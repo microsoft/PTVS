@@ -37,6 +37,7 @@ namespace Microsoft.PythonTools.Interpreter {
         private readonly List<PackageSpec> _availablePackages;
         private CancellationTokenSource _currentRefresh;
         private bool _isReady, _everCached, _everCachedInstallable;
+        private KeyValuePair<string, string>[] _activatedEnvironmentVariables;
 
         internal readonly SemaphoreSlim _working = new SemaphoreSlim(1);
 
@@ -99,6 +100,13 @@ namespace Microsoft.PythonTools.Interpreter {
             if (_historyWatcherTimer != null) {
                 _historyWatcherTimer.Dispose();
                 _historyWatcherTimer = null;
+            }
+        }
+
+        private async Task EnsureActivatedAsync() {
+            if (_activatedEnvironmentVariables == null) {
+                var env = await CondaUtils.CaptureActivationEnvironmentVariablesForRootAsync(_condaPath);
+                _activatedEnvironmentVariables = env.Union(UnbufferedEnv).ToArray();
             }
         }
 
@@ -255,12 +263,14 @@ namespace Microsoft.PythonTools.Interpreter {
                 ui?.OnOperationStarted(this, operation);
                 ui?.OnOutputTextReceived(this, Strings.InstallingPackageStarted.FormatUI(name));
 
+                await EnsureActivatedAsync();
+
                 try {
                     using (var output = ProcessOutput.Run(
                         _condaPath,
                         args,
                         _factory.Configuration.GetPrefixPath(),
-                        UnbufferedEnv,
+                        _activatedEnvironmentVariables,
                         false,
                         PackageManagerUIRedirector.Get(this, ui),
                         quoteArgs: false,
@@ -309,11 +319,13 @@ namespace Microsoft.PythonTools.Interpreter {
                     ui?.OnOperationStarted(this, operation);
                     ui?.OnOutputTextReceived(this, Strings.UninstallingPackageStarted.FormatUI(name));
 
+                    await EnsureActivatedAsync();
+
                     using (var output = ProcessOutput.Run(
                         _condaPath,
                         args,
                         _factory.Configuration.GetPrefixPath(),
-                        UnbufferedEnv,
+                        _activatedEnvironmentVariables,
                         false,
                         PackageManagerUIRedirector.Get(this, ui),
                         elevate: await ShouldElevate(ui, operation)
@@ -396,6 +408,8 @@ namespace Microsoft.PythonTools.Interpreter {
 
             var workingLock = alreadyHasLock ? null : await _working.LockAsync(cancellationToken);
             try {
+                await EnsureActivatedAsync();
+
                 var args = new List<string>();
                 args.Add("list");
                 args.Add("-p");
@@ -408,7 +422,7 @@ namespace Microsoft.PythonTools.Interpreter {
                         _condaPath,
                         args,
                         _factory.Configuration.GetPrefixPath(),
-                        UnbufferedEnv,
+                        _activatedEnvironmentVariables,
                         false,
                         null
                     )) {
@@ -491,6 +505,8 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         private async Task<List<PackageSpec>> ExecuteCondaSearch() {
+            await EnsureActivatedAsync();
+
             var packages = new List<PackageSpec>();
 
             // TODO: Find a way to obtain package descriptions
@@ -517,7 +533,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 _condaPath,
                 args,
                 _factory.Configuration.GetPrefixPath(),
-                UnbufferedEnv,
+                _activatedEnvironmentVariables,
                 false,
                 null
             )) {

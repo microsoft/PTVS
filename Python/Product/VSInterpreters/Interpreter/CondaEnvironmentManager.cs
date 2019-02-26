@@ -36,7 +36,9 @@ namespace Microsoft.PythonTools.Interpreter {
             new KeyValuePair<string, string>("PYTHONUNBUFFERED", "1")
         };
 
-        internal CondaEnvironmentManager(string condaPath) {
+        private KeyValuePair<string, string>[] _activatedEnvironmentVariables;
+
+        private CondaEnvironmentManager(string condaPath) {
             CondaPath = condaPath;
         }
 
@@ -50,15 +52,21 @@ namespace Microsoft.PythonTools.Interpreter {
         public static CondaEnvironmentManager Create(IServiceProvider serviceProvider) {
             var condaPath = CondaUtils.GetRootCondaExecutablePath(serviceProvider);
             if (!string.IsNullOrEmpty(condaPath)) {
-                return new CondaEnvironmentManager(condaPath);
+                return Create(condaPath);
             }
 
             return null;
         }
 
+        public static CondaEnvironmentManager Create(string condaPath) {
+            return new CondaEnvironmentManager(condaPath);
+        }
+
         public async Task<bool> CreateAsync(string newEnvNameOrPath, IEnumerable<PackageSpec> packageSpecs, ICondaEnvironmentManagerUI ui, CancellationToken ct) {
             bool success = false;
             using (await _working.LockAsync(ct)) {
+                await EnsureActivatedAsync();
+
                 var args = new[] {
                     "create",
                     IsAbsolutePath(newEnvNameOrPath) ? "-p" : "-n",
@@ -89,6 +97,8 @@ namespace Microsoft.PythonTools.Interpreter {
 
         public async Task<CondaCreateDryRunResult> PreviewCreateAsync(string newEnvNameOrPath, IEnumerable<PackageSpec> packageSpecs, CancellationToken ct) {
             using (await _working.LockAsync(ct)) {
+                await EnsureActivatedAsync();
+
                 var args = new[] {
                     "create",
                     IsAbsolutePath(newEnvNameOrPath) ? "-p" : "-n",
@@ -105,6 +115,8 @@ namespace Microsoft.PythonTools.Interpreter {
         public async Task<bool> CreateFromEnvironmentFileAsync(string newEnvNameOrPath, string sourceEnvFilePath, ICondaEnvironmentManagerUI ui, CancellationToken ct) {
             bool success = false;
             using (await _working.LockAsync(ct)) {
+                await EnsureActivatedAsync();
+
                 var args = new[] {
                     "env",
                     "create",
@@ -144,6 +156,8 @@ namespace Microsoft.PythonTools.Interpreter {
         public async Task<bool> CreateFromExistingEnvironmentAsync(string newEnvNameOrPath, string sourceEnvPath, ICondaEnvironmentManagerUI ui, CancellationToken ct) {
             bool success = false;
             using (await _working.LockAsync(ct)) {
+                await EnsureActivatedAsync();
+
                 var args = new[] {
                     "create",
                     Path.IsPathRooted(newEnvNameOrPath) ? "-p" : "-n",
@@ -203,6 +217,8 @@ namespace Microsoft.PythonTools.Interpreter {
         private async Task<bool> ExportAsync(string envPath, string destinationSpecFilePath, string[] args, ICondaEnvironmentManagerUI ui, CancellationToken ct) {
             bool success = false;
             using (await _working.LockAsync(ct)) {
+                await EnsureActivatedAsync();
+
                 var operation = "conda " + string.Join(" ", args);
 
                 ui?.OnOperationStarted(this, operation);
@@ -250,6 +266,8 @@ namespace Microsoft.PythonTools.Interpreter {
         public async Task<bool> DeleteAsync(string envPath, ICondaEnvironmentManagerUI ui, CancellationToken ct) {
             bool success = false;
             using (await _working.LockAsync(ct)) {
+                await EnsureActivatedAsync();
+
                 var args = new[] {
                     "remove",
                     "-p",
@@ -291,8 +309,15 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
+        private async Task EnsureActivatedAsync() {
+            if (_activatedEnvironmentVariables == null) {
+                var env = await CondaUtils.CaptureActivationEnvironmentVariablesForRootAsync(CondaPath);
+                _activatedEnvironmentVariables = env.Union(UnbufferedEnv).ToArray();
+            }
+        }
+
         private async Task<CondaCreateDryRunResult> DoPreviewOperationAsync(IEnumerable<string> args, CancellationToken ct) {
-            using (var output = ProcessOutput.RunHiddenAndCapture(CondaPath, args.ToArray())) {
+            using (var output = ProcessOutput.Run(CondaPath, args.ToArray(), Path.GetDirectoryName(CondaPath), _activatedEnvironmentVariables, false, null)) {
                 if (!output.IsStarted) {
                     return null;
                 }
@@ -345,7 +370,7 @@ namespace Microsoft.PythonTools.Interpreter {
                     CondaPath,
                     args,
                     Path.GetDirectoryName(CondaPath),
-                    UnbufferedEnv,
+                    _activatedEnvironmentVariables,
                     false,
                     redirector ?? CondaEnvironmentManagerUIRedirector.Get(this, ui),
                     quoteArgs: false,
