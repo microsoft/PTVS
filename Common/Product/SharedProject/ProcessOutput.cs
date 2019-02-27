@@ -239,13 +239,14 @@ namespace Microsoft.VisualStudioTools.Infrastructure {
         ) {
             var outFile = Path.GetTempFileName();
             var errFile = Path.GetTempFileName();
-            var psi = new ProcessStartInfo("cmd.exe");
-            psi.CreateNoWindow = true;
-            psi.WindowStyle = ProcessWindowStyle.Hidden;
-            psi.UseShellExecute = true;
-            psi.Verb = "runas";
+            var psi = new ProcessStartInfo(Path.Combine(Environment.SystemDirectory, "cmd.exe")) {
+                CreateNoWindow = true,
+                WindowStyle = ProcessWindowStyle.Hidden,
+                UseShellExecute = true,
+                Verb = "runas"
+            };
 
-            string args;
+        string args;
             if (quoteArgs) {
                 args = string.Join(" ", arguments.Where(a => a != null).Select(QuoteSingleArgument));
             } else {

@@ -1,4 +1,4 @@
-// Python Tools for Visual Studio
+﻿// Python Tools for Visual Studio
 // Copyright(c) Microsoft Corporation
 // All rights reserved.
 //
@@ -62,7 +62,7 @@ namespace PythonToolsMockTests {
         [TestMethod, Priority(2)]
         public void PrivateMemberMangling() {
             RefactorTest("xyz", "__f",
-                new[] { 
+                new[] {
                     new FileInput(
 @"class C:
     def __f(self):
@@ -95,7 +95,7 @@ namespace PythonToolsMockTests {
             );
 
             RefactorTest("xyz", "_C__f",
-                new[] { 
+                new[] {
                     new FileInput(
 @"class C:
     def __f(self):
@@ -129,7 +129,7 @@ namespace PythonToolsMockTests {
 
 
             RefactorTest("__y", "__f",
-                new[] { 
+                new[] {
                     new FileInput(
 @"class C:
     def __f(self):
@@ -165,7 +165,7 @@ namespace PythonToolsMockTests {
             );
 
             RefactorTest("__longname", "__f",
-                new[] { 
+                new[] {
                     new FileInput(
 @"class C:
     def __f(self):
@@ -201,7 +201,7 @@ namespace PythonToolsMockTests {
             );
 
             RefactorTest("__f", "__longname",
-                new[] { 
+                new[] {
                     new FileInput(
 @"class C:
     def __longname(self):
@@ -277,7 +277,7 @@ namespace PythonToolsMockTests {
         [TestMethod, Priority(2)]
         public void SanityClassField() {
             RefactorTest("xyz", "abc",
-                new[] { 
+                new[] {
                     new FileInput(
 @"class C:
     abc = 100
@@ -422,7 +422,7 @@ xyz, a\
             );
 
             RefactorTest("xyz", "abc",
-                new[] { 
+                new[] {
                     new FileInput(
 @"class C1:
     abc = 100
@@ -463,12 +463,12 @@ abc = 200
                 )
             );
         }
-        
+
         [TestMethod, Priority(0)]
         public void InheritedClassField() {
 
             RefactorTest("xyz", "abc",
-                new[] { 
+                new[] {
                     new FileInput(
 @"class C1:
     abc = 100
@@ -529,7 +529,7 @@ abc = 200
         [TestMethod, Priority(2)]
         public void TypelessForVariable() {
             RefactorTest("baz", "abc",
-                new[] { 
+                new[] {
                     new FileInput(
 @"def f():
     l = xyz
@@ -548,7 +548,7 @@ abc = 200
         [TestCategory("10s")]
         public void TupleForVariable() {
             RefactorTest("baz", "abc",
-                new[] { 
+                new[] {
                     new FileInput(
 @"def f():
     l = xyz
@@ -563,7 +563,7 @@ abc = 200
             );
 
             RefactorTest("baz", "abc",
-                new[] { 
+                new[] {
                     new FileInput(
 @"def f():
     l = xyz
@@ -578,7 +578,7 @@ abc = 200
             );
 
             RefactorTest("baz", "abc",
-                new[] { 
+                new[] {
                     new FileInput(
 @"def f():
     l = xyz
@@ -593,7 +593,7 @@ abc = 200
             );
 
             RefactorTest("baz", "de_f",
-                new[] { 
+                new[] {
                     new FileInput(
 @"def f():
     l = xyz
@@ -608,7 +608,7 @@ abc = 200
             );
 
             RefactorTest("baz", "de_f",
-                new[] { 
+                new[] {
                     new FileInput(
 @"def f():
     l = xyz
@@ -623,7 +623,7 @@ abc = 200
             );
 
             RefactorTest("baz", "de_f",
-                new[] { 
+                new[] {
                     new FileInput(
 @"def f():
     l = xyz
@@ -641,7 +641,7 @@ abc = 200
         [TestMethod, Priority(2)]
         public void SanityInstanceField() {
             RefactorTest("xyz", "abc",
-                new[] { 
+                new[] {
                     new FileInput(
 @"class C:
     def __init__(self):
@@ -663,7 +663,7 @@ a.xyz
                 }
             );
             RefactorTest("xyz", "abc",
-                new[] { 
+                new[] {
                     new FileInput(
 @"class C:
     def make(self):
@@ -688,7 +688,7 @@ a.xyz
         [TestCategory("10s")]
         public void SanityParameter() {
             RefactorTest("xyz", "abc",
-                new[] { 
+                new[] {
                     new FileInput(
 @"def f(abc):
     print abc, abc(), abc[i], x[abc], y(abc)
@@ -703,7 +703,7 @@ a.xyz
             );
 
             RefactorTest("xyz", "abc",
-                new[] { 
+                new[] {
                     new FileInput(
 @"def f(abc):
     print abc
@@ -722,7 +722,7 @@ abc = 200
             );
 
             RefactorTest("xyz", "abc",
-                new[] { 
+                new[] {
                     new FileInput(
 @"def f(*abc):
     print abc
@@ -739,7 +739,7 @@ abc = 200
             );
 
             RefactorTest("xyz", "abc",
-                new[] { 
+                new[] {
                     new FileInput(
 @"def f(**abc):
     print abc
@@ -756,7 +756,7 @@ abc = 200
             );
 
             RefactorTest("xyz", "abc",
-                new[] { 
+                new[] {
                     new FileInput(
 @"def f(*p, **abc):
     print abc
@@ -773,7 +773,7 @@ abc = 200
             );
 
             RefactorTest("xyz", "abc",
-                new[] { 
+                new[] {
                     new FileInput(
 @"def f(abc=None):
     print abc
@@ -790,7 +790,7 @@ abc = 200
             );
 
             RefactorTest("xyz", "abc",
-                new[] { 
+                new[] {
                     new FileInput(
 @"def f(i=abc):
     print abc
@@ -807,7 +807,7 @@ xyz = 200
             );
 
             RefactorTest("xyz", "abc",
-                new[] { 
+                new[] {
                     new FileInput(
 @"def f(abc=abc):
     print abc
@@ -827,7 +827,7 @@ abc = 200
         [TestMethod, Priority(2)]
         public void SanityLocal() {
             RefactorTest("xyz", "abc",
-                new[] { 
+                new[] {
                     new FileInput(
 @"def f():
     abc = 100
@@ -842,7 +842,7 @@ abc = 200
             );
 
             RefactorTest("xyz", "abc",
-                new[] { 
+                new[] {
                     new FileInput(
 @"def f():
     abc = 100
@@ -859,9 +859,9 @@ abc = 200
                     )
                 }
             );
-            
+
             RefactorTest("xyz", "abc",
-                new[] { 
+                new[] {
                     new FileInput(
 @"def f():
     abc = 100
@@ -888,7 +888,7 @@ def h(abc):
         [TestMethod, Priority(2)]
         public void SanityClosure() {
             RefactorTest("xyz", "abc",
-                new[] { 
+                new[] {
                     new FileInput(
 @"def f():
     abc = 100
@@ -905,7 +905,7 @@ def h(abc):
             );
 
             RefactorTest("xyz", "abc",
-                new[] { 
+                new[] {
                     new FileInput(
 @"def f():
     abc = 100
@@ -926,7 +926,7 @@ abc = 200
             );
 
             RefactorTest("xyz", "abc",
-                new[] { 
+                new[] {
                     new FileInput(
 @"def f(abc):
     def g(abc):
@@ -948,7 +948,7 @@ abc = 200
         [TestMethod, Priority(2)]
         public void SanityLambda() {
             RefactorTest("xyz", "abc",
-                new[] { 
+                new[] {
                     new FileInput(
 @"def f():
     abc = 100
@@ -963,7 +963,7 @@ abc = 200
             );
 
             RefactorTest("xyz", "abc",
-                new[] { 
+                new[] {
                     new FileInput(
 @"def f():
     abc = 100
@@ -982,7 +982,7 @@ abc = 200
             );
 
             RefactorTest("xyz", "abc",
-                new[] { 
+                new[] {
                     new FileInput(
 @"def f(abc):
     g = lambda abc: abc
@@ -1002,7 +1002,7 @@ abc = 200
         [TestMethod, Priority(2)]
         public void SanityInlineIf() {
             RefactorTest("xyz", "abc",
-                new[] { 
+                new[] {
                     new FileInput(
                         "abc = 0; x = True if abc else False",
                         "xyz = 0; x = True if xyz else False"
@@ -1011,7 +1011,7 @@ abc = 200
             );
 
             RefactorTest("xyz", "abc",
-                new[] { 
+                new[] {
                     new FileInput(
                         "abc = 0; x = abc if abc else False",
                         "xyz = 0; x = xyz if xyz else False"
@@ -1020,7 +1020,7 @@ abc = 200
             );
 
             RefactorTest("xyz", "abc",
-                new[] { 
+                new[] {
                     new FileInput(
                         "abc = 0; x = True if abc else abc",
                         "xyz = 0; x = True if xyz else xyz"
@@ -1032,7 +1032,7 @@ abc = 200
         [TestMethod, Priority(3)]
         public void SanityGenerator() {
             RefactorTest("xyz", "abc",
-                new[] { 
+                new[] {
                     new FileInput(
                         "x = (abc for abc in range(100))",
                         "x = (xyz for xyz in range(100))"
@@ -1041,7 +1041,7 @@ abc = 200
             );
 
             RefactorTest("xyz", "abc",
-                new[] { 
+                new[] {
                     new FileInput(
                         "abc = 100; x = (abc for abc in range(abc))",
                         "xyz = 100; x = (abc for abc in range(xyz))"
@@ -1050,7 +1050,7 @@ abc = 200
             );
 
             RefactorTest("xyz", "abc",
-                new[] { 
+                new[] {
                     new FileInput(
                         "x = (i[abc] for abc in range(100))",
                         "x = (i[xyz] for xyz in range(100))"
@@ -1059,7 +1059,7 @@ abc = 200
             );
 
             RefactorTest("xyz", "abc", version: new Version(3, 2),
-                inputs: new[] { 
+                inputs: new[] {
                     new FileInput(
                         "x = {abc : i[abc] for abc in range(100)}",
                         "x = {xyz : i[xyz] for xyz in range(100)}"
@@ -1068,7 +1068,7 @@ abc = 200
             );
 
             RefactorTest("xyz", "abc", version: new Version(3, 2),
-                inputs: new[] { 
+                inputs: new[] {
                     new FileInput(
                         "x = {i : abc for i, abc in enumerate(range(100))}",
                         "x = {i : xyz for i, xyz in enumerate(range(100))}"
@@ -1077,7 +1077,7 @@ abc = 200
             );
 
             RefactorTest("xyz", "abc", version: new Version(3, 2),
-                inputs: new[] { 
+                inputs: new[] {
                     new FileInput(
                         "x = {abc for abc in range(100)}",
                         "x = {xyz for xyz in range(100)}"
@@ -1086,7 +1086,7 @@ abc = 200
             );
 
             RefactorTest("xyz", "abc",
-                new[] { 
+                new[] {
                     new FileInput(
                         "abc = [1, 2, 3]; x = (abc for i in abc)",
                         "xyz = [1, 2, 3]; x = (xyz for i in xyz)"
@@ -1098,7 +1098,7 @@ abc = 200
         [TestMethod, Priority(3)]
         public void SanityGeneratorFilter() {
             RefactorTest("xyz", "abc",
-                new[] { 
+                new[] {
                     new FileInput(
                         "abc = 10; x = (i for i in range(100) if abc > i)",
                         "xyz = 10; x = (i for i in range(100) if xyz > i)"
@@ -1107,7 +1107,7 @@ abc = 200
             );
 
             RefactorTest("xyz", "abc",
-                new[] { 
+                new[] {
                     new FileInput(
                         "abc = 10; x = (i for i in range(100) if i or abc)",
                         "xyz = 10; x = (i for i in range(100) if i or xyz)"
@@ -1116,7 +1116,7 @@ abc = 200
             );
 
             RefactorTest("xyz", "abc", version: new Version(3, 2),
-                inputs: new[] { 
+                inputs: new[] {
                     new FileInput(
                         "x = {abc : i[abc] for abc in range(100)}",
                         "x = {xyz : i[xyz] for xyz in range(100)}"
@@ -1125,7 +1125,7 @@ abc = 200
             );
 
             RefactorTest("xyz", "abc", version: new Version(3, 2),
-                inputs: new[] { 
+                inputs: new[] {
                     new FileInput(
                         "x = {i : abc for i, abc in enumerate(range(100))}",
                         "x = {i : xyz for i, xyz in enumerate(range(100))}"
@@ -1134,7 +1134,7 @@ abc = 200
             );
 
             RefactorTest("xyz", "abc", version: new Version(3, 2),
-                inputs: new[] { 
+                inputs: new[] {
                     new FileInput(
                         "x = {abc for abc in range(100)}",
                         "x = {xyz for xyz in range(100)}"
@@ -1143,7 +1143,7 @@ abc = 200
             );
 
             RefactorTest("xyz", "abc",
-                new[] { 
+                new[] {
                     new FileInput(
                         "abc = [1, 2, 3]; x = (abc for i in abc)",
                         "xyz = [1, 2, 3]; x = (xyz for i in xyz)"
@@ -1155,7 +1155,7 @@ abc = 200
         [TestMethod, Priority(0)]
         public void SanitySlices() {
             RefactorTest("xyz", "abc", version: new Version(3, 2),
-            inputs: new[] { 
+            inputs: new[] {
                     new FileInput(
 @"
 abc = 100
@@ -1182,7 +1182,7 @@ x = y[xyz-1:xyz:xyz+1]
         [TestMethod, Priority(2)]
         public void SanityGlobal() {
             RefactorTest("xyz", "abc",
-                new[] { 
+                new[] {
                     new FileInput(
 @"def f():
     global abc
@@ -1203,7 +1203,7 @@ xyz = 100
             );
 
             RefactorTest("xyz", "abc",
-                new[] { 
+                new[] {
                     new FileInput(
 @"def f():
     global abc; assert abc
@@ -1222,7 +1222,7 @@ xyz = 100
             );
 
             RefactorTest("xyz", "abc",
-                new[] { 
+                new[] {
                     new FileInput(
 @"abc = { }
 def f():
@@ -1237,7 +1237,7 @@ def f():
             );
 
             RefactorTest("xyz", "abc",
-                new[] { 
+                new[] {
                     new FileInput(
 @"def f():
     global abc
@@ -1265,7 +1265,7 @@ xyz = 100
         [TestMethod, Priority(0)]
         public void SanityNonLocal() {
             RefactorTest("xyz", "abc", version: new Version(3, 2),
-            inputs: new[] { 
+            inputs: new[] {
                     new FileInput(
 @"
 def g():
@@ -1291,7 +1291,7 @@ abc = 100
             );
 
             RefactorTest("xyz", "abc", version: new Version(3, 2),
-            inputs: new[] { 
+            inputs: new[] {
                     new FileInput(
 @"
 def g():
@@ -1315,7 +1315,7 @@ abc = 100
             );
 
             RefactorTest("xyz", "abc", version: new Version(3, 2),
-            inputs: new[] { 
+            inputs: new[] {
                     new FileInput(
 @"
 def g():
@@ -1343,7 +1343,7 @@ abc = 100
         [TestCategory("10s")]
         public void SanityRenameClass() {
             RefactorTest("xyz", "abc",
-            new[] { 
+            new[] {
                     new FileInput(
 @"
 4
@@ -1366,8 +1366,8 @@ y = { xyz: 'abc', 'abc': xyz }"
                 }
             );
 
-            RefactorTest("xyz", "abc", 
-            new[] { 
+            RefactorTest("xyz", "abc",
+            new[] {
                     new FileInput(
 @"
 4
@@ -1393,7 +1393,7 @@ y = { xyz: 'abc', 'abc': xyz, xyz.A: 'A', 'A': xyz.A }"
             );
 
             RefactorTest("xyz", "abc",
-            new[] { 
+            new[] {
                     new FileInput(
 @"
 4
@@ -1416,7 +1416,7 @@ xyz.A"
             );
 
             RefactorTest("xyz", "abc",
-            new[] { 
+            new[] {
                     new FileInput(
 @"
 4
@@ -1440,7 +1440,7 @@ xyz.A"
             );
 
             RefactorTest("xyz", "abc",
-            new[] { 
+            new[] {
                     new FileInput(
 @"class abc(object):
     pass
@@ -1460,7 +1460,7 @@ class x(xyz):
         [TestMethod, Priority(0)]
         public void RenameMetaclass() {
             RefactorTest("xyz", "abc", version: new Version(2, 7),
-            inputs: new[] { 
+            inputs: new[] {
                     new FileInput(
 @"class abc(type):
     pass
@@ -1477,7 +1477,7 @@ class x(object):
             );
 
             RefactorTest("xyz", "abc", version: new Version(3, 2),
-            inputs: new[] { 
+            inputs: new[] {
                     new FileInput(
 @"class abc(type):
     pass
@@ -1498,7 +1498,7 @@ class x(metaclass=xyz):
         [TestMethod, Priority(2)]
         public void SanityRenameFunction() {
             RefactorTest("xyz", "abc",
-            new[] { 
+            new[] {
                     new FileInput(
 @"
 4
@@ -1526,7 +1526,7 @@ y = { xyz: 'abc', 'abc': xyz }"
             );
 
             RefactorTest("xyz", "abc",
-            new[] { 
+            new[] {
                     new FileInput(
 @"
 4
@@ -1555,7 +1555,7 @@ fdoc = xyz.func_doc"
         [TestMethod, Priority(0)]
         public void SanityDelLocal() {
             RefactorTest("xyz", "abc",
-            new[] { 
+            new[] {
                     new FileInput(
 @"
 def f():
@@ -1564,7 +1564,7 @@ def f():
 @"
 def f():
     xyz = 100
-    del xyz"                    
+    del xyz"
                     )
 
                 }
@@ -1574,7 +1574,7 @@ def f():
         [TestMethod, Priority(2)]
         public void SanityDelInstanceMember() {
             RefactorTest("xyz", "abc",
-            new[] { 
+            new[] {
                     new FileInput(
 @"
 class C(object):
@@ -1605,7 +1605,7 @@ def f():
         [TestMethod, Priority(0)]
         public void SanityDelClassMember() {
             RefactorTest("xyz", "abc",
-            new[] { 
+            new[] {
                     new FileInput(
 @"
 class C(object):
@@ -1634,7 +1634,7 @@ def f():
         [TestMethod, Priority(2)]
         public void SanityDelGlobal() {
             RefactorTest("xyz", "abc",
-            new[] { 
+            new[] {
                     new FileInput(
 @"
 def f():
@@ -1656,7 +1656,7 @@ xyz = 100
             );
 
             RefactorTest("xyz", "abc",
-            new[] { 
+            new[] {
                     new FileInput(
 @"
 def f():
@@ -1681,7 +1681,7 @@ xyz = 100
         [TestMethod, Priority(2)]
         public void DelNonLocal() {
             RefactorTest("xyz", "abc", version: new Version(3, 2),
-            inputs: new[] { 
+            inputs: new[] {
                     new FileInput(
 @"
 def g():
@@ -1710,7 +1710,7 @@ abc = 100
         [TestCategory("10s")]
         public void Decorators() {
             RefactorTest("abc", "xyz",
-            new[] { 
+            new[] {
                     new FileInput(
 @"
 def xyz():
@@ -1732,7 +1732,7 @@ def f():
             );
 
             RefactorTest("abc", "xyz",
-            new[] { 
+            new[] {
                     new FileInput(
 @"
 def xyz():
@@ -1760,7 +1760,7 @@ def f():
             );
 
             RefactorTest("abc", "xyz",
-            new[] { 
+            new[] {
                     new FileInput(
 @"
 def xyz(name):
@@ -1782,7 +1782,7 @@ def f():
             );
 
             RefactorTest("abc", "xyz",
-            new[] { 
+            new[] {
                     new FileInput(
 @"
 xyz = 'xyz'
@@ -1808,7 +1808,7 @@ def f():
             );
 
             RefactorTest("abc", "xyz",
-            new[] { 
+            new[] {
                     new FileInput(
 @"
 class C:
@@ -1837,8 +1837,8 @@ def f():
 
         [TestMethod, Priority(0)]
         public void TryStatement() {
-            RefactorTest("abc", "xyz", 
-            new[] { 
+            RefactorTest("abc", "xyz",
+            new[] {
                     new FileInput(
 @"
 try:
@@ -1856,7 +1856,7 @@ except Exception, abc:
             );
 
             RefactorTest("abc", "xyz", version: new Version(3, 2),
-            inputs: new[] { 
+            inputs: new[] {
                     new FileInput(
 @"
 try:
@@ -1878,7 +1878,7 @@ except Exception as abc:
         [TestMethod, Priority(0)]
         public void FinallyStatement() {
             RefactorTest("xyz", "abc",
-            new[] { 
+            new[] {
                     new FileInput(
 @"
 try:
@@ -1903,7 +1903,7 @@ finally:
         [TestMethod, Priority(2)]
         public void RaiseStatement() {
             RefactorTest("xyz", "abc", version: new Version(2, 7),
-            inputs: new[] { 
+            inputs: new[] {
                     new FileInput(
 @"
 abc = 'a message: abc'
@@ -1919,7 +1919,7 @@ raise Exception, xyz, xyz
             );
 
             RefactorTest("xyz", "abc", version: new Version(3, 2),
-            inputs: new[] { 
+            inputs: new[] {
                     new FileInput(
 @"
 abc = 'a message: abc'
@@ -1938,7 +1938,7 @@ raise Exception() from xyz
         [TestMethod, Priority(2)]
         public void ExecStatement() {
             RefactorTest("xyz", "abc", version: new Version(2, 7),
-            inputs: new[] { 
+            inputs: new[] {
                     new FileInput(
 @"
 abc = 'some code: abc'
@@ -1958,7 +1958,7 @@ exec compile(xyz)
             );
 
             RefactorTest("xyz", "abc", version: new Version(3, 2),
-            inputs: new[] { 
+            inputs: new[] {
                     new FileInput(
 @"
 abc = 'some code: abc'
@@ -1978,7 +1978,7 @@ exec(compile(xyz))
             );
 
             RefactorTest("xyz", "abc", version: new Version(2, 7),
-            inputs: new[] { 
+            inputs: new[] {
                     new FileInput(
 @"
 abc = { }
@@ -1996,7 +1996,7 @@ exec 'abc = 1' in xyz, xyz
             );
 
             RefactorTest("xyz", "abc", version: new Version(3, 2),
-            inputs: new[] { 
+            inputs: new[] {
                     new FileInput(
 @"
 abc = { }
@@ -2017,7 +2017,7 @@ exec('abc = 1', xyz, xyz)
         [TestMethod, Priority(2)]
         public void IsInstanceScope() {
             RefactorTest("abc", "xyz", version: new Version(3, 2),
-            inputs: new[] { 
+            inputs: new[] {
                     new FileInput(
 @"
 xyz = 1
@@ -2038,7 +2038,7 @@ print(abc.upper())
         [TestMethod, Priority(0)]
         public void WithStatement() {
             RefactorTest("abc", "xyz", version: new Version(3, 2),
-            inputs: new[] { 
+            inputs: new[] {
                     new FileInput(
 @"
 with xyz as xyz:
@@ -2055,8 +2055,8 @@ with abc as abc:
 
         [TestMethod, Priority(0)]
         public void YieldStatement() {
-            RefactorTest("xyz", "abc", 
-            inputs: new[] { 
+            RefactorTest("xyz", "abc",
+            inputs: new[] {
                     new FileInput(
 @"
 def a():
@@ -2074,8 +2074,8 @@ def a():
 
         [TestMethod, Priority(2)]
         public void KeywordParameter() {
-            RefactorTest("xyz", "abc", 
-            new[] { 
+            RefactorTest("xyz", "abc",
+            new[] {
                     new FileInput(
 @"
 def f(abc):
@@ -2093,11 +2093,11 @@ f(xyz = 10)
                 new ExpectedPreviewItem("test.py",
                     new ExpectedPreviewItem("def f(abc):"),
                     new ExpectedPreviewItem("f(abc = 10)")
-                )   
+                )
             );
 
             RefactorTest("xyz", "abc",
-            new[] { 
+            new[] {
                     new FileInput(
 @"
 def g():
@@ -2121,7 +2121,7 @@ def f(xyz):
             );
 
             RefactorTest("xyz", "abc",
-            new[] { 
+            new[] {
                     new FileInput(
 @"
 def f(abc):
@@ -2164,7 +2164,7 @@ f(abc)
         [TestMethod, Priority(2)]
         public void ImportAsStatement() {
             RefactorTest("xyz", "abc",
-            new[] { 
+            new[] {
                     new FileInput(
 @"
 import sys as abc
@@ -2182,7 +2182,7 @@ x = xyz
             );
 
             RefactorTest("xyz", "abc",
-            new[] { 
+            new[] {
                     new FileInput(
 @"
 import os, sys as abc
@@ -2200,7 +2200,7 @@ x = xyz
             );
 
             RefactorTest("xyz", "abc",
-            new[] { 
+            new[] {
                     new FileInput(
 @"
 import sys as abc, os
@@ -2221,7 +2221,7 @@ x = xyz
         [TestMethod, Priority(2)]
         public void FromImportAsStatement() {
             RefactorTest("xyz", "abc",
-            new[] { 
+            new[] {
                     new FileInput(
 @"
 from sys import oar as abc
@@ -2239,7 +2239,7 @@ x = xyz
             );
 
             RefactorTest("xyz", "abc",
-            new[] { 
+            new[] {
                     new FileInput(
 @"
 from sys import (oar as abc, baz)
@@ -2261,7 +2261,7 @@ x = xyz
         [TestMethod, Priority(2)]
         public void Annotations() {
             RefactorTest("xyz", "abc", version: new Version(3, 2),
-                inputs: new[] { 
+                inputs: new[] {
                     new FileInput(
 @"def f(x : abc):
     print(abc)
@@ -2278,7 +2278,7 @@ xyz = 200
             );
 
             RefactorTest("xyz", "abc", version: new Version(3, 2),
-                inputs: new[] { 
+                inputs: new[] {
                     new FileInput(
 @"def f(x : f(abc)):
     print(abc)
@@ -2295,7 +2295,7 @@ xyz = 200
             );
 
             RefactorTest("xyz", "abc", version: new Version(3, 2),
-                inputs: new[] { 
+                inputs: new[] {
                     new FileInput(
 @"def f(abc : None):
     print(abc)
@@ -2316,7 +2316,7 @@ abc = 200
         [TestMethod, Priority(0)]
         public void NestedFunctions() {
             RefactorTest("h", "g",
-                new[] { 
+                new[] {
                     new FileInput(
 @"def f(abc):
     def g(abc):
@@ -2345,7 +2345,7 @@ def g(a, b, c):
         [TestMethod, Priority(2)]
         public void CrossModuleRename() {
             RefactorTest("xyz", "abc",
-                new[] { 
+                new[] {
                     new FileInput(
                         "def abc(): pass",
                         "def xyz(): pass"
@@ -2359,7 +2359,7 @@ def g(a, b, c):
             );
 
             RefactorTest("xyz", "abc",
-                new[] { 
+                new[] {
                     new FileInput(
                         "abc = None",
                         "xyz = None"
@@ -2373,7 +2373,7 @@ def g(a, b, c):
             );
 
             RefactorTest("xyz", "abc",
-                new[] { 
+                new[] {
                     new FileInput(
                         "def abc(): pass",
                         "def xyz(): pass"
@@ -2394,6 +2394,42 @@ def g(a, b, c):
             CannotRename("abc", "import abc as oar", ErrorModuleName);
         }
 
+        [TestMethod, Priority(0)]
+        public void ValidPythonIdentifier() {
+            string validUnicodeCharacters = "䶵䶴㐁";
+            char invalidIdentifier = '!';
+
+            //Valid python 2 and 3 identifiers
+            CheckPythonIdentifierValidity("a1b2c3");
+            CheckPythonIdentifierValidity("_abc123");
+            CheckPythonIdentifierValidity("a1_b2_c3_");
+            CheckPythonIdentifierValidity("__");
+            CheckPythonIdentifierValidity("_abc_");
+
+            //Valid in python 3 but not 2
+            CheckPythonIdentifierValidity(validUnicodeCharacters, false);
+            CheckPythonIdentifierValidity(string.Concat(validUnicodeCharacters, "a1"), false);
+            CheckPythonIdentifierValidity(string.Concat("a1", validUnicodeCharacters), false);
+            CheckPythonIdentifierValidity(string.Concat("a1", validUnicodeCharacters, "b2", validUnicodeCharacters), false);
+
+            //Valid in neither python 3 or 2
+            CheckPythonIdentifierValidity(invalidIdentifier.ToString(), false, false);
+            CheckPythonIdentifierValidity("", false, false);
+            CheckPythonIdentifierValidity(" ", false, false);
+            CheckPythonIdentifierValidity("1a2b3c", false, false);
+            CheckPythonIdentifierValidity(" 1a 2b 3c ", false, false);
+            CheckPythonIdentifierValidity(string.Concat("abc", invalidIdentifier), false, false);
+            CheckPythonIdentifierValidity(string.Concat(invalidIdentifier, "abc"), false, false);
+            CheckPythonIdentifierValidity(string.Concat("abc", invalidIdentifier, "123", validUnicodeCharacters), false, false);
+            CheckPythonIdentifierValidity(string.Concat(validUnicodeCharacters, "1a2b3c", invalidIdentifier), false, false);
+            CheckPythonIdentifierValidity(string.Concat(invalidIdentifier, "a1b3c3", validUnicodeCharacters), false, false);
+        }
+
+        private static void CheckPythonIdentifierValidity(string identifier, bool isValidPython2Identifier = true, bool isValidPython3Identifier = true) {
+            Assert.AreEqual(isValidPython2Identifier, ExtractMethodRequestView.IsValidPythonIdentifier(identifier, PythonLanguageVersion.V27));
+            Assert.AreEqual(isValidPython3Identifier, ExtractMethodRequestView.IsValidPythonIdentifier(identifier, PythonLanguageVersion.V30));
+        }
+
         class FileInput {
             public readonly string Input, Output, Filename;
 
@@ -2412,7 +2448,7 @@ def g(a, b, c):
             for (int i = 0; i < inputs.Length; ++i) {
                 Console.WriteLine("Test code {0} {1}:\r\n{2}\r\n", i, inputs[i].Filename, inputs[i].Input);
             }
-            
+
             foreach(bool preview in new[] { true, false } ) {
                 OneRefactorTest(newName, caretText, inputs, version, preview, null, items, expectedSelectedText);
 
@@ -2601,7 +2637,7 @@ def g(a, b, c):
                 } else {
                     PrintList(list);
                 }
-                
+
                 Previewed = true;
                 return pIVsPreviewChangesEngine.ApplyChanges();
             }
@@ -2635,7 +2671,7 @@ def g(a, b, c):
                 uint count;
                 list.GetItemCount(out count);
 
-                
+
                 for (int i = 0; i < count; i++) {
                     string text;
                     list.GetText((uint)i, VSTREETEXTOPTIONS.TTO_DEFAULT, out text);

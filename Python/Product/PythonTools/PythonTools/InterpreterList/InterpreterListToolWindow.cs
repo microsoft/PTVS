@@ -77,7 +77,7 @@ namespace Microsoft.PythonTools.InterpreterList {
             _outputWindow = OutputWindowRedirector.GetGeneral(_site);
             Debug.Assert(_outputWindow != null);
             _statusBar = _site.GetService(typeof(SVsStatusbar)) as IVsStatusbar;
-            
+
             var list = new ToolWindow();
             list.ViewCreated += List_ViewCreated;
             list.ViewSelected += List_ViewSelected;
@@ -225,7 +225,7 @@ namespace Microsoft.PythonTools.InterpreterList {
 
             var psi = new ProcessStartInfo();
             psi.UseShellExecute = false;
-            psi.FileName = "explorer.exe";
+            psi.FileName = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "explorer.exe");
             psi.Arguments = "\"" + path + "\"";
 
             Process.Start(psi).Dispose();
@@ -378,7 +378,7 @@ namespace Microsoft.PythonTools.InterpreterList {
         private void OpenInteractiveWindow_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
             var view = e.Parameter as EnvironmentView;
             e.CanExecute = view != null &&
-                view.Factory != null && 
+                view.Factory != null &&
                 view.Factory.Configuration != null &&
                 File.Exists(view.Factory.Configuration.InterpreterPath);
         }
@@ -523,13 +523,14 @@ namespace Microsoft.PythonTools.InterpreterList {
 
             var paths = GetPathEntries(view);
             var pathCmd = string.IsNullOrEmpty(paths) ? "" : string.Format("set PATH={0};%PATH% & ", paths);
-            var psi = new ProcessStartInfo("cmd.exe");
-            psi.Arguments = string.Join(" ", new[] {
-                "/S",
-                "/K",
-                pathCmd + string.Format("title {0} environment", view.Description)
-            }.Select(ProcessOutput.QuoteSingleArgument));
-            psi.WorkingDirectory = view.PrefixPath;
+            var psi = new ProcessStartInfo(Path.Combine(Environment.SystemDirectory, "cmd.exe")) {
+                Arguments = string.Join(" ", new[] {
+                    "/S",
+                    "/K",
+                    pathCmd + string.Format("title {0} environment", view.Description)
+                }.Select(ProcessOutput.QuoteSingleArgument)),
+                WorkingDirectory = view.PrefixPath
+            };
 
             Process.Start(psi).Dispose();
         }
@@ -545,14 +546,15 @@ namespace Microsoft.PythonTools.InterpreterList {
 
             var paths = GetPathEntries(view);
             var pathCmd = string.IsNullOrEmpty(paths) ? "" : string.Format("$env:PATH='{0};' + $env:PATH; ", paths);
-            var psi = new ProcessStartInfo("powershell.exe");
-            psi.Arguments = string.Join(" ", new[] {
-                "-NoLogo",
-                "-NoExit",
-                "-Command",
-                pathCmd + string.Format("(Get-Host).UI.RawUI.WindowTitle = '{0} environment'", view.Description)
-            }.Select(ProcessOutput.QuoteSingleArgument));
-            psi.WorkingDirectory = view.PrefixPath;
+            var psi = new ProcessStartInfo(Path.Combine(Environment.SystemDirectory, "WindowsPowerShell", "v1.0", "powershell.exe")) {
+                Arguments = string.Join(" ", new[] {
+                    "-NoLogo",
+                    "-NoExit",
+                    "-Command",
+                    pathCmd + string.Format("(Get-Host).UI.RawUI.WindowTitle = '{0} environment'", view.Description)
+                }.Select(ProcessOutput.QuoteSingleArgument)),
+                WorkingDirectory = view.PrefixPath
+            };
 
             Process.Start(psi).Dispose();
         }
@@ -567,7 +569,7 @@ namespace Microsoft.PythonTools.InterpreterList {
         }
 
         internal static async System.Threading.Tasks.Task OpenAtAsync(IServiceProvider site, string viewId, Type extension) {
-            var service = (IPythonToolsToolWindowService) site?.GetService(typeof(IPythonToolsToolWindowService));
+            var service = (IPythonToolsToolWindowService)site?.GetService(typeof(IPythonToolsToolWindowService));
             if (service == null) {
                 Debug.Fail("Failed to get environment list window");
                 return;
@@ -585,7 +587,7 @@ namespace Microsoft.PythonTools.InterpreterList {
         }
 
         internal static async System.Threading.Tasks.Task OpenAtAsync(IServiceProvider site, IPythonInterpreterFactory interpreter, Type extension = null) {
-            var service = (IPythonToolsToolWindowService) site?.GetService(typeof(IPythonToolsToolWindowService));
+            var service = (IPythonToolsToolWindowService)site?.GetService(typeof(IPythonToolsToolWindowService));
             if (service == null) {
                 Debug.Fail("Failed to get environment list window");
                 return;

@@ -2243,6 +2243,12 @@ Expand selection to the full expression?</value>
   <data name="AddEnvironmentCancelButtonAutomationName" xml:space="preserve">
     <value>Cancel</value>
   </data>
+  <data name="AddEnvironmentAddButtonAutomationName" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="AddEnvironmentCreateButtonAutomationName" xml:space="preserve">
+    <value>Create</value>
+  </data>
   <data name="AddEnvironmentPagesListBoxAutomationName" xml:space="preserve">
     <value>Pages</value>
   </data>
@@ -2278,7 +2284,10 @@ Expand selection to the full expression?</value>
   <data name="AddInstalledEnvironmentLabel" xml:space="preserve">
     <value>Python installation</value>
   </data>
-  <data name="AddInstalledEnvironmentLaunch" xml:space="preserve">
+  <data name="AddInstalledEnvironmentInstallButton" xml:space="preserve">
+    <value>_Install</value>
+  </data>
+  <data name="AddInstalledEnvironmentInstallButtonAutomationName" xml:space="preserve">
     <value>Install</value>
   </data>
   <data name="AddInstalledEnvironmentInstalledLabel" xml:space="preserve">
@@ -2336,7 +2345,7 @@ Expand selection to the full expression?</value>
     <value>Ba_se interpreter</value>
   </data>
   <data name="AddVirtualEnvironmentRequirementsPathLabel" xml:space="preserve">
-    <value>Install packages fr_om file</value>
+    <value>Install packages fr_om file (optional)</value>
   </data>
   <data name="AddVirtualEnvironmentPreviewLabel" xml:space="preserve">
     <value>Actions we will perform</value>
@@ -2355,6 +2364,9 @@ Expand selection to the full expression?</value>
   </data>
   <data name="AddVirtualEnvironmentDescriptionWatermark" xml:space="preserve">
     <value>Description for this environment</value>
+  </data>
+  <data name="AddVirtualEnvironmentDescriptionName" xml:space="preserve">
+    <value>Environment description</value>
   </data>
   <data name="AddVirtualEnvironmentPreviewInProgress" xml:space="preserve">
     <value>Building preview...</value>
@@ -2381,7 +2393,7 @@ Expand selection to the full expression?</value>
     <value>In_terpreter path</value>
   </data>
   <data name="AddExistingEnvironmentWindowsInterpreterPathLabel" xml:space="preserve">
-    <value>Windo_wed interpreter</value>
+    <value>Windo_wed interpreter (optional)</value>
   </data>
   <data name="AddExistingEnvironmentLanguageVersionLabel" xml:space="preserve">
     <value>Language _version</value>
@@ -2411,7 +2423,10 @@ Expand selection to the full expression?</value>
     <value>environment.yml</value>
   </data>
   <data name="AddCondaEnvironmentFileHelp" xml:space="preserve">
-    <value>The environment file is typically named environment.yml and specifies the Conda and pip packages to install when creating the Conda environment.</value>
+    <value>Path to environment.yml file, which specifies the Conda and pip packages to install when creating the Conda environment.</value>
+  </data>
+  <data name="AddCondaEnvironmentFileName" xml:space="preserve">
+    <value>Environment file path</value>
   </data>
   <data name="AddCondaEnvironmentFileBrowseButton" xml:space="preserve">
     <value>Browse for environment file</value>
@@ -2425,8 +2440,14 @@ Expand selection to the full expression?</value>
   <data name="AddCondaPackagesWatermark" xml:space="preserve">
     <value>ex. numpy pandas</value>
   </data>
+  <data name="AddCondaPackagesName" xml:space="preserve">
+    <value>Package names</value>
+  </data>
+  <data name="AddCondaPackagesBrowseButton" xml:space="preserve">
+    <value>Add packages</value>
+  </data>
   <data name="AddCondaPackagesHelpText" xml:space="preserve">
-    <value>List of Conda packages to install when creating the Conda environment. Entries should be separated by spaces.</value>
+    <value>List of Conda packages to install when creating the Conda environment. Entries should be separated by spaces. Example: numpy pandas</value>
   </data>
   <data name="AddEnvironmentSetAsDefaultLabel" xml:space="preserve">
     <value>Set as _default environment for new projects</value>

@@ -45,6 +45,7 @@ namespace Microsoft.PythonTools.Environments {
             IsCondaMissing = _condaMgr == null;
             PageName = Strings.AddCondaEnvironmentTabHeader;
             AcceptCaption = Strings.AddEnvironmentCreateButton;
+            AcceptAutomationName = Strings.AddEnvironmentCreateButtonAutomationName;
             IsAcceptEnabled = !IsCondaMissing;
 
             SetAsCurrent = SelectedProject != null;

@@ -116,7 +116,10 @@ namespace Microsoft.PythonTools.Options {
                     );
 
                     if (File.Exists(path)) {
-                        Process.Start("explorer.exe", "/select," + ProcessOutput.QuoteSingleArgument(path))?.Dispose();
+                        Process.Start(
+                            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "explorer.exe"),
+                            "/select," + ProcessOutput.QuoteSingleArgument(path)
+                        )?.Dispose();
                     }
                 } catch (OperationCanceledException) {
                 }

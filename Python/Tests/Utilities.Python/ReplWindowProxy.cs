@@ -114,14 +114,15 @@ namespace TestUtilities.UI.Python {
         public static ReplWindowProxy Prepare(
             PythonVisualStudioApp app,
             ReplWindowProxySettings settings,
-            string projectName = null,
+            string projectName,
+            string workspaceName,
             bool useIPython = false
         ) {
             settings.AssertValid();
 
             ReplWindowProxy result = null;
             try {
-                result = OpenInteractive(app, settings, projectName, useIPython ? IPythonBackend : StandardBackend);
+                result = OpenInteractive(app, settings, projectName, workspaceName, useIPython ? IPythonBackend : StandardBackend);
                 app = null;
 
                 for (int retries = 10; retries > 0; --retries) {
@@ -172,7 +173,7 @@ namespace TestUtilities.UI.Python {
             }
         }
 
-        private static ToolWindowPane ActivateInteractiveWindow(ReplWindowProxySettings settings, VisualStudioApp app, string projectName, string backend) {
+        private static ToolWindowPane ActivateInteractiveWindow(ReplWindowProxySettings settings, VisualStudioApp app, string projectName, string workspaceName, string backend) {
             string description = null;
             if (settings.Version.IsCPython) {
                 description = string.Format("{0} {1}",
@@ -205,6 +206,9 @@ namespace TestUtilities.UI.Python {
                 var dteProj = app.GetProject(projectName);
                 var proj = (PythonProjectNode)dteProj.GetCommonProject();
                 replId = PythonReplEvaluatorProvider.GetEvaluatorId(proj);
+            } else if (!string.IsNullOrEmpty(workspaceName)) {
+                var workspaceContextProvider = app.ComponentModel.GetService<IPythonWorkspaceContextProvider>();
+                replId = PythonReplEvaluatorProvider.GetEvaluatorId(workspaceContextProvider.Workspace);
             }
 
             return app.ServiceProvider.GetUIThread().Invoke(() => {
@@ -232,9 +236,10 @@ namespace TestUtilities.UI.Python {
             VisualStudioApp app,
             ReplWindowProxySettings settings,
             string projectName,
+            string workspaceName,
             string backend
         ) {
-            var toolWindow = ActivateInteractiveWindow(settings, app, projectName, backend);
+            var toolWindow = ActivateInteractiveWindow(settings, app, projectName, workspaceName, backend);
 
             var interactive = toolWindow != null ? ((IVsInteractiveWindow)toolWindow).InteractiveWindow : null;
 

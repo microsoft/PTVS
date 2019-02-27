@@ -88,7 +88,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The environment file is typically named environment.yml and specifies the Conda and pip packages to install when creating the Conda environment..
+        ///   Looks up a localized string similar to Path to environment.yml file, which specifies the Conda and pip packages to install when creating the Conda environment..
         /// </summary>
         public static string AddCondaEnvironmentFileHelp {
             get {
@@ -102,6 +102,15 @@ namespace Microsoft.PythonTools {
         public static string AddCondaEnvironmentFileInvalid {
             get {
                 return ResourceManager.GetString("AddCondaEnvironmentFileInvalid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Environment file path.
+        /// </summary>
+        public static string AddCondaEnvironmentFileName {
+            get {
+                return ResourceManager.GetString("AddCondaEnvironmentFileName", resourceCulture);
             }
         }
         
@@ -206,11 +215,29 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to List of Conda packages to install when creating the Conda environment. Entries should be separated by spaces..
+        ///   Looks up a localized string similar to Add packages.
+        /// </summary>
+        public static string AddCondaPackagesBrowseButton {
+            get {
+                return ResourceManager.GetString("AddCondaPackagesBrowseButton", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to List of Conda packages to install when creating the Conda environment. Entries should be separated by spaces. Example: numpy pandas.
         /// </summary>
         public static string AddCondaPackagesHelpText {
             get {
                 return ResourceManager.GetString("AddCondaPackagesHelpText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Package names.
+        /// </summary>
+        public static string AddCondaPackagesName {
+            get {
+                return ResourceManager.GetString("AddCondaPackagesName", resourceCulture);
             }
         }
         
@@ -269,6 +296,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Add.
+        /// </summary>
+        public static string AddEnvironmentAddButtonAutomationName {
+            get {
+                return ResourceManager.GetString("AddEnvironmentAddButtonAutomationName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to _Cancel.
         /// </summary>
         public static string AddEnvironmentCancelButton {
@@ -301,6 +337,15 @@ namespace Microsoft.PythonTools {
         public static string AddEnvironmentCreateButton {
             get {
                 return ResourceManager.GetString("AddEnvironmentCreateButton", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Create.
+        /// </summary>
+        public static string AddEnvironmentCreateButtonAutomationName {
+            get {
+                return ResourceManager.GetString("AddEnvironmentCreateButtonAutomationName", resourceCulture);
             }
         }
         
@@ -541,7 +586,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Windo_wed interpreter.
+        ///   Looks up a localized string similar to Windo_wed interpreter (optional).
         /// </summary>
         public static string AddExistingEnvironmentWindowsInterpreterPathLabel {
             get {
@@ -586,6 +631,24 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to _Install.
+        /// </summary>
+        public static string AddInstalledEnvironmentInstallButton {
+            get {
+                return ResourceManager.GetString("AddInstalledEnvironmentInstallButton", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Install.
+        /// </summary>
+        public static string AddInstalledEnvironmentInstallButtonAutomationName {
+            get {
+                return ResourceManager.GetString("AddInstalledEnvironmentInstallButtonAutomationName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Already installed.
         /// </summary>
         public static string AddInstalledEnvironmentInstalledLabel {
@@ -600,15 +663,6 @@ namespace Microsoft.PythonTools {
         public static string AddInstalledEnvironmentLabel {
             get {
                 return ResourceManager.GetString("AddInstalledEnvironmentLabel", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Install.
-        /// </summary>
-        public static string AddInstalledEnvironmentLaunch {
-            get {
-                return ResourceManager.GetString("AddInstalledEnvironmentLaunch", resourceCulture);
             }
         }
         
@@ -663,6 +717,15 @@ namespace Microsoft.PythonTools {
         public static string AddVirtualEnvironmentChangeLocationLink {
             get {
                 return ResourceManager.GetString("AddVirtualEnvironmentChangeLocationLink", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Environment description.
+        /// </summary>
+        public static string AddVirtualEnvironmentDescriptionName {
+            get {
+                return ResourceManager.GetString("AddVirtualEnvironmentDescriptionName", resourceCulture);
             }
         }
         
@@ -784,7 +847,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Install packages fr_om file.
+        ///   Looks up a localized string similar to Install packages fr_om file (optional).
         /// </summary>
         public static string AddVirtualEnvironmentRequirementsPathLabel {
             get {

@@ -339,6 +339,7 @@ namespace Microsoft.PythonTools.Environments {
             //IsAcceptEnabled = WillCreateVirtualEnv && !Progress.IsProgressDisplayed;
             IsAcceptEnabled = !Progress.IsProgressDisplayed;
             AcceptCaption = Strings.AddEnvironmentCreateButton;
+            AcceptAutomationName = Strings.AddEnvironmentCreateButtonAutomationName;
         }
 
         private static bool IsFolderNotEmpty(string path) {

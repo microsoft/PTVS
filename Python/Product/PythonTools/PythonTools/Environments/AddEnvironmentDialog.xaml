@@ -8,6 +8,7 @@
     xmlns:l="clr-namespace:Microsoft.PythonTools.Environments"
     xmlns:wpf="clr-namespace:Microsoft.VisualStudioTools.Wpf"
     xmlns:ptwpf="clr-namespace:Microsoft.PythonTools.Wpf"
+    xmlns:vsui="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.15.0"
     xmlns:common="clr-namespace:Microsoft.PythonTools;assembly=Microsoft.PythonTools.Common"
     mc:Ignorable="d"
     Title="{x:Static common:Strings.AddEnvironmentTitle}"
@@ -119,6 +120,23 @@
                                         </ControlTemplate>
                                     </Setter.Value>
                                 </Setter>
+                                <Setter Property="FocusVisualStyle">
+                                    <Setter.Value>
+                                        <Style>
+                                            <Setter Property="Control.Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate>
+                                                        <Rectangle Margin="2"
+                                                                   SnapsToDevicePixels="True"
+                                                                   Stroke="{DynamicResource {x:Static vsui:CommonDocumentColors.ListItemTextSelectedBrushKey}}"
+                                                                   StrokeThickness="1"
+                                                                   StrokeDashArray="1 2"/>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </Setter.Value>
+                                </Setter>
                                 <Style.Triggers>
                                     <Trigger Property="IsSelected" Value="True">
                                         <Setter Property="Background" Value="{DynamicResource {x:Static ptwpf:ModernStyles.SelectedItemActiveBrushKey}}"/>
@@ -146,9 +164,8 @@
                         <ColumnDefinition/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <Button
+                    <vsui:HyperlinkButton
                         Grid.Column="0"
-                        Style="{StaticResource NavigationButton}"
                         HorizontalAlignment="Left"
                         VerticalAlignment="Center"
                         Margin="6 0 24 0"
@@ -165,7 +182,7 @@
                             VerticalAlignment="Center"
                             IsEnabled="{Binding Path=PagesView/IsAcceptEnabled}"
                             Click="OkClick"
-                            AutomationProperties.Name="{x:Static common:Strings.AddEnvironmentOKButtonAutomationName}"
+                            AutomationProperties.Name="{Binding Path=PagesView/AcceptAutomationName}"
                             AutomationProperties.AutomationId="AddButton">
                             <Button.Content>
                                 <StackPanel Orientation="Horizontal">
