@@ -10,8 +10,6 @@ We welcome code contributions - see [Contributing](https://github.com/Microsoft/
 
 [![Join the chat at https://gitter.im/Microsoft/PTVS](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/Microsoft/PTVS?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-![Build status for master branch](https://mseng.visualstudio.com/_apis/public/build/definitions/b21de0ba-dffd-474c-b888-7112d5e6397b/2921/badge)
-
 ## Visual Studio 2017 and Visual Studio 2019 installation
 
 The Python development workload is available as part of [Visual Studio](https://aka.ms/PTVS) Community, Professional and Enterprise. To install, run the [normal VS installer](https://visualstudio.com/vs/downloads?wt.mc_id=github_microsoft_com) and select either the **Python development workload** or the **Data science and analytical applications workload**.
