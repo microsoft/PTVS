@@ -1,10 +1,12 @@
 # Python tools for Visual Studio
 
-Python support for [Visual Studio](https://aka.ms/PTVS) is developed and managed here.
+Python support for Visual Studio is developed and managed here.
 
-Visit our page on [VisualStudio.com](https://aka.ms/PTVS) for an overview and download links, and check out our documentation on [docs.microsoft.com](https://aka.ms/PTVSDocs) and our (old) [Getting Started](http://aka.ms/PTVSTutorial) series on YouTube.
+Visit our [product overview and downloads page](https://aka.ms/PTVS), read our [documentation](https://aka.ms/PTVSDocs) and watch our (old) [YouTube tutorials](http://aka.ms/PTVSTutorial).
 
-Feel free to file issues or ask questions on our [issue tracker](http://github.com/Microsoft/PTVS/issues), and we welcome code contributions - see [Contributing](https://github.com/Microsoft/PTVS/wiki/Contributing-to-PTVS) for information. Documentation contributions may be made at the [visualstudio-docs](https://github.com/Microsoft/visualstudio-docs/tree/master/docs/python) repository.
+Feel free to file issues or ask questions on our [issue tracker](http://github.com/Microsoft/PTVS/issues), or use the Send Feedback functionality in Visual Studio to report a problem or suggest a feature.
+
+We welcome code contributions - see [Contributing](https://github.com/Microsoft/PTVS/wiki/Contributing-to-PTVS) for information. Documentation contributions may be made at the [visualstudio-docs](https://github.com/Microsoft/visualstudio-docs/tree/master/docs/python) repository.
 
 [![Join the chat at https://gitter.im/Microsoft/PTVS](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/Microsoft/PTVS?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
