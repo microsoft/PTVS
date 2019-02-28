@@ -101,9 +101,9 @@ namespace Microsoft.PythonTools.Interpreter {
                 return false;
             }
 
-            var cmp = StringComparer.OrdinalIgnoreCase;
+            var cmp = StringComparer.InvariantCultureIgnoreCase;//Should this be OrdinalIgnoreCase???
             return cmp.Equals(PrefixPath, other.PrefixPath) &&
-                   string.Equals(Id, other.Id) &&
+                   cmp.Equals(Id, other.Id) &&
                    cmp.Equals(Description, other.Description) &&
                    cmp.Equals(InterpreterPath, other.InterpreterPath) &&
                    cmp.Equals(WindowsInterpreterPath, other.WindowsInterpreterPath) &&

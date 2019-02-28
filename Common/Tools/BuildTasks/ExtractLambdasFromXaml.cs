@@ -20,6 +20,7 @@ using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Configuration;
+using System.Globalization;
 using System.IO;
 using System.Reflection;
 using System.Xaml;
@@ -117,7 +118,7 @@ namespace Microsoft.VisualStudioTools.BuildTasks {
         }
 
         private void LogError(string source, int line, int code, string text) {
-            string xalCode = string.Format("XAL{0:D4}", code);
+            string xalCode = string.Format(CultureInfo.InvariantCulture, "XAL{0:D4}", code);
 
             if (source == null) {
                 source = ToolName;
@@ -380,7 +381,8 @@ namespace Microsoft.VisualStudioTools.BuildTasks {
         private static readonly string LambdaConverterClrNamespaceWithAssembly = LambdaConverterClrNamespace + ";assembly=";
 
         private static bool IsLambdaNamespace(string ns) {
-            return ns != null && (ns == LambdaConverterClrNamespace || ns.StartsWith(LambdaConverterClrNamespaceWithAssembly));
+            return ns != null && (ns == LambdaConverterClrNamespace ||
+                ns.StartsWith(LambdaConverterClrNamespaceWithAssembly, false, CultureInfo.InvariantCulture));
         }
 
 #if CONSOLE_APP
