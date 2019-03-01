@@ -43,8 +43,8 @@
       <Item ItemId=";AddCondaEnvironmentFileHelp" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Path to environment.yml file, which specifies the Conda and pip packages to install when creating the Conda environment.]]></Val>
-          <Tgt Cat="Text" Stat="Update" Orig="New">
-            <Val><![CDATA[O arquivo do ambiente normalmente é chamado de environment.yml e especifica os pacotes do Conda e de PIP a serem instalados ao criar o ambiente do Conda.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Caminho para o arquivo environment.yml, que especifica os pacotes Conda e pip a serem instalados ao criar o ambiente do Conda.]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[The environment file is typically named environment.yml and specifies the Conda and pip packages to install when creating the Conda environment.]]></Val>
@@ -64,6 +64,9 @@
       <Item ItemId=";AddCondaEnvironmentFileName" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Environment file path]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Caminho do arquivo do ambiente]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -169,14 +172,17 @@
       <Item ItemId=";AddCondaPackagesBrowseButton" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Add packages]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Adicionar pacotes]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";AddCondaPackagesHelpText" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[List of Conda packages to install when creating the Conda environment. Entries should be separated by spaces. Example: numpy pandas]]></Val>
-          <Tgt Cat="Text" Stat="Update" Orig="New">
-            <Val><![CDATA[Lista de pacotes Conda a serem instalados ao criar o ambiente do Conda. As entradas devem ser separadas por espaços.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Lista de pacotes Conda a serem instalados ao criar o ambiente do Conda. As entradas devem ser separadas por espaços. Por exemplo: numpy pandas]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[List of Conda packages to install when creating the Conda environment. Entries should be separated by spaces.]]></Val>
@@ -187,6 +193,9 @@
       <Item ItemId=";AddCondaPackagesName" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Package names]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Nomes de pacote]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -535,8 +544,8 @@
       <Item ItemId=";AddExistingEnvironmentWindowsInterpreterPathLabel" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Windo_wed interpreter (optional)]]></Val>
-          <Tgt Cat="Text" Stat="Update" Orig="New">
-            <Val><![CDATA[Interpretador em jan_ela]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Interpretador em jan_ela (opcional)]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[Windo_wed interpreter]]></Val>
@@ -661,6 +670,9 @@
       <Item ItemId=";AddVirtualEnvironmentDescriptionName" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Environment description]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Descrição do ambiente]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -784,8 +796,8 @@
       <Item ItemId=";AddVirtualEnvironmentRequirementsPathLabel" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Install packages fr_om file (optional)]]></Val>
-          <Tgt Cat="Text" Stat="Update" Orig="New">
-            <Val><![CDATA[Instalar pacotes d_o arquivo]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Instalar pacotes d_o arquivo (opcional)]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[Install packages fr_om file]]></Val>
