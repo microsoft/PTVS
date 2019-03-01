@@ -661,6 +661,9 @@
       <Item ItemId=";AddVirtualEnvironmentDescriptionName" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Environment description]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Ortam açıklaması]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
