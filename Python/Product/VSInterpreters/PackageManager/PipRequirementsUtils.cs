@@ -91,7 +91,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 var installedPackage = installed.FirstOrDefault(pkg =>
                     string.Compare(pkg.Name, requirementPackageName, StringComparison.OrdinalIgnoreCase) == 0);
 
-                if (!requirementPackageName.Equals("") && installedPackage == null) {
+                if (requirementPackageName.Length > 0 && installedPackage == null) {
                     return true;
                 }
             }

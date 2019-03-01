@@ -716,8 +716,10 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         private void OnChanged(object sender, FileSystemEventArgs e) {
-            if ((Directory.Exists(e.FullPath) && !"__pycache__".Equals(PathUtils.GetFileOrDirectoryName(e.FullPath))) ||
-                ModulePath.IsPythonFile(e.FullPath, false, true, false)) {
+            if ((Directory.Exists(e.FullPath) && 
+                !PathUtils.GetFileOrDirectoryName(e.FullPath).Equals("__pycache__", StringComparison.OrdinalIgnoreCase)) ||
+                ModulePath.IsPythonFile(e.FullPath, false, true, false)
+            ) {
                 try {
                     _refreshIsCurrentTrigger.Change(1000, Timeout.Infinite);
                 } catch (ObjectDisposedException) {
