@@ -717,7 +717,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
         private void OnChanged(object sender, FileSystemEventArgs e) {
             if ((Directory.Exists(e.FullPath) && 
-                !PathUtils.GetFileOrDirectoryName(e.FullPath).Equals("__pycache__", StringComparison.InvariantCulture)) ||
+                !PathUtils.GetFileOrDirectoryName(e.FullPath).Equals("__pycache__", StringComparison.OrdinalIgnoreCase)) ||
                 ModulePath.IsPythonFile(e.FullPath, false, true, false)
             ) {
                 try {

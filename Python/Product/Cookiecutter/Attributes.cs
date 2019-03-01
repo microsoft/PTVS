@@ -27,7 +27,7 @@ namespace Microsoft.CookiecutterTools {
             _name = name;
         }
 
-        public override string DisplayName => Strings.ResourceManager.GetString(_name, CultureInfo.InvariantCulture);
+        public override string DisplayName => Strings.ResourceManager.GetString(_name, Strings.Culture);
     }
 
     [AttributeUsage(AttributeTargets.All)]
@@ -42,7 +42,7 @@ namespace Microsoft.CookiecutterTools {
             get {
                 if (!_replaced) {
                     _replaced = true;
-                    DescriptionValue = Strings.ResourceManager.GetString(base.Description, CultureInfo.InvariantCulture);
+                    DescriptionValue = Strings.ResourceManager.GetString(base.Description, Strings.Culture);
                 }
                 return base.Description;
             }
@@ -56,7 +56,7 @@ namespace Microsoft.CookiecutterTools {
         }
 
         protected override string GetLocalizedString(string value) {
-            return Strings.ResourceManager.GetString(value, CultureInfo.InvariantCulture);
+            return Strings.ResourceManager.GetString(value, Strings.Culture);
         }
     }
 }

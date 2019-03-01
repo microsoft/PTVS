@@ -29,7 +29,7 @@ namespace Microsoft.PythonTools.Project {
 
         public override string DisplayName {
             get {
-                return Strings.ResourceManager.GetString(_name, CultureInfo.InvariantCulture) ?? VisualStudioTools.Project.SR.GetString(_name);
+                return Strings.ResourceManager.GetString(_name, Strings.Culture) ?? VisualStudioTools.Project.SR.GetString(_name);
             }
         }
     }
@@ -46,7 +46,7 @@ namespace Microsoft.PythonTools.Project {
             get {
                 if (!_replaced) {
                     _replaced = true;
-                    DescriptionValue = Strings.ResourceManager.GetString(base.Description) ??
+                    DescriptionValue = Strings.ResourceManager.GetString(base.Description, Strings.Culture) ??
                         VisualStudioTools.Project.SR.GetString(base.Description);
                 }
                 return base.Description;
@@ -61,7 +61,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         protected override string GetLocalizedString(string value) {
-            return Strings.ResourceManager.GetString(value) ?? VisualStudioTools.Project.SR.GetString(value);
+            return Strings.ResourceManager.GetString(value, Strings.Culture) ?? VisualStudioTools.Project.SR.GetString(value);
         }
     }
 }

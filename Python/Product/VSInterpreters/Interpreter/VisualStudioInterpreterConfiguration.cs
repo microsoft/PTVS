@@ -103,7 +103,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
             var cmp = StringComparer.OrdinalIgnoreCase;
             return cmp.Equals(PrefixPath, other.PrefixPath) &&
-                   string.Equals(Id, other.Id, StringComparison.InvariantCultureIgnoreCase) &&
+                   cmp.Equals(Id, other.Id) &&
                    cmp.Equals(Description, other.Description) &&
                    cmp.Equals(InterpreterPath, other.InterpreterPath) &&
                    cmp.Equals(WindowsInterpreterPath, other.WindowsInterpreterPath) &&
