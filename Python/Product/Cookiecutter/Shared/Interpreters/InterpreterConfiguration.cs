@@ -96,9 +96,9 @@ namespace Microsoft.CookiecutterTools.Interpreters {
                 return false;
             }
 
-            var cmp = StringComparer.InvariantCultureIgnoreCase;//Should this be OrdinalIgnoreCase???
+            var cmp = StringComparer.OrdinalIgnoreCase;
             return cmp.Equals(PrefixPath, other.PrefixPath) &&
-                cmp.Equals(Id, other.Id) &&
+                string.Equals(Id, other.Id, StringComparison.InvariantCultureIgnoreCase) &&
                 cmp.Equals(InterpreterPath, other.InterpreterPath) &&
                 cmp.Equals(WindowsInterpreterPath, other.WindowsInterpreterPath) &&
                 cmp.Equals(PathEnvironmentVariable, other.PathEnvironmentVariable) &&

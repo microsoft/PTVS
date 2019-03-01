@@ -16,6 +16,7 @@
 
 using System;
 using System.ComponentModel;
+using System.Globalization;
 
 namespace Microsoft.PythonTools.Project {
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Property | AttributeTargets.Field, Inherited = false, AllowMultiple = false)]
@@ -28,7 +29,7 @@ namespace Microsoft.PythonTools.Project {
 
         public override string DisplayName {
             get {
-                return Strings.ResourceManager.GetString(_name) ?? VisualStudioTools.Project.SR.GetString(_name);
+                return Strings.ResourceManager.GetString(_name, CultureInfo.InvariantCulture) ?? VisualStudioTools.Project.SR.GetString(_name);
             }
         }
     }
