@@ -185,9 +185,9 @@ print(obj._my_attr_val)
 ";
             using (var helper = new NavigableHelper(code, Version)) {
                 // my_attr
-                await helper.CheckDefinitionLocations(71, 7, Location(4, 5), Location(5, 9), Location(8, 5), Location(9, 9));
-                await helper.CheckDefinitionLocations(128, 7, Location(4, 5), Location(5, 9), Location(8, 5), Location(9, 9));
-                await helper.CheckDefinitionLocations(152, 7, Location(4, 5), Location(5, 9), Location(8, 5), Location(9, 9));
+                await helper.CheckDefinitionLocations(71, 7, Location(4, 5), Location(8, 5), Location(9, 9));
+                await helper.CheckDefinitionLocations(128, 7, Location(4, 5), Location(8, 5), Location(9, 9));
+                await helper.CheckDefinitionLocations(152, 7, Location(4, 5), Location(8, 5), Location(9, 9));
                 await helper.CheckDefinitionLocations(229, 7, Location(4, 5), Location(5, 9), Location(8, 5), Location(9, 9), Location(13, 5));
                 await helper.CheckDefinitionLocations(252, 7, Location(4, 5), Location(5, 9), Location(8, 5), Location(9, 9), Location(13, 5));
 
@@ -202,10 +202,10 @@ print(obj._my_attr_val)
                 await helper.CheckDefinitionLocations(272, 12, Location(2, 5), Location(10, 14));
 
                 // self
-                await helper.CheckDefinitionLocations(79, 4, Location(5, 17));
-                await helper.CheckDefinitionLocations(102, 4, Location(5, 17));
-                await helper.CheckDefinitionLocations(160, 4, Location(9, 17));
-                await helper.CheckDefinitionLocations(181, 4, Location(9, 17));
+                await helper.CheckDefinitionLocations(79, 4, Location(1, 1));
+                await helper.CheckDefinitionLocations(102, 4, Location(1, 1));
+                await helper.CheckDefinitionLocations(160, 4, Location(1, 1));
+                await helper.CheckDefinitionLocations(181, 4, Location(1, 1));
             }
         }
 
@@ -217,7 +217,7 @@ res = my_var * 10
 ";
             using (var helper = new NavigableHelper(code, Version)) {
                 // 2 definitions for my_var
-                await helper.CheckDefinitionLocations(30, 6, Location(1, 1), Location(2, 1));
+                await helper.CheckDefinitionLocations(30, 6, Location(2, 1));
             }
         }
 

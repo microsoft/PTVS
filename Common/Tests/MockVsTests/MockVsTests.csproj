@@ -56,6 +56,8 @@
     <Reference Include="Microsoft.VisualStudio.TextManager.Interop, Version=7.1.40304.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Microsoft.VisualStudio.TextManager.Interop.8.0, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Microsoft.VisualStudio.Threading" />
+    <Reference Include="Microsoft.VisualStudio.Workspace" />
+    <Reference Include="Microsoft.VisualStudio.Workspace.VSIntegration.Contracts" />
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
     <Reference Include="System" />
@@ -140,6 +142,7 @@
     <Compile Include="CachedVsInfo.cs" />
     <Compile Include="CommandTargetExtensions.cs" />
     <Compile Include="IsMockVs.cs" />
+    <Compile Include="MockVsFolderWorkspaceService.cs" />
     <Compile Include="MockClassifierAggregatorService.cs" />
     <Compile Include="MockDTEProperties.cs" />
     <Compile Include="MockDTEProperty.cs" />
