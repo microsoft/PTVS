@@ -937,6 +937,11 @@ namespace Microsoft.PythonTools.Intellisense {
         internal async Task TriggerCompletionSession(bool completeWord, char triggerChar, bool? commitByDefault = null) {
             var caretPoint = _textView.TextBuffer.CurrentSnapshot.CreateTrackingPoint(_textView.Caret.Position.BufferPosition, PointTrackingMode.Positive);
             var session = _services.CompletionBroker.CreateCompletionSession(_textView, caretPoint, true);
+            if (session == null) {
+                // Session is null when text view has multiple carets
+                return;
+            }
+
             session.SetTriggerCharacter(triggerChar);
             if (completeWord) {
                 session.SetCompleteWordMode();
