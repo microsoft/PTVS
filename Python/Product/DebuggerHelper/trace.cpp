@@ -241,32 +241,32 @@ volatile uint32_t evalLoopSEHCode; // if a structured exception occured during e
 
 __declspec(dllexport)
 bool StringEquals27(const DebuggerString* debuggerString, const void* pyString) {
-    int32_t my_length = debuggerString->length;
+	int32_t my_length = debuggerString->length;
     const wchar_t* my_data = debuggerString->data;
 
     // In 2.7, we have to be able to compare against either ASCII or Unicode strings, so check type and branch.
     auto ob_type = ReadField<const void*>(pyString, fieldOffsets.PyObject.ob_type);
     if (reinterpret_cast<uint64_t>(ob_type) == types.PyBytes_Type) {
-        auto ob_size = ReadField<SSIZE_T>(pyString, fieldOffsets.PyVarObject.ob_size);
+		auto ob_size = ReadField<SSIZE_T>(pyString, fieldOffsets.PyVarObject.ob_size);
         if (ob_size != my_length) {
             return false;
         }
 
         const char* data = reinterpret_cast<const char*>(pyString) + fieldOffsets.PyBytesObject.ob_sval;
-        for (int32_t i = 0; i < my_length; ++i) {
+		for (int32_t i = 0; i < my_length; ++i) {
             if (data[i] != my_data[i]) {
                 return false;
             }
         }
         return true;
     } else if (reinterpret_cast<uint64_t>(ob_type) == types.PyUnicode_Type) {
-        auto length = ReadField<SSIZE_T>(pyString, fieldOffsets.PyUnicodeObject27.length);
+		auto length = ReadField<SSIZE_T>(pyString, fieldOffsets.PyUnicodeObject27.length);
         if (length != my_length) {
             return false;
         }
 
         const wchar_t* data = ReadField<const wchar_t*>(pyString, fieldOffsets.PyUnicodeObject27.str);
-        return memcmp(data, my_data, my_length * 2) == 0;
+        return memcmp(data, my_data, my_length * ((size_t) 2)) == 0;
     } else {
         return false;
     }
@@ -281,7 +281,7 @@ bool StringEquals33(const DebuggerString* debuggerString, const void* pyString) 
         return false;
     }
 
-    int32_t my_length = debuggerString->length;
+	int32_t my_length = debuggerString->length;
     const wchar_t* my_data = debuggerString->data;
 
 #pragma warning(push)
@@ -311,7 +311,7 @@ bool StringEquals33(const DebuggerString* debuggerString, const void* pyString) 
             return false;
         }
 
-        return memcmp(wstr, my_data, my_length * 2) == 0;
+        return memcmp(wstr, my_data, my_length * ((size_t) 2)) == 0;
     }
 
     auto length = ReadField<SSIZE_T>(pyString, fieldOffsets.PyUnicodeObject33.length);
@@ -329,7 +329,7 @@ bool StringEquals33(const DebuggerString* debuggerString, const void* pyString) 
     }
 
     if (kind == 2) {
-        return memcmp(data, my_data, my_length * 2) == 0;
+        return memcmp(data, my_data, my_length * ((size_t) 2)) == 0;
     } else if (kind == 1 || ascii) {
         auto asciiData = reinterpret_cast<const char*>(data);
         for (int32_t i = 0; i < my_length; ++i) {
@@ -524,22 +524,20 @@ static void TraceReturn(void* frame) {
 #pragma warning(disable:4211) // nonstandard extension used: redefined extern to static
 
 static void ReleasePendingObjects() {
-    if (objectsToRelease) {
-        auto otr = reinterpret_cast<ObjectToRelease*>(InterlockedExchange64(&objectsToRelease, 0));
-        while (otr != nullptr) {
-            // Releasing an object may trigger execution of its __del__ function, which will cause re-entry to this code,
-            // so null out the reference before releasing, and check for nulls in the list.
-            auto obj = otr->pyObject;
-            if (obj != 0) {
-                otr->pyObject = 0;
-                Py_DecRef(reinterpret_cast<PyObject*>(obj));
-            }
+	auto otr = reinterpret_cast<ObjectToRelease*>(InterlockedExchange64(&objectsToRelease, 0));
+	while (otr != nullptr) {
+		// Releasing an object may trigger execution of its __del__ function, which will cause re-entry to this code,
+		// so null out the reference before releasing, and check for nulls in the list.
+		auto obj = otr->pyObject;
+		if (obj != 0) {
+			otr->pyObject = 0;
+			Py_DecRef(reinterpret_cast<PyObject*>(obj));
+		}
 
-            auto next = reinterpret_cast<ObjectToRelease*>(otr->next);
-            VirtualFree(otr, 0, MEM_RELEASE);
-            otr = next;
-        }
-    }
+		auto next = reinterpret_cast<ObjectToRelease*>(otr->next);
+		VirtualFree(otr, 0, MEM_RELEASE);
+		otr = next;
+	}
 }
 
 #pragma warning(pop)
