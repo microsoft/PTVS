@@ -315,27 +315,27 @@ __success(return) BOOL EnumProcessModulesHelper(
 
             auto cur = start;
             *lpcbNeeded = 0;
-			auto lphCurrentModule = lphModule;
+            auto lphCurrentModule = lphModule;
             do {
-				if ((*lpcbNeeded + sizeof(SIZE_T)) <= cb) {
+                if ((*lpcbNeeded + sizeof(SIZE_T)) <= cb) {
                     PVOID *curLink = (PVOID*)cur;
                     curLink -= 2;
                     LDR_DATA_TABLE_ENTRY* curTable = (LDR_DATA_TABLE_ENTRY*)curLink;
                     if (curTable->DllBase == nullptr) {
                         break;
                     }
-					*lphCurrentModule = (HMODULE)curTable->DllBase;
-					lphCurrentModule++;
-				}
+                    *lphCurrentModule = (HMODULE)curTable->DllBase;
+                    lphCurrentModule++;
+                }
 
-				(*lpcbNeeded) += sizeof(SIZE_T);
+                (*lpcbNeeded) += sizeof(SIZE_T);
                 cur = (LDR_DATA_TABLE_ENTRY*)((LIST_ENTRY*)cur)->Flink;
             } while (cur != start && cur != 0);
 
-			return (lphCurrentModule == lphModule) ? FALSE : *lpcbNeeded <= cb;
+            return (lphCurrentModule == lphModule) ? FALSE : *lpcbNeeded <= cb;
         }
         
-		return enumProc(hProcess, lphModule, cb, lpcbNeeded);
+        return enumProc(hProcess, lphModule, cb, lpcbNeeded);
 }
 
 // This function will work with Win7 and later versions of the OS and is safe to call under
@@ -407,8 +407,8 @@ char* ReadCodeFromFile(wchar_t* filePath) {
     auto length = filestr.tellg();
     filestr.seekg(0, ios::beg);
 
-	SSIZE_T len = (int)length;
-	char* buffer = new char[len + 1];
+    SSIZE_T len = (int)length;
+    char* buffer = new char[len + 1];
     filestr.read(buffer, len);
     buffer[len] = 0;
 
@@ -457,17 +457,17 @@ public:
     pointer allocate(size_type size, allocator<void>::const_pointer hint = 0) {
         UNREFERENCED_PARAMETER(hint);
 
-		g_heap = (g_heap == nullptr) ? HeapCreate(0, 0, 0) : g_heap;
-		if (g_heap != nullptr)
-		{
-			auto mem = HeapAlloc(g_heap, 0, size * sizeof(T));
-			return static_cast<pointer>(mem);
-		}
-		
-		return nullptr;
+    g_heap = (g_heap == nullptr) ? HeapCreate(0, 0, 0) : g_heap;
+    if (g_heap != nullptr)
+    {
+        auto mem = HeapAlloc(g_heap, 0, size * sizeof(T));
+        return static_cast<pointer>(mem);
     }
-    
-	void deallocate(pointer p, size_type n) {
+
+        return nullptr;
+    }
+ 
+    void deallocate(pointer p, size_type n) {
         UNREFERENCED_PARAMETER(n);
 
         HeapFree(g_heap, 0, p);
@@ -602,7 +602,7 @@ public:
     bool Succeeded;
 
     ConnectionInfo() : 
-		Succeeded(false), Buffer(nullptr), FileMapping(nullptr) {
+        Succeeded(false), Buffer(nullptr), FileMapping(nullptr) {
     }
 
     ConnectionInfo(MemoryBuffer *memoryBuffer, HANDLE fileMapping) :
@@ -984,7 +984,7 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
 #define TICKS_DIFF(prev, cur) ((cur) >= (prev)) ? ((cur)-(prev)) : ((0xFFFFFFFF-(prev))+(cur)) 
             const DWORD ticksPerSecond = 1000;
 
-			ULONGLONG startTickCount = GetTickCount64();
+            ULONGLONG startTickCount = GetTickCount64();
             do {
                 SuspendThreads(suspendedThreads, addPendingCall, threadsInited);
 
