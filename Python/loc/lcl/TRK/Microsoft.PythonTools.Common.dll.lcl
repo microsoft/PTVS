@@ -42,12 +42,12 @@
       </Item>
       <Item ItemId=";AddCondaEnvironmentFileHelp" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[The environment file is typically named environment.yml and specifies the Conda and pip packages to install when creating the Conda environment.]]></Val>
+          <Val><![CDATA[Path to environment.yml file, which specifies the Conda and pip packages to install when creating the Conda environment.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Ortam dosyası genellikle environment.yml olarak adlandırılır, Conda ortamı oluşturulurken yüklenecek Conda ve pip paketlerini belirtir.]]></Val>
+            <Val><![CDATA[Conda ortamı oluşturulurken yüklenecek Conda ve pip paketlerini belirten environment.yml dosyası yolu.]]></Val>
           </Tgt>
           <Prev Cat="Text">
-            <Val><![CDATA[The environment file is typically named environment.yml and specifies the conda and pip packages to install when creating the conda environment.]]></Val>
+            <Val><![CDATA[The environment file is typically named environment.yml and specifies the Conda and pip packages to install when creating the Conda environment.]]></Val>
           </Prev>
         </Str>
         <Disp Icon="Str" />
@@ -57,6 +57,15 @@
           <Val><![CDATA[Conda environment file '{0}' does not exist.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA['{0}' adlı conda ortam dosyası yok.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";AddCondaEnvironmentFileName" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Environment file path]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Ortam dosyası yolu]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -160,15 +169,33 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";AddCondaPackagesBrowseButton" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Add packages]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Paket ekle]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";AddCondaPackagesHelpText" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[List of Conda packages to install when creating the Conda environment. Entries should be separated by spaces.]]></Val>
+          <Val><![CDATA[List of Conda packages to install when creating the Conda environment. Entries should be separated by spaces. Example: numpy pandas]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Conda ortamı oluşturulurken yüklenecek olan Conda paketlerinin listesi. Girdiler boşluklarla ayrılmalıdır.]]></Val>
+            <Val><![CDATA[Conda ortamı oluşturulurken yüklenecek olan Conda paketlerinin listesi. Girdiler boşluklarla ayrılmalıdır. Örnek: numpy pandas]]></Val>
           </Tgt>
           <Prev Cat="Text">
-            <Val><![CDATA[List of conda packages to install when creating the conda environment. Entries should be separated by spaces.]]></Val>
+            <Val><![CDATA[List of Conda packages to install when creating the Conda environment. Entries should be separated by spaces.]]></Val>
           </Prev>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";AddCondaPackagesName" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Package names]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Paket adları]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -226,6 +253,15 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";AddEnvironmentAddButtonAutomationName" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Add]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Ekle]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";AddEnvironmentCancelButton" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[_Cancel]]></Val>
@@ -258,6 +294,15 @@
           <Val><![CDATA[C_reate]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[O_luştur]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";AddEnvironmentCreateButtonAutomationName" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Create]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Oluştur]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -498,10 +543,13 @@
       </Item>
       <Item ItemId=";AddExistingEnvironmentWindowsInterpreterPathLabel" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Windo_wed interpreter]]></Val>
+          <Val><![CDATA[Windo_wed interpreter (optional)]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Pencer_eli yorumlayıcı]]></Val>
+            <Val><![CDATA[Windo_wed yorumlayıcı (isteğe bağlı)]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Windo_wed interpreter]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -523,6 +571,24 @@
           <Prev Cat="Text">
             <Val><![CDATA[To install a new Python interpreter, open Visual Studio Installer and install it from there.]]></Val>
           </Prev>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";AddInstalledEnvironmentInstallButton" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[_Install]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[_Yükle]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";AddInstalledEnvironmentInstallButtonAutomationName" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Install]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Yükle]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -553,18 +619,6 @@
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[Python yüklemesi]]></Val>
           </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";AddInstalledEnvironmentLaunch" ItemType="0" PsrId="211" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Install]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Yükle]]></Val>
-          </Tgt>
-          <Prev Cat="Text">
-            <Val><![CDATA[Open Visual Studio Installer]]></Val>
-          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -609,6 +663,15 @@
           <Val><![CDATA[Change virtual environment _location]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[Sanal ortam _konumunu değiştir]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";AddVirtualEnvironmentDescriptionName" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Environment description]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Ortam açıklaması]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -732,10 +795,13 @@
       </Item>
       <Item ItemId=";AddVirtualEnvironmentRequirementsPathLabel" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Install packages fr_om file]]></Val>
+          <Val><![CDATA[Install packages fr_om file (optional)]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Bir veya _daha fazla Anaconda paketi adı]]></Val>
+            <Val><![CDATA[Dosya_dan paket yükleme (isteğe bağlı)]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Install packages fr_om file]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
