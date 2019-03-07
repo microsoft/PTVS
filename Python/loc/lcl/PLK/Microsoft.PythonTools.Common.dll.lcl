@@ -545,7 +545,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Windo_wed interpreter (optional)]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Interpreter w oknie (opcjonalnie)]]></Val>
+            <Val><![CDATA[Interpreter w o_knie (opcjonalnie)]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[Windo_wed interpreter]]></Val>
