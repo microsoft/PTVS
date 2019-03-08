@@ -40,8 +40,7 @@ namespace Microsoft.PythonTools.Repl {
         IInteractiveEvaluator,
         IPythonInteractiveEvaluator,
         IMultipleScopeEvaluator,
-        IPythonInteractiveIntellisense
-    {
+        IPythonInteractiveIntellisense {
         private PythonDebugProcessReplEvaluator _activeEvaluator;
         private readonly Dictionary<int, PythonDebugProcessReplEvaluator> _evaluators = new Dictionary<int, PythonDebugProcessReplEvaluator>(); // process id to evaluator
         private readonly Dictionary<int, Task> _attachingTasks = new Dictionary<int, Task>();
@@ -121,7 +120,7 @@ namespace Microsoft.PythonTools.Repl {
             }
             if (_activeEvaluator != null) {
                 return _activeEvaluator.CanExecuteCode(text);
-            }else if (CustomDebugAdapterProtocolExtension.CanUseExperimental()) {
+            } else if (CustomDebugAdapterProtocolExtension.CanUseExperimental()) {
                 return CanExecuteCodeExperimental(text);
             }
             return true;
@@ -203,7 +202,8 @@ namespace Microsoft.PythonTools.Repl {
             if (_activeEvaluator != null) {
                 return _activeEvaluator.FormatClipboard();
             }
-            return String.Empty;
+            //Formatting for experimental debugger
+            return PythonCommonInteractiveEvaluator.FormatClipBoard(_serviceProvider, CurrentWindow);
         }
 
         public void Dispose() {
@@ -561,8 +561,9 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             process.ProcessExited += new EventHandler<ProcessExitedEventArgs>(OnProcessExited);
-            var evaluator = new PythonDebugProcessReplEvaluator(_serviceProvider, process, threadIdMapper);
-            evaluator.CurrentWindow = CurrentWindow;
+            var evaluator = new PythonDebugProcessReplEvaluator(_serviceProvider, process, threadIdMapper) {
+                CurrentWindow = CurrentWindow
+            };
             evaluator.AvailableScopesChanged += new EventHandler<EventArgs>(evaluator_AvailableScopesChanged);
             evaluator.MultipleScopeSupportChanged += new EventHandler<EventArgs>(evaluator_MultipleScopeSupportChanged);
             await evaluator.InitializeAsync();

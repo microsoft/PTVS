@@ -259,8 +259,6 @@ namespace Microsoft.PythonTools.Repl {
                 return _window;
             }
             set {
-                if (_window != null) {
-                }
                 _commands = null;
 
                 if (value != null) {
@@ -450,9 +448,10 @@ namespace Microsoft.PythonTools.Repl {
 
         internal static LaunchConfiguration GetWorkspaceLaunchConfigurationOrThrow(IPythonWorkspaceContext workspace) {
             var fact = GetWorkspaceInterpreterFactoryOrThrow(workspace);
-            var config = new LaunchConfiguration(fact.Configuration);
-            config.WorkingDirectory = workspace.Location;
-            config.SearchPaths = workspace.GetAbsoluteSearchPaths().ToList();
+            var config = new LaunchConfiguration(fact.Configuration) {
+                WorkingDirectory = workspace.Location,
+                SearchPaths = workspace.GetAbsoluteSearchPaths().ToList()
+            };
             return config;
         }
 
@@ -568,6 +567,10 @@ namespace Microsoft.PythonTools.Repl {
         private static Regex _splitLineRegex = new Regex(_splitRegexPattern);
 
         public string FormatClipboard() {
+            return FormatClipBoard(_serviceProvider, CurrentWindow);
+        }
+
+        internal static string FormatClipBoard(IServiceProvider serviceProvider, IInteractiveWindow interactiveWindow) {
             // WPF and Windows Forms Clipboard behavior differs when it comes
             // to DataFormats.CommaSeparatedValue.
             // WPF will always return the data as a string, no matter how it
@@ -600,15 +603,11 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             var txt = System.Windows.Clipboard.GetText();
-            if (!_serviceProvider.GetPythonToolsService().AdvancedOptions.PasteRemovesReplPrompts) {
+            if (!serviceProvider.GetPythonToolsService().AdvancedOptions.PasteRemovesReplPrompts) {
                 return txt;
             }
 
-
-            return ReplPromptHelpers.RemovePrompts(
-                txt,
-                _window.TextView.Options.GetNewLineCharacter()
-            );
+            return ReplPromptHelpers.RemovePrompts(txt, interactiveWindow.TextView.Options.GetNewLineCharacter());
         }
 
         private static string FormatItem(string item) {
