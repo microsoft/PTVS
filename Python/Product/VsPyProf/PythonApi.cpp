@@ -345,11 +345,12 @@ void VsPyProf::GetModuleName(wstring name, wstring& finalName) {
 
             // Re-assemble to C:\Fob\Oar\Baz
             wchar_t newName[MAX_PATH];
+            newName[0] = '\0';
             _wmakepath_s(newName, drive, dir, nullptr, nullptr);
 
             // C:\Fob\Oar\Baz -> C, Fob\Oar, Baz
             _wsplitpath_s(newName, drive, _MAX_DRIVE, dir, _MAX_DIR, file, _MAX_FNAME, nullptr, 0);
-            finalName.append(file);	// finalName is now Baz, our package name
+            finalName.append(file);    // finalName is now Baz, our package name
 
             // re-assemble to C:\Fob\Oar\Baz
             _wmakepath_s(newName, drive, dir, file, nullptr);
@@ -408,7 +409,7 @@ bool VsPyProf::GetBuiltinToken(PyObject* codeObj, DWORD_PTR& func, DWORD_PTR& mo
         if (_registeredObjects.find(func) == _registeredObjects.end()) {
 
             _registeredObjects.insert(func);
-            ReferenceObject(codeObj);	 // keep alive the method def via the code object
+            ReferenceObject(codeObj);     // keep alive the method def via the code object
 
 
             wstring name, moduleName;
@@ -424,7 +425,7 @@ bool VsPyProf::GetBuiltinToken(PyObject* codeObj, DWORD_PTR& func, DWORD_PTR& mo
 
                 // In Python3k module methods apparently have the module as their self, modules don't 
                 // actually have any interesting methods so we can always filter.
-                if (type != PyModule_Type) {
+                if (type != nullptr && type != PyModule_Type) {
                     auto className = type->tp_name;
 
                     for (int i = 0; className[i]; i++) {
@@ -542,7 +543,8 @@ VsPyProf::VsPyProf(HMODULE pythonModule, int majorVersion, int minorVersion, Ent
     PyModule_Type(pyModuleType),
     PyInstance_Type(pyInstType),
     _asUnicode(asUnicode),
-    _unicodeGetLength(unicodeGetLength) {
+    _unicodeGetLength(unicodeGetLength), 
+    _refCount(0) {
 }
 
 VsPyProfThread::VsPyProfThread(VsPyProf* profiler) : _profiler(profiler), _depth(0) {
