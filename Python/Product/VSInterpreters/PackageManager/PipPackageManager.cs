@@ -115,11 +115,20 @@ namespace Microsoft.PythonTools.Interpreter {
         private void EnsureActivated() {
             if (_activatedEnvironmentVariables == null) {
                 var prefixPath = _factory.Configuration.GetPrefixPath();
-                if (_condaLocatorProvider != null && CondaUtils.IsCondaEnvironment(prefixPath)) {
+                if (_condaLocatorProvider != null && Directory.Exists(prefixPath) && CondaUtils.IsCondaEnvironment(prefixPath)) {
                     var rootConda = _condaLocatorProvider.FindLocator()?.CondaExecutablePath;
-                    var env = CondaUtils.CaptureActivationEnvironmentVariablesForPrefix(rootConda, prefixPath);
-                    _activatedEnvironmentVariables = env.Union(UnbufferedEnv).ToArray();
+                    if (File.Exists(rootConda)) {
+                        var env = CondaUtils.CaptureActivationEnvironmentVariablesForPrefix(rootConda, prefixPath);
+                        _activatedEnvironmentVariables = env.Union(UnbufferedEnv).ToArray();
+                    } else {
+                        // Normally, the root is required for this environment to have been discovered,
+                        // but it could be that the user added this as a custom environment and then
+                        // uninstalled the root. When that's the case, there is no way to activate,
+                        // so proceed without activation env variables.
+                        _activatedEnvironmentVariables = UnbufferedEnv;
+                    }
                 } else {
+                    // Not a conda environment, no activation necessary.
                     _activatedEnvironmentVariables = UnbufferedEnv;
                 }
             }
