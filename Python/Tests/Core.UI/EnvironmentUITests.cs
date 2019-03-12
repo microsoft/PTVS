@@ -329,13 +329,10 @@ namespace PythonToolsUITests {
             using (var dis = InitPython3(app)) {
                 var pm = app.OptionsService.GetPackageManagers(dis.CurrentDefault).FirstOrDefault();
                 if (pm.GetInstalledPackageAsync(new PackageSpec("virtualenv"), CancellationTokens.After60s).WaitAndUnwrapExceptions().IsValid) {
-                    pm.UninstallAsync(new PackageSpec("virtualenv"), new TestPackageManagerUI(), CancellationTokens.After60s).WaitAndUnwrapExceptions();
+                    if (!pm.UninstallAsync(new PackageSpec("virtualenv"), new TestPackageManagerUI(), CancellationTokens.After60s).WaitAndUnwrapExceptions()) {
+                        Assert.Fail("Failed to uninstall 'virtualenv' from {0}", dis.CurrentDefault.Configuration.GetPrefixPath());
+                    }
                 }
-
-                Assert.AreEqual(0, Microsoft.PythonTools.Analysis.ModulePath.GetModulesInLib(dis.CurrentDefault.Configuration)
-                    .Count(mp => mp.FullName == "virtualenv"),
-                    string.Format("Failed to uninstall 'virtualenv' from {0}", dis.CurrentDefault.Configuration.GetPrefixPath())
-                );
 
                 var project = CreateTemporaryProject(app);
 
