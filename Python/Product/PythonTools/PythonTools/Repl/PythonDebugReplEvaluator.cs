@@ -199,11 +199,7 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public string FormatClipboard() {
-            if (_activeEvaluator != null) {
-                return _activeEvaluator.FormatClipboard();
-            }
-            //Formatting for experimental debugger
-            return PythonCommonInteractiveEvaluator.FormatClipBoard(_serviceProvider, CurrentWindow);
+            return PythonCommonInteractiveEvaluator.FormatClipboard(_serviceProvider, CurrentWindow);
         }
 
         public void Dispose() {

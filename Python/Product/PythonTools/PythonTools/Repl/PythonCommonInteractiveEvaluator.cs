@@ -567,10 +567,10 @@ namespace Microsoft.PythonTools.Repl {
         private static Regex _splitLineRegex = new Regex(_splitRegexPattern);
 
         public string FormatClipboard() {
-            return FormatClipBoard(_serviceProvider, CurrentWindow);
+            return FormatClipboard(_serviceProvider, CurrentWindow);
         }
 
-        internal static string FormatClipBoard(IServiceProvider serviceProvider, IInteractiveWindow interactiveWindow) {
+        internal static string FormatClipboard(IServiceProvider serviceProvider, IInteractiveWindow interactiveWindow) {
             // WPF and Windows Forms Clipboard behavior differs when it comes
             // to DataFormats.CommaSeparatedValue.
             // WPF will always return the data as a string, no matter how it
