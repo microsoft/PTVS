@@ -29,8 +29,11 @@ namespace Microsoft.PythonTools.Environments {
 
         public static IEnumerable<InterpreterView> GetInterpreters(
             IServiceProvider serviceProvider,
-            PythonProjectNode project, 
-            bool onlyGlobalEnvironments = false
+            PythonProjectNode project,
+            bool onlyGlobalEnvironments = false,
+            bool includeVirtualEnv = true,
+            bool includeCondaEnv = true,
+            bool includeIronPythonEnv = true
         ) {
             if (serviceProvider == null) {
                 throw new ArgumentNullException(nameof(serviceProvider));
@@ -41,6 +44,7 @@ namespace Microsoft.PythonTools.Environments {
             var res = knownProviders.Configurations
                 .Where(PythonInterpreterFactoryExtensions.IsUIVisible)
                 .Where(PythonInterpreterFactoryExtensions.IsRunnable)
+                .Where(configuration => FilterInterpreters(configuration, includeVirtualEnv, includeCondaEnv, includeIronPythonEnv))
                 .OrderBy(c => c.Description)
                 .ThenBy(c => c.Version)
                 .Select(c => new InterpreterView(c.Id, c.Description, c.InterpreterPath, c.Version.ToString(), c.ArchitectureString, project));
@@ -56,6 +60,28 @@ namespace Microsoft.PythonTools.Environments {
             }
 
             return res;
+        }
+
+        private static bool FilterInterpreters(
+            InterpreterConfiguration interpreterConfiguration,
+            bool includeVirtualEnv,
+            bool includeCondaEnv,
+            bool includeIronPythonEnv
+        ) {
+
+            if (!includeVirtualEnv && VirtualEnv.IsVirtualEnvironment(interpreterConfiguration.GetPrefixPath())) {
+                return false;
+            }
+
+            if (!includeCondaEnv && CondaUtils.IsCondaEnvironment(interpreterConfiguration.GetPrefixPath())) {
+                return false;
+            }
+
+            if (!includeIronPythonEnv && interpreterConfiguration.IsIronPython()) {
+                return false;
+            }
+
+            return true;
         }
 
         private static string FormatInvalidId(string id) {

@@ -24,7 +24,6 @@ using System.Threading.Tasks;
 using System.Windows;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.PlatformUI;
 
 namespace Microsoft.PythonTools.Environments {
@@ -353,7 +352,7 @@ namespace Microsoft.PythonTools.Environments {
         protected override void ResetProjectDependentProperties() {
             LocationPath = SelectedProject?.HomeFolder ?? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
             VirtualEnvName = GetDefaultEnvName();
-            Interpreters = new ObservableCollection<InterpreterView>(InterpreterView.GetInterpreters(Site, null, true));
+            Interpreters = new ObservableCollection<InterpreterView>(InterpreterView.GetInterpreters(Site, null, true, false, false, false));
             BaseInterpreter = Interpreters.FirstOrDefault(v => v.Id == SelectedProject?.ActiveInterpreterId) ?? Interpreters.LastOrDefault();
             RequirementsPath = SelectedProject?.RequirementsTxtPath ?? string.Empty;
             CanInstallRequirementsTxt = File.Exists(RequirementsPath);
