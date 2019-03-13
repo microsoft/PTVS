@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.IO;
 using Microsoft.PythonTools.Environments;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Logging;
 using Microsoft.VisualStudio.Imaging;
 using Microsoft.VisualStudio.Shell;
@@ -27,8 +28,8 @@ using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.Project {
     internal sealed class VirtualEnvCreateInfoBar : PythonProjectInfoBar {
-        public VirtualEnvCreateInfoBar(PythonProjectNode projectNode)
-            : base(projectNode) {
+        public VirtualEnvCreateInfoBar(IServiceProvider site, PythonProjectNode projectNode, IPythonWorkspaceContext workspace)
+            : base(site, projectNode, workspace) {
         }
 
         public override async Task CheckAsync() {
@@ -36,21 +37,22 @@ namespace Microsoft.PythonTools.Project {
                 return;
             }
 
-            if (!Project.Site.GetPythonToolsService().GeneralOptions.PromptForEnvCreate) {
+            var projectOrWorkspaceName = Project?.Caption ?? Workspace?.WorkspaceName ?? string.Empty;
+
+            if (!Site.GetPythonToolsService().GeneralOptions.PromptForEnvCreate) {
                 return;
             }
 
-            var suppressProp = Project.GetProjectProperty(PythonConstants.SuppressEnvironmentCreationPrompt);
-            if (suppressProp.IsTrue()) {
+            if (IsSuppressed(PythonConstants.SuppressEnvironmentCreationPrompt)) {
                 return;
             }
 
-            if (!Project.IsActiveInterpreterGlobalDefault) {
-                return;
-            }
-
-            var txtPath = Project.GetRequirementsTxtPath();
+            var txtPath = Project?.GetRequirementsTxtPath() ?? Workspace?.GetRequirementsTxtPath();
             if (!File.Exists(txtPath)) {
+                return;
+            }
+
+            if (Project?.IsActiveInterpreterGlobalDefault == false || Workspace?.IsCurrentFactoryDefault == false) {
                 return;
             }
 
@@ -62,13 +64,13 @@ namespace Microsoft.PythonTools.Project {
                     }
                 );
                 AddEnvironmentDialog.ShowAddVirtualEnvironmentDialogAsync(
-                    Project.Site,
+                    Site,
                     Project,
-                    null,
+                    Workspace,
                     null,
                     null,
                     txtPath
-                ).HandleAllExceptions(Project.Site, typeof(VirtualEnvCreateInfoBar)).DoNotWait();
+                ).HandleAllExceptions(Site, typeof(VirtualEnvCreateInfoBar)).DoNotWait();
                 Close();
             };
 
@@ -79,7 +81,9 @@ namespace Microsoft.PythonTools.Project {
                         Action = VirtualEnvCreateInfoBarActions.Ignore,
                     }
                 );
-                Project.SetProjectProperty(PythonConstants.SuppressEnvironmentCreationPrompt, true.ToString());
+                SuppressAsync(PythonConstants.SuppressEnvironmentCreationPrompt)
+                    .HandleAllExceptions(Site, typeof(VirtualEnvCreateInfoBar))
+                    .DoNotWait();
                 Close();
             };
 
@@ -89,7 +93,7 @@ namespace Microsoft.PythonTools.Project {
             messages.Add(new InfoBarTextSpan(
                 Strings.RequirementsTxtCreateVirtualEnvInfoBarMessage.FormatUI(
                     PathUtils.GetFileOrDirectoryName(txtPath),
-                    Project.Caption
+                    projectOrWorkspaceName
             )));
             actions.Add(new InfoBarHyperlink(Strings.RequirementsTxtInfoBarCreateVirtualEnvAction, createVirtualEnv));
             actions.Add(new InfoBarHyperlink(Strings.RequirementsTxtInfoBarProjectIgnoreAction, projectIgnore));

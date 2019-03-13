@@ -391,6 +391,7 @@
       <DependentUpon>AddEnvironmentDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="PythonTools\Project\DeprecatedReferenceNode.cs" />
+    <Compile Include="PythonTools\WorkspaceInfoBarManager.cs" />
     <Compile Include="PythonTools\Wpf\ModernDialog.cs" />
     <Compile Include="PythonTools\Wpf\ModernDialogHeaderControl.xaml.cs">
       <DependentUpon>ModernDialogHeaderControl.xaml</DependentUpon>

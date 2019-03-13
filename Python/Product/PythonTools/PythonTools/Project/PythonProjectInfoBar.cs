@@ -16,6 +16,8 @@
 
 using System;
 using System.Diagnostics;
+using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Logging;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
@@ -32,15 +34,21 @@ namespace Microsoft.PythonTools.Project {
         private IVsInfoBarUIElement _infoBar;
         private InfoBarModel _infoBarModel;
 
-        protected PythonProjectInfoBar(PythonProjectNode projectNode) {
-            Project = projectNode ?? throw new ArgumentNullException(nameof(projectNode));
-            Logger = (IPythonToolsLogger)projectNode.Site.GetService(typeof(IPythonToolsLogger));
-            _shell = (IVsShell)projectNode.Site.GetService(typeof(SVsShell));
-            _infoBarFactory = (IVsInfoBarUIFactory)projectNode.Site.GetService(typeof(SVsInfoBarUIFactory));
-            _idleManager = new IdleManager(Project.Site);
+        protected PythonProjectInfoBar(IServiceProvider site, PythonProjectNode projectNode, IPythonWorkspaceContext workspace) {
+            Site = site ?? throw new ArgumentNullException(nameof(site));
+            Project = projectNode;
+            Workspace = workspace;
+            Logger = (IPythonToolsLogger)site.GetService(typeof(IPythonToolsLogger));
+            _shell = (IVsShell)site.GetService(typeof(SVsShell));
+            _infoBarFactory = (IVsInfoBarUIFactory)site.GetService(typeof(SVsInfoBarUIFactory));
+            _idleManager = new IdleManager(site);
         }
 
+        protected IServiceProvider Site { get; }
+
         protected PythonProjectNode Project { get; }
+
+        protected IPythonWorkspaceContext Workspace { get; }
 
         protected IPythonToolsLogger Logger { get; }
 
@@ -76,6 +84,26 @@ namespace Microsoft.PythonTools.Project {
 
             _infoBar.Advise(this, out uint cookie);
             _adviseCookie = cookie;
+        }
+
+        protected bool IsSuppressed(string propertyName) {
+            if (Project != null) {
+                var suppressProp = Project.GetProjectProperty(propertyName);
+                return suppressProp.IsTrue();
+            } else if (Workspace != null) {
+                var suppressProp = Workspace.GetStringProperty(propertyName);
+                return suppressProp.IsTrue();
+            }
+
+            return false;
+        }
+
+        protected async Task SuppressAsync(string propertyName) {
+            if (Project != null) {
+                Project.SetProjectProperty(propertyName, true.ToString());
+            } else if (Workspace != null) {
+                await Workspace.SetPropertyAsync(propertyName, true.ToString());
+            }
         }
 
         private void OnIdle(object sender, ComponentManagerEventArgs e) {

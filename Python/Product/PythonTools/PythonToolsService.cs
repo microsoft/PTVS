@@ -109,6 +109,7 @@ namespace Microsoft.PythonTools {
             _diagnosticsProvider = new DiagnosticsProvider(container);
             Logger = (IPythonToolsLogger)container.GetService(typeof(IPythonToolsLogger));
             EnvironmentSwitcherManager = new EnvironmentSwitcherManager(container);
+            WorkspaceInfoBarManager = new WorkspaceInfoBarManager(container);
 
             _idleManager.OnIdle += OnIdleInitialization;
 
@@ -141,6 +142,9 @@ namespace Microsoft.PythonTools {
             foreach (var kv in GetActiveSharedAnalyzers()) {
                 kv.Value.Dispose();
             }
+
+            EnvironmentSwitcherManager.Dispose();
+            WorkspaceInfoBarManager.Dispose();
         }
 
         private void InitializeLogging() {
@@ -182,6 +186,8 @@ namespace Microsoft.PythonTools {
         internal IPythonToolsLogger Logger { get; }
 
         internal EnvironmentSwitcherManager EnvironmentSwitcherManager { get; }
+
+        internal WorkspaceInfoBarManager WorkspaceInfoBarManager { get; }
 
         internal Task<VsProjectAnalyzer> CreateAnalyzerAsync(IPythonInterpreterFactory factory) {
             if (factory == null) {
