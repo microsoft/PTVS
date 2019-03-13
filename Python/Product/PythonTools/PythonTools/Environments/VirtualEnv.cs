@@ -427,7 +427,11 @@ namespace Microsoft.PythonTools.Environments {
         }
         
         internal static bool IsVirtualEnvironment(string prefixPath) {
-            return (File.Exists(Path.Combine(prefixPath, "pyvenv.cfg")) || File.Exists(Path.Combine(FindLibPath(prefixPath), "orig-prefix.txt")));
+            if(string.IsNullOrEmpty(prefixPath)) {
+                return false;
+            }
+
+            return (File.Exists(Path.Combine(prefixPath, "pyvenv.cfg")) || File.Exists(Path.Combine(FindLibPath(prefixPath) ?? "", "orig-prefix.txt")));
         }
     }
 }
