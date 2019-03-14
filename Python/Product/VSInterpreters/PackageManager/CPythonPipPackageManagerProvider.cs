@@ -34,6 +34,15 @@ namespace Microsoft.PythonTools.Interpreter {
         private static readonly PipPackageManagerCommands CommandsV26 = new PipCommandsV26();
         private static readonly PipPackageManagerCommands CommandsV27AndLater = new PipCommandsV27AndLater();
 
+        private readonly ICondaLocatorProvider _condaLocatorProvider;
+
+        [ImportingConstructor]
+        public CPythonPipPackageManagerProvider(
+            [Import] ICondaLocatorProvider condaLocatorProvider
+        ) {
+            _condaLocatorProvider = condaLocatorProvider;
+        }
+
         public IEnumerable<IPackageManager> GetPackageManagers(IPythonInterpreterFactory factory) {
             IPackageManager pm = null;
             try {
@@ -41,7 +50,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 // We have to use 'python -m pip' on pip v10, because pip.main() no longer exists
                 // pip v10 is not supported on Python 2.6, so pip.main() is fine there
                 var cmds = factory.Configuration.Version > new Version(2, 6) ? CommandsV27AndLater : CommandsV26;
-                pm = new PipPackageManager(factory, cmds, 1000);
+                pm = new PipPackageManager(factory, cmds, 1000, _condaLocatorProvider);
             } catch (NotSupportedException) {
             }
             

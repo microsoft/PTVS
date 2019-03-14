@@ -31,11 +31,20 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
         private static readonly PipPackageManagerCommands Commands = new IPyPipCommands();
 
+        private readonly ICondaLocatorProvider _condaLocatorProvider;
+
+        [ImportingConstructor]
+        public IronPythonPipPackageManagerProvider(
+            [Import] ICondaLocatorProvider condaLocatorProvider
+        ) {
+            _condaLocatorProvider = condaLocatorProvider;
+        }
+
         public IEnumerable<IPackageManager> GetPackageManagers(IPythonInterpreterFactory factory) {
             IPackageManager pm = null;
             if (factory is IronPythonAstInterpreterFactory) {
                 try {
-                    pm = new PipPackageManager(factory, Commands, 0);
+                    pm = new PipPackageManager(factory, Commands, 0, _condaLocatorProvider);
                 } catch (NotSupportedException) {
                 }
             }
