@@ -628,25 +628,6 @@ namespace PythonToolsUITests {
 
         [TestMethod, Priority(0)]
         [TestCategory("10s")]
-        public async Task PipExtension() {
-            var service = MakeEmptyVEnv(usePipPackageManager: true);
-
-            using (var wpf = new WpfProxy())
-            using (var list = new EnvironmentListProxy(wpf)) {
-                list.CreatePipExtension = true;
-                list.InitializeEnvironments(service, service);
-
-                var environment = list.Environments.Single();
-                var pip = list.GetExtensionOrAssert<PipExtensionProvider>(environment);
-
-                // Allow the initial scan to complete
-                var ppm = (PipPackageManager)pip._packageManager;
-                await Task.Delay(500);
-                await ppm._working.WaitAsync(1500);
-                ppm._working.Release();
-
-        [TestMethod, Priority(0)]
-        [TestCategory("10s")]
         public async Task PipExtensionInVirtualEnv() {
             var service = MakeEmptyVEnv();
             await CheckPipExtensionAsync(service);
@@ -794,13 +775,15 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0)]
         public void PythonInterpretersFilteringTest() {
             PythonVersion pythonTwoInterpreter = PythonPaths.Python27_x64 ??
-                                        PythonPaths.Python26_x64 ??
-                                        PythonPaths.Python27 ??
-                                        PythonPaths.Python26;
+                                                    PythonPaths.Python26_x64 ??
+                                                    PythonPaths.Python27 ??
+                                                    PythonPaths.Python26;
+
             PythonVersion pythonThreeInterpreter = PythonPaths.Python37_x64 ??
-                                        PythonPaths.Python36_x64 ??
-                                        PythonPaths.Python37 ??
-                                        PythonPaths.Python36;
+                                                    PythonPaths.Python36_x64 ??
+                                                    PythonPaths.Python37 ??
+                                                    PythonPaths.Python36;
+
             if (!FilterPythonInterpreterAndEnv(pythonTwoInterpreter) && !FilterPythonInterpreterAndEnv(pythonThreeInterpreter)) {
                 Assert.Inconclusive("Unable to detect global python interpreter or create python virtual environment");
             }
@@ -808,7 +791,9 @@ namespace PythonToolsUITests {
 
         [TestMethod, Priority(0)]
         public void CondaInterpreterFilteringTest() {
-            PythonVersion condaTwoInterpreter = PythonPaths.Anaconda27_x64 ?? PythonPaths.Anaconda27;
+            PythonVersion condaTwoInterpreter = PythonPaths.Anaconda27_x64 ??
+                                                    PythonPaths.Anaconda27;
+
             PythonVersion condaThreeInterpreter = PythonPaths.Anaconda37_x64 ??
                                                     PythonPaths.Anaconda36_x64 ??
                                                     PythonPaths.Anaconda37 ??
@@ -822,6 +807,7 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0)]
         public void IronPythonInterpretersFilteringTest() {
             PythonVersion ironPythonInterpreter = PythonPaths.IronPython27_x64 ?? PythonPaths.IronPython27;
+
             if (ironPythonInterpreter == null) {
                 Assert.Inconclusive("Unable to detect iron python 2.7 interpreter");
             }
@@ -886,7 +872,7 @@ namespace PythonToolsUITests {
                 DeleteFolder.Add(env);
             }
 
-            var virtualEnvParameter = pythonVersion.Version < PythonLanguageVersion.V30 ? "virtualenv" : "venv";
+            var virtualEnvParameter = (pythonVersion.Version < PythonLanguageVersion.V30) ? "virtualenv" : "venv";
             WorkspaceInterpreterFactoryTests.CreatePythonVirtualEnv(pythonVersion.InterpreterPath, env, "", virtualEnvParameter);
 
             var interpreterConfiguration = new VisualStudioInterpreterConfiguration(
@@ -952,8 +938,6 @@ namespace PythonToolsUITests {
 
             Assert.AreEqual(head + "|" + body + "|" + tail, h + "|" + body + "|" + tail);
         }
-
-        #region Test Helpers
 
         private static bool LogException(Task task) {
             var ex = task.Exception;
@@ -1223,7 +1207,7 @@ namespace PythonToolsUITests {
 
         #endregion
     }
-
+    
     class TestPipPackageCache : PipPackageCache {
         public TestPipPackageCache(string cachePath = null) : base(
             null, null,
