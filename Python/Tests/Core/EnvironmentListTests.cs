@@ -823,28 +823,30 @@ namespace PythonToolsUITests {
         public void IronPythonInterpretersFilteringTest() {
             PythonVersion ironPythonInterpreter = PythonPaths.IronPython27_x64 ?? PythonPaths.IronPython27;
             if (ironPythonInterpreter == null) {
-                Assert.Inconclusive("Install iron python 2.7");
+                Assert.Inconclusive("Unable to detect iron python 2.7 interpreter");
             }
 
-            Assert.IsTrue(InterpreterView.FilterInterpreter(ironPythonInterpreter.Configuration, true, true, true));
-            Assert.IsTrue(InterpreterView.FilterInterpreter(ironPythonInterpreter.Configuration, false, false, true));
-            Assert.IsFalse(InterpreterView.FilterInterpreter(ironPythonInterpreter.Configuration, true, true, false));
-            Assert.IsFalse(InterpreterView.FilterInterpreter(ironPythonInterpreter.Configuration, false, false, false));
+            Assert.IsTrue(InterpreterView.IncludeConfigurationInterpreter(ironPythonInterpreter.Configuration, true, true, true));
+            Assert.IsTrue(InterpreterView.IncludeConfigurationInterpreter(ironPythonInterpreter.Configuration, false, false, true));
+            Assert.IsFalse(InterpreterView.IncludeConfigurationInterpreter(ironPythonInterpreter.Configuration, true, true, false));
+            Assert.IsFalse(InterpreterView.IncludeConfigurationInterpreter(ironPythonInterpreter.Configuration, false, false, false));
         }
+
+        #region Test Helpers
 
         private bool FilterPythonInterpreterAndEnv(PythonVersion pythonInterpreter) {
             if (pythonInterpreter != null) {
-                Assert.IsTrue(InterpreterView.FilterInterpreter(pythonInterpreter.Configuration, true, true, true));
-                Assert.IsTrue(InterpreterView.FilterInterpreter(pythonInterpreter.Configuration, true, false, false));
-                Assert.IsTrue(InterpreterView.FilterInterpreter(pythonInterpreter.Configuration, false, true, true));
-                Assert.IsTrue(InterpreterView.FilterInterpreter(pythonInterpreter.Configuration, false, false, false));
+                Assert.IsTrue(InterpreterView.IncludeConfigurationInterpreter(pythonInterpreter.Configuration, true, true, true));
+                Assert.IsTrue(InterpreterView.IncludeConfigurationInterpreter(pythonInterpreter.Configuration, true, false, false));
+                Assert.IsTrue(InterpreterView.IncludeConfigurationInterpreter(pythonInterpreter.Configuration, false, true, true));
+                Assert.IsTrue(InterpreterView.IncludeConfigurationInterpreter(pythonInterpreter.Configuration, false, false, false));
 
                 var pythonVirtualEnvConfiguration = GeneratePythonVirtualEnv(pythonInterpreter);
                 if (pythonVirtualEnvConfiguration != null) {
-                    Assert.IsTrue(InterpreterView.FilterInterpreter(pythonInterpreter.Configuration, true, true, true));
-                    Assert.IsTrue(InterpreterView.FilterInterpreter(pythonInterpreter.Configuration, true, false, false));
-                    Assert.IsFalse(InterpreterView.FilterInterpreter(pythonInterpreter.Configuration, false, true, true));
-                    Assert.IsFalse(InterpreterView.FilterInterpreter(pythonInterpreter.Configuration, false, false, false));
+                    Assert.IsTrue(InterpreterView.IncludeConfigurationInterpreter(pythonVirtualEnvConfiguration, true, true, true));
+                    Assert.IsTrue(InterpreterView.IncludeConfigurationInterpreter(pythonVirtualEnvConfiguration, true, false, false));
+                    Assert.IsFalse(InterpreterView.IncludeConfigurationInterpreter(pythonVirtualEnvConfiguration, false, true, true));
+                    Assert.IsFalse(InterpreterView.IncludeConfigurationInterpreter(pythonVirtualEnvConfiguration, false, false, false));
 
                     return true;
                 }
@@ -855,17 +857,17 @@ namespace PythonToolsUITests {
 
         private bool FilterCondaInterpreterAndEnv(PythonVersion condaInterpreter) {
             if (condaInterpreter != null) {
-                Assert.IsTrue(InterpreterView.FilterInterpreter(condaInterpreter.Configuration, true, true, true));
-                Assert.IsTrue(InterpreterView.FilterInterpreter(condaInterpreter.Configuration, false, true, false));
-                Assert.IsFalse(InterpreterView.FilterInterpreter(condaInterpreter.Configuration, true, false, true));
-                Assert.IsFalse(InterpreterView.FilterInterpreter(condaInterpreter.Configuration, false, false, false));
+                Assert.IsTrue(InterpreterView.IncludeConfigurationInterpreter(condaInterpreter.Configuration, true, true, true));
+                Assert.IsTrue(InterpreterView.IncludeConfigurationInterpreter(condaInterpreter.Configuration, false, true, false));
+                Assert.IsFalse(InterpreterView.IncludeConfigurationInterpreter(condaInterpreter.Configuration, true, false, true));
+                Assert.IsFalse(InterpreterView.IncludeConfigurationInterpreter(condaInterpreter.Configuration, false, false, false));
 
                 var condaVirtualEnvConfiguration = GenerateCondaVirtualEnv(condaInterpreter);
                 if (condaVirtualEnvConfiguration != null) {
-                    Assert.IsTrue(InterpreterView.FilterInterpreter(condaVirtualEnvConfiguration, true, true, true));
-                    Assert.IsTrue(InterpreterView.FilterInterpreter(condaVirtualEnvConfiguration, false, true, false));
-                    Assert.IsFalse(InterpreterView.FilterInterpreter(condaVirtualEnvConfiguration, true, false, true));
-                    Assert.IsFalse(InterpreterView.FilterInterpreter(condaVirtualEnvConfiguration, false, false, false));
+                    Assert.IsTrue(InterpreterView.IncludeConfigurationInterpreter(condaVirtualEnvConfiguration, true, true, true));
+                    Assert.IsTrue(InterpreterView.IncludeConfigurationInterpreter(condaVirtualEnvConfiguration, false, true, false));
+                    Assert.IsFalse(InterpreterView.IncludeConfigurationInterpreter(condaVirtualEnvConfiguration, true, false, true));
+                    Assert.IsFalse(InterpreterView.IncludeConfigurationInterpreter(condaVirtualEnvConfiguration, false, false, false));
                     return true;
                 }
             }
@@ -884,15 +886,10 @@ namespace PythonToolsUITests {
                 DeleteFolder.Add(env);
             }
 
-            var a = pythonVersion.Version.ToVersion().ToString();
-            WorkspaceInterpreterFactoryTests.CreatePythonVirtualEnv(
-                pythonVersion.InterpreterPath,
-                env, 
-                "",
-                (pythonVersion.Version < PythonLanguageVersion.V30) ? "virtualenv" : "venv"
-            );
+            var virtualEnvParameter = pythonVersion.Version < PythonLanguageVersion.V30 ? "virtualenv" : "venv";
+            WorkspaceInterpreterFactoryTests.CreatePythonVirtualEnv(pythonVersion.InterpreterPath, env, "", virtualEnvParameter);
 
-            var interpreterConfiguration =  new VisualStudioInterpreterConfiguration(
+            var interpreterConfiguration = new VisualStudioInterpreterConfiguration(
                     "Mock;" + Guid.NewGuid().ToString(),
                     Path.GetFileName(PathUtils.TrimEndSeparator(env)),
                     env,
@@ -901,11 +898,11 @@ namespace PythonToolsUITests {
                     "PYTHONPATH",
                     pythonVersion.Architecture,
                     pythonVersion.Version.ToVersion()
-                
             );
 
             return interpreterConfiguration;
         }
+
         private VisualStudioInterpreterConfiguration GenerateCondaVirtualEnv(PythonVersion pythonVersion) {
             if (pythonVersion == null) {
                 return null;

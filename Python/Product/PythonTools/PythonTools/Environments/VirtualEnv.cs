@@ -27,7 +27,7 @@ using Microsoft.PythonTools.Project;
 
 namespace Microsoft.PythonTools.Environments {
     static class VirtualEnv {
-        private static readonly KeyValuePair<string, string>[] UnbufferedEnv = new[] { 
+        private static readonly KeyValuePair<string, string>[] UnbufferedEnv = new[] {
             new KeyValuePair<string, string>("PYTHONUNBUFFERED", "1")
         };
 
@@ -427,11 +427,17 @@ namespace Microsoft.PythonTools.Environments {
         }
         
         internal static bool IsPythonVirtualEnv(string prefixPath) {
-            if(string.IsNullOrEmpty(prefixPath)) {
+            if (string.IsNullOrEmpty(prefixPath)) {
+                return false;
+            }
+            
+            string libPath = FindLibPath(prefixPath);
+            if(libPath == null) {
                 return false;
             }
 
-            return (File.Exists(Path.Combine(prefixPath, "pyvenv.cfg")) || File.Exists(Path.Combine(FindLibPath(prefixPath) ?? "", "orig-prefix.txt")));
+            //pyenv.cfg detect python 3 and orig-prefix.txt detects python 2
+            return (File.Exists(Path.Combine(prefixPath, "pyvenv.cfg")) || File.Exists(Path.Combine(libPath, "orig-prefix.txt")));
         }
     }
 }
