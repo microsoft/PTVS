@@ -54,7 +54,12 @@ namespace Microsoft.PythonTools.Intellisense {
         public VsProjectAnalyzer TryGetWorkspaceAnalyzer() {
             _site.MustBeCalledFromUIThread();
 
-            if (_analyzers.TryGetValue(_pythonWorkspaceService.Workspace, out WorkspaceAnalyzer analyzer)) {
+            var workspace = _pythonWorkspaceService.Workspace;
+            if (workspace == null) {
+                return null;
+            }
+
+            if (_analyzers.TryGetValue(workspace, out WorkspaceAnalyzer analyzer)) {
                 return analyzer.Analyzer;
             }
 
