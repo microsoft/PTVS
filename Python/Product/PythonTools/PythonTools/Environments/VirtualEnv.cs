@@ -410,7 +410,7 @@ namespace Microsoft.PythonTools.Environments {
             pathVar = baseInterpreter.Configuration.PathEnvironmentVariable;
         }
 
-        private static string FindLibPath(string prefixPath) {
+        internal static string FindLibPath(string prefixPath) {
             // Find site.py to find the library
             var libPath = PathUtils.FindFile(prefixPath, "site.py", depthLimit: 1, firstCheck: new[] { "Lib" });
             if (!File.Exists(libPath)) {
@@ -426,7 +426,7 @@ namespace Microsoft.PythonTools.Environments {
             return libPath;
         }
         
-        internal static bool IsVirtualEnvironment(string prefixPath) {
+        internal static bool IsPythonVirtualEnv(string prefixPath) {
             if(string.IsNullOrEmpty(prefixPath)) {
                 return false;
             }

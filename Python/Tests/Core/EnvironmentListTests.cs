@@ -32,6 +32,7 @@ using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Win32;
+using PythonToolsTests;
 using TestUtilities;
 using TestUtilities.Mocks;
 using TestUtilities.Python;
@@ -327,7 +328,7 @@ namespace PythonToolsUITests {
                         )
                     ));
                     var view = list.Environments.Single();
-                    Assert.IsTrue(wpf.Invoke( ()=> view.IsBroken), $"'{invalidPath ?? "<null>"}' should be detected as broken");
+                    Assert.IsTrue(wpf.Invoke(() => view.IsBroken), $"'{invalidPath ?? "<null>"}' should be detected as broken");
                 }
             }
         }
@@ -612,7 +613,7 @@ namespace PythonToolsUITests {
             using (var list = new EnvironmentListProxy(wpf)) {
                 list.CreatePipExtension = true;
                 list.InitializeEnvironments(service, service);
-                
+
                 var environment = list.Environments.Single();
                 var pip = list.GetExtensionOrAssert<PipExtensionProvider>(environment);
 
@@ -714,7 +715,7 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0)]
         public async Task UpdatePackageInfo() {
             var pm = new MockPackageManager();
-            
+
             var pv = new PipPackageView(pm, PackageSpec.FromRequirement("ptvsd==0.9"), true);
 
             var changes = new List<string>();
@@ -788,6 +789,163 @@ namespace PythonToolsUITests {
             TestFileNameEllipsis("\\lib\\", "", "", "\\lib\\");
             TestFileNameEllipsis("lib\\", "", "", "lib\\");
             TestFileNameEllipsis("", "", "", "");
+        }
+
+        [TestMethod, Priority(0)]
+        public void PythonInterpretersFilteringTest() {
+            PythonVersion pythonTwoInterpreter = PythonPaths.Python27_x64 ??
+                                        PythonPaths.Python26_x64 ??
+                                        PythonPaths.Python27 ??
+                                        PythonPaths.Python26;
+            PythonVersion pythonThreeInterpreter = PythonPaths.Python37_x64 ??
+                                        PythonPaths.Python36_x64 ??
+                                        PythonPaths.Python37 ??
+                                        PythonPaths.Python36;
+            if (!FilterPythonInterpreterAndEnv(pythonTwoInterpreter) && !FilterPythonInterpreterAndEnv(pythonThreeInterpreter)) {
+                Assert.Inconclusive("Unable to detect global python interpreter or create python virtual environment");
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void CondaInterpreterFilteringTest() {
+            PythonVersion condaTwoInterpreter = PythonPaths.Anaconda27_x64 ?? PythonPaths.Anaconda27;
+            PythonVersion condaThreeInterpreter = PythonPaths.Anaconda37_x64 ??
+                                                    PythonPaths.Anaconda36_x64 ??
+                                                    PythonPaths.Anaconda37 ??
+                                                    PythonPaths.Anaconda36;
+
+            if (!FilterCondaInterpreterAndEnv(condaTwoInterpreter) && !FilterCondaInterpreterAndEnv(condaThreeInterpreter)) {
+                Assert.Inconclusive("Unable to detect global conda interpreter or create conda virtual environment");
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void IronPythonInterpretersFilteringTest() {
+            PythonVersion ironPythonInterpreter = PythonPaths.IronPython27_x64 ?? PythonPaths.IronPython27;
+            if (ironPythonInterpreter == null) {
+                Assert.Inconclusive("Install iron python 2.7");
+            }
+
+            Assert.IsTrue(InterpreterView.FilterInterpreter(ironPythonInterpreter.Configuration, true, true, true));
+            Assert.IsTrue(InterpreterView.FilterInterpreter(ironPythonInterpreter.Configuration, false, false, true));
+            Assert.IsFalse(InterpreterView.FilterInterpreter(ironPythonInterpreter.Configuration, true, true, false));
+            Assert.IsFalse(InterpreterView.FilterInterpreter(ironPythonInterpreter.Configuration, false, false, false));
+        }
+
+        private bool FilterPythonInterpreterAndEnv(PythonVersion pythonInterpreter) {
+            if (pythonInterpreter != null) {
+                Assert.IsTrue(InterpreterView.FilterInterpreter(pythonInterpreter.Configuration, true, true, true));
+                Assert.IsTrue(InterpreterView.FilterInterpreter(pythonInterpreter.Configuration, true, false, false));
+                Assert.IsTrue(InterpreterView.FilterInterpreter(pythonInterpreter.Configuration, false, true, true));
+                Assert.IsTrue(InterpreterView.FilterInterpreter(pythonInterpreter.Configuration, false, false, false));
+
+                var pythonVirtualEnvConfiguration = GeneratePythonVirtualEnv(pythonInterpreter);
+                if (pythonVirtualEnvConfiguration != null) {
+                    Assert.IsTrue(InterpreterView.FilterInterpreter(pythonInterpreter.Configuration, true, true, true));
+                    Assert.IsTrue(InterpreterView.FilterInterpreter(pythonInterpreter.Configuration, true, false, false));
+                    Assert.IsFalse(InterpreterView.FilterInterpreter(pythonInterpreter.Configuration, false, true, true));
+                    Assert.IsFalse(InterpreterView.FilterInterpreter(pythonInterpreter.Configuration, false, false, false));
+
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private bool FilterCondaInterpreterAndEnv(PythonVersion condaInterpreter) {
+            if (condaInterpreter != null) {
+                Assert.IsTrue(InterpreterView.FilterInterpreter(condaInterpreter.Configuration, true, true, true));
+                Assert.IsTrue(InterpreterView.FilterInterpreter(condaInterpreter.Configuration, false, true, false));
+                Assert.IsFalse(InterpreterView.FilterInterpreter(condaInterpreter.Configuration, true, false, true));
+                Assert.IsFalse(InterpreterView.FilterInterpreter(condaInterpreter.Configuration, false, false, false));
+
+                var condaVirtualEnvConfiguration = GenerateCondaVirtualEnv(condaInterpreter);
+                if (condaVirtualEnvConfiguration != null) {
+                    Assert.IsTrue(InterpreterView.FilterInterpreter(condaVirtualEnvConfiguration, true, true, true));
+                    Assert.IsTrue(InterpreterView.FilterInterpreter(condaVirtualEnvConfiguration, false, true, false));
+                    Assert.IsFalse(InterpreterView.FilterInterpreter(condaVirtualEnvConfiguration, true, false, true));
+                    Assert.IsFalse(InterpreterView.FilterInterpreter(condaVirtualEnvConfiguration, false, false, false));
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private VisualStudioInterpreterConfiguration GeneratePythonVirtualEnv(PythonVersion pythonVersion) {
+            if (pythonVersion == null) {
+                return null;
+            }
+
+            string env = TestData.GetTempPath();
+            if (env.Length > 140) {
+                env = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+                DeleteFolder.Add(env);
+            }
+
+            var a = pythonVersion.Version.ToVersion().ToString();
+            WorkspaceInterpreterFactoryTests.CreatePythonVirtualEnv(
+                pythonVersion.InterpreterPath,
+                env, 
+                "",
+                (pythonVersion.Version < PythonLanguageVersion.V30) ? "virtualenv" : "venv"
+            );
+
+            var interpreterConfiguration =  new VisualStudioInterpreterConfiguration(
+                    "Mock;" + Guid.NewGuid().ToString(),
+                    Path.GetFileName(PathUtils.TrimEndSeparator(env)),
+                    env,
+                    PathUtils.FindFile(env, "python.exe"),
+                    PathUtils.FindFile(env, "python.exe"),
+                    "PYTHONPATH",
+                    pythonVersion.Architecture,
+                    pythonVersion.Version.ToVersion()
+                
+            );
+
+            return interpreterConfiguration;
+        }
+        private VisualStudioInterpreterConfiguration GenerateCondaVirtualEnv(PythonVersion pythonVersion) {
+            if (pythonVersion == null) {
+                return null;
+            }
+
+            var env = TestData.GetTempPath();
+            if (env.Length > 140) {
+                env = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+                DeleteFolder.Add(env);
+            }
+
+            var condaExePath = Path.Combine(pythonVersion.PrefixPath, "scripts", "conda.exe");
+            using (var proc = ProcessOutput.RunHiddenAndCapture(
+                condaExePath,
+                "create",
+                "-p",
+                env,
+                "python={0}".FormatInvariant(pythonVersion.Version.ToVersion().ToString()),
+                "-y"
+            )) {
+                Console.WriteLine(proc.Arguments);
+                proc.Wait();
+                foreach (var line in proc.StandardOutputLines.Concat(proc.StandardErrorLines)) {
+                    Console.WriteLine(line);
+                }
+                Assert.AreEqual(0, proc.ExitCode ?? -1, "Failed to create conda environment");
+            }
+
+            var pythonInterpreterConfiguration = new VisualStudioInterpreterConfiguration(
+                    "Mock;" + Guid.NewGuid().ToString(),
+                    Path.GetFileName(PathUtils.TrimEndSeparator(env)),
+                    env,
+                    PathUtils.FindFile(env, "python.exe"),
+                    PathUtils.FindFile(env, "python.exe"),
+                    "PYTHONPATH",
+                    pythonVersion.Architecture,
+                    pythonVersion.Version.ToVersion()
+            );
+
+            return pythonInterpreterConfiguration;
         }
 
         private static void TestFileNameEllipsis(string path, string head, string body, string tail) {

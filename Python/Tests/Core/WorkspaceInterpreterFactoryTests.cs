@@ -211,9 +211,9 @@ namespace PythonToolsTests {
             return new WorkspaceTestHelper.MockWorkspaceContext(new WorkspaceTestHelper.MockWorkspace(workspacePath));
         }
 
-        private static void CreatePythonVirtualEnv(string pythonInterpreterPath, string workspacePath, string envName) {
+        internal static void CreatePythonVirtualEnv(string pythonInterpreterPath, string workspacePath, string envName, string environmentCreationParameter = "venv") {
             //Creating virtual environment and confirming it was created
-            using (var p = ProcessOutput.RunHiddenAndCapture(pythonInterpreterPath, "-m", "venv", Path.Combine(workspacePath, envName))) {
+            using (var p = ProcessOutput.RunHiddenAndCapture(pythonInterpreterPath, "-m", environmentCreationParameter, Path.Combine(workspacePath, envName))) {
                 Console.WriteLine(p.Arguments);
                 Assert.IsTrue(p.Wait(TimeSpan.FromMinutes(3)));
                 Console.WriteLine(string.Join(Environment.NewLine, p.StandardOutputLines.Concat(p.StandardErrorLines)));
