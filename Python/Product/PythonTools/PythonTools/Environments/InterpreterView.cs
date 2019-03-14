@@ -44,7 +44,7 @@ namespace Microsoft.PythonTools.Environments {
             var res = knownProviders.Configurations
                 .Where(PythonInterpreterFactoryExtensions.IsUIVisible)
                 .Where(PythonInterpreterFactoryExtensions.IsRunnable)
-                .Where(configuration => FilterInterpreter(configuration, includeVirtualEnv, includeCondaEnv, includeIronPythonEnv))
+                .Where(configuration => IncludeConfigurationInterpreter(configuration, includeVirtualEnv, includeCondaEnv, includeIronPythonEnv))
                 .OrderBy(c => c.Description)
                 .ThenBy(c => c.Version)
                 .Select(c => new InterpreterView(c.Id, c.Description, c.InterpreterPath, c.Version.ToString(), c.ArchitectureString, project));
@@ -62,7 +62,7 @@ namespace Microsoft.PythonTools.Environments {
             return res;
         }
 
-        internal static bool FilterInterpreter(
+        internal static bool IncludeConfigurationInterpreter(
             InterpreterConfiguration interpreterConfiguration,
             bool includeVirtualEnv,
             bool includeCondaEnv,
