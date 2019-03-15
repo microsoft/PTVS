@@ -124,5 +124,13 @@ namespace Microsoft.PythonTools.Logging {
         /// Install environment
         /// </summary>
         InstallEnv,
+        /// <summary>
+        /// Select an environment from the python toolbar
+        /// </summary>
+        SelectEnvFromToolbar,
+        /// <summary>
+        /// Add an environment from the python toolbar
+        /// </summary>
+        AddEnvFromToolbar,
     }
 }
