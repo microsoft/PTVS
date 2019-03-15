@@ -436,7 +436,7 @@ namespace Microsoft.PythonTools.Environments {
                 return false;
             }
 
-            //pyenv.cfg detect python 3 and orig-prefix.txt detects python 2
+            //pyenv.cfg detects python 3 and orig-prefix.txt detects python 2
             return (File.Exists(Path.Combine(prefixPath, "pyvenv.cfg")) || File.Exists(Path.Combine(libPath, "orig-prefix.txt")));
         }
     }

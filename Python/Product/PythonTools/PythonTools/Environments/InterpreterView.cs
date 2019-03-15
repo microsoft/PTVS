@@ -31,9 +31,7 @@ namespace Microsoft.PythonTools.Environments {
             IServiceProvider serviceProvider,
             PythonProjectNode project,
             bool onlyGlobalEnvironments = false,
-            bool includeVirtualEnv = true,
-            bool includeCondaEnv = true,
-            bool includeIronPythonEnv = true
+            InterpreterFilter excludeInterpreters = InterpreterFilter.None
         ) {
             if (serviceProvider == null) {
                 throw new ArgumentNullException(nameof(serviceProvider));
@@ -44,7 +42,7 @@ namespace Microsoft.PythonTools.Environments {
             var res = knownProviders.Configurations
                 .Where(PythonInterpreterFactoryExtensions.IsUIVisible)
                 .Where(PythonInterpreterFactoryExtensions.IsRunnable)
-                .Where(configuration => IncludeConfigurationInterpreter(configuration, includeVirtualEnv, includeCondaEnv, includeIronPythonEnv))
+                .Where(configuration => ExcludeInterpreter(configuration, excludeInterpreters) == false)
                 .OrderBy(c => c.Description)
                 .ThenBy(c => c.Version)
                 .Select(c => new InterpreterView(c.Id, c.Description, c.InterpreterPath, c.Version.ToString(), c.ArchitectureString, project));
@@ -62,26 +60,33 @@ namespace Microsoft.PythonTools.Environments {
             return res;
         }
 
-        internal static bool IncludeConfigurationInterpreter(
-            InterpreterConfiguration interpreterConfiguration,
-            bool includeVirtualEnv,
-            bool includeCondaEnv,
-            bool includeIronPythonEnv
-        ) {
-
-            if (!includeVirtualEnv && VirtualEnv.IsPythonVirtualEnv(interpreterConfiguration.GetPrefixPath())) {
+        internal static bool ExcludeInterpreter(InterpreterConfiguration config, InterpreterFilter excludeInterpreters = InterpreterFilter.None) {
+            if (excludeInterpreters == InterpreterFilter.None) {
                 return false;
             }
 
-            if (!includeCondaEnv && CondaUtils.IsCondaEnvironment(interpreterConfiguration.GetPrefixPath())) {
-                return false;
+            if (excludeInterpreters.HasFlag(InterpreterFilter.ExcludePythonEnv) && VirtualEnv.IsPythonVirtualEnv(config.GetPrefixPath())) {
+                return true;
             }
 
-            if (!includeIronPythonEnv && interpreterConfiguration.IsIronPython()) {
-                return false;
+            if (excludeInterpreters.HasFlag(InterpreterFilter.ExcludeCondaEnv) && CondaUtils.IsCondaEnvironment(config.GetPrefixPath())) {
+                return true;
             }
 
-            return true;
+            if (excludeInterpreters.HasFlag(InterpreterFilter.ExcludeIronPythonEnv) && config.IsIronPython()) {
+                return true;
+            }
+
+            return false;
+        }
+
+        [Flags]
+        internal enum InterpreterFilter {
+            None = 0,
+            ExcludePythonEnv = 1,
+            ExcludeCondaEnv = 2,
+            ExcludeIronPythonEnv = 4,
+            ExcludeAll = ~None
         }
 
         private static string FormatInvalidId(string id) {
