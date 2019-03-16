@@ -21,6 +21,7 @@ using System.Runtime.InteropServices;
 using Microsoft.PythonTools.Environments;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Logging;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -31,11 +32,13 @@ namespace Microsoft.PythonTools.Commands {
     class CurrentEnvironmentCommand : OleMenuCommand {
         private readonly IServiceProvider _serviceProvider;
         private readonly EnvironmentSwitcherManager _envSwitchMgr;
+        private readonly IPythonToolsLogger _logger;
 
         public CurrentEnvironmentCommand(IServiceProvider serviceProvider)
             : base(null, null, QueryStatus, new CommandID(GuidList.guidPythonToolsCmdSet, (int)PkgCmdIDList.comboIdCurrentEnvironment)) {
             _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
             _envSwitchMgr = serviceProvider.GetPythonToolsService().EnvironmentSwitcherManager;
+            _logger = serviceProvider.GetService(typeof(IPythonToolsLogger)) as IPythonToolsLogger;
         }
 
         public override void Invoke(object inArg, IntPtr outArg, OLECMDEXECOPT options) {
@@ -50,9 +53,17 @@ namespace Microsoft.PythonTools.Commands {
                 var text = inArg as string;
                 var factory = _envSwitchMgr.AllFactories.SingleOrDefault(f => f.Configuration.Description == text);
                 if (factory != null) {
+                    _logger?.LogEvent(PythonLogEvent.SelectEnvFromToolbar, new SelectEnvFromToolbarInfo() {
+                        InterpreterId = factory.Configuration.Id,
+                        Architecture = factory.Configuration.Architecture.ToString(),
+                        Version = factory.Configuration.Version.ToString(),
+                        IsIronPython = factory.Configuration.IsIronPython(),
+                    });
+
                     SwitchToFactoryAsync(factory).HandleAllExceptions(_serviceProvider, GetType()).DoNotWait();
                 } else {
                     // The special "Add Environment..." entry, or any entry that no longer exists brings up the add dialog
+                    _logger?.LogEvent(PythonLogEvent.AddEnvFromToolbar, null);
                     AddEnvironmentCommand
                         .AddEnvironmentAsync(_envSwitchMgr, _serviceProvider, AddEnvironmentDialog.PageKind.VirtualEnvironment)
                         .HandleAllExceptions(_serviceProvider, GetType())
