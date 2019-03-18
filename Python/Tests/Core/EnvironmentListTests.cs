@@ -773,75 +773,86 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(0)]
-        public void FilterPython2Interpreter() {
+        public void FilterInterpreterPython2() {
             PythonVersion pythonInterpreter =   PythonPaths.Python27_x64 ??
                                                 PythonPaths.Python26_x64 ??
                                                 PythonPaths.Python27 ??
                                                 PythonPaths.Python26;
+            if (pythonInterpreter == null) {
+                Assert.Inconclusive("Python 2.6 or 2.7 not found");
+            }
 
-            Assert.IsNotNull(pythonInterpreter, "Python 2.6 or 2.7 not found");
             FilterPythonInterpreterEnv(pythonInterpreter);
         }
 
         [TestMethod, Priority(0)]
-        public void FilterPython3Interpreter() {
+        public void FilterInterpreterPython3() {
             PythonVersion pythonInterpreter =   PythonPaths.Python37_x64 ??
                                                 PythonPaths.Python36_x64 ??
                                                 PythonPaths.Python37 ??
                                                 PythonPaths.Python36;
+            if (pythonInterpreter == null) {
+                Assert.Inconclusive("Python 3.6 or 3.7 not found");
+            }
 
-            Assert.IsNotNull(pythonInterpreter, "Python 3.6 or 3.7 not found");
             FilterPythonInterpreterEnv(pythonInterpreter);
         }
 
         [TestMethod, Priority(0)]
-        public void FilterConda2Interpreter() {
+        public void FilterInterpreterConda2() {
             PythonVersion condaInterpreter = PythonPaths.Anaconda27_x64 ?? PythonPaths.Anaconda27;
 
-            Assert.IsNotNull(condaInterpreter, "Anaconda 2.6 or 2.7 not found");
+            condaInterpreter.AssertInstalled();
             FilterCondaInterpreter(condaInterpreter);
         }
 
         [TestMethod, Priority(0)]
-        public void FilterConda3Interpreter() {
+        public void FilterInterpreterConda3() {
             PythonVersion condaInterpreter =    PythonPaths.Anaconda37_x64 ??
                                                 PythonPaths.Anaconda36_x64 ??
                                                 PythonPaths.Anaconda37 ??
                                                 PythonPaths.Anaconda36;
 
-            Assert.IsNotNull(condaInterpreter, "Anaconda 3.6 or 3.7 not found");
+            condaInterpreter.AssertInstalled();
             FilterCondaInterpreter(condaInterpreter);
         }
 
         [TestMethod, Priority(0)]
-        public void FilterIronPython2Interpreter() {
-            PythonVersion ironPythonInterpreter = PythonPaths.IronPython27_x64 ?? PythonPaths.IronPython27;
-            Assert.IsNotNull(ironPythonInterpreter, "Iron python 2.7 not found");
+        public void FilterInterpreterIronpython2() {
+            PythonVersion ironpythonInterpreter = PythonPaths.IronPython27_x64 ?? PythonPaths.IronPython27;
+            if (ironpythonInterpreter == null) {
+                Assert.Inconclusive("Iron python 2.7 not found");
+            }
 
-            Assert.IsTrue(InterpreterView.ExcludeInterpreter(ironPythonInterpreter.Configuration, InterpreterView.InterpreterFilter.ExcludeAll));
-            Assert.IsTrue(InterpreterView.ExcludeInterpreter(ironPythonInterpreter.Configuration, InterpreterView.InterpreterFilter.ExcludeIronPythonEnv));
-            Assert.IsFalse(InterpreterView.ExcludeInterpreter(ironPythonInterpreter.Configuration, InterpreterView.InterpreterFilter.None));
+            Assert.IsTrue(InterpreterView.ExcludeInterpreter(ironpythonInterpreter.Configuration, InterpreterView.InterpreterFilter.ExcludeAll));
+            Assert.IsTrue(InterpreterView.ExcludeInterpreter(ironpythonInterpreter.Configuration, InterpreterView.InterpreterFilter.ExcludeIronpython));
+            Assert.IsFalse(InterpreterView.ExcludeInterpreter(ironpythonInterpreter.Configuration, InterpreterView.InterpreterFilter.None));
             Assert.IsFalse(InterpreterView.ExcludeInterpreter(
-                ironPythonInterpreter.Configuration,
-                InterpreterView.InterpreterFilter.ExcludePythonEnv | InterpreterView.InterpreterFilter.ExcludeCondaEnv)
+                ironpythonInterpreter.Configuration,
+                InterpreterView.InterpreterFilter.ExcludeVirtualEnv | InterpreterView.InterpreterFilter.ExcludeCondaEnv)
             );
         }
 
         #region Test Helpers
         private void FilterPythonInterpreterEnv(PythonVersion pythonInterpreter) {
             Assert.IsFalse(InterpreterView.ExcludeInterpreter(pythonInterpreter.Configuration, InterpreterView.InterpreterFilter.None));
-            Assert.IsFalse(InterpreterView.ExcludeInterpreter(pythonInterpreter.Configuration, InterpreterView.InterpreterFilter.ExcludePythonEnv));
+            Assert.IsFalse(InterpreterView.ExcludeInterpreter(pythonInterpreter.Configuration, InterpreterView.InterpreterFilter.ExcludeVirtualEnv));
             Assert.IsFalse(InterpreterView.ExcludeInterpreter(pythonInterpreter.Configuration, InterpreterView.InterpreterFilter.ExcludeAll));
 
-            var pythonVirtualEnvConfiguration = CreatePythonVirtualEnv(pythonInterpreter);
-            Assert.IsNotNull(pythonVirtualEnvConfiguration, "Failed to create python virtual environment: " + pythonVirtualEnvConfiguration.Version.ToString());
+            var virtualEnvConfig = CreateVirtualEnv(pythonInterpreter);
+            if (virtualEnvConfig == null) {
+                Assert.Inconclusive(
+                    "Unable to test excluding virtual environment because creation of virtual environment has failed {0}",
+                    virtualEnvConfig.Version.ToString()
+                );
+            }
 
-            Assert.IsTrue(InterpreterView.ExcludeInterpreter(pythonVirtualEnvConfiguration, InterpreterView.InterpreterFilter.ExcludePythonEnv));
-            Assert.IsTrue(InterpreterView.ExcludeInterpreter(pythonVirtualEnvConfiguration, InterpreterView.InterpreterFilter.ExcludeAll));
+            Assert.IsTrue(InterpreterView.ExcludeInterpreter(virtualEnvConfig, InterpreterView.InterpreterFilter.ExcludeVirtualEnv));
+            Assert.IsTrue(InterpreterView.ExcludeInterpreter(virtualEnvConfig, InterpreterView.InterpreterFilter.ExcludeAll));
             Assert.IsFalse(InterpreterView.ExcludeInterpreter(pythonInterpreter.Configuration, InterpreterView.InterpreterFilter.None));
             Assert.IsFalse(InterpreterView.ExcludeInterpreter(
                 pythonInterpreter.Configuration,
-                (InterpreterView.InterpreterFilter.ExcludeCondaEnv | InterpreterView.InterpreterFilter.ExcludeIronPythonEnv)
+                (InterpreterView.InterpreterFilter.ExcludeCondaEnv | InterpreterView.InterpreterFilter.ExcludeIronpython)
             ));
         }
 
@@ -851,16 +862,15 @@ namespace PythonToolsUITests {
             Assert.IsFalse(InterpreterView.ExcludeInterpreter(condaInterpreter.Configuration, InterpreterView.InterpreterFilter.None));
             Assert.IsFalse(InterpreterView.ExcludeInterpreter(
                 condaInterpreter.Configuration,
-                InterpreterView.InterpreterFilter.ExcludePythonEnv | InterpreterView.InterpreterFilter.ExcludeIronPythonEnv)
+                InterpreterView.InterpreterFilter.ExcludeVirtualEnv | InterpreterView.InterpreterFilter.ExcludeIronpython)
             );
-
 
             //https://gist.github.com/RaymonGulati1/541bda00aa8b3c6c6c84315486d21dbc
             //Tests for filtering conda interpreters and environments. 
             //Also includes code for using the conda interpreter to generate a conda env   
         }
 
-        private VisualStudioInterpreterConfiguration CreatePythonVirtualEnv(PythonVersion pythonVersion) {
+        private VisualStudioInterpreterConfiguration CreateVirtualEnv(PythonVersion pythonVersion) {
             if (pythonVersion == null) {
                 return null;
             }
@@ -872,7 +882,7 @@ namespace PythonToolsUITests {
             }
 
             var virtualEnvParameter = (pythonVersion.Version < PythonLanguageVersion.V30) ? "virtualenv" : "venv";
-            WorkspaceInterpreterFactoryTests.CreatePythonVirtualEnv(pythonVersion.InterpreterPath, env, "", virtualEnvParameter);
+            WorkspaceInterpreterFactoryTests.virtualEnvModule(pythonVersion.InterpreterPath, env, "", virtualEnvParameter);
             var interpreterConfiguration = new VisualStudioInterpreterConfiguration(
                     "Mock;" + Guid.NewGuid().ToString(),
                     Path.GetFileName(PathUtils.TrimEndSeparator(env)),
@@ -1163,7 +1173,7 @@ namespace PythonToolsUITests {
 
         #endregion
     }
-    
+
     class TestPipPackageCache : PipPackageCache {
         public TestPipPackageCache(string cachePath = null) : base(
             null, null,

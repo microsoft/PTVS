@@ -425,14 +425,14 @@ namespace Microsoft.PythonTools.Environments {
             }
             return libPath;
         }
-        
+
         internal static bool IsPythonVirtualEnv(string prefixPath) {
             if (string.IsNullOrEmpty(prefixPath)) {
                 return false;
             }
-            
+
             string libPath = FindLibPath(prefixPath);
-            if(libPath == null) {
+            if (libPath == null) {
                 return false;
             }
 

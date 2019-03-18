@@ -38,11 +38,10 @@ namespace Microsoft.PythonTools.Environments {
             }
 
             var knownProviders = serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>();
-
             var res = knownProviders.Configurations
                 .Where(PythonInterpreterFactoryExtensions.IsUIVisible)
                 .Where(PythonInterpreterFactoryExtensions.IsRunnable)
-                .Where(configuration => ExcludeInterpreter(configuration, excludeInterpreters) == false)
+                .Where(configuration => !ExcludeInterpreter(configuration, excludeInterpreters))
                 .OrderBy(c => c.Description)
                 .ThenBy(c => c.Version)
                 .Select(c => new InterpreterView(c.Id, c.Description, c.InterpreterPath, c.Version.ToString(), c.ArchitectureString, project));
@@ -65,7 +64,7 @@ namespace Microsoft.PythonTools.Environments {
                 return false;
             }
 
-            if (excludeInterpreters.HasFlag(InterpreterFilter.ExcludePythonEnv) && VirtualEnv.IsPythonVirtualEnv(config.GetPrefixPath())) {
+            if (excludeInterpreters.HasFlag(InterpreterFilter.ExcludeVirtualEnv) && VirtualEnv.IsPythonVirtualEnv(config.GetPrefixPath())) {
                 return true;
             }
 
@@ -73,7 +72,7 @@ namespace Microsoft.PythonTools.Environments {
                 return true;
             }
 
-            if (excludeInterpreters.HasFlag(InterpreterFilter.ExcludeIronPythonEnv) && config.IsIronPython()) {
+            if (excludeInterpreters.HasFlag(InterpreterFilter.ExcludeIronpython) && config.IsIronPython()) {
                 return true;
             }
 
@@ -83,9 +82,9 @@ namespace Microsoft.PythonTools.Environments {
         [Flags]
         internal enum InterpreterFilter {
             None = 0,
-            ExcludePythonEnv = 1,
+            ExcludeVirtualEnv = 1,
             ExcludeCondaEnv = 2,
-            ExcludeIronPythonEnv = 4,
+            ExcludeIronpython = 4,
             ExcludeAll = ~None
         }
 
