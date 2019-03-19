@@ -882,7 +882,7 @@ namespace PythonToolsUITests {
             }
 
             var virtualEnvParameter = (pythonVersion.Version < PythonLanguageVersion.V30) ? "virtualenv" : "venv";
-            WorkspaceInterpreterFactoryTests.virtualEnvModule(pythonVersion.InterpreterPath, env, "", virtualEnvParameter);
+            WorkspaceInterpreterFactoryTests.CreatePythonVirtualEnv(pythonVersion.InterpreterPath, env, "", virtualEnvParameter);
             var interpreterConfiguration = new VisualStudioInterpreterConfiguration(
                     "Mock;" + Guid.NewGuid().ToString(),
                     Path.GetFileName(PathUtils.TrimEndSeparator(env)),
