@@ -881,8 +881,8 @@ namespace PythonToolsUITests {
                 DeleteFolder.Add(env);
             }
 
-            var virtualEnvParameter = (pythonVersion.Version < PythonLanguageVersion.V30) ? "virtualenv" : "venv";
-            WorkspaceInterpreterFactoryTests.CreatePythonVirtualEnv(pythonVersion.InterpreterPath, env, "", virtualEnvParameter);
+            var virtualEnvModule = (pythonVersion.Version < PythonLanguageVersion.V30) ? "virtualenv" : "venv";
+            WorkspaceInterpreterFactoryTests.CreatePythonVirtualEnv(pythonVersion.InterpreterPath, env, "", virtualEnvModule);
             var interpreterConfiguration = new VisualStudioInterpreterConfiguration(
                     "Mock;" + Guid.NewGuid().ToString(),
                     Path.GetFileName(PathUtils.TrimEndSeparator(env)),
