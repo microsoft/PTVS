@@ -525,8 +525,6 @@ namespace Microsoft.PythonTools.Interpreter {
             // --platform win-64
             var args = new List<string>();
             args.Add("search");
-            args.Add("-p");
-            args.Add(ProcessOutput.QuoteSingleArgument(_factory.Configuration.GetPrefixPath()));
             args.Add("--json");
 
             using (var proc = ProcessOutput.Run(
