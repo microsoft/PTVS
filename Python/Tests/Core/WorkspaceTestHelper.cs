@@ -391,7 +391,15 @@ namespace PythonToolsTests {
                 throw new NotImplementedException();
             }
 
+            public bool? GetBoolProperty(string propertyName) {
+                throw new NotImplementedException();
+            }
+
             public Task SetPropertyAsync(string propertyName, string propertyVal) {
+                throw new NotImplementedException();
+            }
+
+            public Task SetPropertyAsync(string propertyName, bool? propertyVal) {
                 throw new NotImplementedException();
             }
         }

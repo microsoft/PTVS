@@ -128,6 +128,10 @@ namespace Microsoft.PythonTools.Interpreter {
             return _workspace.GetStringProperty(propertyName);
         }
 
+        public bool? GetBoolProperty(string propertyName) {
+            return _workspace.GetBoolProperty(propertyName);
+        }
+
         private string[] ReadSearchPathsSetting() {
             var settingsMgr = _workspace.GetSettingsManager();
             var settings = settingsMgr.GetAggregatedSettings(PythonSettingsType);
@@ -151,6 +155,10 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         public Task SetPropertyAsync(string propertyName, string propertyVal) {
+            return _workspace.SetPropertyAsync(propertyName, propertyVal);
+        }
+
+        public Task SetPropertyAsync(string propertyName, bool? propertyVal) {
             return _workspace.SetPropertyAsync(propertyName, propertyVal);
         }
 

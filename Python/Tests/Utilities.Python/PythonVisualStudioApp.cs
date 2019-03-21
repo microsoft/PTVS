@@ -234,6 +234,25 @@ namespace TestUtilities.UI.Python {
             }
         }
 
+        public AutomationElementCollection GetInfoBars() {
+            return Element.FindAll(TreeScope.Descendants, new PropertyCondition(AutomationElement.AutomationIdProperty, "infobarcontrol"));
+        }
+
+        public AutomationElement FindFirstInfoBar(Condition condition, TimeSpan timeout) {
+            for (int i = 0; i < timeout.TotalMilliseconds; i += 500) {
+                var infoBars = GetInfoBars();
+                foreach (AutomationElement infoBar in infoBars) {
+                    var createLink = infoBar.FindFirst(TreeScope.Descendants, condition);
+                    if (createLink != null) {
+                        return createLink;
+                    }
+                }
+                Thread.Sleep(500);
+            }
+
+            return null;
+        }
+
         public ReplWindowProxy ExecuteInInteractive(Project project, ReplWindowProxySettings settings = null) {
             // Prepare makes sure that IPython mode is disabled, and that the REPL is reset and cleared
             var window = ReplWindowProxy.Prepare(this, settings, project.Name, workspaceName: null);

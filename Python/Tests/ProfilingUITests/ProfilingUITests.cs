@@ -1227,7 +1227,7 @@ namespace ProfilingUITests {
 
         #region Helpers
 
-        public class DotNotWaitOnExit : PythonDebuggingGeneralOptionsSetter {
+        public class DotNotWaitOnExit : PythonOptionsSetter {
             public DotNotWaitOnExit(EnvDTE.DTE dte) :
                 base(dte, waitOnNormalExit: false, waitOnAbnormalExit: false) {
             }

@@ -50,9 +50,9 @@ namespace Microsoft.PythonTools {
         private void OnWorkspaceInitialized(object sender, PythonWorkspaceContextEventArgs e) {
             var workspace = e.Workspace;
 
-            _packageInstallInfoBar = new PackageInstallInfoBar(_serviceProvider, null, workspace);
-            _condaEnvCreateInfoBar = new CondaEnvCreateInfoBar(_serviceProvider, null, workspace);
-            _virtualEnvCreateInfoBar = new VirtualEnvCreateInfoBar(_serviceProvider, null, workspace);
+            _packageInstallInfoBar = new PackageInstallInfoBar(_serviceProvider, workspace);
+            _condaEnvCreateInfoBar = new CondaEnvCreateInfoBar(_serviceProvider, workspace);
+            _virtualEnvCreateInfoBar = new VirtualEnvCreateInfoBar(_serviceProvider, workspace);
 
             workspace.AddActionOnClose(_packageInstallInfoBar, (obj => ((PythonProjectInfoBar)obj).Dispose()));
             workspace.AddActionOnClose(_condaEnvCreateInfoBar, (obj => ((PythonProjectInfoBar)obj).Dispose()));

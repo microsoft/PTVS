@@ -28,16 +28,18 @@ using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.Project {
     internal sealed class VirtualEnvCreateInfoBar : PythonProjectInfoBar {
-        public VirtualEnvCreateInfoBar(IServiceProvider site, PythonProjectNode projectNode, IPythonWorkspaceContext workspace)
-            : base(site, projectNode, workspace) {
+        public VirtualEnvCreateInfoBar(IServiceProvider site, PythonProjectNode projectNode)
+            : base(site, projectNode) {
+        }
+
+        public VirtualEnvCreateInfoBar(IServiceProvider site, IPythonWorkspaceContext workspace)
+            : base(site, workspace) {
         }
 
         public override async Task CheckAsync() {
             if (IsCreated) {
                 return;
             }
-
-            var projectOrWorkspaceName = Project?.Caption ?? Workspace?.WorkspaceName ?? string.Empty;
 
             if (!Site.GetPythonToolsService().GeneralOptions.PromptForEnvCreate) {
                 return;
@@ -56,36 +58,15 @@ namespace Microsoft.PythonTools.Project {
                 return;
             }
 
-            Action createVirtualEnv = () => {
-                Logger?.LogEvent(
-                    PythonLogEvent.VirtualEnvCreateInfoBar,
-                    new VirtualEnvCreateInfoBarInfo() {
-                        Action = VirtualEnvCreateInfoBarActions.Create,
-                    }
-                );
-                AddEnvironmentDialog.ShowAddVirtualEnvironmentDialogAsync(
-                    Site,
-                    Project,
-                    Workspace,
-                    null,
-                    null,
-                    txtPath
-                ).HandleAllExceptions(Site, typeof(VirtualEnvCreateInfoBar)).DoNotWait();
-                Close();
-            };
+            ShowInfoBar(txtPath);
+        }
 
-            Action projectIgnore = () => {
-                Logger?.LogEvent(
-                    PythonLogEvent.VirtualEnvCreateInfoBar,
-                    new VirtualEnvCreateInfoBarInfo() {
-                        Action = VirtualEnvCreateInfoBarActions.Ignore,
-                    }
-                );
-                SuppressAsync(PythonConstants.SuppressEnvironmentCreationPrompt)
-                    .HandleAllExceptions(Site, typeof(VirtualEnvCreateInfoBar))
-                    .DoNotWait();
-                Close();
-            };
+        private void ShowInfoBar(string txtPath) {
+            var context = Project != null ? InfoBarContexts.Project : InfoBarContexts.Workspace;
+            var projectOrWorkspaceName = Project?.Caption ?? Workspace?.WorkspaceName ?? string.Empty;
+
+            Action createVirtualEnv = () => CreateEnvironment(context, txtPath);
+            Action projectIgnore = () => Ignore(context);
 
             var messages = new List<IVsInfoBarTextSpan>();
             var actions = new List<InfoBarActionItem>();
@@ -102,10 +83,44 @@ namespace Microsoft.PythonTools.Project {
                 PythonLogEvent.VirtualEnvCreateInfoBar,
                 new VirtualEnvCreateInfoBarInfo() {
                     Action = VirtualEnvCreateInfoBarActions.Prompt,
+                    Context = context,
                 }
             );
 
             Create(new InfoBarModel(messages, actions, KnownMonikers.StatusInformation, isCloseButtonVisible: true));
+        }
+
+        private void Ignore(string context) {
+            Logger?.LogEvent(
+                PythonLogEvent.VirtualEnvCreateInfoBar,
+                new VirtualEnvCreateInfoBarInfo() {
+                    Action = VirtualEnvCreateInfoBarActions.Ignore,
+                    Context = context,
+                }
+            );
+            SuppressAsync(PythonConstants.SuppressEnvironmentCreationPrompt)
+                .HandleAllExceptions(Site, typeof(VirtualEnvCreateInfoBar))
+                .DoNotWait();
+            Close();
+        }
+
+        private void CreateEnvironment(string context, string txtPath) {
+            Logger?.LogEvent(
+                PythonLogEvent.VirtualEnvCreateInfoBar,
+                new VirtualEnvCreateInfoBarInfo() {
+                    Action = VirtualEnvCreateInfoBarActions.Create,
+                    Context = context,
+                }
+            );
+            AddEnvironmentDialog.ShowAddVirtualEnvironmentDialogAsync(
+                Site,
+                Project,
+                Workspace,
+                null,
+                null,
+                txtPath
+            ).HandleAllExceptions(Site, typeof(VirtualEnvCreateInfoBar)).DoNotWait();
+            Close();
         }
     }
 }

@@ -725,7 +725,7 @@ dependencies:
             return envFilePath;
         }
 
-        private static void CreateVirtualEnvironment(PythonVersion pythonVersion, string envPath) {
+        internal static void CreateVirtualEnvironment(PythonVersion pythonVersion, string envPath) {
             using (var output = ProcessOutput.RunHiddenAndCapture(pythonVersion.Configuration.InterpreterPath, "-m", "venv", envPath)) {
                 Assert.IsTrue(output.Wait(TimeSpan.FromMinutes(3)));
                 Assert.AreEqual(0, output.ExitCode);

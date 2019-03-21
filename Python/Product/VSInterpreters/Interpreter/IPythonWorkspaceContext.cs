@@ -74,6 +74,13 @@ namespace Microsoft.PythonTools.Interpreter {
         string GetStringProperty(string propertyName);
 
         /// <summary>
+        /// Return the property setting from PythonSettings.json.
+        /// </summary>
+        /// <param name="propertyName">Property to retrieve.</param>
+        /// <returns>Property value.</returns>
+        bool? GetBoolProperty(string propertyName);
+
+        /// <summary>
         /// Read the interpreter setting string from PythonSettings.json.
         /// </summary>
         /// <remarks>
@@ -118,6 +125,14 @@ namespace Microsoft.PythonTools.Interpreter {
         /// <param name="propertyName">Name of property.</param>
         /// <param name="propertyVal">Value of property.</param>
         Task SetPropertyAsync(string propertyName, string propertyVal);
+
+        /// <summary>
+        /// Set a property to the specified value. If the value is <c>null</c>,
+        /// the property is removed if it already exists.
+        /// </summary>
+        /// <param name="propertyName">Name of property.</param>
+        /// <param name="propertyVal">Value of property.</param>
+        Task SetPropertyAsync(string propertyName, bool? propertyVal);
 
         /// <summary>
         /// Update the interpreter setting in PythonSettings.json to

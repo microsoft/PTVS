@@ -29,8 +29,12 @@ using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.Project {
     internal sealed class PackageInstallInfoBar : PythonProjectInfoBar {
-        public PackageInstallInfoBar(IServiceProvider site, PythonProjectNode projectNode, IPythonWorkspaceContext workspace)
-            : base(site, projectNode, workspace) {
+        public PackageInstallInfoBar(IServiceProvider site, PythonProjectNode projectNode)
+            : base(site, projectNode) {
+        }
+
+        public PackageInstallInfoBar(IServiceProvider site, IPythonWorkspaceContext workspace)
+            : base(site, workspace) {
         }
 
         public override async Task CheckAsync() {
@@ -38,7 +42,6 @@ namespace Microsoft.PythonTools.Project {
                 return;
             }
 
-            var projectOrWorkspaceName = Project?.Caption ?? Workspace?.WorkspaceName ?? string.Empty;
             var options = Site.GetPythonToolsService().InterpreterOptionsService;
 
             if (!Site.GetPythonToolsService().GeneralOptions.PromptForPackageInstallation) {
@@ -73,31 +76,15 @@ namespace Microsoft.PythonTools.Project {
                 return;
             }
 
-            Action installPackages = () => {
-                Logger?.LogEvent(
-                    PythonLogEvent.PackageInstallInfoBar,
-                    new PackageInstallInfoBarInfo() {
-                        Action = PackageInstallInfoBarActions.Install,
-                    }
-                );
-                PythonProjectNode.InstallRequirementsAsync(Site, pm, txtPath)
-                    .HandleAllExceptions(Site, typeof(PackageInstallInfoBar))
-                    .DoNotWait();
-                Close();
-            };
+            ShowInfoBar(txtPath, pm);
+        }
 
-            Action projectIgnore = () => {
-                Logger?.LogEvent(
-                    PythonLogEvent.PackageInstallInfoBar,
-                    new PackageInstallInfoBarInfo() {
-                        Action = PackageInstallInfoBarActions.Ignore,
-                    }
-                );
-                SuppressAsync(PythonConstants.SuppressPackageInstallationPrompt)
-                    .HandleAllExceptions(Site, typeof(PackageInstallInfoBar))
-                    .DoNotWait();
-                Close();
-            };
+        private void ShowInfoBar(string txtPath, IPackageManager pm) {
+            var context = Project != null ? InfoBarContexts.Project : InfoBarContexts.Workspace;
+            var projectOrWorkspaceName = Project?.Caption ?? Workspace?.WorkspaceName ?? string.Empty;
+
+            Action installPackages = () => InstallPackages(context, txtPath, pm);
+            Action projectIgnore = () => Ignore(context);
 
             var messages = new List<IVsInfoBarTextSpan>();
             var actions = new List<InfoBarActionItem>();
@@ -115,10 +102,39 @@ namespace Microsoft.PythonTools.Project {
                 PythonLogEvent.PackageInstallInfoBar,
                 new PackageInstallInfoBarInfo() {
                     Action = PackageInstallInfoBarActions.Prompt,
+                    Context = context,
                 }
             );
 
             Create(new InfoBarModel(messages, actions, KnownMonikers.StatusInformation, isCloseButtonVisible: true));
+        }
+
+        private void Ignore(string context) {
+            Logger?.LogEvent(
+                PythonLogEvent.PackageInstallInfoBar,
+                new PackageInstallInfoBarInfo() {
+                    Action = PackageInstallInfoBarActions.Ignore,
+                    Context = context,
+                }
+            );
+            SuppressAsync(PythonConstants.SuppressPackageInstallationPrompt)
+                .HandleAllExceptions(Site, typeof(PackageInstallInfoBar))
+                .DoNotWait();
+            Close();
+        }
+
+        private void InstallPackages(string context, string txtPath, IPackageManager pm) {
+            Logger?.LogEvent(
+                PythonLogEvent.PackageInstallInfoBar,
+                new PackageInstallInfoBarInfo() {
+                    Action = PackageInstallInfoBarActions.Install,
+                    Context = context,
+                }
+            );
+            PythonProjectNode.InstallRequirementsAsync(Site, pm, txtPath)
+                .HandleAllExceptions(Site, typeof(PackageInstallInfoBar))
+                .DoNotWait();
+            Close();
         }
 
         private async Task<bool> PackagesMissingAsync(IPackageManager pm, string txtPath) {

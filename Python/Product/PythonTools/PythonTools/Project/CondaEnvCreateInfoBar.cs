@@ -29,16 +29,18 @@ using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.Project {
     internal sealed class CondaEnvCreateInfoBar : PythonProjectInfoBar {
-        public CondaEnvCreateInfoBar(IServiceProvider site, PythonProjectNode projectNode, IPythonWorkspaceContext workspace)
-            : base(site, projectNode, workspace) {
+        public CondaEnvCreateInfoBar(IServiceProvider site, PythonProjectNode projectNode)
+            : base(site, projectNode) {
+        }
+
+        public CondaEnvCreateInfoBar(IServiceProvider site, IPythonWorkspaceContext workspace)
+            : base(site, workspace) {
         }
 
         public override async Task CheckAsync() {
             if (IsCreated) {
                 return;
             }
-
-            var projectOrWorkspaceName = Project?.Caption ?? Workspace?.WorkspaceName ?? string.Empty;
 
             if (!Site.GetPythonToolsService().GeneralOptions.PromptForEnvCreate) {
                 return;
@@ -87,40 +89,15 @@ namespace Microsoft.PythonTools.Project {
                 }
             }
 
-            Action create = () => {
-                Logger?.LogEvent(
-                    PythonLogEvent.CondaEnvCreateInfoBar,
-                    new CondaEnvCreateInfoBarInfo() {
-                        Action = CondaEnvCreateInfoBarActions.Create,
-                    }
-                );
-                if (Project != null) {
-                    Project.ShowAddCondaEnvironment(existingName, yamlPath);
-                } else if (Workspace != null) {
-                    AddEnvironmentDialog.ShowAddCondaEnvironmentDialogAsync(
-                        Site,
-                        null,
-                        Workspace,
-                        existingName,
-                        yamlPath,
-                        null
-                    ).HandleAllExceptions(Site, typeof(CondaEnvCreateInfoBar)).DoNotWait();
-                }
-                Close();
-            };
+            ShowInfoBar(yamlPath, existingName);
+        }
 
-            Action projectIgnore = () => {
-                Logger?.LogEvent(
-                    PythonLogEvent.CondaEnvCreateInfoBar,
-                    new CondaEnvCreateInfoBarInfo() {
-                        Action = CondaEnvCreateInfoBarActions.Ignore,
-                    }
-                );
-                SuppressAsync(PythonConstants.SuppressEnvironmentCreationPrompt)
-                    .HandleAllExceptions(Site, typeof(CondaEnvCreateInfoBar))
-                    .DoNotWait();
-                Close();
-            };
+        private void ShowInfoBar(string yamlPath, string existingName) {
+            var context = Project != null ? InfoBarContexts.Project : InfoBarContexts.Workspace;
+            var projectOrWorkspaceName = Project?.Caption ?? Workspace?.WorkspaceName ?? string.Empty;
+
+            Action create = () => CreateEnvironment(context, yamlPath, existingName);
+            Action projectIgnore = () => Ignore(context);
 
             var messages = new List<IVsInfoBarTextSpan>();
             var actions = new List<InfoBarActionItem>();
@@ -138,10 +115,48 @@ namespace Microsoft.PythonTools.Project {
                 new CondaEnvCreateInfoBarInfo() {
                     Action = CondaEnvCreateInfoBarActions.Prompt,
                     Reason = existingName != null ? CondaEnvCreateInfoBarReasons.MissingEnv : CondaEnvCreateInfoBarReasons.NoEnv,
+                    Context = context,
                 }
             );
 
             Create(new InfoBarModel(messages, actions, KnownMonikers.StatusInformation, isCloseButtonVisible: true));
+        }
+
+        private void Ignore(string context) {
+            Logger?.LogEvent(
+                PythonLogEvent.CondaEnvCreateInfoBar,
+                new CondaEnvCreateInfoBarInfo() {
+                    Action = CondaEnvCreateInfoBarActions.Ignore,
+                    Context = context,
+                }
+            );
+            SuppressAsync(PythonConstants.SuppressEnvironmentCreationPrompt)
+                .HandleAllExceptions(Site, typeof(CondaEnvCreateInfoBar))
+                .DoNotWait();
+            Close();
+        }
+
+        private void CreateEnvironment(string context, string yamlPath, string existingName) {
+            Logger?.LogEvent(
+                PythonLogEvent.CondaEnvCreateInfoBar,
+                new CondaEnvCreateInfoBarInfo() {
+                    Action = CondaEnvCreateInfoBarActions.Create,
+                    Context = context,
+                }
+            );
+            if (Project != null) {
+                Project.ShowAddCondaEnvironment(existingName, yamlPath);
+            } else if (Workspace != null) {
+                AddEnvironmentDialog.ShowAddCondaEnvironmentDialogAsync(
+                    Site,
+                    null,
+                    Workspace,
+                    existingName,
+                    yamlPath,
+                    null
+                ).HandleAllExceptions(Site, typeof(CondaEnvCreateInfoBar)).DoNotWait();
+            }
+            Close();
         }
 
         private bool IsCondaEnvOrAnaconda(IPythonInterpreterFactory fact) {

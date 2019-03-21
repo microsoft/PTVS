@@ -41,6 +41,20 @@ namespace Microsoft.PythonTools {
             return propertyVal;
         }
 
+        public static bool? GetBoolProperty(this IWorkspace workspace, string propertyName) {
+            if (workspace == null) {
+                throw new ArgumentNullException(nameof(workspace));
+            }
+
+            var settingsMgr = workspace.GetSettingsManager();
+            var settings = settingsMgr.GetAggregatedSettings(PythonSettingsType);
+            if (settings.GetProperty(propertyName, out bool propertyVal) == WorkspaceSettingsResult.Success) {
+                return propertyVal;
+            }
+
+            return null;
+        }
+
         public static string GetInterpreter(this IWorkspace workspace) {
             return workspace.GetStringProperty(InterpreterProperty);
         }
@@ -77,6 +91,26 @@ namespace Microsoft.PythonTools {
                 var writer = await persist.GetWriter(PythonSettingsType);
                 if (propertyVal != null) {
                     writer.SetProperty(propertyName, propertyVal);
+                } else {
+                    writer.Delete(propertyName);
+                }
+            }
+        }
+
+        public static async Task SetPropertyAsync(this IWorkspace workspace, string propertyName, bool? propertyVal) {
+            if (workspace == null) {
+                throw new ArgumentNullException(nameof(workspace));
+            }
+
+            if (propertyName == null) {
+                throw new ArgumentNullException(nameof(propertyName));
+            }
+
+            var settingsMgr = workspace.GetSettingsManager();
+            using (var persist = await settingsMgr.GetPersistanceAsync(true)) {
+                var writer = await persist.GetWriter(PythonSettingsType);
+                if (propertyVal.HasValue) {
+                    writer.SetProperty(propertyName, propertyVal.Value);
                 } else {
                     writer.Delete(propertyName);
                 }

@@ -34,10 +34,18 @@ namespace Microsoft.PythonTools.Project {
         private IVsInfoBarUIElement _infoBar;
         private InfoBarModel _infoBarModel;
 
-        protected PythonProjectInfoBar(IServiceProvider site, PythonProjectNode projectNode, IPythonWorkspaceContext workspace) {
+        protected PythonProjectInfoBar(IServiceProvider site, PythonProjectNode projectNode) {
             Site = site ?? throw new ArgumentNullException(nameof(site));
-            Project = projectNode;
-            Workspace = workspace;
+            Project = projectNode ?? throw new ArgumentNullException(nameof(projectNode));
+            Logger = (IPythonToolsLogger)site.GetService(typeof(IPythonToolsLogger));
+            _shell = (IVsShell)site.GetService(typeof(SVsShell));
+            _infoBarFactory = (IVsInfoBarUIFactory)site.GetService(typeof(SVsInfoBarUIFactory));
+            _idleManager = new IdleManager(site);
+        }
+
+        protected PythonProjectInfoBar(IServiceProvider site, IPythonWorkspaceContext workspace) {
+            Site = site ?? throw new ArgumentNullException(nameof(site));
+            Workspace = workspace ?? throw new ArgumentNullException(nameof(workspace));
             Logger = (IPythonToolsLogger)site.GetService(typeof(IPythonToolsLogger));
             _shell = (IVsShell)site.GetService(typeof(SVsShell));
             _infoBarFactory = (IVsInfoBarUIFactory)site.GetService(typeof(SVsInfoBarUIFactory));
@@ -91,8 +99,8 @@ namespace Microsoft.PythonTools.Project {
                 var suppressProp = Project.GetProjectProperty(propertyName);
                 return suppressProp.IsTrue();
             } else if (Workspace != null) {
-                var suppressProp = Workspace.GetStringProperty(propertyName);
-                return suppressProp.IsTrue();
+                var suppressProp = Workspace.GetBoolProperty(propertyName);
+                return suppressProp.HasValue ? suppressProp.Value : false;
             }
 
             return false;
@@ -102,7 +110,7 @@ namespace Microsoft.PythonTools.Project {
             if (Project != null) {
                 Project.SetProjectProperty(propertyName, true.ToString());
             } else if (Workspace != null) {
-                await Workspace.SetPropertyAsync(propertyName, true.ToString());
+                await Workspace.SetPropertyAsync(propertyName, true);
             }
         }
 

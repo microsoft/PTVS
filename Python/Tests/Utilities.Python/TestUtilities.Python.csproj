@@ -123,7 +123,7 @@
     <Compile Include="AddCondaEnvironmentDialogWrapper.cs" />
     <Compile Include="PythonProjectExtensions.cs" />
     <Compile Include="PythonServiceGeneralOptionsSetter.cs" />
-    <Compile Include="PythonDebuggingGeneralOptionsSetter.cs" />
+    <Compile Include="PythonOptionsSetter.cs" />
     <Compile Include="PythonProjectDebugProperties.cs" />
     <Compile Include="FormattingOptionsTreeView.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
