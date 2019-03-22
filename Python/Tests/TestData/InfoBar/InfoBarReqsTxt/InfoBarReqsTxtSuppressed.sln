@@ -1,0 +1,23 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28718.190
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "InfoBarReqsTxtSuppressed", "InfoBarReqsTxtSuppressed.pyproj", "{C59430AC-06E9-4418-A324-F8B567DB2B10}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C59430AC-06E9-4418-A324-F8B567DB2B10}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C59430AC-06E9-4418-A324-F8B567DB2B10}.Release|Any CPU.ActiveCfg = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B87718F0-FD84-4A37-A450-C6CEDB39C19E}
+	EndGlobalSection
+EndGlobal

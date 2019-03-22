@@ -344,6 +344,8 @@ namespace PythonToolsTests {
 
             public IPythonInterpreterFactory CurrentFactory => throw new NotImplementedException();
 
+            public bool IsCurrentFactoryDefault => throw new NotImplementedException();
+
 #pragma warning disable CS0067
             public event EventHandler InterpreterSettingChanged;
             public event EventHandler SearchPathsSettingChanged;
@@ -382,6 +384,22 @@ namespace PythonToolsTests {
             }
 
             public void AddActionOnClose(object key, Action<object> action) {
+                throw new NotImplementedException();
+            }
+
+            public string GetStringProperty(string propertyName) {
+                throw new NotImplementedException();
+            }
+
+            public bool? GetBoolProperty(string propertyName) {
+                throw new NotImplementedException();
+            }
+
+            public Task SetPropertyAsync(string propertyName, string propertyVal) {
+                throw new NotImplementedException();
+            }
+
+            public Task SetPropertyAsync(string propertyName, bool? propertyVal) {
                 throw new NotImplementedException();
             }
         }

@@ -55,11 +55,30 @@ namespace Microsoft.PythonTools.Interpreter {
         IPythonInterpreterFactory CurrentFactory { get; }
 
         /// <summary>
+        /// Whether the <see cref="CurrentFactory"/> is set to the global default.
+        /// </summary>
+        bool IsCurrentFactoryDefault { get; }
+
+        /// <summary>
         /// Get an absolute path from a workspace relative path.
         /// </summary>
         /// <param name="path">Relative path.</param>
         /// <returns>Absolute path.</returns>
         string MakeRooted(string path);
+
+        /// <summary>
+        /// Return the property setting from PythonSettings.json.
+        /// </summary>
+        /// <param name="propertyName">Property to retrieve.</param>
+        /// <returns>Property value.</returns>
+        string GetStringProperty(string propertyName);
+
+        /// <summary>
+        /// Return the property setting from PythonSettings.json.
+        /// </summary>
+        /// <param name="propertyName">Property to retrieve.</param>
+        /// <returns>Property value.</returns>
+        bool? GetBoolProperty(string propertyName);
 
         /// <summary>
         /// Read the interpreter setting string from PythonSettings.json.
@@ -98,6 +117,22 @@ namespace Microsoft.PythonTools.Interpreter {
         /// Absolute path to file or <c>null</c> if there is none.
         /// </returns>
         string GetEnvironmentYmlPath();
+
+        /// <summary>
+        /// Set a property to the specified value. If the value is <c>null</c>,
+        /// the property is removed if it already exists.
+        /// </summary>
+        /// <param name="propertyName">Name of property.</param>
+        /// <param name="propertyVal">Value of property.</param>
+        Task SetPropertyAsync(string propertyName, string propertyVal);
+
+        /// <summary>
+        /// Set a property to the specified value. If the value is <c>null</c>,
+        /// the property is removed if it already exists.
+        /// </summary>
+        /// <param name="propertyName">Name of property.</param>
+        /// <param name="propertyVal">Value of property.</param>
+        Task SetPropertyAsync(string propertyName, bool? propertyVal);
 
         /// <summary>
         /// Update the interpreter setting in PythonSettings.json to

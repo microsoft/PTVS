@@ -311,7 +311,7 @@
       <DependentUpon>AddVirtualEnvironmentControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="PythonTools\Options\PythonDebugOptionsService.cs" />
-    <Compile Include="PythonTools\Project\PythonProjectInfoBar.cs" />
+    <Compile Include="PythonTools\Project\PythonInfoBar.cs" />
     <Compile Include="PythonTools\Project\PackageInstallInfoBar.cs" />
     <Compile Include="PythonTools\Project\VirtualEnvCreateInfoBar.cs" />
     <Compile Include="PythonTools\Project\CondaEnvCreateInfoBar.cs" />
@@ -391,6 +391,7 @@
       <DependentUpon>AddEnvironmentDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="PythonTools\Project\DeprecatedReferenceNode.cs" />
+    <Compile Include="PythonTools\WorkspaceInfoBarManager.cs" />
     <Compile Include="PythonTools\Wpf\ModernDialog.cs" />
     <Compile Include="PythonTools\Wpf\ModernDialogHeaderControl.xaml.cs">
       <DependentUpon>ModernDialogHeaderControl.xaml</DependentUpon>

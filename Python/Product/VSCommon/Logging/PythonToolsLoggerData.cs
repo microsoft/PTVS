@@ -114,6 +114,11 @@ namespace Microsoft.PythonTools.Logging {
         public bool ExpressionFound { get; set; }
     }
 
+    static class InfoBarContexts {
+        public const string Project = "Project";
+        public const string Workspace = "Workspace";
+    }
+
     static class CondaEnvCreateInfoBarActions {
         public const string Prompt = "Prompt";
         public const string Create = "Create";
@@ -128,6 +133,7 @@ namespace Microsoft.PythonTools.Logging {
     sealed class CondaEnvCreateInfoBarInfo : PythonToolsLoggerData {
         public string Reason { get; set; }
         public string Action { get; set; }
+        public string Context { get; set; }
     }
 
     static class VirtualEnvCreateInfoBarActions {
@@ -138,6 +144,7 @@ namespace Microsoft.PythonTools.Logging {
 
     sealed class VirtualEnvCreateInfoBarInfo : PythonToolsLoggerData {
         public string Action { get; set; }
+        public string Context { get; set; }
     }
 
     static class PackageInstallInfoBarActions {
@@ -148,6 +155,7 @@ namespace Microsoft.PythonTools.Logging {
 
     sealed class PackageInstallInfoBarInfo : PythonToolsLoggerData {
         public string Action { get; set; }
+        public string Context { get; set; }
     }
 
     sealed class CreateCondaEnvInfo : PythonToolsLoggerData {

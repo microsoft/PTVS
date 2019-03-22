@@ -130,9 +130,9 @@ namespace Microsoft.PythonTools.Project {
             InterpreterRegistry.InterpretersChanged += OnInterpreterRegistryChanged;
             _pythonProject = new VsPythonProject(this);
 
-            _condaEnvCreateInfoBar = new CondaEnvCreateInfoBar(this);
-            _virtualEnvCreateInfoBar = new VirtualEnvCreateInfoBar(this);
-            _packageInstallInfoBar = new PackageInstallInfoBar(this);
+            _condaEnvCreateInfoBar = new CondaEnvCreateProjectInfoBar(this.Site, this);
+            _virtualEnvCreateInfoBar = new VirtualEnvCreateProjectInfoBar(this.Site, this);
+            _packageInstallInfoBar = new PackageInstallProjectInfoBar(this.Site, this);
         }
 
         private static KeyValuePair<string, string>[] outputGroupNames = {

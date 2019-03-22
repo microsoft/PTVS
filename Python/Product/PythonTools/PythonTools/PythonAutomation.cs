@@ -30,7 +30,7 @@ namespace Microsoft.PythonTools {
     /// can be fetched using Dte.GetObject("VsPython").
     /// </summary>
     [ComVisible(true)]
-    public sealed class PythonAutomation : IVsPython, IPythonOptions2, IPythonIntellisenseOptions {
+    public sealed class PythonAutomation : IVsPython, IPythonOptions3, IPythonIntellisenseOptions {
         private readonly IServiceProvider _serviceProvider;
         private readonly PythonToolsService _pyService;
         private AutomationInteractiveOptions _interactiveOptions;
@@ -125,6 +125,27 @@ namespace Microsoft.PythonTools {
                 _pyService.DebuggerOptions.Save();
             }
         }
+
+        bool IPythonOptions3.PromptForEnvCreate {
+            get {
+                return _pyService.GeneralOptions.PromptForEnvCreate;
+            }
+            set {
+                _pyService.GeneralOptions.PromptForEnvCreate = value;
+                _pyService.GeneralOptions.Save();
+            }
+        }
+
+        bool IPythonOptions3.PromptForPackageInstallation {
+            get {
+                return _pyService.GeneralOptions.PromptForPackageInstallation;
+            }
+            set {
+                _pyService.GeneralOptions.PromptForPackageInstallation = value;
+                _pyService.GeneralOptions.Save();
+            }
+        }
+
 
         #endregion
 

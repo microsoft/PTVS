@@ -16,7 +16,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.PythonTools.Environments;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Logging;
@@ -26,22 +29,106 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.Project {
-    internal sealed class CondaEnvCreateInfoBar : PythonProjectInfoBar {
-        public CondaEnvCreateInfoBar(PythonProjectNode projectNode)
-            : base(projectNode) {
+    internal abstract class CondaEnvCreateInfoBar : PythonInfoBar {
+        public CondaEnvCreateInfoBar(IServiceProvider site)
+            : base(site) {
         }
 
+        protected string EnvironmentYmlPath { get; set; }
+
+        protected string Caption { get; set; }
+
+        protected string Context { get; set; }
+
+        protected string MissingEnvName { get; set; }
+
+        protected bool IsGloballySuppressed =>
+            !Site.GetPythonToolsService().GeneralOptions.PromptForEnvCreate;
+
+        protected abstract void ShowAddEnvironmentDialog();
+
+        protected abstract void Suppress();
+
+        protected bool IsCondaEnvOrAnaconda(IPythonInterpreterFactory fact) {
+            if (CondaEnvironmentFactoryProvider.IsCondaEnv(fact)) {
+                return true;
+            }
+
+            // If it's not a conda env, but has conda package manager, then do not prompt
+            // (this may be the root anaconda installation)
+            var options = Site.GetPythonToolsService().InterpreterOptionsService;
+            var pm = options.GetPackageManagers(fact)?.FirstOrDefault(p => p.UniqueKey == "conda");
+            return pm != null;
+        }
+
+        protected void ShowInfoBar() {
+            var messages = new List<IVsInfoBarTextSpan>();
+            var actions = new List<InfoBarActionItem>();
+
+            var msg = MissingEnvName != null
+                ? Strings.CondaInfoBarRecreateMessage.FormatUI(Caption, MissingEnvName)
+                : Strings.CondaInfoBarCreateNewMessage.FormatUI(Caption);
+
+            messages.Add(new InfoBarTextSpan(msg));
+            actions.Add(new InfoBarHyperlink(Strings.CondaInfoBarCreateAction, (Action)CreateEnvironment));
+            actions.Add(new InfoBarHyperlink(Strings.CondaInfoBarProjectIgnoreAction, (Action)Ignore));
+
+            Logger?.LogEvent(
+                PythonLogEvent.CondaEnvCreateInfoBar,
+                new CondaEnvCreateInfoBarInfo() {
+                    Action = CondaEnvCreateInfoBarActions.Prompt,
+                    Reason = MissingEnvName != null ? CondaEnvCreateInfoBarReasons.MissingEnv : CondaEnvCreateInfoBarReasons.NoEnv,
+                    Context = Context,
+                }
+            );
+
+            Create(new InfoBarModel(messages, actions, KnownMonikers.StatusInformation, isCloseButtonVisible: true));
+        }
+
+        private void Ignore() {
+            Logger?.LogEvent(
+                PythonLogEvent.CondaEnvCreateInfoBar,
+                new CondaEnvCreateInfoBarInfo() {
+                    Action = CondaEnvCreateInfoBarActions.Ignore,
+                    Context = Context,
+                }
+            );
+            Suppress();
+            Close();
+        }
+
+        private void CreateEnvironment() {
+            Logger?.LogEvent(
+                PythonLogEvent.CondaEnvCreateInfoBar,
+                new CondaEnvCreateInfoBarInfo() {
+                    Action = CondaEnvCreateInfoBarActions.Create,
+                    Context = Context,
+                }
+            );
+            ShowAddEnvironmentDialog();
+            Close();
+        }
+    }
+
+    sealed class CondaEnvCreateProjectInfoBar : CondaEnvCreateInfoBar {
+        public CondaEnvCreateProjectInfoBar(IServiceProvider site, PythonProjectNode projectNode)
+            :base (site) {
+            Project = projectNode ?? throw new ArgumentNullException(nameof(projectNode));
+        }
+
+        private PythonProjectNode Project { get; }
+
         public override async Task CheckAsync() {
-            if (IsCreated) {
+            if (IsCreated || IsGloballySuppressed) {
                 return;
             }
 
-            if (!Project.Site.GetPythonToolsService().GeneralOptions.PromptForEnvCreate) {
-                return;
-            }
+            EnvironmentYmlPath = Project.GetEnvironmentYmlPath();
+            Caption = Project.Caption;
+            Context = InfoBarContexts.Project;
+            MissingEnvName = null;
 
-            var suppressProp = Project.GetProjectProperty(PythonConstants.SuppressEnvironmentCreationPrompt);
-            if (suppressProp.IsTrue()) {
+            if (Project.GetProjectProperty(PythonConstants.SuppressEnvironmentCreationPrompt).IsTrue()) {
                 return;
             }
 
@@ -50,8 +137,6 @@ namespace Microsoft.PythonTools.Project {
             if (IsCondaEnvOrAnaconda(active) && active.IsRunnable()) {
                 return;
             }
-
-            var yamlPath = Project.GetEnvironmentYmlPath();
 
             var all = Project.InterpreterFactories.ToArray();
             var allConda = all.Where(IsCondaEnvOrAnaconda).ToArray();
@@ -62,71 +147,83 @@ namespace Microsoft.PythonTools.Project {
                 .Where(name => name != null)
                 .ToArray();
 
-            string existingName;
             if (condaNotFoundNames.Any() && !foundConda.Any()) {
                 // Propose to recreate one of the conda references, since they are all missing
-                existingName = condaNotFoundNames.First();
-            } else if (!foundConda.Any() && !string.IsNullOrEmpty(yamlPath)) {
+                MissingEnvName = condaNotFoundNames.First();
+            } else if (!foundConda.Any() && !string.IsNullOrEmpty(EnvironmentYmlPath)) {
                 // Propose to create a new one, since there's a yaml file and no conda references
-                existingName = null;
+                MissingEnvName = null;
             } else {
                 // Nothing to do
                 return;
             }
 
-            Action create = () => {
-                Logger?.LogEvent(
-                    PythonLogEvent.CondaEnvCreateInfoBar,
-                    new CondaEnvCreateInfoBarInfo() {
-                        Action = CondaEnvCreateInfoBarActions.Create,
-                    }
-                );
-                Project.ShowAddCondaEnvironment(existingName, yamlPath);
-                Close();
-            };
-
-            Action projectIgnore = () => {
-                Logger?.LogEvent(
-                    PythonLogEvent.CondaEnvCreateInfoBar,
-                    new CondaEnvCreateInfoBarInfo() {
-                        Action = CondaEnvCreateInfoBarActions.Ignore,
-                    }
-                );
-                Project.SetProjectProperty(PythonConstants.SuppressEnvironmentCreationPrompt, true.ToString());
-                Close();
-            };
-
-            var messages = new List<IVsInfoBarTextSpan>();
-            var actions = new List<InfoBarActionItem>();
-
-            var msg = existingName != null
-                ? Strings.CondaInfoBarRecreateMessage.FormatUI(Project.Caption, existingName)
-                : Strings.CondaInfoBarCreateNewMessage.FormatUI(Project.Caption);
-
-            messages.Add(new InfoBarTextSpan(msg));
-            actions.Add(new InfoBarHyperlink(Strings.CondaInfoBarCreateAction, create));
-            actions.Add(new InfoBarHyperlink(Strings.CondaInfoBarProjectIgnoreAction, projectIgnore));
-
-            Logger?.LogEvent(
-                PythonLogEvent.CondaEnvCreateInfoBar,
-                new CondaEnvCreateInfoBarInfo() {
-                    Action = CondaEnvCreateInfoBarActions.Prompt,
-                    Reason = existingName != null ? CondaEnvCreateInfoBarReasons.MissingEnv : CondaEnvCreateInfoBarReasons.NoEnv,
-                }
-            );
-
-            Create(new InfoBarModel(messages, actions, KnownMonikers.StatusInformation, isCloseButtonVisible: true));
+            ShowInfoBar();
         }
 
-        private bool IsCondaEnvOrAnaconda(IPythonInterpreterFactory fact) {
-            if (CondaEnvironmentFactoryProvider.IsCondaEnv(fact)) {
-                return true;
+        protected override void ShowAddEnvironmentDialog() {
+            Project.ShowAddCondaEnvironment(MissingEnvName, EnvironmentYmlPath);
+        }
+
+        protected override void Suppress() {
+            Project.SetProjectProperty(PythonConstants.SuppressEnvironmentCreationPrompt, true.ToString());
+        }
+    }
+
+    sealed class CondaEnvCreateWorkspaceInfoBar : CondaEnvCreateInfoBar {
+        public CondaEnvCreateWorkspaceInfoBar(IServiceProvider site, IPythonWorkspaceContext workspace)
+            : base(site) {
+            Workspace = workspace ?? throw new ArgumentNullException(nameof(workspace));
+        }
+
+        private IPythonWorkspaceContext Workspace { get; }
+
+        public override async Task CheckAsync() {
+            if (IsCreated || IsGloballySuppressed) {
+                return;
             }
 
-            // If it's not a conda env, but has conda package manager, then do not prompt
-            // (this may be the root anaconda installation)
-            var pm = Project.InterpreterOptions.GetPackageManagers(fact)?.FirstOrDefault(p => p.UniqueKey == "conda");
-            return pm != null;
+            EnvironmentYmlPath = Workspace.GetEnvironmentYmlPath();
+            Caption = Workspace.WorkspaceName;
+            Context = InfoBarContexts.Workspace;
+            MissingEnvName = null;
+
+            if (Workspace.GetBoolProperty(PythonConstants.SuppressEnvironmentCreationPrompt) == true) {
+                return;
+            }
+
+            // Skip if active is already conda
+            var active = Workspace.CurrentFactory;
+            if (IsCondaEnvOrAnaconda(active) && active.IsRunnable()) {
+                return;
+            }
+
+            if (Workspace.IsCurrentFactoryDefault == false) {
+                return;
+            }
+
+            if (!File.Exists(EnvironmentYmlPath)) {
+                return;
+            }
+
+            ShowInfoBar();
+        }
+
+        protected override void ShowAddEnvironmentDialog() {
+            AddEnvironmentDialog.ShowAddCondaEnvironmentDialogAsync(
+                Site,
+                null,
+                Workspace,
+                MissingEnvName,
+                EnvironmentYmlPath,
+                null
+            ).HandleAllExceptions(Site, typeof(CondaEnvCreateInfoBar)).DoNotWait();
+        }
+
+        protected override void Suppress() {
+            Workspace.SetPropertyAsync(PythonConstants.SuppressEnvironmentCreationPrompt, true)
+                .HandleAllExceptions(Site, typeof(CondaEnvCreateWorkspaceInfoBar))
+                .DoNotWait();
         }
     }
 }

@@ -20,7 +20,7 @@ using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Parsing;
 
 namespace TestUtilities.Python {
-    public class PythonDebuggingGeneralOptionsSetter : IDisposable {
+    public class PythonOptionsSetter : IDisposable {
         private readonly DTE _dte;
         private readonly bool? _promptBeforeRunningWithBuildErrorSetting;
         private readonly bool? _autoAnalyzeStandardLibrary;
@@ -29,8 +29,10 @@ namespace TestUtilities.Python {
         private readonly bool? _waitOnAbnormalExit;
         private readonly bool? _waitOnNormalExit;
         private readonly bool? _useLegacyDebugger;
+        private readonly bool? _promptForEnvCreate;
+        private readonly bool? _promptForPackageInstallation;
 
-        public PythonDebuggingGeneralOptionsSetter(
+        public PythonOptionsSetter(
             DTE dte,
             bool? promptBeforeRunningWithBuildErrorSetting = null,
             bool? autoAnalyzeStandardLibrary = null,
@@ -38,7 +40,9 @@ namespace TestUtilities.Python {
             bool? teeStandardOutput = null,
             bool? waitOnAbnormalExit = null,
             bool? waitOnNormalExit = null,
-            bool? useLegacyDebugger = null
+            bool? useLegacyDebugger = null,
+            bool? promptForEnvCreate = null,
+            bool? promptForPackageInstallation = null
         ) {
             _dte = dte;
             var options = GetOptions();
@@ -77,8 +81,17 @@ namespace TestUtilities.Python {
                 _useLegacyDebugger = options.UseLegacyDebugger;
                 options.UseLegacyDebugger = useLegacyDebugger.Value;
             }
-        }
 
+            if (promptForEnvCreate.HasValue) {
+                _promptForEnvCreate = options.PromptForEnvCreate;
+                options.PromptForEnvCreate = promptForEnvCreate.Value;
+            }
+
+            if (promptForPackageInstallation.HasValue) {
+                _promptForPackageInstallation = options.PromptForPackageInstallation;
+                options.PromptForPackageInstallation = promptForPackageInstallation.Value;
+            }
+        }
 
         public void Dispose() {
             var options = GetOptions();
@@ -110,8 +123,16 @@ namespace TestUtilities.Python {
             if (_useLegacyDebugger.HasValue) {
                 options.UseLegacyDebugger = _useLegacyDebugger.Value;
             }
+
+            if (_promptForEnvCreate.HasValue) {
+                options.PromptForEnvCreate = _promptForEnvCreate.Value;
+            }
+
+            if (_promptForPackageInstallation.HasValue) {
+                options.PromptForPackageInstallation = _promptForPackageInstallation.Value;
+            }
         }
 
-        private IPythonOptions2 GetOptions() => (IPythonOptions2)_dte.GetObject("VsPython");
+        private IPythonOptions3 GetOptions() => (IPythonOptions3)_dte.GetObject("VsPython");
     }
 }

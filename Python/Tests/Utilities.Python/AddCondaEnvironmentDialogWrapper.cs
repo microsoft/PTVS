@@ -20,7 +20,7 @@ using System.Windows.Automation;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TestUtilities.UI {
-    class AddCondaEnvironmentDialogWrapper : AddEnvironmentDialogWrapperBase {
+    public class AddCondaEnvironmentDialogWrapper : AddEnvironmentDialogWrapperBase {
         public AddCondaEnvironmentDialogWrapper(VisualStudioApp app, AutomationElement element)
             : base(app, element) {
         }

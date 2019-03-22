@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.IO;
 using Microsoft.PythonTools.Environments;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Logging;
 using Microsoft.VisualStudio.Imaging;
 using Microsoft.VisualStudio.Shell;
@@ -26,22 +27,94 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.Project {
-    internal sealed class VirtualEnvCreateInfoBar : PythonProjectInfoBar {
-        public VirtualEnvCreateInfoBar(PythonProjectNode projectNode)
-            : base(projectNode) {
+    internal abstract class VirtualEnvCreateInfoBar : PythonInfoBar {
+        public VirtualEnvCreateInfoBar(IServiceProvider site)
+            : base(site) {
         }
 
+        protected string RequirementsTxtPath { get; set; }
+
+        protected string Caption { get; set; }
+
+        protected string Context { get; set; }
+
+        protected bool IsGloballySuppressed =>
+            !Site.GetPythonToolsService().GeneralOptions.PromptForEnvCreate;
+
+        protected abstract void ShowAddEnvironmentDialog();
+
+        protected abstract void Suppress();
+
+        protected void ShowInfoBar() {
+            var messages = new List<IVsInfoBarTextSpan>();
+            var actions = new List<InfoBarActionItem>();
+
+            messages.Add(new InfoBarTextSpan(
+                Strings.RequirementsTxtCreateVirtualEnvInfoBarMessage.FormatUI(
+                    PathUtils.GetFileOrDirectoryName(RequirementsTxtPath),
+                    Caption
+            )));
+            actions.Add(new InfoBarHyperlink(Strings.RequirementsTxtInfoBarCreateVirtualEnvAction, (Action)CreateEnvironment));
+            actions.Add(new InfoBarHyperlink(Strings.RequirementsTxtInfoBarProjectIgnoreAction, (Action)Ignore));
+
+            Logger?.LogEvent(
+                PythonLogEvent.VirtualEnvCreateInfoBar,
+                new VirtualEnvCreateInfoBarInfo() {
+                    Action = VirtualEnvCreateInfoBarActions.Prompt,
+                    Context = Context,
+                }
+            );
+
+            Create(new InfoBarModel(messages, actions, KnownMonikers.StatusInformation, isCloseButtonVisible: true));
+        }
+
+        private void Ignore() {
+            Logger?.LogEvent(
+                PythonLogEvent.VirtualEnvCreateInfoBar,
+                new VirtualEnvCreateInfoBarInfo() {
+                    Action = VirtualEnvCreateInfoBarActions.Ignore,
+                    Context = Context,
+                }
+            );
+            Suppress();
+            Close();
+        }
+
+        private void CreateEnvironment() {
+            Logger?.LogEvent(
+                PythonLogEvent.VirtualEnvCreateInfoBar,
+                new VirtualEnvCreateInfoBarInfo() {
+                    Action = VirtualEnvCreateInfoBarActions.Create,
+                    Context = Context,
+                }
+            );
+            ShowAddEnvironmentDialog();
+            Close();
+        }
+    }
+
+    internal sealed class VirtualEnvCreateProjectInfoBar : VirtualEnvCreateInfoBar {
+        public VirtualEnvCreateProjectInfoBar(IServiceProvider site, PythonProjectNode projectNode)
+            : base(site) {
+            Project = projectNode ?? throw new ArgumentNullException(nameof(projectNode));
+        }
+
+        private PythonProjectNode Project { get; }
+
         public override async Task CheckAsync() {
-            if (IsCreated) {
+            if (IsCreated || IsGloballySuppressed) {
                 return;
             }
 
-            if (!Project.Site.GetPythonToolsService().GeneralOptions.PromptForEnvCreate) {
+            RequirementsTxtPath = Project.GetRequirementsTxtPath();
+            Caption = Project.Caption;
+            Context = InfoBarContexts.Project;
+
+            if (Project.GetProjectProperty(PythonConstants.SuppressEnvironmentCreationPrompt).IsTrue()) {
                 return;
             }
 
-            var suppressProp = Project.GetProjectProperty(PythonConstants.SuppressEnvironmentCreationPrompt);
-            if (suppressProp.IsTrue()) {
+            if (!File.Exists(RequirementsTxtPath)) {
                 return;
             }
 
@@ -49,59 +122,72 @@ namespace Microsoft.PythonTools.Project {
                 return;
             }
 
-            var txtPath = Project.GetRequirementsTxtPath();
-            if (!File.Exists(txtPath)) {
+            ShowInfoBar();
+        }
+
+        protected override void ShowAddEnvironmentDialog() {
+            AddEnvironmentDialog.ShowAddVirtualEnvironmentDialogAsync(
+                Site,
+                Project,
+                null,
+                null,
+                null,
+                RequirementsTxtPath
+            ).HandleAllExceptions(Site, typeof(VirtualEnvCreateInfoBar)).DoNotWait();
+        }
+
+        protected override void Suppress() {
+            Project.SetProjectProperty(PythonConstants.SuppressEnvironmentCreationPrompt, true.ToString());
+        }
+    }
+
+    internal sealed class VirtualEnvCreateWorkspaceInfoBar : VirtualEnvCreateInfoBar {
+        public VirtualEnvCreateWorkspaceInfoBar(IServiceProvider site, IPythonWorkspaceContext workspace)
+            : base(site) {
+            Workspace = workspace ?? throw new ArgumentNullException(nameof(workspace));
+        }
+
+        private IPythonWorkspaceContext Workspace { get; }
+
+        public override async Task CheckAsync() {
+            if (IsCreated || IsGloballySuppressed) {
                 return;
             }
 
-            Action createVirtualEnv = () => {
-                Logger?.LogEvent(
-                    PythonLogEvent.VirtualEnvCreateInfoBar,
-                    new VirtualEnvCreateInfoBarInfo() {
-                        Action = VirtualEnvCreateInfoBarActions.Create,
-                    }
-                );
-                AddEnvironmentDialog.ShowAddVirtualEnvironmentDialogAsync(
-                    Project.Site,
-                    Project,
-                    null,
-                    null,
-                    null,
-                    txtPath
-                ).HandleAllExceptions(Project.Site, typeof(VirtualEnvCreateInfoBar)).DoNotWait();
-                Close();
-            };
+            RequirementsTxtPath = Workspace.GetRequirementsTxtPath();
+            Caption = Workspace.WorkspaceName;
+            Context = InfoBarContexts.Workspace;
 
-            Action projectIgnore = () => {
-                Logger?.LogEvent(
-                    PythonLogEvent.VirtualEnvCreateInfoBar,
-                    new VirtualEnvCreateInfoBarInfo() {
-                        Action = VirtualEnvCreateInfoBarActions.Ignore,
-                    }
-                );
-                Project.SetProjectProperty(PythonConstants.SuppressEnvironmentCreationPrompt, true.ToString());
-                Close();
-            };
+            if (Workspace.GetBoolProperty(PythonConstants.SuppressEnvironmentCreationPrompt) == true) {
+                return;
+            }
 
-            var messages = new List<IVsInfoBarTextSpan>();
-            var actions = new List<InfoBarActionItem>();
+            if (!File.Exists(RequirementsTxtPath)) {
+                return;
+            }
 
-            messages.Add(new InfoBarTextSpan(
-                Strings.RequirementsTxtCreateVirtualEnvInfoBarMessage.FormatUI(
-                    PathUtils.GetFileOrDirectoryName(txtPath),
-                    Project.Caption
-            )));
-            actions.Add(new InfoBarHyperlink(Strings.RequirementsTxtInfoBarCreateVirtualEnvAction, createVirtualEnv));
-            actions.Add(new InfoBarHyperlink(Strings.RequirementsTxtInfoBarProjectIgnoreAction, projectIgnore));
+            if (!Workspace.IsCurrentFactoryDefault) {
+                return;
+            }
 
-            Logger?.LogEvent(
-                PythonLogEvent.VirtualEnvCreateInfoBar,
-                new VirtualEnvCreateInfoBarInfo() {
-                    Action = VirtualEnvCreateInfoBarActions.Prompt,
-                }
-            );
+            ShowInfoBar();
+        }
 
-            Create(new InfoBarModel(messages, actions, KnownMonikers.StatusInformation, isCloseButtonVisible: true));
+        protected override void ShowAddEnvironmentDialog() {
+            AddEnvironmentDialog.ShowAddVirtualEnvironmentDialogAsync(
+                Site,
+                null,
+                Workspace,
+                null,
+                null,
+                RequirementsTxtPath
+            ).HandleAllExceptions(Site, typeof(VirtualEnvCreateInfoBar)).DoNotWait();
+        }
+
+        protected override void Suppress() {
+            Workspace.SetPropertyAsync(PythonConstants.SuppressEnvironmentCreationPrompt, true)
+                .HandleAllExceptions(Site, typeof(VirtualEnvCreateWorkspaceInfoBar))
+                .DoNotWait();
         }
     }
 }

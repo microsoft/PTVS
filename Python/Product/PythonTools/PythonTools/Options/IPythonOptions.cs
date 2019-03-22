@@ -65,6 +65,19 @@ namespace Microsoft.PythonTools.Options {
         }
     }
 
+    [Guid("E02D8200-D02B-4437-B9D3-A3AE883B9C37")]
+    public interface IPythonOptions3 : IPythonOptions2 {
+        bool PromptForEnvCreate {
+            get;
+            set;
+        }
+
+        bool PromptForPackageInstallation {
+            get;
+            set;
+        }
+    }
+
     [Guid("77179244-BBD7-4AA2-B27B-F2CCC679953A")]
     public interface IPythonIntellisenseOptions {
         bool AddNewLineAtEndOfFullyTypedWord { get; set; }

@@ -234,6 +234,43 @@ namespace TestUtilities.UI.Python {
             }
         }
 
+        public AutomationElementCollection GetInfoBars() {
+            return Element.FindAll(
+                TreeScope.Descendants,
+                new PropertyCondition(AutomationElement.AutomationIdProperty, "infobarcontrol")
+            );
+        }
+
+        public AutomationElement FindFirstInfoBar(Condition condition, TimeSpan timeout) {
+            for (int i = 0; i < timeout.TotalMilliseconds; i += 500) {
+                var infoBars = GetInfoBars();
+                foreach (AutomationElement infoBar in infoBars) {
+                    var createLink = infoBar.FindFirst(TreeScope.Descendants, condition);
+                    if (createLink != null) {
+                        return createLink;
+                    }
+                }
+                Thread.Sleep(500);
+            }
+
+            return null;
+        }
+
+        public PythonCreateVirtualEnvInfoBar FindCreateVirtualEnvInfoBar(TimeSpan timeout) {
+            var element = FindFirstInfoBar(PythonCreateVirtualEnvInfoBar.FindCondition, timeout);
+            return element != null ? new PythonCreateVirtualEnvInfoBar(element) : null;
+        }
+
+        public PythonCreateCondaEnvInfoBar FindCreateCondaEnvInfoBar(TimeSpan timeout) {
+            var element = FindFirstInfoBar(PythonCreateCondaEnvInfoBar.FindCondition, timeout);
+            return element != null ? new PythonCreateCondaEnvInfoBar(element) : null;
+        }
+
+        public PythonInstallPackagesInfoBar FindInstallPackagesInfoBar(TimeSpan timeout) {
+            var element = FindFirstInfoBar(PythonInstallPackagesInfoBar.FindCondition, timeout);
+            return element != null ? new PythonInstallPackagesInfoBar(element) : null;
+        }
+
         public ReplWindowProxy ExecuteInInteractive(Project project, ReplWindowProxySettings settings = null) {
             // Prepare makes sure that IPython mode is disabled, and that the REPL is reset and cleared
             var window = ReplWindowProxy.Prepare(this, settings, project.Name, workspaceName: null);

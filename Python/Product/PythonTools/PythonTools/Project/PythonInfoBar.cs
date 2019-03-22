@@ -16,6 +16,8 @@
 
 using System;
 using System.Diagnostics;
+using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Logging;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
@@ -24,7 +26,7 @@ using Microsoft.VisualStudioTools;
 using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.Project {
-    internal abstract class PythonProjectInfoBar : IVsInfoBarUIEvents, IDisposable {
+    internal abstract class PythonInfoBar : IVsInfoBarUIEvents, IDisposable {
         private readonly IVsShell _shell;
         private readonly IVsInfoBarUIFactory _infoBarFactory;
         private readonly IdleManager _idleManager;
@@ -32,15 +34,15 @@ namespace Microsoft.PythonTools.Project {
         private IVsInfoBarUIElement _infoBar;
         private InfoBarModel _infoBarModel;
 
-        protected PythonProjectInfoBar(PythonProjectNode projectNode) {
-            Project = projectNode ?? throw new ArgumentNullException(nameof(projectNode));
-            Logger = (IPythonToolsLogger)projectNode.Site.GetService(typeof(IPythonToolsLogger));
-            _shell = (IVsShell)projectNode.Site.GetService(typeof(SVsShell));
-            _infoBarFactory = (IVsInfoBarUIFactory)projectNode.Site.GetService(typeof(SVsInfoBarUIFactory));
-            _idleManager = new IdleManager(Project.Site);
+        protected PythonInfoBar(IServiceProvider site) {
+            Site = site ?? throw new ArgumentNullException(nameof(site));
+            Logger = (IPythonToolsLogger)site.GetService(typeof(IPythonToolsLogger));
+            _shell = (IVsShell)site.GetService(typeof(SVsShell));
+            _infoBarFactory = (IVsInfoBarUIFactory)site.GetService(typeof(SVsInfoBarUIFactory));
+            _idleManager = new IdleManager(site);
         }
 
-        protected PythonProjectNode Project { get; }
+        protected IServiceProvider Site { get; }
 
         protected IPythonToolsLogger Logger { get; }
 

@@ -81,6 +81,14 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
+        public bool IsCurrentFactoryDefault {
+            get {
+                lock (_cacheLock) {
+                    return _factoryIsDefault == true;
+                }
+            }
+        }
+
         public void Initialize() {
             _interpreter = ReadInterpreterSetting();
             _searchPaths = ReadSearchPathsSetting();
@@ -113,11 +121,15 @@ namespace Microsoft.PythonTools.Interpreter {
         public string MakeRooted(string path) => _workspace.MakeRooted(path);
 
         public string ReadInterpreterSetting() {
-            var settingsMgr = _workspace.GetSettingsManager();
-            var settings = settingsMgr.GetAggregatedSettings(PythonSettingsType);
-            settings.GetProperty(InterpreterProperty, out string interpreter);
+            return _workspace.GetInterpreter();
+        }
 
-            return interpreter;
+        public string GetStringProperty(string propertyName) {
+            return _workspace.GetStringProperty(propertyName);
+        }
+
+        public bool? GetBoolProperty(string propertyName) {
+            return _workspace.GetBoolProperty(propertyName);
         }
 
         private string[] ReadSearchPathsSetting() {
@@ -140,6 +152,14 @@ namespace Microsoft.PythonTools.Interpreter {
 
         public string GetEnvironmentYmlPath() {
             return _workspace.GetEnvironmentYmlPath();
+        }
+
+        public Task SetPropertyAsync(string propertyName, string propertyVal) {
+            return _workspace.SetPropertyAsync(propertyName, propertyVal);
+        }
+
+        public Task SetPropertyAsync(string propertyName, bool? propertyVal) {
+            return _workspace.SetPropertyAsync(propertyName, propertyVal);
         }
 
         public Task SetInterpreterFactoryAsync(IPythonInterpreterFactory factory) {
