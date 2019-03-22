@@ -121,6 +121,9 @@
     <Compile Include="MockReplWindow.cs" />
     <Compile Include="MockUIThread.cs" />
     <Compile Include="AddCondaEnvironmentDialogWrapper.cs" />
+    <Compile Include="PythonInstallPackagesInfoBar.cs" />
+    <Compile Include="PythonCreateCondaEnvInfoBar.cs" />
+    <Compile Include="PythonCreateVirtualEnvInfoBar.cs" />
     <Compile Include="PythonProjectExtensions.cs" />
     <Compile Include="PythonServiceGeneralOptionsSetter.cs" />
     <Compile Include="PythonOptionsSetter.cs" />

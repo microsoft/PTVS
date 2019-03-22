@@ -26,7 +26,7 @@ using Microsoft.VisualStudioTools;
 using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.Project {
-    internal abstract class PythonProjectInfoBar : IVsInfoBarUIEvents, IDisposable {
+    internal abstract class PythonInfoBar : IVsInfoBarUIEvents, IDisposable {
         private readonly IVsShell _shell;
         private readonly IVsInfoBarUIFactory _infoBarFactory;
         private readonly IdleManager _idleManager;
@@ -34,18 +34,8 @@ namespace Microsoft.PythonTools.Project {
         private IVsInfoBarUIElement _infoBar;
         private InfoBarModel _infoBarModel;
 
-        protected PythonProjectInfoBar(IServiceProvider site, PythonProjectNode projectNode) {
+        protected PythonInfoBar(IServiceProvider site) {
             Site = site ?? throw new ArgumentNullException(nameof(site));
-            Project = projectNode ?? throw new ArgumentNullException(nameof(projectNode));
-            Logger = (IPythonToolsLogger)site.GetService(typeof(IPythonToolsLogger));
-            _shell = (IVsShell)site.GetService(typeof(SVsShell));
-            _infoBarFactory = (IVsInfoBarUIFactory)site.GetService(typeof(SVsInfoBarUIFactory));
-            _idleManager = new IdleManager(site);
-        }
-
-        protected PythonProjectInfoBar(IServiceProvider site, IPythonWorkspaceContext workspace) {
-            Site = site ?? throw new ArgumentNullException(nameof(site));
-            Workspace = workspace ?? throw new ArgumentNullException(nameof(workspace));
             Logger = (IPythonToolsLogger)site.GetService(typeof(IPythonToolsLogger));
             _shell = (IVsShell)site.GetService(typeof(SVsShell));
             _infoBarFactory = (IVsInfoBarUIFactory)site.GetService(typeof(SVsInfoBarUIFactory));
@@ -53,10 +43,6 @@ namespace Microsoft.PythonTools.Project {
         }
 
         protected IServiceProvider Site { get; }
-
-        protected PythonProjectNode Project { get; }
-
-        protected IPythonWorkspaceContext Workspace { get; }
 
         protected IPythonToolsLogger Logger { get; }
 
@@ -92,26 +78,6 @@ namespace Microsoft.PythonTools.Project {
 
             _infoBar.Advise(this, out uint cookie);
             _adviseCookie = cookie;
-        }
-
-        protected bool IsSuppressed(string propertyName) {
-            if (Project != null) {
-                var suppressProp = Project.GetProjectProperty(propertyName);
-                return suppressProp.IsTrue();
-            } else if (Workspace != null) {
-                var suppressProp = Workspace.GetBoolProperty(propertyName);
-                return suppressProp.HasValue ? suppressProp.Value : false;
-            }
-
-            return false;
-        }
-
-        protected async Task SuppressAsync(string propertyName) {
-            if (Project != null) {
-                Project.SetProjectProperty(propertyName, true.ToString());
-            } else if (Workspace != null) {
-                await Workspace.SetPropertyAsync(propertyName, true);
-            }
         }
 
         private void OnIdle(object sender, ComponentManagerEventArgs e) {

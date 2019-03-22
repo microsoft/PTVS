@@ -17,8 +17,6 @@
 using System;
 using System.IO;
 using System.Text;
-using System.Windows.Automation;
-using Microsoft.PythonTools;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
@@ -33,7 +31,7 @@ namespace PythonToolsUITests {
 
             using (new PythonOptionsSetter(app.Dte, promptForEnvCreate: true)) {
                 OpenSolution(app, sln);
-                AssertInfoBarVisibility(app, true, Strings.RequirementsTxtInfoBarCreateVirtualEnvAction);
+                AssertCreateVirtualEnvInfoBarVisibility(app, true);
             }
         }
 
@@ -42,7 +40,7 @@ namespace PythonToolsUITests {
 
             using (new PythonOptionsSetter(app.Dte, promptForEnvCreate: false)) {
                 OpenSolution(app, sln);
-                AssertInfoBarVisibility(app, false, Strings.RequirementsTxtInfoBarCreateVirtualEnvAction);
+                AssertCreateVirtualEnvInfoBarVisibility(app, false);
             }
         }
 
@@ -51,7 +49,7 @@ namespace PythonToolsUITests {
 
             using (new PythonOptionsSetter(app.Dte, promptForEnvCreate: true)) {
                 OpenSolution(app, sln);
-                AssertInfoBarVisibility(app, false, Strings.RequirementsTxtInfoBarCreateVirtualEnvAction);
+                AssertCreateVirtualEnvInfoBarVisibility(app, false);
             }
         }
 
@@ -62,7 +60,7 @@ namespace PythonToolsUITests {
 
             using (new PythonOptionsSetter(app.Dte, promptForEnvCreate: true)) {
                 OpenFolder(app, workspaceFolder);
-                AssertInfoBarVisibility(app, true, Strings.RequirementsTxtInfoBarCreateVirtualEnvAction);
+                AssertCreateVirtualEnvInfoBarVisibility(app, true);
             }
         }
 
@@ -73,7 +71,7 @@ namespace PythonToolsUITests {
 
             using (new PythonOptionsSetter(app.Dte, promptForEnvCreate: false)) {
                 OpenFolder(app, workspaceFolder);
-                AssertInfoBarVisibility(app, false, Strings.RequirementsTxtInfoBarCreateVirtualEnvAction);
+                AssertCreateVirtualEnvInfoBarVisibility(app, false);
             }
         }
 
@@ -85,7 +83,7 @@ namespace PythonToolsUITests {
 
             using (new PythonOptionsSetter(app.Dte, promptForEnvCreate: true)) {
                 OpenFolder(app, workspaceFolder);
-                AssertInfoBarVisibility(app, false, Strings.RequirementsTxtInfoBarCreateVirtualEnvAction);
+                AssertCreateVirtualEnvInfoBarVisibility(app, false);
             }
         }
 
@@ -94,7 +92,7 @@ namespace PythonToolsUITests {
 
             using (new PythonOptionsSetter(app.Dte, promptForEnvCreate: true)) {
                 OpenFolder(app, workspaceFolder);
-                AssertInfoBarVisibility(app, false, Strings.RequirementsTxtInfoBarCreateVirtualEnvAction);
+                AssertCreateVirtualEnvInfoBarVisibility(app, false);
             }
         }
 
@@ -103,7 +101,7 @@ namespace PythonToolsUITests {
 
             using (new PythonOptionsSetter(app.Dte, promptForEnvCreate: true)) {
                 OpenSolution(app, sln);
-                AssertInfoBarVisibility(app, true, Strings.CondaInfoBarCreateAction);
+                AssertCreateCondaEnvInfoBarVisibility(app, true);
             }
         }
 
@@ -112,7 +110,7 @@ namespace PythonToolsUITests {
 
             using (new PythonOptionsSetter(app.Dte, promptForEnvCreate: false)) {
                 OpenSolution(app, sln);
-                AssertInfoBarVisibility(app, false, Strings.CondaInfoBarCreateAction);
+                AssertCreateCondaEnvInfoBarVisibility(app, false);
             }
         }
 
@@ -121,7 +119,7 @@ namespace PythonToolsUITests {
 
             using (new PythonOptionsSetter(app.Dte, promptForEnvCreate: true)) {
                 OpenSolution(app, sln);
-                AssertInfoBarVisibility(app, false, Strings.CondaInfoBarCreateAction);
+                AssertCreateCondaEnvInfoBarVisibility(app, false);
             }
         }
 
@@ -132,7 +130,7 @@ namespace PythonToolsUITests {
 
             using (new PythonOptionsSetter(app.Dte, promptForEnvCreate: true)) {
                 OpenFolder(app, workspaceFolder);
-                AssertInfoBarVisibility(app, true, Strings.CondaInfoBarCreateAction);
+                AssertCreateCondaEnvInfoBarVisibility(app, true);
             }
         }
 
@@ -143,7 +141,7 @@ namespace PythonToolsUITests {
 
             using (new PythonOptionsSetter(app.Dte, promptForEnvCreate: false)) {
                 OpenFolder(app, workspaceFolder);
-                AssertInfoBarVisibility(app, false, Strings.CondaInfoBarCreateAction);
+                AssertCreateCondaEnvInfoBarVisibility(app, false);
             }
         }
 
@@ -155,7 +153,7 @@ namespace PythonToolsUITests {
 
             using (new PythonOptionsSetter(app.Dte, promptForEnvCreate: true)) {
                 OpenFolder(app, workspaceFolder);
-                AssertInfoBarVisibility(app, false, Strings.CondaInfoBarCreateAction);
+                AssertCreateCondaEnvInfoBarVisibility(app, false);
             }
         }
 
@@ -164,118 +162,117 @@ namespace PythonToolsUITests {
 
             using (new PythonOptionsSetter(app.Dte, promptForEnvCreate: true)) {
                 OpenFolder(app, workspaceFolder);
-                AssertInfoBarVisibility(app, false, Strings.CondaInfoBarCreateAction);
+                AssertCreateCondaEnvInfoBarVisibility(app, false);
             }
         }
 
         public void InstallPackagesProjectPrompt(PythonVisualStudioApp app) {
-            var python = PythonPaths.Python37;
-            python.AssertInstalled();
+            // The project has a reference to 3.7 32-bit 'env' virtual env
+            // requirements.txt lists "bottle" and "cookies"
+            // Install only "bottle" and we should see prompt
+            var basePython = PythonPaths.Python37;
+            basePython.AssertInstalled();
 
             var sln = app.CopyProjectForTest(@"TestData\InfoBar\InfoBarMissingPackages\InfoBarMissingPackages.sln");
 
-            // The project has a reference to 'env' subfolder, which we need to create
-            // requirements.txt lists "bottle" and "cookies"
-            // Install only "bottle" and we should see prompt
             CreateVirtualEnvironmentWithPackages(
-                python,
+                basePython,
                 Path.Combine(Path.GetDirectoryName(sln), "env"),
                 new[] { "bottle" }
             );
 
             using (new PythonOptionsSetter(app.Dte, promptForPackageInstallation: true)) {
                 OpenSolution(app, sln);
-                AssertInfoBarVisibility(app, true, Strings.RequirementsTxtInfoBarInstallPackagesAction);
+                AssertInstallPackagesInfoBarVisibility(app, true);
             }
         }
 
         public void InstallPackagesProjectNoPromptNoMissingPackage(PythonVisualStudioApp app) {
-            var python = PythonPaths.Python37;
-            python.AssertInstalled();
+            // The project has a reference to 3.7 32-bit 'env' virtual env
+            // requirements.txt lists "bottle" and "cookies"
+            // Install both, we should not see prompt
+            var basePython = PythonPaths.Python37;
+            basePython.AssertInstalled();
 
             var sln = app.CopyProjectForTest(@"TestData\InfoBar\InfoBarMissingPackages\InfoBarMissingPackages.sln");
 
-            // The project has a reference to 'env' subfolder, which we need to create
-            // requirements.txt lists "bottle" and "cookies"
-            // Install both, we should not see prompt
             CreateVirtualEnvironmentWithPackages(
-                python,
+                basePython,
                 Path.Combine(Path.GetDirectoryName(sln), "env"),
                 new[] { "bottle", "cookies" }
             );
 
             using (new PythonOptionsSetter(app.Dte, promptForPackageInstallation: true)) {
                 OpenSolution(app, sln);
-                AssertInfoBarVisibility(app, false, Strings.RequirementsTxtInfoBarInstallPackagesAction);
+                AssertInstallPackagesInfoBarVisibility(app, false);
             }
         }
 
         public void InstallPackagesWorkspacePrompt(PythonVisualStudioApp app) {
-            var python = PythonPaths.Python37;
-            python.AssertInstalled();
+            var basePython = PythonPaths.Python37_x64 ?? PythonPaths.Python37;
+            basePython.AssertInstalled();
 
             var workspaceFolder = CreateWorkspaceFolder(
                 reqsFileContents: "bottle\ncookies",
                 settingsFileContents: "{ \"Interpreter\": \"env\\\\scripts\\\\python.exe\" }",
-                virtualEnvBase: python,
+                virtualEnvBase: basePython,
                 virtualEnvPackages: new[] { "bottle" }
             );
 
-            OpenFolder(app, workspaceFolder);
-
             using (new PythonOptionsSetter(app.Dte, promptForPackageInstallation: true)) {
-                AssertInfoBarVisibility(app, true, Strings.RequirementsTxtInfoBarInstallPackagesAction);
+                OpenFolder(app, workspaceFolder);
+                AssertInstallPackagesInfoBarVisibility(app, true);
             }
         }
 
         public void InstallPackagesWorkspaceNoPromptGlobalSuppress(PythonVisualStudioApp app) {
-            var python = PythonPaths.Python37;
-            python.AssertInstalled();
+            var basePython = PythonPaths.Python37_x64 ?? PythonPaths.Python37;
+            basePython.AssertInstalled();
 
             var workspaceFolder = CreateWorkspaceFolder(
                 reqsFileContents: "bottle\ncookies",
                 settingsFileContents: "{ \"Interpreter\": \"env\\\\scripts\\\\python.exe\" }",
-                virtualEnvBase: python,
+                virtualEnvBase: basePython,
                 virtualEnvPackages: new[] { "bottle" }
             );
 
             using (new PythonOptionsSetter(app.Dte, promptForPackageInstallation: false)) {
                 OpenFolder(app, workspaceFolder);
-                AssertInfoBarVisibility(app, false, Strings.RequirementsTxtInfoBarInstallPackagesAction);
+                AssertInstallPackagesInfoBarVisibility(app, false);
             }
         }
 
         public void InstallPackagesWorkspaceNoPromptLocalSuppress(PythonVisualStudioApp app) {
-            var python = PythonPaths.Python37;
-            python.AssertInstalled();
+            var basePython = PythonPaths.Python37_x64 ?? PythonPaths.Python37;
+            basePython.AssertInstalled();
 
             var workspaceFolder = CreateWorkspaceFolder(
                 reqsFileContents: "bottle\ncookies",
                 settingsFileContents: "{ \"Interpreter\": \"env\\\\scripts\\\\python.exe\", \"SuppressPackageInstallationPrompt\": true }",
-                virtualEnvBase: python,
+                virtualEnvBase: basePython,
                 virtualEnvPackages: new[] { "bottle" }
             );
 
             using (new PythonOptionsSetter(app.Dte, promptForPackageInstallation: true)) {
                 OpenFolder(app, workspaceFolder);
-                AssertInfoBarVisibility(app, false, Strings.RequirementsTxtInfoBarInstallPackagesAction);
+                AssertInstallPackagesInfoBarVisibility(app, false);
             }
         }
 
         public void InstallPackagesWorkspaceNoPromptNoMissingPackage(PythonVisualStudioApp app) {
-            var python = PythonPaths.Python37;
-            python.AssertInstalled();
+            var basePython = PythonPaths.Python37_x64 ?? PythonPaths.Python37;
+            basePython.AssertInstalled();
 
             var workspaceFolder = CreateWorkspaceFolder(
                 reqsFileContents: "bottle\ncookies",
                 settingsFileContents: "{ \"Interpreter\": \"env\\\\scripts\\\\python.exe\" }",
-                virtualEnvBase: python,
+                virtualEnvBase: basePython,
                 virtualEnvPackages: new[] { "bottle", "cookies" }
             );
 
             using (new PythonOptionsSetter(app.Dte, promptForPackageInstallation: true)) {
                 OpenFolder(app, workspaceFolder);
-                AssertInfoBarVisibility(app, false, Strings.RequirementsTxtInfoBarInstallPackagesAction);
+                AssertInstallPackagesInfoBarVisibility(app, false);
             }
         }
 
@@ -291,7 +288,7 @@ namespace PythonToolsUITests {
             using (app.SelectDefaultInterpreter(globalDefault))
             using (new PythonOptionsSetter(app.Dte, promptForPackageInstallation: true)) {
                 OpenFolder(app, workspaceFolder);
-                AssertInfoBarVisibility(app, false, Strings.RequirementsTxtInfoBarInstallPackagesAction);
+                AssertInstallPackagesInfoBarVisibility(app, false);
             }
         }
 
@@ -367,19 +364,37 @@ namespace PythonToolsUITests {
             }
         }
 
-        private static void AssertInfoBarVisibility(PythonVisualStudioApp app, bool expectedVisible, string hyperLinkName) {
-            var infoBar = app.FindFirstInfoBar(
-                new AndCondition(
-                    new PropertyCondition(AutomationElement.NameProperty, hyperLinkName),
-                    new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Hyperlink)),
-                TimeSpan.FromSeconds(5)
-            );
-
+        private static PythonCreateVirtualEnvInfoBar AssertCreateVirtualEnvInfoBarVisibility(PythonVisualStudioApp app, bool expectedVisible) {
+            var infoBar = app.FindCreateVirtualEnvInfoBar(TimeSpan.FromSeconds(5));
             if (expectedVisible) {
-                Assert.IsNotNull(infoBar, $"Expected info bar with hyperlink '{hyperLinkName}' to be visible");
+                Assert.IsNotNull(infoBar, "Expected info bar to be visible");
             } else {
-                Assert.IsNull(infoBar, $"Expected info bar with hyperlink '{hyperLinkName}' to NOT be visible");
+                Assert.IsNull(infoBar, "Expected info bar to NOT be visible");
             }
+
+            return infoBar;
+        }
+
+        private static PythonCreateCondaEnvInfoBar AssertCreateCondaEnvInfoBarVisibility(PythonVisualStudioApp app, bool expectedVisible) {
+            var infoBar = app.FindCreateCondaEnvInfoBar(TimeSpan.FromSeconds(5));
+            if (expectedVisible) {
+                Assert.IsNotNull(infoBar, "Expected info bar to be visible");
+            } else {
+                Assert.IsNull(infoBar, "Expected info bar to NOT be visible");
+            }
+
+            return infoBar;
+        }
+
+        private static PythonInstallPackagesInfoBar AssertInstallPackagesInfoBarVisibility(PythonVisualStudioApp app, bool expectedVisible) {
+            var infoBar = app.FindInstallPackagesInfoBar(TimeSpan.FromSeconds(5));
+            if (expectedVisible) {
+                Assert.IsNotNull(infoBar, "Expected info bar to be visible");
+            } else {
+                Assert.IsNull(infoBar, "Expected info bar to NOT be visible");
+            }
+
+            return infoBar;
         }
     }
 }

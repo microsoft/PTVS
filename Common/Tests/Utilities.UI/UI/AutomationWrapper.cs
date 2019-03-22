@@ -69,6 +69,20 @@ namespace TestUtilities.UI {
             ));
         }
 
+        /// <summary>
+        /// Clicks the child hyperlink with the specified name.
+        /// </summary>
+        /// <param name="name"></param>
+        public void ClickHyperlinkByName(string name) {
+            Invoke(FindFirstWithRetry(
+                TreeScope.Descendants,
+                new AndCondition(
+                    new PropertyCondition(AutomationElement.NameProperty, name),
+                    new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Hyperlink)
+                )
+            ));
+        }
+
         public AutomationElement FindByName(string name) {
             return FindFirstWithRetry(
                 TreeScope.Descendants,

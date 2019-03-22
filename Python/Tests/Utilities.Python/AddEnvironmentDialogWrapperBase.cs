@@ -20,7 +20,7 @@ using System.Windows.Automation;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TestUtilities.UI {
-    class AddEnvironmentDialogWrapperBase : AutomationDialog {
+    public class AddEnvironmentDialogWrapperBase : AutomationDialog {
         public AddEnvironmentDialogWrapperBase(VisualStudioApp app, AutomationElement element)
             : base(app, element) {
         }
