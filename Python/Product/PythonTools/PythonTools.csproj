@@ -1040,7 +1040,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <EmbeddedResource Include="..\Icons\Dev$(VSTarget)\PythonImageList.png" />
-    <Resource Include="..\Icons\Dev$(VSTarget)\PythonProjectBig.ico" />
     <EmbeddedResource Include="Legacy\ObsoleteResources.resx">
       <ManifestResourceName>Microsoft.VisualStudioTools.SharedProject</ManifestResourceName>
       <SubType>Designer</SubType>

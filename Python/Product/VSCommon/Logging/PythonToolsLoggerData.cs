@@ -185,4 +185,12 @@ namespace Microsoft.PythonTools.Logging {
         public bool Custom { get; set; }
         public bool Global { get; set; }
     }
+
+    sealed class SelectEnvFromToolbarInfo : PythonToolsLoggerData {
+        [PiiProperty]
+        public string InterpreterId { get; set; }
+        public string Architecture { get; set; }
+        public string Version { get; set; }
+        public bool IsIronPython { get; set; }
+    }
 }
