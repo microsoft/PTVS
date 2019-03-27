@@ -96,9 +96,9 @@ namespace Microsoft.PythonTools.Project {
             Close();
         }
 
-        protected static async Task<bool> PackagesMissingAsync(IPackageManager packageManager, string reqTxtPath) {
+        protected static async Task<bool> MissingPackageDetectedAsync(IPackageManager packageManager, string reqTxtPath) {
             try {
-                return await PipRequirementsUtils.AnyPackageMissing(
+                return await PipRequirementsUtils.MissingPackageDetectedAsync(
                                 packageManager.Factory.Configuration.InterpreterPath,
                                 reqTxtPath
                              );
@@ -152,7 +152,7 @@ namespace Microsoft.PythonTools.Project {
                 return;
             }
 
-            var missing = await PackagesMissingAsync(PackageManager, RequirementsTxtPath);
+            var missing = await MissingPackageDetectedAsync(PackageManager, RequirementsTxtPath);
             if (!missing) {
                 return;
             }
@@ -206,7 +206,7 @@ namespace Microsoft.PythonTools.Project {
                 return;
             }
 
-            var missing = await PackagesMissingAsync(PackageManager, RequirementsTxtPath);
+            var missing = await MissingPackageDetectedAsync(PackageManager, RequirementsTxtPath);
             if (!missing) {
                 return;
             }
