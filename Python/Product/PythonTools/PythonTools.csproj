@@ -829,10 +829,10 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-  <Content Include="missing_req_packages.py">
-	  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  <IncludeInVSIX>true</IncludeInVSIX>
-  </Content>
+    <Content Include="missing_req_packages.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
     <Content Include="ptvsd\repl\ipython_client.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
