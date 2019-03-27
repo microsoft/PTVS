@@ -14,10 +14,12 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using Microsoft.PythonTools.Infrastructure;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace Microsoft.PythonTools.Interpreter {
     static class PipRequirementsUtils {
@@ -82,20 +84,19 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        internal static bool AnyPackageMissing(
-            IEnumerable<string> original,
-            IEnumerable<PackageSpec> installed
-        ) {
-            foreach (var _line in original) {
-                var requirementPackageName = ParseRequirementLineRegex.Match(_line.Trim()).Groups["name"].Value;
-                var installedPackage = installed.FirstOrDefault(pkg =>
-                    string.Compare(pkg.Name, requirementPackageName, StringComparison.OrdinalIgnoreCase) == 0);
+        internal static async Task<bool> AnyPackageMissing(string interpreterPath, string reqTxtPath) {
+            var processOutput = ProcessOutput.RunHiddenAndCapture(
+                interpreterPath,
+                PythonToolsInstallPath.GetFile("missing_req_packages.py"),
+                reqTxtPath
+            );
 
-                if (requirementPackageName.Length > 0 && installedPackage == null) {
-                    return true;
-                }
+            await processOutput;
+
+            if(processOutput.ExitCode == 1) {
+                return true;
             }
-
+ 
             return false;
         }
     }

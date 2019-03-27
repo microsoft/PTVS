@@ -96,11 +96,12 @@ namespace Microsoft.PythonTools.Project {
             Close();
         }
 
-        protected static async Task<bool> PackagesMissingAsync(IPackageManager pm, string txtPath) {
+        protected static async Task<bool> PackagesMissingAsync(IPackageManager packageManager, string reqTxtPath) {
             try {
-                var original = File.ReadAllLines(txtPath);
-                var installed = await pm.GetInstalledPackagesAsync(CancellationTokens.After15s);
-                return PipRequirementsUtils.AnyPackageMissing(original, installed);
+                return await PipRequirementsUtils.AnyPackageMissing(
+                                packageManager.Factory.Configuration.InterpreterPath,
+                                reqTxtPath
+                             );
             } catch (IOException) {
             } catch (OperationCanceledException) {
             }
