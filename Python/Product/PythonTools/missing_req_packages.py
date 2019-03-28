@@ -24,12 +24,13 @@
 __author__ = "Microsoft Corporation <ptvshelp@microsoft.com>"
 __version__ = "3.0.0.0"
 
-import sys
 import codecs
 import locale
 import re
+import sys
 import pkg_resources
-from pkg_resources import DistributionNotFound, VersionConflict
+import traceback
+
 
 BOMS = [
     (codecs.BOM_UTF8, 'utf-8'),
@@ -57,10 +58,10 @@ def auto_decode(data):
     return data.decode(locale.getpreferredencoding(False) or sys.getdefaultencoding())
 
 try:
-    file_handle = open(sys.argv[1], "rb")
-    req_txt_lines = auto_decode(file_handle.read()).splitlines()
-except FileNotFoundError as e:
-    print("UnableToOpenFile")
+    with open(sys.argv[1], "rb") as file_handle:
+        req_txt_lines = auto_decode(file_handle.read()).splitlines()
+except Exception:
+    traceback.print_exc()
     sys.exit(0)
 
 req_met = 0
@@ -83,13 +84,13 @@ for line in req_txt_lines:
         pkg_resources.require(line)
         print("Installed : {}".format(line))
         req_met += 1
-    except DistributionNotFound as e:
+    except pkg_resources.DistributionNotFound:
         print("NotFound : {}".format(line))
         not_found += 1
-    except VersionConflict as e:
+    except pkg_resources.VersionConflict as e:
         print("VersionConflict : {}".format(line))
         version_conflict += 1
-    except Exception as e:
+    except Exception:
         print("Invalid : {}".format(line))
         invalid_req += 1
 

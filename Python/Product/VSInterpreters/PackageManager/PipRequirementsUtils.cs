@@ -84,9 +84,11 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        //Returns true if a missing package is detected. A package could be missing and not be detected (Git+...)
-        //Returns false when a missing package is not detected such as file not found exception or invalid file, etc
-        internal static async Task<bool> DetectedMissingPackageAsync(string interpreterPath, string reqTxtPath) {
+        /// <summary>
+        ///Returns true if a missing package is detected. A package could be missing and not be detected (Git+...)
+        ///Returns false when a missing package is not detected such as file not found exception or invalid file, etc
+        /// </summary>
+        internal static async Task<bool> DetectMissingPackagesAsync(string interpreterPath, string reqTxtPath) {
             var processOutput = ProcessOutput.RunHiddenAndCapture(
                 interpreterPath,
                 PythonToolsInstallPath.GetFile("missing_req_packages.py"),
@@ -95,10 +97,10 @@ namespace Microsoft.PythonTools.Interpreter {
 
             await processOutput;
 
-            if(processOutput.ExitCode == 1) {
+            if (processOutput.ExitCode == 1) {
                 return true;
             }
- 
+
             return false;
         }
     }
