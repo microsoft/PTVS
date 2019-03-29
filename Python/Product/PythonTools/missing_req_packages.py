@@ -14,12 +14,12 @@
 # See the Apache Version 2.0 License for specific language governing
 # permissions and limitations under the License.
 
-#This script determines if a python interpreter is missing any packages 
-#As defined in a text file (usually requirements.txt) which goes into pip
+# This script determines if a python interpreter is missing any packages 
+# As defined in a text file (usually requirements.txt) which goes into pip
 
-#Exit code = 1 means atleast 1 package is missing or version conflict. Show install package bar
-#Exit code = 0 means that packages may or may not be missing or file not find or other problems. Do not show install bar
-    #If exit code = 0 and git_req >= 1, then a package may or may not be missing
+# Exit code = 1 means atleast 1 package is missing or version conflict. Show install package bar
+# Exit code = 0 means that packages may or may not be missing or file not find or other problems. Do not show install bar
+    # If exit code = 0 and git_req >= 1, then a package may or may not be missing
 
 __author__ = "Microsoft Corporation <ptvshelp@microsoft.com>"
 __version__ = "3.0.0.0"
@@ -28,9 +28,8 @@ import codecs
 import locale
 import re
 import sys
-import pkg_resources
 import traceback
-
+import pkg_resources
 
 BOMS = [
     (codecs.BOM_UTF8, 'utf-8'),
@@ -75,7 +74,7 @@ for line in req_txt_lines:
         if line == "":
             continue            
 
-        #"git+..." is a valid requirements.txt instruction, but it's not supported by pkg_resource
+        # "git+..." is a valid requirements.txt instruction, but it's not supported by pkg_resource
         if line.lower().startswith("git+"):
             print("Git : {}".format(line))
             git_req += 1
@@ -87,7 +86,7 @@ for line in req_txt_lines:
     except pkg_resources.DistributionNotFound:
         print("NotFound : {}".format(line))
         not_found += 1
-    except pkg_resources.VersionConflict as e:
+    except pkg_resources.VersionConflict:
         print("VersionConflict : {}".format(line))
         version_conflict += 1
     except Exception:

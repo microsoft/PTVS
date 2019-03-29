@@ -14,12 +14,12 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.PythonTools.Infrastructure;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Interpreter {
     static class PipRequirementsUtils {
@@ -85,8 +85,8 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         /// <summary>
-        ///Returns true if a missing package is detected. A package could be missing and not be detected (Git+...)
-        ///Returns false when a missing package is not detected such as file not found exception or invalid file, etc
+        /// Returns true if a missing package is detected. A package could be missing and not be detected (Git+...)
+        /// Returns false when a missing package is not detected such as file not found exception or invalid file, etc
         /// </summary>
         internal static async Task<bool> DetectMissingPackagesAsync(string interpreterPath, string reqTxtPath) {
             var processOutput = ProcessOutput.RunHiddenAndCapture(
