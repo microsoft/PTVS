@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="utf-8" ?>
-<RoleTemplateData RoleProjectTargetFramework="4.0" MinWindowsAzureToolsVersion="2.2" MaxWindowsAzureToolsVersion="3.0" RoleProjectGuid="9F6ED981-1370-4933-9BBE-6E98DB55E149">
-  <VsTemplate Name="Web\WebRoleDjango" Language="Python"/>
-  <ProjectItems />
-</RoleTemplateData>

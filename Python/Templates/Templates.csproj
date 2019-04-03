@@ -68,9 +68,6 @@
       <IncludeInVSIX>true</IncludeInVSIX>
       <VSIXSubPath>.</VSIXSubPath>
     </Content>
-    <None Include="SharedFiles\**\*">
-      <IncludeInVsix>false</IncludeInVsix>
-    </None>
     <None Include="ReadmeFiles\**\*">
       <IncludeInVsix>false</IncludeInVsix>
     </None>

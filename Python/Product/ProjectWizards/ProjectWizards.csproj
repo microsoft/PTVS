@@ -86,7 +86,6 @@
       <Link>PythonConstants.cs</Link>
     </Compile>
     <Compile Include="AzureDebugWebConfigWizard.cs" />
-    <Compile Include="CloudServiceWizard.cs" />
     <Compile Include="CookiecutterWizard.cs" />
     <Compile Include="ImportWizard.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
