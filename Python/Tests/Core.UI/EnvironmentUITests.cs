@@ -523,7 +523,7 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
                 // Note: we need to use a real virtual env for this, because the
                 // workspace factory provider runs the env's python.exe.
                 var envPath = TestData.GetTempPath("testenv");
-                CreateVirtualEnvironment(basePython, envPath);
+                basePython.CreatePythonVirtualEnv(envPath);
 
                 // Add existing virtual environment dialog, custom path to a
                 // virtual env located outside of workspace root.
@@ -725,13 +725,6 @@ dependencies:
             return envFilePath;
         }
 
-        internal static void CreateVirtualEnvironment(PythonVersion pythonVersion, string envPath) {
-            using (var output = ProcessOutput.RunHiddenAndCapture(pythonVersion.Configuration.InterpreterPath, "-m", "venv", envPath)) {
-                Assert.IsTrue(output.Wait(TimeSpan.FromMinutes(3)));
-                Assert.AreEqual(0, output.ExitCode);
-                Assert.IsTrue(File.Exists(Path.Combine(envPath, "Scripts", "python.exe")));
-            }
-        }
 
         private void CheckSwitcherEnvironment(PythonVisualStudioApp app, string expectedDescription) {
             var expectedVisible = expectedDescription != null;

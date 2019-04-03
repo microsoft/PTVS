@@ -175,9 +175,8 @@ namespace PythonToolsUITests {
 
             var sln = app.CopyProjectForTest(@"TestData\InfoBar\InfoBarMissingPackages\InfoBarMissingPackages.sln");
 
-            CreateVirtualEnvironmentWithPackages(
-                basePython,
-                Path.Combine(Path.GetDirectoryName(sln), "env"),
+            basePython.CreatePythonVirtualEnvWithPkgs(
+                Path.Combine(Path.GetDirectoryName(sln), "env"), 
                 new[] { "bottle" }
             );
 
@@ -196,9 +195,8 @@ namespace PythonToolsUITests {
 
             var sln = app.CopyProjectForTest(@"TestData\InfoBar\InfoBarMissingPackages\InfoBarMissingPackages.sln");
 
-            CreateVirtualEnvironmentWithPackages(
-                basePython,
-                Path.Combine(Path.GetDirectoryName(sln), "env"),
+            basePython.CreatePythonVirtualEnvWithPkgs(
+                Path.Combine(Path.GetDirectoryName(sln), "env"), 
                 new[] { "bottle", "cookies" }
             );
 
@@ -342,26 +340,10 @@ namespace PythonToolsUITests {
             }
 
             if (virtualEnvBase != null) {
-                CreateVirtualEnvironmentWithPackages(
-                    virtualEnvBase,
-                    Path.Combine(workspaceFolder, "env"),
-                    virtualEnvPackages
-                );
+                virtualEnvBase.CreatePythonVirtualEnvWithPkgs(Path.Combine(workspaceFolder, "env"), virtualEnvPackages);
             }
 
             return workspaceFolder;
-        }
-
-        private static void CreateVirtualEnvironmentWithPackages(PythonVersion baseEnv, string envFolderPath, string[] packages) {
-            EnvironmentUITests.CreateVirtualEnvironment(baseEnv, envFolderPath);
-
-            var envPythonExePath = Path.Combine(envFolderPath, "scripts", "python.exe");
-            foreach (var package in packages.MaybeEnumerate()) {
-                using (var output = ProcessOutput.RunHiddenAndCapture(envPythonExePath, "-m", "pip", "install", package)) {
-                    Assert.IsTrue(output.Wait(TimeSpan.FromSeconds(30)));
-                    Assert.AreEqual(0, output.ExitCode);
-                }
-            }
         }
 
         private static PythonCreateVirtualEnvInfoBar AssertCreateVirtualEnvInfoBarVisibility(PythonVisualStudioApp app, bool expectedVisible) {
