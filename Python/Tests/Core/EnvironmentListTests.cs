@@ -778,10 +778,8 @@ namespace PythonToolsUITests {
                                                 PythonPaths.Python26_x64 ??
                                                 PythonPaths.Python27 ??
                                                 PythonPaths.Python26;
-            if (pythonInterpreter == null) {
-                Assert.Inconclusive("Python 2.6 or 2.7 not found");
-            }
 
+            pythonInterpreter.AssertInstalled("Unable to run test because python 2.6 or 2.7 must be installed");
             FilterPythonInterpreterEnv(pythonInterpreter);
         }
 
@@ -791,10 +789,8 @@ namespace PythonToolsUITests {
                                                 PythonPaths.Python36_x64 ??
                                                 PythonPaths.Python37 ??
                                                 PythonPaths.Python36;
-            if (pythonInterpreter == null) {
-                Assert.Inconclusive("Python 3.6 or 3.7 not found");
-            }
 
+            pythonInterpreter.AssertInstalled("Unable to run test because python 3.6 or 3.7 must be installed");
             FilterPythonInterpreterEnv(pythonInterpreter);
         }
 
@@ -881,8 +877,7 @@ namespace PythonToolsUITests {
                 DeleteFolder.Add(env);
             }
 
-            var virtualEnvModule = (pythonVersion.Version < PythonLanguageVersion.V30) ? "virtualenv" : "venv";
-            WorkspaceInterpreterFactoryTests.CreatePythonVirtualEnv(pythonVersion.InterpreterPath, env, "", virtualEnvModule);
+            pythonVersion.CreatePythonVirtualEnv(env);
             var interpreterConfiguration = new VisualStudioInterpreterConfiguration(
                     "Mock;" + Guid.NewGuid().ToString(),
                     Path.GetFileName(PathUtils.TrimEndSeparator(env)),

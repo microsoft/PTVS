@@ -18,6 +18,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Interpreter {
     static class PipRequirementsUtils {
@@ -82,18 +84,28 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        internal static bool AnyPackageMissing(
-            IEnumerable<string> original,
-            IEnumerable<PackageSpec> installed
-        ) {
-            foreach (var _line in original) {
-                var requirementPackageName = ParseRequirementLineRegex.Match(_line.Trim()).Groups["name"].Value;
-                var installedPackage = installed.FirstOrDefault(pkg =>
-                    string.Compare(pkg.Name, requirementPackageName, StringComparison.OrdinalIgnoreCase) == 0);
+        /// <summary>
+        /// Returns true if a missing package is detected. A package could be missing and not be detected (Git+...)
+        /// Returns false when a missing package is not detected such as file not found exception or invalid file, etc
+        /// </summary>
+        /// <param name="interpreterPath"></param>
+        /// <param name="reqTxtPath"></param>
+        /// <returns></returns>
+        internal static async Task<bool> DetectMissingPackagesAsync(string interpreterPath, string reqTxtPath) {
+            try {
+                var processOutput = ProcessOutput.RunHiddenAndCapture(
+                    interpreterPath,
+                    PythonToolsInstallPath.GetFile("missing_req_packages.py"),
+                    reqTxtPath
+                );
 
-                if (requirementPackageName.Length > 0 && installedPackage == null) {
+                await processOutput;
+                if (processOutput.ExitCode == 1) {
                     return true;
                 }
+
+            } catch (Exception) {
+                // Do nothing. End of function will return false because no missing packages detected due to exception
             }
 
             return false;

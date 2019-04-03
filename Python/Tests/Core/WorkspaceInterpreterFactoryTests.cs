@@ -93,7 +93,7 @@ namespace PythonToolsTests {
             // Create virtual env inside the workspace folder (one level from root)
             var configs = TestTriggerDiscovery(
                 workspaceContext,
-                () => CreatePythonVirtualEnv(python.InterpreterPath, workspaceFolder, "env")
+                () => python.CreatePythonVirtualEnv(Path.Combine(workspaceFolder, "env"))
             ).ToArray();
 
             Assert.AreEqual(1, configs.Length);
@@ -206,21 +206,10 @@ namespace PythonToolsTests {
             Directory.CreateDirectory(workspacePath);
             File.WriteAllText(Path.Combine(workspacePath, "app.py"), string.Empty);
 
-            CreatePythonVirtualEnv(python.InterpreterPath, workspacePath, envName);
+            python.CreatePythonVirtualEnv(Path.Combine(workspacePath, envName));
 
             return new WorkspaceTestHelper.MockWorkspaceContext(new WorkspaceTestHelper.MockWorkspace(workspacePath));
         }
 
-        internal static void CreatePythonVirtualEnv(string pythonInterpreterPath, string workspacePath, string envName, string virtualEnvModule = "venv") {
-            //Creating virtual environment and confirming it was created
-            using (var p = ProcessOutput.RunHiddenAndCapture(pythonInterpreterPath, "-m", virtualEnvModule, Path.Combine(workspacePath, envName))) {
-                Console.WriteLine(p.Arguments);
-                Assert.IsTrue(p.Wait(TimeSpan.FromMinutes(3)));
-                Console.WriteLine(string.Join(Environment.NewLine, p.StandardOutputLines.Concat(p.StandardErrorLines)));
-                Assert.AreEqual(0, p.ExitCode);
-            }
-
-            Assert.IsTrue(File.Exists(Path.Combine(workspacePath, envName, "scripts", "python.exe")));
-        }
     }
 }
