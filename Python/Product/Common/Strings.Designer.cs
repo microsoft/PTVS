@@ -676,6 +676,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to (none available).
+        /// </summary>
+        public static string AddInstalledEnvironmentNoneAvailable {
+            get {
+                return ResourceManager.GetString("AddInstalledEnvironmentNoneAvailable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Python installation.
         /// </summary>
         public static string AddInstalledEnvironmentTabHeader {
