@@ -126,7 +126,7 @@ namespace VSInterpretersTests {
                     "itsdangerous==0.24",
                     "Jinja2==2.7.3",
                     "MarkupSafe==0.23",
-                                    "Werkzeug==0.9.6"
+                    "Werkzeug==0.9.6"
                 }, new[] {
                     "flask==0.10.1",
                     "itsdangerous==0.24",
