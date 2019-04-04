@@ -1,4 +1,0 @@
-<?xml version="1.0" encoding="utf-8" ?>
-<RoleTemplateData RoleProjectTargetFramework="4.0" MinWindowsAzureToolsVersion="2.2" MaxWindowsAzureToolsVersion="3.0" RoleProjectGuid="1726B398-800D-4BB5-B7A9-537229FEAE0C">
-  <VsTemplate Name="Web\WebRoleFlask" Language="Python"/>
-</RoleTemplateData>
