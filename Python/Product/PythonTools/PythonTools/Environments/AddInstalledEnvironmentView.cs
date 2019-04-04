@@ -20,7 +20,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Data;
+using System.Windows.Controls;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Logging;
 using Microsoft.VisualStudio;
@@ -55,25 +55,25 @@ namespace Microsoft.PythonTools.Environments {
                     RefreshAcceptButton
             ));
 
-            SetupPackages = new ObservableCollection<SetupPackageView>(packages);
+            AvailablePackages = new ObservableCollection<object>(packages.Where(p => !p.Installed));
+            if (!AvailablePackages.Any()) {
+                AvailablePackages.Add(new SetupPackageNoneView(Strings.AddInstalledEnvironmentNoneAvailable));
+            }
 
-            InstalledView = new ListCollectionView(SetupPackages);
-            InstalledView.Filter = (p => ((SetupPackageView)p).Installed);
-
-            AvailableView = new ListCollectionView(SetupPackages);
-            AvailableView.Filter = (p => !((SetupPackageView)p).Installed);
+            InstalledPackages = new ObservableCollection<object>(packages.Where(p => p.Installed));
+            if (!InstalledPackages.Any()) {
+                InstalledPackages.Add(new SetupPackageNoneView(Strings.AddInstalledEnvironmentNone));
+            }
 
             RefreshAcceptButton();
         }
 
-        public ObservableCollection<SetupPackageView> SetupPackages { get; }
+        public ObservableCollection<object> InstalledPackages { get; }
 
-        public ListCollectionView InstalledView { get; }
-
-        public ListCollectionView AvailableView { get; }
+        public ObservableCollection<object> AvailablePackages { get; }
 
         private void RefreshAcceptButton() {
-            IsAcceptEnabled = SetupPackages?.Any(p => p.IsChecked) ?? false;
+            IsAcceptEnabled = AvailablePackages?.OfType<SetupPackageView>().Any(p => p.IsChecked) ?? false;
         }
 
         private static IVsSetupPackageInfo[] GetPackages(IVsSetupCompositionService setupService) {
@@ -95,7 +95,7 @@ namespace Microsoft.PythonTools.Environments {
         public override Task ApplyAsync() {
             _logger?.LogEvent(PythonLogEvent.InstallEnv, null);
 
-            var ids = SetupPackages.Where(p => p.IsChecked).Select(p => p.PackageId).ToArray();
+            var ids = AvailablePackages.OfType<SetupPackageView>().Where(p => p.IsChecked).Select(p => p.PackageId).ToArray();
             if (ids.Length > 0) {
                 IVsProjectAcquisitionSetupDriver driver;
                 if (_retargeting != null &&
@@ -144,6 +144,38 @@ namespace Microsoft.PythonTools.Environments {
 
         private static void IsChecked_Changed(DependencyObject d, DependencyPropertyChangedEventArgs e) {
             ((SetupPackageView)d).IsCheckedChanged?.Invoke();
+        }
+
+        public override string ToString() {
+            return Title;
+        }
+    }
+
+    sealed class SetupPackageNoneView : DependencyObject {
+        public SetupPackageNoneView(string text) {
+            Text = text;
+        }
+
+        public string Text { get; set; }
+
+        public override string ToString() {
+            return Text;
+        }
+    }
+
+    sealed class SetupPackageTemplateSelector : DataTemplateSelector {
+        public DataTemplate PackageView { get; set; }
+
+        public DataTemplate NoneView { get; set; }
+
+        public override DataTemplate SelectTemplate(object item, DependencyObject container) {
+            if (item is SetupPackageView) {
+                return PackageView;
+            } else if (item is SetupPackageNoneView) {
+                return NoneView;
+            }
+
+            return base.SelectTemplate(item, container);
         }
     }
 }

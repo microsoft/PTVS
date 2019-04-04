@@ -2296,6 +2296,9 @@ Expand selection to the full expression?</value>
   <data name="AddInstalledEnvironmentNone" xml:space="preserve">
     <value>(none)</value>
   </data>
+  <data name="AddInstalledEnvironmentNoneAvailable" xml:space="preserve">
+    <value>(none available)</value>
+  </data>
   <data name="AddCondaEnvironmentTabHeader" xml:space="preserve">
     <value>Conda environment</value>
   </data>
