@@ -143,7 +143,7 @@ namespace Microsoft.PythonTools.Editor {
             }
 
             int depth = 0;
-            foreach (var token in (direction > 0 ? buffer.GetTokensForwardFromPoint(position) : buffer.GetTokensInReverseFromPoint(position))) {
+            foreach (var token in (direction > 0 ? buffer.GetTokensForwardFromPoint(position) : buffer.GetTokensInReverseFromPoint(position - 1))) {
                 if (!token.Trigger.HasFlag(Parsing.TokenTriggers.MatchBraces)) {
                     continue;
                 }
