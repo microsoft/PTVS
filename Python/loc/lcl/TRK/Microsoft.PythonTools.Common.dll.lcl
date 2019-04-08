@@ -631,6 +631,12 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";AddInstalledEnvironmentNoneAvailable" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[(none available)]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";AddInstalledEnvironmentTabHeader" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Python installation]]></Val>
@@ -1403,7 +1409,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Machine Learning]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Makine Learning]]></Val>
+            <Val><![CDATA[Makine Öğrenmesi]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
