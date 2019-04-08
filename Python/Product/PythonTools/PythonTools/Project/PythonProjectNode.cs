@@ -1486,7 +1486,12 @@ namespace Microsoft.PythonTools.Project {
                     }
                 }
 
-                var files = AllVisibleDescendants.OfType<PythonFileNode>().Select(f => f.Url).ToArray();
+                var files = AllVisibleDescendants
+                    .OfType<PythonFileNode>()
+                    .Select(f => f.Url)
+                    .Where(File.Exists)
+                    .ToArray();
+
                 var fileSet = new Lazy<HashSet<string>>(() => new HashSet<string>(files, StringComparer.OrdinalIgnoreCase));
 
                 log?.WriteLine($"Project includes files:{Environment.NewLine}    {string.Join(Environment.NewLine + "    ", files)}");
