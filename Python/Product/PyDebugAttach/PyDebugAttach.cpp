@@ -685,7 +685,6 @@ bool LoadAndEvaluateCode(
     
     auto debuggerCode = fileContents.data();
     auto code = PyObjectHolder(isDebug, pyCompileString(debuggerCode, fileName, 257 /*Py_file_input*/));
-    delete[] debuggerCode;
 
     if (*code == nullptr) {
         connInfo.ReportErrorAfterAttachDone(ConnError_LoadDebuggerFailed);
