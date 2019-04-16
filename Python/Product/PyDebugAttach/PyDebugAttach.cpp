@@ -316,7 +316,7 @@ int AttachCallback(void *initThreads) {
     SetEvent(g_initedEvent);
     return 0;
 }
-//Change this to a boolean and output through string reference
+
 bool ReadCodeFromFile(wchar_t* filePath, string& fileContents) {
     ifstream filestr;
     filestr.open(filePath, ios::binary);

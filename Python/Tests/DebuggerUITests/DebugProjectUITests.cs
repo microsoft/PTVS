@@ -273,14 +273,8 @@ namespace DebuggerUITests {
                 WaitForMode(app, dbgDebugMode.dbgDesignMode);
             }
         }
-
+        
         public void SetNextLine(PythonVisualStudioApp app, bool useVsCodeDebugger, string interpreter, DotNotWaitOnNormalExit optionSetter) {
-            if (useVsCodeDebugger) {
-                // https://github.com/Microsoft/ptvsd/issues/18
-                // This is not implemented in the experimental debugger
-                Assert.Inconclusive();
-                return;
-            }
             var pyService = app.ServiceProvider.GetUIThread().Invoke(() => app.ServiceProvider.GetPythonToolsService());
             using (SelectDefaultInterpreter(app, interpreter))
             using (new PythonOptionsSetter(app.Dte, useLegacyDebugger: !useVsCodeDebugger)) {
