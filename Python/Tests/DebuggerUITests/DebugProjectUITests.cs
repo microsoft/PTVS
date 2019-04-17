@@ -275,12 +275,6 @@ namespace DebuggerUITests {
         }
 
         public void SetNextLine(PythonVisualStudioApp app, bool useVsCodeDebugger, string interpreter, DotNotWaitOnNormalExit optionSetter) {
-            if (useVsCodeDebugger) {
-                // https://github.com/Microsoft/ptvsd/issues/18
-                // This is not implemented in the experimental debugger
-                Assert.Inconclusive();
-                return;
-            }
             var pyService = app.ServiceProvider.GetUIThread().Invoke(() => app.ServiceProvider.GetPythonToolsService());
             using (SelectDefaultInterpreter(app, interpreter))
             using (new PythonOptionsSetter(app.Dte, useLegacyDebugger: !useVsCodeDebugger)) {
@@ -294,15 +288,31 @@ namespace DebuggerUITests {
                 app.Dte.Debugger.SetNextStatement();
                 app.Dte.Debugger.StepOver(true);
                 WaitForMode(app, dbgDebugMode.dbgBreakMode);
+                Assert.AreEqual((uint)9, ((StackFrame2)app.Dte.Debugger.CurrentStackFrame).LineNumber);
 
                 var curFrame = app.Dte.Debugger.CurrentStackFrame;
-                var local = curFrame.Locals.Item("y");
-                Assert.AreEqual("100", local.Value);
+                if (useVsCodeDebugger) {
+                    var locals = new List<Expression>();
+                    foreach (Expression e in curFrame.Locals) {
+                        locals.Add(e);
+                    }
 
-                try {
-                    curFrame.Locals.Item("x");
-                    Assert.Fail("Expected exception, x should not be defined");
-                } catch {
+                    var local = locals.Single(e => e.Name == "y");
+                    Assert.AreEqual("100", local.Value);
+                    try {
+                        locals.Single(e => e.Name == "x");
+                        Assert.Fail("Expected exception, x should not be defined");
+                    } catch {
+                    }
+
+                } else {
+                    var local = curFrame.Locals.Item("y");
+                    Assert.AreEqual("100", local.Value);
+                    try {
+                        curFrame.Locals.Item("x");
+                        Assert.Fail("Expected exception, x should not be defined");
+                    } catch {
+                    }
                 }
 
                 app.Dte.Debugger.TerminateAll();
@@ -485,16 +495,11 @@ namespace DebuggerUITests {
         }
 
         public void SimpleException(PythonVisualStudioApp app, bool useVsCodeDebugger, string interpreter, DotNotWaitOnNormalExit optionSetter) {
-            if (useVsCodeDebugger) {
-                // https://github.com/Microsoft/ptvsd/issues/312
-                // https://github.com/Microsoft/ptvsd/issues/194
-                Assert.Inconclusive();
-                return;
-            }
             var pyService = app.ServiceProvider.GetUIThread().Invoke(() => app.ServiceProvider.GetPythonToolsService());
             using (SelectDefaultInterpreter(app, interpreter))
             using (new PythonOptionsSetter(app.Dte, useLegacyDebugger: !useVsCodeDebugger)) {
-                ExceptionTest(app, "SimpleException.py", "Exception Thrown", "Exception", "Exception", 3);
+                string exceptionDescription = useVsCodeDebugger ? "" : "Exception";
+                ExceptionTest(app, "SimpleException.py", "Exception Thrown", exceptionDescription, "Exception", 3);
             }
         }
 
@@ -508,16 +513,11 @@ namespace DebuggerUITests {
         }
 
         public void SimpleExceptionUnhandled(PythonVisualStudioApp app, bool useVsCodeDebugger, string interpreter, DotNotWaitOnNormalExit optionSetter) {
-            if (useVsCodeDebugger) {
-                // This should be done as part of just my code and the fix for hiding debugger
-                // https://github.com/Microsoft/ptvsd/issues/194
-                // https://github.com/Microsoft/ptvsd/issues/199
-                Assert.Inconclusive();
-                return;
-            }
             using (SelectDefaultInterpreter(app, interpreter))
-            using (new PythonOptionsSetter(app.Dte, waitOnAbnormalExit: false)) {
-                ExceptionTest(app, "SimpleExceptionUnhandled.py", "Exception User-Unhandled", "ValueError: bad value", "ValueError", 2);
+            using (new PythonOptionsSetter(app.Dte, waitOnAbnormalExit: false, useLegacyDebugger: !useVsCodeDebugger)) {
+                string exceptionTitle = useVsCodeDebugger ? "Exception Unhandled" : "Exception User-Unhandled";
+                string exceptionDescription = useVsCodeDebugger ? "bad value" : "ValueError: bad value";
+                ExceptionTest(app, "SimpleExceptionUnhandled.py", exceptionTitle, exceptionDescription, "ValueError", 2, true);
             }
         }
 
@@ -896,14 +896,16 @@ namespace DebuggerUITests {
             Assert.IsTrue(exists, "Python script was expected to create file '{0}'.", createdFilePath);
         }
 
-        private static void ExceptionTest(PythonVisualStudioApp app, string filename, string expectedTitle, string expectedDescription, string exceptionType, int expectedLine) {
+        private static void ExceptionTest(PythonVisualStudioApp app, string filename, string expectedTitle, string expectedDescription, string exceptionType, int expectedLine, bool isUnhandled=false) {
             var debug3 = (Debugger3)app.Dte.Debugger;
             using (new DebuggingGeneralOptionsSetter(app.Dte, enableJustMyCode: true)) {
                 OpenDebuggerProject(app, filename);
 
                 var exceptionSettings = debug3.ExceptionGroups.Item("Python Exceptions");
 
-                exceptionSettings.SetBreakWhenThrown(true, exceptionSettings.Item(exceptionType));
+                if (!isUnhandled) {
+                    exceptionSettings.SetBreakWhenThrown(true, exceptionSettings.Item(exceptionType));
+                }
 
                 app.Dte.ExecuteCommand("Debug.Start");
                 WaitForMode(app, dbgDebugMode.dbgBreakMode);

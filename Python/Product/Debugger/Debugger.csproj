@@ -183,7 +183,7 @@
   </ItemGroup>
   <Import Project="..\ProjectAfter.settings" />
   <PropertyGroup>
-    <BundledPTVSDVersion>4.2.5</BundledPTVSDVersion>
+    <BundledPTVSDVersion>4.2.8b1</BundledPTVSDVersion>
   </PropertyGroup>
   <Target Name="_GatherPtvsd" BeforeTargets="_IncludePtvsd" Condition="!Exists('$(IntermediateOutputPath)Packages\ptvsd\__init__.py')">
     <PropertyGroup>
