@@ -52,6 +52,9 @@ namespace Microsoft.VisualStudioTools {
             // Indicates that the engine should be loaded directly by VS
             engineKey.SetValue("AlwaysLoadLocal", 1);
 
+            // Indicates that the engine supports 'goto' and 'gotoTargets' feature.
+            engineKey.SetValue("SetNextStatement", 1);
+
             // Address and callstack breakpoints are not currently supported by the Debug Adapter Host
             engineKey.SetValue("AddressBP", 0);
             engineKey.SetValue("CallStackBP", 0);
