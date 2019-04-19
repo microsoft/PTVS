@@ -144,6 +144,12 @@ namespace PythonToolsUITestsRunner {
 
         [TestMethod, Priority(0)]
         [TestCategory("Installed")]
+        public void WorkspaceCreateCondaEnvFromNoPackages() {
+            _vs.RunTest(nameof(PythonToolsUITests.EnvironmentUITests.WorkspaceCreateCondaEnvFromNoPackages));
+        }
+
+        [TestMethod, Priority(0)]
+        [TestCategory("Installed")]
         public void WorkspaceAddCustomEnvLocal() {
             _vs.RunTest(nameof(PythonToolsUITests.EnvironmentUITests.WorkspaceAddCustomEnvLocal));
         }

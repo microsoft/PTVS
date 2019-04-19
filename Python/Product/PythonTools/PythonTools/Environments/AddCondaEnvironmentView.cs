@@ -77,7 +77,7 @@ namespace Microsoft.PythonTools.Environments {
 
         public IEnumerable<PackageSpec> PackagesSpecs {
             get {
-                return (Packages ?? "")
+                return (String.IsNullOrWhiteSpace(Packages) ? "Python" : Packages)
                     .Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)
                     .Select(p => new PackageSpec(null, fullSpec: p))
                     .ToArray();

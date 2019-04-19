@@ -470,6 +470,23 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
             }
         }
 
+        public void WorkspaceCreateCondaEnvFromNoPackages(PythonVisualStudioApp app) {
+            var globalDefault37 = PythonPaths.Python37_x64 ?? PythonPaths.Python37;
+            globalDefault37.AssertInstalled();
+
+            using (var dis = app.SelectDefaultInterpreter(globalDefault37)) {
+                var workspaceFolder = CreateAndOpenWorkspace(app, globalDefault37);
+
+                // Create conda environment dialog with no packages
+                app.CreateWorkspaceCondaEnvironment("", null, null, out _, out string envPath, out string envDesc);
+                try {
+                    CheckSwitcherEnvironment(app, envDesc);
+                } finally {
+                    FileUtils.DeleteDirectory(envPath);
+                }
+            }
+        }
+
         public void WorkspaceCreateCondaEnvFromEnvFile(PythonVisualStudioApp app) {
             var globalDefault37 = PythonPaths.Python37_x64 ?? PythonPaths.Python37;
             globalDefault37.AssertInstalled();

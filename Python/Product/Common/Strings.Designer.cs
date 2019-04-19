@@ -251,7 +251,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to ex. numpy pandas.
+        ///   Looks up a localized string similar to Example: &quot;numpy pandas&quot;. If no packages are listed, Python will be installed.
         /// </summary>
         public static string AddCondaPackagesWatermark {
             get {
@@ -1292,11 +1292,29 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Conda environment &apos;{0}&apos; was created, but it will not be detected by Visual Studio because it does not contain Python..
+        /// </summary>
+        public static string CondaEnvCreatedWithoutPython {
+            get {
+                return ResourceManager.GetString("CondaEnvCreatedWithoutPython", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Conda Environment.
         /// </summary>
         public static string CondaEnvironmentDescription {
             get {
                 return ResourceManager.GetString("CondaEnvironmentDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Conda environment not detected.
+        /// </summary>
+        public static string CondaEnvNotDetected {
+            get {
+                return ResourceManager.GetString("CondaEnvNotDetected", resourceCulture);
             }
         }
         
