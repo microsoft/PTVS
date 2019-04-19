@@ -127,9 +127,9 @@
         </Grid>
         <Grid Visibility="{Binding Path=IsCondaMissing, Converter={x:Static wpf:Converters.TrueIsHidden}}">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="514*"/>
+                <ColumnDefinition Width="514"/>
                 <ColumnDefinition Width="28"/>
-                <ColumnDefinition Width="188*"/>
+                <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
             <ScrollViewer
                 Grid.Column="0"

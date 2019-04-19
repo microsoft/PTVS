@@ -111,9 +111,13 @@ namespace Microsoft.PythonTools.Environments {
         }
 
         private async Task CreateCondaEnvironmentAsync(CondaUI ui, ITaskHandler taskHandler, CancellationToken ct) {
+            bool createdCondaEnvNoPython = false;
+
             try {
                 var factory = await CreateFactoryAsync(ui, taskHandler, ct);
-                if (factory != null) {
+                if (factory == null) {
+                    createdCondaEnvNoPython = true;
+                } else {
                     await _site.GetUIThread().InvokeTask(async () => {
                         if (_project != null) {
                             _project.AddInterpreter(factory.Configuration.Id);
@@ -132,19 +136,25 @@ namespace Microsoft.PythonTools.Environments {
                             await InterpreterListToolWindow.OpenAtAsync(_site, factory);
                         }
                     });
+
+                    taskHandler?.Progress.Report(new TaskProgressData() {
+                        CanBeCanceled = false,
+                        ProgressText = Strings.CondaStatusCenterCreateProgressCompleted,
+                        PercentComplete = 100,
+                    });
+
+                    _statusBar?.SetText(Strings.CondaStatusBarCreateSucceeded.FormatUI(_actualName));
                 }
-
-                taskHandler?.Progress.Report(new TaskProgressData() {
-                    CanBeCanceled = false,
-                    ProgressText = Strings.CondaStatusCenterCreateProgressCompleted,
-                    PercentComplete = 100,
-                });
-
-                _statusBar?.SetText(Strings.CondaStatusBarCreateSucceeded.FormatUI(_actualName));
             } catch (Exception ex) when (!ex.IsCriticalException()) {
                 _statusBar?.SetText(Strings.CondaStatusBarCreateFailed.FormatUI(_actualName));
                 ui.OnErrorTextReceived(_condaMgr, ex.Message);
                 throw;
+            }
+
+            if (createdCondaEnvNoPython) {
+                ui.OnErrorTextReceived(_condaMgr, Strings.CondaEnvCreatedWithoutPython.FormatUI(_actualName));
+                _statusBar?.SetText(Strings.CondaEnvNotDetected);
+                throw new ApplicationException(Strings.CondaEnvNotDetected);
             }
         }
 
@@ -183,7 +193,6 @@ namespace Microsoft.PythonTools.Environments {
                             throw new ApplicationException(Strings.CondaStatusCenterCreateFailure);
                         }
                     }
-
                     failed = false;
                 } finally {
                     _logger?.LogEvent(PythonLogEvent.CreateCondaEnv, new CreateCondaEnvInfo() {
@@ -205,7 +214,6 @@ namespace Microsoft.PythonTools.Environments {
             // not contain a python interpreter. Common case for this is
             // when the package list the user has entered is empty string.
             var factory = _factoryProvider?.GetInterpreterFactory(expectedId);
-
             return factory;
         }
 

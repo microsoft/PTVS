@@ -2264,7 +2264,7 @@ Expand selection to the full expression?</value>
   <data name="AddEnvironmentCancelButton" xml:space="preserve">
     <value>_Cancel</value>
   </data>
-    <data name="AddEnvironmentValidationErrors" xml:space="preserve">
+  <data name="AddEnvironmentValidationErrors" xml:space="preserve">
     <value>Some fields have invalid values.
 
 {0}</value>
@@ -2441,7 +2441,7 @@ Expand selection to the full expression?</value>
     <value>On_e or more Anaconda package names</value>
   </data>
   <data name="AddCondaPackagesWatermark" xml:space="preserve">
-    <value>ex. numpy pandas</value>
+    <value>Example: "Numpy Pandas". If no packages are listed, Python will be installed</value>
   </data>
   <data name="AddCondaPackagesName" xml:space="preserve">
     <value>Package names</value>
@@ -2450,7 +2450,7 @@ Expand selection to the full expression?</value>
     <value>Add packages</value>
   </data>
   <data name="AddCondaPackagesHelpText" xml:space="preserve">
-    <value>List of Conda packages to install when creating the Conda environment. Entries should be separated by spaces. Example: numpy pandas</value>
+    <value>List of Conda packages to install when creating the Conda environment. Entries should be separated by spaces. Example: Numpy Pandas</value>
   </data>
   <data name="AddEnvironmentSetAsDefaultLabel" xml:space="preserve">
     <value>Set as _default environment for new projects</value>
@@ -2865,5 +2865,12 @@ Please specify at least one package.</value>
   <data name="WrappingWidthExample" xml:space="preserve">
     <value># Sets the width for wrapping comments
 # and documentation strings.</value>
+  </data>
+  <data name="CondaEnvCreatedWithoutPython" xml:space="preserve">
+    <value>Conda environment '{0}' was created, but it will not be detected by Visual Studio because it does not contain Python.</value>
+    <comment>Display in the output window</comment>
+  </data>
+  <data name="CondaEnvNotDetected" xml:space="preserve">
+    <value>Conda environment not detected</value>
   </data>
 </root>
