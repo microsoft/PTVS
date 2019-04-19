@@ -193,6 +193,7 @@ namespace Microsoft.PythonTools.Environments {
                             throw new ApplicationException(Strings.CondaStatusCenterCreateFailure);
                         }
                     }
+
                     failed = false;
                 } finally {
                     _logger?.LogEvent(PythonLogEvent.CreateCondaEnv, new CreateCondaEnvInfo() {
@@ -214,6 +215,7 @@ namespace Microsoft.PythonTools.Environments {
             // not contain a python interpreter. Common case for this is
             // when the package list the user has entered is empty string.
             var factory = _factoryProvider?.GetInterpreterFactory(expectedId);
+
             return factory;
         }
 
