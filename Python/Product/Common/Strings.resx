@@ -2441,7 +2441,7 @@ Expand selection to the full expression?</value>
     <value>On_e or more Anaconda package names</value>
   </data>
   <data name="AddCondaPackagesWatermark" xml:space="preserve">
-    <value>Example: "Numpy Pandas". If no packages are listed, Python will be installed</value>
+    <value>Example: "numpy pandas". If no packages are listed, Python will be installed</value>
   </data>
   <data name="AddCondaPackagesName" xml:space="preserve">
     <value>Package names</value>
@@ -2450,7 +2450,7 @@ Expand selection to the full expression?</value>
     <value>Add packages</value>
   </data>
   <data name="AddCondaPackagesHelpText" xml:space="preserve">
-    <value>List of Conda packages to install when creating the Conda environment. Entries should be separated by spaces. Example: Numpy Pandas</value>
+    <value>List of Conda packages to install when creating the Conda environment. Entries should be separated by spaces. Example: numpy pandas</value>
   </data>
   <data name="AddEnvironmentSetAsDefaultLabel" xml:space="preserve">
     <value>Set as _default environment for new projects</value>

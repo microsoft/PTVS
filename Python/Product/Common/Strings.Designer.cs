@@ -224,7 +224,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to List of Conda packages to install when creating the Conda environment. Entries should be separated by spaces. Example: Numpy Pandas.
+        ///   Looks up a localized string similar to List of Conda packages to install when creating the Conda environment. Entries should be separated by spaces. Example: numpy pandas.
         /// </summary>
         public static string AddCondaPackagesHelpText {
             get {
@@ -251,7 +251,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Example: &quot;Numpy Pandas&quot;. If no packages are listed, Python will be installed.
+        ///   Looks up a localized string similar to Example: &quot;numpy pandas&quot;. If no packages are listed, Python will be installed.
         /// </summary>
         public static string AddCondaPackagesWatermark {
             get {
