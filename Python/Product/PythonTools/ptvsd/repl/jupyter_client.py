@@ -343,25 +343,28 @@ class JupyterClientBackend(ReplBackend):
                 if self.exit_requested:
                     break
 
-                m = Message(client.get_shell_msg(block=True))
-                msg_id = m.msg_id
-                msg_type = m.msg_type
+                try:
+                    m = Message(client.get_shell_msg(timeout=0.1))
+                    msg_id = m.msg_id
+                    msg_type = m.msg_type
 
-                print('%s: %s' % (msg_type, msg_id))
+                    print('%s: %s' % (msg_type, msg_id))
 
-                exec_count = m.content['execution_count', None]
-                if exec_count != last_exec_count and exec_count is not None:
-                    last_exec_count = exec_count
-                    exec_count = int(exec_count) + 1
-                    ps1 = 'In [%s]: ' % exec_count
-                    ps2 = ' ' * (len(ps1) - 5) + '...: '
-                    self.send_prompt('\n' + ps1, ps2, allow_multiple_statements=True)
+                    exec_count = m.content['execution_count', None]
+                    if exec_count != last_exec_count and exec_count is not None:
+                        last_exec_count = exec_count
+                        exec_count = int(exec_count) + 1
+                        ps1 = 'In [%s]: ' % exec_count
+                        ps2 = ' ' * (len(ps1) - 5) + '...: '
+                        self.send_prompt('\n' + ps1, ps2, allow_multiple_statements=True)
 
-                parent_id = m.parent_header['msg_id', None]
-                if parent_id:
-                    on_reply = on_replies.pop((parent_id, msg_type), ())
-                    for callable in on_reply:
-                        callable(m)
+                    parent_id = m.parent_header['msg_id', None]
+                    if parent_id:
+                        on_reply = on_replies.pop((parent_id, msg_type), ())
+                        for callable in on_reply:
+                            callable(m)
+                except Empty:
+                    pass
 
         except zmq.error.ZMQError:
             self.exit_process()
