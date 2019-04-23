@@ -365,8 +365,7 @@ class JupyterClientBackend(ReplBackend):
                             callable(m)
                 except Empty:
                     pass
-                except:
-                    raise
+
         except zmq.error.ZMQError:
             self.exit_process()
         except KeyboardInterrupt:
