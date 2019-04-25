@@ -210,10 +210,13 @@
       </Item>
       <Item ItemId=";AddCondaPackagesWatermark" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[ex. numpy pandas]]></Val>
+          <Val><![CDATA[Example: "numpy pandas". If no packages are listed, Python will be installed]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Exemple : numpy pandas]]></Val>
+            <Val><![CDATA[Exemple : "numpy pandas". Si aucun package n'est listé, Python est installé]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[ex. numpy pandas]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -1245,6 +1248,24 @@
           <Val><![CDATA[----- Successfully deleted '{0}' -----]D;]A;]D;]A;]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[----- « {0} » supprimé -----]D;]A;]D;]A;]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";CondaEnvCreatedWithoutPython" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Conda environment '{0}' was created, but it will not be detected by Visual Studio because it does not contain Python.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[L'environnement Conda '{0}' a été créé, mais Visual Studio ne peut pas le détecter, car il ne contient pas Python.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";CondaEnvNotDetected" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Conda environment not detected]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Environnement Conda non détecté]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
