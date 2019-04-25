@@ -113,7 +113,7 @@ namespace Microsoft.VisualStudioTools.BuildTasks {
                 return GenerateOutput();
             } catch (Exception ex) {
                 LogError(null, 0, 0, ex.Message);
-                return false;
+                throw;
             }
         }
 
