@@ -84,6 +84,7 @@
     <SignManifests>false</SignManifests>
     <AssemblyOriginatorKeyFile>$(TargetsPath)\FinalPublicKey.snk</AssemblyOriginatorKeyFile>
     <DelaySign>true</DelaySign>
+    <Features>$(Features);flow-analysis</Features> 
   </PropertyGroup>
 
 </Project>
