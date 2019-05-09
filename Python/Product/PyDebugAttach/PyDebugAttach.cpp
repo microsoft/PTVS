@@ -783,7 +783,7 @@ bool LoadAndEvaluateCode(
 
     dictSetItem(globalsDict, "__builtins__", getBuiltins());
     auto size = WideCharToMultiByte(CP_UTF8, 0, filePath, (DWORD)wcslen(filePath), NULL, 0, NULL, NULL);
-    char* filenameBuffer = new char[size];
+    char* filenameBuffer = new char[size + 1];
     if (WideCharToMultiByte(CP_UTF8, 0, filePath, (DWORD)wcslen(filePath), filenameBuffer, size, NULL, NULL) != 0) {
         filenameBuffer[size] = 0;
         dictSetItem(globalsDict, "__file__", strFromString(filenameBuffer));
