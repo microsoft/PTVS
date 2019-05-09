@@ -255,6 +255,7 @@
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.LanguageServer.Client" />
+    <Reference Include="Microsoft.Internal.VisualStudio.Shell.Embeddable"/>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="PythonTools\Debugger\CustomDebugAdapterProtocolExtension.cs" />
@@ -391,6 +392,7 @@
       <DependentUpon>AddEnvironmentDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="PythonTools\Project\DeprecatedReferenceNode.cs" />
+    <Compile Include="PythonTools\PythonFeedbackDiagnosticFileProvider.cs" />
     <Compile Include="PythonTools\WorkspaceInfoBarManager.cs" />
     <Compile Include="PythonTools\Wpf\ModernDialog.cs" />
     <Compile Include="PythonTools\Wpf\ModernDialogHeaderControl.xaml.cs">
