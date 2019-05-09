@@ -80,14 +80,14 @@
         "/>
 
     <FilesToSign Include="@(ManagedFiles->'$(BinariesOutputPath)%(Identity)')">
-      <Authenticode>Microsoft</Authenticode>
+      <Authenticode>Microsoft400</Authenticode>
       <StrongName Condition="!$([msbuild]::ValueOrDefault(%(SkipStrongName), `false`))">StrongName</StrongName>
       <SignedPath>$(BinariesOutputPath)%(Filename)%(Extension)</SignedPath>
       <UnsignedPath>$(UnsignedOutputPath)%(Filename)%(Extension)</UnsignedPath>
     </FilesToSign>
 
     <FilesToSign Include="@(UnmanagedFiles->'$(BinariesOutputPath)%(Identity)')">
-      <Authenticode>Microsoft</Authenticode>
+      <Authenticode>Microsoft400</Authenticode>
       <SignedPath>$(BinariesOutputPath)%(Filename)%(Extension)</SignedPath>
       <UnsignedPath>$(UnsignedOutputPath)%(Filename)%(Extension)</UnsignedPath>
     </FilesToSign>
@@ -97,7 +97,7 @@
     <ItemGroup>
       <LocFilesToSign Include="$(BinariesOutputPath)localize\**\*.resources.dll" />
       <FilesToSign Include="@(LocFilesToSign)">
-        <Authenticode>Microsoft</Authenticode>
+        <Authenticode>Microsoft400</Authenticode>
         <StrongName>StrongName</StrongName>
         <SignedPath>$(BinariesOutputPath)localize\%(RecursiveDir)%(Filename)%(Extension)</SignedPath>
         <UnsignedPath>$(UnsignedOutputPath)%(RecursiveDir)%(Filename)%(Extension)</UnsignedPath>

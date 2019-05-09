@@ -178,7 +178,7 @@
 
     <ItemGroup>
       <FilesToSign Include="@(_VsixToSign)">
-        <Authenticode>vsix</Authenticode>
+        <Authenticode>VsixSHA2</Authenticode>
       </FilesToSign>
     </ItemGroup>
   </Target>
