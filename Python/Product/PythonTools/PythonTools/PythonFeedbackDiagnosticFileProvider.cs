@@ -36,21 +36,32 @@ namespace Microsoft.PythonTools {
         }
 
         public IEnumerable<string> GetFiles() {
-            var folderPath = Path.GetTempPath();
-            var filePath = PathUtils.GetAvailableFilename(folderPath, "PythonDiagnostics", ".log");
+            var filePath = PathUtils.GetAvailableFilename(
+                Path.GetTempPath(),
+                "PythonToolsDiagnostics_{0:yyyyMMddHHmmss}".FormatInvariant(DateTime.Now),
+                ".log"
+            );
 
-            // Generate the file in the background and return the path we'll
-            // be generating immediately (so as to not delay the feedback dialog)
+            // Generate the file in the background and return the path
+            // immediately, to avoid delay opening the feedback dialog.
             Task.Run(() => GenerateFile(filePath));
 
             return new string[] { filePath };
         }
 
         private void GenerateFile(string filePath) {
-            using (var writer = new StreamWriter(filePath, false, Encoding.UTF8)) {
-                _serviceProvider.GetUIThread().Invoke(() => {
-                    _serviceProvider.GetPythonToolsService().GetDiagnosticsLog(writer, false);
-                });
+            try {
+                using (var writer = new StreamWriter(filePath, false, Encoding.UTF8)) {
+                    _serviceProvider.GetUIThread().Invoke(() => {
+                        try {
+                            _serviceProvider.GetPythonToolsService().GetDiagnosticsLog(writer, false);
+                        } catch (Exception ex) when (!ex.IsCriticalException()) {
+                            // Append the error to the log we're writing
+                            writer.WriteLine(ex.ToUnhandledExceptionMessage(GetType()));
+                        }
+                    });
+                }
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
             }
         }
     }

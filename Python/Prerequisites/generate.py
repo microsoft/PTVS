@@ -17,6 +17,7 @@ ASSEMBLIES = sorted([
     "FastCgiTest",
     "IpcJsonTests",
     "IronPythonTests",
+    "Microsoft.Internal.VisualStudio.Shell.Embeddable",
     "Microsoft.IronPythonTools.Resolver",
     "Microsoft.PythonTools",
     "Microsoft.PythonTools.Attacher",

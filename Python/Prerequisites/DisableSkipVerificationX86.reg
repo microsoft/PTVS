@@ -12,6 +12,7 @@ Windows Registry Editor Version 5.00
 [-HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\StrongName\Verification\IpcJsonTests,B03F5F7F11D50A3A]
 [-HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\StrongName\Verification\IronPythonTests,B03F5F7F11D50A3A]
 [-HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\StrongName\Verification\Microsoft.CookiecutterTools,B03F5F7F11D50A3A]
+[-HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\StrongName\Verification\Microsoft.Internal.VisualStudio.Shell.Embeddable,B03F5F7F11D50A3A]
 [-HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\StrongName\Verification\Microsoft.IronPythonTools.Resolver,B03F5F7F11D50A3A]
 [-HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\StrongName\Verification\Microsoft.PythonTools,B03F5F7F11D50A3A]
 [-HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\StrongName\Verification\Microsoft.PythonTools.Attacher,B03F5F7F11D50A3A]
