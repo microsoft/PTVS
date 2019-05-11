@@ -29,6 +29,9 @@ namespace Microsoft.PythonTools.Interpreter {
         private const string PythonSettingsType = "PythonSettings";
         private const string InterpreterProperty = "Interpreter";
         private const string SearchPathsProperty = "SearchPaths";
+        private const string PytestArgProperty = "PyTestArgs";
+        private const string PytestEnabledProperty = "PyTestEnabled";
+        private const string PytestPathProperty = "PyTestPath";
 
         private readonly IWorkspace _workspace;
         private readonly IInterpreterOptionsService _optionsService;
@@ -43,6 +46,10 @@ namespace Microsoft.PythonTools.Interpreter {
         private object _cacheLock = new object();
         private string[] _searchPaths;
         private string _interpreter;
+        private string[] _pytestArgs;
+        private bool _pytestEnabled;
+        private string _pytestPath;
+
 
         // These are set in initialize
         private IPythonInterpreterFactory _factory;
@@ -61,6 +68,8 @@ namespace Microsoft.PythonTools.Interpreter {
         public event EventHandler InterpreterSettingChanged;
 
         public event EventHandler SearchPathsSettingChanged;
+
+        public event EventHandler TestSettingChanged;
 
         /// <summary>
         /// The effective interpreter for this workspace has changed.
@@ -92,6 +101,9 @@ namespace Microsoft.PythonTools.Interpreter {
         public void Initialize() {
             _interpreter = ReadInterpreterSetting();
             _searchPaths = ReadSearchPathsSetting();
+            _pytestArgs = ReadPytestArgSetting();
+            _pytestEnabled = GetBoolProperty(PytestEnabledProperty) ?? false;
+            _pytestPath = GetStringProperty(PytestPathProperty) ?? "pytest";
 
             RefreshCurrentFactory();
 
@@ -138,6 +150,15 @@ namespace Microsoft.PythonTools.Interpreter {
             var searchPaths = settings.UnionPropertyArray<string>(SearchPathsProperty);
 
             return searchPaths.ToArray();
+        }
+
+        private string[] ReadPytestArgSetting()
+        {
+            var settingsMgr = _workspace.GetSettingsManager();
+            var settings = settingsMgr.GetAggregatedSettings(PythonSettingsType);
+            var pytestarg = settings.UnionPropertyArray<string>(PytestArgProperty);
+
+            return pytestarg.ToArray();
         }
 
         public IEnumerable<string> GetAbsoluteSearchPaths() {
@@ -255,15 +276,25 @@ namespace Microsoft.PythonTools.Interpreter {
             // own changed events as applicable.
             bool interpreterChanged = false;
             bool searchPathsChanged = false;
+            bool testSettingsChanged = false;
+
             lock (_cacheLock) {
                 var oldInterpreter = _interpreter;
-                var oldSearchPaths = _searchPaths;
-
+                interpreterChanged = oldInterpreter != _interpreter;
                 _interpreter = ReadInterpreterSetting();
+
+                var oldSearchPaths = _searchPaths;
+                searchPathsChanged = !oldSearchPaths.SequenceEqual(_searchPaths);
                 _searchPaths = ReadSearchPathsSetting();
 
-                interpreterChanged = oldInterpreter != _interpreter;
-                searchPathsChanged = !oldSearchPaths.SequenceEqual(_searchPaths);
+                var oldPytestArgs = _pytestArgs;
+                var oldPytestEnabled = _pytestEnabled;
+                var oldPytestPath = _pytestPath;
+
+                _pytestArgs = ReadPytestArgSetting();
+                _pytestEnabled = GetBoolProperty(PytestEnabledProperty) ?? false;
+                _pytestPath = GetStringProperty(PytestPathProperty) ?? "pytest";
+                testSettingsChanged = !oldPytestArgs.SequenceEqual(_pytestArgs) || oldPytestEnabled != _pytestEnabled || !String.Equals(oldPytestPath, _pytestPath);
             }
 
             if (interpreterChanged) {
@@ -288,6 +319,10 @@ namespace Microsoft.PythonTools.Interpreter {
 
             if (searchPathsChanged) {
                 SearchPathsSettingChanged?.Invoke(this, EventArgs.Empty);
+            }
+
+            if (testSettingsChanged) {
+                TestSettingChanged?.Invoke(this, EventArgs.Empty);
             }
 
             return Task.CompletedTask;

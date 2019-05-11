@@ -27,14 +27,14 @@ namespace Microsoft.VisualStudioTools.TestAdapter {
     internal class TestContainer : ITestContainer {
         private readonly int _version;
         private readonly Architecture _architecture;
-        private readonly PythonProject _project;
+        private readonly string _projectHome;
         private readonly TestCaseInfo[] _testCases;
 
-        public TestContainer(ITestContainerDiscoverer discoverer, string source, PythonProject project, int version, Architecture architecture, TestCaseInfo[] testCases) {
+        public TestContainer(ITestContainerDiscoverer discoverer, string source, string projectHome, int version, Architecture architecture, TestCaseInfo[] testCases) {
             Discoverer = discoverer;
             Source = source;
             _version = version;
-            _project = project;
+            _projectHome = projectHome;
             _architecture = architecture;
             _testCases = testCases;
         }
@@ -51,9 +51,9 @@ namespace Microsoft.VisualStudioTools.TestAdapter {
             }
         }
 
-        public PythonProject Project {
+        public string Project {
             get {
-                return _project;
+                return _projectHome;
             }
         }
 

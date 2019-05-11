@@ -135,25 +135,25 @@ namespace Microsoft.PythonTools.TestAdapter {
                     foreach (var project in pyContainers) {
                         foreach (var container in project) {
                             writer.WriteStartElement("Project");
-                            writer.WriteAttributeString("home", project.Key.ProjectHome);
+                            writer.WriteAttributeString("home", project.Key);
 
                             LaunchConfiguration config = null;
                             string nativeCode = "", djangoSettings = "";
 
                             ThreadHelper.JoinableTaskFactory.Run(async () => {
                                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-                                try {
-                                    config = project.Key.GetLaunchConfigurationOrThrow();
-                                } catch {
-                                }
-                                nativeCode = project.Key.GetProperty(PythonConstants.EnableNativeCodeDebugging);
-                                djangoSettings = project.Key.GetProperty("DjangoSettingsModule");
+                                //try {
+                                //    config = project.Key.GetLaunchConfigurationOrThrow();
+                                //} catch {
+                                //}
+                                //nativeCode = project.Key.GetProperty(PythonConstants.EnableNativeCodeDebugging);
+                                //djangoSettings = project.Key.GetProperty("DjangoSettingsModule");
                             });
 
                             if (config == null) {
                                 log.Log(
                                     MessageLevel.Warning,
-                                    Strings.TestDiscoveryFailedMissingLaunchConfiguration.FormatUI(project.Key.ProjectHome)
+                                    Strings.TestDiscoveryFailedMissingLaunchConfiguration.FormatUI(project.Key)
                                 );
                                 continue;
                             }

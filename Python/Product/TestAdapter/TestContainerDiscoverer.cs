@@ -35,7 +35,7 @@ namespace Microsoft.PythonTools.TestAdapter {
     class TestContainerDiscoverer : ITestContainerDiscoverer, IDisposable {
         private readonly IServiceProvider _serviceProvider;
         private readonly SolutionEventsListener _solutionListener;
-        private readonly Dictionary<PythonProject, ProjectInfo> _projectInfo;
+        private readonly Dictionary<string, ProjectInfo> _projectInfo;
         private bool _firstLoad, _isDisposed;
         public const string ExecutorUriString = "executor://PythonTestExecutor/v1";
         public static readonly Uri _ExecutorUri = new Uri(ExecutorUriString);
@@ -44,7 +44,7 @@ namespace Microsoft.PythonTools.TestAdapter {
         private TestContainerDiscoverer([Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider, [Import(typeof(IOperationState))]IOperationState operationState) {
             _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
 
-            _projectInfo = new Dictionary<PythonProject, ProjectInfo>();
+            _projectInfo = new Dictionary<string, ProjectInfo>();
 
             _solutionListener = new SolutionEventsListener(serviceProvider);
             _solutionListener.ProjectLoaded += OnProjectLoaded;
@@ -90,11 +90,13 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
         }
 
-        public TestContainer GetTestContainer(PythonProject project, string path) {
+        public TestContainer GetTestContainer(string projectHome, string path) {
             ProjectInfo projectInfo;
-            if (_projectInfo.TryGetValue(project, out projectInfo)) {
+            if (_projectInfo.TryGetValue(projectHome, out projectInfo))
+            {
                 TestContainer container;
-                if (projectInfo.TryGetContainer(path, out container)) {
+                if (projectInfo.TryGetContainer(path, out container))
+                {
                     return container;
                 }
             }
@@ -130,7 +132,10 @@ namespace Microsoft.PythonTools.TestAdapter {
             if (pyProj != null) {
                 var analyzer = await pyProj.GetAnalyzerAsync();
                 if (analyzer != null) {
-                    _projectInfo[pyProj] = new ProjectInfo(this, pyProj);
+                    _projectInfo[pyProj.ProjectHome] = new ProjectInfo(this, pyProj.ProjectHome);
+                    await _projectInfo[pyProj.ProjectHome].UpdateTestCasesAsync(analyzer, analyzer.Files, false);
+
+                    analyzer.AnalysisComplete += _projectInfo[pyProj.ProjectHome].AnalysisComplete;
                 }
             }
 
@@ -142,41 +147,30 @@ namespace Microsoft.PythonTools.TestAdapter {
                 var pyProj = PythonProject.FromObject(e.Project);
                 ProjectInfo events;
                 if (pyProj != null &&
-                    _projectInfo.TryGetValue(pyProj, out events) &&
-                    _projectInfo.Remove(pyProj)) {
-                    events.Dispose();
+                    _projectInfo.TryGetValue(pyProj.ProjectHome, out events) &&
+                    _projectInfo.Remove(pyProj.ProjectHome)) {
                 }
             }
 
             TestContainersUpdated?.Invoke(this, EventArgs.Empty);
         }
 
-        sealed class ProjectInfo : IDisposable {
-            private readonly PythonProject _project;
+        sealed class ProjectInfo {
+            private readonly string _projectHome;
             private readonly TestContainerDiscoverer _discoverer;
             private readonly Dictionary<string, TestContainer> _containers;
             private readonly object _containersLock = new object();
-            private ProjectAnalyzer _analyzer;
-
+            
             private List<string> _pendingRequests;
 
-            public ProjectInfo(TestContainerDiscoverer discoverer, PythonProject project) {
-                _project = project;
+            public ProjectInfo(TestContainerDiscoverer discoverer, String projectHome) {
+                _projectHome = projectHome;
                 _discoverer = discoverer;
                 _containers = new Dictionary<string, TestContainer>(StringComparer.OrdinalIgnoreCase);
                 _pendingRequests = new List<string>();
-
-                project.ProjectAnalyzerChanged += ProjectAnalyzerChanged;
-                RegisterWithAnalyzerAsync().HandleAllExceptions(_discoverer._serviceProvider, GetType()).DoNotWait();
             }
 
-            public void Dispose() {
-                if (_analyzer != null) {
-                    _analyzer.AnalysisComplete -= AnalysisComplete;
-                }
-                _project.ProjectAnalyzerChanged -= ProjectAnalyzerChanged;
-            }
-
+         
             public TestContainer[] GetAllContainers() {
                 lock (_containersLock) {
                     return _containers.Select(x => x.Value).ToArray();
@@ -194,20 +188,8 @@ namespace Microsoft.PythonTools.TestAdapter {
                     return _containers.Remove(path);
                 }
             }
-
-            private async Task RegisterWithAnalyzerAsync() {
-                if (_analyzer != null) {
-                    _analyzer.AnalysisComplete -= AnalysisComplete;
-                }
-                _analyzer = await _project.GetAnalyzerAsync();
-                if (_analyzer != null) {
-                    _analyzer.AnalysisComplete += AnalysisComplete;
-                    await _analyzer.RegisterExtensionAsync(typeof(TestAnalyzer)).ConfigureAwait(false);
-                    await UpdateTestCasesAsync(_analyzer, _analyzer.Files, false).ConfigureAwait(false);
-                }
-            }
-
-            private void AnalysisComplete(object sender, AnalysisCompleteEventArgs e) {
+            public void AnalysisComplete(object sender, AnalysisCompleteEventArgs e)
+            {
                 PendOrSubmitRequests((ProjectAnalyzer)sender, e.Path)
                     .HandleAllExceptions(_discoverer._serviceProvider, GetType())
                     .DoNotWait();
@@ -240,7 +222,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 await UpdateTestCasesAsync(analyzer, pendingRequests, true).ConfigureAwait(false);
             }
 
-            private async Task UpdateTestCasesAsync(ProjectAnalyzer analyzer, IEnumerable<string> paths, bool notify) {
+            public async Task UpdateTestCasesAsync(ProjectAnalyzer analyzer, IEnumerable<string> paths, bool notify) {
                 var testCaseData = await analyzer.SendExtensionCommandAsync(
                     TestAnalyzer.Name,
                     TestAnalyzer.GetTestCasesCommand,
@@ -265,7 +247,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                                 _containers[path] = new TestContainer(
                                     _discoverer,
                                     path,
-                                    _project,
+                                    _projectHome,
                                     version,
                                     Architecture,
                                     testCases.ToArray()
@@ -290,10 +272,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             private void ContainersChanged() {
                 _discoverer.TestContainersUpdated?.Invoke(_discoverer, EventArgs.Empty);
             }
-
-            public void ProjectAnalyzerChanged(object sender, EventArgs e) {
-                RegisterWithAnalyzerAsync().HandleAllExceptions(_discoverer._serviceProvider, GetType()).DoNotWait();
-            }
+           
         }
     }
 }

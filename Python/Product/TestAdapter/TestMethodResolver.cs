@@ -47,7 +47,7 @@ namespace Microsoft.PythonTools.TestAdapter {
         public string GetCurrentTest(string filePath, int line, int lineCharOffset) {
             var pyProj = PythonProject.FromObject(PathToProject(filePath));
             if (pyProj != null) {
-                var container = _discoverer.GetTestContainer(pyProj, filePath);
+                var container = _discoverer.GetTestContainer(pyProj.ProjectHome, filePath);
                 if (container != null) {
                     foreach (var testCase in container.TestCases) {
                         if (testCase.StartLine >= line && line <= testCase.EndLine) {
