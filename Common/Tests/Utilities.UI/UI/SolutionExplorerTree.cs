@@ -93,7 +93,7 @@ namespace TestUtilities.UI {
         }
 
         public void SelectProject(EnvDTE.Project project) {
-            var slnName = string.Format("Solution '{0}' ({1} project{2})",
+            var slnName = string.Format("Solution '{0}' ({1} of {1} project{2})",
                 Path.GetFileNameWithoutExtension(project.DTE.Solution.FullName),
                 project.DTE.Solution.Projects.Count,
                 project.DTE.Solution.Projects.Count == 1 ? "" : "s"
@@ -169,7 +169,7 @@ namespace TestUtilities.UI {
                 }
             });
             var slnLabel = string.Format(
-                "Solution '{0}' ({1} project{2})",
+                "Solution '{0}' ({1} of {1} project{2})",
                 Path.GetFileNameWithoutExtension(sln.FullName),
                 count,
                 count == 1 ? "" : "s"
