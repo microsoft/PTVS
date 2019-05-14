@@ -133,9 +133,8 @@ namespace Microsoft.PythonTools.TestAdapter {
                 var analyzer = await pyProj.GetAnalyzerAsync();
                 if (analyzer != null) {
                     _projectInfo[pyProj.ProjectHome] = new ProjectInfo(this, pyProj.ProjectHome);
-                    await _projectInfo[pyProj.ProjectHome].UpdateTestCasesAsync(analyzer, analyzer.Files, false);
-
                     analyzer.AnalysisComplete += _projectInfo[pyProj.ProjectHome].AnalysisComplete;
+                    await _projectInfo[pyProj.ProjectHome].UpdateTestCasesAsync(analyzer, analyzer.Files, false);
                 }
             }
 
