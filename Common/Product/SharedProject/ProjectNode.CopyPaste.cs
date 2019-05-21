@@ -1706,14 +1706,14 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
         internal void AddExistingDirectories(HierarchyNode node, string[] filesDropped) {
-            List<KeyValuePair<HierarchyNode, HierarchyNode>> addedItems = new List<KeyValuePair<HierarchyNode, HierarchyNode>>();
+            var addedItems = new List<KeyValuePair<HierarchyNode, HierarchyNode>>();
+            var includedItems = new List<KeyValuePair<HierarchyNode, HierarchyNode>>();
 
             var oldTriggerFlag = this.EventTriggeringFlag;
             EventTriggeringFlag |= ProjectNode.EventTriggering.DoNotTriggerHierarchyEvents;
             try {
-
                 foreach (var dir in filesDropped) {
-                    AddExistingDirectory(GetOrAddDirectory(node, addedItems, dir), dir, addedItems);
+                    AddExistingDirectory(GetOrAddDirectory(node, addedItems, includedItems, dir), dir, addedItems, includedItems);
                 }
             } finally {
                 EventTriggeringFlag = oldTriggerFlag;
@@ -1725,14 +1725,16 @@ namespace Microsoft.VisualStudioTools.Project {
                     this.tracker.OnItemAdded(item.Value.Url, VSADDFILEFLAGS.VSADDFILEFLAGS_NoFlags);
                 }
                 OnInvalidateItems(node);
+            } else if (includedItems.Count > 0) {
+                OnInvalidateItems(node);
             }
         }
 
-        private void AddExistingDirectory(HierarchyNode node, string path, List<KeyValuePair<HierarchyNode, HierarchyNode>> addedItems) {
+        private void AddExistingDirectory(HierarchyNode node, string path, List<KeyValuePair<HierarchyNode, HierarchyNode>> addedItems, List<KeyValuePair<HierarchyNode, HierarchyNode>> includedItems) {
             foreach (var dir in Directory.GetDirectories(path)) {
-                var existingDir = GetOrAddDirectory(node, addedItems, dir);
+                var existingDir = GetOrAddDirectory(node, addedItems, includedItems, dir);
 
-                AddExistingDirectory(existingDir, dir, addedItems);
+                AddExistingDirectory(existingDir, dir, addedItems, includedItems);
             }
 
             foreach (var file in Directory.GetFiles(path)) {
@@ -1741,17 +1743,24 @@ namespace Microsoft.VisualStudioTools.Project {
                     existingFile = CreateFileNode(file);
                     addedItems.Add(new KeyValuePair<HierarchyNode, HierarchyNode>(node, existingFile));
                     node.AddChild(existingFile);
+                } else if (existingFile.ItemNode.IsExcluded) {
+                    existingFile.IncludeInProject(false);
+                    includedItems.Add(new KeyValuePair<HierarchyNode, HierarchyNode>(node, existingFile));
                 }
             }
         }
 
-        private HierarchyNode GetOrAddDirectory(HierarchyNode node, List<KeyValuePair<HierarchyNode, HierarchyNode>> addedItems, string dir) {
+        private HierarchyNode GetOrAddDirectory(HierarchyNode node, List<KeyValuePair<HierarchyNode, HierarchyNode>> addedItems, List<KeyValuePair<HierarchyNode, HierarchyNode>> includedItems, string dir) {
             var existingDir = node.FindImmediateChildByName(Path.GetFileName(dir));
             if (existingDir == null) {
                 existingDir = CreateFolderNode(dir);
                 addedItems.Add(new KeyValuePair<HierarchyNode, HierarchyNode>(node, existingDir));
                 node.AddChild(existingDir);
+            } else if (existingDir.ItemNode.IsExcluded) {
+                existingDir.IncludeInProject(false);
+                includedItems.Add(new KeyValuePair<HierarchyNode, HierarchyNode>(node, existingDir));
             }
+
             return existingDir;
         }
 

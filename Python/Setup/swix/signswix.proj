@@ -8,7 +8,7 @@
   
   <ItemGroup>
     <FilesToSign Include="$(OutputPath)*.vsix">
-      <Authenticode>Vsix</Authenticode>
+      <Authenticode>VsixSHA2</Authenticode>
       <UnsignedPath>$(UnsignedOutputPath)%(Filename)%(Extension)</UnsignedPath>
     </FilesToSign>
   </ItemGroup>

@@ -8,6 +8,7 @@ $need_symlink = @(
     "python2",
     "MicroBuild.Core",
     "Microsoft.VSSDK.BuildTools",
+    "Microsoft.VSSDK.Debugger.VSDConfigTool",
     "Newtonsoft.Json",
     "Microsoft.VisualStudio.Python.LanguageServer"
 )
