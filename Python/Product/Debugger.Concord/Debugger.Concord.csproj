@@ -206,7 +206,7 @@
     <PropertyGroup>
       <_Arguments>@(VsdConfigXmlTransformed, ' ') @(IntermediateAssembly->'"%(FullPath)"', ' ') "$(VsdConfigOutput)"</_Arguments>
     </PropertyGroup>
-    <Exec Command="&quot;$(VsSDKToolsPath)\vsdconfigtool.exe&quot; $(_Arguments)" />
+    <Exec Command="&quot;$(PackagesPath)\Microsoft.VSSDK.Debugger.VSDConfigTool\build\vsdconfigtool.exe&quot; $(_Arguments)" />
   </Target>
   <Target Name="IncludeVsdConfigAndNatvis" BeforeTargets="AssignTargetPaths;GetVSIXSourceItems">
     <ItemGroup>
