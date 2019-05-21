@@ -75,11 +75,39 @@ namespace DebuggerUITests {
         }
 
         /// <summary>
-        /// Debugs a project with and without a process-wide PYTHONPATH value.
+        /// Debugs a project when clearing process-wide PYTHONPATH value.
         /// If <see cref="DebugPythonProjectSubFolderStartupFileSysPath"/> fails
         /// this test may also fail.
         /// </summary>
-        public void DebugPythonProjectWithAndWithoutClearingPythonPath(PythonVisualStudioApp app, bool useVsCodeDebugger, string interpreter, DotNotWaitOnNormalExit optionSetter) {
+        public void DebugPythonProjectWithClearingPythonPath(PythonVisualStudioApp app, bool useVsCodeDebugger, string interpreter, DotNotWaitOnNormalExit optionSetter) {
+            var pyService = app.ServiceProvider.GetUIThread().Invoke(() => app.ServiceProvider.GetPythonToolsService());
+            using (SelectDefaultInterpreter(app, interpreter))
+            using (new PythonOptionsSetter(app.Dte, useLegacyDebugger: !useVsCodeDebugger)) {
+                var sysPathSln = app.CopyProjectForTest(@"TestData\SysPath.sln");
+                var helloWorldSln = app.CopyProjectForTest(@"TestData\HelloWorld.sln");
+                var testDataPath = Path.Combine(PathUtils.GetParent(helloWorldSln), "HelloWorld").Replace("\\", "\\\\");
+
+                using (new EnvironmentVariableSetter("PYTHONPATH", testDataPath)) {
+                    app.OpenProject(sysPathSln);
+
+                    using (new PythonServiceGeneralOptionsSetter(pyService, clearGlobalPythonPath: true)) {
+                        ClearOutputWindowDebugPaneText(app);
+                        app.Dte.ExecuteCommand("Debug.Start");
+                        WaitForMode(app, dbgDebugMode.dbgDesignMode);
+
+                        var outputWindowText = WaitForDebugOutput(app, text => text.Contains("DONE"));
+                        Assert.IsFalse(outputWindowText.Contains(testDataPath), outputWindowText);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Debugs a project when not clearing a process-wide PYTHONPATH value.
+        /// If <see cref="DebugPythonProjectSubFolderStartupFileSysPath"/> fails
+        /// this test may also fail.
+        /// </summary>
+        public void DebugPythonProjectWithoutClearingPythonPath(PythonVisualStudioApp app, bool useVsCodeDebugger, string interpreter, DotNotWaitOnNormalExit optionSetter) {
             var pyService = app.ServiceProvider.GetUIThread().Invoke(() => app.ServiceProvider.GetPythonToolsService());
             using (SelectDefaultInterpreter(app, interpreter))
             using (new PythonOptionsSetter(app.Dte, useLegacyDebugger: !useVsCodeDebugger)) {
@@ -97,13 +125,6 @@ namespace DebuggerUITests {
 
                         WaitForDebugOutput(app, text => text.Contains(testDataPath));
                     }
-
-                    ClearOutputWindowDebugPaneText(app);
-                    app.Dte.ExecuteCommand("Debug.Start");
-                    WaitForMode(app, dbgDebugMode.dbgDesignMode);
-
-                    var outputWindowText = WaitForDebugOutput(app, text => text.Contains("DONE"));
-                    Assert.IsFalse(outputWindowText.Contains(testDataPath), outputWindowText);
                 }
             }
         }

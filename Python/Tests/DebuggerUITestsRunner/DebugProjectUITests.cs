@@ -57,8 +57,14 @@ namespace DebuggerUITestsRunner {
 
         [TestMethod, Priority(0)]
         [TestCategory("Installed")]
-        public void DebugPythonProjectWithAndWithoutClearingPythonPath() {
-            _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.DebugPythonProjectWithAndWithoutClearingPythonPath), UseVsCodeDebugger, Interpreter);
+        public void DebugPythonProjectWithClearingPythonPath() {
+            _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.DebugPythonProjectWithClearingPythonPath), UseVsCodeDebugger, Interpreter);
+        }
+
+        [TestMethod, Priority(0)]
+        [TestCategory("Installed")]
+        public void DebugPythonProjectWithoutClearingPythonPath() {
+            _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.DebugPythonProjectWithoutClearingPythonPath), UseVsCodeDebugger, Interpreter);
         }
 
         [TestMethod, Priority(0)]
