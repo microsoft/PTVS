@@ -39,7 +39,8 @@ namespace PythonToolsUITestsRunner {
         public static void ClassCleanup() => VsTestContext.Instance.Dispose();
         #endregion
 
-        [TestMethod, Priority(0)]
+        // Note: Report a problem feature requires the user to be signed in to VS
+        [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void ReportAProblemDiagnostics() {
             _vs.RunTest(nameof(PythonToolsUITests.SendFeedbackTests.ReportAProblemDiagnostics));

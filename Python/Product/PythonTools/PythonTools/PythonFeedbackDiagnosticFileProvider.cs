@@ -35,7 +35,7 @@ namespace Microsoft.PythonTools {
             this._serviceProvider = serviceProvider;
         }
 
-        public IEnumerable<string> GetFiles() {
+        public IReadOnlyCollection<string> GetFiles() {
             var filePath = PathUtils.GetAvailableFilename(
                 Path.GetTempPath(),
                 "PythonToolsDiagnostics_{0:yyyyMMddHHmmss}".FormatInvariant(DateTime.Now),
