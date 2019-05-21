@@ -42,6 +42,7 @@ namespace Microsoft.PythonTools.Debugger {
         ) {
             var options = pyService.DebuggerOptions;
 
+            yield return AD7Engine.StopOnEntry + "=True";
             if (alwaysPauseAtEnd || allowPauseAtEnd && options.WaitOnAbnormalExit) {
                 yield return AD7Engine.WaitOnAbnormalExitSetting + "=True";
             }
