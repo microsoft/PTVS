@@ -90,6 +90,7 @@ namespace Microsoft.PythonTools.Debugger {
             var pyService = _serviceProvider.GetPythonToolsService();
 
             var options = new StringBuilder();
+            options.Append(AD7Engine.StopOnEntry + "=True");
             if (pyService.DebuggerOptions.WaitOnAbnormalExit) {
                 options.Append(";" + AD7Engine.WaitOnAbnormalExitSetting + "=True");
             }

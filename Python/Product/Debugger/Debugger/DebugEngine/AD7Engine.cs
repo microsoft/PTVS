@@ -140,6 +140,11 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         public const string DebugStdLib = "DEBUG_STDLIB";
 
         /// <summary>
+        /// Specifies the debugger should stop on first statement.
+        /// </summary>
+        public const string StopOnEntry = "STOP_ON_ENTRY";
+
+        /// <summary>
         /// Specifies if the debugger should display the function return values in locals window
         /// </summary>
         public const string ShowReturnValue = "SHOW_RETURN_VALUE";
