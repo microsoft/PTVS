@@ -29,7 +29,7 @@ namespace Microsoft.PythonTools.Django.Intellisense {
         public ProjectBlockCompletionContext(VsProjectAnalyzer analyzer, ITextBuffer buffer)
             : base(analyzer, buffer.GetFileName()) {
 
-            var doc = HtmlEditorDocument.FromTextBuffer(buffer);
+            var doc = HtmlEditorDocument.TryFromTextBuffer(buffer);
             if (doc == null) {
                 return;
             }

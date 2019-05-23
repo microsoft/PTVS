@@ -76,7 +76,7 @@ namespace Microsoft.PythonTools.Django.Intellisense {
 
         protected override IEnumerable<DjangoBlock> GetBlocks(IEnumerable<CompletionInfo> results, SnapshotPoint triggerPoint) {
             var buffers = _buffer.GetContributingBuffers().Where(b => b.ContentType.IsOfType(TemplateHtmlContentType.ContentTypeName));
-            var doc = HtmlEditorDocument.FromTextBuffer(buffers.FirstOrDefault() ?? _buffer);
+            var doc = HtmlEditorDocument.TryFromTextBuffer(buffers.FirstOrDefault() ?? _buffer);
             if (doc == null) {
                 yield break;
             }

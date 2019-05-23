@@ -39,7 +39,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
         public override event EventHandler<ClassificationChangedEventArgs> ClassificationChanged;
 
         internal static HtmlEditorDocument HtmlEditorDocumentFromTextBuffer(ITextBuffer buffer) {
-            var doc = HtmlEditorDocument.FromTextBuffer(buffer);
+            var doc = HtmlEditorDocument.TryFromTextBuffer(buffer);
             if (doc == null) {
                 var projBuffer = buffer as IProjectionBuffer;
                 if (projBuffer != null) {
