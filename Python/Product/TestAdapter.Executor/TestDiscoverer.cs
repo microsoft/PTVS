@@ -16,12 +16,17 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Xml;
+using System.Windows;
 using System.Xml.XPath;
+using Microsoft.PythonTools.TestAdapter.Model;
+using Microsoft.PythonTools.TestAdapter.Services;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
+using System.Windows.Forms;
 
 namespace Microsoft.PythonTools.TestAdapter {
     [FileExtension(".py")]
@@ -51,7 +56,42 @@ namespace Microsoft.PythonTools.TestAdapter {
         static void DiscoverTests(IEnumerable<string> sources, IMessageLogger logger, ITestCaseDiscoverySink discoverySink, IRunSettings settings) {
             var sourcesSet = new HashSet<string>(sources, StringComparer.OrdinalIgnoreCase);
 
+            
             var executorUri = new Uri(PythonConstants.TestExecutorUriString);
+
+            var projectSettings = RunSettingsUtil.GetProjectSettings(settings);
+
+            foreach(var pair in projectSettings) {
+
+                var discovery = new DiscoveryService();
+
+                List<PytestDiscoveryResults> results = discovery.RunDiscovery(pair.Value);
+
+                if( results.Count == 0) {
+                    continue;
+                }
+
+                var parents = results[0].Parents;
+                foreach ( var t in results[0].Tests) {
+
+                    var rootPath = results[0].Root;
+                    var sourceAndLineNum = t.Source.Split('\\')[1];
+                    var sourceStrings = sourceAndLineNum.Split(':');
+                    var lineNum = Int32.Parse(sourceStrings[1]);
+                    var codeFilePath = rootPath + "\\" + sourceStrings[0];
+
+                    var tc = new TestCase(t.Id.Split('\\')[1], executorUri, codeFilePath) {
+                        DisplayName = t.Name,
+                        LineNumber = lineNum,
+                        CodeFilePath = codeFilePath
+                    };
+
+                    discoverySink.SendTestCase(tc);
+                }
+            }
+
+
+
             // Test list is sent to us via our run settings which we use to smuggle the
             // data we have in our analysis process.
             var doc = Read(settings.SettingsXml);

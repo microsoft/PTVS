@@ -136,16 +136,22 @@ namespace Microsoft.PythonTools.TestAdapter {
                         foreach (var container in project) {
                             writer.WriteStartElement("Project");
                             writer.WriteAttributeString("home", project.Key);
-
-                            LaunchConfiguration config = null;
+                            
                             string nativeCode = "", djangoSettings = "";
 
+                            TestContainerDiscoverer discoverer = container.Discoverer as TestContainerDiscoverer;
+                            if (discoverer == null) {
+                                continue;
+                            }
+
+                            LaunchConfiguration config = null;
                             ThreadHelper.JoinableTaskFactory.Run(async () => {
                                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-                                //try {
-                                //    config = project.Key.GetLaunchConfigurationOrThrow();
-                                //} catch {
-                                //}
+                                try {
+                                    config = discoverer.GetLaunchConfigurationOrThrow(project.Key);
+                                    
+                                } catch {
+                                }
                                 //nativeCode = project.Key.GetProperty(PythonConstants.EnableNativeCodeDebugging);
                                 //djangoSettings = project.Key.GetProperty("DjangoSettingsModule");
                             });
@@ -166,6 +172,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                             writer.WriteAttributeString("pathEnv", config.Interpreter.PathEnvironmentVariable);
 
                             writer.WriteStartElement("Environment");
+                           
                             foreach (var keyValue in config.Environment) {
                                 writer.WriteStartElement("Variable");
                                 writer.WriteAttributeString("name", keyValue.Key);
@@ -182,15 +189,20 @@ namespace Microsoft.PythonTools.TestAdapter {
                             }
                             writer.WriteEndElement(); // SearchPaths
 
-                            foreach (var test in container.TestCases) {
-                                writer.WriteStartElement("Test");
-                                writer.WriteAttributeString("className", test.ClassName);
-                                writer.WriteAttributeString("file", test.Filename);
-                                writer.WriteAttributeString("line", test.StartLine.ToString());
-                                writer.WriteAttributeString("column", test.StartColumn.ToString());
-                                writer.WriteAttributeString("method", test.MethodName);
-                                writer.WriteEndElement(); // Test
+                            writer.WriteStartElement("Test");
+                            writer.WriteAttributeString("source", container.Source);
+                            if (container.TestCases != null) {
+                                foreach (var test in container.TestCases) {
+                                  
+                                    writer.WriteAttributeString("className", test.ClassName);
+                                    writer.WriteAttributeString("file", test.Filename);
+                                    writer.WriteAttributeString("line", test.StartLine.ToString());
+                                    writer.WriteAttributeString("column", test.StartColumn.ToString());
+                                    writer.WriteAttributeString("method", test.MethodName);
+                                    
+                                }
                             }
+                            writer.WriteEndElement(); // Test
 
                             writer.WriteEndElement();  // Project
                         }

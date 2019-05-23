@@ -17,9 +17,12 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using System.Diagnostics;
 using System.Linq;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Projects;
+using Microsoft.PythonTools.TestAdapter.Model;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -92,17 +95,38 @@ namespace Microsoft.PythonTools.TestAdapter {
 
         public TestContainer GetTestContainer(string projectHome, string path) {
             ProjectInfo projectInfo;
-            if (_projectInfo.TryGetValue(projectHome, out projectInfo))
-            {
+            if (_projectInfo.TryGetValue(projectHome, out projectInfo)) {
                 TestContainer container;
-                if (projectInfo.TryGetContainer(path, out container))
-                {
+                if (projectInfo.TryGetContainer(path, out container)) {
                     return container;
                 }
             }
 
             return null;
         }
+
+        public LaunchConfiguration GetLaunchConfigurationOrThrow(string projectHome) {
+            ProjectInfo projectInfo;
+            if (_projectInfo.TryGetValue(projectHome, out projectInfo)) {
+                return projectInfo.GetLaunchConfigurationOrThrow();
+            }
+
+            return null;
+        }
+
+
+        public void NotifyChanged() {
+            TestContainersUpdated?.Invoke(this, EventArgs.Empty);
+        }
+
+
+        #region SolutionExtenions
+
+        /// <summary>
+        /// return a list of TestContainers by querying each of the projects
+        /// </summary>
+        /// <param name="project"></param>
+
 
         private static IEnumerable<IVsProject> EnumerateLoadedProjects(IVsSolution solution) {
             var guid = new Guid(PythonConstants.ProjectFactoryGuid);
@@ -121,6 +145,101 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
         }
 
+        /// <summary>
+        /// Get the items present in the project
+        /// </summary>
+        public static IEnumerable<string> GetProjectItems(IVsProject project) {
+            Debug.Assert(project != null, "Project is not null");
+
+            // Each item in VS OM is IVSHierarchy. 
+            IVsHierarchy hierarchy = (IVsHierarchy)project;
+
+            return GetProjectItems(hierarchy, VSConstants.VSITEMID_ROOT);
+        }
+
+        /// <summary>
+        /// Get project items
+        /// </summary>
+        private static IEnumerable<string> GetProjectItems(IVsHierarchy project, uint itemId) {
+
+            object pVar = GetPropertyValue((int)__VSHPROPID.VSHPROPID_FirstChild, itemId, project);
+
+            uint childId = GetItemId(pVar);
+            while (childId != VSConstants.VSITEMID_NIL) {
+                foreach (string item in GetProjectItems(project, childId)) {
+                    yield return item;
+                }
+
+                string childPath = GetCanonicalName(childId, project);
+                yield return childPath;
+
+                pVar = GetPropertyValue((int)__VSHPROPID.VSHPROPID_NextSibling, childId, project);
+                childId = GetItemId(pVar);
+            }
+        }
+
+        /// <summary>
+        /// Convert parameter object to ItemId
+        /// </summary>
+        private static uint GetItemId(object pvar) {
+            if (pvar == null) return VSConstants.VSITEMID_NIL;
+            if (pvar is int) return (uint)(int)pvar;
+            if (pvar is uint) return (uint)pvar;
+            if (pvar is short) return (uint)(short)pvar;
+            if (pvar is ushort) return (uint)(ushort)pvar;
+            if (pvar is long) return (uint)(long)pvar;
+            return VSConstants.VSITEMID_NIL;
+        }
+
+        /// <summary>
+        /// Get the parameter property value
+        /// </summary>
+        private static object GetPropertyValue(int propid, uint itemId, IVsHierarchy vsHierarchy) {
+            if (itemId == VSConstants.VSITEMID_NIL) {
+                return null;
+            }
+
+            try {
+                object o;
+                ErrorHandler.ThrowOnFailure(vsHierarchy.GetProperty(itemId, propid, out o));
+
+                return o;
+            } catch (System.NotImplementedException) {
+                return null;
+            } catch (System.Runtime.InteropServices.COMException) {
+                return null;
+            } catch (System.ArgumentException) {
+                return null;
+            }
+        }
+
+
+        /// <summary>
+        /// Get the canonical name
+        /// </summary>
+        private static string GetCanonicalName(uint itemId, IVsHierarchy hierarchy) {
+            Debug.Assert(itemId != VSConstants.VSITEMID_NIL, "ItemId cannot be nill");
+
+            string strRet = string.Empty;
+            int hr = hierarchy.GetCanonicalName(itemId, out strRet);
+
+            if (hr == VSConstants.E_NOTIMPL) {
+                // Special case E_NOTIMLP to avoid perf hit to throw an exception.
+                return string.Empty;
+            } else {
+                try {
+                    ErrorHandler.ThrowOnFailure(hr);
+                } catch (System.Runtime.InteropServices.COMException) {
+                    strRet = string.Empty;
+                }
+
+
+                // This could be in the case of S_OK, S_FALSE, etc.
+                return strRet;
+            }
+        }
+#endregion
+
         public event EventHandler TestContainersUpdated;
 
         private void OnProjectLoaded(object sender, ProjectEventArgs e) {
@@ -130,12 +249,11 @@ namespace Microsoft.PythonTools.TestAdapter {
         private async Task OnProjectLoadedAsync(IVsProject project) {
             var pyProj = PythonProject.FromObject(project);
             if (pyProj != null) {
-                var analyzer = await pyProj.GetAnalyzerAsync();
-                if (analyzer != null) {
-                    _projectInfo[pyProj.ProjectHome] = new ProjectInfo(this, pyProj.ProjectHome);
-                    analyzer.AnalysisComplete += _projectInfo[pyProj.ProjectHome].AnalysisComplete;
-                    await _projectInfo[pyProj.ProjectHome].UpdateTestCasesAsync(analyzer, analyzer.Files, false);
-                }
+
+                var sources = GetProjectItems(project);
+                var projInfo = new ProjectInfo(this, pyProj, sources);
+                projInfo.UpdateTestCases();
+                _projectInfo[pyProj.ProjectHome] = projInfo;
             }
 
             TestContainersUpdated?.Invoke(this, EventArgs.Empty);
@@ -154,124 +272,6 @@ namespace Microsoft.PythonTools.TestAdapter {
             TestContainersUpdated?.Invoke(this, EventArgs.Empty);
         }
 
-        sealed class ProjectInfo {
-            private readonly string _projectHome;
-            private readonly TestContainerDiscoverer _discoverer;
-            private readonly Dictionary<string, TestContainer> _containers;
-            private readonly object _containersLock = new object();
-            
-            private List<string> _pendingRequests;
-
-            public ProjectInfo(TestContainerDiscoverer discoverer, String projectHome) {
-                _projectHome = projectHome;
-                _discoverer = discoverer;
-                _containers = new Dictionary<string, TestContainer>(StringComparer.OrdinalIgnoreCase);
-                _pendingRequests = new List<string>();
-            }
-
-         
-            public TestContainer[] GetAllContainers() {
-                lock (_containersLock) {
-                    return _containers.Select(x => x.Value).ToArray();
-                }
-            }
-
-            public bool TryGetContainer(string path, out TestContainer container) {
-                lock (_containersLock) {
-                    return _containers.TryGetValue(path, out container);
-                }
-            }
-
-            private bool RemoveContainer(string path) {
-                lock (_containersLock) {
-                    return _containers.Remove(path);
-                }
-            }
-            public void AnalysisComplete(object sender, AnalysisCompleteEventArgs e)
-            {
-                PendOrSubmitRequests((ProjectAnalyzer)sender, e.Path)
-                    .HandleAllExceptions(_discoverer._serviceProvider, GetType())
-                    .DoNotWait();
-            }
-
-            private async Task PendOrSubmitRequests(ProjectAnalyzer analyzer, string path) {
-                List<string> pendingRequests;
-                int originalCount;
-                lock (_containersLock) {
-                    pendingRequests = _pendingRequests;
-                    _pendingRequests.Add(path);
-                    originalCount = _pendingRequests.Count;
-
-                    if (originalCount > 50) {
-                        _pendingRequests = new List<string>();
-                    }
-                }
-
-                await Task.Delay(100).ConfigureAwait(false);
-
-                lock (_containersLock) {
-                    if (pendingRequests.Count != originalCount) {
-                        return;
-                    }
-                    if (_pendingRequests == pendingRequests) {
-                        _pendingRequests = new List<string>();
-                    }
-                }
-
-                await UpdateTestCasesAsync(analyzer, pendingRequests, true).ConfigureAwait(false);
-            }
-
-            public async Task UpdateTestCasesAsync(ProjectAnalyzer analyzer, IEnumerable<string> paths, bool notify) {
-                var testCaseData = await analyzer.SendExtensionCommandAsync(
-                    TestAnalyzer.Name,
-                    TestAnalyzer.GetTestCasesCommand,
-                    string.Join(";", paths.Select(PathUtils.NormalizePath).Distinct(StringComparer.OrdinalIgnoreCase))
-                );
-
-                if (testCaseData == null) {
-                    return;
-                }
-
-                var testCaseGroups = TestAnalyzer.GetTestCases(testCaseData).GroupBy(tc => tc.Filename);
-
-                bool anythingToNotify = false;
-
-                foreach (var testCases in testCaseGroups) {
-                    var path = testCases.Key;
-                    if (testCases.Any()) {
-                        if (!TryGetContainer(path, out TestContainer existing) || !existing.TestCases.SequenceEqual(testCases)) {
-                            // we have a new entry or some of the tests changed
-                            int version = (existing?.Version ?? 0) + 1;
-                            lock (_containersLock) {
-                                _containers[path] = new TestContainer(
-                                    _discoverer,
-                                    path,
-                                    _projectHome,
-                                    version,
-                                    Architecture,
-                                    testCases.ToArray()
-                                );
-                            }
-
-                            anythingToNotify = true;
-                        }
-                    } else if (RemoveContainer(path)) {
-                        // Raise containers changed event...
-                        anythingToNotify = true;
-                    }
-                }
-
-                if (notify && anythingToNotify) {
-                    ContainersChanged();
-                }
-            }
-
-            private Architecture Architecture => Architecture.Default;
-
-            private void ContainersChanged() {
-                _discoverer.TestContainersUpdated?.Invoke(_discoverer, EventArgs.Empty);
-            }
-           
-        }
+        
     }
 }
