@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Microsoft.PythonTools.TestAdapter.Model {
+namespace Microsoft.PythonTools.TestAdapter.Config {
     public class PythonProjectSettings : IEquatable<PythonProjectSettings> {
         public readonly string ProjectHome, WorkingDirectory, InterpreterPath, PathEnv;
         public readonly bool EnableNativeCodeDebugging;

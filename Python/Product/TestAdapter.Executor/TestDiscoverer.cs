@@ -16,22 +16,24 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Xml;
-using System.Windows;
 using System.Xml.XPath;
-using Microsoft.PythonTools.TestAdapter.Model;
 using Microsoft.PythonTools.TestAdapter.Services;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
+using Microsoft.PythonTools.TestAdapter.Config;
+using Microsoft.PythonTools.TestAdapter.Pytest;
 using System.Windows.Forms;
+using System.Diagnostics;
 
 namespace Microsoft.PythonTools.TestAdapter {
     [FileExtension(".py")]
     [DefaultExecutorUri(PythonConstants.TestExecutorUriString)]
     class TestDiscoverer : ITestDiscoverer {
+        
         public void DiscoverTests(IEnumerable<string> sources, IDiscoveryContext discoveryContext, IMessageLogger logger, ITestCaseDiscoverySink discoverySink) {
             if (sources == null) {
                 throw new ArgumentNullException(nameof(sources));
@@ -54,56 +56,29 @@ namespace Microsoft.PythonTools.TestAdapter {
 
 
         static void DiscoverTests(IEnumerable<string> sources, IMessageLogger logger, ITestCaseDiscoverySink discoverySink, IRunSettings settings) {
-            var sourcesSet = new HashSet<string>(sources, StringComparer.OrdinalIgnoreCase);
-
             
-            var executorUri = new Uri(PythonConstants.TestExecutorUriString);
+            MessageBox.Show("Discover: " + Process.GetCurrentProcess().Id);
 
-            var projectSettings = RunSettingsUtil.GetProjectSettings(settings);
+            var sourceToProjSettings = RunSettingsUtil.GetSourceToProjSettings(settings);
+                        
 
-            foreach(var pair in projectSettings) {
+            foreach (var testGroup in sources.GroupBy(x => sourceToProjSettings[x])) {
+                DiscoverTestGroup(testGroup, logger, discoverySink);
+            }
+        }
 
-                var discovery = new DiscoveryService();
+        static private void DiscoverTestGroup(IGrouping<PythonProjectSettings, string> testGroup, IMessageLogger logger, ITestCaseDiscoverySink discoverySink ) {
 
-                List<PytestDiscoveryResults> results = discovery.RunDiscovery(pair.Value);
+            var discovery = new DiscoveryService();
+            var results = discovery.RunDiscovery(testGroup.Key, testGroup);
 
-                if( results.Count == 0) {
-                    continue;
-                }
-
-                var parents = results[0].Parents;
-                foreach ( var t in results[0].Tests) {
-
-                    var rootPath = results[0].Root;
-                    var sourceAndLineNum = t.Source.Split('\\')[1];
-                    var sourceStrings = sourceAndLineNum.Split(':');
-                    var lineNum = Int32.Parse(sourceStrings[1]);
-                    var codeFilePath = rootPath + "\\" + sourceStrings[0];
-
-                    var tc = new TestCase(t.Id.Split('\\')[1], executorUri, codeFilePath) {
-                        DisplayName = t.Name,
-                        LineNumber = lineNum,
-                        CodeFilePath = codeFilePath
-                    };
-
-                    discoverySink.SendTestCase(tc);
-                }
+            if (results.Count == 0) {
+                return;
             }
 
+            var executorUri = new Uri(PythonConstants.TestExecutorUriString);
 
-
-            // Test list is sent to us via our run settings which we use to smuggle the
-            // data we have in our analysis process.
-            var doc = Read(settings.SettingsXml);
-            foreach (var t in TestReader.ReadTests(doc, sourcesSet, m => {
-                logger?.SendMessage(TestMessageLevel.Warning, m);
-            })) {
-                var tc = new TestCase(t.FullyQualifiedName, executorUri, t.SourceFile) {
-                    DisplayName = t.DisplayName,
-                    LineNumber = t.LineNo,
-                    CodeFilePath = t.FileName
-                };
-
+            foreach (var tc in PyTestReader.ParseTestCase(results[0].Root, results[0], executorUri)) {
                 discoverySink.SendTestCase(tc);
             }
         }

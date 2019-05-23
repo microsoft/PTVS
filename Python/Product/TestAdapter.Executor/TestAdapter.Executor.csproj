@@ -85,13 +85,13 @@
     <Compile Include="..\VSCommon\Infrastructure\VisualStudioApp.cs">
       <Link>VisualStudioApp.cs</Link>
     </Compile>
-    <Compile Include="Model\PytestDiscoveryResults.cs" />
-    <Compile Include="Model\PythonProjectSettings.cs" />
-    <Compile Include="Model\RunSettingsUtil.cs" />
+    <Compile Include="Pytest\PytestDiscoveryResults.cs" />
+    <Compile Include="Config\PythonProjectSettings.cs" />
+    <Compile Include="Config\RunSettingsUtil.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\DiscoveryService.cs" />
     <Compile Include="Services\ExecutorService.cs" />
-    <Compile Include="Services\TestResultParser.cs" />
+    <Compile Include="Pytest\TestResultParser.cs" />
     <Compile Include="TestDiscoverer.cs" />
     <Compile Include="TestExecutor.cs" />
     <Compile Include="TestProtocol.cs" />

@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.XPath;
 
-namespace Microsoft.PythonTools.TestAdapter.Services {
+namespace Microsoft.PythonTools.TestAdapter.Pytest {
     public class TestResultParser {
 
 
@@ -30,12 +30,16 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
 
             foreach (XPathNavigator t in nodes) {
 
+                var lineStr = t.GetAttribute("line", "");
+                int line = 0;
+                if(!Int32.TryParse(lineStr,out line)) {
+                    continue;
+                }
+
                 var file = t.GetAttribute("file", "");
-                var name = t.GetAttribute("name", "");
 
-                var qualifiedName = String.Format("{0}::{1}", file, name);
-
-                var testResult = results.Where( x => string.Compare(x.TestCase.FullyQualifiedName, qualifiedName, StringComparison.InvariantCultureIgnoreCase) == 0).FirstOrDefault();
+                var testResult = results
+                    .Where(x => (x.TestCase.LineNumber == line) && String.Compare(x.TestCase.Source, file, StringComparison.InvariantCultureIgnoreCase) == 0).FirstOrDefault();
 
                 if (testResult != null) {
                   
@@ -67,7 +71,5 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
             settings.XmlResolver = null;
             return new XPathDocument(XmlReader.Create(new StreamReader(xml), settings));
         }
-
-
     }
 }

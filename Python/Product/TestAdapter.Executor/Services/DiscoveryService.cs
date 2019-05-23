@@ -1,16 +1,14 @@
 ﻿
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Projects;
-using Microsoft.PythonTools.TestAdapter.Model;
+using Microsoft.PythonTools.TestAdapter.Config;
+using Microsoft.PythonTools.TestAdapter.Pytest;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace Microsoft.PythonTools.TestAdapter.Services {
     internal class DiscoveryService {
@@ -58,8 +56,9 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
         }
 
 
-        public List<PytestDiscoveryResults> RunDiscovery(PythonProjectSettings projSettings) {
-            var arguments = GetArguments(projSettings.Sources);
+        public List<PytestDiscoveryResults> RunDiscovery(PythonProjectSettings projSettings, IEnumerable<string> sources) {
+            var discoveryResults = new List<PytestDiscoveryResults>();
+            var arguments = GetArguments(sources);
             var utf8 = new UTF8Encoding(false);
 
             using (var outputStream = new MemoryStream())
@@ -78,33 +77,20 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
 
                 outputStream.Flush();
                 outputStream.Seek(0, SeekOrigin.Begin);
-                var jsonStr = new StreamReader(outputStream).ReadToEnd();
+                var json = new StreamReader(outputStream).ReadToEnd();
 
-                var discoveryResults = JsonConvert.DeserializeObject<List<PytestDiscoveryResults>>(jsonStr);
-                return discoveryResults;
+                try {
+                    discoveryResults = JsonConvert.DeserializeObject<List<PytestDiscoveryResults>>(json);
+                } catch (InvalidOperationException ex) {
+                    Debug.WriteLine("Failed to parse: {0}".FormatInvariant(ex.Message));
+                    Debug.WriteLine(json);
+                } catch (JsonException ex) {
+                    Debug.WriteLine("Failed to parse: {0}".FormatInvariant(ex.Message));
+                    Debug.WriteLine(json);
+                }
             }
+
+            return discoveryResults;
         }
-
-
-
-
-        //private string[] GetArguments(LaunchConfiguration config) {
-        //    var arguments = new List<string>();
-        //    arguments.Add(TestLauncherPath);
-        //    arguments.Add(config.WorkingDirectory);
-        //    arguments.Add("pytest");
-        //    arguments.Add("--collect-only");
-        //    arguments.Add("test4.py");
-
-        //    return arguments.ToArray();
-        //}
-
-        //public TestCaseInfo[] GetTestCases() {
-        //    var testCases = new List<TestCaseInfo>();
-        //    return testCases.ToArray();
-        //}
-
-
-
     }
 }

@@ -3,15 +3,12 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.XPath;
 
-namespace Microsoft.PythonTools.TestAdapter.Model {
+namespace Microsoft.PythonTools.TestAdapter.Config {
     public class RunSettingsUtil {
-        public static Dictionary<string, PythonProjectSettings> GetSourceToSettings(IRunSettings settings) {
+        public static Dictionary<string, PythonProjectSettings> GetSourceToProjSettings(IRunSettings settings) {
             var doc = Read(settings.SettingsXml);
             XPathNodeIterator nodes = doc.CreateNavigator().Select("/RunSettings/Python/TestCases/Project");
             Dictionary<string, PythonProjectSettings> res = new Dictionary<string, PythonProjectSettings>();
@@ -76,7 +73,7 @@ namespace Microsoft.PythonTools.TestAdapter.Model {
 
 
                 foreach (XPathNavigator test in project.Select("Test")) {
-                    string testFile = test.GetAttribute("source", "");
+                    string testFile = test.GetAttribute("file", "");
                     projSettings.Sources.Add(testFile);
                 }
 

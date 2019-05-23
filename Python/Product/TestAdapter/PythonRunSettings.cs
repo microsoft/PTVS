@@ -190,18 +190,8 @@ namespace Microsoft.PythonTools.TestAdapter {
                             writer.WriteEndElement(); // SearchPaths
 
                             writer.WriteStartElement("Test");
-                            writer.WriteAttributeString("source", container.Source);
-                            if (container.TestCases != null) {
-                                foreach (var test in container.TestCases) {
-                                  
-                                    writer.WriteAttributeString("className", test.ClassName);
-                                    writer.WriteAttributeString("file", test.Filename);
-                                    writer.WriteAttributeString("line", test.StartLine.ToString());
-                                    writer.WriteAttributeString("column", test.StartColumn.ToString());
-                                    writer.WriteAttributeString("method", test.MethodName);
-                                    
-                                }
-                            }
+                            writer.WriteAttributeString("file", container.Source);
+                          
                             writer.WriteEndElement(); // Test
 
                             writer.WriteEndElement();  // Project

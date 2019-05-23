@@ -1,14 +1,10 @@
 ﻿using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.TestAdapter.Model;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.PythonTools.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using System.IO;
+using Microsoft.PythonTools.TestAdapter.Config;
 
 namespace Microsoft.PythonTools.TestAdapter.Services {
     public class ExecutorService {

@@ -21,7 +21,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
@@ -29,12 +28,12 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Xml;
 using System.Xml.XPath;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Ipc.Json;
-using Microsoft.PythonTools.TestAdapter.Model;
+using Microsoft.PythonTools.TestAdapter.Config;
+using Microsoft.PythonTools.TestAdapter.Pytest;
 using Microsoft.PythonTools.TestAdapter.Services;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
@@ -85,24 +84,30 @@ namespace Microsoft.PythonTools.TestAdapter {
 
             _cancelRequested.Reset();
 
-            var executorUri = new Uri(PythonConstants.TestExecutorUriString);
+            var sourceToProjSettings = RunSettingsUtil.GetSourceToProjSettings(runContext.RunSettings);
+
             var tests = new List<TestCase>();
-            var doc = RunSettingsUtil.Read(runContext.RunSettings.SettingsXml);
-            foreach (var t in TestReader.ReadTests(doc, new HashSet<string>(sources, StringComparer.OrdinalIgnoreCase), m => {
-                frameworkHandle?.SendMessage(TestMessageLevel.Warning, m);
-            })) {
-                tests.Add(new TestCase(t.FullyQualifiedName, executorUri, t.SourceFile) {
-                    DisplayName = t.DisplayName,
-                    LineNumber = t.LineNo,
-                    CodeFilePath = t.SourceFile
-                });
+
+            foreach (var testGroup in sources.GroupBy(x => sourceToProjSettings[x])) {
+
+                var discovery = new DiscoveryService();
+                var results = discovery.RunDiscovery(testGroup.Key, testGroup);
+
+                if (results.Count == 0) {
+                    return;
+                }
+
+                var executorUri = new Uri(PythonConstants.TestExecutorUriString);
+
+                var tcList = PyTestReader.ParseTestCase(results[0].Root, results[0], executorUri);
+                tests.AddRange(tcList);
+
+                if (_cancelRequested.WaitOne(0)) {
+                    return;
+                }
             }
 
-            if (_cancelRequested.WaitOne(0)) {
-                return;
-            }
-
-            RunTestCases(tests, runContext, frameworkHandle);
+            RunPytest(tests, runContext, frameworkHandle);
         }
 
        
@@ -137,31 +142,22 @@ namespace Microsoft.PythonTools.TestAdapter {
             IRunContext runContext,
             IFrameworkHandle frameworkHandle
         ) {
+            var sourceToProjSettings = RunSettingsUtil.GetSourceToProjSettings(runContext.RunSettings); 
+
+            foreach (var testGroup in tests.GroupBy(x => sourceToProjSettings[x.CodeFilePath])) {
+                RunTestGroup(testGroup, frameworkHandle);
+            }
+        }
+
+        private void RunTestGroup(IGrouping<PythonProjectSettings, TestCase> testGroup, IFrameworkHandle frameworkHandle) {
 
             var executor = new ExecutorService();
+            var resultsXML = executor.Run(testGroup.Key, testGroup);
 
-            var projectSettings = RunSettingsUtil.GetProjectSettings(runContext.RunSettings);
+            var testResults = TestResultParser.Parse(resultsXML, testGroup);
 
-            var sourceToSettings = new Dictionary<string, PythonProjectSettings>();
-
-            foreach (var pair in projectSettings) {
-                var projectSetting = pair.Value;
-                foreach (var source in projectSetting.Sources) {
-                    sourceToSettings[source] = projectSetting;
-                }
-            }
-
-            foreach (var testGroup in tests.GroupBy(x => sourceToSettings[x.CodeFilePath])) {
-
-                var resultsXML = executor.Run(testGroup.Key, testGroup);
-
-
-                var testResults = TestResultParser.Parse(resultsXML, testGroup);
-
-
-                foreach( var result in testResults) {
-                    frameworkHandle.RecordResult(result);
-                }
+            foreach (var result in testResults) {
+                frameworkHandle.RecordResult(result);
             }
         }
 
@@ -177,7 +173,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 covPath = GetCoveragePath(tests);
             }
             // .py file path -> project settings
-            var sourceToSettings = RunSettingsUtil.GetSourceToSettings(runContext.RunSettings);
+            var sourceToSettings = RunSettingsUtil.GetSourceToProjSettings(runContext.RunSettings);
 
             foreach (var testGroup in tests.GroupBy(x => sourceToSettings[x.CodeFilePath])) {
                 if (_cancelRequested.WaitOne(0)) {
