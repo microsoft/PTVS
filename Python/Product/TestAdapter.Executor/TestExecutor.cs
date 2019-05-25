@@ -68,7 +68,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 
         public void RunTests(IEnumerable<string> sources, IRunContext runContext, IFrameworkHandle frameworkHandle) {
 
-            MessageBox.Show("Hello1: " + Process.GetCurrentProcess().Id);
+           // MessageBox.Show("Hello1: " + Process.GetCurrentProcess().Id);
 
             if (sources == null) {
                 throw new ArgumentNullException(nameof(sources));
@@ -114,7 +114,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 
         public void RunTests(IEnumerable<TestCase> tests, IRunContext runContext, IFrameworkHandle frameworkHandle) {
 
-            MessageBox.Show("Hello2: " + Process.GetCurrentProcess().Id);
+            //MessageBox.Show("Hello1: " + Process.GetCurrentProcess().Id);
 
             if (tests == null) {
                 throw new ArgumentNullException(nameof(tests));
@@ -132,8 +132,6 @@ namespace Microsoft.PythonTools.TestAdapter {
 
 
             RunPytest(tests, runContext, frameworkHandle);
-
-           // RunTestCases(tests, runContext, frameworkHandle);
         }
 
 

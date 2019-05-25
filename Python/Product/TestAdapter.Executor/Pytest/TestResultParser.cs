@@ -1,6 +1,8 @@
-﻿using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+﻿using Microsoft.PythonTools.Infrastructure;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -19,57 +21,75 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
         /// <param name="tests"></param>
         /// <returns></returns>
         public static IEnumerable<TestResult> Parse(string junitXmlPath, IEnumerable<TestCase> tests) {
-            var results = tests.Select(t => new TestResult(t) { Outcome = TestOutcome.NotFound }).ToList();
+            var testResults = tests.Select(t => new TestResult(t) { Outcome = TestOutcome.NotFound }).ToList();
 
             if (!File.Exists(junitXmlPath)) {
-                return results;
+                return testResults;
             }
 
             var doc = Read(junitXmlPath);
             XPathNodeIterator nodes = doc.CreateNavigator().Select("/testsuite/testcase");
 
             foreach (XPathNavigator t in nodes) {
-
-                var lineStr = t.GetAttribute("line", "");
-                int line = 0;
-                if(!Int32.TryParse(lineStr,out line)) {
+                var file = t.GetAttribute("file", "");
+                var name = t.GetAttribute("name", "");
+               
+                if (String.IsNullOrEmpty(file) ||
+                    String.IsNullOrEmpty(name) ||
+                    !Int32.TryParse(t.GetAttribute("line", String.Empty), out int line))
+                {
+                    var message = String.Empty;
+                    if(t.HasChildren) {
+                        t.MoveToFirstChild();
+                        message = t.GetAttribute("message", String.Empty) + t.Value;
+                    }
+                    Debug.WriteLine("Test result parse failed: {0}".FormatInvariant(message));
                     continue;
                 }
 
-                var file = t.GetAttribute("file", "");
+                var qualifiedName = String.Format("{0}::{1}", file, name);
 
-                var testResult = results
-                    .Where(x => (x.TestCase.LineNumber == line) && String.Compare(x.TestCase.Source, file, StringComparison.InvariantCultureIgnoreCase) == 0).FirstOrDefault();
+                var foundResult = testResults
+                    .Where(x => String.Compare(x.TestCase.FullyQualifiedName, qualifiedName, StringComparison.InvariantCultureIgnoreCase) == 0)
+                    .FirstOrDefault();
 
-                if (testResult != null) {
-                  
-                    testResult.Outcome = TestOutcome.Passed;
+                if (foundResult != null) {
+
+                    foundResult.Outcome = TestOutcome.Passed;
 
                     var timeStr = t.GetAttribute("time", "");
                     Double time = 0.0;
-                    testResult.Duration = Double.TryParse(timeStr, out time) ? TimeSpan.FromSeconds(time) : TimeSpan.Zero;
+                    foundResult.Duration = Double.TryParse(timeStr, out time) ? TimeSpan.FromSeconds(time) : TimeSpan.Zero;
                       
                     if (t.HasChildren) {
                         t.MoveToFirstChild();
 
-                        if(String.Compare(t.Name, "failure") == 0) {
-                            testResult.Outcome = TestOutcome.Failed;
-                            testResult.Messages.Add(new TestResultMessage(TestResultMessage.StandardErrorCategory, t.GetAttribute("message", "")));
+                        if ((String.Compare(t.Name, "failure") == 0) ||
+                            (String.Compare(t.Name, "error") == 0)) {
+                            foundResult.Outcome = TestOutcome.Failed;
+
+                            foundResult.Messages.Add(new TestResultMessage(TestResultMessage.StandardErrorCategory, $"{t.GetAttribute("message", "")}\n{t.Value}"));
                         }
                     }
-
-                    results.Add(testResult);
+                }
+                else {
+                    var message = String.Empty;
+                    if (t.HasChildren) {
+                        t.MoveToFirstChild();
+                        message = t.GetAttribute("message", String.Empty) + t.Value;
+                    }
+                    Debug.WriteLine("Testcase for result not found: {0}".FormatInvariant(message));
                 }
             }
                      
-            return results;
+            return testResults;
         }
 
 
         public static XPathDocument Read(string xml) {
             var settings = new XmlReaderSettings();
             settings.XmlResolver = null;
-            return new XPathDocument(XmlReader.Create(new StreamReader(xml), settings));
+            return new XPathDocument(XmlReader.Create(new StreamReader(xml, new UTF8Encoding(false)), settings));
         }
     }
 }
