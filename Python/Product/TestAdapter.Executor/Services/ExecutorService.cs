@@ -5,25 +5,29 @@ using System.Threading;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using System.IO;
 using Microsoft.PythonTools.TestAdapter.Config;
+using System.Diagnostics;
 
 namespace Microsoft.PythonTools.TestAdapter.Services {
     public class ExecutorService {
 
         private static readonly string TestLauncherPath = PythonToolsInstallPath.GetFile("testlauncher.py");
-        
 
         public string[] GetArguments(IEnumerable<TestCase> tests, PythonProjectSettings projSettings, string outputfile) {
             var arguments = new List<string>();
             arguments.Add(TestLauncherPath);
             arguments.Add(projSettings.WorkingDirectory);
             arguments.Add("pytest");
-
             arguments.Add(String.Format("--junitxml={0}", outputfile));
 
             foreach (var test in tests) {
-                arguments.Add(test.FullyQualifiedName);
-            }
+                var pytestId = test.GetPropertyValue<string>(Pytest.Constants.PytestIdProperty, default(string));
 
+                if (String.IsNullOrEmpty(pytestId)) {
+                    Debug.WriteLine("PytestId missing for testcase {0}", test.FullyQualifiedName);
+                    continue;
+                }
+                arguments.Add(pytestId);
+            }
             return arguments.ToArray();
         }
 
@@ -38,7 +42,6 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
                 arguments            
                 
             )) {
-
                 // If there's an error in the launcher script,
                 // it will terminate without connecting back.
                 WaitHandle.WaitAny(new WaitHandle[] { proc.WaitHandle });

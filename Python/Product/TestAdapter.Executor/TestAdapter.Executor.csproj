@@ -85,6 +85,7 @@
     <Compile Include="..\VSCommon\Infrastructure\VisualStudioApp.cs">
       <Link>VisualStudioApp.cs</Link>
     </Compile>
+    <Compile Include="Pytest\Constants.cs" />
     <Compile Include="Pytest\PytestDiscoveryResults.cs" />
     <Compile Include="Config\PythonProjectSettings.cs" />
     <Compile Include="Config\RunSettingsUtil.cs" />

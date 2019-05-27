@@ -33,9 +33,11 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
             foreach (XPathNavigator t in nodes) {
                 var file = t.GetAttribute("file", "");
                 var name = t.GetAttribute("name", "");
-               
+                var classname = t.GetAttribute("classname", "");
+
                 if (String.IsNullOrEmpty(file) ||
                     String.IsNullOrEmpty(name) ||
+                    String.IsNullOrEmpty(classname) ||
                     !Int32.TryParse(t.GetAttribute("line", String.Empty), out int line))
                 {
                     var message = String.Empty;
@@ -46,11 +48,13 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
                     Debug.WriteLine("Test result parse failed: {0}".FormatInvariant(message));
                     continue;
                 }
+       
 
-                var qualifiedName = String.Format("{0}::{1}", file, name);
-
+                // Match on classname and function name for now
                 var foundResult = testResults
-                    .Where(x => String.Compare(x.TestCase.FullyQualifiedName, qualifiedName, StringComparison.InvariantCultureIgnoreCase) == 0)
+                    .Where(x =>
+                    String.Compare(x.TestCase.DisplayName, name, StringComparison.InvariantCultureIgnoreCase) == 0 &&
+                    String.Compare(x.TestCase.GetPropertyValue<string>(Pytest.Constants.PyTestXmlClassNameProperty, default(string)), classname, StringComparison.InvariantCultureIgnoreCase) == 0) 
                     .FirstOrDefault();
 
                 if (foundResult != null) {

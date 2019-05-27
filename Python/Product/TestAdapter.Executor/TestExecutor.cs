@@ -114,7 +114,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 
         public void RunTests(IEnumerable<TestCase> tests, IRunContext runContext, IFrameworkHandle frameworkHandle) {
 
-            //MessageBox.Show("Hello1: " + Process.GetCurrentProcess().Id);
+           // MessageBox.Show("Hello1: " + Process.GetCurrentProcess().Id);
 
             if (tests == null) {
                 throw new ArgumentNullException(nameof(tests));
