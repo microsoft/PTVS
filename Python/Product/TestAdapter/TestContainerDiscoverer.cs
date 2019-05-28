@@ -26,7 +26,6 @@ using Microsoft.PythonTools.TestAdapter.Model;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestWindow.Extensibility;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.TestAdapter;
@@ -37,12 +36,14 @@ namespace Microsoft.PythonTools.TestAdapter {
     [Export(typeof(TestContainerDiscoverer))]
     class TestContainerDiscoverer : ITestContainerDiscoverer, IDisposable {
         private readonly IServiceProvider _serviceProvider;
-        private readonly SolutionEventsListener _solutionListener;
+        
         private readonly Dictionary<string, ProjectInfo> _projectInfo;
         private bool _firstLoad, _isDisposed;
         public const string ExecutorUriString = "executor://PythonTestExecutor/v1";
         public static readonly Uri _ExecutorUri = new Uri(ExecutorUriString);
 
+        private readonly SolutionEventsListener _solutionListener;
+    
         [ImportingConstructor]
         private TestContainerDiscoverer([Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider, [Import(typeof(IOperationState))]IOperationState operationState) {
             _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));

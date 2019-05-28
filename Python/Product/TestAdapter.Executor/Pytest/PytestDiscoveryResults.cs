@@ -106,7 +106,10 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
             var classList = new List<string>();
             var currId = t.Parentid;
             while (parentMap.TryGetValue(currId, out PytestParent parent)) {
-                classList.Add(Path.GetFileNameWithoutExtension(parent.Name));
+                // class names for functions dont append the direct parent 
+                if (String.Compare(parent.Kind, "function", StringComparison.OrdinalIgnoreCase) != 0) {
+                    classList.Add(Path.GetFileNameWithoutExtension(parent.Name));
+                }
                 currId = parent.Parentid;
             }
 
