@@ -124,7 +124,10 @@
       <Link>ServiceProviderExtension.cs</Link>
     </Compile>
     <Compile Include="TestContainerDiscoverer.cs" />
+    <Compile Include="TestFileAddRemoveListener.cs" />
+    <Compile Include="TestFilesUpdateWatcher.cs" />
     <Compile Include="TestMethodResolver.cs" />
+    <Compile Include="VsProjectExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common\Common.csproj">

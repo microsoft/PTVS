@@ -17,18 +17,17 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
-using System.Diagnostics;
 using System.Linq;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Projects;
 using Microsoft.PythonTools.TestAdapter.Model;
-using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestWindow.Extensibility;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.TestAdapter;
+
 using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.TestAdapter {
@@ -43,7 +42,8 @@ namespace Microsoft.PythonTools.TestAdapter {
         public static readonly Uri _ExecutorUri = new Uri(ExecutorUriString);
 
         private readonly SolutionEventsListener _solutionListener;
-    
+        //private readonly TestFilesUpdateWatcher _testFilesUpdateWatcher;
+
         [ImportingConstructor]
         private TestContainerDiscoverer([Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider, [Import(typeof(IOperationState))]IOperationState operationState) {
             _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
@@ -54,6 +54,9 @@ namespace Microsoft.PythonTools.TestAdapter {
             _solutionListener.ProjectLoaded += OnProjectLoaded;
             _solutionListener.ProjectUnloading += OnProjectUnloaded;
             _solutionListener.ProjectClosing += OnProjectUnloaded;
+         
+
+            //_testFilesUpdateWatcher = new TestFilesUpdateWatcher();
 
             _firstLoad = true;
         }
@@ -62,6 +65,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             if (!_isDisposed) {
                 _isDisposed = true;
                 _solutionListener.Dispose();
+            //    _testFilesUpdateWatcher.Dispose();
             }
         }
 
@@ -82,7 +86,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                             _firstLoad = false;
                             // Get current solution
                             var solution = (IVsSolution)_serviceProvider.GetService(typeof(SVsSolution));
-                            foreach (var project in EnumerateLoadedProjects(solution)) {
+                            foreach (var project in VsProjectExtensions.EnumerateLoadedProjects(solution)) {
                                 OnProjectLoaded(null, new ProjectEventArgs(project));
                             }
                             _solutionListener.StartListeningForChanges();
@@ -111,135 +115,12 @@ namespace Microsoft.PythonTools.TestAdapter {
             if (_projectInfo.TryGetValue(projectHome, out projectInfo)) {
                 return projectInfo.GetLaunchConfigurationOrThrow();
             }
-
             return null;
         }
-
 
         public void NotifyChanged() {
             TestContainersUpdated?.Invoke(this, EventArgs.Empty);
         }
-
-
-        #region SolutionExtenions
-
-        /// <summary>
-        /// return a list of TestContainers by querying each of the projects
-        /// </summary>
-        /// <param name="project"></param>
-
-
-        private static IEnumerable<IVsProject> EnumerateLoadedProjects(IVsSolution solution) {
-            var guid = new Guid(PythonConstants.ProjectFactoryGuid);
-            IEnumHierarchies hierarchies;
-            ErrorHandler.ThrowOnFailure((solution.GetProjectEnum(
-                (uint)(__VSENUMPROJFLAGS.EPF_MATCHTYPE | __VSENUMPROJFLAGS.EPF_LOADEDINSOLUTION),
-                ref guid,
-                out hierarchies)));
-            IVsHierarchy[] hierarchy = new IVsHierarchy[1];
-            uint fetched;
-            while (ErrorHandler.Succeeded(hierarchies.Next(1, hierarchy, out fetched)) && fetched == 1) {
-                var project = hierarchy[0] as IVsProject;
-                if (project != null) {
-                    yield return project;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Get the items present in the project
-        /// </summary>
-        public static IEnumerable<string> GetProjectItems(IVsProject project) {
-            Debug.Assert(project != null, "Project is not null");
-
-            // Each item in VS OM is IVSHierarchy. 
-            IVsHierarchy hierarchy = (IVsHierarchy)project;
-
-            return GetProjectItems(hierarchy, VSConstants.VSITEMID_ROOT);
-        }
-
-        /// <summary>
-        /// Get project items
-        /// </summary>
-        private static IEnumerable<string> GetProjectItems(IVsHierarchy project, uint itemId) {
-
-            object pVar = GetPropertyValue((int)__VSHPROPID.VSHPROPID_FirstChild, itemId, project);
-
-            uint childId = GetItemId(pVar);
-            while (childId != VSConstants.VSITEMID_NIL) {
-                foreach (string item in GetProjectItems(project, childId)) {
-                    yield return item;
-                }
-
-                string childPath = GetCanonicalName(childId, project);
-                yield return childPath;
-
-                pVar = GetPropertyValue((int)__VSHPROPID.VSHPROPID_NextSibling, childId, project);
-                childId = GetItemId(pVar);
-            }
-        }
-
-        /// <summary>
-        /// Convert parameter object to ItemId
-        /// </summary>
-        private static uint GetItemId(object pvar) {
-            if (pvar == null) return VSConstants.VSITEMID_NIL;
-            if (pvar is int) return (uint)(int)pvar;
-            if (pvar is uint) return (uint)pvar;
-            if (pvar is short) return (uint)(short)pvar;
-            if (pvar is ushort) return (uint)(ushort)pvar;
-            if (pvar is long) return (uint)(long)pvar;
-            return VSConstants.VSITEMID_NIL;
-        }
-
-        /// <summary>
-        /// Get the parameter property value
-        /// </summary>
-        private static object GetPropertyValue(int propid, uint itemId, IVsHierarchy vsHierarchy) {
-            if (itemId == VSConstants.VSITEMID_NIL) {
-                return null;
-            }
-
-            try {
-                object o;
-                ErrorHandler.ThrowOnFailure(vsHierarchy.GetProperty(itemId, propid, out o));
-
-                return o;
-            } catch (System.NotImplementedException) {
-                return null;
-            } catch (System.Runtime.InteropServices.COMException) {
-                return null;
-            } catch (System.ArgumentException) {
-                return null;
-            }
-        }
-
-
-        /// <summary>
-        /// Get the canonical name
-        /// </summary>
-        private static string GetCanonicalName(uint itemId, IVsHierarchy hierarchy) {
-            Debug.Assert(itemId != VSConstants.VSITEMID_NIL, "ItemId cannot be nill");
-
-            string strRet = string.Empty;
-            int hr = hierarchy.GetCanonicalName(itemId, out strRet);
-
-            if (hr == VSConstants.E_NOTIMPL) {
-                // Special case E_NOTIMLP to avoid perf hit to throw an exception.
-                return string.Empty;
-            } else {
-                try {
-                    ErrorHandler.ThrowOnFailure(hr);
-                } catch (System.Runtime.InteropServices.COMException) {
-                    strRet = string.Empty;
-                }
-
-
-                // This could be in the case of S_OK, S_FALSE, etc.
-                return strRet;
-            }
-        }
-#endregion
 
         public event EventHandler TestContainersUpdated;
 
@@ -251,7 +132,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             var pyProj = PythonProject.FromObject(project);
             if (pyProj != null) {
 
-                var sources = GetProjectItems(project);
+                var sources = project.GetProjectItems();
                 var projInfo = new ProjectInfo(this, pyProj, sources);
                 projInfo.UpdateTestCases();
                 _projectInfo[pyProj.ProjectHome] = projInfo;
@@ -272,7 +153,5 @@ namespace Microsoft.PythonTools.TestAdapter {
 
             TestContainersUpdated?.Invoke(this, EventArgs.Empty);
         }
-
-        
     }
 }
