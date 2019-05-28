@@ -28,22 +28,22 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
             }
 
             var doc = Read(junitXmlPath);
-            XPathNodeIterator nodes = doc.CreateNavigator().Select("/testsuite/testcase");
+            XPathNodeIterator xmlTestCases = doc.CreateNavigator().Select("/testsuite/testcase");
 
-            foreach (XPathNavigator t in nodes) {
-                var file = t.GetAttribute("file", "");
-                var name = t.GetAttribute("name", "");
-                var classname = t.GetAttribute("classname", "");
+            foreach (XPathNavigator testcase in xmlTestCases) {
+                var file = testcase.GetAttribute("file", "");
+                var name = testcase.GetAttribute("name", "");
+                var classname = testcase.GetAttribute("classname", "");
 
                 if (String.IsNullOrEmpty(file) ||
                     String.IsNullOrEmpty(name) ||
                     String.IsNullOrEmpty(classname) ||
-                    !Int32.TryParse(t.GetAttribute("line", String.Empty), out int line))
+                    !Int32.TryParse(testcase.GetAttribute("line", String.Empty), out int line))
                 {
                     var message = String.Empty;
-                    if(t.HasChildren) {
-                        t.MoveToFirstChild();
-                        message = t.GetAttribute("message", String.Empty) + t.Value;
+                    if(testcase.HasChildren) {
+                        testcase.MoveToFirstChild();
+                        message = testcase.GetAttribute("message", String.Empty) + testcase.Value;
                     }
                     Debug.WriteLine("Test result parse failed: {0}".FormatInvariant(message));
                     continue;
@@ -51,36 +51,19 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
        
 
                 // Match on classname and function name for now
-                var foundResult = testResults
+                var result = testResults
                     .Where(x =>
                     String.Compare(x.TestCase.DisplayName, name, StringComparison.InvariantCultureIgnoreCase) == 0 &&
                     String.Compare(x.TestCase.GetPropertyValue<string>(Pytest.Constants.PyTestXmlClassNameProperty, default(string)), classname, StringComparison.InvariantCultureIgnoreCase) == 0) 
                     .FirstOrDefault();
 
-                if (foundResult != null) {
-
-                    foundResult.Outcome = TestOutcome.Passed;
-
-                    var timeStr = t.GetAttribute("time", "");
-                    Double time = 0.0;
-                    foundResult.Duration = Double.TryParse(timeStr, out time) ? TimeSpan.FromSeconds(time) : TimeSpan.Zero;
-                      
-                    if (t.HasChildren) {
-                        t.MoveToFirstChild();
-
-                        if ((String.Compare(t.Name, "failure") == 0) ||
-                            (String.Compare(t.Name, "error") == 0)) {
-                            foundResult.Outcome = TestOutcome.Failed;
-
-                            foundResult.Messages.Add(new TestResultMessage(TestResultMessage.StandardErrorCategory, $"{t.GetAttribute("message", "")}\n{t.Value}"));
-                        }
-                    }
-                }
-                else {
+                if (result != null) {
+                    UpdateTestResult(testcase, result);
+                } else {
                     var message = String.Empty;
-                    if (t.HasChildren) {
-                        t.MoveToFirstChild();
-                        message = t.GetAttribute("message", String.Empty) + t.Value;
+                    if (testcase.HasChildren) {
+                        testcase.MoveToFirstChild();
+                        message = testcase.GetAttribute("message", String.Empty) + testcase.Value;
                     }
                     Debug.WriteLine("Testcase for result not found: {0}".FormatInvariant(message));
                 }
@@ -89,6 +72,41 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
             return testResults;
         }
 
+        private static void UpdateTestResult(XPathNavigator navNode, TestResult result) {
+            result.Outcome = TestOutcome.Passed;
+
+            var timeStr = navNode.GetAttribute("time", "");
+            if (Double.TryParse(timeStr, out Double time)) {
+                result.Duration = TimeSpan.FromSeconds(time);
+            }
+
+            if (navNode.HasChildren) {
+             
+                navNode.MoveToFirstChild();
+
+                do {
+                    switch (navNode.Name) {
+                        case "skipped":
+                            result.Outcome = TestOutcome.Skipped;
+                            break;
+                        case "failure":
+                            result.Outcome = TestOutcome.Failed;
+                            result.Messages.Add(new TestResultMessage(TestResultMessage.StandardErrorCategory, $"{navNode.GetAttribute("message", "")}\n{navNode.Value}"));
+                            break;
+                        case "error":
+                            result.Outcome = TestOutcome.None;
+                            result.Messages.Add(new TestResultMessage(TestResultMessage.StandardErrorCategory, $"{navNode.GetAttribute("message", "")}\n{navNode.Value}"));
+                            break;
+                        case "system-out":
+                            result.Messages.Add(new TestResultMessage(TestResultMessage.StandardOutCategory, $"{navNode.Value}"));
+                            break;
+                        case "system-err":
+                            result.Messages.Add(new TestResultMessage(TestResultMessage.StandardErrorCategory, $"{navNode.Value}"));
+                            break;
+                    }
+                } while (navNode.MoveToNext());
+            }
+        }
 
         public static XPathDocument Read(string xml) {
             var settings = new XmlReaderSettings();

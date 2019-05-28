@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+using System;
 
 namespace Microsoft.PythonTools.TestAdapter.Pytest {
     internal static class Constants {
@@ -12,5 +13,6 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
 
         internal static readonly TestProperty PytestFileProptery = TestProperty.Register("PytestFile", "PytestFile", typeof(string), TestPropertyAttributes.Hidden, typeof(TestCase));
 
+        internal static readonly Uri PytestUri = new Uri(PythonConstants.TestExecutorUriString);
     }
 }

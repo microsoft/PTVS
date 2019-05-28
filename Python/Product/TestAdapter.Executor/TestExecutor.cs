@@ -97,9 +97,11 @@ namespace Microsoft.PythonTools.TestAdapter {
                     return;
                 }
 
-                var executorUri = new Uri(PythonConstants.TestExecutorUriString);
+                if (_cancelRequested.WaitOne(0)) {
+                    return;
+                }
 
-                var tcList = PyTestReader.ParseTestCase(results[0].Root, results[0], executorUri);
+                var tcList = PyTestReader.ParseDiscovery(results[0], discoverySink:null);
                 tests.AddRange(tcList);
 
                 if (_cancelRequested.WaitOne(0)) {
@@ -114,7 +116,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 
         public void RunTests(IEnumerable<TestCase> tests, IRunContext runContext, IFrameworkHandle frameworkHandle) {
 
-           // MessageBox.Show("Hello1: " + Process.GetCurrentProcess().Id);
+            MessageBox.Show("Hello1: " + Process.GetCurrentProcess().Id);
 
             if (tests == null) {
                 throw new ArgumentNullException(nameof(tests));
@@ -129,7 +131,6 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
 
             _cancelRequested.Reset();
-
 
             RunPytest(tests, runContext, frameworkHandle);
         }

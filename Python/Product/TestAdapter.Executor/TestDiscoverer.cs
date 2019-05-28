@@ -16,10 +16,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Xml;
-using System.Xml.XPath;
 using Microsoft.PythonTools.TestAdapter.Services;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
@@ -48,19 +45,10 @@ namespace Microsoft.PythonTools.TestAdapter {
             DiscoverTests(sources, logger, discoverySink, settings);
         }
 
-        private static XPathDocument Read(string xml) {
-            var settings = new XmlReaderSettings();
-            settings.XmlResolver = null;
-            return new XPathDocument(XmlReader.Create(new StringReader(xml), settings));
-        }
-
-
         static void DiscoverTests(IEnumerable<string> sources, IMessageLogger logger, ITestCaseDiscoverySink discoverySink, IRunSettings settings) {
-            
             MessageBox.Show("Discover: " + Process.GetCurrentProcess().Id);
 
             var sourceToProjSettings = RunSettingsUtil.GetSourceToProjSettings(settings);
-                        
 
             foreach (var testGroup in sources.GroupBy(x => sourceToProjSettings[x])) {
                 DiscoverTestGroup(testGroup, logger, discoverySink);
@@ -76,11 +64,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 return;
             }
 
-            var executorUri = new Uri(PythonConstants.TestExecutorUriString);
-
-            foreach (var tc in PyTestReader.ParseTestCase(results[0].Root, results[0], executorUri)) {
-                discoverySink.SendTestCase(tc);
-            }
+            PyTestReader.ParseDiscovery(results[0], discoverySink);
         }
     }
 }
