@@ -41,7 +41,7 @@ namespace Microsoft.PythonTools.TestAdapter {
         }
 
         public Uri ExecutorUri {
-            get { return TestContainerDiscoverer._ExecutorUri; }
+            get { return PythonConstants.ExecutorUri; }
         }
 
         public string GetCurrentTest(string filePath, int line, int lineCharOffset) {

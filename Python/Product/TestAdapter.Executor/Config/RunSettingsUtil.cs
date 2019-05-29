@@ -11,7 +11,7 @@ namespace Microsoft.PythonTools.TestAdapter.Config {
         public static Dictionary<string, PythonProjectSettings> GetSourceToProjSettings(IRunSettings settings) {
             var doc = Read(settings.SettingsXml);
             XPathNodeIterator nodes = doc.CreateNavigator().Select("/RunSettings/Python/TestCases/Project");
-            Dictionary<string, PythonProjectSettings> res = new Dictionary<string, PythonProjectSettings>();
+            var res = new Dictionary<string, PythonProjectSettings>(StringComparer.OrdinalIgnoreCase);
 
             foreach (XPathNavigator project in nodes) {
                 PythonProjectSettings projSettings = new PythonProjectSettings(

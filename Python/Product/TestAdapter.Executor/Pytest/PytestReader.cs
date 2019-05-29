@@ -1,4 +1,5 @@
 ﻿using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.TestAdapter.Config;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using System;
@@ -61,24 +62,18 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
         /// <param name="parentMap"></param>
         /// <returns></returns>
         private static string CreateXmlClassName(PytestTest t, Dictionary<string, PytestParent> parentMap) {
-            var classList = new List<string>();
+            var parentList = new List<string>();
             var currId = t.Parentid;
             while (parentMap.TryGetValue(currId, out PytestParent parent)) {
                 // class names for functions dont append the direct parent 
                 if (String.Compare(parent.Kind, "function", StringComparison.OrdinalIgnoreCase) != 0) {
-                    classList.Add(Path.GetFileNameWithoutExtension(parent.Name));
+                    parentList.Add(Path.GetFileNameWithoutExtension(parent.Name));
                 }
                 currId = parent.Parentid;
             }
+            parentList.Reverse();
 
-            var builder = new StringBuilder();
-            classList.Reverse();
-            classList.ForEach(s => builder.Append($"{s}."));
-
-            var xmlClassName = String.Empty;
-            if (builder.Length > 0) {
-                xmlClassName = builder.ToString(0, builder.Length - 1);
-            }
+            var xmlClassName = String.Join(".", parentList);
             return xmlClassName;
         }
 

@@ -170,5 +170,8 @@ namespace Microsoft.PythonTools {
 
         internal const string PythonToolsProcessIdEnvironmentVariable = "_PTVS_PID";
         internal const string TestExecutorUriString = "executor://PythonTestExecutor/v1";
+        
+        
+        public static readonly Uri ExecutorUri = new Uri(TestExecutorUriString);
     }
 }

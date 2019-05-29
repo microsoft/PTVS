@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.IO;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Linq;
@@ -35,14 +36,10 @@ namespace Microsoft.PythonTools.TestAdapter {
     [Export(typeof(TestContainerDiscoverer))]
     class TestContainerDiscoverer : ITestContainerDiscoverer, IDisposable {
         private readonly IServiceProvider _serviceProvider;
-        
         private readonly Dictionary<string, ProjectInfo> _projectInfo;
         private bool _firstLoad, _isDisposed;
-        public const string ExecutorUriString = "executor://PythonTestExecutor/v1";
-        public static readonly Uri _ExecutorUri = new Uri(ExecutorUriString);
-
-        private readonly SolutionEventsListener _solutionListener;
-        //private readonly TestFilesUpdateWatcher _testFilesUpdateWatcher;
+        private SolutionEventsListener _solutionListener;
+        private TestFilesUpdateWatcher _testFilesUpdateWatcher;
 
         [ImportingConstructor]
         private TestContainerDiscoverer([Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider, [Import(typeof(IOperationState))]IOperationState operationState) {
@@ -55,23 +52,33 @@ namespace Microsoft.PythonTools.TestAdapter {
             _solutionListener.ProjectUnloading += OnProjectUnloaded;
             _solutionListener.ProjectClosing += OnProjectUnloaded;
          
-
-            //_testFilesUpdateWatcher = new TestFilesUpdateWatcher();
-
+            _testFilesUpdateWatcher = new TestFilesUpdateWatcher();
+            _testFilesUpdateWatcher.FileChangedEvent += OnProjectItemChanged;
             _firstLoad = true;
         }
 
         void IDisposable.Dispose() {
             if (!_isDisposed) {
                 _isDisposed = true;
-                _solutionListener.Dispose();
-            //    _testFilesUpdateWatcher.Dispose();
+
+                if(_solutionListener != null) {
+                    _solutionListener.ProjectLoaded -= OnProjectLoaded;
+                    _solutionListener.ProjectUnloading -= OnProjectUnloaded;
+                    _solutionListener.ProjectClosing -= OnProjectUnloaded;
+                    _solutionListener.Dispose();
+                }
+
+                if (_testFilesUpdateWatcher != null) {
+                    _testFilesUpdateWatcher.FileChangedEvent -= OnProjectItemChanged;
+                    _testFilesUpdateWatcher.Dispose();
+                    _testFilesUpdateWatcher = null;
+                }
             }
         }
 
         public Uri ExecutorUri {
             get {
-                return _ExecutorUri;
+                return PythonConstants.ExecutorUri;
             }
         }
 
@@ -118,7 +125,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             return null;
         }
 
-        public void NotifyChanged() {
+        private void NotifyContainerChanged() {
             TestContainersUpdated?.Invoke(this, EventArgs.Empty);
         }
 
@@ -133,12 +140,12 @@ namespace Microsoft.PythonTools.TestAdapter {
             if (pyProj != null) {
 
                 var sources = project.GetProjectItems();
-                var projInfo = new ProjectInfo(this, pyProj, sources);
-                projInfo.UpdateTestCases();
+                var projInfo = new ProjectInfo(this, pyProj);
+                UpdateTestContainers(sources, projInfo, isAdd:true);
                 _projectInfo[pyProj.ProjectHome] = projInfo;
             }
 
-            TestContainersUpdated?.Invoke(this, EventArgs.Empty);
+            NotifyContainerChanged();
         }
 
         private void OnProjectUnloaded(object sender, ProjectEventArgs e) {
@@ -151,7 +158,54 @@ namespace Microsoft.PythonTools.TestAdapter {
                 }
             }
 
-            TestContainersUpdated?.Invoke(this, EventArgs.Empty);
+            NotifyContainerChanged();
+        }
+
+        private void UpdateTestContainers(IEnumerable<string> sources, ProjectInfo projInfo, bool isAdd) {
+            bool anythingToNotify = false;
+            foreach (var path in sources) {
+
+                if (!Path.GetExtension(path).Equals(PythonConstants.FileExtension, StringComparison.OrdinalIgnoreCase)) {
+                    continue;
+                }
+
+                if (isAdd) {
+                    anythingToNotify |= projInfo.UpdateTestContainer(path);
+                    _testFilesUpdateWatcher.AddWatch(path);
+                }
+                else {
+                    anythingToNotify |= projInfo.RemoveTestContainer(path);
+                    _testFilesUpdateWatcher.RemoveWatch(path);
+                }
+            }
+
+            if (anythingToNotify) {
+                NotifyContainerChanged();
+            }
+        }
+
+        private void OnProjectItemChanged(object sender, TestFileChangedEventArgs  e) {
+            var pyProj = PythonProject.FromObject(e.Project);
+            
+            if (_projectInfo.TryGetValue(pyProj.ProjectHome, out ProjectInfo projectInfo)) {
+                var sources = new List<string>() { e.File };
+
+                switch (e.ChangedReason) {
+                    case TestFileChangedReason.None:
+                        break;
+                    case TestFileChangedReason.Renamed: // rename triggers Added and Removed
+                        break;
+                    case TestFileChangedReason.Added:
+                        UpdateTestContainers(sources, projectInfo, isAdd: true);
+                        break;
+                    case TestFileChangedReason.Changed:
+                        UpdateTestContainers(sources, projectInfo, isAdd: true);
+                        break;
+                    case TestFileChangedReason.Removed:
+                        UpdateTestContainers(sources, projectInfo, isAdd: false);
+                        break;
+                }
+            }
         }
     }
 }

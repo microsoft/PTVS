@@ -31,7 +31,7 @@ namespace Microsoft.PythonTools.TestAdapter {
     sealed class PythonStackTraceParser : IStackTraceParser {
         public Uri ExecutorUri {
             get {
-                return TestContainerDiscoverer._ExecutorUri;
+                return PythonConstants.ExecutorUri;
             }
         }
 
