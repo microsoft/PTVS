@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.IO;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudioTools;
 
@@ -31,27 +32,31 @@ namespace Microsoft.VisualStudioTools.TestAdapter {
         }
 
         public bool AddWatch(string path) {
-           // ValidateArg.NotNull(path, "path");
-
-            if (!String.IsNullOrEmpty(path)) {
+             if (!String.IsNullOrEmpty(path)) {
                 var directoryName = Path.GetDirectoryName(path);
-                var filter = Path.GetFileName(path);
+                var filter = Path.GetFileName(path);// String.Format("*{0}",Path.GetFileName(path));
 
                 if (!_fileWatchers.ContainsKey(path) && Directory.Exists(directoryName)) {
-                    var watcher = new FileSystemWatcher(directoryName, filter);
-                    _fileWatchers[path] = watcher;
+                    try {
+                        var watcher = new FileSystemWatcher(directoryName, filter);
+                        _fileWatchers[path] = watcher;
 
-                    watcher.Changed += OnChanged;
-                    watcher.EnableRaisingEvents = true;
-                    return true;
+                        watcher.NotifyFilter = NotifyFilters.LastWrite 
+                                            | NotifyFilters.FileName 
+                                            | NotifyFilters.DirectoryName 
+                                            | NotifyFilters.CreationTime;
+                        watcher.Changed += OnChanged;
+                        watcher.EnableRaisingEvents = true;
+                        return true;
+                    } catch (Exception ex) when (!ex.IsCriticalException()) {
+                        ex.ReportUnhandledException(null, GetType());
+                    }
                 }
             }
             return false;
         }
 
         public bool AddDirectoryWatch(string path) {
-            //ValidateArg.NotNull(path, "path");
-
             if (!String.IsNullOrEmpty(path)) {
                 if (!_fileWatchers.ContainsKey(path) && Directory.Exists(path)) {
                     var watcher = new FileSystemWatcher(path);
@@ -68,8 +73,6 @@ namespace Microsoft.VisualStudioTools.TestAdapter {
         }
 
         public void RemoveWatch(string path) {
-            //ValidateArg.NotNull(path, "path");
-
             if (!String.IsNullOrEmpty(path)) {
                 FileSystemWatcher watcher;
 

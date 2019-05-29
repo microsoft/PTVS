@@ -35,12 +35,10 @@ namespace Microsoft.PythonTools.TestAdapter.Model {
             return _pythonProject.GetLaunchConfigurationOrThrow();
         }
 
-        public bool UpdateTestContainer(string path) {
-            bool anythingToNotify = false;
-         
+        public void AddTestContainer(string path) {
             if (!TryGetContainer(path, out TestContainer existing)) {
-                // we have a new entry or some of the tests changed
-                int version = (existing?.Version ?? 0) + 1;
+                
+                int version = 0;
 
                 _containers[path] = new TestContainer(
                     _discoverer,
@@ -50,11 +48,7 @@ namespace Microsoft.PythonTools.TestAdapter.Model {
                     Architecture,
                     null
                 );
-
-                anythingToNotify = true;
             } 
-        
-            return anythingToNotify;
         }
 
         public bool RemoveTestContainer(string path) {

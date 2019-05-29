@@ -1,13 +1,40 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.PythonTools.TestAdapter {
     internal static class VsProjectExtensions {
-    
-        public static IEnumerable<IVsProject> EnumerateLoadedProjects(IVsSolution solution) {
+
+
+        public static IVsProject PathToProject(string filePath, IVsRunningDocumentTable rdt) {
+            IVsHierarchy hierarchy;
+            uint itemId;
+            IntPtr docData = IntPtr.Zero;
+            uint cookie;
+            try {
+                var hr = rdt.FindAndLockDocument(
+                    (uint)_VSRDTFLAGS.RDT_NoLock,
+                    filePath,
+                    out hierarchy,
+                    out itemId,
+                    out docData,
+                    out cookie);
+                ErrorHandler.ThrowOnFailure(hr);
+            } finally {
+                if (docData != IntPtr.Zero) {
+                    Marshal.Release(docData);
+                    docData = IntPtr.Zero;
+                }
+            }
+
+            return hierarchy as IVsProject;
+        }
+
+
+        public static IEnumerable<IVsProject> EnumerateLoadedProjects(this IVsSolution solution) {
             var guid = new Guid(PythonConstants.ProjectFactoryGuid);
             IEnumHierarchies hierarchies;
             ErrorHandler.ThrowOnFailure((solution.GetProjectEnum(

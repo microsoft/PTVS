@@ -162,7 +162,6 @@ namespace Microsoft.PythonTools.TestAdapter {
         }
 
         private void UpdateTestContainers(IEnumerable<string> sources, ProjectInfo projInfo, bool isAdd) {
-            bool anythingToNotify = false;
             foreach (var path in sources) {
 
                 if (!Path.GetExtension(path).Equals(PythonConstants.FileExtension, StringComparison.OrdinalIgnoreCase)) {
@@ -170,24 +169,33 @@ namespace Microsoft.PythonTools.TestAdapter {
                 }
 
                 if (isAdd) {
-                    anythingToNotify |= projInfo.UpdateTestContainer(path);
+                    projInfo.AddTestContainer(path);
                     _testFilesUpdateWatcher.AddWatch(path);
                 }
                 else {
-                    anythingToNotify |= projInfo.RemoveTestContainer(path);
+                    projInfo.RemoveTestContainer(path);
                     _testFilesUpdateWatcher.RemoveWatch(path);
                 }
             }
 
-            if (anythingToNotify) {
-                NotifyContainerChanged();
-            }
+            NotifyContainerChanged();
         }
 
-        private void OnProjectItemChanged(object sender, TestFileChangedEventArgs  e) {
-            var pyProj = PythonProject.FromObject(e.Project);
-            
-            if (_projectInfo.TryGetValue(pyProj.ProjectHome, out ProjectInfo projectInfo)) {
+        private void OnProjectItemChanged(object sender, TestFileChangedEventArgs e) {
+            if(String.IsNullOrEmpty(e.File)) {
+                return;
+            }
+            // Get current solution
+            //var solution = (IVsSolution)_serviceProvider.GetService(typeof(SVsSolution));
+            //foreach (var project in VsProjectExtensions.EnumerateLoadedProjects(solution)) {
+            //    if( project.IsDocumentInProject(e.File, out int found, ))
+            //}
+
+            var rdt = (IVsRunningDocumentTable)_serviceProvider.GetService(typeof(SVsRunningDocumentTable));
+            var pyProj = PythonProject.FromObject(VsProjectExtensions.PathToProject(e.File, rdt));
+            if (pyProj != null &&
+                _projectInfo.TryGetValue(pyProj.ProjectHome, out ProjectInfo projectInfo)) {
+
                 var sources = new List<string>() { e.File };
 
                 switch (e.ChangedReason) {

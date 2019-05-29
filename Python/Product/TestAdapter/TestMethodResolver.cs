@@ -45,7 +45,8 @@ namespace Microsoft.PythonTools.TestAdapter {
         }
 
         public string GetCurrentTest(string filePath, int line, int lineCharOffset) {
-            var pyProj = PythonProject.FromObject(PathToProject(filePath));
+            var rdt = (IVsRunningDocumentTable)_serviceProvider.GetService(typeof(SVsRunningDocumentTable));
+            var pyProj = PythonProject.FromObject(VsProjectExtensions.PathToProject(filePath, rdt));
             if (pyProj != null) {
                 var container = _discoverer.GetTestContainer(pyProj.ProjectHome, filePath);
                 if (container != null) {
@@ -61,30 +62,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             return null;
         }
 
-        private IVsProject PathToProject(string filePath) {
-            var rdt = (IVsRunningDocumentTable)_serviceProvider.GetService(typeof(SVsRunningDocumentTable));
-            IVsHierarchy hierarchy;
-            uint itemId;
-            IntPtr docData = IntPtr.Zero;
-            uint cookie;
-            try {
-                var hr = rdt.FindAndLockDocument(
-                    (uint)_VSRDTFLAGS.RDT_NoLock,
-                    filePath,
-                    out hierarchy,
-                    out itemId,
-                    out docData,
-                    out cookie);
-                ErrorHandler.ThrowOnFailure(hr);
-            } finally {
-                if (docData != IntPtr.Zero) {
-                    Marshal.Release(docData);
-                    docData = IntPtr.Zero;
-                }
-            }
-
-            return hierarchy as IVsProject;
-        }
+       
 
         #endregion
     }
