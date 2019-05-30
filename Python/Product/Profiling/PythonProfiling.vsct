@@ -207,14 +207,11 @@
       <Parent guid="guidPythonProfilingCmdSet" id="menuIdPerfSingleReportContext"/>
     </CommandPlacement>
 
-    <CommandPlacement guid="guidPythonProfilingCmdSet" id="cmdidStartPythonProfiling" priority="0x10">
-      <Parent guid="guidPerfMenuGroup" id="IDG_PERF_BAR_GENERAL" />
+    <CommandPlacement guid="guidPythonProfilingCmdSet" id="cmdidStartPythonProfiling" priority="0x0d85">
+      <Parent guid="guidVSDebugGroup" id="IDG_EXECUTION"/>
     </CommandPlacement>
-    <CommandPlacement guid="guidPythonProfilingCmdSet" id="cmdidStartPythonProfiling" priority="0x10">
-      <Parent guid="guidPerfMenuGroup" id="IDG_PERF_TOPLEVEL"/>
-    </CommandPlacement>
-    <CommandPlacement guid="guidPythonProfilingCmdSet" id="cmdidPerfExplorer" priority="0x10">
-      <Parent guid="guidDiagMenuGroup" id="IDG_DIAG_WINDOWS_MENU"/>
+    <CommandPlacement guid="guidPythonProfilingCmdSet" id="cmdidPerfExplorer" priority="0xff50">
+      <Parent guid="guidVSDebugGroup" id="IDG_DEBUG_WINDOWS_GENERAL"/>
     </CommandPlacement>
     <CommandPlacement guid="guidPythonProfilingCmdSet" id="cmdidPerfExplorer" priority="0x8000">
       <Parent guid="guidDiagMenuGroup" id="IDG_VIEW_OTHERWINDOWS_DIAG_MENU"/>
@@ -276,14 +273,14 @@
 
     <!-- External Guids and IDs which we need to hook into -->
     <GuidSymbol name="guidExplorerContext" value ="{3725B6C9-AE91-4b69-871B-3490DE1322BA}" />    
-    <GuidSymbol name="guidPerfMenuGroup" value="{79F7EEA7-D110-4b79-A6FB-2A25EE4D913F}" >
-      <IDSymbol name="IDG_PERF_BAR_GENERAL" value="0x1010"/>
-      <IDSymbol name="IDG_PERF_TOPLEVEL" value="0x1023"/>
+
+    <GuidSymbol name="guidDiagMenuGroup" value="{CD68F8E6-2842-4F7E-AF7B-5A019631CEB5}">
+      <IDSymbol name="IDG_VIEW_OTHERWINDOWS_DIAG_MENU" value="0x2002"/>
     </GuidSymbol>
 
-    <GuidSymbol name="guidDiagMenuGroup" value="{CD68F8E6-2842-4F7E-AF7b-5A019631CEB5}">
-      <IDSymbol name="IDG_DIAG_WINDOWS_MENU" value="0x1003"/>
-      <IDSymbol name="IDG_VIEW_OTHERWINDOWS_DIAG_MENU" value="0x2002"/>
+    <GuidSymbol name="guidVSDebugGroup" value="{C9DD4A58-47FB-11D2-83E7-00C04F9902C1}">
+      <IDSymbol name="IDG_DEBUG_WINDOWS_GENERAL" value="0x0002"/>
+      <IDSymbol name="IDG_EXECUTION" value="0x0004"/>
     </GuidSymbol>
 
     <GuidSymbol name="guidPythonToolsCmdSet" value="{bdfa79d2-2cd2-474a-a82a-ce8694116825}">
