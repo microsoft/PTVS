@@ -63,6 +63,14 @@ namespace TestUtilities.UI {
             ErrorHandler.ThrowOnFailure(uiShell.GetDialogOwnerHwnd(out hwnd));
             if (hwnd != _mainWindowHandle) {
                 using (var dlg = new AutomationDialog(this, AutomationElement.FromHandle(hwnd))) {
+                    //startup window popup, press button "Continue without code"
+                    var cwc = dlg.FindByName("Continue without code");
+                    if (cwc != null)
+                    {
+                        Invoke(cwc);
+                        WaitForInputIdle();
+                        return;
+                    }
                     Console.WriteLine("Unexpected dialog at start of test");
                     DumpElement(dlg.Element);
                     dlg.WaitForClosed(TimeSpan.FromSeconds(5), dlg.CloseWindow);
