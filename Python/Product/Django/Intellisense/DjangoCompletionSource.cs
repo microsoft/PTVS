@@ -21,13 +21,8 @@ using Microsoft.PythonTools.Django.TemplateParsing;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
-#if DEV16_OR_LATER
 using Microsoft.WebTools.Languages.Html.Editor.Document;
 using Microsoft.WebTools.Languages.Shared.Text;
-#else
-using Microsoft.Html.Editor.Document;
-using Microsoft.Web.Core.Text;
-#endif
 
 namespace Microsoft.PythonTools.Django.Intellisense {
     internal class DjangoCompletionSource : DjangoCompletionSourceBase {
@@ -76,7 +71,7 @@ namespace Microsoft.PythonTools.Django.Intellisense {
 
         protected override IEnumerable<DjangoBlock> GetBlocks(IEnumerable<CompletionInfo> results, SnapshotPoint triggerPoint) {
             var buffers = _buffer.GetContributingBuffers().Where(b => b.ContentType.IsOfType(TemplateHtmlContentType.ContentTypeName));
-            var doc = HtmlEditorDocument.FromTextBuffer(buffers.FirstOrDefault() ?? _buffer);
+            var doc = HtmlEditorDocument.TryFromTextBuffer(buffers.FirstOrDefault() ?? _buffer);
             if (doc == null) {
                 yield break;
             }

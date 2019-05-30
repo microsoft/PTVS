@@ -22,15 +22,15 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Utilities;
-#if DEV16_OR_LATER
+using Microsoft.WebTools.Languages.Shared.Editor.Completion;
 using Microsoft.WebTools.Languages.Shared.Editor.Services;
-#else
-using Microsoft.Web.Editor.Services;
-#endif
 
 namespace Microsoft.PythonTools.Django.Intellisense {
-    [Export(typeof(IIntellisenseControllerProvider)), ContentType(TemplateTagContentType.ContentTypeName), Order]
-    internal class TemplateCompletionControllerProvider : IIntellisenseControllerProvider {
+    [Export(typeof(IIntellisenseControllerProvider))]
+    [Export(typeof(ICompletionControllerProvider))]
+    [ContentType(TemplateTagContentType.ContentTypeName)]
+    [Order]
+    internal class TemplateCompletionControllerProvider : IIntellisenseControllerProvider, ICompletionControllerProvider {
         private readonly ICompletionBroker _completionBroker;
         private readonly ISignatureHelpBroker _signatureHelpBroker;
         private readonly PythonToolsService _pyService;
@@ -42,6 +42,10 @@ namespace Microsoft.PythonTools.Django.Intellisense {
             _quickInfoBroker = quickInfoBroker;
             _signatureHelpBroker = signatureHelpBroker;
             _pyService = (PythonToolsService)serviceProvider.GetService(typeof(PythonToolsService));
+        }
+
+        public CompletionController GetCompletionController(ITextView textView) {
+            return ServiceManager.GetService<TemplateCompletionController>(textView);
         }
 
         public IIntellisenseController TryCreateIntellisenseController(ITextView view, IList<ITextBuffer> subjectBuffers) {
