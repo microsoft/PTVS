@@ -23,7 +23,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.Python;
 
-namespace FastCgiTest {
+namespace FastCgiTests {
     [TestClass]
     public class FastCgiTests3x : FastCgiTests2x {
         [ClassInitialize]

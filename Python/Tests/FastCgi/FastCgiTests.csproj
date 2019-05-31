@@ -32,8 +32,8 @@
     <ProjectGuid>{60F6AAF8-40C9-4983-A5FE-D6A9B82AF22D}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>FastCgiTest</RootNamespace>
-    <AssemblyName>FastCgiTest</AssemblyName>
+    <RootNamespace>FastCgiTests</RootNamespace>
+    <AssemblyName>FastCgiTests</AssemblyName>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
   </PropertyGroup>

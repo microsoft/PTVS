@@ -30,7 +30,7 @@ using Microsoft.Win32;
 using TestUtilities;
 using TestUtilities.Python;
 
-namespace FastCgiTest {
+namespace FastCgiTests {
     [TestClass]
     public class FastCgiTests2x {
         [ClassInitialize]
