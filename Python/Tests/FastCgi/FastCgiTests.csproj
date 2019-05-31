@@ -82,7 +82,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="FastCgiTests.cs" />
+    <Compile Include="FastCgiTests2x.cs" />
     <Compile Include="FastCgiTests3x.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

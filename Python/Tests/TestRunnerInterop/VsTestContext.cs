@@ -80,7 +80,7 @@ namespace TestRunnerInterop {
                             return _devenvExe;
                         }
 
-                        _devenvExe = Path.Combine(Path.GetDirectoryName(_devenvExe), "IDE", "Common7", "devenv.exe");
+                        _devenvExe = Path.Combine(Path.GetDirectoryName(_devenvExe), "Common7", "IDE", "devenv.exe");
                         if (File.Exists(_devenvExe)) {
                             return _devenvExe;
                         }
