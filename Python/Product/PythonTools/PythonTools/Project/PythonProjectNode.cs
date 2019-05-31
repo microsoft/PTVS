@@ -2053,6 +2053,8 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public override bool Publish(PublishProjectOptions publishOptions, bool async) {
+            _logger.LogEvent(PythonLogEvent.CustomPublish, null);
+
             var factory = GetInterpreterFactory();
             if (factory.Configuration.IsAvailable() &&
                 Directory.Exists(factory.Configuration.GetPrefixPath()) &&

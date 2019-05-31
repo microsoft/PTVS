@@ -19,7 +19,7 @@ namespace Microsoft.PythonTools.Django {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class Resources {
@@ -178,24 +178,6 @@ namespace Microsoft.PythonTools.Django {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Django.
-        /// </summary>
-        public static string DjangoPropertyPageTitle {
-            get {
-                return ResourceManager.GetString("DjangoPropertyPageTitle", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The full name of your settings module, for example, &quot;myproject.settings&quot;. If not provided, the DJANGO_SETTINGS_MODULE environment variable will be used..
-        /// </summary>
-        public static string DjangoSettingsModuleHelp {
-            get {
-                return ResourceManager.GetString("DjangoSettingsModuleHelp", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Django Tags.
         /// </summary>
         public static string DjangoTagsCompletionSetDisplayName {
@@ -282,17 +264,6 @@ namespace Microsoft.PythonTools.Django {
         public static string SelectAnotherName {
             get {
                 return ResourceManager.GetString("SelectAnotherName", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to A regex pattern to identify static URIs, for example: ^/static/.*
-        ///The web.config file will be configured to resolve URIs matching this pattern to a file system path rather than your application.
-        ///NOTE: This pattern is applied in addition to the static URI specified in the Django settings module..
-        /// </summary>
-        public static string StaticUriHelp {
-            get {
-                return ResourceManager.GetString("StaticUriHelp", resourceCulture);
             }
         }
         

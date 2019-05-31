@@ -31,7 +31,7 @@ namespace Microsoft.PythonTools.Project {
     [PackageRegistration(UseManagedResourcesOnly = true)]
     [ProvideProjectFactory(typeof(PythonProjectFactory), PythonConstants.LanguageName, "#127", "pyproj", "pyproj", ".\\NullPath", LanguageVsTemplate = PythonConstants.LanguageName)]
     [ProvideObject(typeof(PythonGeneralPropertyPage))]
-    [ProvideObject(typeof(PythonWebPropertyPage))]
+    [ProvideObject(typeof(PythonAzureWebPropertyPage))]
     [ProvideObject(typeof(PythonDebugPropertyPage))]
     [ProvideObject(typeof(PublishPropertyPage))]
     [ProvideEditorExtension2(typeof(PythonEditorFactory), PythonConstants.FileExtension, 50, ProjectGuid = VSConstants.CLSID.MiscellaneousFilesProject_string, NameResourceID = 3016, EditorNameResourceId = 3004, DefaultName = "module", TemplateDir = "NewFileItems")]

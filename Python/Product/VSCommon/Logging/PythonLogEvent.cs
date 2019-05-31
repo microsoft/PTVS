@@ -132,5 +132,9 @@ namespace Microsoft.PythonTools.Logging {
         /// Add an environment from the python toolbar
         /// </summary>
         AddEnvFromToolbar,
+        /// <summary>
+        /// Custom publish functionality
+        /// </summary>
+        CustomPublish,
     }
 }

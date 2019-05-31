@@ -696,7 +696,7 @@ namespace Microsoft.PythonTools.Django.Project {
         }
 
         private static Guid[] PropertyPagesToAdd = new[] {
-            GuidList.guidDjangoPropertyPage
+            new Guid(PythonConstants.WebPropertyPageGuid)
         };
 
         private static Guid[] CfgSpecificPropertyPagesToAdd = new Guid[0];

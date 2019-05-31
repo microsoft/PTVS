@@ -19,6 +19,8 @@
     <WebBrowserUrl>http://localhost</WebBrowserUrl>
     <OutputPath>.</OutputPath>
     <SuppressCollectPythonCloudServiceFiles>true</SuppressCollectPythonCloudServiceFiles>
+    <PublishLinuxFxVersion>3.7</PublishLinuxFxVersion>
+    <PublishLinuxAppCommandLine>gunicorn --bind=0.0.0.0 --timeout 600 $safeprojectname$.wsgi</PublishLinuxAppCommandLine>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>

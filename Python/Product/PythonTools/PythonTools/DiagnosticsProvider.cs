@@ -61,9 +61,8 @@ namespace Microsoft.PythonTools {
             PythonWebLauncher.RunWebServerTargetTypeProperty,
             PythonWebLauncher.RunWebServerArgumentsProperty,
             PythonWebLauncher.RunWebServerEnvironmentProperty,
-            PythonWebPropertyPage.StaticUriPatternSetting,
-            PythonWebPropertyPage.StaticUriRewriteSetting,
-            PythonWebPropertyPage.WsgiHandlerSetting
+            PythonAzureWebPropertyPage.PublishLinuxAppCommandLineSetting,
+            PythonAzureWebPropertyPage.PublishLinuxFxVersionSetting
         };
 
         private static readonly Regex InterestingApplicationLogEntries = new Regex(

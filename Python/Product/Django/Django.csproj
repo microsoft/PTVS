@@ -149,16 +149,9 @@
     <Compile Include="Debugger\DjangoLauncherProvider.cs" />
     <Compile Include="DialogWindowVersioningWorkaround.cs" />
     <Compile Include="Project\DjangoProjectConfig.cs" />
-    <Compile Include="Project\DjangoPropertyPage.cs" />
     <Compile Include="Project\IDjangoProject.cs" />
     <Compile Include="Project\ProjectSmuggler.cs" />
     <Compile Include="ProvideLanguageTemplatesAttribute.cs" />
-    <Compile Include="Project\DjangoPropertyPageControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="Project\DjangoPropertyPageControl.Designer.cs">
-      <DependentUpon>DjangoPropertyPageControl.cs</DependentUpon>
-    </Compile>
     <Compile Include="Extensions.cs" />
     <Compile Include="Guids.cs" />
     <Compile Include="Project\DjangoProjectFactory.cs" />
@@ -188,9 +181,6 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Project\DjangoPropertyPageControl.resx">
-      <DependentUpon>DjangoPropertyPageControl.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="Resources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>

@@ -433,8 +433,8 @@ See the Python Environments window for details.</value>
   <data name="ImportWizardFlaskProjectCustomization" xml:space="preserve">
     <value>Flask Web Project</value>
   </data>
-  <data name="PythonWebPropertyPageTitle" xml:space="preserve">
-    <value>Web</value>
+  <data name="PythonAzureWebPropertyPageTitle" xml:space="preserve">
+    <value>Azure Web</value>
   </data>
   <data name="StaticPatternHelp" xml:space="preserve">
     <value>A regex pattern to identify static URIs, for example: '^static/.*'
@@ -696,13 +696,6 @@ See PublishPropertyControl_LocationLabel for examples.</comment>
   </data>
   <data name="BuiltinClassificationType" xml:space="preserve">
     <value>Python Builtins</value>
-  </data>
-  <data name="StaticPatternError" xml:space="preserve">
-    <value>The specified pattern is an invalid regular expression.</value>
-  </data>
-  <data name="StaticRewriteHelp" xml:space="preserve">
-    <value>A rewrite pattern to apply to URIs matching the static URI pattern, for example 'static_files/{R:1}' for a pattern '^static/(.*)'
-By default, URIs matching the pattern are mapped directly to a file system path.</value>
   </data>
   <data name="UpgradedBottleImports" xml:space="preserve">
     <value>This Bottle project has been upgraded and will no longer work with PTVS 2.1 Beta.</value>

@@ -5127,6 +5127,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Azure Web.
+        /// </summary>
+        public static string PythonAzureWebPropertyPageTitle {
+            get {
+                return ResourceManager.GetString("PythonAzureWebPropertyPageTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Debug.
         /// </summary>
         public static string PythonDebugPropertyPageLabel {
@@ -5384,15 +5393,6 @@ namespace Microsoft.PythonTools {
         public static string PythonWebLauncherName {
             get {
                 return ResourceManager.GetString("PythonWebLauncherName", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Web.
-        /// </summary>
-        public static string PythonWebPropertyPageTitle {
-            get {
-                return ResourceManager.GetString("PythonWebPropertyPageTitle", resourceCulture);
             }
         }
         
@@ -6849,31 +6849,12 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The specified pattern is an invalid regular expression..
-        /// </summary>
-        public static string StaticPatternError {
-            get {
-                return ResourceManager.GetString("StaticPatternError", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to A regex pattern to identify static URIs, for example: &apos;^static/.*&apos;
         ///The web.config file will be configured to resolve URIs matching this pattern to a file system path rather than your application..
         /// </summary>
         public static string StaticPatternHelp {
             get {
                 return ResourceManager.GetString("StaticPatternHelp", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to A rewrite pattern to apply to URIs matching the static URI pattern, for example &apos;static_files/{R:1}&apos; for a pattern &apos;^static/(.*)&apos;
-        ///By default, URIs matching the pattern are mapped directly to a file system path..
-        /// </summary>
-        public static string StaticRewriteHelp {
-            get {
-                return ResourceManager.GetString("StaticRewriteHelp", resourceCulture);
             }
         }
         

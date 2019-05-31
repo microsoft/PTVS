@@ -24,15 +24,14 @@ namespace Microsoft.PythonTools.Project.Web {
     [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable",
         Justification = "object is owned by VS")]
     [Guid(PythonConstants.WebPropertyPageGuid)]
-    class PythonWebPropertyPage : CommonPropertyPage {
-        private readonly PythonWebPropertyPageControl _control;
+    class PythonAzureWebPropertyPage : CommonPropertyPage {
+        private readonly PythonAzureWebPropertyPageControl _control;
 
-        public const string StaticUriPatternSetting = "StaticUriPattern";
-        public const string StaticUriRewriteSetting = "StaticUriRewrite";
-        public const string WsgiHandlerSetting = "PythonWsgiHandler";
+        public const string PublishLinuxFxVersionSetting = "PublishLinuxFxVersion";
+        public const string PublishLinuxAppCommandLineSetting = "PublishLinuxAppCommandLine";
 
-        public PythonWebPropertyPage() {
-            _control = new PythonWebPropertyPageControl(this);
+        public PythonAzureWebPropertyPage() {
+            _control = new PythonAzureWebPropertyPageControl(this);
         }
 
         public override Control Control {
@@ -40,18 +39,16 @@ namespace Microsoft.PythonTools.Project.Web {
         }
 
         public override void Apply() {
-            SetProjectProperty(StaticUriPatternSetting, _control.StaticUriPattern);
-            SetProjectProperty(StaticUriRewriteSetting, _control.StaticUriRewrite);
-            SetProjectProperty(WsgiHandlerSetting, _control.WsgiHandler);
+            SetProjectProperty(PublishLinuxFxVersionSetting, _control.FrameworkVersion);
+            SetProjectProperty(PublishLinuxAppCommandLineSetting, _control.StartupCommand);
             IsDirty = false;
         }
 
         public override void LoadSettings() {
             Loading = true;
             try {
-                _control.StaticUriPattern = GetProjectProperty(StaticUriPatternSetting);
-                _control.StaticUriRewrite = GetProjectProperty(StaticUriRewriteSetting);
-                _control.WsgiHandler = GetProjectProperty(WsgiHandlerSetting);
+                _control.FrameworkVersion = GetProjectProperty(PublishLinuxFxVersionSetting);
+                _control.StartupCommand = GetProjectProperty(PublishLinuxAppCommandLineSetting);
                 IsDirty = false;
             } finally {
                 Loading = false;
@@ -59,7 +56,7 @@ namespace Microsoft.PythonTools.Project.Web {
         }
 
         public override string Name {
-            get { return Strings.PythonWebPropertyPageTitle; }
+            get { return Strings.PythonAzureWebPropertyPageTitle; }
         }
     }
 }
