@@ -30,9 +30,9 @@ using Microsoft.Win32;
 using TestUtilities;
 using TestUtilities.Python;
 
-namespace FastCgiTest {
+namespace FastCgiTests {
     [TestClass]
-    public class FastCgiTests {
+    public class FastCgiTests2x {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
@@ -124,7 +124,6 @@ namespace FastCgiTest {
                 }
             }
         }
-
 
         [TestMethod, Priority(0)]
         [TestCategory("10s")]
@@ -293,6 +292,7 @@ namespace FastCgiTest {
         }
 
         private static WebSite ConfigureIISForDjango(string appCmd, string python, string djangoSettings) {
+            // TODO If a python interpreter does not have Django installed, check another interpreter
             EnsureDjango(python);
 
             var site = CreateSite();
@@ -354,7 +354,7 @@ namespace FastCgiTest {
 
         public virtual PythonVersion PythonVersion {
             get {
-                return PythonPaths.Python27 ?? PythonPaths.Python27_x64;
+                return PythonPaths.Python27_x64 ?? PythonPaths.Python27;
             }
         }
 
@@ -1225,7 +1225,7 @@ namespace FastCgiTest {
 
         private static string WFastCgiPath {
             get {
-                var wfastcgiPath = Path.Combine(Path.GetDirectoryName(typeof(FastCgiTests).Assembly.Location), "wfastcgi.py");
+                var wfastcgiPath = Path.Combine(Path.GetDirectoryName(typeof(FastCgiTests2x).Assembly.Location), "wfastcgi.py");
                 if (File.Exists(wfastcgiPath)) {
                     return wfastcgiPath;
                 }
