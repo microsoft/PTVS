@@ -220,6 +220,7 @@ namespace PythonToolsUITests {
             app.WaitForOutputWindowText("Build", "1 failed");
         }
 
+        /*
         //[TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void WebProjectBuildWarnings(PythonVisualStudioApp app) {
@@ -296,7 +297,7 @@ namespace PythonToolsUITests {
                     }
                 }
             }
-        }
+        }*/
 
         //[TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]

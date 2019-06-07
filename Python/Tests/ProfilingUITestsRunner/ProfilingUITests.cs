@@ -230,12 +230,6 @@ namespace ProfilingUITestsRunner {
 
         [TestMethod, Priority(0)]
         [TestCategory("Installed")]
-        public void BuiltinsProfilePython26() {
-            _vs.RunTest(nameof(PUIT.BuiltinsProfilePython26));
-        }
-
-        [TestMethod, Priority(0)]
-        [TestCategory("Installed")]
         public void BuiltinsProfilePython27() {
             _vs.RunTest(nameof(PUIT.BuiltinsProfilePython27));
         }
@@ -244,48 +238,6 @@ namespace ProfilingUITestsRunner {
         [TestCategory("Installed")]
         public void BuiltinsProfilePython27x64() {
             _vs.RunTest(nameof(PUIT.BuiltinsProfilePython27x64));
-        }
-
-        [TestMethod, Priority(0)]
-        [TestCategory("Installed")]
-        public void BuiltinsProfilePython31() {
-            _vs.RunTest(nameof(PUIT.BuiltinsProfilePython31));
-        }
-
-        [TestMethod, Priority(0)]
-        [TestCategory("Installed")]
-        public void BuiltinsProfilePython32() {
-            _vs.RunTest(nameof(PUIT.BuiltinsProfilePython32));
-        }
-
-        [TestMethod, Priority(0)]
-        [TestCategory("Installed")]
-        public void BuiltinsProfilePython32x64() {
-            _vs.RunTest(nameof(PUIT.BuiltinsProfilePython32x64));
-        }
-
-        [TestMethod, Priority(0)]
-        [TestCategory("Installed")]
-        public void BuiltinsProfilePython33() {
-            _vs.RunTest(nameof(PUIT.BuiltinsProfilePython33));
-        }
-
-        [TestMethod, Priority(0)]
-        [TestCategory("Installed")]
-        public void BuiltinsProfilePython33x64() {
-            _vs.RunTest(nameof(PUIT.BuiltinsProfilePython33x64));
-        }
-
-        [TestMethod, Priority(0)]
-        [TestCategory("Installed")]
-        public void BuiltinsProfilePython34() {
-            _vs.RunTest(nameof(PUIT.BuiltinsProfilePython34));
-        }
-
-        [TestMethod, Priority(0)]
-        [TestCategory("Installed")]
-        public void BuiltinsProfilePython34x64() {
-            _vs.RunTest(nameof(PUIT.BuiltinsProfilePython34x64));
         }
 
         [TestMethod, Priority(0)]

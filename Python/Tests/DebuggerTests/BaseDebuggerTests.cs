@@ -29,6 +29,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 
 namespace DebuggerTests {
+    [TestClass, Ignore]
     public abstract class BaseDebuggerTests {
         static BaseDebuggerTests() {
             AssertListener.Initialize();
@@ -528,7 +529,7 @@ namespace DebuggerTests {
 
         internal virtual PythonVersion Version {
             get {
-                return PythonPaths.Python26;
+                return PythonPaths.Python27;
             }
         }
 

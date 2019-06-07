@@ -205,7 +205,7 @@ f()",
         }
 
         private static PythonInteractiveEvaluator MakeEvaluator() {
-            var python = PythonPaths.Python27 ?? PythonPaths.Python27_x64 ?? PythonPaths.Python26 ?? PythonPaths.Python26_x64;
+            var python = PythonPaths.Python27_x64 ?? PythonPaths.Python27;
             python.AssertInstalled();
             var provider = new SimpleFactoryProvider(python.InterpreterPath, python.InterpreterPath);
             var eval = new PythonInteractiveEvaluator(PythonToolsTestUtilities.CreateMockServiceProvider()) {

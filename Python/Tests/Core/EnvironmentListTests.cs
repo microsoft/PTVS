@@ -775,22 +775,22 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(0)]
         public void FilterInterpreterPython2() {
             PythonVersion pythonInterpreter =   PythonPaths.Python27_x64 ??
-                                                PythonPaths.Python26_x64 ??
-                                                PythonPaths.Python27 ??
-                                                PythonPaths.Python26;
+                                                PythonPaths.Python27;
 
-            pythonInterpreter.AssertInstalled("Unable to run test because python 2.6 or 2.7 must be installed");
+            pythonInterpreter.AssertInstalled("Unable to run test because python 2.7 must be installed");
             FilterPythonInterpreterEnv(pythonInterpreter);
         }
 
         [TestMethod, Priority(0)]
         public void FilterInterpreterPython3() {
             PythonVersion pythonInterpreter =   PythonPaths.Python37_x64 ??
-                                                PythonPaths.Python36_x64 ??
                                                 PythonPaths.Python37 ??
-                                                PythonPaths.Python36;
+                                                PythonPaths.Python36_x64 ??
+                                                PythonPaths.Python36 ??
+                                                PythonPaths.Python35_x64 ??
+                                                PythonPaths.Python35;
 
-            pythonInterpreter.AssertInstalled("Unable to run test because python 3.6 or 3.7 must be installed");
+            pythonInterpreter.AssertInstalled("Unable to run test because python 3.5, 3.6 or 3.7 must be installed");
             FilterPythonInterpreterEnv(pythonInterpreter);
         }
 
