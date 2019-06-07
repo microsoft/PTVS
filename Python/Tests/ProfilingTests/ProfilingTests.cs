@@ -35,7 +35,7 @@ namespace ProfilingTests {
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
         }
-        
+
         [TestMethod, Priority(0)]
         public async Task ProfileWithEncoding() {
             var proflaun = Path.Combine(
