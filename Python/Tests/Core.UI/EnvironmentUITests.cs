@@ -57,7 +57,7 @@ namespace PythonToolsUITests {
             return app.SelectDefaultInterpreter(
                 PythonPaths.Python37 ?? PythonPaths.Python37_x64 ??
                 PythonPaths.Python36 ?? PythonPaths.Python36_x64 ??
-                PythonPaths.Python35 ?? PythonPaths.Python35_x64 ??
+                PythonPaths.Python35 ?? PythonPaths.Python35_x64
             );
         }
 
