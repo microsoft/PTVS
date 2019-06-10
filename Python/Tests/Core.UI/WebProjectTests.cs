@@ -220,6 +220,7 @@ namespace PythonToolsUITests {
             app.WaitForOutputWindowText("Build", "1 failed");
         }
 
+        // Update the test from version 3.3/3.4 to 3.5-3.7. 
         /*
         //[TestMethod, Priority(0)]
         [HostType("VSTestHost"), TestCategory("Installed")]

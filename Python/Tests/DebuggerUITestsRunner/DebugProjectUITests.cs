@@ -18,7 +18,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestRunnerInterop;
 
 namespace DebuggerUITestsRunner {
-    [TestClass, Ignore]
     public abstract class DebugProjectUITests {
         #region UI test boilerplate
         public VsTestInvoker _vs => new VsTestInvoker(
@@ -255,7 +254,6 @@ namespace DebuggerUITestsRunner {
         protected override string Interpreter => ""; // Use the existing global default
     }
 
-    [TestClass, Ignore]
     public abstract class DebugProjectUITestsExperimental : DebugProjectUITests {
         protected override bool UseVsCodeDebugger => true;
     }

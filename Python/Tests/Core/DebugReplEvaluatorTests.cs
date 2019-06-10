@@ -32,7 +32,6 @@ using TestUtilities.Mocks;
 using TestUtilities.Python;
 
 namespace PythonToolsTests {
-    [TestClass]
     public abstract class DebugReplEvaluatorTests {
         private PythonDebugReplEvaluator _evaluator;
         private MockReplWindow _window;

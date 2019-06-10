@@ -29,7 +29,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 
 namespace DebuggerTests {
-    [TestClass, Ignore]
     public abstract class BaseDebuggerTests {
         static BaseDebuggerTests() {
             AssertListener.Initialize();

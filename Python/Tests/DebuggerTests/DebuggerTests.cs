@@ -31,7 +31,6 @@ using Microsoft.VisualStudioTools;
 using TestUtilities;
 
 namespace DebuggerTests {
-    [TestClass, Ignore]
     public abstract class DebuggerTests : BaseDebuggerTests {
         [TestInitialize]
         public void CheckVersion() {
