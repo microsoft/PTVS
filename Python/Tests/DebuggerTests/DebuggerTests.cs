@@ -1239,7 +1239,7 @@ namespace DebuggerTests {
             }.RunAsync();
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         public async Task TestBreakpointHitOtherThreadStackTrace() {
             // http://pytools.codeplex.com/workitem/483
 
@@ -1907,7 +1907,7 @@ namespace DebuggerTests {
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         public async Task TestExceptionHandlers() {
             var debugger = new PythonDebugger();
 

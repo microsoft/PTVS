@@ -52,12 +52,12 @@ namespace DjangoTests {
             Assert.AreEqual(value, values.Single().GetConstantValueAsString());
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         public void TestRender() {
             TestSingleRenderVariable("test_render.html");
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         public void TestRenderToResponse() {
             TestSingleRenderVariable("test_render_to_response.html");
         }
@@ -122,7 +122,7 @@ namespace DjangoTests {
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         public void TestListView() {
             var proj = AnalyzerTest(TestData.GetPath("TestData\\DjangoAnalysisTestApp"), out _);
             var templates = TestData.GetPath("TestData\\DjangoAnalysisTestApp\\myapp\\templates\\myapp\\");
@@ -132,7 +132,7 @@ namespace DjangoTests {
             AssertUtil.ContainsExactly(detailsVars.Keys, "latest_poll_list");
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         public void TestDetailsView() {
             var proj = AnalyzerTest(TestData.GetPath("TestData\\DjangoAnalysisTestApp"), out _);
             var templates = TestData.GetPath("TestData\\DjangoAnalysisTestApp\\myapp\\templates\\myapp\\");

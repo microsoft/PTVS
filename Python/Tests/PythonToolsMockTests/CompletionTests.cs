@@ -264,7 +264,7 @@ print
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         public void ExceptionCompletions() {
             using (var vs = new MockVs()) {
                 foreach (var ver in new[] { PythonLanguageVersion.V36, PythonLanguageVersion.V27 }) {
@@ -444,7 +444,7 @@ f(1, 2, 3, 4,")) {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         public void ImportCompletions() {
             using (var view = new PythonEditor()) {
                 view.Text = "import  ";
@@ -547,7 +547,7 @@ f(1, 2, 3, 4,")) {
         }
 
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         public void FromOSPathImportCompletions2x() {
             using (var vs = new MockVs()) {
                 var factory = vs.Invoke(() => vs.GetPyService().InterpreterRegistryService.Interpreters.LastOrDefault(p => p.Configuration.Version.Major == 2));
@@ -555,7 +555,7 @@ f(1, 2, 3, 4,")) {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         public void FromOSPathImportCompletions3x() {
             using (var vs = new MockVs()) {
                 var factory = vs.Invoke(() => vs.GetPyService().InterpreterRegistryService.Interpreters.LastOrDefault(p => p.Configuration.Version.Major == 3));
@@ -641,7 +641,7 @@ sys.
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         public void GotoDefinition() {
             using (var vs = new MockVs()) {
                 string code = @"
@@ -809,7 +809,7 @@ class Baz(Fob, Oar):
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         public void BuiltinOverrideCompletions() {
             AssertOverrideInsertionContains(PythonLanguageVersion.V27, "str", "capitalize", "capitalize(self):\r\n        return super(Fob, self).capitalize()");
             AssertOverrideInsertionContains(PythonLanguageVersion.V33, "str", "capitalize", "capitalize(self):\r\n        return super().capitalize()");
@@ -1030,7 +1030,7 @@ x = m.f(";
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         public void YieldFromExpressionCompletion() {
             const string code = @"
 def f():
@@ -1059,7 +1059,7 @@ def g():
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         public void AwaitExpressionCompletion() {
             const string code = @"
 async def f():

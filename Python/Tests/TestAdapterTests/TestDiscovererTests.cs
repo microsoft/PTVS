@@ -98,7 +98,7 @@ namespace TestAdapterTests {
             return TestAnalyzer.GetTestCasesFromAst(m, null);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         public void DecoratedTests() {
             using (var analyzer = MakeTestAnalyzer()) {
                 var code = @"import unittest
@@ -186,7 +186,7 @@ class MyTest3(TestBase):
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         public void TestCaseRunTests() {
             using (var analyzer = MakeTestAnalyzer()) {
                 var code = @"import unittest
@@ -213,7 +213,7 @@ class TestBase(unittest.TestCase):
         /// <summary>
         /// If we have test* and runTest we shouldn't discover runTest
         /// </summary>
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         public void TestCaseRunTestsWithTest() {
             using (var analyzer = MakeTestAnalyzer()) {
                 var code = @"import unittest

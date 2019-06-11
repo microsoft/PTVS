@@ -156,7 +156,7 @@ NameError: name 'does_not_exist' is not defined
             Assert.AreEqual("1", variables[0].StringRepr);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         public async Task AvailableScopes() {
             await AttachAsync("DebugReplTest1.py", 3);
 
@@ -185,7 +185,7 @@ NameError: name 'does_not_exist' is not defined
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         public virtual async Task ChangeModule() {
             await AttachAsync("DebugReplTest1.py", 3);
 
@@ -215,7 +215,7 @@ NameError: name 'does_not_exist' is not defined
             Assert.AreEqual("'hello'", ExecuteText("a"));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         public virtual async Task ChangeFrame() {
             await AttachAsync("DebugReplTest2.py", 13);
 
@@ -279,7 +279,7 @@ NameError: name 'does_not_exist' is not defined
             Assert.AreEqual("'thread1'", ExecuteText("t1_val"));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         public virtual async Task ChangeProcess() {
             await AttachAsync("DebugReplTest4A.py", 3);
             await AttachAsync("DebugReplTest4B.py", 3);
@@ -319,7 +319,7 @@ NameError: name 'does_not_exist' is not defined
             Assert.AreEqual("Abort is not supported.", _window.Error.TrimEnd());
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         public async Task StepInto() {
             // Make sure that we don't step into the internal repl code
             // http://pytools.codeplex.com/workitem/777

@@ -464,7 +464,7 @@ abc = 200
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         public void InheritedClassField() {
 
             RefactorTest("xyz", "abc",
@@ -1262,7 +1262,7 @@ xyz = 100
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         public void SanityNonLocal() {
             RefactorTest("xyz", "abc", version: new Version(3, 2),
             inputs: new[] {
@@ -2313,7 +2313,7 @@ abc = 200
 
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         public void NestedFunctions() {
             RefactorTest("h", "g",
                 new[] {
