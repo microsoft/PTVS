@@ -724,7 +724,7 @@ def f(x):
             // If we complete processing then we have succeeded
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(TestExtensions.P2_FAILING_UNIT_TEST)]
         [TestCategory("ExpectFail")]
         public void CartesianStarArgs() {
             // TODO: Figure out whether this is useful behaviour
@@ -3196,7 +3196,7 @@ abc()
             );
         }
 
-        [TestMethod, Priority(2), TestCategory("ExpectFail")]
+        [TestMethod, Priority(TestExtensions.P2_FAILING_UNIT_TEST), TestCategory("ExpectFail")]
         public void SuperclassMemberReferencesCrossModule() {
             // https://github.com/Microsoft/PTVS/issues/2271
 

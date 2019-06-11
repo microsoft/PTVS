@@ -206,7 +206,7 @@ l(42)
             }
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(TestExtensions.P2_FAILING_UNIT_TEST)]
         public void TrueFalseNoneCompletions() {
             // http://pytools.codeplex.com/workitem/1905
             foreach (var version in new[] { PythonLanguageVersion.V27, PythonLanguageVersion.V33 }) {
@@ -476,7 +476,7 @@ f(1, 2, 3, 4,")) {
             }
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(TestExtensions.P2_FAILING_UNIT_TEST)]
         public void FromImportCompletions() {
             using (var view = new PythonEditor()) {
                 IEnumerable<string> completions = null;
@@ -660,7 +660,7 @@ C().fff";
             }
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(TestExtensions.P2_FAILING_UNIT_TEST)]
         public void QuickInfo() {
             string code = @"
 x = ""ABCDEFGHIJKLMNOPQRSTUVWYXZ""
@@ -716,7 +716,7 @@ e): <unknown type>");
             }
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(TestExtensions.P2_FAILING_UNIT_TEST)]
         public void NormalOverrideCompletions() {
             using (var view2 = new PythonEditor(version: PythonLanguageVersion.V27))
             using (var view3 = new PythonEditor(version: PythonLanguageVersion.V33)) {
@@ -905,7 +905,7 @@ class B(dict):
             }
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(TestExtensions.P2_FAILING_UNIT_TEST)]
         public void CompletionWithLongDocString() {
             using (var vs = new MockVs()) {
                 var docString = GenerateText(100, 72, "    ").ToArray();

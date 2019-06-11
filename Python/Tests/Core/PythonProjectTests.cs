@@ -181,7 +181,7 @@ namespace PythonToolsTests {
         }
 
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(TestExtensions.P2_FAILING_UNIT_TEST)]
         public async Task AnalyzeBadEgg() {
             var factories = new[] { InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(3, 4)) };
             var services = PythonToolsTestUtilities.CreateMockServiceProvider().GetEditorServices();

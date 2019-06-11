@@ -90,7 +90,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(TestExtensions.P2_FAILING_UNIT_TEST)]
         public async Task DisplayVariables() {
             await AttachAsync("DebugReplTest1.py", 3);
 
@@ -497,13 +497,13 @@ NameError: name 'does_not_exist' is not defined
             }
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(TestExtensions.P2_FAILING_UNIT_TEST)]
         public override async Task ChangeFrame() => await base.ChangeFrame();
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(TestExtensions.P2_FAILING_UNIT_TEST)]
         public override async Task ChangeModule() => await base.ChangeModule();
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(TestExtensions.P2_FAILING_UNIT_TEST)]
         public override async Task ChangeProcess() => await base.ChangeProcess();
     }
 }

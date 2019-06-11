@@ -143,7 +143,7 @@ namespace DebuggerTests {
             }
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(TestExtensions.P2_FAILING_UNIT_TEST)]
         [TestCategory("10s"), TestCategory("60s")]
         public virtual async Task AttachReattach() {
             Process p = Process.Start(Version.InterpreterPath, "-B \"" + TestData.GetPath(@"TestData\DebuggerProject\InfiniteRun.py") + "\"");
@@ -328,7 +328,7 @@ namespace DebuggerTests {
             }
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(TestExtensions.P2_FAILING_UNIT_TEST)]
         [TestCategory("10s")]
         public virtual async Task AttachTimeout() {
             string cast = "(PyCodeObject*)";
@@ -370,7 +370,7 @@ int main(int argc, char* argv[]) {
         /// <summary>
         /// Attempts to attach w/ code only running on new threads which are initialized using PyGILState_Ensure
         /// </summary>
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(TestExtensions.P2_FAILING_UNIT_TEST)]
         [TestCategory("10s")]
         public virtual async Task AttachNewThread_PyGILState_Ensure() {
             var hostCode = @"#include <Python.h>
@@ -493,7 +493,7 @@ void main()
         /// <summary>
         /// Attempts to attach w/ code only running on new threads which are initialized using PyThreadState_New
         /// </summary>
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(TestExtensions.P2_FAILING_UNIT_TEST)]
         [TestCategory("10s")]
         public virtual async Task AttachNewThread_PyThreadState_New() {
             var hostCode = @"#include <Windows.h>
@@ -621,7 +621,7 @@ void main()
             }
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(TestExtensions.P2_FAILING_UNIT_TEST)]
         [TestCategory("10s")]
         public virtual async Task AttachTimeoutThreadsInitialized() {
             string cast = "(PyCodeObject*)";
@@ -1151,7 +1151,7 @@ int main(int argc, char* argv[]) {
         }
 
         // https://github.com/Microsoft/PTVS/issues/2842
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(TestExtensions.P2_FAILING_UNIT_TEST)]
         public virtual async Task AttachPtvsdAndStopDebugging() {
             if (!HasPtvsdCommandLine) {
                 return;

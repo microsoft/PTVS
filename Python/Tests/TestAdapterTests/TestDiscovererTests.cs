@@ -138,7 +138,7 @@ class MyTest(unittest.TestCase):
             }
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(TestExtensions.P2_FAILING_UNIT_TEST)]
         public void TestCaseSubclasses() {
             using (var analyzer = MakeTestAnalyzer()) {
                 var entry1 = AddModule(analyzer, "Pkg.SubPkg", @"import unittest
