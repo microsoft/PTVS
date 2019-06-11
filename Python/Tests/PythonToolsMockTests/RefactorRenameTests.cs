@@ -512,7 +512,7 @@ abc = 200
             );
         }
 
-        [TestMethod, Priority(3)]
+        [TestMethod, Priority(TestExtensions.P3_FAILING_UNIT_TEST)]
         public void RenameGeneratorVariable() {
             // http://pytools.codeplex.com/workitem/454
             RefactorTest("xyz", "abc",

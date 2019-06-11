@@ -98,7 +98,7 @@ namespace PythonToolsTests {
             Assert.AreEqual("'hello'", ExecuteText("a"));
         }
 
-        [TestMethod, Priority(3)]
+        [TestMethod, Priority(TestExtensions.P3_FAILING_UNIT_TEST)]
         public async Task DisplayFunctionLocalsAndGlobals() {
             await AttachAsync("DebugReplTest2.py", 13);
 
@@ -106,7 +106,7 @@ namespace PythonToolsTests {
             Assert.AreEqual("5", ExecuteText("print(global_val)"));
         }
 
-        [TestMethod, Priority(3)]
+        [TestMethod, Priority(TestExtensions.P3_FAILING_UNIT_TEST)]
         public async Task ErrorInInput() {
             await AttachAsync("DebugReplTest2.py", 13);
 
@@ -117,7 +117,7 @@ NameError: name 'does_not_exist' is not defined
 ".Replace("\r\n", "\n"), _window.Error.Replace("\r\n", "\n"));
         }
 
-        [TestMethod, Priority(3)]
+        [TestMethod, Priority(TestExtensions.P3_FAILING_UNIT_TEST)]
         public async Task ChangeVariables() {
             await AttachAsync("DebugReplTest2.py", 13);
 
@@ -125,7 +125,7 @@ NameError: name 'does_not_exist' is not defined
             Assert.AreEqual("1", ExecuteText("print(innermost_val)"));
         }
 
-        [TestMethod, Priority(3)]
+        [TestMethod, Priority(TestExtensions.P3_FAILING_UNIT_TEST)]
         public async Task ChangeVariablesAndRefreshFrames() {
             // This is really a test for PythonProcess' RefreshFramesAsync
             // but it's convenient to have it here, as this is the exact
@@ -249,7 +249,7 @@ NameError: name 'does_not_exist' is not defined
             Assert.AreEqual("1", ExecuteCommand(new DebugReplFrameCommand(), ""));
         }
 
-        [TestMethod, Priority(3)]
+        [TestMethod, Priority(TestExtensions.P3_FAILING_UNIT_TEST)]
         [TestCategory("10s")]
         public async Task ChangeThread() {
             await AttachAsync("DebugReplTest3.py", 39);
@@ -306,7 +306,7 @@ NameError: name 'does_not_exist' is not defined
             Assert.AreEqual("60", ExecuteText("b2"));
         }
 
-        [TestMethod, Priority(3)]
+        [TestMethod, Priority(TestExtensions.P3_FAILING_UNIT_TEST)]
         [TestCategory("10s")]
         public async Task Abort() {
             await AttachAsync("DebugReplTest5.py", 3);

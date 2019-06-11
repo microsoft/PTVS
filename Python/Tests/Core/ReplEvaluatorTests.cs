@@ -59,7 +59,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(3)]
+        [TestMethod, Priority(TestExtensions.P3_FAILING_UNIT_TEST)]
         public void TestAbort() {
             using (var evaluator = MakeEvaluator()) {
                 var window = new MockReplWindow(evaluator);
@@ -107,7 +107,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(3)]
+        [TestMethod, Priority(TestExtensions.P3_FAILING_UNIT_TEST)]
         public async Task TestGetAllMembers() {
             using (var evaluator = MakeEvaluator()) {
                 var window = new MockReplWindow(evaluator);

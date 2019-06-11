@@ -1100,7 +1100,7 @@ int main(int argc, char* argv[]) {
             });
         }
 
-        [TestMethod, Priority(3)]
+        [TestMethod, Priority(TestExtensions.P3_FAILING_UNIT_TEST)]
         public async Task AttachPtvsdCommandLineNoWait() {
             if (!HasPtvsdCommandLine) {
                 return;
