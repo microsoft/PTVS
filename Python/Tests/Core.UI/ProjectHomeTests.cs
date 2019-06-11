@@ -194,12 +194,12 @@ namespace PythonToolsUITests {
             app.OpenSolutionExplorer();
             var window = app.SolutionExplorerTreeView;
 
-            var folder = window.FindItem("Solution 'DragDropRelocatedTest' (1 project)", "DragDropTest", "TestFolder", "SubItem.py");
+            var folder = window.FindItem("Solution 'DragDropRelocatedTest' (1 of 1 project)", "DragDropTest", "TestFolder", "SubItem.py");
             var point = folder.GetClickablePoint();
             Mouse.MoveTo(point);
             Mouse.Down(MouseButton.Left);
 
-            var projectItem = window.FindItem("Solution 'DragDropRelocatedTest' (1 project)", "DragDropTest");
+            var projectItem = window.FindItem("Solution 'DragDropRelocatedTest' (1 of 1 project)", "DragDropTest");
             point = projectItem.GetClickablePoint();
             Mouse.MoveTo(point);
             Mouse.Up(MouseButton.Left);
@@ -207,7 +207,7 @@ namespace PythonToolsUITests {
             using (var dlg = AutomationDialog.WaitForDialog(app)) {
                 dlg.OK();
             }
-            Assert.IsNotNull(window.WaitForItem("Solution 'DragDropRelocatedTest' (1 project)", "DragDropTest", "SubItem.py"));
+            Assert.IsNotNull(window.WaitForItem("Solution 'DragDropRelocatedTest' (1 of 1 project)", "DragDropTest", "SubItem.py"));
 
             app.Dte.Solution.Close(true);
             // Ensure file was moved and the path was updated correctly.
