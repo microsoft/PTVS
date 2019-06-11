@@ -226,15 +226,15 @@ namespace PythonToolsUITests {
             app.OpenSolutionExplorer();
             var window = app.SolutionExplorerTreeView;
 
-            var folder = window.FindItem("Solution 'CutPasteRelocatedTest' (1 project)", "CutPasteTest", "TestFolder", "SubItem.py");
+            var folder = window.FindItem("Solution 'CutPasteRelocatedTest' (1 of 1 project)", "CutPasteTest", "TestFolder", "SubItem.py");
             AutomationWrapper.Select(folder);
             app.ExecuteCommand("Edit.Cut");
 
-            var projectItem = window.FindItem("Solution 'CutPasteRelocatedTest' (1 project)", "CutPasteTest");
+            var projectItem = window.FindItem("Solution 'CutPasteRelocatedTest' (1 of 1 project)", "CutPasteTest");
             AutomationWrapper.Select(projectItem);
             app.ExecuteCommand("Edit.Paste");
 
-            Assert.IsNotNull(window.WaitForItem("Solution 'CutPasteRelocatedTest' (1 project)", "CutPasteTest", "SubItem.py"));
+            Assert.IsNotNull(window.WaitForItem("Solution 'CutPasteRelocatedTest' (1 of 1 project)", "CutPasteTest", "SubItem.py"));
 
             app.Dte.Solution.Close(true);
             // Ensure file was moved and the path was updated correctly.
