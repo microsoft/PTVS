@@ -22,6 +22,10 @@ using System.Threading;
 
 namespace TestRunnerInterop {
     public sealed class VsTestContext : IDisposable {
+        public const int P0_FAILING_UI_TEST = 12;
+        public const int P2_FAILING_UI_TEST = 22;
+        public const int P3_FAILING_UI_TEST = 32;
+
         private readonly string _testDataRoot;
         private VsInstance _vs;
         private string _devenvExe;
