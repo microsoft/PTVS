@@ -39,19 +39,19 @@ namespace PythonToolsUITestsRunner {
         public static void ClassCleanup() => VsTestContext.Instance.Dispose();
         #endregion
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(VsTestContext.P2_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void DocString() {
             _vs.RunTest(nameof(PythonToolsUITests.AddImportTests.DocString));
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(VsTestContext.P2_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void UnicodeDocString() {
             _vs.RunTest(nameof(PythonToolsUITests.AddImportTests.UnicodeDocString));
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(VsTestContext.P2_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void DocStringFuture() {
             _vs.RunTest(nameof(PythonToolsUITests.AddImportTests.DocStringFuture));
@@ -75,7 +75,7 @@ namespace PythonToolsUITestsRunner {
             _vs.RunTest(nameof(PythonToolsUITests.AddImportTests.ImportWithErrors));
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(VsTestContext.P2_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void ImportBuiltinFunction() {
             _vs.RunTest(nameof(PythonToolsUITests.AddImportTests.ImportBuiltinFunction));
@@ -105,7 +105,7 @@ namespace PythonToolsUITestsRunner {
             _vs.RunTest(nameof(PythonToolsUITests.AddImportTests.ImportFunctionFromExistingFromImportParensAsName));
         }
 
-        [TestMethod, Priority(0VsTestContext.P0_FAILING_UI_TEST]
+        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void ImportFunctionFromExistingFromImportParensAsNameTrailingComma() {
             _vs.RunTest(nameof(PythonToolsUITests.AddImportTests.ImportFunctionFromExistingFromImportParensAsNameTrailingComma));
@@ -129,7 +129,7 @@ namespace PythonToolsUITestsRunner {
             _vs.RunTest(nameof(PythonToolsUITests.AddImportTests.ImportSubPackage));
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(VsTestContext.P2_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void Parameters() {
             _vs.RunTest(nameof(PythonToolsUITests.AddImportTests.Parameters));

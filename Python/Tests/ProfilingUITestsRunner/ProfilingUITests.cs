@@ -70,7 +70,7 @@ namespace ProfilingUITestsRunner {
             _vs.RunTest(nameof(PUIT.NewProfilingSessionOpenSolution));
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(VsTestContext.P2_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void LaunchPythonProfilingWizard() {
             _vs.RunTest(nameof(PUIT.LaunchPythonProfilingWizard));
@@ -180,13 +180,13 @@ namespace ProfilingUITestsRunner {
             _vs.RunTest(nameof(PUIT.StopProfiling));
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(VsTestContext.P2_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void MultipleTargets() {
             _vs.RunTest(nameof(PUIT.MultipleTargets));
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(VsTestContext.P2_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void MultipleTargetsWithProjectHome() {
             _vs.RunTest(nameof(PUIT.MultipleTargetsWithProjectHome));

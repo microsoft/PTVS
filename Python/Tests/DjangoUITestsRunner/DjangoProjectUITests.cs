@@ -69,7 +69,7 @@ namespace DjangoUITestsRunner {
             _vs.RunTest(nameof(DjangoUITests.DjangoProjectUITests.DjangoCommandsNonDjangoApp));
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(VsTestContext.P2_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void StartNewApp() {
             _vs.RunTest(nameof(DjangoUITests.DjangoProjectUITests.StartNewApp));

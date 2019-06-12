@@ -132,7 +132,7 @@ namespace DebuggerUITestsRunner {
             _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.MainThread), UseVsCodeDebugger, Interpreter);
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(VsTestContext.P2_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void ExpressionEvaluation() {
             _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.ExpressionEvaluation), UseVsCodeDebugger, Interpreter);

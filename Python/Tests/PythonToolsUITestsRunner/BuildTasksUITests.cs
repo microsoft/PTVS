@@ -41,7 +41,7 @@ namespace PythonToolsUITestsRunner {
 
         #region Python 2.7 tests
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(VsTestContext.P2_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void CustomCommandsAdded_27() {
             _vs.RunTest(nameof(PythonToolsUITests.BuildTasksUITests.CustomCommandsAdded), "2.7");
@@ -71,7 +71,7 @@ namespace PythonToolsUITestsRunner {
             _vs.RunTest(nameof(PythonToolsUITests.BuildTasksUITests.CustomCommandsRunProcessInRepl), "2.7");
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(VsTestContext.P2_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void CustomCommandsRunProcessInOutput_27() {
             _vs.RunTest(nameof(PythonToolsUITests.BuildTasksUITests.CustomCommandsRunProcessInOutput), "2.7");
@@ -89,13 +89,13 @@ namespace PythonToolsUITestsRunner {
             _vs.RunTest(nameof(PythonToolsUITests.BuildTasksUITests.CustomCommandsErrorList), "2.7");
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(VsTestContext.P2_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void CustomCommandsRequiredPackages_27() {
             _vs.RunTest(nameof(PythonToolsUITests.BuildTasksUITests.CustomCommandsRequiredPackages), "2.7");
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(VsTestContext.P2_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void CustomCommandsSearchPath_27() {
             _vs.RunTest(nameof(PythonToolsUITests.BuildTasksUITests.CustomCommandsSearchPath), "2.7");
@@ -105,7 +105,7 @@ namespace PythonToolsUITestsRunner {
 
         #region Python 3.5 tests
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(VsTestContext.P2_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void CustomCommandsAdded_35() {
             _vs.RunTest(nameof(PythonToolsUITests.BuildTasksUITests.CustomCommandsAdded), "3.5");
@@ -135,7 +135,7 @@ namespace PythonToolsUITestsRunner {
             _vs.RunTest(nameof(PythonToolsUITests.BuildTasksUITests.CustomCommandsRunProcessInRepl), "3.5");
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(VsTestContext.P2_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void CustomCommandsRunProcessInOutput_35() {
             _vs.RunTest(nameof(PythonToolsUITests.BuildTasksUITests.CustomCommandsRunProcessInOutput), "3.5");
@@ -153,13 +153,13 @@ namespace PythonToolsUITestsRunner {
             _vs.RunTest(nameof(PythonToolsUITests.BuildTasksUITests.CustomCommandsErrorList), "3.5");
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(VsTestContext.P2_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void CustomCommandsRequiredPackages_35() {
             _vs.RunTest(nameof(PythonToolsUITests.BuildTasksUITests.CustomCommandsRequiredPackages), "3.5");
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(VsTestContext.P2_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void CustomCommandsSearchPath_35() {
             _vs.RunTest(nameof(PythonToolsUITests.BuildTasksUITests.CustomCommandsSearchPath), "3.5");
