@@ -57,7 +57,7 @@ namespace PythonToolsUITestsRunner {
             _vs.RunTest(nameof(PythonToolsUITests.EditorTests.OutliningTest));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void OutlineNestedFuncDef() {
             _vs.RunTest(nameof(PythonToolsUITests.EditorTests.OutlineNestedFuncDef));
@@ -120,7 +120,7 @@ namespace PythonToolsUITestsRunner {
             _vs.RunTest(nameof(PythonToolsUITests.EditorTests.AutoIndentExisting));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void TypingTest() {
             _vs.RunTest(nameof(PythonToolsUITests.EditorTests.TypingTest));
@@ -156,7 +156,7 @@ namespace PythonToolsUITestsRunner {
             _vs.RunTest(nameof(PythonToolsUITests.EditorTests.IndentationInconsistencyIgnore));
         }
 
-        [TestMethod, Priority(0), TestCategory("Squiggle")]
+        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST), TestCategory("Squiggle")]
         [TestCategory("Installed")]
         public void ImportPresent() {
             _vs.RunTest(nameof(PythonToolsUITests.EditorTests.ImportPresent));

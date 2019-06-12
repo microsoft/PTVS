@@ -47,7 +47,7 @@ namespace PythonToolsUITestsRunner {
             _vs.RunTest(nameof(PythonToolsUITests.BuildTasksUITests.CustomCommandsAdded), "2.7");
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void CustomCommandsWithResourceLabel_27() {
             _vs.RunTest(nameof(PythonToolsUITests.BuildTasksUITests.CustomCommandsWithResourceLabel), "2.7");
@@ -59,7 +59,7 @@ namespace PythonToolsUITestsRunner {
             _vs.RunTest(nameof(PythonToolsUITests.BuildTasksUITests.CustomCommandsReplWithResourceLabel), "2.7");
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void CustomCommandsRunInRepl_27() {
             _vs.RunTest(nameof(PythonToolsUITests.BuildTasksUITests.CustomCommandsRunInRepl), "2.7");
@@ -83,7 +83,7 @@ namespace PythonToolsUITestsRunner {
             _vs.RunTest(nameof(PythonToolsUITests.BuildTasksUITests.CustomCommandsRunProcessInConsole), "2.7");
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void CustomCommandsErrorList_27() {
             _vs.RunTest(nameof(PythonToolsUITests.BuildTasksUITests.CustomCommandsErrorList), "2.7");
@@ -111,19 +111,19 @@ namespace PythonToolsUITestsRunner {
             _vs.RunTest(nameof(PythonToolsUITests.BuildTasksUITests.CustomCommandsAdded), "3.5");
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void CustomCommandsWithResourceLabel_35() {
             _vs.RunTest(nameof(PythonToolsUITests.BuildTasksUITests.CustomCommandsWithResourceLabel), "3.5");
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void CustomCommandsReplWithResourceLabel_35() {
             _vs.RunTest(nameof(PythonToolsUITests.BuildTasksUITests.CustomCommandsReplWithResourceLabel), "3.5");
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void CustomCommandsRunInRepl_35() {
             _vs.RunTest(nameof(PythonToolsUITests.BuildTasksUITests.CustomCommandsRunInRepl), "3.5");

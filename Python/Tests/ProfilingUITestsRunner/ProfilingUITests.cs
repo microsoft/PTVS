@@ -40,13 +40,13 @@ namespace ProfilingUITestsRunner {
         public static void ClassCleanup() => VsTestContext.Instance.Dispose();
         #endregion
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void DefaultInterpreterSelected() {
             _vs.RunTest(nameof(PUIT.DefaultInterpreterSelected));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void StartupProjectSelected() {
             _vs.RunTest(nameof(PUIT.StartupProjectSelected));
@@ -58,13 +58,13 @@ namespace ProfilingUITestsRunner {
             _vs.RunTest(nameof(PUIT.NewProfilingSession));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void DeleteMultipleSessions() {
             _vs.RunTest(nameof(PUIT.DeleteMultipleSessions));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void NewProfilingSessionOpenSolution() {
             _vs.RunTest(nameof(PUIT.NewProfilingSessionOpenSolution));
@@ -124,13 +124,13 @@ namespace ProfilingUITestsRunner {
             _vs.RunTest(nameof(PUIT.SaveDirtySession));
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void DeleteReport() {
             _vs.RunTest(nameof(PUIT.DeleteReport));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void CompareReports() {
             _vs.RunTest(nameof(PUIT.CompareReports));
@@ -162,19 +162,19 @@ namespace ProfilingUITestsRunner {
             _vs.RunTest(nameof(PUIT.TargetPropertiesForProject));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void TargetPropertiesForInterpreter() {
             _vs.RunTest(nameof(PUIT.TargetPropertiesForInterpreter));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void TargetPropertiesForExecutable() {
             _vs.RunTest(nameof(PUIT.TargetPropertiesForExecutable));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void StopProfiling() {
             _vs.RunTest(nameof(PUIT.StopProfiling));
@@ -198,67 +198,67 @@ namespace ProfilingUITestsRunner {
             _vs.RunTest(nameof(PUIT.MultipleReports));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void LaunchExecutable() {
             _vs.RunTest(nameof(PUIT.LaunchExecutable));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void ClassProfile() {
             _vs.RunTest(nameof(PUIT.ClassProfile));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void OldClassProfile() {
             _vs.RunTest(nameof(PUIT.OldClassProfile));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void DerivedProfile() {
             _vs.RunTest(nameof(PUIT.DerivedProfile));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void Pystone() {
             _vs.RunTest(nameof(PUIT.Pystone));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void BuiltinsProfilePython27() {
             _vs.RunTest(nameof(PUIT.BuiltinsProfilePython27));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void BuiltinsProfilePython27x64() {
             _vs.RunTest(nameof(PUIT.BuiltinsProfilePython27x64));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void BuiltinsProfilePython35() {
             _vs.RunTest(nameof(PUIT.BuiltinsProfilePython35));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void BuiltinsProfilePython35x64() {
             _vs.RunTest(nameof(PUIT.BuiltinsProfilePython35x64));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void BuiltinsProfilePython36() {
             _vs.RunTest(nameof(PUIT.BuiltinsProfilePython36));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void BuiltinsProfilePython36x64() {
             _vs.RunTest(nameof(PUIT.BuiltinsProfilePython36x64));
@@ -276,7 +276,7 @@ namespace ProfilingUITestsRunner {
             _vs.RunTest(nameof(PUIT.BuiltinsProfilePython37x64));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void LaunchExecutableUsingInterpreterGuid() {
             _vs.RunTest(nameof(PUIT.LaunchExecutableUsingInterpreterGuid));

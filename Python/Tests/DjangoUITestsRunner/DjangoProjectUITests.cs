@@ -57,7 +57,7 @@ namespace DjangoUITestsRunner {
             _vs.RunTest(nameof(DjangoUITests.DjangoProjectUITests.DjangoCollectStaticFilesCommand));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void DjangoShellCommand() {
             _vs.RunTest(nameof(DjangoUITests.DjangoProjectUITests.DjangoShellCommand));
@@ -88,7 +88,7 @@ namespace DjangoUITestsRunner {
         }
 
         [Ignore] // https://devdiv.visualstudio.com/DevDiv/_workitems?id=433488
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void DebugProjectProperties() {
             _vs.RunTest(nameof(DjangoUITests.DjangoProjectUITests.DebugProjectProperties));
