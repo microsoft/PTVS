@@ -40,12 +40,13 @@ namespace Microsoft.PythonTools.TestAdapter {
         private bool _firstLoad, _isDisposed;
         private SolutionEventsListener _solutionListener;
         private TestFilesUpdateWatcher _testFilesUpdateWatcher;
+        private TestFileAddRemoveListener _testFilesAddRemoveListener;
 
         [ImportingConstructor]
         private TestContainerDiscoverer([Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider, [Import(typeof(IOperationState))]IOperationState operationState) {
             _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-
             _projectInfo = new Dictionary<string, ProjectInfo>();
+            _firstLoad = true;
 
             _solutionListener = new SolutionEventsListener(serviceProvider);
             _solutionListener.ProjectLoaded += OnProjectLoaded;
@@ -54,7 +55,10 @@ namespace Microsoft.PythonTools.TestAdapter {
          
             _testFilesUpdateWatcher = new TestFilesUpdateWatcher();
             _testFilesUpdateWatcher.FileChangedEvent += OnProjectItemChanged;
-            _firstLoad = true;
+
+            _testFilesAddRemoveListener = new TestFileAddRemoveListener(serviceProvider, new Guid());
+            _testFilesAddRemoveListener.TestFileChanged += OnProjectItemChanged;
+            _testFilesAddRemoveListener.StartListeningForTestFileChanges();
         }
 
         void IDisposable.Dispose() {
@@ -72,6 +76,12 @@ namespace Microsoft.PythonTools.TestAdapter {
                     _testFilesUpdateWatcher.FileChangedEvent -= OnProjectItemChanged;
                     _testFilesUpdateWatcher.Dispose();
                     _testFilesUpdateWatcher = null;
+                }
+
+                if (_testFilesAddRemoveListener != null) {
+                    _testFilesAddRemoveListener.TestFileChanged -= OnProjectItemChanged;
+                    _testFilesAddRemoveListener.Dispose();
+                    _testFilesAddRemoveListener = null;
                 }
             }
         }
@@ -185,14 +195,14 @@ namespace Microsoft.PythonTools.TestAdapter {
             if(String.IsNullOrEmpty(e.File)) {
                 return;
             }
-            // Get current solution
-            //var solution = (IVsSolution)_serviceProvider.GetService(typeof(SVsSolution));
-            //foreach (var project in VsProjectExtensions.EnumerateLoadedProjects(solution)) {
-            //    if( project.IsDocumentInProject(e.File, out int found, ))
-            //}
+  
+            IVsProject vsProject = e.Project;
+            if(vsProject == null) {
+                var rdt = (IVsRunningDocumentTable)_serviceProvider.GetService(typeof(SVsRunningDocumentTable));
+                vsProject = VsProjectExtensions.PathToProject(e.File, rdt);
+            }
 
-            var rdt = (IVsRunningDocumentTable)_serviceProvider.GetService(typeof(SVsRunningDocumentTable));
-            var pyProj = PythonProject.FromObject(VsProjectExtensions.PathToProject(e.File, rdt));
+            var pyProj = PythonProject.FromObject(vsProject);
             if (pyProj != null &&
                 _projectInfo.TryGetValue(pyProj.ProjectHome, out ProjectInfo projectInfo)) {
 
