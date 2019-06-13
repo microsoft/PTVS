@@ -147,7 +147,8 @@ namespace Microsoft.PythonTools.TestAdapter {
 
         private async Task OnProjectLoadedAsync(IVsProject project) {
             var pyProj = PythonProject.FromObject(project);
-            if (pyProj != null) {
+            if (pyProj != null 
+                && pyProj.GetProperty(PythonConstants.PyTestEnabledSetting).IsTrue()) {
 
                 var sources = project.GetProjectItems();
                 var projInfo = new ProjectInfo(this, pyProj);

@@ -88,6 +88,7 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
                     switch (navNode.Name) {
                         case "skipped":
                             result.Outcome = TestOutcome.Skipped;
+                            result.Messages.Add(new TestResultMessage(TestResultMessage.StandardErrorCategory, $"{navNode.GetAttribute("message", "")}\n{navNode.Value}\n"));
                             break;
                         case "failure":
                             result.Outcome = TestOutcome.Failed;
