@@ -121,6 +121,11 @@ namespace Microsoft.PythonTools {
         public const string StartupFileSetting = "StartupFile";
         public const string IsWindowsApplicationSetting = "IsWindowsApplication";
         public const string EnvironmentSetting = "Environment";
+        public const string PyTestEnabledSetting = "PyTestEnabled";
+        public const string PyTestPathSetting = "PyTestPath";
+        public const string PyTestArgsSetting = "PyTestArgs";
+
+
 
         /// <summary>
         /// Specifies port to which to open web browser on launch.

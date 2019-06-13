@@ -35,6 +35,11 @@ namespace Microsoft.PythonTools.TestAdapter.Model {
             return _pythonProject.GetLaunchConfigurationOrThrow();
         }
 
+        public string GetProperty(string name) {
+            return _pythonProject.GetProperty(name);
+        }
+
+
         public void AddTestContainer(string path) {
             if (!TryGetContainer(path, out TestContainer existing)) {
                 

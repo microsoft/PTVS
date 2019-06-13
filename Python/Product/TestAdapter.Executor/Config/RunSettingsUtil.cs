@@ -19,7 +19,10 @@ namespace Microsoft.PythonTools.TestAdapter.Config {
                     project.GetAttribute("workingDir", ""),
                     project.GetAttribute("interpreter", ""),
                     project.GetAttribute("pathEnv", ""),
-                    project.GetAttribute("nativeDebugging", "").IsTrue()
+                    project.GetAttribute("nativeDebugging", "").IsTrue(),
+                    project.GetAttribute("pytestPath", ""),
+                    project.GetAttribute("pytestArgs", ""),
+                    project.GetAttribute("pytestEnabled", "").IsTrue()
                 );
 
                 foreach (XPathNavigator environment in project.Select("Environment/Variable")) {
@@ -28,6 +31,11 @@ namespace Microsoft.PythonTools.TestAdapter.Config {
 
                 string djangoSettings = project.GetAttribute("djangoSettingsModule", "");
                 if (!String.IsNullOrWhiteSpace(djangoSettings)) {
+                    projSettings.Environment["DJANGO_SETTINGS_MODULE"] = djangoSettings;
+                }
+
+                string pytestEnabled = project.GetAttribute("pytestEnabled", "");
+                if (!String.IsNullOrWhiteSpace(pytestEnabled)) {
                     projSettings.Environment["DJANGO_SETTINGS_MODULE"] = djangoSettings;
                 }
 
@@ -39,45 +47,6 @@ namespace Microsoft.PythonTools.TestAdapter.Config {
                     string testFile = test.GetAttribute("file", "");
                     res[testFile] = projSettings;
                 }
-            }
-            return res;
-        }
-
-
-        public static Dictionary<string, PythonProjectSettings> GetProjectSettings(IRunSettings settings) {
-            var doc = Read(settings.SettingsXml);
-            XPathNodeIterator nodes = doc.CreateNavigator().Select("/RunSettings/Python/TestCases/Project");
-            Dictionary<string, PythonProjectSettings> res = new Dictionary<string, PythonProjectSettings>();
-
-            foreach (XPathNavigator project in nodes) {
-                PythonProjectSettings projSettings = new PythonProjectSettings(
-                    project.GetAttribute("home", ""),
-                    project.GetAttribute("workingDir", ""),
-                    project.GetAttribute("interpreter", ""),
-                    project.GetAttribute("pathEnv", ""),
-                    project.GetAttribute("nativeDebugging", "").IsTrue()
-                );
-
-                foreach (XPathNavigator environment in project.Select("Environment/Variable")) {
-                    projSettings.Environment[environment.GetAttribute("name", "")] = environment.GetAttribute("value", "");
-                }
-
-                string djangoSettings = project.GetAttribute("djangoSettingsModule", "");
-                if (!String.IsNullOrWhiteSpace(djangoSettings)) {
-                    projSettings.Environment["DJANGO_SETTINGS_MODULE"] = djangoSettings;
-                }
-
-                foreach (XPathNavigator searchPath in project.Select("SearchPaths/Search")) {
-                    projSettings.SearchPath.Add(searchPath.GetAttribute("value", ""));
-                }
-
-
-                foreach (XPathNavigator test in project.Select("Test")) {
-                    string testFile = test.GetAttribute("file", "");
-                    projSettings.Sources.Add(testFile);
-                }
-
-                res[projSettings.ProjectHome] = projSettings;
             }
             return res;
         }

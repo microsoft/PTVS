@@ -89,9 +89,13 @@ namespace Microsoft.PythonTools.TestAdapter {
             var tests = new List<TestCase>();
 
             foreach (var testGroup in sources.GroupBy(x => sourceToProjSettings[x])) {
+                PythonProjectSettings settings = testGroup.Key;
+                if(!settings.PytestEnabled) {
+                    continue;
+                }
 
                 var discovery = new DiscoveryService();
-                var results = discovery.RunDiscovery(testGroup.Key, testGroup);
+                var results = discovery.RunDiscovery(settings, testGroup);
 
                 if (results.Count == 0) {
                     return;
@@ -155,9 +159,13 @@ namespace Microsoft.PythonTools.TestAdapter {
         }
 
         private void RunTestGroup(IGrouping<PythonProjectSettings, TestCase> testGroup, IFrameworkHandle frameworkHandle) {
+            PythonProjectSettings settings = testGroup.Key;
+            if (!settings.PytestEnabled) {
+                return;
+            }
 
             var executor = new ExecutorService();
-            var resultsXML = executor.Run(testGroup.Key, testGroup);
+            var resultsXML = executor.Run(settings, testGroup);
 
             var testResults = TestResultParser.Parse(resultsXML, testGroup);
 

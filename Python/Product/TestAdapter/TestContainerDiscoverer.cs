@@ -127,10 +127,10 @@ namespace Microsoft.PythonTools.TestAdapter {
             return null;
         }
 
-        public LaunchConfiguration GetLaunchConfigurationOrThrow(string projectHome) {
+        public ProjectInfo GetProjectInfo(string projectHome) {
             ProjectInfo projectInfo;
             if (_projectInfo.TryGetValue(projectHome, out projectInfo)) {
-                return projectInfo.GetLaunchConfigurationOrThrow();
+                return projectInfo;
             }
             return null;
         }

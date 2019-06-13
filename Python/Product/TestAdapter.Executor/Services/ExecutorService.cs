@@ -16,8 +16,11 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
             var arguments = new List<string>();
             arguments.Add(TestLauncherPath);
             arguments.Add(projSettings.WorkingDirectory);
-            arguments.Add("pytest");
+            arguments.Add(projSettings.PytestPath);
             arguments.Add(String.Format("--junitxml={0}", outputfile));
+
+            if (!String.IsNullOrEmpty(projSettings.PytestArgs))
+                arguments.Add(projSettings.PytestArgs);
 
             foreach (var test in tests) {
                 var pytestId = test.GetPropertyValue<string>(Pytest.Constants.PytestIdProperty, default(string));

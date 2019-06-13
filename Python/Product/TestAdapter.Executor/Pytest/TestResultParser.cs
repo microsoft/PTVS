@@ -91,17 +91,17 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
                             break;
                         case "failure":
                             result.Outcome = TestOutcome.Failed;
-                            result.Messages.Add(new TestResultMessage(TestResultMessage.StandardErrorCategory, $"{navNode.GetAttribute("message", "")}\n{navNode.Value}"));
+                            result.Messages.Add(new TestResultMessage(TestResultMessage.StandardErrorCategory, $"{navNode.GetAttribute("message", "")}\n{navNode.Value}\n"));
                             break;
                         case "error":
                             result.Outcome = TestOutcome.None;
-                            result.Messages.Add(new TestResultMessage(TestResultMessage.StandardErrorCategory, $"{navNode.GetAttribute("message", "")}\n{navNode.Value}"));
+                            result.Messages.Add(new TestResultMessage(TestResultMessage.StandardErrorCategory, $"{navNode.GetAttribute("message", "")}\n{navNode.Value}\n"));
                             break;
                         case "system-out":
-                            result.Messages.Add(new TestResultMessage(TestResultMessage.StandardOutCategory, $"{navNode.Value}"));
+                            result.Messages.Add(new TestResultMessage(TestResultMessage.StandardOutCategory, $"{navNode.Value}\n"));
                             break;
                         case "system-err":
-                            result.Messages.Add(new TestResultMessage(TestResultMessage.StandardErrorCategory, $"{navNode.Value}"));
+                            result.Messages.Add(new TestResultMessage(TestResultMessage.StandardErrorCategory, $"{navNode.Value}\n"));
                             break;
                     }
                 } while (navNode.MoveToNext());

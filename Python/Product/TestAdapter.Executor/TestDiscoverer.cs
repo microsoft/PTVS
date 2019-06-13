@@ -56,9 +56,13 @@ namespace Microsoft.PythonTools.TestAdapter {
         }
 
         static private void DiscoverTestGroup(IGrouping<PythonProjectSettings, string> testGroup, IMessageLogger logger, ITestCaseDiscoverySink discoverySink ) {
+            PythonProjectSettings settings = testGroup.Key;
+            if(!settings.PytestEnabled) {
+                return;
+            }
 
             var discovery = new DiscoveryService();
-            var results = discovery.RunDiscovery(testGroup.Key, testGroup);
+            var results = discovery.RunDiscovery(settings, testGroup);
 
             if (results.Count == 0) {
                 return;

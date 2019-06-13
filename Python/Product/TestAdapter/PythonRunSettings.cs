@@ -21,6 +21,7 @@ using System.Linq;
 using System.Xml.XPath;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.TestAdapter.Model;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.TestWindow.Extensibility;
@@ -135,37 +136,50 @@ namespace Microsoft.PythonTools.TestAdapter {
                     foreach (var project in pyContainers) {
                         foreach (var container in project) {
                             writer.WriteStartElement("Project");
-                            writer.WriteAttributeString("home", project.Key);
+                            writer.WriteAttributeString("home", container.Project);
                             
-                            string nativeCode = "", djangoSettings = "";
+                            string nativeCode = "", djangoSettings = "", pytestEnabled = "", pytestPath = "", pytestArgs = "";
 
                             TestContainerDiscoverer discoverer = container.Discoverer as TestContainerDiscoverer;
                             if (discoverer == null) {
                                 continue;
                             }
 
+                            ProjectInfo projInfo = null; 
                             LaunchConfiguration config = null;
                             ThreadHelper.JoinableTaskFactory.Run(async () => {
                                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+                                projInfo = discoverer.GetProjectInfo(container.Project);
+
+                                if(projInfo == null) {
+                                    return;
+                                }
                                 try {
-                                    config = discoverer.GetLaunchConfigurationOrThrow(project.Key);
+                                    config = projInfo.GetLaunchConfigurationOrThrow();
                                     
                                 } catch {
                                 }
-                                //nativeCode = project.Key.GetProperty(PythonConstants.EnableNativeCodeDebugging);
-                                //djangoSettings = project.Key.GetProperty("DjangoSettingsModule");
+                                nativeCode = projInfo.GetProperty(PythonConstants.EnableNativeCodeDebugging);
+                                djangoSettings = projInfo.GetProperty("DjangoSettingsModule");
+                                pytestEnabled = projInfo.GetProperty(PythonConstants.PyTestEnabledSetting);
+                                pytestPath = projInfo.GetProperty(PythonConstants.PyTestPathSetting);
+                                pytestArgs = projInfo.GetProperty(PythonConstants.PyTestArgsSetting);
                             });
 
-                            if (config == null) {
+                            if (config == null || projInfo == null) {
                                 log.Log(
                                     MessageLevel.Warning,
-                                    Strings.TestDiscoveryFailedMissingLaunchConfiguration.FormatUI(project.Key)
+                                    Strings.TestDiscoveryFailedMissingLaunchConfiguration.FormatUI(container.Project)
                                 );
                                 continue;
                             }
                             writer.WriteAttributeString("useLegacyDebugger", UseLegacyDebugger ? "1" : "0");
                             writer.WriteAttributeString("nativeDebugging", nativeCode);
                             writer.WriteAttributeString("djangoSettingsModule", djangoSettings);
+
+                            writer.WriteAttributeString("pytestEnabled", pytestEnabled);
+                            writer.WriteAttributeString("pytestPath", pytestPath);
+                            writer.WriteAttributeString("pytestArgs", pytestArgs);
 
                             writer.WriteAttributeString("workingDir", config.WorkingDirectory);
                             writer.WriteAttributeString("interpreter", config.GetInterpreterPath());
