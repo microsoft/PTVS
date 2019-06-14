@@ -32,6 +32,8 @@ namespace Microsoft.PythonTools.TestAdapter {
     class TestDiscoverer : ITestDiscoverer {
         
         public void DiscoverTests(IEnumerable<string> sources, IDiscoveryContext discoveryContext, IMessageLogger logger, ITestCaseDiscoverySink discoverySink) {
+            MessageBox.Show("Discover: " + Process.GetCurrentProcess().Id);
+
             if (sources == null) {
                 throw new ArgumentNullException(nameof(sources));
             }
@@ -40,15 +42,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 throw new ArgumentNullException(nameof(discoverySink));
             }
 
-            var settings = discoveryContext.RunSettings;
-            
-            DiscoverTests(sources, logger, discoverySink, settings);
-        }
-
-        static void DiscoverTests(IEnumerable<string> sources, IMessageLogger logger, ITestCaseDiscoverySink discoverySink, IRunSettings settings) {
-            MessageBox.Show("Discover: " + Process.GetCurrentProcess().Id);
-
-            var sourceToProjSettings = RunSettingsUtil.GetSourceToProjSettings(settings);
+            var sourceToProjSettings = RunSettingsUtil.GetSourceToProjSettings(discoveryContext.RunSettings);
 
             foreach (var testGroup in sources.GroupBy(x => sourceToProjSettings[x])) {
                 DiscoverTestGroup(testGroup, logger, discoverySink);

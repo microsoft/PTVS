@@ -1,13 +1,10 @@
 ﻿using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.TestAdapter.Config;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Text;
-
 
 namespace Microsoft.PythonTools.TestAdapter.Pytest {
     static class PyTestReader {

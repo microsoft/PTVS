@@ -33,6 +33,32 @@ namespace Microsoft.PythonTools.TestAdapter {
             return hierarchy as IVsProject;
         }
 
+        
+        public static string GetProjectHome(this IVsProject project) {
+            Debug.Assert(project != null);
+            var hier = (IVsHierarchy)project;
+            object extObject;
+            ErrorHandler.ThrowOnFailure(hier.GetProperty(
+                (uint)VSConstants.VSITEMID.Root,
+                (int)__VSHPROPID.VSHPROPID_ExtObject,
+                out extObject
+            ));
+            var proj = extObject as EnvDTE.Project;
+            if (proj == null) {
+                return null;
+            }
+            var props = proj.Properties;
+            if (props == null) {
+                return null;
+            }
+            var projHome = props.Item("ProjectHome");
+            if (projHome == null) {
+                return null;
+            }
+
+            return projHome.Value as string;
+        }
+
 
         public static IEnumerable<IVsProject> EnumerateLoadedProjects(this IVsSolution solution) {
             var guid = new Guid(PythonConstants.ProjectFactoryGuid);

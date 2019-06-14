@@ -41,19 +41,31 @@ namespace Microsoft.PythonTools.TestAdapter.Model {
 
 
         public void AddTestContainer(string path) {
-            if (!TryGetContainer(path, out TestContainer existing)) {
-                
-                int version = 0;
 
+            TestContainer existing;
+            if (!TryGetContainer(path, out existing)) {
+            
                 _containers[path] = new TestContainer(
                     _discoverer,
                     path,
                     _projectHome,
-                    version,
+                    version:0,
                     Architecture,
                     null
                 );
             } 
+            else {
+                RemoveTestContainer(path);
+
+                _containers[path] = new TestContainer(
+                   _discoverer,
+                   path,
+                   _projectHome,
+                   version: existing.Version + 1,
+                   Architecture,
+                   null
+               );
+            }
         }
 
         public bool RemoveTestContainer(string path) {

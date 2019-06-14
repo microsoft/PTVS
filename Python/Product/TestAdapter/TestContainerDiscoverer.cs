@@ -154,9 +154,9 @@ namespace Microsoft.PythonTools.TestAdapter {
                 var projInfo = new ProjectInfo(this, pyProj);
                 UpdateTestContainers(sources, projInfo, isAdd:true);
                 _projectInfo[pyProj.ProjectHome] = projInfo;
-            }
 
-            NotifyContainerChanged();
+                NotifyContainerChanged();
+            }
         }
 
         private void OnProjectUnloaded(object sender, ProjectEventArgs e) {
@@ -166,10 +166,11 @@ namespace Microsoft.PythonTools.TestAdapter {
                 if (pyProj != null &&
                     _projectInfo.TryGetValue(pyProj.ProjectHome, out events) &&
                     _projectInfo.Remove(pyProj.ProjectHome)) {
+
+                    NotifyContainerChanged();
                 }
             }
 
-            NotifyContainerChanged();
         }
 
         private void UpdateTestContainers(IEnumerable<string> sources, ProjectInfo projInfo, bool isAdd) {
@@ -193,19 +194,22 @@ namespace Microsoft.PythonTools.TestAdapter {
         }
 
         private void OnProjectItemChanged(object sender, TestFileChangedEventArgs e) {
-            if(String.IsNullOrEmpty(e.File)) {
+            if (String.IsNullOrEmpty(e.File)) 
                 return;
-            }
-  
+            
             IVsProject vsProject = e.Project;
-            if(vsProject == null) {
+            if (vsProject == null) {
                 var rdt = (IVsRunningDocumentTable)_serviceProvider.GetService(typeof(SVsRunningDocumentTable));
                 vsProject = VsProjectExtensions.PathToProject(e.File, rdt);
             }
 
-            var pyProj = PythonProject.FromObject(vsProject);
-            if (pyProj != null &&
-                _projectInfo.TryGetValue(pyProj.ProjectHome, out ProjectInfo projectInfo)) {
+            if (vsProject == null)
+                return;
+
+            string projectHome = vsProject.GetProjectHome();
+            
+            if (projectHome != null &&
+                _projectInfo.TryGetValue(projectHome, out ProjectInfo projectInfo)) {
 
                 var sources = new List<string>() { e.File };
 
