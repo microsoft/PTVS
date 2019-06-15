@@ -33,7 +33,6 @@ namespace Microsoft.PythonTools.TestAdapter {
             return hierarchy as IVsProject;
         }
 
-        
         public static string GetProjectHome(this IVsProject project) {
             Debug.Assert(project != null);
             var hier = (IVsHierarchy)project;
@@ -58,7 +57,6 @@ namespace Microsoft.PythonTools.TestAdapter {
 
             return projHome.Value as string;
         }
-
 
         public static IEnumerable<IVsProject> EnumerateLoadedProjects(this IVsSolution solution) {
             var guid = new Guid(PythonConstants.ProjectFactoryGuid);

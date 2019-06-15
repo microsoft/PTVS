@@ -20,7 +20,6 @@ using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Linq;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Projects;
 using Microsoft.PythonTools.TestAdapter.Model;
 using Microsoft.VisualStudio.Shell;
@@ -36,17 +35,19 @@ namespace Microsoft.PythonTools.TestAdapter {
     [Export(typeof(TestContainerDiscoverer))]
     class TestContainerDiscoverer : ITestContainerDiscoverer, IDisposable {
         private readonly IServiceProvider _serviceProvider;
-        private readonly Dictionary<string, ProjectInfo> _projectInfo;
-        private bool _firstLoad, _isDisposed;
+        private readonly Dictionary<string, ProjectInfo> _projectMap;
+        private bool _firstLoad, _isDisposed, _forceRefresh;
         private SolutionEventsListener _solutionListener;
         private TestFilesUpdateWatcher _testFilesUpdateWatcher;
         private TestFileAddRemoveListener _testFilesAddRemoveListener;
+        private readonly HashSet<string> _pytestConfigFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "pytest.ini" , "setup.cfg" , "tox.ini" };
 
         [ImportingConstructor]
         private TestContainerDiscoverer([Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider, [Import(typeof(IOperationState))]IOperationState operationState) {
             _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-            _projectInfo = new Dictionary<string, ProjectInfo>();
+            _projectMap = new Dictionary<string, ProjectInfo>();
             _firstLoad = true;
+            _forceRefresh = false;
 
             _solutionListener = new SolutionEventsListener(serviceProvider);
             _solutionListener.ProjectLoaded += OnProjectLoaded;
@@ -94,30 +95,34 @@ namespace Microsoft.PythonTools.TestAdapter {
 
         public IEnumerable<ITestContainer> TestContainers {
             get {
-                if (_firstLoad) {
+                if (_firstLoad || _forceRefresh) {
+                    _projectMap.Clear();
+
                     // The first time through, we don't know about any loaded
                     // projects.
                     ThreadHelper.JoinableTaskFactory.Run(async () => {
                         await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-                        if (_firstLoad) {
+                        if (_firstLoad || _forceRefresh) {
                             _firstLoad = false;
+                            _forceRefresh = false;
                             // Get current solution
                             var solution = (IVsSolution)_serviceProvider.GetService(typeof(SVsSolution));
                             foreach (var project in VsProjectExtensions.EnumerateLoadedProjects(solution)) {
                                 OnProjectLoaded(null, new ProjectEventArgs(project));
                             }
+                                                 
                             _solutionListener.StartListeningForChanges();
                         }
                     });
                 }
 
-                return _projectInfo.Values.SelectMany(x => x.GetAllContainers());
+                return _projectMap.Values.SelectMany(x => x.GetAllContainers());
             }
         }
 
         public TestContainer GetTestContainer(string projectHome, string path) {
             ProjectInfo projectInfo;
-            if (_projectInfo.TryGetValue(projectHome, out projectInfo)) {
+            if (_projectMap.TryGetValue(projectHome, out projectInfo)) {
                 TestContainer container;
                 if (projectInfo.TryGetContainer(path, out container)) {
                     return container;
@@ -129,7 +134,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 
         public ProjectInfo GetProjectInfo(string projectHome) {
             ProjectInfo projectInfo;
-            if (_projectInfo.TryGetValue(projectHome, out projectInfo)) {
+            if (_projectMap.TryGetValue(projectHome, out projectInfo)) {
                 return projectInfo;
             }
             return null;
@@ -153,7 +158,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 var sources = project.GetProjectItems();
                 var projInfo = new ProjectInfo(this, pyProj);
                 UpdateTestContainers(sources, projInfo, isAdd:true);
-                _projectInfo[pyProj.ProjectHome] = projInfo;
+                _projectMap[pyProj.ProjectHome] = projInfo;
 
                 NotifyContainerChanged();
             }
@@ -162,41 +167,48 @@ namespace Microsoft.PythonTools.TestAdapter {
         private void OnProjectUnloaded(object sender, ProjectEventArgs e) {
             if (e.Project != null) {
                 var pyProj = PythonProject.FromObject(e.Project);
-                ProjectInfo events;
+                
                 if (pyProj != null &&
-                    _projectInfo.TryGetValue(pyProj.ProjectHome, out events) &&
-                    _projectInfo.Remove(pyProj.ProjectHome)) {
+                    _projectMap.TryGetValue(pyProj.ProjectHome, out ProjectInfo events) &&
+                    _projectMap.Remove(pyProj.ProjectHome)) {
 
                     NotifyContainerChanged();
                 }
             }
-
         }
 
         private void UpdateTestContainers(IEnumerable<string> sources, ProjectInfo projInfo, bool isAdd) {
             foreach (var path in sources) {
 
-                if (!Path.GetExtension(path).Equals(PythonConstants.FileExtension, StringComparison.OrdinalIgnoreCase)) {
+                if (!IsTestFileOrSetting(path)) {
                     continue;
                 }
 
                 if (isAdd) {
                     projInfo.AddTestContainer(path);
                     _testFilesUpdateWatcher.AddWatch(path);
-                }
-                else {
+                } else {
                     projInfo.RemoveTestContainer(path);
                     _testFilesUpdateWatcher.RemoveWatch(path);
                 }
             }
+        }
 
-            NotifyContainerChanged();
+        private bool IsTestFileOrSetting(string path) {
+            return Path.GetExtension(path).Equals(PythonConstants.FileExtension, StringComparison.OrdinalIgnoreCase)
+                || IsTestSettingsFile(path);
         }
 
         private void OnProjectItemChanged(object sender, TestFileChangedEventArgs e) {
             if (String.IsNullOrEmpty(e.File)) 
                 return;
-            
+
+            if (IsTestSettingsFile(e.File)) {
+                _forceRefresh = true;
+                NotifyContainerChanged();
+                return;
+            }
+
             IVsProject vsProject = e.Project;
             if (vsProject == null) {
                 var rdt = (IVsRunningDocumentTable)_serviceProvider.GetService(typeof(SVsRunningDocumentTable));
@@ -209,7 +221,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             string projectHome = vsProject.GetProjectHome();
             
             if (projectHome != null &&
-                _projectInfo.TryGetValue(projectHome, out ProjectInfo projectInfo)) {
+                _projectMap.TryGetValue(projectHome, out ProjectInfo projectInfo)) {
 
                 var sources = new List<string>() { e.File };
 
@@ -228,7 +240,16 @@ namespace Microsoft.PythonTools.TestAdapter {
                         UpdateTestContainers(sources, projectInfo, isAdd: false);
                         break;
                 }
+
+                NotifyContainerChanged();
             }
+        }
+
+        private bool IsTestSettingsFile(string file) {
+            if (String.IsNullOrEmpty(file))
+                return false;
+
+            return _pytestConfigFiles.Contains(Path.GetFileName(file));
         }
     }
 }

@@ -4,6 +4,7 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudioTools.TestAdapter;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace Microsoft.PythonTools.TestAdapter.Model {
@@ -41,6 +42,9 @@ namespace Microsoft.PythonTools.TestAdapter.Model {
 
 
         public void AddTestContainer(string path) {
+
+            if (!Path.GetExtension(path).Equals(PythonConstants.FileExtension, StringComparison.OrdinalIgnoreCase))
+                return;
 
             TestContainer existing;
             if (!TryGetContainer(path, out existing)) {
