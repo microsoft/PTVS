@@ -81,22 +81,24 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
             }
 
             if (navNode.HasChildren) {
-             
                 navNode.MoveToFirstChild();
 
                 do {
                     switch (navNode.Name) {
                         case "skipped":
                             result.Outcome = TestOutcome.Skipped;
-                            result.Messages.Add(new TestResultMessage(TestResultMessage.StandardErrorCategory, $"{navNode.GetAttribute("message", "")}\n{navNode.Value}\n"));
+                            result.ErrorMessage = navNode.GetAttribute("message", "");
                             break;
                         case "failure":
                             result.Outcome = TestOutcome.Failed;
-                            result.Messages.Add(new TestResultMessage(TestResultMessage.StandardErrorCategory, $"{navNode.GetAttribute("message", "")}\n{navNode.Value}\n"));
+                            result.ErrorMessage = navNode.GetAttribute("message", "");
+                            result.ErrorStackTrace = navNode.Value; // added to show in stacktrace column
+                            result.Messages.Add(new TestResultMessage(TestResultMessage.StandardErrorCategory, $"{navNode.Value}\n")); //Test Explorer Detail summary wont show link to stacktrace without adding a TestResultMessage
                             break;
                         case "error":
-                            result.Outcome = TestOutcome.None;
-                            result.Messages.Add(new TestResultMessage(TestResultMessage.StandardErrorCategory, $"{navNode.GetAttribute("message", "")}\n{navNode.Value}\n"));
+                            result.Outcome = TestOutcome.None; // occurs when a pytest framework or parse error happens
+                            result.ErrorMessage = navNode.GetAttribute("message", "");
+                            result.Messages.Add(new TestResultMessage(TestResultMessage.StandardErrorCategory, $"{navNode.Value}\n"));
                             break;
                         case "system-out":
                             result.Messages.Add(new TestResultMessage(TestResultMessage.StandardOutCategory, $"{navNode.Value}\n"));

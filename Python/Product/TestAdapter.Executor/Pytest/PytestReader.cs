@@ -39,10 +39,15 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
                     tc.SetPropertyValue(Constants.PytestIdProperty, t.Id);
                     tc.SetPropertyValue(Constants.PyTestXmlClassNameProperty, CreateXmlClassName(t, parentMap));
 
+                    foreach(var marker in t.Markers) {
+                        tc.Traits.Add(new Trait(marker.ToString(), String.Empty));
+                    }
+
                     if (discoverySink != null) {
                         discoverySink.SendTestCase(tc);
                     }
                     testcases.Add(tc);
+
                 } else {
                     Debug.WriteLine("Testcase parse failed:\n {0}".FormatInvariant(t.Id));
                 }
