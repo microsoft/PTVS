@@ -32,8 +32,7 @@ using TestUtilities.Mocks;
 using TestUtilities.Python;
 
 namespace PythonToolsTests {
-    [TestClass]
-    public class DebugReplEvaluatorTests {
+    public abstract class DebugReplEvaluatorTests {
         private PythonDebugReplEvaluator _evaluator;
         private MockReplWindow _window;
         private List<PythonProcess> _processes;
@@ -51,7 +50,7 @@ namespace PythonToolsTests {
 
         internal virtual PythonVersion Version {
             get {
-                return PythonPaths.Python26 ?? PythonPaths.Python26_x64;
+                return PythonPaths.Python27 ?? PythonPaths.Python27_x64;
             }
         }
 
@@ -426,62 +425,6 @@ NameError: name 'does_not_exist' is not defined
 
         protected static CancellationToken TimeoutToken() {
             return CancellationTokens.After5s;
-        }
-    }
-
-    [TestClass]
-    public class DebugReplEvaluatorTests31 : DebugReplEvaluatorTests {
-        [ClassInitialize]
-        public static new void DoDeployment(TestContext context) {
-            AssertListener.Initialize();
-        }
-
-        internal override PythonVersion Version {
-            get {
-                return PythonPaths.Python31 ?? PythonPaths.Python31_x64;
-            }
-        }
-    }
-
-    [TestClass]
-    public class DebugReplEvaluatorTests32 : DebugReplEvaluatorTests {
-        [ClassInitialize]
-        public static new void DoDeployment(TestContext context) {
-            AssertListener.Initialize();
-        }
-
-        internal override PythonVersion Version {
-            get {
-                return PythonPaths.Python32 ?? PythonPaths.Python32_x64;
-            }
-        }
-    }
-
-    [TestClass]
-    public class DebugReplEvaluatorTests33 : DebugReplEvaluatorTests {
-        [ClassInitialize]
-        public static new void DoDeployment(TestContext context) {
-            AssertListener.Initialize();
-        }
-
-        internal override PythonVersion Version {
-            get {
-                return PythonPaths.Python33 ?? PythonPaths.Python33_x64;
-            }
-        }
-    }
-
-    [TestClass]
-    public class DebugReplEvaluatorTests34 : DebugReplEvaluatorTests {
-        [ClassInitialize]
-        public static new void DoDeployment(TestContext context) {
-            AssertListener.Initialize();
-        }
-
-        internal override PythonVersion Version {
-            get {
-                return PythonPaths.Python34 ?? PythonPaths.Python34_x64;
-            }
         }
     }
 

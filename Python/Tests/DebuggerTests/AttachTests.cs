@@ -1281,66 +1281,6 @@ int main(int argc, char* argv[]) {
     }
 
     [TestClass]
-    public class AttachTests31 : AttachTests {
-        internal override PythonVersion Version {
-            get {
-                return PythonPaths.Python31 ?? PythonPaths.Python31_x64;
-            }
-        }
-
-        [TestMethod, Priority(2)]
-        public override async Task AttachWithOutputRedirection() => await base.AttachWithOutputRedirection();
-    }
-
-    [TestClass]
-    public class AttachTests32 : AttachTests {
-        internal override PythonVersion Version {
-            get {
-                return PythonPaths.Python32 ?? PythonPaths.Python32_x64;
-            }
-        }
-
-        public override async Task AttachNewThread_PyThreadState_New() {
-            // PyEval_AcquireLock deprecated in 3.2
-        }
-    }
-
-    [TestClass]
-    public class AttachTests33 : AttachTests {
-        internal override PythonVersion Version {
-            get {
-                return PythonPaths.Python33 ?? PythonPaths.Python33_x64;
-            }
-        }
-
-        public override async Task AttachNewThread_PyThreadState_New() {
-            // PyEval_AcquireLock deprecated in 3.2
-        }
-    }
-
-    [TestClass]
-    public class AttachTests34 : AttachTests {
-        internal override PythonVersion Version {
-            get {
-                return PythonPaths.Python34;
-            }
-        }
-
-        public override async Task AttachNewThread_PyThreadState_New() {
-            // PyEval_AcquireLock deprecated in 3.2
-        }
-    }
-
-    [TestClass]
-    public class AttachTests34_x64 : AttachTests34 {
-        internal override PythonVersion Version {
-            get {
-                return PythonPaths.Python34_x64;
-            }
-        }
-    }
-
-    [TestClass]
     public class AttachTests35 : AttachTests {
         internal override PythonVersion Version {
             get {
@@ -1412,18 +1352,6 @@ int main(int argc, char* argv[]) {
     }
 
     [TestClass]
-    public class AttachTests26 : AttachTests {
-        internal override PythonVersion Version {
-            get {
-                return PythonPaths.Python26 ?? PythonPaths.Python26_x64;
-            }
-        }
-
-        // 2.6 does not support packages as scripts (__main__.py)
-        protected override bool HasPtvsdCommandLine => false;
-    }
-
-    [TestClass]
     public class AttachTests27 : AttachTests {
         internal override PythonVersion Version {
             get {
@@ -1442,7 +1370,7 @@ int main(int argc, char* argv[]) {
     }
 
     [TestClass]
-    public class AttachTestsIpy : AttachTests {
+    public class AttachTestsIpy27 : AttachTests {
         internal override PythonVersion Version {
             get {
                 return PythonPaths.IronPython27 ?? PythonPaths.IronPython27_x64;
