@@ -6004,7 +6004,7 @@ r2 = fn(123, None, 4.5)
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         public void FunctoolsDecoratorReferences() {
             var text = @"from functools import wraps
 
