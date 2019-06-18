@@ -219,7 +219,7 @@ namespace TestAdapterTests {
             )), testCases);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         [TestCategory("10s")]
         public void TestRun() {
             var executor = new TestExecutor();

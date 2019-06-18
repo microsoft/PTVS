@@ -2001,7 +2001,7 @@ namespace DebuggerTests {
 
         #region Exit Code Tests
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         [TestCategory("10s")]
         public async Task TestStartup() {
             var debugger = new PythonDebugger();
@@ -2019,7 +2019,7 @@ namespace DebuggerTests {
             await TestExitCodeAsync(debugger, Path.Combine(DebuggerTestPath, "CheckNameAndFile.py"), 0);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         [TestCategory("10s")]
         public async Task TestWindowsStartup() {
             var debugger = new PythonDebugger();
