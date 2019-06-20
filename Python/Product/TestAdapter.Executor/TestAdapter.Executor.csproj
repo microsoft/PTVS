@@ -100,6 +100,10 @@
     <Compile Include="TestReader.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="PythonFiles\testing_tools\adapter\discovery.py">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
     <Content Include="PythonFiles\testing_tools\adapter\errors.py">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
@@ -108,7 +112,19 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="PythonFiles\testing_tools\adapter\pytest.py">
+    <Content Include="PythonFiles\testing_tools\adapter\pytest\_cli.py">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="PythonFiles\testing_tools\adapter\pytest\_discovery.py">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="PythonFiles\testing_tools\adapter\pytest\_pytest_item.py">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="PythonFiles\testing_tools\adapter\pytest\__init__.py">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
@@ -137,6 +153,7 @@
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="..\ProjectAfter.settings" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
