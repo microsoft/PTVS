@@ -156,7 +156,6 @@ namespace Microsoft.PythonTools.TestAdapter {
                                 }
                                 try {
                                     config = projInfo.GetLaunchConfigurationOrThrow();
-                                    
                                 } catch {
                                 }
                                 nativeCode = projInfo.GetProperty(PythonConstants.EnableNativeCodeDebugging);

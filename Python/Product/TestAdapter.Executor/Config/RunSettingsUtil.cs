@@ -34,11 +34,6 @@ namespace Microsoft.PythonTools.TestAdapter.Config {
                     projSettings.Environment["DJANGO_SETTINGS_MODULE"] = djangoSettings;
                 }
 
-                string pytestEnabled = project.GetAttribute("pytestEnabled", "");
-                if (!String.IsNullOrWhiteSpace(pytestEnabled)) {
-                    projSettings.Environment["DJANGO_SETTINGS_MODULE"] = djangoSettings;
-                }
-
                 foreach (XPathNavigator searchPath in project.Select("SearchPaths/Search")) {
                     projSettings.SearchPath.Add(searchPath.GetAttribute("value", ""));
                 }

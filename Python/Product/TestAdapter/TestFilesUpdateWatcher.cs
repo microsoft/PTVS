@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.IO;
@@ -24,11 +25,11 @@ using Microsoft.VisualStudioTools;
 
 namespace Microsoft.VisualStudioTools.TestAdapter {
     class TestFilesUpdateWatcher : IDisposable {
-        private readonly IDictionary<string, FileSystemWatcher> _fileWatchers;
+        private readonly ConcurrentDictionary<string, FileSystemWatcher> _fileWatchers;
         public event EventHandler<TestFileChangedEventArgs> FileChangedEvent;
 
         public TestFilesUpdateWatcher() {
-            _fileWatchers = new Dictionary<string, FileSystemWatcher>(StringComparer.OrdinalIgnoreCase);
+            _fileWatchers = new ConcurrentDictionary<string, FileSystemWatcher>(StringComparer.OrdinalIgnoreCase);
         }
 
         public bool AddWatch(string path) {
@@ -62,6 +63,11 @@ namespace Microsoft.VisualStudioTools.TestAdapter {
                     var watcher = new FileSystemWatcher(path);
                     _fileWatchers[path] = watcher;
 
+                    watcher.NotifyFilter = NotifyFilters.LastWrite
+                                     | NotifyFilters.FileName
+                                     | NotifyFilters.DirectoryName
+                                     | NotifyFilters.CreationTime;
+
                     watcher.IncludeSubdirectories = true;
                     watcher.Changed += OnChanged;
                     watcher.Renamed += OnRenamed;
@@ -73,17 +79,11 @@ namespace Microsoft.VisualStudioTools.TestAdapter {
         }
 
         public void RemoveWatch(string path) {
-            if (!String.IsNullOrEmpty(path)) {
-                FileSystemWatcher watcher;
-
-                if (_fileWatchers.TryGetValue(path, out watcher)) {
-                    watcher.EnableRaisingEvents = false;
-
-                    _fileWatchers.Remove(path);
-
-                    watcher.Changed -= OnChanged;
-                    watcher.Dispose();
-                }
+            if (!String.IsNullOrEmpty(path) 
+                && _fileWatchers.TryRemove(path, out FileSystemWatcher watcher)) {
+                watcher.EnableRaisingEvents = false;
+                watcher.Changed -= OnChanged;
+                watcher.Dispose();
             }
         }
 

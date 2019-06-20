@@ -27,46 +27,73 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestWindow.Extensibility;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.TestAdapter;
-
 using Task = System.Threading.Tasks.Task;
+using Microsoft.PythonTools.Interpreter;
+using Microsoft.VisualStudio.ComponentModelHost;
+using System.Threading;
+using System.Collections.Concurrent;
 
 namespace Microsoft.PythonTools.TestAdapter {
     [Export(typeof(ITestContainerDiscoverer))]
     [Export(typeof(TestContainerDiscoverer))]
     class TestContainerDiscoverer : ITestContainerDiscoverer, IDisposable {
         private readonly IServiceProvider _serviceProvider;
-        private readonly Dictionary<string, ProjectInfo> _projectMap;
+        private readonly IPythonWorkspaceContextProvider _workspaceContextProvider;
+        private readonly ConcurrentDictionary<string, ProjectInfo> _projectMap;
         private bool _firstLoad, _isDisposed, _forceRefresh;
         private SolutionEventsListener _solutionListener;
         private TestFilesUpdateWatcher _testFilesUpdateWatcher;
         private TestFileAddRemoveListener _testFilesAddRemoveListener;
-        private readonly HashSet<string> _pytestConfigFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "pytest.ini" , "setup.cfg" , "tox.ini" };
+        private readonly HashSet<string> _pytestConfigFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "pytest.ini" , "setup.cfg" , "tox.ini", "PythonSettings.json" };
+        private readonly Timer _deferredChangeNotification;
+      
 
         [ImportingConstructor]
-        private TestContainerDiscoverer([Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider, [Import(typeof(IOperationState))]IOperationState operationState) {
+        private TestContainerDiscoverer(
+            [Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider, 
+            [Import(typeof(IOperationState))]IOperationState operationState,
+            [Import] IPythonWorkspaceContextProvider workspaceContextProvider
+        ) {
             _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-            _projectMap = new Dictionary<string, ProjectInfo>();
+            _projectMap = new ConcurrentDictionary<string, ProjectInfo>();
             _firstLoad = true;
             _forceRefresh = false;
+            _deferredChangeNotification = new Timer(OnDeferredNotifyChanged);
 
             _solutionListener = new SolutionEventsListener(serviceProvider);
             _solutionListener.ProjectLoaded += OnProjectLoaded;
             _solutionListener.ProjectUnloading += OnProjectUnloaded;
             _solutionListener.ProjectClosing += OnProjectUnloaded;
-         
-            _testFilesUpdateWatcher = new TestFilesUpdateWatcher();
-            _testFilesUpdateWatcher.FileChangedEvent += OnProjectItemChanged;
-
+            _solutionListener.SolutionOpened += OnSolutionLoaded;
+            _solutionListener.SolutionClosed += OnSolutionClosed;
+           
             _testFilesAddRemoveListener = new TestFileAddRemoveListener(serviceProvider, new Guid());
             _testFilesAddRemoveListener.TestFileChanged += OnProjectItemChanged;
-            _testFilesAddRemoveListener.StartListeningForTestFileChanges();
+            
+            _workspaceContextProvider = workspaceContextProvider;
+            _workspaceContextProvider.WorkspaceClosed += OnWorkspaceClosed;
+            _workspaceContextProvider.WorkspaceInitialized += OnWorkspaceLoaded;
+        }
+
+        private void OnSolutionClosed(object sender, EventArgs e) {
+            if (_testFilesUpdateWatcher != null) {
+                _testFilesUpdateWatcher.FileChangedEvent -= OnProjectItemChanged;
+                _testFilesUpdateWatcher.Dispose();
+                _testFilesUpdateWatcher = null;
+            }
+            _firstLoad = true;
+        }
+
+        private void OnSolutionLoaded(object sender, EventArgs e) {
         }
 
         void IDisposable.Dispose() {
             if (!_isDisposed) {
                 _isDisposed = true;
 
-                if(_solutionListener != null) {
+                _deferredChangeNotification.Dispose();
+
+                if (_solutionListener != null) {
                     _solutionListener.ProjectLoaded -= OnProjectLoaded;
                     _solutionListener.ProjectUnloading -= OnProjectUnloaded;
                     _solutionListener.ProjectClosing -= OnProjectUnloaded;
@@ -84,6 +111,11 @@ namespace Microsoft.PythonTools.TestAdapter {
                     _testFilesAddRemoveListener.Dispose();
                     _testFilesAddRemoveListener = null;
                 }
+
+                if (_workspaceContextProvider != null) {
+                    _workspaceContextProvider.WorkspaceClosed -= OnWorkspaceClosed;
+                    _workspaceContextProvider.WorkspaceInitialized -= OnWorkspaceLoaded;
+                }
             }
         }
 
@@ -96,22 +128,22 @@ namespace Microsoft.PythonTools.TestAdapter {
         public IEnumerable<ITestContainer> TestContainers {
             get {
                 if (_firstLoad || _forceRefresh) {
-                    _projectMap.Clear();
-
                     // The first time through, we don't know about any loaded
                     // projects.
                     ThreadHelper.JoinableTaskFactory.Run(async () => {
                         await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                         if (_firstLoad || _forceRefresh) {
+                           
+                            var workspace = GetAssociatedPythonWorkspace();
+
+                            if (workspace != null) {
+                                SetupWorkspace(workspace);
+                            } else {
+                                await SetupCurrentSolution();
+                            }
+
                             _firstLoad = false;
                             _forceRefresh = false;
-                            // Get current solution
-                            var solution = (IVsSolution)_serviceProvider.GetService(typeof(SVsSolution));
-                            foreach (var project in VsProjectExtensions.EnumerateLoadedProjects(solution)) {
-                                OnProjectLoaded(null, new ProjectEventArgs(project));
-                            }
-                                                 
-                            _solutionListener.StartListeningForChanges();
                         }
                     });
                 }
@@ -140,11 +172,18 @@ namespace Microsoft.PythonTools.TestAdapter {
             return null;
         }
 
+        public event EventHandler TestContainersUpdated;
+
         private void NotifyContainerChanged() {
+            try {
+                _deferredChangeNotification.Change(500, Timeout.Infinite);
+            } catch (ObjectDisposedException) {
+            }
+        }
+       
+        private void OnDeferredNotifyChanged(object state) {
             TestContainersUpdated?.Invoke(this, EventArgs.Empty);
         }
-
-        public event EventHandler TestContainersUpdated;
 
         private void OnProjectLoaded(object sender, ProjectEventArgs e) {
             OnProjectLoadedAsync(e.Project).HandleAllExceptions(_serviceProvider, GetType()).DoNotWait();
@@ -157,10 +196,14 @@ namespace Microsoft.PythonTools.TestAdapter {
 
                 var sources = project.GetProjectItems();
                 var projInfo = new ProjectInfo(this, pyProj);
-                UpdateTestContainers(sources, projInfo, isAdd:true);
-                _projectMap[pyProj.ProjectHome] = projInfo;
+                _projectMap[projInfo.ProjectHome] = projInfo;
 
-                NotifyContainerChanged();
+                if (_testFilesUpdateWatcher == null) {
+                    _testFilesUpdateWatcher = new TestFilesUpdateWatcher();
+                    _testFilesUpdateWatcher.FileChangedEvent += OnProjectItemChanged;
+                }
+
+                UpdateTestContainers(sources, projInfo, isAdd:true);
             }
         }
 
@@ -169,8 +212,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 var pyProj = PythonProject.FromObject(e.Project);
                 
                 if (pyProj != null &&
-                    _projectMap.TryGetValue(pyProj.ProjectHome, out ProjectInfo events) &&
-                    _projectMap.Remove(pyProj.ProjectHome)) {
+                    _projectMap.TryRemove(pyProj.ProjectHome, out ProjectInfo removedProject )) {
 
                     NotifyContainerChanged();
                 }
@@ -179,7 +221,6 @@ namespace Microsoft.PythonTools.TestAdapter {
 
         private void UpdateTestContainers(IEnumerable<string> sources, ProjectInfo projInfo, bool isAdd) {
             foreach (var path in sources) {
-
                 if (!IsTestFileOrSetting(path)) {
                     continue;
                 }
@@ -250,6 +291,114 @@ namespace Microsoft.PythonTools.TestAdapter {
                 return false;
 
             return _pytestConfigFiles.Contains(Path.GetFileName(file));
+        }
+
+        private void OnWorkspaceClosed(object sender, PythonWorkspaceContextEventArgs e) {
+            if (_testFilesUpdateWatcher != null) {
+                _testFilesUpdateWatcher.FileChangedEvent -= OnWorkspaceFileChanged;
+                _testFilesUpdateWatcher.Dispose();
+                _testFilesUpdateWatcher = null;
+            }
+            _projectMap.Clear();
+            _firstLoad = true;
+        }
+
+        private void OnWorkspaceLoaded(object sender, PythonWorkspaceContextEventArgs e) {
+          //  SetupWorkspace(e.Workspace);
+        }
+
+        private async Task SetupCurrentSolution() {
+            // Get current solution
+            var solution = (IVsSolution)_serviceProvider.GetService(typeof(SVsSolution));
+
+            var tasks = VsProjectExtensions.EnumerateLoadedProjects(solution)
+                .Select(proj => OnProjectLoadedAsync(proj)).ToList();
+            await Task.WhenAll(tasks);
+
+            _solutionListener.StartListeningForChanges();
+            _testFilesAddRemoveListener.StartListeningForTestFileChanges();
+        }
+
+        private void SetupWorkspace(IPythonWorkspaceContext workspace) {
+            var projInfo = new ProjectInfo(this, workspace);
+            _projectMap[projInfo.ProjectHome] = projInfo;
+
+            if (_testFilesUpdateWatcher == null) {
+                _testFilesUpdateWatcher = new TestFilesUpdateWatcher();
+                _testFilesUpdateWatcher.FileChangedEvent += OnWorkspaceFileChanged;
+            }
+            var sources = Directory.EnumerateFiles(workspace.Location, "*.*", SearchOption.AllDirectories);
+            UpdateTestContainers(sources, projInfo, isAdd: true);
+        }
+
+        private void OnWorkspaceFileChanged(object sender, TestFileChangedEventArgs e) {
+
+            if (String.IsNullOrEmpty(e.File))
+                return;
+
+            if (IsTestSettingsFile(e.File)) {
+                _forceRefresh = true;
+                NotifyContainerChanged();
+                return;
+            }
+
+            UpdateWorksapceTestContainersAsync(e).HandleAllExceptions(_serviceProvider, GetType()).DoNotWait();
+        }
+
+        private async Task UpdateWorksapceTestContainersAsync(TestFileChangedEventArgs e) {
+
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+            
+            var workspace = GetAssociatedPythonWorkspace();
+            if (workspace == null)
+                return;
+
+            var projInfo = GetProjectInfo(workspace.Location);
+            if (projInfo == null)
+                return;
+
+            if (String.IsNullOrEmpty(e.File))
+                return;
+
+            if (IsTestSettingsFile(e.File)) {
+                _forceRefresh = true;
+                NotifyContainerChanged();
+                return;
+            }
+
+            var sources = new List<string>() { e.File };
+
+            switch (e.ChangedReason) {
+                case TestFileChangedReason.None:
+                    break;
+                case TestFileChangedReason.Renamed: // rename triggers Added and Removed
+                    break;
+                case TestFileChangedReason.Added:
+                    UpdateTestContainers(sources, projInfo, isAdd: true);
+                    break;
+                case TestFileChangedReason.Changed:
+                    UpdateTestContainers(sources, projInfo, isAdd: true);
+                    break;
+                case TestFileChangedReason.Removed:
+                    UpdateTestContainers(sources, projInfo, isAdd: false);
+                    break;
+            }
+
+            NotifyContainerChanged();
+        }
+
+        private IPythonWorkspaceContext GetAssociatedPythonWorkspace() {
+            _serviceProvider.GetUIThread().MustBeCalledFromUIThread();
+
+            var componnetModel = (IComponentModel)_serviceProvider.GetService(typeof(SComponentModel));
+            if (componnetModel == null)
+                return null;
+
+            var workspaceContextProvider = componnetModel.GetService<IPythonWorkspaceContextProvider>();
+            if (workspaceContextProvider == null)
+                return null;
+
+            return workspaceContextProvider.Workspace;
         }
     }
 }

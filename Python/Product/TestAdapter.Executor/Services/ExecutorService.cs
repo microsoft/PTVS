@@ -24,12 +24,12 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
 
             foreach (var test in tests) {
                 var pytestId = test.GetPropertyValue<string>(Pytest.Constants.PytestIdProperty, default(string));
-
-                if (String.IsNullOrEmpty(pytestId)) {
+                var executionTestPath = Path.Combine(Path.GetDirectoryName(test.CodeFilePath), pytestId);
+                if (String.IsNullOrEmpty(executionTestPath)) {
                     Debug.WriteLine("PytestId missing for testcase {0}", test.FullyQualifiedName);
                     continue;
                 }
-                arguments.Add(pytestId);
+                arguments.Add(executionTestPath);
             }
             return arguments.ToArray();
         }
