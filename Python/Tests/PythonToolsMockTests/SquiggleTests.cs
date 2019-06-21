@@ -58,7 +58,7 @@ namespace PythonToolsMockTests {
         }
 
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         public async Task UnresolvedImportSquiggle() {
             List<string> squiggles;
 
@@ -95,7 +95,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(TestExtensions.P2_FAILING_UNIT_TEST)]
         public async Task HandledImportSquiggle() {
             var testCases = new List<Tuple<string, string[]>>();
             testCases.Add(Tuple.Create(

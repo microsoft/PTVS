@@ -219,7 +219,7 @@ namespace TestAdapterTests {
             )), testCases);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         [TestCategory("10s")]
         public void TestRun() {
             var executor = new TestExecutor();
@@ -612,7 +612,7 @@ namespace TestAdapterTests {
 
         protected override PythonVersion Version => PythonPaths.Python27 ?? PythonPaths.Python27_x64;
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         [TestCategory("10s")]
         public void TestExtensionReference() {
             // This test uses a 32-bit Python 2.7 .pyd

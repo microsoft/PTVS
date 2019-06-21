@@ -57,7 +57,7 @@ namespace PythonToolsUITestsRunner {
             _vs.RunTest(nameof(PythonToolsUITests.EditorTests.OutliningTest));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void OutlineNestedFuncDef() {
             _vs.RunTest(nameof(PythonToolsUITests.EditorTests.OutlineNestedFuncDef));
@@ -90,7 +90,7 @@ namespace PythonToolsUITestsRunner {
             _vs.RunTest(nameof(PythonToolsUITests.EditorTests.ClassificationMultiLineStringTest2));
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(VsTestContext.P2_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void SignaturesTest() {
             _vs.RunTest(nameof(PythonToolsUITests.EditorTests.SignaturesTest));
@@ -102,7 +102,7 @@ namespace PythonToolsUITestsRunner {
             _vs.RunTest(nameof(PythonToolsUITests.EditorTests.MultiLineSignaturesTest));
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(VsTestContext.P2_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void CompletionsCaseSensitive() {
             _vs.RunTest(nameof(PythonToolsUITests.EditorTests.CompletionsCaseSensitive));
@@ -120,13 +120,13 @@ namespace PythonToolsUITestsRunner {
             _vs.RunTest(nameof(PythonToolsUITests.EditorTests.AutoIndentExisting));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void TypingTest() {
             _vs.RunTest(nameof(PythonToolsUITests.EditorTests.TypingTest));
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(VsTestContext.P2_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void CompletionTests() {
             _vs.RunTest(nameof(PythonToolsUITests.EditorTests.CompletionTests));
@@ -156,7 +156,7 @@ namespace PythonToolsUITestsRunner {
             _vs.RunTest(nameof(PythonToolsUITests.EditorTests.IndentationInconsistencyIgnore));
         }
 
-        [TestMethod, Priority(0), TestCategory("Squiggle")]
+        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST), TestCategory("Squiggle")]
         [TestCategory("Installed")]
         public void ImportPresent() {
             _vs.RunTest(nameof(PythonToolsUITests.EditorTests.ImportPresent));
@@ -168,7 +168,7 @@ namespace PythonToolsUITestsRunner {
             _vs.RunTest(nameof(PythonToolsUITests.EditorTests.ImportSelf));
         }
 
-        [TestMethod, Priority(2), TestCategory("Squiggle")]
+        [TestMethod, Priority(VsTestContext.P2_FAILING_UI_TEST), TestCategory("Squiggle")]
         [TestCategory("Installed")]
         public void ImportMissingThenAddThenExcludeFile() {
             _vs.RunTest(nameof(PythonToolsUITests.EditorTests.ImportMissingThenAddThenExcludeFile));
