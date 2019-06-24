@@ -38,9 +38,9 @@
             resources.ApplyResources(this._panel, "_panel");
             this._panel.Controls.Add(this._helpLabel, 0, 0);
             this._panel.Controls.Add(this._frameworkLabel, 0, 1);
-            this._panel.Controls.Add(this._frameworkComboBox, 1, 1);
-            this._panel.Controls.Add(this._startupCommandLabel, 0, 2);
-            this._panel.Controls.Add(this._startupCommandTextBox, 1, 2);
+            this._panel.Controls.Add(this._frameworkComboBox, 0, 3);
+            this._panel.Controls.Add(this._startupCommandTextBox, 0, 5);
+            this._panel.Controls.Add(this._startupCommandLabel, 0, 4);
             this._panel.Name = "_panel";
             // 
             // _helpLabel
@@ -90,7 +90,7 @@
         private System.Windows.Forms.Label _helpLabel;
         private System.Windows.Forms.Label _frameworkLabel;
         private System.Windows.Forms.ComboBox _frameworkComboBox;
-        private System.Windows.Forms.Label _startupCommandLabel;
         private System.Windows.Forms.TextBox _startupCommandTextBox;
+        private System.Windows.Forms.Label _startupCommandLabel;
     }
 }

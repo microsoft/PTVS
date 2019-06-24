@@ -119,7 +119,7 @@
   </resheader>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="_panel.ColumnCount" type="System.Int32, mscorlib">
-    <value>2</value>
+    <value>1</value>
   </data>
   <data name="_helpLabel.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -130,7 +130,7 @@
   </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="_helpLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>0, 0, 3, 16</value>
+    <value>0, 0, 3, 12</value>
   </data>
   <data name="_helpLabel.Size" type="System.Drawing.Size, System.Drawing">
     <value>311, 13</value>
@@ -160,7 +160,7 @@
     <value>True</value>
   </data>
   <data name="_frameworkLabel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 36</value>
+    <value>0, 25</value>
   </data>
   <data name="_frameworkLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>0, 0, 0, 0</value>
@@ -190,7 +190,10 @@
     <value>1</value>
   </data>
   <data name="_frameworkComboBox.Location" type="System.Drawing.Point, System.Drawing">
-    <value>147, 32</value>
+    <value>3, 41</value>
+  </data>
+  <data name="_frameworkComboBox.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 7</value>
   </data>
   <data name="_frameworkComboBox.Size" type="System.Drawing.Size, System.Drawing">
     <value>62, 21</value>
@@ -210,14 +213,44 @@
   <data name="&gt;&gt;_frameworkComboBox.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
+  <data name="_startupCommandTextBox.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
+  <data name="_startupCommandTextBox.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 85</value>
+  </data>
+  <data name="_startupCommandTextBox.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 7</value>
+  </data>
+  <data name="_startupCommandTextBox.Size" type="System.Drawing.Size, System.Drawing">
+    <value>400, 22</value>
+  </data>
+  <data name="_startupCommandTextBox.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="&gt;&gt;_startupCommandTextBox.Name" xml:space="preserve">
+    <value>_startupCommandTextBox</value>
+  </data>
+  <data name="&gt;&gt;_startupCommandTextBox.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_startupCommandTextBox.Parent" xml:space="preserve">
+    <value>_panel</value>
+  </data>
+  <data name="&gt;&gt;_startupCommandTextBox.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
   <data name="_startupCommandLabel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Left</value>
   </data>
   <data name="_startupCommandLabel.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
+  <data name="_startupCommandLabel.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
   <data name="_startupCommandLabel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 63</value>
+    <value>0, 69</value>
   </data>
   <data name="_startupCommandLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>0, 0, 0, 0</value>
@@ -244,30 +277,6 @@
     <value>_panel</value>
   </data>
   <data name="&gt;&gt;_startupCommandLabel.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="_startupCommandTextBox.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Left, Right</value>
-  </data>
-  <data name="_startupCommandTextBox.Location" type="System.Drawing.Point, System.Drawing">
-    <value>147, 59</value>
-  </data>
-  <data name="_startupCommandTextBox.Size" type="System.Drawing.Size, System.Drawing">
-    <value>256, 22</value>
-  </data>
-  <data name="_startupCommandTextBox.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
-  </data>
-  <data name="&gt;&gt;_startupCommandTextBox.Name" xml:space="preserve">
-    <value>_startupCommandTextBox</value>
-  </data>
-  <data name="&gt;&gt;_startupCommandTextBox.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;_startupCommandTextBox.Parent" xml:space="preserve">
-    <value>_panel</value>
-  </data>
-  <data name="&gt;&gt;_startupCommandTextBox.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
   <data name="_panel.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
@@ -283,7 +292,7 @@
     <value>0, 0, 0, 0</value>
   </data>
   <data name="_panel.RowCount" type="System.Int32, mscorlib">
-    <value>4</value>
+    <value>7</value>
   </data>
   <data name="_panel.Size" type="System.Drawing.Size, System.Drawing">
     <value>406, 175</value>
@@ -304,7 +313,7 @@
     <value>0</value>
   </data>
   <data name="_panel.LayoutSettings" type="System.Windows.Forms.TableLayoutSettings, System.Windows.Forms">
-    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="_helpLabel" Row="0" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_frameworkLabel" Row="1" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_frameworkComboBox" Row="1" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="_startupCommandLabel" Row="2" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_startupCommandTextBox" Row="2" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="AutoSize,0,Percent,100" /&gt;&lt;Rows Styles="AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0" /&gt;&lt;/TableLayoutSettings&gt;</value>
+    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="_helpLabel" Row="0" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_frameworkLabel" Row="1" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_frameworkComboBox" Row="3" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_startupCommandTextBox" Row="5" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_startupCommandLabel" Row="4" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="AutoSize,0" /&gt;&lt;Rows Styles="AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0" /&gt;&lt;/TableLayoutSettings&gt;</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
