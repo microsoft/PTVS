@@ -99,7 +99,7 @@ namespace FactoryProviderSuccess {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         public void ProviderLoadLog_Success() {
             var path = FactoryProviderTypeLoadErrorPath;
 
@@ -183,7 +183,7 @@ namespace FactoryProviderSuccess {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         public void ProviderLoadLog_CorruptImage() {
             var catalogLog = new MockLogger();
 
@@ -245,7 +245,7 @@ namespace FactoryProviderTypeLoadException {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         public void ProviderLoadLog_TypeLoadException() {
             var path = FactoryProviderTypeLoadErrorPath;
 
@@ -277,7 +277,7 @@ namespace FactoryProviderTypeLoadException {
             Assert.IsNotNull(registry.Configurations.FirstOrDefault());
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         public void ProviderLoadLog_SuccessAndFailure() {
             var path = FactoryProviderTypeLoadErrorPath;
 

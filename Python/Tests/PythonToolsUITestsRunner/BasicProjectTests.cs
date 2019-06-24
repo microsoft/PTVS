@@ -191,7 +191,7 @@ namespace PythonToolsUITestsRunner {
         }
 
         [Ignore] // TODO: fix this test
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void DotNetSearchPathReferences() {
             _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.DotNetSearchPathReferences));
@@ -280,7 +280,7 @@ namespace PythonToolsUITestsRunner {
             _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.CopyFolderWithMultipleItems));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void OpenInteractiveFromSolutionExplorer() {
             _vs.RunTest(nameof(PythonToolsUITests.BasicProjectTests.OpenInteractiveFromSolutionExplorer));

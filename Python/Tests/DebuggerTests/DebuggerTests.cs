@@ -31,7 +31,6 @@ using Microsoft.VisualStudioTools;
 using TestUtilities;
 
 namespace DebuggerTests {
-    [TestClass, Ignore]
     public abstract class DebuggerTests : BaseDebuggerTests {
         [TestInitialize]
         public void CheckVersion() {
@@ -68,7 +67,7 @@ namespace DebuggerTests {
             await ChildTestAsync(EnumChildrenTestName, lastLine, "s", GetSetChildren(
                 new ChildInfo("[0]", "next((v for i, v in enumerate(s) if i == 0))", Version.Version.Is3x() ? "frozenset({2, 3, 4})" : "frozenset([2, 3, 4])")));
 
-            if (Version.Version.Is2x() && !(this is DebuggerTestsIpy)) {
+            if (Version.Version.Is2x() && !(this is DebuggerTestsIpy27)) {
                 // IronPython unicode repr differs
                 // 3.x: http://pytools.codeplex.com/workitem/76
                 await ChildTestAsync(EnumChildrenTestName, lastLine, "cinst",
@@ -99,14 +98,14 @@ namespace DebuggerTests {
         }
 
         private ChildInfo[] GetSetChildren(ChildInfo items) {
-            if (this is DebuggerTestsIpy) {
+            if (this is DebuggerTestsIpy27) {
                 return new ChildInfo[] { new ChildInfo("Count", null), items };
             }
             return new[] { items };
         }
 
         private ChildInfo[] GetListChildren(params ChildInfo[] items) {
-            if (this is DebuggerTestsIpy) {
+            if (this is DebuggerTestsIpy27) {
                 var res = new List<ChildInfo>(items);
                 res.Add(new ChildInfo("Count", null));
                 res.Add(new ChildInfo("Item", null));
@@ -126,7 +125,7 @@ namespace DebuggerTests {
 
             res.AddRange(items);
 
-            if (this is DebuggerTestsIpy) {
+            if (this is DebuggerTestsIpy27) {
                 res.Add(new ChildInfo("Count", null));
                 res.Add(new ChildInfo("Item", null));
                 res.Add(new ChildInfo("Keys", null));
@@ -150,7 +149,7 @@ namespace DebuggerTests {
             await ChildTestAsync("PrevFrame" + EnumChildrenTestName, breakLine, "s", 1, GetSetChildren(
                 new ChildInfo("[0]", "next((v for i, v in enumerate(s) if i == 0))", Version.Version.Is3x() ? "frozenset({2, 3, 4})" : "frozenset([2, 3, 4])")));
 
-            if (GetType() != typeof(DebuggerTestsIpy) && Version.Version.Is2x()) {
+            if (GetType() != typeof(DebuggerTestsIpy27) && Version.Version.Is2x()) {
                 // IronPython unicode repr differs
                 // 3.x: http://pytools.codeplex.com/workitem/76
                 await ChildTestAsync("PrevFrame" + EnumChildrenTestName, breakLine, "cinst", 1,
@@ -323,7 +322,7 @@ namespace DebuggerTests {
 
         [TestMethod, Priority(0)]
         public async Task SetNextLineTest() {
-            if (GetType() == typeof(DebuggerTestsIpy)) {
+            if (GetType() == typeof(DebuggerTestsIpy27)) {
                 //http://ironpython.codeplex.com/workitem/30129
                 return;
             }
@@ -360,7 +359,7 @@ namespace DebuggerTests {
 
                 var moduleFrame = thread.Frames[0];
                 Assert.AreEqual(1, moduleFrame.StartLine);
-                if (GetType() != typeof(DebuggerTestsIpy)) {
+                if (GetType() != typeof(DebuggerTestsIpy27)) {
                     Assert.AreEqual(13, moduleFrame.EndLine);
                 }
 
@@ -510,7 +509,7 @@ namespace DebuggerTests {
         // https://pytools.codeplex.com/workitem/2772
         [TestMethod, Priority(0)]
         public async Task EvalPseudoTypeTest() {
-            if (this is DebuggerTestsIpy) {
+            if (this is DebuggerTestsIpy27) {
                 return;
             }
 
@@ -616,7 +615,7 @@ namespace DebuggerTests {
                 var obj = frames[0].Locals.First(x => x.Expression == "x");
                 var children = await obj.GetChildrenAsync(CancellationTokens.After2s);
                 int extraCount = 0;
-                if (this is DebuggerTestsIpy) {
+                if (this is DebuggerTestsIpy27) {
                     extraCount += 2;
                 }
                 Assert.AreEqual(extraCount + 3, children.Length);
@@ -1240,7 +1239,7 @@ namespace DebuggerTests {
             }.RunAsync();
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         public async Task TestBreakpointHitOtherThreadStackTrace() {
             // http://pytools.codeplex.com/workitem/483
 
@@ -1712,7 +1711,7 @@ namespace DebuggerTests {
                 await TestExceptionAsync(debugger, Path.Combine(DebuggerTestPath, "UnhandledException4.py"), i == 0, ExceptionMode.Unhandled, null,
                     // On IronPython, an unhandled exception will be repeatedly reported as raised as it bubbles up the stack.
                     // Everywhere else, it will only be reported once at the point where it is initially raised. 
-                    this is DebuggerTestsIpy ?
+                    this is DebuggerTestsIpy27 ?
                     new[] { new ExceptionInfo("OSError", 17), new ExceptionInfo("OSError", 32), new ExceptionInfo("OSError", 55) } :
                     new[] { new ExceptionInfo("OSError", 17) }
                 );
@@ -1834,7 +1833,7 @@ namespace DebuggerTests {
                 raised.RemoveAt(raised.Count - 1);
             }
 
-            if (GetType() == typeof(DebuggerTestsIpy) && raised.Count == exceptions.Length + 1) {
+            if (GetType() == typeof(DebuggerTestsIpy27) && raised.Count == exceptions.Length + 1) {
                 // IronPython over-reports exceptions
                 raised.RemoveAt(raised.Count - 1);
             }
@@ -1908,7 +1907,7 @@ namespace DebuggerTests {
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         public async Task TestExceptionHandlers() {
             var debugger = new PythonDebugger();
 
@@ -2002,7 +2001,7 @@ namespace DebuggerTests {
 
         #region Exit Code Tests
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         [TestCategory("10s")]
         public async Task TestStartup() {
             var debugger = new PythonDebugger();
@@ -2020,7 +2019,7 @@ namespace DebuggerTests {
             await TestExitCodeAsync(debugger, Path.Combine(DebuggerTestPath, "CheckNameAndFile.py"), 0);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         [TestCategory("10s")]
         public async Task TestWindowsStartup() {
             var debugger = new PythonDebugger();
@@ -2238,51 +2237,6 @@ namespace DebuggerTests {
     }
 
     [TestClass]
-    public class DebuggerTests31 : DebuggerTests3x {
-        internal override PythonVersion Version {
-            get {
-                return PythonPaths.Python31 ?? PythonPaths.Python31_x64;
-            }
-        }
-    }
-
-    [TestClass]
-    public class DebuggerTests32 : DebuggerTests3x {
-        internal override PythonVersion Version {
-            get {
-                return PythonPaths.Python32 ?? PythonPaths.Python32_x64;
-            }
-        }
-    }
-
-    [TestClass]
-    public class DebuggerTests33 : DebuggerTests3x {
-        internal override PythonVersion Version {
-            get {
-                return PythonPaths.Python33 ?? PythonPaths.Python33_x64;
-            }
-        }
-    }
-
-    [TestClass]
-    public class DebuggerTests34 : DebuggerTests3x {
-        internal override PythonVersion Version {
-            get {
-                return PythonPaths.Python34;
-            }
-        }
-    }
-
-    [TestClass]
-    public class DebuggerTests34_x64 : DebuggerTests34 {
-        internal override PythonVersion Version {
-            get {
-                return PythonPaths.Python34_x64;
-            }
-        }
-    }
-
-    [TestClass]
     public class DebuggerTests35 : DebuggerTests3x {
         internal override PythonVersion Version {
             get {
@@ -2337,15 +2291,6 @@ namespace DebuggerTests {
     }
 
     [TestClass]
-    public class DebuggerTests26 : DebuggerTests {
-        internal override PythonVersion Version {
-            get {
-                return PythonPaths.Python26 ?? PythonPaths.Python26_x64;
-            }
-        }
-    }
-
-    [TestClass]
     public class DebuggerTests27 : DebuggerTests {
         internal override PythonVersion Version {
             get {
@@ -2364,7 +2309,7 @@ namespace DebuggerTests {
     }
 
     [TestClass]
-    public class DebuggerTestsIpy : DebuggerTests {
+    public class DebuggerTestsIpy27 : DebuggerTests {
         internal override PythonVersion Version {
             get {
                 return PythonPaths.IronPython27 ?? PythonPaths.IronPython27_x64;

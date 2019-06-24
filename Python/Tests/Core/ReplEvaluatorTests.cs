@@ -40,7 +40,7 @@ namespace PythonToolsTests {
             AssertListener.Initialize();
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         public void ExecuteTest() {
             using (var evaluator = MakeEvaluator()) {
                 var window = new MockReplWindow(evaluator);
@@ -59,7 +59,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(3)]
+        [TestMethod, Priority(TestExtensions.P3_FAILING_UNIT_TEST)]
         public void TestAbort() {
             using (var evaluator = MakeEvaluator()) {
                 var window = new MockReplWindow(evaluator);
@@ -83,7 +83,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         public void TestCanExecute() {
             using (var evaluator = MakeEvaluator()) {
                 Assert.IsTrue(evaluator.CanExecuteCode("print 'hello'"));
@@ -107,7 +107,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(3)]
+        [TestMethod, Priority(TestExtensions.P3_FAILING_UNIT_TEST)]
         public async Task TestGetAllMembers() {
             using (var evaluator = MakeEvaluator()) {
                 var window = new MockReplWindow(evaluator);
@@ -129,7 +129,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         public void ReplSplitCodeTest() {
             // http://pytools.codeplex.com/workitem/606
 
@@ -205,7 +205,7 @@ f()",
         }
 
         private static PythonInteractiveEvaluator MakeEvaluator() {
-            var python = PythonPaths.Python27 ?? PythonPaths.Python27_x64 ?? PythonPaths.Python26 ?? PythonPaths.Python26_x64;
+            var python = PythonPaths.Python27_x64 ?? PythonPaths.Python27;
             python.AssertInstalled();
             var provider = new SimpleFactoryProvider(python.InterpreterPath, python.InterpreterPath);
             var eval = new PythonInteractiveEvaluator(PythonToolsTestUtilities.CreateMockServiceProvider()) {
@@ -318,7 +318,7 @@ f()",
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         public async Task NoInterpreterPath() {
             // http://pytools.codeplex.com/workitem/662
 
@@ -335,7 +335,7 @@ f()",
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         public void BadInterpreterPath() {
             // http://pytools.codeplex.com/workitem/662
 

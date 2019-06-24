@@ -17,7 +17,7 @@
 using System.Reflection;
 using System.Runtime.InteropServices;
 
-[assembly: AssemblyTitle("FastCgiTest")]
+[assembly: AssemblyTitle("FastCgiTests")]
 [assembly: AssemblyDescription("")]
 
 [assembly: ComVisible(false)]

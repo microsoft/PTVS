@@ -145,10 +145,8 @@ namespace VSInterpretersTests {
         [TestMethod, Priority(0)]
         public async Task DetectReqPkgMissingPython2Async() {
             PythonVersion pythonInterpreter =   PythonPaths.Python27_x64 ??
-                                                PythonPaths.Python26_x64 ??
-                                                PythonPaths.Python27 ??
-                                                PythonPaths.Python26;
-            pythonInterpreter.AssertInstalled("Unable to run test because python 2.6 or 2.7 must be installed");
+                                                PythonPaths.Python27;
+            pythonInterpreter.AssertInstalled("Unable to run test because python 2.7 must be installed");
 
             await DetectReqPkgMissingAsync(pythonInterpreter);
         }
@@ -156,10 +154,12 @@ namespace VSInterpretersTests {
         [TestMethod, Priority(0)]
         public async Task DetectReqPkgMissingPython3Async() {
             PythonVersion pythonInterpreter =   PythonPaths.Python37_x64 ??
-                                                PythonPaths.Python36_x64 ??
                                                 PythonPaths.Python37 ??
-                                                PythonPaths.Python36;
-            pythonInterpreter.AssertInstalled("Unable to run test because python 3.6 or 3.7 must be installed");
+                                                PythonPaths.Python36_x64 ??
+                                                PythonPaths.Python36 ??
+                                                PythonPaths.Python35_x64 ??
+                                                PythonPaths.Python35;
+            pythonInterpreter.AssertInstalled("Unable to run test because python 3.5, 3.6, or 3.7 must be installed");
 
             await DetectReqPkgMissingAsync(pythonInterpreter);
         }

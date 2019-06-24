@@ -274,7 +274,7 @@ namespace PythonToolsMockTests {
             );
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(TestExtensions.P2_FAILING_UNIT_TEST)]
         public void SanityClassField() {
             RefactorTest("xyz", "abc",
                 new[] {
@@ -464,7 +464,7 @@ abc = 200
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         public void InheritedClassField() {
 
             RefactorTest("xyz", "abc",
@@ -512,7 +512,7 @@ abc = 200
             );
         }
 
-        [TestMethod, Priority(3)]
+        [TestMethod, Priority(TestExtensions.P3_FAILING_UNIT_TEST)]
         public void RenameGeneratorVariable() {
             // http://pytools.codeplex.com/workitem/454
             RefactorTest("xyz", "abc",
@@ -824,7 +824,7 @@ abc = 200
             );
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(TestExtensions.P2_FAILING_UNIT_TEST)]
         public void SanityLocal() {
             RefactorTest("xyz", "abc",
                 new[] {
@@ -885,7 +885,7 @@ def h(abc):
 
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(TestExtensions.P2_FAILING_UNIT_TEST)]
         public void SanityClosure() {
             RefactorTest("xyz", "abc",
                 new[] {
@@ -945,7 +945,7 @@ abc = 200
             );
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(TestExtensions.P2_FAILING_UNIT_TEST)]
         public void SanityLambda() {
             RefactorTest("xyz", "abc",
                 new[] {
@@ -1262,7 +1262,7 @@ xyz = 100
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         public void SanityNonLocal() {
             RefactorTest("xyz", "abc", version: new Version(3, 2),
             inputs: new[] {
@@ -1678,7 +1678,7 @@ xyz = 100
             );
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(TestExtensions.P2_FAILING_UNIT_TEST)]
         public void DelNonLocal() {
             RefactorTest("xyz", "abc", version: new Version(3, 2),
             inputs: new[] {
@@ -2161,7 +2161,7 @@ f(abc)
             );
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(TestExtensions.P2_FAILING_UNIT_TEST)]
         public void ImportAsStatement() {
             RefactorTest("xyz", "abc",
             new[] {
@@ -2313,7 +2313,7 @@ abc = 200
 
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         public void NestedFunctions() {
             RefactorTest("h", "g",
                 new[] {
