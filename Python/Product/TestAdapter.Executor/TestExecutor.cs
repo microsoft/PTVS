@@ -64,8 +64,6 @@ namespace Microsoft.PythonTools.TestAdapter {
             _cancelRequested.Set();
         }
 
-     
-
         public void RunTests(IEnumerable<string> sources, IRunContext runContext, IFrameworkHandle frameworkHandle) {
 
            // MessageBox.Show("Hello1: " + Process.GetCurrentProcess().Id);
@@ -149,7 +147,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 
             foreach (var testGroup in tests.GroupBy(t => sourceToProjSettings.TryGetValue(t.CodeFilePath, out PythonProjectSettings proj) ? proj : null)) {
                 if (testGroup.Key != null) {
-                    RunTestGroup(testGroup, frameworkHandle);
+                    RunTestGroup(testGroup, runContext, frameworkHandle);
                 }
                 else {
                     Debug.WriteLine("Missing projectSettings for TestCases:");
@@ -158,19 +156,19 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
         }
 
-        private void RunTestGroup(IGrouping<PythonProjectSettings, TestCase> testGroup, IFrameworkHandle frameworkHandle) {
+        private void RunTestGroup(IGrouping<PythonProjectSettings, TestCase> testGroup, IRunContext runContext, IFrameworkHandle frameworkHandle) {
             PythonProjectSettings settings = testGroup.Key;
             if (!settings.PytestEnabled) {
                 return;
             }
 
-            var executor = new ExecutorService();
-            var resultsXML = executor.Run(settings, testGroup);
+            using (var executor = new ExecutorService(frameworkHandle, runContext)) {
+                var resultsXML = executor.Run(settings, testGroup);
 
-            var testResults = TestResultParser.Parse(resultsXML, testGroup);
-
-            foreach (var result in testResults) {
-                frameworkHandle.RecordResult(result);
+                var testResults = TestResultParser.Parse(resultsXML, testGroup);
+                foreach (var result in testResults) {
+                    frameworkHandle.RecordResult(result);
+                }
             }
         }
 
