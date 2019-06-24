@@ -55,7 +55,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 return;
             }
 
-            var discovery = new DiscoveryService();
+            var discovery = new DiscoveryService(logger);
             var results = discovery.RunDiscovery(settings, testGroup);
 
             if (results.Count == 0) {

@@ -92,7 +92,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                     continue;
                 }
 
-                var discovery = new DiscoveryService();
+                var discovery = new DiscoveryService(frameworkHandle);
                 var results = discovery.RunDiscovery(settings, testGroup);
 
                 if (results.Count == 0) {

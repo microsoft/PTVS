@@ -30,7 +30,7 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
             PythonAndNative
         }
 
-        public ExecutorService(IFrameworkHandle frameworkHandle,IRunContext runContext) {
+        public ExecutorService(IFrameworkHandle frameworkHandle, IRunContext runContext) {
             _frameworkHandle = frameworkHandle;
             _app = VisualStudioProxy.FromEnvironmentVariable(PythonConstants.PythonToolsProcessIdEnvironmentVariable);
             _debugMode = PythonDebugMode.None;
@@ -134,13 +134,15 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
                 ouputFile = GetJunitXmlFile();
                 var arguments = GetArguments(tests, projSettings, ouputFile);
 
+                var testRedirector = new TestRedirector(_frameworkHandle);
+
                 using (var proc = ProcessOutput.Run(
                     projSettings.InterpreterPath,
                     arguments,
                     projSettings.WorkingDirectory,
                     env,
                     visible: true,
-                    null
+                    testRedirector
                 )) {
 
                     DebugInfo("cd " + projSettings.WorkingDirectory);
