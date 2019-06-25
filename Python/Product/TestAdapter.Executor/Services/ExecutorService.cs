@@ -23,6 +23,7 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
         private readonly PythonDebugMode _debugMode;
         private readonly string _debugSecret;
         private readonly int _debugPort;
+        private readonly IRunContext _runContext;
 
         enum PythonDebugMode {
             None,
@@ -32,12 +33,9 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
 
         public ExecutorService(IFrameworkHandle frameworkHandle, IRunContext runContext) {
             _frameworkHandle = frameworkHandle;
+            _runContext = runContext;
             _app = VisualStudioProxy.FromEnvironmentVariable(PythonConstants.PythonToolsProcessIdEnvironmentVariable);
-            _debugMode = PythonDebugMode.None;
-            if (runContext.IsBeingDebugged && _app != null) {
-                _debugMode = PythonDebugMode.PythonOnly;
-            }
-
+            _debugMode = (runContext.IsBeingDebugged && _app != null) ? PythonDebugMode.PythonOnly : PythonDebugMode.None;
             _debugSecret = GetSecretAndPort(out _debugPort);
         }
 
@@ -181,11 +179,8 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
         }
 
         private string GetJunitXmlFile() {
-            var tempFolder = Path.Combine(Path.GetTempPath(), "pytest");
-            Directory.CreateDirectory(tempFolder);
-
             string baseName = "junitresults_";
-            string outPath = Path.Combine(tempFolder, baseName + Guid.NewGuid().ToString() + ".xml");
+            string outPath = Path.Combine(_runContext.TestRunDirectory, baseName + Guid.NewGuid().ToString() + ".xml");
             return outPath;
         }
 
