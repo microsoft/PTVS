@@ -21,29 +21,29 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
         /// <param name="tests"></param>
         /// <returns></returns>
         public static IEnumerable<TestResult> Parse(string junitXmlPath, IEnumerable<TestCase> tests) {
-            var testResults = tests.Select(t => new TestResult(t) { Outcome = TestOutcome.NotFound }).ToList();
+            var vsTestResults = tests.Select(t => new TestResult(t) { Outcome = TestOutcome.NotFound }).ToList();
 
             if (!File.Exists(junitXmlPath)) {
-                return testResults;
+                return vsTestResults;
             }
 
             var doc = Read(junitXmlPath);
             XPathNodeIterator xmlTestCases = doc.CreateNavigator().Select("/testsuite/testcase");
 
-            foreach (XPathNavigator testcase in xmlTestCases) {
-                var file = testcase.GetAttribute("file", "");
-                var name = testcase.GetAttribute("name", "");
-                var classname = testcase.GetAttribute("classname", "");
+            foreach (XPathNavigator pytestcase in xmlTestCases) {
+                var file = pytestcase.GetAttribute("file", "");
+                var name = pytestcase.GetAttribute("name", "");
+                var classname = pytestcase.GetAttribute("classname", "");
 
                 if (String.IsNullOrEmpty(file) ||
                     String.IsNullOrEmpty(name) ||
                     String.IsNullOrEmpty(classname) ||
-                    !Int32.TryParse(testcase.GetAttribute("line", String.Empty), out int line))
+                    !Int32.TryParse(pytestcase.GetAttribute("line", String.Empty), out int line))
                 {
                     var message = String.Empty;
-                    if(testcase.HasChildren) {
-                        testcase.MoveToFirstChild();
-                        message = testcase.GetAttribute("message", String.Empty) + testcase.Value;
+                    if(pytestcase.HasChildren) {
+                        pytestcase.MoveToFirstChild();
+                        message = pytestcase.GetAttribute("message", String.Empty) + pytestcase.Value;
                     }
                     Debug.WriteLine("Test result parse failed: {0}".FormatInvariant(message));
                     continue;
@@ -51,25 +51,25 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
        
 
                 // Match on classname and function name for now
-                var result = testResults
+                var result = vsTestResults
                     .Where(x =>
                     String.Compare(x.TestCase.DisplayName, name, StringComparison.InvariantCultureIgnoreCase) == 0 &&
                     String.Compare(x.TestCase.GetPropertyValue<string>(Pytest.Constants.PyTestXmlClassNameProperty, default(string)), classname, StringComparison.InvariantCultureIgnoreCase) == 0) 
                     .FirstOrDefault();
 
                 if (result != null) {
-                    UpdateTestResult(testcase, result);
+                    UpdateTestResult(pytestcase, result);
                 } else {
                     var message = String.Empty;
-                    if (testcase.HasChildren) {
-                        testcase.MoveToFirstChild();
-                        message = testcase.GetAttribute("message", String.Empty) + testcase.Value;
+                    if (pytestcase.HasChildren) {
+                        pytestcase.MoveToFirstChild();
+                        message = pytestcase.GetAttribute("message", String.Empty) + pytestcase.Value;
                     }
                     Debug.WriteLine("Testcase for result not found: {0}".FormatInvariant(message));
                 }
             }
                      
-            return testResults;
+            return vsTestResults;
         }
 
         private static void UpdateTestResult(XPathNavigator navNode, TestResult result) {

@@ -46,22 +46,22 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
         }
 
         public string[] GetArguments(IEnumerable<TestCase> tests, PythonProjectSettings projSettings, string outputfile) {
-            var arguments = new List<string>();
-            arguments.Add(TestLauncherPath);
-            arguments.Add(projSettings.WorkingDirectory);
-            arguments.Add(projSettings.PytestPath);
-            arguments.Add(_debugSecret);
-            arguments.Add(_debugPort.ToString());
-            arguments.Add(String.Format("--junitxml={0}", outputfile));
+            var arguments = new List<string> {
+                TestLauncherPath,
+                projSettings.WorkingDirectory,
+                projSettings.PytestPath,
+                _debugSecret,
+                _debugPort.ToString(),
+                String.Format("--junitxml={0}", outputfile)
+            };
 
             if (!String.IsNullOrEmpty(projSettings.PytestArgs))
                 arguments.Add(projSettings.PytestArgs);
 
-            foreach (var test in tests) {
-                var pytestId = test.GetPropertyValue<string>(Pytest.Constants.PytestIdProperty, default(string));
-                var executionTestPath = Path.Combine(Path.GetDirectoryName(test.CodeFilePath), pytestId);
+            foreach (TestCase test in tests) {
+                var executionTestPath = test.GetPropertyValue<string>(Pytest.Constants.PytestTestExecutionPathPropertery, default);
                 if (String.IsNullOrEmpty(executionTestPath)) {
-                    Debug.WriteLine("PytestId missing for testcase {0}", test.FullyQualifiedName);
+                    Debug.WriteLine("Pytest execution path missing for testcase {0}", test.FullyQualifiedName);
                     continue;
                 }
                 arguments.Add(executionTestPath);

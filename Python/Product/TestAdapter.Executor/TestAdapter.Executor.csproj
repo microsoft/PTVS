@@ -90,7 +90,7 @@
     <Compile Include="Config\PythonProjectSettings.cs" />
     <Compile Include="Config\RunSettingsUtil.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Pytest\PytestReader.cs" />
+    <Compile Include="Pytest\PytestDiscoveryReader.cs" />
     <Compile Include="Services\DiscoveryService.cs" />
     <Compile Include="Services\ExecutorService.cs" />
     <Compile Include="Pytest\TestResultParser.cs" />

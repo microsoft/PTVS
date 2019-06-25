@@ -103,7 +103,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                     return;
                 }
 
-                var tcList = PyTestReader.ParseDiscovery(results[0], discoverySink:null);
+                var tcList = PyTestDiscoveryReader.ParseDiscovery(results[0], discoverySink:null);
                 tests.AddRange(tcList);
 
                 if (_cancelRequested.WaitOne(0)) {

@@ -62,7 +62,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 return;
             }
 
-            PyTestReader.ParseDiscovery(results[0], discoverySink);
+            PyTestDiscoveryReader.ParseDiscovery(results[0], discoverySink);
         }
     }
 }

@@ -7,7 +7,7 @@ using System.Diagnostics;
 using System.IO;
 
 namespace Microsoft.PythonTools.TestAdapter.Pytest {
-    static class PyTestReader {
+    static class PyTestDiscoveryReader {
 
         public static IEnumerable<TestCase> ParseDiscovery(PytestDiscoveryResults result, ITestCaseDiscoverySink discoverySink) {
             var testcases = new List<TestCase>();
@@ -35,11 +35,12 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
                         CodeFilePath = codeFilePath
                     };
 
-                    tc.SetPropertyValue(Constants.PytestFileProptery, source);
+                    tc.SetPropertyValue(Constants.PytestFileProperty, source);
                     tc.SetPropertyValue(Constants.PytestIdProperty, t.Id);
                     tc.SetPropertyValue(Constants.PyTestXmlClassNameProperty, CreateXmlClassName(t, parentMap));
-
-                    foreach(var marker in t.Markers) {
+                    tc.SetPropertyValue(Constants.PytestTestExecutionPathPropertery, GetAbsoluteTestExecutionPath(codeFilePath, t.Id));
+                    
+                    foreach (var marker in t.Markers) {
                         tc.Traits.Add(new Trait(marker.ToString(), String.Empty));
                     }
 
@@ -63,7 +64,7 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
         /// <param name="t"></param>
         /// <param name="parentMap"></param>
         /// <returns></returns>
-        private static string CreateXmlClassName(PytestTest t, Dictionary<string, PytestParent> parentMap) {
+        public static string CreateXmlClassName(PytestTest t, Dictionary<string, PytestParent> parentMap) {
             var parentList = new List<string>();
             var currId = t.Parentid;
             while (parentMap.TryGetValue(currId, out PytestParent parent)) {
@@ -90,6 +91,26 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
                 return $"{parts[0]}::{className}::{parts[1]}";
             }
             return fullyQualifiedName;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="absoluteFilePath"></param>
+        /// <param name="pytestId"></param>
+        /// <returns></returns>
+        public static string GetAbsoluteTestExecutionPath(string absoluteFilePath, string pytestId) {
+            var filename = Path.GetFileName(absoluteFilePath);
+            var executionTestPath = "";
+            var index = pytestId.LastIndexOf(filename);
+            if (index != -1) {
+                //join full codefilepath and pytestId but remove overlapping directories or filename
+                var functionName = pytestId.Substring(index + filename.Length);
+                executionTestPath = absoluteFilePath + functionName;
+            } else {
+                executionTestPath = Path.Combine(Path.GetDirectoryName(absoluteFilePath), pytestId.TrimStart('.'));
+            }
+            return executionTestPath;
         }
     }
 }

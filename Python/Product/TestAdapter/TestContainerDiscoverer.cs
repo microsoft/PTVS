@@ -135,7 +135,6 @@ namespace Microsoft.PythonTools.TestAdapter {
                         if (_firstLoad || _forceRefresh) {
                            
                             var workspace = GetAssociatedPythonWorkspace();
-
                             if (workspace != null) {
                                 SetupWorkspace(workspace);
                             } else {
@@ -165,8 +164,8 @@ namespace Microsoft.PythonTools.TestAdapter {
         }
 
         public ProjectInfo GetProjectInfo(string projectHome) {
-            ProjectInfo projectInfo;
-            if (_projectMap.TryGetValue(projectHome, out projectInfo)) {
+            if (projectHome != null 
+                &&_projectMap.TryGetValue(projectHome, out ProjectInfo projectInfo)) {
                 return projectInfo;
             }
             return null;
@@ -190,11 +189,11 @@ namespace Microsoft.PythonTools.TestAdapter {
         }
 
         private async Task OnProjectLoadedAsync(IVsProject project) {
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
             var pyProj = PythonProject.FromObject(project);
             if (pyProj != null 
                 && pyProj.GetProperty(PythonConstants.PyTestEnabledSetting).IsTrue()) {
 
-                var sources = project.GetProjectItems();
                 var projInfo = new ProjectInfo(this, pyProj);
                 _projectMap[projInfo.ProjectHome] = projInfo;
 
@@ -203,19 +202,21 @@ namespace Microsoft.PythonTools.TestAdapter {
                     _testFilesUpdateWatcher.FileChangedEvent += OnProjectItemChanged;
                 }
 
+                var sources = project.GetProjectItems();
                 UpdateTestContainers(sources, projInfo, isAdd:true);
             }
         }
 
         private void OnProjectUnloaded(object sender, ProjectEventArgs e) {
-            if (e.Project != null) {
-                var pyProj = PythonProject.FromObject(e.Project);
-                
-                if (pyProj != null &&
-                    _projectMap.TryRemove(pyProj.ProjectHome, out ProjectInfo removedProject )) {
+            if (e.Project == null)
+                return;
 
-                    NotifyContainerChanged();
-                }
+            string projectHome = e.Project.GetProjectHome();
+            if (projectHome != null 
+                && _projectMap.TryRemove(projectHome, out ProjectInfo projToRemove)) {
+                var sources = e.Project.GetProjectItems();
+                UpdateTestContainers(sources, projToRemove, isAdd: false);
+                NotifyContainerChanged();
             }
         }
 
@@ -388,17 +389,10 @@ namespace Microsoft.PythonTools.TestAdapter {
         }
 
         private IPythonWorkspaceContext GetAssociatedPythonWorkspace() {
-            _serviceProvider.GetUIThread().MustBeCalledFromUIThread();
-
-            var componnetModel = (IComponentModel)_serviceProvider.GetService(typeof(SComponentModel));
-            if (componnetModel == null)
+            if (_workspaceContextProvider == null)
                 return null;
 
-            var workspaceContextProvider = componnetModel.GetService<IPythonWorkspaceContextProvider>();
-            if (workspaceContextProvider == null)
-                return null;
-
-            return workspaceContextProvider.Workspace;
+            return _workspaceContextProvider.Workspace;
         }
     }
 }
