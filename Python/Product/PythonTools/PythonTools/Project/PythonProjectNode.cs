@@ -1313,7 +1313,7 @@ namespace Microsoft.PythonTools.Project {
             var config = new LaunchConfiguration(fact.Configuration) {
                 InterpreterPath = intPath,
                 InterpreterArguments = GetProjectProperty(PythonConstants.InterpreterArgumentsSetting, resetCache: false),
-                ScriptName = GetStartupFile(),
+                ScriptPath = GetStartupFile(),
                 ScriptArguments = GetProjectProperty(PythonConstants.CommandLineArgumentsSetting, resetCache: false),
                 WorkingDirectory = GetWorkingDirectory(),
                 SearchPaths = _searchPaths.GetAbsoluteSearchPaths().ToList()

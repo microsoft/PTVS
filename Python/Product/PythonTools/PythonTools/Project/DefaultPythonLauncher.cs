@@ -42,7 +42,7 @@ namespace Microsoft.PythonTools.Project {
 
         public int LaunchFile(string/*!*/ file, bool debug) {
             var config = _config.Clone();
-            config.ScriptName = file;
+            config.ScriptPath = file;
             return Launch(config, debug);
         }
 

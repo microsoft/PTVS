@@ -35,7 +35,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 PreferWindowedInterpreter = PreferWindowedInterpreter,
                 InterpreterPath = InterpreterPath,
                 InterpreterArguments = InterpreterArguments,
-                ScriptName = ScriptName,
+                ScriptPath = ScriptPath,
                 ScriptArguments = ScriptArguments,
                 WorkingDirectory = WorkingDirectory,
                 Environment = Environment != null ? new Dictionary<string, string>(Environment) : null,
@@ -69,7 +69,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
         public string InterpreterPath { get; set; }
         public string InterpreterArguments { get; set; }
-        public string ScriptName { get; set; }
+        public string ScriptPath { get; set; }
         public string ScriptArguments { get; set; }
         public string WorkingDirectory { get; set; }
 

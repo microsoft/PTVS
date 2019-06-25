@@ -95,7 +95,7 @@ namespace Microsoft.PythonTools.Debugger {
         private static string GetArgs(LaunchConfiguration config) {
             var args = string.Join(" ", new[] {
                     config.InterpreterArguments,
-                    config.ScriptName == null ? "" : ProcessOutput.QuoteSingleArgument(config.ScriptName),
+                    config.ScriptPath == null ? "" : ProcessOutput.QuoteSingleArgument(config.ScriptPath),
                     config.ScriptArguments
                 }.Where(s => !string.IsNullOrEmpty(s)));
 
@@ -126,7 +126,7 @@ namespace Microsoft.PythonTools.Debugger {
 
             JObject jsonObj = new JObject {
                 ["exe"] = config.GetInterpreterPath(),
-                ["cwd"] = string.IsNullOrEmpty(config.WorkingDirectory) ? PathUtils.GetParent(config.ScriptName) : config.WorkingDirectory,
+                ["cwd"] = string.IsNullOrEmpty(config.WorkingDirectory) ? PathUtils.GetParent(config.ScriptPath) : config.WorkingDirectory,
                 ["remoteMachine"] = "",
                 ["args"] = GetArgs(config),
                 ["options"] = GetOptions(provider, config),
@@ -143,12 +143,12 @@ namespace Microsoft.PythonTools.Debugger {
         }
 
         public static void RequireStartupFile(LaunchConfiguration config) {
-            if (string.IsNullOrEmpty(config.ScriptName)) {
+            if (string.IsNullOrEmpty(config.ScriptPath)) {
                 throw new NoStartupFileException(Strings.DebugLaunchScriptNameMissing);
             }
 
-            if (!File.Exists(config.ScriptName)) {
-                throw new NoStartupFileException(Strings.DebugLaunchScriptNameDoesntExist.FormatUI(config.ScriptName));
+            if (!File.Exists(config.ScriptPath)) {
+                throw new NoStartupFileException(Strings.DebugLaunchScriptNameDoesntExist.FormatUI(config.ScriptPath));
             }
         }
 
@@ -163,7 +163,7 @@ namespace Microsoft.PythonTools.Debugger {
             try {
                 dti.Info.dlo = DEBUG_LAUNCH_OPERATION.DLO_CreateProcess;
                 dti.Info.bstrExe = config.GetInterpreterPath();
-                dti.Info.bstrCurDir = string.IsNullOrEmpty(config.WorkingDirectory) ? PathUtils.GetParent(config.ScriptName) : config.WorkingDirectory;
+                dti.Info.bstrCurDir = string.IsNullOrEmpty(config.WorkingDirectory) ? PathUtils.GetParent(config.ScriptPath) : config.WorkingDirectory;
 
                 dti.Info.bstrRemoteMachine = null;
                 dti.Info.fSendStdoutToOutputWindow = 0;
@@ -221,7 +221,7 @@ namespace Microsoft.PythonTools.Debugger {
                 FileName = config.GetInterpreterPath(),
                 Arguments = string.Join(" ", new[] {
                     config.InterpreterArguments,
-                    config.ScriptName == null ? "" : ProcessOutput.QuoteSingleArgument(config.ScriptName),
+                    config.ScriptPath == null ? "" : ProcessOutput.QuoteSingleArgument(config.ScriptPath),
                     config.ScriptArguments
                 }.Where(s => !string.IsNullOrEmpty(s))),
                 WorkingDirectory = config.WorkingDirectory,
@@ -235,7 +235,7 @@ namespace Microsoft.PythonTools.Debugger {
                 throw new FileNotFoundException(Strings.DebugLaunchInterpreterMissing_Path.FormatUI(psi.FileName));
             }
             if (string.IsNullOrEmpty(psi.WorkingDirectory)) {
-                psi.WorkingDirectory = PathUtils.GetParent(config.ScriptName);
+                psi.WorkingDirectory = PathUtils.GetParent(config.ScriptPath);
             }
             if (string.IsNullOrEmpty(psi.WorkingDirectory)) {
                 throw new DirectoryNotFoundException(Strings.DebugLaunchWorkingDirectoryMissing);

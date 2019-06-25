@@ -63,7 +63,7 @@ namespace Microsoft.PythonTools.Wsl.Debugger {
 
         public int LaunchFile(string/*!*/ file, bool debug) {
             var config = _config.Clone();
-            config.ScriptName = file;
+            config.ScriptPath = file;
             return Launch(config, debug);
         }
 
@@ -119,7 +119,7 @@ namespace Microsoft.PythonTools.Wsl.Debugger {
                 // TODO: Search paths
                 "$py {0} {1} {2}".FormatInvariant(
                     config.InterpreterArguments,
-                    config.ScriptName == null ? "" : QuoteSingleArgument(FixPath(config.ScriptName)),
+                    config.ScriptPath == null ? "" : QuoteSingleArgument(FixPath(config.ScriptPath)),
                     config.ScriptArguments
                 ),
                 "read -p 'Press Enter to exit . . .'"
@@ -161,7 +161,7 @@ namespace Microsoft.PythonTools.Wsl.Debugger {
                     "-i", "127.0.0.1",
                     "-p", port.ToString(),
                     "--wait",
-                    QuoteSingleArgument(FixPath(config.ScriptName)),
+                    QuoteSingleArgument(FixPath(config.ScriptPath)),
                     config.ScriptArguments
                 )
             );
