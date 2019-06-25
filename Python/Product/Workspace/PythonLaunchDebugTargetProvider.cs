@@ -134,7 +134,7 @@ namespace Microsoft.PythonTools.Workspace {
             var launchConfig = new LaunchConfiguration(config) {
                 InterpreterPath = config == null ? path : null,
                 InterpreterArguments = settings.GetValue(InterpreterArgumentsKey, string.Empty),
-                ScriptPath = Path.IsPathRooted(scriptName) ? scriptName : Path.Combine(workingDir, scriptName),
+                ScriptName = Path.IsPathRooted(scriptName) ? scriptName : Path.Combine(workingDir, scriptName),
                 ScriptArguments = settings.GetValue(ScriptArgumentsKey, string.Empty),
                 WorkingDirectory = workingDir,
                 SearchPaths = searchPaths,

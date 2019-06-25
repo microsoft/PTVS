@@ -55,10 +55,10 @@ namespace Microsoft.PythonTools.Project.Web {
                 m => {
                     switch (m.Groups[1].Value.ToLowerInvariant()) {
                         case "startupfile":
-                            return original.ScriptPath;
+                            return original.ScriptName;
                         case "startupmodule":
                             try {
-                                return ModulePath.FromFullPath(original.ScriptPath, project.ProjectHome).ModuleName;
+                                return ModulePath.FromFullPath(original.ScriptName, project.ProjectHome).ModuleName;
                             } catch (ArgumentException) {
                             }
                             break;
@@ -78,7 +78,7 @@ namespace Microsoft.PythonTools.Project.Web {
         ) {
             var target = DoSubstitutions(original, project, project.GetProperty(targetProperty));
             if (string.IsNullOrEmpty(target)) {
-                target = original.ScriptPath;
+                target = original.ScriptName;
             }
 
             var targetType = project.GetProperty(targetTypeProperty);
@@ -96,7 +96,7 @@ namespace Microsoft.PythonTools.Project.Web {
             } else if (PythonCommandTask.TargetTypeExecutable.Equals(targetType, StringComparison.OrdinalIgnoreCase)) {
                 config.InterpreterPath = target;
             } else {
-                config.ScriptPath = target;
+                config.ScriptName = target;
             }
 
             var args = DoSubstitutions(original, project, project.GetProperty(argumentsProperty));

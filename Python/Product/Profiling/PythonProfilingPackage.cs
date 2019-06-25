@@ -275,7 +275,7 @@ namespace Microsoft.PythonTools.Profiling {
                 return;
             }
 
-            if (string.IsNullOrEmpty(config.ScriptPath)) {
+            if (string.IsNullOrEmpty(config.ScriptName)) {
                 MessageBox.Show(Strings.NoProjectStartupFile, Strings.ProductTitle);
                 return;
             }
@@ -283,7 +283,7 @@ namespace Microsoft.PythonTools.Profiling {
             if (string.IsNullOrEmpty(config.WorkingDirectory) || config.WorkingDirectory == ".") {
                 config.WorkingDirectory = project.ProjectHome;
                 if (string.IsNullOrEmpty(config.WorkingDirectory)) {
-                    config.WorkingDirectory = Path.GetDirectoryName(config.ScriptPath);
+                    config.WorkingDirectory = Path.GetDirectoryName(config.ScriptName);
                 }
             }
 
@@ -312,7 +312,7 @@ namespace Microsoft.PythonTools.Profiling {
             }
 
             config.InterpreterPath = runTarget.InterpreterPath;
-            config.ScriptPath = runTarget.Script;
+            config.ScriptName = runTarget.Script;
             config.ScriptArguments = runTarget.Arguments;
             config.WorkingDirectory = runTarget.WorkingDirectory;
 
@@ -380,7 +380,7 @@ namespace Microsoft.PythonTools.Profiling {
             var process = new ProfiledProcess(
                 (PythonToolsService)session._serviceProvider.GetService(typeof(PythonToolsService)),
                 config.GetInterpreterPath(),
-                string.Join(" ", ProcessOutput.QuoteSingleArgument(config.ScriptPath), config.ScriptArguments),
+                string.Join(" ", ProcessOutput.QuoteSingleArgument(config.ScriptName), config.ScriptArguments),
                 config.WorkingDirectory,
                 session._serviceProvider.GetPythonToolsService().GetFullEnvironment(config)
             );

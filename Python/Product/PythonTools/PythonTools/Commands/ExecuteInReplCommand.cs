@@ -191,7 +191,7 @@ namespace Microsoft.PythonTools.Commands {
             }
 
             if (!string.IsNullOrEmpty(scriptName)) {
-                config.ScriptPath = scriptName;
+                config.ScriptName = scriptName;
                 // Only overwrite the working dir for a loose file, don't do it for workspaces
                 if (workspace == null) {
                     config.WorkingDirectory = PathUtils.GetParent(scriptName);
@@ -218,9 +218,9 @@ namespace Microsoft.PythonTools.Commands {
             await ThreadHelper.JoinableTaskFactory.RunAsync(async () => {
                 await ((IInteractiveEvaluator)eval).ResetAsync();
 
-                window.InteractiveWindow.WriteLine(Strings.ExecuteInReplCommand_RunningMessage.FormatUI(config.ScriptPath));
+                window.InteractiveWindow.WriteLine(Strings.ExecuteInReplCommand_RunningMessage.FormatUI(config.ScriptName));
 
-                await eval.ExecuteFileAsync(config.ScriptPath, config.ScriptArguments);
+                await eval.ExecuteFileAsync(config.ScriptName, config.ScriptArguments);
             });
         }
 
