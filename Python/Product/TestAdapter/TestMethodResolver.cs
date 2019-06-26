@@ -16,53 +16,48 @@
 
 using System;
 using System.ComponentModel.Composition;
-using System.Runtime.InteropServices;
-using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Projects;
-using Microsoft.VisualStudio;
+using System.Linq;
+using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestWindow.Extensibility;
-using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.TestAdapter {
     [Export(typeof(ITestMethodResolver))]
     class TestMethodResolver : ITestMethodResolver {
         private readonly IServiceProvider _serviceProvider;
-        private readonly TestContainerDiscoverer _discoverer;
-
+        
         #region ITestMethodResolver Members
 
         [ImportingConstructor]
         public TestMethodResolver([Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider,
             [Import]TestContainerDiscoverer discoverer) {
             _serviceProvider = serviceProvider;
-            _discoverer = discoverer;
         }
 
         public Uri ExecutorUri {
             get { return PythonConstants.ExecutorUri; }
         }
 
+        [Obsolete]
         public string GetCurrentTest(string filePath, int line, int lineCharOffset) {
-            var rdt = (IVsRunningDocumentTable)_serviceProvider.GetService(typeof(SVsRunningDocumentTable));
-            var pyProj = PythonProject.FromObject(VsProjectExtensions.PathToProject(filePath, rdt));
-            if (pyProj != null) {
-                var container = _discoverer.GetTestContainer(pyProj.ProjectHome, filePath);
-                if (container != null) {
-                    foreach (var testCase in container.TestCases) {
-                        if (testCase.StartLine >= line && line <= testCase.EndLine) {
-                            var moduleName = PathUtils.CreateFriendlyFilePath(pyProj.ProjectHome, testCase.Filename);
-                            return moduleName + "::" + testCase.ClassName + "::" + testCase.MethodName;
-                        }
-                    }
-                }
-            }
 
-            return null;
+            var componentModel = _serviceProvider.GetService(typeof(SComponentModel)) as IComponentModel;
+            var testService = componentModel.GetService<ITestsService>();
+
+            var tests = testService.GetTestsAsEnumerableAsync().GetAwaiter().GetResult().ToList();
+
+            var testcase = tests
+                .Where(t => String.Compare(t.Source, filePath, ignoreCase: true) == 0)
+                .OrderByDescending(t => t.LineNumber)
+                .Where(t => t.LineNumber <= line)
+                .FirstOrDefault();
+
+            if (testcase == null)
+                return null;
+            
+            return testcase.FullyQualifiedName;
         }
 
-       
 
         #endregion
     }
