@@ -69,7 +69,7 @@ namespace PythonToolsUITestsRunner {
             _vs.RunTest(nameof(PythonToolsUITests.RemoveImportTests.FromImportParensTrailingComma1));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void FromImportParensTrailingComma2() {
             _vs.RunTest(nameof(PythonToolsUITests.RemoveImportTests.FromImportParensTrailingComma2));

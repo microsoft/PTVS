@@ -65,8 +65,12 @@ namespace Microsoft.PythonTools.Interpreter {
                 if (_workspace != null) {
                     _workspace.InterpreterSettingChanged -= OnInterpreterSettingChanged;
                 }
-                _folderWatcher?.Dispose();
-                _folderWatcherTimer?.Dispose();
+                if (_folderWatcher != null) {
+                    _folderWatcher.Dispose();
+                }
+                if (_folderWatcherTimer != null) {
+                    _folderWatcherTimer.Dispose();
+                }
             }
         }
 

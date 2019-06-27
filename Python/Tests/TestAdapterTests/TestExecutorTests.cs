@@ -219,7 +219,7 @@ namespace TestAdapterTests {
             )), testCases);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         [TestCategory("10s")]
         public void TestRun() {
             var executor = new TestExecutor();
@@ -240,7 +240,7 @@ namespace TestAdapterTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         [TestCategory("10s")]
         public void TestRunAll() {
             var executor = new TestExecutor();
@@ -604,16 +604,6 @@ namespace TestAdapterTests {
     }
 
     [TestClass]
-    public class TestExecutorTests26 : TestExecutorTests {
-        [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
-            AssertListener.Initialize();
-        }
-
-        protected override PythonVersion Version => PythonPaths.Python26 ?? PythonPaths.Python26_x64;
-    }
-
-    [TestClass]
     public class TestExecutorTests27 : TestExecutorTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
@@ -622,7 +612,7 @@ namespace TestAdapterTests {
 
         protected override PythonVersion Version => PythonPaths.Python27 ?? PythonPaths.Python27_x64;
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         [TestCategory("10s")]
         public void TestExtensionReference() {
             // This test uses a 32-bit Python 2.7 .pyd
@@ -647,50 +637,6 @@ namespace TestAdapterTests {
     }
 
     [TestClass]
-    public class TestExecutorTests31 : TestExecutorTests {
-        [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
-            AssertListener.Initialize();
-        }
-
-        protected override PythonVersion Version => PythonPaths.Python31 ?? PythonPaths.Python31_x64;
-    }
-
-    [TestClass]
-    public class TestExecutorTests32 : TestExecutorTests {
-        [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
-            AssertListener.Initialize();
-        }
-
-        protected override PythonVersion Version => PythonPaths.Python32 ?? PythonPaths.Python32_x64;
-    }
-
-    [TestClass]
-    public class TestExecutorTests33 : TestExecutorTests {
-        [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
-            AssertListener.Initialize();
-        }
-
-        protected override PythonVersion Version => PythonPaths.Python33 ?? PythonPaths.Python33_x64;
-
-        protected override string ImportErrorFormat => NewImportErrorFormat;
-    }
-
-    [TestClass]
-    public class TestExecutorTests34 : TestExecutorTests {
-        [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
-            AssertListener.Initialize();
-        }
-
-        protected override PythonVersion Version => PythonPaths.Python34 ?? PythonPaths.Python34_x64;
-
-        protected override string ImportErrorFormat => NewImportErrorFormat;
-    }
-
-    [TestClass]
     public class TestExecutorTests35 : TestExecutorTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
@@ -710,6 +656,18 @@ namespace TestAdapterTests {
         }
 
         protected override PythonVersion Version => PythonPaths.Python36 ?? PythonPaths.Python36_x64;
+
+        protected override string ImportErrorFormat => NewImportErrorFormat;
+    }
+
+    [TestClass]
+    public class TestExecutorTests37 : TestExecutorTests {
+        [ClassInitialize]
+        public static void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
+        }
+
+        protected override PythonVersion Version => PythonPaths.Python37 ?? PythonPaths.Python37_x64;
 
         protected override string ImportErrorFormat => NewImportErrorFormat;
     }

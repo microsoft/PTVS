@@ -109,7 +109,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         public void DotCompletes() {
             using (var view = new PythonEditor()) {
                 view.TypeAndWaitForAnalysis("min");

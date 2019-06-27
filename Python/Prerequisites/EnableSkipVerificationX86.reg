@@ -8,7 +8,7 @@ Windows Registry Editor Version 5.00
 [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\StrongName\Verification\DjangoUITests,B03F5F7F11D50A3A]
 [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\StrongName\Verification\DjangoUITestsRunner,B03F5F7F11D50A3A]
 [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\StrongName\Verification\ExternalProfilerDriver,B03F5F7F11D50A3A]
-[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\StrongName\Verification\FastCgiTest,B03F5F7F11D50A3A]
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\StrongName\Verification\FastCgiTests,B03F5F7F11D50A3A]
 [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\StrongName\Verification\IpcJsonTests,B03F5F7F11D50A3A]
 [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\StrongName\Verification\IronPythonTests,B03F5F7F11D50A3A]
 [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\StrongName\Verification\Microsoft.CookiecutterTools,B03F5F7F11D50A3A]

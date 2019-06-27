@@ -275,9 +275,6 @@
       <ItemGroup>
         <Compile Include="DjangoEditorFactory.cs" />
         <Compile Include="Formatting\TemplateEditorFormatterProvider.cs" />
-        <Compile Include="Formatting\TemplateFormatDocumentCommandHandler.cs" />
-        <Compile Include="Formatting\TemplateFormatSelectionCommandHandler.cs" />
-        <Compile Include="Formatting\TemplateHtmlCommandFactory.cs" />
         <Compile Include="Intellisense\AnalyzerExtensions.cs" />
         <Compile Include="Intellisense\DjangoCompletionSource.cs" />
         <Compile Include="Intellisense\DjangoCompletionSourceBase.cs" />
@@ -285,13 +282,10 @@
         <Compile Include="Intellisense\DjangoPredefinedClassificationTypeNames.cs" />
         <Compile Include="Intellisense\ProjectBlockCompletionContext.cs" />
         <Compile Include="Intellisense\ProjectBlockCompletionContextBase.cs" />
-        <Compile Include="Intellisense\TemplateCommandFactory.cs" />
-        <Compile Include="Intellisense\TemplateCompletionCommandHandler.cs" />
         <Compile Include="Intellisense\TemplateCompletionController.cs" />
         <Compile Include="Intellisense\TemplateCompletionControllerProvider.cs" />
         <Compile Include="Intellisense\TemplateMainController.cs" />
         <Compile Include="Intellisense\TemplateTextViewConnectionListener.cs" />
-        <Compile Include="Intellisense\TemplateTypingCommandHandler.cs" />
         <Compile Include="Intellisense\TextBufferExtensions.cs" />
         <Compile Include="TemplateContentType.cs" />
         <Compile Include="TemplateParsing\DjangoBlock.cs" />

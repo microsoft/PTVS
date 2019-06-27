@@ -162,7 +162,7 @@ namespace PythonToolsUITests {
             AssertCondaMetaFiles(envPath, "cookies-2.2.1*.json", "python-*.json");
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         [TestCategory("10s")]
         public async Task CreateEnvironmentByPathFromEnvironmentFileCondaAndPip() {
             var mgr = CreateEnvironmentManager();

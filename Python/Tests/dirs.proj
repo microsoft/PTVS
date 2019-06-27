@@ -13,7 +13,7 @@
     <ProjectFile Include="DjangoTests\DjangoTests.csproj" />
     <ProjectFile Include="DjangoUITests\DjangoUITests.csproj" />
     <ProjectFile Include="DjangoUITestsRunner\DjangoUITestsRunner.csproj" />
-    <ProjectFile Include="FastCgi\FastCgiTest.csproj" />
+    <ProjectFile Include="FastCgi\FastCgiTests.csproj" />
     <ProjectFile Include="TestAdapterTests\TestAdapterTests.csproj" />
     <ProjectFile Include="VSInterpretersTests\VSInterpretersTests.csproj" />
     <ProjectFile Include="ProfilingTests\ProfilingTests.csproj" />

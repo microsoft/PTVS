@@ -41,7 +41,7 @@ namespace DebuggerUITestsRunner {
         public static void ClassCleanup() => VsTestContext.Instance.Dispose();
         #endregion
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void DebugPurePythonProject() {
             _vs.RunTest(nameof(DebuggerUITests.MixedModeDebugProjectUITests.DebugPurePythonProject), Interpreter);
@@ -49,22 +49,22 @@ namespace DebuggerUITestsRunner {
     }
 
     [TestClass]
-    public class MixedModeDebugProjectUITests2x_32 : MixedModeDebugProjectUITests {
+    public class MixedModeDebugProjectUITests27_32 : MixedModeDebugProjectUITests {
         protected override string Interpreter => "Python27";
     }
 
     [TestClass]
-    public class MixedModeDebugProjectUITests2x_64 : MixedModeDebugProjectUITests {
+    public class MixedModeDebugProjectUITests27_64 : MixedModeDebugProjectUITests {
         protected override string Interpreter => "Python27_x64";
     }
 
     [TestClass]
     public class MixedModeDebugProjectUITests3x_32 : MixedModeDebugProjectUITests {
-        protected override string Interpreter => "Python35|Python36";
+        protected override string Interpreter => "Python37|Python36|Python35";
     }
 
     [TestClass]
     public class MixedModeDebugProjectUITests3x_64 : MixedModeDebugProjectUITests {
-        protected override string Interpreter => "Python35_x64|Python36_x64";
+        protected override string Interpreter => "Python37_x64|Python36_x64|Python35_x64";
     }
 }

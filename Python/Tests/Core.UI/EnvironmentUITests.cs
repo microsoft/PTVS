@@ -57,9 +57,7 @@ namespace PythonToolsUITests {
             return app.SelectDefaultInterpreter(
                 PythonPaths.Python37 ?? PythonPaths.Python37_x64 ??
                 PythonPaths.Python36 ?? PythonPaths.Python36_x64 ??
-                PythonPaths.Python35 ?? PythonPaths.Python35_x64 ??
-                PythonPaths.Python34 ?? PythonPaths.Python34_x64 ??
-                PythonPaths.Python33 ?? PythonPaths.Python33_x64
+                PythonPaths.Python35 ?? PythonPaths.Python35_x64
             );
         }
 
@@ -369,7 +367,12 @@ namespace PythonToolsUITests {
         }
 
         public void ProjectAddExistingVEnvLocal(PythonVisualStudioApp app) {
-            var python = PythonPaths.Python37 ?? PythonPaths.Python36 ?? PythonPaths.Python35 ?? PythonPaths.Python34 ?? PythonPaths.Python33;
+            var python =    PythonPaths.Python37_x64 ??
+                            PythonPaths.Python37 ??
+                            PythonPaths.Python36_x64 ??
+                            PythonPaths.Python36 ??
+                            PythonPaths.Python35_x64 ??
+                            PythonPaths.Python35;
             python.AssertInstalled();
 
             var project = CreateTemporaryProject(app);
@@ -391,7 +394,12 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
         }
 
         public void ProjectAddCustomEnvLocal(PythonVisualStudioApp app) {
-            var python = PythonPaths.Python37 ?? PythonPaths.Python36 ?? PythonPaths.Python35 ?? PythonPaths.Python34 ?? PythonPaths.Python33;
+            var python =    PythonPaths.Python37_x64 ??
+                            PythonPaths.Python37 ??
+                            PythonPaths.Python36_x64 ??
+                            PythonPaths.Python36 ??
+                            PythonPaths.Python35_x64 ??
+                            PythonPaths.Python35;
             python.AssertInstalled();
 
             var project = CreateTemporaryProject(app);
@@ -408,7 +416,12 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
         }
 
         public void ProjectAddExistingEnv(PythonVisualStudioApp app) {
-            var python = PythonPaths.Python37 ?? PythonPaths.Python36 ?? PythonPaths.Python35 ?? PythonPaths.Python34 ?? PythonPaths.Python33;
+            var python =    PythonPaths.Python37_x64 ??
+                            PythonPaths.Python37 ??
+                            PythonPaths.Python36_x64 ??
+                            PythonPaths.Python36 ??
+                            PythonPaths.Python35_x64 ??
+                            PythonPaths.Python35;
             python.AssertInstalled();
 
             var project = CreateTemporaryProject(app);

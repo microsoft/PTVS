@@ -39,7 +39,7 @@ namespace PythonToolsUITestsRunner {
         public static void ClassCleanup() => VsTestContext.Instance.Dispose();
         #endregion
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void RunAll() {
             _vs.RunTest(nameof(PythonToolsUITests.TestExplorerTests.RunAll));
