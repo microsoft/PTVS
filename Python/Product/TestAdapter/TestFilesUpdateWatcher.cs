@@ -46,7 +46,7 @@ namespace Microsoft.VisualStudioTools.TestAdapter {
                                             | NotifyFilters.FileName 
                                             | NotifyFilters.DirectoryName 
                                             | NotifyFilters.CreationTime;
-                        watcher.Changed += OnChanged;
+                        watcher.Changed += OnChanged;  //only handle on change  in project mode
                         watcher.EnableRaisingEvents = true;
                         return true;
                     } catch (Exception ex) when (!ex.IsCriticalException()) {
@@ -57,6 +57,11 @@ namespace Microsoft.VisualStudioTools.TestAdapter {
             return false;
         }
 
+        /// <summary>
+        /// No project event listeners in open folder mode so directory listener will handle more events
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
         public bool AddDirectoryWatch(string path) {
             if (!String.IsNullOrEmpty(path)) {
                 if (!_fileWatchers.ContainsKey(path) && Directory.Exists(path)) {
@@ -71,6 +76,8 @@ namespace Microsoft.VisualStudioTools.TestAdapter {
                     watcher.IncludeSubdirectories = true;
                     watcher.Changed += OnChanged;
                     watcher.Renamed += OnRenamed;
+                    watcher.Created += OnCreated;
+                    watcher.Deleted += OnDeleted;
                     watcher.EnableRaisingEvents = true;
                     return true;
                 }
@@ -97,7 +104,21 @@ namespace Microsoft.VisualStudioTools.TestAdapter {
         private void OnRenamed(object sender, RenamedEventArgs e) {
             var evt = FileChangedEvent;
             if (evt != null) {
-                evt(sender, new TestFileChangedEventArgs(null, e.FullPath, TestFileChangedReason.Renamed));
+                evt(sender, new TestFileChangedEventArgs(null, e.FullPath, TestFileChangedReason.Renamed, e.OldFullPath));
+            }
+        }
+
+        private void OnCreated(object sender, FileSystemEventArgs e) {
+            var evt = FileChangedEvent;
+            if (evt != null) {
+                evt(sender, new TestFileChangedEventArgs(null, e.FullPath, TestFileChangedReason.Added));
+            }
+        }
+
+        private void OnDeleted(object sender, FileSystemEventArgs e) {
+            var evt = FileChangedEvent;
+            if (evt != null) {
+                evt(sender, new TestFileChangedEventArgs(null, e.FullPath, TestFileChangedReason.Removed));
             }
         }
 

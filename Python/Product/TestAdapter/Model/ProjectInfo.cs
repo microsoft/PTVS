@@ -33,6 +33,7 @@ namespace Microsoft.PythonTools.TestAdapter.Model {
         }
 
         public void Dispose() {
+            _containers.Clear();
         }
 
         public bool IsWorkspace() => _pythonWorkspace != null;

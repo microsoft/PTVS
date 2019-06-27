@@ -33,12 +33,16 @@ namespace Microsoft.VisualStudioTools.TestAdapter {
     class TestFileChangedEventArgs : EventArgs {
         public IVsProject Project { get; private set; }
         public string File { get; private set; }
+
+        public string OldFile { get; private set; }
+
         public TestFileChangedReason ChangedReason { get; private set; }
 
-        public TestFileChangedEventArgs(IVsProject project, string file, TestFileChangedReason reason) {
+        public TestFileChangedEventArgs(IVsProject project, string file, TestFileChangedReason reason, string oldFile = default) {
             Project = project;
             File = file;
             ChangedReason = reason;
+            OldFile = oldFile;
         }
     }
 
