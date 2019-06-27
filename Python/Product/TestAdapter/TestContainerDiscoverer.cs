@@ -119,16 +119,14 @@ namespace Microsoft.PythonTools.TestAdapter {
                     ThreadHelper.JoinableTaskFactory.Run(async () => {
                         await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                         if (_firstLoad || _forceRefresh) {
-                           
+                            _firstLoad = false;
+                            _forceRefresh = false;
                             var workspace = _workspaceContextProvider.Workspace;
                             if (workspace != null) {
                                 SetupWorkspace(workspace);
                             } else {
                                 await SetupCurrentSolution();
                             }
-
-                            _firstLoad = false;
-                            _forceRefresh = false;
                         }
                     });
                 }
