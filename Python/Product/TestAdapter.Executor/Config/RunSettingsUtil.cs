@@ -22,7 +22,8 @@ namespace Microsoft.PythonTools.TestAdapter.Config {
                     project.GetAttribute("nativeDebugging", "").IsTrue(),
                     project.GetAttribute("pytestPath", ""),
                     project.GetAttribute("pytestArgs", ""),
-                    project.GetAttribute("pytestEnabled", "").IsTrue()
+                    project.GetAttribute("pytestEnabled", "").IsTrue(),
+                    project.GetAttribute("isWorkspace", "").IsTrue()
                 );
 
                 foreach (XPathNavigator environment in project.Select("Environment/Variable")) {

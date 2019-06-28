@@ -85,6 +85,7 @@ namespace Microsoft.PythonTools.TestAdapter.Model {
                     _projectHome,
                     version:0,
                     Architecture,
+                    IsWorkspace(),
                     null
                 );
             } 
@@ -97,6 +98,7 @@ namespace Microsoft.PythonTools.TestAdapter.Model {
                    _projectHome,
                    version: existing.Version + 1,
                    Architecture,
+                   IsWorkspace(),
                    null
                );
             }

@@ -1,4 +1,5 @@
 ﻿using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.TestAdapter.Config;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using System;
@@ -9,7 +10,7 @@ using System.IO;
 namespace Microsoft.PythonTools.TestAdapter.Pytest {
     static class PyTestDiscoveryReader {
 
-        public static IEnumerable<TestCase> ParseDiscovery(PytestDiscoveryResults result, ITestCaseDiscoverySink discoverySink) {
+        public static IEnumerable<TestCase> ParseDiscovery(PytestDiscoveryResults result, ITestCaseDiscoverySink discoverySink, PythonProjectSettings settings) {
             var testcases = new List<TestCase>();
             var parentMap = new Dictionary<string, PytestParent>();
             result.Parents.ForEach(p => parentMap[p.Id] = p);
@@ -39,7 +40,9 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
                     tc.SetPropertyValue(Constants.PytestIdProperty, t.Id);
                     tc.SetPropertyValue(Constants.PyTestXmlClassNameProperty, CreateXmlClassName(t, parentMap));
                     tc.SetPropertyValue(Constants.PytestTestExecutionPathPropertery, GetAbsoluteTestExecutionPath(codeFilePath, t.Id));
-                    
+                    tc.SetPropertyValue(Constants.IsWorkspaceProperty, settings.IsWorkspace);
+
+                    tc.Traits.Add(new Trait("IsWorkspace", settings.IsWorkspace.ToString()));
                     foreach (var marker in t.Markers) {
                         tc.Traits.Add(new Trait(marker.ToString(), String.Empty));
                     }

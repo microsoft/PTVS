@@ -29,9 +29,9 @@ using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.TestAdapter;
 using Task = System.Threading.Tasks.Task;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.VisualStudio.ComponentModelHost;
 using System.Threading;
 using System.Collections.Concurrent;
+using System.Diagnostics.Eventing.Reader;
 
 namespace Microsoft.PythonTools.TestAdapter {
     [Export(typeof(ITestContainerDiscoverer))]
@@ -109,6 +109,13 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
         }
 
+        public bool IsWorkspace {
+            get {
+                return (_workspaceContextProvider != null) 
+                    && (_workspaceContextProvider.Workspace != null);
+            }
+        }
+
         public IEnumerable<ITestContainer> TestContainers {
             get {
                 if (_firstLoad || _forceRefresh) {
@@ -125,7 +132,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                             if (workspace != null) {
                                 SetupWorkspace(workspace);
                             } else {
-                                await SetupCurrentSolution();
+                                SetupCurrentSolution();
                             }
                         }
                     });
@@ -187,13 +194,17 @@ namespace Microsoft.PythonTools.TestAdapter {
         private void OnWorkspaceLoaded(object sender, PythonWorkspaceContextEventArgs e) {
         }
 
-        private async Task SetupCurrentSolution() {
+        private void SetupCurrentSolution() {
             // Get current solution
             var solution = (IVsSolution)_serviceProvider.GetService(typeof(SVsSolution));
 
-            var tasks = VsProjectExtensions.EnumerateLoadedProjects(solution)
-                .Select(proj => OnProjectLoadedAsync(proj)).ToList();
-            await Task.WhenAll(tasks);
+            //var tasks = VsProjectExtensions.EnumerateLoadedProjects(solution)
+            //    .Select(proj => OnProjectLoadedAsync(proj)).ToList();
+            //await Task.WhenAll(tasks);
+
+            foreach (var project in VsProjectExtensions.EnumerateLoadedProjects(solution)) {
+                SetupProject(project);
+            }
 
             var oldSolutionListener = _solutionListener;
             _solutionListener = new SolutionEventsListener(_serviceProvider);
@@ -239,24 +250,25 @@ namespace Microsoft.PythonTools.TestAdapter {
         public event EventHandler TestContainersUpdated;
 
         private void NotifyContainerChanged() {
-            try {
-                _deferredChangeNotification.Change(500, Timeout.Infinite);
-            } catch (ObjectDisposedException) {
-            }
+            TestContainersUpdated?.Invoke(this, EventArgs.Empty);
+            //try {
+            //    _deferredChangeNotification.Change(100, Timeout.Infinite);
+            //} catch (ObjectDisposedException) {
+            //}
         }
        
         private void OnDeferredNotifyChanged(object state) {
-            TestContainersUpdated?.Invoke(this, EventArgs.Empty);
+            //TestContainersUpdated?.Invoke(this, EventArgs.Empty);
         }
 
         private void OnProjectLoaded(object sender, ProjectEventArgs e) {
-            OnProjectLoadedAsync(e.Project).HandleAllExceptions(_serviceProvider, GetType()).DoNotWait();
+            SetupProject(e.Project);
+            NotifyContainerChanged();
         }
 
-        private async Task OnProjectLoadedAsync(IVsProject project) {
-            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+        private void SetupProject(IVsProject project) {
             var pyProj = PythonProject.FromObject(project);
-            if (pyProj != null 
+            if (pyProj != null
                 && pyProj.GetProperty(PythonConstants.PyTestEnabledSetting).IsTrue()) {
 
                 var projInfo = new ProjectInfo(this, pyProj);

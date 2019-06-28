@@ -9,8 +9,9 @@ namespace Microsoft.PythonTools.TestAdapter.Config {
         public readonly List<string> SearchPath;
         public readonly Dictionary<string, string> Environment;
         public readonly List<string> Sources;
+        public readonly bool IsWorkspace;
 
-        public PythonProjectSettings(string projectHome, string workingDir, string interpreter, string pathEnv, bool nativeDebugging, string pytestPath, string pytestArgs, bool pytestEnabled) {
+        public PythonProjectSettings(string projectHome, string workingDir, string interpreter, string pathEnv, bool nativeDebugging, string pytestPath, string pytestArgs, bool pytestEnabled, bool isWorkspace) {
             ProjectHome = projectHome;
             WorkingDirectory = workingDir;
             InterpreterPath = interpreter;
@@ -22,6 +23,7 @@ namespace Microsoft.PythonTools.TestAdapter.Config {
             SearchPath = new List<string>();
             Environment = new Dictionary<string, string>();
             Sources = new List<string>();
+            IsWorkspace = isWorkspace;
         }
 
         public override bool Equals(object obj) {
@@ -43,7 +45,9 @@ namespace Microsoft.PythonTools.TestAdapter.Config {
                 WorkingDirectory == other.WorkingDirectory &&
                 InterpreterPath == other.InterpreterPath &&
                 PathEnv == other.PathEnv &&
-                EnableNativeCodeDebugging == other.EnableNativeCodeDebugging) {
+                EnableNativeCodeDebugging == other.EnableNativeCodeDebugging &&
+                IsWorkspace == other.IsWorkspace &&
+                PytestEnabled == other.PytestEnabled ) {
                 if (SearchPath.Count == other.SearchPath.Count &&
                     Environment.Count == other.Environment.Count) {
                     for (int i = 0; i < SearchPath.Count; i++) {

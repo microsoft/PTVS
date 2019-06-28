@@ -30,14 +30,28 @@ namespace Microsoft.VisualStudioTools.TestAdapter {
         private readonly Architecture _architecture;
         private readonly string _projectHome;
         private readonly TestCaseInfo[] _testCases;
+        private readonly DateTime _timeStamp;
+        private readonly bool _isWorkspace;
 
-        public TestContainer(ITestContainerDiscoverer discoverer, string source, string projectHome, int version, Architecture architecture, TestCaseInfo[] testCases) {
+
+        public TestContainer(ITestContainerDiscoverer discoverer, string source, string projectHome, int version, Architecture architecture, bool isWorkspace, TestCaseInfo[] testCases) {
             Discoverer = discoverer;
             Source = source;
             _version = version;
             _projectHome = projectHome;
             _architecture = architecture;
             _testCases = testCases;
+            _timeStamp = DateTime.Now;
+            _isWorkspace = isWorkspace;
+        }
+
+        /// <summary>
+        /// Copy constructor
+        /// </summary>
+        /// <param name="copy"></param>
+        private TestContainer(TestContainer copy)
+            : this(copy.Discoverer, copy.Source, copy._projectHome, copy.Version, copy._architecture, copy._isWorkspace, copy.TestCases) {
+            this._timeStamp = copy._timeStamp;
         }
 
         public TestCaseInfo[] TestCases {
@@ -64,12 +78,20 @@ namespace Microsoft.VisualStudioTools.TestAdapter {
                 return -1;
             }
 
+            if (_isWorkspace != container._isWorkspace) {
+                return -1;
+            }
+
             var result = String.Compare(Source, container.Source, StringComparison.OrdinalIgnoreCase);
             if (result != 0) {
                 return result;
             }
+            
+            if (_version.CompareTo(container._version) != 0) {
+                return -1;
+            }
 
-            return _version.CompareTo(container._version);
+            return _timeStamp.CompareTo(container._timeStamp);
         }
 
         public IEnumerable<Guid> DebugEngines {
@@ -95,7 +117,7 @@ namespace Microsoft.VisualStudioTools.TestAdapter {
         }
 
         public ITestContainer Snapshot() {
-            return this;
+            return new TestContainer(this);
         }
 
         public string Source { get; private set; }

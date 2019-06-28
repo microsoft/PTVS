@@ -32,7 +32,7 @@ namespace Microsoft.PythonTools.TestAdapter {
     class TestDiscoverer : ITestDiscoverer {
         
         public void DiscoverTests(IEnumerable<string> sources, IDiscoveryContext discoveryContext, IMessageLogger logger, ITestCaseDiscoverySink discoverySink) {
-            MessageBox.Show("Discover: " + Process.GetCurrentProcess().Id);
+          //  MessageBox.Show("Discover: " + Process.GetCurrentProcess().Id);
 
             if (sources == null) {
                 throw new ArgumentNullException(nameof(sources));
@@ -62,7 +62,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 return;
             }
 
-            PyTestDiscoveryReader.ParseDiscovery(results[0], discoverySink);
+            PyTestDiscoveryReader.ParseDiscovery(results[0], discoverySink, settings);
         }
     }
 }
