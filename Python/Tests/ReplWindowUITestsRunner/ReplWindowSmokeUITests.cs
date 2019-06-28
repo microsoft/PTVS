@@ -89,11 +89,6 @@ namespace ReplWindowUITestsRunner {
     }
 
     [TestClass]
-    public class ReplWindowSmokeUITests26 : ReplWindowSmokeUITests {
-        protected override string Interpreter => "Python26|Python26_x64";
-    }
-
-    [TestClass]
     public class ReplWindowSmokeUITests27 : ReplWindowSmokeUITests {
         protected override string Interpreter => "Python27|Python27_x64";
     }
@@ -101,16 +96,6 @@ namespace ReplWindowUITestsRunner {
     [TestClass]
     public class ReplWindowSmokeUITestsIPy27 : ReplWindowSmokeUITests {
         protected override string Interpreter => "IronPython27|IronPython27_x64";
-    }
-
-    [TestClass]
-    public class ReplWindowSmokeUITests33 : ReplWindowSmokeUITests {
-        protected override string Interpreter => "Python33|Python36_x64";
-    }
-
-    [TestClass]
-    public class ReplWindowSmokeUITests34 : ReplWindowSmokeUITests {
-        protected override string Interpreter => "Python34|Python36_x64";
     }
 
     [TestClass]

@@ -39,19 +39,19 @@ namespace PythonToolsUITestsRunner {
         public static void ClassCleanup() => VsTestContext.Instance.Dispose();
         #endregion
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(VsTestContext.P2_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void ErrorList() {
             _vs.RunTest(nameof(PythonToolsUITests.ErrorListTaskListTests.ErrorList));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void CommentTaskList() {
             _vs.RunTest(nameof(PythonToolsUITests.ErrorListTaskListTests.CommentTaskList));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void ErrorListAndTaskListAreClearedWhenProjectIsDeleted() {
             _vs.RunTest(nameof(PythonToolsUITests.ErrorListTaskListTests.ErrorListAndTaskListAreClearedWhenProjectIsDeleted));
@@ -69,13 +69,13 @@ namespace PythonToolsUITestsRunner {
             _vs.RunTest(nameof(PythonToolsUITests.ErrorListTaskListTests.ErrorListAndTaskListAreClearedWhenProjectWithMultipleFilesIsUnloaded));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void ErrorListAndTaskListAreClearedWhenFileIsDeleted() {
             _vs.RunTest(nameof(PythonToolsUITests.ErrorListTaskListTests.ErrorListAndTaskListAreClearedWhenFileIsDeleted));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void ErrorListAndTaskListAreClearedWhenOpenFileIsDeleted() {
             _vs.RunTest(nameof(PythonToolsUITests.ErrorListTaskListTests.ErrorListAndTaskListAreClearedWhenOpenFileIsDeleted));

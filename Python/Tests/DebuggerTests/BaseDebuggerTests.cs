@@ -528,7 +528,7 @@ namespace DebuggerTests {
 
         internal virtual PythonVersion Version {
             get {
-                return PythonPaths.Python26;
+                return PythonPaths.Python27;
             }
         }
 

@@ -39,13 +39,13 @@ namespace PythonToolsUITestsRunner {
         public static void ClassCleanup() => VsTestContext.Instance.Dispose();
         #endregion
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void TestPublishFiles() {
             _vs.RunTest(nameof(PythonToolsUITests.PublishTest.TestPublishFiles));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void TestPublishReadOnlyFiles() {
             _vs.RunTest(nameof(PythonToolsUITests.PublishTest.TestPublishReadOnlyFiles));

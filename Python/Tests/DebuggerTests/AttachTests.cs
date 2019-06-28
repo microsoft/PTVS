@@ -143,7 +143,7 @@ namespace DebuggerTests {
             }
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(TestExtensions.P2_FAILING_UNIT_TEST)]
         [TestCategory("10s"), TestCategory("60s")]
         public virtual async Task AttachReattach() {
             Process p = Process.Start(Version.InterpreterPath, "-B \"" + TestData.GetPath(@"TestData\DebuggerProject\InfiniteRun.py") + "\"");
@@ -328,7 +328,7 @@ namespace DebuggerTests {
             }
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(TestExtensions.P2_FAILING_UNIT_TEST)]
         [TestCategory("10s")]
         public virtual async Task AttachTimeout() {
             string cast = "(PyCodeObject*)";
@@ -370,7 +370,7 @@ int main(int argc, char* argv[]) {
         /// <summary>
         /// Attempts to attach w/ code only running on new threads which are initialized using PyGILState_Ensure
         /// </summary>
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(TestExtensions.P2_FAILING_UNIT_TEST)]
         [TestCategory("10s")]
         public virtual async Task AttachNewThread_PyGILState_Ensure() {
             var hostCode = @"#include <Python.h>
@@ -493,7 +493,7 @@ void main()
         /// <summary>
         /// Attempts to attach w/ code only running on new threads which are initialized using PyThreadState_New
         /// </summary>
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(TestExtensions.P2_FAILING_UNIT_TEST)]
         [TestCategory("10s")]
         public virtual async Task AttachNewThread_PyThreadState_New() {
             var hostCode = @"#include <Windows.h>
@@ -621,7 +621,7 @@ void main()
             }
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(TestExtensions.P2_FAILING_UNIT_TEST)]
         [TestCategory("10s")]
         public virtual async Task AttachTimeoutThreadsInitialized() {
             string cast = "(PyCodeObject*)";
@@ -770,7 +770,7 @@ int main(int argc, char* argv[]) {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         [TestCategory("10s")]
         public virtual async Task AttachWithOutputRedirection() {
             var expectedOutput = new[] { "stdout", "stderr" };
@@ -1011,22 +1011,22 @@ int main(int argc, char* argv[]) {
             AssertUtil.ArrayEquals(expectedOutput, actualOutput);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         public async Task AttachPtvsdImport() {
             await TestPtvsdImport("secret=None", new Uri("tcp://localhost"));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         public async Task AttachPtvsdCommandLine() {
             await TestPtvsdCommandLine("--wait", new Uri("tcp://localhost"));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         public async Task AttachPtvsdImportSecret() {
             await TestPtvsdImport("secret='secret'", new Uri("tcp://secret@localhost"));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         public async Task AttachPtvsdCommandLineSecret() {
             await TestPtvsdCommandLine("--wait --secret secret", new Uri("tcp://secret@localhost"));
         }
@@ -1047,18 +1047,18 @@ int main(int argc, char* argv[]) {
             return ip;
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         public async Task AttachPtvsdImportAddress() {
             var ip = GetNetworkInterface();
             await TestPtvsdImport("secret=None, address=('" + ip + "', 8765)", new Uri("tcp://" + ip + ":8765"));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         public async Task AttachPtvsdCommandLinePort() {
             await TestPtvsdCommandLine("--wait --port 8765", new Uri("tcp://localhost:8765"));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         public async Task AttachPtvsdCommandLineInterface() {
             var ip = GetNetworkInterface();
             await TestPtvsdCommandLine("--wait --interface " + ip, new Uri("tcp://" + ip));
@@ -1100,7 +1100,7 @@ int main(int argc, char* argv[]) {
             });
         }
 
-        [TestMethod, Priority(3)]
+        [TestMethod, Priority(TestExtensions.P3_FAILING_UNIT_TEST)]
         public async Task AttachPtvsdCommandLineNoWait() {
             if (!HasPtvsdCommandLine) {
                 return;
@@ -1151,7 +1151,7 @@ int main(int argc, char* argv[]) {
         }
 
         // https://github.com/Microsoft/PTVS/issues/2842
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(TestExtensions.P2_FAILING_UNIT_TEST)]
         public virtual async Task AttachPtvsdAndStopDebugging() {
             if (!HasPtvsdCommandLine) {
                 return;
@@ -1281,66 +1281,6 @@ int main(int argc, char* argv[]) {
     }
 
     [TestClass]
-    public class AttachTests31 : AttachTests {
-        internal override PythonVersion Version {
-            get {
-                return PythonPaths.Python31 ?? PythonPaths.Python31_x64;
-            }
-        }
-
-        [TestMethod, Priority(2)]
-        public override async Task AttachWithOutputRedirection() => await base.AttachWithOutputRedirection();
-    }
-
-    [TestClass]
-    public class AttachTests32 : AttachTests {
-        internal override PythonVersion Version {
-            get {
-                return PythonPaths.Python32 ?? PythonPaths.Python32_x64;
-            }
-        }
-
-        public override async Task AttachNewThread_PyThreadState_New() {
-            // PyEval_AcquireLock deprecated in 3.2
-        }
-    }
-
-    [TestClass]
-    public class AttachTests33 : AttachTests {
-        internal override PythonVersion Version {
-            get {
-                return PythonPaths.Python33 ?? PythonPaths.Python33_x64;
-            }
-        }
-
-        public override async Task AttachNewThread_PyThreadState_New() {
-            // PyEval_AcquireLock deprecated in 3.2
-        }
-    }
-
-    [TestClass]
-    public class AttachTests34 : AttachTests {
-        internal override PythonVersion Version {
-            get {
-                return PythonPaths.Python34;
-            }
-        }
-
-        public override async Task AttachNewThread_PyThreadState_New() {
-            // PyEval_AcquireLock deprecated in 3.2
-        }
-    }
-
-    [TestClass]
-    public class AttachTests34_x64 : AttachTests34 {
-        internal override PythonVersion Version {
-            get {
-                return PythonPaths.Python34_x64;
-            }
-        }
-    }
-
-    [TestClass]
     public class AttachTests35 : AttachTests {
         internal override PythonVersion Version {
             get {
@@ -1412,18 +1352,6 @@ int main(int argc, char* argv[]) {
     }
 
     [TestClass]
-    public class AttachTests26 : AttachTests {
-        internal override PythonVersion Version {
-            get {
-                return PythonPaths.Python26 ?? PythonPaths.Python26_x64;
-            }
-        }
-
-        // 2.6 does not support packages as scripts (__main__.py)
-        protected override bool HasPtvsdCommandLine => false;
-    }
-
-    [TestClass]
     public class AttachTests27 : AttachTests {
         internal override PythonVersion Version {
             get {
@@ -1442,7 +1370,7 @@ int main(int argc, char* argv[]) {
     }
 
     [TestClass]
-    public class AttachTestsIpy : AttachTests {
+    public class AttachTestsIpy27 : AttachTests {
         internal override PythonVersion Version {
             get {
                 return PythonPaths.IronPython27 ?? PythonPaths.IronPython27_x64;

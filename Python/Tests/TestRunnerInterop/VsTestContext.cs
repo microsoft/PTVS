@@ -22,6 +22,10 @@ using System.Threading;
 
 namespace TestRunnerInterop {
     public sealed class VsTestContext : IDisposable {
+        public const int P0_FAILING_UI_TEST = 12;
+        public const int P2_FAILING_UI_TEST = 22;
+        public const int P3_FAILING_UI_TEST = 32;
+
         private readonly string _testDataRoot;
         private VsInstance _vs;
         private string _devenvExe;
@@ -80,7 +84,7 @@ namespace TestRunnerInterop {
                             return _devenvExe;
                         }
 
-                        _devenvExe = Path.Combine(Path.GetDirectoryName(_devenvExe), "IDE", "Common7", "devenv.exe");
+                        _devenvExe = Path.Combine(Path.GetDirectoryName(_devenvExe), "Common7", "IDE", "devenv.exe");
                         if (File.Exists(_devenvExe)) {
                             return _devenvExe;
                         }

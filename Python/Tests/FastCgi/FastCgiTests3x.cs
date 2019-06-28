@@ -23,9 +23,9 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.Python;
 
-namespace FastCgiTest {
+namespace FastCgiTests {
     [TestClass]
-    public class FastCgiTests3x : FastCgiTests {
+    public class FastCgiTests3x : FastCgiTests2x {
         [ClassInitialize]
         public static new void DoDeployment(TestContext context) {
             AssertListener.Initialize();
@@ -33,8 +33,9 @@ namespace FastCgiTest {
 
         public override PythonVersion PythonVersion {
             get {
-                return PythonPaths.Python34 ?? PythonPaths.Python34_x64 ??
-                    PythonPaths.Python33 ?? PythonPaths.Python33_x64;
+                return PythonPaths.Python37_x64 ?? PythonPaths.Python37 ??
+                       PythonPaths.Python36_x64 ?? PythonPaths.Python36 ??
+                       PythonPaths.Python35_x64 ?? PythonPaths.Python35;
             }
         }
     }

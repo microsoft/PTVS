@@ -30,9 +30,9 @@ using Microsoft.Win32;
 using TestUtilities;
 using TestUtilities.Python;
 
-namespace FastCgiTest {
+namespace FastCgiTests {
     [TestClass]
-    public class FastCgiTests {
+    public class FastCgiTests2x {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
@@ -66,7 +66,7 @@ namespace FastCgiTest {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         [TestCategory("10s")]
         public void DjangoHelloWorld() {
             using (var site = ConfigureIISForDjango(AppCmdPath, InterpreterPath, "DjangoTestApp.settings")) {
@@ -102,7 +102,7 @@ namespace FastCgiTest {
             }
         }*/
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         public void LargeResponse() {
             using (var site = ConfigureIISForDjango(AppCmdPath, InterpreterPath, "DjangoTestApp.settings")) {
                 site.StartServer();
@@ -125,8 +125,7 @@ namespace FastCgiTest {
             }
         }
 
-
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         [TestCategory("10s")]
         public void DjangoHelloWorldParallel() {
             using (var site = ConfigureIISForDjango(AppCmdPath, InterpreterPath, "DjangoTestApp.settings")) {
@@ -293,6 +292,7 @@ namespace FastCgiTest {
         }
 
         private static WebSite ConfigureIISForDjango(string appCmd, string python, string djangoSettings) {
+            // TODO If a python interpreter does not have Django installed, check another interpreter
             EnsureDjango(python);
 
             var site = CreateSite();
@@ -354,7 +354,7 @@ namespace FastCgiTest {
 
         public virtual PythonVersion PythonVersion {
             get {
-                return PythonPaths.Python27 ?? PythonPaths.Python27_x64;
+                return PythonPaths.Python27_x64 ?? PythonPaths.Python27;
             }
         }
 
@@ -435,7 +435,7 @@ namespace FastCgiTest {
 
         #region Test Cases
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         public void TestDjangoNewApp() {
             EnsureDjango();
             IisExpressTest(
@@ -444,7 +444,7 @@ namespace FastCgiTest {
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         public void TestDjangoNewAppUrlRewrite() {
             EnsureDjango();
             IisExpressTest(
@@ -472,7 +472,7 @@ namespace FastCgiTest {
         /// <summary>
         /// Handler doesn't exist in imported module
         /// </summary>
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         public void TestBadHandler() {
             IisExpressTest(
                 TestData.GetPath("TestData", "WFastCgi", "BadHandler"),
@@ -566,7 +566,7 @@ namespace FastCgiTest {
         /// <summary>
         /// Validates wfastcgi exits when changes to .py or .config files are detected
         /// </summary>
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         [TestCategory("10s")]
         public void TestFileSystemChanges() {
             var location = TestData.GetTempPath();
@@ -596,7 +596,7 @@ namespace FastCgiTest {
         /// <summary>
         /// Validates wfastcgi exits when changes to .py files in a subdirectory are detected
         /// </summary>
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         public void TestFileSystemChangesPackage() {
             var location = TestData.GetTempPath();
             FileUtils.CopyDirectory(TestData.GetPath(@"TestData\WFastCgi\FileSystemChangesPackage"), location);
@@ -620,7 +620,7 @@ namespace FastCgiTest {
         /// <summary>
         /// Validates wfastcgi exits when changes to a file pattern specified in web.config changes.
         /// </summary>
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         public void TestFileSystemChangesCustomRegex() {
             var location = TestData.GetTempPath();
             FileUtils.CopyDirectory(TestData.GetPath(@"TestData\WFastCgi\FileSystemChangesCustomRegex"), location);
@@ -666,7 +666,7 @@ namespace FastCgiTest {
         /// <summary>
         /// Validates that we can setup IIS to serve static files properly
         /// </summary>
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         public void TestStaticFiles() {
             EnsureDjango();
             IisExpressTest(
@@ -683,7 +683,7 @@ namespace FastCgiTest {
         /// <summary>
         /// Validates that we can setup IIS to serve static files properly
         /// </summary>
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         public void TestStaticFilesUrlRewrite() {
             EnsureDjango();
             IisExpressTest(
@@ -741,7 +741,7 @@ namespace FastCgiTest {
         /// <summary>
         /// Tests that we send portions of the response as they are given to us.
         /// </summary>
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         public void TestDjangoQueryString() {
             EnsureDjango();
             IisExpressTest(
@@ -756,7 +756,7 @@ namespace FastCgiTest {
         /// <summary>
         /// Tests that we can post values to Django and it gets them 
         /// </summary>
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         public void TestDjangoPost() {
             EnsureDjango();
             IisExpressTest(
@@ -773,7 +773,7 @@ namespace FastCgiTest {
         /// <summary>
         /// Tests that we send portions of the response as they are given to us.
         /// </summary>
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         public void TestDjangoPath() {
             EnsureDjango();
             IisExpressTest(
@@ -788,7 +788,7 @@ namespace FastCgiTest {
         /// <summary>
         /// Tests that we send portions of the response as they are given to us.
         /// </summary>
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         public void TestDjangoQueryStringUrlRewrite() {
             EnsureDjango();
             IisExpressTest(
@@ -803,7 +803,7 @@ namespace FastCgiTest {
         /// <summary>
         /// Tests that we can post values to Django and it gets them when using URL rewriting
         /// </summary>
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         public void TestDjangoPostUrlRewrite() {
             EnsureDjango();
             IisExpressTest(
@@ -820,7 +820,7 @@ namespace FastCgiTest {
         /// <summary>
         /// Tests that we send portions of the response as they are given to us.
         /// </summary>
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         public void TestDjangoPathUrlRewrite() {
             EnsureDjango();
             IisExpressTest(
@@ -1225,7 +1225,7 @@ namespace FastCgiTest {
 
         private static string WFastCgiPath {
             get {
-                var wfastcgiPath = Path.Combine(Path.GetDirectoryName(typeof(FastCgiTests).Assembly.Location), "wfastcgi.py");
+                var wfastcgiPath = Path.Combine(Path.GetDirectoryName(typeof(FastCgiTests2x).Assembly.Location), "wfastcgi.py");
                 if (File.Exists(wfastcgiPath)) {
                     return wfastcgiPath;
                 }

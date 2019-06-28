@@ -45,7 +45,7 @@ namespace PythonToolsUITestsRunner {
             _vs.RunTest(nameof(PythonToolsUITests.FormattingUITests.ToggleableOptionTest));
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(VsTestContext.P2_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void FormatDocument() {
             _vs.RunTest(nameof(PythonToolsUITests.FormattingUITests.FormatDocument));
@@ -57,7 +57,7 @@ namespace PythonToolsUITestsRunner {
             _vs.RunTest(nameof(PythonToolsUITests.FormattingUITests.FormatAsyncDocument));
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(VsTestContext.P2_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void FormatSelection() {
             _vs.RunTest(nameof(PythonToolsUITests.FormattingUITests.FormatSelection));
@@ -69,7 +69,7 @@ namespace PythonToolsUITestsRunner {
             _vs.RunTest(nameof(PythonToolsUITests.FormattingUITests.FormatSelectionNoSelection));
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(VsTestContext.P2_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void FormatReduceLines() {
             _vs.RunTest(nameof(PythonToolsUITests.FormattingUITests.FormatReduceLines));

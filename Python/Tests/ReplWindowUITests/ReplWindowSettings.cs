@@ -25,20 +25,6 @@ namespace ReplWindowUITests {
     internal static class ReplWindowSettings {
         private static Dictionary<string, ReplWindowProxySettings> _allSettings = new Dictionary<string, ReplWindowProxySettings> {
             {
-                "Python26",
-                new ReplWindowProxySettings {
-                    Version = PythonPaths.Python26,
-                    IntFirstMember = "conjugate",
-                }
-            },
-            {
-                "Python26_x64",
-                new ReplWindowProxySettings {
-                    Version = PythonPaths.Python26_x64,
-                    IntFirstMember = "conjugate",
-                }
-            },
-            {
                 "Python27",
                 new ReplWindowProxySettings {
                     Version = PythonPaths.Python27,
@@ -77,83 +63,7 @@ namespace ReplWindowUITests {
                     SourceFileName = "string",
                     ExitHelp = ReplWindowProxySettings.IronPython27ExitHelp,
                 }
-            },
-            {
-                "Python31",
-                new ReplWindowProxySettings {
-                    Version = PythonPaths.Python31,
-                    RawInput = "input",
-                    IPythonIntDocumentation = ReplWindowProxySettings.Python3IntDocumentation,
-                    ExitHelp = ReplWindowProxySettings.Python3ExitHelp,
-                }
-            },
-            {
-                "Python31_x64",
-                new ReplWindowProxySettings {
-                    Version = PythonPaths.Python31_x64,
-                    RawInput = "input",
-                    IPythonIntDocumentation = ReplWindowProxySettings.Python3IntDocumentation,
-                    ExitHelp = ReplWindowProxySettings.Python3ExitHelp,
-                }
-            },
-            {
-                "Python32",
-                new ReplWindowProxySettings {
-                    Version = PythonPaths.Python32,
-                    RawInput = "input",
-                    IPythonIntDocumentation = ReplWindowProxySettings.Python3IntDocumentation,
-                    ExitHelp = ReplWindowProxySettings.Python3ExitHelp,
-                }
-            },
-            {
-                "Python32_x64",
-                new ReplWindowProxySettings {
-                    Version = PythonPaths.Python32_x64,
-                    RawInput = "input",
-                    IPythonIntDocumentation = ReplWindowProxySettings.Python3IntDocumentation,
-                    ExitHelp = ReplWindowProxySettings.Python3ExitHelp,
-                }
-            },
-            {
-                "Python33",
-                new ReplWindowProxySettings {
-                    Version = PythonPaths.Python33,
-                    RawInput = "input",
-                    IPythonIntDocumentation = ReplWindowProxySettings.Python3IntDocumentation,
-                    ExitHelp = ReplWindowProxySettings.Python3ExitHelp,
-                    ImportError = "ImportError: No module named '{0}'",
-                }
-            },
-            {
-                "Python33_x64",
-                new ReplWindowProxySettings {
-                    Version = PythonPaths.Python33_x64,
-                    RawInput = "input",
-                    IPythonIntDocumentation = ReplWindowProxySettings.Python3IntDocumentation,
-                    ExitHelp = ReplWindowProxySettings.Python3ExitHelp,
-                    ImportError = "ImportError: No module named '{0}'",
-                }
-            },
-            {
-                "Python34",
-                new ReplWindowProxySettings {
-                    Version = PythonPaths.Python34,
-                    RawInput = "input",
-                    IPythonIntDocumentation = ReplWindowProxySettings.Python3IntDocumentation,
-                    ExitHelp = ReplWindowProxySettings.Python34ExitHelp,
-                    ImportError = "ImportError: No module named '{0}'",
-                }
-            },
-            {
-                "Python34_x64",
-                new ReplWindowProxySettings {
-                    Version = PythonPaths.Python34_x64,
-                    RawInput = "input",
-                    IPythonIntDocumentation = ReplWindowProxySettings.Python3IntDocumentation,
-                    ExitHelp = ReplWindowProxySettings.Python34ExitHelp,
-                    ImportError = "ImportError: No module named '{0}'",
-                }
-            },
+            },            
             {
                 "Python35",
                 new ReplWindowProxySettings {
