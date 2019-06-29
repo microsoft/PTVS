@@ -228,8 +228,9 @@ def main():
     global _channel
 
     parser = OptionParser(prog = 'visualstudio_py_testlauncher', usage = 'Usage: %prog [<option>] <test names>... ')
-    parser.add_option('-s', '--secret', metavar='<secret>', help='restrict server to only allow clients that specify <secret> when connecting')
+    parser.add_option('-s', '--secret', metavar='<secret>', help='restrict server to only allow clients that specify <secret> when connecting (legacy debugger only)')
     parser.add_option('-p', '--port', type='int', metavar='<port>', help='listen for debugger connections on <port>')
+    parser.add_option('-d', '--debugger-path', type='str', metavar='<debugger_path>', help='path to the debugger directory')
     parser.add_option('-x', '--mixed-mode', action='store_true', help='wait for mixed-mode debugger to attach')
     parser.add_option('-t', '--test', type='str', dest='tests', action='append', help='specifies a test to run')
     parser.add_option('-c', '--coverage', type='str', help='enable code coverage and specify filename')
@@ -239,12 +240,14 @@ def main():
     (opts, _) = parser.parse_args()
     
     sys.path[0] = os.getcwd()
-    
+    if(opts.debugger_path is not None):
+        sys.path.append(opts.debugger_path)
+
     if opts.result_port:
         _channel = _IpcChannel(socket.create_connection(('127.0.0.1', opts.result_port)))
         sys.stdout = _TestOutput(sys.stdout, is_stdout = True)
         sys.stderr = _TestOutput(sys.stderr, is_stdout = False)
-
+    
     if opts.secret and opts.port:
         from ptvsd.debugger import DONT_DEBUG, DEBUG_ENTRYPOINTS, get_code
         from ptvsd import DEFAULT_PORT, enable_attach, wait_for_attach
@@ -253,6 +256,12 @@ def main():
         DEBUG_ENTRYPOINTS.add(get_code(main))
 
         enable_attach(opts.secret, ('127.0.0.1', getattr(opts, 'port', DEFAULT_PORT)), redirect_output = True)
+        wait_for_attach()
+    elif opts.port:   
+        from ptvsd import enable_attach, wait_for_attach
+        from ptvsd.attach_server import DEFAULT_PORT
+        
+        enable_attach(('127.0.0.1', getattr(opts, 'port', DEFAULT_PORT)), redirect_output = True)
         wait_for_attach()
     elif opts.mixed_mode:
         # For mixed-mode attach, there's no ptvsd and hence no wait_for_attach(), 

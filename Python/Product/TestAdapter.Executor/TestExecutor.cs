@@ -107,14 +107,15 @@ namespace Microsoft.PythonTools.TestAdapter {
             var doc = Read(settings.SettingsXml);
             XPathNodeIterator nodes = doc.CreateNavigator().Select("/RunSettings/Python/TestCases/Project");
             Dictionary<string, PythonProjectSettings> res = new Dictionary<string, PythonProjectSettings>();
-
+    
             foreach (XPathNavigator project in nodes) {
                 PythonProjectSettings projSettings = new PythonProjectSettings(
                     project.GetAttribute("home", ""),
                     project.GetAttribute("workingDir", ""),
                     project.GetAttribute("interpreter", ""),
                     project.GetAttribute("pathEnv", ""),
-                    project.GetAttribute("nativeDebugging", "").IsTrue()
+                    project.GetAttribute("nativeDebugging", "").IsTrue(),
+                    project.GetAttribute("useLegacyDebugger", "").IsTrue()
                 );
 
                 foreach (XPathNavigator environment in project.Select("Environment/Variable")) {
@@ -381,12 +382,16 @@ namespace Microsoft.PythonTools.TestAdapter {
                 _searchPaths = GetSearchPaths(tests, settings);
 
                 if (_debugMode == PythonDebugMode.PythonOnly) {
-                    var secretBuffer = new byte[24];
-                    RandomNumberGenerator.Create().GetNonZeroBytes(secretBuffer);
-                    _debugSecret = Convert.ToBase64String(secretBuffer)
-                        .Replace('+', '-')
-                        .Replace('/', '_')
-                        .TrimEnd('=');
+                    if(_settings.UseLegacyDebugger) {
+                        var secretBuffer = new byte[24];
+                        RandomNumberGenerator.Create().GetNonZeroBytes(secretBuffer);
+                        _debugSecret = Convert.ToBase64String(secretBuffer)
+                            .Replace('+', '-')
+                            .Replace('/', '_')
+                            .TrimEnd('=');
+                    } else {
+                        _debugSecret = "";
+                    }
 
                     SocketUtils.GetRandomPortListener(IPAddress.Loopback, out _debugPort).Stop();
                 }
@@ -475,11 +480,6 @@ namespace Microsoft.PythonTools.TestAdapter {
                     if (knownModulePaths.Add(modulePath.LibraryPath)) {
                         paths.Insert(0, modulePath.LibraryPath);
                     }
-                }
-
-                paths.Insert(0, settings.WorkingDirectory);
-                if (_debugMode == PythonDebugMode.PythonOnly) {
-                    paths.Insert(0, PtvsdSearchPath);
                 }
 
                 string searchPaths = string.Join(
@@ -582,7 +582,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                         if (!killed && _debugMode != PythonDebugMode.None) {
                             try {
                                 if (_debugMode == PythonDebugMode.PythonOnly) {
-                                    string qualifierUri = string.Format("tcp://{0}@localhost:{1}?legacyUnitTest", _debugSecret, _debugPort);
+                                    string qualifierUri = string.Format("tcp://{0}@localhost:{1}", _debugSecret, _debugPort);
                                     while (!_app.AttachToProcess(proc, PythonRemoteDebugPortSupplierUnsecuredId, qualifierUri)) {
                                         if (proc.Wait(TimeSpan.FromMilliseconds(500))) {
                                             break;
@@ -761,10 +761,18 @@ namespace Microsoft.PythonTools.TestAdapter {
                 }
 
                 if (_debugMode == PythonDebugMode.PythonOnly) {
-                    arguments.AddRange(new[] {
-                        "-s", _debugSecret,
-                        "-p", _debugPort.ToString()
-                    });
+                    arguments.Add("-p");
+                    arguments.Add(_debugPort.ToString());
+
+                    arguments.Add("-d");
+                    arguments.Add(GetDebuggerPath(_settings.UseLegacyDebugger));
+
+                    if (_settings.UseLegacyDebugger)
+                    {
+                        arguments.Add("-s");
+                        arguments.Add(_debugSecret);
+                    }
+
                 } else if (_debugMode == PythonDebugMode.PythonAndNative) {
                     arguments.Add("-x");
                 }
@@ -775,25 +783,25 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
         }
 
-        private static void RecordEnd(IFrameworkHandle frameworkHandle, TestResult result, string stdout, string stderr, TestOutcome outcome, TP.ResultEvent resultInfo) {
-            result.EndTime = DateTimeOffset.Now;
-            result.Duration = TimeSpan.FromSeconds(resultInfo.durationInSecs);
-            result.Outcome = outcome;
-            
-            // Replace \n with \r\n to be more friendly when copying output...
-            stdout = stdout.Replace("\r\n", "\n").Replace("\n", "\r\n");
-            stderr = stderr.Replace("\r\n", "\n").Replace("\n", "\r\n");
+    private static void RecordEnd(IFrameworkHandle frameworkHandle, TestResult result, string stdout, string stderr, TestOutcome outcome, TP.ResultEvent resultInfo) {
+        result.EndTime = DateTimeOffset.Now;
+        result.Duration = TimeSpan.FromSeconds(resultInfo.durationInSecs);
+        result.Outcome = outcome;
 
-            result.Messages.Add(new TestResultMessage(TestResultMessage.StandardOutCategory, stdout));
-            result.Messages.Add(new TestResultMessage(TestResultMessage.StandardErrorCategory, stderr));
-            result.Messages.Add(new TestResultMessage(TestResultMessage.AdditionalInfoCategory, stderr));
-            if (resultInfo.traceback != null) {
-                result.ErrorStackTrace = resultInfo.traceback;
-                result.Messages.Add(new TestResultMessage(TestResultMessage.DebugTraceCategory, resultInfo.traceback));
-            }
-            if (resultInfo.message != null) {
-                result.ErrorMessage = resultInfo.message;
-            }
+        // Replace \n with \r\n to be more friendly when copying output...
+        stdout = stdout.Replace("\r\n", "\n").Replace("\n", "\r\n");
+        stderr = stderr.Replace("\r\n", "\n").Replace("\n", "\r\n");
+
+        result.Messages.Add(new TestResultMessage(TestResultMessage.StandardOutCategory, stdout));
+        result.Messages.Add(new TestResultMessage(TestResultMessage.StandardErrorCategory, stderr));
+        result.Messages.Add(new TestResultMessage(TestResultMessage.AdditionalInfoCategory, stderr));
+        if (resultInfo.traceback != null) { 
+            result.ErrorStackTrace = resultInfo.traceback;
+            result.Messages.Add(new TestResultMessage(TestResultMessage.DebugTraceCategory, resultInfo.traceback));
+        }
+        if (resultInfo.message != null) {
+            result.ErrorMessage = resultInfo.message;
+        }
 
             frameworkHandle.RecordResult(result);
             frameworkHandle.RecordEnd(result.TestCase, outcome);
@@ -814,15 +822,24 @@ namespace Microsoft.PythonTools.TestAdapter {
         sealed class PythonProjectSettings : IEquatable<PythonProjectSettings> {
             public readonly string ProjectHome, WorkingDirectory, InterpreterPath, PathEnv;
             public readonly bool EnableNativeCodeDebugging;
+            public readonly bool UseLegacyDebugger;
             public readonly List<string> SearchPath;
             public readonly Dictionary<string, string> Environment;
 
-            public PythonProjectSettings(string projectHome, string workingDir, string interpreter, string pathEnv, bool nativeDebugging) {
+            public PythonProjectSettings(
+                string projectHome,
+                string workingDir,
+                string interpreter,
+                string pathEnv,
+                bool nativeDebugging,
+                bool useLegacyDebugger
+            ) {
                 ProjectHome = projectHome;
                 WorkingDirectory = workingDir;
                 InterpreterPath = interpreter;
                 PathEnv = pathEnv;
                 EnableNativeCodeDebugging = nativeDebugging;
+                UseLegacyDebugger = useLegacyDebugger;
                 SearchPath = new List<string>();
                 Environment = new Dictionary<string, string>();
             }
@@ -846,7 +863,8 @@ namespace Microsoft.PythonTools.TestAdapter {
                     WorkingDirectory == other.WorkingDirectory &&
                     InterpreterPath == other.InterpreterPath &&
                     PathEnv == other.PathEnv &&
-                    EnableNativeCodeDebugging == other.EnableNativeCodeDebugging) {
+                    EnableNativeCodeDebugging == other.EnableNativeCodeDebugging &&
+                    UseLegacyDebugger == other.UseLegacyDebugger) {
                     if (SearchPath.Count == other.SearchPath.Count && 
                         Environment.Count == other.Environment.Count) {
                         for (int i = 0; i < SearchPath.Count; i++) {
@@ -877,10 +895,14 @@ namespace Microsoft.PythonTools.TestAdapter {
             PythonAndNative
         }
 
-        private static string PtvsdSearchPath {
-            get {
+        private static string GetDebuggerPath(bool useLegacyDebugger)
+        {
+            if (useLegacyDebugger)
+            {
                 return Path.GetDirectoryName(Path.GetDirectoryName(PythonToolsInstallPath.GetFile("ptvsd\\__init__.py")));
             }
+
+            return Path.GetDirectoryName(Path.GetDirectoryName(PythonToolsInstallPath.GetFile("Packages\\ptvsd\\__init__.py")));
         }
     }
 }

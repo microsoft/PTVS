@@ -104,6 +104,24 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
         }
 
+        private bool UseLegacyDebugger {
+            get {
+                try {
+                    bool useLegacyDebugger = false;
+
+                    _serviceProvider.GetUIThread().Invoke(() => {
+                        var dte = (EnvDTE.DTE)_serviceProvider.GetService(typeof(EnvDTE.DTE));
+                        dynamic automationObject = dte.GetObject("VsPython");
+                        useLegacyDebugger = automationObject.UseLegacyDebugger;
+                    });
+
+                    return useLegacyDebugger;
+                } catch (Exception) {
+                    return false;
+                }
+            }
+        }
+
         public IXPathNavigable AddRunSettings(IXPathNavigable inputRunSettingDocument, IRunSettingsConfigurationInfo configurationInfo, ILogger log) {
             XPathNavigator navigator = inputRunSettingDocument.CreateNavigator();
             var python = navigator.Select("/RunSettings");
@@ -141,9 +159,10 @@ namespace Microsoft.PythonTools.TestAdapter {
                                 );
                                 continue;
                             }
+                            writer.WriteAttributeString("useLegacyDebugger", UseLegacyDebugger ? "1" : "0");
                             writer.WriteAttributeString("nativeDebugging", nativeCode);
                             writer.WriteAttributeString("djangoSettingsModule", djangoSettings);
-                            
+
                             writer.WriteAttributeString("workingDir", config.WorkingDirectory);
                             writer.WriteAttributeString("interpreter", config.GetInterpreterPath());
                             writer.WriteAttributeString("pathEnv", config.Interpreter.PathEnvironmentVariable);
@@ -164,7 +183,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                                 writer.WriteEndElement();
                             }
                             writer.WriteEndElement(); // SearchPaths
-    
+
                             foreach (var test in container.TestCases) {
                                 writer.WriteStartElement("Test");
                                 writer.WriteAttributeString("className", test.ClassName);
@@ -178,7 +197,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                             writer.WriteEndElement();  // Project
                         }
                     }
-                    
+
                     writer.WriteEndElement(); // TestCases
                     writer.WriteEndElement(); // Python
                 }
