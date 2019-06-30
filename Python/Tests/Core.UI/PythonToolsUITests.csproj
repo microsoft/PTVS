@@ -129,6 +129,7 @@
     <Compile Include="ObjectBrowserTest.cs" />
     <Compile Include="ProjectHomeTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SendFeedbackTests.cs" />
     <Compile Include="TestExplorerTests.cs" />
     <Compile Include="PublishTest.cs" />
     <Compile Include="RemoveImportTests.cs" />
