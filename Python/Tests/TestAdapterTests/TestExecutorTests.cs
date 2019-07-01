@@ -295,7 +295,7 @@ namespace TestAdapterTests {
             Assert.IsTrue(recorder.Results.Count < expectedTests.Length);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         [TestCategory("10s")]
         public void TestMultiprocessing() {
             if (Version.Version <= PythonLanguageVersion.V26 ||
