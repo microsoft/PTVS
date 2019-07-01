@@ -107,7 +107,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             var doc = Read(settings.SettingsXml);
             XPathNodeIterator nodes = doc.CreateNavigator().Select("/RunSettings/Python/TestCases/Project");
             Dictionary<string, PythonProjectSettings> res = new Dictionary<string, PythonProjectSettings>();
-    
+
             foreach (XPathNavigator project in nodes) {
                 PythonProjectSettings projSettings = new PythonProjectSettings(
                     project.GetAttribute("home", ""),
@@ -382,7 +382,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 _searchPaths = GetSearchPaths(tests, settings);
 
                 if (_debugMode == PythonDebugMode.PythonOnly) {
-                    if(_settings.UseLegacyDebugger) {
+                    if (_settings.UseLegacyDebugger) {
                         var secretBuffer = new byte[24];
                         RandomNumberGenerator.Create().GetNonZeroBytes(secretBuffer);
                         _debugSecret = Convert.ToBase64String(secretBuffer)
@@ -767,8 +767,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                     arguments.Add("-d");
                     arguments.Add(GetDebuggerPath(_settings.UseLegacyDebugger));
 
-                    if (_settings.UseLegacyDebugger)
-                    {
+                    if (_settings.UseLegacyDebugger) {
                         arguments.Add("-s");
                         arguments.Add(_debugSecret);
                     }
@@ -783,25 +782,25 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
         }
 
-    private static void RecordEnd(IFrameworkHandle frameworkHandle, TestResult result, string stdout, string stderr, TestOutcome outcome, TP.ResultEvent resultInfo) {
-        result.EndTime = DateTimeOffset.Now;
-        result.Duration = TimeSpan.FromSeconds(resultInfo.durationInSecs);
-        result.Outcome = outcome;
+        private static void RecordEnd(IFrameworkHandle frameworkHandle, TestResult result, string stdout, string stderr, TestOutcome outcome, TP.ResultEvent resultInfo) {
+            result.EndTime = DateTimeOffset.Now;
+            result.Duration = TimeSpan.FromSeconds(resultInfo.durationInSecs);
+            result.Outcome = outcome;
 
-        // Replace \n with \r\n to be more friendly when copying output...
-        stdout = stdout.Replace("\r\n", "\n").Replace("\n", "\r\n");
-        stderr = stderr.Replace("\r\n", "\n").Replace("\n", "\r\n");
+            // Replace \n with \r\n to be more friendly when copying output...
+            stdout = stdout.Replace("\r\n", "\n").Replace("\n", "\r\n");
+            stderr = stderr.Replace("\r\n", "\n").Replace("\n", "\r\n");
 
-        result.Messages.Add(new TestResultMessage(TestResultMessage.StandardOutCategory, stdout));
-        result.Messages.Add(new TestResultMessage(TestResultMessage.StandardErrorCategory, stderr));
-        result.Messages.Add(new TestResultMessage(TestResultMessage.AdditionalInfoCategory, stderr));
-        if (resultInfo.traceback != null) { 
-            result.ErrorStackTrace = resultInfo.traceback;
-            result.Messages.Add(new TestResultMessage(TestResultMessage.DebugTraceCategory, resultInfo.traceback));
-        }
-        if (resultInfo.message != null) {
-            result.ErrorMessage = resultInfo.message;
-        }
+            result.Messages.Add(new TestResultMessage(TestResultMessage.StandardOutCategory, stdout));
+            result.Messages.Add(new TestResultMessage(TestResultMessage.StandardErrorCategory, stderr));
+            result.Messages.Add(new TestResultMessage(TestResultMessage.AdditionalInfoCategory, stderr));
+            if (resultInfo.traceback != null) {
+                result.ErrorStackTrace = resultInfo.traceback;
+                result.Messages.Add(new TestResultMessage(TestResultMessage.DebugTraceCategory, resultInfo.traceback));
+            }
+            if (resultInfo.message != null) {
+                result.ErrorMessage = resultInfo.message;
+            }
 
             frameworkHandle.RecordResult(result);
             frameworkHandle.RecordEnd(result.TestCase, outcome);
@@ -847,13 +846,11 @@ namespace Microsoft.PythonTools.TestAdapter {
             public override bool Equals(object obj) {
                 return Equals(obj as PythonProjectSettings);
             }
-
             public override int GetHashCode() {
-                return ProjectHome.GetHashCode() ^ 
-                    WorkingDirectory.GetHashCode() ^ 
+                return ProjectHome.GetHashCode() ^
+                    WorkingDirectory.GetHashCode() ^
                     InterpreterPath.GetHashCode();
             }
-
             public bool Equals(PythonProjectSettings other) {
                 if (other == null) {
                     return false;
@@ -865,7 +862,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                     PathEnv == other.PathEnv &&
                     EnableNativeCodeDebugging == other.EnableNativeCodeDebugging &&
                     UseLegacyDebugger == other.UseLegacyDebugger) {
-                    if (SearchPath.Count == other.SearchPath.Count && 
+                    if (SearchPath.Count == other.SearchPath.Count &&
                         Environment.Count == other.Environment.Count) {
                         for (int i = 0; i < SearchPath.Count; i++) {
                             if (SearchPath[i] != other.SearchPath[i]) {
@@ -895,10 +892,8 @@ namespace Microsoft.PythonTools.TestAdapter {
             PythonAndNative
         }
 
-        private static string GetDebuggerPath(bool useLegacyDebugger)
-        {
-            if (useLegacyDebugger)
-            {
+        private static string GetDebuggerPath(bool useLegacyDebugger) {
+            if (useLegacyDebugger) {
                 return Path.GetDirectoryName(Path.GetDirectoryName(PythonToolsInstallPath.GetFile("ptvsd\\__init__.py")));
             }
 
