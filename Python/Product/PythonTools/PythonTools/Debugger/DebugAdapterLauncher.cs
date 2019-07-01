@@ -56,7 +56,8 @@ namespace Microsoft.PythonTools.Debugger {
                 JObject obj = new JObject()
                 {
                     ["remote"] = uri,
-                    ["options"] = "SHOW_RETURN_VALUE={0}".FormatInvariant(debugService.ShowFunctionReturnValue)
+                    ["options"] = "SHOW_RETURN_VALUE={0};BREAK_SYSTEMEXIT_ZERO={1}"
+                        .FormatInvariant(debugService.ShowFunctionReturnValue, debugService.BreakOnSystemExitZero)
                 };
 
                 launchInfo.LaunchJson = obj.ToString();
