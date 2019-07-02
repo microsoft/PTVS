@@ -48,13 +48,12 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
                     Debug.WriteLine("Test result parse failed: {0}".FormatInvariant(message));
                     continue;
                 }
-       
 
                 // Match on classname and function name for now
                 var result = vsTestResults
-                    .Where(x =>
-                    String.Compare(x.TestCase.DisplayName, name, StringComparison.InvariantCultureIgnoreCase) == 0 &&
-                    String.Compare(x.TestCase.GetPropertyValue<string>(Pytest.Constants.PyTestXmlClassNameProperty, default(string)), classname, StringComparison.InvariantCultureIgnoreCase) == 0) 
+                    .Where(tr =>
+                    String.Compare(tr.TestCase.DisplayName, name, StringComparison.InvariantCultureIgnoreCase) == 0 &&
+                    String.Compare(tr.TestCase.GetPropertyValue<string>(Pytest.Constants.PyTestXmlClassNameProperty, default(string)), classname, StringComparison.InvariantCultureIgnoreCase) == 0) 
                     .FirstOrDefault();
 
                 if (result != null) {

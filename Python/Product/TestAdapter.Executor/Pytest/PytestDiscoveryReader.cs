@@ -85,7 +85,7 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
 
         public static string CreateFullyQualifiedTestNameFromId(string pytestId) {
             var fullyQualifiedName = pytestId.Replace(".\\", "");
-            String[] parts = fullyQualifiedName.Split(new string[] { "::" }, StringSplitOptions.None); ;
+            String[] parts = fullyQualifiedName.Split(new string[] { "::" }, StringSplitOptions.None); 
 
             // set classname as filename, without extension for test functions outside of classes,
             // so test explorer doesn't use .py as the classname

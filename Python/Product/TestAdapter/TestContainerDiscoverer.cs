@@ -126,14 +126,15 @@ namespace Microsoft.PythonTools.TestAdapter {
                     ThreadHelper.JoinableTaskFactory.Run(async () => {
                         await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                         if (_firstLoad || _forceRefresh) {
-                            _firstLoad = false;
-                            _forceRefresh = false;
                             var workspace = _workspaceContextProvider.Workspace;
                             if (workspace != null) {
                                 SetupWorkspace(workspace);
                             } else {
                                 SetupCurrentSolution();
                             }
+
+                            _firstLoad = false;
+                            _forceRefresh = false;
                         }
                     });
                 }
@@ -203,7 +204,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             //await Task.WhenAll(tasks);
 
             foreach (var project in VsProjectExtensions.EnumerateLoadedProjects(solution)) {
-                SetupProject(project);
+                OnProjectLoaded(null, new ProjectEventArgs(project));
             }
 
             var oldSolutionListener = _solutionListener;
@@ -250,7 +251,9 @@ namespace Microsoft.PythonTools.TestAdapter {
         public event EventHandler TestContainersUpdated;
 
         private void NotifyContainerChanged() {
-            TestContainersUpdated?.Invoke(this, EventArgs.Empty);
+            if (!_firstLoad && !_forceRefresh) { 
+              TestContainersUpdated?.Invoke(this, EventArgs.Empty);
+            }
             //try {
             //    _deferredChangeNotification.Change(100, Timeout.Infinite);
             //} catch (ObjectDisposedException) {
@@ -262,12 +265,7 @@ namespace Microsoft.PythonTools.TestAdapter {
         }
 
         private void OnProjectLoaded(object sender, ProjectEventArgs e) {
-            SetupProject(e.Project);
-            NotifyContainerChanged();
-        }
-
-        private void SetupProject(IVsProject project) {
-            var pyProj = PythonProject.FromObject(project);
+            var pyProj = PythonProject.FromObject(e.Project);
             if (pyProj != null
                 && pyProj.GetProperty(PythonConstants.PyTestEnabledSetting).IsTrue()) {
 
@@ -279,7 +277,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                     _testFilesUpdateWatcher.FileChangedEvent += OnProjectItemChanged;
                 }
 
-                var files = FilteredTestOrSettingsFiles(project);
+                var files = FilteredTestOrSettingsFiles(e.Project);
                 UpdateSolutionTestContainersAndFileWatchers(files, projInfo, isAdd: true);
             }
         }

@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Projects;
@@ -41,7 +42,7 @@ namespace Microsoft.VisualStudioTools.TestAdapter {
             _projectHome = projectHome;
             _architecture = architecture;
             _testCases = testCases;
-            _timeStamp = DateTime.Now;
+            _timeStamp = GetTimeStamp();
             _isWorkspace = isWorkspace;
         }
 
@@ -132,6 +133,13 @@ namespace Microsoft.VisualStudioTools.TestAdapter {
 
         public override string ToString() {
             return Source + ":" + Discoverer.ExecutorUri.ToString();
+        }
+        private DateTime GetTimeStamp() {
+            if (!String.IsNullOrEmpty(this.Source) && File.Exists(this.Source)) {
+                return File.GetLastWriteTime(this.Source);
+            } else {
+                return DateTime.MinValue;
+            }
         }
     }
 }
