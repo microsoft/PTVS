@@ -32,6 +32,7 @@ using Microsoft.PythonTools.Interpreter;
 using System.Threading;
 using System.Collections.Concurrent;
 using System.Diagnostics.Eventing.Reader;
+using System.Diagnostics;
 
 namespace Microsoft.PythonTools.TestAdapter {
     [Export(typeof(ITestContainerDiscoverer))]
@@ -198,15 +199,21 @@ namespace Microsoft.PythonTools.TestAdapter {
         private void SetupCurrentSolution() {
             // Get current solution
             var solution = (IVsSolution)_serviceProvider.GetService(typeof(SVsSolution));
+      
+            // add file watchers before loading projects
+            var oldTestFilesUpdateWatcher = _testFilesUpdateWatcher;
+            if (_testFilesUpdateWatcher == null) {
+                _testFilesUpdateWatcher = new TestFilesUpdateWatcher();
+                _testFilesUpdateWatcher.FileChangedEvent += OnProjectItemChanged;
+            }
+            oldTestFilesUpdateWatcher?.Dispose();
 
-            //var tasks = VsProjectExtensions.EnumerateLoadedProjects(solution)
-            //    .Select(proj => OnProjectLoadedAsync(proj)).ToList();
-            //await Task.WhenAll(tasks);
-
+            // add all source files
             foreach (var project in VsProjectExtensions.EnumerateLoadedProjects(solution)) {
                 OnProjectLoaded(null, new ProjectEventArgs(project));
             }
-
+            
+            // add listeners after loading projects
             var oldSolutionListener = _solutionListener;
             _solutionListener = new SolutionEventsListener(_serviceProvider);
             _solutionListener.ProjectLoaded += OnProjectLoaded;
@@ -266,17 +273,19 @@ namespace Microsoft.PythonTools.TestAdapter {
 
         private void OnProjectLoaded(object sender, ProjectEventArgs e) {
             var pyProj = PythonProject.FromObject(e.Project);
-            if (pyProj != null
-                && pyProj.GetProperty(PythonConstants.PyTestEnabledSetting).IsTrue()) {
+            if (pyProj == null)
+                return;
 
+            bool isEnabled = false;
+            try {
+                isEnabled = pyProj.GetProperty(PythonConstants.PyTestEnabledSetting).IsTrue();
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
+                Trace.WriteLine("Exception : " + ex.Message);
+            }
+            
+            if (isEnabled) {
                 var projInfo = new ProjectInfo(this, pyProj);
                 _projectMap[projInfo.ProjectHome] = projInfo;
-
-                if (_testFilesUpdateWatcher == null) {
-                    _testFilesUpdateWatcher = new TestFilesUpdateWatcher();
-                    _testFilesUpdateWatcher.FileChangedEvent += OnProjectItemChanged;
-                }
-
                 var files = FilteredTestOrSettingsFiles(e.Project);
                 UpdateSolutionTestContainersAndFileWatchers(files, projInfo, isAdd: true);
             }
