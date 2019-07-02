@@ -211,8 +211,8 @@
       <Item ItemId=";AddCondaPackagesWatermark" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Example: "numpy pandas". If no packages are listed, Python will be installed]]></Val>
-          <Tgt Cat="Text" Stat="Update" Orig="New">
-            <Val><![CDATA[예: numpy pandas]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[예: "numpy pandas". 패키지가 나열되지 않는 경우 Python이 설치됩니다.]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[ex. numpy pandas]]></Val>
