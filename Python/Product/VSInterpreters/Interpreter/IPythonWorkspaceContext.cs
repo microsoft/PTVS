@@ -36,6 +36,11 @@ namespace Microsoft.PythonTools.Interpreter {
         event EventHandler ActiveInterpreterChanged;
 
         /// <summary>
+        /// Test settings for the workspace has changed.
+        /// </summary>
+        event EventHandler TestSettingChanged;
+
+        /// <summary>
         /// Display name for the workspace.
         /// </summary>
         string WorkspaceName { get; }

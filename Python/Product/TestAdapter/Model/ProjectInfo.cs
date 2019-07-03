@@ -36,7 +36,7 @@ namespace Microsoft.PythonTools.TestAdapter.Model {
             _containers.Clear();
         }
 
-        public bool IsWorkspace() => _pythonWorkspace != null;
+        public bool IsWorkspace => _pythonWorkspace != null;
 
         public TestContainer[] GetAllContainers() {
             return _containers.Select(x => x.Value).ToArray();
@@ -47,7 +47,7 @@ namespace Microsoft.PythonTools.TestAdapter.Model {
         }
 
         public LaunchConfiguration GetLaunchConfigurationOrThrow() {
-            if (IsWorkspace()) {
+            if (IsWorkspace) {
                 if(!_pythonWorkspace.CurrentFactory.Configuration.IsAvailable()) {
                     throw new Exception("MissingEnvironment");
                 }
@@ -65,10 +65,17 @@ namespace Microsoft.PythonTools.TestAdapter.Model {
         }
 
         public string GetProperty(string name) {
-            if (IsWorkspace()) {
+            if (IsWorkspace) {
                 return _pythonWorkspace.GetStringProperty(name);
             }
             return _pythonProject.GetProperty(name);
+        }
+
+        public bool? GetBoolProperty(string name) {
+            if (IsWorkspace) {
+                return _pythonWorkspace.GetBoolProperty(name);
+            }
+            return _pythonProject.GetProperty(name).IsTrue();
         }
 
 
@@ -85,7 +92,7 @@ namespace Microsoft.PythonTools.TestAdapter.Model {
                     _projectHome,
                     version:0,
                     Architecture,
-                    IsWorkspace(),
+                    IsWorkspace,
                     null
                 );
             } 
@@ -98,7 +105,7 @@ namespace Microsoft.PythonTools.TestAdapter.Model {
                    _projectHome,
                    version: existing.Version + 1,
                    Architecture,
-                   IsWorkspace(),
+                   IsWorkspace,
                    null
                );
             }

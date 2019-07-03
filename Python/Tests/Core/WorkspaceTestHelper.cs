@@ -350,6 +350,7 @@ namespace PythonToolsTests {
             public event EventHandler InterpreterSettingChanged;
             public event EventHandler SearchPathsSettingChanged;
             public event EventHandler ActiveInterpreterChanged;
+            public event EventHandler TestSettingChanged;
 #pragma warning restore CS0067
 
             public void Dispose() {

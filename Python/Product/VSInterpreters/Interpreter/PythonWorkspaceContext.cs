@@ -292,7 +292,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 var oldPytestPath = _pytestPath;
 
                 _pytestArgs = ReadPytestArgSetting();
-                _pytestEnabled = GetBoolProperty(PytestEnabledProperty) ?? false;
+                _pytestEnabled = GetBoolProperty(PytestEnabledProperty).GetValueOrDefault(false);
                 _pytestPath = GetStringProperty(PytestPathProperty) ?? "pytest";
                 testSettingsChanged = !oldPytestArgs.SequenceEqual(_pytestArgs) || oldPytestEnabled != _pytestEnabled || !String.Equals(oldPytestPath, _pytestPath);
             }
