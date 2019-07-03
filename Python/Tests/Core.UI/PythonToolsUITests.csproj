@@ -142,7 +142,6 @@
     <Compile Include="UITests.cs" />
     <Compile Include="EnvironmentUITests.cs" />
     <Compile Include="VSPackage.cs" />
-    <Compile Include="WebProjectTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Product\Core\Core.csproj">
