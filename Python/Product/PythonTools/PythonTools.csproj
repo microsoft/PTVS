@@ -255,6 +255,9 @@
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.LanguageServer.Client" />
+    <Reference Include="Microsoft.Internal.VisualStudio.Shell.Embeddable">
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="PythonTools\Debugger\CustomDebugAdapterProtocolExtension.cs" />
@@ -391,6 +394,7 @@
       <DependentUpon>AddEnvironmentDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="PythonTools\Project\DeprecatedReferenceNode.cs" />
+    <Compile Include="PythonTools\PythonFeedbackDiagnosticFileProvider.cs" />
     <Compile Include="PythonTools\WebProject\PythonAzureWebPropertyPageControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
