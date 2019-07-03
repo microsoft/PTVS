@@ -17,7 +17,7 @@
     <PythonDebugWebServerCommandArguments>--debug $(CommandLineArguments)</PythonDebugWebServerCommandArguments>
     <SuppressCollectPythonCloudServiceFiles>true</SuppressCollectPythonCloudServiceFiles>
     <PublishLinuxFxVersion>3.7</PublishLinuxFxVersion>
-    <PublishLinuxAppCommandLine>gunicorn --bind=0.0.0.0 --timeout 600 app</PublishLinuxAppCommandLine>
+    <PublishLinuxAppCommandLine>gunicorn --bind=0.0.0.0 --timeout 600 app:app</PublishLinuxAppCommandLine>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>

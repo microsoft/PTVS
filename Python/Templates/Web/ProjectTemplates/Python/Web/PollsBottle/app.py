@@ -9,6 +9,8 @@ import bottle
 
 import routes
 
+app = bottle.default_app()
+
 if '--debug' in sys.argv[1:] or 'SERVER_DEBUG' in os.environ:
     # Debug mode will enable more verbose output in the console window.
     # It must be set at the beginning of the script.
@@ -17,7 +19,7 @@ if '--debug' in sys.argv[1:] or 'SERVER_DEBUG' in os.environ:
 def wsgi_app():
     """Returns the application to make available through wfastcgi. This is used
     when the site is published to Microsoft Azure."""
-    return bottle.default_app()
+    return app
 
 if __name__ == '__main__':
     PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
