@@ -113,6 +113,13 @@ permissions and limitations under the License.
     </SourceFilesProjectOutputGroupDependsOn>
   </PropertyGroup>
 
+  <Target Name="_ValidateAppServiceLinuxSettings" BeforeTargets="PrepareForBuild">
+    <Error Condition="'$(IsLinux)' == 'true' And '$(PublishLinuxFxVersion)' == ''"
+           Text="Python framework version must be configured for Azure App Service Linux. See the Azure Web section in the project settings." />
+    <Error Condition="'$(IsLinux)' == 'true' And '$(PublishLinuxAppCommandLine)' == ''"
+           Text="Startup command must be configured for Azure App Service Linux. See the Azure Web section in the project settings." />
+  </Target>
+
   <Target Name="_WarnAboutLegacySettings" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <_WarningMessage>
