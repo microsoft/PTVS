@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Microsoft.PythonTools.TestAdapter.Config {
     public class PythonProjectSettings : IEquatable<PythonProjectSettings> {
-        public readonly string ProjectHome, WorkingDirectory, InterpreterPath, PathEnv, PytestPath, PytestArgs;
+        public readonly string ProjectName, ProjectHome, WorkingDirectory, InterpreterPath, PathEnv, PytestPath, PytestArgs;
         public readonly bool EnableNativeCodeDebugging;
         public readonly bool PytestEnabled = false;
         public readonly List<string> SearchPath;
@@ -11,7 +11,8 @@ namespace Microsoft.PythonTools.TestAdapter.Config {
         public readonly List<string> Sources;
         public readonly bool IsWorkspace;
 
-        public PythonProjectSettings(string projectHome, string workingDir, string interpreter, string pathEnv, bool nativeDebugging, string pytestPath, string pytestArgs, bool pytestEnabled, bool isWorkspace) {
+        public PythonProjectSettings(string projectName, string projectHome, string workingDir, string interpreter, string pathEnv, bool nativeDebugging, string pytestPath, string pytestArgs, bool pytestEnabled, bool isWorkspace) {
+            ProjectName = projectName;
             ProjectHome = projectHome;
             WorkingDirectory = workingDir;
             InterpreterPath = interpreter;

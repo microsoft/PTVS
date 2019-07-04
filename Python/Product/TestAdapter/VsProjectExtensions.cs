@@ -33,6 +33,16 @@ namespace Microsoft.PythonTools.TestAdapter {
             return hierarchy as IVsProject;
         }
 
+        public static string GetNameProperty(this IVsHierarchy project) {
+            object value;
+            ErrorHandler.ThrowOnFailure(project.GetProperty(
+                (uint)VSConstants.VSITEMID.Root,
+                (int)__VSHPROPID.VSHPROPID_Name,
+                out value
+            ));
+            return value as string;
+        }
+
         public static string GetProjectHome(this IVsProject project) {
             Debug.Assert(project != null);
             var hier = (IVsHierarchy)project;

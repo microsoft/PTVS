@@ -14,13 +14,15 @@ namespace Microsoft.PythonTools.TestAdapter.Model {
         private readonly PythonProject _pythonProject;
         private readonly IPythonWorkspaceContext _pythonWorkspace;
         private readonly string _projectHome;
+        private readonly string _projectName;
         private readonly ITestContainerDiscoverer _discoverer;
         private readonly Dictionary<string, TestContainer> _containers;
 
-        public ProjectInfo(TestContainerDiscoverer discoverer, PythonProject project) {
+        public ProjectInfo(TestContainerDiscoverer discoverer, PythonProject project, string projectName) {
             _pythonProject = project;
             _pythonWorkspace = null;
             _projectHome = _pythonProject.ProjectHome;
+            _projectName = projectName;
             _discoverer = discoverer;
             _containers = new Dictionary<string, TestContainer>(StringComparer.OrdinalIgnoreCase);
         }
@@ -119,5 +121,16 @@ namespace Microsoft.PythonTools.TestAdapter.Model {
         private Architecture Architecture => Architecture.Default;
 
         public string ProjectHome => _projectHome;
+
+        public string ProjectName {
+            get {
+                if (IsWorkspace) {
+                    return _pythonWorkspace.WorkspaceName;
+                }
+
+                return _projectName;
+            }
+        }
+
     }
 }

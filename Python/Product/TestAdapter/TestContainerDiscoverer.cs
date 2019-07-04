@@ -210,7 +210,9 @@ namespace Microsoft.PythonTools.TestAdapter {
                 pyProj.ProjectPropertyChanged -= OnTestPropertiesChanged;
                 pyProj.ProjectPropertyChanged += OnTestPropertiesChanged;
 
-                var projInfo = new ProjectInfo(this, pyProj);
+                IVsHierarchy hierarchy = (IVsHierarchy)vsProject;
+                var projectName = hierarchy == null ? hierarchy.GetNameProperty() : string.Empty;
+                var projInfo = new ProjectInfo(this, pyProj, projectName);
                 _projectMap[projInfo.ProjectHome] = projInfo;
                 var files = FilteredTestOrSettingsFiles(vsProject);
                 UpdateSolutionTestContainersAndFileWatchers(files, projInfo, isAdd: true);

@@ -15,6 +15,7 @@ namespace Microsoft.PythonTools.TestAdapter.Config {
 
             foreach (XPathNavigator project in nodes) {
                 PythonProjectSettings projSettings = new PythonProjectSettings(
+                    project.GetAttribute("name", ""),
                     project.GetAttribute("home", ""),
                     project.GetAttribute("workingDir", ""),
                     project.GetAttribute("interpreter", ""),
@@ -24,7 +25,7 @@ namespace Microsoft.PythonTools.TestAdapter.Config {
                     project.GetAttribute("pytestArgs", ""),
                     project.GetAttribute("pytestEnabled", "").IsTrue(),
                     project.GetAttribute("isWorkspace", "").IsTrue()
-                );
+                ); 
 
                 foreach (XPathNavigator environment in project.Select("Environment/Variable")) {
                     projSettings.Environment[environment.GetAttribute("name", "")] = environment.GetAttribute("value", "");
