@@ -40,7 +40,7 @@ namespace Microsoft.PythonTools.TestAdapter {
         private readonly IPythonWorkspaceContextProvider _workspaceContextProvider;
         private readonly ConcurrentDictionary<string, ProjectInfo> _projectMap;
         private bool _firstLoad, _isDisposed, _forceRefresh;
-        private TestFilesUpdateWatcher _workspaceUpdateWatcher;
+        private TestFilesUpdateWatcher _testFilesUpdateWatcher;
         private readonly HashSet<string> _pytestFrameworkConfigFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "pytest.ini", "setup.cfg", "tox.ini" };
 
         [ImportingConstructor]
@@ -61,13 +61,13 @@ namespace Microsoft.PythonTools.TestAdapter {
         void IDisposable.Dispose() {
             if (!_isDisposed) {
                 _isDisposed = true;
-                
-                if (_workspaceUpdateWatcher != null) {
-                    _workspaceUpdateWatcher.FileChangedEvent -= OnWorkspaceFileChanged;
-                    _workspaceUpdateWatcher.Dispose();
-                    _workspaceUpdateWatcher = null;
+
+                if (_testFilesUpdateWatcher != null) {
+                    _testFilesUpdateWatcher.FileChangedEvent -= OnWorkspaceFileChanged;
+                    _testFilesUpdateWatcher.Dispose();
+                    _testFilesUpdateWatcher = null;
                 }
-                
+
                 if (_workspaceContextProvider != null) {
                     _workspaceContextProvider.WorkspaceClosed -= OnWorkspaceClosed;
                     _workspaceContextProvider.WorkspaceInitialized -= OnWorkspaceLoaded;
@@ -118,22 +118,12 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
         }
 
-        public TestContainer GetTestContainer(string projectHome, string path) {
-            if (_projectMap.TryGetValue(projectHome, out ProjectInfo projectInfo)) {
-                if (projectInfo.TryGetContainer(path, out TestContainer container)) {
-                    return container;
-                }
-            }
-
-            return null;
-        }
-
         private void OnWorkspaceClosed(object sender, PythonWorkspaceContextEventArgs e) {
             _firstLoad = true;
-            if (_workspaceUpdateWatcher != null) {
-                _workspaceUpdateWatcher.FileChangedEvent -= OnWorkspaceFileChanged;
-                _workspaceUpdateWatcher.Dispose();
-                _workspaceUpdateWatcher = null;
+            if (_testFilesUpdateWatcher != null) {
+                _testFilesUpdateWatcher.FileChangedEvent -= OnWorkspaceFileChanged;
+                _testFilesUpdateWatcher.Dispose();
+                _testFilesUpdateWatcher = null;
             }
 
             if (_workspaceContextProvider.Workspace != null) {
@@ -173,10 +163,10 @@ namespace Microsoft.PythonTools.TestAdapter {
                 var projInfo = new ProjectInfo(this, workspace);
                 _projectMap[projInfo.ProjectHome] = projInfo;
 
-                var oldWatcher = _workspaceUpdateWatcher;
-                _workspaceUpdateWatcher = new TestFilesUpdateWatcher();
-                _workspaceUpdateWatcher.FileChangedEvent += OnWorkspaceFileChanged;
-                _workspaceUpdateWatcher.AddDirectoryWatch(workspace.Location);
+                var oldWatcher = _testFilesUpdateWatcher;
+                _testFilesUpdateWatcher = new TestFilesUpdateWatcher();
+                _testFilesUpdateWatcher.FileChangedEvent += OnWorkspaceFileChanged;
+                _testFilesUpdateWatcher.AddDirectoryWatch(workspace.Location);
                 oldWatcher?.Dispose();
 
                 var files = Directory.EnumerateFiles(workspace.Location, "*.*", SearchOption.AllDirectories);
@@ -197,32 +187,14 @@ namespace Microsoft.PythonTools.TestAdapter {
         public event EventHandler TestContainersUpdated;
 
         private void NotifyContainerChanged() {
-
             // guard against triggering multiple updates during initial load
             if (!_firstLoad) {
                 TestContainersUpdated?.Invoke(this, EventArgs.Empty);
             }
-            //try {
-            //    _deferredChangeNotification.Change(100, Timeout.Infinite);
-            //} catch (ObjectDisposedException) {
-            //}
-        }
-
-        private void OnDeferredNotifyChanged(object state) {
-            //TestContainersUpdated?.Invoke(this, EventArgs.Empty);
-        }
-
-        private IEnumerable<string> FilteredTestOrSettingsFiles(IVsProject project) {
-            return project.GetProjectItems()
-                .Where(s => IsTestFileOrSetting(s));
         }
 
         private bool IsTestFile(string path) {
             return Path.GetExtension(path).Equals(PythonConstants.FileExtension, StringComparison.OrdinalIgnoreCase);
-        }
-
-        private bool IsTestFileOrSetting(string path) {
-            return IsSettingsFile(path) || Path.GetExtension(path).Equals(PythonConstants.FileExtension, StringComparison.OrdinalIgnoreCase);
         }
 
         private bool IsSettingsFile(string file) {

@@ -28,7 +28,6 @@ using Microsoft.VisualStudio.TestWindow.Extensibility;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.TestAdapter;
 using Microsoft.PythonTools.Interpreter;
-using System.Threading;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 
@@ -43,12 +42,12 @@ namespace Microsoft.PythonTools.TestAdapter {
         private SolutionEventsListener _solutionListener;
         private TestFilesUpdateWatcher _testFilesUpdateWatcher;
         private TestFileAddRemoveListener _testFilesAddRemoveListener;
-        private readonly HashSet<string> _pytestFrameworkConfigFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "pytest.ini" , "setup.cfg" , "tox.ini" };
-      
+        private readonly HashSet<string> _pytestFrameworkConfigFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "pytest.ini", "setup.cfg", "tox.ini" };
+
 
         [ImportingConstructor]
         private TestContainerDiscoverer(
-            [Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider, 
+            [Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider,
             [Import(typeof(IOperationState))]IOperationState operationState,
             [Import] IPythonWorkspaceContextProvider workspaceContextProvider
         ) {
@@ -109,7 +108,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
         }
 
-         private bool HasLoadedWorkspace() => _workspaceContextProvider.Workspace != null;
+        private bool HasLoadedWorkspace() => _workspaceContextProvider.Workspace != null;
 
         public IEnumerable<ITestContainer> TestContainers {
             get {
@@ -133,15 +132,6 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
         }
 
-        public TestContainer GetTestContainer(string projectHome, string path) {
-            if (_projectMap.TryGetValue(projectHome, out ProjectInfo projectInfo)) {
-                if (projectInfo.TryGetContainer(path, out TestContainer container)) {
-                    return container;
-                }
-            }
-            return null;
-        }
-
         private void OnSolutionClosed(object sender, EventArgs e) {
             _firstLoad = true;
             _setupComplete = false;
@@ -154,6 +144,11 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
         }
 
+        /// <summary>
+        /// This can be triggered before our class is created so it isn't being used
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void OnSolutionLoaded(object sender, EventArgs e) {
         }
 
@@ -175,8 +170,8 @@ namespace Microsoft.PythonTools.TestAdapter {
         }
 
         public ProjectInfo GetProjectInfo(string projectHome) {
-            if (projectHome != null 
-                &&_projectMap.TryGetValue(projectHome, out ProjectInfo projectInfo)) {
+            if (projectHome != null
+                && _projectMap.TryGetValue(projectHome, out ProjectInfo projectInfo)) {
                 return projectInfo;
             }
             return null;
@@ -186,11 +181,11 @@ namespace Microsoft.PythonTools.TestAdapter {
 
         private void NotifyContainerChanged() {
             // guard against triggering multiple updates during initial load until setup is complete
-            if (!_firstLoad){ 
-              TestContainersUpdated?.Invoke(this, EventArgs.Empty);
+            if (!_firstLoad) {
+                TestContainersUpdated?.Invoke(this, EventArgs.Empty);
             }
         }
-       
+
         private void OnProjectLoaded(object sender, ProjectEventArgs e) {
             if (!_setupComplete)
                 return;
@@ -198,7 +193,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             LoadProject(e.Project);
         }
 
-        private void LoadProject(IVsProject  vsProject) {
+        private void LoadProject(IVsProject vsProject) {
             var pyProj = PythonProject.FromObject(vsProject);
             if (pyProj == null)
                 return;
@@ -261,7 +256,7 @@ namespace Microsoft.PythonTools.TestAdapter {
         }
 
         private void OnProjectItemChanged(object sender, TestFileChangedEventArgs e) {
-            if (String.IsNullOrEmpty(e.File)) 
+            if (String.IsNullOrEmpty(e.File))
                 return;
 
             if (IsSettingsFile(e.File)) {
@@ -273,7 +268,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                     case TestFileChangedReason.Renamed: // TestFileAddRemoveListener rename triggers Added and Removed
                         break;
                     case TestFileChangedReason.Added:
-                        _testFilesUpdateWatcher.AddWatch(e.File); 
+                        _testFilesUpdateWatcher.AddWatch(e.File);
                         break;
                     case TestFileChangedReason.Changed:
                         _testFilesUpdateWatcher.AddWatch(e.File);
