@@ -6,58 +6,70 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 
 namespace Microsoft.PythonTools.TestAdapter.Pytest {
     static class PyTestDiscoveryReader {
 
-        public static IEnumerable<TestCase> ParseDiscovery(PytestDiscoveryResults result, ITestCaseDiscoverySink discoverySink, PythonProjectSettings settings) {
+        public static IEnumerable<TestCase> ParseDiscovery(IList<PytestDiscoveryResults> results, ITestCaseDiscoverySink discoverySink, PythonProjectSettings settings) {
             var testcases = new List<TestCase>();
-            var parentMap = new Dictionary<string, PytestParent>();
-            result.Parents.ForEach(p => parentMap[p.Id] = p);
+            if (!results.Any())
+                return testcases;
 
-            foreach (var t in result.Tests) {
-                var sourceAndLineNum = t.Source.Replace(".\\", "");
-                String[] sourceParts = sourceAndLineNum.Split(':');
-                Debug.Assert(sourceParts.Length == 2);
+            foreach (PytestDiscoveryResults result in results) {
+                Dictionary<string, PytestParent> parentMap = BuildParentMap(result);
 
-                if (sourceParts.Length == 2 &&
-                    Int32.TryParse(sourceParts[1], out int line) &&
-                    !String.IsNullOrWhiteSpace(t.Name) &&
-                    !String.IsNullOrWhiteSpace(t.Id)) {
+                foreach (var t in result.Tests) {
+                    var sourceAndLineNum = t.Source.Replace(".\\", "");
+                    String[] sourceParts = sourceAndLineNum.Split(':');
+                    Debug.Assert(sourceParts.Length == 2);
 
-                    //bschnurr todo: fix codepath for files outside of project
-                    var source = sourceParts[0];
-                    var codeFilePath = Path.Combine(result.Root, source);
+                    if (sourceParts.Length == 2 &&
+                        Int32.TryParse(sourceParts[1], out int line) &&
+                        !String.IsNullOrWhiteSpace(t.Name) &&
+                        !String.IsNullOrWhiteSpace(t.Id)) {
 
-                    var fullyQualifiedName = CreateFullyQualifiedTestNameFromId(t.Id);
-                    var tc = new TestCase(fullyQualifiedName, Constants.PytestUri, codeFilePath) {
-                        DisplayName = t.Name,
-                        LineNumber = line,
-                        CodeFilePath = codeFilePath
-                    };
+                        //bschnurr todo: fix codepath for files outside of project
+                        var source = sourceParts[0];
+                        var codeFilePath = Path.Combine(result.Root, source);
 
-                    tc.SetPropertyValue(Constants.PytestFileProperty, source);
-                    tc.SetPropertyValue(Constants.PytestIdProperty, t.Id);
-                    tc.SetPropertyValue(Constants.PyTestXmlClassNameProperty, CreateXmlClassName(t, parentMap));
-                    tc.SetPropertyValue(Constants.PytestTestExecutionPathPropertery, GetAbsoluteTestExecutionPath(codeFilePath, t.Id));
-                    tc.SetPropertyValue(Constants.IsWorkspaceProperty, settings.IsWorkspace);
+                        Uri executorURI = settings.IsWorkspace ? PythonConstants.WorkspaceExecutorUri : PythonConstants.ExecutorUri;
+                        var fullyQualifiedName = CreateFullyQualifiedTestNameFromId(t.Id);
+                        var tc = new TestCase(fullyQualifiedName, executorURI, codeFilePath) {
+                            DisplayName = t.Name,
+                            LineNumber = line,
+                            CodeFilePath = codeFilePath
+                        };
 
-                    tc.Traits.Add(new Trait("IsWorkspace", settings.IsWorkspace.ToString()));
-                    foreach (var marker in t.Markers) {
-                        tc.Traits.Add(new Trait(marker.ToString(), String.Empty));
+                        tc.SetPropertyValue(Constants.PytestFileProperty, source);
+                        tc.SetPropertyValue(Constants.PytestIdProperty, t.Id);
+                        tc.SetPropertyValue(Constants.PyTestXmlClassNameProperty, CreateXmlClassName(t, parentMap));
+                        tc.SetPropertyValue(Constants.PytestTestExecutionPathPropertery, GetAbsoluteTestExecutionPath(codeFilePath, t.Id));
+                        tc.SetPropertyValue(Constants.IsWorkspaceProperty, settings.IsWorkspace);
+
+                        tc.Traits.Add(new Trait("IsWorkspace", settings.IsWorkspace.ToString()));
+                        foreach (var marker in t.Markers) {
+                            tc.Traits.Add(new Trait(marker.ToString(), String.Empty));
+                        }
+
+                        if (discoverySink != null) {
+                            discoverySink.SendTestCase(tc);
+                        }
+                        testcases.Add(tc);
+
+                    } else {
+                        Debug.WriteLine("Testcase parse failed:\n {0}".FormatInvariant(t.Id));
                     }
-
-                    if (discoverySink != null) {
-                        discoverySink.SendTestCase(tc);
-                    }
-                    testcases.Add(tc);
-
-                } else {
-                    Debug.WriteLine("Testcase parse failed:\n {0}".FormatInvariant(t.Id));
                 }
             }
 
             return testcases;
+        }
+
+        private static Dictionary<string, PytestParent> BuildParentMap(PytestDiscoveryResults result) {
+            var parentMap = new Dictionary<string, PytestParent>();
+            result.Parents.ForEach(p => parentMap[p.Id] = p);
+            return parentMap;
         }
 
         /// <summary>

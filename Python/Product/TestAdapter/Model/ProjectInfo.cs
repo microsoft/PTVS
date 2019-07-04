@@ -2,6 +2,7 @@
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Projects;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+using Microsoft.VisualStudio.TestWindow.Extensibility;
 using Microsoft.VisualStudioTools.TestAdapter;
 using System;
 using System.Collections.Generic;
@@ -13,7 +14,7 @@ namespace Microsoft.PythonTools.TestAdapter.Model {
         private readonly PythonProject _pythonProject;
         private readonly IPythonWorkspaceContext _pythonWorkspace;
         private readonly string _projectHome;
-        private readonly TestContainerDiscoverer _discoverer;
+        private readonly ITestContainerDiscoverer _discoverer;
         private readonly Dictionary<string, TestContainer> _containers;
 
         public ProjectInfo(TestContainerDiscoverer discoverer, PythonProject project) {
@@ -24,7 +25,7 @@ namespace Microsoft.PythonTools.TestAdapter.Model {
             _containers = new Dictionary<string, TestContainer>(StringComparer.OrdinalIgnoreCase);
         }
 
-        public ProjectInfo(TestContainerDiscoverer discoverer, IPythonWorkspaceContext workspace) {
+        public ProjectInfo(WSTestContainerDiscoverer discoverer, IPythonWorkspaceContext workspace) {
             _pythonProject = null;
             _pythonWorkspace = workspace;
             _projectHome = workspace.Location;

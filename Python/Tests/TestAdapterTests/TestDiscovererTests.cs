@@ -55,7 +55,7 @@ namespace TestAdapterTests {
 
             const string projectPath = @"C:\Visual Studio 2015\Projects\PythonApplication107\PythonApplication107\PythonApplication107.pyproj";
             const string testFilePath = @"C:\Visual Studio 2015\Projects\PythonApplication107\PythonApplication107\test1.py";
-            new TestDiscoverer().DiscoverTests(
+            new ProjectTestDiscover().DiscoverTests(
                 new[] { testFilePath },
                 ctx,
                 logger,

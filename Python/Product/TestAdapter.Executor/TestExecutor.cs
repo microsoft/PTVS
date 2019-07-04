@@ -41,9 +41,19 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using TP = Microsoft.PythonTools.TestAdapter.TestProtocol;
 
 namespace Microsoft.PythonTools.TestAdapter {
+
+    [ExtensionUri(PythonConstants.TestExecutorUriString)]
+    class ProjectTestExecutor: TestExecutor {
+
+    }
+
+    [ExtensionUri(PythonConstants.WSTestExecutorUriString)]
+    class WorkspaceTestExecutor : TestExecutor {
+
+    }
+
     [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable",
         Justification = "object owned by VS")]
-    [ExtensionUri(PythonConstants.TestExecutorUriString)]
     class TestExecutor : ITestExecutor {
         private static readonly Guid PythonRemoteDebugPortSupplierUnsecuredId = new Guid("{FEB76325-D127-4E02-B59D-B16D93D46CF5}");
         private static readonly Guid PythonDebugEngineGuid = new Guid("EC1375B7-E2CE-43E8-BF75-DC638DE1F1F9");
@@ -95,15 +105,11 @@ namespace Microsoft.PythonTools.TestAdapter {
                 var discovery = new DiscoveryService(frameworkHandle);
                 var results = discovery.RunDiscovery(settings, testGroup);
 
-                if (results.Count == 0) {
-                    return;
-                }
-
                 if (_cancelRequested.WaitOne(0)) {
                     return;
                 }
 
-                var tcList = PyTestDiscoveryReader.ParseDiscovery(results[0], discoverySink:null, settings);
+                var tcList = PyTestDiscoveryReader.ParseDiscovery(results, discoverySink:null, settings);
                 tests.AddRange(tcList);
 
                 if (_cancelRequested.WaitOne(0)) {
