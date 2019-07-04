@@ -65,6 +65,7 @@ namespace Microsoft.PythonTools.Projects {
         public abstract Task<ProjectAnalyzer> GetAnalyzerAsync();
 
         public abstract event EventHandler ProjectAnalyzerChanged;
+        public abstract event EventHandler ProjectPropertyChanged;
 
         public abstract string ProjectHome { get; }
 

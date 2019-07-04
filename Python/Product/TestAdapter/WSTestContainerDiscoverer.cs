@@ -39,7 +39,7 @@ namespace Microsoft.PythonTools.TestAdapter {
         private readonly IServiceProvider _serviceProvider;
         private readonly IPythonWorkspaceContextProvider _workspaceContextProvider;
         private readonly ConcurrentDictionary<string, ProjectInfo> _projectMap;
-        private bool _firstLoad, _isDisposed, _forceRefresh;
+        private bool _firstLoad, _isDisposed, _isRefresh;
         private TestFilesUpdateWatcher _testFilesUpdateWatcher;
         private readonly HashSet<string> _pytestFrameworkConfigFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "pytest.ini", "setup.cfg", "tox.ini" };
 
@@ -52,7 +52,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
             _projectMap = new ConcurrentDictionary<string, ProjectInfo>();
             _firstLoad = true;
-            _forceRefresh = false;
+            _isRefresh = false;
             _workspaceContextProvider = workspaceContextProvider ?? throw new ArgumentNullException(nameof(workspaceContextProvider));
             _workspaceContextProvider.WorkspaceClosed += OnWorkspaceClosed;
             _workspaceContextProvider.WorkspaceInitialized += OnWorkspaceLoaded;
@@ -99,17 +99,17 @@ namespace Microsoft.PythonTools.TestAdapter {
         public IEnumerable<ITestContainer> TestContainers {
             get {
                 if (HasLoadedWorkspace()
-                    && (_firstLoad || _forceRefresh)) {
+                    && (_firstLoad || _isRefresh)) {
                     _projectMap.Clear();
 
                     // The first time through, we don't know about any loaded
                     // projects.
                     ThreadHelper.JoinableTaskFactory.Run(async () => {
                         await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-                        if (_firstLoad || _forceRefresh) {
+                        if (_firstLoad || _isRefresh) {
                             SetupWorkspace(_workspaceContextProvider.Workspace);
                             _firstLoad = false;
-                            _forceRefresh = false;
+                            _isRefresh = false;
                         };
                     });
                 }
@@ -120,6 +120,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 
         private void OnWorkspaceClosed(object sender, PythonWorkspaceContextEventArgs e) {
             _firstLoad = true;
+            _isRefresh = false;
             if (_testFilesUpdateWatcher != null) {
                 _testFilesUpdateWatcher.FileChangedEvent -= OnWorkspaceFileChanged;
                 _testFilesUpdateWatcher.Dispose();
@@ -188,7 +189,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 
         private void NotifyContainerChanged() {
             // guard against triggering multiple updates during initial load
-            if (!_firstLoad) {
+            if (!_firstLoad && !_isRefresh) {
                 TestContainersUpdated?.Invoke(this, EventArgs.Empty);
             }
         }
@@ -205,8 +206,8 @@ namespace Microsoft.PythonTools.TestAdapter {
         }
 
         private void OnWorkspaceSettingsChange(object sender, System.EventArgs e) {
-            _forceRefresh = true;
             NotifyContainerChanged();
+            _isRefresh = true;
         }
 
         private void OnWorkspaceFileChanged(object sender, TestFileChangedEventArgs e) {
@@ -214,8 +215,8 @@ namespace Microsoft.PythonTools.TestAdapter {
                 return;
 
             if (IsSettingsFile(e.File)) {
-                _forceRefresh = true;
                 NotifyContainerChanged();
+                _isRefresh = true;
                 return;
             }
 

@@ -38,7 +38,7 @@ namespace Microsoft.PythonTools.TestAdapter {
         private readonly IServiceProvider _serviceProvider;
         private readonly IPythonWorkspaceContextProvider _workspaceContextProvider;
         private readonly ConcurrentDictionary<string, ProjectInfo> _projectMap;
-        private bool _firstLoad, _isDisposed, _forceRefresh, _setupComplete;
+        private bool _firstLoad, _isDisposed, _isRefresh, _setupComplete;
         private SolutionEventsListener _solutionListener;
         private TestFilesUpdateWatcher _testFilesUpdateWatcher;
         private TestFileAddRemoveListener _testFilesAddRemoveListener;
@@ -55,7 +55,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             _workspaceContextProvider = workspaceContextProvider ?? throw new ArgumentNullException(nameof(workspaceContextProvider));
             _projectMap = new ConcurrentDictionary<string, ProjectInfo>();
             _firstLoad = true;
-            _forceRefresh = false;
+            _isRefresh = false;
             _setupComplete = false;
 
             _solutionListener = new SolutionEventsListener(_serviceProvider);
@@ -113,17 +113,17 @@ namespace Microsoft.PythonTools.TestAdapter {
         public IEnumerable<ITestContainer> TestContainers {
             get {
                 if (!HasLoadedWorkspace()
-                    && (_firstLoad || _forceRefresh)) {
+                    && (_firstLoad || _isRefresh)) {
                     _projectMap.Clear();
 
                     // The first time through, we don't know about any loaded
                     // projects.
                     ThreadHelper.JoinableTaskFactory.Run(async () => {
                         await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-                        if (_firstLoad || _forceRefresh) {
+                        if (_firstLoad || _isRefresh) {
                             SetupSolution();
                             _firstLoad = false;
-                            _forceRefresh = false;
+                            _isRefresh = false;
                         }
                     });
                 }
@@ -134,6 +134,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 
         private void OnSolutionClosed(object sender, EventArgs e) {
             _firstLoad = true;
+            _isRefresh = false;
             _setupComplete = false;
             _projectMap.Clear();
 
@@ -181,7 +182,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 
         private void NotifyContainerChanged() {
             // guard against triggering multiple updates during initial load until setup is complete
-            if (!_firstLoad) {
+            if (!_firstLoad && !_isRefresh) {
                 TestContainersUpdated?.Invoke(this, EventArgs.Empty);
             }
         }
@@ -206,12 +207,20 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
 
             if (isEnabled) {
+                pyProj.ProjectPropertyChanged -= OnTestPropertiesChanged;
+                pyProj.ProjectPropertyChanged += OnTestPropertiesChanged;
+
                 var projInfo = new ProjectInfo(this, pyProj);
                 _projectMap[projInfo.ProjectHome] = projInfo;
                 var files = FilteredTestOrSettingsFiles(vsProject);
                 UpdateSolutionTestContainersAndFileWatchers(files, projInfo, isAdd: true);
                 NotifyContainerChanged();
             }
+        }
+
+        private void OnTestPropertiesChanged(object sender, EventArgs e) {
+            NotifyContainerChanged();
+            _isRefresh = true;
         }
 
         private void OnProjectUnloaded(object sender, ProjectEventArgs e) {
@@ -227,6 +236,11 @@ namespace Microsoft.PythonTools.TestAdapter {
                 projToRemove.Dispose();
 
                 NotifyContainerChanged();
+            }
+
+            var pyProj = PythonProject.FromObject(e.Project);
+            if (pyProj != null) {
+                pyProj.ProjectPropertyChanged -= OnTestPropertiesChanged;
             }
         }
 
@@ -260,8 +274,6 @@ namespace Microsoft.PythonTools.TestAdapter {
                 return;
 
             if (IsSettingsFile(e.File)) {
-                _forceRefresh = true;
-
                 switch (e.ChangedReason) {
                     case TestFileChangedReason.None:
                         break;
@@ -279,6 +291,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 }
 
                 NotifyContainerChanged();
+                _isRefresh = true;
                 return;
             }
 
