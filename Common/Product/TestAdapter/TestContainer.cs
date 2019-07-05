@@ -27,28 +27,30 @@ namespace Microsoft.VisualStudioTools.TestAdapter {
         private readonly int _version;
         private readonly Architecture _architecture;
         private readonly string _projectHome;
+        private readonly string _projectName;
         private readonly TestCaseInfo[] _testCases;
         private readonly DateTime _timeStamp;
         private readonly bool _isWorkspace;
 
 
-        public TestContainer(ITestContainerDiscoverer discoverer, string source, string projectHome, int version, Architecture architecture, bool isWorkspace, TestCaseInfo[] testCases) {
+        public TestContainer(ITestContainerDiscoverer discoverer, string source, string projectHome, string projectName, int version, Architecture architecture, bool isWorkspace, TestCaseInfo[] testCases) {
             Discoverer = discoverer;
             Source = source;
             _version = version;
             _projectHome = projectHome;
+            _projectName = projectName;
             _architecture = architecture;
             _testCases = testCases;
             _timeStamp = GetTimeStamp();
             _isWorkspace = isWorkspace;
         }
-
+        
         /// <summary>
         /// Copy constructor
         /// </summary>
         /// <param name="copy"></param>
         private TestContainer(TestContainer copy)
-            : this(copy.Discoverer, copy.Source, copy._projectHome, copy.Version, copy._architecture, copy._isWorkspace, copy.TestCases) {
+            : this(copy.Discoverer, copy.Source, copy.Project, copy.ProjectName, copy.Version, copy._architecture, copy._isWorkspace, copy.TestCases) {
             this._timeStamp = copy._timeStamp;
         }
 
@@ -64,9 +66,18 @@ namespace Microsoft.VisualStudioTools.TestAdapter {
             }
         }
 
+        /// <summary>
+        /// Project path
+        /// </summary>
         public string Project {
             get {
                 return _projectHome;
+            }
+        }
+
+        public string ProjectName {
+            get {
+                return _projectName;
             }
         }
              
@@ -87,6 +98,16 @@ namespace Microsoft.VisualStudioTools.TestAdapter {
             
             if (_version.CompareTo(container._version) != 0) {
                 return -1;
+            }
+
+            result = String.Compare(this.Project, container.Project, StringComparison.Ordinal);
+            if (result != 0) {
+                return result;
+            }
+
+            result = String.Compare(this.ProjectName, container.ProjectName, StringComparison.Ordinal);
+            if (result != 0) {
+                return result;
             }
 
             return _timeStamp.CompareTo(container._timeStamp);
