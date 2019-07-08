@@ -230,7 +230,7 @@ def main():
     parser = OptionParser(prog = 'visualstudio_py_testlauncher', usage = 'Usage: %prog [<option>] <test names>... ')
     parser.add_option('-s', '--secret', metavar='<secret>', help='restrict server to only allow clients that specify <secret> when connecting (legacy debugger only)')
     parser.add_option('-p', '--port', type='int', metavar='<port>', help='listen for debugger connections on <port>')
-    parser.add_option('-d', '--debugger-path', type='str', metavar='<debugger_path>', help='Path to the debugger directory')
+    parser.add_option('-d', '--debugger-search-path', type='str', metavar='<debugger_path>', help='Path to the debugger directory')
     parser.add_option('-x', '--mixed-mode', action='store_true', help='wait for mixed-mode debugger to attach')
     parser.add_option('-t', '--test', type='str', dest='tests', action='append', help='specifies a test to run')
     parser.add_option('-c', '--coverage', type='str', help='enable code coverage and specify filename')
@@ -240,7 +240,7 @@ def main():
     (opts, _) = parser.parse_args()
     
     sys.path[0] = os.getcwd()
-    if(opts.debugger_path is not None):
+    if opts.debugger_search_path:
         sys.path.append(opts.debugger_path)
 
     if opts.result_port:

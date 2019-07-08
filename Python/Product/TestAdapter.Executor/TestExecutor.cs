@@ -765,7 +765,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                     arguments.Add(_debugPort.ToString());
 
                     arguments.Add("-d");
-                    arguments.Add(GetDebuggerPath(_settings.UseLegacyDebugger));
+                    arguments.Add(GetDebuggerSearchPath(_settings.UseLegacyDebugger));
 
                     if (_settings.UseLegacyDebugger) {
                         arguments.Add("-s");
@@ -892,7 +892,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             PythonAndNative
         }
 
-        private static string GetDebuggerPath(bool useLegacyDebugger) {
+        private static string GetDebuggerSearchPath(bool useLegacyDebugger) {
             if (useLegacyDebugger) {
                 return Path.GetDirectoryName(Path.GetDirectoryName(PythonToolsInstallPath.GetFile("ptvsd\\__init__.py")));
             }
