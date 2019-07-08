@@ -241,7 +241,7 @@ def main():
     
     sys.path[0] = os.getcwd()
     if opts.debugger_search_path:
-        sys.path.append(opts.debugger_path)
+        sys.path.append(opts.debugger_search_path)
 
     if opts.result_port:
         _channel = _IpcChannel(socket.create_connection(('127.0.0.1', opts.result_port)))
