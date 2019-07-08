@@ -88,15 +88,12 @@ namespace Microsoft.PythonTools.Debugger.Remote {
         }
 
         public int GetEngineInfo(out string pbstrEngine, out Guid pguidEngine) {
-            pguidEngine = !PythonDebugOptionsServiceHelper.Options.UseLegacyDebugger && !IsUnitTest() ? 
-                VSCodeDebugEngine : 
-                AD7Engine.DebugEngineGuid;
+            pguidEngine = PythonDebugOptionsServiceHelper.Options.UseLegacyDebugger ?
+                AD7Engine.DebugEngineGuid :
+                VSCodeDebugEngine;
             pbstrEngine = null;
-            return 0;
-        }
 
-        private bool IsUnitTest() {
-            return _process.DebugPort.Uri.Query.Contains("legacyUnitTest");
+            return 0;
         }
 
         public int GetMemoryBytes(out IDebugMemoryBytes2 ppMemoryBytes) {

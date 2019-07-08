@@ -18,13 +18,11 @@ using System;
 using System.ComponentModel.Composition;
 using System.IO;
 using System.Linq;
-using System.Windows.Threading;
 using System.Xml.XPath;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestWindow.Extensibility;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.TestAdapter;
@@ -104,6 +102,24 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
         }
 
+        private bool UseLegacyDebugger {
+            get {
+                try {
+                    bool useLegacyDebugger = false;
+
+                    _serviceProvider.GetUIThread().Invoke(() => {
+                        var dte = (EnvDTE.DTE)_serviceProvider.GetService(typeof(EnvDTE.DTE));
+                        dynamic automationObject = dte.GetObject("VsPython");
+                        useLegacyDebugger = automationObject.UseLegacyDebugger;
+                    });
+
+                    return useLegacyDebugger;
+                } catch (Exception) {
+                    return false;
+                }
+            }
+        }
+
         public IXPathNavigable AddRunSettings(IXPathNavigable inputRunSettingDocument, IRunSettingsConfigurationInfo configurationInfo, ILogger log) {
             XPathNavigator navigator = inputRunSettingDocument.CreateNavigator();
             var python = navigator.Select("/RunSettings");
@@ -141,9 +157,10 @@ namespace Microsoft.PythonTools.TestAdapter {
                                 );
                                 continue;
                             }
+                            writer.WriteAttributeString("useLegacyDebugger", UseLegacyDebugger ? "1" : "0");
                             writer.WriteAttributeString("nativeDebugging", nativeCode);
                             writer.WriteAttributeString("djangoSettingsModule", djangoSettings);
-                            
+
                             writer.WriteAttributeString("workingDir", config.WorkingDirectory);
                             writer.WriteAttributeString("interpreter", config.GetInterpreterPath());
                             writer.WriteAttributeString("pathEnv", config.Interpreter.PathEnvironmentVariable);
@@ -164,7 +181,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                                 writer.WriteEndElement();
                             }
                             writer.WriteEndElement(); // SearchPaths
-    
+
                             foreach (var test in container.TestCases) {
                                 writer.WriteStartElement("Test");
                                 writer.WriteAttributeString("className", test.ClassName);
@@ -178,7 +195,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                             writer.WriteEndElement();  // Project
                         }
                     }
-                    
+
                     writer.WriteEndElement(); // TestCases
                     writer.WriteEndElement(); // Python
                 }

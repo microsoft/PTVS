@@ -116,7 +116,7 @@ namespace Microsoft.PythonTools {
             }
         }
 
-        bool IPythonOptions2.UseLegacyDebugger {
+        public bool UseLegacyDebugger {
             get {
                 return _pyService.DebuggerOptions.UseLegacyDebugger;
             }
