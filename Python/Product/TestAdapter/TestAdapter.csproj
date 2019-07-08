@@ -128,7 +128,7 @@
     <Compile Include="TestFilesUpdateWatcher.cs" />
     <Compile Include="TestMethodResolver.cs" />
     <Compile Include="VsProjectExtensions.cs" />
-    <Compile Include="WSTestContainerDiscoverer.cs" />
+    <Compile Include="TestContainerDiscovererWorskspace.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common\Common.csproj">

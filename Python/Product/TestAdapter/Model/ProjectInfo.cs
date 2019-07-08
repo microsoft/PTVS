@@ -15,23 +15,20 @@ namespace Microsoft.PythonTools.TestAdapter.Model {
         private readonly IPythonWorkspaceContext _pythonWorkspace;
         private readonly string _projectHome;
         private readonly string _projectName;
-        private readonly ITestContainerDiscoverer _discoverer;
         private readonly Dictionary<string, TestContainer> _containers;
 
-        public ProjectInfo(TestContainerDiscoverer discoverer, PythonProject project, string projectName) {
+        public ProjectInfo(PythonProject project, string projectName) {
             _pythonProject = project;
             _pythonWorkspace = null;
             _projectHome = _pythonProject.ProjectHome;
             _projectName = projectName;
-            _discoverer = discoverer;
             _containers = new Dictionary<string, TestContainer>(StringComparer.OrdinalIgnoreCase);
         }
 
-        public ProjectInfo(WSTestContainerDiscoverer discoverer, IPythonWorkspaceContext workspace) {
+        public ProjectInfo( IPythonWorkspaceContext workspace) {
             _pythonProject = null;
             _pythonWorkspace = workspace;
             _projectHome = workspace.Location;
-            _discoverer = discoverer;
             _containers = new Dictionary<string, TestContainer>(StringComparer.OrdinalIgnoreCase);
         }
 
@@ -81,8 +78,7 @@ namespace Microsoft.PythonTools.TestAdapter.Model {
             return _pythonProject.GetProperty(name).IsTrue();
         }
 
-
-        public void AddTestContainer(string path) {
+        public void AddTestContainer(ITestContainerDiscoverer discoverer, string path) {
             if (!Path.GetExtension(path).Equals(PythonConstants.FileExtension, StringComparison.OrdinalIgnoreCase))
                 return;
 
@@ -90,7 +86,7 @@ namespace Microsoft.PythonTools.TestAdapter.Model {
             if (!TryGetContainer(path, out existing)) {
             
                 _containers[path] = new TestContainer(
-                    _discoverer,
+                    discoverer,
                     path,
                     _projectHome,
                     ProjectName,
@@ -104,7 +100,7 @@ namespace Microsoft.PythonTools.TestAdapter.Model {
                 RemoveTestContainer(path);
 
                 _containers[path] = new TestContainer(
-                   _discoverer,
+                   discoverer,
                    path,
                    _projectHome,
                    ProjectName,
@@ -133,6 +129,5 @@ namespace Microsoft.PythonTools.TestAdapter.Model {
                 return _projectName;
             }
         }
-
     }
 }

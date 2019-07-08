@@ -20,22 +20,17 @@ using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Linq;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Projects;
 using Microsoft.PythonTools.TestAdapter.Model;
 using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestWindow.Extensibility;
-using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.TestAdapter;
 using Microsoft.PythonTools.Interpreter;
-using System.Threading;
 using System.Collections.Concurrent;
-using System.Diagnostics;
 
 namespace Microsoft.PythonTools.TestAdapter {
     [Export(typeof(ITestContainerDiscoverer))]
-    [Export(typeof(WSTestContainerDiscoverer))]
-    class WSTestContainerDiscoverer : ITestContainerDiscoverer, IDisposable {
+    [Export(typeof(TestContainerDiscovererWorskspace))]
+    class TestContainerDiscovererWorskspace : ITestContainerDiscoverer, IDisposable {
         private readonly IServiceProvider _serviceProvider;
         private readonly IPythonWorkspaceContextProvider _workspaceContextProvider;
         private readonly ConcurrentDictionary<string, ProjectInfo> _projectMap;
@@ -44,7 +39,7 @@ namespace Microsoft.PythonTools.TestAdapter {
         private readonly HashSet<string> _pytestFrameworkConfigFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "pytest.ini", "setup.cfg", "tox.ini" };
 
         [ImportingConstructor]
-        private WSTestContainerDiscoverer(
+        private TestContainerDiscovererWorskspace(
             [Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider,
             [Import(typeof(IOperationState))]IOperationState operationState,
             [Import] IPythonWorkspaceContextProvider workspaceContextProvider
@@ -161,7 +156,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             bool isEnabled = workspace.GetBoolProperty(PythonConstants.PyTestEnabledSetting).GetValueOrDefault(false);
 
             if (isEnabled) {
-                var projInfo = new ProjectInfo(this, workspace);
+                var projInfo = new ProjectInfo(workspace);
                 _projectMap[projInfo.ProjectHome] = projInfo;
 
                 var oldWatcher = _testFilesUpdateWatcher;
@@ -172,7 +167,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 
                 var files = Directory.EnumerateFiles(workspace.Location, "*.*", SearchOption.AllDirectories);
                 foreach (var file in files) {
-                    projInfo.AddTestContainer(file);
+                    projInfo.AddTestContainer(this, file);
                 }
             }
         }
@@ -233,17 +228,17 @@ namespace Microsoft.PythonTools.TestAdapter {
 
             switch (e.ChangedReason) {
                 case TestFileChangedReason.Added:
-                    projInfo.AddTestContainer(e.File);
+                    projInfo.AddTestContainer(this, e.File);
                     break;
                 case TestFileChangedReason.Changed:
-                    projInfo.AddTestContainer(e.File);
+                    projInfo.AddTestContainer(this, e.File);
                     break;
                 case TestFileChangedReason.Removed:
                     projInfo.RemoveTestContainer(e.File);
                     break;
                 case TestFileChangedReason.Renamed:
                     projInfo.RemoveTestContainer(e.OldFile);
-                    projInfo.AddTestContainer(e.File);
+                    projInfo.AddTestContainer(this, e.File);
                     break;
                 default:
                     break;

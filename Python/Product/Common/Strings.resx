@@ -640,6 +640,9 @@ See PublishPropertyControl_LocationLabel for examples.</comment>
   <data name="PythonPublishPropertyPageLabel" xml:space="preserve">
     <value>Publish</value>
   </data>
+  <data name="PythonTestPropertyPageLabel" xml:space="preserve">
+    <value>Test</value>
+  </data>
   <data name="PythonDebugPropertyPageLabel" xml:space="preserve">
     <value>Debug</value>
   </data>

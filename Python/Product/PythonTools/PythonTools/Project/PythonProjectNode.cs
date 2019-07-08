@@ -571,7 +571,8 @@ namespace Microsoft.PythonTools.Project {
             return new[] {
                 GetGeneralPropertyPageType().GUID,
                 typeof(PythonDebugPropertyPage).GUID,
-                typeof(PublishPropertyPage).GUID
+                typeof(PublishPropertyPage).GUID,
+                typeof(PythonTestPropertyPage).GUID
             };
         }
 
@@ -1009,8 +1010,6 @@ namespace Microsoft.PythonTools.Project {
             if (debugProp != null) {
                 ((PythonDebugPropertyPageControl)debugProp.Control).ReloadSetting(e.PropertyName);
             }
-
-            ProjectPropertiesChanged?.Invoke(this, EventArgs.Empty);
         }
 
         private PythonGeneralPropertyPageControl GeneralPropertyPageControl {
@@ -1046,7 +1045,6 @@ namespace Microsoft.PythonTools.Project {
             return _analyzer;
         }
 
-        public event EventHandler ProjectPropertiesChanged;
         public event EventHandler ProjectAnalyzerChanged;
         public event EventHandler<AnalyzerChangingEventArgs> ProjectAnalyzerChanging;
 
@@ -2882,6 +2880,11 @@ namespace Microsoft.PythonTools.Project {
             private readonly PythonProjectNode _node;
             public VsPythonProject(PythonProjectNode node) {
                 _node = node;
+                _node.OnProjectPropertyChanged += OnProjectPropertyChanged;
+            }
+
+            private void OnProjectPropertyChanged(object sender, ProjectPropertyChangedArgs e) {
+                ProjectPropertyChanged?.Invoke(this, new PythonProjectPropertyChangedArgs(e.PropertyName, e.OldValue, e.NewValue));
             }
 
             public override string ProjectHome {
@@ -2890,10 +2893,7 @@ namespace Microsoft.PythonTools.Project {
                 }
             }
 
-            public override event EventHandler ProjectPropertyChanged {
-                add { _node.ProjectPropertiesChanged += value; }
-                remove { _node.ProjectPropertiesChanged -= value; }
-            }
+            public override event EventHandler<PythonProjectPropertyChangedArgs> ProjectPropertyChanged;
             
             public override event EventHandler ProjectAnalyzerChanged {
                 add { _node.ProjectAnalyzerChanged += value; }

@@ -5370,6 +5370,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Test.
+        /// </summary>
+        public static string PythonTestPropertyPageLabel {
+            get {
+                return ResourceManager.GetString("PythonTestPropertyPageLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Launches web sites using the Python debugger. This enables the web server commands specified in the project file, and launches a browser window when the server has started..
         /// </summary>
         public static string PythonWebLauncherDescription {

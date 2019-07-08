@@ -75,6 +75,8 @@ namespace Microsoft.PythonTools.TestAdapter {
             if (!_isDisposed) {
                 _isDisposed = true;
 
+                _projectMap.Clear();
+
                 if (_solutionListener != null) {
                     _solutionListener.ProjectLoaded -= OnProjectLoaded;
                     _solutionListener.ProjectUnloading -= OnProjectUnloaded;
@@ -108,11 +110,11 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
         }
 
-        private bool HasLoadedWorkspace() => _workspaceContextProvider.Workspace != null;
+        private bool IsSolutionMode() => _workspaceContextProvider.Workspace == null;
 
         public IEnumerable<ITestContainer> TestContainers {
             get {
-                if (!HasLoadedWorkspace()
+                if (IsSolutionMode()
                     && (_firstLoad || _isRefresh)) {
                     _projectMap.Clear();
 
@@ -133,18 +135,9 @@ namespace Microsoft.PythonTools.TestAdapter {
         }
 
         private void OnSolutionClosed(object sender, EventArgs e) {
-            _firstLoad = true;
-            _isRefresh = false;
-            _setupComplete = false;
-            _projectMap.Clear();
-
-            if (_testFilesUpdateWatcher != null) {
-                _testFilesUpdateWatcher.FileChangedEvent -= OnProjectItemChanged;
-                _testFilesUpdateWatcher.Dispose();
-                _testFilesUpdateWatcher = null;
-            }
+            ResetSolution();
         }
-
+       
         /// <summary>
         /// This can be triggered before our class is created so it isn't being used
         /// </summary>
@@ -154,7 +147,7 @@ namespace Microsoft.PythonTools.TestAdapter {
         }
 
         private void SetupSolution() {
-            // add file watchers before loading projects
+            // create file watcher before loading projects
             var oldTestFilesUpdateWatcher = _testFilesUpdateWatcher;
             _testFilesUpdateWatcher = new TestFilesUpdateWatcher();
             _testFilesUpdateWatcher.FileChangedEvent += OnProjectItemChanged;
@@ -169,6 +162,20 @@ namespace Microsoft.PythonTools.TestAdapter {
 
             _setupComplete = true;
         }
+
+        private void ResetSolution() {
+            _firstLoad = true;
+            _isRefresh = false;
+            _setupComplete = false;
+            _projectMap.Clear();
+
+            if (_testFilesUpdateWatcher != null) {
+                _testFilesUpdateWatcher.FileChangedEvent -= OnProjectItemChanged;
+                _testFilesUpdateWatcher.Dispose();
+                _testFilesUpdateWatcher = null;
+            }
+        }
+
 
         public ProjectInfo GetProjectInfo(string projectHome) {
             if (projectHome != null
@@ -188,6 +195,8 @@ namespace Microsoft.PythonTools.TestAdapter {
         }
 
         private void OnProjectLoaded(object sender, ProjectEventArgs e) {
+            // We delay project test discovery until test explorer requests tests.
+            // But if a project is loaded after SetupSolution() runs, we still need to update.
             if (!_setupComplete)
                 return;
 
@@ -195,24 +204,26 @@ namespace Microsoft.PythonTools.TestAdapter {
         }
 
         private void LoadProject(IVsProject vsProject) {
+            // check for python projects
             var pyProj = PythonProject.FromObject(vsProject);
             if (pyProj == null)
                 return;
 
-            bool isEnabled = false;
+            // always register for project property changes
+            pyProj.ProjectPropertyChanged -= OnTestPropertiesChanged;
+            pyProj.ProjectPropertyChanged += OnTestPropertiesChanged;
+
+            bool isPytestEnabled = false;
             try {
-                isEnabled = pyProj.GetProperty(PythonConstants.PyTestEnabledSetting).IsTrue();
+                isPytestEnabled = pyProj.GetProperty(PythonConstants.PyTestEnabledSetting).IsTrue();
             } catch (Exception ex) when (!ex.IsCriticalException()) {
                 Trace.WriteLine("Exception : " + ex.Message);
             }
 
-            if (isEnabled) {
-                pyProj.ProjectPropertyChanged -= OnTestPropertiesChanged;
-                pyProj.ProjectPropertyChanged += OnTestPropertiesChanged;
-
+            if (isPytestEnabled) {
                 IVsHierarchy hierarchy = (IVsHierarchy)vsProject;
                 var projectName = hierarchy == null ? hierarchy.GetNameProperty() : string.Empty;
-                var projInfo = new ProjectInfo(this, pyProj, projectName);
+                var projInfo = new ProjectInfo(pyProj, projectName);
                 _projectMap[projInfo.ProjectHome] = projInfo;
                 var files = FilteredTestOrSettingsFiles(vsProject);
                 UpdateSolutionTestContainersAndFileWatchers(files, projInfo, isAdd: true);
@@ -220,8 +231,20 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
         }
 
-        private void OnTestPropertiesChanged(object sender, EventArgs e) {
-            NotifyContainerChanged();
+        private void OnTestPropertiesChanged(object sender, PythonProjectPropertyChangedArgs e) {
+            // Need to special case disabling pytest
+            // We want to clear test containers and watchers except still listen for project setting changes ie. ProjectPropertyChanged
+            if (e.PropertyName == PythonConstants.PyTestEnabledSetting
+                && e.OldValue.IsTrue() 
+                && !e.NewValue.IsTrue()) {
+
+                var pythonProj = (PythonProject)sender;
+                if(pythonProj != null)
+                    RemoveTestContainersAndNotify(pythonProj.ProjectHome);
+            }
+            else {
+                NotifyContainerChanged();
+            }
             _isRefresh = true;
         }
 
@@ -229,20 +252,24 @@ namespace Microsoft.PythonTools.TestAdapter {
             if (e.Project == null)
                 return;
 
-            string projectHome = e.Project.GetProjectHome();
-            if (projectHome != null
-                && _projectMap.TryRemove(projectHome, out ProjectInfo projToRemove)) {
+            RemoveTestContainersAndNotify(e.Project.GetProjectHome());
 
-                var files = FilteredTestOrSettingsFiles(e.Project);
-                UpdateSolutionTestContainersAndFileWatchers(files, projToRemove, isAdd: false);
-                projToRemove.Dispose();
-
-                NotifyContainerChanged();
-            }
-
+            // Unregister Properties handler
             var pyProj = PythonProject.FromObject(e.Project);
             if (pyProj != null) {
                 pyProj.ProjectPropertyChanged -= OnTestPropertiesChanged;
+            }
+        }
+
+        private void RemoveTestContainersAndNotify(string projectHome) {
+            if (projectHome != null
+                && _projectMap.TryRemove(projectHome, out ProjectInfo projToRemove)) {
+
+                var testFilesToRemove = projToRemove.GetAllContainers().Select(t => t.Source);
+                UpdateSolutionTestContainersAndFileWatchers(testFilesToRemove, projToRemove, isAdd: false);
+                projToRemove.Dispose();
+
+                NotifyContainerChanged();
             }
         }
 
@@ -251,10 +278,10 @@ namespace Microsoft.PythonTools.TestAdapter {
                 .Where(s => IsTestFileOrSetting(s));
         }
 
-        private void UpdateSolutionTestContainersAndFileWatchers(IEnumerable<string> sources, ProjectInfo projInfo, bool isAdd) {
+        public void UpdateSolutionTestContainersAndFileWatchers(IEnumerable<string> sources, ProjectInfo projInfo, bool isAdd) {
             foreach (var path in sources) {
                 if (isAdd) {
-                    projInfo.AddTestContainer(path);
+                    projInfo.AddTestContainer(this, path);
                     _testFilesUpdateWatcher.AddWatch(path);
                 } else {
                     projInfo.RemoveTestContainer(path);
@@ -300,6 +327,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             if (!IsTestFile(e.File))
                 return;
 
+            // bschnurr todo: this is only looking at opened files
             IVsProject vsProject = e.Project;
             if (vsProject == null) {
                 var rdt = (IVsRunningDocumentTable)_serviceProvider.GetService(typeof(SVsRunningDocumentTable));

@@ -150,8 +150,8 @@ namespace Microsoft.PythonTools.TestAdapter {
                                     var discoverer = container.Discoverer as TestContainerDiscoverer;
                                     isWorkspace = discoverer.IsWorkspace;
                                     projInfo = discoverer.GetProjectInfo(container.Project);
-                                } else if (container.Discoverer is WSTestContainerDiscoverer) {
-                                    var discoverer = container.Discoverer as WSTestContainerDiscoverer;
+                                } else if (container.Discoverer is TestContainerDiscovererWorskspace) {
+                                    var discoverer = container.Discoverer as TestContainerDiscovererWorskspace;
                                     isWorkspace = discoverer.IsWorkspace;
                                     projInfo = discoverer.GetProjectInfo(container.Project);
                                 }

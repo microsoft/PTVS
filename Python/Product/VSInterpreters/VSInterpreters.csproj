@@ -112,6 +112,7 @@
     <Compile Include="Projects\IPythonProjectProvider.cs" />
     <Compile Include="Projects\ProjectAnalyzer.cs" />
     <Compile Include="Projects\PythonProject.cs" />
+    <Compile Include="Projects\PythonProjectPropertyChangedArgs.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Interpreter\CondaEnvironmentFactoryConstants.cs" />
     <Compile Include="PackageManager\CondaUtils.cs" />
