@@ -27,11 +27,11 @@ namespace Microsoft.PythonTools.Debugger {
     [Guid(DebugAdapterLauncherCLSIDNoBraces)]
     public sealed class DebugAdapterLauncher : IAdapterLauncher {
         public const string DebugAdapterLauncherCLSIDNoBraces = "C2990BF1-A87B-4459-9478-322482C535D6";
-        public const string DebugAdapterLauncherCLSID = "{"+ DebugAdapterLauncherCLSIDNoBraces + "}";
+        public const string DebugAdapterLauncherCLSID = "{" + DebugAdapterLauncherCLSIDNoBraces + "}";
         public const string VSCodeDebugEngineId = "{86432F39-ADFD-4C56-AA8F-AF8FCDC66039}";
         public static Guid VSCodeDebugEngine = new Guid(VSCodeDebugEngineId);
 
-        public DebugAdapterLauncher(){}
+        public DebugAdapterLauncher() { }
 
         public void Initialize(IDebugAdapterHostContext context) {
         }
@@ -41,25 +41,32 @@ namespace Microsoft.PythonTools.Debugger {
             // return targetInterop.ExecuteCommandAsync(path, "");
 
             // If you need more control use the DebugAdapterProcess
-            if(launchInfo.LaunchType == LaunchType.Attach) {
+            if (launchInfo.LaunchType == LaunchType.Attach) {
                 return DebugAdapterRemoteProcess.Attach(launchInfo.LaunchJson);
             }
             return DebugAdapterProcess.Start(launchInfo.LaunchJson);
         }
 
         public void UpdateLaunchOptions(IAdapterLaunchInfo launchInfo) {
-            if(launchInfo.LaunchType == LaunchType.Attach) {
+            if (launchInfo.LaunchType == LaunchType.Attach) {
+                JObject launchJson = new JObject();
+
                 launchInfo.DebugPort.GetPortName(out string uri);
+                launchJson["remote"] = uri;
 
                 var debugService = (IPythonDebugOptionsService)Package.GetGlobalService(typeof(IPythonDebugOptionsService));
+                JArray debugOptions = new JArray();
+                if (debugService.ShowFunctionReturnValue) {
+                    debugOptions.Add("ShowReturnValue");
+                }
+                if (debugService.BreakOnSystemExitZero) {
+                    debugOptions.Add("BreakOnSystemExitZero");
+                }
 
-                JObject obj = new JObject()
-                {
-                    ["remote"] = uri,
-                    ["options"] = "SHOW_RETURN_VALUE={0}".FormatInvariant(debugService.ShowFunctionReturnValue)
-                };
-
-                launchInfo.LaunchJson = obj.ToString();
+                if (debugOptions.Count > 0) {
+                    launchJson["debugOptions"] = debugOptions;
+                }
+                launchInfo.LaunchJson = launchJson.ToString();
             }
         }
     }
