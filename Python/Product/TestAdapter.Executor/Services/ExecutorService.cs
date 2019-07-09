@@ -31,6 +31,27 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
             PythonAndNative
         }
 
+
+        /// <summary>
+        /// Used to send messages to TestExplorer's Test output pane
+        /// </summary>
+        sealed class TestRedirector : Redirector {
+            private readonly IMessageLogger _logger;
+
+            public TestRedirector(IMessageLogger logger) {
+                _logger = logger;
+            }
+
+            public override void WriteErrorLine(string line) {
+                _logger.SendMessage(TestMessageLevel.Error, line);
+            }
+
+            public override void WriteLine(string line) {
+                _logger.SendMessage(TestMessageLevel.Informational, line);
+            }
+        }
+
+
         public ExecutorService(IFrameworkHandle frameworkHandle, IRunContext runContext) {
             _frameworkHandle = frameworkHandle;
             _runContext = runContext;

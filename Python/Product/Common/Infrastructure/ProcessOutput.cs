@@ -14,7 +14,6 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -150,25 +149,6 @@ namespace Microsoft.PythonTools.Infrastructure {
         public override void WriteLine(string line) {
             _output.WriteLine(WithPrefix(_outputPrefix, line));
             _output.Flush();
-        }
-    }
-
-    /// <summary>
-    /// Used to send messages to TestExplorer's Test output pane
-    /// </summary>
-    sealed class TestRedirector : Redirector {
-        private readonly IMessageLogger _logger;
-
-        public TestRedirector(IMessageLogger logger) {
-            _logger = logger;
-        }
-
-        public override void WriteErrorLine(string line) {
-            _logger.SendMessage(TestMessageLevel.Error, line);
-        }
-
-        public override void WriteLine(string line) {
-            _logger.SendMessage(TestMessageLevel.Informational, line);
         }
     }
 
