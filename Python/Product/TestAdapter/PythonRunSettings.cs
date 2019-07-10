@@ -25,6 +25,7 @@ using Microsoft.PythonTools.TestAdapter.Model;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.TestWindow.Extensibility;
+using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.TestAdapter;
 
 namespace Microsoft.PythonTools.TestAdapter {
