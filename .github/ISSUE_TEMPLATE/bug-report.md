@@ -18,11 +18,8 @@ assignees: ''
 **Expected behavior**
 [A clear and concise description of what you expected to happen]
 
-**Screenshots**
-[If applicable, add screenshots to help explain your problem]
-
-**Additional context**
-[Add any other information such as error message or stack trace]
+**Additional context and screenshots**
+[Add any other information such as screenshots, error message or stack trace]
 
 **Configuration information (If you are providing a diagnostics file (see below), skip this section)**
 VS and PTVS version: [Can be found under "Help->About Microsoft Visual Studio"]
