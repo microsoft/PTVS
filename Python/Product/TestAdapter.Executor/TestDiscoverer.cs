@@ -64,7 +64,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             var discovery = new DiscoveryService(logger);
             var results = discovery.RunDiscovery(settings, testGroup);
             
-            PyTestDiscoveryReader.ParseDiscovery(results, discoverySink, settings);
+            PyTestDiscoveryReader.ParseDiscovery(results, discoverySink, settings, logger);
         }
     }
 }

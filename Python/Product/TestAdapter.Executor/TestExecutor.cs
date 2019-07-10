@@ -109,8 +109,9 @@ namespace Microsoft.PythonTools.TestAdapter {
                     return;
                 }
 
-                var tcList = PyTestDiscoveryReader.ParseDiscovery(results, discoverySink:null, settings);
-                tests.AddRange(tcList);
+                IEnumerable<TestCase> tcList = PyTestDiscoveryReader.ParseDiscovery(results, discoverySink:null, settings, frameworkHandle);
+                if (tcList != null)
+                    tests.AddRange(tcList);
 
                 if (_cancelRequested.WaitOne(0)) {
                     return;

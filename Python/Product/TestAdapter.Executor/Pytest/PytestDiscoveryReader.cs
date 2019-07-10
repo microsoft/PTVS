@@ -2,6 +2,7 @@
 using Microsoft.PythonTools.TestAdapter.Config;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -11,14 +12,18 @@ using System.Linq;
 namespace Microsoft.PythonTools.TestAdapter.Pytest {
     static class PyTestDiscoveryReader {
 
-        public static IEnumerable<TestCase> ParseDiscovery(IList<PytestDiscoveryResults> results, ITestCaseDiscoverySink discoverySink, PythonProjectSettings settings) {
-            var testcases = new List<TestCase>();
+        public static IEnumerable<TestCase> ParseDiscovery(IList<PytestDiscoveryResults> results, ITestCaseDiscoverySink discoverySink, PythonProjectSettings settings, IMessageLogger logger) {
             if (!results.Any())
-                return testcases;
+                return null;
+
+            var testcases = new List<TestCase>();
+
+            logger.SendMessage(TestMessageLevel.Informational, "Discovered the following tests:");
 
             foreach (PytestDiscoveryResults result in results) {
                 Dictionary<string, PytestParent> parentMap = BuildParentMap(result);
 
+               
                 foreach (var t in result.Tests) {
                     var sourceAndLineNum = t.Source.Replace(".\\", "");
                     String[] sourceParts = sourceAndLineNum.Split(':');
@@ -29,22 +34,24 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
                         !String.IsNullOrWhiteSpace(t.Name) &&
                         !String.IsNullOrWhiteSpace(t.Id)) {
 
+                        var sourceNoLineNumbers = sourceParts[0];
+                        
                         //bschnurr todo: fix codepath for files outside of project
-                        var source = sourceParts[0];
-                        var codeFilePath = Path.Combine(result.Root, source);
+                        var fullSourcePathNormalized = Path.Combine(result.Root, sourceNoLineNumbers).ToLower();
 
                         Uri executorURI = settings.IsWorkspace ? PythonConstants.WorkspaceExecutorUri : PythonConstants.ExecutorUri;
                         var fullyQualifiedName = CreateFullyQualifiedTestNameFromId(t.Id);
-                        var tc = new TestCase(fullyQualifiedName, executorURI, codeFilePath) {
+                        var tc = new TestCase(fullyQualifiedName, executorURI, fullSourcePathNormalized) {
                             DisplayName = t.Name,
                             LineNumber = line,
-                            CodeFilePath = codeFilePath
+                            CodeFilePath = fullSourcePathNormalized
                         };
 
-                        tc.SetPropertyValue(Constants.PytestFileProperty, source);
+                        logger.SendMessage(TestMessageLevel.Informational, $"{tc.DisplayName} Source:{tc.Source} Line:{tc.LineNumber}");
+                        
                         tc.SetPropertyValue(Constants.PytestIdProperty, t.Id);
                         tc.SetPropertyValue(Constants.PyTestXmlClassNameProperty, CreateXmlClassName(t, parentMap));
-                        tc.SetPropertyValue(Constants.PytestTestExecutionPathPropertery, GetAbsoluteTestExecutionPath(codeFilePath, t.Id));
+                        tc.SetPropertyValue(Constants.PytestTestExecutionPathPropertery, GetAbsoluteTestExecutionPath(fullSourcePathNormalized, t.Id));
                         tc.SetPropertyValue(Constants.IsWorkspaceProperty, settings.IsWorkspace);
 
                         tc.Traits.Add(new Trait("IsWorkspace", settings.IsWorkspace.ToString()));

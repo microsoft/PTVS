@@ -35,7 +35,7 @@ namespace Microsoft.VisualStudioTools.TestAdapter {
 
         public TestContainer(ITestContainerDiscoverer discoverer, string source, string projectHome, string projectName, int version, Architecture architecture, bool isWorkspace, TestCaseInfo[] testCases) {
             Discoverer = discoverer;
-            Source = source;
+            Source = source.ToLower(); // Make sure source matches pytest discovery test file paths.
             _version = version;
             _projectHome = projectHome;
             _projectName = projectName;
