@@ -16,7 +16,7 @@ assignees: ''
 3.
 
 **Expected behavior**
-[A clear and concise description of what you are expecting]
+[A clear and concise description of your expectation]
 
 **Additional context and screenshots**
 [Add any other information such as screenshots, error message, or stack trace]
