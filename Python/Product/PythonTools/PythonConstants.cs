@@ -125,9 +125,15 @@ namespace Microsoft.PythonTools {
         public const string PyTestEnabledSetting = "PyTestEnabled";
         public const string PyTestPathSetting = "PyTestPath";
         public const string PyTestArgsSetting = "PyTestArgs";
+        public const string UnitTestArgsSetting = "UnitTestArgs";
+        public const string TestframeworkSetting = "TestFramework";
 
 
-
+        public enum TestframeworkType {
+            None = 0,
+            Pytest = 1,
+            UnitTest = 2
+        }
         /// <summary>
         /// Specifies port to which to open web browser on launch.
         /// </summary>

@@ -37,51 +37,57 @@ namespace Microsoft.PythonTools.Project {
             _propPage = newPage;
         }
 
-        
-        internal void SaveSettings() {
-            _service = _propPage.Project.Site.GetComponentModel().GetService<IInterpreterRegistryService>();
-           
-            _propPage.Project.SetProjectProperty(PythonConstants.PyTestArgsSetting, PytestArgs);
-            _propPage.Project.SetProjectProperty(PythonConstants.PyTestPathSetting, PytestPath);
-            _propPage.Project.SetProjectProperty(PythonConstants.PyTestEnabledSetting, PytestEnabled.ToString());
-        }
-
         internal void LoadSettings() {
             _service = _propPage.Project.Site.GetComponentModel().GetService<IInterpreterRegistryService>();
-           
-            PytestArgs = _propPage.Project.GetProjectProperty(PythonConstants.PyTestArgsSetting, false);
-            PytestPath = _propPage.Project.GetProjectProperty(PythonConstants.PyTestPathSetting, false);
-            if (string.IsNullOrEmpty(PytestPath)) {
-                PytestPath = "pytest";
+
+            UnitTestArgs = _propPage.Project.GetProjectProperty(PythonConstants.UnitTestArgsSetting, false);
+            string testFrameworkStr = _propPage.Project.GetProjectProperty(PythonConstants.TestframeworkSetting, false);
+            TestFramework = PythonConstants.TestframeworkType.None; 
+            if(Enum.TryParse<PythonConstants.TestframeworkType>(testFrameworkStr, out PythonConstants.TestframeworkType parsedFramworked)) {
+                TestFramework = parsedFramworked;
             }
-            PytestEnabled = Convert.ToBoolean(_propPage.Project.GetProjectProperty(PythonConstants.PyTestEnabledSetting, false));
         }
 
-        public string PytestPath {
-            get { return _pytestPath.Text; }
-            set { _pytestPath.Text = value; }
+        internal void SaveSettings() {
+            _service = _propPage.Project.Site.GetComponentModel().GetService<IInterpreterRegistryService>();
+
+            _propPage.Project.SetProjectProperty(PythonConstants.UnitTestArgsSetting, UnitTestArgs);
+            _propPage.Project.SetProjectProperty(PythonConstants.TestframeworkSetting, TestFramework.ToString());
         }
 
-        public string PytestArgs {
-            get { return _arguments.Text; }
-            set { _arguments.Text = value; }
+
+        internal PythonConstants.TestframeworkType TestFramework {
+            get {
+                return (PythonConstants.TestframeworkType)_testFramework.SelectedIndex;
+            }
+            set {
+                _testFramework.SelectedIndex = (int)value;
+            }
         }
 
-        public bool PytestEnabled {
-            get { return _pytestEnabled.Checked; }
-            set { _pytestEnabled.Checked = value; }
+        public string UnitTestArgs {
+            get { return _unitTestArgs.Text; }
+            set { _unitTestArgs.Text = value; }
         }
 
         private void Changed(object sender, EventArgs e) {
             _propPage.IsDirty = true;
         }
 
-        private void TableLayoutPanel2_Paint(object sender, PaintEventArgs e) {
-
+        private void TestFrameworkSelectedIndexChanged(object sender, EventArgs e) {
+            _propPage.IsDirty = true;
+            UpdateLayout(TestFramework);
         }
 
-        private void _applicationGroup_Enter(object sender, EventArgs e) {
-
+        private void UpdateLayout(PythonConstants.TestframeworkType framework) {
+            if (framework == PythonConstants.TestframeworkType.UnitTest) {
+                _unitTestArgs.Visible = true;
+                _unitTestArgsLabel.Visible = true;
+            } else {
+                _unitTestArgs.Visible = false;
+                _unitTestArgsLabel.Visible = false;
+            }
         }
+
     }
 }
