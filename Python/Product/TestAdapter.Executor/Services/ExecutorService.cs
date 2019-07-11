@@ -134,7 +134,7 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
             paths.Insert(0, settings.WorkingDirectory);
 
             if (_debugMode == PythonDebugMode.PythonOnly) {
-                paths.Insert(0, PtvsdSearchPath);
+                paths.Insert(0, GetDebuggerSearchPath(settings.UseLegacyDebugger));
             }
 
             string searchPaths = string.Join(
@@ -221,10 +221,12 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
             _frameworkHandle.SendMessage(TestMessageLevel.Error, message);
         }
 
-        private static string PtvsdSearchPath {
-            get {
+        private static string GetDebuggerSearchPath(bool isLegacy) {
+            if (isLegacy) {
                 return Path.GetDirectoryName(Path.GetDirectoryName(PythonToolsInstallPath.GetFile("ptvsd\\__init__.py")));
             }
+
+            return Path.GetDirectoryName(Path.GetDirectoryName(PythonToolsInstallPath.GetFile("Packages\\ptvsd\\__init__.py")));
         }
 
         private void DetachFromSillyManagedProcess() {

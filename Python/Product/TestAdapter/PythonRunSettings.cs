@@ -105,9 +105,10 @@ namespace Microsoft.PythonTools.TestAdapter {
 
         private bool UseLegacyDebugger {
             get {
-                try {
-                    bool useLegacyDebugger = false;
 
+                //bschnurr todo: support new debugger with pytest
+                bool useLegacyDebugger = true;
+                try {
                     _serviceProvider.GetUIThread().Invoke(() => {
                         var dte = (EnvDTE.DTE)_serviceProvider.GetService(typeof(EnvDTE.DTE));
                         dynamic automationObject = dte.GetObject("VsPython");
@@ -116,8 +117,9 @@ namespace Microsoft.PythonTools.TestAdapter {
 
                     return useLegacyDebugger;
                 } catch (Exception) {
-                    return false;
                 }
+
+                return useLegacyDebugger;
             }
         }
 

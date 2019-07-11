@@ -43,7 +43,7 @@ using TP = Microsoft.PythonTools.TestAdapter.TestProtocol;
 namespace Microsoft.PythonTools.TestAdapter {
 
     [ExtensionUri(PythonConstants.TestExecutorUriString)]
-    class ProjectTestExecutor: TestExecutor {
+    class ProjectTestExecutor : TestExecutor {
 
     }
 
@@ -76,7 +76,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 
         public void RunTests(IEnumerable<string> sources, IRunContext runContext, IFrameworkHandle frameworkHandle) {
 
-           // MessageBox.Show("Hello1: " + Process.GetCurrentProcess().Id);
+            MessageBox.Show("Hello1: " + Process.GetCurrentProcess().Id);
 
             if (sources == null) {
                 throw new ArgumentNullException(nameof(sources));
@@ -124,7 +124,7 @@ namespace Microsoft.PythonTools.TestAdapter {
        
 
         public void RunTests(IEnumerable<TestCase> tests, IRunContext runContext, IFrameworkHandle frameworkHandle) {
-
+        
             //MessageBox.Show("Hello1: " + Process.GetCurrentProcess().Id);
 
             if (tests == null) {
@@ -139,9 +139,9 @@ namespace Microsoft.PythonTools.TestAdapter {
                 throw new ArgumentNullException(nameof(frameworkHandle));
             }
 
-            _cancelRequested.Reset();
-
             RunPytest(tests, runContext, frameworkHandle);
+
+            _cancelRequested.Reset();
         }
 
 
@@ -153,13 +153,16 @@ namespace Microsoft.PythonTools.TestAdapter {
             var sourceToProjSettings = RunSettingsUtil.GetSourceToProjSettings(runContext.RunSettings);
 
             foreach (var testGroup in tests.GroupBy(t => sourceToProjSettings.TryGetValue(t.CodeFilePath, out PythonProjectSettings proj) ? proj : null)) {
-                if (testGroup.Key != null) {
-                    RunTestGroup(testGroup, runContext, frameworkHandle);
-                }
-                else {
+                if (testGroup.Key == null) {
                     Debug.WriteLine("Missing projectSettings for TestCases:");
                     Debug.WriteLine(String.Join(",\n", testGroup));
                 }
+
+                if (_cancelRequested.WaitOne(0)) {
+                    break;
+                }
+
+                RunTestGroup(testGroup, runContext, frameworkHandle);
             }
         }
 
@@ -174,6 +177,10 @@ namespace Microsoft.PythonTools.TestAdapter {
 
                 var testResults = TestResultParser.Parse(resultsXML, testGroup);
                 foreach (var result in testResults) {
+
+                    if (_cancelRequested.WaitOne(0)) {
+                        break;
+                    }
                     frameworkHandle.RecordResult(result);
                 }
             }
