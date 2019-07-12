@@ -39,10 +39,22 @@ namespace PythonToolsUITestsRunner {
         public static void ClassCleanup() => VsTestContext.Instance.Dispose();
         #endregion
 
-        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
+        //[TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
+        //[TestCategory("Installed")]
+        //public void RunAllUnittestProject() {
+        //    _vs.RunTest(nameof(PythonToolsUITests.TestExplorerTests.RunAllUnittestProject));
+        //}
+
+        [TestMethod, Priority(0)]
         [TestCategory("Installed")]
-        public void RunAll() {
-            _vs.RunTest(nameof(PythonToolsUITests.TestExplorerTests.RunAll));
+        public void RunAllPytestProject() {
+            _vs.RunTest(nameof(PythonToolsUITests.TestExplorerTests.RunAllPytestProject));
+        }
+
+        [TestMethod, Priority(0)]
+        [TestCategory("Installed")]
+        public void RunAllPytestWorkspace() {
+            _vs.RunTest(nameof(PythonToolsUITests.TestExplorerTests.RunAllPytestWorkspace));
         }
     }
 }
