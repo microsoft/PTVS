@@ -89,5 +89,8 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
+        private void TableLayoutPanel_Paint(object sender, PaintEventArgs e) {
+
+        }
     }
 }

@@ -30,6 +30,9 @@ namespace Microsoft.PythonTools.Project {
             this._unitTestArgs = new System.Windows.Forms.TextBox();
             this._testFrameworkLabel = new System.Windows.Forms.Label();
             this._testFramework = new System.Windows.Forms.ComboBox();
+            this.label1 = new System.Windows.Forms.Label();
+            this._unitTestPattern = new System.Windows.Forms.TextBox();
+            this._mixedMode = new System.Windows.Forms.CheckBox();
             this.tableLayoutPanel1.SuspendLayout();
             this.tableLayoutPanel.SuspendLayout();
             this.SuspendLayout();
@@ -43,11 +46,15 @@ namespace Microsoft.PythonTools.Project {
             // tableLayoutPanel
             // 
             resources.ApplyResources(this.tableLayoutPanel, "tableLayoutPanel");
+            this.tableLayoutPanel.Controls.Add(this.label1, 0, 5);
             this.tableLayoutPanel.Controls.Add(this._unitTestArgsLabel, 0, 1);
             this.tableLayoutPanel.Controls.Add(this._unitTestArgs, 1, 1);
             this.tableLayoutPanel.Controls.Add(this._testFrameworkLabel, 0, 0);
             this.tableLayoutPanel.Controls.Add(this._testFramework, 1, 0);
+            this.tableLayoutPanel.Controls.Add(this._unitTestPattern, 1, 5);
+            this.tableLayoutPanel.Controls.Add(this._mixedMode, 0, 6);
             this.tableLayoutPanel.Name = "tableLayoutPanel";
+            this.tableLayoutPanel.Paint += new System.Windows.Forms.PaintEventHandler(this.TableLayoutPanel_Paint);
             // 
             // _unitTestArgsLabel
             // 
@@ -77,7 +84,25 @@ namespace Microsoft.PythonTools.Project {
             resources.GetString("_testFramework.Items1"),
             resources.GetString("_testFramework.Items2")});
             this._testFramework.Name = "_testFramework";
-            this._testFramework.SelectedIndexChanged += new System.EventHandler(this.TestFrameworkSelectedIndexChanged);             // 
+            this._testFramework.SelectedIndexChanged += new System.EventHandler(this.TestFrameworkSelectedIndexChanged);
+            // 
+            // label1
+            // 
+            resources.ApplyResources(this.label1, "label1");
+            this.label1.AutoEllipsis = true;
+            this.label1.Name = "label1";
+            // 
+            // _unitTestPattern
+            // 
+            resources.ApplyResources(this._unitTestPattern, "_unitTestPattern");
+            this._unitTestPattern.Name = "_unitTestPattern";
+            // 
+            // _mixedMode
+            // 
+            resources.ApplyResources(this._mixedMode, "_mixedMode");
+            this._mixedMode.Name = "_mixedMode";
+            this._mixedMode.UseVisualStyleBackColor = true;
+            // 
             // PythonTestPropertyPageControl
             // 
             resources.ApplyResources(this, "$this");
@@ -100,5 +125,8 @@ namespace Microsoft.PythonTools.Project {
         private System.Windows.Forms.TextBox _unitTestArgs;
         private System.Windows.Forms.Label _testFrameworkLabel;
         private System.Windows.Forms.ComboBox _testFramework;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.TextBox _unitTestPattern;
+        private System.Windows.Forms.CheckBox _mixedMode;
     }
 }
