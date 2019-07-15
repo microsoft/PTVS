@@ -41,9 +41,9 @@ namespace Microsoft.PythonTools.Project {
             _service = _propPage.Project.Site.GetComponentModel().GetService<IInterpreterRegistryService>();
 
             UnitTestArgs = _propPage.Project.GetProjectProperty(PythonConstants.UnitTestArgsSetting, false);
-            string testFrameworkStr = _propPage.Project.GetProjectProperty(PythonConstants.TestframeworkSetting, false);
-            TestFramework = PythonConstants.TestframeworkType.None; 
-            if(Enum.TryParse<PythonConstants.TestframeworkType>(testFrameworkStr, out PythonConstants.TestframeworkType parsedFramworked)) {
+            string testFrameworkStr = _propPage.Project.GetProjectProperty(PythonConstants.TestFrameworkSetting, false);
+            TestFramework = TestFrameworkType.None; 
+            if(Enum.TryParse<TestFrameworkType>(testFrameworkStr, ignoreCase:true, out TestFrameworkType parsedFramworked)) {
                 TestFramework = parsedFramworked;
             }
         }
@@ -52,13 +52,13 @@ namespace Microsoft.PythonTools.Project {
             _service = _propPage.Project.Site.GetComponentModel().GetService<IInterpreterRegistryService>();
 
             _propPage.Project.SetProjectProperty(PythonConstants.UnitTestArgsSetting, UnitTestArgs);
-            _propPage.Project.SetProjectProperty(PythonConstants.TestframeworkSetting, TestFramework.ToString());
+            _propPage.Project.SetProjectProperty(PythonConstants.TestFrameworkSetting, TestFramework.ToString());
         }
 
 
-        internal PythonConstants.TestframeworkType TestFramework {
+        internal TestFrameworkType TestFramework {
             get {
-                return (PythonConstants.TestframeworkType)_testFramework.SelectedIndex;
+                return (TestFrameworkType)_testFramework.SelectedIndex;
             }
             set {
                 _testFramework.SelectedIndex = (int)value;
@@ -79,8 +79,8 @@ namespace Microsoft.PythonTools.Project {
             UpdateLayout(TestFramework);
         }
 
-        private void UpdateLayout(PythonConstants.TestframeworkType framework) {
-            if (framework == PythonConstants.TestframeworkType.UnitTest) {
+        private void UpdateLayout(TestFrameworkType framework) {
+            if (framework == TestFrameworkType.UnitTest) {
                 _unitTestArgs.Visible = true;
                 _unitTestArgsLabel.Visible = true;
             } else {

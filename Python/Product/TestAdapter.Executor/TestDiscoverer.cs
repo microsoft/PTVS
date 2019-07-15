@@ -36,9 +36,9 @@ namespace Microsoft.PythonTools.TestAdapter {
     /// </summary>
     [FileExtension(".py")]
     [DefaultExecutorUri(PythonConstants.TestExecutorUriString)]
-    class ProjectTestDiscover : ITestDiscoverer {
+    public class PythonTestDiscoverer : ITestDiscoverer {
         public void DiscoverTests(IEnumerable<string> sources, IDiscoveryContext discoveryContext, IMessageLogger logger, ITestCaseDiscoverySink discoverySink) {
-           // MessageBox.Show("Discover: " + Process.GetCurrentProcess().Id);
+   //         MessageBox.Show("Discover: " + Process.GetCurrentProcess().Id);
 
             if (sources == null) {
                 throw new ArgumentNullException(nameof(sources));
@@ -51,20 +51,19 @@ namespace Microsoft.PythonTools.TestAdapter {
             var sourceToProjSettings = RunSettingsUtil.GetSourceToProjSettings(discoveryContext.RunSettings);
 
             foreach (var testGroup in sources.GroupBy(x => sourceToProjSettings[x])) {
-                DiscoverTestGroup(testGroup, logger, discoverySink);
+                DiscoverTestGroup(testGroup, discoveryContext, logger, discoverySink);
             }
         }
 
-        private void DiscoverTestGroup(IGrouping<PythonProjectSettings, string> testGroup, IMessageLogger logger, ITestCaseDiscoverySink discoverySink) {
+        private void DiscoverTestGroup(IGrouping<PythonProjectSettings, string> testGroup, IDiscoveryContext discoveryContext,  IMessageLogger logger, ITestCaseDiscoverySink discoverySink) {
             PythonProjectSettings settings = testGroup.Key;
-            if (!settings.PytestEnabled) {
-                return;
-            }
 
-            var discovery = new DiscoveryService(logger);
-            var results = discovery.RunDiscovery(settings, testGroup);
-            
-            PyTestDiscoveryReader.ParseDiscovery(results, discoverySink, settings, logger);
+            try {
+                var discovery = DiscovererFactory.GetDiscoverer(settings);
+                discovery.DiscoverTests(testGroup, logger, discoverySink);
+            } catch (Exception ex) {
+                logger.SendMessage(TestMessageLevel.Error, ex.Message);
+            }
         }
     }
 }

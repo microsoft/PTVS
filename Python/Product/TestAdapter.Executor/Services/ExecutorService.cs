@@ -68,14 +68,11 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
             var arguments = new List<string> {
                 TestLauncherPath,
                 projSettings.WorkingDirectory,
-                projSettings.PytestPath,
+                "pytest", 
                 _debugSecret,
                 _debugPort.ToString(),
                 String.Format("--junitxml={0}", outputfile)
             };
-
-            if (!String.IsNullOrEmpty(projSettings.PytestArgs))
-                arguments.Add(projSettings.PytestArgs);
 
             foreach (TestCase test in tests) {
                 var executionTestPath = test.GetPropertyValue<string>(Pytest.Constants.PytestTestExecutionPathPropertery, default);

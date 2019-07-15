@@ -29,9 +29,7 @@ namespace Microsoft.PythonTools.Interpreter {
         private const string PythonSettingsType = "PythonSettings";
         private const string InterpreterProperty = "Interpreter";
         private const string SearchPathsProperty = "SearchPaths";
-        private const string PytestArgProperty = "PyTestArgs";
-        private const string PytestEnabledProperty = "PyTestEnabled";
-        private const string PytestPathProperty = "PyTestPath";
+        private const string TestFrameworkProperty = "TestFramework";
 
         private readonly IWorkspace _workspace;
         private readonly IInterpreterOptionsService _optionsService;
@@ -46,9 +44,7 @@ namespace Microsoft.PythonTools.Interpreter {
         private object _cacheLock = new object();
         private string[] _searchPaths;
         private string _interpreter;
-        private string[] _pytestArgs;
-        private bool _pytestEnabled;
-        private string _pytestPath;
+        private string _testFramework;
 
 
         // These are set in initialize
@@ -101,9 +97,7 @@ namespace Microsoft.PythonTools.Interpreter {
         public void Initialize() {
             _interpreter = ReadInterpreterSetting();
             _searchPaths = ReadSearchPathsSetting();
-            _pytestArgs = ReadPytestArgSetting();
-            _pytestEnabled = GetBoolProperty(PytestEnabledProperty) ?? false;
-            _pytestPath = GetStringProperty(PytestPathProperty) ?? "pytest";
+            _testFramework = GetStringProperty(TestFrameworkProperty);
 
             RefreshCurrentFactory();
 
@@ -150,15 +144,6 @@ namespace Microsoft.PythonTools.Interpreter {
             var searchPaths = settings.UnionPropertyArray<string>(SearchPathsProperty);
 
             return searchPaths.ToArray();
-        }
-
-        private string[] ReadPytestArgSetting()
-        {
-            var settingsMgr = _workspace.GetSettingsManager();
-            var settings = settingsMgr.GetAggregatedSettings(PythonSettingsType);
-            var pytestarg = settings.UnionPropertyArray<string>(PytestArgProperty);
-
-            return pytestarg.ToArray();
         }
 
         public IEnumerable<string> GetAbsoluteSearchPaths() {
@@ -287,14 +272,9 @@ namespace Microsoft.PythonTools.Interpreter {
                 searchPathsChanged = !oldSearchPaths.SequenceEqual(_searchPaths);
                 _searchPaths = ReadSearchPathsSetting();
 
-                var oldPytestArgs = _pytestArgs;
-                var oldPytestEnabled = _pytestEnabled;
-                var oldPytestPath = _pytestPath;
-
-                _pytestArgs = ReadPytestArgSetting();
-                _pytestEnabled = GetBoolProperty(PytestEnabledProperty).GetValueOrDefault(false);
-                _pytestPath = GetStringProperty(PytestPathProperty) ?? "pytest";
-                testSettingsChanged = !oldPytestArgs.SequenceEqual(_pytestArgs) || oldPytestEnabled != _pytestEnabled || !String.Equals(oldPytestPath, _pytestPath);
+                var oldTestFramework = _testFramework;
+                _testFramework = GetStringProperty(TestFrameworkProperty);
+                testSettingsChanged = !String.Equals(oldTestFramework, _testFramework);
             }
 
             if (interpreterChanged) {

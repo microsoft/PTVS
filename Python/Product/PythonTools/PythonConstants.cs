@@ -17,6 +17,12 @@
 using System;
 
 namespace Microsoft.PythonTools {
+    public enum TestFrameworkType {
+        None = 0,
+        Pytest = 1,
+        UnitTest = 2
+    }
+
     static class PythonConstants {
         //Language name
         public const string LanguageName = "Python";
@@ -126,14 +132,8 @@ namespace Microsoft.PythonTools {
         public const string PyTestPathSetting = "PyTestPath";
         public const string PyTestArgsSetting = "PyTestArgs";
         public const string UnitTestArgsSetting = "UnitTestArgs";
-        public const string TestframeworkSetting = "TestFramework";
+        public const string TestFrameworkSetting = "TestFramework";
 
-
-        public enum TestframeworkType {
-            None = 0,
-            Pytest = 1,
-            UnitTest = 2
-        }
         /// <summary>
         /// Specifies port to which to open web browser on launch.
         /// </summary>
@@ -181,6 +181,7 @@ namespace Microsoft.PythonTools {
         public const string DontShowUpgradeDialogAgainCollection = "PythonTools\\Dialogs";
 
         internal const string PythonToolsProcessIdEnvironmentVariable = "_PTVS_PID";
+        internal const string UnitTestExecutorUriString = "executor://PythonUnitTestExecutor/v1";
         internal const string TestExecutorUriString = "executor://PythonTestExecutor/v1";
         internal const string WSTestExecutorUriString = "executor://PythonWorkspaceTestExecutor/v1";
         

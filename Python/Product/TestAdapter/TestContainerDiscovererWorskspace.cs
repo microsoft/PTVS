@@ -26,6 +26,7 @@ using Microsoft.VisualStudio.TestWindow.Extensibility;
 using Microsoft.VisualStudioTools.TestAdapter;
 using Microsoft.PythonTools.Interpreter;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 
 namespace Microsoft.PythonTools.TestAdapter {
     [Export(typeof(ITestContainerDiscoverer))]
@@ -153,9 +154,9 @@ namespace Microsoft.PythonTools.TestAdapter {
             if (workspace == null)
                 return;
 
-            bool isEnabled = workspace.GetBoolProperty(PythonConstants.PyTestEnabledSetting).GetValueOrDefault(false);
+            TestFrameworkType testFrameworkType = GetTestFramework(workspace);
 
-            if (isEnabled) {
+            if (testFrameworkType != TestFrameworkType.None) {
                 var projInfo = new ProjectInfo(workspace);
                 _projectMap[projInfo.ProjectHome] = projInfo;
 
@@ -170,6 +171,20 @@ namespace Microsoft.PythonTools.TestAdapter {
                     projInfo.AddTestContainer(this, file);
                 }
             }
+        }
+
+        private static TestFrameworkType GetTestFramework(IPythonWorkspaceContext workspace) {
+            var testFrameworkType = TestFrameworkType.None;
+            try {
+                string testFrameworkStr = workspace.GetStringProperty(PythonConstants.TestFrameworkSetting);
+                if (Enum.TryParse<TestFrameworkType>(testFrameworkStr, ignoreCase: true, out TestFrameworkType parsedFramworked)) {
+                    testFrameworkType = parsedFramworked;
+                }
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
+                Trace.WriteLine("Exception : " + ex.Message);
+            }
+
+            return testFrameworkType;
         }
 
         public ProjectInfo GetProjectInfo(string projectHome) {
