@@ -52,6 +52,11 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
                     visible: false,
                     new StreamRedirector(writer)
                 )) {
+
+                    DebugInfo("cd " + projSettings.WorkingDirectory);
+                    DebugInfo("set " + projSettings.PathEnv + "=" + env[projSettings.PathEnv]);
+                    DebugInfo(proc.Arguments);
+
                     // If there's an error in the launcher script,
                     // it will terminate without connecting back.
                     WaitHandle.WaitAny(new WaitHandle[] { proc.WaitHandle });
@@ -112,6 +117,11 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
                 paths.Where(Directory.Exists).Distinct(StringComparer.OrdinalIgnoreCase)
             );
             return searchPaths;
+        }
+
+        [Conditional("DEBUG")]
+        private void DebugInfo(string message) {
+            _logger.SendMessage(TestMessageLevel.Informational, message);
         }
 
         private void Error(string message) {
