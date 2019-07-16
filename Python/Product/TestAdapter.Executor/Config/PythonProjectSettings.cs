@@ -1,16 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Windows.Forms;
 
 namespace Microsoft.PythonTools.TestAdapter.Config {
     public class PythonProjectSettings : IEquatable<PythonProjectSettings> {
-        public readonly string ProjectName, ProjectHome, WorkingDirectory, InterpreterPath, PathEnv, PytestPath, PytestArgs;
+        public readonly string ProjectName, ProjectHome, WorkingDirectory, InterpreterPath, PathEnv;
         public readonly bool EnableNativeCodeDebugging;
-        public readonly bool PytestEnabled = false;
         public readonly List<string> SearchPath;
         public readonly Dictionary<string, string> Environment;
         public readonly List<string> Sources;
         public readonly bool IsWorkspace;
         public readonly bool UseLegacyDebugger;
+        public readonly TestFrameworkType TestFramwork;
+
+       
 
         public PythonProjectSettings(string projectName,
             string projectHome,
@@ -18,25 +21,22 @@ namespace Microsoft.PythonTools.TestAdapter.Config {
             string interpreter,
             string pathEnv,
             bool nativeDebugging,
-            string pytestPath,
-            string pytestArgs,
-            bool pytestEnabled,
             bool isWorkspace,
-            bool useLegacyDebugger) {
+            bool useLegacyDebugger,
+            string testFramework) {
             ProjectName = projectName;
             ProjectHome = projectHome;
             WorkingDirectory = workingDir;
             InterpreterPath = interpreter;
             PathEnv = pathEnv;
             EnableNativeCodeDebugging = nativeDebugging;
-            PytestEnabled = pytestEnabled;
-            PytestPath = pytestPath;
-            PytestArgs = pytestArgs;
             SearchPath = new List<string>();
             Environment = new Dictionary<string, string>();
             Sources = new List<string>();
             IsWorkspace = isWorkspace;
             UseLegacyDebugger = useLegacyDebugger;
+            TestFramwork = TestFrameworkType.None;
+            Enum.TryParse<TestFrameworkType>(testFramework, ignoreCase:true, out TestFramwork);
         }
 
         public override bool Equals(object obj) {
@@ -60,8 +60,8 @@ namespace Microsoft.PythonTools.TestAdapter.Config {
                 PathEnv == other.PathEnv &&
                 EnableNativeCodeDebugging == other.EnableNativeCodeDebugging &&
                 IsWorkspace == other.IsWorkspace &&
-                PytestEnabled == other.PytestEnabled &&
-                UseLegacyDebugger == other.UseLegacyDebugger) {
+                UseLegacyDebugger == other.UseLegacyDebugger &&
+                TestFramwork == other.TestFramwork) {
                 if (SearchPath.Count == other.SearchPath.Count &&
                     Environment.Count == other.Environment.Count) {
                     for (int i = 0; i < SearchPath.Count; i++) {

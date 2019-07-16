@@ -213,14 +213,9 @@ namespace Microsoft.PythonTools.TestAdapter {
             pyProj.ProjectPropertyChanged -= OnTestPropertiesChanged;
             pyProj.ProjectPropertyChanged += OnTestPropertiesChanged;
 
-            bool isPytestEnabled = false;
-            try {
-                isPytestEnabled = pyProj.GetProperty(PythonConstants.PyTestEnabledSetting).IsTrue();
-            } catch (Exception ex) when (!ex.IsCriticalException()) {
-                Trace.WriteLine("Exception : " + ex.Message);
-            }
+            TestFrameworkType testFrameworkType = GetTestFramework(pyProj);
 
-            if (isPytestEnabled) {
+            if (testFrameworkType != TestFrameworkType.None) {
                 IVsHierarchy hierarchy = (IVsHierarchy)vsProject;
                 var projectName = hierarchy == null ? hierarchy.GetNameProperty() : string.Empty;
                 var projInfo = new ProjectInfo(pyProj, projectName);
@@ -231,16 +226,28 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
         }
 
-        private void OnTestPropertiesChanged(object sender, PythonProjectPropertyChangedArgs e) {
-            // Need to special case disabling pytest
-            // We want to clear test containers and watchers except still listen for project setting changes ie. ProjectPropertyChanged
-            if (e.PropertyName == PythonConstants.PyTestEnabledSetting
-                && e.OldValue.IsTrue() 
-                && !e.NewValue.IsTrue()) {
+        private static TestFrameworkType GetTestFramework(PythonProject pyProj) {
+            var testFrameworkType = TestFrameworkType.None;
+            try {
+                string testFrameworkStr = pyProj.GetProperty(PythonConstants.TestFrameworkSetting);
+                if (Enum.TryParse<TestFrameworkType>(testFrameworkStr, ignoreCase: true, out TestFrameworkType parsedFramworked)) {
+                    testFrameworkType = parsedFramworked;
+                }
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
+                Trace.WriteLine("Exception : " + ex.Message);
+            }
 
+            return testFrameworkType;
+        }
+
+        private void OnTestPropertiesChanged(object sender, PythonProjectPropertyChangedArgs e) {
+            // Need to special case the changing of testframeworks
+            // We want to clear test containers and watchers except still listen for project setting changes ie. ProjectPropertyChanged
+            if (e.PropertyName == PythonConstants.TestFrameworkSetting) {
                 var pythonProj = (PythonProject)sender;
-                if(pythonProj != null)
+                if (pythonProj != null) {
                     RemoveTestContainersAndNotify(pythonProj.ProjectHome);
+                }
             }
             else {
                 NotifyContainerChanged();
