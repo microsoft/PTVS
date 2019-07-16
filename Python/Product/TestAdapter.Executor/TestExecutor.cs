@@ -167,19 +167,8 @@ namespace Microsoft.PythonTools.TestAdapter {
 
         private void RunTestGroup(IGrouping<PythonProjectSettings, TestCase> testGroup, IRunContext runContext, IFrameworkHandle frameworkHandle) {
             PythonProjectSettings settings = testGroup.Key;
-            if (settings.TestFramwork == TestFrameworkType.None) {
+            if (settings.TestFramwork != TestFrameworkType.Pytest) {
                 return;
-            }
-
-            switch (settings.TestFramwork) {
-                case TestFrameworkType.None:
-                    break;
-                case TestFrameworkType.Pytest:
-                    break;
-                case TestFrameworkType.UnitTest:
-                    break;
-                default:
-                    break;
             }
 
             using (var executor = new ExecutorService(frameworkHandle, runContext)) {
