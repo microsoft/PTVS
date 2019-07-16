@@ -57,7 +57,7 @@ namespace TestUtilities {
             _tcs.Task.Wait(_secondsTimeout * 1000);
 
             try {
-                Summarize();
+                //Summarize();
             } finally {
                 _stackTraces.Clear();
             }

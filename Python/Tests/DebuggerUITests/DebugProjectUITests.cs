@@ -955,6 +955,9 @@ namespace DebuggerUITests {
         }
 
         private static Project OpenDebuggerProjectAndBreak(VisualStudioApp app, string startItem, int lineNo, bool setStartupItem = true) {
+            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("PTVS_TEST_DEBUGADAPTER_LOGGING_ENABLED"))) {
+                app.ExecuteCommand("DebugAdapterHost.Logging /On");
+            }
             return OpenProjectAndBreak(app, @"TestData\DebuggerProject.sln", startItem, lineNo);
         }
 
