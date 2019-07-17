@@ -59,10 +59,12 @@
     <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DiscoveryTestInfo.cs" />
     <Compile Include="MockRunContext.cs" />
     <Compile Include="MockMessageLogger.cs" />
     <Compile Include="MockDiscoveryContext.cs" />
     <Compile Include="MockRunSettings.cs" />
+    <Compile Include="MockRunSettingsXmlBuilder.cs" />
     <Compile Include="MockTestCaseDiscoverySink.cs" />
     <Compile Include="MockTestExecutionRecorder.cs" />
     <Compile Include="TestDiscovererTests.cs" />
