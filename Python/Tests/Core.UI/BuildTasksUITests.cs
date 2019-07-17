@@ -65,7 +65,7 @@ namespace PythonToolsUITests {
                 "Test Command 2"
             );
 
-            app.OpenSolutionExplorer().FindItem("Solution 'Commands1' (1 project)", "Commands1").Select();
+            app.OpenSolutionExplorer().FindItem("Solution 'Commands1' (1 of 1 project)", "Commands1").Select();
 
             var menuBar = app.FindByAutomationId("MenuBar").AsWrapper();
             Assert.IsNotNull(menuBar, "Unable to find menu bar");
