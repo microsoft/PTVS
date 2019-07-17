@@ -20,7 +20,9 @@ import traceback
 
 def main():
     cwd, testRunner, secret, port, debugger_search_path, args = parse_argv()
-    load_debugger(cwd, secret, port, debugger_search_path)
+    sys.path[0] = os.getcwd()
+    os.chdir(cwd)
+    load_debugger(secret, port, debugger_search_path)
     run(testRunner, args)
 
 def parse_argv():
@@ -30,18 +32,15 @@ def parse_argv():
     2. Test runner, `pytest` or `nose`
     3. debugSecret
     4. debugPort
-    5. Debugger path
+    5. Debugger search path
     6. Rest of the arguments are passed into the test runner.
     """
 
     return (sys.argv[1], sys.argv[2], sys.argv[3], int(sys.argv[4]), sys.argv[5], sys.argv[6:])
 
-def load_debugger(cwd, secret, port, debugger_search_path):
+def load_debugger(secret, port, debugger_search_path):
     # Load the debugger package
     try:
-        sys.path[0] = os.getcwd()
-        os.chdir(cwd)
-
         if debugger_search_path:
             sys.path.append(debugger_search_path)
         
@@ -76,7 +75,6 @@ Press Enter to close. . .''')
 
 def run(testRunner, args):
     """Runs the test
-    cwd -- the current directory to be set
     testRunner -- test runner to be used `pytest` or `nose`
     args -- arguments passed into the test runner
     """

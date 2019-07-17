@@ -83,7 +83,7 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
         public string[] GetArguments(IEnumerable<TestCase> tests, string outputfile) {
             var arguments = new List<string> {
                 TestLauncherPath,
-                projSettings.WorkingDirectory,
+                _projectSettings.WorkingDirectory,
                 "pytest",
                 _debugSecret,
                 _debugPort.ToString(),
