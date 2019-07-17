@@ -1,4 +1,20 @@
-﻿using Microsoft.PythonTools.Infrastructure;
+﻿// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABILITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
+
+using Microsoft.PythonTools.Infrastructure;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -20,6 +36,7 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
         private static readonly string TestLauncherPath = PythonToolsInstallPath.GetFile("testlauncher.py");
         private static readonly Guid PythonRemoteDebugPortSupplierUnsecuredId = new Guid("{FEB76325-D127-4E02-B59D-B16D93D46CF5}");
         private readonly VisualStudioProxy _app;
+        private readonly PythonProjectSettings _projectSettings;
         private readonly PythonDebugMode _debugMode;
         private readonly string _debugSecret;
         private readonly int _debugPort;
@@ -30,7 +47,6 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
             PythonOnly,
             PythonAndNative
         }
-
 
         /// <summary>
         /// Used to send messages to TestExplorer's Test output pane
@@ -51,26 +67,27 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
             }
         }
 
-
-        public ExecutorService(IFrameworkHandle frameworkHandle, IRunContext runContext) {
+        public ExecutorService(PythonProjectSettings projectSettings, IFrameworkHandle frameworkHandle, IRunContext runContext) {
+            _projectSettings = projectSettings;
             _frameworkHandle = frameworkHandle;
             _runContext = runContext;
             _app = VisualStudioProxy.FromEnvironmentVariable(PythonConstants.PythonToolsProcessIdEnvironmentVariable);
             _debugMode = (runContext.IsBeingDebugged && _app != null) ? PythonDebugMode.PythonOnly : PythonDebugMode.None;
-            _debugSecret = GetSecretAndPort(out _debugPort);
+            GetSecretAndPort(out _debugSecret, out _debugPort);
         }
 
         public void Dispose() {
           
         }
 
-        public string[] GetArguments(IEnumerable<TestCase> tests, PythonProjectSettings projSettings, string outputfile) {
+        public string[] GetArguments(IEnumerable<TestCase> tests, string outputfile) {
             var arguments = new List<string> {
                 TestLauncherPath,
-                projSettings.WorkingDirectory,
-                "pytest", 
+                _projectSettings.WorkingDirectory,
+                "pytest",
                 _debugSecret,
                 _debugPort.ToString(),
+                GetDebuggerSearchPath(_projectSettings.UseLegacyDebugger),
                 String.Format("--junitxml={0}", outputfile)
             };
 
@@ -85,31 +102,34 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
             return arguments.ToArray();
         }
 
-        private string GetSecretAndPort(out int debugPort) {
-            string debugSecret = "";
+        private void GetSecretAndPort(out string debugSecret, out int debugPort) {
+            debugSecret = "";
             debugPort = 0;
+
             if (_debugMode == PythonDebugMode.PythonOnly) {
-                var secretBuffer = new byte[24];
-                RandomNumberGenerator.Create().GetNonZeroBytes(secretBuffer);
-                debugSecret = Convert.ToBase64String(secretBuffer)
-                                    .Replace('+', '-')
-                                    .Replace('/', '_')
-                                    .TrimEnd('=');
+                if(_projectSettings.UseLegacyDebugger) {
+                    var secretBuffer = new byte[24];
+                    RandomNumberGenerator.Create().GetNonZeroBytes(secretBuffer);
+                    debugSecret = Convert.ToBase64String(secretBuffer)
+                                        .Replace('+', '-')
+                                        .Replace('/', '_')
+                                        .TrimEnd('=');
+                }
+
                 SocketUtils.GetRandomPortListener(IPAddress.Loopback, out debugPort).Stop();
             }
-            return debugSecret;
         }
 
-        private Dictionary<string, string> InitializeEnvironment(IEnumerable<TestCase> tests, PythonProjectSettings projSettings) {
-            var pythonPathVar = projSettings.PathEnv;
-            var pythonPath = GetSearchPaths(tests, projSettings);
+        private Dictionary<string, string> InitializeEnvironment(IEnumerable<TestCase> tests) {
+            var pythonPathVar = _projectSettings.PathEnv;
+            var pythonPath = GetSearchPaths(tests, _projectSettings);
             var env  = new Dictionary<string, string>();
 
             if (!string.IsNullOrWhiteSpace(pythonPathVar)) {
                 env[pythonPathVar] = pythonPath;
             }
 
-            foreach (var envVar in projSettings.Environment) {
+            foreach (var envVar in _projectSettings.Environment) {
                 env[envVar.Key] = envVar.Value;
             }
 
@@ -128,12 +148,6 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
                 }
             }
 
-            paths.Insert(0, settings.WorkingDirectory);
-
-            if (_debugMode == PythonDebugMode.PythonOnly) {
-                paths.Insert(0, GetDebuggerSearchPath(settings.UseLegacyDebugger));
-            }
-
             string searchPaths = string.Join(
                 ";",
                 paths.Where(Directory.Exists).Distinct(StringComparer.OrdinalIgnoreCase)
@@ -141,34 +155,33 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
             return searchPaths;
         }
 
-        public string Run(PythonProjectSettings projSettings, IEnumerable<TestCase> tests) {
+        public string Run(IEnumerable<TestCase> tests) {
             string ouputFile = "";
             try {
                 DetachFromSillyManagedProcess();
 
-                var env = InitializeEnvironment(tests, projSettings);
+                var env = InitializeEnvironment(tests);
                 ouputFile = GetJunitXmlFile();
-                var arguments = GetArguments(tests, projSettings, ouputFile);
+                var arguments = GetArguments(tests, ouputFile);
 
                 var testRedirector = new TestRedirector(_frameworkHandle);
 
                 using (var proc = ProcessOutput.Run(
-                    projSettings.InterpreterPath,
+                    _projectSettings.InterpreterPath,
                     arguments,
-                    projSettings.WorkingDirectory,
+                    _projectSettings.WorkingDirectory,
                     env,
                     visible: true,
                     testRedirector
                 )) {
-
-                    DebugInfo("cd " + projSettings.WorkingDirectory);
-                    DebugInfo("set " + projSettings.PathEnv + "=" + env[projSettings.PathEnv]);
+                    DebugInfo("cd " + _projectSettings.WorkingDirectory);
+                    DebugInfo("set " + _projectSettings.PathEnv + "=" + env[_projectSettings.PathEnv]);
                     DebugInfo(proc.Arguments);
 
                     if (!proc.ExitCode.HasValue) {
                         try {
                             if (_debugMode != PythonDebugMode.None) {
-                                string qualifierUri = string.Format("tcp://{0}@localhost:{1}?legacyUnitTest", _debugSecret, _debugPort);
+                                string qualifierUri = string.Format("tcp://{0}@localhost:{1}", _debugSecret, _debugPort);
                                 while (!_app.AttachToProcess(proc, PythonRemoteDebugPortSupplierUnsecuredId, qualifierUri)) {
                                     if (proc.Wait(TimeSpan.FromMilliseconds(500))) {
                                         break;

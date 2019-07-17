@@ -111,7 +111,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 } catch (Exception ex) {
                     frameworkHandle.SendMessage(TestMessageLevel.Error, ex.Message);
                 }
-                
+
                 if (_cancelRequested.WaitOne(0)) {
                     return;
                 }
@@ -120,10 +120,8 @@ namespace Microsoft.PythonTools.TestAdapter {
             RunPytest(testColletion.Tests, runContext, frameworkHandle);
         }
 
-       
-
         public void RunTests(IEnumerable<TestCase> tests, IRunContext runContext, IFrameworkHandle frameworkHandle) {
-        
+
             //MessageBox.Show("Hello1: " + Process.GetCurrentProcess().Id);
 
             if (tests == null) {
@@ -142,7 +140,6 @@ namespace Microsoft.PythonTools.TestAdapter {
 
             _cancelRequested.Reset();
         }
-
 
         private void RunPytest(
             IEnumerable<TestCase> tests,
@@ -171,8 +168,8 @@ namespace Microsoft.PythonTools.TestAdapter {
                 return;
             }
 
-            using (var executor = new ExecutorService(frameworkHandle, runContext)) {
-                var resultsXML = executor.Run(settings, testGroup);
+            using (var executor = new ExecutorService(settings, frameworkHandle, runContext)) {
+                var resultsXML = executor.Run(testGroup);
 
                 var testResults = TestResultParser.Parse(resultsXML, testGroup);
                 foreach (var result in testResults) {
@@ -358,7 +355,6 @@ namespace Microsoft.PythonTools.TestAdapter {
                 return true;
             }
         }
-
 
         sealed class TestRunner : IDisposable {
             private readonly IFrameworkHandle _frameworkHandle;
@@ -845,8 +841,6 @@ namespace Microsoft.PythonTools.TestAdapter {
                 Tests.Add(discoveredTest);
             }
         }
-
-       
 
         enum PythonDebugMode {
             None,
