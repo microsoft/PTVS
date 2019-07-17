@@ -78,13 +78,12 @@ namespace Microsoft.PythonTools.Debugger {
             }
         }
 
-        [Conditional("DEBUG")]
         private void AddRules(JObject launchJson) {
-            string PTVSDirectory = PathUtils.GetParent(typeof(DebugAdapterLauncher).Assembly.Location);
+            string ptvsdDirectory = PathUtils.GetParent(typeof(DebugAdapterLauncher).Assembly.Location);
 
             var rules = new JArray();
             var excludePTVSDirectory = new JObject() {
-                ["path"] = Path.Combine(PTVSDirectory, "**"),
+                ["path"] = Path.Combine(ptvsdDirectory, "**"),
                 ["include"] = false,
             };
 
