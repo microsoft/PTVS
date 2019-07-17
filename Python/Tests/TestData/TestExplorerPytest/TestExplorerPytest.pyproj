@@ -29,7 +29,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <PropertyGroup>
-    <PyTestEnabled>True</PyTestEnabled>
+    <TestFramework>Pytest</TestFramework>
   </PropertyGroup>
   <!-- Uncomment the CoreCompile target to enable the Build command in
        Visual Studio and specify your pre- and post-build commands in

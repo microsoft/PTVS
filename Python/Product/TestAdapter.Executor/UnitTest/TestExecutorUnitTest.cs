@@ -1,4 +1,4 @@
-// Python Tools for Visual Studio
+﻿// Python Tools for Visual Studio
 // Copyright(c) Microsoft Corporation
 // All rights reserved.
 //
@@ -21,46 +21,28 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Forms;
+using System.Xml;
 using System.Xml.XPath;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Ipc.Json;
-using Microsoft.PythonTools.TestAdapter.Config;
-using Microsoft.PythonTools.TestAdapter.Pytest;
-using Microsoft.PythonTools.TestAdapter.Services;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using TP = Microsoft.PythonTools.TestAdapter.TestProtocol;
 
 namespace Microsoft.PythonTools.TestAdapter {
-
-    [ExtensionUri(PythonConstants.TestExecutorUriString)]
-    public class PytestProjectTestExecutor : TestExecutor {
-
-        public PytestProjectTestExecutor() : base() {
-
-        }
-
-    }
-
-    [ExtensionUri(PythonConstants.WSTestExecutorUriString)]
-    public class PytestWorkspaceTestExecutor : TestExecutor {
-        public PytestWorkspaceTestExecutor() : base() {
-
-        }
-    }
-
     [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable",
         Justification = "object owned by VS")]
-    public class TestExecutor : ITestExecutor {
+    [ExtensionUri(PythonConstants.UnitTestExecutorUriString)]
+    class TestExecutorUnitTest : ITestExecutor {
         private static readonly Guid PythonRemoteDebugPortSupplierUnsecuredId = new Guid("{FEB76325-D127-4E02-B59D-B16D93D46CF5}");
         private static readonly Guid PythonDebugEngineGuid = new Guid("EC1375B7-E2CE-43E8-BF75-DC638DE1F1F9");
         private static readonly Guid NativeDebugEngineGuid = new Guid("3B476D35-A401-11D2-AAD4-00C04F990171");
@@ -72,7 +54,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 
         private readonly VisualStudioProxy _app;
 
-        public TestExecutor() {
+        public TestExecutorUnitTest() {
             _app = VisualStudioProxy.FromEnvironmentVariable(PythonConstants.PythonToolsProcessIdEnvironmentVariable);
         }
 
@@ -80,10 +62,13 @@ namespace Microsoft.PythonTools.TestAdapter {
             _cancelRequested.Set();
         }
 
+        private static XPathDocument Read(string xml) {
+            var settings = new XmlReaderSettings();
+            settings.XmlResolver = null;
+            return new XPathDocument(XmlReader.Create(new StringReader(xml), settings));
+        }
+
         public void RunTests(IEnumerable<string> sources, IRunContext runContext, IFrameworkHandle frameworkHandle) {
-
-            //MessageBox.Show("Hello1: " + Process.GetCurrentProcess().Id);
-
             if (sources == null) {
                 throw new ArgumentNullException(nameof(sources));
             }
@@ -98,32 +83,64 @@ namespace Microsoft.PythonTools.TestAdapter {
 
             _cancelRequested.Reset();
 
-            var sourceToProjSettings = RunSettingsUtil.GetSourceToProjSettings(runContext.RunSettings);
-
-            var testColletion = new TestCollection();
-
-            foreach (var testGroup in sources.GroupBy(x => sourceToProjSettings[x])) {
-                var settings = testGroup.Key;
-
-                try {
-                    var discovery = DiscovererFactory.GetDiscoverer(settings);
-                    discovery.DiscoverTests(testGroup, frameworkHandle, testColletion);
-                } catch (Exception ex) {
-                    frameworkHandle.SendMessage(TestMessageLevel.Error, ex.Message);
-                }
-
-                if (_cancelRequested.WaitOne(0)) {
-                    return;
-                }
+            var executorUri = new Uri(PythonConstants.TestExecutorUriString);
+            var tests = new List<TestCase>();
+            var doc = Read(runContext.RunSettings.SettingsXml);
+            foreach (var t in TestReader.ReadTests(doc, new HashSet<string>(sources, StringComparer.OrdinalIgnoreCase), m => {
+                frameworkHandle?.SendMessage(TestMessageLevel.Warning, m);
+            })) {
+                tests.Add(new TestCase(t.FullyQualifiedName, executorUri, t.SourceFile) {
+                    DisplayName = t.DisplayName,
+                    LineNumber = t.LineNo,
+                    CodeFilePath = t.SourceFile
+                });
             }
 
-            RunPytest(testColletion.Tests, runContext, frameworkHandle);
+            if (_cancelRequested.WaitOne(0)) {
+                return;
+            }
+
+            RunTestCases(tests, runContext, frameworkHandle);
+        }
+
+        private Dictionary<string, PythonProjectSettings> GetSourceToSettings(IRunSettings settings) {
+            var doc = Read(settings.SettingsXml);
+            XPathNodeIterator nodes = doc.CreateNavigator().Select("/RunSettings/Python/TestCases/Project");
+            Dictionary<string, PythonProjectSettings> res = new Dictionary<string, PythonProjectSettings>();
+
+            foreach (XPathNavigator project in nodes) {
+                PythonProjectSettings projSettings = new PythonProjectSettings(
+                    project.GetAttribute("home", ""),
+                    project.GetAttribute("workingDir", ""),
+                    project.GetAttribute("interpreter", ""),
+                    project.GetAttribute("pathEnv", ""),
+                    project.GetAttribute("nativeDebugging", "").IsTrue(),
+                    project.GetAttribute("useLegacyDebugger", "").IsTrue()
+                );
+
+                foreach (XPathNavigator environment in project.Select("Environment/Variable")) {
+                    projSettings.Environment[environment.GetAttribute("name", "")] = environment.GetAttribute("value", "");
+                }
+
+                string djangoSettings = project.GetAttribute("djangoSettingsModule", "");
+                if (!String.IsNullOrWhiteSpace(djangoSettings)) {
+                    projSettings.Environment["DJANGO_SETTINGS_MODULE"] = djangoSettings;
+                }
+
+                foreach (XPathNavigator searchPath in project.Select("SearchPaths/Search")) {
+                    projSettings.SearchPath.Add(searchPath.GetAttribute("value", ""));
+                }
+
+                foreach (XPathNavigator test in project.Select("Test")) {
+                    string testFile = test.GetAttribute("file", "");
+                    Debug.Assert(!string.IsNullOrWhiteSpace(testFile));
+                    res[testFile] = projSettings;
+                }
+            }
+            return res;
         }
 
         public void RunTests(IEnumerable<TestCase> tests, IRunContext runContext, IFrameworkHandle frameworkHandle) {
-
-            //MessageBox.Show("Hello1: " + Process.GetCurrentProcess().Id);
-
             if (tests == null) {
                 throw new ArgumentNullException(nameof(tests));
             }
@@ -136,50 +153,9 @@ namespace Microsoft.PythonTools.TestAdapter {
                 throw new ArgumentNullException(nameof(frameworkHandle));
             }
 
-            RunPytest(tests, runContext, frameworkHandle);
-
             _cancelRequested.Reset();
-        }
 
-        private void RunPytest(
-            IEnumerable<TestCase> tests,
-            IRunContext runContext,
-            IFrameworkHandle frameworkHandle
-        ) {
-            var sourceToProjSettings = RunSettingsUtil.GetSourceToProjSettings(runContext.RunSettings);
-
-            foreach (var testGroup in tests.GroupBy(t => sourceToProjSettings.TryGetValue(t.CodeFilePath, out PythonProjectSettings proj) ? proj : null)) {
-                if (testGroup.Key == null) {
-                    Debug.WriteLine("Missing projectSettings for TestCases:");
-                    Debug.WriteLine(String.Join(",\n", testGroup));
-                }
-
-                if (_cancelRequested.WaitOne(0)) {
-                    break;
-                }
-
-                RunTestGroup(testGroup, runContext, frameworkHandle);
-            }
-        }
-
-        private void RunTestGroup(IGrouping<PythonProjectSettings, TestCase> testGroup, IRunContext runContext, IFrameworkHandle frameworkHandle) {
-            PythonProjectSettings settings = testGroup.Key;
-            if (settings.TestFramwork != TestFrameworkType.Pytest) {
-                return;
-            }
-
-            using (var executor = new ExecutorService(settings, frameworkHandle, runContext)) {
-                var resultsXML = executor.Run(testGroup);
-
-                var testResults = TestResultParser.Parse(resultsXML, testGroup);
-                foreach (var result in testResults) {
-
-                    if (_cancelRequested.WaitOne(0)) {
-                        break;
-                    }
-                    frameworkHandle.RecordResult(result);
-                }
-            }
+            RunTestCases(tests, runContext, frameworkHandle);
         }
 
         private void RunTestCases(
@@ -187,14 +163,13 @@ namespace Microsoft.PythonTools.TestAdapter {
             IRunContext runContext,
             IFrameworkHandle frameworkHandle
         ) {
-
             bool codeCoverage = EnableCodeCoverage(runContext);
             string covPath = null;
             if (codeCoverage) {
                 covPath = GetCoveragePath(tests);
             }
             // .py file path -> project settings
-            var sourceToSettings = RunSettingsUtil.GetSourceToProjSettings(runContext.RunSettings);
+            var sourceToSettings = GetSourceToSettings(runContext.RunSettings);
 
             foreach (var testGroup in tests.GroupBy(x => sourceToSettings[x.CodeFilePath])) {
                 if (_cancelRequested.WaitOne(0)) {
@@ -314,7 +289,7 @@ namespace Microsoft.PythonTools.TestAdapter {
         }
 
         private static bool EnableCodeCoverage(IRunContext runContext) {
-            var doc = RunSettingsUtil.Read(runContext.RunSettings.SettingsXml);
+            var doc = Read(runContext.RunSettings.SettingsXml);
             XPathNodeIterator nodes = doc.CreateNavigator().Select("/RunSettings/Python/EnableCoverage");
             bool enableCoverage;
             if (nodes.MoveNext()) {
@@ -330,7 +305,7 @@ namespace Microsoft.PythonTools.TestAdapter {
         /// &lt;DryRun value="true" /&gt; element under RunSettings/Python.
         /// </summary>
         private static bool IsDryRun(IRunSettings settings) {
-            var doc = RunSettingsUtil.Read(settings.SettingsXml);
+            var doc = Read(settings.SettingsXml);
             try {
                 var node = doc.CreateNavigator().SelectSingleNode("/RunSettings/Python/DryRun[@value='true']");
                 return node != null;
@@ -346,7 +321,7 @@ namespace Microsoft.PythonTools.TestAdapter {
         /// RunSettings/Python.
         /// </summary>
         private static bool ShouldShowConsole(IRunSettings settings) {
-            var doc = RunSettingsUtil.Read(settings.SettingsXml);
+            var doc = Read(settings.SettingsXml);
             try {
                 var node = doc.CreateNavigator().SelectSingleNode("/RunSettings/Python/ShowConsole[@value='false']");
                 return node == null;
@@ -355,6 +330,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 return true;
             }
         }
+
 
         sealed class TestRunner : IDisposable {
             private readonly IFrameworkHandle _frameworkHandle;
@@ -839,6 +815,74 @@ namespace Microsoft.PythonTools.TestAdapter {
 
             public void SendTestCase(TestCase discoveredTest) {
                 Tests.Add(discoveredTest);
+            }
+        }
+
+        sealed class PythonProjectSettings : IEquatable<PythonProjectSettings> {
+            public readonly string ProjectHome, WorkingDirectory, InterpreterPath, PathEnv;
+            public readonly bool EnableNativeCodeDebugging;
+            public readonly bool UseLegacyDebugger;
+            public readonly List<string> SearchPath;
+            public readonly Dictionary<string, string> Environment;
+
+            public PythonProjectSettings(
+                string projectHome,
+                string workingDir,
+                string interpreter,
+                string pathEnv,
+                bool nativeDebugging,
+                bool useLegacyDebugger
+            ) {
+                ProjectHome = projectHome;
+                WorkingDirectory = workingDir;
+                InterpreterPath = interpreter;
+                PathEnv = pathEnv;
+                EnableNativeCodeDebugging = nativeDebugging;
+                UseLegacyDebugger = useLegacyDebugger;
+                SearchPath = new List<string>();
+                Environment = new Dictionary<string, string>();
+            }
+
+            public override bool Equals(object obj) {
+                return Equals(obj as PythonProjectSettings);
+            }
+            public override int GetHashCode() {
+                return ProjectHome.GetHashCode() ^
+                    WorkingDirectory.GetHashCode() ^
+                    InterpreterPath.GetHashCode();
+            }
+            public bool Equals(PythonProjectSettings other) {
+                if (other == null) {
+                    return false;
+                }
+
+                if (ProjectHome == other.ProjectHome &&
+                    WorkingDirectory == other.WorkingDirectory &&
+                    InterpreterPath == other.InterpreterPath &&
+                    PathEnv == other.PathEnv &&
+                    EnableNativeCodeDebugging == other.EnableNativeCodeDebugging &&
+                    UseLegacyDebugger == other.UseLegacyDebugger) {
+                    if (SearchPath.Count == other.SearchPath.Count &&
+                        Environment.Count == other.Environment.Count) {
+                        for (int i = 0; i < SearchPath.Count; i++) {
+                            if (SearchPath[i] != other.SearchPath[i]) {
+                                return false;
+                            }
+                        }
+
+                        foreach (var keyValue in Environment) {
+                            string value;
+                            if (!other.Environment.TryGetValue(keyValue.Key, out value) ||
+                                value != keyValue.Value) {
+                                return false;
+                            }
+                        }
+
+                        return true;
+                    }
+                }
+
+                return false;
             }
         }
 

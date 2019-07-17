@@ -140,8 +140,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                             writer.WriteStartElement("Project");
                             writer.WriteAttributeString("home", container.Project);
 
-                            string nativeCode = "", djangoSettings = "", pytestPath = "", pytestArgs = "", projectName = "";
-                            bool pytestEnabled = false;
+                            string nativeCode = "", djangoSettings = "", projectName = "", testFramework = "";
                             bool isWorkspace = false;
                             ProjectInfo projInfo = null;
                             LaunchConfiguration config = null;
@@ -166,9 +165,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                                     }
                                     nativeCode = projInfo.GetProperty(PythonConstants.EnableNativeCodeDebugging);
                                     djangoSettings = projInfo.GetProperty("DjangoSettingsModule");
-                                    pytestEnabled = projInfo.GetBoolProperty(PythonConstants.PyTestEnabledSetting).GetValueOrDefault(false);
-                                    pytestPath = projInfo.GetProperty(PythonConstants.PyTestPathSetting);
-                                    pytestArgs = projInfo.GetProperty(PythonConstants.PyTestArgsSetting);
+                                    testFramework = projInfo.GetProperty(PythonConstants.TestFrameworkSetting);
                                     projectName = projInfo.ProjectName;
                                 }
                             });
@@ -185,11 +182,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                             writer.WriteAttributeString("useLegacyDebugger", UseLegacyDebugger ? "1" : "0");
                             writer.WriteAttributeString("nativeDebugging", nativeCode);
                             writer.WriteAttributeString("djangoSettingsModule", djangoSettings);
-
-                            writer.WriteAttributeString("pytestEnabled", pytestEnabled.ToString());
-                            writer.WriteAttributeString("pytestPath", pytestPath);
-                            writer.WriteAttributeString("pytestArgs", pytestArgs);
-
+                            writer.WriteAttributeString("testFramework", testFramework);
                             writer.WriteAttributeString("workingDir", config.WorkingDirectory);
                             writer.WriteAttributeString("interpreter", config.GetInterpreterPath());
                             writer.WriteAttributeString("pathEnv", config.Interpreter.PathEnvironmentVariable);

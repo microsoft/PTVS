@@ -1,8 +1,8 @@
-﻿
-using Microsoft.PythonTools.Analysis;
+﻿using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.TestAdapter.Config;
 using Microsoft.PythonTools.TestAdapter.Pytest;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using Newtonsoft.Json;
 using System;
@@ -14,47 +14,37 @@ using System.Text;
 using System.Threading;
 
 namespace Microsoft.PythonTools.TestAdapter.Services {
-    internal class DiscoveryService {
-        private readonly IMessageLogger _logger;
+    internal class TestDiscovererPytest : IPythonTestDiscoverer {
+        private readonly PythonProjectSettings _settings;
+        private IMessageLogger _logger;
         private static readonly string DiscoveryAdapterPath = PythonToolsInstallPath.GetFile("PythonFiles\\testing_tools\\run_adapter.py");
 
-        public DiscoveryService(IMessageLogger logger) {
+        public TestDiscovererPytest(PythonProjectSettings settings) {
+            _settings = settings;
+        }
+
+        public void DiscoverTests(IEnumerable<string> sources, IMessageLogger logger, ITestCaseDiscoverySink discoverySink) {
             _logger = logger;
-        }
 
-        public string[] GetArguments(IEnumerable<string> sources) {
-            var arguments = new List<string>();
-            arguments.Add(DiscoveryAdapterPath);
-            arguments.Add("discover");
-            arguments.Add("pytest");
-            arguments.Add("--");
-
-            foreach( var s in sources) {
-                arguments.Add(s);
-            }
-            return arguments.ToArray();
-        }
-
-        public List<PytestDiscoveryResults> RunDiscovery(PythonProjectSettings projSettings, IEnumerable<string> sources) {
             var discoveryResults = new List<PytestDiscoveryResults>();
 
             try {
-                var env = InitializeEnvironment(sources, projSettings);
+                var env = InitializeEnvironment(sources, _settings);
                 var arguments = GetArguments(sources);
 
                 using (var outputStream = new MemoryStream())
-                using (var writer = new StreamWriter(outputStream, encoding: new UTF8Encoding(true), 4096, leaveOpen:true))
+                using (var writer = new StreamWriter(outputStream, encoding: new UTF8Encoding(true), 4096, leaveOpen: true))
                 using (var proc = ProcessOutput.Run(
-                    projSettings.InterpreterPath,
+                    _settings.InterpreterPath,
                     arguments,
-                    projSettings.WorkingDirectory,
+                    _settings.WorkingDirectory,
                     env,
                     visible: false,
                     new StreamRedirector(writer)
                 )) {
 
-                    DebugInfo("cd " + projSettings.WorkingDirectory);
-                    DebugInfo("set " + projSettings.PathEnv + "=" + env[projSettings.PathEnv]);
+                    DebugInfo("cd " + _settings.WorkingDirectory);
+                    DebugInfo("set " + _settings.PathEnv + "=" + env[_settings.PathEnv]);
                     DebugInfo(proc.Arguments);
 
                     // If there's an error in the launcher script,
@@ -78,8 +68,23 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
             } catch (Exception ex) {
                 Error(ex.Message);
             }
-          
-            return discoveryResults;
+
+            if (discoveryResults.Any()) {
+                PyTestDiscoveryReader.ParseDiscovery(discoveryResults, discoverySink, _settings, logger);
+            }
+        }
+
+        public string[] GetArguments(IEnumerable<string> sources) {
+            var arguments = new List<string>();
+            arguments.Add(DiscoveryAdapterPath);
+            arguments.Add("discover");
+            arguments.Add("pytest");
+            arguments.Add("--");
+
+            foreach (var s in sources) {
+                arguments.Add(s);
+            }
+            return arguments.ToArray();
         }
 
         private Dictionary<string, string> InitializeEnvironment(IEnumerable<string> sources, PythonProjectSettings projSettings) {
@@ -121,11 +126,11 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
 
         [Conditional("DEBUG")]
         private void DebugInfo(string message) {
-            _logger.SendMessage(TestMessageLevel.Informational, message);
+            _logger?.SendMessage(TestMessageLevel.Informational, message);
         }
 
         private void Error(string message) {
-            _logger.SendMessage(TestMessageLevel.Error, message);
+            _logger?.SendMessage(TestMessageLevel.Error, message);
         }
     }
 }

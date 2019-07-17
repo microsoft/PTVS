@@ -108,7 +108,7 @@ namespace PythonToolsUITests {
                 var workspaceFolderPath = Path.Combine(TestData.GetTempPath(), "TestExplorerPytest");
                 Directory.CreateDirectory(workspaceFolderPath);
 
-                var pythonSettingsJson = "{\"PyTestEnabled\": true,\"PyTestPath\": \"pytest\"}";
+                var pythonSettingsJson = "{\"TestFramework\": \"Pytest\"}";
                 File.WriteAllText(Path.Combine(workspaceFolderPath, "PythonSettings.json"), pythonSettingsJson);
 
                 var sourceProjectFolderPath = TestData.GetPath("TestData", "TestExplorerPytest");
