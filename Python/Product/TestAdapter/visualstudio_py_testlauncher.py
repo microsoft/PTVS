@@ -177,6 +177,12 @@ class VsTestResult(TextTestResult):
         self._setResult(test, 'passed')
 
     def _setResult(self, test, outcome, trace = None):
+        if ("ptvsd" in sys.modules
+            and sys.modules["ptvsd"].__version__.startswith('3.') 
+            and os.path.normcase(__file__) not in sys.modules["ptvsd"].debugger.DONT_DEBUG):
+            sys.modules["ptvsd"].debugger.DEBUG_ENTRYPOINTS.add(sys.modules["ptvsd"].debugger.get_code(main))
+            sys.modules["ptvsd"].debugger.DONT_DEBUG.append(os.path.normcase(__file__))
+
         tb = None
         message = None
         duration = time.time() - self._start_time if self._start_time else 0

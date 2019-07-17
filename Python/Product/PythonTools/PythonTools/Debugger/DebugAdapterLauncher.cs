@@ -15,6 +15,8 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Diagnostics;
+using System.IO;
 using System.Runtime.InteropServices;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces;
@@ -50,24 +52,45 @@ namespace Microsoft.PythonTools.Debugger {
         public void UpdateLaunchOptions(IAdapterLaunchInfo launchInfo) {
             if (launchInfo.LaunchType == LaunchType.Attach) {
                 JObject launchJson = new JObject();
-
                 launchInfo.DebugPort.GetPortName(out string uri);
+
                 launchJson["remote"] = uri;
+                AddDebugOptions(launchJson);
+                AddRules(launchJson);
 
-                var debugService = (IPythonDebugOptionsService)Package.GetGlobalService(typeof(IPythonDebugOptionsService));
-                JArray debugOptions = new JArray();
-                if (debugService.ShowFunctionReturnValue) {
-                    debugOptions.Add("ShowReturnValue");
-                }
-                if (debugService.BreakOnSystemExitZero) {
-                    debugOptions.Add("BreakOnSystemExitZero");
-                }
-
-                if (debugOptions.Count > 0) {
-                    launchJson["debugOptions"] = debugOptions;
-                }
                 launchInfo.LaunchJson = launchJson.ToString();
             }
+        }
+
+        private void AddDebugOptions(JObject launchJson) {
+            var debugService = (IPythonDebugOptionsService)Package.GetGlobalService(typeof(IPythonDebugOptionsService));
+
+            JArray debugOptions = new JArray();
+            if (debugService.ShowFunctionReturnValue) {
+                debugOptions.Add("ShowReturnValue");
+            }
+            if (debugService.BreakOnSystemExitZero) {
+                debugOptions.Add("BreakOnSystemExitZero");
+            }
+
+            if (debugOptions.Count > 0) {
+                launchJson["debugOptions"] = debugOptions;
+            }
+        }
+
+        [Conditional("DEBUG")]
+        private void AddRules(JObject launchJson) {
+            string PTVSDirectory = PathUtils.GetParent(typeof(DebugAdapterLauncher).Assembly.Location);
+
+            var rules = new JArray();
+            var excludePTVSDirectory = new JObject() {
+                ["path"] = Path.Combine(PTVSDirectory, "**"),
+                ["include"] = false,
+            };
+
+            rules.Add(excludePTVSDirectory);
+
+            launchJson["rules"] = rules;
         }
     }
 }
