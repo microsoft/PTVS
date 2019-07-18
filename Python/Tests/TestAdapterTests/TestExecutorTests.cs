@@ -14,6 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+extern alias pt;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -31,6 +32,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.TestWindow.Extensibility;
 using TestUtilities;
 using TestUtilities.Python;
+using PythonConstants = pt::Microsoft.PythonTools.PythonConstants;
 
 namespace TestAdapterTests {
     [TestClass, Ignore]
@@ -49,30 +51,6 @@ namespace TestAdapterTests {
 
         protected virtual string ImportErrorFormat => OldImportErrorFormat;
 
-        [TestMethod, Priority(0)]
-        public void FromCommandLineArgsRaceCondition() {
-            // https://pytools.codeplex.com/workitem/1429
-
-            var mre = new ManualResetEvent(false);
-            var tasks = new Task<bool>[100];
-            try {
-                for (int i = 0; i < tasks.Length; i += 1) {
-                    tasks[i] = Task.Run(() => {
-                        mre.WaitOne();
-                        using (var arg = VisualStudioProxy.FromProcessId(123)) {
-                            return arg is VisualStudioProxy;
-                        }
-                    });
-                }
-                mre.Set();
-                Assert.IsTrue(Task.WaitAll(tasks, TimeSpan.FromSeconds(30.0)));
-                Assert.IsTrue(tasks.All(t => t.Result));
-            } finally {
-                mre.Dispose();
-                Task.WaitAll(tasks, TimeSpan.FromSeconds(30.0));
-            }
-        }
-
         [TestMethod]
         public void TestBestFile() {
             var file1 = "C:\\Some\\Path\\file1.py";
@@ -87,515 +65,427 @@ namespace TestAdapterTests {
             Assert.AreEqual("C:\\Some\\Path", best);
         }
 
-        // {0} is the test results directory
-        // {1} is one or more formatted _runSettingProject lines
-        // {2} is 'true' or 'false' depending on whether the tests should be run
-        // {3} is 'true' or 'false' depending on whether the console should be shown
-        private const string _runSettings = @"<?xml version=""1.0""?><RunSettings><DataCollectionRunSettings><DataCollectors /></DataCollectionRunSettings><RunConfiguration><ResultsDirectory>{0}</ResultsDirectory><TargetPlatform>X86</TargetPlatform><TargetFrameworkVersion>Framework45</TargetFrameworkVersion></RunConfiguration><Python><TestCases>
-{1}
-</TestCases>
-<DryRun value=""{2}"" /><ShowConsole value=""{3}"" /></Python></RunSettings>";
+        //        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
+        //        [TestCategory("10s")]
+        //        public void TestRunAll() {
+        //            var executor = new TestExecutor();
+        //            var recorder = new MockTestExecutionRecorder();
+        //            var tests = TestInfo.TestAdapterATests.Concat(TestInfo.TestAdapterBTests).ToArray();
+        //            var runContext = CreateRunContext(tests, Version.InterpreterPath);
+        //            var expectedTests = runContext.TestCases;
 
-        // {0} is the project home directory, ending with a backslash
-        // {1} is the project filename, including extension
-        // {2} is the interpreter path
-        // {3} is one or more formatted _runSettingTest lines
-        // {4} is one or more formatten _runSettingEnvironment lines
-        private const string _runSettingProject = @"<Project path=""{0}{1}"" home=""{0}"" nativeDebugging="""" djangoSettingsModule="""" workingDir=""{0}"" interpreter=""{2}"" pathEnv=""PYTHONPATH""><Environment>{4}</Environment><SearchPaths>{5}</SearchPaths>
-{3}
-</Project>";
+        //            executor.RunTests(expectedTests, runContext, recorder);
+        //            PrintTestResults(recorder);
 
-        // {0} is the variable name
-        // {1} is the variable value
-        private const string _runSettingEnvironment = @"<Variable name=""{0}"" value=""{1}"" />";
+        //            var resultNames = recorder.Results.Select(tr => tr.TestCase.FullyQualifiedName).ToSet();
+        //            foreach (var expectedResult in tests) {
+        //                AssertUtil.ContainsAtLeast(resultNames, expectedResult.TestCase.FullyQualifiedName);
+        //                var actualResult = recorder.Results.SingleOrDefault(tr => tr.TestCase.FullyQualifiedName == expectedResult.TestCase.FullyQualifiedName);
+        //                Assert.AreEqual(expectedResult.Outcome, actualResult.Outcome, expectedResult.TestCase.FullyQualifiedName + " had incorrect result");
+        //                Assert.IsTrue(actualResult.Duration >= expectedResult.MinDuration);
+        //            }
+        //        }
 
-        // {0} is the search path
-        private const string _runSettingSearch = @"<Search value=""{0}"" />";
+        //        [TestMethod, Priority(0)]
+        //        public void TestCancel() {
+        //            var executor = new TestExecutor();
+        //            var recorder = new MockTestExecutionRecorder();
+        //            var expectedTests = TestInfo.TestAdapterATests.Union(TestInfo.TestAdapterBTests).ToArray();
+        //            var runContext = CreateRunContext(expectedTests, Version.InterpreterPath);
+        //            var testCases = runContext.TestCases;
 
-        // {0} is the full path to the file
-        // {1} is the class name
-        // {2} is the method name
-        // {3} is the line number (1-indexed)
-        // {4} is the column number (1-indexed)
-        private const string _runSettingTest = @"<Test className=""{1}"" file=""{0}"" line=""{3}"" column=""{4}"" method=""{2}"" />";
+        //            var thread = new System.Threading.Thread(o => {
+        //                executor.RunTests(testCases, runContext, recorder);
+        //            });
+        //            thread.Start();
 
-        private static string GetInterpreterPath(string projectFile) {
-            var doc = new XmlDocument();
-            doc.Load(projectFile);
-            var ns = new XmlNamespaceManager(doc.NameTable);
-            ns.AddNamespace("m", "http://schemas.microsoft.com/developer/msbuild/2003");
-            var id = doc.SelectSingleNode("/m:Project/m:PropertyGroup/m:InterpreterId", ns).FirstChild.Value;
-            return PythonPaths.Versions.First(p => p.Id == id).InterpreterPath;
-        }
+        //            // One of the tests being run is hard coded to take 10 secs
+        //            Assert.IsTrue(thread.IsAlive);
 
-        private static IEnumerable<string> GetEnvironmentVariables(string projectFile) {
-            var doc = new XmlDocument();
-            doc.Load(projectFile);
-            var ns = new XmlNamespaceManager(doc.NameTable);
-            ns.AddNamespace("m", "http://schemas.microsoft.com/developer/msbuild/2003");
-            var env = doc.SelectSingleNode("/m:Project/m:PropertyGroup/m:Environment", ns)?.FirstChild?.Value;
-            if (env == null) {
-                return Enumerable.Empty<string>();
-            }
-            return PathUtils.ParseEnvironment(env).Select(kv => string.Format(_runSettingEnvironment, kv.Key, kv.Value));
-        }
+        //            System.Threading.Thread.Sleep(100);
 
-        private static IEnumerable<string> GetSearchPaths(string projectFile) {
-            var doc = new XmlDocument();
-            doc.Load(projectFile);
-            var ns = new XmlNamespaceManager(doc.NameTable);
-            ns.AddNamespace("m", "http://schemas.microsoft.com/developer/msbuild/2003");
-            var searchPaths = doc.SelectSingleNode("/m:Project/m:PropertyGroup/m:SearchPath", ns)?.FirstChild?.Value;
+        //            executor.Cancel();
+        //            System.Threading.Thread.Sleep(100);
 
-            var projectDir = PathUtils.GetParent(projectFile);
-            var elements = new List<string> { _runSettingSearch.FormatInvariant(projectDir) };
-            if (searchPaths == null) {
-                return elements;
-            }
-            elements.AddRange(searchPaths.Split(';').Select(p =>
-                _runSettingSearch.FormatInvariant(PathUtils.GetAbsoluteDirectoryPath(projectDir, p))
-            ));
-            return elements;
-        }
+        //            // It should take less than 10 secs to cancel
+        //            // Depending on which assemblies are loaded, it may take some time
+        //            // to obtain the interpreters service.
+        //            Assert.IsTrue(thread.Join(10000));
 
-        internal static MockRunContext CreateRunContext(
-            IEnumerable<TestInfo> expected,
-            string interpreter = null,
-            bool dryRun = false,
-            bool showConsole = false
-        ) {
-            var projects = new List<string>();
-            var testCases = new List<TestCase>();
+        //            System.Threading.Thread.Sleep(100);
 
-            var baseDir = TestData.GetTempPath();
-            var sources = Path.Combine(baseDir, "Source");
-            var results = Path.Combine(baseDir, "Results");
+        //            Assert.IsFalse(thread.IsAlive);
 
-            foreach (var proj in expected.GroupBy(e => e.ProjectFilePath)) {
-                var projectSource = Path.GetDirectoryName(proj.Key);
+        //            // Canceled test cases do not get recorded
+        //            Assert.IsTrue(recorder.Results.Count < expectedTests.Length);
+        //        }
 
-                Func<string, string> Rebase = d => PathUtils.GetAbsoluteFilePath(
-                    baseDir,
-                    PathUtils.GetRelativeFilePath(TestData.GetPath(), d)
-                );
+        //        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
+        //        [TestCategory("10s")]
+        //        public void TestMultiprocessing() {
+        //            if (Version.Version <= PythonLanguageVersion.V26 ||
+        //                Version.Version == PythonLanguageVersion.V30) {
+        //                return;
+        //            }
 
-                var projName = Rebase(projectSource);
-                FileUtils.CopyDirectory(projectSource, projName, true);
+        //            var executor = new TestExecutor();
+        //            var recorder = new MockTestExecutionRecorder();
+        //            var expectedTests = TestInfo.TestAdapterMultiprocessingTests;
+        //            var runContext = CreateRunContext(expectedTests, Version.InterpreterPath);
+        //            var testCases = runContext.TestCases;
 
-                var sb = new StringBuilder();
-                foreach (var e in proj) {
-                    var tc = e.TestCase;
-                    tc.CodeFilePath = Rebase(tc.CodeFilePath);
-                    testCases.Add(tc);
+        //            executor.RunTests(testCases, runContext, recorder);
+        //            PrintTestResults(recorder);
 
-                    sb.AppendLine(_runSettingTest.FormatInvariant(
-                        Rebase(e.SourceCodeFilePath),
-                        e.ClassName,
-                        e.MethodName,
-                        e.SourceCodeLineNumber,
-                        8
-                    ));
-                }
+        //            var resultNames = recorder.Results.Select(tr => tr.TestCase.FullyQualifiedName).ToSet();
+        //            foreach (var expectedResult in expectedTests) {
+        //                AssertUtil.ContainsAtLeast(resultNames, expectedResult.TestCase.FullyQualifiedName);
+        //                var actualResult = recorder.Results.SingleOrDefault(tr => tr.TestCase.FullyQualifiedName == expectedResult.TestCase.FullyQualifiedName);
+        //                Assert.AreEqual(expectedResult.Outcome, actualResult.Outcome, expectedResult.TestCase.FullyQualifiedName + " had incorrect result");
+        //            }
+        //        }
 
-                projects.Add(string.Format(_runSettingProject,
-                    PathUtils.EnsureEndSeparator(projName),
-                    Path.GetFileName(proj.Key),
-                    interpreter ?? GetInterpreterPath(proj.Key),
-                    sb.ToString(),
-                    string.Join(Environment.NewLine, GetEnvironmentVariables(proj.Key)),
-                    string.Join(Environment.NewLine, GetSearchPaths(proj.Key))
-                ));
-            }
+        //        [TestMethod, Priority(0)]
+        //        [TestCategory("10s")]
+        //        public void TestRelativeImport() {
+        //            var executor = new TestExecutor();
+        //            var recorder = new MockTestExecutionRecorder();
+        //            var expectedTests = new[] { TestInfo.RelativeImportSuccess };
+        //            var runContext = CreateRunContext(expectedTests, Version.InterpreterPath);
+        //            var testCases = runContext.TestCases;
 
-            foreach (var p in projects) {
-                Console.WriteLine(p);
-            }
+        //            executor.RunTests(testCases, runContext, recorder);
+        //            PrintTestResults(recorder);
 
-            return new MockRunContext(new MockRunSettings(string.Format(_runSettings,
-                results,
-                string.Join(Environment.NewLine, projects),
-                dryRun ? "true" : "false",
-                showConsole ? "true" : "false"
-            )), testCases);
-        }
+        //            var resultNames = recorder.Results.Select(tr => tr.TestCase.FullyQualifiedName).ToSet();
+        //            foreach (var expectedResult in expectedTests) {
+        //                AssertUtil.ContainsAtLeast(resultNames, expectedResult.TestCase.FullyQualifiedName);
+        //                var actualResult = recorder.Results.SingleOrDefault(tr => tr.TestCase.FullyQualifiedName == expectedResult.TestCase.FullyQualifiedName);
+        //                Assert.AreEqual(expectedResult.Outcome, actualResult.Outcome, expectedResult.TestCase.FullyQualifiedName + " had incorrect result");
+        //            }
+        //        }
 
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
-        [TestCategory("10s")]
-        public void TestRun() {
-            var executor = new TestExecutor();
-            var recorder = new MockTestExecutionRecorder();
-            var expectedTests = TestInfo.TestAdapterATests.Concat(TestInfo.TestAdapterBTests).ToArray();
-            var runContext = CreateRunContext(expectedTests, Version.InterpreterPath);
-            var testCases = runContext.TestCases;
+        //        [TestMethod, Priority(0)]
+        //        [TestCategory("10s")]
+        //        public void TestInheritance() {
+        //            // TODO: Figure out the proper fix to make this test pass.
+        //            // There's a confusion between source file path and class file path.
+        //            // Note that the equivalent manual test in IDE works fine.
+        //            var executor = new TestExecutor();
+        //            var recorder = new MockTestExecutionRecorder();
+        //            var expectedTests = TestInfo.TestAdapterBInheritanceTests;
+        //            var runContext = CreateRunContext(expectedTests, Version.InterpreterPath);
+        //            var testCases = runContext.TestCases;
 
-            executor.RunTests(testCases, runContext, recorder);
-            PrintTestResults(recorder);
+        //            executor.RunTests(testCases, runContext, recorder);
+        //            PrintTestResults(recorder);
 
-            var resultNames = recorder.Results.Select(tr => tr.TestCase.FullyQualifiedName).ToSet();
-            foreach (var expectedResult in expectedTests) {
-                AssertUtil.ContainsAtLeast(resultNames, expectedResult.TestCase.FullyQualifiedName);
-                var actualResult = recorder.Results.SingleOrDefault(tr => tr.TestCase.FullyQualifiedName == expectedResult.TestCase.FullyQualifiedName);
-                Assert.AreEqual(expectedResult.Outcome, actualResult.Outcome, expectedResult.TestCase.FullyQualifiedName + " had incorrect result");
-                Assert.IsTrue(actualResult.Duration >= expectedResult.MinDuration);
-            }
-        }
+        //            var resultNames = recorder.Results.Select(tr => tr.TestCase.FullyQualifiedName).ToSet();
+        //            foreach (var expectedResult in expectedTests) {
+        //                AssertUtil.ContainsAtLeast(resultNames, expectedResult.TestCase.FullyQualifiedName);
+        //                var actualResult = recorder.Results.SingleOrDefault(tr => tr.TestCase.FullyQualifiedName == expectedResult.TestCase.FullyQualifiedName);
+        //                Assert.AreEqual(expectedResult.Outcome, actualResult.Outcome, expectedResult.TestCase.FullyQualifiedName + " had incorrect result");
+        //            }
+        //        }
 
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
-        [TestCategory("10s")]
-        public void TestRunAll() {
-            var executor = new TestExecutor();
-            var recorder = new MockTestExecutionRecorder();
-            var tests = TestInfo.TestAdapterATests.Concat(TestInfo.TestAdapterBTests).ToArray();
-            var runContext = CreateRunContext(tests, Version.InterpreterPath);
-            var expectedTests = runContext.TestCases;
+        //        [TestMethod, Priority(0)]
+        //        [TestCategory("10s")]
+        //        public void TestLoadError() {
+        //            // A load error is when unittest module fails to load the test (prior to running it)
+        //            // For example, if the file where the test is defined has an unhandled ImportError.
+        //            // We check that this only causes the tests that can't be loaded to fail,
+        //            // all other tests in the test run which can be loaded successfully will be run.
+        //            var executor = new TestExecutor();
+        //            var recorder = new MockTestExecutionRecorder();
+        //            var expectedTests = TestInfo.GetTestAdapterLoadErrorTests(ImportErrorFormat);
+        //            var runContext = CreateRunContext(expectedTests, Version.InterpreterPath);
+        //            var testCases = runContext.TestCases;
 
-            executor.RunTests(expectedTests, runContext, recorder);
-            PrintTestResults(recorder);
+        //            executor.RunTests(testCases, runContext, recorder);
+        //            PrintTestResults(recorder);
 
-            var resultNames = recorder.Results.Select(tr => tr.TestCase.FullyQualifiedName).ToSet();
-            foreach (var expectedResult in tests) {
-                AssertUtil.ContainsAtLeast(resultNames, expectedResult.TestCase.FullyQualifiedName);
-                var actualResult = recorder.Results.SingleOrDefault(tr => tr.TestCase.FullyQualifiedName == expectedResult.TestCase.FullyQualifiedName);
-                Assert.AreEqual(expectedResult.Outcome, actualResult.Outcome, expectedResult.TestCase.FullyQualifiedName + " had incorrect result");
-                Assert.IsTrue(actualResult.Duration >= expectedResult.MinDuration);
-            }
-        }
+        //            var resultNames = recorder.Results.Select(tr => tr.TestCase.FullyQualifiedName).ToSet();
+        //            foreach (var expectedResult in expectedTests) {
+        //                AssertUtil.ContainsAtLeast(resultNames, expectedResult.TestCase.FullyQualifiedName);
+        //                var actualResult = recorder.Results.SingleOrDefault(tr => tr.TestCase.FullyQualifiedName == expectedResult.TestCase.FullyQualifiedName);
+        //                Assert.AreEqual(expectedResult.Outcome, actualResult.Outcome, expectedResult.TestCase.FullyQualifiedName + " had incorrect result");
 
-        [TestMethod, Priority(0)]
-        public void TestCancel() {
-            var executor = new TestExecutor();
-            var recorder = new MockTestExecutionRecorder();
-            var expectedTests = TestInfo.TestAdapterATests.Union(TestInfo.TestAdapterBTests).ToArray();
-            var runContext = CreateRunContext(expectedTests, Version.InterpreterPath);
-            var testCases = runContext.TestCases;
+        //                if (expectedResult.ContainedErrorMessage != null) {
+        //                    Assert.IsNotNull(actualResult.ErrorMessage);
+        //                    Assert.IsTrue(
+        //                        actualResult.ErrorMessage.Contains(expectedResult.ContainedErrorMessage),
+        //                        string.Format("Error message did not contain expected text: {0}", expectedResult.ContainedErrorMessage)
+        //                    );
+        //                } else {
+        //                    Assert.IsNull(actualResult.ErrorMessage);
+        //                }
+        //            }
+        //        }
 
-            var thread = new System.Threading.Thread(o => {
-                executor.RunTests(testCases, runContext, recorder);
-            });
-            thread.Start();
+        //        [TestMethod, Priority(0)]
+        //        [TestCategory("10s")]
+        //        public void TestStackTrace() {
+        //            var executor = new TestExecutor();
+        //            var recorder = new MockTestExecutionRecorder();
+        //            var expectedTests = new[] {
+        //                TestInfo.StackTraceBadLocalImportFailure,
+        //                TestInfo.StackTraceNotEqualFailure
+        //            };
+        //            var runContext = CreateRunContext(expectedTests, Version.InterpreterPath);
+        //            var testCases = runContext.TestCases;
 
-            // One of the tests being run is hard coded to take 10 secs
-            Assert.IsTrue(thread.IsAlive);
+        //            executor.RunTests(testCases, runContext, recorder);
 
-            System.Threading.Thread.Sleep(100);
+        //            var badLocalImportFile = TestInfo.StackTraceBadLocalImportFailure.SourceCodeFilePath;
+        //            var badLocalImportFrames = new StackFrame[] {
+        //                new StackFrame("local_func in global_func", badLocalImportFile, 13),
+        //                new StackFrame("global_func", badLocalImportFile, 14),
+        //                new StackFrame("Utility.class_static", badLocalImportFile, 19),
+        //                new StackFrame("Utility.instance_method_b", badLocalImportFile, 22),
+        //                new StackFrame("Utility.instance_method_a", badLocalImportFile, 25),
+        //                new StackFrame("StackTraceTests.test_bad_import", badLocalImportFile, 6),
+        //            };
 
-            executor.Cancel();
-            System.Threading.Thread.Sleep(100);
+        //            ValidateStackFrame(recorder.Results[0], badLocalImportFrames);
 
-            // It should take less than 10 secs to cancel
-            // Depending on which assemblies are loaded, it may take some time
-            // to obtain the interpreters service.
-            Assert.IsTrue(thread.Join(10000));
+        //            var notEqualFile = TestInfo.StackTraceNotEqualFailure.SourceCodeFilePath;
+        //            var notEqualFrames = new StackFrame[] {
+        //                new StackFrame("StackTraceTests.test_not_equal", notEqualFile, 9),
+        //            };
 
-            System.Threading.Thread.Sleep(100);
+        //            ValidateStackFrame(recorder.Results[1], notEqualFrames);
+        //        }
 
-            Assert.IsFalse(thread.IsAlive);
+        //        private static void ValidateStackFrame(TestResult result, StackFrame[] expectedFrames) {
+        //            var stackTrace = result.ErrorStackTrace;
+        //            var parser = new PythonStackTraceParser();
+        //            var frames = parser.GetStackFrames(stackTrace).ToArray();
 
-            // Canceled test cases do not get recorded
-            Assert.IsTrue(recorder.Results.Count < expectedTests.Length);
-        }
+        //            Console.WriteLine("Actual frames:");
+        //            foreach (var f in frames) {
+        //                Console.WriteLine("\"{0}\",\"{1}\",\"{2}\"", f.MethodDisplayName, f.FileName, f.LineNumber);
+        //            }
 
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
-        [TestCategory("10s")]
-        public void TestMultiprocessing() {
-            if (Version.Version <= PythonLanguageVersion.V26 ||
-                Version.Version == PythonLanguageVersion.V30) {
-                return;
-            }
+        //            CollectionAssert.AreEqual(expectedFrames, frames, new StackFrameComparer());
+        //        }
 
-            var executor = new TestExecutor();
-            var recorder = new MockTestExecutionRecorder();
-            var expectedTests = TestInfo.TestAdapterMultiprocessingTests;
-            var runContext = CreateRunContext(expectedTests, Version.InterpreterPath);
-            var testCases = runContext.TestCases;
+        //        class StackFrameComparer : IComparer {
+        //            public int Compare(object x, object y) {
+        //                if (x == y) {
+        //                    return 0;
+        //                }
 
-            executor.RunTests(testCases, runContext, recorder);
-            PrintTestResults(recorder);
+        //                var a = x as StackFrame;
+        //                var b = y as StackFrame;
 
-            var resultNames = recorder.Results.Select(tr => tr.TestCase.FullyQualifiedName).ToSet();
-            foreach (var expectedResult in expectedTests) {
-                AssertUtil.ContainsAtLeast(resultNames, expectedResult.TestCase.FullyQualifiedName);
-                var actualResult = recorder.Results.SingleOrDefault(tr => tr.TestCase.FullyQualifiedName == expectedResult.TestCase.FullyQualifiedName);
-                Assert.AreEqual(expectedResult.Outcome, actualResult.Outcome, expectedResult.TestCase.FullyQualifiedName + " had incorrect result");
-            }
-        }
+        //                if (a == null) {
+        //                    return -1;
+        //                }
 
-        [TestMethod, Priority(0)]
-        [TestCategory("10s")]
-        public void TestRelativeImport() {
-            var executor = new TestExecutor();
-            var recorder = new MockTestExecutionRecorder();
-            var expectedTests = new[] { TestInfo.RelativeImportSuccess };
-            var runContext = CreateRunContext(expectedTests, Version.InterpreterPath);
-            var testCases = runContext.TestCases;
+        //                if (b == null) {
+        //                    return 1;
+        //                }
 
-            executor.RunTests(testCases, runContext, recorder);
-            PrintTestResults(recorder);
+        //                int res = a.FileName.CompareTo(b.FileName);
+        //                if (res != 0) {
+        //                    return res;
+        //                }
 
-            var resultNames = recorder.Results.Select(tr => tr.TestCase.FullyQualifiedName).ToSet();
-            foreach (var expectedResult in expectedTests) {
-                AssertUtil.ContainsAtLeast(resultNames, expectedResult.TestCase.FullyQualifiedName);
-                var actualResult = recorder.Results.SingleOrDefault(tr => tr.TestCase.FullyQualifiedName == expectedResult.TestCase.FullyQualifiedName);
-                Assert.AreEqual(expectedResult.Outcome, actualResult.Outcome, expectedResult.TestCase.FullyQualifiedName + " had incorrect result");
-            }
-        }
+        //                res = a.LineNumber.CompareTo(b.LineNumber);
+        //                if (res != 0) {
+        //                    return res;
+        //                }
+
+        //                res = a.MethodDisplayName.CompareTo(b.MethodDisplayName);
+        //                if (res != 0) {
+        //                    return res;
+        //                }
+
+        //                return 0;
+        //            }
+        //        }
 
         [TestMethod, Priority(0)]
         [TestCategory("10s")]
-        public void TestInheritance() {
-            // TODO: Figure out the proper fix to make this test pass.
-            // There's a confusion between source file path and class file path.
-            // Note that the equivalent manual test in IDE works fine.
-            var executor = new TestExecutor();
+        public void RunWithPytestEnvironmentVariable() {
+            var testEnv = TestEnvironment.Create(Version, "Pytest");
+
+            var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_env_var.py");
+            File.Copy(TestData.GetPath("TestData", "TestExecutor", "test_env_var.py"), testFilePath);
+
+            var expectedTests = new[] {
+                new PytestExecutionTestInfo(
+                    "test_variable",
+                    "test_env_var.py::EnvironmentVariableTests::test_variable",
+                    testFilePath,
+                    5,
+                    "test_env_var.EnvironmentVariableTests",
+                    TestOutcome.Passed
+                )
+            };
+
+            var runSettings = new MockRunSettings(
+                MockRunSettingsXmlBuilder.CreateDiscoveryContext(
+                    "Pytest", testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath,
+                    new[] { Tuple.Create("USER_ENV_VAR", "123") }
+                )
+            );
+            var testCases = CreateTestCasesFromTestInfo(testEnv, expectedTests);
+            var runContext = new MockRunContext(runSettings, testCases, testEnv.ResultsFolderPath);
             var recorder = new MockTestExecutionRecorder();
-            var expectedTests = TestInfo.TestAdapterBInheritanceTests;
-            var runContext = CreateRunContext(expectedTests, Version.InterpreterPath);
-            var testCases = runContext.TestCases;
+            var executor = new TestExecutor();
 
             executor.RunTests(testCases, runContext, recorder);
-            PrintTestResults(recorder);
 
-            var resultNames = recorder.Results.Select(tr => tr.TestCase.FullyQualifiedName).ToSet();
-            foreach (var expectedResult in expectedTests) {
-                AssertUtil.ContainsAtLeast(resultNames, expectedResult.TestCase.FullyQualifiedName);
-                var actualResult = recorder.Results.SingleOrDefault(tr => tr.TestCase.FullyQualifiedName == expectedResult.TestCase.FullyQualifiedName);
-                Assert.AreEqual(expectedResult.Outcome, actualResult.Outcome, expectedResult.TestCase.FullyQualifiedName + " had incorrect result");
-            }
+            ValidateExecutedTests(expectedTests, recorder);
         }
 
         [TestMethod, Priority(0)]
         [TestCategory("10s")]
-        public void TestLoadError() {
-            // A load error is when unittest module fails to load the test (prior to running it)
-            // For example, if the file where the test is defined has an unhandled ImportError.
-            // We check that this only causes the tests that can't be loaded to fail,
-            // all other tests in the test run which can be loaded successfully will be run.
-            var executor = new TestExecutor();
+        public void RunWithPytestDuration() {
+            var testEnv = TestEnvironment.Create(Version, "Pytest");
+
+            var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_duration.py");
+            File.Copy(TestData.GetPath("TestData", "TestExecutor", "test_duration.py"), testFilePath);
+
+            var expectedTests = new[] {
+                new PytestExecutionTestInfo(
+                    "test_sleep_0_1",
+                    "test_duration.py::DurationTests::test_sleep_0_1",
+                    testFilePath,
+                    5,
+                    "test_duration.DurationTests",
+                    TestOutcome.Passed,
+                    minDuration: TimeSpan.FromSeconds(0.1)
+                ),
+                new PytestExecutionTestInfo(
+                    "test_sleep_0_3",
+                    "test_duration.py::DurationTests::test_sleep_0_3",
+                    testFilePath,
+                    8,
+                    "test_duration.DurationTests",
+                    TestOutcome.Passed,
+                    minDuration: TimeSpan.FromSeconds(0.3)
+                ),
+                new PytestExecutionTestInfo(
+                    "test_sleep_0_5",
+                    "test_duration.py::DurationTests::test_sleep_0_5",
+                    testFilePath,
+                    11,
+                    "test_duration.DurationTests",
+                    TestOutcome.Failed,
+                    minDuration: TimeSpan.FromSeconds(0.5)
+                ),
+            };
+
+            var runSettings = new MockRunSettings(
+                MockRunSettingsXmlBuilder.CreateDiscoveryContext("Pytest", testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+            );
+            var testCases = CreateTestCasesFromTestInfo(testEnv, expectedTests);
+            var runContext = new MockRunContext(runSettings, testCases, testEnv.ResultsFolderPath);
             var recorder = new MockTestExecutionRecorder();
-            var expectedTests = TestInfo.GetTestAdapterLoadErrorTests(ImportErrorFormat);
-            var runContext = CreateRunContext(expectedTests, Version.InterpreterPath);
-            var testCases = runContext.TestCases;
+            var executor = new TestExecutor();
 
             executor.RunTests(testCases, runContext, recorder);
+
+            ValidateExecutedTests(expectedTests, recorder);
+        }
+
+
+        [TestMethod, Priority(0)]
+        [TestCategory("10s")]
+        public void RunWithPytestSetupAndTeardown() {
+            var testEnv = TestEnvironment.Create(Version, "Pytest");
+
+            var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_teardown.py");
+            File.Copy(TestData.GetPath("TestData", "TestExecutor", "test_teardown.py"), testFilePath);
+
+            var expectedTests = new[] {
+                new PytestExecutionTestInfo(
+                    "test_success",
+                    "test_teardown.py::TeardownTests::test_success",
+                    testFilePath,
+                    10,
+                    "test_teardown.TeardownTests",
+                    TestOutcome.Passed,
+                    containedStdOut: new[] { "doing setUp", "doing tearDown" }
+                ),
+                new PytestExecutionTestInfo(
+                    "test_failure",
+                    "test_teardown.py::TeardownTests::test_failure",
+                    testFilePath,
+                    13,
+                    "test_teardown.TeardownTests",
+                    TestOutcome.Failed,
+                    containedStdOut: new[] { "doing setUp", "doing tearDown" }
+                ),
+            };
+
+            var runSettings = new MockRunSettings(
+                MockRunSettingsXmlBuilder.CreateDiscoveryContext("Pytest", testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+            );
+            var testCases = CreateTestCasesFromTestInfo(testEnv, expectedTests);
+            var runContext = new MockRunContext(runSettings, testCases, testEnv.ResultsFolderPath);
+            var recorder = new MockTestExecutionRecorder();
+            var executor = new TestExecutor();
+
+            executor.RunTests(testCases, runContext, recorder);
+
+            ValidateExecutedTests(expectedTests, recorder);
+        }
+
+        private static List<TestCase> CreateTestCasesFromTestInfo(TestEnvironment testEnv, IEnumerable<PytestExecutionTestInfo> expectedTests) {
+            return Enumerable.Select(expectedTests, ti => {
+                var testCase = new TestCase(ti.FullyQualifiedName, new Uri(PythonConstants.TestExecutorUriString), ti.FilePath) {
+                    DisplayName = ti.DisplayName,
+                    CodeFilePath = ti.FilePath,
+                    LineNumber = ti.LineNumber,
+                };
+
+                string id = ".\\" + ti.FullyQualifiedName;
+                string xmlClassName = ti.PyTestXmlClassName;
+                string execPath = PathUtils.EnsureEndSeparator(testEnv.SourceFolderPath).ToLower() + ti.FullyQualifiedName;
+
+                testCase.SetPropertyValue<string>((TestProperty)Microsoft.PythonTools.TestAdapter.Pytest.Constants.PytestIdProperty, id);
+                testCase.SetPropertyValue<string>((TestProperty)Microsoft.PythonTools.TestAdapter.Pytest.Constants.PyTestXmlClassNameProperty, xmlClassName);
+                testCase.SetPropertyValue<string>((TestProperty)Microsoft.PythonTools.TestAdapter.Pytest.Constants.PytestTestExecutionPathPropertery, execPath);
+                return (TestCase)testCase;
+            }).ToList();
+        }
+
+        private static void ValidateExecutedTests(PytestExecutionTestInfo[] expectedTests, MockTestExecutionRecorder recorder) {
             PrintTestResults(recorder);
 
             var resultNames = recorder.Results.Select(tr => tr.TestCase.FullyQualifiedName).ToSet();
             foreach (var expectedResult in expectedTests) {
-                AssertUtil.ContainsAtLeast(resultNames, expectedResult.TestCase.FullyQualifiedName);
-                var actualResult = recorder.Results.SingleOrDefault(tr => tr.TestCase.FullyQualifiedName == expectedResult.TestCase.FullyQualifiedName);
-                Assert.AreEqual(expectedResult.Outcome, actualResult.Outcome, expectedResult.TestCase.FullyQualifiedName + " had incorrect result");
+                AssertUtil.ContainsAtLeast(resultNames, expectedResult.FullyQualifiedName);
+                var actualResult = recorder.Results.SingleOrDefault(tr => tr.TestCase.FullyQualifiedName == expectedResult.FullyQualifiedName);
+
+                Assert.AreEqual(expectedResult.Outcome, actualResult.Outcome, expectedResult.FullyQualifiedName + " had incorrect result");
+                Assert.IsTrue(actualResult.Duration >= expectedResult.MinDuration, expectedResult.FullyQualifiedName + " had incorrect duration");
 
                 if (expectedResult.ContainedErrorMessage != null) {
-                    Assert.IsNotNull(actualResult.ErrorMessage);
-                    Assert.IsTrue(
-                        actualResult.ErrorMessage.Contains(expectedResult.ContainedErrorMessage),
-                        string.Format("Error message did not contain expected text: {0}", expectedResult.ContainedErrorMessage)
-                    );
-                } else {
-                    Assert.IsNull(actualResult.ErrorMessage);
+                    AssertUtil.Contains(actualResult.ErrorMessage, expectedResult.ContainedErrorMessage);
+                }
+
+                if (expectedResult.ContainedStdOut != null) {
+                    var stdOut = actualResult.Messages.Single(m => m.Category == "StdOutMsgs");
+                    AssertUtil.Contains(stdOut.Text, expectedResult.ContainedStdOut);
                 }
             }
         }
 
-        [TestMethod, Priority(0)]
-        [TestCategory("10s")]
-        public void TestStackTrace() {
-            var executor = new TestExecutor();
-            var recorder = new MockTestExecutionRecorder();
-            var expectedTests = new[] {
-                TestInfo.StackTraceBadLocalImportFailure,
-                TestInfo.StackTraceNotEqualFailure
-            };
-            var runContext = CreateRunContext(expectedTests, Version.InterpreterPath);
-            var testCases = runContext.TestCases;
-
-            executor.RunTests(testCases, runContext, recorder);
-
-            var badLocalImportFile = TestInfo.StackTraceBadLocalImportFailure.SourceCodeFilePath;
-            var badLocalImportFrames = new StackFrame[] {
-                new StackFrame("local_func in global_func", badLocalImportFile, 13),
-                new StackFrame("global_func", badLocalImportFile, 14),
-                new StackFrame("Utility.class_static", badLocalImportFile, 19),
-                new StackFrame("Utility.instance_method_b", badLocalImportFile, 22),
-                new StackFrame("Utility.instance_method_a", badLocalImportFile, 25),
-                new StackFrame("StackTraceTests.test_bad_import", badLocalImportFile, 6),
-            };
-
-            ValidateStackFrame(recorder.Results[0], badLocalImportFrames);
-
-            var notEqualFile = TestInfo.StackTraceNotEqualFailure.SourceCodeFilePath;
-            var notEqualFrames = new StackFrame[] {
-                new StackFrame("StackTraceTests.test_not_equal", notEqualFile, 9),
-            };
-
-            ValidateStackFrame(recorder.Results[1], notEqualFrames);
-        }
-
-        private static void ValidateStackFrame(TestResult result, StackFrame[] expectedFrames) {
-            var stackTrace = result.ErrorStackTrace;
-            var parser = new PythonStackTraceParser();
-            var frames = parser.GetStackFrames(stackTrace).ToArray();
-
-            Console.WriteLine("Actual frames:");
-            foreach (var f in frames) {
-                Console.WriteLine("\"{0}\",\"{1}\",\"{2}\"", f.MethodDisplayName, f.FileName, f.LineNumber);
-            }
-
-            CollectionAssert.AreEqual(expectedFrames, frames, new StackFrameComparer());
-        }
-
-        class StackFrameComparer : IComparer {
-            public int Compare(object x, object y) {
-                if (x == y) {
-                    return 0;
-                }
-
-                var a = x as StackFrame;
-                var b = y as StackFrame;
-
-                if (a == null) {
-                    return -1;
-                }
-
-                if (b == null) {
-                    return 1;
-                }
-
-                int res = a.FileName.CompareTo(b.FileName);
-                if (res != 0) {
-                    return res;
-                }
-
-                res = a.LineNumber.CompareTo(b.LineNumber);
-                if (res != 0) {
-                    return res;
-                }
-
-                res = a.MethodDisplayName.CompareTo(b.MethodDisplayName);
-                if (res != 0) {
-                    return res;
-                }
-
-                return 0;
-            }
-        }
-
-        [TestMethod, Priority(0)]
-        [TestCategory("10s")]
-        public void TestEnvironment() {
-            var executor = new TestExecutor();
-            var recorder = new MockTestExecutionRecorder();
-            var expectedTests = new[] { TestInfo.EnvironmentTestSuccess };
-            var runContext = CreateRunContext(expectedTests, Version.InterpreterPath);
-            var testCases = runContext.TestCases;
-
-            executor.RunTests(testCases, runContext, recorder);
-            PrintTestResults(recorder);
-
-            var resultNames = recorder.Results.Select(tr => tr.TestCase.FullyQualifiedName).ToSet();
-            foreach (var expectedResult in expectedTests) {
-                AssertUtil.ContainsAtLeast(resultNames, expectedResult.TestCase.FullyQualifiedName);
-                var actualResult = recorder.Results.SingleOrDefault(tr => tr.TestCase.FullyQualifiedName == expectedResult.TestCase.FullyQualifiedName);
-                Assert.AreEqual(expectedResult.Outcome, actualResult.Outcome, expectedResult.TestCase.FullyQualifiedName + " had incorrect result");
-            }
-        }
-
-        [TestMethod, Priority(0)]
-        [TestCategory("10s")]
-        public void TestDuration() {
-            var executor = new TestExecutor();
-            var recorder = new MockTestExecutionRecorder();
-            var expectedTests = new[] {
-                TestInfo.DurationSleep01TestSuccess,
-                TestInfo.DurationSleep03TestSuccess,
-                TestInfo.DurationSleep05TestSuccess,
-                TestInfo.DurationSleep08TestSuccess,
-                TestInfo.DurationSleep15TestFailure
-            };
-            var runContext = CreateRunContext(expectedTests, Version.InterpreterPath);
-            var testCases = runContext.TestCases;
-
-            executor.RunTests(testCases, runContext, recorder);
-            PrintTestResults(recorder);
-
-            var resultNames = recorder.Results.Select(tr => tr.TestCase.FullyQualifiedName).ToSet();
-            foreach (var expectedResult in expectedTests) {
-                AssertUtil.ContainsAtLeast(resultNames, expectedResult.TestCase.FullyQualifiedName);
-                var actualResult = recorder.Results.SingleOrDefault(tr => tr.TestCase.FullyQualifiedName == expectedResult.TestCase.FullyQualifiedName);
-                Assert.AreEqual(expectedResult.Outcome, actualResult.Outcome, expectedResult.TestCase.FullyQualifiedName + " had incorrect result");
-                Assert.IsTrue(actualResult.Duration >= expectedResult.MinDuration);
-            }
-        }
-
-        [TestMethod, Priority(0)]
-        [TestCategory("10s")]
-        public void TestTeardown() {
-            var executor = new TestExecutor();
-            var recorder = new MockTestExecutionRecorder();
-            var expectedTests = new[] {
-                TestInfo.TeardownSuccess,
-                TestInfo.TeardownFailure
-            };
-            var runContext = CreateRunContext(expectedTests, Version.InterpreterPath);
-            var testCases = runContext.TestCases;
-
-            executor.RunTests(testCases, runContext, recorder);
-            PrintTestResults(recorder);
-
-            var resultNames = recorder.Results.Select(tr => tr.TestCase.FullyQualifiedName).ToSet();
-            foreach (var expectedResult in expectedTests) {
-                AssertUtil.ContainsAtLeast(resultNames, expectedResult.TestCase.FullyQualifiedName);
-                var actualResult = recorder.Results.SingleOrDefault(tr => tr.TestCase.FullyQualifiedName == expectedResult.TestCase.FullyQualifiedName);
-                Assert.AreEqual(expectedResult.Outcome, actualResult.Outcome, expectedResult.TestCase.FullyQualifiedName + " had incorrect result");
-                var stdOut = actualResult.Messages.Single(m => m.Category == "StdOutMsgs");
-                AssertUtil.Contains(stdOut.Text, "doing setUp", "doing tearDown");
-            }
-        }
-
-        [TestMethod, Priority(0)]
-        public void TestPassOnCommandLine() {
-            var executor = new TestExecutor();
-            var recorder = new MockTestExecutionRecorder();
-            var expectedTests = TestInfo.TestAdapterATests;
-            var runContext = CreateRunContext(expectedTests, Version.InterpreterPath, dryRun: true);
-            var testCases = runContext.TestCases;
-
-            executor.RunTests(testCases, runContext, recorder);
-            PrintTestResults(recorder);
-
-            AssertUtil.ArrayEquals(
-                expectedTests.Select(t => t.TestCase.FullyQualifiedName).ToList(),
-                recorder.Results.Select(t => t.TestCase.FullyQualifiedName).ToList()
-            );
-        }
-
-        [TestMethod, Priority(0)]
-        public void TestPassInTestList() {
-            var executor = new TestExecutor();
-            var recorder = new MockTestExecutionRecorder();
-            var expectedTests = Enumerable.Repeat(TestInfo.TestAdapterATests, 10).SelectMany();
-            var runContext = CreateRunContext(expectedTests, Version.InterpreterPath, dryRun: true);
-            var testCases = runContext.TestCases;
-
-            executor.RunTests(testCases, runContext, recorder);
-            PrintTestResults(recorder);
-
-            AssertUtil.ArrayEquals(
-                expectedTests.Select(t => t.TestCase.FullyQualifiedName).ToList(),
-                recorder.Results.Select(t => t.TestCase.FullyQualifiedName).ToList()
-            );
-        }
-
-        internal static void PrintTestResults(MockTestExecutionRecorder recorder) {
+        private static void PrintTestResults(MockTestExecutionRecorder recorder) {
             foreach (var message in recorder.Messages) {
                 Console.WriteLine(message);
             }
+
             foreach (var result in recorder.Results) {
-                Console.WriteLine("Test: {0}", result.TestCase.FullyQualifiedName);
-                Console.WriteLine("Result: {0}", result.Outcome);
-                Console.WriteLine("Duration: {0}ms", result.Duration.TotalMilliseconds);
+                Console.WriteLine($"FullyQualifiedName: {result.TestCase.FullyQualifiedName}");
+                Console.WriteLine($"Outcome: {result.Outcome}");
+                Console.WriteLine($"Duration: {result.Duration.TotalMilliseconds}ms");
                 foreach(var msg in result.Messages) {
-                    Console.WriteLine("Message {0}:", msg.Category);
+                    Console.WriteLine($"Message {msg.Category}:");
                     Console.WriteLine(msg.Text);
                 }
                 Console.WriteLine("");
@@ -611,29 +501,6 @@ namespace TestAdapterTests {
         }
 
         protected override PythonVersion Version => PythonPaths.Python27 ?? PythonPaths.Python27_x64;
-
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
-        [TestCategory("10s")]
-        public void TestExtensionReference() {
-            // This test uses a 32-bit Python 2.7 .pyd
-            PythonPaths.Python27.AssertInstalled();
-
-            var executor = new TestExecutor();
-            var recorder = new MockTestExecutionRecorder();
-            var expectedTests = new[] { TestInfo.ExtensionReferenceTestSuccess };
-            var runContext = CreateRunContext(expectedTests);
-            var testCases = runContext.TestCases;
-
-            executor.RunTests(testCases, runContext, recorder);
-            PrintTestResults(recorder);
-
-            var resultNames = recorder.Results.Select(tr => tr.TestCase.FullyQualifiedName).ToSet();
-            foreach (var expectedResult in expectedTests) {
-                AssertUtil.ContainsAtLeast(resultNames, expectedResult.TestCase.FullyQualifiedName);
-                var actualResult = recorder.Results.SingleOrDefault(tr => tr.TestCase.FullyQualifiedName == expectedResult.TestCase.FullyQualifiedName);
-                Assert.AreEqual(expectedResult.Outcome, actualResult.Outcome, expectedResult.TestCase.FullyQualifiedName + " had incorrect result");
-            }
-        }
     }
 
     [TestClass]

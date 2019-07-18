@@ -14,6 +14,8 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using Microsoft.PythonTools.Infrastructure;
+using System;
 using System.IO;
 using System.Text;
 
@@ -28,14 +30,13 @@ namespace TestAdapterTests {
 </TestCases>
 <DryRun value=""{2}"" /><ShowConsole value=""{3}"" /></Python></RunSettings>";
 
-        //        // {0} is the project home directory, ending with a backslash
-        //        // {1} is the project filename, including extension
-        //        // {2} is the interpreter path
-        //        // {3} is one or more formatted _runSettingTest lines
-        //        // {4} is one or more formatten _runSettingEnvironment lines
-        //        private const string _runSettingProject = @"<Project path=""{0}{1}"" home=""{0}"" nativeDebugging="""" djangoSettingsModule="""" workingDir=""{0}"" interpreter=""{2}"" pathEnv=""PYTHONPATH""><Environment>{4}</Environment><SearchPaths>{5}</SearchPaths>
-        //{3}
-        //</Project>";
+        // {0} is the project name
+        // {1} is the project folder
+        // {2} is the interpreter path
+        // {3} is the test framework
+        // {4} is one or more formatted _runSettingTest lines
+        // {5} is one or more formatted _runSettingEnvironment lines
+        // {6} is one or more formatted _runSettingSearch lines
 
         private const string _runSettingProject = @"<Project name=""{0}"" home=""{1}"" nativeDebugging="""" djangoSettingsModule="""" workingDir=""{1}"" interpreter=""{2}"" pathEnv=""PYTHONPATH"" testFramework= ""{3}""><Environment>{5}</Environment><SearchPaths>{6}</SearchPaths>
 {4}
@@ -56,11 +57,23 @@ namespace TestAdapterTests {
         //private const string _runSettingTest = @"<Test className=""{1}"" file=""{0}"" line=""{3}"" column=""{4}"" method=""{2}"" />";
         private const string _runSettingTest = @"<Test file=""{0}"" />";
 
-        public static string CreateDiscoveryContext(string testFramework, string interpreterPath, string resultsDir, string testDir) {
+        public static string CreateDiscoveryContext(string testFramework, string interpreterPath, string resultsDir, string testDir, Tuple<string, string>[] environmentVariables = null, string[] searchPaths = null) {
             var tests = new StringBuilder();
 
             foreach (var filePath in Directory.GetFiles(testDir, "*.py")) {
                 tests.Append(string.Format(_runSettingTest, filePath));
+            }
+
+            var variables = new StringBuilder();
+
+            foreach (var variable in environmentVariables.MaybeEnumerate()) {
+                variables.Append(string.Format(_runSettingEnvironment, variable.Item1, variable.Item2));
+            }
+
+            var search = new StringBuilder();
+
+            foreach (var searchPath in searchPaths.MaybeEnumerate()) {
+                search.Append(string.Format(_runSettingSearch, searchPath));
             }
 
             var xml = string.Format(
@@ -73,12 +86,12 @@ namespace TestAdapterTests {
                     interpreterPath,
                     testFramework,
                     tests.ToString(),
-                    string.Empty,
-                    string.Empty
+                    variables.ToString(),
+                    search.ToString()
                 ),
                 "false",
                 "false"
-            );
+            ); ;
 
             return xml;
         }
