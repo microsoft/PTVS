@@ -28,6 +28,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using System.Xml;
 using System.Xml.XPath;
 using Microsoft.PythonTools.Analysis;
@@ -141,6 +142,9 @@ namespace Microsoft.PythonTools.TestAdapter {
         }
 
         public void RunTests(IEnumerable<TestCase> tests, IRunContext runContext, IFrameworkHandle frameworkHandle) {
+
+            MessageBox.Show("Hello1: " + Process.GetCurrentProcess().Id);
+
             if (tests == null) {
                 throw new ArgumentNullException(nameof(tests));
             }

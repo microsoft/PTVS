@@ -5,9 +5,79 @@ from __future__ import absolute_import
 
 import argparse
 import sys
+import unittest
+#import ptvsd
 
 from . import pytest, report
 from .errors import UnsupportedToolError, UnsupportedCommandError
+
+
+# 5678 is the default attach port in the VS Code debug configurations
+#print("Waiting for debugger attach")
+#ptvsd.enable_attach(address=('localhost', 5678), redirect_output=True)
+#ptvsd.wait_for_attach()
+#breakpoint()
+
+import inspect
+import types
+def unittest_discover(pytestargs=None, hidestdio=False,
+             _pytest_main=None, _plugin=None, **_ignored):
+    
+    suites = unittest.defaultTestLoader.discover(pytestargs[0], pytestargs[1])
+    
+    root={}
+
+    for suite in suites._tests:
+        for cls in suite._tests:
+            try:
+                for test in cls._tests:
+                    #print(test.id())
+                    parts = test.id().split('.')
+                    error_case, error_message = None, None
+                    
+                    parts_copy = parts[:]
+                    while parts_copy:
+                        try:
+                            module_name = '.'.join(parts_copy)
+                            module = __import__(module_name)
+                            break
+                        except ImportError:
+                            next_attribute = parts_copy.pop()
+                            
+                    parts = parts[1:]
+         
+                    setattr(test, 'module', module)
+                    filename = inspect.getsourcefile(module)
+                    setattr(test, 'source', filename)
+
+                    obj = module
+                    for part in parts:
+                        try:
+                            parent, obj = obj, getattr(obj, part)
+                        except AttributeError as e:
+                            pass
+
+                    if isinstance(obj, types.FunctionType):
+                        _, lineno = inspect.getsourcelines(obj)
+                        setattr(test, 'lineno', lineno)
+                        #print(lineno)
+
+            except:
+                pass
+    return (
+            {},
+            suites,
+            )
+
+def add_unittest_subparser(cmd, name, parent):
+    """Add a new subparser to the given parent and add args to it."""
+    parser = parent.add_parser(name)
+    if cmd == 'discover':
+        # For now we don't have any tool-specific CLI options to add.
+        pass
+    else:
+        raise UnsupportedCommandError(cmd)
+    return parser
 
 
 TOOLS = {
@@ -15,9 +85,18 @@ TOOLS = {
         '_add_subparser': pytest.add_cli_subparser,
         'discover': pytest.discover,
         },
+    'unittest': {
+        '_add_subparser': add_unittest_subparser,
+        'discover': unittest_discover,
+        },
     }
 REPORTERS = {
-    'discover': report.report_discovered,
+    'pytest': {
+        'discover': report.report_discovered,
+        },
+    'unittest': {
+        'discover': report.report_unittest_discovered
+        }
     }
 
 
@@ -83,7 +162,7 @@ def main(toolname, cmdname, subargs, toolargs,
 
     try:
         run = tool[cmdname]
-        report_result = _reporters[cmdname]
+        report_result = _reporters[toolname][cmdname]
     except KeyError:
         raise UnsupportedCommandError(cmdname)
 

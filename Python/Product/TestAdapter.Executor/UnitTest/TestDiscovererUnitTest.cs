@@ -1,14 +1,18 @@
 ﻿using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.TestAdapter.Config;
+using Microsoft.PythonTools.TestAdapter.UnitTest;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-
+using System.Text;
+using System.Threading;
 
 namespace Microsoft.PythonTools.TestAdapter.Services {
     internal class TestDiscovererUnitTest : IPythonTestDiscoverer {
@@ -22,50 +26,60 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
 
         public void DiscoverTests(IEnumerable<string> sources, IMessageLogger logger, ITestCaseDiscoverySink discoverySink) {
             _logger = logger;
-            throw new NotImplementedException("TestExecutorUnitTest::DiscoverTests");
 
-            //var discoveryResults = new List<PytestDiscoveryResults>();
+            var discoveryResults = new List<UnitTestDiscoveryResults>();
 
-            //try {
-            //    var env = InitializeEnvironment(sources, _settings);
-            //    var arguments = GetArguments(sources);
+            try {
+                var env = InitializeEnvironment(sources, _settings);
+                var arguments = GetArguments(sources);
 
-            //    using (var outputStream = new MemoryStream())
-            //    using (var writer = new StreamWriter(outputStream, encoding: new UTF8Encoding(true), 4096, leaveOpen: true))
-            //    using (var proc = ProcessOutput.Run(
-            //        _settings.InterpreterPath,
-            //        arguments,
-            //        _settings.WorkingDirectory,
-            //        env,
-            //        visible: false,
-            //        new StreamRedirector(writer)
-            //    )) {
+                using (var outputStream = new MemoryStream())
+                using (var writer = new StreamWriter(outputStream, Encoding.UTF8, 4096, leaveOpen: true))
+                using (var proc = ProcessOutput.Run(
+                    _settings.InterpreterPath,
+                    arguments,
+                    _settings.WorkingDirectory,
+                    env,
+                    visible: false,
+                    new StreamRedirector(writer)
+                )) {
 
-            //        DebugInfo("cd " + _settings.WorkingDirectory);
-            //        DebugInfo("set " + _settings.PathEnv + "=" + env[_settings.PathEnv]);
-            //        DebugInfo(proc.Arguments);
+                    DebugInfo("cd " + _settings.WorkingDirectory);
+                    DebugInfo("set " + _settings.PathEnv + "=" + env[_settings.PathEnv]);
+                    DebugInfo(proc.Arguments);
 
-            //        // If there's an error in the launcher script,
-            //        // it will terminate without connecting back.
-            //        WaitHandle.WaitAny(new WaitHandle[] { proc.WaitHandle });
+                    // If there's an error in the launcher script,
+                    // it will terminate without connecting back.
+                    WaitHandle.WaitAny(new WaitHandle[] { proc.WaitHandle });
 
-            //        outputStream.Flush();
-            //        outputStream.Seek(0, SeekOrigin.Begin);
-            //        var json = new StreamReader(outputStream).ReadToEnd();
+                    outputStream.Flush();
+                    outputStream.Seek(0, SeekOrigin.Begin);
+                    var json = new StreamReader(outputStream).ReadToEnd();
 
-            //        try {
-            //            discoveryResults = JsonConvert.DeserializeObject<List<PytestDiscoveryResults>>(json);
-            //        } catch (InvalidOperationException ex) {
-            //            Error("Failed to parse: {0}".FormatInvariant(ex.Message));
-            //            Error(json);
-            //        } catch (JsonException ex) {
-            //            Error("Failed to parse: {0}".FormatInvariant(ex.Message));
-            //            Error(json);
-            //        }
-            //    }
-            //} catch (Exception ex) {
-            //    Error(ex.Message);
-            //}
+                    try {
+                        discoveryResults = JsonConvert.DeserializeObject<List<UnitTestDiscoveryResults>>(json);
+                    } catch (InvalidOperationException ex) {
+                        Error("Failed to parse: {0}".FormatInvariant(ex.Message));
+                        Error(json);
+                    } catch (JsonException ex) {
+                        Error("Failed to parse: {0}".FormatInvariant(ex.Message));
+                        Error(json);
+                    }
+                }
+            } catch (Exception ex) {
+                Error(ex.Message);
+            }
+
+            
+            foreach (var test in discoveryResults.SelectMany(result => result.Tests.Select(test => test))) {
+                var testcase = test.ToVsTestCase(_settings.IsWorkspace, _settings.ProjectHome);
+
+                logger.SendMessage(TestMessageLevel.Informational, $"{testcase.DisplayName} Source:{testcase.Source} Line:{testcase.LineNumber}");
+
+                if (discoverySink != null) {
+                    discoverySink.SendTestCase(testcase);
+                }
+            }
         }
 
         public string[] GetArguments(IEnumerable<string> sources) {
@@ -75,9 +89,9 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
             arguments.Add("unittest");
             arguments.Add("--");
 
-            foreach (var s in sources) {
-                arguments.Add(s);
-            }
+            arguments.Add(_settings.ProjectHome);
+            arguments.Add("test*.py");
+
             return arguments.ToArray();
         }
 

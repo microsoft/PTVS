@@ -188,5 +188,6 @@ namespace Microsoft.PythonTools {
 
         public static readonly Uri ExecutorUri = new Uri(TestExecutorUriString);
         public static readonly Uri WorkspaceExecutorUri = new Uri(WSTestExecutorUriString);
+        public static readonly Uri UnitTestExecutorUri = new Uri(UnitTestExecutorUriString);
     }
 }

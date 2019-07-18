@@ -72,3 +72,44 @@ def report_discovered(tests, parents, pretty=False, simple=False,
     serialized = json.dumps(data, **kwargs)
 
     _send(serialized)
+
+
+
+
+
+
+def report_unittest_discovered(suites, parents, pretty=False, simple=False,
+                      _send=print, **_ignored):
+    """Serialize the discovered tests and write to stdout."""
+    data = []
+        
+    for suite in suites._tests:
+        root = {
+            'tests': []
+            }
+        for cls in suite._tests:
+            try:
+                for test in cls._tests:
+                    testdata = {
+                        'id': test.id(),
+                        'name': test._testMethodName,
+                        'lineno' : test.lineno,
+                        'source' : test.source
+                        }
+                    root['tests'].append(testdata)
+            except:
+                pass
+
+        if root['tests']:
+            data.append(root)
+    kwargs = {}
+    if pretty:
+        # human-formatted
+        kwargs = dict(
+            sort_keys=True,
+            indent=4,
+            separators=(',', ': '),
+            )
+    serialized = json.dumps(data, **kwargs)
+
+    _send(serialized)

@@ -103,6 +103,8 @@
     <Compile Include="TestReader.cs" />
     <Compile Include="UnitTest\TestExecutorUnitTest.cs" />
     <Compile Include="UnitTest\TestDiscovererUnitTest.cs" />
+    <Compile Include="UnitTest\UnitTestDiscoveryResults.cs" />
+    <Compile Include="UnitTest\UnitTestExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="PythonFiles\testing_tools\adapter\discovery.py">

@@ -38,7 +38,7 @@ namespace Microsoft.PythonTools.TestAdapter {
     [DefaultExecutorUri(PythonConstants.TestExecutorUriString)]
     public class PythonTestDiscoverer : ITestDiscoverer {
         public void DiscoverTests(IEnumerable<string> sources, IDiscoveryContext discoveryContext, IMessageLogger logger, ITestCaseDiscoverySink discoverySink) {
-   //         MessageBox.Show("Discover: " + Process.GetCurrentProcess().Id);
+            //MessageBox.Show("Discover: " + Process.GetCurrentProcess().Id);
 
             if (sources == null) {
                 throw new ArgumentNullException(nameof(sources));
