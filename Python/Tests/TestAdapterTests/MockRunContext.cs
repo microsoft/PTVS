@@ -17,16 +17,14 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 
 namespace TestAdapterTests {
     class MockRunContext : IRunContext {
-        private readonly IRunSettings _runSettings;
-
-        public MockRunContext(IRunSettings runSettings, IReadOnlyList<TestCase> testCases) {
-            _runSettings = runSettings;
+        public MockRunContext(IRunSettings runSettings, IReadOnlyList<TestCase> testCases, string resultsDirectory) {
+            RunSettings = runSettings;
             TestCases = testCases;
+            TestRunDirectory = resultsDirectory;
         }
 
         public IReadOnlyList<TestCase> TestCases { get; }
@@ -55,10 +53,8 @@ namespace TestAdapterTests {
             get { throw new NotImplementedException(); }
         }
 
-        public string TestRunDirectory {
-            get { throw new NotImplementedException(); }
-        }
+        public string TestRunDirectory { get; }
 
-        public IRunSettings RunSettings => _runSettings;
+        public IRunSettings RunSettings { get; }
     }
 }

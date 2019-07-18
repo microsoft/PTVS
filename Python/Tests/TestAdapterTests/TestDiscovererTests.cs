@@ -30,33 +30,19 @@ namespace TestAdapterTests {
     public abstract partial class TestDiscovererTests {
         protected abstract PythonVersion Version { get; }
 
+        [TestInitialize]
+        public void CheckVersion() {
+            if (Version == null) {
+                Assert.Inconclusive("Required version of Python is not installed");
+            }
+        }
+
         [TestMethod, Priority(0)]
         public void DiscoverWithPytest() {
-            Version.AssertInstalled();
+            var testEnv = TestEnvironment.Create(Version, "Pytest");
 
-            var envDir = TestData.GetTempPath();
-            Version.CreatePythonVirtualEnvWithPkgs(envDir, new[] { "pytest" });
-
-            var interpreterPath = Path.Combine(envDir, "scripts", "python.exe");
-            var baseDir = TestData.GetTempPath();
-            var testDir = Path.Combine(baseDir, "Source");
-            var resultsDir = Path.Combine(baseDir, "Results");
-            Directory.CreateDirectory(testDir);
-            Directory.CreateDirectory(resultsDir);
-
-            var testFilePath = Path.Combine(testDir, "test_pt.py");
+            var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_pt.py");
             File.Copy(TestData.GetPath("TestData", "TestExplorerPytest", "test_pt.py"), testFilePath);
-
-            var ctx = new MockDiscoveryContext(
-                new MockRunSettings(
-                    MockRunSettingsXmlBuilder.CreateDiscoveryContext("Pytest", interpreterPath, resultsDir, testDir)
-                )
-            );
-            var sink = new MockTestCaseDiscoverySink();
-            var logger = new MockMessageLogger();
-            var discoverer = new PythonTestDiscoverer();
-
-            discoverer.DiscoverTests(new[] { testFilePath }, ctx, logger, sink);
 
             var expectedTests = new[] {
                 new DiscoveryTestInfo("test_pt_pass", "test_pt.py::test_pt::test_pt_pass", testFilePath, 1),
@@ -64,8 +50,53 @@ namespace TestAdapterTests {
                 new DiscoveryTestInfo("test_method_pass", "test_pt.py::TestClassPT::test_method_pass", testFilePath, 8),
             };
 
-            ValidateDiscoveredTests(sink.Tests, expectedTests);
+            var runSettings = new MockRunSettings(
+                MockRunSettingsXmlBuilder.CreateDiscoveryContext("Pytest", testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+            );
+            var discoveryContext = new MockDiscoveryContext(runSettings);
+            var discoverySink = new MockTestCaseDiscoverySink();
+            var logger = new MockMessageLogger();
+            var discoverer = new PythonTestDiscoverer();
+
+            discoverer.DiscoverTests(new[] { testFilePath }, discoveryContext, logger, discoverySink);
+
+            ValidateDiscoveredTests(discoverySink.Tests, expectedTests);
         }
+
+
+
+
+
+
+        [TestMethod, Priority(0)]
+        public void TEMP() {
+            var testEnv = TestEnvironment.Create(Version, "Pytest");
+
+            var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_duration.py");
+            File.Copy(TestData.GetPath("TestData", "TestExecutor", "test_duration.py"), testFilePath);
+
+            var expectedTests = new[] {
+                new DiscoveryTestInfo("test_sleep_0_1", "test_duration.py::DurationTests::test_sleep_0_1", testFilePath, 5),
+                new DiscoveryTestInfo("test_sleep_0_3", "test_duration.py::DurationTests::test_sleep_0_3", testFilePath, 8),
+                new DiscoveryTestInfo("test_sleep_0_5", "test_duration.py::DurationTests::test_sleep_0_5", testFilePath, 11),
+            };
+
+            var runSettings = new MockRunSettings(
+                MockRunSettingsXmlBuilder.CreateDiscoveryContext("Pytest", testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+            );
+            var discoveryContext = new MockDiscoveryContext(runSettings);
+            var discoverySink = new MockTestCaseDiscoverySink();
+            var logger = new MockMessageLogger();
+            var discoverer = new PythonTestDiscoverer();
+
+            discoverer.DiscoverTests(new[] { testFilePath }, discoveryContext, logger, discoverySink);
+
+            ValidateDiscoveredTests(discoverySink.Tests, expectedTests);
+        }
+
+
+
+
 
         [Ignore]
         [TestMethod, Priority(0)]
@@ -88,35 +119,27 @@ namespace TestAdapterTests {
 
         [TestMethod, Priority(0)]
         public void DiscoverWithUnittest() {
-            Version.AssertInstalled();
+            var testEnv = TestEnvironment.Create(Version, "Unittest");
 
-            var interpreterPath = Version.InterpreterPath;
-            var baseDir = TestData.GetTempPath();
-            var testDir = Path.Combine(baseDir, "Source");
-            var resultsDir = Path.Combine(baseDir, "Results");
-            Directory.CreateDirectory(testDir);
-            Directory.CreateDirectory(resultsDir);
-
-            var testFilePath = Path.Combine(testDir, "test_ut.py");
+            var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_ut.py");
             File.Copy(TestData.GetPath("TestData", "TestExplorerPytest", "test_ut.py"), testFilePath);
 
-            var ctx = new MockDiscoveryContext(
-                new MockRunSettings(
-                    MockRunSettingsXmlBuilder.CreateDiscoveryContext("Unittest", interpreterPath, resultsDir, testDir)
-                )
+            var runSettings = new MockRunSettings(
+                MockRunSettingsXmlBuilder.CreateDiscoveryContext("Unittest", testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
             );
-            var sink = new MockTestCaseDiscoverySink();
+            var discoveryContext = new MockDiscoveryContext(runSettings);
+            var discoverySink = new MockTestCaseDiscoverySink();
             var logger = new MockMessageLogger();
             var discoverer = new PythonTestDiscoverer();
 
-            discoverer.DiscoverTests(new[] { testFilePath }, ctx, logger, sink);
+            discoverer.DiscoverTests(new[] { testFilePath }, discoveryContext, logger, discoverySink);
 
             var expectedTests = new[] {
                 new DiscoveryTestInfo("test_ut_fail", "test_ut.py::TestClassUT::test_ut_fail", testFilePath, 4),
                 new DiscoveryTestInfo("test_ut_pass", "test_ut.py::TestClassUT::test_ut_pass", testFilePath, 7),
             };
 
-            ValidateDiscoveredTests(sink.Tests, expectedTests);
+            ValidateDiscoveredTests(discoverySink.Tests, expectedTests);
         }
 
         private static void ValidateDiscoveredTests(IList<TestCase> actualTests, DiscoveryTestInfo[] expectedTests) {
@@ -142,11 +165,14 @@ namespace TestAdapterTests {
             Console.WriteLine("Discovered test cases:");
             Console.WriteLine("----------------------");
             foreach (var tst in testCases) {
-                Console.WriteLine("FullyQualifiedName: " + tst.FullyQualifiedName);
-                Console.WriteLine("Source: " + tst.Source);
-                Console.WriteLine("Display: " + tst.DisplayName);
-                Console.WriteLine("CodeFilePath: " + tst.CodeFilePath);
-                Console.WriteLine("LineNumber: " + tst.LineNumber.ToString());
+                Console.WriteLine($"FullyQualifiedName: {tst.FullyQualifiedName}");
+                Console.WriteLine($"Source: {tst.Source}");
+                Console.WriteLine($"Display: {tst.DisplayName}");
+                Console.WriteLine($"CodeFilePath: {tst.CodeFilePath}");
+                Console.WriteLine($"LineNumber: {tst.LineNumber.ToString()}");
+                Console.WriteLine($"PytestId: {tst.GetPropertyValue<string>(Microsoft.PythonTools.TestAdapter.Pytest.Constants.PytestIdProperty, null)}");
+                Console.WriteLine($"PytestXmlClassName: {tst.GetPropertyValue<string>(Microsoft.PythonTools.TestAdapter.Pytest.Constants.PyTestXmlClassNameProperty, null)}");
+                Console.WriteLine($"PytestTestExecPath: {tst.GetPropertyValue<string>(Microsoft.PythonTools.TestAdapter.Pytest.Constants.PytestTestExecutionPathPropertery, null)}");
                 Console.WriteLine("");
             }
         }

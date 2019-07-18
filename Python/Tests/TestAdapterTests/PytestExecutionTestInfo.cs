@@ -14,21 +14,25 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+
 namespace TestAdapterTests {
-    class DiscoveryTestInfo {
-        public DiscoveryTestInfo(string displayName, string fullyQualifiedName, string filePath, int lineNumber) {
-            DisplayName = displayName;
-            FullyQualifiedName = fullyQualifiedName;
-            FilePath = filePath;
-            LineNumber = lineNumber;
+    class PytestExecutionTestInfo : ExecutionTestInfo {
+        public PytestExecutionTestInfo(
+            string displayName,
+            string fullyQualifiedName,
+            string filePath,
+            int lineNumber,
+            string xmlClassName,
+            TestOutcome outcome,
+            TimeSpan? minDuration = null,
+            string containedErrorMessage = null,
+            string[] containedStdOut = null
+        ) : base(displayName, fullyQualifiedName, filePath, lineNumber, outcome, minDuration, containedErrorMessage, containedStdOut) {
+            PyTestXmlClassName = xmlClassName;
         }
 
-        public string DisplayName { get; }
-
-        public string FullyQualifiedName { get; }
-
-        public string FilePath { get; }
-
-        public int LineNumber { get; }
+        public string PyTestXmlClassName { get; }
     }
 }
