@@ -56,7 +56,7 @@ namespace TestAdapterTests {
                     .ToXml()
             );
 
-            DiscoverTests(new[] { testFilePath }, runSettings, expectedTests);
+            DiscoverTests("Pytest", new[] { testFilePath }, runSettings, expectedTests);
         }
 
         [TestMethod, Priority(0)]
@@ -84,7 +84,7 @@ namespace TestAdapterTests {
                     .ToXml()
             );
 
-            DiscoverTests(new[] { testFilePath }, runSettings, expectedTests);
+            DiscoverTests("Pytest", new[] { testFilePath }, runSettings, expectedTests);
         }
 
         [Ignore] // discovers 0 tests, maybe pytest cannot handle this?
@@ -110,7 +110,7 @@ namespace TestAdapterTests {
                     .ToXml()
             );
 
-            DiscoverTests(new[] { testFilePath1, testFilePath2 }, runSettings, expectedTests);
+            DiscoverTests("Pytest", new[] { testFilePath1, testFilePath2 }, runSettings, expectedTests);
         }
 
         [Ignore] // discovers 0 tests, maybe pytest cannot handle this?
@@ -136,7 +136,7 @@ namespace TestAdapterTests {
                     .ToXml()
             );
 
-            DiscoverTests(new[] { testFilePath1, testFilePath2 }, runSettings, expectedTests);
+            DiscoverTests("Pytest", new[] { testFilePath1, testFilePath2 }, runSettings, expectedTests);
         }
 
         [Ignore] // discovers 3 tests instead of 2, it shouldn't be finding the one in example_pt.py
@@ -165,7 +165,7 @@ namespace TestAdapterTests {
                     .ToXml()
             );
 
-            DiscoverTests(new[] { checkFilePath, testFilePath, exampleFilePath }, runSettings, expectedTests);
+            DiscoverTests("Pytest", new[] { checkFilePath, testFilePath, exampleFilePath }, runSettings, expectedTests);
         }
 
         [TestMethod, Priority(0)]
@@ -189,7 +189,7 @@ namespace TestAdapterTests {
                     .ToXml()
             );
 
-            DiscoverTests(new[] { testFilePath }, runSettings, expectedTests);
+            DiscoverTests("Pytest", new[] { testFilePath }, runSettings, expectedTests);
         }
 
         [TestMethod, Priority(0)]
@@ -235,10 +235,10 @@ namespace TestAdapterTests {
                     .ToXml()
             );
 
-            DiscoverTests(new[] { testFilePath }, runSettings, expectedTests);
+            DiscoverTests("Unittest", new[] { testFilePath }, runSettings, expectedTests);
         }
 
-        private static void DiscoverTests(string[] sources, MockRunSettings runSettings, DiscoveryTestInfo[] expectedTests) {
+        private static void DiscoverTests(string testFramework, string[] sources, MockRunSettings runSettings, DiscoveryTestInfo[] expectedTests) {
             var discoveryContext = new MockDiscoveryContext(runSettings);
             var discoverySink = new MockTestCaseDiscoverySink();
             var logger = new MockMessageLogger();
@@ -246,10 +246,10 @@ namespace TestAdapterTests {
 
             discoverer.DiscoverTests(sources, discoveryContext, logger, discoverySink);
 
-            ValidateDiscoveredTests(discoverySink.Tests, expectedTests);
+            ValidateDiscoveredTests(testFramework, discoverySink.Tests, expectedTests);
         }
 
-        private static void ValidateDiscoveredTests(IList<TestCase> actualTests, DiscoveryTestInfo[] expectedTests) {
+        private static void ValidateDiscoveredTests(string testFramework, IList<TestCase> actualTests, DiscoveryTestInfo[] expectedTests) {
             PrintTestCases(actualTests);
 
             Assert.AreEqual(expectedTests.Length, actualTests.Count);
@@ -257,7 +257,17 @@ namespace TestAdapterTests {
             foreach (var expectedTest in expectedTests) {
                 var actualTestCase = actualTests.SingleOrDefault(tc => tc.FullyQualifiedName == expectedTest.FullyQualifiedName);
                 Assert.IsNotNull(actualTestCase, expectedTest.FullyQualifiedName);
-                Assert.AreEqual(new Uri(PythonConstants.TestExecutorUriString), actualTestCase.ExecutorUri);
+                switch (testFramework) {
+                    case "Pytest":
+                        Assert.AreEqual(new Uri(PythonConstants.TestExecutorUriString), actualTestCase.ExecutorUri);
+                        break;
+                    case "Unittest":
+                        Assert.AreEqual(new Uri(PythonConstants.UnitTestExecutorUriString), actualTestCase.ExecutorUri);
+                        break;
+                    default:
+                        Assert.Fail($"Unexpected test framework: {testFramework}");
+                        break;
+                }
                 Assert.AreEqual(expectedTest.DisplayName, actualTestCase.DisplayName, expectedTest.FullyQualifiedName);
                 Assert.AreEqual(expectedTest.LineNumber, actualTestCase.LineNumber, expectedTest.FullyQualifiedName);
                 Assert.IsTrue(IsSameFile(expectedTest.FilePath, actualTestCase.CodeFilePath), expectedTest.FullyQualifiedName);
@@ -292,7 +302,7 @@ namespace TestAdapterTests {
             AssertListener.Initialize();
         }
 
-        protected override PythonVersion Version => PythonPaths.Python27 ?? PythonPaths.Python27_x64;
+        protected override PythonVersion Version => PythonPaths.Python27_x64 ?? PythonPaths.Python27;
     }
 
     [TestClass]
@@ -302,7 +312,7 @@ namespace TestAdapterTests {
             AssertListener.Initialize();
         }
 
-        protected override PythonVersion Version => PythonPaths.Python35 ?? PythonPaths.Python35_x64;
+        protected override PythonVersion Version => PythonPaths.Python35_x64 ?? PythonPaths.Python35;
     }
 
     [TestClass]
@@ -312,7 +322,7 @@ namespace TestAdapterTests {
             AssertListener.Initialize();
         }
 
-        protected override PythonVersion Version => PythonPaths.Python36 ?? PythonPaths.Python36_x64;
+        protected override PythonVersion Version => PythonPaths.Python36_x64 ?? PythonPaths.Python36;
     }
 
     [TestClass]
@@ -322,6 +332,6 @@ namespace TestAdapterTests {
             AssertListener.Initialize();
         }
 
-        protected override PythonVersion Version => PythonPaths.Python37 ?? PythonPaths.Python37_x64;
+        protected override PythonVersion Version => PythonPaths.Python37_x64 ?? PythonPaths.Python37;
     }
 }

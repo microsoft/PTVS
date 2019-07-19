@@ -497,7 +497,7 @@ namespace TestAdapterTests {
             AssertListener.Initialize();
         }
 
-        protected override PythonVersion Version => PythonPaths.Python27 ?? PythonPaths.Python27_x64;
+        protected override PythonVersion Version => PythonPaths.Python27_x64 ?? PythonPaths.Python27;
     }
 
     [TestClass]
@@ -507,7 +507,7 @@ namespace TestAdapterTests {
             AssertListener.Initialize();
         }
 
-        protected override PythonVersion Version => PythonPaths.Python35 ?? PythonPaths.Python35_x64;
+        protected override PythonVersion Version => PythonPaths.Python35_x64 ?? PythonPaths.Python35;
 
         protected override string ImportErrorFormat => NewImportErrorFormat;
     }
@@ -519,7 +519,7 @@ namespace TestAdapterTests {
             AssertListener.Initialize();
         }
 
-        protected override PythonVersion Version => PythonPaths.Python36 ?? PythonPaths.Python36_x64;
+        protected override PythonVersion Version => PythonPaths.Python36_x64 ?? PythonPaths.Python36;
 
         protected override string ImportErrorFormat => NewImportErrorFormat;
     }
@@ -531,7 +531,7 @@ namespace TestAdapterTests {
             AssertListener.Initialize();
         }
 
-        protected override PythonVersion Version => PythonPaths.Python37 ?? PythonPaths.Python37_x64;
+        protected override PythonVersion Version => PythonPaths.Python37_x64 ?? PythonPaths.Python37;
 
         protected override string ImportErrorFormat => NewImportErrorFormat;
     }
