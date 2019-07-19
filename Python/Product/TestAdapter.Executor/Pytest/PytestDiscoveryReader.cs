@@ -22,7 +22,6 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
 
             foreach (PytestDiscoveryResults result in results) {
                 Dictionary<string, PytestParent> parentMap = BuildParentMap(result);
-
                
                 foreach (var t in result.Tests) {
                     var sourceAndLineNum = t.Source.Replace(".\\", "");
@@ -53,15 +52,9 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
                         tc.SetPropertyValue(Constants.PyTestXmlClassNameProperty, CreateXmlClassName(t, parentMap));
                         tc.SetPropertyValue(Constants.PytestTestExecutionPathPropertery, GetAbsoluteTestExecutionPath(fullSourcePathNormalized, t.Id));
                         tc.SetPropertyValue(Constants.IsWorkspaceProperty, settings.IsWorkspace);
-
-                        tc.Traits.Add(new Trait("IsWorkspace", settings.IsWorkspace.ToString()));
-                        foreach (var marker in t.Markers) {
-                            tc.Traits.Add(new Trait(marker.ToString(), String.Empty));
-                        }
-
-                        if (discoverySink != null) {
-                            discoverySink.SendTestCase(tc);
-                        }
+              
+                        discoverySink?.SendTestCase(tc);
+                        
                         testcases.Add(tc);
 
                     } else {

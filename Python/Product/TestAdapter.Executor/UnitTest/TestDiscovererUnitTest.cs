@@ -79,9 +79,7 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
                     var testcase = test.ToVsTestCase(_settings.IsWorkspace, _settings.ProjectHome);
                     logger.SendMessage(TestMessageLevel.Informational, $"{testcase.DisplayName} Source:{testcase.Source} Line:{testcase.LineNumber}");
 
-                    if (discoverySink != null) {
-                        discoverySink.SendTestCase(testcase);
-                    }
+                    discoverySink?.SendTestCase(testcase);
                 } catch (Exception ex) {
                     _logger.SendMessage(TestMessageLevel.Error, ex.Message);
                 }

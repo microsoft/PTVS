@@ -84,10 +84,8 @@ def report_unittest_discovered(suites, parents, pretty=False, simple=False,
     data = []
         
     for suite in suites._tests:
-        root = {
-            'tests': []
-            }
         for cls in suite._tests:
+            testList = []
             try:
                 for test in cls._tests:
                     testdata = {
@@ -96,12 +94,15 @@ def report_unittest_discovered(suites, parents, pretty=False, simple=False,
                         'lineno' : test.lineno,
                         'source' : test.source
                         }
-                    root['tests'].append(testdata)
+                    testList.append(testdata)
             except:
                 pass
-
-        if root['tests']:
+        if testList:
+            root = {
+                'tests': testList
+            }
             data.append(root)
+
     kwargs = {}
     if pretty:
         # human-formatted
