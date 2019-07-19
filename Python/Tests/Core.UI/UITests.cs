@@ -98,20 +98,20 @@ namespace PythonToolsUITests {
             var window = app.SolutionExplorerTreeView;
 
             // find Program.py, send copy & paste, verify copy of file is there
-            var programPy = window.FindItem("Solution 'HelloWorld' (1 project)", "HelloWorld", "Program.py");
+            var programPy = window.FindItem("Solution 'HelloWorld' (1 of 1 project)", "HelloWorld", "Program.py");
 
             AutomationWrapper.Select(programPy);
 
             Keyboard.ControlC();
             Keyboard.ControlV();
 
-            Assert.IsNotNull(window.WaitForItem("Solution 'HelloWorld' (1 project)", "HelloWorld", "Program - Copy.py"));
+            Assert.IsNotNull(window.WaitForItem("Solution 'HelloWorld' (1 of 1 project)", "HelloWorld", "Program - Copy.py"));
 
             AutomationWrapper.Select(programPy);
             Keyboard.ControlC();
             Keyboard.ControlV();
 
-            Assert.IsNotNull(window.WaitForItem("Solution 'HelloWorld' (1 project)", "HelloWorld", "Program - Copy (2).py"));
+            Assert.IsNotNull(window.WaitForItem("Solution 'HelloWorld' (1 of 1 project)", "HelloWorld", "Program - Copy (2).py"));
         }
 
         //[TestMethod, Priority(0)]
@@ -234,7 +234,7 @@ namespace PythonToolsUITests {
             var window = app.SolutionExplorerTreeView;
 
             // find Program.py, send copy & paste, verify copy of file is there
-            var projectNode = window.FindItem("Solution 'RenameProjectTestUI' (1 project)", "HelloWorld");
+            var projectNode = window.FindItem("Solution 'RenameProjectTestUI' (1 of 1 project)", "HelloWorld");
 
             // rename once, cancel renaming to existing file....
             AutomationWrapper.Select(projectNode);
@@ -262,7 +262,7 @@ namespace PythonToolsUITests {
 
             app.CheckMessageBox(MessageBoxButton.Yes, "HelloWorldExisting.pyproj", "overwrite");
 
-            Assert.IsNotNull(window.WaitForItem("Solution 'RenameProjectTestUI' (1 project)", "HelloWorldExisting"));
+            Assert.IsNotNull(window.WaitForItem("Solution 'RenameProjectTestUI' (1 of 1 project)", "HelloWorldExisting"));
         }
 
         //[TestMethod, Priority(0)]
@@ -498,7 +498,7 @@ namespace PythonToolsUITests {
             app.OpenSolutionExplorer();
             var window = app.SolutionExplorerTreeView;
 
-            var folder = window.FindItem("Solution 'HelloWorld2' (2 projects)", "HelloWorld2", "TestFolder");
+            var folder = window.FindItem("Solution 'HelloWorld2' (2 of 2 projects)", "HelloWorld2", "TestFolder");
             AutomationWrapper.Select(folder);
             Keyboard.ControlC();
 
@@ -509,11 +509,11 @@ namespace PythonToolsUITests {
             } catch {
             }
 
-            var subItem = window.FindItem("Solution 'HelloWorld2' (2 projects)", "HelloWorld2", "TestFolder", "SubItem.py");
+            var subItem = window.FindItem("Solution 'HelloWorld2' (2 of 2 projects)", "HelloWorld2", "TestFolder", "SubItem.py");
             AutomationWrapper.Select(subItem);
             Keyboard.ControlV();
 
-            var item = window.WaitForItem("Solution 'HelloWorld2' (2 projects)", "HelloWorld2", "TestFolder - Copy", "SubItem.py");
+            var item = window.WaitForItem("Solution 'HelloWorld2' (2 of 2 projects)", "HelloWorld2", "TestFolder - Copy", "SubItem.py");
             if (item == null) {
                 AutomationWrapper.DumpElement(window.Element);
                 Assert.Fail("Did not find TestFolder - Copy");
@@ -531,7 +531,7 @@ namespace PythonToolsUITests {
             var files = new[] { "BreakAllTest.py", "BreakpointTest.py", "BreakpointTest2.py" };
             bool anySelected = false;
             foreach (var f in files) {
-                var node = window.FindItem("Solution 'DebuggerProject' (1 project)", "DebuggerProject", f);
+                var node = window.FindItem("Solution 'DebuggerProject' (1 of 1 project)", "DebuggerProject", f);
                 Assert.IsNotNull(node, f + " not found in DebuggerProject");
                 if (anySelected) {
                     ((SelectionItemPattern)node.GetCurrentPattern(SelectionItemPattern.Pattern)).AddToSelection();
@@ -542,14 +542,14 @@ namespace PythonToolsUITests {
             }
             Keyboard.ControlC();
 
-            var projectNode = window.FindItem("Solution 'DebuggerProject' (1 project)", "DebuggerProject");
+            var projectNode = window.FindItem("Solution 'DebuggerProject' (1 of 1 project)", "DebuggerProject");
 
             AutomationWrapper.Select(projectNode);
             Keyboard.ControlV();
 
             foreach (var f in files.Select(f => f.Remove(f.LastIndexOf('.')) + " - Copy" + f.Substring(f.LastIndexOf('.')))) {
                 Assert.IsNotNull(
-                    window.WaitForItem("Solution 'DebuggerProject' (1 project)", "DebuggerProject", f),
+                    window.WaitForItem("Solution 'DebuggerProject' (1 of 1 project)", "DebuggerProject", f),
                     f + " not found after copying");
             }
         }
@@ -565,7 +565,7 @@ namespace PythonToolsUITests {
             app.OpenSolutionExplorer();
             var window = app.SolutionExplorerTreeView;
 
-            var manageNode = window.FindItem("Solution 'DjangoApplication' (1 project)", "DjangoApplication", "manage.py");
+            var manageNode = window.FindItem("Solution 'DjangoApplication' (1 of 1 project)", "DjangoApplication", "manage.py");
             Mouse.MoveTo(manageNode.GetClickablePoint());
             Mouse.Click(MouseButton.Left);
 
@@ -577,7 +577,7 @@ namespace PythonToolsUITests {
             Mouse.Click(MouseButton.Right);
 
             Keyboard.Type("j"); // Exclude from Project
-            Assert.IsNull(window.WaitForItemRemoved("Solution 'DjangoApplication' (1 project)", "DjangoApplication", "manage.py"));
+            Assert.IsNull(window.WaitForItemRemoved("Solution 'DjangoApplication' (1 of 1 project)", "DjangoApplication", "manage.py"));
         }
 
         /// <summary>
@@ -593,15 +593,15 @@ namespace PythonToolsUITests {
 
             app.Dte.ExecuteCommand("Project.ShowAllFiles"); // start showing all
 
-            var folderNode = window.WaitForItem("Solution 'DjangoApplication' (1 project)", "DjangoApplication", "Folder");
+            var folderNode = window.WaitForItem("Solution 'DjangoApplication' (1 of 1 project)", "DjangoApplication", "Folder");
             Mouse.MoveTo(folderNode.GetClickablePoint());
             Mouse.Click(MouseButton.Right);
 
             Keyboard.Type("j"); // Exclude from Project
             app.Dte.ExecuteCommand("Project.ShowAllFiles"); // stop showing all
 
-            Assert.IsNull(window.WaitForItemRemoved("Solution 'DjangoApplication' (1 project)", "DjangoApplication", "notinproject.py"));
-            Assert.IsNotNull(window.WaitForItem("Solution 'DjangoApplication' (1 project)", "DjangoApplication", "Folder", "test.py"));
+            Assert.IsNull(window.WaitForItemRemoved("Solution 'DjangoApplication' (1 of 1 project)", "DjangoApplication", "notinproject.py"));
+            Assert.IsNotNull(window.WaitForItem("Solution 'DjangoApplication' (1 of 1 project)", "DjangoApplication", "Folder", "test.py"));
         }
 
         /// <summary>
@@ -615,7 +615,7 @@ namespace PythonToolsUITests {
             app.OpenSolutionExplorer();
             var window = app.SolutionExplorerTreeView;
 
-            var projectNode = window.WaitForItem("Solution 'AddItemPreviousSiblingNotVisible' (1 project)", "HelloWorld");
+            var projectNode = window.WaitForItem("Solution 'AddItemPreviousSiblingNotVisible' (1 of 1 project)", "HelloWorld");
             Assert.IsNotNull(projectNode);
             AutomationWrapper.Select(projectNode);
 
@@ -636,7 +636,7 @@ namespace PythonToolsUITests {
                 newItem.OK();
             }
 
-            var test2 = window.WaitForItem("Solution 'AddItemPreviousSiblingNotVisible' (1 project)", "HelloWorld", "zmodule1.py");
+            var test2 = window.WaitForItem("Solution 'AddItemPreviousSiblingNotVisible' (1 of 1 project)", "HelloWorld", "zmodule1.py");
             Assert.IsNotNull(test2);
 
             selectedHierarchy.UnadviseHierarchyEvents(cookie);
