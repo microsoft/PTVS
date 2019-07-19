@@ -27,7 +27,7 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
         public void DiscoverTests(IEnumerable<string> sources, IMessageLogger logger, ITestCaseDiscoverySink discoverySink) {
             _logger = logger;
 
-            var discoveryResults = new List<UnitTestDiscoveryResults>();
+            var unitTestResults = new List<UnitTestDiscoveryResults>();
 
             try {
                 var env = InitializeEnvironment(sources, _settings);
@@ -57,7 +57,7 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
                     var json = new StreamReader(outputStream).ReadToEnd();
 
                     try {
-                        discoveryResults = JsonConvert.DeserializeObject<List<UnitTestDiscoveryResults>>(json);
+                        unitTestResults = JsonConvert.DeserializeObject<List<UnitTestDiscoveryResults>>(json);
                     } catch (InvalidOperationException ex) {
                         Error("Failed to parse: {0}".FormatInvariant(ex.Message));
                         Error(json);
@@ -70,14 +70,20 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
                 Error(ex.Message);
             }
 
-            
-            foreach (var test in discoveryResults.SelectMany(result => result.Tests.Select(test => test))) {
-                var testcase = test.ToVsTestCase(_settings.IsWorkspace, _settings.ProjectHome);
+            CreateVsTests(unitTestResults, logger, discoverySink);
+        }
 
-                logger.SendMessage(TestMessageLevel.Informational, $"{testcase.DisplayName} Source:{testcase.Source} Line:{testcase.LineNumber}");
+        private void CreateVsTests(List<UnitTestDiscoveryResults> unitTestResults, IMessageLogger logger, ITestCaseDiscoverySink discoverySink) {
+            foreach (var test in unitTestResults.SelectMany(result => result.Tests.Select(test => test))) {
+                try {
+                    var testcase = test.ToVsTestCase(_settings.IsWorkspace, _settings.ProjectHome);
+                    logger.SendMessage(TestMessageLevel.Informational, $"{testcase.DisplayName} Source:{testcase.Source} Line:{testcase.LineNumber}");
 
-                if (discoverySink != null) {
-                    discoverySink.SendTestCase(testcase);
+                    if (discoverySink != null) {
+                        discoverySink.SendTestCase(testcase);
+                    }
+                } catch (Exception ex) {
+                    _logger.SendMessage(TestMessageLevel.Error, ex.Message);
                 }
             }
         }
