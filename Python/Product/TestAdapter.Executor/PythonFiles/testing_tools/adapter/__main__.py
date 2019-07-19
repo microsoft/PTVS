@@ -6,18 +6,26 @@ from __future__ import absolute_import
 import argparse
 import sys
 
-from . import pytest, report
+from . import pytest, report, unittest
 from .errors import UnsupportedToolError, UnsupportedCommandError
-
 
 TOOLS = {
     'pytest': {
         '_add_subparser': pytest.add_cli_subparser,
         'discover': pytest.discover,
         },
+    'unittest': {
+        '_add_subparser': unittest.add_unittest_cli_subparser,
+        'discover': unittest.discover,
+        },
     }
 REPORTERS = {
-    'discover': report.report_discovered,
+    'pytest': {
+        'discover': report.report_discovered,
+        },
+    'unittest': {
+        'discover': report.report_unittest_discovered
+        }
     }
 
 
@@ -83,7 +91,7 @@ def main(toolname, cmdname, subargs, toolargs,
 
     try:
         run = tool[cmdname]
-        report_result = _reporters[cmdname]
+        report_result = _reporters[toolname][cmdname]
     except KeyError:
         raise UnsupportedCommandError(cmdname)
 
