@@ -325,19 +325,13 @@ namespace TestAdapterTests {
             };
 
             var runSettings = new MockRunSettings(
-                MockRunSettingsXmlBuilder.CreateDiscoveryContext(
-                    "Pytest", testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath,
-                    new[] { Tuple.Create("USER_ENV_VAR", "123") }
-                )
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+                    .WithTestFilesFromFolder(testEnv.SourceFolderPath)
+                    .WithEnvironmentVariable("USER_ENV_VAR", "123")
+                    .ToXml()
             );
-            var testCases = CreateTestCasesFromTestInfo(testEnv, expectedTests);
-            var runContext = new MockRunContext(runSettings, testCases, testEnv.ResultsFolderPath);
-            var recorder = new MockTestExecutionRecorder();
-            var executor = new TestExecutor();
 
-            executor.RunTests(testCases, runContext, recorder);
-
-            ValidateExecutedTests(expectedTests, recorder);
+            ExecuteTests(testEnv, runSettings, expectedTests);
         }
 
         [TestMethod, Priority(0)]
@@ -379,16 +373,12 @@ namespace TestAdapterTests {
             };
 
             var runSettings = new MockRunSettings(
-                MockRunSettingsXmlBuilder.CreateDiscoveryContext("Pytest", testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+                    .WithTestFilesFromFolder(testEnv.SourceFolderPath)
+                    .ToXml()
             );
-            var testCases = CreateTestCasesFromTestInfo(testEnv, expectedTests);
-            var runContext = new MockRunContext(runSettings, testCases, testEnv.ResultsFolderPath);
-            var recorder = new MockTestExecutionRecorder();
-            var executor = new TestExecutor();
 
-            executor.RunTests(testCases, runContext, recorder);
-
-            ValidateExecutedTests(expectedTests, recorder);
+            ExecuteTests(testEnv, runSettings, expectedTests);
         }
 
 
@@ -422,8 +412,15 @@ namespace TestAdapterTests {
             };
 
             var runSettings = new MockRunSettings(
-                MockRunSettingsXmlBuilder.CreateDiscoveryContext("Pytest", testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+                    .WithTestFilesFromFolder(testEnv.SourceFolderPath)
+                    .ToXml()
             );
+
+            ExecuteTests(testEnv, runSettings, expectedTests);
+        }
+
+        private static void ExecuteTests(TestEnvironment testEnv, MockRunSettings runSettings, PytestExecutionTestInfo[] expectedTests) {
             var testCases = CreateTestCasesFromTestInfo(testEnv, expectedTests);
             var runContext = new MockRunContext(runSettings, testCases, testEnv.ResultsFolderPath);
             var recorder = new MockTestExecutionRecorder();
@@ -500,7 +497,7 @@ namespace TestAdapterTests {
             AssertListener.Initialize();
         }
 
-        protected override PythonVersion Version => PythonPaths.Python27 ?? PythonPaths.Python27_x64;
+        protected override PythonVersion Version => PythonPaths.Python27_x64 ?? PythonPaths.Python27;
     }
 
     [TestClass]
@@ -510,7 +507,7 @@ namespace TestAdapterTests {
             AssertListener.Initialize();
         }
 
-        protected override PythonVersion Version => PythonPaths.Python35 ?? PythonPaths.Python35_x64;
+        protected override PythonVersion Version => PythonPaths.Python35_x64 ?? PythonPaths.Python35;
 
         protected override string ImportErrorFormat => NewImportErrorFormat;
     }
@@ -522,7 +519,7 @@ namespace TestAdapterTests {
             AssertListener.Initialize();
         }
 
-        protected override PythonVersion Version => PythonPaths.Python36 ?? PythonPaths.Python36_x64;
+        protected override PythonVersion Version => PythonPaths.Python36_x64 ?? PythonPaths.Python36;
 
         protected override string ImportErrorFormat => NewImportErrorFormat;
     }
@@ -534,7 +531,7 @@ namespace TestAdapterTests {
             AssertListener.Initialize();
         }
 
-        protected override PythonVersion Version => PythonPaths.Python37 ?? PythonPaths.Python37_x64;
+        protected override PythonVersion Version => PythonPaths.Python37_x64 ?? PythonPaths.Python37;
 
         protected override string ImportErrorFormat => NewImportErrorFormat;
     }

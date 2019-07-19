@@ -14,8 +14,6 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.PythonTools.Infrastructure;
-using System;
 using System.IO;
 using System.Text;
 
@@ -50,44 +48,61 @@ namespace TestAdapterTests {
         private const string _runSettingSearch = @"<Search value=""{0}"" />";
 
         // {0} is the full path to the file
-        // {1} is the class name
-        // {2} is the method name
-        // {3} is the line number (1-indexed)
-        // {4} is the column number (1-indexed)
-        //private const string _runSettingTest = @"<Test className=""{1}"" file=""{0}"" line=""{3}"" column=""{4}"" method=""{2}"" />";
         private const string _runSettingTest = @"<Test file=""{0}"" />";
 
-        public static string CreateDiscoveryContext(string testFramework, string interpreterPath, string resultsDir, string testDir, Tuple<string, string>[] environmentVariables = null, string[] searchPaths = null) {
-            var tests = new StringBuilder();
+        private string _framework;
+        private string _resultsDir;
+        private string _testDir;
+        private string _interpreterPath;
+        private StringBuilder _environmentLines = new StringBuilder();
+        private StringBuilder _searchLines = new StringBuilder();
+        private StringBuilder _testLines = new StringBuilder();
 
-            foreach (var filePath in Directory.GetFiles(testDir, "*.py")) {
-                tests.Append(string.Format(_runSettingTest, filePath));
+        public MockRunSettingsXmlBuilder(string testFramework, string interpreterPath, string resultsDir, string testDir) {
+            _environmentLines = new StringBuilder();
+            _searchLines = new StringBuilder();
+            _testLines = new StringBuilder();
+            _framework = testFramework;
+            _interpreterPath = interpreterPath;
+            _resultsDir = resultsDir;
+            _testDir = testDir;
+        }
+
+        public MockRunSettingsXmlBuilder WithEnvironmentVariable(string name, string val) {
+            _environmentLines.Append(string.Format(_runSettingEnvironment, name, val));
+            return this;
+        }
+
+        public MockRunSettingsXmlBuilder WithSearchPath(string searchPath) {
+            _searchLines.Append(string.Format(_runSettingSearch, searchPath));
+            return this;
+        }
+
+        public MockRunSettingsXmlBuilder WithTestFile(string filePath) {
+            _testLines.Append(string.Format(_runSettingTest, filePath));
+            return this;
+        }
+
+        public MockRunSettingsXmlBuilder WithTestFilesFromFolder(string folderPath) {
+            foreach (var filePath in Directory.GetFiles(folderPath, "*.py")) {
+                _testLines.Append(string.Format(_runSettingTest, filePath));
             }
+            return this;
+        }
 
-            var variables = new StringBuilder();
-
-            foreach (var variable in environmentVariables.MaybeEnumerate()) {
-                variables.Append(string.Format(_runSettingEnvironment, variable.Item1, variable.Item2));
-            }
-
-            var search = new StringBuilder();
-
-            foreach (var searchPath in searchPaths.MaybeEnumerate()) {
-                search.Append(string.Format(_runSettingSearch, searchPath));
-            }
-
+        public string ToXml() {
             var xml = string.Format(
                 _runSettings,
-                resultsDir,
+                _resultsDir,
                 string.Format(
                     _runSettingProject,
-                    Path.GetFileName(testDir),
-                    testDir,
-                    interpreterPath,
-                    testFramework,
-                    tests.ToString(),
-                    variables.ToString(),
-                    search.ToString()
+                    Path.GetFileName(_testDir),
+                    _testDir,
+                    _interpreterPath,
+                    _framework,
+                    _testLines.ToString(),
+                    _environmentLines.ToString(),
+                    _searchLines.ToString()
                 ),
                 "false",
                 "false"
