@@ -325,19 +325,13 @@ namespace TestAdapterTests {
             };
 
             var runSettings = new MockRunSettings(
-                MockRunSettingsXmlBuilder.CreateDiscoveryContext(
-                    "Pytest", testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath,
-                    new[] { Tuple.Create("USER_ENV_VAR", "123") }
-                )
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+                    .WithTestFilesFromFolder(testEnv.SourceFolderPath)
+                    .WithEnvironmentVariable("USER_ENV_VAR", "123")
+                    .ToXml()
             );
-            var testCases = CreateTestCasesFromTestInfo(testEnv, expectedTests);
-            var runContext = new MockRunContext(runSettings, testCases, testEnv.ResultsFolderPath);
-            var recorder = new MockTestExecutionRecorder();
-            var executor = new TestExecutor();
 
-            executor.RunTests(testCases, runContext, recorder);
-
-            ValidateExecutedTests(expectedTests, recorder);
+            ExecuteTests(testEnv, runSettings, expectedTests);
         }
 
         [TestMethod, Priority(0)]
@@ -379,16 +373,12 @@ namespace TestAdapterTests {
             };
 
             var runSettings = new MockRunSettings(
-                MockRunSettingsXmlBuilder.CreateDiscoveryContext("Pytest", testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+                    .WithTestFilesFromFolder(testEnv.SourceFolderPath)
+                    .ToXml()
             );
-            var testCases = CreateTestCasesFromTestInfo(testEnv, expectedTests);
-            var runContext = new MockRunContext(runSettings, testCases, testEnv.ResultsFolderPath);
-            var recorder = new MockTestExecutionRecorder();
-            var executor = new TestExecutor();
 
-            executor.RunTests(testCases, runContext, recorder);
-
-            ValidateExecutedTests(expectedTests, recorder);
+            ExecuteTests(testEnv, runSettings, expectedTests);
         }
 
 
@@ -422,8 +412,15 @@ namespace TestAdapterTests {
             };
 
             var runSettings = new MockRunSettings(
-                MockRunSettingsXmlBuilder.CreateDiscoveryContext("Pytest", testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+                    .WithTestFilesFromFolder(testEnv.SourceFolderPath)
+                    .ToXml()
             );
+
+            ExecuteTests(testEnv, runSettings, expectedTests);
+        }
+
+        private static void ExecuteTests(TestEnvironment testEnv, MockRunSettings runSettings, PytestExecutionTestInfo[] expectedTests) {
             var testCases = CreateTestCasesFromTestInfo(testEnv, expectedTests);
             var runContext = new MockRunContext(runSettings, testCases, testEnv.ResultsFolderPath);
             var recorder = new MockTestExecutionRecorder();

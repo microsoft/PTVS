@@ -23,9 +23,11 @@ namespace TestAdapterTests {
         public string InterpreterPath { get; set; }
         public string SourceFolderPath { get; set; }
         public string ResultsFolderPath { get; set; }
+        public string TestFramework { get; set; }
 
         public static TestEnvironment Create(PythonVersion pythonVersion, string testFramework, bool installFramework = true) {
             var env = new TestEnvironment();
+            env.TestFramework = testFramework;
 
             var baseDir = TestData.GetTempPath();
             env.SourceFolderPath = Path.Combine(baseDir, "Source");
