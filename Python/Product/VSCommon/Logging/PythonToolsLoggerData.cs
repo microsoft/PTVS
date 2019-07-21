@@ -147,6 +147,18 @@ namespace Microsoft.PythonTools.Logging {
         public string Context { get; set; }
     }
 
+    sealed class ConfigurePytestInfoBarInfo : PythonToolsLoggerData {
+        public string Action { get; set; }
+        public string Context { get; set; }
+    }
+
+    static class ConfigurePytestInfoBarActions {
+        public const string Prompt = "Prompt";
+        public const string Enable = "Enable";
+        public const string EnableAndInstall = "EnableAndInstall";
+        public const string Ignore = "Ignore";
+    }
+
     static class PackageInstallInfoBarActions {
         public const string Prompt = "Prompt";
         public const string Install = "Install";

@@ -2876,4 +2876,16 @@ Please specify at least one package.</value>
   <data name="CondaEnvNotDetected" xml:space="preserve">
     <value>Conda environment not detected</value>
   </data>
+  <data name="ConfigurePytestTextInfoBarIgnoreAction" xml:space="preserve">
+    <value>Don't show this message again</value>
+  </data>
+  <data name="ConfigurePytestInfoBarEnableAction" xml:space="preserve">
+    <value>Enable pytest</value>
+  </data>
+  <data name="ConfigurePytestTxtInfoBarMessage" xml:space="preserve">
+    <value>A pytest configuration file '{0} was detected in '{1}', but pytest is not enabled</value>
+  </data>
+  <data name="ConfigurePytestInfoBarInstallAndEnableAction" xml:space="preserve">
+    <value>Install and enable PyTest</value>
+  </data>
 </root>

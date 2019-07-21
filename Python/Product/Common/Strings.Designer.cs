@@ -1893,6 +1893,42 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Enable pytest.
+        /// </summary>
+        public static string ConfigurePytestInfoBarEnableAction {
+            get {
+                return ResourceManager.GetString("ConfigurePytestInfoBarEnableAction", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Install and enable PyTest.
+        /// </summary>
+        public static string ConfigurePytestInfoBarInstallAndEnableAction {
+            get {
+                return ResourceManager.GetString("ConfigurePytestInfoBarInstallAndEnableAction", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Don&apos;t show this message again.
+        /// </summary>
+        public static string ConfigurePytestTextInfoBarIgnoreAction {
+            get {
+                return ResourceManager.GetString("ConfigurePytestTextInfoBarIgnoreAction", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A pytest configuration file &apos;{0} was detected in &apos;{1}&apos;, but pytest is not enabled.
+        /// </summary>
+        public static string ConfigurePytestTxtInfoBarMessage {
+            get {
+                return ResourceManager.GetString("ConfigurePytestTxtInfoBarMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cannot create thread in debuggee process.
         /// </summary>
         public static string ConnErrorMessages_CannotInjectThread {

@@ -389,7 +389,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             if (String.IsNullOrEmpty(file))
                 return false;
 
-            return _pytestFrameworkConfigFiles.Contains(Path.GetFileName(file));
+            return PythonConstants.PyTestFrameworkConfigFiles.Contains(Path.GetFileName(file));
         }
     }
 }
