@@ -140,7 +140,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                             writer.WriteStartElement("Project");
                             writer.WriteAttributeString("home", container.Project);
 
-                            string nativeCode = "", djangoSettings = "", projectName = "", testFramework = "";
+                            string nativeCode = "", djangoSettings = "", projectName = "", testFramework = "", unitTestPattern = "", unitTestRootDir = "";
                             bool isWorkspace = false;
                             ProjectInfo projInfo = null;
                             LaunchConfiguration config = null;
@@ -167,6 +167,8 @@ namespace Microsoft.PythonTools.TestAdapter {
                                     djangoSettings = projInfo.GetProperty("DjangoSettingsModule");
                                     testFramework = projInfo.GetProperty(PythonConstants.TestFrameworkSetting);
                                     projectName = projInfo.ProjectName;
+                                    unitTestRootDir = projInfo.GetProperty(PythonConstants.UnitTestRootDirectorySetting);
+                                    unitTestPattern = projInfo.GetProperty(PythonConstants.UnitTestPatternSetting);
                                 }
                             });
 
@@ -186,6 +188,8 @@ namespace Microsoft.PythonTools.TestAdapter {
                             writer.WriteAttributeString("workingDir", config.WorkingDirectory);
                             writer.WriteAttributeString("interpreter", config.GetInterpreterPath());
                             writer.WriteAttributeString("pathEnv", config.Interpreter.PathEnvironmentVariable);
+                            writer.WriteAttributeString("unitTestRootDir", unitTestRootDir);
+                            writer.WriteAttributeString("unitTestPattern", unitTestPattern);
 
                             writer.WriteStartElement("Environment");
                            

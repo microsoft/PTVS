@@ -93,8 +93,8 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
             arguments.Add("unittest");
             arguments.Add("--");
 
-            arguments.Add(_settings.ProjectHome);
-            arguments.Add("test*.py");
+            arguments.Add(_settings.UnitTestRootDir);
+            arguments.Add(_settings.UnitTestPattern);
 
             return arguments.ToArray();
         }
