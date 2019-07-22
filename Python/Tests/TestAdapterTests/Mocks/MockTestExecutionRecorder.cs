@@ -20,7 +20,7 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
-namespace TestAdapterTests {
+namespace TestAdapterTests.Mocks {
     class MockTestExecutionRecorder : IFrameworkHandle {
         public readonly List<TestResult> Results = new List<TestResult>();
         public readonly List<string> Messages = new List<string>();

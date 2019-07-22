@@ -5,7 +5,7 @@ class BaseClassTests(unittest.TestCase):
         pass
 
     def test_base_fail(self):
-        self.assertTrue(False, "Force a failure in base class test.")
+        self.assertTrue(False, "Force a failure in base class code.")
 
 if __name__ == '__main__':
     unittest.main()

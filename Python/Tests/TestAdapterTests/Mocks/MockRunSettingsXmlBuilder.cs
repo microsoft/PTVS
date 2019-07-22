@@ -17,7 +17,7 @@
 using System.IO;
 using System.Text;
 
-namespace TestAdapterTests {
+namespace TestAdapterTests.Mocks {
     class MockRunSettingsXmlBuilder {
         // {0} is the test results directory
         // {1} is one or more formatted _runSettingProject lines

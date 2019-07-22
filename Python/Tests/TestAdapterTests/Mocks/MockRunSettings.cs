@@ -1,4 +1,4 @@
-// Python Tools for Visual Studio
+﻿// Python Tools for Visual Studio
 // Copyright(c) Microsoft Corporation
 // All rights reserved.
 //
@@ -17,16 +17,22 @@
 using System;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 
-namespace TestAdapterTests {
-    class MockDiscoveryContext : IDiscoveryContext {
-        private readonly IRunSettings _runSettings;
+namespace TestAdapterTests.Mocks {
+    class MockRunSettings : IRunSettings {
+        private readonly string _xml;
 
-        public MockDiscoveryContext(IRunSettings runSettings) {
-            _runSettings = runSettings;
+        public MockRunSettings(string xml) {
+            _xml = xml;
         }
 
-        public IRunSettings RunSettings {
-            get { return _runSettings; }
+        public string SettingsXml {
+            get {
+                return _xml;
+            }
+        }
+
+        public ISettingsProvider GetSettings(string settingsName) {
+            throw new NotImplementedException();
         }
     }
 }

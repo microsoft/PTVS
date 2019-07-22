@@ -1,4 +1,4 @@
-﻿// Python Tools for Visual Studio
+// Python Tools for Visual Studio
 // Copyright(c) Microsoft Corporation
 // All rights reserved.
 //
@@ -14,21 +14,20 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace TestAdapterTests {
-    class DiscoveryTestInfo {
-        public DiscoveryTestInfo(string displayName, string fullyQualifiedName, string filePath, int lineNumber) {
-            DisplayName = displayName;
-            FullyQualifiedName = fullyQualifiedName;
-            FilePath = filePath;
-            LineNumber = lineNumber;
+using System.Collections.Generic;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
+
+namespace TestAdapterTests.Mocks {
+    class MockTestCaseDiscoverySink : ITestCaseDiscoverySink {
+        public readonly List<TestCase> Tests = new List<TestCase>();
+
+        #region ITestCaseDiscoverySink Members
+
+        public void SendTestCase(TestCase discoveredTest) {
+            this.Tests.Add(discoveredTest);
         }
 
-        public string DisplayName { get; }
-
-        public string FullyQualifiedName { get; }
-
-        public string FilePath { get; }
-
-        public int LineNumber { get; }
+        #endregion
     }
 }

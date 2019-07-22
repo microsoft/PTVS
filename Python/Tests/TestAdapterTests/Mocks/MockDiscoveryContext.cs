@@ -14,20 +14,18 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Collections.Generic;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 
-namespace TestAdapterTests {
-    class MockTestCaseDiscoverySink : ITestCaseDiscoverySink {
-        public readonly List<TestCase> Tests = new List<TestCase>();
+namespace TestAdapterTests.Mocks {
+    class MockDiscoveryContext : IDiscoveryContext {
+        private readonly IRunSettings _runSettings;
 
-        #region ITestCaseDiscoverySink Members
-
-        public void SendTestCase(TestCase discoveredTest) {
-            this.Tests.Add(discoveredTest);
+        public MockDiscoveryContext(IRunSettings runSettings) {
+            _runSettings = runSettings;
         }
 
-        #endregion
+        public IRunSettings RunSettings {
+            get { return _runSettings; }
+        }
     }
 }

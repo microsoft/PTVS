@@ -19,7 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
-namespace TestAdapterTests {
+namespace TestAdapterTests.Mocks {
     class MockMessageLogger : IMessageLogger {
         public readonly List<Tuple<TestMessageLevel, string>> Messages = new List<Tuple<TestMessageLevel, string>>();
 

@@ -19,7 +19,7 @@ using System.Collections.Generic;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 
-namespace TestAdapterTests {
+namespace TestAdapterTests.Mocks {
     class MockRunContext : IRunContext {
         public MockRunContext(IRunSettings runSettings, IReadOnlyList<TestCase> testCases, string resultsDirectory) {
             RunSettings = runSettings;

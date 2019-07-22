@@ -59,21 +59,18 @@
     <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ExecutionTestInfo.cs" />
-    <Compile Include="DiscoveryTestInfo.cs" />
-    <Compile Include="MockRunContext.cs" />
-    <Compile Include="MockMessageLogger.cs" />
-    <Compile Include="MockDiscoveryContext.cs" />
-    <Compile Include="MockRunSettings.cs" />
-    <Compile Include="MockRunSettingsXmlBuilder.cs" />
-    <Compile Include="MockTestCaseDiscoverySink.cs" />
-    <Compile Include="MockTestExecutionRecorder.cs" />
-    <Compile Include="PytestExecutionTestInfo.cs" />
+    <Compile Include="Mocks\MockRunContext.cs" />
+    <Compile Include="Mocks\MockMessageLogger.cs" />
+    <Compile Include="Mocks\MockDiscoveryContext.cs" />
+    <Compile Include="Mocks\MockRunSettings.cs" />
+    <Compile Include="Mocks\MockRunSettingsXmlBuilder.cs" />
+    <Compile Include="Mocks\MockTestCaseDiscoverySink.cs" />
+    <Compile Include="Mocks\MockTestExecutionRecorder.cs" />
+    <Compile Include="TestInfo.cs" />
     <Compile Include="TestDiscovererTests.cs" />
     <Compile Include="TestEnvironment.cs" />
     <Compile Include="TestExecutorTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TestInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Product\Common\Common.csproj">
