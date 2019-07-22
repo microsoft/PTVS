@@ -28,6 +28,7 @@ using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.TestWindow.Extensibility;
 using TestUtilities;
@@ -86,39 +87,91 @@ namespace TestAdapterTests {
         //            }
         //        }
 
-        //        [TestMethod, Priority(0)]
-        //        public void TestCancel() {
-        //            var executor = new TestExecutor();
-        //            var recorder = new MockTestExecutionRecorder();
-        //            var expectedTests = TestInfo.TestAdapterATests.Union(TestInfo.TestAdapterBTests).ToArray();
-        //            var runContext = CreateRunContext(expectedTests, Version.InterpreterPath);
-        //            var testCases = runContext.TestCases;
+        [TestMethod, Priority(0)]
+        public void TestWithUnittestCancel() {
+            var testEnv = TestEnvironment.Create(Version, "Unittest");
 
-        //            var thread = new System.Threading.Thread(o => {
-        //                executor.RunTests(testCases, runContext, recorder);
-        //            });
-        //            thread.Start();
+            var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_cancel.py");
+            File.Copy(TestData.GetPath("TestData", "TestExecutor", "test_cancel.py"), testFilePath);
 
-        //            // One of the tests being run is hard coded to take 10 secs
-        //            Assert.IsTrue(thread.IsAlive);
+            var expectedTests = new[] {
+                new PytestExecutionTestInfo(
+                    "test_sleep_1",
+                    "test_cancel.py::CancelTests::test_sleep_1",
+                    testFilePath,
+                    5,
+                    "test_cancel.CancelTests",
+                    TestOutcome.Passed,
+                    minDuration: TimeSpan.FromSeconds(0.1)
+                ),
+                new PytestExecutionTestInfo(
+                    "test_sleep_2",
+                    "test_cancel.py::CancelTests::test_sleep_2",
+                    testFilePath,
+                    8,
+                    "test_cancel.CancelTests",
+                    TestOutcome.Passed,
+                    minDuration: TimeSpan.FromSeconds(5)
+                ),
+                new PytestExecutionTestInfo(
+                    "test_sleep_3",
+                    "test_cancel.py::CancelTests::test_sleep_3",
+                    testFilePath,
+                    11,
+                    "test_cancel.CancelTests",
+                    TestOutcome.Passed,
+                    minDuration: TimeSpan.FromSeconds(5)
+                ),
+                new PytestExecutionTestInfo(
+                    "test_sleep_4",
+                    "test_cancel.py::CancelTests::test_sleep_4",
+                    testFilePath,
+                    14,
+                    "test_cancel.CancelTests",
+                    TestOutcome.Passed,
+                    minDuration: TimeSpan.FromSeconds(0.1)
+                ),
+            };
 
-        //            System.Threading.Thread.Sleep(100);
+            var runSettings = new MockRunSettings(
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+                    .WithTestFilesFromFolder(testEnv.SourceFolderPath)
+                    .ToXml()
+            );
 
-        //            executor.Cancel();
-        //            System.Threading.Thread.Sleep(100);
+            var testCases = CreateTestCasesFromTestInfo(testEnv, expectedTests);
+            var runContext = new MockRunContext(runSettings, testCases, testEnv.ResultsFolderPath);
+            var recorder = new MockTestExecutionRecorder();
+            var executor = new TestExecutor();
 
-        //            // It should take less than 10 secs to cancel
-        //            // Depending on which assemblies are loaded, it may take some time
-        //            // to obtain the interpreters service.
-        //            Assert.IsTrue(thread.Join(10000));
+            var thread = new System.Threading.Thread(o => {
+                executor.RunTests(testCases, runContext, recorder);
+            });
+            thread.Start();
 
-        //            System.Threading.Thread.Sleep(100);
+            // 2 of the tests being run are hard coded to take 5 secs
+            Assert.IsTrue(thread.IsAlive);
 
-        //            Assert.IsFalse(thread.IsAlive);
+            System.Threading.Thread.Sleep(100);
 
-        //            // Canceled test cases do not get recorded
-        //            Assert.IsTrue(recorder.Results.Count < expectedTests.Length);
-        //        }
+            executor.Cancel();
+            System.Threading.Thread.Sleep(100);
+
+            // Running all tests should take a bit more than 10 secs
+            // Worse case is we had time to start one of the 5 secs sleep test
+            // before we asked to cancel, but it definitely should take less
+            // than 10 secs because the other 5 secs sleep test should not run.
+            // Depending on which assemblies are loaded, it may take some time
+            // to obtain the interpreters service.
+            Assert.IsTrue(thread.Join(8000));
+
+            System.Threading.Thread.Sleep(100);
+
+            Assert.IsFalse(thread.IsAlive);
+
+            // Canceled test cases do not get recorded
+            Assert.IsTrue(recorder.Results.Count < expectedTests.Length);
+        }
 
         //        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         //        [TestCategory("10s")]
@@ -381,6 +434,52 @@ namespace TestAdapterTests {
             ExecuteTests(testEnv, runSettings, expectedTests);
         }
 
+        [TestMethod, Priority(0)]
+        [TestCategory("10s")]
+        public void RunWithUnittestDuration() {
+            var testEnv = TestEnvironment.Create(Version, "Unittest");
+
+            var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_duration.py");
+            File.Copy(TestData.GetPath("TestData", "TestExecutor", "test_duration.py"), testFilePath);
+
+            var expectedTests = new[] {
+                new PytestExecutionTestInfo(
+                    "test_sleep_0_1",
+                    "test_duration.py::DurationTests::test_sleep_0_1",
+                    testFilePath,
+                    5,
+                    "test_duration.DurationTests",
+                    TestOutcome.Passed,
+                    minDuration: TimeSpan.FromSeconds(0.1)
+                ),
+                new PytestExecutionTestInfo(
+                    "test_sleep_0_3",
+                    "test_duration.py::DurationTests::test_sleep_0_3",
+                    testFilePath,
+                    8,
+                    "test_duration.DurationTests",
+                    TestOutcome.Passed,
+                    minDuration: TimeSpan.FromSeconds(0.3)
+                ),
+                new PytestExecutionTestInfo(
+                    "test_sleep_0_5",
+                    "test_duration.py::DurationTests::test_sleep_0_5",
+                    testFilePath,
+                    11,
+                    "test_duration.DurationTests",
+                    TestOutcome.Failed,
+                    minDuration: TimeSpan.FromSeconds(0.5)
+                ),
+            };
+
+            var runSettings = new MockRunSettings(
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+                    .WithTestFilesFromFolder(testEnv.SourceFolderPath)
+                    .ToXml()
+            );
+
+            ExecuteTests(testEnv, runSettings, expectedTests);
+        }
 
         [TestMethod, Priority(0)]
         [TestCategory("10s")]
@@ -424,7 +523,20 @@ namespace TestAdapterTests {
             var testCases = CreateTestCasesFromTestInfo(testEnv, expectedTests);
             var runContext = new MockRunContext(runSettings, testCases, testEnv.ResultsFolderPath);
             var recorder = new MockTestExecutionRecorder();
-            var executor = new TestExecutor();
+
+            ITestExecutor executor = null;
+            switch (testEnv.TestFramework) {
+                case "Pytest":
+                    executor = new TestExecutor();
+                    break;
+
+                case "Unittest":
+                    executor = new TestExecutorUnitTest();
+                    break;
+                default:
+                    Assert.Fail();
+                    break;
+            }
 
             executor.RunTests(testCases, runContext, recorder);
 
