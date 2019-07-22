@@ -4,7 +4,7 @@ using System.Windows.Forms;
 
 namespace Microsoft.PythonTools.TestAdapter.Config {
     public class PythonProjectSettings : IEquatable<PythonProjectSettings> {
-        public readonly string ProjectName, ProjectHome, WorkingDirectory, InterpreterPath, PathEnv;
+        public readonly string ProjectName, ProjectHome, WorkingDirectory, InterpreterPath, PathEnv, UnitTestPattern, UnitTestRootDir;
         public readonly bool EnableNativeCodeDebugging;
         public readonly List<string> SearchPath;
         public readonly Dictionary<string, string> Environment;
@@ -12,8 +12,6 @@ namespace Microsoft.PythonTools.TestAdapter.Config {
         public readonly bool IsWorkspace;
         public readonly bool UseLegacyDebugger;
         public readonly TestFrameworkType TestFramwork;
-
-       
 
         public PythonProjectSettings(string projectName,
             string projectHome,
@@ -23,7 +21,9 @@ namespace Microsoft.PythonTools.TestAdapter.Config {
             bool nativeDebugging,
             bool isWorkspace,
             bool useLegacyDebugger,
-            string testFramework) {
+            string testFramework,
+            string unitTestPattern,
+            string unitTestRootDir) {
             ProjectName = projectName;
             ProjectHome = projectHome;
             WorkingDirectory = workingDir;
@@ -36,7 +36,9 @@ namespace Microsoft.PythonTools.TestAdapter.Config {
             IsWorkspace = isWorkspace;
             UseLegacyDebugger = useLegacyDebugger;
             TestFramwork = TestFrameworkType.None;
-            Enum.TryParse<TestFrameworkType>(testFramework, ignoreCase:true, out TestFramwork);
+            Enum.TryParse<TestFrameworkType>(testFramework, ignoreCase: true, out TestFramwork);
+            UnitTestPattern = string.IsNullOrEmpty(unitTestPattern) ? PythonConstants.DefaultUnitTestPattern : unitTestPattern;
+            UnitTestRootDir = string.IsNullOrEmpty(unitTestRootDir) ? PythonConstants.DefaultUnitTestRootDirectory : unitTestRootDir;
         }
 
         public override bool Equals(object obj) {
@@ -61,7 +63,9 @@ namespace Microsoft.PythonTools.TestAdapter.Config {
                 EnableNativeCodeDebugging == other.EnableNativeCodeDebugging &&
                 IsWorkspace == other.IsWorkspace &&
                 UseLegacyDebugger == other.UseLegacyDebugger &&
-                TestFramwork == other.TestFramwork) {
+                TestFramwork == other.TestFramwork &&
+                UnitTestPattern == other.UnitTestPattern &&
+                UnitTestRootDir == other.UnitTestRootDir) {
                 if (SearchPath.Count == other.SearchPath.Count &&
                     Environment.Count == other.Environment.Count) {
                     for (int i = 0; i < SearchPath.Count; i++) {

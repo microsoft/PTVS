@@ -15,11 +15,9 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Linq;
 using System.Windows.Forms;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Options;
-using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Project {
     public partial class PythonTestPropertyPageControl : UserControl {
@@ -40,19 +38,25 @@ namespace Microsoft.PythonTools.Project {
         internal void LoadSettings() {
             _service = _propPage.Project.Site.GetComponentModel().GetService<IInterpreterRegistryService>();
 
-            UnitTestArgs = _propPage.Project.GetProjectProperty(PythonConstants.UnitTestArgsSetting, false);
+            string rootDir = _propPage.Project.GetProjectProperty(PythonConstants.UnitTestRootDirectorySetting, false);
+            UnitTestRootDir = string.IsNullOrEmpty(rootDir) ? PythonConstants.DefaultUnitTestRootDirectory : rootDir;
+
+            string pattern = _propPage.Project.GetProjectProperty(PythonConstants.UnitTestPatternSetting, false);
+            UnitTestPattern = string.IsNullOrEmpty(pattern) ? PythonConstants.DefaultUnitTestPattern : pattern;
+
             string testFrameworkStr = _propPage.Project.GetProjectProperty(PythonConstants.TestFrameworkSetting, false);
-            TestFramework = TestFrameworkType.None; 
-            if(Enum.TryParse<TestFrameworkType>(testFrameworkStr, ignoreCase:true, out TestFrameworkType parsedFramworked)) {
-                TestFramework = parsedFramworked;
+            TestFramework = TestFrameworkType.None;
+            if (Enum.TryParse<TestFrameworkType>(testFrameworkStr, ignoreCase: true, out TestFrameworkType parsedFramework)) {
+                TestFramework = parsedFramework;
             }
         }
 
         internal void SaveSettings() {
             _service = _propPage.Project.Site.GetComponentModel().GetService<IInterpreterRegistryService>();
 
-            _propPage.Project.SetProjectProperty(PythonConstants.UnitTestArgsSetting, UnitTestArgs);
             _propPage.Project.SetProjectProperty(PythonConstants.TestFrameworkSetting, TestFramework.ToString());
+            _propPage.Project.SetProjectProperty(PythonConstants.UnitTestPatternSetting, UnitTestPattern);
+            _propPage.Project.SetProjectProperty(PythonConstants.UnitTestRootDirectorySetting, UnitTestRootDir);
         }
 
 
@@ -65,9 +69,14 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        public string UnitTestArgs {
-            get { return _unitTestArgs.Text; }
-            set { _unitTestArgs.Text = value; }
+        public string UnitTestRootDir {
+            get { return _unitTestRootDir.Text; }
+            set { _unitTestRootDir.Text = value; }
+        }
+
+        public string UnitTestPattern {
+            get { return _unitTestPattern.Text; }
+            set { _unitTestPattern.Text = value; }
         }
 
         private void Changed(object sender, EventArgs e) {
@@ -81,16 +90,16 @@ namespace Microsoft.PythonTools.Project {
 
         private void UpdateLayout(TestFrameworkType framework) {
             if (framework == TestFrameworkType.UnitTest) {
-                _unitTestArgs.Visible = true;
-                _unitTestArgsLabel.Visible = true;
+                _unitTestRootDir.Visible = true;
+                _unittestRootDirLabel.Visible = true;
+                _unitTestPattern.Visible = true;
+                _unittestPatternLabel.Visible = true;
             } else {
-                _unitTestArgs.Visible = false;
-                _unitTestArgsLabel.Visible = false;
+                _unitTestRootDir.Visible = false;
+                _unittestRootDirLabel.Visible = false;
+                _unitTestPattern.Visible = false;
+                _unittestPatternLabel.Visible = false;
             }
-        }
-
-        private void TableLayoutPanel_Paint(object sender, PaintEventArgs e) {
-
         }
     }
 }

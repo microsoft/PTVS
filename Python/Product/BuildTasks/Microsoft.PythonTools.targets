@@ -205,12 +205,6 @@ permissions and limitations under the License.
     </CreatePythonCommandItem>
   </Target>
 
-  <PropertyGroup>
-    <PyTestEnabled>false</PyTestEnabled>
-    <PyTestPath>pytest</PyTestPath>
-    <PyTestArgs></PyTestArgs>
-  </PropertyGroup>
-  
   <!-- Build system compatibility -->
 
   <PropertyGroup>
