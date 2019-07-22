@@ -16,6 +16,7 @@
 
 using System;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+using Microsoft.VisualStudio.TestWindow.Extensibility;
 
 namespace TestAdapterTests {
     class PytestExecutionTestInfo : ExecutionTestInfo {
@@ -28,11 +29,15 @@ namespace TestAdapterTests {
             TestOutcome outcome,
             TimeSpan? minDuration = null,
             string containedErrorMessage = null,
-            string[] containedStdOut = null
+            string[] containedStdOut = null,
+            StackFrame[] stackFrames = null
         ) : base(displayName, fullyQualifiedName, filePath, lineNumber, outcome, minDuration, containedErrorMessage, containedStdOut) {
             PyTestXmlClassName = xmlClassName;
+            StackFrames = stackFrames;
         }
 
         public string PyTestXmlClassName { get; }
+
+        public StackFrame[] StackFrames { get; }
     }
 }

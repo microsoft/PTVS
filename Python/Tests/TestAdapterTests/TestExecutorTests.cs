@@ -173,31 +173,6 @@ namespace TestAdapterTests {
             Assert.IsTrue(recorder.Results.Count < expectedTests.Length);
         }
 
-        //        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
-        //        [TestCategory("10s")]
-        //        public void TestMultiprocessing() {
-        //            if (Version.Version <= PythonLanguageVersion.V26 ||
-        //                Version.Version == PythonLanguageVersion.V30) {
-        //                return;
-        //            }
-
-        //            var executor = new TestExecutor();
-        //            var recorder = new MockTestExecutionRecorder();
-        //            var expectedTests = TestInfo.TestAdapterMultiprocessingTests;
-        //            var runContext = CreateRunContext(expectedTests, Version.InterpreterPath);
-        //            var testCases = runContext.TestCases;
-
-        //            executor.RunTests(testCases, runContext, recorder);
-        //            PrintTestResults(recorder);
-
-        //            var resultNames = recorder.Results.Select(tr => tr.TestCase.FullyQualifiedName).ToSet();
-        //            foreach (var expectedResult in expectedTests) {
-        //                AssertUtil.ContainsAtLeast(resultNames, expectedResult.TestCase.FullyQualifiedName);
-        //                var actualResult = recorder.Results.SingleOrDefault(tr => tr.TestCase.FullyQualifiedName == expectedResult.TestCase.FullyQualifiedName);
-        //                Assert.AreEqual(expectedResult.Outcome, actualResult.Outcome, expectedResult.TestCase.FullyQualifiedName + " had incorrect result");
-        //            }
-        //        }
-
         //        [TestMethod, Priority(0)]
         //        [TestCategory("10s")]
         //        public void TestRelativeImport() {
@@ -275,88 +250,52 @@ namespace TestAdapterTests {
         //            }
         //        }
 
-        //        [TestMethod, Priority(0)]
-        //        [TestCategory("10s")]
-        //        public void TestStackTrace() {
-        //            var executor = new TestExecutor();
-        //            var recorder = new MockTestExecutionRecorder();
-        //            var expectedTests = new[] {
-        //                TestInfo.StackTraceBadLocalImportFailure,
-        //                TestInfo.StackTraceNotEqualFailure
-        //            };
-        //            var runContext = CreateRunContext(expectedTests, Version.InterpreterPath);
-        //            var testCases = runContext.TestCases;
+        [TestMethod, Priority(0)]
+        [TestCategory("10s")]
+        public void TestWithUnitTestStackTrace() {
+            var testEnv = TestEnvironment.Create(Version, "Unittest");
 
-        //            executor.RunTests(testCases, runContext, recorder);
+            var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_stack_trace.py");
+            File.Copy(TestData.GetPath("TestData", "TestExecutor", "test_stack_trace.py"), testFilePath);
 
-        //            var badLocalImportFile = TestInfo.StackTraceBadLocalImportFailure.SourceCodeFilePath;
-        //            var badLocalImportFrames = new StackFrame[] {
-        //                new StackFrame("local_func in global_func", badLocalImportFile, 13),
-        //                new StackFrame("global_func", badLocalImportFile, 14),
-        //                new StackFrame("Utility.class_static", badLocalImportFile, 19),
-        //                new StackFrame("Utility.instance_method_b", badLocalImportFile, 22),
-        //                new StackFrame("Utility.instance_method_a", badLocalImportFile, 25),
-        //                new StackFrame("StackTraceTests.test_bad_import", badLocalImportFile, 6),
-        //            };
+            var expectedTests = new[] {
+                new PytestExecutionTestInfo(
+                    "test_bad_import",
+                    "test_stack_trace.py::StackTraceTests::test_bad_import",
+                    testFilePath,
+                    5,
+                    "test_cancel.StackTraceTests",
+                    TestOutcome.Failed,
+                    stackFrames: new StackFrame[] {
+                        new StackFrame("local_func in global_func", testFilePath, 13),
+                        new StackFrame("global_func", testFilePath, 14),
+                        new StackFrame("Utility.class_static", testFilePath, 19),
+                        new StackFrame("Utility.instance_method_b", testFilePath, 22),
+                        new StackFrame("Utility.instance_method_a", testFilePath, 25),
+                        new StackFrame("StackTraceTests.test_bad_import", testFilePath, 6),
+                    }
+                ),
+                new PytestExecutionTestInfo(
+                    "test_not_equal",
+                    "test_stack_trace.py::StackTraceTests::test_not_equal",
+                    testFilePath,
+                    8,
+                    "test_cancel.StackTraceTests",
+                    TestOutcome.Failed,
+                    stackFrames: new StackFrame[] {
+                        new StackFrame("StackTraceTests.test_not_equal", testFilePath, 9),
+                    }
+                ),
+            };
 
-        //            ValidateStackFrame(recorder.Results[0], badLocalImportFrames);
+            var runSettings = new MockRunSettings(
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+                    .WithTestFilesFromFolder(testEnv.SourceFolderPath)
+                    .ToXml()
+            );
 
-        //            var notEqualFile = TestInfo.StackTraceNotEqualFailure.SourceCodeFilePath;
-        //            var notEqualFrames = new StackFrame[] {
-        //                new StackFrame("StackTraceTests.test_not_equal", notEqualFile, 9),
-        //            };
-
-        //            ValidateStackFrame(recorder.Results[1], notEqualFrames);
-        //        }
-
-        //        private static void ValidateStackFrame(TestResult result, StackFrame[] expectedFrames) {
-        //            var stackTrace = result.ErrorStackTrace;
-        //            var parser = new PythonStackTraceParser();
-        //            var frames = parser.GetStackFrames(stackTrace).ToArray();
-
-        //            Console.WriteLine("Actual frames:");
-        //            foreach (var f in frames) {
-        //                Console.WriteLine("\"{0}\",\"{1}\",\"{2}\"", f.MethodDisplayName, f.FileName, f.LineNumber);
-        //            }
-
-        //            CollectionAssert.AreEqual(expectedFrames, frames, new StackFrameComparer());
-        //        }
-
-        //        class StackFrameComparer : IComparer {
-        //            public int Compare(object x, object y) {
-        //                if (x == y) {
-        //                    return 0;
-        //                }
-
-        //                var a = x as StackFrame;
-        //                var b = y as StackFrame;
-
-        //                if (a == null) {
-        //                    return -1;
-        //                }
-
-        //                if (b == null) {
-        //                    return 1;
-        //                }
-
-        //                int res = a.FileName.CompareTo(b.FileName);
-        //                if (res != 0) {
-        //                    return res;
-        //                }
-
-        //                res = a.LineNumber.CompareTo(b.LineNumber);
-        //                if (res != 0) {
-        //                    return res;
-        //                }
-
-        //                res = a.MethodDisplayName.CompareTo(b.MethodDisplayName);
-        //                if (res != 0) {
-        //                    return res;
-        //                }
-
-        //                return 0;
-        //            }
-        //        }
+            ExecuteTests(testEnv, runSettings, expectedTests);
+        }
 
         [TestMethod, Priority(0)]
         [TestCategory("10s")]
@@ -581,7 +520,24 @@ namespace TestAdapterTests {
                     var stdOut = actualResult.Messages.Single(m => m.Category == "StdOutMsgs");
                     AssertUtil.Contains(stdOut.Text, expectedResult.ContainedStdOut);
                 }
+
+                if (expectedResult.StackFrames != null) {
+                    ValidateStackFrame(actualResult, expectedResult.StackFrames);
+                }
             }
+        }
+
+        private static void ValidateStackFrame(TestResult result, StackFrame[] expectedFrames) {
+            var stackTrace = result.ErrorStackTrace;
+            var parser = new PythonStackTraceParser();
+            var frames = parser.GetStackFrames(stackTrace).ToArray();
+
+            Console.WriteLine("Actual frames:");
+            foreach (var f in frames) {
+                Console.WriteLine("\"{0}\",\"{1}\",\"{2}\"", f.MethodDisplayName, f.FileName, f.LineNumber);
+            }
+
+            CollectionAssert.AreEqual(expectedFrames, frames, new StackFrameComparer());
         }
 
         private static void PrintTestResults(MockTestExecutionRecorder recorder) {
@@ -598,6 +554,43 @@ namespace TestAdapterTests {
                     Console.WriteLine(msg.Text);
                 }
                 Console.WriteLine("");
+            }
+        }
+
+
+        class StackFrameComparer : IComparer {
+            public int Compare(object x, object y) {
+                if (x == y) {
+                    return 0;
+                }
+
+                var a = x as StackFrame;
+                var b = y as StackFrame;
+
+                if (a == null) {
+                    return -1;
+                }
+
+                if (b == null) {
+                    return 1;
+                }
+
+                int res = a.FileName.CompareTo(b.FileName);
+                if (res != 0) {
+                    return res;
+                }
+
+                res = a.LineNumber.CompareTo(b.LineNumber);
+                if (res != 0) {
+                    return res;
+                }
+
+                res = a.MethodDisplayName.CompareTo(b.MethodDisplayName);
+                if (res != 0) {
+                    return res;
+                }
+
+                return 0;
             }
         }
     }
