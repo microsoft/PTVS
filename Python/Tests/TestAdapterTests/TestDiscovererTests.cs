@@ -56,7 +56,7 @@ namespace TestAdapterTests {
                     .ToXml()
             );
 
-            DiscoverTests("Pytest", new[] { testFilePath }, runSettings, expectedTests);
+            DiscoverTests(testEnv, new[] { testFilePath }, runSettings, expectedTests);
         }
 
         [TestMethod, Priority(0)]
@@ -84,7 +84,7 @@ namespace TestAdapterTests {
                     .ToXml()
             );
 
-            DiscoverTests("Pytest", new[] { testFilePath }, runSettings, expectedTests);
+            DiscoverTests(testEnv, new[] { testFilePath }, runSettings, expectedTests);
         }
 
         [Ignore] // discovers 0 tests, maybe pytest cannot handle this?
@@ -110,10 +110,10 @@ namespace TestAdapterTests {
                     .ToXml()
             );
 
-            DiscoverTests("Pytest", new[] { testFilePath1, testFilePath2 }, runSettings, expectedTests);
+            DiscoverTests(testEnv, new[] { testFilePath1, testFilePath2 }, runSettings, expectedTests);
         }
 
-        [Ignore] // discovers 0 tests, maybe pytest cannot handle this?
+        [Ignore] // discovers 0 tests, our pytest discovery cannot handle this?
         [TestMethod, Priority(0)]
         public void DiscoverWithPytestImportError() {
             // one file has a valid passing test,
@@ -136,7 +136,32 @@ namespace TestAdapterTests {
                     .ToXml()
             );
 
-            DiscoverTests("Pytest", new[] { testFilePath1, testFilePath2 }, runSettings, expectedTests);
+            DiscoverTests(testEnv, new[] { testFilePath1, testFilePath2 }, runSettings, expectedTests);
+        }
+
+        [TestMethod, Priority(0)]
+        public void DiscoverWithUnitTestImportError() {
+            // one file has a valid passing test,
+            // the other has an unknown module import at global scope
+            var testEnv = TestEnvironment.Create(Version, "Unittest");
+
+            FileUtils.CopyDirectory(TestData.GetPath("TestData", "TestDiscoverer", "ImportErrorUnittest"), testEnv.SourceFolderPath);
+
+            var testFilePath1 = Path.Combine(testEnv.SourceFolderPath, "test_no_error.py");
+            var testFilePath2 = Path.Combine(testEnv.SourceFolderPath, "test_import_error.py");
+
+            var expectedTests = new[] {
+                new DiscoveryTestInfo("test_no_error", "test_no_error.py::NoErrorTests::test_no_error", testFilePath1, 4),
+            };
+
+            var runSettings = new MockRunSettings(
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+                    .WithTestFile(testFilePath1)
+                    .WithTestFile(testFilePath2)
+                    .ToXml()
+            );
+
+            DiscoverTests(testEnv, new[] { testFilePath1, testFilePath2 }, runSettings, expectedTests);
         }
 
         [Ignore] // discovers 3 tests instead of 2, it shouldn't be finding the one in example_pt.py
@@ -165,7 +190,7 @@ namespace TestAdapterTests {
                     .ToXml()
             );
 
-            DiscoverTests("Pytest", new[] { checkFilePath, testFilePath, exampleFilePath }, runSettings, expectedTests);
+            DiscoverTests(testEnv, new[] { checkFilePath, testFilePath, exampleFilePath }, runSettings, expectedTests);
         }
 
         [TestMethod, Priority(0)]
@@ -189,7 +214,7 @@ namespace TestAdapterTests {
                     .ToXml()
             );
 
-            DiscoverTests("Pytest", new[] { testFilePath }, runSettings, expectedTests);
+            DiscoverTests(testEnv, new[] { testFilePath }, runSettings, expectedTests);
         }
 
         [TestMethod, Priority(0)]
@@ -235,10 +260,10 @@ namespace TestAdapterTests {
                     .ToXml()
             );
 
-            DiscoverTests("Unittest", new[] { testFilePath }, runSettings, expectedTests);
+            DiscoverTests(testEnv, new[] { testFilePath }, runSettings, expectedTests);
         }
 
-        private static void DiscoverTests(string testFramework, string[] sources, MockRunSettings runSettings, DiscoveryTestInfo[] expectedTests) {
+        private static void DiscoverTests(TestEnvironment testEnv, string[] sources, MockRunSettings runSettings, DiscoveryTestInfo[] expectedTests) {
             var discoveryContext = new MockDiscoveryContext(runSettings);
             var discoverySink = new MockTestCaseDiscoverySink();
             var logger = new MockMessageLogger();
@@ -246,7 +271,7 @@ namespace TestAdapterTests {
 
             discoverer.DiscoverTests(sources, discoveryContext, logger, discoverySink);
 
-            ValidateDiscoveredTests(testFramework, discoverySink.Tests, expectedTests);
+            ValidateDiscoveredTests(testEnv.TestFramework, discoverySink.Tests, expectedTests);
         }
 
         private static void ValidateDiscoveredTests(string testFramework, IList<TestCase> actualTests, DiscoveryTestInfo[] expectedTests) {

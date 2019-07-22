@@ -216,39 +216,47 @@ namespace TestAdapterTests {
         //            }
         //        }
 
-        //        [TestMethod, Priority(0)]
-        //        [TestCategory("10s")]
-        //        public void TestLoadError() {
-        //            // A load error is when unittest module fails to load the test (prior to running it)
-        //            // For example, if the file where the test is defined has an unhandled ImportError.
-        //            // We check that this only causes the tests that can't be loaded to fail,
-        //            // all other tests in the test run which can be loaded successfully will be run.
-        //            var executor = new TestExecutor();
-        //            var recorder = new MockTestExecutionRecorder();
-        //            var expectedTests = TestInfo.GetTestAdapterLoadErrorTests(ImportErrorFormat);
-        //            var runContext = CreateRunContext(expectedTests, Version.InterpreterPath);
-        //            var testCases = runContext.TestCases;
+        [TestMethod, Priority(0)]
+        [TestCategory("10s")]
+        public void TestWithUnittestImportError() {
+            // A load error is when unittest module fails to load the test (prior to running it)
+            // For example, if the file where the test is defined has an unhandled ImportError.
+            // We check that this only causes the tests that can't be loaded to fail,
+            // all other tests in the test run which can be loaded successfully will be run.
+            var testEnv = TestEnvironment.Create(Version, "Unittest");
 
-        //            executor.RunTests(testCases, runContext, recorder);
-        //            PrintTestResults(recorder);
+            FileUtils.CopyDirectory(TestData.GetPath("TestData", "TestDiscoverer", "ImportErrorUnittest"), testEnv.SourceFolderPath);
 
-        //            var resultNames = recorder.Results.Select(tr => tr.TestCase.FullyQualifiedName).ToSet();
-        //            foreach (var expectedResult in expectedTests) {
-        //                AssertUtil.ContainsAtLeast(resultNames, expectedResult.TestCase.FullyQualifiedName);
-        //                var actualResult = recorder.Results.SingleOrDefault(tr => tr.TestCase.FullyQualifiedName == expectedResult.TestCase.FullyQualifiedName);
-        //                Assert.AreEqual(expectedResult.Outcome, actualResult.Outcome, expectedResult.TestCase.FullyQualifiedName + " had incorrect result");
+            var testFilePath1 = Path.Combine(testEnv.SourceFolderPath, "test_no_error.py");
+            var testFilePath2 = Path.Combine(testEnv.SourceFolderPath, "test_import_error.py");
 
-        //                if (expectedResult.ContainedErrorMessage != null) {
-        //                    Assert.IsNotNull(actualResult.ErrorMessage);
-        //                    Assert.IsTrue(
-        //                        actualResult.ErrorMessage.Contains(expectedResult.ContainedErrorMessage),
-        //                        string.Format("Error message did not contain expected text: {0}", expectedResult.ContainedErrorMessage)
-        //                    );
-        //                } else {
-        //                    Assert.IsNull(actualResult.ErrorMessage);
-        //                }
-        //            }
-        //        }
+            var expectedTests = new[] {
+                new PytestExecutionTestInfo(
+                    "test_no_error",
+                    "test_no_error.py::NoErrorTests::test_no_error",
+                    testFilePath1,
+                    4,
+                    "test_no_error.NoErrorTests",
+                    TestOutcome.Passed
+                ),
+                new PytestExecutionTestInfo(
+                    "test_import_error",
+                    "test_import_error.py::ImportErrorTests::test_import_error",
+                    testFilePath2,
+                    5,
+                    "test_import_error.ImportErrorTests",
+                    TestOutcome.Failed
+                ),
+            };
+
+            var runSettings = new MockRunSettings(
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+                    .WithTestFilesFromFolder(testEnv.SourceFolderPath)
+                    .ToXml()
+            );
+
+            ExecuteTests(testEnv, runSettings, expectedTests);
+        }
 
         [TestMethod, Priority(0)]
         [TestCategory("10s")]
