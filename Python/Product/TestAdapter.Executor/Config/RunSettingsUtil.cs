@@ -23,7 +23,9 @@ namespace Microsoft.PythonTools.TestAdapter.Config {
                     project.GetAttribute("nativeDebugging", "").IsTrue(),
                     project.GetAttribute("isWorkspace", "").IsTrue(),
                     project.GetAttribute("useLegacyDebugger", "").IsTrue(),
-                    project.GetAttribute("testFramework", "")
+                    project.GetAttribute("testFramework", ""),
+                    project.GetAttribute("unitTestPattern", ""),
+                    project.GetAttribute("unitTestRootDir", "")
                 ); 
 
                 foreach (XPathNavigator environment in project.Select("Environment/Variable")) {
