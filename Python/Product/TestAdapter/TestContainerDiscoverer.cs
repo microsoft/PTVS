@@ -30,6 +30,7 @@ using Microsoft.VisualStudioTools.TestAdapter;
 using Microsoft.PythonTools.Interpreter;
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Threading;
 
 namespace Microsoft.PythonTools.TestAdapter {
     [Export(typeof(ITestContainerDiscoverer))]
@@ -43,7 +44,7 @@ namespace Microsoft.PythonTools.TestAdapter {
         private TestFilesUpdateWatcher _testFilesUpdateWatcher;
         private TestFileAddRemoveListener _testFilesAddRemoveListener;
         private readonly HashSet<string> _pytestFrameworkConfigFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "pytest.ini", "setup.cfg", "tox.ini" };
-
+        private readonly Timer _deferredTestChangeNotification;
 
         [ImportingConstructor]
         private TestContainerDiscoverer(
@@ -57,6 +58,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             _firstLoad = true;
             _isRefresh = false;
             _setupComplete = false;
+            _deferredTestChangeNotification = new Timer(OnDeferredTestChanged);
 
             _solutionListener = new SolutionEventsListener(_serviceProvider);
             _solutionListener.ProjectLoaded += OnProjectLoaded;
@@ -74,7 +76,7 @@ namespace Microsoft.PythonTools.TestAdapter {
         void IDisposable.Dispose() {
             if (!_isDisposed) {
                 _isDisposed = true;
-
+                _deferredTestChangeNotification.Dispose();
                 _projectMap.Clear();
 
                 if (_solutionListener != null) {
@@ -114,18 +116,18 @@ namespace Microsoft.PythonTools.TestAdapter {
 
         public IEnumerable<ITestContainer> TestContainers {
             get {
-                if (IsSolutionMode()
-                    && (_firstLoad || _isRefresh)) {
-                    _projectMap.Clear();
-
+                if (IsSolutionMode() && 
+                    (_firstLoad || _isRefresh)) {
                     // The first time through, we don't know about any loaded
                     // projects.
                     ThreadHelper.JoinableTaskFactory.Run(async () => {
                         await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                         if (_firstLoad || _isRefresh) {
-                            SetupSolution();
                             _firstLoad = false;
                             _isRefresh = false;
+                            
+                             _projectMap.Clear();
+                             SetupSolution();
                         }
                     });
                 }
@@ -137,7 +139,7 @@ namespace Microsoft.PythonTools.TestAdapter {
         private void OnSolutionClosed(object sender, EventArgs e) {
             ResetSolution();
         }
-       
+
         /// <summary>
         /// This can be triggered before our class is created so it isn't being used
         /// </summary>
@@ -188,8 +190,15 @@ namespace Microsoft.PythonTools.TestAdapter {
         public event EventHandler TestContainersUpdated;
 
         private void NotifyContainerChanged() {
+            try {
+                _deferredTestChangeNotification.Change(500, Timeout.Infinite);
+            } catch (ObjectDisposedException) {
+            }
+        }
+
+        private void OnDeferredTestChanged(object state) {
             // guard against triggering multiple updates during initial load until setup is complete
-            if (!_firstLoad && !_isRefresh) {
+            if (!_firstLoad) {
                 TestContainersUpdated?.Invoke(this, EventArgs.Empty);
             }
         }
@@ -200,30 +209,38 @@ namespace Microsoft.PythonTools.TestAdapter {
             if (!_setupComplete)
                 return;
 
-            LoadProject(e.Project);
+            if (LoadProject(e.Project)) {
+                NotifyContainerChanged();
+            }
         }
 
-        private void LoadProject(IVsProject vsProject) {
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="vsProject"></param>
+        /// <returns>True if loaded any files</returns>
+        private bool LoadProject(IVsProject vsProject) {
             // check for python projects
             var pyProj = PythonProject.FromObject(vsProject);
             if (pyProj == null)
-                return;
+                return false;
 
             // always register for project property changes
             pyProj.ProjectPropertyChanged -= OnTestPropertiesChanged;
             pyProj.ProjectPropertyChanged += OnTestPropertiesChanged;
 
             TestFrameworkType testFrameworkType = GetTestFramework(pyProj);
-
-            if (testFrameworkType != TestFrameworkType.None) {
-                IVsHierarchy hierarchy = (IVsHierarchy)vsProject;
-                var projectName = hierarchy == null ? hierarchy.GetNameProperty() : string.Empty;
-                var projInfo = new ProjectInfo(pyProj, projectName);
-                _projectMap[projInfo.ProjectHome] = projInfo;
-                var files = FilteredTestOrSettingsFiles(vsProject);
-                UpdateSolutionTestContainersAndFileWatchers(files, projInfo, isAdd: true);
-                NotifyContainerChanged();
+            if (testFrameworkType == TestFrameworkType.None) {
+                return false;
             }
+
+            IVsHierarchy hierarchy = (IVsHierarchy)vsProject;
+            var projectName = hierarchy == null ? hierarchy.GetNameProperty() : string.Empty;
+            var projInfo = new ProjectInfo(pyProj, projectName);
+            _projectMap[projInfo.ProjectHome] = projInfo;
+            var files = FilteredTestOrSettingsFiles(vsProject);
+            UpdateSolutionTestContainersAndFileWatchers(files, projInfo, isAdd: true);
+            return files.Any();
         }
 
         private static TestFrameworkType GetTestFramework(PythonProject pyProj) {
@@ -241,25 +258,17 @@ namespace Microsoft.PythonTools.TestAdapter {
         }
 
         private void OnTestPropertiesChanged(object sender, PythonProjectPropertyChangedArgs e) {
-            // Need to special case the changing of testframeworks
-            // We want to clear test containers and watchers except still listen for project setting changes ie. ProjectPropertyChanged
-            if (e.PropertyName == PythonConstants.TestFrameworkSetting) {
-                var pythonProj = (PythonProject)sender;
-                if (pythonProj != null) {
-                    RemoveTestContainersAndNotify(pythonProj.ProjectHome);
-                }
-            }
-            else {
-                NotifyContainerChanged();
-            }
             _isRefresh = true;
+            NotifyContainerChanged();
         }
 
         private void OnProjectUnloaded(object sender, ProjectEventArgs e) {
             if (e.Project == null)
                 return;
 
-            RemoveTestContainersAndNotify(e.Project.GetProjectHome());
+            if (RemoveTestContainers(e.Project.GetProjectHome())) {
+                NotifyContainerChanged();
+            }
 
             // Unregister Properties handler
             var pyProj = PythonProject.FromObject(e.Project);
@@ -268,16 +277,21 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
         }
 
-        private void RemoveTestContainersAndNotify(string projectHome) {
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="projectHome"></param>
+        /// <returns>True if files were removed</returns>
+        private bool RemoveTestContainers(string projectHome) {
             if (projectHome != null
                 && _projectMap.TryRemove(projectHome, out ProjectInfo projToRemove)) {
 
                 var testFilesToRemove = projToRemove.GetAllContainers().Select(t => t.Source);
                 UpdateSolutionTestContainersAndFileWatchers(testFilesToRemove, projToRemove, isAdd: false);
                 projToRemove.Dispose();
-
-                NotifyContainerChanged();
+                return testFilesToRemove.Any();
             }
+            return false;
         }
 
         private IEnumerable<string> FilteredTestOrSettingsFiles(IVsProject project) {
@@ -326,8 +340,8 @@ namespace Microsoft.PythonTools.TestAdapter {
                         break;
                 }
 
-                NotifyContainerChanged();
                 _isRefresh = true;
+                NotifyContainerChanged();
                 return;
             }
 
