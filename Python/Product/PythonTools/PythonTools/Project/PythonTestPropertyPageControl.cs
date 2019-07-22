@@ -46,8 +46,8 @@ namespace Microsoft.PythonTools.Project {
 
             string testFrameworkStr = _propPage.Project.GetProjectProperty(PythonConstants.TestFrameworkSetting, false);
             TestFramework = TestFrameworkType.None;
-            if (Enum.TryParse<TestFrameworkType>(testFrameworkStr, ignoreCase: true, out TestFrameworkType parsedFramworked)) {
-                TestFramework = parsedFramworked;
+            if (Enum.TryParse<TestFrameworkType>(testFrameworkStr, ignoreCase: true, out TestFrameworkType parsedFramework)) {
+                TestFramework = parsedFramework;
             }
         }
 
