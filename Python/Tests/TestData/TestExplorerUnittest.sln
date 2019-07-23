@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27415.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "TestExplorer", "TestExplorer\TestExplorer.pyproj", "{EAF42455-CCE2-444A-BC05-D92BB53C4C61}"
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "TestExplorerUnittest", "TestExplorerUnittest\TestExplorerUnittest.pyproj", "{EAF42455-CCE2-444A-BC05-D92BB53C4C61}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

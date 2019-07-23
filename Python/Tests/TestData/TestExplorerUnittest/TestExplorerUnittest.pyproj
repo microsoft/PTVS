@@ -10,8 +10,9 @@
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
-    <Name>TestExplorer</Name>
-    <RootNamespace>TestExplorer</RootNamespace>
+    <Name>TestExplorerUnittest</Name>
+    <RootNamespace>TestExplorerUnittest</RootNamespace>
+    <TestFramework>Unittest</TestFramework>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
