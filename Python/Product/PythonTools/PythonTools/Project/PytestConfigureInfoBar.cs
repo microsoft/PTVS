@@ -65,7 +65,7 @@ namespace Microsoft.PythonTools.Project {
                 && await IsPyTestInstalled()
             ) {
                 //Case #1. "Enable Pytest"
-                infoBarMessage = Strings.PyTestConfigurationFileFound.FormatUI(InfoBarData.Caption);
+                infoBarMessage = Strings.PyTestInstalledConfigurationFileFound.FormatUI(InfoBarData.Caption);
                 acceptActionItem = new InfoBarHyperlink(Strings.PyTestEnableInfoBarAction, (Action)EnablePytestAction);
 
             } else if (validConfigFile &&
@@ -73,7 +73,7 @@ namespace Microsoft.PythonTools.Project {
                 && !(await IsPyTestInstalled())
             ) {
                 //Case #2. "Install and enable Pytest"
-                infoBarMessage = Strings.PyTestConfigurationFileFound.FormatUI(InfoBarData.Caption);
+                infoBarMessage = Strings.PyTestNotInstalledConfigurationFileFound.FormatUI(InfoBarData.Caption);
                 acceptActionItem = new InfoBarHyperlink(
                     Strings.PyTestInstallAndEnableInfoBarAction,
                     (Action)(async () => await InstallAndEnablePytestActionAsync())
@@ -238,9 +238,6 @@ namespace Microsoft.PythonTools.Project {
                     Project.GetProjectProperty(PythonConstants.TestFrameworkSetting, false)
                 )
             };
-
-            infoBarData.InterpreterOptionsService = Site.GetPythonToolsService().InterpreterOptionsService;
-            
 
             await CheckAsync(infoBarData);
         }

@@ -2882,16 +2882,19 @@ Please specify at least one package.</value>
   <data name="PyTestEnableInfoBarAction" xml:space="preserve">
     <value>Enable pytest</value>
   </data>
-  <data name="PyTestConfigurationFileFound" xml:space="preserve">
-    <value>A pytest configuration file was detected in "{0}", but pytest is not enabled</value>
+  <data name="PyTestInstalledConfigurationFileFound" xml:space="preserve">
+    <value>A pytest configuration file was detected in '{0}', but pytest is not enabled.</value>
   </data>
   <data name="PyTestInstallAndEnableInfoBarAction" xml:space="preserve">
     <value>Install and enable pytest</value>
   </data>
   <data name="PyTestNotInstalled" xml:space="preserve">
-    <value>Pytest in enabled in "{0}", but it is not installed in the active virtual environment</value>
+    <value>Pytest is enabled in '{0}', but it is not installed in the active environment.</value>
   </data>
   <data name="PyTestInstallInfoBarAction" xml:space="preserve">
     <value>Install pytest</value>
+  </data>
+  <data name="PyTestNotInstalledConfigurationFileFound" xml:space="preserve">
+    <value>A pytest configuration file was detected in '{0}', but pytest is not installed or enabled.</value>
   </data>
 </root>

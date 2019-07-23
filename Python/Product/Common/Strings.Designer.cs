@@ -5127,15 +5127,6 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to A pytest configuration file was detected in &quot;{0}&quot;, but pytest is not enabled.
-        /// </summary>
-        public static string PyTestConfigurationFileFound {
-            get {
-                return ResourceManager.GetString("PyTestConfigurationFileFound", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Enable pytest.
         /// </summary>
         public static string PyTestEnableInfoBarAction {
@@ -5163,6 +5154,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to A pytest configuration file was detected in &apos;{0}&apos;, but pytest is not enabled..
+        /// </summary>
+        public static string PyTestInstalledConfigurationFileFound {
+            get {
+                return ResourceManager.GetString("PyTestInstalledConfigurationFileFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Install pytest.
         /// </summary>
         public static string PyTestInstallInfoBarAction {
@@ -5172,11 +5172,20 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Pytest in enabled in &quot;{0}&quot;, but it is not installed in the active virtual environment.
+        ///   Looks up a localized string similar to Pytest is enabled in &apos;{0}&apos;, but it is not installed in the active environment..
         /// </summary>
         public static string PyTestNotInstalled {
             get {
                 return ResourceManager.GetString("PyTestNotInstalled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A pytest configuration file was detected in &apos;{0}&apos;, but pytest is not installed or enabled..
+        /// </summary>
+        public static string PyTestNotInstalledConfigurationFileFound {
+            get {
+                return ResourceManager.GetString("PyTestNotInstalledConfigurationFileFound", resourceCulture);
             }
         }
         
