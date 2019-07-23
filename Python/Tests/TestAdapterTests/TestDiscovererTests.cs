@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -251,7 +252,12 @@ namespace TestAdapterTests {
             Assert.AreEqual(0, discoverySink.Tests.Count);
 
             var errors = string.Join(Environment.NewLine, logger.GetErrors());
-            AssertUtil.Contains(errors, "ModuleNotFoundError: No module named 'pytest'");
+            AssertUtil.Contains(
+                errors,
+                Version.Version <= PythonLanguageVersion.V27
+                    ? "ImportError: No module named pytest"
+                    : "ModuleNotFoundError: No module named 'pytest'"
+            );
         }
 
         [TestMethod, Priority(0)]
