@@ -96,7 +96,7 @@ namespace Microsoft.PythonTools.Project {
         private readonly CondaEnvCreateInfoBar _condaEnvCreateInfoBar;
         private readonly VirtualEnvCreateInfoBar _virtualEnvCreateInfoBar;
         private readonly PackageInstallInfoBar _packageInstallInfoBar;
-        private readonly ConfigurePytestInfoBar _configurePytestInfoBar;
+        private readonly PyTestInfoBar _pyTestInfoBar;
 
         private readonly SemaphoreSlim _recreatingAnalyzer = new SemaphoreSlim(1);
 
@@ -132,7 +132,7 @@ namespace Microsoft.PythonTools.Project {
             _condaEnvCreateInfoBar = new CondaEnvCreateProjectInfoBar(Site, this);
             _virtualEnvCreateInfoBar = new VirtualEnvCreateProjectInfoBar(Site, this);
             _packageInstallInfoBar = new PackageInstallProjectInfoBar(Site, this);
-            _configurePytestInfoBar = new ConfigurePytestProjectInfoBar(Site, this);
+            _pyTestInfoBar = new PyTestProjectInfoBar(Site, this);
         }
 
         private static KeyValuePair<string, string>[] outputGroupNames = {
@@ -744,7 +744,7 @@ namespace Microsoft.PythonTools.Project {
                 _condaEnvCreateInfoBar.CheckAsync(),
                 _virtualEnvCreateInfoBar.CheckAsync(),
                 _packageInstallInfoBar.CheckAsync(),
-                _configurePytestInfoBar.CheckAsync()
+                _pyTestInfoBar.CheckAsync()
             );
         }
 
@@ -1093,7 +1093,7 @@ namespace Microsoft.PythonTools.Project {
                 _condaEnvCreateInfoBar.Dispose();
                 _virtualEnvCreateInfoBar.Dispose();
                 _packageInstallInfoBar.Dispose();
-                _configurePytestInfoBar.Dispose();
+                _pyTestInfoBar.Dispose();
 
                 _reanalyzeProjectNotification.Dispose();
 
@@ -2627,8 +2627,10 @@ namespace Microsoft.PythonTools.Project {
         }
 
         internal string GetPyTestConfigFilePath() {
-            return PythonConstants.PyTestFrameworkConfigFiles
-                .FirstOrDefault(fileName => File.Exists(PathUtils.GetAbsoluteFilePath(ProjectHome, fileName)));
+            string fileName = PythonConstants.PyTestFrameworkConfigFiles
+                .FirstOrDefault(x => File.Exists(PathUtils.GetAbsoluteFilePath(ProjectHome, x)));
+
+            return String.IsNullOrEmpty(fileName) ? "" : Path.Combine(ProjectHome, fileName);
         }
 
         internal string GetEnvironmentYmlPath() {

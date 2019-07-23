@@ -154,6 +154,7 @@ namespace Microsoft.PythonTools.Logging {
 
     static class ConfigurePytestInfoBarActions {
         public const string Prompt = "Prompt";
+        public const string Install = "Install";
         public const string Enable = "Enable";
         public const string EnableAndInstall = "EnableAndInstall";
         public const string Ignore = "Ignore";

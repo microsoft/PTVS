@@ -1893,42 +1893,6 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Enable pytest.
-        /// </summary>
-        public static string ConfigurePytestInfoBarEnableAction {
-            get {
-                return ResourceManager.GetString("ConfigurePytestInfoBarEnableAction", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Install and enable PyTest.
-        /// </summary>
-        public static string ConfigurePytestInfoBarInstallAndEnableAction {
-            get {
-                return ResourceManager.GetString("ConfigurePytestInfoBarInstallAndEnableAction", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Don&apos;t show this message again.
-        /// </summary>
-        public static string ConfigurePytestTextInfoBarIgnoreAction {
-            get {
-                return ResourceManager.GetString("ConfigurePytestTextInfoBarIgnoreAction", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to A pytest configuration file &apos;{0} was detected in &apos;{1}&apos;, but pytest is not enabled.
-        /// </summary>
-        public static string ConfigurePytestTxtInfoBarMessage {
-            get {
-                return ResourceManager.GetString("ConfigurePytestTxtInfoBarMessage", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Cannot create thread in debuggee process.
         /// </summary>
         public static string ConnErrorMessages_CannotInjectThread {
@@ -5159,6 +5123,60 @@ namespace Microsoft.PythonTools {
         public static string PydReferenceDeprecated {
             get {
                 return ResourceManager.GetString("PydReferenceDeprecated", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A pytest configuration file was detected in &quot;{0}&quot;, but pytest is not enabled.
+        /// </summary>
+        public static string PyTestConfigurationFileFound {
+            get {
+                return ResourceManager.GetString("PyTestConfigurationFileFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enable pytest.
+        /// </summary>
+        public static string PyTestEnableInfoBarAction {
+            get {
+                return ResourceManager.GetString("PyTestEnableInfoBarAction", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Don&apos;t show this message again.
+        /// </summary>
+        public static string PyTestIgnoreInfoBarAction {
+            get {
+                return ResourceManager.GetString("PyTestIgnoreInfoBarAction", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Install and enable pytest.
+        /// </summary>
+        public static string PyTestInstallAndEnableInfoBarAction {
+            get {
+                return ResourceManager.GetString("PyTestInstallAndEnableInfoBarAction", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Install pytest.
+        /// </summary>
+        public static string PyTestInstallInfoBarAction {
+            get {
+                return ResourceManager.GetString("PyTestInstallInfoBarAction", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Pytest in enabled in &quot;{0}&quot;, but it is not installed in the active virtual environment.
+        /// </summary>
+        public static string PyTestNotInstalled {
+            get {
+                return ResourceManager.GetString("PyTestNotInstalled", resourceCulture);
             }
         }
         

@@ -29,6 +29,7 @@ namespace Microsoft.PythonTools.Options {
             this._showOutputWindowForPackageInstallation = new System.Windows.Forms.CheckBox();
             this._promptForEnvCreate = new System.Windows.Forms.CheckBox();
             this._promptForPackageInstallation = new System.Windows.Forms.CheckBox();
+            this._promptForPytestEnableAndInstall = new System.Windows.Forms.CheckBox();
             this._elevatePip = new System.Windows.Forms.CheckBox();
             this._clearGlobalPythonPath = new System.Windows.Forms.CheckBox();
             this._updateSearchPathsForLinkedFiles = new System.Windows.Forms.CheckBox();
@@ -47,14 +48,15 @@ namespace Microsoft.PythonTools.Options {
             this.tableLayoutPanel3.Controls.Add(this._showOutputWindowForPackageInstallation, 0, 1);
             this.tableLayoutPanel3.Controls.Add(this._promptForEnvCreate, 0, 2);
             this.tableLayoutPanel3.Controls.Add(this._promptForPackageInstallation, 0, 3);
-            this.tableLayoutPanel3.Controls.Add(this._elevatePip, 0, 4);
-            this.tableLayoutPanel3.Controls.Add(this._clearGlobalPythonPath, 0, 5);
-            this.tableLayoutPanel3.Controls.Add(this._updateSearchPathsForLinkedFiles, 0, 6);
-            this.tableLayoutPanel3.Controls.Add(this._unresolvedImportWarning, 0, 7);
-            this.tableLayoutPanel3.Controls.Add(this._invalidEncodingWarning, 0, 8);
-            this.tableLayoutPanel3.Controls.Add(this._indentationInconsistentLabel, 0, 9);
-            this.tableLayoutPanel3.Controls.Add(this._indentationInconsistentCombo, 1, 9);
-            this.tableLayoutPanel3.Controls.Add(this._resetSuppressDialog, 0, 10);
+            this.tableLayoutPanel3.Controls.Add(this._promptForPytestEnableAndInstall, 0, 4);
+            this.tableLayoutPanel3.Controls.Add(this._elevatePip, 0, 5);
+            this.tableLayoutPanel3.Controls.Add(this._clearGlobalPythonPath, 0, 6);
+            this.tableLayoutPanel3.Controls.Add(this._updateSearchPathsForLinkedFiles, 0, 7);
+            this.tableLayoutPanel3.Controls.Add(this._unresolvedImportWarning, 0, 8);
+            this.tableLayoutPanel3.Controls.Add(this._invalidEncodingWarning, 0, 9);
+            this.tableLayoutPanel3.Controls.Add(this._indentationInconsistentLabel, 0, 10);
+            this.tableLayoutPanel3.Controls.Add(this._indentationInconsistentCombo, 1, 10);
+            this.tableLayoutPanel3.Controls.Add(this._resetSuppressDialog, 0, 11);
             this.tableLayoutPanel3.Name = "tableLayoutPanel3";
             // 
             // _showOutputWindowForVirtualEnvCreate
@@ -84,6 +86,13 @@ namespace Microsoft.PythonTools.Options {
             this.tableLayoutPanel3.SetColumnSpan(this._promptForPackageInstallation, 2);
             this._promptForPackageInstallation.Name = "_promptForPackageInstallation";
             this._promptForPackageInstallation.UseVisualStyleBackColor = true;
+            // 
+            // _promptForPytestEnableAndInstall
+            // 
+            resources.ApplyResources(this._promptForPytestEnableAndInstall, "_promptForPytestEnableAndInstall");
+            this.tableLayoutPanel3.SetColumnSpan(this._promptForPytestEnableAndInstall, 2);
+            this._promptForPytestEnableAndInstall.Name = "_promptForPytestEnableAndInstall";
+            this._promptForPytestEnableAndInstall.UseVisualStyleBackColor = true;
             // 
             // _elevatePip
             // 
@@ -171,6 +180,7 @@ namespace Microsoft.PythonTools.Options {
         private System.Windows.Forms.CheckBox _updateSearchPathsForLinkedFiles;
         private System.Windows.Forms.Label _indentationInconsistentLabel;
         private System.Windows.Forms.ComboBox _indentationInconsistentCombo;
+        private System.Windows.Forms.CheckBox _promptForPytestEnableAndInstall;
         private System.Windows.Forms.CheckBox _elevatePip;
         private System.Windows.Forms.CheckBox _unresolvedImportWarning;
         private System.Windows.Forms.CheckBox _clearGlobalPythonPath;

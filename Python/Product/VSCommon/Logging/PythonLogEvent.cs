@@ -111,7 +111,7 @@ namespace Microsoft.PythonTools.Logging {
         /// <summary>
         /// Configure pytest info bar
         /// </summary>
-        ConfigurePytestInfoBar,
+        PyTestInfoBar,
         /// <summary>
         /// Create conda environment
         /// </summary>
