@@ -15,6 +15,8 @@
 // permissions and limitations under the License.
 
 extern alias pt;
+
+using System;
 using System.IO;
 using TestUtilities;
 
@@ -47,13 +49,29 @@ namespace TestAdapterTests {
                     }
                     break;
                 default:
-                    // TODO: when bug #5454 is fixed, we should create an empty
-                    // virtual env to ensure env does not have pytest installed
-                    env.InterpreterPath = pythonVersion.InterpreterPath;
+                    if (HasPackage(pythonVersion.PrefixPath, "pytest")) {
+                        // Create an empty virtual env to ensure we don't accidentally rely on pytest
+                        // (which was bug https://github.com/microsoft/PTVS/issues/5454)
+                        var envDir = TestData.GetTempPath();
+                        pythonVersion.CreatePythonVirtualEnv(envDir);
+                        env.InterpreterPath = Path.Combine(envDir, "scripts", "python.exe");
+                    } else {
+                        env.InterpreterPath = pythonVersion.InterpreterPath;
+                    }
                     break;
             }
 
             return env;
+        }
+
+        private static bool HasPackage(string prefixPath, string packageName) {
+            foreach (var p in Directory.EnumerateDirectories(Path.Combine(prefixPath, "Lib", "site-packages"))) {
+                if (Path.GetFileName(p).StartsWith(packageName, StringComparison.InvariantCultureIgnoreCase)) {
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }
