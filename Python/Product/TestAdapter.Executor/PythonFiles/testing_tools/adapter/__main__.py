@@ -6,29 +6,53 @@ from __future__ import absolute_import
 import argparse
 import sys
 
-from . import pytest, report, unittest
+from . import report, unittest
 from .errors import UnsupportedToolError, UnsupportedCommandError
+
+
+def default_subparser(cmd, name, parent):
+    parser = parent.add_parser(name)
+    if cmd == 'discover':
+        # For now we don't have any tool-specific CLI options to add.
+        pass
+    else:
+        raise UnsupportedCommandError(cmd)
+    return parser
+
+
+def pytest_add_cli_subparser(cmd, name, parent):
+    # Handle the case where the user hasn't installed pytest but we still want to see it appear as an option
+    try:
+        from . import pytest
+        return pytest.add_cli_subparser(cmd, name, parent)
+    except ImportError:
+        return default_subparser(cmd, name, parent)
+
+
+def pytest_discover(pytestargs=None, **_ignored):
+    # Delay importing pytest until actaully used
+    from . import pytest
+    return pytest.discover(pytestargs, _ignored)
 
 TOOLS = {
     'pytest': {
-        '_add_subparser': pytest.add_cli_subparser,
-        'discover': pytest.discover,
+        '_add_subparser': pytest_add_cli_subparser,
+        'discover': pytest_discover,
         },
     'unittest': {
         '_add_subparser': unittest.add_unittest_cli_subparser,
         'discover': unittest.discover,
         },
     }
+
 REPORTERS = {
-    'pytest': {
+     'pytest': {
         'discover': report.report_discovered,
         },
     'unittest': {
         'discover': report.report_unittest_discovered
         }
     }
-
-
 
 def parse_args(
         argv=sys.argv[1:],
