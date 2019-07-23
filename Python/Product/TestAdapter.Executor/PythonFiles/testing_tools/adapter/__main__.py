@@ -46,7 +46,7 @@ TOOLS = {
     }
 
 REPORTERS = {
-     'pytest': {
+    'pytest': {
         'discover': report.report_discovered,
         },
     'unittest': {
