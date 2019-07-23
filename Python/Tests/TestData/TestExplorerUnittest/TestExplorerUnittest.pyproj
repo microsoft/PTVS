@@ -2,7 +2,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>74c7265e-e4ed-4f27-8384-3ca6e36603d9</ProjectGuid>
+    <ProjectGuid>eaf42455-cce2-444a-bc05-d92bb53c4c61</ProjectGuid>
     <ProjectHome>.</ProjectHome>
     <StartupFile>
     </StartupFile>
@@ -10,9 +10,9 @@
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
-    <Name>TestExplorerPytest</Name>
-    <RootNamespace>TestExplorerPytest</RootNamespace>
-    <TestFramework>pytest</TestFramework>
+    <Name>TestExplorerUnittest</Name>
+    <RootNamespace>TestExplorerUnittest</RootNamespace>
+    <TestFramework>Unittest</TestFramework>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -23,10 +23,9 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="test_ut.py" />
-    <Compile Include="test_pt.py" />
-    <Compile Include="test_fixture.py" />
-    <Compile Include="test_mark.py" />
+    <Compile Include="test1.py">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in

@@ -47,6 +47,8 @@ namespace TestAdapterTests {
                     }
                     break;
                 default:
+                    // TODO: when bug #5454 is fixed, we should create an empty
+                    // virtual env to ensure env does not have pytest installed
                     env.InterpreterPath = pythonVersion.InterpreterPath;
                     break;
             }
