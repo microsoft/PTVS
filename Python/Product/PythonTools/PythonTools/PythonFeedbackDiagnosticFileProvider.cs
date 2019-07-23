@@ -32,10 +32,20 @@ namespace Microsoft.PythonTools {
 
         [ImportingConstructor]
         public PythonFeedbackDiagnosticFileProvider([Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider) {
-            this._serviceProvider = serviceProvider;
+            _serviceProvider = serviceProvider;
         }
 
         public IReadOnlyCollection<string> GetFiles() {
+            // A null UIThreadBase means the VS PythonTools package hasn't been initialized,
+            // which means the user is not using Python, so we should not
+            // write Python diagnostics file.
+            // Note: we do not use the GetUIThread() extension method which
+            // returns a mock UI thread instead of returning null.
+            var uiThread = (UIThreadBase)_serviceProvider.GetService(typeof(UIThreadBase));
+            if (uiThread == null) {
+                return new string[0];
+            }
+
             var filePath = PathUtils.GetAvailableFilename(
                 Path.GetTempPath(),
                 "PythonToolsDiagnostics_{0:yyyyMMddHHmmss}".FormatInvariant(DateTime.Now),
@@ -44,23 +54,23 @@ namespace Microsoft.PythonTools {
 
             // Generate the file in the background and return the path
             // immediately, to avoid delay opening the feedback dialog.
-            Task.Run(() => GenerateFile(filePath));
+            Task.Run(() => GenerateFile(uiThread, filePath));
 
             return new string[] { filePath };
         }
 
-        private void GenerateFile(string filePath) {
+        private void GenerateFile(UIThreadBase uiThread, string filePath) {
             try {
-                using (var writer = new StreamWriter(filePath, false, Encoding.UTF8)) {
-                    _serviceProvider.GetUIThread().Invoke(() => {
+                uiThread.Invoke(() => {
+                    using (var writer = new StreamWriter(filePath, false, Encoding.UTF8)) {
                         try {
                             _serviceProvider.GetPythonToolsService().GetDiagnosticsLog(writer, false);
                         } catch (Exception ex) when (!ex.IsCriticalException()) {
                             // Append the error to the log we're writing
                             writer.WriteLine(ex.ToUnhandledExceptionMessage(GetType()));
                         }
-                    });
-                }
+                    }
+                });
             } catch (Exception ex) when (!ex.IsCriticalException()) {
             }
         }
