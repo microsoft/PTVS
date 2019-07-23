@@ -30,7 +30,7 @@ def pytest_add_cli_subparser(cmd, name, parent):
 
 
 def pytest_discover(pytestargs=None, **_ignored):
-    # Delay importing pytest until actaully used
+    # Delay importing pytest until actually used
     from . import pytest
     return pytest.discover(pytestargs, _ignored)
 
