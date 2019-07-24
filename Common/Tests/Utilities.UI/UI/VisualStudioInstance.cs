@@ -44,6 +44,7 @@ namespace TestUtilities.UI {
             _solution = solution;
             _app = app;
             Project = _app.OpenProject(solution.Filename);
+            Project = _app.OpenProject(solution.Filename);
 
             ThreadHelper.JoinableTaskFactory.Run(async () => {
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
