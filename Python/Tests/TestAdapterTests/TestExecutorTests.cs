@@ -50,13 +50,13 @@ namespace TestAdapterTests {
         public void TestBestFile() {
             var file1 = "C:\\Some\\Path\\file1.py";
             var file2 = "C:\\Some\\Path\\file2.py";
-            var best = TestExecutor.UpdateBestFile(null, file1);
+            var best = TestExecutorUnitTest.UpdateBestFile(null, file1);
             Assert.AreEqual(best, file1);
 
-            best = TestExecutor.UpdateBestFile(null, file1);
+            best = TestExecutorUnitTest.UpdateBestFile(null, file1);
             Assert.AreEqual(best, file1);
 
-            best = TestExecutor.UpdateBestFile(best, file2);
+            best = TestExecutorUnitTest.UpdateBestFile(best, file2);
             Assert.AreEqual("C:\\Some\\Path", best);
         }
 
@@ -196,7 +196,7 @@ namespace TestAdapterTests {
             var testCases = CreateTestCasesFromTestInfo(testEnv, expectedTests);
             var runContext = new MockRunContext(runSettings, testCases, testEnv.ResultsFolderPath);
             var recorder = new MockTestExecutionRecorder();
-            var executor = new TestExecutor();
+            var executor = new TestExecutorPytest();
 
             var thread = new System.Threading.Thread(o => {
                 executor.RunTests(testCases, runContext, recorder);
@@ -574,7 +574,7 @@ namespace TestAdapterTests {
             ITestExecutor executor = null;
             switch (testEnv.TestFramework) {
                 case FrameworkPytest:
-                    executor = new TestExecutor();
+                    executor = new TestExecutorPytest();
                     break;
 
                 case FrameworkUnittest:
@@ -592,7 +592,7 @@ namespace TestAdapterTests {
 
         private static List<TestCase> CreateTestCasesFromTestInfo(TestEnvironment testEnv, IEnumerable<TestInfo> expectedTests) {
             return Enumerable.Select(expectedTests, ti => {
-                var testCase = new TestCase(ti.FullyQualifiedName, new Uri(PythonConstants.TestExecutorUriString), ti.FilePath) {
+                var testCase = new TestCase(ti.FullyQualifiedName, new Uri(PythonConstants.PytestExecutorUriString), ti.FilePath) {
                     DisplayName = ti.DisplayName,
                     CodeFilePath = ti.FilePath,
                     LineNumber = ti.LineNumber,

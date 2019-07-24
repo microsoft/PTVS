@@ -284,7 +284,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 var node = doc.CreateNavigator().SelectSingleNode("/RunSettings/Python/DryRun[@value='true']");
                 return node != null;
             } catch (Exception ex) {
-                Debug.Fail(ex.ToUnhandledExceptionMessage(typeof(TestExecutor)));
+                Debug.Fail(ex.ToUnhandledExceptionMessage(typeof(TestExecutorPytest)));
                 return false;
             }
         }
@@ -300,7 +300,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 var node = doc.CreateNavigator().SelectSingleNode("/RunSettings/Python/ShowConsole[@value='false']");
                 return node == null;
             } catch (Exception ex) {
-                Debug.Fail(ex.ToUnhandledExceptionMessage(typeof(TestExecutor)));
+                Debug.Fail(ex.ToUnhandledExceptionMessage(typeof(TestExecutorPytest)));
                 return true;
             }
         }

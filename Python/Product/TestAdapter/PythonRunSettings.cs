@@ -148,12 +148,12 @@ namespace Microsoft.PythonTools.TestAdapter {
                             ThreadHelper.JoinableTaskFactory.Run(async () => {
                                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-                                if (container.Discoverer is TestContainerDiscoverer) {
-                                    var discoverer = container.Discoverer as TestContainerDiscoverer;
+                                if (container.Discoverer is TestContainerDiscovererProject) {
+                                    var discoverer = container.Discoverer as TestContainerDiscovererProject;
                                     isWorkspace = discoverer.IsWorkspace;
                                     projInfo = discoverer.GetProjectInfo(container.Project);
-                                } else if (container.Discoverer is TestContainerDiscovererWorskspace) {
-                                    var discoverer = container.Discoverer as TestContainerDiscovererWorskspace;
+                                } else if (container.Discoverer is TestContainerDiscovererWorkspace) {
+                                    var discoverer = container.Discoverer as TestContainerDiscovererWorkspace;
                                     isWorkspace = discoverer.IsWorkspace;
                                     projInfo = discoverer.GetProjectInfo(container.Project);
                                 }

@@ -30,8 +30,8 @@ using System.Diagnostics;
 
 namespace Microsoft.PythonTools.TestAdapter {
     [Export(typeof(ITestContainerDiscoverer))]
-    [Export(typeof(TestContainerDiscovererWorskspace))]
-    class TestContainerDiscovererWorskspace : ITestContainerDiscoverer, IDisposable {
+    [Export(typeof(TestContainerDiscovererWorkspace))]
+    class TestContainerDiscovererWorkspace : ITestContainerDiscoverer, IDisposable {
         private readonly IServiceProvider _serviceProvider;
         private readonly IPythonWorkspaceContextProvider _workspaceContextProvider;
         private readonly ConcurrentDictionary<string, ProjectInfo> _projectMap;
@@ -39,7 +39,7 @@ namespace Microsoft.PythonTools.TestAdapter {
         private TestFilesUpdateWatcher _testFilesUpdateWatcher;
 
         [ImportingConstructor]
-        private TestContainerDiscovererWorskspace(
+        private TestContainerDiscovererWorkspace(
             [Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider,
             [Import(typeof(IOperationState))]IOperationState operationState,
             [Import] IPythonWorkspaceContextProvider workspaceContextProvider
@@ -78,7 +78,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 
         public Uri ExecutorUri {
             get {
-                return PythonConstants.WorkspaceExecutorUri;
+                return PythonConstants.PythonWorkspaceContainerDiscovererUri;
             }
         }
 

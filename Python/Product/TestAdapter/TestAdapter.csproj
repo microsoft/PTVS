@@ -124,12 +124,11 @@
     <Compile Include="..\..\..\Common\Product\TestAdapter\ServiceProviderExtension.cs">
       <Link>ServiceProviderExtension.cs</Link>
     </Compile>
-    <Compile Include="TestContainerDiscoverer.cs" />
+    <Compile Include="TestContainerDiscovererProject.cs" />
     <Compile Include="TestFileAddRemoveListener.cs" />
     <Compile Include="TestFilesUpdateWatcher.cs" />
-    <Compile Include="TestMethodResolver.cs" />
     <Compile Include="VsProjectExtensions.cs" />
-    <Compile Include="TestContainerDiscovererWorskspace.cs" />
+    <Compile Include="TestContainerDiscovererWorkspace.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common\Common.csproj">

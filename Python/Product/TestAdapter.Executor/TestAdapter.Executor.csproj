@@ -92,13 +92,13 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Pytest\PytestDiscoveryReader.cs" />
     <Compile Include="Pytest\TestDiscovererPytest.cs" />
+    <Compile Include="Pytest\TestExecutorPytest.cs" />
     <Compile Include="Services\DiscoveryServiceFactory.cs" />
     <Compile Include="Services\ExecutorService.cs" />
     <Compile Include="Pytest\TestResultParser.cs" />
     <Compile Include="Services\IPythonTestDiscoverer.cs" />
     <Compile Include="TestCollection.cs" />
     <Compile Include="TestDiscoverer.cs" />
-    <Compile Include="TestExecutor.cs" />
     <Compile Include="TestProtocol.cs" />
     <Compile Include="TestReader.cs" />
     <Compile Include="UnitTest\TestExecutorUnitTest.cs" />

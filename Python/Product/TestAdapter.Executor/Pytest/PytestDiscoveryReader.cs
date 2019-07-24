@@ -37,10 +37,9 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
                         
                         //bschnurr todo: fix codepath for files outside of project
                         var fullSourcePathNormalized = Path.Combine(result.Root, sourceNoLineNumbers).ToLower();
-
-                        Uri executorURI = settings.IsWorkspace ? PythonConstants.WorkspaceExecutorUri : PythonConstants.ExecutorUri;
                         var fullyQualifiedName = CreateFullyQualifiedTestNameFromId(t.Id);
-                        var tc = new TestCase(fullyQualifiedName, executorURI, fullSourcePathNormalized) {
+
+                        var tc = new TestCase(fullyQualifiedName, PythonConstants.PytestExecutorUri, fullSourcePathNormalized) {
                             DisplayName = t.Name,
                             LineNumber = line,
                             CodeFilePath = fullSourcePathNormalized
