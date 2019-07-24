@@ -97,11 +97,11 @@ def report_unittest_discovered(suites, parents, pretty=False, simple=False,
                     testList.append(testdata)
             except:
                 pass
-        if testList:
-            root = {
-                'tests': testList
-            }
-            data.append(root)
+            if testList:
+                root = {
+                    'tests': testList
+                }
+                data.append(root)
 
     kwargs = {}
     if pretty:
