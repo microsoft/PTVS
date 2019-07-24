@@ -61,6 +61,7 @@ namespace Microsoft.PythonTools.Options {
             _showOutputWindowForPackageInstallation.Checked = pyService.GeneralOptions.ShowOutputWindowForPackageInstallation;
             _promptForEnvCreate.Checked = pyService.GeneralOptions.PromptForEnvCreate;
             _promptForPackageInstallation.Checked = pyService.GeneralOptions.PromptForPackageInstallation;
+            _promptForPytestEnableAndInstall.Checked = pyService.GeneralOptions.PromptForPyTestInstallOrEnable;
             _elevatePip.Checked = pyService.GeneralOptions.ElevatePip;
             _updateSearchPathsForLinkedFiles.Checked = pyService.GeneralOptions.UpdateSearchPathsWhenAddingLinkedFiles;
             _unresolvedImportWarning.Checked = pyService.GeneralOptions.UnresolvedImportWarning;
@@ -74,6 +75,7 @@ namespace Microsoft.PythonTools.Options {
             pyService.GeneralOptions.ShowOutputWindowForPackageInstallation = _showOutputWindowForPackageInstallation.Checked;
             pyService.GeneralOptions.PromptForEnvCreate = _promptForEnvCreate.Checked;
             pyService.GeneralOptions.PromptForPackageInstallation = _promptForPackageInstallation.Checked;
+            pyService.GeneralOptions.PromptForPyTestInstallOrEnable = _promptForPytestEnableAndInstall.Checked;
             pyService.GeneralOptions.ElevatePip = _elevatePip.Checked;
             pyService.GeneralOptions.UpdateSearchPathsWhenAddingLinkedFiles = _updateSearchPathsForLinkedFiles.Checked;
             pyService.GeneralOptions.IndentationInconsistencySeverity = IndentationInconsistencySeverity;

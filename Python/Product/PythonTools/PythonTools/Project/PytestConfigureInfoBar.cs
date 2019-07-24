@@ -16,7 +16,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.Composition;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -27,6 +26,7 @@ using Microsoft.PythonTools.Logging;
 using Microsoft.VisualStudio.Imaging;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using OutputWindowRedirector = Microsoft.VisualStudioTools.Infrastructure.OutputWindowRedirector;
 using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.Project {
@@ -65,7 +65,7 @@ namespace Microsoft.PythonTools.Project {
                 && await IsPyTestInstalled()
             ) {
                 //Case #1. "Enable Pytest"
-                infoBarMessage = Strings.PyTestInstalledConfigurationFileFound.FormatUI(InfoBarData.Caption);
+                infoBarMessage = Strings.PyTestInstalledConfigurationFileFound.FormatUI(InfoBarData.Caption, InfoBarData.Context.ToLower());
                 acceptActionItem = new InfoBarHyperlink(Strings.PyTestEnableInfoBarAction, (Action)EnablePytestAction);
 
             } else if (validConfigFile &&
@@ -73,17 +73,17 @@ namespace Microsoft.PythonTools.Project {
                 && !(await IsPyTestInstalled())
             ) {
                 //Case #2. "Install and enable Pytest"
-                infoBarMessage = Strings.PyTestNotInstalledConfigurationFileFound.FormatUI(InfoBarData.Caption);
+                infoBarMessage = Strings.PyTestNotInstalledConfigurationFileFound.FormatUI(InfoBarData.Caption, InfoBarData.Context.ToLower());
                 acceptActionItem = new InfoBarHyperlink(
                     Strings.PyTestInstallAndEnableInfoBarAction,
-                    (Action)(async () => await InstallAndEnablePytestActionAsync())
+                    (Action)InstallAndEnablePytestAction
                 );
 
             } else if (InfoBarData.TestFramework == TestFrameworkType.Pytest && !(await IsPyTestInstalled())) {
                 //Case #3 and #4. "Install Pytest"
-                infoBarMessage = Strings.PyTestNotInstalled.FormatUI(InfoBarData.Caption);
+                infoBarMessage = Strings.PyTestNotInstalled.FormatUI(InfoBarData.Caption, InfoBarData.Context.ToLower());
                 acceptActionItem = new InfoBarHyperlink(Strings.PyTestInstallInfoBarAction,
-                    (Action)(async () => await InstallPytestActionAsync())
+                    (Action)InstallPytestAction
                 );
 
             } else {
@@ -105,40 +105,59 @@ namespace Microsoft.PythonTools.Project {
             Create(new InfoBarModel(messages, acceptAction, KnownMonikers.StatusInformation));
         }
 
+        private void InstallPytestAction() {
+            InstallPytestActionAsync().HandleAllExceptions(Site, GetType()).DoNotWait();
+        }
+
         private async Task InstallPytestActionAsync() {
             LogEvent(ConfigurePytestInfoBarActions.Install);
-            if (!await InstallPyTestAsync()) {
-                //Install failed. Force output window to display itself.
-                //TODO Raymon
+            var result = await InstallPyTestAsync();
+            if (!result) {
+                var generalOutputWindow = OutputWindowRedirector.GetGeneral(Site);
+                generalOutputWindow.ShowAndActivate();
             }
+
             Close();
         }
 
         private void EnablePytestAction() {
+            EnablePytestActionAsync().HandleAllExceptions(Site, GetType()).DoNotWait();
+        }
+
+        private async Task EnablePytestActionAsync() {
             LogEvent(ConfigurePytestInfoBarActions.Enable);
-            SetProperty(PythonConstants.TestFrameworkSetting, "Pytest");
+            await SetPropertyAsync(PythonConstants.TestFrameworkSetting, "Pytest");
             Close();
+        }
+
+        private void InstallAndEnablePytestAction() {
+            InstallAndEnablePytestActionAsync().HandleAllExceptions(Site, GetType()).DoNotWait();
         }
 
         private async Task InstallAndEnablePytestActionAsync() {
             LogEvent(ConfigurePytestInfoBarActions.EnableAndInstall);
             if (!await InstallPyTestAsync()) {
-                //Install failed. Take some action TODO RAymon
+                var generalOutputWindow = OutputWindowRedirector.GetGeneral(Site);
+                generalOutputWindow.ShowAndActivate();
             }
 
-            SetProperty(PythonConstants.TestFrameworkSetting, "Pytest");
+            await SetPropertyAsync(PythonConstants.TestFrameworkSetting, "Pytest");
             Close();
         }
 
         private void IgnoreAction() {
+            IgnoreActionAsync().HandleAllExceptions(Site, GetType()).DoNotWait();
+        }
+
+        private async Task IgnoreActionAsync() {
             LogEvent(ConfigurePytestInfoBarActions.Ignore);
-            SetProperty(PythonConstants.SuppressPytestConfigPrompt, true.ToString());
+            await SetPropertyAsync(PythonConstants.SuppressPytestConfigPrompt, true.ToString());
             Close();
         }
 
-        private async Task<Boolean> InstallPyTestAsync() {
-            //Is there a better way to do this? Combining two link queries? TODO
+        private async Task<bool> InstallPyTestAsync() {
             var packageManagers = InfoBarData.InterpreterOptionsService.GetPackageManagers(InfoBarData.InterpreterFactory);
+
             foreach (var packageManager in packageManagers) {
                 bool pytestInstalled = await packageManager.InstallAsync(
                     new PackageSpec("pytest"),
@@ -155,28 +174,15 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private async Task<bool> IsPyTestInstalled() {
-            //TODO Simplify syntax Raymon
             var packageManagers = InfoBarData.InterpreterOptionsService.GetPackageManagers(InfoBarData.InterpreterFactory);
+            var getPackageManagersTask = packageManagers.Select(
+                packageManager => packageManager.GetInstalledPackagesAsync(CancellationToken.None)
+            ).ToList();
 
-            var getPackageManagersTask = new List<Task<IList<PackageSpec>>>();
-            foreach (var packageManager in packageManagers) {
-                getPackageManagersTask.Add(packageManager.GetInstalledPackagesAsync(CancellationToken.None));
-            }
-            var packages = await Task.WhenAll(getPackageManagersTask);
-
-            bool pytestPackageFound = false;
-            foreach (var packageSpecs in packages) {
-                var result = packageSpecs.FirstOrDefault(
-                    x => String.Equals(x.Name, nameof(TestFrameworkType.Pytest), StringComparison.OrdinalIgnoreCase)
-                );
-
-                if (result != null) {
-                    pytestPackageFound = true;
-                    break;
-                }
-            }
-
-            return pytestPackageFound;
+            var packagesList = await Task.WhenAll(getPackageManagersTask);
+            return packagesList.Any(packages => packages.Any(package =>
+                String.Equals(package.Name, nameof(TestFrameworkType.Pytest), StringComparison.OrdinalIgnoreCase))
+            );
         }
 
         private void LogEvent(string action) {
@@ -189,14 +195,14 @@ namespace Microsoft.PythonTools.Project {
             );
         }
 
-        protected abstract void SetProperty(string propertyName, string propertyValue);
+        protected abstract Task SetPropertyAsync(string propertyName, string propertyValue);
 
         protected class PyTestInfoBarData {
             public IInterpreterOptionsService InterpreterOptionsService { get; set; }
             public IPythonInterpreterFactory InterpreterFactory { get; set; }
 
-            public bool IsGloballySuppressed = false; //TODO Raymon
-            public bool InfoBarSuppressed = false;
+            public bool IsGloballySuppressed { get; set; }
+            public bool InfoBarSuppressed { get; set; }
 
             public string Caption { get; set; }
             public string Context { get; set; }
@@ -225,11 +231,10 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public override async Task CheckAsync() {
-
             var infoBarData = new PyTestInfoBarData {
                 InterpreterOptionsService = Site.GetPythonToolsService().InterpreterOptionsService,
                 InterpreterFactory = Project.ActiveInterpreter,
-                IsGloballySuppressed = false, //TODO Raymon
+                IsGloballySuppressed = !Site.GetPythonToolsService().GeneralOptions.PromptForPyTestInstallOrEnable,
                 InfoBarSuppressed = Project.GetProjectProperty(PythonConstants.SuppressPytestConfigPrompt).IsTrue(),
                 Caption = Project.Caption,
                 Context = InfoBarContexts.Project,
@@ -242,8 +247,9 @@ namespace Microsoft.PythonTools.Project {
             await CheckAsync(infoBarData);
         }
 
-        protected override void SetProperty(string propertyName, string propertyValue) {
-            Project.SetProjectProperty(propertyName, propertyValue);
+        protected override Task SetPropertyAsync(string propertyName, string propertyValue) {
+            Project.SetProjectProperty(propertyName, propertyValue);//but this function isn't async. 
+            return Task.CompletedTask;
         }
     }
 
@@ -258,7 +264,7 @@ namespace Microsoft.PythonTools.Project {
             var infoBarData = new PyTestInfoBarData {
                 InterpreterOptionsService = Site.GetPythonToolsService().InterpreterOptionsService,
                 InterpreterFactory = WorkspaceContext.CurrentFactory,
-                IsGloballySuppressed = false, //TODO Raymon
+                IsGloballySuppressed = !Site.GetPythonToolsService().GeneralOptions.PromptForPyTestInstallOrEnable,
                 InfoBarSuppressed = WorkspaceContext.GetBoolProperty(PythonConstants.SuppressPytestConfigPrompt) ?? false,
                 Caption = WorkspaceContext.WorkspaceName,
                 Context = InfoBarContexts.Workspace,
@@ -266,30 +272,19 @@ namespace Microsoft.PythonTools.Project {
                 TestFramework = PyTestInfoBarData.GetTestFramework(WorkspaceContext.GetStringProperty(PythonConstants.TestFrameworkSetting)),
             };
 
-
-
             await CheckAsync(infoBarData);
         }
 
         private string GetPyTestConfigFilePath() {
-            return PythonConstants.PyTestFrameworkConfigFiles
-                .FirstOrDefault(fileName => File.Exists(PathUtils.GetAbsoluteFilePath(WorkspaceContext.Location, fileName)));
+            var fileName = PythonConstants.PyTestFrameworkConfigFiles
+                .FirstOrDefault(x => File.Exists(PathUtils.GetAbsoluteFilePath(WorkspaceContext.Location, x)));
+
+            return string.IsNullOrEmpty(fileName) ? "" : Path.Combine(WorkspaceContext.Location, fileName);
         }
 
-        protected override async void SetProperty(string propertyName, string propertyValue) {
-            await WorkspaceContext.SetPropertyAsync(propertyName, propertyValue);
+        protected override Task SetPropertyAsync(string propertyName, string propertyValue) {
+            return WorkspaceContext.SetPropertyAsync(propertyName, propertyValue);
         }
-
-
 
     }
-
-
-
-
-
-
-
-
-
 }

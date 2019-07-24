@@ -119,7 +119,7 @@ namespace Microsoft.PythonTools {
         }
 
         private void TriggerInfoBar() {
-            //_infoBarCheckTriggered = true;
+            _infoBarCheckTriggered = true;
             TriggerInfoBarsAsync().HandleAllExceptions(_serviceProvider, typeof(WorkspaceInfoBarManager)).DoNotWait();
         }
 

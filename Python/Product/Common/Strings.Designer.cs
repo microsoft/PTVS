@@ -5154,7 +5154,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to A pytest configuration file was detected in &apos;{0}&apos;, but pytest is not enabled..
+        ///   Looks up a localized string similar to A pytest configuration file was detected in the {0} {1}, but pytest is not enabled..
         /// </summary>
         public static string PyTestInstalledConfigurationFileFound {
             get {
@@ -5172,7 +5172,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Pytest is enabled in &apos;{0}&apos;, but it is not installed in the active environment..
+        ///   Looks up a localized string similar to Pytest is enabled in the {0} {1}, but it is not installed in the active environment..
         /// </summary>
         public static string PyTestNotInstalled {
             get {
@@ -5181,7 +5181,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to A pytest configuration file was detected in &apos;{0}&apos;, but pytest is not installed or enabled..
+        ///   Looks up a localized string similar to A pytest configuration file was detected in the {0} {1}, but pytest is not installed or enabled..
         /// </summary>
         public static string PyTestNotInstalledConfigurationFileFound {
             get {

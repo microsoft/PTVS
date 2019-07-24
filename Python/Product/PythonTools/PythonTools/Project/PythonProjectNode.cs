@@ -734,7 +734,7 @@ namespace Microsoft.PythonTools.Project {
             base.OnOpenItem(fullPathToSourceFile);
 
             if (!_infoBarCheckTriggered) {
-                //_infoBarCheckTriggered = true;
+                _infoBarCheckTriggered = true;
                 TriggerInfoBarsAsync().HandleAllExceptions(Site, typeof(PythonProjectNode)).DoNotWait();
             }
         }
