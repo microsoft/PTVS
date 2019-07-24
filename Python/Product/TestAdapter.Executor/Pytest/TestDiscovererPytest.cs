@@ -80,6 +80,7 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
             arguments.Add("discover");
             arguments.Add("pytest");
             arguments.Add("--");
+            arguments.Add("--cache-clear");
 
             foreach (var s in sources) {
                 arguments.Add(s);
