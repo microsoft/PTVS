@@ -49,7 +49,7 @@ def discover(pytestargs=None, hidestdio=False,
                             pass
 
                     if (isinstance(obj, types.FunctionType) or
-                        isinstance(obj, types.UnboundMethodType)):
+                        ((sys.version_info[0] < 3) and isinstance(obj, types.UnboundMethodType))):
                         _, lineno = inspect.getsourcelines(obj)
                         setattr(test, 'lineno', lineno)
             except:
