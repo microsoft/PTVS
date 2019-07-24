@@ -40,7 +40,7 @@ def discover(pytestargs=None, hidestdio=False,
 
                     filename = inspect.getsourcefile(module)
                     setattr(test, 'source', filename)
-
+                    
                     obj = module
                     for part in parts:
                         try:
@@ -48,7 +48,8 @@ def discover(pytestargs=None, hidestdio=False,
                         except AttributeError as e:
                             pass
 
-                    if isinstance(obj, types.FunctionType):
+                    if (isinstance(obj, types.FunctionType) or
+                        isinstance(obj, types.UnboundMethodType)):
                         _, lineno = inspect.getsourcelines(obj)
                         setattr(test, 'lineno', lineno)
             except:
