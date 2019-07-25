@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Collections.Generic;
 
 namespace Microsoft.PythonTools {
     public enum TestFrameworkType {
@@ -129,11 +130,13 @@ namespace Microsoft.PythonTools {
         public const string IsWindowsApplicationSetting = "IsWindowsApplication";
         public const string EnvironmentSetting = "Environment";
         public const string TestFrameworkSetting = "TestFramework";
-
         public const string UnitTestRootDirectorySetting = "UnitTestRootDirectory";
         public const string DefaultUnitTestRootDirectory = ".";
         public const string UnitTestPatternSetting = "UnitTestPattern";
         public const string DefaultUnitTestPattern = "test*.py";
+
+        public static readonly HashSet<string> PyTestFrameworkConfigFiles =
+            new HashSet<string>(StringComparer.OrdinalIgnoreCase) {"pytest.ini", "setup.cfg", "tox.ini"};
 
         /// <summary>
         /// Specifies port to which to open web browser on launch.
@@ -164,6 +167,9 @@ namespace Microsoft.PythonTools {
 
         // Suppress the prompt for package installation project property
         public const string SuppressPackageInstallationPrompt = "SuppressPackageInstallationPrompt";
+
+        // Suppress the prompt for pytest configuration project property
+        public const string SuppressPytestConfigPrompt = "SuppressPytestConfigPrompt";
 
         // Launch option to ignore pause on exist settings
         internal const string NeverPauseOnExit = "NeverPauseOnExit";

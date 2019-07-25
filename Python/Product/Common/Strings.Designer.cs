@@ -5015,6 +5015,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Project.
+        /// </summary>
+        public static string ProjectText {
+            get {
+                return ResourceManager.GetString("ProjectText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Use the legacy debugger.
         /// </summary>
         public static string PtvsdDisableCaption {
@@ -5123,6 +5132,69 @@ namespace Microsoft.PythonTools {
         public static string PydReferenceDeprecated {
             get {
                 return ResourceManager.GetString("PydReferenceDeprecated", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enable pytest.
+        /// </summary>
+        public static string PyTestEnableInfoBarAction {
+            get {
+                return ResourceManager.GetString("PyTestEnableInfoBarAction", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Don&apos;t show this message again.
+        /// </summary>
+        public static string PyTestIgnoreInfoBarAction {
+            get {
+                return ResourceManager.GetString("PyTestIgnoreInfoBarAction", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Install and enable pytest.
+        /// </summary>
+        public static string PyTestInstallAndEnableInfoBarAction {
+            get {
+                return ResourceManager.GetString("PyTestInstallAndEnableInfoBarAction", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A pytest configuration file was detected in the {0} {1}, but pytest is not enabled..
+        /// </summary>
+        public static string PyTestInstalledConfigurationFileFound {
+            get {
+                return ResourceManager.GetString("PyTestInstalledConfigurationFileFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Install pytest.
+        /// </summary>
+        public static string PyTestInstallInfoBarAction {
+            get {
+                return ResourceManager.GetString("PyTestInstallInfoBarAction", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Pytest is enabled in the {0} {1}, but it is not installed in the active environment..
+        /// </summary>
+        public static string PyTestNotInstalled {
+            get {
+                return ResourceManager.GetString("PyTestNotInstalled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A pytest configuration file was detected in the {0} {1}, but pytest is not installed or enabled..
+        /// </summary>
+        public static string PyTestNotInstalledConfigurationFileFound {
+            get {
+                return ResourceManager.GetString("PyTestNotInstalledConfigurationFileFound", resourceCulture);
             }
         }
         
@@ -7504,6 +7576,15 @@ namespace Microsoft.PythonTools {
         public static string WorkspaceEnvironmentDescription {
             get {
                 return ResourceManager.GetString("WorkspaceEnvironmentDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Workspace.
+        /// </summary>
+        public static string WorkspaceText {
+            get {
+                return ResourceManager.GetString("WorkspaceText", resourceCulture);
             }
         }
         

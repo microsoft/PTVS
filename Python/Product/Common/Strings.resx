@@ -2876,4 +2876,37 @@ Please specify at least one package.</value>
   <data name="CondaEnvNotDetected" xml:space="preserve">
     <value>Conda environment not detected</value>
   </data>
+  <data name="PyTestIgnoreInfoBarAction" xml:space="preserve">
+    <value>Don't show this message again</value>
+  </data>
+  <data name="PyTestEnableInfoBarAction" xml:space="preserve">
+    <value>Enable pytest</value>
+  </data>
+  <data name="PyTestInstalledConfigurationFileFound" xml:space="preserve">
+    <value>A pytest configuration file was detected in the {0} {1}, but pytest is not enabled.</value>
+    <comment>{0} is the project or workspace name
+{1} is "project" or "workspace"</comment>
+  </data>
+  <data name="PyTestInstallAndEnableInfoBarAction" xml:space="preserve">
+    <value>Install and enable pytest</value>
+  </data>
+  <data name="PyTestNotInstalled" xml:space="preserve">
+    <value>Pytest is enabled in the {0} {1}, but it is not installed in the active environment.</value>
+    <comment>{0} is the project or workspace name
+{1} is "project" or "workspace"</comment>
+  </data>
+  <data name="PyTestInstallInfoBarAction" xml:space="preserve">
+    <value>Install pytest</value>
+  </data>
+  <data name="PyTestNotInstalledConfigurationFileFound" xml:space="preserve">
+    <value>A pytest configuration file was detected in the {0} {1}, but pytest is not installed or enabled.</value>
+    <comment>{0} is the project or workspace name
+{1} is "project" or "workspace"</comment>
+  </data>
+  <data name="ProjectText" xml:space="preserve">
+    <value>Project</value>
+  </data>
+  <data name="WorkspaceText" xml:space="preserve">
+    <value>Workspace</value>
+  </data>
 </root>

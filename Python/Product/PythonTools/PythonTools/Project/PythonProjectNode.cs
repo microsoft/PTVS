@@ -59,8 +59,7 @@ namespace Microsoft.PythonTools.Project {
         CommonProjectNode,
         IPythonProject,
         IAzureRoleProject,
-        IPythonProjectProvider
-    {
+        IPythonProjectProvider {
         // For files that are analyzed because they were directly or indirectly referenced in the search path, store the information
         // about the directory from the search path that referenced them in IProjectEntry.Properties[_searchPathEntryKey], so that
         // they can be located and removed when that directory is removed from the path.
@@ -97,6 +96,7 @@ namespace Microsoft.PythonTools.Project {
         private readonly CondaEnvCreateInfoBar _condaEnvCreateInfoBar;
         private readonly VirtualEnvCreateInfoBar _virtualEnvCreateInfoBar;
         private readonly PackageInstallInfoBar _packageInstallInfoBar;
+        private readonly PyTestInfoBar _pyTestInfoBar;
 
         private readonly SemaphoreSlim _recreatingAnalyzer = new SemaphoreSlim(1);
 
@@ -129,9 +129,10 @@ namespace Microsoft.PythonTools.Project {
             InterpreterRegistry.InterpretersChanged += OnInterpreterRegistryChanged;
             _pythonProject = new VsPythonProject(this);
 
-            _condaEnvCreateInfoBar = new CondaEnvCreateProjectInfoBar(this.Site, this);
-            _virtualEnvCreateInfoBar = new VirtualEnvCreateProjectInfoBar(this.Site, this);
-            _packageInstallInfoBar = new PackageInstallProjectInfoBar(this.Site, this);
+            _condaEnvCreateInfoBar = new CondaEnvCreateProjectInfoBar(Site, this);
+            _virtualEnvCreateInfoBar = new VirtualEnvCreateProjectInfoBar(Site, this);
+            _packageInstallInfoBar = new PackageInstallProjectInfoBar(Site, this);
+            _pyTestInfoBar = new PyTestProjectInfoBar(Site, this);
         }
 
         private static KeyValuePair<string, string>[] outputGroupNames = {
@@ -742,7 +743,8 @@ namespace Microsoft.PythonTools.Project {
             await Task.WhenAll(
                 _condaEnvCreateInfoBar.CheckAsync(),
                 _virtualEnvCreateInfoBar.CheckAsync(),
-                _packageInstallInfoBar.CheckAsync()
+                _packageInstallInfoBar.CheckAsync(),
+                _pyTestInfoBar.CheckAsync()
             );
         }
 
@@ -855,8 +857,8 @@ namespace Microsoft.PythonTools.Project {
                             canDelete:
                                 isProjectSpecific &&
                                 Directory.Exists(fact.Configuration.GetPrefixPath()),
-                            isGlobalDefault:false,
-                            canRemove:canRemove
+                            isGlobalDefault: false,
+                            canRemove: canRemove
                         ));
                     }
                 }
@@ -1091,6 +1093,7 @@ namespace Microsoft.PythonTools.Project {
                 _condaEnvCreateInfoBar.Dispose();
                 _virtualEnvCreateInfoBar.Dispose();
                 _packageInstallInfoBar.Dispose();
+                _pyTestInfoBar.Dispose();
 
                 _reanalyzeProjectNotification.Dispose();
 
@@ -1273,7 +1276,7 @@ namespace Microsoft.PythonTools.Project {
                 throw new MissingInterpreterException(
                     Strings.MissingEnvironment.FormatUI(fact.Configuration.Description, fact.Configuration.Version)
                 );
-            } else if (IsActiveInterpreterGlobalDefault && 
+            } else if (IsActiveInterpreterGlobalDefault &&
                 !String.IsNullOrWhiteSpace(BuildProject.GetPropertyValue(MSBuildConstants.InterpreterIdProperty))) {
                 throw new MissingInterpreterException(
                     Strings.MissingEnvironmentUnknownVersion.FormatUI(
@@ -2623,6 +2626,13 @@ namespace Microsoft.PythonTools.Project {
             return File.Exists(reqsPath) ? reqsPath : null;
         }
 
+        internal string GetPyTestConfigFilePath() {
+            string fileName = PythonConstants.PyTestFrameworkConfigFiles
+                .FirstOrDefault(x => File.Exists(PathUtils.GetAbsoluteFilePath(ProjectHome, x)));
+
+            return String.IsNullOrEmpty(fileName) ? "" : Path.Combine(ProjectHome, fileName);
+        }
+
         internal string GetEnvironmentYmlPath() {
             var yamlPath = PathUtils.GetAbsoluteFilePath(ProjectHome, "environment.yml");
             return File.Exists(yamlPath) ? yamlPath : null;
@@ -2654,7 +2664,7 @@ namespace Microsoft.PythonTools.Project {
                 return GuidList.guidPythonToolsCmdSet;
             }
         }
-        
+
         public PythonProject Project {
             get {
                 return _pythonProject;
@@ -2894,7 +2904,7 @@ namespace Microsoft.PythonTools.Project {
             }
 
             public override event EventHandler<PythonProjectPropertyChangedArgs> ProjectPropertyChanged;
-            
+
             public override event EventHandler ProjectAnalyzerChanged {
                 add { _node.ProjectAnalyzerChanged += value; }
                 remove { _node.ProjectAnalyzerChanged -= value; }

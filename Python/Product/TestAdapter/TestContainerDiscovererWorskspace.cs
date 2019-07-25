@@ -37,7 +37,6 @@ namespace Microsoft.PythonTools.TestAdapter {
         private readonly ConcurrentDictionary<string, ProjectInfo> _projectMap;
         private bool _firstLoad, _isDisposed, _isRefresh;
         private TestFilesUpdateWatcher _testFilesUpdateWatcher;
-        private readonly HashSet<string> _pytestFrameworkConfigFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "pytest.ini", "setup.cfg", "tox.ini" };
 
         [ImportingConstructor]
         private TestContainerDiscovererWorskspace(
@@ -211,8 +210,8 @@ namespace Microsoft.PythonTools.TestAdapter {
         private bool IsSettingsFile(string file) {
             if (String.IsNullOrEmpty(file))
                 return false;
-
-            return _pytestFrameworkConfigFiles.Contains(Path.GetFileName(file));
+            
+            return PythonConstants.PyTestFrameworkConfigFiles.Contains(Path.GetFileName(file));
         }
 
         private void OnWorkspaceSettingsChange(object sender, System.EventArgs e) {
