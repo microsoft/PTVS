@@ -65,7 +65,7 @@ namespace Microsoft.PythonTools.Project {
                 && await IsPyTestInstalled()
             ) {
                 //Case #1. "Enable Pytest"
-                infoBarMessage = Strings.PyTestInstalledConfigurationFileFound.FormatUI(InfoBarData.Caption, InfoBarData.Context.ToLower());
+                infoBarMessage = Strings.PyTestInstalledConfigurationFileFound.FormatUI(InfoBarData.Caption, InfoBarData.ContextLocalized.ToLower());
                 acceptActionItem = new InfoBarHyperlink(Strings.PyTestEnableInfoBarAction, (Action)EnablePytestAction);
 
             } else if (validConfigFile &&
@@ -73,7 +73,7 @@ namespace Microsoft.PythonTools.Project {
                 && !(await IsPyTestInstalled())
             ) {
                 //Case #2. "Install and enable Pytest"
-                infoBarMessage = Strings.PyTestNotInstalledConfigurationFileFound.FormatUI(InfoBarData.Caption, InfoBarData.Context.ToLower());
+                infoBarMessage = Strings.PyTestNotInstalledConfigurationFileFound.FormatUI(InfoBarData.Caption, InfoBarData.ContextLocalized.ToLower());
                 acceptActionItem = new InfoBarHyperlink(
                     Strings.PyTestInstallAndEnableInfoBarAction,
                     (Action)InstallAndEnablePytestAction
@@ -81,7 +81,7 @@ namespace Microsoft.PythonTools.Project {
 
             } else if (InfoBarData.TestFramework == TestFrameworkType.Pytest && !(await IsPyTestInstalled())) {
                 //Case #3 and #4. "Install Pytest"
-                infoBarMessage = Strings.PyTestNotInstalled.FormatUI(InfoBarData.Caption, InfoBarData.Context.ToLower());
+                infoBarMessage = Strings.PyTestNotInstalled.FormatUI(InfoBarData.Caption, InfoBarData.ContextLocalized.ToLower());
                 acceptActionItem = new InfoBarHyperlink(Strings.PyTestInstallInfoBarAction,
                     (Action)InstallPytestAction
                 );
@@ -206,6 +206,7 @@ namespace Microsoft.PythonTools.Project {
 
             public string Caption { get; set; }
             public string Context { get; set; }
+            public string ContextLocalized { get; set; }
             public string PyTestConfigFilePath { get; set; }
             public TestFrameworkType TestFramework { get; set; }
 
@@ -238,6 +239,7 @@ namespace Microsoft.PythonTools.Project {
                 InfoBarSuppressed = Project.GetProjectProperty(PythonConstants.SuppressPytestConfigPrompt).IsTrue(),
                 Caption = Project.Caption,
                 Context = InfoBarContexts.Project,
+                ContextLocalized = Strings.ProjectText,
                 PyTestConfigFilePath = Project.GetPyTestConfigFilePath(),
                 TestFramework = PyTestInfoBarData.GetTestFramework(
                     Project.GetProjectProperty(PythonConstants.TestFrameworkSetting, false)
@@ -268,6 +270,7 @@ namespace Microsoft.PythonTools.Project {
                 InfoBarSuppressed = WorkspaceContext.GetBoolProperty(PythonConstants.SuppressPytestConfigPrompt) ?? false,
                 Caption = WorkspaceContext.WorkspaceName,
                 Context = InfoBarContexts.Workspace,
+                ContextLocalized = Strings.WorkspaceText,
                 PyTestConfigFilePath = GetPyTestConfigFilePath(),
                 TestFramework = PyTestInfoBarData.GetTestFramework(WorkspaceContext.GetStringProperty(PythonConstants.TestFrameworkSetting)),
             };

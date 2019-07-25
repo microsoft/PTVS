@@ -5015,6 +5015,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Project.
+        /// </summary>
+        public static string ProjectText {
+            get {
+                return ResourceManager.GetString("ProjectText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Use the legacy debugger.
         /// </summary>
         public static string PtvsdDisableCaption {
@@ -7567,6 +7576,15 @@ namespace Microsoft.PythonTools {
         public static string WorkspaceEnvironmentDescription {
             get {
                 return ResourceManager.GetString("WorkspaceEnvironmentDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Workspace.
+        /// </summary>
+        public static string WorkspaceText {
+            get {
+                return ResourceManager.GetString("WorkspaceText", resourceCulture);
             }
         }
         
