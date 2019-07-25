@@ -177,6 +177,18 @@ class VsTestResult(TextTestResult):
         self._setResult(test, 'passed')
 
     def _setResult(self, test, outcome, trace = None):
+        # If a user runs the unit tests without debugging and then attaches to them using the legacy debugger (TCP or PID)
+        # Then the user will be able to debug this script. 
+        # After attaching the debugger, this script must add itself to the DONT_DEBUG list so it's not debugged. 
+        # Since this script doesn't know when the legacy debugger has been imported and attached, it's doing a check after every test
+        # This code will be removed when the legacy debugger is removed. 
+        # For more information, see https://github.com/microsoft/PTVS/pull/5447
+        if ("ptvsd" in sys.modules
+            and sys.modules["ptvsd"].__version__.startswith('3.') 
+            and os.path.normcase(__file__) not in sys.modules["ptvsd"].debugger.DONT_DEBUG):
+            sys.modules["ptvsd"].debugger.DEBUG_ENTRYPOINTS.add(sys.modules["ptvsd"].debugger.get_code(main))
+            sys.modules["ptvsd"].debugger.DONT_DEBUG.append(os.path.normcase(__file__))
+
         tb = None
         message = None
         duration = time.time() - self._start_time if self._start_time else 0
