@@ -65,7 +65,7 @@ namespace Microsoft.PythonTools.Project {
                 && await IsPyTestInstalled()
             ) {
                 //Case #1. "Enable Pytest"
-                infoBarMessage = Strings.PyTestInstalledConfigurationFileFound.FormatUI(InfoBarData.Caption, InfoBarData.ContextLocalized.ToLower());
+                infoBarMessage = Strings.PyTestInstalledConfigurationFileFound.FormatUI(InfoBarData.Caption, InfoBarData.ContextLocalized);
                 acceptActionItem = new InfoBarHyperlink(Strings.PyTestEnableInfoBarAction, (Action)EnablePytestAction);
 
             } else if (validConfigFile &&
@@ -73,7 +73,7 @@ namespace Microsoft.PythonTools.Project {
                 && !(await IsPyTestInstalled())
             ) {
                 //Case #2. "Install and enable Pytest"
-                infoBarMessage = Strings.PyTestNotInstalledConfigurationFileFound.FormatUI(InfoBarData.Caption, InfoBarData.ContextLocalized.ToLower());
+                infoBarMessage = Strings.PyTestNotInstalledConfigurationFileFound.FormatUI(InfoBarData.Caption, InfoBarData.ContextLocalized);
                 acceptActionItem = new InfoBarHyperlink(
                     Strings.PyTestInstallAndEnableInfoBarAction,
                     (Action)InstallAndEnablePytestAction
@@ -81,7 +81,7 @@ namespace Microsoft.PythonTools.Project {
 
             } else if (InfoBarData.TestFramework == TestFrameworkType.Pytest && !(await IsPyTestInstalled())) {
                 //Case #3 and #4. "Install Pytest"
-                infoBarMessage = Strings.PyTestNotInstalled.FormatUI(InfoBarData.Caption, InfoBarData.ContextLocalized.ToLower());
+                infoBarMessage = Strings.PyTestNotInstalled.FormatUI(InfoBarData.Caption, InfoBarData.ContextLocalized);
                 acceptActionItem = new InfoBarHyperlink(Strings.PyTestInstallInfoBarAction,
                     (Action)InstallPytestAction
                 );

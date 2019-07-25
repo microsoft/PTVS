@@ -5015,7 +5015,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Project.
+        ///   Looks up a localized string similar to project.
         /// </summary>
         public static string ProjectText {
             get {
@@ -7580,7 +7580,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Workspace.
+        ///   Looks up a localized string similar to workspace.
         /// </summary>
         public static string WorkspaceText {
             get {

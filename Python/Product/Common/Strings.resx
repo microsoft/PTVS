@@ -2904,9 +2904,9 @@ Please specify at least one package.</value>
 {1} is "project" or "workspace"</comment>
   </data>
   <data name="ProjectText" xml:space="preserve">
-    <value>Project</value>
+    <value>project</value>
   </data>
   <data name="WorkspaceText" xml:space="preserve">
-    <value>Workspace</value>
+    <value>workspace</value>
   </data>
 </root>
