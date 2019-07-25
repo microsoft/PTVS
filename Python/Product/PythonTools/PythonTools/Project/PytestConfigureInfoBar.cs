@@ -291,21 +291,3 @@ namespace Microsoft.PythonTools.Project {
 
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
