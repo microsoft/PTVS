@@ -82,10 +82,6 @@
       <Name>PythonTools</Name>
       <Aliases>global,pt</Aliases>
     </ProjectReference>
-    <ProjectReference Include="..\..\Product\TestAdapter.Analysis\TestAdapter.Analysis.csproj">
-      <Project>{6500e6e2-4604-48fc-af4e-1ff12b8c6757}</Project>
-      <Name>TestAdapter.Analysis</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\Product\TestAdapter.Executor\TestAdapter.Executor.csproj">
       <Project>{44e8bb56-c38e-49a8-8bc1-7af40d0ac725}</Project>
       <Name>TestAdapter.Executor</Name>

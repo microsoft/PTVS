@@ -39,7 +39,6 @@ ASSEMBLIES = sorted([
     "Microsoft.PythonTools.ProjectWizards",
     "Microsoft.PythonTools.RunElevated",
     "Microsoft.PythonTools.TestAdapter",
-    "Microsoft.PythonTools.TestAdapter.Analysis",
     "Microsoft.PythonTools.TestAdapter.Executor",
     "Microsoft.PythonTools.VSCommon",
     "Microsoft.PythonTools.VSInterpreters",
