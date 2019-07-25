@@ -17,30 +17,22 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Microsoft.PythonTools.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestWindow.Extensibility;
 using Microsoft.VisualStudio.TestWindow.Extensibility.Model;
 
 namespace Microsoft.VisualStudioTools.TestAdapter {
     internal class TestContainer : ITestContainer {
-        private readonly int _version;
-        private readonly Architecture _architecture;
-        private readonly string _projectHome;
-        private readonly string _projectName;
-        private readonly TestCaseInfo[] _testCases;
         private readonly DateTime _timeStamp;
         private readonly bool _isWorkspace;
 
-
-        public TestContainer(ITestContainerDiscoverer discoverer, string source, string projectHome, string projectName, int version, Architecture architecture, bool isWorkspace, TestCaseInfo[] testCases) {
+        public TestContainer(ITestContainerDiscoverer discoverer, string source, string projectHome, string projectName, int version, Architecture architecture, bool isWorkspace) {
             Discoverer = discoverer;
             Source = source.ToLower(); // Make sure source matches pytest discovery test file paths.
-            _version = version;
-            _projectHome = projectHome;
-            _projectName = projectName;
-            _architecture = architecture;
-            _testCases = testCases;
+            Version = version;
+            Project = projectHome;
+            ProjectName = projectName;
+            TargetPlatform = architecture;
             _timeStamp = GetTimeStamp();
             _isWorkspace = isWorkspace;
         }
@@ -50,36 +42,18 @@ namespace Microsoft.VisualStudioTools.TestAdapter {
         /// </summary>
         /// <param name="copy"></param>
         private TestContainer(TestContainer copy)
-            : this(copy.Discoverer, copy.Source, copy.Project, copy.ProjectName, copy.Version, copy._architecture, copy._isWorkspace, copy.TestCases) {
-            this._timeStamp = copy._timeStamp;
+            : this(copy.Discoverer, copy.Source, copy.Project, copy.ProjectName, copy.Version, copy.TargetPlatform, copy._isWorkspace) {
+            _timeStamp = copy._timeStamp;
         }
 
-        public TestCaseInfo[] TestCases {
-            get {
-                return _testCases;
-            }
-        }
-
-        public int Version {
-            get {
-                return _version;
-            }
-        }
+        public int Version { get; private set; }
 
         /// <summary>
         /// Project path
         /// </summary>
-        public string Project {
-            get {
-                return _projectHome;
-            }
-        }
+        public string Project { get; private set; }
 
-        public string ProjectName {
-            get {
-                return _projectName;
-            }
-        }
+        public string ProjectName { get; private set; }
              
         public int CompareTo(ITestContainer other) {
             var container = other as TestContainer;
@@ -96,7 +70,7 @@ namespace Microsoft.VisualStudioTools.TestAdapter {
                 return result;
             }
             
-            if (_version.CompareTo(container._version) != 0) {
+            if (Version.CompareTo(container.Version) != 0) {
                 return -1;
             }
 
@@ -141,17 +115,14 @@ namespace Microsoft.VisualStudioTools.TestAdapter {
 
         public string Source { get; private set; }
 
-        public FrameworkVersion TargetFramework {
-            get { return FrameworkVersion.None; }
-        }
+        public FrameworkVersion TargetFramework => FrameworkVersion.None;
 
-        public Architecture TargetPlatform {
-            get { return _architecture; }
-        }
+        public Architecture TargetPlatform { get; private set; }
 
         public override string ToString() {
             return Source + ":" + Discoverer.ExecutorUri.ToString();
         }
+
         private DateTime GetTimeStamp() {
             if (!String.IsNullOrEmpty(this.Source) && File.Exists(this.Source)) {
                 return File.GetLastWriteTime(this.Source);
