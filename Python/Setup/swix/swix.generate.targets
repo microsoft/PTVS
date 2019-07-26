@@ -4,7 +4,7 @@
     <SwrFile>$(IntermediateOutputPath)package.g.swr</SwrFile>
     <SwrFile Condition="$(OutputLocalized)">$(IntermediateOutputPath)package.g.$(lang).swr</SwrFile>
     <SwixPackageType Condition="$(SwixPackageType) == ''">component</SwixPackageType>
-    <SwixVersion Condition="$(SwixVersion) == ''">$(VSTarget).$(BuildNumber)</SwixVersion>
+    <SwixVersion Condition="$(SwixVersion) == ''">$(FileVersion)</SwixVersion>
     <Python Condition="$(Python) == ''">"$(PackagesPath)python\tools\python.exe"</Python>
   </PropertyGroup>
 

@@ -8,7 +8,7 @@
     <FinalizeManifest>true</FinalizeManifest>
     <FinalizeSkipLayout>true</FinalizeSkipLayout>
 
-    <BuildNumber>$(VSTarget).$(BuildNumber)</BuildNumber>
+    <BuildNumber>$(FileVersion)</BuildNumber>
 
     <TargetName>$(MSBuildProjectName)</TargetName>
   </PropertyGroup>
