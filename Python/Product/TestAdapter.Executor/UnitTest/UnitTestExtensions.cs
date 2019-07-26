@@ -18,15 +18,17 @@ using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using System;
 using System.Diagnostics;
+using System.Linq;
+using System.Xml.Schema;
 
 namespace Microsoft.PythonTools.TestAdapter.UnitTest {
     public static class UnitTestExtensions {
 
         public static TestCase ToVsTestCase(this UnitTestTestCase test, bool isWorkspace, string projectHome) {
             var normalizedPath = test.Source.ToLowerInvariant();
-            var moduleName = PathUtils.CreateFriendlyFilePath(projectHome, normalizedPath).ToLowerInvariant();
+            var relativeModulePath = PathUtils.CreateFriendlyFilePath(projectHome, normalizedPath).ToLowerInvariant();
 
-            var fullyQualifiedName = MakeFullyQualifiedTestName(moduleName, test.Id);
+            var fullyQualifiedName = MakeFullyQualifiedTestName(relativeModulePath, test.Id);
             var testCase = new TestCase(fullyQualifiedName, PythonConstants.UnitTestExecutorUri, normalizedPath) {
                 DisplayName = test.Name,
                 LineNumber = test.Line,
@@ -37,15 +39,24 @@ namespace Microsoft.PythonTools.TestAdapter.UnitTest {
         }
 
         // Note any changes here need to agree with TestReader.ParseFullyQualifiedTestName
-        private static string MakeFullyQualifiedTestName(string modulePath, string unitTestId) {
+        private static string MakeFullyQualifiedTestName(string relativeModulePath, string unitTestId) {
             // ie. test3.Test_test3.test_A
+            int numTrailingElementsAfterModule = 2;
             var idParts = unitTestId.Split('.');
-            Debug.Assert(idParts.Length == 3);
 
-            // drop module name and append to filepath
-            var parts = new[] { modulePath, idParts[1], idParts[2] };
-            return String.Join("::", parts);
+            Debug.Assert(idParts.Length > numTrailingElementsAfterModule);
+
+            //Take last 2 elements
+            //unittest id could be folder.modulefilename.class.func
+            if (idParts.Length > numTrailingElementsAfterModule) {
+                var classAndFuncNames = idParts.Skip(Math.Max(0, idParts.Count() - numTrailingElementsAfterModule)).ToArray();
+
+                // drop module name and append to filepath
+                var parts = new string[] { relativeModulePath, classAndFuncNames[0], classAndFuncNames[1] };
+                return String.Join("::", parts);
+            } else {
+                return relativeModulePath + "::" + String.Join("::", idParts);
+            }
         }
-
     }
 }
