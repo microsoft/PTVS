@@ -34,8 +34,8 @@ using System.Threading;
 
 namespace Microsoft.PythonTools.TestAdapter {
     [Export(typeof(ITestContainerDiscoverer))]
-    [Export(typeof(TestContainerDiscoverer))]
-    class TestContainerDiscoverer : ITestContainerDiscoverer, IDisposable {
+    [Export(typeof(TestContainerDiscovererProject))]
+    class TestContainerDiscovererProject : ITestContainerDiscoverer, IDisposable {
         private readonly IServiceProvider _serviceProvider;
         private readonly IPythonWorkspaceContextProvider _workspaceContextProvider;
         private readonly ConcurrentDictionary<string, ProjectInfo> _projectMap;
@@ -47,7 +47,7 @@ namespace Microsoft.PythonTools.TestAdapter {
         private readonly Timer _deferredTestChangeNotification;
 
         [ImportingConstructor]
-        private TestContainerDiscoverer(
+        private TestContainerDiscovererProject(
             [Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider,
             [Import(typeof(IOperationState))]IOperationState operationState,
             [Import] IPythonWorkspaceContextProvider workspaceContextProvider
@@ -102,7 +102,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 
         public Uri ExecutorUri {
             get {
-                return PythonConstants.ExecutorUri;
+                return PythonConstants.PythonProjectContainerDiscovererUri;
             }
         }
 

@@ -188,13 +188,16 @@ namespace Microsoft.PythonTools {
         public const string DontShowUpgradeDialogAgainCollection = "PythonTools\\Dialogs";
 
         internal const string PythonToolsProcessIdEnvironmentVariable = "_PTVS_PID";
-        internal const string UnitTestExecutorUriString = "executor://PythonUnitTestExecutor/v1";
-        internal const string TestExecutorUriString = "executor://PythonTestExecutor/v1";
-        internal const string WSTestExecutorUriString = "executor://PythonWorkspaceTestExecutor/v1";
-        
 
-        public static readonly Uri ExecutorUri = new Uri(TestExecutorUriString);
-        public static readonly Uri WorkspaceExecutorUri = new Uri(WSTestExecutorUriString);
+        internal const string UnitTestExecutorUriString = "executor://PythonUnitTestExecutor/v1";
+        internal const string PytestExecutorUriString = "executor://PythonPyTestExecutor/v1";
+        internal const string PythonProjectContainerDiscovererUriString = "executor://PythonProjectDiscoverer/v1";
+        internal const string PythonWorkspaceContainerDiscovererUriString = "executor://PythonWorkspaceDiscoverer/v1";
+
         public static readonly Uri UnitTestExecutorUri = new Uri(UnitTestExecutorUriString);
+        public static readonly Uri PytestExecutorUri = new Uri(PytestExecutorUriString);
+
+        public static readonly Uri PythonProjectContainerDiscovererUri = new Uri(PythonProjectContainerDiscovererUriString);
+        public static readonly Uri PythonWorkspaceContainerDiscovererUri = new Uri(PythonWorkspaceContainerDiscovererUriString);
     }
 }

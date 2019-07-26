@@ -22,7 +22,6 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using Microsoft.PythonTools.TestAdapter.Config;
-using Microsoft.PythonTools.TestAdapter.Pytest;
 using System.Windows.Forms;
 using System.Diagnostics;
 
@@ -30,12 +29,11 @@ namespace Microsoft.PythonTools.TestAdapter {
 
 
     /// <summary>
-    /// Note even though we we specify  [DefaultExecutorUri(PythonConstants.TestExecutorUriString)] we still get all .py source files
-    /// from all testcontainers.  Adding another ITestDiscover class with  [DefaultExecutorUri(PythonConstants.WSTestExecutorUriString)]
-    /// doesn't filter anything so just using one class for all types of .py sources
+    /// Note even though we we specify  [DefaultExecutorUri(PythonConstants.PytestExecutorUri)] we still get all .py source files
+    /// from all testcontainers.  
     /// </summary>
     [FileExtension(".py")]
-    [DefaultExecutorUri(PythonConstants.TestExecutorUriString)]
+    [DefaultExecutorUri(PythonConstants.PytestExecutorUriString)]
     public class PythonTestDiscoverer : ITestDiscoverer {
         public void DiscoverTests(IEnumerable<string> sources, IDiscoveryContext discoveryContext, IMessageLogger logger, ITestCaseDiscoverySink discoverySink) {
             //MessageBox.Show("Discover: " + Process.GetCurrentProcess().Id);

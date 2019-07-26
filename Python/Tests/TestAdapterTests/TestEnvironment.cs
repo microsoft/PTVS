@@ -18,6 +18,7 @@ extern alias pt;
 
 using System;
 using System.IO;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 
 namespace TestAdapterTests {
@@ -26,6 +27,16 @@ namespace TestAdapterTests {
         public string SourceFolderPath { get; set; }
         public string ResultsFolderPath { get; set; }
         public string TestFramework { get; set; }
+
+        public Uri ExecutionUri {
+            get {
+                switch (TestFramework) {
+                    case "Pytest": return pt.Microsoft.PythonTools.PythonConstants.PytestExecutorUri;
+                    case "Unittest": return pt.Microsoft.PythonTools.PythonConstants.UnitTestExecutorUri;
+                    default: Assert.Fail("unexpected test framework"); return null;
+                }
+            }
+        }
 
         public static TestEnvironment Create(PythonVersion pythonVersion, string testFramework, bool installFramework = true) {
             var env = new TestEnvironment();

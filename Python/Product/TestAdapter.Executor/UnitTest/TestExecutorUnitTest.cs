@@ -284,7 +284,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 var node = doc.CreateNavigator().SelectSingleNode("/RunSettings/Python/DryRun[@value='true']");
                 return node != null;
             } catch (Exception ex) {
-                Debug.Fail(ex.ToUnhandledExceptionMessage(typeof(TestExecutor)));
+                Debug.Fail(ex.ToUnhandledExceptionMessage(typeof(TestExecutorUnitTest)));
                 return false;
             }
         }
@@ -300,7 +300,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 var node = doc.CreateNavigator().SelectSingleNode("/RunSettings/Python/ShowConsole[@value='false']");
                 return node == null;
             } catch (Exception ex) {
-                Debug.Fail(ex.ToUnhandledExceptionMessage(typeof(TestExecutor)));
+                Debug.Fail(ex.ToUnhandledExceptionMessage(typeof(TestExecutorUnitTest)));
                 return true;
             }
         }
@@ -377,10 +377,10 @@ namespace Microsoft.PythonTools.TestAdapter {
 
             [SuppressMessage("Microsoft.Usage", "CA2213:DisposableFieldsShouldBeDisposed", MessageId = "_connection")]
             public void Dispose() {
+                _socket.Dispose();
                 _connected.Dispose();
                 _done.Dispose();
                 _connection?.Dispose();
-                _socket.Dispose();
             }
 
             private static Task RequestHandler(RequestArgs arg1, Func<Response, Task> arg2) {
@@ -482,7 +482,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                     new MemoryStream(),
                     true,
                     stream,
-                    true,
+                    _showConsole,
                     RequestHandler,
                     TP.RegisteredTypes,
                     "TestExecutor"
@@ -519,7 +519,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                         arguments,
                         _settings.WorkingDirectory,
                         _env,
-                        _showConsole,
+                        true,
                         null
                     )) {
                         bool killed = false;

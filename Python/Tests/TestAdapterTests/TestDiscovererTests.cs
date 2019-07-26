@@ -361,7 +361,7 @@ namespace TestAdapterTests {
                 Assert.IsNotNull(actualTestCase, expectedTest.FullyQualifiedName);
                 switch (testFramework) {
                     case FrameworkPytest:
-                        Assert.AreEqual(new Uri(PythonConstants.TestExecutorUriString), actualTestCase.ExecutorUri);
+                        Assert.AreEqual(new Uri(PythonConstants.PytestExecutorUriString), actualTestCase.ExecutorUri);
                         break;
                     case FrameworkUnittest:
                         Assert.AreEqual(new Uri(PythonConstants.UnitTestExecutorUriString), actualTestCase.ExecutorUri);
