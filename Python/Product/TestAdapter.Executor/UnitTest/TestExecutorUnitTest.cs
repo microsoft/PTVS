@@ -482,7 +482,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                     new MemoryStream(),
                     true,
                     stream,
-                    true,
+                    _showConsole,
                     RequestHandler,
                     TP.RegisteredTypes,
                     "TestExecutor"
