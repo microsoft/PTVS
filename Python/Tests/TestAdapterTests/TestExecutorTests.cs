@@ -196,7 +196,7 @@ namespace TestAdapterTests {
             var testCases = CreateTestCasesFromTestInfo(testEnv, expectedTests);
             var runContext = new MockRunContext(runSettings, testCases, testEnv.ResultsFolderPath);
             var recorder = new MockTestExecutionRecorder();
-            var executor = new TestExecutorPytest();
+            var executor = new TestExecutorUnitTest();
 
             var thread = new System.Threading.Thread(o => {
                 executor.RunTests(testCases, runContext, recorder);
@@ -592,7 +592,7 @@ namespace TestAdapterTests {
 
         private static List<TestCase> CreateTestCasesFromTestInfo(TestEnvironment testEnv, IEnumerable<TestInfo> expectedTests) {
             return Enumerable.Select(expectedTests, ti => {
-                var testCase = new TestCase(ti.FullyQualifiedName, new Uri(PythonConstants.PytestExecutorUriString), ti.FilePath) {
+                var testCase = new TestCase(ti.FullyQualifiedName, testEnv.ExecutionUri, ti.FilePath) {
                     DisplayName = ti.DisplayName,
                     CodeFilePath = ti.FilePath,
                     LineNumber = ti.LineNumber,
