@@ -35,6 +35,12 @@ namespace TestAdapterTests {
 
         protected abstract PythonVersion Version { get; }
 
+        [ClassCleanup]
+        public static void ClassCleanup() {
+            TestEnvironment.Clear();
+        }
+
+
         [TestInitialize]
         public void CheckVersion() {
             if (Version == null) {
@@ -45,7 +51,7 @@ namespace TestAdapterTests {
         [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public void DiscoverPytest() {
-            var testEnv = TestEnvironment.Create(Version, FrameworkPytest);
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
 
             var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_pt.py");
             File.Copy(TestData.GetPath("TestData", "TestDiscoverer", "BasicPytest", "test_pt.py"), testFilePath);
@@ -69,7 +75,7 @@ namespace TestAdapterTests {
         [TestCategory("10s")]
         public void DiscoverPytestSearchPath() {
             // test_search_path.py has an import at global scope that requires search path to resolve
-            var testEnv = TestEnvironment.Create(Version, FrameworkPytest);
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
 
             FileUtils.CopyDirectory(TestData.GetPath("TestData", "TestDiscoverer", "ImportFromSearchPath"), testEnv.SourceFolderPath);
 
@@ -100,7 +106,7 @@ namespace TestAdapterTests {
         public void DiscoverPytestSyntaxError() {
             // one file has a valid passing test,
             // the other has a test with a syntax error in it
-            var testEnv = TestEnvironment.Create(Version, FrameworkPytest);
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
 
             FileUtils.CopyDirectory(TestData.GetPath("TestData", "TestDiscoverer", "SyntaxError"), testEnv.SourceFolderPath);
 
@@ -127,7 +133,7 @@ namespace TestAdapterTests {
         public void DiscoverPytestImportError() {
             // one file has a valid passing test,
             // the other has an unknown module import at global scope
-            var testEnv = TestEnvironment.Create(Version, FrameworkPytest);
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
 
             FileUtils.CopyDirectory(TestData.GetPath("TestData", "TestDiscoverer", "ImportErrorPytest"), testEnv.SourceFolderPath);
 
@@ -153,7 +159,7 @@ namespace TestAdapterTests {
         public void DiscoverUnitTestImportError() {
             // one file has a valid passing test,
             // the other has an unknown module import at global scope
-            var testEnv = TestEnvironment.Create(Version, FrameworkUnittest);
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
 
             FileUtils.CopyDirectory(TestData.GetPath("TestData", "TestDiscoverer", "ImportErrorUnittest"), testEnv.SourceFolderPath);
 
@@ -178,7 +184,7 @@ namespace TestAdapterTests {
         [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public void DiscoverPytestConfigPythonFiles() {
-            var testEnv = TestEnvironment.Create(Version, FrameworkPytest);
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
 
             FileUtils.CopyDirectory(TestData.GetPath("TestData", "TestDiscoverer", "ConfigPythonFiles"), testEnv.SourceFolderPath);
 
@@ -207,7 +213,7 @@ namespace TestAdapterTests {
         [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public void DiscoverPytestConfigPythonFunctions() {
-            var testEnv = TestEnvironment.Create(Version, FrameworkPytest);
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
 
             FileUtils.CopyDirectory(TestData.GetPath("TestData", "TestDiscoverer", "ConfigPythonFunctions"), testEnv.SourceFolderPath);
 
@@ -232,7 +238,7 @@ namespace TestAdapterTests {
         [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public void DiscoverPytestNotInstalled() {
-            var testEnv = TestEnvironment.Create(Version, FrameworkPytest, installFramework: false);
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest, installFramework: false);
 
             var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_pt.py");
             File.Copy(TestData.GetPath("TestData", "TestDiscoverer", "BasicPytest", "test_pt.py"), testFilePath);
@@ -263,8 +269,8 @@ namespace TestAdapterTests {
         [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public void DiscoverUnittest() {
-            var testEnv = TestEnvironment.Create(Version, FrameworkUnittest);
-
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
+           
             var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_ut.py");
             File.Copy(TestData.GetPath("TestData", "TestDiscoverer", "BasicUnittest", "test_ut.py"), testFilePath);
 
@@ -286,7 +292,7 @@ namespace TestAdapterTests {
         [TestCategory("10s")]
         
         public void DiscoverUnittestDecoratorsIgnoreLineNumbers() {
-            var testEnv = TestEnvironment.Create(Version, FrameworkUnittest);
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
 
             var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_decorators_ut.py");
             File.Copy(TestData.GetPath("TestData", "TestDiscoverer", "Decorators", "test_decorators_ut.py"), testFilePath);
@@ -310,7 +316,7 @@ namespace TestAdapterTests {
         [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public void DiscoverUnittestDecoratorsCorrectLineNumbers() {
-            var testEnv = TestEnvironment.Create(Version, FrameworkUnittest);
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
 
             var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_decorators_ut.py");
             File.Copy(TestData.GetPath("TestData", "TestDiscoverer", "Decorators", "test_decorators_ut.py"), testFilePath);
@@ -333,7 +339,7 @@ namespace TestAdapterTests {
         [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public void DiscoverUnittestRelativeImport() {
-            var testEnv = TestEnvironment.Create(Version, FrameworkUnittest);
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
 
             FileUtils.CopyDirectory(TestData.GetPath("TestData", "TestDiscoverer", "RelativeImport"), testEnv.SourceFolderPath);
 
@@ -360,7 +366,7 @@ namespace TestAdapterTests {
         [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public void DiscoverUnittestInheritance() {
-            var testEnv = TestEnvironment.Create(Version, FrameworkUnittest);
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
 
             FileUtils.CopyDirectory(TestData.GetPath("TestData", "TestDiscoverer", "Inheritance"), testEnv.SourceFolderPath);
 
