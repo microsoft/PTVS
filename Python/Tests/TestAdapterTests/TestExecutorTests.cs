@@ -39,6 +39,11 @@ namespace TestAdapterTests {
 
         protected abstract PythonVersion Version { get; }
 
+        [ClassCleanup]
+        public static void Cleanup() {
+            TestEnvironment.Clear();
+        }
+
         [TestInitialize]
         public void CheckVersion() {
             if (Version == null) {
@@ -63,7 +68,7 @@ namespace TestAdapterTests {
         [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public void RunUnittest() {
-            var testEnv = TestEnvironment.Create(Version, FrameworkUnittest);
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
 
             var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_ut.py");
             File.Copy(TestData.GetPath("TestData", "TestDiscoverer", "BasicUnittest", "test_ut.py"), testFilePath);
@@ -97,7 +102,7 @@ namespace TestAdapterTests {
         [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public void RunPytest() {
-            var testEnv = TestEnvironment.Create(Version, FrameworkPytest);
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
 
             var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_pt.py");
             File.Copy(TestData.GetPath("TestData", "TestDiscoverer", "BasicPytest", "test_pt.py"), testFilePath);
@@ -143,7 +148,7 @@ namespace TestAdapterTests {
         [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public void RunUnittestCancel() {
-            var testEnv = TestEnvironment.Create(Version, FrameworkUnittest);
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
 
             var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_cancel.py");
             File.Copy(TestData.GetPath("TestData", "TestExecutor", "test_cancel.py"), testFilePath);
@@ -231,7 +236,7 @@ namespace TestAdapterTests {
         [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public void RunUnittestRelativeImport() {
-            var testEnv = TestEnvironment.Create(Version, FrameworkUnittest);
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
 
             FileUtils.CopyDirectory(TestData.GetPath("TestData", "TestDiscoverer", "RelativeImport"), testEnv.SourceFolderPath);
 
@@ -259,7 +264,7 @@ namespace TestAdapterTests {
         [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public void RunUnittestInheritance() {
-            var testEnv = TestEnvironment.Create(Version, FrameworkUnittest);
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
 
             FileUtils.CopyDirectory(TestData.GetPath("TestData", "TestDiscoverer", "Inheritance"), testEnv.SourceFolderPath);
 
@@ -330,7 +335,7 @@ namespace TestAdapterTests {
             // For example, if the file where the test is defined has an unhandled ImportError.
             // We check that this only causes the tests that can't be loaded to fail,
             // all other tests in the test run which can be loaded successfully will be run.
-            var testEnv = TestEnvironment.Create(Version, FrameworkUnittest);
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
 
             FileUtils.CopyDirectory(TestData.GetPath("TestData", "TestDiscoverer", "ImportErrorUnittest"), testEnv.SourceFolderPath);
 
@@ -366,7 +371,7 @@ namespace TestAdapterTests {
         [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public void RunUnitTestStackTrace() {
-            var testEnv = TestEnvironment.Create(Version, FrameworkUnittest);
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
 
             var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_stack_trace.py");
             File.Copy(TestData.GetPath("TestData", "TestExecutor", "test_stack_trace.py"), testFilePath);
@@ -411,7 +416,7 @@ namespace TestAdapterTests {
         [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public void RunPytestEnvironmentVariable() {
-            var testEnv = TestEnvironment.Create(Version, FrameworkPytest);
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
 
             var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_env_var.py");
             File.Copy(TestData.GetPath("TestData", "TestExecutor", "test_env_var.py"), testFilePath);
@@ -440,7 +445,7 @@ namespace TestAdapterTests {
         [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public void RunPytestDuration() {
-            var testEnv = TestEnvironment.Create(Version, FrameworkPytest);
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
 
             var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_duration.py");
             File.Copy(TestData.GetPath("TestData", "TestExecutor", "test_duration.py"), testFilePath);
@@ -487,7 +492,7 @@ namespace TestAdapterTests {
         [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public void RunUnittestDuration() {
-            var testEnv = TestEnvironment.Create(Version, FrameworkUnittest);
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
 
             var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_duration.py");
             File.Copy(TestData.GetPath("TestData", "TestExecutor", "test_duration.py"), testFilePath);
@@ -531,7 +536,7 @@ namespace TestAdapterTests {
         [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public void RunPytestSetupAndTeardown() {
-            var testEnv = TestEnvironment.Create(Version, FrameworkPytest);
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
 
             var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_teardown.py");
             File.Copy(TestData.GetPath("TestData", "TestExecutor", "test_teardown.py"), testFilePath);
