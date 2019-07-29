@@ -17,12 +17,15 @@
 extern alias pt;
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 
 namespace TestAdapterTests {
     internal class TestEnvironment {
+        private static Dictionary<string, TestEnvironment> _environmentsMap = new Dictionary<string, TestEnvironment>();
+
         public string InterpreterPath { get; set; }
         public string SourceFolderPath { get; set; }
         public string ResultsFolderPath { get; set; }
@@ -37,16 +40,18 @@ namespace TestAdapterTests {
                 }
             }
         }
+        
+        public static TestEnvironment GetOrCreate(PythonVersion pythonVersion, string testFramework, bool installFramework = true) {
+            var testEnvironmentId = $"{pythonVersion.ToString().ToLower()}:{testFramework.ToLower()}:{installFramework.ToString()}";
+            if (_environmentsMap.TryGetValue(testEnvironmentId, out TestEnvironment foundEnv)) {
+                SetDirectories(foundEnv);
+                return foundEnv;
+            }
 
-        public static TestEnvironment Create(PythonVersion pythonVersion, string testFramework, bool installFramework = true) {
             var env = new TestEnvironment();
             env.TestFramework = testFramework;
 
-            var baseDir = TestData.GetTempPath();
-            env.SourceFolderPath = Path.Combine(baseDir, "Source");
-            env.ResultsFolderPath = Path.Combine(baseDir, "Results");
-            Directory.CreateDirectory(env.SourceFolderPath);
-            Directory.CreateDirectory(env.ResultsFolderPath);
+            SetDirectories(env);
 
             switch (testFramework) {
                 case "Pytest": {
@@ -72,10 +77,24 @@ namespace TestAdapterTests {
                     break;
             }
 
+            _environmentsMap.Add(testEnvironmentId, env);
+
             return env;
         }
 
-        private static bool HasPackage(string prefixPath, string packageName) {
+        public static void Clear() {
+            _environmentsMap.Clear();
+        }
+
+        private static void SetDirectories(TestEnvironment env) {
+            var baseDir = TestData.GetTempPath();
+            env.SourceFolderPath = Path.Combine(baseDir, "Source");
+            env.ResultsFolderPath = Path.Combine(baseDir, "Results");
+            Directory.CreateDirectory(env.SourceFolderPath);
+            Directory.CreateDirectory(env.ResultsFolderPath);
+        }
+
+           private static bool HasPackage(string prefixPath, string packageName) {
             foreach (var p in Directory.EnumerateDirectories(Path.Combine(prefixPath, "Lib", "site-packages"))) {
                 if (Path.GetFileName(p).StartsWith(packageName, StringComparison.InvariantCultureIgnoreCase)) {
                     return true;
