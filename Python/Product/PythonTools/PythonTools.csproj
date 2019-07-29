@@ -314,7 +314,7 @@
       <DependentUpon>AddVirtualEnvironmentControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="PythonTools\Options\PythonDebugOptionsService.cs" />
-    <Compile Include="PythonTools\Project\PytestConfigureInfoBar.cs" />
+    <Compile Include="PythonTools\Project\ConfigureTestFrameworkInfoBar.cs" />
     <Compile Include="PythonTools\Project\PythonTestPropertyPageControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
