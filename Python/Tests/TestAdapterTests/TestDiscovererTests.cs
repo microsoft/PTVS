@@ -306,7 +306,7 @@ namespace TestAdapterTests {
             DiscoverTests(testEnv, new[] { testFilePath }, runSettings, expectedTests);
         }
 
-        [Ignore] //note: Add when we fix: Unittest discovery returns off by one line number for decorated functions #5497
+        [Ignore] //until we fix https://github.com/microsoft/PTVS/issues/5497
         [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public void DiscoverUnittestDecoratorsCorrectLineNumbers() {
