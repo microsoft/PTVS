@@ -282,7 +282,54 @@ namespace TestAdapterTests {
             DiscoverTests(testEnv, new[] { testFilePath }, runSettings, expectedTests);
         }
 
-        [Ignore] // TODO: is this a bug in product? this is not returning any result
+        [TestMethod, Priority(0)]
+        [TestCategory("10s")]
+        
+        public void DiscoverUnittestDecoratorsIgnoreLineNumbers() {
+            var testEnv = TestEnvironment.Create(Version, FrameworkUnittest);
+
+            var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_decorators_ut.py");
+            File.Copy(TestData.GetPath("TestData", "TestDiscoverer", "Decorators", "test_decorators_ut.py"), testFilePath);
+
+            var expectedTests = new[] {
+                new TestInfo("test_ut_fail", "test_decorators_ut.py::TestClassDecoratorsUT::test_ut_fail", testFilePath, 5),
+                //note: Currently unittest/_discovery.py is returning decorators line number
+                new TestInfo("test_ut_pass", "test_decorators_ut.py::TestClassDecoratorsUT::test_ut_pass", testFilePath, 8), 
+            };
+
+            var runSettings = new MockRunSettings(
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+                    .WithTestFilesFromFolder(testEnv.SourceFolderPath)
+                    .ToXml()
+            );
+
+            DiscoverTests(testEnv, new[] { testFilePath }, runSettings, expectedTests);
+        }
+
+        [Ignore] //note: Add when we fix: Unittest discovery returns off by one line number for decorated functions #5497
+        [TestMethod, Priority(0)]
+        [TestCategory("10s")]
+        public void DiscoverUnittestDecoratorsCorrectLineNumbers() {
+            var testEnv = TestEnvironment.Create(Version, FrameworkUnittest);
+
+            var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_decorators_ut.py");
+            File.Copy(TestData.GetPath("TestData", "TestDiscoverer", "Decorators", "test_decorators_ut.py"), testFilePath);
+
+            var expectedTests = new[] {
+                new TestInfo("test_ut_fail", "test_decorators_ut.py::TestClassDecoratorsUT::test_ut_fail", testFilePath, 5),
+                //bschnurr note: currently unittest/_discovery.py is returning decorators line number
+                new TestInfo("test_ut_pass", "test_decorators_ut.py::TestClassDecoratorsUT::test_ut_pass", testFilePath, 9),
+            };
+
+            var runSettings = new MockRunSettings(
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+                    .WithTestFilesFromFolder(testEnv.SourceFolderPath)
+                    .ToXml()
+            );
+
+            DiscoverTests(testEnv, new[] { testFilePath }, runSettings, expectedTests);
+        }
+
         [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public void DiscoverUnittestRelativeImport() {
@@ -295,7 +342,7 @@ namespace TestAdapterTests {
             var expectedTests = new[] {
                 new TestInfo(
                     "test_relative_import",
-                    "test_relative_import.py::RelativeImportTests::test_relative_import",
+                    "relativeimportpackage\\test_relative_import.py::RelativeImportTests::test_relative_import",
                     testFilePath,
                     5
                 ),
