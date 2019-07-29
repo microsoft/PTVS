@@ -271,7 +271,7 @@
     <value>4</value>
   </data>
   <data name="_promptForPytestEnableAndInstall.Text" xml:space="preserve">
-    <value>Show notification bar to install and enable &amp;pytest</value>
+    <value>Show notification bar to configure test &amp;framework</value>
   </data>
   <data name="&gt;&gt;_promptForPytestEnableAndInstall.Name" xml:space="preserve">
     <value>_promptForPytestEnableAndInstall</value>

@@ -5145,15 +5145,6 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Don&apos;t show this message again.
-        /// </summary>
-        public static string PyTestIgnoreInfoBarAction {
-            get {
-                return ResourceManager.GetString("PyTestIgnoreInfoBarAction", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Install and enable pytest.
         /// </summary>
         public static string PyTestInstallAndEnableInfoBarAction {
@@ -5438,6 +5429,24 @@ namespace Microsoft.PythonTools {
         public static string PythonPublishPropertyPageLabel {
             get {
                 return ResourceManager.GetString("PythonPublishPropertyPageLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A file containing Python tests was detected in the {0} {1}, but the testing framework is disabled.
+        /// </summary>
+        public static string PythonTestFileDetected {
+            get {
+                return ResourceManager.GetString("PythonTestFileDetected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Don&apos;t show this message again.
+        /// </summary>
+        public static string PythonTestFrameworkIgnoreInfoBarAction {
+            get {
+                return ResourceManager.GetString("PythonTestFrameworkIgnoreInfoBarAction", resourceCulture);
             }
         }
         
@@ -7213,6 +7222,15 @@ namespace Microsoft.PythonTools {
         public static string UninstallPackages {
             get {
                 return ResourceManager.GetString("UninstallPackages", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enable unittest.
+        /// </summary>
+        public static string UnitTestEnableInfoBarAction {
+            get {
+                return ResourceManager.GetString("UnitTestEnableInfoBarAction", resourceCulture);
             }
         }
         
