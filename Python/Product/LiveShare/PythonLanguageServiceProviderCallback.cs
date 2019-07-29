@@ -26,6 +26,7 @@ using Microsoft.VisualStudio.LiveShare.LanguageServices;
 using Microsoft.VisualStudio.Threading;
 using Microsoft.VisualStudioTools;
 using LSP = Microsoft.VisualStudio.LanguageServer.Protocol;
+using LS = Microsoft.VisualStudio.LiveShare.LanguageServices;
 
 namespace Microsoft.PythonTools.LiveShare {
     internal class PythonLanguageServiceProviderCallback : ILanguageServiceProviderCallback {
@@ -86,7 +87,7 @@ namespace Microsoft.PythonTools.LiveShare {
             _analyzerCache[documentUri] = analyzer;
         }
 
-        public async Task<TOut> RequestAsync<TIn, TOut>(LspRequest<TIn, TOut> method, TIn param, RequestContext context, CancellationToken cancellationToken) {
+        public async Task<TOut> RequestAsync<TIn, TOut>(LS.LspRequest<TIn, TOut> method, TIn param, RequestContext context, CancellationToken cancellationToken) {
             if (method.Name == Methods.Initialize.Name) {
                 var capabilities = new ServerCapabilities {
                     CompletionProvider = new LSP.CompletionOptions {

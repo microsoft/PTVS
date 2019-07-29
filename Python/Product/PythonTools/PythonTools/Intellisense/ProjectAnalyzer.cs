@@ -1801,7 +1801,8 @@ namespace Microsoft.PythonTools.Intellisense {
                     for (int i = 0; i < arr.Count; ++i) {
                         result.SetValue(arr[i].ToObject(el), i);
                     }
-                    return (U)(object)result;
+                    var response = (U)(object)result;
+                    return response;
                 } catch (Exception e) {
                     Debug.WriteLine($"Response failed: {e}");
                     _logger?.LogEvent(Logging.PythonLogEvent.AnalysisOperationFailed, e.Message);
@@ -1809,7 +1810,8 @@ namespace Microsoft.PythonTools.Intellisense {
             }
             if (r.body is Newtonsoft.Json.Linq.JToken o) {
                 try {
-                    return o.ToObject<U>();
+                    var response = o.ToObject<U>();
+                    return response;
                 } catch (Newtonsoft.Json.JsonException e) {
                     Debug.WriteLine($"Response failed: {e}");
                     _logger?.LogEvent(Logging.PythonLogEvent.AnalysisOperationFailed, e.Message);

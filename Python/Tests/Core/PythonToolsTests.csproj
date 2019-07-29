@@ -50,7 +50,7 @@
     <Reference Include="Microsoft.VisualStudio.LanguageServer.Protocol">
       <Private>True</Private>
     </Reference>
-    <Reference Include="Microsoft.VisualStudio.LiveShare.LanguageServices">
+    <Reference Include="Microsoft.VisualStudio.LiveShare.LanguageServices.16.3">
       <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.VsInteractiveWindow" />
