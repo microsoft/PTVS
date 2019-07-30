@@ -35,6 +35,8 @@ namespace TestAdapterTests {
 
         protected abstract PythonVersion Version { get; }
 
+        protected virtual string ImportErrorFormat => "ModuleNotFoundError: No module named '{0}'";
+
         [ClassCleanup]
         public static void ClassCleanup() {
             TestEnvironment.Clear();
@@ -258,12 +260,7 @@ namespace TestAdapterTests {
             Assert.AreEqual(0, discoverySink.Tests.Count);
 
             var errors = string.Join(Environment.NewLine, logger.GetErrors());
-            AssertUtil.Contains(
-                errors,
-                Version.Version <= PythonLanguageVersion.V27
-                    ? "ImportError: No module named pytest"
-                    : "ModuleNotFoundError: No module named 'pytest'"
-            );
+            AssertUtil.Contains(errors, string.Format(ImportErrorFormat, "pytest"));
         }
 
         [TestMethod, Priority(0)]
@@ -460,6 +457,8 @@ namespace TestAdapterTests {
         }
 
         protected override PythonVersion Version => PythonPaths.Python27_x64 ?? PythonPaths.Python27;
+
+        protected override string ImportErrorFormat => "ImportError: No module named {0}";
     }
 
     [TestClass]
@@ -470,6 +469,8 @@ namespace TestAdapterTests {
         }
 
         protected override PythonVersion Version => PythonPaths.Python35_x64 ?? PythonPaths.Python35;
+
+        protected override string ImportErrorFormat => "ImportError: No module named '{0}'";
     }
 
     [TestClass]
