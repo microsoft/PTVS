@@ -2876,7 +2876,7 @@ Please specify at least one package.</value>
   <data name="CondaEnvNotDetected" xml:space="preserve">
     <value>Conda environment not detected</value>
   </data>
-  <data name="PyTestIgnoreInfoBarAction" xml:space="preserve">
+  <data name="PythonTestFrameworkIgnoreInfoBarAction" xml:space="preserve">
     <value>Don't show this message again</value>
   </data>
   <data name="PyTestEnableInfoBarAction" xml:space="preserve">
@@ -2908,5 +2908,12 @@ Please specify at least one package.</value>
   </data>
   <data name="WorkspaceText" xml:space="preserve">
     <value>workspace</value>
+  </data>
+  <data name="UnitTestEnableInfoBarAction" xml:space="preserve">
+    <value>Enable unittest</value>
+  </data>
+  <data name="PythonTestFileDetected" xml:space="preserve">
+    <value>A file containing Python tests was detected in the {0} {1}, but the test framework is disabled.</value>
+    <comment>{0} is project or workspace name. {1} is "project" or "workspace"</comment>
   </data>
 </root>

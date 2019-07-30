@@ -169,7 +169,7 @@ namespace Microsoft.PythonTools {
         public const string SuppressPackageInstallationPrompt = "SuppressPackageInstallationPrompt";
 
         // Suppress the prompt for pytest configuration project property
-        public const string SuppressPytestConfigPrompt = "SuppressPytestConfigPrompt";
+        public const string SuppressConfigureTestFrameworkPrompt = "SuppressConfigureTestFrameworkPrompt";
 
         // Launch option to ignore pause on exist settings
         internal const string NeverPauseOnExit = "NeverPauseOnExit";

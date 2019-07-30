@@ -34,7 +34,7 @@ namespace Microsoft.PythonTools.Options {
         private const string ShowOutputWindowForPackageInstallationSetting = "ShowOutputWindowForPackageInstallation";
         private const string PromptForEnvCreateSetting = "PromptForEnvCreate";
         private const string PromptForPackageInstallationSetting = "PromptForPackageInstallation";
-        private const string PromptForPyTestInstallOrEnableSetting = "PromptForPyTestInstallOrEnableSetting";
+        private const string PromptForTestFrameWorkInfoBarSetting = "PromptForTestFrameWorkInfoBar";
         private const string ElevatePipSetting = "ElevatePip";
         private const string UnresolvedImportWarningSetting = "UnresolvedImportWarning";
         private const string InvalidEncodingWarningSetting = "InvalidEncodingWarningWarning";
@@ -52,7 +52,7 @@ namespace Microsoft.PythonTools.Options {
             ShowOutputWindowForPackageInstallation = _pyService.LoadBool(ShowOutputWindowForPackageInstallationSetting, GeneralCategory) ?? true;
             PromptForEnvCreate = _pyService.LoadBool(PromptForEnvCreateSetting, GeneralCategory) ?? true;
             PromptForPackageInstallation = _pyService.LoadBool(PromptForPackageInstallationSetting, GeneralCategory) ?? true;
-            PromptForPyTestInstallOrEnable = _pyService.LoadBool(PromptForPyTestInstallOrEnableSetting, GeneralCategory) ?? true;
+            PromptForTestFrameWorkInfoBar = _pyService.LoadBool(PromptForTestFrameWorkInfoBarSetting, GeneralCategory) ?? true;
 
             ElevatePip = _pyService.LoadBool(ElevatePipSetting, GeneralCategory) ?? false;
             UnresolvedImportWarning = _pyService.LoadBool(UnresolvedImportWarningSetting, GeneralCategory) ?? true;
@@ -78,7 +78,7 @@ namespace Microsoft.PythonTools.Options {
             _pyService.SaveBool(ShowOutputWindowForPackageInstallationSetting, GeneralCategory, ShowOutputWindowForPackageInstallation);
             _pyService.SaveBool(PromptForEnvCreateSetting, GeneralCategory, PromptForEnvCreate);
             _pyService.SaveBool(PromptForPackageInstallationSetting, GeneralCategory, PromptForPackageInstallation);
-            _pyService.SaveBool(PromptForPyTestInstallOrEnableSetting, GeneralCategory, PromptForPyTestInstallOrEnable);
+            _pyService.SaveBool(PromptForTestFrameWorkInfoBarSetting, GeneralCategory, PromptForTestFrameWorkInfoBar);
             _pyService.SaveBool(ElevatePipSetting, GeneralCategory, ElevatePip);
             _pyService.SaveBool(UnresolvedImportWarningSetting, GeneralCategory, UnresolvedImportWarning);
             _pyService.SaveBool(ClearGlobalPythonPathSetting, GeneralCategory, ClearGlobalPythonPath);
@@ -98,7 +98,7 @@ namespace Microsoft.PythonTools.Options {
             ShowOutputWindowForPackageInstallation = true;
             PromptForEnvCreate = true;
             PromptForPackageInstallation = true;
-            PromptForPyTestInstallOrEnable = true;
+            PromptForTestFrameWorkInfoBar = true;
             ElevatePip = false;
             UnresolvedImportWarning = true;
             ClearGlobalPythonPath = true;
@@ -191,10 +191,10 @@ namespace Microsoft.PythonTools.Options {
         }
 
         /// <summary>
-        /// Show an info bar to propose installing or enabling pytest
+        /// Show an info bar to set up a testing framework
         /// </summary>
         /// <remarks>New in 2.0</remarks>
-        public bool PromptForPyTestInstallOrEnable {
+        public bool PromptForTestFrameWorkInfoBar {
             get;
             set;
         }

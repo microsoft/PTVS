@@ -96,7 +96,7 @@ namespace Microsoft.PythonTools.Project {
         private readonly CondaEnvCreateInfoBar _condaEnvCreateInfoBar;
         private readonly VirtualEnvCreateInfoBar _virtualEnvCreateInfoBar;
         private readonly PackageInstallInfoBar _packageInstallInfoBar;
-        private readonly PyTestInfoBar _pyTestInfoBar;
+        private readonly TestFrameworkInfoBar _testFrameworkInfoBar;
 
         private readonly SemaphoreSlim _recreatingAnalyzer = new SemaphoreSlim(1);
 
@@ -132,7 +132,7 @@ namespace Microsoft.PythonTools.Project {
             _condaEnvCreateInfoBar = new CondaEnvCreateProjectInfoBar(Site, this);
             _virtualEnvCreateInfoBar = new VirtualEnvCreateProjectInfoBar(Site, this);
             _packageInstallInfoBar = new PackageInstallProjectInfoBar(Site, this);
-            _pyTestInfoBar = new PyTestProjectInfoBar(Site, this);
+            _testFrameworkInfoBar = new TestFrameworkProjectInfoBar(Site, this);
         }
 
         private static KeyValuePair<string, string>[] outputGroupNames = {
@@ -744,7 +744,7 @@ namespace Microsoft.PythonTools.Project {
                 _condaEnvCreateInfoBar.CheckAsync(),
                 _virtualEnvCreateInfoBar.CheckAsync(),
                 _packageInstallInfoBar.CheckAsync(),
-                _pyTestInfoBar.CheckAsync()
+                _testFrameworkInfoBar.CheckAsync()
             );
         }
 
@@ -1093,7 +1093,7 @@ namespace Microsoft.PythonTools.Project {
                 _condaEnvCreateInfoBar.Dispose();
                 _virtualEnvCreateInfoBar.Dispose();
                 _packageInstallInfoBar.Dispose();
-                _pyTestInfoBar.Dispose();
+                _testFrameworkInfoBar.Dispose();
 
                 _reanalyzeProjectNotification.Dispose();
 
