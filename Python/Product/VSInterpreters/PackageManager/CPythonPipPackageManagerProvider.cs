@@ -63,6 +63,10 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         private IPackageManager TryCreatePackageManager(IPythonInterpreterFactory factory) {
+            if (factory == null) {
+                return null;
+            }
+
             try {
                 // 'python -m pip', causes this error on Python 2.6: pip is a package and cannot be directly executed
                 // We have to use 'python -m pip' on pip v10, because pip.main() no longer exists
