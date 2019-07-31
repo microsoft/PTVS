@@ -116,6 +116,7 @@
       <Link>Guids.cs</Link>
     </Compile>
     <Compile Include="Model\ProjectInfo.cs" />
+    <Compile Include="PackageManagerEventSink.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PythonRunSettings.cs" />
     <Compile Include="PythonStackTraceParser.cs" />

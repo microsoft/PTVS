@@ -15,18 +15,19 @@
 // permissions and limitations under the License.
 
 using System;
-using System.IO;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Threading;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.TestAdapter.Model;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.TestWindow.Extensibility;
 using Microsoft.VisualStudioTools.TestAdapter;
-using Microsoft.PythonTools.Interpreter;
-using System.Collections.Concurrent;
-using System.Diagnostics;
 
 namespace Microsoft.PythonTools.TestAdapter {
     [Export(typeof(ITestContainerDiscoverer))]
@@ -35,6 +36,8 @@ namespace Microsoft.PythonTools.TestAdapter {
         private readonly IServiceProvider _serviceProvider;
         private readonly IPythonWorkspaceContextProvider _workspaceContextProvider;
         private readonly ConcurrentDictionary<string, ProjectInfo> _projectMap;
+        private readonly PackageManagerEventSink _packageManagerEventSink;
+        private readonly Timer _deferredTestChangeNotification;
         private bool _firstLoad, _isDisposed, _isRefresh;
         private TestFilesUpdateWatcher _testFilesUpdateWatcher;
 
@@ -42,10 +45,14 @@ namespace Microsoft.PythonTools.TestAdapter {
         private TestContainerDiscovererWorkspace(
             [Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider,
             [Import(typeof(IOperationState))]IOperationState operationState,
-            [Import] IPythonWorkspaceContextProvider workspaceContextProvider
+            [Import] IPythonWorkspaceContextProvider workspaceContextProvider,
+            [Import] IInterpreterOptionsService interpreterOptionsService
         ) {
             _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
             _projectMap = new ConcurrentDictionary<string, ProjectInfo>();
+            _packageManagerEventSink = new PackageManagerEventSink(interpreterOptionsService);
+            _packageManagerEventSink.InstalledPackagesChanged += OnInstalledPackagesChanged;
+            _deferredTestChangeNotification = new Timer(OnDeferredTestChanged);
             _firstLoad = true;
             _isRefresh = false;
             _workspaceContextProvider = workspaceContextProvider ?? throw new ArgumentNullException(nameof(workspaceContextProvider));
@@ -56,6 +63,7 @@ namespace Microsoft.PythonTools.TestAdapter {
         void IDisposable.Dispose() {
             if (!_isDisposed) {
                 _isDisposed = true;
+                _deferredTestChangeNotification.Dispose();
 
                 if (_testFilesUpdateWatcher != null) {
                     _testFilesUpdateWatcher.FileChangedEvent -= OnWorkspaceFileChanged;
@@ -82,29 +90,26 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
         }
 
-        public bool IsWorkspace {
-            get {
-                return (_workspaceContextProvider != null)
-                    && (_workspaceContextProvider.Workspace != null);
-            }
-        }
+        public bool IsWorkspace => _workspaceContextProvider?.Workspace != null;
 
-        private bool HasLoadedWorkspace() => _workspaceContextProvider.Workspace != null;
+        private bool HasLoadedWorkspace() => _workspaceContextProvider?.Workspace != null;
 
         public IEnumerable<ITestContainer> TestContainers {
             get {
                 if (HasLoadedWorkspace()
                     && (_firstLoad || _isRefresh)) {
-                    _projectMap.Clear();
-
                     // The first time through, we don't know about any loaded
                     // projects.
                     ThreadHelper.JoinableTaskFactory.Run(async () => {
                         await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
                         if (_firstLoad || _isRefresh) {
-                            SetupWorkspace(_workspaceContextProvider.Workspace);
                             _firstLoad = false;
                             _isRefresh = false;
+
+                            _projectMap.Clear();
+                            _packageManagerEventSink.UnwatchAll();
+
+                            SetupWorkspace(_workspaceContextProvider.Workspace);
                         };
                     });
                 }
@@ -126,6 +131,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 _workspaceContextProvider.Workspace.SearchPathsSettingChanged -= OnWorkspaceSettingsChange;
                 _workspaceContextProvider.Workspace.InterpreterSettingChanged -= OnWorkspaceSettingsChange;
                 _workspaceContextProvider.Workspace.TestSettingChanged -= OnWorkspaceSettingsChange;
+                _workspaceContextProvider.Workspace.ActiveInterpreterChanged -= OnActiveInterpreterChanged;
 
                 if (_projectMap.TryRemove(_workspaceContextProvider.Workspace.Location, out ProjectInfo projToRemove)) {
                     projToRemove.Dispose();
@@ -133,6 +139,8 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
 
             _projectMap.Clear();
+            _packageManagerEventSink.InstalledPackagesChanged -= OnInstalledPackagesChanged;
+            _packageManagerEventSink.UnwatchAll();
         }
 
         private void OnWorkspaceLoaded(object sender, PythonWorkspaceContextEventArgs e) {
@@ -169,6 +177,10 @@ namespace Microsoft.PythonTools.TestAdapter {
                 foreach (var file in files) {
                     projInfo.AddTestContainer(this, file);
                 }
+
+                workspace.ActiveInterpreterChanged -= OnActiveInterpreterChanged;
+                workspace.ActiveInterpreterChanged += OnActiveInterpreterChanged;
+                _packageManagerEventSink.WatchPackageManagers(workspace.CurrentFactory);
             }
         }
 
@@ -176,8 +188,8 @@ namespace Microsoft.PythonTools.TestAdapter {
             var testFrameworkType = TestFrameworkType.None;
             try {
                 string testFrameworkStr = workspace.GetStringProperty(PythonConstants.TestFrameworkSetting);
-                if (Enum.TryParse<TestFrameworkType>(testFrameworkStr, ignoreCase: true, out TestFrameworkType parsedFramworked)) {
-                    testFrameworkType = parsedFramworked;
+                if (Enum.TryParse<TestFrameworkType>(testFrameworkStr, ignoreCase: true, out TestFrameworkType parsedFramework)) {
+                    testFrameworkType = parsedFramework;
                 }
             } catch (Exception ex) when (!ex.IsCriticalException()) {
                 Trace.WriteLine("Exception : " + ex.Message);
@@ -197,8 +209,15 @@ namespace Microsoft.PythonTools.TestAdapter {
         public event EventHandler TestContainersUpdated;
 
         private void NotifyContainerChanged() {
-            // guard against triggering multiple updates during initial load
-            if (!_firstLoad && !_isRefresh) {
+            try {
+                _deferredTestChangeNotification.Change(500, Timeout.Infinite);
+            } catch (ObjectDisposedException) {
+            }
+        }
+
+        private void OnDeferredTestChanged(object state) {
+            // guard against triggering multiple updates during initial load until setup is complete
+            if (!_firstLoad) {
                 TestContainersUpdated?.Invoke(this, EventArgs.Empty);
             }
         }
@@ -217,6 +236,16 @@ namespace Microsoft.PythonTools.TestAdapter {
         private void OnWorkspaceSettingsChange(object sender, System.EventArgs e) {
             NotifyContainerChanged();
             _isRefresh = true;
+        }
+
+        private void OnActiveInterpreterChanged(object sender, EventArgs e) {
+            _isRefresh = true;
+            NotifyContainerChanged();
+        }
+
+        private void OnInstalledPackagesChanged(object sender, EventArgs e) {
+            _isRefresh = true;
+            NotifyContainerChanged();
         }
 
         private void OnWorkspaceFileChanged(object sender, TestFileChangedEventArgs e) {
