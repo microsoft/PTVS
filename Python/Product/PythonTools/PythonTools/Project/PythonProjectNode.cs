@@ -2905,6 +2905,11 @@ namespace Microsoft.PythonTools.Project {
 
             public override event EventHandler<PythonProjectPropertyChangedArgs> ProjectPropertyChanged;
 
+            public override event EventHandler ActiveInterpreterChanged {
+                add { _node.ActiveInterpreterChanged += value; }
+                remove { _node.ActiveInterpreterChanged -= value; }
+            }
+
             public override event EventHandler ProjectAnalyzerChanged {
                 add { _node.ProjectAnalyzerChanged += value; }
                 remove { _node.ProjectAnalyzerChanged -= value; }

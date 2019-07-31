@@ -15,11 +15,15 @@
 // permissions and limitations under the License.
 
 using System;
-using System.IO;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Threading;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Projects;
 using Microsoft.PythonTools.TestAdapter.Model;
 using Microsoft.VisualStudio.Shell;
@@ -27,10 +31,6 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestWindow.Extensibility;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.TestAdapter;
-using Microsoft.PythonTools.Interpreter;
-using System.Collections.Concurrent;
-using System.Diagnostics;
-using System.Threading;
 
 namespace Microsoft.PythonTools.TestAdapter {
     [Export(typeof(ITestContainerDiscoverer))]
@@ -39,22 +39,25 @@ namespace Microsoft.PythonTools.TestAdapter {
         private readonly IServiceProvider _serviceProvider;
         private readonly IPythonWorkspaceContextProvider _workspaceContextProvider;
         private readonly ConcurrentDictionary<string, ProjectInfo> _projectMap;
+        private readonly PackageManagerEventSink _packageManagerEventSink;
         private bool _firstLoad, _isDisposed, _isRefresh, _setupComplete;
         private SolutionEventsListener _solutionListener;
         private TestFilesUpdateWatcher _testFilesUpdateWatcher;
         private TestFileAddRemoveListener _testFilesAddRemoveListener;
-        private readonly HashSet<string> _pytestFrameworkConfigFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "pytest.ini", "setup.cfg", "tox.ini" };
         private readonly Timer _deferredTestChangeNotification;
 
         [ImportingConstructor]
         private TestContainerDiscovererProject(
             [Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider,
             [Import(typeof(IOperationState))]IOperationState operationState,
-            [Import] IPythonWorkspaceContextProvider workspaceContextProvider
+            [Import] IPythonWorkspaceContextProvider workspaceContextProvider,
+            [Import] IInterpreterOptionsService interpreterOptionsService
         ) {
             _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
             _workspaceContextProvider = workspaceContextProvider ?? throw new ArgumentNullException(nameof(workspaceContextProvider));
             _projectMap = new ConcurrentDictionary<string, ProjectInfo>();
+            _packageManagerEventSink = new PackageManagerEventSink(interpreterOptionsService);
+            _packageManagerEventSink.InstalledPackagesChanged += OnInstalledPackagesChanged;
             _firstLoad = true;
             _isRefresh = false;
             _setupComplete = false;
@@ -78,6 +81,8 @@ namespace Microsoft.PythonTools.TestAdapter {
                 _isDisposed = true;
                 _deferredTestChangeNotification.Dispose();
                 _projectMap.Clear();
+                _packageManagerEventSink.InstalledPackagesChanged -= OnInstalledPackagesChanged;
+                _packageManagerEventSink.Dispose();
 
                 if (_solutionListener != null) {
                     _solutionListener.ProjectLoaded -= OnProjectLoaded;
@@ -100,19 +105,11 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
         }
 
-        public Uri ExecutorUri {
-            get {
-                return PythonConstants.PythonProjectContainerDiscovererUri;
-            }
-        }
+        public Uri ExecutorUri => PythonConstants.PythonProjectContainerDiscovererUri;
 
-        public bool IsWorkspace {
-            get {
-                return false;
-            }
-        }
+        public bool IsWorkspace => false;
 
-        private bool IsSolutionMode() => _workspaceContextProvider.Workspace == null;
+        private bool IsSolutionMode() => _workspaceContextProvider?.Workspace == null;
 
         public IEnumerable<ITestContainer> TestContainers {
             get {
@@ -125,8 +122,10 @@ namespace Microsoft.PythonTools.TestAdapter {
                         if (_firstLoad || _isRefresh) {
                             _firstLoad = false;
                             _isRefresh = false;
-                            
+
                              _projectMap.Clear();
+                            _packageManagerEventSink.UnwatchAll();
+
                              SetupSolution();
                         }
                     });
@@ -170,6 +169,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             _isRefresh = false;
             _setupComplete = false;
             _projectMap.Clear();
+            _packageManagerEventSink.UnwatchAll();
 
             if (_testFilesUpdateWatcher != null) {
                 _testFilesUpdateWatcher.FileChangedEvent -= OnProjectItemChanged;
@@ -234,6 +234,10 @@ namespace Microsoft.PythonTools.TestAdapter {
                 return false;
             }
 
+            pyProj.ActiveInterpreterChanged -= OnActiveInterpreterChanged;
+            pyProj.ActiveInterpreterChanged += OnActiveInterpreterChanged;
+            _packageManagerEventSink.WatchPackageManagers(pyProj.GetInterpreterFactory());
+
             IVsHierarchy hierarchy = (IVsHierarchy)vsProject;
             var projectName = hierarchy == null ? hierarchy.GetNameProperty() : string.Empty;
             var projInfo = new ProjectInfo(pyProj, projectName);
@@ -247,8 +251,8 @@ namespace Microsoft.PythonTools.TestAdapter {
             var testFrameworkType = TestFrameworkType.None;
             try {
                 string testFrameworkStr = pyProj.GetProperty(PythonConstants.TestFrameworkSetting);
-                if (Enum.TryParse<TestFrameworkType>(testFrameworkStr, ignoreCase: true, out TestFrameworkType parsedFramworked)) {
-                    testFrameworkType = parsedFramworked;
+                if (Enum.TryParse<TestFrameworkType>(testFrameworkStr, ignoreCase: true, out TestFrameworkType parsedFramework)) {
+                    testFrameworkType = parsedFramework;
                 }
             } catch (Exception ex) when (!ex.IsCriticalException()) {
                 Trace.WriteLine("Exception : " + ex.Message);
@@ -258,6 +262,16 @@ namespace Microsoft.PythonTools.TestAdapter {
         }
 
         private void OnTestPropertiesChanged(object sender, PythonProjectPropertyChangedArgs e) {
+            _isRefresh = true;
+            NotifyContainerChanged();
+        }
+
+        private void OnActiveInterpreterChanged(object sender, EventArgs e) {
+            _isRefresh = true;
+            NotifyContainerChanged();
+        }
+
+        private void OnInstalledPackagesChanged(object sender, EventArgs e) {
             _isRefresh = true;
             NotifyContainerChanged();
         }
@@ -274,6 +288,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             var pyProj = PythonProject.FromObject(e.Project);
             if (pyProj != null) {
                 pyProj.ProjectPropertyChanged -= OnTestPropertiesChanged;
+                pyProj.ActiveInterpreterChanged -= OnActiveInterpreterChanged;
             }
         }
 

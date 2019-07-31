@@ -67,6 +67,8 @@ namespace Microsoft.PythonTools.Projects {
         public abstract event EventHandler ProjectAnalyzerChanged;
         public abstract event EventHandler<PythonProjectPropertyChangedArgs> ProjectPropertyChanged;
 
+        public abstract event EventHandler ActiveInterpreterChanged;
+
         public abstract string ProjectHome { get; }
 
         public abstract LaunchConfiguration GetLaunchConfigurationOrThrow();

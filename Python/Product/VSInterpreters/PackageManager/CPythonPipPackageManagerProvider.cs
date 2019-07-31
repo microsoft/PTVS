@@ -35,27 +35,46 @@ namespace Microsoft.PythonTools.Interpreter {
         private static readonly PipPackageManagerCommands CommandsV27AndLater = new PipCommandsV27AndLater();
 
         private readonly ICondaLocatorProvider _condaLocatorProvider;
+        private readonly Dictionary<IPythonInterpreterFactory, IPackageManager> _packageManagerMap;
 
         [ImportingConstructor]
         public CPythonPipPackageManagerProvider(
             [Import] ICondaLocatorProvider condaLocatorProvider
         ) {
             _condaLocatorProvider = condaLocatorProvider;
+            _packageManagerMap = new Dictionary<IPythonInterpreterFactory, IPackageManager>();
         }
 
         public IEnumerable<IPackageManager> GetPackageManagers(IPythonInterpreterFactory factory) {
             IPackageManager pm = null;
+
+            lock (_packageManagerMap) {
+                if (!_packageManagerMap.TryGetValue(factory, out pm)) {
+                    pm = TryCreatePackageManager(factory);
+                    if (pm != null) {
+                        _packageManagerMap.Add(factory, pm);
+                    }
+                }
+            }
+
+            if (pm != null) {
+                yield return pm;
+            }
+        }
+
+        private IPackageManager TryCreatePackageManager(IPythonInterpreterFactory factory) {
+            if (factory == null) {
+                return null;
+            }
+
             try {
                 // 'python -m pip', causes this error on Python 2.6: pip is a package and cannot be directly executed
                 // We have to use 'python -m pip' on pip v10, because pip.main() no longer exists
                 // pip v10 is not supported on Python 2.6, so pip.main() is fine there
                 var cmds = factory.Configuration.Version > new Version(2, 6) ? CommandsV27AndLater : CommandsV26;
-                pm = new PipPackageManager(factory, cmds, 1000, _condaLocatorProvider);
+                return new PipPackageManager(factory, cmds, 1000, _condaLocatorProvider);
             } catch (NotSupportedException) {
-            }
-            
-            if (pm != null) {
-                yield return pm;
+                return null;
             }
         }
     }
