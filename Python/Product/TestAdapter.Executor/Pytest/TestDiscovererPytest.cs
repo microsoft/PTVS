@@ -43,7 +43,9 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
             _logger = logger;
             string json = null;
 
-            LogInfo(Strings.PythonTestDiscovererStartedMessage.FormatUI(_settings.DiscoveryWaitTimeInSeconds));
+            var workspaceText = _settings.IsWorkspace ? Strings.WorkspaceText : Strings.ProjectText;
+            LogInfo(Strings.PythonTestDiscovererStartedMessage.FormatUI(PythonConstants.PytestText, _settings.ProjectName, workspaceText,  _settings.DiscoveryWaitTimeInSeconds));
+
             try {
                 var env = InitializeEnvironment(sources, _settings);
                 var arguments = GetArguments(sources);

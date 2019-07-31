@@ -5433,7 +5433,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Python discovery started, waiting up to {0} seconds.
+        ///   Looks up a localized string similar to Starting {0} discovery for the {1} {2}. This can take up to {3} seconds..
         /// </summary>
         public static string PythonTestDiscovererStartedMessage {
             get {
@@ -5442,7 +5442,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Discovery timeout error, possibly due to blocking call, see aka.ms/VSTestExplorerPython for more info.
+        ///   Looks up a localized string similar to Python test discovery timeout, possibly due to blocking call. Go to https://aka.ms/VSTestExplorerPython for more details on test discovery..
         /// </summary>
         public static string PythonTestDiscovererTimeoutErrorMessage {
             get {
