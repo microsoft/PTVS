@@ -18,27 +18,15 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.IO;
 using System.Linq;
-using System.Net;
-using System.Net.Sockets;
-using System.Runtime.InteropServices;
-using System.Security.Cryptography;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-using System.Xml.XPath;
-using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Ipc.Json;
 using Microsoft.PythonTools.TestAdapter.Config;
 using Microsoft.PythonTools.TestAdapter.Pytest;
 using Microsoft.PythonTools.TestAdapter.Services;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
-using TP = Microsoft.PythonTools.TestAdapter.TestProtocol;
 
 namespace Microsoft.PythonTools.TestAdapter {
 

@@ -24,6 +24,7 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using Microsoft.PythonTools.TestAdapter.Config;
 using System.Windows.Forms;
 using System.Diagnostics;
+using System.Threading;
 
 namespace Microsoft.PythonTools.TestAdapter {
 

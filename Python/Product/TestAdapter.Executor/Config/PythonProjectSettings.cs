@@ -12,7 +12,7 @@ namespace Microsoft.PythonTools.TestAdapter.Config {
         public readonly bool IsWorkspace;
         public readonly bool UseLegacyDebugger;
         public readonly TestFrameworkType TestFramwork;
-
+        public readonly int DiscoveryWaitTimeInSeconds;
         public PythonProjectSettings(string projectName,
             string projectHome,
             string workingDir,
@@ -23,7 +23,8 @@ namespace Microsoft.PythonTools.TestAdapter.Config {
             bool useLegacyDebugger,
             string testFramework,
             string unitTestPattern,
-            string unitTestRootDir) {
+            string unitTestRootDir,
+            string discoveryWaitTimeInSeconds) {
             ProjectName = projectName;
             ProjectHome = projectHome;
             WorkingDirectory = workingDir;
@@ -39,6 +40,7 @@ namespace Microsoft.PythonTools.TestAdapter.Config {
             Enum.TryParse<TestFrameworkType>(testFramework, ignoreCase: true, out TestFramwork);
             UnitTestPattern = string.IsNullOrEmpty(unitTestPattern) ? PythonConstants.DefaultUnitTestPattern : unitTestPattern;
             UnitTestRootDir = string.IsNullOrEmpty(unitTestRootDir) ? PythonConstants.DefaultUnitTestRootDirectory : unitTestRootDir;
+            DiscoveryWaitTimeInSeconds = Int32.TryParse(discoveryWaitTimeInSeconds, out int parsedWaitTime) ? parsedWaitTime : PythonConstants.DiscoveryTimeoutInSeconds;
         }
 
         public override bool Equals(object obj) {

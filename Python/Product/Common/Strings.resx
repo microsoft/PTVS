@@ -2909,6 +2909,13 @@ Please specify at least one package.</value>
   <data name="WorkspaceText" xml:space="preserve">
     <value>workspace</value>
   </data>
+  <data name="PythonTestDiscovererStartedMessage" xml:space="preserve">
+    <value>Python discovery started, waiting up to {0} seconds</value>
+    <comment>{0} is an integer wait time in seconds</comment>
+  </data>
+    <data name="PythonTestDiscovererTimeoutErrorMessage" xml:space="preserve">
+    <value>Discovery timeout error, possibly due to blocking call, see aka.ms/VSTestExplorerPython for more info</value>
+  </data>
   <data name="UnitTestEnableInfoBarAction" xml:space="preserve">
     <value>Enable unittest</value>
   </data>

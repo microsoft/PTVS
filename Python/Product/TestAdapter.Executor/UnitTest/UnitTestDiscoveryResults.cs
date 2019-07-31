@@ -14,12 +14,12 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Newtonsoft.Json;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace Microsoft.PythonTools.TestAdapter.UnitTest {
 
-    public class UnitTestTestCase {
+    sealed public class UnitTestTestCase {
         [JsonProperty("id")]
         public string Id { get; set; }
 
@@ -33,7 +33,7 @@ namespace Microsoft.PythonTools.TestAdapter.UnitTest {
         public string Source { get; set; }
     }
 
-    public class UnitTestDiscoveryResults {
+    sealed public class UnitTestDiscoveryResults {
         [JsonProperty("tests")]
         public List<UnitTestTestCase> Tests { get; set; }
     }

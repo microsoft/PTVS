@@ -25,7 +25,8 @@ namespace Microsoft.PythonTools.TestAdapter.Config {
                     project.GetAttribute("useLegacyDebugger", "").IsTrue(),
                     project.GetAttribute("testFramework", ""),
                     project.GetAttribute("unitTestPattern", ""),
-                    project.GetAttribute("unitTestRootDir", "")
+                    project.GetAttribute("unitTestRootDir", ""),
+                    project.GetAttribute("discoveryWaitTime", "")
                 ); 
 
                 foreach (XPathNavigator environment in project.Select("Environment/Variable")) {

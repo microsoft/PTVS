@@ -16,6 +16,7 @@
 
 using System.IO;
 using System.Text;
+using Microsoft.PythonTools;
 
 namespace TestAdapterTests.Mocks {
     class MockRunSettingsXmlBuilder {
@@ -36,7 +37,7 @@ namespace TestAdapterTests.Mocks {
         // {5} is one or more formatted _runSettingEnvironment lines
         // {6} is one or more formatted _runSettingSearch lines
 
-        private const string _runSettingProject = @"<Project name=""{0}"" home=""{1}"" nativeDebugging="""" djangoSettingsModule="""" workingDir=""{1}"" interpreter=""{2}"" pathEnv=""PYTHONPATH"" testFramework= ""{3}""><Environment>{5}</Environment><SearchPaths>{6}</SearchPaths>
+        private const string _runSettingProject = @"<Project name=""{0}"" home=""{1}"" nativeDebugging="""" djangoSettingsModule="""" workingDir=""{1}"" interpreter=""{2}"" pathEnv=""PYTHONPATH"" testFramework= ""{3}"" discoveryWaitTime= ""{7}""><Environment>{5}</Environment><SearchPaths>{6}</SearchPaths>
 {4}
 </Project>";
 
@@ -54,11 +55,12 @@ namespace TestAdapterTests.Mocks {
         private string _resultsDir;
         private string _testDir;
         private string _interpreterPath;
+        private string _discoveryWaitTimeInSeconds;
         private StringBuilder _environmentLines = new StringBuilder();
         private StringBuilder _searchLines = new StringBuilder();
         private StringBuilder _testLines = new StringBuilder();
 
-        public MockRunSettingsXmlBuilder(string testFramework, string interpreterPath, string resultsDir, string testDir) {
+        public MockRunSettingsXmlBuilder(string testFramework, string interpreterPath, string resultsDir, string testDir, string discoveryWaitTimeInSeconds = default ) {
             _environmentLines = new StringBuilder();
             _searchLines = new StringBuilder();
             _testLines = new StringBuilder();
@@ -66,6 +68,7 @@ namespace TestAdapterTests.Mocks {
             _interpreterPath = interpreterPath;
             _resultsDir = resultsDir;
             _testDir = testDir;
+            _discoveryWaitTimeInSeconds = discoveryWaitTimeInSeconds;
         }
 
         public MockRunSettingsXmlBuilder WithEnvironmentVariable(string name, string val) {
@@ -102,7 +105,8 @@ namespace TestAdapterTests.Mocks {
                     _framework,
                     _testLines.ToString(),
                     _environmentLines.ToString(),
-                    _searchLines.ToString()
+                    _searchLines.ToString(),
+                    _discoveryWaitTimeInSeconds ?? string.Empty
                 ),
                 "false",
                 "false"
