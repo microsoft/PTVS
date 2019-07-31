@@ -265,15 +265,16 @@ namespace Microsoft.PythonTools.Interpreter {
 
             lock (_cacheLock) {
                 var oldInterpreter = _interpreter;
-                interpreterChanged = oldInterpreter != _interpreter;
                 _interpreter = ReadInterpreterSetting();
 
                 var oldSearchPaths = _searchPaths;
-                searchPathsChanged = !oldSearchPaths.SequenceEqual(_searchPaths);
                 _searchPaths = ReadSearchPathsSetting();
 
                 var oldTestFramework = _testFramework;
                 _testFramework = GetStringProperty(TestFrameworkProperty);
+
+                interpreterChanged = oldInterpreter != _interpreter;
+                searchPathsChanged = !oldSearchPaths.SequenceEqual(_searchPaths);
                 testSettingsChanged = !String.Equals(oldTestFramework, _testFramework);
             }
 
