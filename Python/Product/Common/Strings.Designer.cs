@@ -3389,11 +3389,29 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to An error occurred opening command prompt..
+        /// </summary>
+        public static string ErrorOpeningCommandPrompt {
+            get {
+                return ResourceManager.GetString("ErrorOpeningCommandPrompt", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to An error occurred opening this interactive window..
         /// </summary>
         public static string ErrorOpeningInteractiveWindow {
             get {
                 return ResourceManager.GetString("ErrorOpeningInteractiveWindow", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An error occurred opening PowerShell..
+        /// </summary>
+        public static string ErrorOpeningPowershell {
+            get {
+                return ResourceManager.GetString("ErrorOpeningPowershell", resourceCulture);
             }
         }
         
@@ -3416,6 +3434,15 @@ namespace Microsoft.PythonTools {
         public static string ErrorStartingInteractiveProcess {
             get {
                 return ResourceManager.GetString("ErrorStartingInteractiveProcess", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An error occurred starting this interpreter..
+        /// </summary>
+        public static string ErrorStartingInterpreter {
+            get {
+                return ResourceManager.GetString("ErrorStartingInterpreter", resourceCulture);
             }
         }
         
