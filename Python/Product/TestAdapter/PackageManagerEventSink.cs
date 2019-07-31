@@ -21,14 +21,12 @@ using Microsoft.PythonTools.Interpreter;
 namespace Microsoft.PythonTools.TestAdapter {
     class PackageManagerEventSink : IDisposable {
         private readonly IInterpreterOptionsService _interpreterOptionsService;
-        private readonly object _packageManagersLock;
-        private HashSet<IPackageManager> _packageManagers;
+        private readonly HashSet<IPackageManager> _packageManagers;
 
         public event EventHandler InstalledPackagesChanged;
 
         public PackageManagerEventSink(IInterpreterOptionsService interpreterOptionsService) {
             _interpreterOptionsService = interpreterOptionsService;
-            _packageManagersLock = new object();
             _packageManagers = new HashSet<IPackageManager>();
         }
 
@@ -43,7 +41,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 
             var mgrs = _interpreterOptionsService.GetPackageManagers(factory);
 
-            lock (_packageManagersLock) {
+            lock (_packageManagers) {
                 foreach (var mgr in mgrs) {
                     if (_packageManagers.Add(mgr)) {
                         mgr.InstalledPackagesChanged += OnInstalledPackagesChanged;
@@ -53,7 +51,7 @@ namespace Microsoft.PythonTools.TestAdapter {
         }
 
         public void UnwatchAll() {
-            lock (_packageManagersLock) {
+            lock (_packageManagers) {
                 foreach (var packageManager in _packageManagers) {
                     packageManager.InstalledPackagesChanged -= OnInstalledPackagesChanged;
                 }
