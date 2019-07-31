@@ -67,7 +67,7 @@ namespace Microsoft.PythonTools.TestAdapter.UnitTest {
                 DebugInfo("set " + _settings.PathEnv + "=" + env[_settings.PathEnv]);
                 DebugInfo($"{_settings.InterpreterPath} {string.Join(" ", arguments)}");
 
-                json = ProcessExecute.RunWithTimeout(
+                var (stdOut, stdError) = ProcessExecute.RunWithTimeout(
                     _settings.InterpreterPath,
                     env,
                     arguments,
@@ -75,6 +75,10 @@ namespace Microsoft.PythonTools.TestAdapter.UnitTest {
                     _settings.PathEnv,
                     _settings.DiscoveryWaitTimeInSeconds
                     );
+                json = stdOut;
+                if (!String.IsNullOrEmpty(stdError)) {
+                    Error(stdError);
+                }
             } catch (TimeoutException) {
                 Error(Strings.PythonTestDiscovererTimeoutErrorMessage);
                 return;

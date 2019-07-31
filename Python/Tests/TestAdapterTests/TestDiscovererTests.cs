@@ -324,9 +324,9 @@ namespace TestAdapterTests {
             var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_ut.py");
             File.Copy(TestData.GetPath("TestData", "TestDiscoverer", "Timeout", "test_timeout_ut.py"), testFilePath);
 
-            int waitTimInSeconds = 1;
+            int waitTimeInSeconds = 1;
             var runSettings = new MockRunSettings(
-                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath, waitTimInSeconds)
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath, waitTimeInSeconds)
                     .WithTestFilesFromFolder(testEnv.SourceFolderPath)
                     .ToXml()
             );
