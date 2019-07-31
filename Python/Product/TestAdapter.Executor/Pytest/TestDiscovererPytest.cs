@@ -45,7 +45,16 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
 
             LogInfo(Strings.PythonTestDiscovererStartedMessage.FormatUI(_settings.DiscoveryWaitTimeInSeconds));
             try {
-                json = ExecuteProcess(sources);
+                var env = InitializeEnvironment(sources, _settings);
+                var arguments = GetArguments(sources);
+                json = ExecuteProcess(
+                    _settings.InterpreterPath,
+                    env,
+                    arguments,
+                    _settings.WorkingDirectory,
+                    _settings.PathEnv,
+                    _settings.DiscoveryWaitTimeInSeconds
+                    );
             } catch (TimeoutException) {
                 Error(Strings.PythonTestDiscovererTimeoutErrorMessage);
                 return;
@@ -68,7 +77,7 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
 
         private void CreateVsTests(IEnumerable<PytestDiscoveryResults> discoveryResults, ITestCaseDiscoverySink discoverySink) {
             foreach (PytestDiscoveryResults result in discoveryResults ?? Enumerable.Empty<PytestDiscoveryResults>()) {
-                var parentMap =  result.Parents.ToDictionary(p => p.Id, p => p);
+                var parentMap = result.Parents.ToDictionary(p => p.Id, p => p);
                 foreach (PytestTest test in result.Tests) {
                     try {
                         TestCase tc = test.ToVsTestCase(_settings.ProjectHome, parentMap);
@@ -79,30 +88,33 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
                     }
                 }
             }
-        } 
+        }
 
-        private string ExecuteProcess(IEnumerable<string> sources) {
-            var env = InitializeEnvironment(sources, _settings);
-            var arguments = GetArguments(sources);
-            var utf8 = new UTF8Encoding(false);
-
+        private string ExecuteProcess(
+           string filename,
+           Dictionary<string, string> env,
+           IEnumerable<string> arguments,
+           string workingDirectory,
+           string pathEnv,
+           int timeoutInSeconds
+           ) {
             using (var outputStream = new MemoryStream())
-            using (var reader = new StreamReader(outputStream, utf8, false, 4096, true))
-            using (var writer = new StreamWriter(outputStream, encoding: new UTF8Encoding(true), 4096, leaveOpen: true))
+            using (var reader = new StreamReader(outputStream, Encoding.UTF8, false, 4096, leaveOpen: true))
+            using (var writer = new StreamWriter(outputStream, Encoding.UTF8, 4096, leaveOpen: true))
             using (var proc = ProcessOutput.Run(
-                _settings.InterpreterPath,
+                filename,
                 arguments,
-                _settings.WorkingDirectory,
+                workingDirectory,
                 env,
                 visible: false,
                 new StreamRedirector(writer)
             )) {
-                DebugInfo("cd " + _settings.WorkingDirectory);
-                DebugInfo("set " + _settings.PathEnv + "=" + env[_settings.PathEnv]);
+                DebugInfo("cd " + workingDirectory);
+                DebugInfo("set " + pathEnv + "=" + env[pathEnv]);
                 DebugInfo(proc.Arguments);
 
                 if (!proc.ExitCode.HasValue) {
-                    if (!proc.Wait(TimeSpan.FromSeconds(_settings.DiscoveryWaitTimeInSeconds))) {
+                    if (!proc.Wait(TimeSpan.FromSeconds(timeoutInSeconds))) {
                         try {
                             proc.Kill();
                         } catch (InvalidOperationException) {
@@ -111,10 +123,10 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
                         throw new TimeoutException();
                     }
                 }
-                outputStream.Flush();
+                writer.Flush();
                 outputStream.Seek(0, SeekOrigin.Begin);
-                string json = reader.ReadToEnd();
-                return json;
+                string data = reader.ReadToEnd();
+                return data;
             }
         }
 

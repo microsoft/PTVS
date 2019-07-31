@@ -93,7 +93,7 @@
     <Compile Include="Pytest\PytestExtensions.cs" />
     <Compile Include="Pytest\TestDiscovererPytest.cs" />
     <Compile Include="Pytest\TestExecutorPytest.cs" />
-    <Compile Include="Services\DiscoveryServiceFactory.cs" />
+    <Compile Include="Services\DiscovererFactory.cs" />
     <Compile Include="Services\ExecutorService.cs" />
     <Compile Include="Pytest\TestResultParser.cs" />
     <Compile Include="Services\IPythonTestDiscoverer.cs" />
