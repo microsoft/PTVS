@@ -75,15 +75,14 @@ namespace TestAdapterTests {
         }
 
         [TestMethod, Priority(0)]
-        [TestCategory("1s")]
+        [TestCategory("10s")]
         public void DiscoverPytestTimeoutError() {
             var testEnv = TestEnvironment.Create(Version, FrameworkPytest);
 
             var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_timeout_pt.py");
             File.Copy(TestData.GetPath("TestData", "TestDiscoverer", "Timeout", "test_timeout_pt.py"), testFilePath);
 
-            var waitTimeInSeconds = "1";
-
+            int waitTimeInSeconds = 1;
             var runSettings = new MockRunSettings(
                 new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath, waitTimeInSeconds)
                     .WithTestFilesFromFolder(testEnv.SourceFolderPath)
@@ -318,15 +317,14 @@ namespace TestAdapterTests {
         }
 
         [TestMethod, Priority(0)]
-        [TestCategory("1s")]
+        [TestCategory("10s")]
         public void DiscoverUnittestTimeoutError() {
             var testEnv = TestEnvironment.Create(Version, FrameworkUnittest);
 
             var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_ut.py");
             File.Copy(TestData.GetPath("TestData", "TestDiscoverer", "Timeout", "test_timeout_ut.py"), testFilePath);
 
-            string waitTimInSeconds = "1";
-
+            int waitTimInSeconds = 1;
             var runSettings = new MockRunSettings(
                 new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath, waitTimInSeconds)
                     .WithTestFilesFromFolder(testEnv.SourceFolderPath)

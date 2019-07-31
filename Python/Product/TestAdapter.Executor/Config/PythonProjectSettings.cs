@@ -41,6 +41,7 @@ namespace Microsoft.PythonTools.TestAdapter.Config {
             UnitTestPattern = string.IsNullOrEmpty(unitTestPattern) ? PythonConstants.DefaultUnitTestPattern : unitTestPattern;
             UnitTestRootDir = string.IsNullOrEmpty(unitTestRootDir) ? PythonConstants.DefaultUnitTestRootDirectory : unitTestRootDir;
             DiscoveryWaitTimeInSeconds = Int32.TryParse(discoveryWaitTimeInSeconds, out int parsedWaitTime) ? parsedWaitTime : PythonConstants.DiscoveryTimeoutInSeconds;
+            DiscoveryWaitTimeInSeconds = DiscoveryWaitTimeInSeconds > 0 ? DiscoveryWaitTimeInSeconds : PythonConstants.DiscoveryTimeoutInSeconds;
         }
 
         public override bool Equals(object obj) {

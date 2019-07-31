@@ -20,7 +20,7 @@ using System.IO;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 namespace Microsoft.PythonTools.TestAdapter.Pytest {
-    static class PyTestDiscoveryReader {
+    static class PyTestExtensions {
 
         public static TestCase ToVsTestCase(this PytestTest test, string projectHome, Dictionary<string, PytestParent> parentMap) {
             if (String.IsNullOrEmpty(projectHome)) {
@@ -31,9 +31,8 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
             }
 
             var sourceAndLineNum = test.Source.Replace(".\\", "");
-            String[] sourceParts = sourceAndLineNum.Split(':');
+            var sourceParts = sourceAndLineNum.Split(':');
             int line = 0;
-
             if (sourceParts.Length != 2 ||
                 !Int32.TryParse(sourceParts[1], out line) ||
                 String.IsNullOrWhiteSpace(test.Name) ||
@@ -65,7 +64,7 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
         /// <param name="t"></param>
         /// <param name="parentMap"></param>
         /// <returns></returns>
-        public static string CreateXmlClassName(PytestTest t, Dictionary<string, PytestParent> parentMap) {
+        internal static string CreateXmlClassName(PytestTest t, Dictionary<string, PytestParent> parentMap) {
             var parentList = new List<string>();
             var currId = t.Parentid;
             while (parentMap.TryGetValue(currId, out PytestParent parent)) {
@@ -81,7 +80,7 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
             return xmlClassName;
         }
 
-        public static string CreateFullyQualifiedTestNameFromId(string pytestId) {
+        internal static string CreateFullyQualifiedTestNameFromId(string pytestId) {
             var fullyQualifiedName = pytestId.Replace(".\\", "");
             String[] parts = fullyQualifiedName.Split(new string[] { "::" }, StringSplitOptions.None);
 
@@ -100,7 +99,7 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
         /// <param name="absoluteFilePath"></param>
         /// <param name="pytestId"></param>
         /// <returns></returns>
-        public static string GetAbsoluteTestExecutionPath(string absoluteFilePath, string pytestId) {
+        internal static string GetAbsoluteTestExecutionPath(string absoluteFilePath, string pytestId) {
             var filename = Path.GetFileName(absoluteFilePath);
             var executionTestPath = "";
             var index = pytestId.LastIndexOf(filename);

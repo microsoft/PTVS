@@ -30,23 +30,20 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.TestAdapter.Config;
-using Microsoft.PythonTools.TestAdapter.UnitTest;
+using Microsoft.PythonTools.TestAdapter.Services;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using Newtonsoft.Json;
 
-namespace Microsoft.PythonTools.TestAdapter.Services {
+namespace Microsoft.PythonTools.TestAdapter.UnitTest {
     internal class TestDiscovererUnitTest : IPythonTestDiscoverer {
         private readonly PythonProjectSettings _settings;
         private IMessageLogger _logger;
@@ -66,9 +63,13 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
             try {
                 var env = InitializeEnvironment(sources, _settings);
                 var arguments = GetArguments(sources);
-                json = ExecuteProcess(
-                    _settings.InterpreterPath, 
-                    env, 
+                DebugInfo("cd " + _settings.WorkingDirectory);
+                DebugInfo("set " + _settings.PathEnv + "=" + env[_settings.PathEnv]);
+                DebugInfo($"{_settings.InterpreterPath} {string.Join(" ", arguments)}");
+
+                json = ProcessExecute.RunWithTimeout(
+                    _settings.InterpreterPath,
+                    env,
                     arguments,
                     _settings.WorkingDirectory,
                     _settings.PathEnv,
@@ -93,48 +94,8 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
             CreateVsTests(results, logger, discoverySink);
         }
 
-        private string ExecuteProcess(
-            string filename,
-            Dictionary<string, string> env,
-            IEnumerable<string> arguments,
-            string workingDirectory,
-            string pathEnv,
-            int timeoutInSeconds
-            ) {
-            using (var outputStream = new MemoryStream())
-            using (var reader = new StreamReader(outputStream, Encoding.UTF8, false, 4096, leaveOpen:true))
-            using (var writer = new StreamWriter(outputStream, Encoding.UTF8, 4096, leaveOpen: true))
-            using (var proc = ProcessOutput.Run(
-                filename,
-                arguments,
-                workingDirectory,
-                env,
-                visible: false,
-                new StreamRedirector(writer)
-            )) {
-                DebugInfo("cd " + workingDirectory);
-                DebugInfo("set " + pathEnv + "=" + env[pathEnv]);
-                DebugInfo(proc.Arguments);
-                
-                if (!proc.ExitCode.HasValue) {
-                    if (!proc.Wait(TimeSpan.FromSeconds(timeoutInSeconds))) {
-                        try {
-                            proc.Kill();
-                        } catch (InvalidOperationException) {
-                            // Process has already exited
-                        }
-                        throw new TimeoutException();
-                    }
-                }
-                writer.Flush();
-                outputStream.Seek(0, SeekOrigin.Begin);
-                string data = reader.ReadToEnd();
-                return data;
-            }
-        }
-
         private void CreateVsTests(IEnumerable<UnitTestDiscoveryResults> unitTestResults, IMessageLogger logger, ITestCaseDiscoverySink discoverySink) {
-            foreach (var test in unitTestResults?.SelectMany(result => result.Tests.Select(test => test)) ?? Enumerable.Empty<UnitTestTestCase>()) {
+            foreach (var test in unitTestResults?.SelectMany(result => result.Tests.Select(test => test)).MaybeEnumerate()) {
                 try {
                     TestCase tc = test.ToVsTestCase(_settings.IsWorkspace, _settings.ProjectHome);
                     DebugInfo($"{tc.DisplayName} Source:{tc.Source} Line:{tc.LineNumber}");

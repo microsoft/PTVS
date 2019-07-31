@@ -19,17 +19,16 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.TestAdapter.Config;
-using Microsoft.PythonTools.TestAdapter.Pytest;
+using Microsoft.PythonTools.TestAdapter.Services;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using Newtonsoft.Json;
 
-namespace Microsoft.PythonTools.TestAdapter.Services {
+namespace Microsoft.PythonTools.TestAdapter.Pytest {
     internal class TestDiscovererPytest : IPythonTestDiscoverer {
         private readonly PythonProjectSettings _settings;
         private IMessageLogger _logger;
@@ -49,7 +48,11 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
             try {
                 var env = InitializeEnvironment(sources, _settings);
                 var arguments = GetArguments(sources);
-                json = ExecuteProcess(
+                DebugInfo("cd " + _settings.WorkingDirectory);
+                DebugInfo("set " + _settings.PathEnv + "=" + env[_settings.PathEnv]);
+                DebugInfo($"{_settings.InterpreterPath} {string.Join(" ", arguments)}");
+
+                json = ProcessExecute.RunWithTimeout(
                     _settings.InterpreterPath,
                     env,
                     arguments,
@@ -78,7 +81,7 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
 
 
         private void CreateVsTests(IEnumerable<PytestDiscoveryResults> discoveryResults, ITestCaseDiscoverySink discoverySink) {
-            foreach (PytestDiscoveryResults result in discoveryResults ?? Enumerable.Empty<PytestDiscoveryResults>()) {
+            foreach (var result in discoveryResults.MaybeEnumerate()) {
                 var parentMap = result.Parents.ToDictionary(p => p.Id, p => p);
                 foreach (PytestTest test in result.Tests) {
                     try {
@@ -89,46 +92,6 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
                         Error(ex.Message);
                     }
                 }
-            }
-        }
-
-        private string ExecuteProcess(
-           string filename,
-           Dictionary<string, string> env,
-           IEnumerable<string> arguments,
-           string workingDirectory,
-           string pathEnv,
-           int timeoutInSeconds
-           ) {
-            using (var outputStream = new MemoryStream())
-            using (var reader = new StreamReader(outputStream, Encoding.UTF8, false, 4096, leaveOpen: true))
-            using (var writer = new StreamWriter(outputStream, Encoding.UTF8, 4096, leaveOpen: true))
-            using (var proc = ProcessOutput.Run(
-                filename,
-                arguments,
-                workingDirectory,
-                env,
-                visible: false,
-                new StreamRedirector(writer)
-            )) {
-                DebugInfo("cd " + workingDirectory);
-                DebugInfo("set " + pathEnv + "=" + env[pathEnv]);
-                DebugInfo(proc.Arguments);
-
-                if (!proc.ExitCode.HasValue) {
-                    if (!proc.Wait(TimeSpan.FromSeconds(timeoutInSeconds))) {
-                        try {
-                            proc.Kill();
-                        } catch (InvalidOperationException) {
-                            // Process has already exited
-                        }
-                        throw new TimeoutException();
-                    }
-                }
-                writer.Flush();
-                outputStream.Seek(0, SeekOrigin.Begin);
-                string data = reader.ReadToEnd();
-                return data;
             }
         }
 

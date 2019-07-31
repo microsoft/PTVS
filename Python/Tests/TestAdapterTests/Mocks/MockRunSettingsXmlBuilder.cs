@@ -55,12 +55,12 @@ namespace TestAdapterTests.Mocks {
         private string _resultsDir;
         private string _testDir;
         private string _interpreterPath;
-        private string _discoveryWaitTimeInSeconds;
+        private int _discoveryWaitTimeInSeconds;
         private StringBuilder _environmentLines = new StringBuilder();
         private StringBuilder _searchLines = new StringBuilder();
         private StringBuilder _testLines = new StringBuilder();
 
-        public MockRunSettingsXmlBuilder(string testFramework, string interpreterPath, string resultsDir, string testDir, string discoveryWaitTimeInSeconds = default ) {
+        public MockRunSettingsXmlBuilder(string testFramework, string interpreterPath, string resultsDir, string testDir, int discoveryWaitTimeInSeconds = -1 ) {
             _environmentLines = new StringBuilder();
             _searchLines = new StringBuilder();
             _testLines = new StringBuilder();
@@ -106,7 +106,7 @@ namespace TestAdapterTests.Mocks {
                     _testLines.ToString(),
                     _environmentLines.ToString(),
                     _searchLines.ToString(),
-                    _discoveryWaitTimeInSeconds ?? string.Empty
+                    _discoveryWaitTimeInSeconds < 0 ? string.Empty : _discoveryWaitTimeInSeconds.ToString()
                 ),
                 "false",
                 "false"
