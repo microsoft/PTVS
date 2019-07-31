@@ -17,11 +17,11 @@ namespace Microsoft.PythonTools.TestAdapter.Model {
         private readonly string _projectName;
         private readonly Dictionary<string, TestContainer> _containers;
 
-        public ProjectInfo(PythonProject project, string projectName) {
+        public ProjectInfo(PythonProject project) {
             _pythonProject = project;
             _pythonWorkspace = null;
             _projectHome = _pythonProject.ProjectHome;
-            _projectName = projectName;
+            _projectName = _pythonProject.ProjectName;
             _containers = new Dictionary<string, TestContainer>(StringComparer.OrdinalIgnoreCase);
         }
 
@@ -29,6 +29,7 @@ namespace Microsoft.PythonTools.TestAdapter.Model {
             _pythonProject = null;
             _pythonWorkspace = workspace;
             _projectHome = workspace.Location;
+            _projectName = workspace.WorkspaceName;
             _containers = new Dictionary<string, TestContainer>(StringComparer.OrdinalIgnoreCase);
         }
 

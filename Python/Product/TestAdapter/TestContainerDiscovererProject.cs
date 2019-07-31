@@ -238,9 +238,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             pyProj.ActiveInterpreterChanged += OnActiveInterpreterChanged;
             _packageManagerEventSink.WatchPackageManagers(pyProj.GetInterpreterFactory());
 
-            IVsHierarchy hierarchy = (IVsHierarchy)vsProject;
-            var projectName = hierarchy == null ? hierarchy.GetNameProperty() : string.Empty;
-            var projInfo = new ProjectInfo(pyProj, projectName);
+            var projInfo = new ProjectInfo(pyProj);
             _projectMap[projInfo.ProjectHome] = projInfo;
             var files = FilteredTestOrSettingsFiles(vsProject);
             UpdateSolutionTestContainersAndFileWatchers(files, projInfo, isAdd: true);

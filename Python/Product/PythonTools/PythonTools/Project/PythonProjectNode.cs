@@ -2903,6 +2903,12 @@ namespace Microsoft.PythonTools.Project {
                 }
             }
 
+            public override string ProjectName {
+                get {
+                    return _node.Caption;
+                }
+            }
+
             public override event EventHandler<PythonProjectPropertyChangedArgs> ProjectPropertyChanged;
 
             public override event EventHandler ActiveInterpreterChanged {

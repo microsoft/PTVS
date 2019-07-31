@@ -203,6 +203,6 @@ namespace Microsoft.PythonTools {
         //Discovery
         internal const string PytestText = "pytest";
         internal const string UnitTestText = "unittest";
-        internal const int DiscoveryTimeoutInSeconds = 1;
+        internal const int DiscoveryTimeoutInSeconds = 60;
     }
 }
