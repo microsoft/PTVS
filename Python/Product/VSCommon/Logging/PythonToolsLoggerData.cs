@@ -152,7 +152,7 @@ namespace Microsoft.PythonTools.Logging {
         public string Context { get; set; }
     }
 
-    static class ConfigurePytestInfoBarActions {
+    static class ConfigureTestFrameworkInfoBarActions {
         public const string Prompt = "Prompt";
         public const string InstallPytest = "InstallPytest";
         public const string EnablePytest = "EnablePytest";

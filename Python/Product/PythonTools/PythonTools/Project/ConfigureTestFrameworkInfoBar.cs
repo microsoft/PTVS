@@ -98,7 +98,7 @@ namespace Microsoft.PythonTools.Project {
 
 
         private void ShowInfoBar(string infoBarMessage, List<InfoBarHyperlink> acceptActionItems) {
-            LogEvent(ConfigurePytestInfoBarActions.Prompt);
+            LogEvent(ConfigureTestFrameworkInfoBarActions.Prompt);
 
             acceptActionItems.Add(new InfoBarHyperlink(Strings.PythonTestFrameworkIgnoreInfoBarAction, (Action)IgnoreAction));
             Create(new InfoBarModel(
@@ -144,7 +144,7 @@ namespace Microsoft.PythonTools.Project {
         
         private void LogEvent(string action) {
             Logger?.LogEvent(
-                PythonLogEvent.PyTestInfoBar,
+                PythonLogEvent.ConfigureTestFrameworkInfoBar,
                 new ConfigureTestFrameworkInfoBarInfo() {
                     Action = action,
                     Context = _infoBarData.Context,
@@ -158,7 +158,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private async Task InstallPytestActionAsync() {
-            LogEvent(ConfigurePytestInfoBarActions.InstallPytest);
+            LogEvent(ConfigureTestFrameworkInfoBarActions.InstallPytest);
             var result = await InstallPyTestAsync();
             if (!result) {
                 var generalOutputWindow = OutputWindowRedirector.GetGeneral(Site);
@@ -173,7 +173,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private async Task EnablePytestActionAsync() {
-            LogEvent(ConfigurePytestInfoBarActions.EnablePytest);
+            LogEvent(ConfigureTestFrameworkInfoBarActions.EnablePytest);
             await SetPropertyAsync(PythonConstants.TestFrameworkSetting, "Pytest");
             Close();
         }
@@ -183,7 +183,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private async Task InstallAndEnablePytestActionAsync() {
-            LogEvent(ConfigurePytestInfoBarActions.EnableAndInstallPytest);
+            LogEvent(ConfigureTestFrameworkInfoBarActions.EnableAndInstallPytest);
             if (!await InstallPyTestAsync()) {
                 var generalOutputWindow = OutputWindowRedirector.GetGeneral(Site);
                 generalOutputWindow.ShowAndActivate();
@@ -198,7 +198,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private async Task EnableUnitTestActionAsync() {
-            LogEvent(ConfigurePytestInfoBarActions.EnableUnitTest);
+            LogEvent(ConfigureTestFrameworkInfoBarActions.EnableUnitTest);
             await SetPropertyAsync(PythonConstants.TestFrameworkSetting, "unittest");
             Close();
         }
@@ -208,7 +208,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private async Task IgnoreActionAsync() {
-            LogEvent(ConfigurePytestInfoBarActions.Ignore);
+            LogEvent(ConfigureTestFrameworkInfoBarActions.Ignore);
             await SetPropertyAsync(PythonConstants.SuppressConfigureTestFrameworkPrompt, "true");
             Close();
         }

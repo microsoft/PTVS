@@ -21,9 +21,9 @@ namespace Microsoft.PythonTools.Projects {
     /// Argument of the event raised when a project property is changed.
     /// </summary>
     public class PythonProjectPropertyChangedArgs : EventArgs {
-        public string PropertyName;
-        public string OldValue;
-        public string NewValue;
+        public string PropertyName { get; }
+        public string OldValue { get; }
+        public string NewValue { get; }
 
         internal PythonProjectPropertyChangedArgs(string propertyName, string oldValue, string newValue) {
             this.PropertyName = propertyName;
