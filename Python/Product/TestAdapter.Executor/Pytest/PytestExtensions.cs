@@ -53,6 +53,13 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
             tc.SetPropertyValue(Constants.PytestIdProperty, test.Id);
             tc.SetPropertyValue(Constants.PyTestXmlClassNameProperty, CreateXmlClassName(test, parentMap));
             tc.SetPropertyValue(Constants.PytestTestExecutionPathPropertery, GetAbsoluteTestExecutionPath(fullSourcePathNormalized, test.Id));
+
+            if (test.Markers != null) {
+                foreach (var marker in test.Markers) {
+                    tc.Traits.Add(new Trait(marker.ToString(), String.Empty));
+                }
+            }
+
             return tc;
         }
 

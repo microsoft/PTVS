@@ -140,16 +140,6 @@ namespace Microsoft.PythonTools.TestAdapter.UnitTest {
 
         private string GetSearchPaths(IEnumerable<string> sources, PythonProjectSettings settings) {
             var paths = settings.SearchPath;
-
-            HashSet<string> knownModulePaths = new HashSet<string>();
-            foreach (var source in sources) {
-                string testFilePath = PathUtils.GetAbsoluteFilePath(settings.ProjectHome, source);
-                var modulePath = ModulePath.FromFullPath(testFilePath);
-                if (knownModulePaths.Add(modulePath.LibraryPath)) {
-                    paths.Insert(0, modulePath.LibraryPath);
-                }
-            }
-
             paths.Insert(0, settings.WorkingDirectory);
 
             string searchPaths = string.Join(

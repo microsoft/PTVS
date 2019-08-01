@@ -48,7 +48,7 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
 
             try {
                 var env = InitializeEnvironment(sources, _settings);
-                var arguments = GetArguments(sources);
+                var arguments = GetArguments(sources, _settings);
                 DebugInfo("cd " + _settings.WorkingDirectory);
                 DebugInfo("set " + _settings.PathEnv + "=" + env[_settings.PathEnv]);
                 DebugInfo($"{_settings.InterpreterPath} {string.Join(" ", arguments)}");
@@ -96,7 +96,7 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
             }
         }
 
-        public string[] GetArguments(IEnumerable<string> sources) {
+        public string[] GetArguments(IEnumerable<string> sources, PythonProjectSettings projSettings) {
             var arguments = new List<string>();
             arguments.Add(DiscoveryAdapterPath);
             arguments.Add("discover");
@@ -104,8 +104,10 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
             arguments.Add("--");
             arguments.Add("--cache-clear");
 
-            foreach (var s in sources) {
-                arguments.Add(s);
+            if (!projSettings.IsWorkspace) {
+                foreach (var s in sources) {
+                    arguments.Add(s);
+                }
             }
             return arguments.ToArray();
         }
@@ -129,15 +131,6 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
 
         private string GetSearchPaths(IEnumerable<string> sources, PythonProjectSettings settings) {
             var paths = settings.SearchPath;
-
-            HashSet<string> knownModulePaths = new HashSet<string>();
-            foreach (var source in sources) {
-                string testFilePath = PathUtils.GetAbsoluteFilePath(settings.ProjectHome, source);
-                var modulePath = ModulePath.FromFullPath(testFilePath);
-                if (knownModulePaths.Add(modulePath.LibraryPath)) {
-                    paths.Insert(0, modulePath.LibraryPath);
-                }
-            }
 
             paths.Insert(0, settings.WorkingDirectory);
 
