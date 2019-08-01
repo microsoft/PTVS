@@ -15,13 +15,16 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using System.Text;
 using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.TestAdapter.Services {
     static class ProcessExecute {
 
-        static public (string, string) RunWithTimeout(
+        static internal string RunWithTimeout(
             string filename,
             Dictionary<string, string> env,
             IEnumerable<string> arguments,
@@ -29,13 +32,16 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
             string pathEnv,
             int timeoutInSeconds
         ) {
+            using (var outputStream = new MemoryStream())
+            using (var reader = new StreamReader(outputStream, Encoding.UTF8, false, 4096, leaveOpen: true))
+            using (var writer = new StreamWriter(outputStream, Encoding.UTF8, 4096, leaveOpen: true))
             using (var proc = ProcessOutput.Run(
                 filename,
                 arguments,
                 workingDirectory,
                 env,
-                false,
-                null
+                visible: false,
+                new StreamRedirector(writer)
             )) {
                 if (!proc.ExitCode.HasValue) {
                     if (!proc.Wait(TimeSpan.FromSeconds(timeoutInSeconds))) {
@@ -47,9 +53,10 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
                         throw new TimeoutException();
                     }
                 }
-
-                return (string.Join(Environment.NewLine, proc.StandardOutputLines),
-                    string.Join(Environment.NewLine, proc.StandardErrorLines));
+                writer.Flush();
+                outputStream.Seek(0, SeekOrigin.Begin);
+                string data = reader.ReadToEnd();
+                return data;
             }
         }
     }

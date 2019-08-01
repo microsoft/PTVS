@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -52,7 +53,7 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
                 DebugInfo("set " + _settings.PathEnv + "=" + env[_settings.PathEnv]);
                 DebugInfo($"{_settings.InterpreterPath} {string.Join(" ", arguments)}");
                 
-                var(stdOut, stdError) = ProcessExecute.RunWithTimeout(
+                json = ProcessExecute.RunWithTimeout(
                     _settings.InterpreterPath,
                     env,
                     arguments,
@@ -60,12 +61,6 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
                     _settings.PathEnv,
                     _settings.DiscoveryWaitTimeInSeconds
                     );
-
-                json = stdOut;
-                if (!String.IsNullOrEmpty(stdError)) {
-                    Error(stdError);
-                }
-                
             } catch (TimeoutException) {
                 Error(Strings.PythonTestDiscovererTimeoutErrorMessage);
                 return;
@@ -128,6 +123,7 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
                 env[envVar.Key] = envVar.Value;
             }
 
+            env["PYTHONUNBUFFERED"] = "1";
             return env;
         }
 
