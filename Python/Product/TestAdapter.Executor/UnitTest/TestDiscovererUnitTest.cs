@@ -133,6 +133,8 @@ namespace Microsoft.PythonTools.TestAdapter.UnitTest {
                 env[envVar.Key] = envVar.Value;
             }
 
+            env["PYTHONUNBUFFERED"] = "1";
+
             return env;
         }
 
