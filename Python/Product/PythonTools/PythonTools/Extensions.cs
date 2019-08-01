@@ -168,7 +168,7 @@ namespace Microsoft.PythonTools {
                     // When it is autocompletion (as when typing in front of the existing contruct), take left part only.
                     var span = completeWord ? lastToken.Span : Span.FromBounds(lastToken.Span.Start, position);
                     return snapshot.CreateTrackingSpan(span, SpanTrackingMode.EdgeInclusive);
-                } 
+                }
 
                 // Handle "<|="
                 return null;
@@ -236,11 +236,10 @@ namespace Microsoft.PythonTools {
             }
         }
 
-          /// <summary>
+        /// <summary>
         /// Get the items present in the project
         /// </summary>
-        public static IEnumerable<string> GetProjectItems(this IVsProject project)
-        {
+        public static IEnumerable<string> GetProjectItems(this IVsProject project) {
             Debug.Assert(project != null, "Project is not null");
 
             // Each item in VS OM is IVSHierarchy. 
@@ -252,16 +251,13 @@ namespace Microsoft.PythonTools {
         /// <summary>
         /// Get project items
         /// </summary>
-        private static IEnumerable<string> GetProjectItems(IVsHierarchy project, uint itemId)
-        {
+        private static IEnumerable<string> GetProjectItems(IVsHierarchy project, uint itemId) {
 
             object pVar = GetPropertyValue((int)__VSHPROPID.VSHPROPID_FirstChild, itemId, project);
 
             uint childId = GetItemId(pVar);
-            while (childId != VSConstants.VSITEMID_NIL)
-            {
-                foreach (string item in GetProjectItems(project, childId))
-                {
+            while (childId != VSConstants.VSITEMID_NIL) {
+                foreach (string item in GetProjectItems(project, childId)) {
                     yield return item;
                 }
 

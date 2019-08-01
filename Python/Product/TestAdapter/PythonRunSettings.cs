@@ -105,9 +105,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 
         private bool UseLegacyDebugger {
             get {
-
-                //bschnurr todo: support new debugger with pytest
-                bool useLegacyDebugger = true;
+                bool useLegacyDebugger = false;
                 try {
                     _serviceProvider.GetUIThread().Invoke(() => {
                         var dte = (EnvDTE.DTE)_serviceProvider.GetService(typeof(EnvDTE.DTE));
@@ -144,7 +142,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                             bool isWorkspace = false;
                             ProjectInfo projInfo = null;
                             LaunchConfiguration config = null;
-                                       
+
                             ThreadHelper.JoinableTaskFactory.Run(async () => {
                                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
@@ -192,7 +190,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                             writer.WriteAttributeString("unitTestPattern", unitTestPattern);
 
                             writer.WriteStartElement("Environment");
-                           
+
                             foreach (var keyValue in config.Environment) {
                                 writer.WriteStartElement("Variable");
                                 writer.WriteAttributeString("name", keyValue.Key);
@@ -211,7 +209,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 
                             writer.WriteStartElement("Test");
                             writer.WriteAttributeString("file", container.Source);
-                          
+
                             writer.WriteEndElement(); // Test
 
                             writer.WriteEndElement();  // Project

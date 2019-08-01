@@ -14,12 +14,11 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.PythonTools.Infrastructure;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using System;
 using System.Diagnostics;
 using System.Linq;
-using System.Xml.Schema;
+using Microsoft.PythonTools.Infrastructure;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 namespace Microsoft.PythonTools.TestAdapter.UnitTest {
     public static class UnitTestExtensions {
