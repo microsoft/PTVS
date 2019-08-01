@@ -481,7 +481,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                     new MemoryStream(),
                     true,
                     stream,
-                    _showConsole,
+                    true,
                     RequestHandler,
                     TP.RegisteredTypes,
                     "TestExecutor"
@@ -518,7 +518,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                         arguments,
                         _settings.WorkingDirectory,
                         _env,
-                        true,
+                        _showConsole,
                         null
                     )) {
                         bool killed = false;
