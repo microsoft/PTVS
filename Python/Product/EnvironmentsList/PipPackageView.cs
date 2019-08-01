@@ -45,17 +45,18 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             }
 
             try {
-                var oldDescription = _package.Description;
                 var p = await _provider.GetInstallablePackageAsync(_package, CancellationToken.None);
                 if (p.IsValid) {
                     if (!p.ExactVersion.IsEmpty && (!_upgradeVersion.HasValue || !_upgradeVersion.Value.Equals(p.ExactVersion))) {
                         _upgradeVersion = p.ExactVersion;
                         OnPropertyChanged("UpgradeVersion");
                     }
-                    if (p.Description != _package.Description) {
+                    
+                    if (!String.IsNullOrEmpty(p.Description) && p.Description != _package.Description) {
                         _package.Description = p.Description;
                         OnPropertyChanged("Description");
-                    } else if (string.IsNullOrEmpty(p.Description)) {
+                    }
+                    else if (_package.Description == null) {
                         _package.Description = string.Empty;
                         OnPropertyChanged("Description");
                     }
