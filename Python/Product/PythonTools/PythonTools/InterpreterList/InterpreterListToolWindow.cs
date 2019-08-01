@@ -228,7 +228,7 @@ namespace Microsoft.PythonTools.InterpreterList {
             psi.FileName = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "explorer.exe");
             psi.Arguments = "\"" + path + "\"";
 
-            Process.Start(psi).Dispose();
+            Process.Start(psi)?.Dispose();
             e.Handled = true;
         }
 
@@ -418,24 +418,29 @@ namespace Microsoft.PythonTools.InterpreterList {
         }
 
         private void StartInterpreter_Executed(object sender, ExecutedRoutedEventArgs e) {
-            var view = (EnvironmentView)e.Parameter;
+            try {
+                var view = (EnvironmentView)e.Parameter;
 
-            var config = new LaunchConfiguration(view.Factory.Configuration) {
-                PreferWindowedInterpreter = (e.Command == EnvironmentPathsExtension.StartWindowsInterpreter),
-                WorkingDirectory = view.Factory.Configuration.GetPrefixPath(),
-                SearchPaths = new List<string>()
-            };
+                var config = new LaunchConfiguration(view.Factory.Configuration) {
+                    PreferWindowedInterpreter = (e.Command == EnvironmentPathsExtension.StartWindowsInterpreter),
+                    WorkingDirectory = view.Factory.Configuration.GetPrefixPath(),
+                    SearchPaths = new List<string>()
+                };
 
-            var sln = (IVsSolution)_site.GetService(typeof(SVsSolution));
-            foreach (var pyProj in sln.EnumerateLoadedPythonProjects()) {
-                if (pyProj.InterpreterConfigurations.Contains(config.Interpreter)) {
-                    config.SearchPaths.AddRange(pyProj.GetSearchPaths());
+                var sln = (IVsSolution)_site.GetService(typeof(SVsSolution));
+                foreach (var pyProj in sln.EnumerateLoadedPythonProjects()) {
+                    if (pyProj.InterpreterConfigurations.Contains(config.Interpreter)) {
+                        config.SearchPaths.AddRange(pyProj.GetSearchPaths());
+                    }
                 }
+
+                config.LaunchOptions[PythonConstants.NeverPauseOnExit] = "true";
+
+                Process.Start(Debugger.DebugLaunchHelper.CreateProcessStartInfo(_site, config))?.Dispose();
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
+                TaskDialog.ForException(_site, ex, Strings.ErrorStartingInterpreter, Strings.IssueTrackerUrl).ShowModal();
+                return;
             }
-
-            config.LaunchOptions[PythonConstants.NeverPauseOnExit] = "true";
-
-            Process.Start(Debugger.DebugLaunchHelper.CreateProcessStartInfo(_site, config)).Dispose();
         }
 
         private void OnlineHelp_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
@@ -519,20 +524,25 @@ namespace Microsoft.PythonTools.InterpreterList {
         }
 
         private void OpenInCommandPrompt_Executed(object sender, ExecutedRoutedEventArgs e) {
-            var view = (EnvironmentView)e.Parameter;
+            try {
+                var view = (EnvironmentView)e.Parameter;
 
-            var paths = GetPathEntries(view);
-            var pathCmd = string.IsNullOrEmpty(paths) ? "" : string.Format("set PATH={0};%PATH% & ", paths);
-            var psi = new ProcessStartInfo(Path.Combine(Environment.SystemDirectory, "cmd.exe")) {
-                Arguments = string.Join(" ", new[] {
+                var paths = GetPathEntries(view);
+                var pathCmd = string.IsNullOrEmpty(paths) ? "" : string.Format("set PATH={0};%PATH% & ", paths);
+                var psi = new ProcessStartInfo(Path.Combine(Environment.SystemDirectory, "cmd.exe")) {
+                    Arguments = string.Join(" ", new[] {
                     "/S",
                     "/K",
                     pathCmd + string.Format("title {0} environment", view.Description)
                 }.Select(ProcessOutput.QuoteSingleArgument)),
-                WorkingDirectory = view.PrefixPath
-            };
+                    WorkingDirectory = view.PrefixPath
+                };
 
-            Process.Start(psi).Dispose();
+                Process.Start(psi)?.Dispose();
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
+                TaskDialog.ForException(_site, ex, Strings.ErrorOpeningCommandPrompt, Strings.IssueTrackerUrl).ShowModal();
+                return;
+            }
         }
 
         private void OpenInPowerShell_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
@@ -542,21 +552,26 @@ namespace Microsoft.PythonTools.InterpreterList {
         }
 
         private void OpenInPowerShell_Executed(object sender, ExecutedRoutedEventArgs e) {
-            var view = (EnvironmentView)e.Parameter;
+            try {
+                var view = (EnvironmentView)e.Parameter;
 
-            var paths = GetPathEntries(view);
-            var pathCmd = string.IsNullOrEmpty(paths) ? "" : string.Format("$env:PATH='{0};' + $env:PATH; ", paths);
-            var psi = new ProcessStartInfo(Path.Combine(Environment.SystemDirectory, "WindowsPowerShell", "v1.0", "powershell.exe")) {
-                Arguments = string.Join(" ", new[] {
+                var paths = GetPathEntries(view);
+                var pathCmd = string.IsNullOrEmpty(paths) ? "" : string.Format("$env:PATH='{0};' + $env:PATH; ", paths);
+                var psi = new ProcessStartInfo(Path.Combine(Environment.SystemDirectory, "WindowsPowerShell", "v1.0", "powershell.exe")) {
+                    Arguments = string.Join(" ", new[] {
                     "-NoLogo",
                     "-NoExit",
                     "-Command",
                     pathCmd + string.Format("(Get-Host).UI.RawUI.WindowTitle = '{0} environment'", view.Description)
                 }.Select(ProcessOutput.QuoteSingleArgument)),
-                WorkingDirectory = view.PrefixPath
-            };
+                    WorkingDirectory = view.PrefixPath
+                };
 
-            Process.Start(psi).Dispose();
+                Process.Start(psi)?.Dispose();
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
+                TaskDialog.ForException(_site, ex, Strings.ErrorOpeningPowershell, Strings.IssueTrackerUrl).ShowModal();
+                return;
+            }
         }
 
         private void OpenInBrowser_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
