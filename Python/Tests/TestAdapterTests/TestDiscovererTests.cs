@@ -77,7 +77,7 @@ namespace TestAdapterTests {
         [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public void DiscoverPytestTimeoutError() {
-            var testEnv = TestEnvironment.Create(Version, FrameworkPytest);
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
 
             var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_timeout_pt.py");
             File.Copy(TestData.GetPath("TestData", "TestDiscoverer", "Timeout", "test_timeout_pt.py"), testFilePath);
@@ -319,7 +319,7 @@ namespace TestAdapterTests {
         [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public void DiscoverUnittestTimeoutError() {
-            var testEnv = TestEnvironment.Create(Version, FrameworkUnittest);
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
 
             var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_ut.py");
             File.Copy(TestData.GetPath("TestData", "TestDiscoverer", "Timeout", "test_timeout_ut.py"), testFilePath);
