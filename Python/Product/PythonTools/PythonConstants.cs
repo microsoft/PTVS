@@ -199,5 +199,10 @@ namespace Microsoft.PythonTools {
 
         public static readonly Uri PythonProjectContainerDiscovererUri = new Uri(PythonProjectContainerDiscovererUriString);
         public static readonly Uri PythonWorkspaceContainerDiscovererUri = new Uri(PythonWorkspaceContainerDiscovererUriString);
+
+        //Discovery
+        internal const string PytestText = "pytest";
+        internal const string UnitTestText = "unittest";
+        internal const int DiscoveryTimeoutInSeconds = 60;
     }
 }

@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Microsoft.PythonTools;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
@@ -71,6 +72,36 @@ namespace TestAdapterTests {
             );
 
             DiscoverTests(testEnv, new[] { testFilePath }, runSettings, expectedTests);
+        }
+
+        [TestMethod, Priority(0)]
+        [TestCategory("10s")]
+        public void DiscoverPytestTimeoutError() {
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
+
+            var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_timeout_pt.py");
+            File.Copy(TestData.GetPath("TestData", "TestDiscoverer", "Timeout", "test_timeout_pt.py"), testFilePath);
+
+            int waitTimeInSeconds = 1;
+            var runSettings = new MockRunSettings(
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath, waitTimeInSeconds)
+                    .WithTestFilesFromFolder(testEnv.SourceFolderPath)
+                    .ToXml()
+            );
+            
+            var discoveryContext = new MockDiscoveryContext(runSettings);
+            var discoverySink = new MockTestCaseDiscoverySink();
+            var logger = new MockMessageLogger();
+            var discoverer = new PythonTestDiscoverer();
+
+            discoverer.DiscoverTests(new[] { testFilePath }, discoveryContext, logger, discoverySink);
+            Assert.AreEqual(0, discoverySink.Tests.Count);
+
+            var errors = string.Join(Environment.NewLine, logger.GetErrors());
+            AssertUtil.Contains(
+                errors,
+                Strings.PythonTestDiscovererTimeoutErrorMessage
+            );
         }
 
         [TestMethod, Priority(0)]
@@ -287,7 +318,37 @@ namespace TestAdapterTests {
 
         [TestMethod, Priority(0)]
         [TestCategory("10s")]
-        
+        public void DiscoverUnittestTimeoutError() {
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
+
+            var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_ut.py");
+            File.Copy(TestData.GetPath("TestData", "TestDiscoverer", "Timeout", "test_timeout_ut.py"), testFilePath);
+
+            int waitTimeInSeconds = 1;
+            var runSettings = new MockRunSettings(
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath, waitTimeInSeconds)
+                    .WithTestFilesFromFolder(testEnv.SourceFolderPath)
+                    .ToXml()
+            );
+
+            var discoveryContext = new MockDiscoveryContext(runSettings);
+            var discoverySink = new MockTestCaseDiscoverySink();
+            var logger = new MockMessageLogger();
+            var discoverer = new PythonTestDiscoverer();
+
+            discoverer.DiscoverTests(new[] { testFilePath }, discoveryContext, logger, discoverySink);
+            Assert.AreEqual(0, discoverySink.Tests.Count);
+
+            var errors = string.Join(Environment.NewLine, logger.GetErrors());
+            AssertUtil.Contains(
+                errors,
+                Strings.PythonTestDiscovererTimeoutErrorMessage
+            );
+        }
+
+
+        [TestMethod, Priority(0)]
+        [TestCategory("10s")]
         public void DiscoverUnittestDecoratorsIgnoreLineNumbers() {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
 

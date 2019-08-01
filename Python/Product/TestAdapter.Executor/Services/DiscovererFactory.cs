@@ -1,6 +1,7 @@
 ﻿
 using Microsoft.PythonTools.TestAdapter.Config;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
+using Microsoft.PythonTools.TestAdapter.Pytest;
+using Microsoft.PythonTools.TestAdapter.UnitTest;
 using System;
 
 namespace Microsoft.PythonTools.TestAdapter.Services {

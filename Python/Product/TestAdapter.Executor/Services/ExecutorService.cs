@@ -14,21 +14,21 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.PythonTools.Infrastructure;
 using System;
 using System.Collections.Generic;
-using System.Threading;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-using System.IO;
-using Microsoft.PythonTools.TestAdapter.Config;
 using System.Diagnostics;
+using System.IO;
+using System.Linq;
 using System.Net;
+using System.Runtime.InteropServices;
+using System.Security.Cryptography;
+using System.Threading;
+using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.TestAdapter.Config;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
-using Microsoft.PythonTools.Analysis;
-using System.Linq;
-using System.Security.Cryptography;
-using System.Runtime.InteropServices;
 
 namespace Microsoft.PythonTools.TestAdapter.Services {
     public class ExecutorService : IDisposable {
@@ -240,7 +240,7 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
         }
 
         private void DetachFromSillyManagedProcess() {
-            var dte = _app != null ? _app.GetDTE() : null;
+            var dte = _app?.GetDTE();
             if (dte != null && _debugMode != PythonDebugMode.None) {
                 dte.Debugger.DetachAll();
             }

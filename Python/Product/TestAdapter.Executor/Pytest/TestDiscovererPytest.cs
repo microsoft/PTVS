@@ -1,19 +1,35 @@
-﻿using Microsoft.PythonTools.Analysis;
-using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.TestAdapter.Config;
-using Microsoft.PythonTools.TestAdapter.Pytest;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
-using Newtonsoft.Json;
+﻿// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABILITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
+
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading;
+using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.TestAdapter.Config;
+using Microsoft.PythonTools.TestAdapter.Services;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
+using Newtonsoft.Json;
 
-namespace Microsoft.PythonTools.TestAdapter.Services {
+namespace Microsoft.PythonTools.TestAdapter.Pytest {
     internal class TestDiscovererPytest : IPythonTestDiscoverer {
         private readonly PythonProjectSettings _settings;
         private IMessageLogger _logger;
@@ -25,52 +41,58 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
 
         public void DiscoverTests(IEnumerable<string> sources, IMessageLogger logger, ITestCaseDiscoverySink discoverySink) {
             _logger = logger;
+            string json = null;
 
-            var discoveryResults = new List<PytestDiscoveryResults>();
+            var workspaceText = _settings.IsWorkspace ? Strings.WorkspaceText : Strings.ProjectText;
+            LogInfo(Strings.PythonTestDiscovererStartedMessage.FormatUI(PythonConstants.PytestText, _settings.ProjectName, workspaceText,  _settings.DiscoveryWaitTimeInSeconds));
 
             try {
                 var env = InitializeEnvironment(sources, _settings);
                 var arguments = GetArguments(sources);
-
-                using (var outputStream = new MemoryStream())
-                using (var writer = new StreamWriter(outputStream, encoding: new UTF8Encoding(true), 4096, leaveOpen: true))
-                using (var proc = ProcessOutput.Run(
+                DebugInfo("cd " + _settings.WorkingDirectory);
+                DebugInfo("set " + _settings.PathEnv + "=" + env[_settings.PathEnv]);
+                DebugInfo($"{_settings.InterpreterPath} {string.Join(" ", arguments)}");
+                
+                json = ProcessExecute.RunWithTimeout(
                     _settings.InterpreterPath,
+                    env,
                     arguments,
                     _settings.WorkingDirectory,
-                    env,
-                    visible: false,
-                    new StreamRedirector(writer)
-                )) {
-
-                    DebugInfo("cd " + _settings.WorkingDirectory);
-                    DebugInfo("set " + _settings.PathEnv + "=" + env[_settings.PathEnv]);
-                    DebugInfo(proc.Arguments);
-
-                    // If there's an error in the launcher script,
-                    // it will terminate without connecting back.
-                    WaitHandle.WaitAny(new WaitHandle[] { proc.WaitHandle });
-
-                    outputStream.Flush();
-                    outputStream.Seek(0, SeekOrigin.Begin);
-                    var json = new StreamReader(outputStream).ReadToEnd();
-
-                    try {
-                        discoveryResults = JsonConvert.DeserializeObject<List<PytestDiscoveryResults>>(json);
-                    } catch (InvalidOperationException ex) {
-                        Error("Failed to parse: {0}".FormatInvariant(ex.Message));
-                        Error(json);
-                    } catch (JsonException ex) {
-                        Error("Failed to parse: {0}".FormatInvariant(ex.Message));
-                        Error(json);
-                    }
-                }
-            } catch (Exception ex) {
-                Error(ex.Message);
+                    _settings.PathEnv,
+                    _settings.DiscoveryWaitTimeInSeconds
+                    );
+            } catch (TimeoutException) {
+                Error(Strings.PythonTestDiscovererTimeoutErrorMessage);
+                return;
             }
 
-            if (discoveryResults.Any()) {
-                PyTestDiscoveryReader.ParseDiscovery(discoveryResults, discoverySink, _settings, logger);
+            List<PytestDiscoveryResults> results = null;
+            try {
+                results = JsonConvert.DeserializeObject<List<PytestDiscoveryResults>>(json);
+            } catch (InvalidOperationException ex) {
+                Error("Failed to parse: {0}".FormatInvariant(ex.Message));
+                Error(json);
+            } catch (JsonException ex) {
+                Error("Failed to parse: {0}".FormatInvariant(ex.Message));
+                Error(json);
+            }
+
+            CreateVsTests(results, discoverySink);
+        }
+
+
+        private void CreateVsTests(IEnumerable<PytestDiscoveryResults> discoveryResults, ITestCaseDiscoverySink discoverySink) {
+            foreach (var result in discoveryResults.MaybeEnumerate()) {
+                var parentMap = result.Parents.ToDictionary(p => p.Id, p => p);
+                foreach (PytestTest test in result.Tests) {
+                    try {
+                        TestCase tc = test.ToVsTestCase(_settings.ProjectHome, parentMap);
+                        DebugInfo($"{tc.DisplayName} Source:{tc.Source} Line:{tc.LineNumber}");
+                        discoverySink?.SendTestCase(tc);
+                    } catch (Exception ex) {
+                        Error(ex.Message);
+                    }
+                }
             }
         }
 
@@ -101,6 +123,7 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
                 env[envVar.Key] = envVar.Value;
             }
 
+            env["PYTHONUNBUFFERED"] = "1";
             return env;
         }
 
@@ -127,11 +150,15 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
 
         [Conditional("DEBUG")]
         private void DebugInfo(string message) {
-            _logger?.SendMessage(TestMessageLevel.Informational, message);
+            _logger?.SendMessage(TestMessageLevel.Informational, message ?? String.Empty);
+        }
+
+        private void LogInfo(string message) {
+            _logger?.SendMessage(TestMessageLevel.Informational, message ?? String.Empty);
         }
 
         private void Error(string message) {
-            _logger?.SendMessage(TestMessageLevel.Error, message);
+            _logger?.SendMessage(TestMessageLevel.Error, message ?? String.Empty);
         }
     }
 }

@@ -5433,6 +5433,24 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Starting {0} discovery for the {1} {2}. This can take up to {3} seconds..
+        /// </summary>
+        public static string PythonTestDiscovererStartedMessage {
+            get {
+                return ResourceManager.GetString("PythonTestDiscovererStartedMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Python test discovery timeout, possibly due to blocking call. Go to https://aka.ms/VSTestExplorerPython for more details on test discovery..
+        /// </summary>
+        public static string PythonTestDiscovererTimeoutErrorMessage {
+            get {
+                return ResourceManager.GetString("PythonTestDiscovererTimeoutErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to A file containing Python tests was detected in the {0} {1}, but the test framework is disabled..
         /// </summary>
         public static string PythonTestFileDetected {

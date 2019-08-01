@@ -2909,6 +2909,16 @@ Please specify at least one package.</value>
   <data name="WorkspaceText" xml:space="preserve">
     <value>workspace</value>
   </data>
+  <data name="PythonTestDiscovererStartedMessage" xml:space="preserve">
+    <value>Starting {0} discovery for the {1} {2}. This can take up to {3} seconds.</value>
+    <comment>{0} is the testframe name "pytest" or "unittest"
+{1} is the project or workspace name
+{2} is "project" or "workspace"
+{3} is an integer wait time in seconds</comment>
+  </data>
+    <data name="PythonTestDiscovererTimeoutErrorMessage" xml:space="preserve">
+    <value>Python test discovery timeout, possibly due to blocking call. Go to https://aka.ms/VSTestExplorerPython for more details on test discovery.</value>
+  </data>
   <data name="UnitTestEnableInfoBarAction" xml:space="preserve">
     <value>Enable unittest</value>
   </data>
