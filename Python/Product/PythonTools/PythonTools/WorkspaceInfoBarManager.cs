@@ -34,6 +34,7 @@ namespace Microsoft.PythonTools {
         private PackageInstallInfoBar _packageInstallInfoBar;
         private CondaEnvCreateInfoBar _condaEnvCreateInfoBar;
         private VirtualEnvCreateInfoBar _virtualEnvCreateInfoBar;
+        private TestFrameworkWorkspaceInfoBar _testFrameworkInfoBar;
         private bool _infoBarCheckTriggered;
 
         public WorkspaceInfoBarManager(IServiceProvider serviceProvider) {
@@ -53,11 +54,12 @@ namespace Microsoft.PythonTools {
             _packageInstallInfoBar = new PackageInstallWorkspaceInfoBar(_serviceProvider, workspace);
             _condaEnvCreateInfoBar = new CondaEnvCreateWorkspaceInfoBar(_serviceProvider, workspace);
             _virtualEnvCreateInfoBar = new VirtualEnvCreateWorkspaceInfoBar(_serviceProvider, workspace);
+            _testFrameworkInfoBar = new TestFrameworkWorkspaceInfoBar(_serviceProvider, workspace);
 
             workspace.AddActionOnClose(_packageInstallInfoBar, (obj => ((PythonInfoBar)obj).Dispose()));
             workspace.AddActionOnClose(_condaEnvCreateInfoBar, (obj => ((PythonInfoBar)obj).Dispose()));
             workspace.AddActionOnClose(_virtualEnvCreateInfoBar, (obj => ((PythonInfoBar)obj).Dispose()));
-
+            workspace.AddActionOnClose(_testFrameworkInfoBar, (obj => ((PythonInfoBar)obj).Dispose()));
             _infoBarCheckTriggered = false;
 
             // When we see a Python file opened in the workspace, we trigger info bar checks.
@@ -124,7 +126,8 @@ namespace Microsoft.PythonTools {
             await Task.WhenAll(
                 _condaEnvCreateInfoBar.CheckAsync(),
                 _virtualEnvCreateInfoBar.CheckAsync(),
-                _packageInstallInfoBar.CheckAsync()
+                _packageInstallInfoBar.CheckAsync(),
+                _testFrameworkInfoBar.CheckAsync()
             );
         }
 

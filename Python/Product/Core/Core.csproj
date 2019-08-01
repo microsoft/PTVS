@@ -100,10 +100,6 @@
       <Project>{4e18d41e-5e73-461f-9289-f6709257171a}</Project>
       <Name>Microsoft.PythonTools.RunElevated</Name>
     </ProjectReference>
-    <ProjectReference Include="..\TestAdapter.Analysis\TestAdapter.Analysis.csproj">
-      <Project>{6500e6e2-4604-48fc-af4e-1ff12b8c6757}</Project>
-      <Name>Microsoft.PythonTools.TestAdapter.Analysis</Name>
-    </ProjectReference>
     <ProjectReference Include="..\TestAdapter.Executor\TestAdapter.Executor.csproj">
       <Project>{44e8bb56-c38e-49a8-8bc1-7af40d0ac725}</Project>
       <Name>Microsoft.PythonTools.TestAdapter.Executor</Name>

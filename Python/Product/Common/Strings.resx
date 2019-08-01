@@ -649,6 +649,9 @@ See PublishPropertyControl_LocationLabel for examples.</comment>
   <data name="PythonPublishPropertyPageLabel" xml:space="preserve">
     <value>Publish</value>
   </data>
+  <data name="PythonTestPropertyPageLabel" xml:space="preserve">
+    <value>Test</value>
+  </data>
   <data name="PythonDebugPropertyPageLabel" xml:space="preserve">
     <value>Debug</value>
   </data>
@@ -2881,5 +2884,55 @@ Please specify at least one package.</value>
   </data>
   <data name="CondaEnvNotDetected" xml:space="preserve">
     <value>Conda environment not detected</value>
+  </data>
+  <data name="PythonTestFrameworkIgnoreInfoBarAction" xml:space="preserve">
+    <value>Don't show this message again</value>
+  </data>
+  <data name="PyTestEnableInfoBarAction" xml:space="preserve">
+    <value>Enable pytest</value>
+  </data>
+  <data name="PyTestInstalledConfigurationFileFound" xml:space="preserve">
+    <value>A pytest configuration file was detected in the {0} {1}, but pytest is not enabled.</value>
+    <comment>{0} is the project or workspace name
+{1} is "project" or "workspace"</comment>
+  </data>
+  <data name="PyTestInstallAndEnableInfoBarAction" xml:space="preserve">
+    <value>Install and enable pytest</value>
+  </data>
+  <data name="PyTestNotInstalled" xml:space="preserve">
+    <value>Pytest is enabled in the {0} {1}, but it is not installed in the active environment.</value>
+    <comment>{0} is the project or workspace name
+{1} is "project" or "workspace"</comment>
+  </data>
+  <data name="PyTestInstallInfoBarAction" xml:space="preserve">
+    <value>Install pytest</value>
+  </data>
+  <data name="PyTestNotInstalledConfigurationFileFound" xml:space="preserve">
+    <value>A pytest configuration file was detected in the {0} {1}, but pytest is not installed or enabled.</value>
+    <comment>{0} is the project or workspace name
+{1} is "project" or "workspace"</comment>
+  </data>
+  <data name="ProjectText" xml:space="preserve">
+    <value>project</value>
+  </data>
+  <data name="WorkspaceText" xml:space="preserve">
+    <value>workspace</value>
+  </data>
+  <data name="PythonTestDiscovererStartedMessage" xml:space="preserve">
+    <value>Starting {0} discovery for the {1} {2}. This can take up to {3} seconds.</value>
+    <comment>{0} is the testframe name "pytest" or "unittest"
+{1} is the project or workspace name
+{2} is "project" or "workspace"
+{3} is an integer wait time in seconds</comment>
+  </data>
+    <data name="PythonTestDiscovererTimeoutErrorMessage" xml:space="preserve">
+    <value>Python test discovery timeout, possibly due to blocking call. Go to https://aka.ms/VSTestExplorerPython for more details on test discovery.</value>
+  </data>
+  <data name="UnitTestEnableInfoBarAction" xml:space="preserve">
+    <value>Enable unittest</value>
+  </data>
+  <data name="PythonTestFileDetected" xml:space="preserve">
+    <value>A file containing Python tests was detected in the {0} {1}, but the test framework is disabled.</value>
+    <comment>{0} is project or workspace name. {1} is "project" or "workspace"</comment>
   </data>
 </root>

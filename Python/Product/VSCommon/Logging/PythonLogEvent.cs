@@ -109,6 +109,10 @@ namespace Microsoft.PythonTools.Logging {
         /// </summary>
         PackageInstallInfoBar,
         /// <summary>
+        /// Configure test framework info bar
+        /// </summary>
+        ConfigureTestFrameworkInfoBar,
+        /// <summary>
         /// Create conda environment
         /// </summary>
         CreateCondaEnv,

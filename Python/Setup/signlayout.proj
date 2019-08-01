@@ -35,7 +35,6 @@
         Microsoft.PythonTools.ProjectWizards.dll;
         Microsoft.PythonTools.RunElevated.exe;
         Microsoft.PythonTools.TestAdapter.dll;
-        Microsoft.PythonTools.TestAdapter.Analysis.dll;
         Microsoft.PythonTools.TestAdapter.Executor.dll;
         Microsoft.PythonTools.VSCommon.dll;
         Microsoft.PythonTools.VSInterpreters.dll;

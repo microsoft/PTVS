@@ -29,6 +29,7 @@ namespace Microsoft.PythonTools.Interpreter {
         private const string PythonSettingsType = "PythonSettings";
         private const string InterpreterProperty = "Interpreter";
         private const string SearchPathsProperty = "SearchPaths";
+        private const string TestFrameworkProperty = "TestFramework";
 
         private readonly IWorkspace _workspace;
         private readonly IInterpreterOptionsService _optionsService;
@@ -43,6 +44,8 @@ namespace Microsoft.PythonTools.Interpreter {
         private object _cacheLock = new object();
         private string[] _searchPaths;
         private string _interpreter;
+        private string _testFramework;
+
 
         // These are set in initialize
         private IPythonInterpreterFactory _factory;
@@ -61,6 +64,8 @@ namespace Microsoft.PythonTools.Interpreter {
         public event EventHandler InterpreterSettingChanged;
 
         public event EventHandler SearchPathsSettingChanged;
+
+        public event EventHandler TestSettingChanged;
 
         /// <summary>
         /// The effective interpreter for this workspace has changed.
@@ -92,6 +97,7 @@ namespace Microsoft.PythonTools.Interpreter {
         public void Initialize() {
             _interpreter = ReadInterpreterSetting();
             _searchPaths = ReadSearchPathsSetting();
+            _testFramework = GetStringProperty(TestFrameworkProperty);
 
             RefreshCurrentFactory();
 
@@ -255,15 +261,21 @@ namespace Microsoft.PythonTools.Interpreter {
             // own changed events as applicable.
             bool interpreterChanged = false;
             bool searchPathsChanged = false;
+            bool testSettingsChanged = false;
+
             lock (_cacheLock) {
                 var oldInterpreter = _interpreter;
-                var oldSearchPaths = _searchPaths;
-
                 _interpreter = ReadInterpreterSetting();
+
+                var oldSearchPaths = _searchPaths;
                 _searchPaths = ReadSearchPathsSetting();
+
+                var oldTestFramework = _testFramework;
+                _testFramework = GetStringProperty(TestFrameworkProperty);
 
                 interpreterChanged = oldInterpreter != _interpreter;
                 searchPathsChanged = !oldSearchPaths.SequenceEqual(_searchPaths);
+                testSettingsChanged = !String.Equals(oldTestFramework, _testFramework);
             }
 
             if (interpreterChanged) {
@@ -288,6 +300,10 @@ namespace Microsoft.PythonTools.Interpreter {
 
             if (searchPathsChanged) {
                 SearchPathsSettingChanged?.Invoke(this, EventArgs.Empty);
+            }
+
+            if (testSettingsChanged) {
+                TestSettingChanged?.Invoke(this, EventArgs.Empty);
             }
 
             return Task.CompletedTask;

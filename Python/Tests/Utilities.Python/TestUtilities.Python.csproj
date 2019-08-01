@@ -137,6 +137,7 @@
     <Compile Include="PythonProjectGenerator.cs" />
     <Compile Include="PythonProjectProcessor.cs" />
     <Compile Include="PythonTestDefinitions.cs" />
+    <Compile Include="PythonTestExplorerGridView.cs" />
     <Compile Include="PythonToolsOptionsImporter.cs" />
     <Compile Include="PythonToolsTestUtilities.cs" />
     <Compile Include="EditorWindowExtensions.cs" />

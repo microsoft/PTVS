@@ -34,6 +34,7 @@ namespace Microsoft.PythonTools.Options {
         private const string ShowOutputWindowForPackageInstallationSetting = "ShowOutputWindowForPackageInstallation";
         private const string PromptForEnvCreateSetting = "PromptForEnvCreate";
         private const string PromptForPackageInstallationSetting = "PromptForPackageInstallation";
+        private const string PromptForTestFrameWorkInfoBarSetting = "PromptForTestFrameWorkInfoBar";
         private const string ElevatePipSetting = "ElevatePip";
         private const string UnresolvedImportWarningSetting = "UnresolvedImportWarning";
         private const string InvalidEncodingWarningSetting = "InvalidEncodingWarningWarning";
@@ -51,11 +52,12 @@ namespace Microsoft.PythonTools.Options {
             ShowOutputWindowForPackageInstallation = _pyService.LoadBool(ShowOutputWindowForPackageInstallationSetting, GeneralCategory) ?? true;
             PromptForEnvCreate = _pyService.LoadBool(PromptForEnvCreateSetting, GeneralCategory) ?? true;
             PromptForPackageInstallation = _pyService.LoadBool(PromptForPackageInstallationSetting, GeneralCategory) ?? true;
+            PromptForTestFrameWorkInfoBar = _pyService.LoadBool(PromptForTestFrameWorkInfoBarSetting, GeneralCategory) ?? true;
+
             ElevatePip = _pyService.LoadBool(ElevatePipSetting, GeneralCategory) ?? false;
             UnresolvedImportWarning = _pyService.LoadBool(UnresolvedImportWarningSetting, GeneralCategory) ?? true;
             InvalidEncodingWarning = _pyService.LoadBool(InvalidEncodingWarningSetting, GeneralCategory) ?? true;
             ClearGlobalPythonPath = _pyService.LoadBool(ClearGlobalPythonPathSetting, GeneralCategory) ?? true;
-
 
             AutoAnalyzeStandardLibrary = _pyService.LoadBool(AutoAnalysisSetting, AdvancedCategory) ?? true;
             IndentationInconsistencySeverity = _pyService.LoadEnum<Severity>(IndentationInconsistencySeveritySetting, AdvancedCategory) ?? Severity.Warning;
@@ -76,10 +78,10 @@ namespace Microsoft.PythonTools.Options {
             _pyService.SaveBool(ShowOutputWindowForPackageInstallationSetting, GeneralCategory, ShowOutputWindowForPackageInstallation);
             _pyService.SaveBool(PromptForEnvCreateSetting, GeneralCategory, PromptForEnvCreate);
             _pyService.SaveBool(PromptForPackageInstallationSetting, GeneralCategory, PromptForPackageInstallation);
+            _pyService.SaveBool(PromptForTestFrameWorkInfoBarSetting, GeneralCategory, PromptForTestFrameWorkInfoBar);
             _pyService.SaveBool(ElevatePipSetting, GeneralCategory, ElevatePip);
             _pyService.SaveBool(UnresolvedImportWarningSetting, GeneralCategory, UnresolvedImportWarning);
             _pyService.SaveBool(ClearGlobalPythonPathSetting, GeneralCategory, ClearGlobalPythonPath);
-
             _pyService.SaveBool(AutoAnalysisSetting, AdvancedCategory, AutoAnalyzeStandardLibrary);
             _pyService.SaveBool(UpdateSearchPathsWhenAddingLinkedFilesSetting, AdvancedCategory, UpdateSearchPathsWhenAddingLinkedFiles);
             _pyService.SaveEnum(IndentationInconsistencySeveritySetting, AdvancedCategory, _indentationInconsistencySeverity);
@@ -96,10 +98,10 @@ namespace Microsoft.PythonTools.Options {
             ShowOutputWindowForPackageInstallation = true;
             PromptForEnvCreate = true;
             PromptForPackageInstallation = true;
+            PromptForTestFrameWorkInfoBar = true;
             ElevatePip = false;
             UnresolvedImportWarning = true;
             ClearGlobalPythonPath = true;
-
             IndentationInconsistencySeverity = Severity.Warning;
             AutoAnalyzeStandardLibrary = true;
             UpdateSearchPathsWhenAddingLinkedFiles = true;
@@ -187,7 +189,16 @@ namespace Microsoft.PythonTools.Options {
             get;
             set;
         }
-        
+
+        /// <summary>
+        /// Show an info bar to set up a testing framework
+        /// </summary>
+        /// <remarks>New in 2.0</remarks>
+        public bool PromptForTestFrameWorkInfoBar {
+            get;
+            set;
+        }
+
         /// <summary>
         /// True to always run pip elevated when installing or uninstalling
         /// packages.

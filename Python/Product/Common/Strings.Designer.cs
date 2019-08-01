@@ -5042,6 +5042,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to project.
+        /// </summary>
+        public static string ProjectText {
+            get {
+                return ResourceManager.GetString("ProjectText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Use the legacy debugger.
         /// </summary>
         public static string PtvsdDisableCaption {
@@ -5150,6 +5159,60 @@ namespace Microsoft.PythonTools {
         public static string PydReferenceDeprecated {
             get {
                 return ResourceManager.GetString("PydReferenceDeprecated", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enable pytest.
+        /// </summary>
+        public static string PyTestEnableInfoBarAction {
+            get {
+                return ResourceManager.GetString("PyTestEnableInfoBarAction", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Install and enable pytest.
+        /// </summary>
+        public static string PyTestInstallAndEnableInfoBarAction {
+            get {
+                return ResourceManager.GetString("PyTestInstallAndEnableInfoBarAction", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A pytest configuration file was detected in the {0} {1}, but pytest is not enabled..
+        /// </summary>
+        public static string PyTestInstalledConfigurationFileFound {
+            get {
+                return ResourceManager.GetString("PyTestInstalledConfigurationFileFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Install pytest.
+        /// </summary>
+        public static string PyTestInstallInfoBarAction {
+            get {
+                return ResourceManager.GetString("PyTestInstallInfoBarAction", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Pytest is enabled in the {0} {1}, but it is not installed in the active environment..
+        /// </summary>
+        public static string PyTestNotInstalled {
+            get {
+                return ResourceManager.GetString("PyTestNotInstalled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A pytest configuration file was detected in the {0} {1}, but pytest is not installed or enabled..
+        /// </summary>
+        public static string PyTestNotInstalledConfigurationFileFound {
+            get {
+                return ResourceManager.GetString("PyTestNotInstalledConfigurationFileFound", resourceCulture);
             }
         }
         
@@ -5393,6 +5456,51 @@ namespace Microsoft.PythonTools {
         public static string PythonPublishPropertyPageLabel {
             get {
                 return ResourceManager.GetString("PythonPublishPropertyPageLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Starting {0} discovery for the {1} {2}. This can take up to {3} seconds..
+        /// </summary>
+        public static string PythonTestDiscovererStartedMessage {
+            get {
+                return ResourceManager.GetString("PythonTestDiscovererStartedMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Python test discovery timeout, possibly due to blocking call. Go to https://aka.ms/VSTestExplorerPython for more details on test discovery..
+        /// </summary>
+        public static string PythonTestDiscovererTimeoutErrorMessage {
+            get {
+                return ResourceManager.GetString("PythonTestDiscovererTimeoutErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A file containing Python tests was detected in the {0} {1}, but the test framework is disabled..
+        /// </summary>
+        public static string PythonTestFileDetected {
+            get {
+                return ResourceManager.GetString("PythonTestFileDetected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Don&apos;t show this message again.
+        /// </summary>
+        public static string PythonTestFrameworkIgnoreInfoBarAction {
+            get {
+                return ResourceManager.GetString("PythonTestFrameworkIgnoreInfoBarAction", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Test.
+        /// </summary>
+        public static string PythonTestPropertyPageLabel {
+            get {
+                return ResourceManager.GetString("PythonTestPropertyPageLabel", resourceCulture);
             }
         }
         
@@ -7163,6 +7271,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Enable unittest.
+        /// </summary>
+        public static string UnitTestEnableInfoBarAction {
+            get {
+                return ResourceManager.GetString("UnitTestEnableInfoBarAction", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unknown role type: {0}.
         /// </summary>
         public static string UnknownRoleTypeException {
@@ -7522,6 +7639,15 @@ namespace Microsoft.PythonTools {
         public static string WorkspaceEnvironmentDescription {
             get {
                 return ResourceManager.GetString("WorkspaceEnvironmentDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to workspace.
+        /// </summary>
+        public static string WorkspaceText {
+            get {
+                return ResourceManager.GetString("WorkspaceText", resourceCulture);
             }
         }
         

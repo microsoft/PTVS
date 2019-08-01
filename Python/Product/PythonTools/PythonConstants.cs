@@ -15,8 +15,15 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Collections.Generic;
 
 namespace Microsoft.PythonTools {
+    public enum TestFrameworkType {
+        None = 0,
+        Pytest = 1,
+        UnitTest = 2
+    }
+
     static class PythonConstants {
         //Language name
         public const string LanguageName = "Python";
@@ -42,6 +49,7 @@ namespace Microsoft.PythonTools {
         public const string GeneralPropertyPageGuid = "888888fd-3c4a-40da-aefb-5ac10f5e8b30";
         public const string DebugPropertyPageGuid = "9A46BC86-34CB-4597-83E5-498E3BDBA20A";
         public const string PublishPropertyPageGuid = "63DF0877-CF53-4975-B200-2B11D669AB00";
+        public const string TestPropertyPageGuid = "D3B8505A-A2A7-49ED-B2C1-400136801EC6";
         internal const string WebPropertyPageGuid = "76EED3B5-14B1-413B-937A-F6F79AC1F8C8";
         internal const string EditorFactoryPromptForEncodingGuid = "CA887E0B-55C6-4AE9-B5CF-A2EEFBA90A3E";
 
@@ -121,6 +129,14 @@ namespace Microsoft.PythonTools {
         public const string StartupFileSetting = "StartupFile";
         public const string IsWindowsApplicationSetting = "IsWindowsApplication";
         public const string EnvironmentSetting = "Environment";
+        public const string TestFrameworkSetting = "TestFramework";
+        public const string UnitTestRootDirectorySetting = "UnitTestRootDirectory";
+        public const string DefaultUnitTestRootDirectory = ".";
+        public const string UnitTestPatternSetting = "UnitTestPattern";
+        public const string DefaultUnitTestPattern = "test*.py";
+
+        public static readonly HashSet<string> PyTestFrameworkConfigFiles =
+            new HashSet<string>(StringComparer.OrdinalIgnoreCase) {"pytest.ini", "setup.cfg", "tox.ini"};
 
         /// <summary>
         /// Specifies port to which to open web browser on launch.
@@ -152,6 +168,9 @@ namespace Microsoft.PythonTools {
         // Suppress the prompt for package installation project property
         public const string SuppressPackageInstallationPrompt = "SuppressPackageInstallationPrompt";
 
+        // Suppress the prompt for pytest configuration project property
+        public const string SuppressConfigureTestFrameworkPrompt = "SuppressConfigureTestFrameworkPrompt";
+
         // Launch option to ignore pause on exist settings
         internal const string NeverPauseOnExit = "NeverPauseOnExit";
 
@@ -169,6 +188,21 @@ namespace Microsoft.PythonTools {
         public const string DontShowUpgradeDialogAgainCollection = "PythonTools\\Dialogs";
 
         internal const string PythonToolsProcessIdEnvironmentVariable = "_PTVS_PID";
-        internal const string TestExecutorUriString = "executor://PythonTestExecutor/v1";
+
+        internal const string UnitTestExecutorUriString = "executor://PythonUnitTestExecutor/v1";
+        internal const string PytestExecutorUriString = "executor://PythonPyTestExecutor/v1";
+        internal const string PythonProjectContainerDiscovererUriString = "executor://PythonProjectDiscoverer/v1";
+        internal const string PythonWorkspaceContainerDiscovererUriString = "executor://PythonWorkspaceDiscoverer/v1";
+
+        public static readonly Uri UnitTestExecutorUri = new Uri(UnitTestExecutorUriString);
+        public static readonly Uri PytestExecutorUri = new Uri(PytestExecutorUriString);
+
+        public static readonly Uri PythonProjectContainerDiscovererUri = new Uri(PythonProjectContainerDiscovererUriString);
+        public static readonly Uri PythonWorkspaceContainerDiscovererUri = new Uri(PythonWorkspaceContainerDiscovererUriString);
+
+        //Discovery
+        internal const string PytestText = "pytest";
+        internal const string UnitTestText = "unittest";
+        internal const int DiscoveryTimeoutInSeconds = 60;
     }
 }

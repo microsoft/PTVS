@@ -300,6 +300,8 @@ namespace Microsoft.VisualStudioTools.Project {
                 }
                 ProjectMgr.ReDrawNode(this, UIHierarchyElement.Icon);
                 ProjectMgr.OnPropertyChanged(this, (int)__VSHPROPID.VSHPROPID_IsNonMemberItem, 0);
+
+                this.ProjectMgr.Tracker.OnItemRemoved(Url, VSREMOVEFILEFLAGS.VSREMOVEFILEFLAGS_NoFlags);
             }
 
             // For performance reasons we don't want to call RefreshPropertyBrowser here. 

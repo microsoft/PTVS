@@ -17,243 +17,475 @@
 extern alias pt;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading;
-using Microsoft.PythonTools.Analysis;
-using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Interpreter.Ast;
+using Microsoft.PythonTools;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using TestAdapterTests.Mocks;
 using TestUtilities;
-using TestUtilities.Python;
 using PythonConstants = pt::Microsoft.PythonTools.PythonConstants;
 
 namespace TestAdapterTests {
-    [TestClass]
-    public class TestDiscovererTests {
-        [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
-            AssertListener.Initialize();
+    [TestClass, Ignore]
+    public abstract partial class TestDiscovererTests {
+        private const string FrameworkPytest = "Pytest";
+        private const string FrameworkUnittest = "Unittest";
+
+        protected abstract PythonVersion Version { get; }
+
+        protected virtual string ImportErrorFormat => "ModuleNotFoundError: No module named '{0}'";
+
+        [ClassCleanup]
+        public static void ClassCleanup() {
+            TestEnvironment.Clear();
         }
 
-        private const string _runSettings = @"<?xml version=""1.0""?><RunSettings><DataCollectionRunSettings><DataCollectors /></DataCollectionRunSettings><RunConfiguration><ResultsDirectory>C:\Visual Studio 2015\Projects\PythonApplication107\TestResults</ResultsDirectory><TargetPlatform>X86</TargetPlatform><TargetFrameworkVersion>Framework45</TargetFrameworkVersion></RunConfiguration><Python><TestCases><Project path=""C:\Visual Studio 2015\Projects\PythonApplication107\PythonApplication107\PythonApplication107.pyproj"" home=""C:\Visual Studio 2015\Projects\PythonApplication107\PythonApplication107\"" nativeDebugging="""" djangoSettingsModule="""" workingDir=""C:\Visual Studio 2015\Projects\PythonApplication107\PythonApplication107\"" interpreter=""C:\Python35-32\python.exe"" pathEnv=""PYTHONPATH""><Environment /><SearchPaths><Search value=""C:\Visual Studio 2015\Projects\PythonApplication107\PythonApplication107\"" /></SearchPaths>
-<Test className=""Test_test1"" file=""C:\Visual Studio 2015\Projects\PythonApplication107\PythonApplication107\test1.py"" line=""17"" column=""9"" method=""test_A"" />
-<Test className=""Test_test1"" file=""C:\Visual Studio 2015\Projects\PythonApplication107\PythonApplication107\test1.py"" line=""21"" column=""9"" method=""test_B"" />
-<Test className=""Test_test2"" file=""C:\Visual Studio 2015\Projects\PythonApplication107\PythonApplication107\test1.py"" line=""48"" column=""9"" method=""test_C"" /></Project></TestCases></Python></RunSettings>";
+
+        [TestInitialize]
+        public void CheckVersion() {
+            if (Version == null) {
+                Assert.Inconclusive("Required version of Python is not installed");
+            }
+        }
 
         [TestMethod, Priority(0)]
         [TestCategory("10s")]
-        public void TestDiscover() {
-            var ctx = new MockDiscoveryContext(new MockRunSettings(_runSettings));
-            var sink = new MockTestCaseDiscoverySink();
-            var logger = new MockMessageLogger();
+        public void DiscoverPytest() {
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
 
-            const string projectPath = @"C:\Visual Studio 2015\Projects\PythonApplication107\PythonApplication107\PythonApplication107.pyproj";
-            const string testFilePath = @"C:\Visual Studio 2015\Projects\PythonApplication107\PythonApplication107\test1.py";
-            new TestDiscoverer().DiscoverTests(
-                new[] { testFilePath },
-                ctx,
-                logger,
-                sink
-            );
-
-            PrintTestCases(sink.Tests);
+            var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_pt.py");
+            File.Copy(TestData.GetPath("TestData", "TestDiscoverer", "BasicPytest", "test_pt.py"), testFilePath);
 
             var expectedTests = new[] {
-                TestInfo.FromRelativePaths("Test_test1", "test_A", projectPath, testFilePath, 17, TestOutcome.Passed),
-                TestInfo.FromRelativePaths("Test_test1", "test_B", projectPath, testFilePath, 21, TestOutcome.Passed),
-                TestInfo.FromRelativePaths("Test_test2", "test_C", projectPath, testFilePath, 48, TestOutcome.Passed)
+                new TestInfo("test_pt_pass", "test_pt.py::test_pt::test_pt_pass", testFilePath, 1),
+                new TestInfo("test_pt_fail", "test_pt.py::test_pt::test_pt_fail", testFilePath, 4),
+                new TestInfo("test_method_pass", "test_pt.py::TestClassPT::test_method_pass", testFilePath, 8),
             };
 
-            Assert.AreEqual(expectedTests.Length, sink.Tests.Count);
+            var runSettings = new MockRunSettings(
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+                    .WithTestFilesFromFolder(testEnv.SourceFolderPath)
+                    .ToXml()
+            );
+
+            DiscoverTests(testEnv, new[] { testFilePath }, runSettings, expectedTests);
+        }
+
+        [TestMethod, Priority(0)]
+        [TestCategory("10s")]
+        public void DiscoverPytestTimeoutError() {
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
+
+            var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_timeout_pt.py");
+            File.Copy(TestData.GetPath("TestData", "TestDiscoverer", "Timeout", "test_timeout_pt.py"), testFilePath);
+
+            int waitTimeInSeconds = 1;
+            var runSettings = new MockRunSettings(
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath, waitTimeInSeconds)
+                    .WithTestFilesFromFolder(testEnv.SourceFolderPath)
+                    .ToXml()
+            );
+            
+            var discoveryContext = new MockDiscoveryContext(runSettings);
+            var discoverySink = new MockTestCaseDiscoverySink();
+            var logger = new MockMessageLogger();
+            var discoverer = new PythonTestDiscoverer();
+
+            discoverer.DiscoverTests(new[] { testFilePath }, discoveryContext, logger, discoverySink);
+            Assert.AreEqual(0, discoverySink.Tests.Count);
+
+            var errors = string.Join(Environment.NewLine, logger.GetErrors());
+            AssertUtil.Contains(
+                errors,
+                Strings.PythonTestDiscovererTimeoutErrorMessage
+            );
+        }
+
+        [TestMethod, Priority(0)]
+        [TestCategory("10s")]
+        public void DiscoverPytestSearchPath() {
+            // test_search_path.py has an import at global scope that requires search path to resolve
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
+
+            FileUtils.CopyDirectory(TestData.GetPath("TestData", "TestDiscoverer", "ImportFromSearchPath"), testEnv.SourceFolderPath);
+
+            // <SourceFolderPath>/TestFolder/
+            // <SourceFolderPath>/TestFolder/test_search_path.py
+            // <SourceFolderPath>/SearchPath/
+            // <SourceFolderPath>/SearchPath/searchpathmodule.py
+            var testFilePath = Path.Combine(testEnv.SourceFolderPath, "TestFolder", "test_search_path.py");
+            var searchPath = Path.Combine(testEnv.SourceFolderPath, "SearchPath");
+
+            var expectedTests = new[] {
+                new TestInfo("test_imported_module", "testfolder\\test_search_path.py::SearchPathTests::test_imported_module", testFilePath, 5),
+            };
+
+            var runSettings = new MockRunSettings(
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+                    .WithTestFile(testFilePath)
+                    .WithSearchPath(searchPath)
+                    .ToXml()
+            );
+
+            DiscoverTests(testEnv, new[] { testFilePath }, runSettings, expectedTests);
+        }
+
+        [Ignore] // discovers 0 tests, maybe pytest cannot handle this?
+        [TestMethod, Priority(0)]
+        [TestCategory("10s")]
+        public void DiscoverPytestSyntaxError() {
+            // one file has a valid passing test,
+            // the other has a test with a syntax error in it
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
+
+            FileUtils.CopyDirectory(TestData.GetPath("TestData", "TestDiscoverer", "SyntaxError"), testEnv.SourceFolderPath);
+
+            var testFilePath1 = Path.Combine(testEnv.SourceFolderPath, "test_basic.py");
+            var testFilePath2 = Path.Combine(testEnv.SourceFolderPath, "test_syntax_error.py");
+
+            var expectedTests = new[] {
+                new TestInfo("test_success", "test_basic.py::test_basic::test_success", testFilePath1, 1),
+            };
+
+            var runSettings = new MockRunSettings(
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+                    .WithTestFile(testFilePath1)
+                    .WithTestFile(testFilePath2)
+                    .ToXml()
+            );
+
+            DiscoverTests(testEnv, new[] { testFilePath1, testFilePath2 }, runSettings, expectedTests);
+        }
+
+        [Ignore] // discovers 0 tests, our pytest discovery cannot handle this?
+        [TestMethod, Priority(0)]
+        [TestCategory("10s")]
+        public void DiscoverPytestImportError() {
+            // one file has a valid passing test,
+            // the other has an unknown module import at global scope
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
+
+            FileUtils.CopyDirectory(TestData.GetPath("TestData", "TestDiscoverer", "ImportErrorPytest"), testEnv.SourceFolderPath);
+
+            var testFilePath1 = Path.Combine(testEnv.SourceFolderPath, "test_basic.py");
+            var testFilePath2 = Path.Combine(testEnv.SourceFolderPath, "test_import_error.py");
+
+            var expectedTests = new[] {
+                new TestInfo("test_success", "test_basic.py::test_basic::test_success", testFilePath1, 1),
+            };
+
+            var runSettings = new MockRunSettings(
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+                    .WithTestFile(testFilePath1)
+                    .WithTestFile(testFilePath2)
+                    .ToXml()
+            );
+
+            DiscoverTests(testEnv, new[] { testFilePath1, testFilePath2 }, runSettings, expectedTests);
+        }
+
+        [TestMethod, Priority(0)]
+        [TestCategory("10s")]
+        public void DiscoverUnitTestImportError() {
+            // one file has a valid passing test,
+            // the other has an unknown module import at global scope
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
+
+            FileUtils.CopyDirectory(TestData.GetPath("TestData", "TestDiscoverer", "ImportErrorUnittest"), testEnv.SourceFolderPath);
+
+            var testFilePath1 = Path.Combine(testEnv.SourceFolderPath, "test_no_error.py");
+            var testFilePath2 = Path.Combine(testEnv.SourceFolderPath, "test_import_error.py");
+
+            var expectedTests = new[] {
+                new TestInfo("test_no_error", "test_no_error.py::NoErrorTests::test_no_error", testFilePath1, 4),
+            };
+
+            var runSettings = new MockRunSettings(
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+                    .WithTestFile(testFilePath1)
+                    .WithTestFile(testFilePath2)
+                    .ToXml()
+            );
+
+            DiscoverTests(testEnv, new[] { testFilePath1, testFilePath2 }, runSettings, expectedTests);
+        }
+
+        [Ignore] // TODO: discovers 3 tests instead of 2, it shouldn't be finding the one in example_pt.py
+        [TestMethod, Priority(0)]
+        [TestCategory("10s")]
+        public void DiscoverPytestConfigPythonFiles() {
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
+
+            FileUtils.CopyDirectory(TestData.GetPath("TestData", "TestDiscoverer", "ConfigPythonFiles"), testEnv.SourceFolderPath);
+
+            var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_pt.py");
+            var checkFilePath = Path.Combine(testEnv.SourceFolderPath, "check_pt.py");
+            var exampleFilePath = Path.Combine(testEnv.SourceFolderPath, "example_pt.py");
+
+            // pytest.ini declares that tests are only files named check_*.py and test_*.py
+            // so the test defined in example_pt.py should not be discovered
+            var expectedTests = new[] {
+                new TestInfo("test_1", "test_pt.py::test_pt::test_1", testFilePath, 1),
+                new TestInfo("test_2", "check_pt.py::check_pt::test_2", checkFilePath, 1),
+            };
+
+            var runSettings = new MockRunSettings(
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+                    .WithTestFile(checkFilePath)
+                    .WithTestFile(testFilePath)
+                    .WithTestFile(exampleFilePath)
+                    .ToXml()
+            );
+
+            DiscoverTests(testEnv, new[] { checkFilePath, testFilePath, exampleFilePath }, runSettings, expectedTests);
+        }
+
+        [TestMethod, Priority(0)]
+        [TestCategory("10s")]
+        public void DiscoverPytestConfigPythonFunctions() {
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
+
+            FileUtils.CopyDirectory(TestData.GetPath("TestData", "TestDiscoverer", "ConfigPythonFunctions"), testEnv.SourceFolderPath);
+
+            var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_misc_prefixes.py");
+
+            // pytest.ini declares that tests are only functions named check_* and verify_*
+            // so the test named test_* and example_* should not be discovered
+            var expectedTests = new[] {
+                new TestInfo("check_func", "test_misc_prefixes.py::test_misc_prefixes::check_func", testFilePath, 4),
+                new TestInfo("verify_func", "test_misc_prefixes.py::test_misc_prefixes::verify_func", testFilePath, 10),
+            };
+
+            var runSettings = new MockRunSettings(
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+                    .WithTestFile(testFilePath)
+                    .ToXml()
+            );
+
+            DiscoverTests(testEnv, new[] { testFilePath }, runSettings, expectedTests);
+        }
+
+        [TestMethod, Priority(0)]
+        [TestCategory("10s")]
+        public void DiscoverPytestNotInstalled() {
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest, installFramework: false);
+
+            var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_pt.py");
+            File.Copy(TestData.GetPath("TestData", "TestDiscoverer", "BasicPytest", "test_pt.py"), testFilePath);
+
+            var runSettings = new MockRunSettings(
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+                    .WithTestFilesFromFolder(testEnv.SourceFolderPath)
+                    .ToXml()
+            );
+
+            var discoveryContext = new MockDiscoveryContext(runSettings);
+            var discoverySink = new MockTestCaseDiscoverySink();
+            var logger = new MockMessageLogger();
+            var discoverer = new PythonTestDiscoverer();
+
+            discoverer.DiscoverTests(new[] { testFilePath }, discoveryContext, logger, discoverySink);
+            Assert.AreEqual(0, discoverySink.Tests.Count);
+
+            var errors = string.Join(Environment.NewLine, logger.GetErrors());
+            AssertUtil.Contains(errors, string.Format(ImportErrorFormat, "pytest"));
+        }
+
+        [TestMethod, Priority(0)]
+        [TestCategory("10s")]
+        public void DiscoverUnittest() {
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
+           
+            var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_ut.py");
+            File.Copy(TestData.GetPath("TestData", "TestDiscoverer", "BasicUnittest", "test_ut.py"), testFilePath);
+
+            var expectedTests = new[] {
+                new TestInfo("test_ut_fail", "test_ut.py::TestClassUT::test_ut_fail", testFilePath, 4),
+                new TestInfo("test_ut_pass", "test_ut.py::TestClassUT::test_ut_pass", testFilePath, 7),
+            };
+
+            var runSettings = new MockRunSettings(
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+                    .WithTestFilesFromFolder(testEnv.SourceFolderPath)
+                    .ToXml()
+            );
+
+            DiscoverTests(testEnv, new[] { testFilePath }, runSettings, expectedTests);
+        }
+
+        [TestMethod, Priority(0)]
+        [TestCategory("10s")]
+        public void DiscoverUnittestTimeoutError() {
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
+
+            var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_ut.py");
+            File.Copy(TestData.GetPath("TestData", "TestDiscoverer", "Timeout", "test_timeout_ut.py"), testFilePath);
+
+            int waitTimeInSeconds = 1;
+            var runSettings = new MockRunSettings(
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath, waitTimeInSeconds)
+                    .WithTestFilesFromFolder(testEnv.SourceFolderPath)
+                    .ToXml()
+            );
+
+            var discoveryContext = new MockDiscoveryContext(runSettings);
+            var discoverySink = new MockTestCaseDiscoverySink();
+            var logger = new MockMessageLogger();
+            var discoverer = new PythonTestDiscoverer();
+
+            discoverer.DiscoverTests(new[] { testFilePath }, discoveryContext, logger, discoverySink);
+            Assert.AreEqual(0, discoverySink.Tests.Count);
+
+            var errors = string.Join(Environment.NewLine, logger.GetErrors());
+            AssertUtil.Contains(
+                errors,
+                Strings.PythonTestDiscovererTimeoutErrorMessage
+            );
+        }
+
+
+        [TestMethod, Priority(0)]
+        [TestCategory("10s")]
+        public void DiscoverUnittestDecoratorsIgnoreLineNumbers() {
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
+
+            var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_decorators_ut.py");
+            File.Copy(TestData.GetPath("TestData", "TestDiscoverer", "Decorators", "test_decorators_ut.py"), testFilePath);
+
+            // disable line checking until we fix https://github.com/microsoft/PTVS/issues/5497
+            var expectedTests = new[] {
+                new TestInfo("test_ut_fail", "test_decorators_ut.py::TestClassDecoratorsUT::test_ut_fail", testFilePath, -1),
+                new TestInfo("test_ut_pass", "test_decorators_ut.py::TestClassDecoratorsUT::test_ut_pass", testFilePath, -1), 
+            };
+
+            var runSettings = new MockRunSettings(
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+                    .WithTestFilesFromFolder(testEnv.SourceFolderPath)
+                    .ToXml()
+            );
+
+            DiscoverTests(testEnv, new[] { testFilePath }, runSettings, expectedTests);
+        }
+
+        [Ignore] //until we fix https://github.com/microsoft/PTVS/issues/5497
+        [TestMethod, Priority(0)]
+        [TestCategory("10s")]
+        public void DiscoverUnittestDecoratorsCorrectLineNumbers() {
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
+
+            var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_decorators_ut.py");
+            File.Copy(TestData.GetPath("TestData", "TestDiscoverer", "Decorators", "test_decorators_ut.py"), testFilePath);
+
+            var expectedTests = new[] {
+                new TestInfo("test_ut_fail", "test_decorators_ut.py::TestClassDecoratorsUT::test_ut_fail", testFilePath, 5),
+                //bschnurr note: currently unittest/_discovery.py is returning decorators line number
+                new TestInfo("test_ut_pass", "test_decorators_ut.py::TestClassDecoratorsUT::test_ut_pass", testFilePath, 9),
+            };
+
+            var runSettings = new MockRunSettings(
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+                    .WithTestFilesFromFolder(testEnv.SourceFolderPath)
+                    .ToXml()
+            );
+
+            DiscoverTests(testEnv, new[] { testFilePath }, runSettings, expectedTests);
+        }
+
+        [TestMethod, Priority(0)]
+        [TestCategory("10s")]
+        public void DiscoverUnittestRelativeImport() {
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
+
+            FileUtils.CopyDirectory(TestData.GetPath("TestData", "TestDiscoverer", "RelativeImport"), testEnv.SourceFolderPath);
+
+            var testFilePath = Path.Combine(testEnv.SourceFolderPath, "relativeimportpackage\\test_relative_import.py");
+
+            var expectedTests = new[] {
+                new TestInfo(
+                    "test_relative_import",
+                    "relativeimportpackage\\test_relative_import.py::RelativeImportTests::test_relative_import",
+                    testFilePath,
+                    5
+                ),
+            };
+
+            var runSettings = new MockRunSettings(
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+                    .WithTestFile(testFilePath)
+                    .ToXml()
+            );
+
+            DiscoverTests(testEnv, new[] { testFilePath }, runSettings, expectedTests);
+        }
+
+        [TestMethod, Priority(0)]
+        [TestCategory("10s")]
+        public void DiscoverUnittestInheritance() {
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
+
+            FileUtils.CopyDirectory(TestData.GetPath("TestData", "TestDiscoverer", "Inheritance"), testEnv.SourceFolderPath);
+
+            var baseTestFilePath = Path.Combine(testEnv.SourceFolderPath, "test_base.py");
+            var derivedTestFilePath = Path.Combine(testEnv.SourceFolderPath, "test_derived.py");
+
+            var expectedTests = new[] {
+                new TestInfo("test_base_pass", "test_base.py::BaseClassTests::test_base_pass", baseTestFilePath, 4),
+                new TestInfo("test_base_fail", "test_base.py::BaseClassTests::test_base_fail", baseTestFilePath, 7),
+                // TODO: investigate potential bug in product code,
+                // file name incorrect for these two, should be in baseTestFilePath
+                new TestInfo("test_base_pass", "test_derived.py::DerivedClassTests::test_base_pass", derivedTestFilePath, 4),
+                new TestInfo("test_base_fail", "test_derived.py::DerivedClassTests::test_base_fail", derivedTestFilePath, 7),
+                new TestInfo("test_derived_pass", "test_derived.py::DerivedClassTests::test_derived_pass", derivedTestFilePath, 5),
+                new TestInfo("test_derived_fail", "test_derived.py::DerivedClassTests::test_derived_fail", derivedTestFilePath, 8),
+            };
+
+            var runSettings = new MockRunSettings(
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+                    .WithTestFilesFromFolder(testEnv.SourceFolderPath)
+                    .ToXml()
+            );
+
+            DiscoverTests(testEnv, new[] { baseTestFilePath, derivedTestFilePath }, runSettings, expectedTests);
+        }
+
+        private static void DiscoverTests(TestEnvironment testEnv, string[] sources, MockRunSettings runSettings, TestInfo[] expectedTests) {
+            var discoveryContext = new MockDiscoveryContext(runSettings);
+            var discoverySink = new MockTestCaseDiscoverySink();
+            var logger = new MockMessageLogger();
+            var discoverer = new PythonTestDiscoverer();
+
+            discoverer.DiscoverTests(sources, discoveryContext, logger, discoverySink);
+
+            ValidateDiscoveredTests(testEnv.TestFramework, discoverySink.Tests, expectedTests);
+        }
+
+        private static void ValidateDiscoveredTests(string testFramework, IList<TestCase> actualTests, TestInfo[] expectedTests) {
+            PrintTestCases(actualTests);
+
+            Assert.AreEqual(expectedTests.Length, actualTests.Count);
 
             foreach (var expectedTest in expectedTests) {
-                var expectedFullyQualifiedName = TestReader.MakeFullyQualifiedTestName(expectedTest.RelativeClassFilePath, expectedTest.ClassName, expectedTest.MethodName);
-                var actualTestCase = sink.Tests.SingleOrDefault(tc => tc.FullyQualifiedName == expectedFullyQualifiedName);
-                Assert.IsNotNull(actualTestCase, expectedFullyQualifiedName);
-                Assert.AreEqual(expectedTest.MethodName, actualTestCase.DisplayName, expectedFullyQualifiedName);
-                Assert.AreEqual(new Uri(PythonConstants.TestExecutorUriString), actualTestCase.ExecutorUri);
-                Assert.AreEqual(expectedTest.SourceCodeLineNumber, actualTestCase.LineNumber, expectedFullyQualifiedName);
-                Assert.IsTrue(IsSameFile(expectedTest.SourceCodeFilePath, actualTestCase.CodeFilePath), expectedFullyQualifiedName);
-
-                sink.Tests.Remove(actualTestCase);
-            }
-
-            Debug.WriteLine("");
-            Debug.WriteLine("");
-            Debug.WriteLine("");
-            Debug.WriteLine("");
-
-            PrintTestCases(sink.Tests);
-        }
-
-        private static IEnumerable<TestCaseInfo> GetTestCasesFromAst(string code, PythonAnalyzer analyzer) {
-            var codeStream = new MemoryStream(Encoding.UTF8.GetBytes(code));
-            var m = PythonModuleLoader.FromStream(analyzer.Interpreter, codeStream, "test-module.py", analyzer.LanguageVersion, "__main__");
-            return TestAnalyzer.GetTestCasesFromAst(m, null);
-        }
-
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
-        public void DecoratedTests() {
-            using (var analyzer = MakeTestAnalyzer()) {
-                var code = @"import unittest
-
-def decorator(fn):
-    def wrapped(*args, **kwargs):
-        return fn(*args, **kwargs)
-    return wrapped
-
-class MyTest(unittest.TestCase):
-    @decorator
-    def testAbc(self):
-        pass
-
-    @fake_decorator
-    def testDef(self):
-        pass
-";
-                var entry = AddModule(analyzer, "Fob", code);
-
-                entry.PreAnalyze();
-                analyzer.AnalyzeQueuedEntries(CancellationToken.None);
-
-                var tests = TestAnalyzer.GetTestCasesFromAnalysis(entry)
-                    .Select(t => $"{t.MethodName}:{t.StartLine}");
-                AssertUtil.ArrayEquals(
-                    new[] { "testAbc:10", "testDef:14" },
-                    tests.ToArray()
-                );
-
-                tests = GetTestCasesFromAst(code, analyzer)
-                    .Select(t => $"{t.MethodName}:{t.StartLine}");
-                AssertUtil.ArrayEquals(
-                    new[] { "testAbc:9", "testDef:13" },
-                    tests.ToArray()
-                );
-            }
-        }
-
-        [TestMethod, Priority(TestExtensions.P2_FAILING_UNIT_TEST)]
-        public void TestCaseSubclasses() {
-            using (var analyzer = MakeTestAnalyzer()) {
-                var entry1 = AddModule(analyzer, "Pkg.SubPkg", @"import unittest
-
-class TestBase(unittest.TestCase):
-    pass
-");
-
-                var entry2 = AddModule(
-                    analyzer,
-                    "Pkg",
-                    moduleFile: "Pkg\\__init__.py",
-                    code: @"from .SubPkg import TestBase"
-                );
-
-                var code = @"from Pkg.SubPkg import TestBase as TB1
-from Pkg import TestBase as TB2
-from Pkg import *
-
-class MyTest1(TB1):
-    def test1(self):
-        pass
-
-class MyTest2(TB2):
-    def test2(self):
-        pass
-
-class MyTest3(TestBase):
-    def test3(self):
-        pass
-";
-                var entry3 = AddModule(analyzer, "__main__", code);
-
-                entry1.PreAnalyze();
-                entry2.PreAnalyze();
-                entry3.PreAnalyze();
-                analyzer.AnalyzeQueuedEntries(CancellationToken.None);
-
-                var test = TestAnalyzer.GetTestCasesFromAnalysis(entry3).ToList();
-                AssertUtil.ContainsExactly(test.Select(t => t.MethodName), "test1", "test2", "test3");
-
-                // Cannot discover tests from subclasses with just the AST
-                test = GetTestCasesFromAst(code, analyzer).ToList();
-                AssertUtil.ContainsExactly(test.Select(t => t.MethodName));
-            }
-        }
-
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
-        public void TestCaseRunTests() {
-            using (var analyzer = MakeTestAnalyzer()) {
-                var code = @"import unittest
-
-class TestBase(unittest.TestCase):
-    def runTests(self):
-        pass # should not discover this as it isn't runTest or test*
-    def runTest(self):
-        pass
-";
-                var entry = AddModule(analyzer, "__main__", code);
-
-                entry.PreAnalyze();
-                analyzer.AnalyzeQueuedEntries(CancellationToken.None);
-
-                var test = TestAnalyzer.GetTestCasesFromAnalysis(entry).ToList();
-                AssertUtil.ContainsExactly(test.Select(t => t.ClassName), "TestBase");
-
-                test = GetTestCasesFromAst(code, analyzer).ToList();
-                AssertUtil.ContainsExactly(test.Select(t => t.ClassName), "TestBase");
-            }
-        }
-
-        /// <summary>
-        /// If we have test* and runTest we shouldn't discover runTest
-        /// </summary>
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
-        public void TestCaseRunTestsWithTest() {
-            using (var analyzer = MakeTestAnalyzer()) {
-                var code = @"import unittest
-
-class TestBase(unittest.TestCase):
-    def test_1(self):
-        pass
-    def runTest(self):
-        pass
-";
-                var entry = AddModule(analyzer, "__main__", code);
-
-                entry.PreAnalyze();
-                analyzer.AnalyzeQueuedEntries(CancellationToken.None);
-
-                var test = TestAnalyzer.GetTestCasesFromAnalysis(entry).ToList();
-                AssertUtil.ContainsExactly(test.Select(t => t.MethodName), "test_1");
-
-                test = GetTestCasesFromAst(code, analyzer).ToList();
-                AssertUtil.ContainsExactly(test.Select(t => t.MethodName), "test_1");
-            }
-        }
-
-        private PythonAnalyzer MakeTestAnalyzer() {
-            return PythonAnalyzer.CreateAsync(InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(2, 7))).GetAwaiter().GetResult();
-        }
-
-        private IPythonProjectEntry AddModule(PythonAnalyzer analyzer, string moduleName, string code, string moduleFile = null) {
-            using (var source = new StringReader(code)) {
-                var entry = analyzer.AddModule(
-                    moduleName,
-                    TestData.GetPath("Fob\\" + (moduleFile ?? moduleName.Replace('.', '\\') + ".py"))
-                );
-
-                var parser = Parser.CreateParser(source, PythonLanguageVersion.V27, new ParserOptions() { BindReferences = true });
-                using (var p = entry.BeginParse()) {
-                    p.Tree = parser.ParseFile();
-                    p.Complete();
+                var actualTestCase = actualTests.SingleOrDefault(tc => tc.FullyQualifiedName == expectedTest.FullyQualifiedName);
+                Assert.IsNotNull(actualTestCase, expectedTest.FullyQualifiedName);
+                switch (testFramework) {
+                    case FrameworkPytest:
+                        Assert.AreEqual(new Uri(PythonConstants.PytestExecutorUriString), actualTestCase.ExecutorUri);
+                        break;
+                    case FrameworkUnittest:
+                        Assert.AreEqual(new Uri(PythonConstants.UnitTestExecutorUriString), actualTestCase.ExecutorUri);
+                        break;
+                    default:
+                        Assert.Fail($"Unexpected test framework: {testFramework}");
+                        break;
                 }
-                return entry;
+                Assert.AreEqual(expectedTest.DisplayName, actualTestCase.DisplayName, expectedTest.FullyQualifiedName);
+                Assert.IsTrue(IsSameFile(expectedTest.FilePath, actualTestCase.CodeFilePath), expectedTest.FullyQualifiedName);
+                if (expectedTest.LineNumber > 0) {
+                    Assert.AreEqual(expectedTest.LineNumber, actualTestCase.LineNumber, expectedTest.FullyQualifiedName);
+                }
             }
         }
 
@@ -262,14 +494,63 @@ class TestBase(unittest.TestCase):
         }
 
         private static void PrintTestCases(IEnumerable<TestCase> testCases) {
+            Console.WriteLine("Discovered test cases:");
+            Console.WriteLine("----------------------");
             foreach (var tst in testCases) {
-                Console.WriteLine("Test: " + tst.FullyQualifiedName);
-                Console.WriteLine("Source: " + tst.Source);
-                Console.WriteLine("Display: " + tst.DisplayName);
-                Console.WriteLine("Location: " + tst.CodeFilePath);
-                Console.WriteLine("Location: " + tst.LineNumber.ToString());
+                Console.WriteLine($"FullyQualifiedName: {tst.FullyQualifiedName}");
+                Console.WriteLine($"Source: {tst.Source}");
+                Console.WriteLine($"Display: {tst.DisplayName}");
+                Console.WriteLine($"CodeFilePath: {tst.CodeFilePath}");
+                Console.WriteLine($"LineNumber: {tst.LineNumber.ToString()}");
+                Console.WriteLine($"PytestId: {tst.GetPropertyValue<string>(Microsoft.PythonTools.TestAdapter.Pytest.Constants.PytestIdProperty, null)}");
+                Console.WriteLine($"PytestXmlClassName: {tst.GetPropertyValue<string>(Microsoft.PythonTools.TestAdapter.Pytest.Constants.PyTestXmlClassNameProperty, null)}");
+                Console.WriteLine($"PytestTestExecPath: {tst.GetPropertyValue<string>(Microsoft.PythonTools.TestAdapter.Pytest.Constants.PytestTestExecutionPathPropertery, null)}");
                 Console.WriteLine("");
             }
         }
+    }
+
+    [TestClass]
+    public class TestDiscovererTests27 : TestDiscovererTests {
+        [ClassInitialize]
+        public static void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
+        }
+
+        protected override PythonVersion Version => PythonPaths.Python27_x64 ?? PythonPaths.Python27;
+
+        protected override string ImportErrorFormat => "ImportError: No module named {0}";
+    }
+
+    [TestClass]
+    public class TestDiscovererTests35 : TestDiscovererTests {
+        [ClassInitialize]
+        public static void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
+        }
+
+        protected override PythonVersion Version => PythonPaths.Python35_x64 ?? PythonPaths.Python35;
+
+        protected override string ImportErrorFormat => "ImportError: No module named '{0}'";
+    }
+
+    [TestClass]
+    public class TestDiscovererTests36 : TestDiscovererTests {
+        [ClassInitialize]
+        public static void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
+        }
+
+        protected override PythonVersion Version => PythonPaths.Python36_x64 ?? PythonPaths.Python36;
+    }
+
+    [TestClass]
+    public class TestDiscovererTests37 : TestDiscovererTests {
+        [ClassInitialize]
+        public static void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
+        }
+
+        protected override PythonVersion Version => PythonPaths.Python37_x64 ?? PythonPaths.Python37;
     }
 }

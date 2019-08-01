@@ -21,6 +21,7 @@ using System.Linq;
 using System.Xml.XPath;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.TestAdapter.Model;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.TestWindow.Extensibility;
@@ -104,9 +105,8 @@ namespace Microsoft.PythonTools.TestAdapter {
 
         private bool UseLegacyDebugger {
             get {
+                bool useLegacyDebugger = false;
                 try {
-                    bool useLegacyDebugger = false;
-
                     _serviceProvider.GetUIThread().Invoke(() => {
                         var dte = (EnvDTE.DTE)_serviceProvider.GetService(typeof(EnvDTE.DTE));
                         dynamic automationObject = dte.GetObject("VsPython");
@@ -115,8 +115,9 @@ namespace Microsoft.PythonTools.TestAdapter {
 
                     return useLegacyDebugger;
                 } catch (Exception) {
-                    return false;
                 }
+
+                return useLegacyDebugger;
             }
         }
 
@@ -135,37 +136,61 @@ namespace Microsoft.PythonTools.TestAdapter {
                     foreach (var project in pyContainers) {
                         foreach (var container in project) {
                             writer.WriteStartElement("Project");
-                            writer.WriteAttributeString("home", project.Key.ProjectHome);
+                            writer.WriteAttributeString("home", container.Project);
 
+                            string nativeCode = "", djangoSettings = "", projectName = "", testFramework = "", unitTestPattern = "", unitTestRootDir = "";
+                            bool isWorkspace = false;
+                            ProjectInfo projInfo = null;
                             LaunchConfiguration config = null;
-                            string nativeCode = "", djangoSettings = "";
 
                             ThreadHelper.JoinableTaskFactory.Run(async () => {
                                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-                                try {
-                                    config = project.Key.GetLaunchConfigurationOrThrow();
-                                } catch {
+
+                                if (container.Discoverer is TestContainerDiscovererProject) {
+                                    var discoverer = container.Discoverer as TestContainerDiscovererProject;
+                                    isWorkspace = discoverer.IsWorkspace;
+                                    projInfo = discoverer.GetProjectInfo(container.Project);
+                                } else if (container.Discoverer is TestContainerDiscovererWorkspace) {
+                                    var discoverer = container.Discoverer as TestContainerDiscovererWorkspace;
+                                    isWorkspace = discoverer.IsWorkspace;
+                                    projInfo = discoverer.GetProjectInfo(container.Project);
                                 }
-                                nativeCode = project.Key.GetProperty(PythonConstants.EnableNativeCodeDebugging);
-                                djangoSettings = project.Key.GetProperty("DjangoSettingsModule");
+
+                                if (projInfo != null) {
+                                    try {
+                                        config = projInfo.GetLaunchConfigurationOrThrow();
+                                    } catch {
+                                    }
+                                    nativeCode = projInfo.GetProperty(PythonConstants.EnableNativeCodeDebugging);
+                                    djangoSettings = projInfo.GetProperty("DjangoSettingsModule");
+                                    testFramework = projInfo.GetProperty(PythonConstants.TestFrameworkSetting);
+                                    projectName = projInfo.ProjectName;
+                                    unitTestRootDir = projInfo.GetProperty(PythonConstants.UnitTestRootDirectorySetting);
+                                    unitTestPattern = projInfo.GetProperty(PythonConstants.UnitTestPatternSetting);
+                                }
                             });
 
-                            if (config == null) {
+                            if (config == null || projInfo == null) {
                                 log.Log(
                                     MessageLevel.Warning,
-                                    Strings.TestDiscoveryFailedMissingLaunchConfiguration.FormatUI(project.Key.ProjectHome)
+                                    Strings.TestDiscoveryFailedMissingLaunchConfiguration.FormatUI(container.Project)
                                 );
                                 continue;
                             }
+                            writer.WriteAttributeString("name", projectName);
+                            writer.WriteAttributeString("isWorkspace", isWorkspace.ToString());
                             writer.WriteAttributeString("useLegacyDebugger", UseLegacyDebugger ? "1" : "0");
                             writer.WriteAttributeString("nativeDebugging", nativeCode);
                             writer.WriteAttributeString("djangoSettingsModule", djangoSettings);
-
+                            writer.WriteAttributeString("testFramework", testFramework);
                             writer.WriteAttributeString("workingDir", config.WorkingDirectory);
                             writer.WriteAttributeString("interpreter", config.GetInterpreterPath());
                             writer.WriteAttributeString("pathEnv", config.Interpreter.PathEnvironmentVariable);
+                            writer.WriteAttributeString("unitTestRootDir", unitTestRootDir);
+                            writer.WriteAttributeString("unitTestPattern", unitTestPattern);
 
                             writer.WriteStartElement("Environment");
+
                             foreach (var keyValue in config.Environment) {
                                 writer.WriteStartElement("Variable");
                                 writer.WriteAttributeString("name", keyValue.Key);
@@ -182,15 +207,10 @@ namespace Microsoft.PythonTools.TestAdapter {
                             }
                             writer.WriteEndElement(); // SearchPaths
 
-                            foreach (var test in container.TestCases) {
-                                writer.WriteStartElement("Test");
-                                writer.WriteAttributeString("className", test.ClassName);
-                                writer.WriteAttributeString("file", test.Filename);
-                                writer.WriteAttributeString("line", test.StartLine.ToString());
-                                writer.WriteAttributeString("column", test.StartColumn.ToString());
-                                writer.WriteAttributeString("method", test.MethodName);
-                                writer.WriteEndElement(); // Test
-                            }
+                            writer.WriteStartElement("Test");
+                            writer.WriteAttributeString("file", container.Source);
+
+                            writer.WriteEndElement(); // Test
 
                             writer.WriteEndElement();  // Project
                         }

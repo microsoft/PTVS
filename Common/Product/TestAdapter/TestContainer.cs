@@ -16,50 +16,52 @@
 
 using System;
 using System.Collections.Generic;
-using Microsoft.PythonTools.Analysis;
-using Microsoft.PythonTools.Projects;
-using Microsoft.PythonTools.TestAdapter;
+using System.IO;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestWindow.Extensibility;
 using Microsoft.VisualStudio.TestWindow.Extensibility.Model;
 
 namespace Microsoft.VisualStudioTools.TestAdapter {
     internal class TestContainer : ITestContainer {
-        private readonly int _version;
-        private readonly Architecture _architecture;
-        private readonly PythonProject _project;
-        private readonly TestCaseInfo[] _testCases;
+        private readonly DateTime _timeStamp;
+        private readonly bool _isWorkspace;
 
-        public TestContainer(ITestContainerDiscoverer discoverer, string source, PythonProject project, int version, Architecture architecture, TestCaseInfo[] testCases) {
+        public TestContainer(ITestContainerDiscoverer discoverer, string source, string projectHome, string projectName, int version, Architecture architecture, bool isWorkspace) {
             Discoverer = discoverer;
-            Source = source;
-            _version = version;
-            _project = project;
-            _architecture = architecture;
-            _testCases = testCases;
+            Source = source.ToLower(); // Make sure source matches pytest discovery test file paths.
+            Version = version;
+            Project = projectHome;
+            ProjectName = projectName;
+            TargetPlatform = architecture;
+            _timeStamp = GetTimeStamp();
+            _isWorkspace = isWorkspace;
+        }
+        
+        /// <summary>
+        /// Copy constructor
+        /// </summary>
+        /// <param name="copy"></param>
+        private TestContainer(TestContainer copy)
+            : this(copy.Discoverer, copy.Source, copy.Project, copy.ProjectName, copy.Version, copy.TargetPlatform, copy._isWorkspace) {
+            _timeStamp = copy._timeStamp;
         }
 
-        public TestCaseInfo[] TestCases {
-            get {
-                return _testCases;
-            }
-        }
+        public int Version { get; private set; }
 
-        public int Version {
-            get {
-                return _version;
-            }
-        }
+        /// <summary>
+        /// Project path
+        /// </summary>
+        public string Project { get; private set; }
 
-        public PythonProject Project {
-            get {
-                return _project;
-            }
-        }
-
+        public string ProjectName { get; private set; }
+             
         public int CompareTo(ITestContainer other) {
             var container = other as TestContainer;
             if (container == null) {
+                return -1;
+            }
+
+            if (_isWorkspace != container._isWorkspace) {
                 return -1;
             }
 
@@ -67,8 +69,22 @@ namespace Microsoft.VisualStudioTools.TestAdapter {
             if (result != 0) {
                 return result;
             }
+            
+            if (Version.CompareTo(container.Version) != 0) {
+                return -1;
+            }
 
-            return _version.CompareTo(container._version);
+            result = String.Compare(this.Project, container.Project, StringComparison.Ordinal);
+            if (result != 0) {
+                return result;
+            }
+
+            result = String.Compare(this.ProjectName, container.ProjectName, StringComparison.Ordinal);
+            if (result != 0) {
+                return result;
+            }
+
+            return _timeStamp.CompareTo(container._timeStamp);
         }
 
         public IEnumerable<Guid> DebugEngines {
@@ -94,21 +110,25 @@ namespace Microsoft.VisualStudioTools.TestAdapter {
         }
 
         public ITestContainer Snapshot() {
-            return this;
+            return new TestContainer(this);
         }
 
         public string Source { get; private set; }
 
-        public FrameworkVersion TargetFramework {
-            get { return FrameworkVersion.None; }
-        }
+        public FrameworkVersion TargetFramework => FrameworkVersion.None;
 
-        public Architecture TargetPlatform {
-            get { return _architecture; }
-        }
+        public Architecture TargetPlatform { get; private set; }
 
         public override string ToString() {
             return Source + ":" + Discoverer.ExecutorUri.ToString();
+        }
+
+        private DateTime GetTimeStamp() {
+            if (!String.IsNullOrEmpty(this.Source) && File.Exists(this.Source)) {
+                return File.GetLastWriteTime(this.Source);
+            } else {
+                return DateTime.MinValue;
+            }
         }
     }
 }

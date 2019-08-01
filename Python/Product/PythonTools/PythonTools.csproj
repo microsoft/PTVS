@@ -314,8 +314,16 @@
       <DependentUpon>AddVirtualEnvironmentControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="PythonTools\Options\PythonDebugOptionsService.cs" />
+    <Compile Include="PythonTools\Project\ConfigureTestFrameworkInfoBar.cs" />
+    <Compile Include="PythonTools\Project\PythonTestPropertyPageControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="PythonTools\Project\PythonTestPropertyPageControl.Designer.cs">
+      <DependentUpon>PythonTestPropertyPageControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="PythonTools\Project\PythonInfoBar.cs" />
     <Compile Include="PythonTools\Project\PackageInstallInfoBar.cs" />
+    <Compile Include="PythonTools\Project\PythonTestPropertyPage.cs" />
     <Compile Include="PythonTools\Project\VirtualEnvCreateInfoBar.cs" />
     <Compile Include="PythonTools\Project\CondaEnvCreateInfoBar.cs" />
     <Compile Include="ProvideFeatureFlagAttribute.cs" />
@@ -1073,6 +1081,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="PythonTools\Project\DefaultPythonLauncherOptions.resx">
       <DependentUpon>DefaultPythonLauncherOptions.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="PythonTools\Project\PublishPropertyControl.resx">
       <DependentUpon>PublishPropertyControl.cs</DependentUpon>
@@ -1083,6 +1092,9 @@
   </ItemGroup>
   <ItemGroup>
     <!-- Resources -->
+    <EmbeddedResource Include="PythonTools\Project\PythonTestPropertyPageControl.resx">
+      <DependentUpon>PythonTestPropertyPageControl.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="PythonTools\Project\StartWithErrorsDialog.resx">
       <DependentUpon>StartWithErrorsDialog.cs</DependentUpon>
     </EmbeddedResource>
