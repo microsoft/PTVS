@@ -22,10 +22,9 @@ using System.Linq;
 using System.Net;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
-using System.Threading;
-using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.TestAdapter.Config;
+using Microsoft.PythonTools.TestAdapter.Utils;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
@@ -88,17 +87,27 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
                 _debugSecret,
                 _debugPort.ToString(),
                 GetDebuggerSearchPath(_projectSettings.UseLegacyDebugger),
-                String.Format("--junitxml={0}", outputfile)
             };
 
-            foreach (TestCase test in tests) {
-                var executionTestPath = test.GetPropertyValue<string>(Pytest.Constants.PytestIdProperty, default);
-                if (String.IsNullOrEmpty(executionTestPath)) {
-                    Debug.WriteLine("Pytest execution path missing for testcase {0}", test.FullyQualifiedName);
-                    continue;
-                }
-                arguments.Add(executionTestPath);
+            // For a small set of tests, we'll pass them on the command
+            // line. Once we exceed a certain (arbitrary) number, create
+            // a test list on disk so that we do not overflow the 
+            // 32K argument limit.
+            var testIds = tests.Select(t => t.GetPropertyValue<string>(Pytest.Constants.PytestIdProperty, default));
+            if (testIds.Count() > 5 ) {
+                var testListFilePath = TestUtils.CreateTestList(testIds);
+                arguments.Add(testListFilePath);
             }
+            else {
+                arguments.Add("blankTestList");
+                foreach (var testId in testIds) {
+                    arguments.Add(testId);
+                }
+            }
+
+            // output results to xml file
+            arguments.Add(String.Format("--junitxml={0}", outputfile));
+
             return arguments.ToArray();
         }
 

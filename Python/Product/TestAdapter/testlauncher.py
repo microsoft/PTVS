@@ -19,11 +19,11 @@ import sys
 import traceback
 
 def main():
-    cwd, testRunner, secret, port, debugger_search_path, args = parse_argv()
+    cwd, testRunner, secret, port, debugger_search_path, test_file, args = parse_argv()
     sys.path[0] = os.getcwd()
     os.chdir(cwd)
     load_debugger(secret, port, debugger_search_path)
-    run(testRunner, args)
+    run(testRunner,test_file, args)
 
 def parse_argv():
     """Parses arguments for use with the test launcher.
@@ -33,10 +33,11 @@ def parse_argv():
     3. debugSecret
     4. debugPort
     5. Debugger search path
-    6. Rest of the arguments are passed into the test runner.
+    6. TestFile List
+    7. Rest of the arguments are passed into the test runner.
     """
 
-    return (sys.argv[1], sys.argv[2], sys.argv[3], int(sys.argv[4]), sys.argv[5], sys.argv[6:])
+    return (sys.argv[1], sys.argv[2], sys.argv[3], int(sys.argv[4]), sys.argv[5], sys.argv[6], sys.argv[7:])
 
 def load_debugger(secret, port, debugger_search_path):
     # Load the debugger package
@@ -73,11 +74,20 @@ Press Enter to close. . .''')
             input()
         sys.exit(1)
 
-def run(testRunner, args):
+def run(testRunner,test_list, args):
     """Runs the test
     testRunner -- test runner to be used `pytest` or `nose`
     args -- arguments passed into the test runner
     """
+
+    all_tests = []
+    if test_list and os.path.exists(test_list):
+        with open(test_list, 'r', encoding='utf-8') as tests:
+            all_tests.extend(t.strip() for t in tests)
+
+
+    if all_tests:
+        args.extend(all_tests)
 
     try:
         if testRunner == 'pytest':
