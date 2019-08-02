@@ -604,6 +604,11 @@ namespace TestAdapterTests {
                 };
 
                 string id = ".\\" + ti.FullyQualifiedName;
+                if (testEnv.TestFramework == FrameworkPytest) {
+                    var classParts = ti.PytestXmlClassName.Split('.');
+                    id = (classParts.Length > 1) ? ".\\" + ti.FullyQualifiedName : ".\\" + Path.GetFileName(ti.FilePath) + "::" + ti.DisplayName;
+                }
+             
                 string xmlClassName = ti.PytestXmlClassName;
 
                 // FullyQualifiedName as exec path suffix only works for test class case,

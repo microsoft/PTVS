@@ -92,7 +92,7 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
             };
 
             foreach (TestCase test in tests) {
-                var executionTestPath = test.GetPropertyValue<string>(Pytest.Constants.PytestTestExecutionPathPropertery, default);
+                var executionTestPath = test.GetPropertyValue<string>(Pytest.Constants.PytestIdProperty, default);
                 if (String.IsNullOrEmpty(executionTestPath)) {
                     Debug.WriteLine("Pytest execution path missing for testcase {0}", test.FullyQualifiedName);
                     continue;
@@ -138,15 +138,7 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
 
         private string GetSearchPaths(IEnumerable<TestCase> tests, PythonProjectSettings settings) {
             var paths = settings.SearchPath;
-
-            HashSet<string> knownModulePaths = new HashSet<string>();
-            foreach (var test in tests) {
-                string testFilePath = PathUtils.GetAbsoluteFilePath(settings.ProjectHome, test.CodeFilePath);
-                var modulePath = ModulePath.FromFullPath(testFilePath);
-                if (knownModulePaths.Add(modulePath.LibraryPath)) {
-                    paths.Insert(0, modulePath.LibraryPath);
-                }
-            }
+            paths.Insert(0, settings.WorkingDirectory);
 
             string searchPaths = string.Join(
                 ";",
@@ -188,9 +180,8 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
                                     }
                                  }
                             }
-                           
-                            WaitHandle.WaitAny(new WaitHandle[] { proc.WaitHandle });
-                            proc.Wait(TimeSpan.FromMilliseconds(1000));
+
+                            proc.Wait();
                         } catch (COMException ex) {
                             Error(Strings.Test_ErrorConnecting);
                             DebugError(ex.ToString());
