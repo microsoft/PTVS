@@ -131,6 +131,15 @@ EndGlobal
             collection.UnloadAllProjects();
             collection.Dispose();
 
+            // MSBuild.Project doesn't want to save ToolsVersion as 4.0,
+            // (passing it to MSBuild.Project ctor does nothing)
+            // so manually replace it here.
+            foreach (var proj in projects) {
+                var text = File.ReadAllText(proj.FullPath, Encoding.UTF8);
+                text = text.Replace("ToolsVersion=\"Current\"", "ToolsVersion=\"4.0\"");
+                File.WriteAllText(proj.FullPath, text, Encoding.UTF8);
+            }
+
             var slnFilename = Path.Combine(location, solutionName + ".sln");
             File.WriteAllText(slnFilename, slnFile.ToString().Replace("\\t", "\t"), Encoding.UTF8);
             return new SolutionFile(slnFilename, toGenerate);
