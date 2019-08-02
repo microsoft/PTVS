@@ -114,6 +114,7 @@ namespace Microsoft.PythonTools {
                    PathUtils.IsValidPath(filePath) &&
                    File.Exists(filePath) &&
                    ModulePath.IsPythonSourceFile(filePath) &&
+                   _pythonWorkspaceService.Workspace != null &&
                    PathUtils.IsSubpathOf(_pythonWorkspaceService.Workspace.Location, filePath);
         }
 
