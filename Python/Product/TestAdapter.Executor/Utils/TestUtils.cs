@@ -21,18 +21,10 @@ using System.Text;
 namespace Microsoft.PythonTools.TestAdapter.Utils {
     static class TestUtils {
 
-        // For a small set of tests, we'll pass them on the command
-        // line. Once we exceed a certain (arbitrary) number, create
-        // a test list on disk so that we do not overflow the 
-        // 32K argument limit.
-        internal static string CreateTestList(IEnumerable<string> tests) {
-            var testList = Path.GetTempFileName();
-            using (var writer = new StreamWriter(testList, false, new UTF8Encoding(false))) {
-                foreach (var test in tests) {
-                    writer.WriteLine(test);
-                }
-            }
-            return testList;
+        internal static string CreateTestListFile(IEnumerable<string> tests) {
+            var testListFilePath = Path.GetTempFileName();
+            File.WriteAllLines(testListFilePath, tests, new UTF8Encoding(false));
+            return testListFilePath;
         }
     }
 }

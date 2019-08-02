@@ -508,7 +508,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                     // a test list on disk so that we do not overflow the 
                     // 32K argument limit.
                     if (_tests.Length > 5) {
-                        testList = TestUtils.CreateTestList(GetTestCases().Select( pair => pair.Key));
+                        testList = TestUtils.CreateTestListFile(GetTestCases().Select( pair => pair.Key));
                     }
                     var arguments = GetArguments(testList);
 

@@ -23,7 +23,7 @@ def main():
     sys.path[0] = os.getcwd()
     os.chdir(cwd)
     load_debugger(secret, port, debugger_search_path)
-    run(testRunner,test_file, args)
+    run(testRunner, test_file, args)
 
 def parse_argv():
     """Parses arguments for use with the test launcher.
@@ -74,20 +74,15 @@ Press Enter to close. . .''')
             input()
         sys.exit(1)
 
-def run(testRunner,test_list, args):
+def run(testRunner, test_file, args):
     """Runs the test
     testRunner -- test runner to be used `pytest` or `nose`
     args -- arguments passed into the test runner
     """
 
-    all_tests = []
-    if test_list and os.path.exists(test_list):
-        with open(test_list, 'r', encoding='utf-8') as tests:
-            all_tests.extend(t.strip() for t in tests)
-
-
-    if all_tests:
-        args.extend(all_tests)
+    if test_file and os.path.exists(test_file):
+        with open(test_file, 'r', encoding='utf-8') as tests:
+            args.extend(t.strip() for t in tests)
 
     try:
         if testRunner == 'pytest':
