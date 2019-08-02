@@ -15,15 +15,14 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.TestAdapter.Config;
 using Microsoft.PythonTools.TestAdapter.Services;
+using Microsoft.PythonTools.TestAdapter.Utils;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
@@ -44,7 +43,7 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
             string json = null;
 
             var workspaceText = _settings.IsWorkspace ? Strings.WorkspaceText : Strings.ProjectText;
-            LogInfo(Strings.PythonTestDiscovererStartedMessage.FormatUI(PythonConstants.PytestText, _settings.ProjectName, workspaceText,  _settings.DiscoveryWaitTimeInSeconds));
+            LogInfo(Strings.PythonTestDiscovererStartedMessage.FormatUI(PythonConstants.PytestText, _settings.ProjectName, workspaceText, _settings.DiscoveryWaitTimeInSeconds));
 
             try {
                 var env = InitializeEnvironment(sources, _settings);
@@ -52,7 +51,7 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
                 DebugInfo("cd " + _settings.WorkingDirectory);
                 DebugInfo("set " + _settings.PathEnv + "=" + env[_settings.PathEnv]);
                 DebugInfo($"{_settings.InterpreterPath} {string.Join(" ", arguments)}");
-                
+
                 json = ProcessExecute.RunWithTimeout(
                     _settings.InterpreterPath,
                     env,
@@ -101,14 +100,28 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
             arguments.Add(DiscoveryAdapterPath);
             arguments.Add("discover");
             arguments.Add("pytest");
-            arguments.Add("--");
-            arguments.Add("--cache-clear");
 
-            if (!projSettings.IsWorkspace) {
+            // For a small set of tests, we'll pass them on the command
+            // line. Once we exceed a certain (arbitrary) number, create
+            // a test list on disk so that we do not overflow the 
+            // 32K argument limit.
+            bool useTestList = sources.Count() > 5;
+            if (!projSettings.IsWorkspace &&
+                useTestList) {
+                var testListFilePath = TestUtils.CreateTestList(sources);
+                arguments.Add("--test-list");
+                arguments.Add(testListFilePath);
+            }
+            //Note pytest specific arguments go after this separator
+            arguments.Add("--");
+            // Add source files to pytest as arguments
+            if (!projSettings.IsWorkspace &&
+                !useTestList) {
                 foreach (var s in sources) {
                     arguments.Add(s);
                 }
             }
+            arguments.Add("--cache-clear");
             return arguments.ToArray();
         }
 
