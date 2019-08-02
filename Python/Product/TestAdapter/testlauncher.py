@@ -33,7 +33,7 @@ def parse_argv():
     3. debugSecret
     4. debugPort
     5. Debugger search path
-    6. TestFile List
+    6. TestFile, with a list of testIds to run
     7. Rest of the arguments are passed into the test runner.
     """
 
