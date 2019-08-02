@@ -138,6 +138,8 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
 
         private string GetSearchPaths(IEnumerable<TestCase> tests, PythonProjectSettings settings) {
             var paths = settings.SearchPath;
+            paths.Insert(0, settings.WorkingDirectory);
+
             string searchPaths = string.Join(
                 ";",
                 paths.Where(Directory.Exists).Distinct(StringComparer.OrdinalIgnoreCase)
