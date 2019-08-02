@@ -22,10 +22,9 @@ using System.Linq;
 using System.Net;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
-using System.Threading;
-using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.TestAdapter.Config;
+using Microsoft.PythonTools.TestAdapter.Utils;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
@@ -77,7 +76,7 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
         }
 
         public void Dispose() {
-          
+
         }
 
         public string[] GetArguments(IEnumerable<TestCase> tests, string outputfile) {
@@ -88,17 +87,26 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
                 _debugSecret,
                 _debugPort.ToString(),
                 GetDebuggerSearchPath(_projectSettings.UseLegacyDebugger),
-                String.Format("--junitxml={0}", outputfile)
             };
 
-            foreach (TestCase test in tests) {
-                var executionTestPath = test.GetPropertyValue<string>(Pytest.Constants.PytestIdProperty, default);
-                if (String.IsNullOrEmpty(executionTestPath)) {
-                    Debug.WriteLine("Pytest execution path missing for testcase {0}", test.FullyQualifiedName);
-                    continue;
+            // For a small set of tests, we'll pass them on the command
+            // line. Once we exceed a certain (arbitrary) number, create
+            // a test list on disk so that we do not overflow the 
+            // 32K argument limit.
+            var testIds = tests.Select(t => t.GetPropertyValue<string>(Pytest.Constants.PytestIdProperty, default));
+            if (testIds.Count() > 5) {
+                var testListFilePath = TestUtils.CreateTestListFile(testIds);
+                arguments.Add(testListFilePath);
+            } else {
+                arguments.Add("dummyfilename"); //expected not to exist, but script excepts something
+                foreach (var testId in testIds) {
+                    arguments.Add(testId);
                 }
-                arguments.Add(executionTestPath);
             }
+
+            // output results to xml file
+            arguments.Add(String.Format("--junitxml={0}", outputfile));
+
             return arguments.ToArray();
         }
 
@@ -107,7 +115,7 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
             debugPort = 0;
 
             if (_debugMode == PythonDebugMode.PythonOnly) {
-                if(_projectSettings.UseLegacyDebugger) {
+                if (_projectSettings.UseLegacyDebugger) {
                     var secretBuffer = new byte[24];
                     RandomNumberGenerator.Create().GetNonZeroBytes(secretBuffer);
                     debugSecret = Convert.ToBase64String(secretBuffer)
@@ -123,7 +131,7 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
         private Dictionary<string, string> InitializeEnvironment(IEnumerable<TestCase> tests) {
             var pythonPathVar = _projectSettings.PathEnv;
             var pythonPath = GetSearchPaths(tests, _projectSettings);
-            var env  = new Dictionary<string, string>();
+            var env = new Dictionary<string, string>();
 
             if (!string.IsNullOrWhiteSpace(pythonPathVar)) {
                 env[pythonPathVar] = pythonPath;
@@ -178,7 +186,7 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
                                     if (proc.Wait(TimeSpan.FromMilliseconds(500))) {
                                         break;
                                     }
-                                 }
+                                }
                             }
 
                             proc.Wait();
@@ -196,7 +204,7 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
             } catch (Exception e) {
                 Error(e.ToString());
             }
-            
+
             return ouputFile;
         }
 

@@ -34,6 +34,7 @@ using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Ipc.Json;
 using Microsoft.PythonTools.TestAdapter.Config;
 using Microsoft.PythonTools.TestAdapter.Services;
+using Microsoft.PythonTools.TestAdapter.Utils;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
@@ -507,7 +508,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                     // a test list on disk so that we do not overflow the 
                     // 32K argument limit.
                     if (_tests.Length > 5) {
-                        testList = CreateTestList();
+                        testList = TestUtils.CreateTestListFile(GetTestCases().Select( pair => pair.Key));
                     }
                     var arguments = GetArguments(testList);
 
