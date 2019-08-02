@@ -108,7 +108,7 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
             bool useTestList = sources.Count() > 5;
             if (!projSettings.IsWorkspace &&
                 useTestList) {
-                var testListFilePath = TestUtils.CreateTestList(sources);
+                var testListFilePath = TestUtils.CreateTestListFile(sources);
                 arguments.Add("--test-list");
                 arguments.Add(testListFilePath);
             }
