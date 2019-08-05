@@ -20,6 +20,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
@@ -101,6 +102,52 @@ namespace TestAdapterTests {
 
         [TestMethod, Priority(0)]
         [TestCategory("10s")]
+        public void RunUnittestLargeTestCount() {
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
+
+            // Test that we don't try passing 1000 tests via command line arguments
+            // since that would exceed the 32k limit and fail.
+            var testContentsFormat = @"import unittest
+
+class ManyTest(unittest.TestCase):
+{0}
+
+if __name__ == '__main__':
+    unittest.main()
+";
+            var testFunctions = new StringBuilder();
+            var expectedTests = new List<TestInfo>();
+            var moduleName = "test_many";
+            var className = "ManyTest";
+            var testFilePath = Path.Combine(testEnv.SourceFolderPath, $"{moduleName}.py");
+
+            for (int i = 0; i < 1000; i++) {
+                var funcName = $"test_func_{i}";
+                testFunctions.AppendLine($"    def {funcName}(self): pass");
+
+                expectedTests.Add(new TestInfo(
+                    funcName,
+                    $"{moduleName}.py::{className}::{funcName}",
+                    testFilePath,
+                    4 + i,
+                    outcome: TestOutcome.Passed
+                ));
+            }
+
+            var testContents = string.Format(testContentsFormat, testFunctions.ToString());
+            File.WriteAllText(testFilePath, testContents);
+
+            var runSettings = new MockRunSettings(
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+                    .WithTestFilesFromFolder(testEnv.SourceFolderPath)
+                    .ToXml()
+            );
+
+            ExecuteTests(testEnv, runSettings, expectedTests.ToArray());
+        }
+
+        [TestMethod, Priority(0)]
+        [TestCategory("10s")]
         public void RunPytest() {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
 
@@ -143,6 +190,43 @@ namespace TestAdapterTests {
             );
 
             ExecuteTests(testEnv, runSettings, expectedTests);
+        }
+
+        [TestMethod, Priority(0)]
+        [TestCategory("10s")]
+        public void RunPytestLargeTestCount() {
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
+
+            // Test that we don't try passing 1000 tests via command line arguments
+            // since that would exceed the 32k limit and fail.
+            var testContents = new StringBuilder();
+            var expectedTests = new List<TestInfo>();
+            var moduleName = "test_many";
+            var testFilePath = Path.Combine(testEnv.SourceFolderPath, $"{moduleName}.py");
+
+            for (int i = 0; i < 1000; i++) {
+                var funcName = $"test_func_{i}";
+                testContents.AppendLine($"def {funcName}(): pass");
+
+                expectedTests.Add(new TestInfo(
+                    funcName,
+                    $"{moduleName}.py::{moduleName}::{funcName}",
+                    testFilePath,
+                    i + 1,
+                    outcome: TestOutcome.Passed,
+                    pytestXmlClassName: moduleName
+                ));
+            }
+
+            File.WriteAllText(testFilePath, testContents.ToString());
+
+            var runSettings = new MockRunSettings(
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+                    .WithTestFilesFromFolder(testEnv.SourceFolderPath)
+                    .ToXml()
+            );
+
+            ExecuteTests(testEnv, runSettings, expectedTests.ToArray());
         }
 
         [TestMethod, Priority(0)]

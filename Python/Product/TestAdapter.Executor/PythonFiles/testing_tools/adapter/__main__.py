@@ -2,8 +2,9 @@
 # Licensed under the MIT License.
 
 from __future__ import absolute_import
-import os
+import io
 import argparse
+import os
 import sys
 
 from . import report, unittest
@@ -97,7 +98,7 @@ def parse_args(
 
     # Append tests pass by file test_list to toolargs
     if args.test_list and os.path.exists(args.test_list):
-        with open(args.test_list, 'r', encoding='utf-8') as tests:
+        with io.open(args.test_list, 'r', encoding='utf-8') as tests:
             toolargs.extend(t.strip() for t in tests)
    
     cmd = ns.pop('cmd')
