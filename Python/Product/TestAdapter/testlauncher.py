@@ -14,6 +14,7 @@
 # See the Apache Version 2.0 License for specific language governing
 # permissions and limitations under the License.
 
+import io
 import os
 import sys
 import traceback
@@ -81,7 +82,7 @@ def run(testRunner, test_file, args):
     """
 
     if test_file and os.path.exists(test_file):
-        with open(test_file, 'r', encoding='utf-8') as tests:
+        with io.open(test_file, 'r', encoding='utf-8') as tests:
             args.extend(t.strip() for t in tests)
 
     try:

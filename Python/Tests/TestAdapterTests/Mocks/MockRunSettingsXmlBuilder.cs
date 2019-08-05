@@ -37,7 +37,7 @@ namespace TestAdapterTests.Mocks {
         // {5} is one or more formatted _runSettingEnvironment lines
         // {6} is one or more formatted _runSettingSearch lines
 
-        private const string _runSettingProject = @"<Project name=""{0}"" home=""{1}"" nativeDebugging="""" djangoSettingsModule="""" workingDir=""{1}"" interpreter=""{2}"" pathEnv=""PYTHONPATH"" testFramework= ""{3}"" discoveryWaitTime= ""{7}""><Environment>{5}</Environment><SearchPaths>{6}</SearchPaths>
+        private const string _runSettingProject = @"<Project name=""{0}"" home=""{1}"" nativeDebugging="""" djangoSettingsModule="""" workingDir=""{1}"" interpreter=""{2}"" pathEnv=""PYTHONPATH"" testFramework= ""{3}"" discoveryWaitTime= ""{7}"" isWorkspace=""{8}""><Environment>{5}</Environment><SearchPaths>{6}</SearchPaths>
 {4}
 </Project>";
 
@@ -56,11 +56,12 @@ namespace TestAdapterTests.Mocks {
         private string _testDir;
         private string _interpreterPath;
         private int _discoveryWaitTimeInSeconds;
+        private bool _isWorkspace;
         private StringBuilder _environmentLines = new StringBuilder();
         private StringBuilder _searchLines = new StringBuilder();
         private StringBuilder _testLines = new StringBuilder();
 
-        public MockRunSettingsXmlBuilder(string testFramework, string interpreterPath, string resultsDir, string testDir, int discoveryWaitTimeInSeconds = -1 ) {
+        public MockRunSettingsXmlBuilder(string testFramework, string interpreterPath, string resultsDir, string testDir, int discoveryWaitTimeInSeconds = -1, bool isWorkspace = true) {
             _environmentLines = new StringBuilder();
             _searchLines = new StringBuilder();
             _testLines = new StringBuilder();
@@ -69,6 +70,7 @@ namespace TestAdapterTests.Mocks {
             _resultsDir = resultsDir;
             _testDir = testDir;
             _discoveryWaitTimeInSeconds = discoveryWaitTimeInSeconds;
+            _isWorkspace = isWorkspace;
         }
 
         public MockRunSettingsXmlBuilder WithEnvironmentVariable(string name, string val) {
@@ -106,7 +108,8 @@ namespace TestAdapterTests.Mocks {
                     _testLines.ToString(),
                     _environmentLines.ToString(),
                     _searchLines.ToString(),
-                    _discoveryWaitTimeInSeconds < 0 ? string.Empty : _discoveryWaitTimeInSeconds.ToString()
+                    _discoveryWaitTimeInSeconds < 0 ? string.Empty : _discoveryWaitTimeInSeconds.ToString(),
+                    _isWorkspace
                 ),
                 "false",
                 "false"
