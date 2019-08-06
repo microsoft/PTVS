@@ -66,7 +66,8 @@ namespace TestAdapterTests {
             Assert.AreEqual("C:\\Some\\Path", best);
         }
 
-        [TestMethod, Priority(0)]
+        //To be fixed in https://github.com/microsoft/PTVS/issues/5538
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         [TestCategory("10s")]
         public void RunUnittest() {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
@@ -345,7 +346,8 @@ if __name__ == '__main__':
             ExecuteTests(testEnv, runSettings, expectedTests);
         }
 
-        [TestMethod, Priority(0)]
+        //To be fixed in https://github.com/microsoft/PTVS/issues/5538
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         [TestCategory("10s")]
         public void RunUnittestInheritance() {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
@@ -412,7 +414,8 @@ if __name__ == '__main__':
             ExecuteTests(testEnv, runSettings, expectedTests);
         }
 
-        [TestMethod, Priority(0)]
+        //To be fixed in https://github.com/microsoft/PTVS/issues/5538
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         [TestCategory("10s")]
         public void RunUnittestImportError() {
             // A load error is when unittest module fails to load the test (prior to running it)
@@ -452,7 +455,8 @@ if __name__ == '__main__':
             ExecuteTests(testEnv, runSettings, expectedTests);
         }
 
-        [TestMethod, Priority(0)]
+        //To be fixed in https://github.com/microsoft/PTVS/issues/5538
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         [TestCategory("10s")]
         public void RunUnitTestStackTrace() {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
