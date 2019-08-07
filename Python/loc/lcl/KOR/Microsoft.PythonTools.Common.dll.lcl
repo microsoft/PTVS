@@ -3355,6 +3355,9 @@
       <Item ItemId=";ErrorOpeningCommandPrompt" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[An error occurred opening command prompt.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[명령 프롬프트를 여는 동안 오류가 발생했습니다.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -3370,6 +3373,9 @@
       <Item ItemId=";ErrorOpeningPowershell" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[An error occurred opening PowerShell.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[PowerShell을 여는 동안 오류가 발생했습니다.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -3394,6 +3400,9 @@
       <Item ItemId=";ErrorStartingInterpreter" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[An error occurred starting this interpreter.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[이 인터프리터를 시작하는 동안 오류가 발생했습니다.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -5098,36 +5107,54 @@
       <Item ItemId=";PyTestEnableInfoBarAction" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Enable pytest]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[pytest 사용]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";PyTestInstallAndEnableInfoBarAction" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Install and enable pytest]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[pytest 설치 및 사용]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";PyTestInstallInfoBarAction" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Install pytest]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[pytest 설치]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";PyTestInstalledConfigurationFileFound" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[A pytest configuration file was detected in the {0} {1}, but pytest is not enabled.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[{0} {1}에서 pytest 구성 파일이 검색되었지만, pytest가 사용하도록 설정되어 있지 않습니다.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";PyTestNotInstalled" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Pytest is enabled in the {0} {1}, but it is not installed in the active environment.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[{0} {1}에서 pytest가 사용하도록 설정되어 있지만, 활성 환경에 설치되어 있지 않습니다.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";PyTestNotInstalledConfigurationFileFound" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[A pytest configuration file was detected in the {0} {1}, but pytest is not installed or enabled.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[{0} {1}에서 pytest 구성 파일이 검색되었지만, pytest가 설치되어 있거나 사용하도록 설정되어 있지 않습니다.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -5386,18 +5413,27 @@
       <Item ItemId=";PythonTestDiscovererStartedMessage" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Starting {0} discovery for the {1} {2}. This can take up to {3} seconds.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[{1} {2}에 대해 {0} 검색을 시작합니다. 이 작업에는 최대 {3}초가 걸릴 수 있습니다.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";PythonTestDiscovererTimeoutErrorMessage" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Python test discovery timeout, possibly due to blocking call. Go to https://aka.ms/VSTestExplorerPython for more details on test discovery.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Python 테스트 검색이 시간 초과되었습니다. 호출 차단 때문인 것 같습니다. 테스트 검색에 대한 자세한 내용을 보려면 https://aka.ms/VSTestExplorerPython으로 이동하세요.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";PythonTestFileDetected" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[A file containing Python tests was detected in the {0} {1}, but the test framework is disabled.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[{0} {1}에서 Python 테스트를 포함하는 파일이 검색되었지만, 테스트 프레임워크가 사용하도록 설정되어 있지 않습니다.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -7171,6 +7207,9 @@
       <Item ItemId=";UnitTestEnableInfoBarAction" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Enable unittest]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[unittest 사용]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>

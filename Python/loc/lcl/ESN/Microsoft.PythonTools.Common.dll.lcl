@@ -3355,6 +3355,9 @@
       <Item ItemId=";ErrorOpeningCommandPrompt" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[An error occurred opening command prompt.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Error al abrir el símbolo del sistema.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -3370,6 +3373,9 @@
       <Item ItemId=";ErrorOpeningPowershell" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[An error occurred opening PowerShell.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Error al abrir PowerShell.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -3394,6 +3400,9 @@
       <Item ItemId=";ErrorStartingInterpreter" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[An error occurred starting this interpreter.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Error al iniciar el intérprete.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -5098,36 +5107,54 @@
       <Item ItemId=";PyTestEnableInfoBarAction" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Enable pytest]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Habilitar pytest]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";PyTestInstallAndEnableInfoBarAction" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Install and enable pytest]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Instalar y habilitar pytest]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";PyTestInstallInfoBarAction" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Install pytest]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Instalar pytest]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";PyTestInstalledConfigurationFileFound" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[A pytest configuration file was detected in the {0} {1}, but pytest is not enabled.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Se ha detectado un archivo de configuración de pytest en {0} {1}, pero pytest no está habilitado.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";PyTestNotInstalled" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Pytest is enabled in the {0} {1}, but it is not installed in the active environment.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Pytest está habilitado en {0} {1}, pero no está instalado en el entorno activo.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";PyTestNotInstalledConfigurationFileFound" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[A pytest configuration file was detected in the {0} {1}, but pytest is not installed or enabled.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Se ha detectado un archivo de configuración de pytest en {0} {1}, pero pytest no está instalado ni habilitado.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -5386,18 +5413,27 @@
       <Item ItemId=";PythonTestDiscovererStartedMessage" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Starting {0} discovery for the {1} {2}. This can take up to {3} seconds.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Iniciando la detección de {0} para {1} {2}. Esto puede tardar hasta {3} segundos.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";PythonTestDiscovererTimeoutErrorMessage" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Python test discovery timeout, possibly due to blocking call. Go to https://aka.ms/VSTestExplorerPython for more details on test discovery.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Se ha agotado el tiempo de expiración de la detección de pruebas de Python, posiblemente debido a una llamada de bloqueo. Vaya a https://aka.ms/VSTestExplorerPython para obtener más detalles sobre la detección de pruebas.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";PythonTestFileDetected" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[A file containing Python tests was detected in the {0} {1}, but the test framework is disabled.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Se ha detectado un archivo que contiene pruebas de Python en {0} {1}, pero el marco de pruebas está deshabilitado.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -7171,6 +7207,9 @@
       <Item ItemId=";UnitTestEnableInfoBarAction" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Enable unittest]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Habilitar unittest]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
