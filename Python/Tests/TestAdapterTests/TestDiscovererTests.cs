@@ -82,7 +82,7 @@ namespace TestAdapterTests {
             // since that would exceed the 32k limit and fail.
             var isWorkspace = false;
             var expectedTests = new List<TestInfo>();
-            for (int i = 0; i < 1000; i ++) {
+            for (int i = 0; i < 1000; i++) {
                 var moduleName = $"test_file_with_long_file_name_{i}";
                 var funcName = $"test_func_{i}";
                 var testFilePath = Path.Combine(testEnv.SourceFolderPath, $"{moduleName}.py");
@@ -120,7 +120,7 @@ namespace TestAdapterTests {
                     .WithTestFilesFromFolder(testEnv.SourceFolderPath)
                     .ToXml()
             );
-            
+
             var discoveryContext = new MockDiscoveryContext(runSettings);
             var discoverySink = new MockTestCaseDiscoverySink();
             var logger = new MockMessageLogger();
@@ -165,15 +165,14 @@ namespace TestAdapterTests {
             DiscoverTests(testEnv, new[] { testFilePath }, runSettings, expectedTests);
         }
 
-        [Ignore] // discovers 0 tests, maybe pytest cannot handle this?
         [TestMethod, Priority(0)]
         [TestCategory("10s")]
-        public void DiscoverPytestSyntaxError() {
+        public void DiscoverPytestSyntaxErrorPartialResults() {
             // one file has a valid passing test,
             // the other has a test with a syntax error in it
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
 
-            FileUtils.CopyDirectory(TestData.GetPath("TestData", "TestDiscoverer", "SyntaxError"), testEnv.SourceFolderPath);
+            FileUtils.CopyDirectory(TestData.GetPath("TestData", "TestDiscoverer", "SyntaxErrorPytest"), testEnv.SourceFolderPath);
 
             var testFilePath1 = Path.Combine(testEnv.SourceFolderPath, "test_basic.py");
             var testFilePath2 = Path.Combine(testEnv.SourceFolderPath, "test_syntax_error.py");
@@ -190,6 +189,43 @@ namespace TestAdapterTests {
             );
 
             DiscoverTests(testEnv, new[] { testFilePath1, testFilePath2 }, runSettings, expectedTests);
+        }
+
+        [TestMethod, Priority(0)]
+        [TestCategory("10s")]
+        public void DiscoverPytestSyntaxErrorLogErrors() {
+            // one file has a valid passing test,
+            // the other has a test with a syntax error in it
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
+
+            FileUtils.CopyDirectory(TestData.GetPath("TestData", "TestDiscoverer", "SyntaxErrorPytest"), testEnv.SourceFolderPath);
+
+            var testFilePath1 = Path.Combine(testEnv.SourceFolderPath, "test_basic.py");
+            var testFilePath2 = Path.Combine(testEnv.SourceFolderPath, "test_syntax_error.py");
+
+            var expectedTests = new[] {
+                new TestInfo("test_success", "test_basic.py::test_basic::test_success", testFilePath1, 1),
+            };
+
+            var runSettings = new MockRunSettings(
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+                    .WithTestFile(testFilePath1)
+                    .WithTestFile(testFilePath2)
+                    .ToXml()
+            );
+
+            var discoveryContext = new MockDiscoveryContext(runSettings);
+            var discoverySink = new MockTestCaseDiscoverySink();
+            var logger = new MockMessageLogger();
+            var discoverer = new PythonTestDiscoverer();
+
+            discoverer.DiscoverTests(new[] { testFilePath1, testFilePath2 }, discoveryContext, logger, discoverySink);
+
+            var errors = string.Join(Environment.NewLine, logger.GetErrors());
+
+            AssertUtil.Contains(errors,
+                "SyntaxError: invalid syntax"
+            );
         }
 
         [Ignore] // discovers 0 tests, our pytest discovery cannot handle this?
@@ -244,6 +280,84 @@ namespace TestAdapterTests {
 
             DiscoverTests(testEnv, new[] { testFilePath1, testFilePath2 }, runSettings, expectedTests);
         }
+
+        [TestMethod, Priority(0)]
+        [TestCategory("10s")]
+        public void DiscoverUnitTestSyntaxErrorPartialResults() {
+            // one file has a valid passing test,
+            // the other has an unknown module import at global scope
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
+
+            FileUtils.CopyDirectory(TestData.GetPath("TestData", "TestDiscoverer", "SyntaxErrorUnittest"), testEnv.SourceFolderPath);
+
+            var testFilePath1 = Path.Combine(testEnv.SourceFolderPath, "test_basic_ut.py");
+            var testFilePath2 = Path.Combine(testEnv.SourceFolderPath, "test_syntax_error_ut.py");
+
+            var expectedTests = new[] {
+                new TestInfo("test_ut_fail", "test_basic_ut.py::TestClassUT::test_ut_fail", testFilePath1, 4),
+                new TestInfo("test_ut_pass", "test_basic_ut.py::TestClassUT::test_ut_pass", testFilePath1, 7),
+            };
+
+            var runSettings = new MockRunSettings(
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+                    .WithTestFile(testFilePath1)
+                    .WithTestFile(testFilePath2)
+                    .ToXml()
+            );
+
+            var discoveryContext = new MockDiscoveryContext(runSettings);
+            var discoverySink = new MockTestCaseDiscoverySink();
+            var logger = new MockMessageLogger();
+            var discoverer = new PythonTestDiscoverer();
+
+            discoverer.DiscoverTests(new[] { testFilePath1, testFilePath2 }, discoveryContext, logger, discoverySink);
+
+            ValidateDiscoveredTests(testEnv.TestFramework, discoverySink.Tests, expectedTests);
+        }
+
+
+        [TestMethod, Priority(0)]
+        [TestCategory("10s")]
+        public void DiscoverUnitTestSyntaxErrorLogErrors() {
+            // one file has a valid passing test,
+            // the other has an unknown module import at global scope
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
+
+            FileUtils.CopyDirectory(TestData.GetPath("TestData", "TestDiscoverer", "SyntaxErrorUnittest"), testEnv.SourceFolderPath);
+
+            var testFilePath1 = Path.Combine(testEnv.SourceFolderPath, "test_basic_ut.py");
+            var testFilePath2 = Path.Combine(testEnv.SourceFolderPath, "test_syntax_error_ut.py");
+
+            var expectedTests = new[] {
+                new TestInfo("test_ut_fail", "test_basic_ut.py::TestClassUT::test_ut_fail", testFilePath1, 4),
+                new TestInfo("test_ut_pass", "test_basic_ut.py::TestClassUT::test_ut_pass", testFilePath1, 7),
+            };
+
+            var runSettings = new MockRunSettings(
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+                    .WithTestFile(testFilePath1)
+                    .WithTestFile(testFilePath2)
+                    .ToXml()
+            );
+
+            var discoveryContext = new MockDiscoveryContext(runSettings);
+            var discoverySink = new MockTestCaseDiscoverySink();
+            var logger = new MockMessageLogger();
+            var discoverer = new PythonTestDiscoverer();
+
+            discoverer.DiscoverTests(new[] { testFilePath1, testFilePath2 }, discoveryContext, logger, discoverySink);
+           
+            var errors = string.Join(Environment.NewLine, logger.GetErrors());
+
+            if (Version.Version > Microsoft.PythonTools.Parsing.PythonLanguageVersion.V27) {
+                AssertUtil.Contains(errors,
+                    "SyntaxError: invalid syntax"
+                );
+            } else {
+                Assert.Inconclusive("Python 2.7 unittest errors are not currently being printed to error logs");
+            }
+        }
+
 
         [Ignore] // TODO: discovers 3 tests instead of 2, it shouldn't be finding the one in example_pt.py
         [TestMethod, Priority(0)]
@@ -330,7 +444,7 @@ namespace TestAdapterTests {
         [TestCategory("10s")]
         public void DiscoverUnittest() {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
-           
+
             var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_ut.py");
             File.Copy(TestData.GetPath("TestData", "TestDiscoverer", "BasicUnittest", "test_ut.py"), testFilePath);
 
@@ -433,7 +547,7 @@ if __name__ == '__main__':
             // disable line checking until we fix https://github.com/microsoft/PTVS/issues/5497
             var expectedTests = new[] {
                 new TestInfo("test_ut_fail", "test_decorators_ut.py::TestClassDecoratorsUT::test_ut_fail", testFilePath, -1),
-                new TestInfo("test_ut_pass", "test_decorators_ut.py::TestClassDecoratorsUT::test_ut_pass", testFilePath, -1), 
+                new TestInfo("test_ut_pass", "test_decorators_ut.py::TestClassDecoratorsUT::test_ut_pass", testFilePath, -1),
             };
 
             var runSettings = new MockRunSettings(
@@ -525,6 +639,53 @@ if __name__ == '__main__':
 
             DiscoverTests(testEnv, new[] { baseTestFilePath, derivedTestFilePath }, runSettings, expectedTests);
         }
+
+        [TestMethod, Priority(0)]
+        [TestCategory("10s")]
+        public void DiscoverUnitTestWarnings() {
+            // one file has a valid passing test,
+            // the other has an unknown module import at global scope
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
+
+            FileUtils.CopyDirectory(TestData.GetPath("TestData", "TestDiscoverer", "Warnings"), testEnv.SourceFolderPath);
+
+            var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_warnings.py");
+            var expectedTests = new[] {
+                new TestInfo("test_A", "test_warnings.py::Test_WarnClass::test_A", testFilePath, 6),
+            };
+
+            var runSettings = new MockRunSettings(
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+                    .WithTestFile(testFilePath)
+                    .ToXml()
+            );
+
+            DiscoverTests(testEnv, new[] { testFilePath }, runSettings, expectedTests);
+        }
+
+        [TestMethod, Priority(0)]
+        [TestCategory("10s")]
+        public void DiscoverPytestWarnings() {
+            // one file has a valid passing test,
+            // the other has an unknown module import at global scope
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
+
+            FileUtils.CopyDirectory(TestData.GetPath("TestData", "TestDiscoverer", "Warnings"), testEnv.SourceFolderPath);
+
+            var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_warnings.py");
+            var expectedTests = new[] {
+                new TestInfo("test_A", "test_warnings.py::Test_WarnClass::test_A", testFilePath, 6),
+            };
+
+            var runSettings = new MockRunSettings(
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+                    .WithTestFile(testFilePath)
+                    .ToXml()
+            );
+
+            DiscoverTests(testEnv, new[] { testFilePath }, runSettings, expectedTests);
+        }
+
 
         private static void DiscoverTests(TestEnvironment testEnv, string[] sources, MockRunSettings runSettings, TestInfo[] expectedTests) {
             var discoveryContext = new MockDiscoveryContext(runSettings);

@@ -31,7 +31,7 @@ def discover(pytestargs=None, hidestdio=False,
         if hidestdio:
             print(stdio.getvalue(), file=sys.stderr)
             sys.stdout.flush()
-        raise Exception('pytest discovery failed (exit code {})'.format(ec))
+        print('pytest discovery failed (exit code {})'.format(ec))
     if not _plugin._started:
         if hidestdio:
             print(stdio.getvalue(), file=sys.stderr)
