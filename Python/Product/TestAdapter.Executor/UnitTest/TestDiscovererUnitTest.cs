@@ -34,7 +34,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.TestAdapter.Config;
 using Microsoft.PythonTools.TestAdapter.Services;
@@ -112,8 +111,8 @@ namespace Microsoft.PythonTools.TestAdapter.UnitTest {
             arguments.Add(DiscoveryAdapterPath);
             arguments.Add("discover");
             arguments.Add("unittest");
+            //Note unittest specific options go after this separator
             arguments.Add("--");
-
             arguments.Add(_settings.UnitTestRootDir);
             arguments.Add(_settings.UnitTestPattern);
 

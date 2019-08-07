@@ -106,6 +106,7 @@
     <Compile Include="UnitTest\TestDiscovererUnitTest.cs" />
     <Compile Include="UnitTest\UnitTestDiscoveryResults.cs" />
     <Compile Include="UnitTest\UnitTestExtensions.cs" />
+    <Compile Include="Utils\TestUtils.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="PythonFiles\testing_tools\adapter\discovery.py">

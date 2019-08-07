@@ -2,13 +2,13 @@
 # Licensed under the MIT License.
 
 from __future__ import absolute_import
-
+import io
 import argparse
+import os
 import sys
 
 from . import report, unittest
 from .errors import UnsupportedToolError, UnsupportedCommandError
-
 
 def default_subparser(cmd, name, parent):
     parser = parent.add_parser(name)
@@ -84,6 +84,7 @@ def parse_args(
                 subsub.add_argument('--no-hide-stdio', dest='hidestdio',
                                     action='store_false')
                 subsub.add_argument('--pretty', action='store_true')
+                subsub.add_argument('--test-list',  metavar='<file>', type=str, help='read tests from this file')
 
     # Parse the args!
     if '--' in argv:
@@ -95,6 +96,11 @@ def parse_args(
     args = parser.parse_args(argv)
     ns = vars(args)
 
+    # Append tests pass by file test_list to toolargs
+    if args.test_list and os.path.exists(args.test_list):
+        with io.open(args.test_list, 'r', encoding='utf-8') as tests:
+            toolargs.extend(t.strip() for t in tests)
+   
     cmd = ns.pop('cmd')
     if not cmd:
         parser.error('missing command')

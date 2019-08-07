@@ -14,16 +14,17 @@
 # See the Apache Version 2.0 License for specific language governing
 # permissions and limitations under the License.
 
+import io
 import os
 import sys
 import traceback
 
 def main():
-    cwd, testRunner, secret, port, debugger_search_path, args = parse_argv()
+    cwd, testRunner, secret, port, debugger_search_path, test_file, args = parse_argv()
     sys.path[0] = os.getcwd()
     os.chdir(cwd)
     load_debugger(secret, port, debugger_search_path)
-    run(testRunner, args)
+    run(testRunner, test_file, args)
 
 def parse_argv():
     """Parses arguments for use with the test launcher.
@@ -33,10 +34,11 @@ def parse_argv():
     3. debugSecret
     4. debugPort
     5. Debugger search path
-    6. Rest of the arguments are passed into the test runner.
+    6. TestFile, with a list of testIds to run
+    7. Rest of the arguments are passed into the test runner.
     """
 
-    return (sys.argv[1], sys.argv[2], sys.argv[3], int(sys.argv[4]), sys.argv[5], sys.argv[6:])
+    return (sys.argv[1], sys.argv[2], sys.argv[3], int(sys.argv[4]), sys.argv[5], sys.argv[6], sys.argv[7:])
 
 def load_debugger(secret, port, debugger_search_path):
     # Load the debugger package
@@ -73,11 +75,15 @@ Press Enter to close. . .''')
             input()
         sys.exit(1)
 
-def run(testRunner, args):
+def run(testRunner, test_file, args):
     """Runs the test
     testRunner -- test runner to be used `pytest` or `nose`
     args -- arguments passed into the test runner
     """
+
+    if test_file and os.path.exists(test_file):
+        with io.open(test_file, 'r', encoding='utf-8') as tests:
+            args.extend(t.strip() for t in tests)
 
     try:
         if testRunner == 'pytest':

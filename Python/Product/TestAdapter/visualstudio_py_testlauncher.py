@@ -19,6 +19,7 @@ from __future__ import with_statement
 __author__ = "Microsoft Corporation <ptvshelp@microsoft.com>"
 __version__ = "3.0.0.0"
 
+import io
 import os.path
 import sys
 import json
@@ -38,13 +39,6 @@ try:
 except:
     from unittest import _TextTestResult as TextTestResult
     _IS_OLD_UNITTEST = True
-
-if sys.version_info[0] < 3:
-    if sys.version_info[:2] < (2, 6):
-        from codecs import open
-    else:
-        from io import open
-
 
 class _TestOutput(object):
     """file like object which redirects output to the repl window."""
@@ -296,7 +290,7 @@ def main():
 
     all_tests = list(opts.tests or [])
     if opts.test_list:
-        with open(opts.test_list, 'r', encoding='utf-8') as test_list:
+        with io.open(opts.test_list, 'r', encoding='utf-8') as test_list:
             all_tests.extend(t.strip() for t in test_list)
 
     if opts.dry_run:
