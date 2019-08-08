@@ -44,8 +44,8 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
             LogInfo(Strings.PythonTestDiscovererStartedMessage.FormatUI(PythonConstants.PytestText, _settings.ProjectName, workspaceText, _settings.DiscoveryWaitTimeInSeconds));
 
             var env = InitializeEnvironment(sources, _settings);
-            var outputfilename = Path.GetTempFileName();
-            var arguments = GetArguments(sources, _settings, outputfilename);
+            var outputFilePath = Path.GetTempFileName();
+            var arguments = GetArguments(sources, _settings, outputFilePath);
        
             DebugInfo("cd " + _settings.WorkingDirectory);
             DebugInfo("set " + _settings.PathEnv + "=" + env[_settings.PathEnv]);
@@ -68,12 +68,12 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
                 return;
             }
 
-            if (!File.Exists(outputfilename)) {
-                Error(Strings.PythonDiscoveryResultsNotFound.FormatUI(outputfilename));
+            if (!File.Exists(outputFilePath)) {
+                Error(Strings.PythonDiscoveryResultsNotFound.FormatUI(outputFilePath));
                 return;
             }
 
-            string json = File.ReadAllText(outputfilename);
+            string json = File.ReadAllText(outputFilePath);
             if (string.IsNullOrEmpty(json)) {
                 return;
             }
@@ -84,10 +84,10 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
                 CreateVsTests(results, discoverySink);
             } catch (InvalidOperationException ex) {
                 Error("Failed to parse: {0}".FormatInvariant(ex.Message));
-                Error(json ?? string.Empty);
+                Error(json);
             } catch (JsonException ex) {
                 Error("Failed to parse: {0}".FormatInvariant(ex.Message));
-                Error(json ?? string.Empty);
+                Error(json);
             }
         }
 
