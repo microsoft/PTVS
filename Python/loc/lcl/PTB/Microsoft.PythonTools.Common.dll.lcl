@@ -7207,6 +7207,9 @@
       <Item ItemId=";UnitTestEnableInfoBarAction" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Enable unittest]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Habilitar teste de unidade]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
