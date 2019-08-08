@@ -1387,6 +1387,9 @@
       <Item ItemId=";_testFramework.Items2" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Combo Box">
           <Val><![CDATA[unittest]]></Val>
+          <Tgt Cat="Combo Box" Stat="Loc" Orig="New">
+            <Val><![CDATA[teste de unidade]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Dlg" />
       </Item>
