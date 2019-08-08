@@ -5505,11 +5505,65 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Test framework.
+        /// </summary>
+        public static string PythonTestPropertyPageFrameworkHelpText {
+            get {
+                return ResourceManager.GetString("PythonTestPropertyPageFrameworkHelpText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Test _framework:.
+        /// </summary>
+        public static string PythonTestPropertyPageFrameworkLabel {
+            get {
+                return ResourceManager.GetString("PythonTestPropertyPageFrameworkLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Test.
         /// </summary>
         public static string PythonTestPropertyPageLabel {
             get {
                 return ResourceManager.GetString("PythonTestPropertyPageLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Pattern.
+        /// </summary>
+        public static string PythonTestPropertyPageUnittestPatternHelpText {
+            get {
+                return ResourceManager.GetString("PythonTestPropertyPageUnittestPatternHelpText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to _Pattern:.
+        /// </summary>
+        public static string PythonTestPropertyPageUnittestPatternLabel {
+            get {
+                return ResourceManager.GetString("PythonTestPropertyPageUnittestPatternLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Root directory.
+        /// </summary>
+        public static string PythonTestPropertyPageUnittestRootDirectoryHelpText {
+            get {
+                return ResourceManager.GetString("PythonTestPropertyPageUnittestRootDirectoryHelpText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Root _directory:.
+        /// </summary>
+        public static string PythonTestPropertyPageUnittestRootDirectoryLabel {
+            get {
+                return ResourceManager.GetString("PythonTestPropertyPageUnittestRootDirectoryLabel", resourceCulture);
             }
         }
         

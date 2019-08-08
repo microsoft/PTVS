@@ -664,6 +664,24 @@ See PublishPropertyControl_LocationLabel for examples.</comment>
   <data name="PythonGeneralPropertyPageControl_UseGlobalDefaultInterpreter" xml:space="preserve">
     <value>(Use global default)</value>
   </data>
+  <data name="PythonTestPropertyPageFrameworkLabel" xml:space="preserve">
+    <value>Test _framework:</value>
+  </data>
+  <data name="PythonTestPropertyPageFrameworkHelpText" xml:space="preserve">
+    <value>Test framework</value>
+  </data>
+  <data name="PythonTestPropertyPageUnittestRootDirectoryLabel" xml:space="preserve">
+    <value>Root _directory:</value>
+  </data>
+  <data name="PythonTestPropertyPageUnittestRootDirectoryHelpText" xml:space="preserve">
+    <value>Root directory</value>
+  </data>
+  <data name="PythonTestPropertyPageUnittestPatternLabel" xml:space="preserve">
+    <value>_Pattern:</value>
+  </data>
+  <data name="PythonTestPropertyPageUnittestPatternHelpText" xml:space="preserve">
+    <value>Pattern</value>
+  </data>
   <data name="AddingProjectEnvironmentToWrongProjectException" xml:space="preserve">
     <value>Adding project environment {0} to wrong project {1}</value>
     <comment>{0} is environment id
