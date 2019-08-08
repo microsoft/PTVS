@@ -5226,6 +5226,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Discovery results file &apos;{0}&apos; was not found..
+        /// </summary>
+        public static string PythonDiscoveryResultsNotFound {
+            get {
+                return ResourceManager.GetString("PythonDiscoveryResultsNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to  -- Other installed interpreters --.
         /// </summary>
         public static string PythonGeneralPropertyPageControl_OtherInterpretersSeparator {

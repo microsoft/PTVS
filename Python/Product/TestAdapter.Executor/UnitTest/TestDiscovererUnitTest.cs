@@ -54,34 +54,48 @@ namespace Microsoft.PythonTools.TestAdapter.UnitTest {
 
         public void DiscoverTests(IEnumerable<string> sources, IMessageLogger logger, ITestCaseDiscoverySink discoverySink) {
             _logger = logger;
-            string json = null;
-
             var workspaceText = _settings.IsWorkspace ? Strings.WorkspaceText : Strings.ProjectText;
             LogInfo(Strings.PythonTestDiscovererStartedMessage.FormatUI(PythonConstants.UnitTestText, _settings.ProjectName, workspaceText, _settings.DiscoveryWaitTimeInSeconds));
 
-            try {
-                var env = InitializeEnvironment(sources, _settings);
-                var arguments = GetArguments(sources);
-                DebugInfo("cd " + _settings.WorkingDirectory);
-                DebugInfo("set " + _settings.PathEnv + "=" + env[_settings.PathEnv]);
-                DebugInfo($"{_settings.InterpreterPath} {string.Join(" ", arguments)}");
+            var env = InitializeEnvironment(sources, _settings);
+            var outputFilePath = Path.GetTempFileName();
+            var arguments = GetArguments(sources, outputFilePath);
 
-                json = ProcessExecute.RunWithTimeout(
+            DebugInfo("cd " + _settings.WorkingDirectory);
+            DebugInfo("set " + _settings.PathEnv + "=" + env[_settings.PathEnv]);
+            DebugInfo($"{_settings.InterpreterPath} {string.Join(" ", arguments)}");
+
+            try {
+                var stdout = ProcessExecute.RunWithTimeout(
                     _settings.InterpreterPath,
                     env,
                     arguments,
                     _settings.WorkingDirectory,
                     _settings.PathEnv,
                     _settings.DiscoveryWaitTimeInSeconds
-                    );
+                );
+                if (!String.IsNullOrEmpty(stdout)) {
+                    Error(stdout);
+                }
             } catch (TimeoutException) {
                 Error(Strings.PythonTestDiscovererTimeoutErrorMessage);
+                return;
+            }
+
+            if (!File.Exists(outputFilePath)) {
+                Error(Strings.PythonDiscoveryResultsNotFound.FormatUI(outputFilePath));
+                return;
+            }
+
+            string json = File.ReadAllText(outputFilePath);
+            if (String.IsNullOrEmpty(json)) {
                 return;
             }
 
             List<UnitTestDiscoveryResults> results = null;
             try {
                 results = JsonConvert.DeserializeObject<List<UnitTestDiscoveryResults>>(json);
+                CreateVsTests(results, logger, discoverySink);
             } catch (InvalidOperationException ex) {
                 Error("Failed to parse: {0}".FormatInvariant(ex.Message));
                 Error(json);
@@ -89,16 +103,12 @@ namespace Microsoft.PythonTools.TestAdapter.UnitTest {
                 Error("Failed to parse: {0}".FormatInvariant(ex.Message));
                 Error(json);
             }
-
-            CreateVsTests(results, logger, discoverySink);
         }
 
         private void CreateVsTests(IEnumerable<UnitTestDiscoveryResults> unitTestResults, IMessageLogger logger, ITestCaseDiscoverySink discoverySink) {
             foreach (var test in unitTestResults?.SelectMany(result => result.Tests.Select(test => test)).MaybeEnumerate()) {
                 try {
                     TestCase tc = test.ToVsTestCase(_settings.IsWorkspace, _settings.ProjectHome);
-                    DebugInfo($"{tc.DisplayName} Source:{tc.Source} Line:{tc.LineNumber}");
-
                     discoverySink?.SendTestCase(tc);
                 } catch (Exception ex) {
                     Error(ex.Message);
@@ -106,11 +116,13 @@ namespace Microsoft.PythonTools.TestAdapter.UnitTest {
             }
         }
 
-        public string[] GetArguments(IEnumerable<string> sources) {
+        public string[] GetArguments(IEnumerable<string> sources, string outputfilename) {
             var arguments = new List<string>();
             arguments.Add(DiscoveryAdapterPath);
             arguments.Add("discover");
             arguments.Add("unittest");
+            arguments.Add("--output-file");
+            arguments.Add(outputfilename);
             //Note unittest specific options go after this separator
             arguments.Add("--");
             arguments.Add(_settings.UnitTestRootDir);

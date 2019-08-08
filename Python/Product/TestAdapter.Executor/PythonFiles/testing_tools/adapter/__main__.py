@@ -85,6 +85,7 @@ def parse_args(
                                     action='store_false')
                 subsub.add_argument('--pretty', action='store_true')
                 subsub.add_argument('--test-list',  metavar='<file>', type=str, help='read tests from this file')
+                subsub.add_argument('--output-file',  metavar='<file>', type=str, help='file name to use for tests found')
 
     # Parse the args!
     if '--' in argv:
@@ -126,9 +127,24 @@ def main(toolname, cmdname, subargs, toolargs,
         raise UnsupportedCommandError(cmdname)
 
     parents, result = run(toolargs, **subargs)
-    report_result(result, parents,
-                  **subargs
-                  )
+    
+    if 'output_file' in subargs:
+        with io.open(subargs['output_file'], 'wt') as handle:
+            def file_print(message):
+                if sys.version_info > (3,):
+                    handle.write(message)
+                else:
+                    handle.write(message.decode('utf-8'))
+            
+            report_result(result, 
+                parents, 
+                _send=file_print,
+                **subargs
+                )
+    else:
+        report_result(result, parents,
+            **subargs
+            )
 
 
 if __name__ == '__main__':
