@@ -38,10 +38,12 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
             _settings = settings;
         }
 
-        public void DiscoverTests(IEnumerable<string> sources,
-                                  IMessageLogger logger,
-                                  ITestCaseDiscoverySink discoverySink,
-                                  Dictionary<string, PythonProjectSettings> sourceToProjectSettings) {
+        public void DiscoverTests(
+            IEnumerable<string> sources,
+            IMessageLogger logger,
+            ITestCaseDiscoverySink discoverySink,
+            Dictionary<string, PythonProjectSettings> sourceToProjectSettings
+        ) {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             var workspaceText = _settings.IsWorkspace ? Strings.WorkspaceText : Strings.ProjectText;
             LogInfo(Strings.PythonTestDiscovererStartedMessage.FormatUI(PythonConstants.PytestText, _settings.ProjectName, workspaceText, _settings.DiscoveryWaitTimeInSeconds));
@@ -94,9 +96,11 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
             }
         }
 
-        private void CreateVsTests(IEnumerable<PytestDiscoveryResults> discoveryResults,
-                                   ITestCaseDiscoverySink discoverySink,
-                                   Dictionary<string, PythonProjectSettings> sourceToProjectSettings) {
+        private void CreateVsTests(
+            IEnumerable<PytestDiscoveryResults> discoveryResults,
+            ITestCaseDiscoverySink discoverySink,
+            Dictionary<string, PythonProjectSettings> sourceToProjectSettings
+        ) {
             foreach (var result in discoveryResults.MaybeEnumerate()) {
                 var parentMap = result.Parents.ToDictionary(p => p.Id, p => p);
                 foreach (PytestTest test in result.Tests) {

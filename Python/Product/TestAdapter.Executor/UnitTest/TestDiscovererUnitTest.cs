@@ -52,10 +52,12 @@ namespace Microsoft.PythonTools.TestAdapter.UnitTest {
             _settings = settings;
         }
 
-        public void DiscoverTests(IEnumerable<string> sources,
-                                  IMessageLogger logger,
-                                  ITestCaseDiscoverySink discoverySink,
-                                  Dictionary<string, PythonProjectSettings> sourceToProjectSettings) {
+        public void DiscoverTests(
+            IEnumerable<string> sources,
+            IMessageLogger logger,
+            ITestCaseDiscoverySink discoverySink,
+            Dictionary<string, PythonProjectSettings> sourceToProjectSettings
+         ) {
             _logger = logger;
             var workspaceText = _settings.IsWorkspace ? Strings.WorkspaceText : Strings.ProjectText;
             LogInfo(Strings.PythonTestDiscovererStartedMessage.FormatUI(PythonConstants.UnitTestText, _settings.ProjectName, workspaceText, _settings.DiscoveryWaitTimeInSeconds));
@@ -108,10 +110,12 @@ namespace Microsoft.PythonTools.TestAdapter.UnitTest {
             }
         }
 
-        private void CreateVsTests(IEnumerable<UnitTestDiscoveryResults> unitTestResults,
-                                   IMessageLogger logger,
-                                   ITestCaseDiscoverySink discoverySink,
-                                   Dictionary<string, PythonProjectSettings> sourceToProjectSettings) {
+        private void CreateVsTests(
+            IEnumerable<UnitTestDiscoveryResults> unitTestResults,
+            IMessageLogger logger,
+            ITestCaseDiscoverySink discoverySink,
+            Dictionary<string, PythonProjectSettings> sourceToProjectSettings
+        ) {
             foreach (var test in unitTestResults?.SelectMany(result => result.Tests.Select(test => test)).MaybeEnumerate()) {
                 try {
                     if(!sourceToProjectSettings.ContainsKey(test.Source)) {

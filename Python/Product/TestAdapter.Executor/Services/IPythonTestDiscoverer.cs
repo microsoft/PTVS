@@ -22,9 +22,11 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
 namespace Microsoft.PythonTools.TestAdapter.Services {
     interface IPythonTestDiscoverer {
-        void DiscoverTests(IEnumerable<string> sources,
-                           IMessageLogger logger,
-                           ITestCaseDiscoverySink discoverySink,
-                           Dictionary<string, PythonProjectSettings> sourceToProjectSettings);
+        void DiscoverTests(
+            IEnumerable<string> sources,
+            IMessageLogger logger,
+            ITestCaseDiscoverySink discoverySink,
+            Dictionary<string, PythonProjectSettings> sourceToProjectSettings
+        );
     }
 }

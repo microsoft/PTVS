@@ -33,9 +33,12 @@ namespace Microsoft.PythonTools.TestAdapter {
     [FileExtension(".py")]
     [DefaultExecutorUri(PythonConstants.PytestExecutorUriString)]
     public class PythonTestDiscoverer : ITestDiscoverer {
-        public void DiscoverTests(IEnumerable<string> sources, IDiscoveryContext discoveryContext, IMessageLogger logger, ITestCaseDiscoverySink discoverySink) {
-            //MessageBox.Show("Discover: " + Process.GetCurrentProcess().Id);
-
+        public void DiscoverTests(
+            IEnumerable<string> sources,
+            IDiscoveryContext discoveryContext,
+            IMessageLogger logger,
+            ITestCaseDiscoverySink discoverySink
+        ) {
             if (sources == null) {
                 throw new ArgumentNullException(nameof(sources));
             }
@@ -51,13 +54,14 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
         }
 
-        private void DiscoverTestGroup(IGrouping<PythonProjectSettings, string> testGroup,
-                                       IDiscoveryContext discoveryContext,
-                                       IMessageLogger logger,
-                                       ITestCaseDiscoverySink discoverySink,
-                                       Dictionary<string, PythonProjectSettings> sourceToProjSettings) {
+        private void DiscoverTestGroup(
+            IGrouping<PythonProjectSettings, string> testGroup,
+            IDiscoveryContext discoveryContext,
+            IMessageLogger logger,
+            ITestCaseDiscoverySink discoverySink,
+            Dictionary<string, PythonProjectSettings> sourceToProjSettings
+        ) {
             PythonProjectSettings settings = testGroup.Key;
-
             try {
                 var discovery = DiscovererFactory.GetDiscoverer(settings);
                 discovery.DiscoverTests(testGroup, logger, discoverySink, sourceToProjSettings);
