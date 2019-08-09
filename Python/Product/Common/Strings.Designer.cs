@@ -3087,6 +3087,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Go to https://aka.ms/VSTestExplorerPython for more details on test discovery configuration..
+        /// </summary>
+        public static string DiscoveryConfigurationMessage {
+            get {
+                return ResourceManager.GetString("DiscoveryConfigurationMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Python Documentation.
         /// </summary>
         public static string DocumentationClassificationType {

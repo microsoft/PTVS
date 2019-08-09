@@ -15,20 +15,15 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.TestAdapter.Config;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 namespace Microsoft.PythonTools.TestAdapter.UnitTest {
     public static class UnitTestExtensions {
 
-        public static TestCase ToVsTestCase(this UnitTestTestCase test,
-                                            bool isWorkspace,
-                                            string projectHome) {
-            
+        public static TestCase ToVsTestCase(this UnitTestTestCase test, string projectHome) {
             var relativeModulePath = PathUtils.CreateFriendlyFilePath(projectHome, test.Source);
             var fullyQualifiedName = MakeFullyQualifiedTestName(relativeModulePath, test.Id);
             var testCase = new TestCase(fullyQualifiedName, PythonConstants.UnitTestExecutorUri, test.Source) {

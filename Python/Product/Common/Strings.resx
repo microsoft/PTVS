@@ -2942,4 +2942,7 @@ Please specify at least one package.</value>
     <value>Test container was not found for {0}.</value>
     <comment>{0} is the test info</comment>
   </data>
+  <data name="DiscoveryConfigurationMessage" xml:space="preserve">
+    <value>Go to https://aka.ms/VSTestExplorerPython for more details on test discovery configuration.</value>
+  </data>
 </root>

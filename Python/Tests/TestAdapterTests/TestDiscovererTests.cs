@@ -249,7 +249,6 @@ namespace TestAdapterTests {
             );
         }
 
-        [Ignore] // discovers 0 tests, our pytest discovery cannot handle this?
         [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public void DiscoverPytestImportError() {

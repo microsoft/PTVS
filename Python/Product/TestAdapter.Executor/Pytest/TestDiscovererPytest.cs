@@ -101,6 +101,7 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
             ITestCaseDiscoverySink discoverySink,
             Dictionary<string, PythonProjectSettings> sourceToProjectSettings
         ) {
+            bool showConfigurationHint = false;
             foreach (var result in discoveryResults.MaybeEnumerate()) {
                 var parentMap = result.Parents.ToDictionary(p => p.Id, p => p);
                 foreach (PytestTest test in result.Tests) {
@@ -109,6 +110,7 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
                         var fullSourcePath = Path.IsPathRooted(parsedSource) ? parsedSource : Path.Combine(_settings.ProjectHome, parsedSource);
                         if (!sourceToProjectSettings.ContainsKey(fullSourcePath)) {
                             Warn(Strings.ErrorTestContainerNotFound.FormatUI(test.ToString()));
+                            showConfigurationHint = true;
                             continue;
                         }
 
@@ -124,6 +126,10 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
                         Error(ex.Message);
                     }
                 }
+            }
+
+            if (showConfigurationHint) {
+                LogInfo(Strings.DiscoveryConfigurationMessage);
             }
         }
 

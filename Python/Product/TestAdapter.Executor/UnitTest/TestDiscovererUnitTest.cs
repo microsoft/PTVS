@@ -116,18 +116,24 @@ namespace Microsoft.PythonTools.TestAdapter.UnitTest {
             ITestCaseDiscoverySink discoverySink,
             Dictionary<string, PythonProjectSettings> sourceToProjectSettings
         ) {
+            bool showConfigurationHint = false;
             foreach (var test in unitTestResults?.SelectMany(result => result.Tests.Select(test => test)).MaybeEnumerate()) {
                 try {
                     if(!sourceToProjectSettings.ContainsKey(test.Source)) {
                         Warn(Strings.ErrorTestContainerNotFound.FormatUI(test.ToString()));
+                        showConfigurationHint = true;
                         continue;
                     }
 
-                    TestCase tc = test.ToVsTestCase(_settings.IsWorkspace, _settings.ProjectHome);
+                    TestCase tc = test.ToVsTestCase(_settings.ProjectHome);
                     discoverySink?.SendTestCase(tc);
                 } catch (Exception ex) {
                     Error(ex.Message);
                 }
+            }
+
+            if (showConfigurationHint) {
+                LogInfo(Strings.DiscoveryConfigurationMessage);
             }
         }
 
