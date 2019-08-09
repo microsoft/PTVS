@@ -55,9 +55,8 @@ namespace Microsoft.PythonTools.TestAdapter.UnitTest {
         public void DiscoverTests(
             IEnumerable<string> sources,
             IMessageLogger logger,
-            ITestCaseDiscoverySink discoverySink,
-            Dictionary<string, PythonProjectSettings> sourceToProjectSettings
-         ) {
+            ITestCaseDiscoverySink discoverySink
+        ) {
             _logger = logger;
             var workspaceText = _settings.IsWorkspace ? Strings.WorkspaceText : Strings.ProjectText;
             LogInfo(Strings.PythonTestDiscovererStartedMessage.FormatUI(PythonConstants.UnitTestText, _settings.ProjectName, workspaceText, _settings.DiscoveryWaitTimeInSeconds));
@@ -100,7 +99,7 @@ namespace Microsoft.PythonTools.TestAdapter.UnitTest {
             List<UnitTestDiscoveryResults> results = null;
             try {
                 results = JsonConvert.DeserializeObject<List<UnitTestDiscoveryResults>>(json);
-                CreateVsTests(results, logger, discoverySink, sourceToProjectSettings);
+                CreateVsTests(results, discoverySink);
             } catch (InvalidOperationException ex) {
                 Error("Failed to parse: {0}".FormatInvariant(ex.Message));
                 Error(json);
@@ -112,21 +111,19 @@ namespace Microsoft.PythonTools.TestAdapter.UnitTest {
 
         private void CreateVsTests(
             IEnumerable<UnitTestDiscoveryResults> unitTestResults,
-            IMessageLogger logger,
-            ITestCaseDiscoverySink discoverySink,
-            Dictionary<string, PythonProjectSettings> sourceToProjectSettings
+            ITestCaseDiscoverySink discoverySink
         ) {
             bool showConfigurationHint = false;
             foreach (var test in unitTestResults?.SelectMany(result => result.Tests.Select(test => test)).MaybeEnumerate()) {
                 try {
-                    if(!sourceToProjectSettings.ContainsKey(test.Source)) {
+                    // Note: Test Explorer will show a key not found exception if we use a source path that doesn't match a test container's source.
+                    if (_settings.TestContainerSources.TryGetValue(test.Source, out string testContainerSourcePath)) {
+                        TestCase tc = test.ToVsTestCase(_settings.ProjectHome);
+                        discoverySink?.SendTestCase(tc);
+                    } else {
                         Warn(Strings.ErrorTestContainerNotFound.FormatUI(test.ToString()));
                         showConfigurationHint = true;
-                        continue;
                     }
-
-                    TestCase tc = test.ToVsTestCase(_settings.ProjectHome);
-                    discoverySink?.SendTestCase(tc);
                 } catch (Exception ex) {
                     Error(ex.Message);
                 }

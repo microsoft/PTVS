@@ -23,7 +23,7 @@ namespace Microsoft.PythonTools.TestAdapter.Config {
         public readonly bool EnableNativeCodeDebugging;
         public readonly List<string> SearchPath;
         public readonly Dictionary<string, string> Environment;
-        public readonly List<string> Sources;
+        public readonly Dictionary<string, string> TestContainerSources;
         public readonly bool IsWorkspace;
         public readonly bool UseLegacyDebugger;
         public readonly TestFrameworkType TestFramwork;
@@ -48,7 +48,7 @@ namespace Microsoft.PythonTools.TestAdapter.Config {
             EnableNativeCodeDebugging = nativeDebugging;
             SearchPath = new List<string>();
             Environment = new Dictionary<string, string>();
-            Sources = new List<string>();
+            TestContainerSources = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             IsWorkspace = isWorkspace;
             UseLegacyDebugger = useLegacyDebugger;
             TestFramwork = TestFrameworkType.None;
@@ -74,7 +74,8 @@ namespace Microsoft.PythonTools.TestAdapter.Config {
                 return false;
             }
 
-            if (ProjectHome == other.ProjectHome &&
+            if (ProjectName == other.ProjectName &&
+                ProjectHome == other.ProjectHome &&
                 WorkingDirectory == other.WorkingDirectory &&
                 InterpreterPath == other.InterpreterPath &&
                 PathEnv == other.PathEnv &&
@@ -83,31 +84,12 @@ namespace Microsoft.PythonTools.TestAdapter.Config {
                 UseLegacyDebugger == other.UseLegacyDebugger &&
                 TestFramwork == other.TestFramwork &&
                 UnitTestPattern == other.UnitTestPattern &&
-                UnitTestRootDir == other.UnitTestRootDir) {
-                if (SearchPath.Count == other.SearchPath.Count &&
-                    Environment.Count == other.Environment.Count) {
-                    for (int i = 0; i < SearchPath.Count; i++) {
-                        if (SearchPath[i] != other.SearchPath[i]) {
-                            return false;
-                        }
-                    }
-
-                    for (int i = 0; i < Sources.Count; i++) {
-                        if (Sources[i] != other.Sources[i]) {
-                            return false;
-                        }
-                    }
-
-                    foreach (var keyValue in Environment) {
-                        string value;
-                        if (!other.Environment.TryGetValue(keyValue.Key, out value) ||
-                            value != keyValue.Value) {
-                            return false;
-                        }
-                    }
-
-                    return true;
-                }
+                UnitTestRootDir == other.UnitTestRootDir &&
+                SearchPath.Count == other.SearchPath.Count &&
+                Environment.Count == other.Environment.Count &&
+                TestContainerSources.Count == other.TestContainerSources.Count &&
+                DiscoveryWaitTimeInSeconds == other.DiscoveryWaitTimeInSeconds) {
+                return true;
             }
 
             return false;

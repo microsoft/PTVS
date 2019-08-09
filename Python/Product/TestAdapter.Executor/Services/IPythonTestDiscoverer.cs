@@ -25,8 +25,7 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
         void DiscoverTests(
             IEnumerable<string> sources,
             IMessageLogger logger,
-            ITestCaseDiscoverySink discoverySink,
-            Dictionary<string, PythonProjectSettings> sourceToProjectSettings
+            ITestCaseDiscoverySink discoverySink
         );
     }
 }

@@ -41,8 +41,7 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
         public void DiscoverTests(
             IEnumerable<string> sources,
             IMessageLogger logger,
-            ITestCaseDiscoverySink discoverySink,
-            Dictionary<string, PythonProjectSettings> sourceToProjectSettings
+            ITestCaseDiscoverySink discoverySink
         ) {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             var workspaceText = _settings.IsWorkspace ? Strings.WorkspaceText : Strings.ProjectText;
@@ -51,7 +50,7 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
             var env = InitializeEnvironment(sources, _settings);
             var outputFilePath = Path.GetTempFileName();
             var arguments = GetArguments(sources, _settings, outputFilePath);
-       
+
             DebugInfo("cd " + _settings.WorkingDirectory);
             DebugInfo("set " + _settings.PathEnv + "=" + env[_settings.PathEnv]);
             DebugInfo($"{_settings.InterpreterPath} {string.Join(" ", arguments)}");
@@ -86,7 +85,7 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
             List<PytestDiscoveryResults> results = null;
             try {
                 results = JsonConvert.DeserializeObject<List<PytestDiscoveryResults>>(json);
-                CreateVsTests(results, discoverySink, sourceToProjectSettings);
+                CreateVsTests(results, discoverySink);
             } catch (InvalidOperationException ex) {
                 Error("Failed to parse: {0}".FormatInvariant(ex.Message));
                 Error(json);
@@ -98,8 +97,7 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
 
         private void CreateVsTests(
             IEnumerable<PytestDiscoveryResults> discoveryResults,
-            ITestCaseDiscoverySink discoverySink,
-            Dictionary<string, PythonProjectSettings> sourceToProjectSettings
+            ITestCaseDiscoverySink discoverySink
         ) {
             bool showConfigurationHint = false;
             foreach (var result in discoveryResults.MaybeEnumerate()) {
@@ -107,21 +105,17 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
                 foreach (PytestTest test in result.Tests) {
                     try {
                         (string parsedSource, int line) = test.ParseSourceAndLine();
-                        var fullSourcePath = Path.IsPathRooted(parsedSource) ? parsedSource : Path.Combine(_settings.ProjectHome, parsedSource);
-                        if (!sourceToProjectSettings.ContainsKey(fullSourcePath)) {
+                        var parsedFullSourcePath = Path.IsPathRooted(parsedSource) ? parsedSource : Path.Combine(_settings.ProjectHome, parsedSource);
+                     
+                        //Note: Pytest adapter is currently returning lowercase source paths
+                        //Test Explorer will show a key not found exception if we use a source path that doesn't match a test container's source.
+                        if (_settings.TestContainerSources.TryGetValue(parsedFullSourcePath, out string testContainerSourcePath)) {
+                            TestCase tc = test.ToVsTestCase(testContainerSourcePath, line, parentMap);
+                            discoverySink?.SendTestCase(tc);
+                        } else {
                             Warn(Strings.ErrorTestContainerNotFound.FormatUI(test.ToString()));
                             showConfigurationHint = true;
-                            continue;
                         }
-
-                        // Discovery adapter will lowercase the source field but Test Explorer needs TestCase to match TestContainer Source
-                        var testContainerSourcePath = sourceToProjectSettings
-                            .Where(pair => String.Compare(pair.Key, fullSourcePath, StringComparison.OrdinalIgnoreCase) == 0)
-                            .Select(x => x.Key)
-                            .FirstOrDefault();
-
-                        TestCase tc = test.ToVsTestCase(testContainerSourcePath, line, parentMap);
-                        discoverySink?.SendTestCase(tc);
                     } catch (Exception ex) {
                         Error(ex.Message);
                     }
