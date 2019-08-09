@@ -38,8 +38,11 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
             _settings = settings;
         }
 
-        public void DiscoverTests(IEnumerable<string> sources, IMessageLogger logger, ITestCaseDiscoverySink discoverySink) {
-            _logger = logger;
+        public void DiscoverTests(IEnumerable<string> sources,
+                                  IMessageLogger logger,
+                                  ITestCaseDiscoverySink discoverySink,
+                                  Dictionary<string, PythonProjectSettings> sourceToProjectSettings) {
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             var workspaceText = _settings.IsWorkspace ? Strings.WorkspaceText : Strings.ProjectText;
             LogInfo(Strings.PythonTestDiscovererStartedMessage.FormatUI(PythonConstants.PytestText, _settings.ProjectName, workspaceText, _settings.DiscoveryWaitTimeInSeconds));
 
@@ -81,7 +84,7 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
             List<PytestDiscoveryResults> results = null;
             try {
                 results = JsonConvert.DeserializeObject<List<PytestDiscoveryResults>>(json);
-                CreateVsTests(results, discoverySink);
+                CreateVsTests(results, discoverySink, sourceToProjectSettings);
             } catch (InvalidOperationException ex) {
                 Error("Failed to parse: {0}".FormatInvariant(ex.Message));
                 Error(json);
@@ -91,12 +94,27 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
             }
         }
 
-        private void CreateVsTests(IEnumerable<PytestDiscoveryResults> discoveryResults, ITestCaseDiscoverySink discoverySink) {
+        private void CreateVsTests(IEnumerable<PytestDiscoveryResults> discoveryResults,
+                                   ITestCaseDiscoverySink discoverySink,
+                                   Dictionary<string, PythonProjectSettings> sourceToProjectSettings) {
             foreach (var result in discoveryResults.MaybeEnumerate()) {
                 var parentMap = result.Parents.ToDictionary(p => p.Id, p => p);
                 foreach (PytestTest test in result.Tests) {
                     try {
-                        TestCase tc = test.ToVsTestCase(_settings.ProjectHome, parentMap);
+                        (string parsedSource, int line) = test.ParseSourceAndLine();
+                        var fullSourcePath = Path.IsPathRooted(parsedSource) ? parsedSource : Path.Combine(_settings.ProjectHome, parsedSource);
+                        if (!sourceToProjectSettings.ContainsKey(fullSourcePath)) {
+                            Warn(Strings.ErrorTestContainerNotFound.FormatUI(test.ToString()));
+                            continue;
+                        }
+
+                        // Discovery adapter will lowercase the source field but Test Explorer needs TestCase to match TestContainer Source
+                        var testContainerSourcePath = sourceToProjectSettings
+                            .Where(pair => String.Compare(pair.Key, fullSourcePath, StringComparison.OrdinalIgnoreCase) == 0)
+                            .Select(x => x.Key)
+                            .FirstOrDefault();
+
+                        TestCase tc = test.ToVsTestCase(testContainerSourcePath, line, parentMap);
                         discoverySink?.SendTestCase(tc);
                     } catch (Exception ex) {
                         Error(ex.Message);
@@ -110,7 +128,6 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
             arguments.Add(DiscoveryAdapterPath);
             arguments.Add("discover");
             arguments.Add("pytest");
-
             arguments.Add("--output-file");
             arguments.Add(outputfilename);
 
@@ -178,6 +195,9 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
 
         private void Error(string message) {
             _logger?.SendMessage(TestMessageLevel.Error, message ?? String.Empty);
+        }
+        private void Warn(string message) {
+            _logger?.SendMessage(TestMessageLevel.Warning, message ?? String.Empty);
         }
     }
 }

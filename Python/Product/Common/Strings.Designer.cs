@@ -3465,6 +3465,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Test container was not found for {0}..
+        /// </summary>
+        public static string ErrorTestContainerNotFound {
+            get {
+                return ResourceManager.GetString("ErrorTestContainerNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Execute File in P&amp;ython Interactive.
         /// </summary>
         public static string ExecuteInReplCommand_ExecuteFile {

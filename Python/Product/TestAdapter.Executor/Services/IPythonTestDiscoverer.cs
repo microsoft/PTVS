@@ -15,12 +15,16 @@
 // permissions and limitations under the License.
 
 using System.Collections.Generic;
+using Microsoft.PythonTools.TestAdapter.Config;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
 
 namespace Microsoft.PythonTools.TestAdapter.Services {
     interface IPythonTestDiscoverer {
-        void DiscoverTests(IEnumerable<string> sources, IMessageLogger logger, ITestCaseDiscoverySink discoverySink);
+        void DiscoverTests(IEnumerable<string> sources,
+                           IMessageLogger logger,
+                           ITestCaseDiscoverySink discoverySink,
+                           Dictionary<string, PythonProjectSettings> sourceToProjectSettings);
     }
 }

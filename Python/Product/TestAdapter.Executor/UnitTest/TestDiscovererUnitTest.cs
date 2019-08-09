@@ -52,7 +52,10 @@ namespace Microsoft.PythonTools.TestAdapter.UnitTest {
             _settings = settings;
         }
 
-        public void DiscoverTests(IEnumerable<string> sources, IMessageLogger logger, ITestCaseDiscoverySink discoverySink) {
+        public void DiscoverTests(IEnumerable<string> sources,
+                                  IMessageLogger logger,
+                                  ITestCaseDiscoverySink discoverySink,
+                                  Dictionary<string, PythonProjectSettings> sourceToProjectSettings) {
             _logger = logger;
             var workspaceText = _settings.IsWorkspace ? Strings.WorkspaceText : Strings.ProjectText;
             LogInfo(Strings.PythonTestDiscovererStartedMessage.FormatUI(PythonConstants.UnitTestText, _settings.ProjectName, workspaceText, _settings.DiscoveryWaitTimeInSeconds));
@@ -95,7 +98,7 @@ namespace Microsoft.PythonTools.TestAdapter.UnitTest {
             List<UnitTestDiscoveryResults> results = null;
             try {
                 results = JsonConvert.DeserializeObject<List<UnitTestDiscoveryResults>>(json);
-                CreateVsTests(results, logger, discoverySink);
+                CreateVsTests(results, logger, discoverySink, sourceToProjectSettings);
             } catch (InvalidOperationException ex) {
                 Error("Failed to parse: {0}".FormatInvariant(ex.Message));
                 Error(json);
@@ -105,9 +108,17 @@ namespace Microsoft.PythonTools.TestAdapter.UnitTest {
             }
         }
 
-        private void CreateVsTests(IEnumerable<UnitTestDiscoveryResults> unitTestResults, IMessageLogger logger, ITestCaseDiscoverySink discoverySink) {
+        private void CreateVsTests(IEnumerable<UnitTestDiscoveryResults> unitTestResults,
+                                   IMessageLogger logger,
+                                   ITestCaseDiscoverySink discoverySink,
+                                   Dictionary<string, PythonProjectSettings> sourceToProjectSettings) {
             foreach (var test in unitTestResults?.SelectMany(result => result.Tests.Select(test => test)).MaybeEnumerate()) {
                 try {
+                    if(!sourceToProjectSettings.ContainsKey(test.Source)) {
+                        Warn(Strings.ErrorTestContainerNotFound.FormatUI(test.ToString()));
+                        continue;
+                    }
+
                     TestCase tc = test.ToVsTestCase(_settings.IsWorkspace, _settings.ProjectHome);
                     discoverySink?.SendTestCase(tc);
                 } catch (Exception ex) {
@@ -171,6 +182,10 @@ namespace Microsoft.PythonTools.TestAdapter.UnitTest {
 
         private void Error(string message) {
             _logger?.SendMessage(TestMessageLevel.Error, message);
+        }
+
+        private void Warn(string message) {
+            _logger?.SendMessage(TestMessageLevel.Warning, message);
         }
     }
 }

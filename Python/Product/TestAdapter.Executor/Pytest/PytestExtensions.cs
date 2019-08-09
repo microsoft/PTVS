@@ -22,37 +22,50 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 namespace Microsoft.PythonTools.TestAdapter.Pytest {
     static class PyTestExtensions {
 
-        public static TestCase ToVsTestCase(this PytestTest test, string projectHome, Dictionary<string, PytestParent> parentMap) {
-            if (String.IsNullOrEmpty(projectHome)) {
-                throw new ArgumentException(nameof(projectHome));
+        /// <summary>
+        /// Parses the relative source and line number from a PytestTest discovery result
+        /// Example Test "source": ".\\test_user_marks.py:17",
+        ///     returns  (test_user_marks.py, 17)
+        /// </summary>
+        /// <param name="test"></param>
+        /// <returns></returns>
+        public static (string, int) ParseSourceAndLine(this PytestTest test) {
+            int line = 0;
+            var sourceAndLineNum = test.Source.Replace(".\\", "");
+            var sourceParts = sourceAndLineNum.Split(':');
+            if (sourceParts.Length != 2 ||
+                !Int32.TryParse(sourceParts[1], out line)) {
+                throw new FormatException(String.Format("Invalid source: {0}",test.ToString()));
             }
+
+            return (sourceParts[0], line);
+        }
+
+        public static TestCase ToVsTestCase(this PytestTest test, string source, int line, Dictionary<string, PytestParent> parentMap) {
             if (parentMap == null) {
                 throw new ArgumentException(nameof(parentMap));
             }
 
-            var sourceAndLineNum = test.Source.Replace(".\\", "");
-            var sourceParts = sourceAndLineNum.Split(':');
-            int line = 0;
-            if (sourceParts.Length != 2 ||
-                !Int32.TryParse(sourceParts[1], out line) ||
-                String.IsNullOrWhiteSpace(test.Name) ||
-                String.IsNullOrWhiteSpace(test.Id)) {
-                throw new FormatException("Invalid pytest test discovered: " + test.ToString());
+            if (String.IsNullOrWhiteSpace(source)) {
+                throw new ArgumentException(nameof(source) + " " + test.ToString());
             }
+            
+            if (String.IsNullOrWhiteSpace(test.Name) ||
+                String.IsNullOrWhiteSpace(test.Id)) {
+                throw new FormatException(test.ToString());
+            }
+            
+            var fullyQualifiedName = CreateFullyQualifiedTestNameFromId(source, test.Id);
 
-            //bschnurr todo: fix codepath for files outside of project
-            var fullSourcePathNormalized = Path.Combine(projectHome, sourceParts[0]).ToLowerInvariant();
-            var fullyQualifiedName = CreateFullyQualifiedTestNameFromId(test.Id);
-
-            var tc = new TestCase(fullyQualifiedName, PythonConstants.PytestExecutorUri, fullSourcePathNormalized) {
+            var tc = new TestCase(fullyQualifiedName, PythonConstants.PytestExecutorUri, source) {
                 DisplayName = test.Name,
                 LineNumber = line,
-                CodeFilePath = fullSourcePathNormalized
+                CodeFilePath = source
             };
 
             tc.SetPropertyValue(Constants.PytestIdProperty, test.Id);
             tc.SetPropertyValue(Constants.PyTestXmlClassNameProperty, CreateXmlClassName(test, parentMap));
-            tc.SetPropertyValue(Constants.PytestTestExecutionPathPropertery, GetAbsoluteTestExecutionPath(fullSourcePathNormalized, test.Id));
+            tc.SetPropertyValue(Constants.PytestTestExecutionPathPropertery, GetAbsoluteTestExecutionPath(source, test.Id));
 
             if (test.Markers != null) {
                 foreach (var marker in test.Markers) {
@@ -87,7 +100,7 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
             return xmlClassName;
         }
 
-        internal static string CreateFullyQualifiedTestNameFromId(string pytestId) {
+        internal static string CreateFullyQualifiedTestNameFromId(string source, string pytestId) {
             var fullyQualifiedName = pytestId.Replace(".\\", "");
             String[] parts = fullyQualifiedName.Split(new string[] { "::" }, StringSplitOptions.None);
 

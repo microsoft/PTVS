@@ -75,6 +75,27 @@ namespace TestAdapterTests {
 
         [TestMethod, Priority(0)]
         [TestCategory("10s")]
+        public void DiscoverPytestUppercaseFileName() {
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
+
+            var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_Uppercase.py");
+            File.Copy(TestData.GetPath("TestData", "TestDiscoverer", "Uppercase", "test_Uppercase.py"), testFilePath);
+
+            var expectedTests = new[] {
+                new TestInfo("test_A", "test_uppercase.py::Test_UppercaseClass::test_A", testFilePath, 4),
+            };
+
+            var runSettings = new MockRunSettings(
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+                    .WithTestFilesFromFolder(testEnv.SourceFolderPath)
+                    .ToXml()
+            );
+
+            DiscoverTests(testEnv, new[] { testFilePath }, runSettings, expectedTests);
+        }
+
+        [TestMethod, Priority(0)]
+        [TestCategory("10s")]
         public void DiscoverPytestLargeProject() {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
 
@@ -451,6 +472,28 @@ namespace TestAdapterTests {
             var expectedTests = new[] {
                 new TestInfo("test_ut_fail", "test_ut.py::TestClassUT::test_ut_fail", testFilePath, 4),
                 new TestInfo("test_ut_pass", "test_ut.py::TestClassUT::test_ut_pass", testFilePath, 7),
+            };
+
+            var runSettings = new MockRunSettings(
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+                    .WithTestFilesFromFolder(testEnv.SourceFolderPath)
+                    .ToXml()
+            );
+
+            DiscoverTests(testEnv, new[] { testFilePath }, runSettings, expectedTests);
+        }
+
+
+        [TestMethod, Priority(0)]
+        [TestCategory("10s")]
+        public void DiscoverUnittestUppercaseFileName() {
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
+
+            var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_Uppercase.py");
+            File.Copy(TestData.GetPath("TestData", "TestDiscoverer", "Uppercase", "test_Uppercase.py"), testFilePath);
+
+            var expectedTests = new[] {
+                new TestInfo("test_A", "test_Uppercase.py::Test_UppercaseClass::test_A", testFilePath, 4),
             };
 
             var runSettings = new MockRunSettings(
