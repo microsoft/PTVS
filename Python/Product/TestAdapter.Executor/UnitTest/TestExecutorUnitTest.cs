@@ -94,7 +94,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 
                 try {
                     var discovery = DiscovererFactory.GetDiscoverer(settings);
-                    discovery.DiscoverTests(testGroup, frameworkHandle, testColletion);
+                    discovery.DiscoverTests(testGroup, frameworkHandle, testColletion, sourceToProjSettings);
                 } catch (Exception ex) {
                     frameworkHandle.SendMessage(TestMessageLevel.Error, ex.Message);
                 }

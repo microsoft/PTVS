@@ -55,17 +55,12 @@ namespace Microsoft.PythonTools.TestAdapter {
         }
 
         public void RunTests(IEnumerable<string> sources, IRunContext runContext, IFrameworkHandle frameworkHandle) {
-
-            //MessageBox.Show("Hello1: " + Process.GetCurrentProcess().Id);
-
             if (sources == null) {
                 throw new ArgumentNullException(nameof(sources));
             }
-
             if (runContext == null) {
                 throw new ArgumentNullException(nameof(runContext));
             }
-
             if (frameworkHandle == null) {
                 throw new ArgumentNullException(nameof(frameworkHandle));
             }
@@ -73,15 +68,13 @@ namespace Microsoft.PythonTools.TestAdapter {
             _cancelRequested.Reset();
 
             var sourceToProjSettings = RunSettingsUtil.GetSourceToProjSettings(runContext.RunSettings);
-
-            var testColletion = new TestCollection();
-
+            var testCollection = new TestCollection();
             foreach (var testGroup in sources.GroupBy(x => sourceToProjSettings[x])) {
                 var settings = testGroup.Key;
 
                 try {
                     var discovery = DiscovererFactory.GetDiscoverer(settings);
-                    discovery.DiscoverTests(testGroup, frameworkHandle, testColletion);
+                    discovery.DiscoverTests(testGroup, frameworkHandle, testCollection, sourceToProjSettings);
                 } catch (Exception ex) {
                     frameworkHandle.SendMessage(TestMessageLevel.Error, ex.Message);
                 }
@@ -90,13 +83,10 @@ namespace Microsoft.PythonTools.TestAdapter {
                     return;
                 }
             }
-
-            RunPytest(testColletion.Tests, runContext, frameworkHandle);
+            RunPytest(testCollection.Tests, runContext, frameworkHandle);
         }
 
         public void RunTests(IEnumerable<TestCase> tests, IRunContext runContext, IFrameworkHandle frameworkHandle) {
-
-            //MessageBox.Show("Hello1: " + Process.GetCurrentProcess().Id);
 
             if (tests == null) {
                 throw new ArgumentNullException(nameof(tests));
@@ -136,7 +126,11 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
         }
 
-        private void RunTestGroup(IGrouping<PythonProjectSettings, TestCase> testGroup, IRunContext runContext, IFrameworkHandle frameworkHandle) {
+        private void RunTestGroup(
+            IGrouping<PythonProjectSettings, TestCase> testGroup,
+            IRunContext runContext,
+            IFrameworkHandle frameworkHandle
+        ) {
             PythonProjectSettings settings = testGroup.Key;
             if (settings.TestFramwork != TestFrameworkType.Pytest) {
                 return;

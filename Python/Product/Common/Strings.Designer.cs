@@ -3087,6 +3087,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Go to https://aka.ms/VSTestExplorerPython for more details on test discovery configuration..
+        /// </summary>
+        public static string DiscoveryConfigurationMessage {
+            get {
+                return ResourceManager.GetString("DiscoveryConfigurationMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Python Documentation.
         /// </summary>
         public static string DocumentationClassificationType {
@@ -3461,6 +3470,15 @@ namespace Microsoft.PythonTools {
         public static string ErrorTaskItemZipArchiveNotSupportedMessage {
             get {
                 return ResourceManager.GetString("ErrorTaskItemZipArchiveNotSupportedMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Test container was not found for {0}..
+        /// </summary>
+        public static string ErrorTestContainerNotFound {
+            get {
+                return ResourceManager.GetString("ErrorTestContainerNotFound", resourceCulture);
             }
         }
         

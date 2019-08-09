@@ -195,6 +195,36 @@ if __name__ == '__main__':
 
         [TestMethod, Priority(0)]
         [TestCategory("10s")]
+        public void RunPytestUppercaseFileName() {
+            Assert.Inconclusive("Need to fix pytestId filename portition being lowercased ie.test_Uppercase.py::Test_UppercaseClass::test_A");
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
+
+            var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_Uppercase.py");
+            File.Copy(TestData.GetPath("TestData", "TestDiscoverer", "Uppercase", "test_Uppercase.py"), testFilePath);
+
+            var expectedTests = new[] {
+                new TestInfo(
+                   "test_A", 
+                   "test_uppercase.py::Test_UppercaseClass::test_A",
+                    testFilePath,
+                    4,
+                    outcome: TestOutcome.Passed,
+                    pytestXmlClassName: "Test_UppercaseClass"
+                ),
+            };
+
+            var runSettings = new MockRunSettings(
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+                    .WithTestFilesFromFolder(testEnv.SourceFolderPath)
+                    .ToXml()
+            );
+
+            ExecuteTests(testEnv, runSettings, expectedTests);
+        }
+
+
+        [TestMethod, Priority(0)]
+        [TestCategory("10s")]
         public void RunPytestLargeTestCount() {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
 
