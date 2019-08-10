@@ -117,7 +117,7 @@ namespace Microsoft.PythonTools.TestAdapter.UnitTest {
             foreach (var test in unitTestResults?.SelectMany(result => result.Tests.Select(test => test)).MaybeEnumerate()) {
                 try {
                     // Note: Test Explorer will show a key not found exception if we use a source path that doesn't match a test container's source.
-                    if (_settings.TestContainerSources.TryGetValue(test.Source, out string testContainerSourcePath)) {
+                    if (_settings.TestContainerSources.TryGetValue(test.Source, out _)) {
                         TestCase tc = test.ToVsTestCase(_settings.ProjectHome);
                         discoverySink?.SendTestCase(tc);
                     } else {

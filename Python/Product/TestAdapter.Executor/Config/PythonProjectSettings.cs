@@ -48,6 +48,9 @@ namespace Microsoft.PythonTools.TestAdapter.Config {
             EnableNativeCodeDebugging = nativeDebugging;
             SearchPath = new List<string>();
             Environment = new Dictionary<string, string>();
+            // Mapping of full file path to full file path which was assigned to the TestContainer.  
+            // The pytest adapter discovery is returning lowercase paths and Test Explorer needs TestCase sources and TestContainer sources
+            // to match or else tests wont be removed when you unload a project.
             TestContainerSources = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             IsWorkspace = isWorkspace;
             UseLegacyDebugger = useLegacyDebugger;
