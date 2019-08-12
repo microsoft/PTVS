@@ -3474,6 +3474,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Testcase not found for test result: {0}.
+        /// </summary>
+        public static string ErrorTestCaseNotFound {
+            get {
+                return ResourceManager.GetString("ErrorTestCaseNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Test container was not found for {0}..
         /// </summary>
         public static string ErrorTestContainerNotFound {
@@ -5217,6 +5226,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Invalid source in test: {0}.
+        /// </summary>
+        public static string PytestInvalidTestSource {
+            get {
+                return ResourceManager.GetString("PytestInvalidTestSource", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Pytest is enabled in the {0} {1}, but it is not installed in the active environment..
         /// </summary>
         public static string PyTestNotInstalled {
@@ -5231,6 +5249,15 @@ namespace Microsoft.PythonTools {
         public static string PyTestNotInstalledConfigurationFileFound {
             get {
                 return ResourceManager.GetString("PyTestNotInstalledConfigurationFileFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Results for pytest not found {0}.
+        /// </summary>
+        public static string PytestResultsXmlNotFound {
+            get {
+                return ResourceManager.GetString("PytestResultsXmlNotFound", resourceCulture);
             }
         }
         

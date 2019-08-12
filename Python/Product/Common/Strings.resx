@@ -2963,4 +2963,18 @@ Please specify at least one package.</value>
   <data name="DiscoveryConfigurationMessage" xml:space="preserve">
     <value>Go to https://aka.ms/VSTestExplorerPython for more details on test discovery configuration.</value>
   </data>
+  <data name="ErrorTestCaseNotFound" xml:space="preserve">
+    <value>Testcase not found for test result: {0}</value>
+    <comment>{0} is the result xml data found</comment>
+  </data>
+  <data name="PytestInvalidTestSource" xml:space="preserve">
+    <value>Invalid source in test: {0}</value>
+    <comment>{0} is the test info</comment>
+  </data>
+  <data name="PytestResultsXmlNotFound" xml:space="preserve">
+    <value>Results for pytest not found {0}</value>
+    <comment>{0} is the expected file path</comment>
+  </data>
+
+    
 </root>
