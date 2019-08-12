@@ -379,7 +379,6 @@ namespace TestAdapterTests {
         }
 
 
-        [Ignore] // TODO: discovers 3 tests instead of 2, it shouldn't be finding the one in example_pt.py
         [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public void DiscoverPytestConfigPythonFiles() {

@@ -36,7 +36,7 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
             var sourceParts = sourceAndLineNum.Split(':');
             if (sourceParts.Length != 2 ||
                 !Int32.TryParse(sourceParts[1], out line)) {
-                throw new FormatException(String.Format("Invalid source: {0}", test.ToString()));
+                throw new FormatException(Strings.PytestInvalidTestSource.FormatUI(test.ToString()));
             }
 
             return (sourceParts[0], line);

@@ -145,16 +145,18 @@ namespace Microsoft.PythonTools.TestAdapter {
                             break;
                         }
                         try {
-                            string pytestId = TestResultParser.GetPytestId(pytestResultNode);
+                            var pytestId = TestResultParser.GetPytestId(pytestResultNode);
                             if (pytestId != null && idToResultsMap.TryGetValue(pytestId, out TestResult vsTestResult)) {
                                 TestResultParser.UpdateVsTestResult(vsTestResult, pytestResultNode);
                             } else {
-                                frameworkHandle.SendMessage(TestMessageLevel.Error, Strings.ErrorTestCaseNotFound.FormatInvariant(pytestResultNode.OuterXml));
+                                frameworkHandle.SendMessage(TestMessageLevel.Error, Strings.ErrorTestCaseNotFound.FormatUI(pytestResultNode.OuterXml));
                             }
                         } catch (Exception ex) {
                             frameworkHandle.SendMessage(TestMessageLevel.Error, ex.Message);
                         }
                     }
+                } else {
+                    frameworkHandle.SendMessage(TestMessageLevel.Error, Strings.PytestResultsXmlNotFound.FormatUI(resultsXML));
                 }
 
                 foreach (var result in idToResultsMap.Values) {

@@ -48,11 +48,11 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
 
         /// <summary>
         /// Handles two cases:
-        /// case A: Function instead a class
+        /// case A: Function inside a class - classname drops the filename portion 
         ///  <testcase classname="test2.Test_test2" file="test2.py" name="test_A" >
         ///  pytestId .\test2.py::Test_test2::test_A
         ///  
-        /// case B: Global function
+        /// case B: Global function - classname dropped entirely
         ///   <testcase classname="test_sample" file="test_sample.py" name="test_answer" >
         ///   pytestId .\test_sample.py::test_answer 
         /// </summary>
@@ -61,9 +61,9 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
         /// <param name="funcname"></param>
         /// <returns></returns>
         internal static string CreatePytestId(string filename, string classname, string funcname) {
-            var classParts = classname.Split('.');
-            if (classParts.Length > 1) {
-                var classNameWithoutFilename = String.Join("", classParts.Skip(1));
+            var classIndex = classname.IndexOf(".");
+            if (classIndex >= 0 && classIndex < (classname.Length - 1)) {
+                var classNameWithoutFilename = classname.Substring(classIndex + 1);
                 return $".\\{filename}::{classNameWithoutFilename}::{funcname}";
             } else {
                 return $".\\{filename}::{funcname}";
