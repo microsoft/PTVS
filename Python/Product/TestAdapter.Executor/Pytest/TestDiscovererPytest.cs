@@ -110,7 +110,11 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
                         //Note: Pytest adapter is currently returning lowercase source paths
                         //Test Explorer will show a key not found exception if we use a source path that doesn't match a test container's source.
                         if (_settings.TestContainerSources.TryGetValue(parsedFullSourcePath, out string testContainerSourcePath)) {
-                            TestCase tc = test.ToVsTestCase(testContainerSourcePath, line, parentMap);
+                            TestCase tc = test.ToVsTestCase(
+                                testContainerSourcePath, 
+                                line, 
+                                parentMap, 
+                                _settings.ProjectHome);
                             discoverySink?.SendTestCase(tc);
                         } else {
                             Warn(Strings.ErrorTestContainerNotFound.FormatUI(test.ToString()));

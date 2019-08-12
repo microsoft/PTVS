@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 namespace Microsoft.PythonTools.TestAdapter.Pytest {
@@ -35,45 +36,62 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
             var sourceParts = sourceAndLineNum.Split(':');
             if (sourceParts.Length != 2 ||
                 !Int32.TryParse(sourceParts[1], out line)) {
-                throw new FormatException(String.Format("Invalid source: {0}",test.ToString()));
+                throw new FormatException(String.Format("Invalid source: {0}", test.ToString()));
             }
 
             return (sourceParts[0], line);
         }
 
-        public static TestCase ToVsTestCase(this PytestTest test, string source, int line, Dictionary<string, PytestParent> parentMap) {
+        public static TestCase ToVsTestCase(
+            this PytestTest test,
+            string source,
+            int line,
+            Dictionary<string, PytestParent> parentMap,
+            string projectHome
+        ) {
             if (parentMap == null) {
                 throw new ArgumentException(nameof(parentMap));
             }
-
             if (String.IsNullOrWhiteSpace(source)) {
                 throw new ArgumentException(nameof(source) + " " + test.ToString());
             }
-            
+            if (String.IsNullOrWhiteSpace(projectHome)) {
+                throw new ArgumentException(nameof(projectHome));
+            }
             if (String.IsNullOrWhiteSpace(test.Name) ||
                 String.IsNullOrWhiteSpace(test.Id)) {
                 throw new FormatException(test.ToString());
             }
-            
-            var fullyQualifiedName = CreateFullyQualifiedTestNameFromId(source, test.Id);
 
+            var pytestId = CreateProperCasedPytestId(source, projectHome, test.Id);
+            var fullyQualifiedName = CreateFullyQualifiedTestNameFromId(source, pytestId);
             var tc = new TestCase(fullyQualifiedName, PythonConstants.PytestExecutorUri, source) {
                 DisplayName = test.Name,
                 LineNumber = line,
                 CodeFilePath = source
             };
 
-            tc.SetPropertyValue(Constants.PytestIdProperty, test.Id);
-            tc.SetPropertyValue(Constants.PyTestXmlClassNameProperty, CreateXmlClassName(test, parentMap));
-            tc.SetPropertyValue(Constants.PytestTestExecutionPathPropertery, GetAbsoluteTestExecutionPath(source, test.Id));
-
-            if (test.Markers != null) {
-                foreach (var marker in test.Markers) {
-                    tc.Traits.Add(new Trait(marker.ToString(), String.Empty));
-                }
+            tc.SetPropertyValue(Constants.PytestIdProperty, pytestId);
+          
+            foreach (var marker in test.Markers.MaybeEnumerate()) {
+                tc.Traits.Add(new Trait(marker.ToString(), String.Empty));
             }
 
             return tc;
+        }
+
+        /// <summary>
+        /// Currently the pytest discovery adapter is lowercasing the file portion the id.
+        /// Fix function replaces the file portion with an unmodified verison.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="projectHome"></param>
+        /// <param name="pytestId"></param>
+        /// <returns></returns>
+        internal static string CreateProperCasedPytestId(string source, string projectHome, string pytestId) {
+            String[] idParts = pytestId.Replace(".\\", "").Split(new string[] { "::" }, StringSplitOptions.None);
+            idParts[0] = PathUtils.CreateFriendlyFilePath(projectHome, source);
+            return String.Join("::", idParts);
         }
 
 

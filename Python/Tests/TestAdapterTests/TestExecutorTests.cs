@@ -196,7 +196,6 @@ if __name__ == '__main__':
         [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public void RunPytestUppercaseFileName() {
-            Assert.Inconclusive("Need to fix pytestId filename portition being lowercased ie.test_Uppercase.py::Test_UppercaseClass::test_A");
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
 
             var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_Uppercase.py");
@@ -205,11 +204,11 @@ if __name__ == '__main__':
             var expectedTests = new[] {
                 new TestInfo(
                    "test_A", 
-                   "test_uppercase.py::Test_UppercaseClass::test_A",
+                   "test_Uppercase.py::Test_UppercaseClass::test_A",
                     testFilePath,
                     4,
                     outcome: TestOutcome.Passed,
-                    pytestXmlClassName: "Test_UppercaseClass"
+                    pytestXmlClassName: "test_Uppercase.Test_UppercaseClass"
                 ),
             };
 
@@ -724,11 +723,9 @@ if __name__ == '__main__':
                 string id = ".\\" + ti.FullyQualifiedName;
                 if (testEnv.TestFramework == FrameworkPytest) {
                     var classParts = ti.PytestXmlClassName.Split('.');
-                    id = (classParts.Length > 1) ? ".\\" + ti.FullyQualifiedName : ".\\" + Path.GetFileName(ti.FilePath) + "::" + ti.DisplayName;
+                    id = (classParts.Length > 1) ? id : ".\\" + Path.GetFileName(ti.FilePath) + "::" + ti.DisplayName;
                 }
              
-                string xmlClassName = ti.PytestXmlClassName;
-
                 // FullyQualifiedName as exec path suffix only works for test class case,
                 // for standalone methods, specify the exec path suffix when creating TestInfo.
                 string execPath;
@@ -739,8 +736,6 @@ if __name__ == '__main__':
                 }
 
                 testCase.SetPropertyValue<string>((TestProperty)Microsoft.PythonTools.TestAdapter.Pytest.Constants.PytestIdProperty, id);
-                testCase.SetPropertyValue<string>((TestProperty)Microsoft.PythonTools.TestAdapter.Pytest.Constants.PyTestXmlClassNameProperty, xmlClassName);
-                testCase.SetPropertyValue<string>((TestProperty)Microsoft.PythonTools.TestAdapter.Pytest.Constants.PytestTestExecutionPathPropertery, execPath);
                 return (TestCase)testCase;
             }).ToList();
         }

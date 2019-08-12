@@ -82,7 +82,7 @@ namespace TestAdapterTests {
             File.Copy(TestData.GetPath("TestData", "TestDiscoverer", "Uppercase", "test_Uppercase.py"), testFilePath);
 
             var expectedTests = new[] {
-                new TestInfo("test_A", "test_uppercase.py::Test_UppercaseClass::test_A", testFilePath, 4),
+                new TestInfo("test_A", "test_Uppercase.py::Test_UppercaseClass::test_A", testFilePath, 4),
             };
 
             var runSettings = new MockRunSettings(
@@ -173,7 +173,7 @@ namespace TestAdapterTests {
             var searchPath = Path.Combine(testEnv.SourceFolderPath, "SearchPath");
 
             var expectedTests = new[] {
-                new TestInfo("test_imported_module", "testfolder\\test_search_path.py::SearchPathTests::test_imported_module", testFilePath, 5),
+                new TestInfo("test_imported_module", "TestFolder\\test_search_path.py::SearchPathTests::test_imported_module", testFilePath, 5),
             };
 
             var runSettings = new MockRunSettings(
@@ -781,8 +781,6 @@ if __name__ == '__main__':
                 Console.WriteLine($"CodeFilePath: {tst.CodeFilePath}");
                 Console.WriteLine($"LineNumber: {tst.LineNumber.ToString()}");
                 Console.WriteLine($"PytestId: {tst.GetPropertyValue<string>(Microsoft.PythonTools.TestAdapter.Pytest.Constants.PytestIdProperty, null)}");
-                Console.WriteLine($"PytestXmlClassName: {tst.GetPropertyValue<string>(Microsoft.PythonTools.TestAdapter.Pytest.Constants.PyTestXmlClassNameProperty, null)}");
-                Console.WriteLine($"PytestTestExecPath: {tst.GetPropertyValue<string>(Microsoft.PythonTools.TestAdapter.Pytest.Constants.PytestTestExecutionPathPropertery, null)}");
                 Console.WriteLine("");
             }
         }

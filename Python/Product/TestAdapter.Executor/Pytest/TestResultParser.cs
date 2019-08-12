@@ -23,69 +23,61 @@ using System.Xml;
 using System.Xml.XPath;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
 namespace Microsoft.PythonTools.TestAdapter.Pytest {
     public class TestResultParser {
-
-
         /// <summary>
-        /// Parses the junit xml for test results and matches them to the corresponding original TestCase using 
+        /// Parses the junit xml for test results and matches them to the corresponding original vsTestCase using 
         /// </summary>
         /// <param name="junitXmlPath"></param>
         /// <param name="tests"></param>
         /// <returns></returns>
-        public static IEnumerable<TestResult> Parse(string junitXmlPath, IEnumerable<TestCase> tests) {
-            var vsTestResults = tests.Select(t => new TestResult(t) { Outcome = TestOutcome.NotFound }).ToList();
+        internal static string GetPytestId(XPathNavigator result) {
+            var file = result.GetAttribute("file", "");
+            var funcname = result.GetAttribute("name", "");
+            var classname = result.GetAttribute("classname", "");
+            var line = result.GetAttribute("line", "");
 
-            if (!File.Exists(junitXmlPath)) {
-                return vsTestResults;
+            if (IsPytestResultValid(file, classname, funcname, line)) {
+                var pytestId = CreatePytestId(file, classname, funcname);
+                return pytestId;
             }
-
-            var doc = Read(junitXmlPath);
-            XPathNodeIterator xmlTestCases = doc.CreateNavigator().Select("/testsuite/testcase");
-
-            foreach (XPathNavigator pytestcase in xmlTestCases) {
-                var file = pytestcase.GetAttribute("file", "");
-                var name = pytestcase.GetAttribute("name", "");
-                var classname = pytestcase.GetAttribute("classname", "");
-
-                if (String.IsNullOrEmpty(file) ||
-                    String.IsNullOrEmpty(name) ||
-                    String.IsNullOrEmpty(classname) ||
-                    !Int32.TryParse(pytestcase.GetAttribute("line", String.Empty), out int line))
-                {
-                    var message = String.Empty;
-                    if(pytestcase.HasChildren) {
-                        pytestcase.MoveToFirstChild();
-                        message = pytestcase.GetAttribute("message", String.Empty) + pytestcase.Value;
-                    }
-                    Debug.WriteLine("Test result parse failed: {0}".FormatInvariant(message));
-                    continue;
-                }
-
-                // Match on classname and function name for now
-                var result = vsTestResults
-                    .Where(tr =>
-                    String.Compare(tr.TestCase.DisplayName, name, StringComparison.InvariantCultureIgnoreCase) == 0 &&
-                    String.Compare(tr.TestCase.GetPropertyValue<string>(Pytest.Constants.PyTestXmlClassNameProperty, default(string)), classname, StringComparison.InvariantCultureIgnoreCase) == 0) 
-                    .FirstOrDefault();
-
-                if (result != null) {
-                    UpdateTestResult(pytestcase, result);
-                } else {
-                    var message = String.Empty;
-                    if (pytestcase.HasChildren) {
-                        pytestcase.MoveToFirstChild();
-                        message = pytestcase.GetAttribute("message", String.Empty) + pytestcase.Value;
-                    }
-                    Debug.WriteLine("Testcase for result not found: {0}".FormatInvariant(message));
-                }
-            }
-                     
-            return vsTestResults;
+            return null;
         }
 
-        private static void UpdateTestResult(XPathNavigator navNode, TestResult result) {
+        /// <summary>
+        /// Handles two cases:
+        /// case A: Function instead a class
+        ///  <testcase classname="test2.Test_test2" file="test2.py" name="test_A" >
+        ///  pytestId .\test2.py::Test_test2::test_A
+        ///  
+        /// case B: Global function
+        ///   <testcase classname="test_sample" file="test_sample.py" name="test_answer" >
+        ///   pytestId .\test_sample.py::test_answer 
+        /// </summary>
+        /// <param name="filename"></param>
+        /// <param name="classname"></param>
+        /// <param name="funcname"></param>
+        /// <returns></returns>
+        internal static string CreatePytestId(string filename, string classname, string funcname) {
+            var classParts = classname.Split('.');
+            if (classParts.Length > 1) {
+                var classNameWithoutFilename = String.Join("", classParts.Skip(1));
+                return $".\\{filename}::{classNameWithoutFilename}::{funcname}";
+            } else {
+                return $".\\{filename}::{funcname}";
+            }
+        }
+
+        internal static bool IsPytestResultValid(string file, string classname, string funcname, string line) {
+            return !String.IsNullOrEmpty(file)
+                   && !String.IsNullOrEmpty(classname)
+                   && !String.IsNullOrEmpty(funcname)
+                   && Int32.TryParse(line, out _);
+        }
+
+        internal static void UpdateVsTestResult(TestResult result, XPathNavigator navNode) {
             result.Outcome = TestOutcome.Passed;
 
             var timeStr = navNode.GetAttribute("time", "");
@@ -124,9 +116,10 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
             }
         }
 
-        public static XPathDocument Read(string xml) {
-            var settings = new XmlReaderSettings();
-            settings.XmlResolver = null;
+        internal static XPathDocument Read(string xml) {
+            var settings = new XmlReaderSettings {
+                XmlResolver = null
+            };
             return new XPathDocument(XmlReader.Create(new StreamReader(xml, new UTF8Encoding(false)), settings));
         }
     }
