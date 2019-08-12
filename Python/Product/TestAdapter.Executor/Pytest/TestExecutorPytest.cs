@@ -134,7 +134,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
 
             using (var executor = new ExecutorService(settings, frameworkHandle, runContext)) {
-                Dictionary<string, TestResult> idToResultsMap = CreatePytestIdToVsTestResultsMap(testGroup);
+                var idToResultsMap = CreatePytestIdToVsTestResultsMap(testGroup);
                 var resultsXML = executor.Run(testGroup);
 
                 //Read pytest results from xml
