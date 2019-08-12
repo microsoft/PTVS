@@ -3483,7 +3483,8 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Test container was not found for {0}..
+        ///   Looks up a localized string similar to Test container was not found under folder {0} 
+        ///for test {1}..
         /// </summary>
         public static string ErrorTestContainerNotFound {
             get {

@@ -105,8 +105,9 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
                 foreach (PytestTest test in result.Tests) {
                     try {
                         (string parsedSource, int line) = test.ParseSourceAndLine();
-                        var parsedFullSourcePath = Path.IsPathRooted(parsedSource) ? parsedSource : Path.Combine(_settings.ProjectHome, parsedSource);
-                     
+                        // Note: we use _settings.ProjectHome and not result.root since it is being lowercased
+                        var parsedFullSourcePath = Path.IsPathRooted(parsedSource) ? parsedSource : PathUtils.GetAbsoluteFilePath(_settings.ProjectHome, parsedSource);
+
                         //Note: Pytest adapter is currently returning lowercase source paths
                         //Test Explorer will show a key not found exception if we use a source path that doesn't match a test container's source.
                         if (_settings.TestContainerSources.TryGetValue(parsedFullSourcePath, out string testContainerSourcePath)) {
@@ -117,7 +118,7 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
                                 _settings.ProjectHome);
                             discoverySink?.SendTestCase(tc);
                         } else {
-                            Warn(Strings.ErrorTestContainerNotFound.FormatUI(test.ToString()));
+                            Warn(Strings.ErrorTestContainerNotFound.FormatUI(_settings.ProjectHome, test.ToString()));
                             showConfigurationHint = true;
                         }
                     } catch (Exception ex) {

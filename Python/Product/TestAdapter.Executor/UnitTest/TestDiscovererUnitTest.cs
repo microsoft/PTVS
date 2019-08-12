@@ -121,7 +121,7 @@ namespace Microsoft.PythonTools.TestAdapter.UnitTest {
                         TestCase tc = test.ToVsTestCase(_settings.ProjectHome);
                         discoverySink?.SendTestCase(tc);
                     } else {
-                        Warn(Strings.ErrorTestContainerNotFound.FormatUI(test.ToString()));
+                        Warn(Strings.ErrorTestContainerNotFound.FormatUI(_settings.ProjectHome, test.ToString()));
                         showConfigurationHint = true;
                     }
                 } catch (Exception ex) {
