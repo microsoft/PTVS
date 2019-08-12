@@ -137,6 +137,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 Dictionary<string, TestResult> idToResultsMap = CreatePytestIdToVsTestResultsMap(testGroup);
                 var resultsXML = executor.Run(testGroup);
 
+                //Read pytest results from xml
                 if (File.Exists(resultsXML)) {
                     var xmlTestResultNodes = TestResultParser.Read(resultsXML).CreateNavigator().Select("/testsuite/testcase");
                     foreach (XPathNavigator pytestResultNode in xmlTestResultNodes) {
@@ -145,11 +146,10 @@ namespace Microsoft.PythonTools.TestAdapter {
                         }
                         try {
                             string pytestId = TestResultParser.GetPytestId(pytestResultNode);
-
-                            if (idToResultsMap.TryGetValue(pytestId, out TestResult vsTestResult)) {
+                            if (pytestId != null && idToResultsMap.TryGetValue(pytestId, out TestResult vsTestResult)) {
                                 TestResultParser.UpdateVsTestResult(vsTestResult, pytestResultNode);
                             } else {
-                                frameworkHandle.SendMessage(TestMessageLevel.Error, "Test not found for result: {0}".FormatInvariant(pytestResultNode.InnerXml));
+                                frameworkHandle.SendMessage(TestMessageLevel.Error, Strings.ErrorTestCaseNotFound.FormatInvariant(pytestResultNode.OuterXml));
                             }
                         } catch (Exception ex) {
                             frameworkHandle.SendMessage(TestMessageLevel.Error, ex.Message);

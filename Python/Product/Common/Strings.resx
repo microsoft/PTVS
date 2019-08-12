@@ -2963,4 +2963,9 @@ Please specify at least one package.</value>
   <data name="DiscoveryConfigurationMessage" xml:space="preserve">
     <value>Go to https://aka.ms/VSTestExplorerPython for more details on test discovery configuration.</value>
   </data>
+  <data name="ErrorTestCaseNotFound" xml:space="preserve">
+    <value>Testcase not found for test result: {0}</value>
+    <comment>{0} is the result xml data found</comment>
+  </data>
+    
 </root>

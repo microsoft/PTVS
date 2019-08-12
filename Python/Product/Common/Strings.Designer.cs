@@ -3474,6 +3474,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Testcase not found for test result: {0}.
+        /// </summary>
+        public static string ErrorTestCaseNotFound {
+            get {
+                return ResourceManager.GetString("ErrorTestCaseNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Test container was not found for {0}..
         /// </summary>
         public static string ErrorTestContainerNotFound {
