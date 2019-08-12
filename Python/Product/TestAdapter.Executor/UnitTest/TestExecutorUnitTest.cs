@@ -86,7 +86,6 @@ namespace Microsoft.PythonTools.TestAdapter {
             _cancelRequested.Reset();
 
             var sourceToProjSettings = RunSettingsUtil.GetSourceToProjSettings(runContext.RunSettings);
-
             var testColletion = new TestCollection();
 
             foreach (var testGroup in sources.GroupBy(x => sourceToProjSettings[x])) {
@@ -94,7 +93,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 
                 try {
                     var discovery = DiscovererFactory.GetDiscoverer(settings);
-                    discovery.DiscoverTests(testGroup, frameworkHandle, testColletion, sourceToProjSettings);
+                    discovery.DiscoverTests(testGroup, frameworkHandle, testColletion);
                 } catch (Exception ex) {
                     frameworkHandle.SendMessage(TestMessageLevel.Error, ex.Message);
                 }
