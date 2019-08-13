@@ -176,7 +176,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 _testFilesUpdateWatcher.AddDirectoryWatch(workspace.Location);
                 oldWatcher?.Dispose();
 
-                foreach (var file in GetTestFiles(projInfo)) {
+                foreach (var file in GetTestContainerFiles(projInfo)) {
                     projInfo.AddTestContainer(this, file);
                 }
 
@@ -231,7 +231,7 @@ namespace Microsoft.PythonTools.TestAdapter {
         private bool IsSettingsFile(string file) {
             if (String.IsNullOrEmpty(file))
                 return false;
-            
+
             return PythonConstants.PyTestFrameworkConfigFiles.Contains(Path.GetFileName(file));
         }
 
@@ -291,18 +291,18 @@ namespace Microsoft.PythonTools.TestAdapter {
             NotifyContainerChanged();
         }
 
-        private IEnumerable<string> GetTestFiles(ProjectInfo projectInfo) {
-            List<string> validFiles = Directory.EnumerateFiles(projectInfo.ProjectHome, "*.py", SearchOption.TopDirectoryOnly).ToList();
-            List<InterpreterConfiguration> workspaceInterpreterFactories = _interpreterRegistryService.Configurations
+        private IEnumerable<string> GetTestContainerFiles(ProjectInfo projectInfo) {
+            var validFiles = Directory.EnumerateFiles(projectInfo.ProjectHome, "*.py", SearchOption.TopDirectoryOnly);
+            var workspaceInterpreterConfigs = _interpreterRegistryService.Configurations
                 .Where(x => PathUtils.IsSubpathOf(projectInfo.ProjectHome, x.InterpreterPath))
                 .ToList();
+            var workspaceCacheDirPath = Path.Combine(projectInfo.ProjectHome, ".vs");
 
-            foreach (var directory in Directory.EnumerateDirectories(projectInfo.ProjectHome, "*", SearchOption.TopDirectoryOnly)) {
-
-                if (!workspaceInterpreterFactories.Any(x => PathUtils.IsSameDirectory(x.GetPrefixPath(), directory)) &&
-                    !PathUtils.IsSameDirectory(directory, Path.Combine(projectInfo.ProjectHome, ".vs"))
+            foreach (var directory in Directory.EnumerateDirectories(projectInfo.ProjectHome)) {
+                if (!workspaceInterpreterConfigs.Any(x => PathUtils.IsSameDirectory(x.GetPrefixPath(), directory)) &&
+                    !PathUtils.IsSameDirectory(directory, workspaceCacheDirPath)
                 ) {
-                    validFiles.AddRange(Directory.EnumerateFiles(directory, "*.py", SearchOption.AllDirectories));
+                    validFiles = validFiles.Concat(Directory.EnumerateFiles(directory, "*.py", SearchOption.AllDirectories));
                 }
             }
 
