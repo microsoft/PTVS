@@ -55,13 +55,18 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
         /// case B: Global function - classname dropped entirely
         ///   <testcase classname="test_sample" file="test_sample.py" name="test_answer" >
         ///   pytestId .\test_sample.py::test_answer 
+        ///   
+        /// case C: Function inside a class inside a package - classsname drops the relative path portion
+        ///   <testcase classname="package1.packageA.test1.Test_test1" file="package1\packageA\test1.py" line="3" name="test_A" time="0.003">
+        ///   pytestID .\package1\packageA\test1.py::Test_test1::test_A
+        /// 
         /// </summary>
         /// <param name="filename"></param>
         /// <param name="classname"></param>
         /// <param name="funcname"></param>
         /// <returns></returns>
         internal static string CreatePytestId(string filename, string classname, string funcname) {
-            var classIndex = classname.IndexOf(".");
+            var classIndex = classname.LastIndexOf(".");
             if (classIndex >= 0 && classIndex < (classname.Length - 1)) {
                 var classNameWithoutFilename = classname.Substring(classIndex + 1);
                 return $".\\{filename}::{classNameWithoutFilename}::{funcname}";

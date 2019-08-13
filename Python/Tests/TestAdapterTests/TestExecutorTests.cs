@@ -221,6 +221,44 @@ if __name__ == '__main__':
             ExecuteTests(testEnv, runSettings, expectedTests);
         }
 
+        [TestMethod, Priority(0)]
+        [TestCategory("10s")]
+        public void RunPytestSubpackages() {
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
+
+            FileUtils.CopyDirectory(TestData.GetPath("TestData", "TestExecutor", "SubPackages"), testEnv.SourceFolderPath);
+
+            var testFilePath1 = Path.Combine(testEnv.SourceFolderPath, "package1\\packageA\\test1.py");
+            var testFilePath2 = Path.Combine(testEnv.SourceFolderPath, "package1\\packageA\\test2.py");
+
+            var expectedTests = new[] {
+                new TestInfo(
+                   "test_A",
+                   "package1\\packageA\\test1.py::Test_test1::test_A",
+                    testFilePath1,
+                    4,
+                    outcome: TestOutcome.Passed,
+                    pytestXmlClassName: "package1.packageA.test1.Test_test1"
+                ),
+                 new TestInfo(
+                   "test_A",
+                   "package1\\packageA\\test2.py::Test_test2::test_A",
+                    testFilePath2,
+                    4,
+                    outcome: TestOutcome.Passed,
+                    pytestXmlClassName: "package1.packageA.test2.Test_test2"
+                ),
+            };
+
+            var runSettings = new MockRunSettings(
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+                    .WithTestFile(testFilePath1)
+                    .WithTestFile(testFilePath2)
+                    .ToXml()
+            );
+
+            ExecuteTests(testEnv, runSettings, expectedTests);
+        }
 
         [TestMethod, Priority(0)]
         [TestCategory("10s")]
