@@ -176,10 +176,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 _testFilesUpdateWatcher.AddDirectoryWatch(workspace.Location);
                 oldWatcher?.Dispose();
 
-                var files = Directory.EnumerateFiles(workspace.Location, "*.py", SearchOption.AllDirectories)
-                    .Where(x => !IsFileExcluded(projInfo, x)
-                );
-                foreach (var file in files) {
+                foreach (var file in FilterInvalidFiles(projInfo)) {
                     projInfo.AddTestContainer(this, file);
                 }
 
@@ -294,11 +291,28 @@ namespace Microsoft.PythonTools.TestAdapter {
             NotifyContainerChanged();
         }
 
-        private bool IsFileExcluded(ProjectInfo projectInfo, string filePath)
-        {
+        private IEnumerable<string> FilterInvalidFiles(ProjectInfo projectInfo) {
+            List<string> validFiles = Directory.EnumerateFiles(projectInfo.ProjectHome, "*.py", SearchOption.TopDirectoryOnly).ToList();
+            List<InterpreterConfiguration> workspaceInterpreterFactories = _interpreterRegistryService.Configurations
+                .Where(x => PathUtils.IsSubpathOf(projectInfo.ProjectHome, x.InterpreterPath))
+                .ToList();
+
+            foreach (var directory in Directory.EnumerateDirectories(projectInfo.ProjectHome, "*", SearchOption.TopDirectoryOnly)) {
+
+                if (!workspaceInterpreterFactories.Any(x => PathUtils.IsSameDirectory(x.GetPrefixPath(), directory)) &&
+                    !PathUtils.IsSameDirectory(directory, Path.Combine(projectInfo.ProjectHome, ".vs"))
+                ) {
+                    validFiles.AddRange(Directory.EnumerateFiles(directory, "*.py", SearchOption.AllDirectories));
+                }
+            }
+
+            return validFiles;
+        }
+
+        private bool IsFileExcluded(ProjectInfo projectInfo, string filePath) {
             bool isFileInVirtualEnv = _interpreterRegistryService.Configurations
                 .Where(x => PathUtils.IsSubpathOf(projectInfo.ProjectHome, x.InterpreterPath))
-                .Any(x=> PathUtils.IsSubpathOf(x.GetPrefixPath(), filePath));
+                .Any(x => PathUtils.IsSubpathOf(x.GetPrefixPath(), filePath));
 
             return isFileInVirtualEnv || PathUtils.IsSubpathOf(Path.Combine(projectInfo.ProjectHome, ".vs"), filePath);
         }
