@@ -176,7 +176,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 _testFilesUpdateWatcher.AddDirectoryWatch(workspace.Location);
                 oldWatcher?.Dispose();
 
-                foreach (var file in FilterInvalidFiles(projInfo)) {
+                foreach (var file in GetTestFiles(projInfo)) {
                     projInfo.AddTestContainer(this, file);
                 }
 
@@ -291,7 +291,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             NotifyContainerChanged();
         }
 
-        private IEnumerable<string> FilterInvalidFiles(ProjectInfo projectInfo) {
+        private IEnumerable<string> GetTestFiles(ProjectInfo projectInfo) {
             List<string> validFiles = Directory.EnumerateFiles(projectInfo.ProjectHome, "*.py", SearchOption.TopDirectoryOnly).ToList();
             List<InterpreterConfiguration> workspaceInterpreterFactories = _interpreterRegistryService.Configurations
                 .Where(x => PathUtils.IsSubpathOf(projectInfo.ProjectHome, x.InterpreterPath))
