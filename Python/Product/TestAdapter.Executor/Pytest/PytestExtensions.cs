@@ -21,7 +21,7 @@ using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 namespace Microsoft.PythonTools.TestAdapter.Pytest {
-    static class PyTestExtensions {
+    static internal class PyTestExtensions {
 
         /// <summary>
         /// Parses the relative source and line number from a PytestTest discovery result
@@ -89,8 +89,8 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
         /// <param name="pytestId"></param>
         /// <returns></returns>
         internal static string CreateProperCasedPytestId(string source, string projectHome, string pytestId) {
-            String[] idParts = pytestId.Replace(".\\", "").Split(new string[] { "::" }, StringSplitOptions.None);
-            idParts[0] = PathUtils.CreateFriendlyFilePath(projectHome, source);
+            String[] idParts = pytestId.Split(new string[] { "::" }, StringSplitOptions.None);
+            idParts[0] = ".\\" + PathUtils.CreateFriendlyFilePath(projectHome, source);
             return String.Join("::", idParts);
         }
 
