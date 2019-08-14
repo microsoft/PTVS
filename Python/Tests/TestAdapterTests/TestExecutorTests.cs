@@ -66,8 +66,7 @@ namespace TestAdapterTests {
             Assert.AreEqual("C:\\Some\\Path", best);
         }
 
-        //To be fixed in https://github.com/microsoft/PTVS/issues/5538
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public void RunUnittest() {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
@@ -413,8 +412,7 @@ if __name__ == '__main__':
             ExecuteTests(testEnv, runSettings, expectedTests);
         }
 
-        //To be fixed in https://github.com/microsoft/PTVS/issues/5538
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public void RunUnittestInheritance() {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
@@ -481,8 +479,7 @@ if __name__ == '__main__':
             ExecuteTests(testEnv, runSettings, expectedTests);
         }
 
-        //To be fixed in https://github.com/microsoft/PTVS/issues/5538
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public void RunUnittestImportError() {
             // A load error is when unittest module fails to load the test (prior to running it)
@@ -522,8 +519,7 @@ if __name__ == '__main__':
             ExecuteTests(testEnv, runSettings, expectedTests);
         }
 
-        //To be fixed in https://github.com/microsoft/PTVS/issues/5538
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public void RunUnitTestStackTrace() {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
@@ -889,16 +885,6 @@ if __name__ == '__main__':
         }
 
         protected override PythonVersion Version => PythonPaths.Python35_x64 ?? PythonPaths.Python35;
-    }
-
-    [TestClass]
-    public class TestExecutorTests36 : TestExecutorTests {
-        [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
-            AssertListener.Initialize();
-        }
-
-        protected override PythonVersion Version => PythonPaths.Python36_x64 ?? PythonPaths.Python36;
     }
 
     [TestClass]

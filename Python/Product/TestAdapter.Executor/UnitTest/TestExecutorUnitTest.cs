@@ -318,7 +318,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             private readonly string _debugSecret;
             private readonly int _debugPort;
             private readonly ManualResetEvent _cancelRequested;
-            private readonly AutoResetEvent _connected = new AutoResetEvent(false);
+            private readonly ManualResetEvent _connected = new ManualResetEvent(false);
             private readonly AutoResetEvent _done = new AutoResetEvent(false);
             private Connection _connection;
             private readonly Socket _socket;
@@ -513,6 +513,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 
                     ////////////////////////////////////////////////////////////
                     // Do the test run
+                    _connected.Reset();
                     using (var proc = ProcessOutput.Run(
                         _settings.InterpreterPath,
                         arguments,
@@ -530,8 +531,9 @@ namespace Microsoft.PythonTools.TestAdapter {
                         // If there's an error in the launcher script,
                         // it will terminate without connecting back.
                         WaitHandle.WaitAny(new WaitHandle[] { _connected, proc.WaitHandle });
+                        bool processConnected = _connected.WaitOne(1);
 
-                        if (proc.ExitCode.HasValue) {
+                        if (!processConnected && proc.ExitCode.HasValue) {
                             // Process has already exited
                             proc.Wait();
                             Error(Strings.Test_FailedToStartExited);
