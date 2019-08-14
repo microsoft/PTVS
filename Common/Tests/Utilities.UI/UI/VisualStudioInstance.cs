@@ -53,6 +53,22 @@ namespace TestUtilities.UI {
             _solutionExplorer = _app.OpenSolutionExplorer();
             SelectSolutionNode();
         }
+        
+       //SelectSolutionNode for item visibility 
+        public VisualStudioInstance(SolutionFile solution, VisualStudioApp app, string item)
+        {
+            _solution = solution;
+            _app = app;
+            Project = _app.OpenProject(solution.Filename);
+
+            ThreadHelper.JoinableTaskFactory.Run(async () => {
+                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+                Keyboard.Reset();
+            });
+
+            _solutionExplorer = _app.OpenSolutionExplorer();
+            SelectSolutionNode_visbility();
+        }
 
         public VisualStudioApp App {
             get {
@@ -171,6 +187,19 @@ namespace TestUtilities.UI {
 
             }
         }
+        
+        //The Visible property of one of the two projects under the same solution is false
+        private string SolutionNodeText_visibility
+        {
+            get
+            {
+                return String.Format(
+                    "Solution '{0}' (1 of 2 projects)",
+                    Path.GetFileNameWithoutExtension(_solution.Filename)
+                );
+
+            }
+        }
 
         /// <summary>
         /// Selects the solution node using the mouse.
@@ -188,6 +217,19 @@ namespace TestUtilities.UI {
             _solutionExplorer = _app.OpenSolutionExplorer();
             var item = SolutionExplorer.WaitForItem(SolutionNodeText);
             Assert.IsNotNull(item, "Failed to find {0}", SolutionNodeText);
+            SolutionExplorer.CenterInView(item);
+            Mouse.MoveTo(item.GetClickablePoint());
+            Mouse.Click(MouseButton.Left);
+        }
+        
+        //add for item visibility 
+        public void SelectSolutionNode_visbility()
+        {
+            // May need to reopen Solution Explorer so we can find a clickable
+            // point.
+            _solutionExplorer = _app.OpenSolutionExplorer();
+            var item = SolutionExplorer.WaitForItem(SolutionNodeText_visibility);
+            Assert.IsNotNull(item, "Failed to find {0}", SolutionNodeText_visibility);
             SolutionExplorer.CenterInView(item);
             Mouse.MoveTo(item.GetClickablePoint());
             Mouse.Click(MouseButton.Left);
