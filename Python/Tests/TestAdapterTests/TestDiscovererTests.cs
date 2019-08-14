@@ -94,39 +94,6 @@ namespace TestAdapterTests {
             DiscoverTests(testEnv, new[] { testFilePath }, runSettings, expectedTests);
         }
 
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
-        [TestCategory("10s")]
-        public void DiscoverPytestLargeProject() {
-            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
-
-            // Test that we don't try passing 1000 files via command line arguments
-            // since that would exceed the 32k limit and fail.
-            var isWorkspace = false;
-            var expectedTests = new List<TestInfo>();
-            for (int i = 0; i < 1000; i++) {
-                var moduleName = $"test_file_with_long_file_name_{i}";
-                var funcName = $"test_func_{i}";
-                var testFilePath = Path.Combine(testEnv.SourceFolderPath, $"{moduleName}.py");
-                var testContents = $"def {funcName}(): pass";
-                File.WriteAllText(testFilePath, testContents);
-
-                expectedTests.Add(new TestInfo(
-                    funcName,
-                    $"{moduleName}.py::{moduleName}::{funcName}",
-                    testFilePath,
-                    1
-                ));
-            }
-
-            var runSettings = new MockRunSettings(
-                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath, isWorkspace: isWorkspace)
-                    .WithTestFilesFromFolder(testEnv.SourceFolderPath)
-                    .ToXml()
-            );
-
-            DiscoverTests(testEnv, expectedTests.Select(t => t.FilePath).ToArray(), runSettings, expectedTests.ToArray());
-        }
-
         [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public void DiscoverPytestTimeoutError() {

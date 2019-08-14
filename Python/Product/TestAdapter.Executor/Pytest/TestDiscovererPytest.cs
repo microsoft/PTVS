@@ -139,27 +139,8 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
             arguments.Add("pytest");
             arguments.Add("--output-file");
             arguments.Add(outputfilename);
-
-            // For a small set of tests, we'll pass them on the command
-            // line. Once we exceed a certain (arbitrary) number, create
-            // a test list on disk so that we do not overflow the 
-            // 32K argument limit.
-            bool useTestList = sources.Count() > 5;
-            if (!projSettings.IsWorkspace &&
-                useTestList) {
-                var testListFilePath = TestUtils.CreateTestListFile(sources);
-                arguments.Add("--test-list");
-                arguments.Add(testListFilePath);
-            }
             //Note pytest specific arguments go after this separator
             arguments.Add("--");
-            // Add source files to pytest as arguments
-            if (!projSettings.IsWorkspace &&
-                !useTestList) {
-                foreach (var s in sources) {
-                    arguments.Add(s);
-                }
-            }
             arguments.Add("--cache-clear");
             return arguments.ToArray();
         }
