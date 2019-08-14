@@ -464,12 +464,16 @@ namespace TestAdapterTests {
         public void DiscoverUnittest() {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
 
-            var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_ut.py");
-            File.Copy(TestData.GetPath("TestData", "TestDiscoverer", "BasicUnittest", "test_ut.py"), testFilePath);
+            var testFile1Path = Path.Combine(testEnv.SourceFolderPath, "test_ut.py");
+            File.Copy(TestData.GetPath("TestData", "TestDiscoverer", "BasicUnittest", "test_ut.py"), testFile1Path);
+
+            var testFile2Path = Path.Combine(testEnv.SourceFolderPath, "test_runtest.py");
+            File.Copy(TestData.GetPath("TestData", "TestDiscoverer", "BasicUnittest", "test_runtest.py"), testFile2Path);
 
             var expectedTests = new[] {
-                new TestInfo("test_ut_fail", "test_ut.py::TestClassUT::test_ut_fail", testFilePath, 4),
-                new TestInfo("test_ut_pass", "test_ut.py::TestClassUT::test_ut_pass", testFilePath, 7),
+                new TestInfo("test_ut_fail", "test_ut.py::TestClassUT::test_ut_fail", testFile1Path, 4),
+                new TestInfo("test_ut_pass", "test_ut.py::TestClassUT::test_ut_pass", testFile1Path, 7),
+                new TestInfo("runTest", "test_runtest.py::TestClassRunTest::runTest", testFile2Path, 4),
             };
 
             var runSettings = new MockRunSettings(
@@ -478,7 +482,7 @@ namespace TestAdapterTests {
                     .ToXml()
             );
 
-            DiscoverTests(testEnv, new[] { testFilePath }, runSettings, expectedTests);
+            DiscoverTests(testEnv, new[] { testFile1Path }, runSettings, expectedTests);
         }
 
         [TestMethod, Priority(0)]

@@ -71,22 +71,32 @@ namespace TestAdapterTests {
         public void RunUnittest() {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
 
-            var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_ut.py");
-            File.Copy(TestData.GetPath("TestData", "TestDiscoverer", "BasicUnittest", "test_ut.py"), testFilePath);
+            var testFile1Path = Path.Combine(testEnv.SourceFolderPath, "test_ut.py");
+            File.Copy(TestData.GetPath("TestData", "TestDiscoverer", "BasicUnittest", "test_ut.py"), testFile1Path);
+
+            var testFile2Path = Path.Combine(testEnv.SourceFolderPath, "test_runtest.py");
+            File.Copy(TestData.GetPath("TestData", "TestDiscoverer", "BasicUnittest", "test_runtest.py"), testFile2Path);
 
             var expectedTests = new[] {
                 new TestInfo(
                     "test_ut_fail",
                     "test_ut.py::TestClassUT::test_ut_fail",
-                    testFilePath,
+                    testFile1Path,
                     4,
                     outcome: TestOutcome.Failed
                 ),
                 new TestInfo(
                     "test_ut_pass",
                     "test_ut.py::TestClassUT::test_ut_pass",
-                    testFilePath,
+                    testFile1Path,
                     7,
+                    outcome: TestOutcome.Passed
+                ),
+                new TestInfo(
+                    "runTest",
+                    "test_runtest.py::TestClassRunTest::runTest",
+                    testFile2Path,
+                    4,
                     outcome: TestOutcome.Passed
                 ),
             };
@@ -383,7 +393,6 @@ if __name__ == '__main__':
             Assert.IsTrue(recorder.Results.Count < expectedTests.Length);
         }
 
-        [Ignore] // TODO: is this a bug in product? See equivalent test for test discoverer
         [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public void RunUnittestRelativeImport() {
@@ -396,7 +405,7 @@ if __name__ == '__main__':
             var expectedTests = new[] {
                 new TestInfo(
                     "test_relative_import",
-                    "test_relative_import.py::RelativeImportTests::test_relative_import",
+                    "relativeimportpackage\\test_relative_import.py::RelativeImportTests::test_relative_import",
                     testFilePath,
                     5,
                     outcome: TestOutcome.Passed
