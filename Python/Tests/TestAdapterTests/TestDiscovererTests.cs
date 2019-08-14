@@ -94,7 +94,7 @@ namespace TestAdapterTests {
             DiscoverTests(testEnv, new[] { testFilePath }, runSettings, expectedTests);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         [TestCategory("10s")]
         public void DiscoverPytestLargeProject() {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
@@ -807,16 +807,6 @@ if __name__ == '__main__':
         protected override PythonVersion Version => PythonPaths.Python35_x64 ?? PythonPaths.Python35;
 
         protected override string ImportErrorFormat => "ImportError: No module named '{0}'";
-    }
-
-    [TestClass]
-    public class TestDiscovererTests36 : TestDiscovererTests {
-        [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
-            AssertListener.Initialize();
-        }
-
-        protected override PythonVersion Version => PythonPaths.Python36_x64 ?? PythonPaths.Python36;
     }
 
     [TestClass]

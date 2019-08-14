@@ -159,13 +159,14 @@ namespace Microsoft.PythonTools.Project {
 
         private async Task InstallPytestActionAsync() {
             LogEvent(ConfigureTestFrameworkInfoBarActions.InstallPytest);
+            Close();
+
             var result = await InstallPyTestAsync();
             if (!result) {
                 var generalOutputWindow = OutputWindowRedirector.GetGeneral(Site);
                 generalOutputWindow.ShowAndActivate();
             }
 
-            Close();
         }
 
         private void EnablePytestAction() {
@@ -174,8 +175,9 @@ namespace Microsoft.PythonTools.Project {
 
         private async Task EnablePytestActionAsync() {
             LogEvent(ConfigureTestFrameworkInfoBarActions.EnablePytest);
-            await SetPropertyAsync(PythonConstants.TestFrameworkSetting, "Pytest");
             Close();
+
+            await SetPropertyAsync(PythonConstants.TestFrameworkSetting, "Pytest");
         }
 
         private void InstallAndEnablePytestAction() {
@@ -184,13 +186,14 @@ namespace Microsoft.PythonTools.Project {
 
         private async Task InstallAndEnablePytestActionAsync() {
             LogEvent(ConfigureTestFrameworkInfoBarActions.EnableAndInstallPytest);
+            Close();
+
             if (!await InstallPyTestAsync()) {
                 var generalOutputWindow = OutputWindowRedirector.GetGeneral(Site);
                 generalOutputWindow.ShowAndActivate();
             }
 
             await SetPropertyAsync(PythonConstants.TestFrameworkSetting, "Pytest");
-            Close();
         }
 
         private void EnableUnitTestAction() {
@@ -199,8 +202,9 @@ namespace Microsoft.PythonTools.Project {
 
         private async Task EnableUnitTestActionAsync() {
             LogEvent(ConfigureTestFrameworkInfoBarActions.EnableUnitTest);
-            await SetPropertyAsync(PythonConstants.TestFrameworkSetting, "unittest");
             Close();
+
+            await SetPropertyAsync(PythonConstants.TestFrameworkSetting, "unittest");
         }
 
         private void IgnoreAction() {
@@ -209,8 +213,9 @@ namespace Microsoft.PythonTools.Project {
 
         private async Task IgnoreActionAsync() {
             LogEvent(ConfigureTestFrameworkInfoBarActions.Ignore);
-            await SetPropertyAsync(PythonConstants.SuppressConfigureTestFrameworkPrompt, "true");
             Close();
+
+            await SetPropertyAsync(PythonConstants.SuppressConfigureTestFrameworkPrompt, "true");
         }
 
 
