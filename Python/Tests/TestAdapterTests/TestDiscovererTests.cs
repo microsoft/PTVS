@@ -481,6 +481,33 @@ namespace TestAdapterTests {
             DiscoverTests(testEnv, new[] { testFilePath }, runSettings, expectedTests);
         }
 
+        [TestMethod, Priority(0)]
+        [TestCategory("10s")]
+        public void DiscoverUnittestConfiguration() {
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
+
+            FileUtils.CopyDirectory(TestData.GetPath("TestData", "TestDiscoverer", "ConfigUnittest"), testEnv.SourceFolderPath);
+
+            // We have 3 files
+            // product/prefix_not_included.py (should not be found, outside test folder)
+            // test/test_not_included.py (should not be found, incorrect filename pattern)
+            // test/prefix_included.py (should be found)
+            var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test", "prefix_included.py");
+
+            var expectedTests = new[] {
+                new TestInfo("test_included", "test\\prefix_included.py::PrefixIncluded::test_included", testFilePath, 4),
+            };
+
+            var runSettings = new MockRunSettings(
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+                    .WithTestFilesFromFolder(Path.Combine(testEnv.SourceFolderPath, "product"))
+                    .WithTestFilesFromFolder(Path.Combine(testEnv.SourceFolderPath, "test"))
+                    .WithUnitTestConfiguration("test", "prefix_*.py")
+                    .ToXml()
+            );
+
+            DiscoverTests(testEnv, new[] { testFilePath }, runSettings, expectedTests);
+        }
 
         [TestMethod, Priority(0)]
         [TestCategory("10s")]
