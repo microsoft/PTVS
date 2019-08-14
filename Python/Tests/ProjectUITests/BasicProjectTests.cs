@@ -1239,8 +1239,11 @@ namespace ProjectUITests {
                 );
 
                 var solutionFile = SolutionFile.Generate("HelloWorld", baseProj, imported);
-                using (var solution = solutionFile.ToVs(app)) {
-                    Assert.IsNotNull(solution.WaitForItem("HelloWorld", "VisibleItem.txt"), "VisibleItem.txt not found");
+                //using (var solution = solutionFile.ToVs(app)) {
+                //Sets parameters and calls the overload method of ToVS
+                using (var solution = solutionFile.ToVs(app,"true")){
+                    //Assert.IsNotNull(solution.WaitForItem("HelloWorld", "VisibleItem.txt"), "VisibleItem.txt not found");
+                    Assert.IsNull(solution.WaitForItem("HelloWorld", "VisibleItem.txt"), "VisibleItem.txt not found");
                     Assert.IsNull(solution.FindItem("HelloWorld", "ProjectInvisible.txt"), "VisibleItem.txt not found");
                     Assert.IsNull(solution.FindItem("HelloWorld", "ImportedItem.txt"), "VisibleItem.txt not found");
                 }
