@@ -33,6 +33,16 @@ namespace TestUtilities.UI {
             }
             return new VisualStudioInstance(self, app);
         }
+        
+        //ToVS overloading for item visibility 
+        public static IVisualStudioInstance ToVs(this SolutionFile self, VisualStudioApp app, string item)
+        {
+            if (app == null)
+            {
+                return self.ToMockVs();
+            }
+            return new VisualStudioInstance(self, app, item);
+        }
 
         public static string[] GetDisplayTexts(this ICompletionSession completionSession) {
             return completionSession.CompletionSets.First().Completions.Select(x => x.DisplayText).ToArray();
