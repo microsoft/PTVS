@@ -524,9 +524,9 @@ namespace Microsoft.PythonTools.TestAdapter {
                     )) {
                         bool killed = false;
 
-                        DebugInfo("cd " + _settings.WorkingDirectory);
-                        DebugInfo("set " + pythonPath.Key + "=" + pythonPath.Value);
-                        DebugInfo(proc.Arguments);
+                        Info("cd " + _settings.WorkingDirectory);
+                        Info("set " + pythonPath.Key + "=" + pythonPath.Value);
+                        Info(proc.Arguments);
 
                         // If there's an error in the launcher script,
                         // it will terminate without connecting back.
