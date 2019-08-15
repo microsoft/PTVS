@@ -30,7 +30,7 @@ using Microsoft.VisualStudio.TestWindow.Extensibility;
 using TestAdapterTests.Mocks;
 using TestUtilities;
 using TestUtilities.Python;
-using PythonConstants = pt::Microsoft.PythonTools.PythonConstants;
+using pt::Microsoft.PythonTools.CodeCoverage;
 
 namespace TestAdapterTests {
     [TestClass, Ignore]
@@ -530,6 +530,53 @@ if __name__ == '__main__':
 
         [TestMethod, Priority(0)]
         [TestCategory("10s")]
+        public void RunUnittestCoverage() {
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest, installCoverage: true);
+
+            FileUtils.CopyDirectory(TestData.GetPath("TestData", "TestExecutor", "Coverage"), testEnv.SourceFolderPath);
+
+            var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_coverage.py");
+
+            var expectedTests = new[] {
+                new TestInfo(
+                    "test_one",
+                    "test_coverage.py::TestCoverage::test_one",
+                    testFilePath,
+                    6,
+                    outcome: TestOutcome.Passed
+                ),
+                new TestInfo(
+                    "test_one",
+                    "test_coverage.py::TestCoverage::test_two",
+                    testFilePath,
+                    10,
+                    outcome: TestOutcome.Passed
+                ),
+            };
+
+            var expectedCoverages = new[] {
+                new CoverageInfo(
+                    "test_coverage.py",
+                    new[] { 1, 3, 5, 6, 7, 8, 10, 11, 13 }
+                ),
+                new CoverageInfo(
+                    "package1\\__init__.py",
+                    new[] { 1, 2, 3, 4, 5, 9, 10, 12 }
+                )
+            };
+
+            var runSettings = new MockRunSettings(
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+                    .WithTestFile(testFilePath)
+                    .WithCoverage()
+                    .ToXml()
+            );
+
+            ExecuteTests(testEnv, runSettings, expectedTests, expectedCoverages);
+        }
+
+        [TestMethod, Priority(0)]
+        [TestCategory("10s")]
         public void RunUnitTestStackTrace() {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
 
@@ -731,7 +778,7 @@ if __name__ == '__main__':
             ExecuteTests(testEnv, runSettings, expectedTests);
         }
 
-        private static void ExecuteTests(TestEnvironment testEnv, MockRunSettings runSettings, TestInfo[] expectedTests) {
+        private static void ExecuteTests(TestEnvironment testEnv, MockRunSettings runSettings, TestInfo[] expectedTests, CoverageInfo[] expectedCoverages = null) {
             var testCases = CreateTestCasesFromTestInfo(testEnv, expectedTests);
             var runContext = new MockRunContext(runSettings, testCases, testEnv.ResultsFolderPath);
             var recorder = new MockTestExecutionRecorder();
@@ -753,6 +800,7 @@ if __name__ == '__main__':
             executor.RunTests(testCases, runContext, recorder);
 
             ValidateExecutedTests(expectedTests, recorder);
+            ValidateCoverage(testEnv.SourceFolderPath, expectedCoverages, recorder);
         }
 
         private static List<TestCase> CreateTestCasesFromTestInfo(TestEnvironment testEnv, IEnumerable<TestInfo> expectedTests) {
@@ -823,10 +871,22 @@ if __name__ == '__main__':
         }
 
         private static void PrintTestResults(MockTestExecutionRecorder recorder) {
+            Console.WriteLine("Messages:");
             foreach (var message in recorder.Messages) {
                 Console.WriteLine(message);
             }
+            Console.WriteLine("");
 
+            Console.WriteLine("Attachments:");
+            foreach (var attachment in recorder.Attachments) {
+                Console.WriteLine($"DisplayName: {attachment.DisplayName}");
+                Console.WriteLine($"Uri: {attachment.Uri}");
+                Console.WriteLine($"Count: {attachment.Attachments.Count}");
+                Console.WriteLine("");
+            }
+            Console.WriteLine("");
+
+            Console.WriteLine("Results:");
             foreach (var result in recorder.Results) {
                 Console.WriteLine($"FullyQualifiedName: {result.TestCase.FullyQualifiedName}");
                 Console.WriteLine($"Outcome: {result.Outcome}");
@@ -837,6 +897,49 @@ if __name__ == '__main__':
                 }
                 Console.WriteLine("");
             }
+        }
+
+        private static void ValidateCoverage(string sourceDir, CoverageInfo[] expectedCoverages, MockTestExecutionRecorder recorder) {
+            var coverageAttachment = recorder.Attachments.SingleOrDefault(x => x.Uri == TestExecutorUnitTest.PythonCodeCoverageUri);
+            if (expectedCoverages != null) {
+                Assert.IsNotNull(coverageAttachment, "Coverage attachment not found");
+                Assert.AreEqual(1, coverageAttachment.Attachments.Count, "Expected 1 coverage data item");
+
+                var coverageItem = coverageAttachment.Attachments[0];
+                var coverageFilePath = coverageItem.Uri.LocalPath;
+                Assert.IsTrue(File.Exists(coverageFilePath), $"File path '{coverageFilePath}' does not exist");
+
+                ValidateCoverage(sourceDir, expectedCoverages, coverageFilePath);
+            } else {
+                Assert.IsNull(coverageAttachment, "Coverage attachment should not have been found");
+            }
+        }
+
+        private static void ValidateCoverage(string sourceDir, CoverageInfo[] expectedCoverages, string coverageFilePath) {
+            using (var stream = new FileStream(coverageFilePath, FileMode.Open, FileAccess.Read)) {
+                var converter = new CoveragePyConverter(sourceDir, stream);
+                var result = converter.Parse();
+                Assert.AreEqual(expectedCoverages.Length, result.Length, "Unexpected number of files in coverage results");
+
+                foreach (var expectedInfo in expectedCoverages) {
+                    var filePath = Path.Combine(sourceDir, expectedInfo.FileName);
+                    var actual = result.SingleOrDefault(x => PathUtils.IsSamePath(x.Filename, filePath));
+                    Assert.IsNotNull(actual, $"Expected coverage result for '{filePath}'");
+
+                    AssertUtil.ContainsExactly(actual.Hits, expectedInfo.CoveredLines);
+                }
+            }
+        }
+
+        class CoverageInfo {
+            public CoverageInfo(string fileName, int[] coveredLines) {
+                FileName = fileName;
+                CoveredLines = coveredLines;
+            }
+
+            public string FileName { get; }
+
+            public int[] CoveredLines { get; }
         }
 
         class StackFrameComparer : IComparer {

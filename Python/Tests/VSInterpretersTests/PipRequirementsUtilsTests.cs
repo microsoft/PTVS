@@ -170,7 +170,7 @@ namespace VSInterpretersTests {
             string reqTextPath = Path.Combine(virtualEnvPath, "requirements.txt");
             var installPackages = new[] { "cookies >= 2.0", "Bottle==0.8.2" };
 
-            pythonInterpreter.CreatePythonVirtualEnvWithPkgs(virtualEnvPath, installPackages);
+            pythonInterpreter.CreateVirtualEnv(virtualEnvPath, installPackages);
 
             // Test cases for packages not missing
             bool isPackageMissing = await PipRequirementsUtils.DetectMissingPackagesAsync(interpreterExePath, reqTextPath);

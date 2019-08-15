@@ -175,7 +175,7 @@ namespace PythonToolsUITests {
 
             var sln = app.CopyProjectForTest(@"TestData\InfoBar\InfoBarMissingPackages\InfoBarMissingPackages.sln");
 
-            basePython.CreatePythonVirtualEnvWithPkgs(
+            basePython.CreateVirtualEnv(
                 Path.Combine(Path.GetDirectoryName(sln), "env"), 
                 new[] { "bottle" }
             );
@@ -195,7 +195,7 @@ namespace PythonToolsUITests {
 
             var sln = app.CopyProjectForTest(@"TestData\InfoBar\InfoBarMissingPackages\InfoBarMissingPackages.sln");
 
-            basePython.CreatePythonVirtualEnvWithPkgs(
+            basePython.CreateVirtualEnv(
                 Path.Combine(Path.GetDirectoryName(sln), "env"), 
                 new[] { "bottle", "cookies" }
             );
@@ -340,7 +340,7 @@ namespace PythonToolsUITests {
             }
 
             if (virtualEnvBase != null) {
-                virtualEnvBase.CreatePythonVirtualEnvWithPkgs(Path.Combine(workspaceFolder, "env"), virtualEnvPackages);
+                virtualEnvBase.CreateVirtualEnv(Path.Combine(workspaceFolder, "env"), virtualEnvPackages);
             }
 
             return workspaceFolder;
