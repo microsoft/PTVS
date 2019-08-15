@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.PythonTools;
 
@@ -36,10 +37,16 @@ namespace TestAdapterTests.Mocks {
         // {4} is one or more formatted _runSettingTest lines
         // {5} is one or more formatted _runSettingEnvironment lines
         // {6} is one or more formatted _runSettingSearch lines
+        // {7} is the discovery wait time
+        // {8} is the workspace true/false
+        // {9} is the unit test configuration formatted _unitTestConfig
 
-        private const string _runSettingProject = @"<Project name=""{0}"" home=""{1}"" nativeDebugging="""" djangoSettingsModule="""" workingDir=""{1}"" interpreter=""{2}"" pathEnv=""PYTHONPATH"" testFramework= ""{3}"" discoveryWaitTime= ""{7}"" isWorkspace=""{8}""><Environment>{5}</Environment><SearchPaths>{6}</SearchPaths>
+        private const string _runSettingProject = @"<Project name=""{0}"" home=""{1}"" nativeDebugging="""" djangoSettingsModule="""" workingDir=""{1}"" interpreter=""{2}"" pathEnv=""PYTHONPATH"" testFramework= ""{3}"" {9} discoveryWaitTime= ""{7}"" isWorkspace=""{8}""><Environment>{5}</Environment><SearchPaths>{6}</SearchPaths>
 {4}
 </Project>";
+
+        // {0} is the full path to the file
+        private const string _unitTestConfig = @" unitTestRootDir=""{0}"" unitTestPattern=""{1}""";
 
         // {0} is the variable name
         // {1} is the variable value
@@ -55,6 +62,7 @@ namespace TestAdapterTests.Mocks {
         private string _resultsDir;
         private string _testDir;
         private string _interpreterPath;
+        private string _unitTestConfigAttributes;
         private int _discoveryWaitTimeInSeconds;
         private bool _isWorkspace;
         private StringBuilder _environmentLines = new StringBuilder();
@@ -69,6 +77,7 @@ namespace TestAdapterTests.Mocks {
             _interpreterPath = interpreterPath;
             _resultsDir = resultsDir;
             _testDir = testDir;
+            _unitTestConfigAttributes = string.Empty;
             _discoveryWaitTimeInSeconds = discoveryWaitTimeInSeconds;
             _isWorkspace = isWorkspace;
         }
@@ -85,6 +94,11 @@ namespace TestAdapterTests.Mocks {
 
         public MockRunSettingsXmlBuilder WithTestFile(string filePath) {
             _testLines.Append(string.Format(_runSettingTest, filePath));
+            return this;
+        }
+
+        public MockRunSettingsXmlBuilder WithUnitTestConfiguration(string rootFolderPath, string pattern) {
+            _unitTestConfigAttributes = string.Format(_unitTestConfig, rootFolderPath, pattern);
             return this;
         }
 
@@ -109,7 +123,8 @@ namespace TestAdapterTests.Mocks {
                     _environmentLines.ToString(),
                     _searchLines.ToString(),
                     _discoveryWaitTimeInSeconds < 0 ? string.Empty : _discoveryWaitTimeInSeconds.ToString(),
-                    _isWorkspace
+                    _isWorkspace,
+                    _unitTestConfigAttributes
                 ),
                 "false",
                 "false"

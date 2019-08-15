@@ -431,12 +431,16 @@ namespace TestAdapterTests {
         public void DiscoverUnittest() {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
 
-            var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_ut.py");
-            File.Copy(TestData.GetPath("TestData", "TestDiscoverer", "BasicUnittest", "test_ut.py"), testFilePath);
+            var testFile1Path = Path.Combine(testEnv.SourceFolderPath, "test_ut.py");
+            File.Copy(TestData.GetPath("TestData", "TestDiscoverer", "BasicUnittest", "test_ut.py"), testFile1Path);
+
+            var testFile2Path = Path.Combine(testEnv.SourceFolderPath, "test_runtest.py");
+            File.Copy(TestData.GetPath("TestData", "TestDiscoverer", "BasicUnittest", "test_runtest.py"), testFile2Path);
 
             var expectedTests = new[] {
-                new TestInfo("test_ut_fail", "test_ut.py::TestClassUT::test_ut_fail", testFilePath, 4),
-                new TestInfo("test_ut_pass", "test_ut.py::TestClassUT::test_ut_pass", testFilePath, 7),
+                new TestInfo("test_ut_fail", "test_ut.py::TestClassUT::test_ut_fail", testFile1Path, 4),
+                new TestInfo("test_ut_pass", "test_ut.py::TestClassUT::test_ut_pass", testFile1Path, 7),
+                new TestInfo("runTest", "test_runtest.py::TestClassRunTest::runTest", testFile2Path, 4),
             };
 
             var runSettings = new MockRunSettings(
@@ -445,9 +449,36 @@ namespace TestAdapterTests {
                     .ToXml()
             );
 
-            DiscoverTests(testEnv, new[] { testFilePath }, runSettings, expectedTests);
+            DiscoverTests(testEnv, new[] { testFile1Path }, runSettings, expectedTests);
         }
 
+        [TestMethod, Priority(0)]
+        [TestCategory("10s")]
+        public void DiscoverUnittestConfiguration() {
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
+
+            FileUtils.CopyDirectory(TestData.GetPath("TestData", "TestDiscoverer", "ConfigUnittest"), testEnv.SourceFolderPath);
+
+            // We have 3 files
+            // product/prefix_not_included.py (should not be found, outside test folder)
+            // test/test_not_included.py (should not be found, incorrect filename pattern)
+            // test/prefix_included.py (should be found)
+            var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test", "prefix_included.py");
+
+            var expectedTests = new[] {
+                new TestInfo("test_included", "test\\prefix_included.py::PrefixIncluded::test_included", testFilePath, 4),
+            };
+
+            var runSettings = new MockRunSettings(
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+                    .WithTestFilesFromFolder(Path.Combine(testEnv.SourceFolderPath, "product"))
+                    .WithTestFilesFromFolder(Path.Combine(testEnv.SourceFolderPath, "test"))
+                    .WithUnitTestConfiguration("test", "prefix_*.py")
+                    .ToXml()
+            );
+
+            DiscoverTests(testEnv, new[] { testFilePath }, runSettings, expectedTests);
+        }
 
         [TestMethod, Priority(0)]
         [TestCategory("10s")]
