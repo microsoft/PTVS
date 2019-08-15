@@ -174,9 +174,9 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
                     visible: true,
                     testRedirector
                 )) {
-                    DebugInfo("cd " + _projectSettings.WorkingDirectory);
-                    DebugInfo("set " + _projectSettings.PathEnv + "=" + env[_projectSettings.PathEnv]);
-                    DebugInfo(proc.Arguments);
+                    LogInfo("cd " + _projectSettings.WorkingDirectory);
+                    LogInfo("set " + _projectSettings.PathEnv + "=" + env[_projectSettings.PathEnv]);
+                    LogInfo(proc.Arguments);
 
                     if (!proc.ExitCode.HasValue) {
                         try {
@@ -224,6 +224,10 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
         [Conditional("DEBUG")]
         private void DebugError(string message) {
             _frameworkHandle.SendMessage(TestMessageLevel.Error, message);
+        }
+
+        private void LogInfo(string message) {
+            _frameworkHandle?.SendMessage(TestMessageLevel.Informational, message ?? String.Empty);
         }
 
         private void Error(string message) {

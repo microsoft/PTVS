@@ -22,7 +22,6 @@ using System.Linq;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.TestAdapter.Config;
 using Microsoft.PythonTools.TestAdapter.Services;
-using Microsoft.PythonTools.TestAdapter.Utils;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
@@ -51,9 +50,9 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
             var outputFilePath = Path.GetTempFileName();
             var arguments = GetArguments(sources, _settings, outputFilePath);
 
-            DebugInfo("cd " + _settings.WorkingDirectory);
-            DebugInfo("set " + _settings.PathEnv + "=" + env[_settings.PathEnv]);
-            DebugInfo($"{_settings.InterpreterPath} {string.Join(" ", arguments)}");
+            LogInfo("cd " + _settings.WorkingDirectory);
+            LogInfo("set " + _settings.PathEnv + "=" + env[_settings.PathEnv]);
+            LogInfo($"{_settings.InterpreterPath} {string.Join(" ", arguments)}");
 
             try {
                 var stdout = ProcessExecute.RunWithTimeout(

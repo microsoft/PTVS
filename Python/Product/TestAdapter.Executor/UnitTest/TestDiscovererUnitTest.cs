@@ -65,9 +65,9 @@ namespace Microsoft.PythonTools.TestAdapter.UnitTest {
             var outputFilePath = Path.GetTempFileName();
             var arguments = GetArguments(sources, outputFilePath);
 
-            DebugInfo("cd " + _settings.WorkingDirectory);
-            DebugInfo("set " + _settings.PathEnv + "=" + env[_settings.PathEnv]);
-            DebugInfo($"{_settings.InterpreterPath} {string.Join(" ", arguments)}");
+            LogInfo("cd " + _settings.WorkingDirectory);
+            LogInfo("set " + _settings.PathEnv + "=" + env[_settings.PathEnv]);
+            LogInfo($"{_settings.InterpreterPath} {string.Join(" ", arguments)}");
 
             try {
                 var stdout = ProcessExecute.RunWithTimeout(
