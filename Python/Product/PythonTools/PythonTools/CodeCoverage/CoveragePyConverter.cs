@@ -76,7 +76,7 @@ namespace Microsoft.PythonTools.CodeCoverage {
 
         private string GetFilename(string basePath, XPathNavigator node) {
             // Try and find the source relative to the coverage file first...
-            var filename = node.GetAttribute("filename", "");
+            var filename = node.GetAttribute("filename", "").Replace("/", "\\");
             string relativePath = Path.Combine(_coverageXmlBasePath, filename);
             if (File.Exists(relativePath)) {
                 return relativePath;

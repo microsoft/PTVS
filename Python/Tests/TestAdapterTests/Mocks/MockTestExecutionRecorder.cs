@@ -24,6 +24,7 @@ namespace TestAdapterTests.Mocks {
     class MockTestExecutionRecorder : IFrameworkHandle {
         public readonly List<TestResult> Results = new List<TestResult>();
         public readonly List<string> Messages = new List<string>();
+        public readonly List<AttachmentSet> Attachments = new List<AttachmentSet>();
 
         public bool EnableShutdownAfterTestRun {
             get {
@@ -42,6 +43,7 @@ namespace TestAdapterTests.Mocks {
         }
 
         public void RecordAttachments(IList<AttachmentSet> attachmentSets) {
+            Attachments.AddRange(attachmentSets);
         }
 
         public void RecordEnd(TestCase testCase, TestOutcome outcome) {

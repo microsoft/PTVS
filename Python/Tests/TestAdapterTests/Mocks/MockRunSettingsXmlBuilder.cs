@@ -25,10 +25,11 @@ namespace TestAdapterTests.Mocks {
         // {1} is one or more formatted _runSettingProject lines
         // {2} is 'true' or 'false' depending on whether the tests should be run
         // {3} is 'true' or 'false' depending on whether the console should be shown
+        // {4} is 'True' or 'False' depending on whether code coverage is enabled
         private const string _runSettings = @"<?xml version=""1.0""?><RunSettings><DataCollectionRunSettings><DataCollectors /></DataCollectionRunSettings><RunConfiguration><ResultsDirectory>{0}</ResultsDirectory><TargetPlatform>X86</TargetPlatform><TargetFrameworkVersion>Framework45</TargetFrameworkVersion></RunConfiguration><Python><TestCases>
 {1}
 </TestCases>
-<DryRun value=""{2}"" /><ShowConsole value=""{3}"" /></Python></RunSettings>";
+<DryRun value=""{2}"" /><EnableCoverage>{4}</EnableCoverage><ShowConsole value=""{3}"" /></Python></RunSettings>";
 
         // {0} is the project name
         // {1} is the project folder
@@ -65,6 +66,7 @@ namespace TestAdapterTests.Mocks {
         private string _unitTestConfigAttributes;
         private int _discoveryWaitTimeInSeconds;
         private bool _isWorkspace;
+        private bool _coverage;
         private StringBuilder _environmentLines = new StringBuilder();
         private StringBuilder _searchLines = new StringBuilder();
         private StringBuilder _testLines = new StringBuilder();
@@ -109,6 +111,11 @@ namespace TestAdapterTests.Mocks {
             return this;
         }
 
+        public MockRunSettingsXmlBuilder WithCoverage() {
+            _coverage = true;
+            return this;
+        }
+
         public string ToXml() {
             var xml = string.Format(
                 _runSettings,
@@ -127,8 +134,9 @@ namespace TestAdapterTests.Mocks {
                     _unitTestConfigAttributes
                 ),
                 "false",
-                "false"
-            ); ;
+                "false",
+                _coverage
+            );
 
             return xml;
         }
