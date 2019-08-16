@@ -58,11 +58,17 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
             }
 
             public override void WriteErrorLine(string line) {
-                _logger.SendMessage(TestMessageLevel.Error, line);
+                try {
+                    _logger.SendMessage(TestMessageLevel.Error, line);
+                } catch (ArgumentException) {
+                }
             }
 
             public override void WriteLine(string line) {
-                _logger.SendMessage(TestMessageLevel.Informational, line);
+                try {
+                    _logger.SendMessage(TestMessageLevel.Informational, line);
+                } catch (ArgumentException) {
+                }
             }
         }
 
@@ -171,8 +177,12 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
                     arguments,
                     _projectSettings.WorkingDirectory,
                     env,
-                    visible: true,
-                    testRedirector
+                    visible: false,
+                    testRedirector,
+                    quoteArgs:true,
+                    elevate:false,
+                    System.Text.Encoding.UTF8,
+                    System.Text.Encoding.UTF8
                 )) {
                     LogInfo("cd " + _projectSettings.WorkingDirectory);
                     LogInfo("set " + _projectSettings.PathEnv + "=" + env[_projectSettings.PathEnv]);
@@ -227,7 +237,7 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
         }
 
         private void LogInfo(string message) {
-            _frameworkHandle?.SendMessage(TestMessageLevel.Informational, message ?? String.Empty);
+            _frameworkHandle.SendMessage(TestMessageLevel.Informational, message);
         }
 
         private void Error(string message) {
