@@ -139,7 +139,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 
                 //Read pytest results from xml
                 if (File.Exists(resultsXML)) {
-                    var xmlTestResultNodes = TestResultParser.Read(resultsXML).CreateNavigator().Select("/testsuite/testcase");
+                    var xmlTestResultNodes = TestResultParser.Read(resultsXML).CreateNavigator().SelectDescendants("testcase", "", false);
                     foreach (XPathNavigator pytestResultNode in xmlTestResultNodes) {
                         if (_cancelRequested.WaitOne(0)) {
                             break;
