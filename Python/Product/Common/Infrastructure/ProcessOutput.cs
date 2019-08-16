@@ -363,20 +363,23 @@ namespace Microsoft.PythonTools.Infrastructure {
                 }
 
                 if (redirector != null) {
-                    var reader = new StreamReader(client.GetStream(), utf8, false, 4096, true);
                     Task.Run(() => {
-                        try {
-                            for (var line = reader.ReadLine(); line != null; line = reader.ReadLine()) {
-                                if (line.StartsWithOrdinal("OUT:")) {
-                                    redirector.WriteLine(line.Substring(4));
-                                } else if (line.StartsWithOrdinal("ERR:")) {
-                                    redirector.WriteErrorLine(line.Substring(4));
-                                } else {
-                                    redirector.WriteLine(line);
+                        using (var reader = new StreamReader(client.GetStream(), utf8, false, 4096, true)) {
+                            try {
+                                string line;
+                                while ((line = reader.ReadLine()) != null) { 
+                                
+                                    if (line.StartsWithOrdinal("OUT:")) {
+                                        redirector.WriteLine(line.Substring(4));
+                                    } else if (line.StartsWithOrdinal("ERR:")) {
+                                        redirector.WriteErrorLine(line.Substring(4));
+                                    } else {
+                                        redirector.WriteLine(line);
+                                    }
                                 }
+                            } catch (IOException) {
+                            } catch (ObjectDisposedException) {
                             }
-                        } catch (IOException) {
-                        } catch (ObjectDisposedException) {
                         }
                     });
                 }
