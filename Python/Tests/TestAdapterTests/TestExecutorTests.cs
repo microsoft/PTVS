@@ -53,20 +53,6 @@ namespace TestAdapterTests {
         }
 
         [TestMethod, Priority(0)]
-        public void TestBestFile() {
-            var file1 = "C:\\Some\\Path\\file1.py";
-            var file2 = "C:\\Some\\Path\\file2.py";
-            var best = TestExecutorUnitTest.UpdateBestFile(null, file1);
-            Assert.AreEqual(best, file1);
-
-            best = TestExecutorUnitTest.UpdateBestFile(null, file1);
-            Assert.AreEqual(best, file1);
-
-            best = TestExecutorUnitTest.UpdateBestFile(best, file2);
-            Assert.AreEqual("C:\\Some\\Path", best);
-        }
-
-        [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public void RunUnittest() {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
@@ -577,6 +563,55 @@ if __name__ == '__main__':
 
         [TestMethod, Priority(0)]
         [TestCategory("10s")]
+        public void RunPytestCoverage() {
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest, installCoverage: true);
+
+            FileUtils.CopyDirectory(TestData.GetPath("TestData", "TestExecutor", "Coverage"), testEnv.SourceFolderPath);
+
+            var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_coverage.py");
+
+            var expectedTests = new[] {
+                new TestInfo(
+                    "test_one",
+                    "test_coverage.py::TestCoverage::test_one",
+                    testFilePath,
+                    6,
+                    outcome: TestOutcome.Passed,
+                    pytestXmlClassName: "test_coverage.TestCoverage"
+                ),
+                new TestInfo(
+                    "test_one",
+                    "test_coverage.py::TestCoverage::test_two",
+                    testFilePath,
+                    10,
+                    outcome: TestOutcome.Passed,
+                    pytestXmlClassName: "test_coverage.TestCoverage"
+                ),
+            };
+
+            var expectedCoverages = new[] {
+                new CoverageInfo(
+                    "test_coverage.py",
+                    new[] { 1, 3, 5, 6, 7, 8, 10, 11, 13 }
+                ),
+                new CoverageInfo(
+                    "package1\\__init__.py",
+                    new[] { 1, 2, 3, 4, 5, 9, 10, 12 }
+                )
+            };
+
+            var runSettings = new MockRunSettings(
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+                    .WithTestFile(testFilePath)
+                    .WithCoverage()
+                    .ToXml()
+            );
+
+            ExecuteTests(testEnv, runSettings, expectedTests, expectedCoverages);
+        }
+
+        [TestMethod, Priority(0)]
+        [TestCategory("10s")]
         public void RunUnitTestStackTrace() {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
 
@@ -900,7 +935,7 @@ if __name__ == '__main__':
         }
 
         private static void ValidateCoverage(string sourceDir, CoverageInfo[] expectedCoverages, MockTestExecutionRecorder recorder) {
-            var coverageAttachment = recorder.Attachments.SingleOrDefault(x => x.Uri == TestExecutorUnitTest.PythonCodeCoverageUri);
+            var coverageAttachment = recorder.Attachments.SingleOrDefault(x => x.Uri == pt.Microsoft.PythonTools.PythonConstants.PythonCodeCoverageUri);
             if (expectedCoverages != null) {
                 Assert.IsNotNull(coverageAttachment, "Coverage attachment not found");
                 Assert.AreEqual(1, coverageAttachment.Attachments.Count, "Expected 1 coverage data item");
@@ -918,7 +953,10 @@ if __name__ == '__main__':
         private static void ValidateCoverage(string sourceDir, CoverageInfo[] expectedCoverages, string coverageFilePath) {
             using (var stream = new FileStream(coverageFilePath, FileMode.Open, FileAccess.Read)) {
                 var converter = new CoveragePyConverter(sourceDir, stream);
-                var result = converter.Parse();
+                var result = converter.Parse()
+                    .Where(fi => PathUtils.IsSubpathOf(sourceDir, fi.Filename))
+                    .ToArray();
+
                 Assert.AreEqual(expectedCoverages.Length, result.Length, "Unexpected number of files in coverage results");
 
                 foreach (var expectedInfo in expectedCoverages) {

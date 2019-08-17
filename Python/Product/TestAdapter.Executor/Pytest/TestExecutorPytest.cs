@@ -42,7 +42,6 @@ namespace Microsoft.PythonTools.TestAdapter {
         private static readonly Guid PythonDebugEngineGuid = new Guid("EC1375B7-E2CE-43E8-BF75-DC638DE1F1F9");
         private static readonly Guid NativeDebugEngineGuid = new Guid("3B476D35-A401-11D2-AAD4-00C04F990171");
         private static readonly string TestLauncherPath = PythonToolsInstallPath.GetFile("visualstudio_py_testlauncher.py");
-        internal static readonly Uri PythonCodeCoverageUri = new Uri("datacollector://Microsoft/PythonCodeCoverage/1.0");
         private readonly ManualResetEvent _cancelRequested = new ManualResetEvent(false);
         private readonly VisualStudioProxy _app;
 
@@ -135,7 +134,14 @@ namespace Microsoft.PythonTools.TestAdapter {
 
             using (var executor = new ExecutorService(settings, frameworkHandle, runContext)) {
                 var idToResultsMap = CreatePytestIdToVsTestResultsMap(testGroup);
-                var resultsXML = executor.Run(testGroup);
+
+                bool codeCoverage = ExecutorService.EnableCodeCoverage(runContext);
+                string covPath = null;
+                if (codeCoverage) {
+                    covPath = ExecutorService.GetCoveragePath(testGroup);
+                }
+
+                var resultsXML = executor.Run(testGroup, covPath);
 
                 //Read pytest results from xml
                 if (File.Exists(resultsXML)) {
@@ -164,6 +170,10 @@ namespace Microsoft.PythonTools.TestAdapter {
                         break;
                     }
                     frameworkHandle.RecordResult(result);
+                }
+
+                if (codeCoverage) {
+                    ExecutorService.AttachCoverageResults(frameworkHandle, covPath);
                 }
             }
         }

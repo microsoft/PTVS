@@ -193,12 +193,15 @@ namespace Microsoft.PythonTools {
         internal const string PytestExecutorUriString = "executor://PythonPyTestExecutor/v1";
         internal const string PythonProjectContainerDiscovererUriString = "executor://PythonProjectDiscoverer/v1";
         internal const string PythonWorkspaceContainerDiscovererUriString = "executor://PythonWorkspaceDiscoverer/v1";
+        internal const string PythonCodeCoverageUriString = "datacollector://Microsoft/PythonCodeCoverage/1.0";
 
         public static readonly Uri UnitTestExecutorUri = new Uri(UnitTestExecutorUriString);
         public static readonly Uri PytestExecutorUri = new Uri(PytestExecutorUriString);
 
         public static readonly Uri PythonProjectContainerDiscovererUri = new Uri(PythonProjectContainerDiscovererUriString);
         public static readonly Uri PythonWorkspaceContainerDiscovererUri = new Uri(PythonWorkspaceContainerDiscovererUriString);
+
+        public static readonly Uri PythonCodeCoverageUri = new Uri(PythonCodeCoverageUriString);
 
         //Discovery
         internal const string PytestText = "pytest";
