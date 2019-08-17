@@ -39,6 +39,14 @@ namespace TestAdapterTests {
         }
 
         [TestMethod]
+        public void CreatePytestId_GlobalFuncRelative() {
+            Assert.AreEqual(
+                ".\\tests\\unit\\test_statistics.py::test_key_creation",
+                TestResultParser.CreatePytestId("tests\\unit\\test_statistics.py", "tests.unit.test_statistics", "test_key_creation")
+            );
+        }
+
+        [TestMethod]
         public void CreatePytestId_ClassFuncWithRelativeFilename() {
             Assert.AreEqual(
                 ".\\package1\\packageA\\test1.py::Test_test1::test_A", 
