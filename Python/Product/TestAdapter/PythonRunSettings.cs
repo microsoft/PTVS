@@ -41,7 +41,6 @@ namespace Microsoft.PythonTools.TestAdapter {
     class PythonRunSettings : IRunSettingsService {
         private readonly IComponentModel _compModel;
         private readonly IServiceProvider _serviceProvider;
-        internal static Uri PythonCodeCoverageUri = new Uri("datacollector://Microsoft/PythonCodeCoverage/1.0");
 
         private const string CodeCoverageImportName = "Microsoft.VisualStudio.TestWindow.CodeCoverage.ICodeCoverageSettingsService";
         internal const string CodeCoverageUriString = @"datacollector://Microsoft/CodeCoverage/2.0";
@@ -57,7 +56,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 
         private void StateChange(object sender, OperationStateChangedEventArgs e) {
             if (e.State == TestOperationStates.TestExecutionFinished) {
-                var resultUris = e.Operation.GetRunSettingsDataCollectorResultUri(PythonCodeCoverageUri);
+                var resultUris = e.Operation.GetRunSettingsDataCollectorResultUri(PythonConstants.PythonCodeCoverageUri);
                 if (resultUris != null) {
                     foreach (var eachAttachment in resultUris) {
                         string filePath = eachAttachment.LocalPath;

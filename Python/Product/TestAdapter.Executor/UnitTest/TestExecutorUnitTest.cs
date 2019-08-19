@@ -27,8 +27,6 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Xml;
-using System.Xml.XPath;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Ipc.Json;
@@ -50,7 +48,6 @@ namespace Microsoft.PythonTools.TestAdapter {
         private static readonly Guid NativeDebugEngineGuid = new Guid("3B476D35-A401-11D2-AAD4-00C04F990171");
 
         private static readonly string TestLauncherPath = PythonToolsInstallPath.GetFile("visualstudio_py_testlauncher.py");
-        internal static readonly Uri PythonCodeCoverageUri = new Uri("datacollector://Microsoft/PythonCodeCoverage/1.0");
 
         private readonly ManualResetEvent _cancelRequested = new ManualResetEvent(false);
 
@@ -62,12 +59,6 @@ namespace Microsoft.PythonTools.TestAdapter {
 
         public void Cancel() {
             _cancelRequested.Set();
-        }
-
-        private static XPathDocument Read(string xml) {
-            var settings = new XmlReaderSettings();
-            settings.XmlResolver = null;
-            return new XPathDocument(XmlReader.Create(new StringReader(xml), settings));
         }
 
         public void RunTests(IEnumerable<string> sources, IRunContext runContext, IFrameworkHandle frameworkHandle) {
@@ -132,10 +123,10 @@ namespace Microsoft.PythonTools.TestAdapter {
             IRunContext runContext,
             IFrameworkHandle frameworkHandle
         ) {
-            bool codeCoverage = EnableCodeCoverage(runContext);
+            bool codeCoverage = ExecutorService.EnableCodeCoverage(runContext);
             string covPath = null;
             if (codeCoverage) {
-                covPath = GetCoveragePath(tests);
+                covPath = ExecutorService.GetCoveragePath(tests);
             }
             // .py file path -> project settings
             var sourceToSettings = RunSettingsUtil.GetSourceToProjSettings(runContext.RunSettings);
@@ -163,147 +154,9 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
 
             if (codeCoverage) {
-                if (File.Exists(covPath + ".xml")) {
-                    var set = new AttachmentSet(PythonCodeCoverageUri, "CodeCoverage");
-
-                    set.Attachments.Add(
-                        new UriDataAttachment(new Uri(covPath + ".xml"), "Coverage Data")
-                    );
-                    frameworkHandle.RecordAttachments(new[] { set });
-
-                    File.Delete(covPath);
-                } else {
-                    frameworkHandle.SendMessage(TestMessageLevel.Warning, Strings.Test_NoCoverageProduced);
-                }
+                ExecutorService.AttachCoverageResults(frameworkHandle, covPath);
             }
         }
-
-        private static string GetCoveragePath(IEnumerable<TestCase> tests) {
-            string bestFile = null, bestClass = null, bestMethod = null;
-
-            // Try and generate a friendly name for the coverage report.  We use
-            // the filename, class, and method.  We include each one if we're
-            // running from a single filename/class/method.  When we have multiple
-            // we drop the identifying names.  If we have multiple files we
-            // go to the top level directory...  If all else fails we do "pycov".
-            foreach (var test in tests) {
-                string testFile, testClass, testMethod;
-                TestReader.ParseFullyQualifiedTestName(
-                    test.FullyQualifiedName,
-                    out testFile,
-                    out testClass,
-                    out testMethod
-                );
-
-                bestFile = UpdateBestFile(bestFile, test.CodeFilePath);
-                if (bestFile != test.CodeFilePath) {
-                    // Different files, don't include class/methods even
-                    // if they happen to be the same.
-                    bestClass = bestMethod = "";
-                }
-
-                bestClass = UpdateBest(bestClass, testClass);
-                bestMethod = UpdateBest(bestMethod, testMethod);
-            }
-
-            string filename = "";
-
-            if (!String.IsNullOrWhiteSpace(bestFile)) {
-                if (ModulePath.IsPythonSourceFile(bestFile)) {
-                    filename = ModulePath.FromFullPath(bestFile).ModuleName;
-                } else {
-                    filename = Path.GetFileName(bestFile);
-                }
-            } else {
-                filename = "pycov";
-            }
-
-            if (!String.IsNullOrWhiteSpace(bestClass)) {
-                filename += "_" + bestClass;
-            }
-
-            if (!String.IsNullOrWhiteSpace(bestMethod)) {
-                filename += "_" + bestMethod;
-            }
-
-            filename += "_" + DateTime.Now.ToString("s").Replace(':', '_');
-
-            return Path.Combine(Path.GetTempPath(), filename);
-        }
-
-        private static string UpdateBest(string best, string test) {
-            if (best == null || best == test) {
-                best = test;
-            } else if (!string.IsNullOrEmpty(best)) {
-                best = "";
-            }
-
-            return best;
-        }
-
-        internal static string UpdateBestFile(string bestFile, string testFile) {
-            if (bestFile == null || bestFile == testFile) {
-                bestFile = testFile;
-            } else if (!string.IsNullOrEmpty(bestFile)) {
-                // Get common directory name, trim to the last \\ where we 
-                // have things in common
-                int lastSlash = 0;
-                for (int i = 0; i < bestFile.Length && i < testFile.Length; i++) {
-                    if (bestFile[i] != testFile[i]) {
-                        bestFile = bestFile.Substring(0, lastSlash);
-                        break;
-                    } else if (bestFile[i] == '\\' || bestFile[i] == '/') {
-                        lastSlash = i;
-                    }
-                }
-            }
-
-            return bestFile;
-        }
-
-        private static bool EnableCodeCoverage(IRunContext runContext) {
-            var doc = Read(runContext.RunSettings.SettingsXml);
-            XPathNodeIterator nodes = doc.CreateNavigator().Select("/RunSettings/Python/EnableCoverage");
-            bool enableCoverage;
-            if (nodes.MoveNext()) {
-                if (Boolean.TryParse(nodes.Current.Value, out enableCoverage)) {
-                    return enableCoverage;
-                }
-            }
-            return false;
-        }
-
-        /// <summary>
-        /// Returns true if this is a dry run. Dry runs require a
-        /// &lt;DryRun value="true" /&gt; element under RunSettings/Python.
-        /// </summary>
-        private static bool IsDryRun(IRunSettings settings) {
-            var doc = Read(settings.SettingsXml);
-            try {
-                var node = doc.CreateNavigator().SelectSingleNode("/RunSettings/Python/DryRun[@value='true']");
-                return node != null;
-            } catch (Exception ex) {
-                Debug.Fail(ex.ToUnhandledExceptionMessage(typeof(TestExecutorUnitTest)));
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// Returns true if the console should be shown. This is the default
-        /// unless a &lt;ShowConsole value="false" /&gt; element exists under
-        /// RunSettings/Python.
-        /// </summary>
-        private static bool ShouldShowConsole(IRunSettings settings) {
-            var doc = Read(settings.SettingsXml);
-            try {
-                var node = doc.CreateNavigator().SelectSingleNode("/RunSettings/Python/ShowConsole[@value='false']");
-                return node == null;
-            } catch (Exception ex) {
-                Debug.Fail(ex.ToUnhandledExceptionMessage(typeof(TestExecutorUnitTest)));
-                return true;
-            }
-        }
-
 
         sealed class TestRunner : IDisposable {
             private readonly IFrameworkHandle _frameworkHandle;
@@ -342,8 +195,8 @@ namespace Microsoft.PythonTools.TestAdapter {
                 _settings = settings;
                 _app = app;
                 _cancelRequested = cancelRequested;
-                _dryRun = IsDryRun(runContext.RunSettings);
-                _showConsole = ShouldShowConsole(runContext.RunSettings);
+                _dryRun = ExecutorService.IsDryRun(runContext.RunSettings);
+                _showConsole = ExecutorService.ShouldShowConsole(runContext.RunSettings);
 
                 _env = new Dictionary<string, string>();
 
@@ -443,7 +296,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 }
             }
 
-            private string GetSearchPaths(IEnumerable<TestCase> tests, PythonProjectSettings settings) {
+            private static string GetSearchPaths(IEnumerable<TestCase> tests, PythonProjectSettings settings) {
                 var paths = settings.SearchPath.ToList();
 
                 HashSet<string> knownModulePaths = new HashSet<string>();
@@ -497,7 +350,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                     return;
                 }
                 try {
-                    DetachFromSillyManagedProcess();
+                    ExecutorService.DetachFromSillyManagedProcess(_app, _debugMode);
 
                     var pythonPath = InitializeEnvironment();
 
@@ -654,13 +507,6 @@ namespace Microsoft.PythonTools.TestAdapter {
                 _frameworkHandle.SendMessage(TestMessageLevel.Warning, message);
             }
 
-            private void DetachFromSillyManagedProcess() {
-                var dte = _app != null ? _app.GetDTE() : null;
-                if (dte != null && _debugMode != PythonDebugMode.None) {
-                    dte.Debugger.DetachAll();
-                }
-            }
-
             private KeyValuePair<string, string> InitializeEnvironment() {
                 var pythonPathVar = _settings.PathEnv;
                 var pythonPath = _searchPaths;
@@ -700,18 +546,6 @@ namespace Microsoft.PythonTools.TestAdapter {
                 }
             }
 
-            private string CreateTestList() {
-                var testList = Path.GetTempFileName();
-
-                using (var writer = new StreamWriter(testList, false, new UTF8Encoding(false))) {
-                    foreach (var test in GetTestCases()) {
-                        writer.WriteLine(test.Key);
-                    }
-                }
-
-                return testList;
-            }
-
             private string[] GetArguments(string testList = null) {
                 var arguments = new List<string>();
                 arguments.Add(TestLauncherPath);
@@ -740,7 +574,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                     arguments.Add(_debugPort.ToString());
 
                     arguments.Add("-d");
-                    arguments.Add(GetDebuggerSearchPath(_settings.UseLegacyDebugger));
+                    arguments.Add(ExecutorService.GetDebuggerSearchPath(_settings.UseLegacyDebugger));
 
                     if (_settings.UseLegacyDebugger) {
                         arguments.Add("-s");
@@ -779,20 +613,6 @@ namespace Microsoft.PythonTools.TestAdapter {
 
             frameworkHandle.RecordResult(result);
             frameworkHandle.RecordEnd(result.TestCase, outcome);
-        }
-      
-        enum PythonDebugMode {
-            None,
-            PythonOnly,
-            PythonAndNative
-        }
-
-        private static string GetDebuggerSearchPath(bool useLegacyDebugger) {
-            if (useLegacyDebugger) {
-                return Path.GetDirectoryName(Path.GetDirectoryName(PythonToolsInstallPath.GetFile("ptvsd\\__init__.py")));
-            }
-
-            return Path.GetDirectoryName(Path.GetDirectoryName(PythonToolsInstallPath.GetFile("Packages\\ptvsd\\__init__.py")));
         }
     }
 }

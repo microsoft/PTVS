@@ -10,5 +10,8 @@ class TestCoverage(unittest.TestCase):
     def test_two(self):
         full_coverage()
 
+def test_global():
+    partial_coverage(1)
+
 if __name__ == '__main__':
     unittest.main()
