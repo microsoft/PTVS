@@ -66,9 +66,13 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
         /// <param name="funcname"></param>
         /// <returns></returns>
         internal static string CreatePytestId(string filename, string classname, string funcname) {
-            var classIndex = classname.LastIndexOf(".");
-            if (classIndex >= 0 && classIndex < (classname.Length - 1)) {
-                var classNameWithoutFilename = classname.Substring(classIndex + 1);
+            var classNameWithoutFilename = String.Empty;
+            var filenamePortion = Path.ChangeExtension(filename, null).Replace("\\", ".");
+            if (filenamePortion.Length < classname.Length) {
+                classNameWithoutFilename = classname.Substring(filenamePortion.Length + 1);
+            }
+
+            if (!String.IsNullOrEmpty(classNameWithoutFilename)) {
                 return $".\\{filename}::{classNameWithoutFilename}::{funcname}";
             } else {
                 return $".\\{filename}::{funcname}";
