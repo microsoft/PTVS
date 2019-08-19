@@ -543,7 +543,7 @@ if __name__ == '__main__':
             var expectedCoverages = new[] {
                 new CoverageInfo(
                     "test_coverage.py",
-                    new[] { 1, 3, 5, 6, 7, 8, 10, 11, 13 }
+                    new[] { 1, 3, 5, 6, 7, 8, 10, 11, 13, 16 }
                 ),
                 new CoverageInfo(
                     "package1\\__init__.py",
@@ -587,12 +587,21 @@ if __name__ == '__main__':
                     outcome: TestOutcome.Passed,
                     pytestXmlClassName: "test_coverage.TestCoverage"
                 ),
+                new TestInfo(
+                    "test_global",
+                    "test_coverage.py::test_coverage::test_global",
+                    testFilePath,
+                    13,
+                    outcome: TestOutcome.Passed,
+                    pytestXmlClassName: "test_coverage",
+                    pytestExecPathSuffix: "test_global"
+                ),
             };
 
             var expectedCoverages = new[] {
                 new CoverageInfo(
                     "test_coverage.py",
-                    new[] { 1, 3, 5, 6, 7, 8, 10, 11, 13 }
+                    new[] { 1, 3, 5, 6, 7, 8, 10, 11, 13, 14, 16 }
                 ),
                 new CoverageInfo(
                     "package1\\__init__.py",
