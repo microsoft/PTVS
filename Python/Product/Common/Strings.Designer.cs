@@ -5532,7 +5532,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to A file containing Python tests was detected in the {0} {1}, but the test framework is disabled..
+        ///   Looks up a localized string similar to A file which may contain Python tests was detected in the {0} {1}, but the test framework is disabled..
         /// </summary>
         public static string PythonTestFileDetected {
             get {

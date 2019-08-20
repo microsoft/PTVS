@@ -2950,7 +2950,7 @@ Please specify at least one package.</value>
     <value>Enable unittest</value>
   </data>
   <data name="PythonTestFileDetected" xml:space="preserve">
-    <value>A file containing Python tests was detected in the {0} {1}, but the test framework is disabled.</value>
+    <value>A file which may contain Python tests was detected in the {0} {1}, but the test framework is disabled.</value>
     <comment>{0} is project or workspace name. {1} is "project" or "workspace"</comment>
   </data>
   <data name="PythonDiscoveryResultsNotFound" xml:space="preserve">
