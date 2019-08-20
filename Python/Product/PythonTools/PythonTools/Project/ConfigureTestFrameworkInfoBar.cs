@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Infrastructure;
@@ -79,7 +80,7 @@ namespace Microsoft.PythonTools.Project {
                     acceptActionItems.Add(new InfoBarHyperlink(Strings.PyTestInstallAndEnableInfoBarAction, (Action)InstallAndEnablePytestAction));
                 }
 
-            } else if (PythonTestFileFound()) {
+            } else if (PythonTestFileFound((x) => Regex.IsMatch(PathUtils.GetFileOrDirectoryName(x), PythonConstants.TestPatternFileNameRegex))) {
                 infoBarMessage = Strings.PythonTestFileDetected.FormatUI(_infoBarData.Caption, _infoBarData.ContextLocalized);
 
                 if (await IsPyTestInstalledAsync()) {
@@ -138,10 +139,6 @@ namespace Microsoft.PythonTools.Project {
             );
         }
 
-        private bool PythonTestFileFound() {
-            return PathUtils.EnumerateFiles(_infoBarData.RootDirectory, "*test*.py", true).Any();
-        }
-        
         private void LogEvent(string action) {
             Logger?.LogEvent(
                 PythonLogEvent.ConfigureTestFrameworkInfoBar,
@@ -151,7 +148,6 @@ namespace Microsoft.PythonTools.Project {
                 }
             );
         }
-
 
         private void InstallPytestAction() {
             InstallPytestActionAsync().HandleAllExceptions(Site, GetType()).DoNotWait();
@@ -218,6 +214,7 @@ namespace Microsoft.PythonTools.Project {
             await SetPropertyAsync(PythonConstants.SuppressConfigureTestFrameworkPrompt, "true");
         }
 
+        protected abstract bool PythonTestFileFound(Predicate<string> fileFilter);
 
         protected abstract Task SetPropertyAsync(string propertyName, string propertyValue);
 
@@ -281,6 +278,15 @@ namespace Microsoft.PythonTools.Project {
             Project.SetProjectProperty(propertyName, propertyValue);
             return Task.CompletedTask;
         }
+
+        protected override bool PythonTestFileFound(Predicate<string> fileFilter) {
+            return Project.AllDescendants
+                .Where(x => (x is PythonFileNode || x is PythonNonCodeFileNode))
+                .Select(f => f.Url)
+                .Where(File.Exists)
+                .Where(x => fileFilter(x))
+                .Any();
+        }
     }
 
     internal sealed class TestFrameworkWorkspaceInfoBar : TestFrameworkInfoBar {
@@ -316,6 +322,10 @@ namespace Microsoft.PythonTools.Project {
 
         protected override async Task SetPropertyAsync(string propertyName, string propertyValue) {
             await WorkspaceContext.SetPropertyAsync(propertyName, propertyValue);
+        }
+
+        protected override bool PythonTestFileFound(Predicate<string> fileFilter) {
+            return WorkspaceContext.EnumerateUserFiles(fileFilter).Any();
         }
     }
 }

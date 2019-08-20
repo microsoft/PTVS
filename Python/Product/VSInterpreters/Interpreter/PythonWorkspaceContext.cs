@@ -152,6 +152,29 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
+        public IEnumerable<string> EnumerateUserFiles(Predicate<string> predicate) {
+            var workspaceCacheDirPath = Path.Combine(_workspace.Location, ".vs");
+            var workspaceInterpreterConfigs = _registryService.Configurations
+                .Where(x => PathUtils.IsSubpathOf(_workspace.Location, x.InterpreterPath))
+                .ToList();
+
+            foreach (var file in Directory.EnumerateFiles(_workspace.Location).Where(x => predicate(x))) {
+                yield return file;
+            }
+
+            foreach (var topLevelDirectory in Directory.EnumerateDirectories(_workspace.Location)) {
+                if (!workspaceInterpreterConfigs.Any(x => PathUtils.IsSameDirectory(x.GetPrefixPath(), topLevelDirectory)) &&
+                    !PathUtils.IsSameDirectory(topLevelDirectory, workspaceCacheDirPath)
+                ) {
+                    foreach (var file in Directory
+                                .EnumerateFiles(topLevelDirectory, "*", SearchOption.AllDirectories)
+                                .Where(x => predicate(x))
+                    ) {
+                        yield return file;
+                    }
+                }
+            }
+        }
         public string GetRequirementsTxtPath() {
             return _workspace.GetRequirementsTxtPath();
         }
