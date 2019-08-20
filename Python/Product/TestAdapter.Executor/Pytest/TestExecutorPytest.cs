@@ -108,7 +108,7 @@ namespace Microsoft.PythonTools.TestAdapter {
         ) {
             var sourceToProjSettings = RunSettingsUtil.GetSourceToProjSettings(runContext.RunSettings);
 
-            foreach (var testGroup in tests.GroupBy(t => sourceToProjSettings.TryGetValue(t.CodeFilePath, out PythonProjectSettings proj) ? proj : null)) {
+            foreach (var testGroup in tests.GroupBy(t => sourceToProjSettings.TryGetValue(t.CodeFilePath ?? String.Empty, out PythonProjectSettings proj) ? proj : null)) {
                 if (testGroup.Key == null) {
                     Debug.WriteLine("Missing projectSettings for TestCases:");
                     Debug.WriteLine(String.Join(",\n", testGroup));
