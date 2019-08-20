@@ -822,6 +822,44 @@ if __name__ == '__main__':
             ExecuteTests(testEnv, runSettings, expectedTests);
         }
 
+        [TestMethod, Priority(0)]
+        [TestCategory("10s")]
+        public void RunPytestCodeFilePathNotFound() {
+            var runSettings = new MockRunSettings(
+                new MockRunSettingsXmlBuilder("pytest", "", "", "")
+                    .WithTestFile("DummyFilePath")
+                    .ToXml()
+            );
+
+            var differentDummyFilePath = "DifferentDummyFilePath";
+            var testCases = new List<TestCase>() { new TestCase("fakeTest", pt.Microsoft.PythonTools.PythonConstants.PytestExecutorUri, differentDummyFilePath) { CodeFilePath = differentDummyFilePath } };
+            var runContext = new MockRunContext(runSettings, testCases, "");
+            var recorder = new MockTestExecutionRecorder();
+            var executor = new TestExecutorPytest();
+            
+            //should not throw
+            executor.RunTests(testCases, runContext, recorder);
+        }
+
+        [TestMethod, Priority(0)]
+        [TestCategory("10s")]
+        public void RunPytestNullCodeFilePath() {
+            var runSettings = new MockRunSettings(
+                new MockRunSettingsXmlBuilder("pytest", "", "", "")
+                    .WithTestFile("DummyFilePath")
+                    .ToXml()
+            );
+
+            var differentDummyFilePath = "DifferentDummyFilePath";
+            var testCases = new List<TestCase>() { new TestCase("fakeTest", pt.Microsoft.PythonTools.PythonConstants.PytestExecutorUri, differentDummyFilePath) { CodeFilePath = null } };
+            var runContext = new MockRunContext(runSettings, testCases, "");
+            var recorder = new MockTestExecutionRecorder();
+            var executor = new TestExecutorPytest();
+
+            //should not throw
+            executor.RunTests(testCases, runContext, recorder);
+        }
+
         private static void ExecuteTests(TestEnvironment testEnv, MockRunSettings runSettings, TestInfo[] expectedTests, CoverageInfo[] expectedCoverages = null) {
             var testCases = CreateTestCasesFromTestInfo(testEnv, expectedTests);
             var runContext = new MockRunContext(runSettings, testCases, testEnv.ResultsFolderPath);
