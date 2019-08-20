@@ -3067,6 +3067,9 @@
       <Item ItemId=";DiscoveryConfigurationMessage" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Go to https://aka.ms/VSTestExplorerPython for more details on test discovery configuration.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[要详细了解测试发现配置，请转到 https://aka.ms/VSTestExplorerPython。]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -3433,6 +3436,9 @@
       <Item ItemId=";ErrorTestCaseNotFound" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Testcase not found for test result: {0}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[找不到测试结果的测试用例: {0}]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
