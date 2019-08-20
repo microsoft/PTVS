@@ -48,8 +48,11 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
 
             var sourceToProjSettings = RunSettingsUtil.GetSourceToProjSettings(discoveryContext.RunSettings);
+            if (!sourceToProjSettings.Any()) {
+                return;
+            }
 
-            foreach (var testGroup in sources.GroupBy(x => sourceToProjSettings[x])) {
+            foreach (var testGroup in sources.GroupBy(x => sourceToProjSettings.TryGetValue(x, out PythonProjectSettings project) ? project : null )) {
                 DiscoverTestGroup(testGroup, discoveryContext, logger, discoverySink);
             }
         }
@@ -61,6 +64,10 @@ namespace Microsoft.PythonTools.TestAdapter {
             ITestCaseDiscoverySink discoverySink
         ) {
             PythonProjectSettings settings = testGroup.Key;
+            if (settings == null) {
+                return;
+            }
+
             try {
                 var discovery = DiscovererFactory.GetDiscoverer(settings);
                 discovery.DiscoverTests(testGroup, logger, discoverySink);

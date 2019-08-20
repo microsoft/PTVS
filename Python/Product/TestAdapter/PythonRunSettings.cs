@@ -125,30 +125,22 @@ namespace Microsoft.PythonTools.TestAdapter {
             var python = navigator.Select("/RunSettings");
             if (python.MoveNext()) {
                 using (var writer = python.Current.AppendChild()) {
-                    var pyContainers = configurationInfo.TestContainers
+                    var pyContainersByProject = configurationInfo.TestContainers
                         .OfType<TestContainer>()
                         .GroupBy(x => x.Project);
 
                     writer.WriteStartElement("Python");
                     writer.WriteStartElement("TestCases");
 
-                    foreach (var project in pyContainers) {
-                        writer.WriteStartElement("Project");
-                        bool isFirstElement = true;
-                        bool didFindProjectInfo = false;
-                        foreach (var container in project) {
-                            if (isFirstElement) {
-                                isFirstElement = false;
-                                didFindProjectInfo = WriteProjectInfoForContainer(writer, container, log);
-                            }
-
-                            if (didFindProjectInfo) {
+                    foreach (var projectContainers in pyContainersByProject) {
+                        if (WriteProjectInfoForContainer(writer, projectContainers.FirstOrDefault(), log)) {
+                            foreach (var container in projectContainers) {
                                 writer.WriteStartElement("Test");
                                 writer.WriteAttributeString("file", container.Source);
                                 writer.WriteEndElement(); // Test    
                             }
+                            writer.WriteEndElement();  // Project
                         }
-                        writer.WriteEndElement();  // Project
                     }
 
                     writer.WriteEndElement(); // TestCases
@@ -220,7 +212,10 @@ namespace Microsoft.PythonTools.TestAdapter {
 
 
         bool WriteProjectInfoForContainer(System.Xml.XmlWriter writer, TestContainer container, ILogger log) {
-            writer.WriteAttributeString("home", container.Project);
+            if (container == null) {
+                return false;
+            }
+        
             string nativeCode = "", djangoSettings = "", projectName = "", testFramework = "", unitTestPattern = "", unitTestRootDir = "";
             bool isWorkspace = false;
             ProjectInfo projInfo = null;
@@ -260,6 +255,8 @@ namespace Microsoft.PythonTools.TestAdapter {
                 );
                 return false;
             }
+            writer.WriteStartElement("Project");
+            writer.WriteAttributeString("home", container.Project);
             writer.WriteAttributeString("name", projectName);
             writer.WriteAttributeString("isWorkspace", isWorkspace.ToString());
             writer.WriteAttributeString("useLegacyDebugger", UseLegacyDebugger ? "1" : "0");
