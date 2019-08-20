@@ -37,6 +37,8 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
         private readonly IFrameworkHandle _frameworkHandle;
         private static readonly string TestLauncherPath = PythonToolsInstallPath.GetFile("testlauncher.py");
         private static readonly Guid PythonRemoteDebugPortSupplierUnsecuredId = new Guid("{FEB76325-D127-4E02-B59D-B16D93D46CF5}");
+        private static readonly Guid PythonDebugEngineGuid = new Guid("EC1375B7-E2CE-43E8-BF75-DC638DE1F1F9");
+        private static readonly Guid NativeDebugEngineGuid = new Guid("3B476D35-A401-11D2-AAD4-00C04F990171");
         private readonly VisualStudioProxy _app;
         private readonly PythonProjectSettings _projectSettings;
         private readonly PythonDebugMode _debugMode;
@@ -74,8 +76,8 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
             _frameworkHandle = frameworkHandle;
             _runContext = runContext;
             _app = VisualStudioProxy.FromEnvironmentVariable(PythonConstants.PythonToolsProcessIdEnvironmentVariable);
-            _debugMode = (runContext.IsBeingDebugged && _app != null) ? PythonDebugMode.PythonOnly : PythonDebugMode.None;
-            GetSecretAndPort(out _debugSecret, out _debugPort);
+
+            GetDebugSettings(_app, _runContext, _projectSettings, out _debugMode, out _debugSecret, out _debugPort);
         }
 
         public void Dispose() {
@@ -90,6 +92,7 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
                 _debugSecret,
                 _debugPort.ToString(),
                 GetDebuggerSearchPath(_projectSettings.UseLegacyDebugger),
+                _debugMode == PythonDebugMode.PythonAndNative ? "mixed" : string.Empty,
                 coveragePath ?? string.Empty
             };
 
@@ -261,12 +264,17 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
             }
         }
 
-        private void GetSecretAndPort(out string debugSecret, out int debugPort) {
+        internal static void GetDebugSettings(VisualStudioProxy app, IRunContext runContext, PythonProjectSettings projectSettings, out PythonDebugMode debugMode, out string debugSecret, out int debugPort) {
+            debugMode = PythonDebugMode.None;
             debugSecret = "";
             debugPort = 0;
 
-            if (_debugMode == PythonDebugMode.PythonOnly) {
-                if (_projectSettings.UseLegacyDebugger) {
+            if (runContext.IsBeingDebugged && app != null) {
+                debugMode = projectSettings.EnableNativeCodeDebugging ? PythonDebugMode.PythonAndNative : PythonDebugMode.PythonOnly;
+            }
+
+            if (debugMode == PythonDebugMode.PythonOnly) {
+                if (projectSettings.UseLegacyDebugger) {
                     var secretBuffer = new byte[24];
                     RandomNumberGenerator.Create().GetNonZeroBytes(secretBuffer);
                     debugSecret = Convert.ToBase64String(secretBuffer)
@@ -311,7 +319,6 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
             try {
                 DetachFromSillyManagedProcess(_app, _debugMode);
 
-
                 var env = InitializeEnvironment(tests);
                 ouputFile = GetJunitXmlFile();
                 var arguments = GetArguments(tests, ouputFile, coveragePath);
@@ -337,12 +344,7 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
                     if (!proc.ExitCode.HasValue) {
                         try {
                             if (_debugMode != PythonDebugMode.None) {
-                                string qualifierUri = string.Format("tcp://{0}@localhost:{1}", _debugSecret, _debugPort);
-                                while (!_app.AttachToProcess(proc, PythonRemoteDebugPortSupplierUnsecuredId, qualifierUri)) {
-                                    if (proc.Wait(TimeSpan.FromMilliseconds(500))) {
-                                        break;
-                                    }
-                                }
+                                AttachDebugger(_app, proc, _debugMode, _debugSecret, _debugPort);
                             }
 
                             proc.Wait();
@@ -362,6 +364,24 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
             }
 
             return ouputFile;
+        }
+
+        internal static void AttachDebugger(VisualStudioProxy app, ProcessOutput proc, PythonDebugMode debugMode, string debugSecret, int debugPort) {
+            if (debugMode == PythonDebugMode.PythonOnly) {
+                string qualifierUri = string.Format("tcp://{0}@localhost:{1}", debugSecret, debugPort);
+                while (!app.AttachToProcess(proc, PythonRemoteDebugPortSupplierUnsecuredId, qualifierUri)) {
+                    if (proc.Wait(TimeSpan.FromMilliseconds(500))) {
+                        break;
+                    }
+                }
+            } else if (debugMode == PythonDebugMode.PythonAndNative) {
+                var engines = new[] { PythonDebugEngineGuid, NativeDebugEngineGuid };
+                while (!app.AttachToProcess(proc, engines)) {
+                    if (proc.Wait(TimeSpan.FromMilliseconds(500))) {
+                        break;
+                    }
+                }
+            }
         }
 
         private string GetJunitXmlFile() {

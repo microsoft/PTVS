@@ -43,10 +43,6 @@ namespace Microsoft.PythonTools.TestAdapter {
         Justification = "object owned by VS")]
     [ExtensionUri(PythonConstants.UnitTestExecutorUriString)]
     class TestExecutorUnitTest : ITestExecutor {
-        private static readonly Guid PythonRemoteDebugPortSupplierUnsecuredId = new Guid("{FEB76325-D127-4E02-B59D-B16D93D46CF5}");
-        private static readonly Guid PythonDebugEngineGuid = new Guid("EC1375B7-E2CE-43E8-BF75-DC638DE1F1F9");
-        private static readonly Guid NativeDebugEngineGuid = new Guid("3B476D35-A401-11D2-AAD4-00C04F990171");
-
         private static readonly string TestLauncherPath = PythonToolsInstallPath.GetFile("visualstudio_py_testlauncher.py");
 
         private readonly ManualResetEvent _cancelRequested = new ManualResetEvent(false);
@@ -200,27 +196,10 @@ namespace Microsoft.PythonTools.TestAdapter {
 
                 _env = new Dictionary<string, string>();
 
-                _debugMode = PythonDebugMode.None;
-                if (runContext.IsBeingDebugged && _app != null) {
-                    _debugMode = settings.EnableNativeCodeDebugging ? PythonDebugMode.PythonAndNative : PythonDebugMode.PythonOnly;
-                }
-
                 _searchPaths = GetSearchPaths(tests, settings);
 
-                if (_debugMode == PythonDebugMode.PythonOnly) {
-                    if (_settings.UseLegacyDebugger) {
-                        var secretBuffer = new byte[24];
-                        RandomNumberGenerator.Create().GetNonZeroBytes(secretBuffer);
-                        _debugSecret = Convert.ToBase64String(secretBuffer)
-                            .Replace('+', '-')
-                            .Replace('/', '_')
-                            .TrimEnd('=');
-                    } else {
-                        _debugSecret = "";
-                    }
+                ExecutorService.GetDebugSettings(_app, _context, _settings, out _debugMode, out _debugSecret, out _debugPort);
 
-                    SocketUtils.GetRandomPortListener(IPAddress.Loopback, out _debugPort).Stop();
-                }
                 _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.IP);
                 _socket.Bind(new IPEndPoint(IPAddress.Loopback, 0));
                 _socket.Listen(0);
@@ -409,22 +388,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 
                         if (!killed && _debugMode != PythonDebugMode.None) {
                             try {
-                                if (_debugMode == PythonDebugMode.PythonOnly) {
-                                    string qualifierUri = string.Format("tcp://{0}@localhost:{1}", _debugSecret, _debugPort);
-                                    while (!_app.AttachToProcess(proc, PythonRemoteDebugPortSupplierUnsecuredId, qualifierUri)) {
-                                        if (proc.Wait(TimeSpan.FromMilliseconds(500))) {
-                                            break;
-                                        }
-                                    }
-                                } else {
-                                    var engines = new[] { PythonDebugEngineGuid, NativeDebugEngineGuid };
-                                    while (!_app.AttachToProcess(proc, engines)) {
-                                        if (proc.Wait(TimeSpan.FromMilliseconds(500))) {
-                                            break;
-                                        }
-                                    }
-                                }
-
+                                ExecutorService.AttachDebugger(_app, proc, _debugMode, _debugSecret, _debugPort);
                             } catch (COMException ex) {
                                 Error(Strings.Test_ErrorConnecting);
                                 DebugError(ex.ToString());
