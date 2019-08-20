@@ -8,10 +8,10 @@ import sys
 import traceback
 
 def main():
-    cwd, testRunner, secret, port, debugger_search_path, coverage_file, test_file, args = parse_argv()
+    cwd, testRunner, secret, port, debugger_search_path, mixed_mode, coverage_file, test_file, args = parse_argv()
     sys.path[0] = os.getcwd()
     os.chdir(cwd)
-    load_debugger(secret, port, debugger_search_path)
+    load_debugger(secret, port, debugger_search_path, mixed_mode)
     run(testRunner, coverage_file, test_file, args)
 
 def parse_argv():
@@ -22,14 +22,15 @@ def parse_argv():
     3. debugSecret
     4. debugPort
     5. Debugger search path
-    6. Enable code coverage and specify filename
-    7. TestFile, with a list of testIds to run
-    8. Rest of the arguments are passed into the test runner.
+    6. Mixed-mode debugging (non-empty string to enable, empty string to disable)
+    7. Enable code coverage and specify filename
+    8. TestFile, with a list of testIds to run
+    9. Rest of the arguments are passed into the test runner.
     """
 
-    return (sys.argv[1], sys.argv[2], sys.argv[3], int(sys.argv[4]), sys.argv[5], sys.argv[6], sys.argv[7], sys.argv[8:])
+    return (sys.argv[1], sys.argv[2], sys.argv[3], int(sys.argv[4]), sys.argv[5], sys.argv[6], sys.argv[7], sys.argv[8], sys.argv[9:])
 
-def load_debugger(secret, port, debugger_search_path):
+def load_debugger(secret, port, debugger_search_path, mixed_mode):
     # Load the debugger package
     try:
         if debugger_search_path:
@@ -51,6 +52,24 @@ def load_debugger(secret, port, debugger_search_path):
             
             enable_attach(('127.0.0.1', port), redirect_output = True)
             wait_for_attach()
+        elif mixed_mode:
+            # For mixed-mode attach, there's no ptvsd and hence no wait_for_attach(), 
+            # so we have to use Win32 API in a loop to do the same thing.
+            from time import sleep
+            from ctypes import windll, c_char
+            while True:
+                if windll.kernel32.IsDebuggerPresent() != 0:
+                    break
+                sleep(0.1)
+            try:
+                debugger_helper = windll['Microsoft.PythonTools.Debugger.Helper.x86.dll']
+            except WindowsError:
+                debugger_helper = windll['Microsoft.PythonTools.Debugger.Helper.x64.dll']
+            isTracing = c_char.in_dll(debugger_helper, "isTracing")
+            while True:
+                if isTracing.value != 0:
+                    break
+                sleep(0.1)
     except:
         traceback.print_exc()
         print('''
