@@ -3087,6 +3087,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Go to https://aka.ms/VSTestExplorerPython for more details on test discovery configuration..
+        /// </summary>
+        public static string DiscoveryConfigurationMessage {
+            get {
+                return ResourceManager.GetString("DiscoveryConfigurationMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Python Documentation.
         /// </summary>
         public static string DocumentationClassificationType {
@@ -3461,6 +3470,24 @@ namespace Microsoft.PythonTools {
         public static string ErrorTaskItemZipArchiveNotSupportedMessage {
             get {
                 return ResourceManager.GetString("ErrorTaskItemZipArchiveNotSupportedMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Testcase not found for test result: {0}.
+        /// </summary>
+        public static string ErrorTestCaseNotFound {
+            get {
+                return ResourceManager.GetString("ErrorTestCaseNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Matching test container source was not found under folder {0} for test {1}..
+        /// </summary>
+        public static string ErrorTestContainerNotFound {
+            get {
+                return ResourceManager.GetString("ErrorTestContainerNotFound", resourceCulture);
             }
         }
         
@@ -5199,6 +5226,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Invalid source in test: {0}.
+        /// </summary>
+        public static string PytestInvalidTestSource {
+            get {
+                return ResourceManager.GetString("PytestInvalidTestSource", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Pytest is enabled in the {0} {1}, but it is not installed in the active environment..
         /// </summary>
         public static string PyTestNotInstalled {
@@ -5217,11 +5253,29 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Results for pytest not found {0}.
+        /// </summary>
+        public static string PytestResultsXmlNotFound {
+            get {
+                return ResourceManager.GetString("PytestResultsXmlNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Debug.
         /// </summary>
         public static string PythonDebugPropertyPageLabel {
             get {
                 return ResourceManager.GetString("PythonDebugPropertyPageLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Discovery results file &apos;{0}&apos; was not found..
+        /// </summary>
+        public static string PythonDiscoveryResultsNotFound {
+            get {
+                return ResourceManager.GetString("PythonDiscoveryResultsNotFound", resourceCulture);
             }
         }
         
@@ -5478,7 +5532,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to A file containing Python tests was detected in the {0} {1}, but the test framework is disabled..
+        ///   Looks up a localized string similar to A file which may contain Python tests was detected in the {0} {1}, but the test framework is disabled..
         /// </summary>
         public static string PythonTestFileDetected {
             get {
@@ -5496,11 +5550,65 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Test framework.
+        /// </summary>
+        public static string PythonTestPropertyPageFrameworkHelpText {
+            get {
+                return ResourceManager.GetString("PythonTestPropertyPageFrameworkHelpText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Test _framework:.
+        /// </summary>
+        public static string PythonTestPropertyPageFrameworkLabel {
+            get {
+                return ResourceManager.GetString("PythonTestPropertyPageFrameworkLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Test.
         /// </summary>
         public static string PythonTestPropertyPageLabel {
             get {
                 return ResourceManager.GetString("PythonTestPropertyPageLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Pattern.
+        /// </summary>
+        public static string PythonTestPropertyPageUnittestPatternHelpText {
+            get {
+                return ResourceManager.GetString("PythonTestPropertyPageUnittestPatternHelpText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to _Pattern:.
+        /// </summary>
+        public static string PythonTestPropertyPageUnittestPatternLabel {
+            get {
+                return ResourceManager.GetString("PythonTestPropertyPageUnittestPatternLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Root directory.
+        /// </summary>
+        public static string PythonTestPropertyPageUnittestRootDirectoryHelpText {
+            get {
+                return ResourceManager.GetString("PythonTestPropertyPageUnittestRootDirectoryHelpText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Root _directory:.
+        /// </summary>
+        public static string PythonTestPropertyPageUnittestRootDirectoryLabel {
+            get {
+                return ResourceManager.GetString("PythonTestPropertyPageUnittestRootDirectoryLabel", resourceCulture);
             }
         }
         

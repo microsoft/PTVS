@@ -15,6 +15,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 
@@ -50,6 +51,10 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
 
         [JsonProperty("parentid")]
         public string Parentid { get; set; }
+
+        public override string ToString() {
+            return String.Format("{0}: Id:{1} Source:{2}", this.GetType().Name, this.Id, this.Source);
+        }
     }
 
     sealed class PytestDiscoveryResults {

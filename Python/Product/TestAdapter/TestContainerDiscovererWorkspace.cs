@@ -21,6 +21,7 @@ using System.ComponentModel.Composition;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
@@ -37,6 +38,7 @@ namespace Microsoft.PythonTools.TestAdapter {
         private readonly IPythonWorkspaceContextProvider _workspaceContextProvider;
         private readonly ConcurrentDictionary<string, ProjectInfo> _projectMap;
         private readonly PackageManagerEventSink _packageManagerEventSink;
+        private readonly IInterpreterRegistryService _interpreterRegistryService;
         private readonly Timer _deferredTestChangeNotification;
         private bool _firstLoad, _isDisposed, _isRefresh;
         private TestFilesUpdateWatcher _testFilesUpdateWatcher;
@@ -46,12 +48,14 @@ namespace Microsoft.PythonTools.TestAdapter {
             [Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider,
             [Import(typeof(IOperationState))]IOperationState operationState,
             [Import] IPythonWorkspaceContextProvider workspaceContextProvider,
-            [Import] IInterpreterOptionsService interpreterOptionsService
+            [Import] IInterpreterOptionsService interpreterOptionsService,
+            [Import] IInterpreterRegistryService interpreterRegistryService
         ) {
             _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
             _projectMap = new ConcurrentDictionary<string, ProjectInfo>();
             _packageManagerEventSink = new PackageManagerEventSink(interpreterOptionsService);
             _packageManagerEventSink.InstalledPackagesChanged += OnInstalledPackagesChanged;
+            _interpreterRegistryService = interpreterRegistryService;
             _deferredTestChangeNotification = new Timer(OnDeferredTestChanged);
             _firstLoad = true;
             _isRefresh = false;
@@ -173,8 +177,9 @@ namespace Microsoft.PythonTools.TestAdapter {
                 _testFilesUpdateWatcher.AddDirectoryWatch(workspace.Location);
                 oldWatcher?.Dispose();
 
-                var files = Directory.EnumerateFiles(workspace.Location, "*.*", SearchOption.AllDirectories);
-                foreach (var file in files) {
+                Regex testFileFilterRegex = new Regex(@".*\.(py|txt)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+                Predicate<string> testFileFilter = (x) => testFileFilterRegex.IsMatch(x);
+                foreach (var file in _workspaceContextProvider.Workspace.EnumerateUserFiles(testFileFilter)) {
                     projInfo.AddTestContainer(this, file);
                 }
 
@@ -229,7 +234,7 @@ namespace Microsoft.PythonTools.TestAdapter {
         private bool IsSettingsFile(string file) {
             if (String.IsNullOrEmpty(file))
                 return false;
-            
+
             return PythonConstants.PyTestFrameworkConfigFiles.Contains(Path.GetFileName(file));
         }
 
@@ -266,7 +271,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 return;
 
             var projInfo = GetProjectInfo(workspace.Location);
-            if (projInfo == null)
+            if (projInfo == null || IsFileExcluded(projInfo, e.File))
                 return;
 
             switch (e.ChangedReason) {
@@ -287,6 +292,14 @@ namespace Microsoft.PythonTools.TestAdapter {
                     break;
             }
             NotifyContainerChanged();
+        }
+
+        private bool IsFileExcluded(ProjectInfo projectInfo, string filePath) {
+            bool isFileInVirtualEnv = _interpreterRegistryService.Configurations
+                .Where(x => PathUtils.IsSubpathOf(projectInfo.ProjectHome, x.InterpreterPath))
+                .Any(x => PathUtils.IsSubpathOf(x.GetPrefixPath(), filePath));
+
+            return isFileInVirtualEnv || PathUtils.IsSubpathOf(Path.Combine(projectInfo.ProjectHome, ".vs"), filePath);
         }
     }
 }

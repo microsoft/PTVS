@@ -23,15 +23,13 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 namespace Microsoft.PythonTools.TestAdapter.UnitTest {
     public static class UnitTestExtensions {
 
-        public static TestCase ToVsTestCase(this UnitTestTestCase test, bool isWorkspace, string projectHome) {
-            var normalizedPath = test.Source.ToLowerInvariant();
-            var relativeModulePath = PathUtils.CreateFriendlyFilePath(projectHome, normalizedPath).ToLowerInvariant();
-
+        public static TestCase ToVsTestCase(this UnitTestTestCase test, string projectHome) {
+            var relativeModulePath = PathUtils.CreateFriendlyFilePath(projectHome, test.Source);
             var fullyQualifiedName = MakeFullyQualifiedTestName(relativeModulePath, test.Id);
-            var testCase = new TestCase(fullyQualifiedName, PythonConstants.UnitTestExecutorUri, normalizedPath) {
+            var testCase = new TestCase(fullyQualifiedName, PythonConstants.UnitTestExecutorUri, test.Source) {
                 DisplayName = test.Name,
                 LineNumber = test.Line,
-                CodeFilePath = normalizedPath
+                CodeFilePath = test.Source
             };
 
             return testCase;

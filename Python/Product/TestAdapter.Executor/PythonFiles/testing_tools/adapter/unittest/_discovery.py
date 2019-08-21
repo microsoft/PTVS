@@ -14,6 +14,12 @@ def discover(pytestargs=None, hidestdio=False,
     
     suites = unittest.defaultTestLoader.discover(pytestargs[0], pytestargs[1])
     
+    #Print errors if not Python 2.7 because .errors wont exist
+    if ((sys.version_info[0] >= 3) and 
+        unittest.defaultTestLoader.errors):
+        for error in unittest.defaultTestLoader.errors:
+            print(error)
+
     root={}
 
     for suite in suites._tests:

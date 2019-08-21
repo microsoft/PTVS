@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 
 namespace Microsoft.PythonTools {
     public enum TestFrameworkType {
@@ -134,6 +135,8 @@ namespace Microsoft.PythonTools {
         public const string DefaultUnitTestRootDirectory = ".";
         public const string UnitTestPatternSetting = "UnitTestPattern";
         public const string DefaultUnitTestPattern = "test*.py";
+        public static readonly Regex DefaultTestFileNameRegex = 
+            new Regex(@"((^test.*)|(^.*_test))\.(py|txt)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         public static readonly HashSet<string> PyTestFrameworkConfigFiles =
             new HashSet<string>(StringComparer.OrdinalIgnoreCase) {"pytest.ini", "setup.cfg", "tox.ini"};
@@ -193,12 +196,15 @@ namespace Microsoft.PythonTools {
         internal const string PytestExecutorUriString = "executor://PythonPyTestExecutor/v1";
         internal const string PythonProjectContainerDiscovererUriString = "executor://PythonProjectDiscoverer/v1";
         internal const string PythonWorkspaceContainerDiscovererUriString = "executor://PythonWorkspaceDiscoverer/v1";
+        internal const string PythonCodeCoverageUriString = "datacollector://Microsoft/PythonCodeCoverage/1.0";
 
         public static readonly Uri UnitTestExecutorUri = new Uri(UnitTestExecutorUriString);
         public static readonly Uri PytestExecutorUri = new Uri(PytestExecutorUriString);
 
         public static readonly Uri PythonProjectContainerDiscovererUri = new Uri(PythonProjectContainerDiscovererUriString);
         public static readonly Uri PythonWorkspaceContainerDiscovererUri = new Uri(PythonWorkspaceContainerDiscovererUriString);
+
+        public static readonly Uri PythonCodeCoverageUri = new Uri(PythonCodeCoverageUriString);
 
         //Discovery
         internal const string PytestText = "pytest";
