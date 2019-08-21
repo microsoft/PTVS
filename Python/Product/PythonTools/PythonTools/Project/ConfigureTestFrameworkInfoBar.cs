@@ -280,7 +280,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         protected override bool PythonTestFileFound(Predicate<string> fileFilter) {
-            return Project.AllDescendants
+            return Project.AllVisibleDescendants
                 .Where(x => (x is PythonFileNode || x is PythonNonCodeFileNode))
                 .Select(f => f.Url)
                 .Where(File.Exists)
