@@ -1,18 +1,6 @@
-# Python Tools for Visual Studio
-# Copyright(c) Microsoft Corporation
-# All rights reserved.
-# 
-# Licensed under the Apache License, Version 2.0 (the License); you may not use
-# this file except in compliance with the License. You may obtain a copy of the
-# License at http://www.apache.org/licenses/LICENSE-2.0
-# 
-# THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
-# OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
-# IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
-# MERCHANTABILITY OR NON-INFRINGEMENT.
-# 
-# See the Apache Version 2.0 License for specific language governing
-# permissions and limitations under the License.
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
 
 import io
 import os
@@ -20,11 +8,11 @@ import sys
 import traceback
 
 def main():
-    cwd, testRunner, secret, port, debugger_search_path, test_file, args = parse_argv()
+    cwd, testRunner, secret, port, debugger_search_path, mixed_mode, coverage_file, test_file, args = parse_argv()
     sys.path[0] = os.getcwd()
     os.chdir(cwd)
-    load_debugger(secret, port, debugger_search_path)
-    run(testRunner, test_file, args)
+    load_debugger(secret, port, debugger_search_path, mixed_mode)
+    run(testRunner, coverage_file, test_file, args)
 
 def parse_argv():
     """Parses arguments for use with the test launcher.
@@ -34,13 +22,15 @@ def parse_argv():
     3. debugSecret
     4. debugPort
     5. Debugger search path
-    6. TestFile, with a list of testIds to run
-    7. Rest of the arguments are passed into the test runner.
+    6. Mixed-mode debugging (non-empty string to enable, empty string to disable)
+    7. Enable code coverage and specify filename
+    8. TestFile, with a list of testIds to run
+    9. Rest of the arguments are passed into the test runner.
     """
 
-    return (sys.argv[1], sys.argv[2], sys.argv[3], int(sys.argv[4]), sys.argv[5], sys.argv[6], sys.argv[7:])
+    return (sys.argv[1], sys.argv[2], sys.argv[3], int(sys.argv[4]), sys.argv[5], sys.argv[6], sys.argv[7], sys.argv[8], sys.argv[9:])
 
-def load_debugger(secret, port, debugger_search_path):
+def load_debugger(secret, port, debugger_search_path, mixed_mode):
     # Load the debugger package
     try:
         if debugger_search_path:
@@ -62,6 +52,24 @@ def load_debugger(secret, port, debugger_search_path):
             
             enable_attach(('127.0.0.1', port), redirect_output = True)
             wait_for_attach()
+        elif mixed_mode:
+            # For mixed-mode attach, there's no ptvsd and hence no wait_for_attach(), 
+            # so we have to use Win32 API in a loop to do the same thing.
+            from time import sleep
+            from ctypes import windll, c_char
+            while True:
+                if windll.kernel32.IsDebuggerPresent() != 0:
+                    break
+                sleep(0.1)
+            try:
+                debugger_helper = windll['Microsoft.PythonTools.Debugger.Helper.x86.dll']
+            except WindowsError:
+                debugger_helper = windll['Microsoft.PythonTools.Debugger.Helper.x64.dll']
+            isTracing = c_char.in_dll(debugger_helper, "isTracing")
+            while True:
+                if isTracing.value != 0:
+                    break
+                sleep(0.1)
     except:
         traceback.print_exc()
         print('''
@@ -75,7 +83,7 @@ Press Enter to close. . .''')
             input()
         sys.exit(1)
 
-def run(testRunner, test_file, args):
+def run(testRunner, coverage_file, test_file, args):
     """Runs the test
     testRunner -- test runner to be used `pytest` or `nose`
     args -- arguments passed into the test runner
@@ -85,7 +93,17 @@ def run(testRunner, test_file, args):
         with io.open(test_file, 'r', encoding='utf-8') as tests:
             args.extend(t.strip() for t in tests)
 
+    cov = None
     try:
+        if coverage_file:
+            try:
+                import coverage
+                cov = coverage.coverage(coverage_file)
+                cov.load()
+                cov.start()
+            except:
+                pass
+
         if testRunner == 'pytest':
             import pytest
             pytest.main(args)
@@ -95,6 +113,10 @@ def run(testRunner, test_file, args):
         sys.exit(0)
     finally:
         pass
+        if cov is not None:
+            cov.stop()
+            cov.save()
+            cov.xml_report(outfile = coverage_file + '.xml', omit=__file__)
 
 if __name__ == '__main__':
     main()

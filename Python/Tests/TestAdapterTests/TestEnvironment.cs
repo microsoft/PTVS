@@ -41,8 +41,8 @@ namespace TestAdapterTests {
             }
         }
         
-        public static TestEnvironment GetOrCreate(PythonVersion pythonVersion, string testFramework, bool installFramework = true) {
-            var testEnvironmentId = $"{pythonVersion.ToString().ToLower()}:{testFramework.ToLower()}:{installFramework.ToString()}";
+        public static TestEnvironment GetOrCreate(PythonVersion pythonVersion, string testFramework, bool installFramework = true, bool installCoverage = false) {
+            var testEnvironmentId = $"{pythonVersion.ToString().ToLower()}:{testFramework.ToLower()}:{installFramework.ToString()}:{installCoverage.ToString()}";
             if (_environmentsMap.TryGetValue(testEnvironmentId, out TestEnvironment foundEnv)) {
                 SetDirectories(foundEnv);
                 return foundEnv;
@@ -56,20 +56,27 @@ namespace TestAdapterTests {
             switch (testFramework) {
                 case "Pytest": {
                         var envDir = TestData.GetTempPath();
+                        var packages = new List<string>();
                         if (installFramework) {
-                            pythonVersion.CreatePythonVirtualEnvWithPkgs(envDir, new[] { "pytest" });
-                        } else {
-                            pythonVersion.CreatePythonVirtualEnv(envDir);
+                            packages.Add("pytest");
                         }
+                        if (installCoverage) {
+                            packages.Add("coverage");
+                        }
+                        pythonVersion.CreateVirtualEnv(envDir, packages);
                         env.InterpreterPath = Path.Combine(envDir, "scripts", "python.exe");
                     }
                     break;
                 default:
-                    if (HasPackage(pythonVersion.PrefixPath, "pytest")) {
+                    if (HasPackage(pythonVersion.PrefixPath, "pytest") || installCoverage) {
                         // Create an empty virtual env to ensure we don't accidentally rely on pytest
                         // (which was bug https://github.com/microsoft/PTVS/issues/5454)
                         var envDir = TestData.GetTempPath();
-                        pythonVersion.CreatePythonVirtualEnv(envDir);
+                        var packages = new List<string>();
+                        if (installCoverage) {
+                            packages.Add("coverage");
+                        }
+                        pythonVersion.CreateVirtualEnv(envDir, packages);
                         env.InterpreterPath = Path.Combine(envDir, "scripts", "python.exe");
                     } else {
                         env.InterpreterPath = pythonVersion.InterpreterPath;
@@ -94,7 +101,7 @@ namespace TestAdapterTests {
             Directory.CreateDirectory(env.ResultsFolderPath);
         }
 
-           private static bool HasPackage(string prefixPath, string packageName) {
+        private static bool HasPackage(string prefixPath, string packageName) {
             foreach (var p in Directory.EnumerateDirectories(Path.Combine(prefixPath, "Lib", "site-packages"))) {
                 if (Path.GetFileName(p).StartsWith(packageName, StringComparison.InvariantCultureIgnoreCase)) {
                     return true;

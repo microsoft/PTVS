@@ -108,6 +108,12 @@ namespace Microsoft.PythonTools.Interpreter {
         IEnumerable<string> GetAbsoluteSearchPaths();
 
         /// <summary>
+        /// Filters and returns a list of workspace user files based on predicate
+        /// </summary>
+        /// <param name="predicate">Predicate for file filtering</param>
+        /// <returns>An IEnumerable for all the files in workspace which do not belong to virtual environment or VS cache</returns>
+        IEnumerable<string> EnumerateUserFiles(Predicate<string> predicate);
+
         /// Get the absolute path to the workspace's requirements.txt file.
         /// </summary>
         /// <returns>

@@ -262,15 +262,12 @@ namespace TestUtilities {
         }
 
         /// <summary>
-        /// Creates a Python virtual environment in vEnvPath directory and installs the specified packages
+        /// Creates a Python virtual environment in specified directory and installs the specified packages.
         /// </summary>
-        /// <param name="pyVersion"></param>
-        /// <param name="virtualEnvPath"></param>
-        /// <param name="packages"></param>
-        public static void CreatePythonVirtualEnvWithPkgs(this PythonVersion pyVersion, string virtualEnvPath, string[] packages) {
-            pyVersion.CreatePythonVirtualEnv(virtualEnvPath);
+        public static void CreateVirtualEnv(this PythonVersion pyVersion, string envPath, IEnumerable<string> packages) {
+            pyVersion.CreateVirtualEnv(envPath);
 
-            var envPythonExePath = Path.Combine(virtualEnvPath, "scripts", "python.exe");
+            var envPythonExePath = Path.Combine(envPath, "scripts", "python.exe");
             foreach (var package in packages.MaybeEnumerate()) {
                 using (var output = ProcessOutput.RunHiddenAndCapture(envPythonExePath, "-m", "pip", "install", package)) {
                     Assert.IsTrue(output.Wait(TimeSpan.FromSeconds(30)));
@@ -280,20 +277,18 @@ namespace TestUtilities {
         }
 
         /// <summary>
-        /// Creates a Python virtual environment in vEnvPath directory
+        /// Creates a Python virtual environment in specified directory.
         /// </summary>
-        /// <param name="pyVersion"></param>
-        /// <param name="vEnvPath"></param>
-        public static void CreatePythonVirtualEnv(this PythonVersion pyVersion, string vEnvPath) {
+        public static void CreateVirtualEnv(this PythonVersion pyVersion, string envPath) {
             var virtualEnvModule = (pyVersion.Version < PythonLanguageVersion.V30) ? "virtualenv" : "venv";
-            using (var p = ProcessOutput.RunHiddenAndCapture(pyVersion.InterpreterPath, "-m", virtualEnvModule, vEnvPath)) {
+            using (var p = ProcessOutput.RunHiddenAndCapture(pyVersion.InterpreterPath, "-m", virtualEnvModule, envPath)) {
                 Console.WriteLine(p.Arguments);
                 Assert.IsTrue(p.Wait(TimeSpan.FromMinutes(3)));
                 Console.WriteLine(string.Join(Environment.NewLine, p.StandardOutputLines.Concat(p.StandardErrorLines)));
                 Assert.AreEqual(0, p.ExitCode);
             }
 
-            Assert.IsTrue(File.Exists(Path.Combine(vEnvPath, "scripts", "python.exe")));
+            Assert.IsTrue(File.Exists(Path.Combine(envPath, "scripts", "python.exe")));
         }
     }
 }

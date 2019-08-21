@@ -41,7 +41,6 @@ namespace Microsoft.PythonTools.TestAdapter {
     class PythonRunSettings : IRunSettingsService {
         private readonly IComponentModel _compModel;
         private readonly IServiceProvider _serviceProvider;
-        internal static Uri PythonCodeCoverageUri = new Uri("datacollector://Microsoft/PythonCodeCoverage/1.0");
 
         private const string CodeCoverageImportName = "Microsoft.VisualStudio.TestWindow.CodeCoverage.ICodeCoverageSettingsService";
         internal const string CodeCoverageUriString = @"datacollector://Microsoft/CodeCoverage/2.0";
@@ -57,7 +56,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 
         private void StateChange(object sender, OperationStateChangedEventArgs e) {
             if (e.State == TestOperationStates.TestExecutionFinished) {
-                var resultUris = e.Operation.GetRunSettingsDataCollectorResultUri(PythonCodeCoverageUri);
+                var resultUris = e.Operation.GetRunSettingsDataCollectorResultUri(PythonConstants.PythonCodeCoverageUri);
                 if (resultUris != null) {
                     foreach (var eachAttachment in resultUris) {
                         string filePath = eachAttachment.LocalPath;
@@ -126,92 +125,20 @@ namespace Microsoft.PythonTools.TestAdapter {
             var python = navigator.Select("/RunSettings");
             if (python.MoveNext()) {
                 using (var writer = python.Current.AppendChild()) {
-                    var pyContainers = configurationInfo.TestContainers
+                    var pyContainersByProject = configurationInfo.TestContainers
                         .OfType<TestContainer>()
                         .GroupBy(x => x.Project);
 
                     writer.WriteStartElement("Python");
                     writer.WriteStartElement("TestCases");
 
-                    foreach (var project in pyContainers) {
-                        foreach (var container in project) {
-                            writer.WriteStartElement("Project");
-                            writer.WriteAttributeString("home", container.Project);
-
-                            string nativeCode = "", djangoSettings = "", projectName = "", testFramework = "", unitTestPattern = "", unitTestRootDir = "";
-                            bool isWorkspace = false;
-                            ProjectInfo projInfo = null;
-                            LaunchConfiguration config = null;
-
-                            ThreadHelper.JoinableTaskFactory.Run(async () => {
-                                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
-                                if (container.Discoverer is TestContainerDiscovererProject) {
-                                    var discoverer = container.Discoverer as TestContainerDiscovererProject;
-                                    isWorkspace = discoverer.IsWorkspace;
-                                    projInfo = discoverer.GetProjectInfo(container.Project);
-                                } else if (container.Discoverer is TestContainerDiscovererWorkspace) {
-                                    var discoverer = container.Discoverer as TestContainerDiscovererWorkspace;
-                                    isWorkspace = discoverer.IsWorkspace;
-                                    projInfo = discoverer.GetProjectInfo(container.Project);
-                                }
-
-                                if (projInfo != null) {
-                                    try {
-                                        config = projInfo.GetLaunchConfigurationOrThrow();
-                                    } catch {
-                                    }
-                                    nativeCode = projInfo.GetProperty(PythonConstants.EnableNativeCodeDebugging);
-                                    djangoSettings = projInfo.GetProperty("DjangoSettingsModule");
-                                    testFramework = projInfo.GetProperty(PythonConstants.TestFrameworkSetting);
-                                    projectName = projInfo.ProjectName;
-                                    unitTestRootDir = projInfo.GetProperty(PythonConstants.UnitTestRootDirectorySetting);
-                                    unitTestPattern = projInfo.GetProperty(PythonConstants.UnitTestPatternSetting);
-                                }
-                            });
-
-                            if (config == null || projInfo == null) {
-                                log.Log(
-                                    MessageLevel.Warning,
-                                    Strings.TestDiscoveryFailedMissingLaunchConfiguration.FormatUI(container.Project)
-                                );
-                                continue;
+                    foreach (var projectContainers in pyContainersByProject) {
+                        if (WriteProjectInfoForContainer(writer, projectContainers.FirstOrDefault(), log)) {
+                            foreach (var container in projectContainers) {
+                                writer.WriteStartElement("Test");
+                                writer.WriteAttributeString("file", container.Source);
+                                writer.WriteEndElement(); // Test    
                             }
-                            writer.WriteAttributeString("name", projectName);
-                            writer.WriteAttributeString("isWorkspace", isWorkspace.ToString());
-                            writer.WriteAttributeString("useLegacyDebugger", UseLegacyDebugger ? "1" : "0");
-                            writer.WriteAttributeString("nativeDebugging", nativeCode);
-                            writer.WriteAttributeString("djangoSettingsModule", djangoSettings);
-                            writer.WriteAttributeString("testFramework", testFramework);
-                            writer.WriteAttributeString("workingDir", config.WorkingDirectory);
-                            writer.WriteAttributeString("interpreter", config.GetInterpreterPath());
-                            writer.WriteAttributeString("pathEnv", config.Interpreter.PathEnvironmentVariable);
-                            writer.WriteAttributeString("unitTestRootDir", unitTestRootDir);
-                            writer.WriteAttributeString("unitTestPattern", unitTestPattern);
-
-                            writer.WriteStartElement("Environment");
-
-                            foreach (var keyValue in config.Environment) {
-                                writer.WriteStartElement("Variable");
-                                writer.WriteAttributeString("name", keyValue.Key);
-                                writer.WriteAttributeString("value", keyValue.Value);
-                                writer.WriteEndElement();
-                            }
-                            writer.WriteEndElement(); // Environment
-
-                            writer.WriteStartElement("SearchPaths");
-                            foreach (var path in config.SearchPaths) {
-                                writer.WriteStartElement("Search");
-                                writer.WriteAttributeString("value", path);
-                                writer.WriteEndElement();
-                            }
-                            writer.WriteEndElement(); // SearchPaths
-
-                            writer.WriteStartElement("Test");
-                            writer.WriteAttributeString("file", container.Source);
-
-                            writer.WriteEndElement(); // Test
-
                             writer.WriteEndElement();  // Project
                         }
                     }
@@ -281,6 +208,86 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
 
             return inputRunSettingDocument;
+        }
+
+
+        bool WriteProjectInfoForContainer(System.Xml.XmlWriter writer, TestContainer container, ILogger log) {
+            if (container == null) {
+                return false;
+            }
+        
+            string nativeCode = "", djangoSettings = "", projectName = "", testFramework = "", unitTestPattern = "", unitTestRootDir = "";
+            bool isWorkspace = false;
+            ProjectInfo projInfo = null;
+            LaunchConfiguration config = null;
+
+            ThreadHelper.JoinableTaskFactory.Run(async () => {
+                await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+                if (container.Discoverer is TestContainerDiscovererProject) {
+                    var discoverer = container.Discoverer as TestContainerDiscovererProject;
+                    isWorkspace = discoverer.IsWorkspace;
+                    projInfo = discoverer.GetProjectInfo(container.Project);
+                } else if (container.Discoverer is TestContainerDiscovererWorkspace) {
+                    var discoverer = container.Discoverer as TestContainerDiscovererWorkspace;
+                    isWorkspace = discoverer.IsWorkspace;
+                    projInfo = discoverer.GetProjectInfo(container.Project);
+                }
+
+                if (projInfo != null) {
+                    try {
+                        config = projInfo.GetLaunchConfigurationOrThrow();
+                    } catch {
+                    }
+                    nativeCode = projInfo.GetProperty(PythonConstants.EnableNativeCodeDebugging);
+                    djangoSettings = projInfo.GetProperty("DjangoSettingsModule");
+                    testFramework = projInfo.GetProperty(PythonConstants.TestFrameworkSetting);
+                    projectName = projInfo.ProjectName;
+                    unitTestRootDir = projInfo.GetProperty(PythonConstants.UnitTestRootDirectorySetting);
+                    unitTestPattern = projInfo.GetProperty(PythonConstants.UnitTestPatternSetting);
+                }
+            });
+
+            if (config == null || projInfo == null) {
+                log.Log(
+                    MessageLevel.Warning,
+                    Strings.TestDiscoveryFailedMissingLaunchConfiguration.FormatUI(container.Project)
+                );
+                return false;
+            }
+            writer.WriteStartElement("Project");
+            writer.WriteAttributeString("home", container.Project);
+            writer.WriteAttributeString("name", projectName);
+            writer.WriteAttributeString("isWorkspace", isWorkspace.ToString());
+            writer.WriteAttributeString("useLegacyDebugger", UseLegacyDebugger ? "1" : "0");
+            writer.WriteAttributeString("nativeDebugging", nativeCode);
+            writer.WriteAttributeString("djangoSettingsModule", djangoSettings);
+            writer.WriteAttributeString("testFramework", testFramework);
+            writer.WriteAttributeString("workingDir", config.WorkingDirectory);
+            writer.WriteAttributeString("interpreter", config.GetInterpreterPath());
+            writer.WriteAttributeString("pathEnv", config.Interpreter.PathEnvironmentVariable);
+            writer.WriteAttributeString("unitTestRootDir", unitTestRootDir);
+            writer.WriteAttributeString("unitTestPattern", unitTestPattern);
+
+            writer.WriteStartElement("Environment");
+
+            foreach (var keyValue in config.Environment) {
+                writer.WriteStartElement("Variable");
+                writer.WriteAttributeString("name", keyValue.Key);
+                writer.WriteAttributeString("value", keyValue.Value);
+                writer.WriteEndElement();
+            }
+            writer.WriteEndElement(); // Environment
+
+            writer.WriteStartElement("SearchPaths");
+            foreach (var path in config.SearchPaths) {
+                writer.WriteStartElement("Search");
+                writer.WriteAttributeString("value", path);
+                writer.WriteEndElement();
+            }
+            writer.WriteEndElement(); // SearchPaths
+
+            return true;
         }
     }
 }

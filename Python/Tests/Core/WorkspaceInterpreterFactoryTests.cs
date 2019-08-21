@@ -93,7 +93,7 @@ namespace PythonToolsTests {
             // Create virtual env inside the workspace folder (one level from root)
             var configs = TestTriggerDiscovery(
                 workspaceContext,
-                () => python.CreatePythonVirtualEnv(Path.Combine(workspaceFolder, "env"))
+                () => python.CreateVirtualEnv(Path.Combine(workspaceFolder, "env"))
             ).ToArray();
 
             Assert.AreEqual(1, configs.Length);
@@ -206,7 +206,7 @@ namespace PythonToolsTests {
             Directory.CreateDirectory(workspacePath);
             File.WriteAllText(Path.Combine(workspacePath, "app.py"), string.Empty);
 
-            python.CreatePythonVirtualEnv(Path.Combine(workspacePath, envName));
+            python.CreateVirtualEnv(Path.Combine(workspacePath, envName));
 
             return new WorkspaceTestHelper.MockWorkspaceContext(new WorkspaceTestHelper.MockWorkspace(workspacePath));
         }

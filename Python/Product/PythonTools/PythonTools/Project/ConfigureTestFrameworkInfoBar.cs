@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Infrastructure;
@@ -79,7 +80,7 @@ namespace Microsoft.PythonTools.Project {
                     acceptActionItems.Add(new InfoBarHyperlink(Strings.PyTestInstallAndEnableInfoBarAction, (Action)InstallAndEnablePytestAction));
                 }
 
-            } else if (PythonTestFileFound()) {
+            } else if (PythonTestFileFound((x) => PythonConstants.DefaultTestFileNameRegex.IsMatch(PathUtils.GetFileOrDirectoryName(x)))) {
                 infoBarMessage = Strings.PythonTestFileDetected.FormatUI(_infoBarData.Caption, _infoBarData.ContextLocalized);
 
                 if (await IsPyTestInstalledAsync()) {
@@ -138,10 +139,6 @@ namespace Microsoft.PythonTools.Project {
             );
         }
 
-        private bool PythonTestFileFound() {
-            return PathUtils.EnumerateFiles(_infoBarData.RootDirectory, "*test*.py", true).Any();
-        }
-        
         private void LogEvent(string action) {
             Logger?.LogEvent(
                 PythonLogEvent.ConfigureTestFrameworkInfoBar,
@@ -152,20 +149,20 @@ namespace Microsoft.PythonTools.Project {
             );
         }
 
-
         private void InstallPytestAction() {
             InstallPytestActionAsync().HandleAllExceptions(Site, GetType()).DoNotWait();
         }
 
         private async Task InstallPytestActionAsync() {
             LogEvent(ConfigureTestFrameworkInfoBarActions.InstallPytest);
+            Close();
+
             var result = await InstallPyTestAsync();
             if (!result) {
                 var generalOutputWindow = OutputWindowRedirector.GetGeneral(Site);
                 generalOutputWindow.ShowAndActivate();
             }
 
-            Close();
         }
 
         private void EnablePytestAction() {
@@ -174,8 +171,9 @@ namespace Microsoft.PythonTools.Project {
 
         private async Task EnablePytestActionAsync() {
             LogEvent(ConfigureTestFrameworkInfoBarActions.EnablePytest);
-            await SetPropertyAsync(PythonConstants.TestFrameworkSetting, "Pytest");
             Close();
+
+            await SetPropertyAsync(PythonConstants.TestFrameworkSetting, "Pytest");
         }
 
         private void InstallAndEnablePytestAction() {
@@ -184,13 +182,14 @@ namespace Microsoft.PythonTools.Project {
 
         private async Task InstallAndEnablePytestActionAsync() {
             LogEvent(ConfigureTestFrameworkInfoBarActions.EnableAndInstallPytest);
+            Close();
+
             if (!await InstallPyTestAsync()) {
                 var generalOutputWindow = OutputWindowRedirector.GetGeneral(Site);
                 generalOutputWindow.ShowAndActivate();
             }
 
             await SetPropertyAsync(PythonConstants.TestFrameworkSetting, "Pytest");
-            Close();
         }
 
         private void EnableUnitTestAction() {
@@ -199,8 +198,9 @@ namespace Microsoft.PythonTools.Project {
 
         private async Task EnableUnitTestActionAsync() {
             LogEvent(ConfigureTestFrameworkInfoBarActions.EnableUnitTest);
-            await SetPropertyAsync(PythonConstants.TestFrameworkSetting, "unittest");
             Close();
+
+            await SetPropertyAsync(PythonConstants.TestFrameworkSetting, "unittest");
         }
 
         private void IgnoreAction() {
@@ -209,10 +209,12 @@ namespace Microsoft.PythonTools.Project {
 
         private async Task IgnoreActionAsync() {
             LogEvent(ConfigureTestFrameworkInfoBarActions.Ignore);
-            await SetPropertyAsync(PythonConstants.SuppressConfigureTestFrameworkPrompt, "true");
             Close();
+
+            await SetPropertyAsync(PythonConstants.SuppressConfigureTestFrameworkPrompt, "true");
         }
 
+        protected abstract bool PythonTestFileFound(Predicate<string> fileFilter);
 
         protected abstract Task SetPropertyAsync(string propertyName, string propertyValue);
 
@@ -276,6 +278,15 @@ namespace Microsoft.PythonTools.Project {
             Project.SetProjectProperty(propertyName, propertyValue);
             return Task.CompletedTask;
         }
+
+        protected override bool PythonTestFileFound(Predicate<string> fileFilter) {
+            return Project.AllVisibleDescendants
+                .Where(x => (x is PythonFileNode || x is PythonNonCodeFileNode))
+                .Select(f => f.Url)
+                .Where(File.Exists)
+                .Where(x => fileFilter(x))
+                .Any();
+        }
     }
 
     internal sealed class TestFrameworkWorkspaceInfoBar : TestFrameworkInfoBar {
@@ -311,6 +322,10 @@ namespace Microsoft.PythonTools.Project {
 
         protected override async Task SetPropertyAsync(string propertyName, string propertyValue) {
             await WorkspaceContext.SetPropertyAsync(propertyName, propertyValue);
+        }
+
+        protected override bool PythonTestFileFound(Predicate<string> fileFilter) {
+            return WorkspaceContext.EnumerateUserFiles(fileFilter).Any();
         }
     }
 }

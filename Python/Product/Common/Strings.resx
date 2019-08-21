@@ -664,6 +664,24 @@ See PublishPropertyControl_LocationLabel for examples.</comment>
   <data name="PythonGeneralPropertyPageControl_UseGlobalDefaultInterpreter" xml:space="preserve">
     <value>(Use global default)</value>
   </data>
+  <data name="PythonTestPropertyPageFrameworkLabel" xml:space="preserve">
+    <value>Test _framework:</value>
+  </data>
+  <data name="PythonTestPropertyPageFrameworkHelpText" xml:space="preserve">
+    <value>Test framework</value>
+  </data>
+  <data name="PythonTestPropertyPageUnittestRootDirectoryLabel" xml:space="preserve">
+    <value>Root _directory:</value>
+  </data>
+  <data name="PythonTestPropertyPageUnittestRootDirectoryHelpText" xml:space="preserve">
+    <value>Root directory</value>
+  </data>
+  <data name="PythonTestPropertyPageUnittestPatternLabel" xml:space="preserve">
+    <value>_Pattern:</value>
+  </data>
+  <data name="PythonTestPropertyPageUnittestPatternHelpText" xml:space="preserve">
+    <value>Pattern</value>
+  </data>
   <data name="AddingProjectEnvironmentToWrongProjectException" xml:space="preserve">
     <value>Adding project environment {0} to wrong project {1}</value>
     <comment>{0} is environment id
@@ -2932,7 +2950,32 @@ Please specify at least one package.</value>
     <value>Enable unittest</value>
   </data>
   <data name="PythonTestFileDetected" xml:space="preserve">
-    <value>A file containing Python tests was detected in the {0} {1}, but the test framework is disabled.</value>
+    <value>A file which may contain Python tests was detected in the {0} {1}, but the test framework is disabled.</value>
     <comment>{0} is project or workspace name. {1} is "project" or "workspace"</comment>
   </data>
+  <data name="PythonDiscoveryResultsNotFound" xml:space="preserve">
+    <value>Discovery results file '{0}' was not found.</value>
+  </data>
+  <data name="ErrorTestContainerNotFound" xml:space="preserve">
+    <value>Matching test container source was not found under folder {0} for test {1}.</value>
+    <comment>{0} is the root directory
+{1} is the test info</comment>
+  </data>
+  <data name="DiscoveryConfigurationMessage" xml:space="preserve">
+    <value>Go to https://aka.ms/VSTestExplorerPython for more details on test discovery configuration.</value>
+  </data>
+  <data name="ErrorTestCaseNotFound" xml:space="preserve">
+    <value>Testcase not found for test result: {0}</value>
+    <comment>{0} is the result xml data found</comment>
+  </data>
+  <data name="PytestInvalidTestSource" xml:space="preserve">
+    <value>Invalid source in test: {0}</value>
+    <comment>{0} is the test info</comment>
+  </data>
+  <data name="PytestResultsXmlNotFound" xml:space="preserve">
+    <value>Results for pytest not found {0}</value>
+    <comment>{0} is the expected file path</comment>
+  </data>
+
+    
 </root>

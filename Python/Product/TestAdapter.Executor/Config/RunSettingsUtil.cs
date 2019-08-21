@@ -44,6 +44,7 @@ namespace Microsoft.PythonTools.TestAdapter.Config {
 
                 foreach (XPathNavigator test in project.Select("Test")) {
                     string testFile = test.GetAttribute("file", "");
+                    projSettings.TestContainerSources.Add(testFile, testFile);
                     res[testFile] = projSettings;
                 }
             }

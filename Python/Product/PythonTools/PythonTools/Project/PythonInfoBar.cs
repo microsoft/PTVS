@@ -56,7 +56,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         protected void Close() {
-            _infoBar.Close();
+            _infoBar?.Close();
         }
 
         protected void FinishCreate() {

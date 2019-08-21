@@ -33,9 +33,12 @@ namespace Microsoft.PythonTools.TestAdapter {
     [FileExtension(".py")]
     [DefaultExecutorUri(PythonConstants.PytestExecutorUriString)]
     public class PythonTestDiscoverer : ITestDiscoverer {
-        public void DiscoverTests(IEnumerable<string> sources, IDiscoveryContext discoveryContext, IMessageLogger logger, ITestCaseDiscoverySink discoverySink) {
-            //MessageBox.Show("Discover: " + Process.GetCurrentProcess().Id);
-
+        public void DiscoverTests(
+            IEnumerable<string> sources,
+            IDiscoveryContext discoveryContext,
+            IMessageLogger logger,
+            ITestCaseDiscoverySink discoverySink
+        ) {
             if (sources == null) {
                 throw new ArgumentNullException(nameof(sources));
             }
@@ -45,14 +48,25 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
 
             var sourceToProjSettings = RunSettingsUtil.GetSourceToProjSettings(discoveryContext.RunSettings);
+            if (!sourceToProjSettings.Any()) {
+                return;
+            }
 
-            foreach (var testGroup in sources.GroupBy(x => sourceToProjSettings[x])) {
+            foreach (var testGroup in sources.GroupBy(x => sourceToProjSettings.TryGetValue(x, out PythonProjectSettings project) ? project : null )) {
                 DiscoverTestGroup(testGroup, discoveryContext, logger, discoverySink);
             }
         }
 
-        private void DiscoverTestGroup(IGrouping<PythonProjectSettings, string> testGroup, IDiscoveryContext discoveryContext,  IMessageLogger logger, ITestCaseDiscoverySink discoverySink) {
+        private void DiscoverTestGroup(
+            IGrouping<PythonProjectSettings, string> testGroup,
+            IDiscoveryContext discoveryContext,
+            IMessageLogger logger,
+            ITestCaseDiscoverySink discoverySink
+        ) {
             PythonProjectSettings settings = testGroup.Key;
+            if (settings == null) {
+                return;
+            }
 
             try {
                 var discovery = DiscovererFactory.GetDiscoverer(settings);

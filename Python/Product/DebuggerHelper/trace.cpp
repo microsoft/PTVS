@@ -266,7 +266,7 @@ bool StringEquals27(const DebuggerString* debuggerString, const void* pyString) 
         }
 
         const wchar_t* data = ReadField<const wchar_t*>(pyString, fieldOffsets.PyUnicodeObject27.str);
-        return memcmp(data, my_data, my_length * 2) == 0;
+        return memcmp(data, my_data, my_length * static_cast<size_t>(2)) == 0;
     } else {
         return false;
     }
@@ -311,7 +311,7 @@ bool StringEquals33(const DebuggerString* debuggerString, const void* pyString) 
             return false;
         }
 
-        return memcmp(wstr, my_data, my_length * 2) == 0;
+        return memcmp(wstr, my_data, my_length * static_cast<size_t>(2)) == 0;
     }
 
     auto length = ReadField<SSIZE_T>(pyString, fieldOffsets.PyUnicodeObject33.length);
@@ -329,7 +329,7 @@ bool StringEquals33(const DebuggerString* debuggerString, const void* pyString) 
     }
 
     if (kind == 2) {
-        return memcmp(data, my_data, my_length * 2) == 0;
+        return memcmp(data, my_data, my_length * static_cast<size_t>(2)) == 0;
     } else if (kind == 1 || ascii) {
         auto asciiData = reinterpret_cast<const char*>(data);
         for (int32_t i = 0; i < my_length; ++i) {
@@ -521,7 +521,11 @@ static void TraceReturn(void* frame) {
 }
 
 #pragma warning(push)
-#pragma warning(disable:4211) // nonstandard extension used: redefined extern to static
+#pragma warning(disable:4211 28112) // nonstandard extension used: redefined extern to static
+                                    // If "objectsToRelease" is accessed through interlocked function even once,
+                                        //it must always be accessed through interlocked functions
+                                        //Waring supressed because there is no other interlocked operation performed on 
+                                        //This variable and we want to avoid it here due to performance reasons
 
 static void ReleasePendingObjects() {
     if (objectsToRelease) {

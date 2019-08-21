@@ -22,7 +22,6 @@ using System.Linq;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.TestAdapter.Config;
 using Microsoft.PythonTools.TestAdapter.Services;
-using Microsoft.PythonTools.TestAdapter.Utils;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
@@ -38,36 +37,54 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
             _settings = settings;
         }
 
-        public void DiscoverTests(IEnumerable<string> sources, IMessageLogger logger, ITestCaseDiscoverySink discoverySink) {
-            _logger = logger;
-            string json = null;
-
+        public void DiscoverTests(
+            IEnumerable<string> sources,
+            IMessageLogger logger,
+            ITestCaseDiscoverySink discoverySink
+        ) {
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             var workspaceText = _settings.IsWorkspace ? Strings.WorkspaceText : Strings.ProjectText;
             LogInfo(Strings.PythonTestDiscovererStartedMessage.FormatUI(PythonConstants.PytestText, _settings.ProjectName, workspaceText, _settings.DiscoveryWaitTimeInSeconds));
 
-            try {
-                var env = InitializeEnvironment(sources, _settings);
-                var arguments = GetArguments(sources, _settings);
-                DebugInfo("cd " + _settings.WorkingDirectory);
-                DebugInfo("set " + _settings.PathEnv + "=" + env[_settings.PathEnv]);
-                DebugInfo($"{_settings.InterpreterPath} {string.Join(" ", arguments)}");
+            var env = InitializeEnvironment(sources, _settings);
+            var outputFilePath = Path.GetTempFileName();
+            var arguments = GetArguments(sources, _settings, outputFilePath);
 
-                json = ProcessExecute.RunWithTimeout(
+            LogInfo("cd " + _settings.WorkingDirectory);
+            LogInfo("set " + _settings.PathEnv + "=" + env[_settings.PathEnv]);
+            LogInfo($"{_settings.InterpreterPath} {string.Join(" ", arguments)}");
+
+            try {
+                var stdout = ProcessExecute.RunWithTimeout(
                     _settings.InterpreterPath,
                     env,
                     arguments,
                     _settings.WorkingDirectory,
                     _settings.PathEnv,
                     _settings.DiscoveryWaitTimeInSeconds
-                    );
+                );
+                if (!String.IsNullOrEmpty(stdout)) {
+                    Error(stdout);
+                }
             } catch (TimeoutException) {
                 Error(Strings.PythonTestDiscovererTimeoutErrorMessage);
+                return;
+            }
+
+            if (!File.Exists(outputFilePath)) {
+                Error(Strings.PythonDiscoveryResultsNotFound.FormatUI(outputFilePath));
+                return;
+            }
+
+            string json = File.ReadAllText(outputFilePath);
+            if (string.IsNullOrEmpty(json)) {
                 return;
             }
 
             List<PytestDiscoveryResults> results = null;
             try {
                 results = JsonConvert.DeserializeObject<List<PytestDiscoveryResults>>(json);
+                CreateVsTests(results, discoverySink);
             } catch (InvalidOperationException ex) {
                 Error("Failed to parse: {0}".FormatInvariant(ex.Message));
                 Error(json);
@@ -75,53 +92,56 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
                 Error("Failed to parse: {0}".FormatInvariant(ex.Message));
                 Error(json);
             }
-
-            CreateVsTests(results, discoverySink);
         }
 
-
-        private void CreateVsTests(IEnumerable<PytestDiscoveryResults> discoveryResults, ITestCaseDiscoverySink discoverySink) {
+        private void CreateVsTests(
+            IEnumerable<PytestDiscoveryResults> discoveryResults,
+            ITestCaseDiscoverySink discoverySink
+        ) {
+            bool showConfigurationHint = false;
             foreach (var result in discoveryResults.MaybeEnumerate()) {
                 var parentMap = result.Parents.ToDictionary(p => p.Id, p => p);
                 foreach (PytestTest test in result.Tests) {
                     try {
-                        TestCase tc = test.ToVsTestCase(_settings.ProjectHome, parentMap);
-                        DebugInfo($"{tc.DisplayName} Source:{tc.Source} Line:{tc.LineNumber}");
-                        discoverySink?.SendTestCase(tc);
+                        (string parsedSource, int line) = test.ParseSourceAndLine();
+                        // Note: we use _settings.ProjectHome and not result.root since it is being lowercased
+                        var parsedFullSourcePath = Path.IsPathRooted(parsedSource) ? parsedSource : PathUtils.GetAbsoluteFilePath(_settings.ProjectHome, parsedSource);
+
+                        //Note: Pytest adapter is currently returning lowercase source paths
+                        //Test Explorer will show a key not found exception if we use a source path that doesn't match a test container's source.
+                        if (_settings.TestContainerSources.TryGetValue(parsedFullSourcePath, out string testContainerSourcePath)) {
+                            TestCase tc = test.ToVsTestCase(
+                                testContainerSourcePath, 
+                                line, 
+                                parentMap, 
+                                _settings.ProjectHome);
+                            discoverySink?.SendTestCase(tc);
+                        } else {
+                            Warn(Strings.ErrorTestContainerNotFound.FormatUI(_settings.ProjectHome, test.ToString()));
+                            showConfigurationHint = true;
+                        }
                     } catch (Exception ex) {
                         Error(ex.Message);
                     }
                 }
             }
+
+            if (showConfigurationHint) {
+                LogInfo(Strings.DiscoveryConfigurationMessage);
+            }
         }
 
-        public string[] GetArguments(IEnumerable<string> sources, PythonProjectSettings projSettings) {
+        public string[] GetArguments(IEnumerable<string> sources, PythonProjectSettings projSettings, string outputfilename) {
             var arguments = new List<string>();
             arguments.Add(DiscoveryAdapterPath);
             arguments.Add("discover");
             arguments.Add("pytest");
-
-            // For a small set of tests, we'll pass them on the command
-            // line. Once we exceed a certain (arbitrary) number, create
-            // a test list on disk so that we do not overflow the 
-            // 32K argument limit.
-            bool useTestList = sources.Count() > 5;
-            if (!projSettings.IsWorkspace &&
-                useTestList) {
-                var testListFilePath = TestUtils.CreateTestListFile(sources);
-                arguments.Add("--test-list");
-                arguments.Add(testListFilePath);
-            }
+            arguments.Add("--output-file");
+            arguments.Add(outputfilename);
             //Note pytest specific arguments go after this separator
             arguments.Add("--");
-            // Add source files to pytest as arguments
-            if (!projSettings.IsWorkspace &&
-                !useTestList) {
-                foreach (var s in sources) {
-                    arguments.Add(s);
-                }
-            }
             arguments.Add("--cache-clear");
+            arguments.Add(String.Format("--rootdir={0}", projSettings.ProjectHome));
             return arguments.ToArray();
         }
 
@@ -165,6 +185,9 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
 
         private void Error(string message) {
             _logger?.SendMessage(TestMessageLevel.Error, message ?? String.Empty);
+        }
+        private void Warn(string message) {
+            _logger?.SendMessage(TestMessageLevel.Warning, message ?? String.Empty);
         }
     }
 }

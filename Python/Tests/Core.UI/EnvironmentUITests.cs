@@ -553,7 +553,7 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
                 // Note: we need to use a real virtual env for this, because the
                 // workspace factory provider runs the env's python.exe.
                 var envPath = TestData.GetTempPath("testenv");
-                basePython.CreatePythonVirtualEnv(envPath);
+                basePython.CreateVirtualEnv(envPath);
 
                 // Add existing virtual environment dialog, custom path to a
                 // virtual env located outside of workspace root.
