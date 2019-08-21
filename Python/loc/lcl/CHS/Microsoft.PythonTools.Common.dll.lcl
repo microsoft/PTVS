@@ -5484,10 +5484,13 @@
       </Item>
       <Item ItemId=";PythonTestFileDetected" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[A file containing Python tests was detected in the {0} {1}, but the test framework is disabled.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
+          <Val><![CDATA[A file which may contain Python tests was detected in the {0} {1}, but the test framework is disabled.]]></Val>
+          <Tgt Cat="Text" Stat="Update" Orig="New">
             <Val><![CDATA[在 {0} {1} 中检测到包含 Python 测试的文件，但已禁用此测试框架。]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[A file containing Python tests was detected in the {0} {1}, but the test framework is disabled.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -5513,7 +5516,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Test _framework:]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[测试框架:]]></Val>
+            <Val><![CDATA[测试框架(_F):]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -5540,7 +5543,7 @@
         <Str Cat="Text">
           <Val><![CDATA[_Pattern:]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[模式:]]></Val>
+            <Val><![CDATA[模式(_P):]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -5558,7 +5561,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Root _directory:]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[根目录:]]></Val>
+            <Val><![CDATA[根目录(_D):]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
