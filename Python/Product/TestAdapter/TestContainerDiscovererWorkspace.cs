@@ -177,7 +177,8 @@ namespace Microsoft.PythonTools.TestAdapter {
                 _testFilesUpdateWatcher.AddDirectoryWatch(workspace.Location);
                 oldWatcher?.Dispose();
 
-                Predicate<string> testFileFilter = (x) => Regex.IsMatch(PythonConstants.TestPatternFileNameRegex, x);
+                Regex testFileFilterRegex = new Regex(@".*\.(py|txt)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+                Predicate<string> testFileFilter = (x) => testFileFilterRegex.IsMatch(x);
                 foreach (var file in _workspaceContextProvider.Workspace.EnumerateUserFiles(testFileFilter)) {
                     projInfo.AddTestContainer(this, file);
                 }
@@ -292,7 +293,6 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
             NotifyContainerChanged();
         }
-
 
         private bool IsFileExcluded(ProjectInfo projectInfo, string filePath) {
             bool isFileInVirtualEnv = _interpreterRegistryService.Configurations

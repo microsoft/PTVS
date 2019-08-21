@@ -80,7 +80,7 @@ namespace Microsoft.PythonTools.Project {
                     acceptActionItems.Add(new InfoBarHyperlink(Strings.PyTestInstallAndEnableInfoBarAction, (Action)InstallAndEnablePytestAction));
                 }
 
-            } else if (PythonTestFileFound((x) => Regex.IsMatch(PathUtils.GetFileOrDirectoryName(x), PythonConstants.TestPatternFileNameRegex))) {
+            } else if (PythonTestFileFound((x) => PythonConstants.DefaultTestFileNameRegex.IsMatch(PathUtils.GetFileOrDirectoryName(x)))) {
                 infoBarMessage = Strings.PythonTestFileDetected.FormatUI(_infoBarData.Caption, _infoBarData.ContextLocalized);
 
                 if (await IsPyTestInstalledAsync()) {

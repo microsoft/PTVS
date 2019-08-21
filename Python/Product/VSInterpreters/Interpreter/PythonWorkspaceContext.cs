@@ -175,6 +175,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 }
             }
         }
+
         public string GetRequirementsTxtPath() {
             return _workspace.GetRequirementsTxtPath();
         }

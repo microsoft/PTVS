@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 
 namespace Microsoft.PythonTools {
     public enum TestFrameworkType {
@@ -134,7 +135,8 @@ namespace Microsoft.PythonTools {
         public const string DefaultUnitTestRootDirectory = ".";
         public const string UnitTestPatternSetting = "UnitTestPattern";
         public const string DefaultUnitTestPattern = "test*.py";
-        public const string TestPatternFileNameRegex = @"((^test.*)|(^.*_test))\.(py|txt)";
+        public static readonly Regex DefaultTestFileNameRegex = 
+            new Regex(@"((^test.*)|(^.*_test))\.(py|txt)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         public static readonly HashSet<string> PyTestFrameworkConfigFiles =
             new HashSet<string>(StringComparer.OrdinalIgnoreCase) {"pytest.ini", "setup.cfg", "tox.ini"};
