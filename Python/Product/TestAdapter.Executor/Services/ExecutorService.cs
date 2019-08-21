@@ -84,7 +84,7 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
 
         }
 
-        public string[] GetArguments(IEnumerable<TestCase> tests, string outputfile, string coveragePath) {
+        public string[] GetArguments(IEnumerable<TestCase> tests, string outputfile, string coveragePath, PythonProjectSettings settings) {
             var arguments = new List<string> {
                 TestLauncherPath,
                 _projectSettings.WorkingDirectory,
@@ -113,6 +113,7 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
 
             // output results to xml file
             arguments.Add(String.Format("--junitxml={0}", outputfile));
+            arguments.Add(String.Format("--rootdir={0}", settings.ProjectHome));
 
             return arguments.ToArray();
         }
@@ -321,7 +322,7 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
 
                 var env = InitializeEnvironment(tests);
                 ouputFile = GetJunitXmlFile();
-                var arguments = GetArguments(tests, ouputFile, coveragePath);
+                var arguments = GetArguments(tests, ouputFile, coveragePath, _projectSettings);
 
                 var testRedirector = new TestRedirector(_frameworkHandle);
 
