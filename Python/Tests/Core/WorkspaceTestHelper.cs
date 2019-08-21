@@ -403,6 +403,8 @@ namespace PythonToolsTests {
             public Task SetPropertyAsync(string propertyName, bool? propertyVal) {
                 throw new NotImplementedException();
             }
+
+            public IEnumerable<string> EnumerateUserFiles(Predicate<string> predicate) => throw new NotImplementedException();
         }
     }
 }

@@ -21,6 +21,7 @@ using System.ComponentModel.Composition;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
@@ -176,7 +177,9 @@ namespace Microsoft.PythonTools.TestAdapter {
                 _testFilesUpdateWatcher.AddDirectoryWatch(workspace.Location);
                 oldWatcher?.Dispose();
 
-                foreach (var file in GetTestContainerFiles(projInfo)) {
+                Regex testFileFilterRegex = new Regex(@".*\.(py|txt)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+                Predicate<string> testFileFilter = (x) => testFileFilterRegex.IsMatch(x);
+                foreach (var file in _workspaceContextProvider.Workspace.EnumerateUserFiles(testFileFilter)) {
                     projInfo.AddTestContainer(this, file);
                 }
 
@@ -289,24 +292,6 @@ namespace Microsoft.PythonTools.TestAdapter {
                     break;
             }
             NotifyContainerChanged();
-        }
-
-        private IEnumerable<string> GetTestContainerFiles(ProjectInfo projectInfo) {
-            var validFiles = Directory.EnumerateFiles(projectInfo.ProjectHome, "*.py", SearchOption.TopDirectoryOnly);
-            var workspaceInterpreterConfigs = _interpreterRegistryService.Configurations
-                .Where(x => PathUtils.IsSubpathOf(projectInfo.ProjectHome, x.InterpreterPath))
-                .ToList();
-            var workspaceCacheDirPath = Path.Combine(projectInfo.ProjectHome, ".vs");
-
-            foreach (var directory in Directory.EnumerateDirectories(projectInfo.ProjectHome)) {
-                if (!workspaceInterpreterConfigs.Any(x => PathUtils.IsSameDirectory(x.GetPrefixPath(), directory)) &&
-                    !PathUtils.IsSameDirectory(directory, workspaceCacheDirPath)
-                ) {
-                    validFiles = validFiles.Concat(Directory.EnumerateFiles(directory, "*.py", SearchOption.AllDirectories));
-                }
-            }
-
-            return validFiles;
         }
 
         private bool IsFileExcluded(ProjectInfo projectInfo, string filePath) {
