@@ -6,6 +6,7 @@ import io
 import os
 import sys
 import traceback
+import pytest
 
 def main():
     cwd, testRunner, secret, port, debugger_search_path, mixed_mode, coverage_file, test_file, args = parse_argv()
@@ -27,7 +28,6 @@ def parse_argv():
     8. TestFile, with a list of testIds to run
     9. Rest of the arguments are passed into the test runner.
     """
-
     return (sys.argv[1], sys.argv[2], sys.argv[3], int(sys.argv[4]), sys.argv[5], sys.argv[6], sys.argv[7], sys.argv[8], sys.argv[9:])
 
 def load_debugger(secret, port, debugger_search_path, mixed_mode):
@@ -42,7 +42,6 @@ def load_debugger(secret, port, debugger_search_path, mixed_mode):
             from ptvsd.debugger import DONT_DEBUG, DEBUG_ENTRYPOINTS, get_code
             from ptvsd import enable_attach, wait_for_attach
 
-            DONT_DEBUG.append(os.path.normcase(__file__))
             DEBUG_ENTRYPOINTS.add(get_code(main))
             enable_attach(secret, ('127.0.0.1', port), redirect_output = True)
             wait_for_attach()
@@ -105,8 +104,8 @@ def run(testRunner, coverage_file, test_file, args):
                 pass
 
         if testRunner == 'pytest':
-            import pytest
-            pytest.main(args)
+            _plugin = TestCollector()
+            pytest.main(args, [_plugin])
         else:
             import nose
             nose.run(argv=args)
@@ -118,5 +117,29 @@ def run(testRunner, coverage_file, test_file, args):
             cov.save()
             cov.xml_report(outfile = coverage_file + '.xml', omit=__file__)
 
+
+class TestCollector(object):
+    """This is a pytest plugin that prevents notfound errors from ending execution of tests."""
+
+    def __init__(self, tests=None):
+        pass
+  
+    def pytest_collectstart(self, collector):
+       originalCollect = collector.collect
+       
+       # wrap the actual collect() call and clear any _notfound errors so that no exceptions will be thrown
+       # we still print the errors to the user
+       def collectwapper():
+           yield from originalCollect()
+           notfound = getattr(collector, '_notfound', [])
+           if notfound:
+               for arg, exc in notfound: 
+                   line = "(no name {!r} in any of {!r})".format(arg, exc.args[0])
+                   print("ERROR: not found: {}\n{}".format(arg, line))
+               collector._notfound = []
+
+       collector.collect = collectwapper
+
 if __name__ == '__main__':
     main()
+      
