@@ -208,8 +208,12 @@ if __name__ == '__main__':
             var discoverySink = new MockTestCaseDiscoverySink();
             var logger = new MockMessageLogger();
             var discoverer = new PythonTestDiscoverer();
-
             discoverer.DiscoverTests(new[] { testFilePath1, testFilePath2 }, discoveryContext, logger, discoverySink);
+
+            Console.WriteLine($"Discovered Tests");
+            foreach (var test in discoverySink.Tests) {
+                Console.WriteLine($"{test.DisplayName}");
+            }
 
             Assert.IsTrue(discoverySink.Tests.Any());
             Assert.AreEqual(discoverySink.Tests.Count(), 20);
@@ -217,12 +221,70 @@ if __name__ == '__main__':
             var testCases = discoverySink.Tests;
             var runContext = new MockRunContext(runSettings, testCases, testEnv.ResultsFolderPath);
             var recorder = new MockTestExecutionRecorder();
-
-            ITestExecutor executor = executor = new TestExecutorPytest(); ;
-            
+            var executor = new TestExecutorPytest();
             executor.RunTests(testCases, runContext, recorder);
 
+            PrintTestResults(recorder);
+
             Assert.IsFalse(recorder.Results.Any(tr => tr.Outcome != TestOutcome.Passed));
+        }
+
+
+        [TestMethod, Priority(0)]
+        [TestCategory("10s")]
+        public void RunPytestMissingPytestIdShowsErrorAndReturnsPartialResults() {
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
+
+            var testFilePath1 = Path.Combine(testEnv.SourceFolderPath, "test_indirect_list.py");
+            File.Copy(TestData.GetPath("TestData", "TestDiscoverer", "Parameterized", "test_indirect_list.py"), testFilePath1);
+
+            var runSettings = new MockRunSettings(
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+                    .WithTestFilesFromFolder(testEnv.SourceFolderPath)
+                    .ToXml()
+            );
+            var discoveryContext = new MockDiscoveryContext(runSettings);
+            var discoverySink = new MockTestCaseDiscoverySink();
+            var logger = new MockMessageLogger();
+            var discoverer = new PythonTestDiscoverer();
+            discoverer.DiscoverTests(new[] { testFilePath1 }, discoveryContext, logger, discoverySink);
+
+            Console.WriteLine($"Discovered Tests");
+            foreach (var test in discoverySink.Tests) {
+                Console.WriteLine($"{test.DisplayName}");
+            }
+
+            Assert.IsTrue(discoverySink.Tests.Any());
+            Assert.AreEqual(discoverySink.Tests.Count(), 1);
+
+            // create a Missing Test with valid file but missing pytestId
+            var tc = discoverySink.Tests.First();
+            var validId = tc.GetPropertyValue<string>(Microsoft.PythonTools.TestAdapter.Pytest.Constants.PytestIdProperty, "");
+            var missingTest = new TestCase(tc.DisplayName + "_copy", tc.ExecutorUri, tc.Source);
+            missingTest.CodeFilePath = tc.CodeFilePath;
+            var missingPytestId = validId + "_copy";
+            missingTest.SetPropertyValue<string>(Microsoft.PythonTools.TestAdapter.Pytest.Constants.PytestIdProperty, missingPytestId);
+            discoverySink.Tests.Add(missingTest);
+
+            var testCases = discoverySink.Tests;
+            var runContext = new MockRunContext(runSettings, testCases, testEnv.ResultsFolderPath);
+            var recorder = new MockTestExecutionRecorder();
+            var executor = new TestExecutorPytest();
+            executor.RunTests(testCases, runContext, recorder);
+
+            //Check for Error Message
+            var errors = string.Join(Environment.NewLine, recorder.Messages);
+            AssertUtil.Contains(
+                errors,
+                "ERROR: not found:"
+            );
+
+            PrintTestResults(recorder);
+
+            //Check for Partial Results
+            Assert.IsTrue(recorder.Results.Any());
+            Assert.IsFalse(recorder.Results[0].Outcome != TestOutcome.Passed);
+            Assert.IsFalse(recorder.Results[1].Outcome != TestOutcome.NotFound);
         }
 
         [TestMethod, Priority(0)]
@@ -235,7 +297,7 @@ if __name__ == '__main__':
 
             var expectedTests = new[] {
                 new TestInfo(
-                   "test_A", 
+                   "test_A",
                    "test_Uppercase.py::Test_UppercaseClass::test_A",
                     testFilePath,
                     4,
@@ -873,7 +935,7 @@ if __name__ == '__main__':
             var runContext = new MockRunContext(runSettings, testCases, "");
             var recorder = new MockTestExecutionRecorder();
             var executor = new TestExecutorPytest();
-            
+
             //should not throw
             executor.RunTests(testCases, runContext, recorder);
         }
@@ -935,7 +997,7 @@ if __name__ == '__main__':
                     var classParts = ti.PytestXmlClassName.Split('.');
                     id = (classParts.Length > 1) ? id : ".\\" + Path.GetFileName(ti.FilePath) + "::" + ti.DisplayName;
                 }
-             
+
                 // FullyQualifiedName as exec path suffix only works for test class case,
                 // for standalone methods, specify the exec path suffix when creating TestInfo.
                 string execPath;
