@@ -216,7 +216,7 @@ if __name__ == '__main__':
             }
 
             Assert.IsTrue(discoverySink.Tests.Any());
-            Assert.AreEqual(discoverySink.Tests.Count(), 20);
+            Assert.AreEqual(discoverySink.Tests.Count(), 21);
 
             var testCases = discoverySink.Tests;
             var runContext = new MockRunContext(runSettings, testCases, testEnv.ResultsFolderPath);
@@ -283,8 +283,8 @@ if __name__ == '__main__':
 
             //Check for Partial Results
             Assert.IsTrue(recorder.Results.Any());
-            Assert.IsFalse(recorder.Results[0].Outcome != TestOutcome.Passed);
-            Assert.IsFalse(recorder.Results[1].Outcome != TestOutcome.NotFound);
+            Assert.IsFalse(recorder.Results.Single( r => r.TestCase.DisplayName == discoverySink.Tests[0].DisplayName).Outcome != TestOutcome.Passed);
+            Assert.IsFalse(recorder.Results.Single(r => r.TestCase.DisplayName == discoverySink.Tests[1].DisplayName).Outcome != TestOutcome.NotFound);
         }
 
         [TestMethod, Priority(0)]

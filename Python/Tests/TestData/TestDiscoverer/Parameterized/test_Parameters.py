@@ -78,6 +78,19 @@ def test_eval(test_input, expected):
         ("\\", "\\"),
         ("\n \n", "\n \n"),
         (":", ":"),
+        (  """
+           .. figure:: foo.jpg
+
+ 
+
+              this is title
+           """, """
+           .. figure:: foo.jpg
+
+ 
+
+              this is title
+           """)
     ],
 )
 def test_pytest_finds_tests_with_special_strings(test_input, expected):
