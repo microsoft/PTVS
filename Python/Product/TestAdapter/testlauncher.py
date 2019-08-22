@@ -40,7 +40,8 @@ def load_debugger(secret, port, debugger_search_path, mixed_mode):
             import ptvsd
             from ptvsd.debugger import DONT_DEBUG, DEBUG_ENTRYPOINTS, get_code
             from ptvsd import enable_attach, wait_for_attach
-
+            
+            DONT_DEBUG.append(os.path.normcase(__file__))
             DEBUG_ENTRYPOINTS.add(get_code(main))
             enable_attach(secret, ('127.0.0.1', port), redirect_output = True)
             wait_for_attach()
