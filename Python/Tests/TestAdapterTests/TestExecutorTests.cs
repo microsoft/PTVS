@@ -188,6 +188,43 @@ if __name__ == '__main__':
             ExecuteTests(testEnv, runSettings, expectedTests);
         }
 
+
+        [TestMethod, Priority(0)]
+        [TestCategory("10s")]
+        public void RunPytestParameterizedAndDiscovery() {
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
+
+            var testFilePath1 = Path.Combine(testEnv.SourceFolderPath, "test_indirect_list.py");
+            var testFilePath2 = Path.Combine(testEnv.SourceFolderPath, "test_Parameters.py");
+            File.Copy(TestData.GetPath("TestData", "TestDiscoverer", "Parameterized", "test_indirect_list.py"), testFilePath1);
+            File.Copy(TestData.GetPath("TestData", "TestDiscoverer", "Parameterized", "test_Parameters.py"), testFilePath2);
+
+            var runSettings = new MockRunSettings(
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+                    .WithTestFilesFromFolder(testEnv.SourceFolderPath)
+                    .ToXml()
+            );
+            var discoveryContext = new MockDiscoveryContext(runSettings);
+            var discoverySink = new MockTestCaseDiscoverySink();
+            var logger = new MockMessageLogger();
+            var discoverer = new PythonTestDiscoverer();
+
+            discoverer.DiscoverTests(new[] { testFilePath1, testFilePath2 }, discoveryContext, logger, discoverySink);
+
+            Assert.IsTrue(discoverySink.Tests.Any());
+            Assert.AreEqual(discoverySink.Tests.Count(), 20);
+
+            var testCases = discoverySink.Tests;
+            var runContext = new MockRunContext(runSettings, testCases, testEnv.ResultsFolderPath);
+            var recorder = new MockTestExecutionRecorder();
+
+            ITestExecutor executor = executor = new TestExecutorPytest(); ;
+            
+            executor.RunTests(testCases, runContext, recorder);
+
+            Assert.IsFalse(recorder.Results.Any(tr => tr.Outcome != TestOutcome.Passed));
+        }
+
         [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public void RunPytestUppercaseFileName() {
