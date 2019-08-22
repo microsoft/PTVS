@@ -6,7 +6,6 @@ import io
 import os
 import sys
 import traceback
-import pytest
 
 def main():
     cwd, testRunner, secret, port, debugger_search_path, mixed_mode, coverage_file, test_file, args = parse_argv()
@@ -104,6 +103,8 @@ def run(testRunner, coverage_file, test_file, args):
                 pass
 
         if testRunner == 'pytest':
+            import pytest
+            patch_translate_non_printable()
             _plugin = TestCollector()
             pytest.main(args, [_plugin])
         else:
@@ -117,6 +118,25 @@ def run(testRunner, coverage_file, test_file, args):
             cov.save()
             cov.xml_report(outfile = coverage_file + '.xml', omit=__file__)
 
+#note: this must match adapter\pytest\_discovery.py
+def patch_translate_non_printable():
+    import _pytest.compat
+    translate_non_printable =  getattr(_pytest.compat, "_translate_non_printable")
+
+    if translate_non_printable:
+        def _translate_non_printable_patched(s):
+            s = translate_non_printable(s)
+            s = s.replace(':', '/:')  # pytest testcase not found error and VS TestExplorer FQN parsing
+            s = s.replace('.', '_')   # VS TestExplorer FQN parsing
+            s = s.replace('\n', '/n') # pytest testcase not found error 
+            s = s.replace('\\', '/')  # pytest testcase not found error, fixes cases (actual backslash followed by n)
+            s = s.replace('\r', '/r') # pytest testcase not found error
+            return s
+
+        _pytest.compat._translate_non_printable = _translate_non_printable_patched
+    else:
+        print("ERROR: failed to patch pytest, _pytest.compat._translate_non_printable")
+
 
 class TestCollector(object):
     """This is a pytest plugin that prevents notfound errors from ending execution of tests."""
@@ -124,21 +144,31 @@ class TestCollector(object):
     def __init__(self, tests=None):
         pass
   
+    #Pytest Hook
     def pytest_collectstart(self, collector):
-       originalCollect = collector.collect
-       
-       # wrap the actual collect() call and clear any _notfound errors so that no exceptions will be thrown
-       # we still print the errors to the user
-       def collectwapper():
-           yield from originalCollect()
-           notfound = getattr(collector, '_notfound', [])
-           if notfound:
-               for arg, exc in notfound: 
-                   line = "(no name {!r} in any of {!r})".format(arg, exc.args[0])
-                   print("ERROR: not found: {}\n{}".format(arg, line))
-               collector._notfound = []
+        self.patch_collect_test_notfound(collector)
 
-       collector.collect = collectwapper
+    def patch_collect_test_notfound(self, collector):
+        originalCollect = getattr(collector, "collect")
+       
+        if not originalCollect:
+            print("ERROR: failed to patch pytest, collector.collect")
+            pass
+            
+        # Fix for RunAll in VS, when a single parameterized test isn't found
+        # Wrap the actual collect() call and clear any _notfound errors to prevent exceptions which skips remaining tests to run
+        # We still print the same errors to the user
+        def collectwapper():
+            yield from originalCollect()
+            notfound = getattr(collector, '_notfound', [])
+            if notfound:
+                  for arg, exc in notfound: 
+                      line = "(no name {!r} in any of {!r})".format(arg, exc.args[0])
+                      print("ERROR: not found: {}\n{}".format(arg, line))
+                  #clear errors 
+                  collector._notfound = []
+
+        collector.collect = collectwapper
 
 if __name__ == '__main__':
     main()
