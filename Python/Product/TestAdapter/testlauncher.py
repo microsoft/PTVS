@@ -159,7 +159,9 @@ class TestCollector(object):
         # Wrap the actual collect() call and clear any _notfound errors to prevent exceptions which skips remaining tests to run
         # We still print the same errors to the user
         def collectwapper():
-            yield from originalCollect()
+            for item in originalCollect():
+                yield item
+           
             notfound = getattr(collector, '_notfound', [])
             if notfound:
                   for arg, exc in notfound: 
