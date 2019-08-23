@@ -27,7 +27,6 @@ def parse_argv():
     8. TestFile, with a list of testIds to run
     9. Rest of the arguments are passed into the test runner.
     """
-
     return (sys.argv[1], sys.argv[2], sys.argv[3], int(sys.argv[4]), sys.argv[5], sys.argv[6], sys.argv[7], sys.argv[8], sys.argv[9:])
 
 def load_debugger(secret, port, debugger_search_path, mixed_mode):
@@ -41,7 +40,7 @@ def load_debugger(secret, port, debugger_search_path, mixed_mode):
             import ptvsd
             from ptvsd.debugger import DONT_DEBUG, DEBUG_ENTRYPOINTS, get_code
             from ptvsd import enable_attach, wait_for_attach
-
+            
             DONT_DEBUG.append(os.path.normcase(__file__))
             DEBUG_ENTRYPOINTS.add(get_code(main))
             enable_attach(secret, ('127.0.0.1', port), redirect_output = True)
@@ -106,7 +105,9 @@ def run(testRunner, coverage_file, test_file, args):
 
         if testRunner == 'pytest':
             import pytest
-            pytest.main(args)
+            patch_translate_non_printable()
+            _plugin = TestCollector()
+            pytest.main(args, [_plugin])
         else:
             import nose
             nose.run(argv=args)
@@ -118,5 +119,60 @@ def run(testRunner, coverage_file, test_file, args):
             cov.save()
             cov.xml_report(outfile = coverage_file + '.xml', omit=__file__)
 
+#note: this must match adapter\pytest\_discovery.py
+def patch_translate_non_printable():
+    import _pytest.compat
+    translate_non_printable =  getattr(_pytest.compat, "_translate_non_printable")
+
+    if translate_non_printable:
+        def _translate_non_printable_patched(s):
+            s = translate_non_printable(s)
+            s = s.replace(':', '/:')  # pytest testcase not found error and VS TestExplorer FQN parsing
+            s = s.replace('.', '_')   # VS TestExplorer FQN parsing
+            s = s.replace('\n', '/n') # pytest testcase not found error 
+            s = s.replace('\\', '/')  # pytest testcase not found error, fixes cases (actual backslash followed by n)
+            s = s.replace('\r', '/r') # pytest testcase not found error
+            return s
+
+        _pytest.compat._translate_non_printable = _translate_non_printable_patched
+    else:
+        print("ERROR: failed to patch pytest, _pytest.compat._translate_non_printable")
+
+
+class TestCollector(object):
+    """This is a pytest plugin that prevents notfound errors from ending execution of tests."""
+
+    def __init__(self, tests=None):
+        pass
+  
+    #Pytest Hook
+    def pytest_collectstart(self, collector):
+        self.patch_collect_test_notfound(collector)
+
+    def patch_collect_test_notfound(self, collector):
+        originalCollect = getattr(collector, "collect")
+       
+        if not originalCollect:
+            print("ERROR: failed to patch pytest, collector.collect")
+            pass
+            
+        # Fix for RunAll in VS, when a single parameterized test isn't found
+        # Wrap the actual collect() call and clear any _notfound errors to prevent exceptions which skips remaining tests to run
+        # We still print the same errors to the user
+        def collectwapper():
+            for item in originalCollect():
+                yield item
+           
+            notfound = getattr(collector, '_notfound', [])
+            if notfound:
+                  for arg, exc in notfound: 
+                      line = "(no name {!r} in any of {!r})".format(arg, exc.args[0])
+                      print("ERROR: not found: {}\n{}".format(arg, line))
+                  #clear errors 
+                  collector._notfound = []
+
+        collector.collect = collectwapper
+
 if __name__ == '__main__':
     main()
+      
