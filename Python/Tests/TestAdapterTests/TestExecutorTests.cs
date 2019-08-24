@@ -284,7 +284,7 @@ if __name__ == '__main__':
             //Check for Partial Results
             Assert.IsTrue(recorder.Results.Any());
             Assert.IsFalse(recorder.Results.Single( r => r.TestCase.DisplayName == discoverySink.Tests[0].DisplayName).Outcome != TestOutcome.Passed);
-            Assert.IsFalse(recorder.Results.Single(r => r.TestCase.DisplayName == discoverySink.Tests[1].DisplayName).Outcome != TestOutcome.NotFound);
+            Assert.IsFalse(recorder.Results.Single(r => r.TestCase.DisplayName == discoverySink.Tests[1].DisplayName).Outcome != TestOutcome.Skipped);
         }
 
         [TestMethod, Priority(0)]

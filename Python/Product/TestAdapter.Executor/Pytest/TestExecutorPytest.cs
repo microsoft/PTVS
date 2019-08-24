@@ -133,8 +133,6 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
 
             using (var executor = new ExecutorService(settings, frameworkHandle, runContext)) {
-                var idToResultsMap = CreatePytestIdToVsTestResultsMap(testGroup);
-
                 bool codeCoverage = ExecutorService.EnableCodeCoverage(runContext);
                 string covPath = null;
                 if (codeCoverage) {
@@ -143,6 +141,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 
                 var resultsXML = executor.Run(testGroup, covPath);
 
+                var pytestIdToResultsMap = TestResultParser.CreatePytestIdToVsTestResultsMap(testGroup, defaultOutcome: TestOutcome.Skipped);
                 //Read pytest results from xml
                 if (File.Exists(resultsXML)) {
                     var xmlTestResultNodes = TestResultParser.Read(resultsXML).CreateNavigator().SelectDescendants("testcase", "", false);
@@ -152,7 +151,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                         }
                         try {
                             var pytestId = TestResultParser.GetPytestId(pytestResultNode);
-                            if (pytestId != null && idToResultsMap.TryGetValue(pytestId, out TestResult vsTestResult)) {
+                            if (pytestId != null && pytestIdToResultsMap.TryGetValue(pytestId, out TestResult vsTestResult)) {
                                 TestResultParser.UpdateVsTestResult(vsTestResult, pytestResultNode);
                             } else {
                                 frameworkHandle.SendMessage(TestMessageLevel.Error, Strings.ErrorTestCaseNotFound.FormatUI(pytestResultNode.OuterXml));
@@ -165,7 +164,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                     frameworkHandle.SendMessage(TestMessageLevel.Error, Strings.PytestResultsXmlNotFound.FormatUI(resultsXML));
                 }
 
-                foreach (var result in idToResultsMap.Values) {
+                foreach (var result in pytestIdToResultsMap.Values) {
                     if (_cancelRequested.WaitOne(0)) {
                         break;
                     }
@@ -176,11 +175,6 @@ namespace Microsoft.PythonTools.TestAdapter {
                     ExecutorService.AttachCoverageResults(frameworkHandle, covPath);
                 }
             }
-        }
-
-        private static Dictionary<string, TestResult> CreatePytestIdToVsTestResultsMap(IEnumerable<TestCase> vsTestCases) {
-            return vsTestCases.Select(tc => new TestResult(tc) { Outcome = TestOutcome.NotFound })
-                .ToDictionary(tr => tr.TestCase.GetPropertyValue<string>(Pytest.Constants.PytestIdProperty, String.Empty), tr => tr);
         }
     }
 }

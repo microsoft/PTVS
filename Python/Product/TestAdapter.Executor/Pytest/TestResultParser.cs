@@ -125,6 +125,12 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
             }
         }
 
+        internal static Dictionary<string, TestResult> CreatePytestIdToVsTestResultsMap(IEnumerable<TestCase> vsTestCases, TestOutcome defaultOutcome) {
+
+            return vsTestCases.Select(tc => new TestResult(tc) { Outcome = defaultOutcome })
+                .ToDictionary(tr => tr.TestCase.GetPropertyValue<string>(Pytest.Constants.PytestIdProperty, String.Empty), tr => tr);
+        }
+
         internal static XPathDocument Read(string xml) {
             var settings = new XmlReaderSettings {
                 XmlResolver = null
