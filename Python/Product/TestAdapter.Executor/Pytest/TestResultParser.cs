@@ -87,6 +87,10 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
         }
 
         internal static void UpdateVsTestResult(TestResult result, XPathNavigator navNode) {
+            if (navNode.Name != "testcase") {
+                throw new ArgumentException("navNode.Name {0} not eqaul to testcase", navNode.Name);
+            }
+
             result.Outcome = TestOutcome.Passed;
 
             var timeStr = navNode.GetAttribute("time", "");
@@ -110,7 +114,7 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
                             result.Messages.Add(new TestResultMessage(TestResultMessage.StandardErrorCategory, $"{navNode.Value}\n")); //Test Explorer Detail summary wont show link to stacktrace without adding a TestResultMessage
                             break;
                         case "error":
-                            result.Outcome = TestOutcome.None; // occurs when a pytest framework or parse error happens
+                            result.Outcome = TestOutcome.Failed; // occurs when a pytest framework or parse error happens
                             result.ErrorMessage = navNode.GetAttribute("message", "");
                             result.Messages.Add(new TestResultMessage(TestResultMessage.StandardErrorCategory, $"{navNode.Value}\n"));
                             break;

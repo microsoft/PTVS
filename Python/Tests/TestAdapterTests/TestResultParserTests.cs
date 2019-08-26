@@ -18,12 +18,21 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.PythonTools.TestAdapter.Pytest;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using System.Linq;
-using System.Collections.Generic;
+using System.Xml;
+using System;
 
 namespace TestAdapterTests {
 
     [TestClass]
     public class TestResultParserTests {
+
+        private const string _xmlResultsFormat =
+@"<?xml version=""1.0"" encoding=""utf - 8""?>
+  <testsuites>
+    <testsuite errors = ""0"" failures = ""0"" hostname = ""computer"" name = ""pytest"" skipped = ""0"" tests = ""1"" time = ""0.014"" timestamp = ""2019-08-23T08:38:53.347672"" >
+      {0}
+    </testsuite>
+  </testsuites>";
 
         [TestMethod]
         public void CreatePytestId_FuncInsideClass() {
@@ -72,5 +81,174 @@ namespace TestAdapterTests {
                 0
             );
         }
+
+        [TestMethod]
+        public void PytestPassResult() {
+            var testPass = @"<testcase classname=""test_Parameters"" file=""test_Parameters.py"" line=""42"" name=""test_timedistance_v3[forward]"" time=""0.001""></testcase>";
+            var xmlResults = string.Format(_xmlResultsFormat, testPass);
+
+            var doc = new XmlDocument();
+            doc.LoadXml(xmlResults);
+            var result = new TestResult(new TestCase());
+            var testCaseIter = doc.CreateNavigator().SelectDescendants("testcase", "", false);
+            testCaseIter.MoveNext();
+            TestResultParser.UpdateVsTestResult(result, testCaseIter.Current);
+
+            Assert.AreEqual(TestOutcome.Passed, result.Outcome);
+            Assert.AreEqual(TimeSpan.FromSeconds(0.001), result.Duration);
+        }
+
+
+        [TestMethod]
+        public void PytestFailureResult() {
+            var testPass = @"<testcase classname=""test_failures"" file=""test_failures.py"" line=""12"" name=""test_fail"" time=""0.001"">
+            <failure message = ""assert 0"" >
+                 def test_fail():
+                &gt; assert 0
+                E assert 0
+
+                test_failures.py:14: AssertionError
+            </failure>
+        </testcase> ";
+            var xmlResults = string.Format(_xmlResultsFormat, testPass);
+
+            var doc = new XmlDocument();
+            doc.LoadXml(xmlResults);
+            var result = new TestResult(new TestCase());
+            var testCaseIter = doc.CreateNavigator().SelectDescendants("testcase", "", false);
+            testCaseIter.MoveNext();
+            TestResultParser.UpdateVsTestResult(result, testCaseIter.Current);
+
+            Assert.AreEqual(TestOutcome.Failed, result.Outcome);
+            Assert.AreEqual(TimeSpan.FromSeconds(0.001), result.Duration);
+            Assert.AreEqual("assert 0", result.ErrorMessage);
+            Assert.IsTrue(result.Messages.Any(item => item.Text.Contains("test_failures.py:14: AssertionError")));
+        }
+
+        [TestMethod]
+        public void PytestErrorResult() {
+            var testPass = @" <testcase classname=""test_failures"" file=""test_failures.py"" line=""16"" name=""test_error"" time=""0.001"">
+            <error message = ""test setup failure"" >
+                 @pytest.fixture
+                def error_fixture():
+                &gt; assert 0
+                E assert 0
+
+                test_failures.py:6: AssertionError
+            </error>
+        </testcase> ";
+            var xmlResults = string.Format(_xmlResultsFormat, testPass);
+
+            var doc = new XmlDocument();
+            doc.LoadXml(xmlResults);
+            var result = new TestResult(new TestCase());
+            var testCaseIter = doc.CreateNavigator().SelectDescendants("testcase", "", false);
+            testCaseIter.MoveNext();
+            TestResultParser.UpdateVsTestResult(result, testCaseIter.Current);
+
+            Assert.AreEqual(TestOutcome.Failed, result.Outcome);
+            Assert.AreEqual(TimeSpan.FromSeconds(0.001), result.Duration);
+            Assert.AreEqual("test setup failure", result.ErrorMessage);
+            Assert.IsTrue(result.Messages.Any(item => item.Text.Contains("test_failures.py:6: AssertionError")));
+        }
+
+        [TestMethod]
+        public void PytestSkipResult() {
+            var testPass = @"<testcase classname=""test_failures"" file=""test_failures.py"" line=""20"" name=""test_skip"" time=""0.001"">
+            <skipped message = ""skipping this test"" type = ""pytest.skip"" > C:\Users\bschnurr\source\repos\Parameters\Parameters\test_failures.py:22: skipping this test </skipped >
+          </testcase>";
+            var xmlResults = string.Format(_xmlResultsFormat, testPass);
+
+            var doc = new XmlDocument();
+            doc.LoadXml(xmlResults);
+            var result = new TestResult(new TestCase());
+            var testCaseIter = doc.CreateNavigator().SelectDescendants("testcase", "", false);
+            testCaseIter.MoveNext();
+            TestResultParser.UpdateVsTestResult(result, testCaseIter.Current);
+
+            Assert.AreEqual(TestOutcome.Skipped, result.Outcome);
+            Assert.AreEqual(TimeSpan.FromSeconds(0.001), result.Duration);
+            Assert.AreEqual("skipping this test", result.ErrorMessage);
+        }
+
+        [TestMethod]
+        public void PytestSkipXFailedResult() {
+            var testPass = @"<testcase classname = ""test_failures"" file=""test_failures.py"" line=""24"" name=""test_xfail"" time=""0.200"">
+            <skipped message = ""xfailing this test"" type = ""pytest.xfail"" ></skipped>
+         </testcase>";
+            var xmlResults = string.Format(_xmlResultsFormat, testPass);
+
+            var doc = new XmlDocument();
+            doc.LoadXml(xmlResults);
+            var result = new TestResult(new TestCase());
+            var testCaseIter = doc.CreateNavigator().SelectDescendants("testcase", "", false);
+            testCaseIter.MoveNext();
+            TestResultParser.UpdateVsTestResult(result, testCaseIter.Current);
+
+            Assert.AreEqual(TestOutcome.Skipped, result.Outcome);
+            Assert.AreEqual(TimeSpan.FromSeconds(0.200), result.Duration);
+            Assert.AreEqual("xfailing this test", result.ErrorMessage);
+            //todo: added check for skipped message type = "pytest.xfail" when added
+        }
+
+        [TestMethod]
+        public void PytestResultsStdOutAppendsToMessages() {
+            var testPass = @"<testcase classname=""test_failures"" file=""test_failures.py"" line=""8"" name=""test_ok"" time=""0.002"">
+            <system-out>
+                  ok
+              </system-out>
+    
+            </testcase>";
+            var xmlResults = string.Format(_xmlResultsFormat, testPass);
+
+            var doc = new XmlDocument();
+            doc.LoadXml(xmlResults);
+            var result = new TestResult(new TestCase());
+            var testCaseIter = doc.CreateNavigator().SelectDescendants("testcase", "", false);
+            testCaseIter.MoveNext();
+            TestResultParser.UpdateVsTestResult(result, testCaseIter.Current);
+
+            Assert.AreEqual(TestOutcome.Passed, result.Outcome);
+            Assert.AreEqual(TimeSpan.FromSeconds(0.002), result.Duration);
+            Assert.IsTrue(result.Messages.Any(item => item.Text.Contains("ok")));
+        }
+
+        [TestMethod]
+        public void PytestResultsStdErrorAppendsToMessages() {
+            var testPass = @"<testcase classname=""test_failures"" file=""test_failures.py"" line=""8"" name=""test_ok"" time=""0.002"">
+            <system-err>
+                  bad
+              </system-err>
+    
+            </testcase>";
+            var xmlResults = string.Format(_xmlResultsFormat, testPass);
+
+            var doc = new XmlDocument();
+            doc.LoadXml(xmlResults);
+            var result = new TestResult(new TestCase());
+            var testCaseIter = doc.CreateNavigator().SelectDescendants("testcase", "", false);
+            testCaseIter.MoveNext();
+            TestResultParser.UpdateVsTestResult(result, testCaseIter.Current);
+
+            Assert.AreEqual(TestOutcome.Passed, result.Outcome);
+            Assert.AreEqual(TimeSpan.FromSeconds(0.002), result.Duration);
+            Assert.IsTrue(result.Messages.Any(item => item.Text.Contains("bad")));
+        }
+
+
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentException))]
+        public void PytestWrongXmlNodeThrowsException() {
+            var testPass = @"<testcase classname=""test_Parameters"" file=""test_Parameters.py"" line=""42"" name=""test_timedistance_v3[forward]"" time=""0.001""></testcase>";
+            var xmlResults = string.Format(_xmlResultsFormat, testPass);
+
+            var doc = new XmlDocument();
+            doc.LoadXml(xmlResults);
+            var result = new TestResult(new TestCase());
+            var rootNode = doc.CreateNavigator();
+
+            TestResultParser.UpdateVsTestResult(result, rootNode);
+        }
+
     }
 }
