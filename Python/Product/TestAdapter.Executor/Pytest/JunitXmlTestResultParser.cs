@@ -21,7 +21,7 @@ using System.Xml.XPath;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 namespace Microsoft.PythonTools.TestAdapter.Pytest {
-    public class TestResultParser {
+    public class JunitXmlTestResultParser {
         /// <summary>
         /// Parses the junit xml for test results and matches them to the corresponding original vsTestCase using 
         /// </summary>
@@ -83,7 +83,7 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
 
         internal static void UpdateVsTestResult(TestResult result, XPathNavigator navNode) {
             if (navNode.Name != "testcase") {
-                throw new ArgumentException("navNode.Name {0} not eqaul to testcase", navNode.Name);
+                throw new ArgumentException("navNode.Name {0} not equal to testcase", navNode.Name);
             }
 
             result.Outcome = TestOutcome.Passed;

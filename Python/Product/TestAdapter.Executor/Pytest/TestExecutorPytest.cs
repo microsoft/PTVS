@@ -146,15 +146,15 @@ namespace Microsoft.PythonTools.TestAdapter {
 
                 //Read pytest results from xml
                 if (File.Exists(resultsXML)) {
-                    var xmlTestResultNodes = TestResultParser.Read(resultsXML).CreateNavigator().SelectDescendants("testcase", "", false);
+                    var xmlTestResultNodes = JunitXmlTestResultParser.Read(resultsXML).CreateNavigator().SelectDescendants("testcase", "", false);
                     foreach (XPathNavigator pytestResultNode in xmlTestResultNodes) {
                         if (_cancelRequested.WaitOne(0)) {
                             break;
                         }
                         try {
-                            var pytestId = TestResultParser.GetPytestId(pytestResultNode);
+                            var pytestId = JunitXmlTestResultParser.GetPytestId(pytestResultNode);
                             if (pytestId != null && pytestIdToResultsMap.TryGetValue(pytestId, out TestResult vsTestResult)) {
-                                TestResultParser.UpdateVsTestResult(vsTestResult, pytestResultNode);
+                                JunitXmlTestResultParser.UpdateVsTestResult(vsTestResult, pytestResultNode);
                             } else {
                                 frameworkHandle.SendMessage(TestMessageLevel.Error, Strings.ErrorTestCaseNotFound.FormatUI(pytestResultNode.OuterXml));
                             }

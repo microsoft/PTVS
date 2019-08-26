@@ -14,19 +14,19 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.PythonTools.TestAdapter.Pytest;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+using System;
 using System.Linq;
 using System.Xml;
-using System;
+using Microsoft.PythonTools.TestAdapter.Pytest;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TestAdapterTests {
 
     [TestClass]
-    public class TestResultParserTests {
+    public class JunitXmlTestResultParserTests {
 
-        private const string _xmlResultsFormat =
+        private const string _junitXmlResultsFormat =
 @"<?xml version=""1.0"" encoding=""utf - 8""?>
   <testsuites>
     <testsuite errors = ""0"" failures = ""0"" hostname = ""computer"" name = ""pytest"" skipped = ""0"" tests = ""1"" time = ""0.014"" timestamp = ""2019-08-23T08:38:53.347672"" >
@@ -38,7 +38,7 @@ namespace TestAdapterTests {
         public void CreatePytestId_FuncInsideClass() {
             Assert.AreEqual(
                 ".\\test2.py::Test_test2::test_A",
-                TestResultParser.CreatePytestId("test2.py", "test2.Test_test2", "test_A")
+                JunitXmlTestResultParser.CreatePytestId("test2.py", "test2.Test_test2", "test_A")
             );
         }
 
@@ -46,7 +46,7 @@ namespace TestAdapterTests {
         public void CreatePytestId_GlobalFunc() {
             Assert.AreEqual(
                 ".\\test_sample.py::test_answer",
-                TestResultParser.CreatePytestId("test_sample.py", "test_sample", "test_answer")
+                JunitXmlTestResultParser.CreatePytestId("test_sample.py", "test_sample", "test_answer")
             );
         }
 
@@ -54,7 +54,7 @@ namespace TestAdapterTests {
         public void CreatePytestId_GlobalFuncRelative() {
             Assert.AreEqual(
                 ".\\tests\\unit\\test_statistics.py::test_key_creation",
-                TestResultParser.CreatePytestId("tests\\unit\\test_statistics.py", "tests.unit.test_statistics", "test_key_creation")
+                JunitXmlTestResultParser.CreatePytestId("tests\\unit\\test_statistics.py", "tests.unit.test_statistics", "test_key_creation")
             );
         }
 
@@ -62,7 +62,7 @@ namespace TestAdapterTests {
         public void CreatePytestId_ClassFuncWithRelativeFilename() {
             Assert.AreEqual(
                 ".\\package1\\packageA\\test1.py::Test_test1::test_A",
-                TestResultParser.CreatePytestId("package1\\packageA\\test1.py", "package1.packageA.test1.Test_test1", "test_A")
+                JunitXmlTestResultParser.CreatePytestId("package1\\packageA\\test1.py", "package1.packageA.test1.Test_test1", "test_A")
             );
         }
 
@@ -76,7 +76,7 @@ namespace TestAdapterTests {
             Assert.AreEqual(
                 string.Compare(
                     PyTestExtensions.CreateProperCasedPytestId(projectRoot + filename, projectRoot, pytestId),
-                    TestResultParser.CreatePytestId(filename.ToLower(), "package1.packageA.test1.Test_test1", "test_A"),
+                    JunitXmlTestResultParser.CreatePytestId(filename.ToLower(), "package1.packageA.test1.Test_test1", "test_A"),
                     ignoreCase: true),
                 0
             );
@@ -85,19 +85,12 @@ namespace TestAdapterTests {
         [TestMethod]
         public void PytestPassResult() {
             var testPass = @"<testcase classname=""test_Parameters"" file=""test_Parameters.py"" line=""42"" name=""test_timedistance_v3[forward]"" time=""0.001""></testcase>";
-            var xmlResults = string.Format(_xmlResultsFormat, testPass);
-
-            var doc = new XmlDocument();
-            doc.LoadXml(xmlResults);
-            var result = new TestResult(new TestCase());
-            var testCaseIter = doc.CreateNavigator().SelectDescendants("testcase", "", false);
-            testCaseIter.MoveNext();
-            TestResultParser.UpdateVsTestResult(result, testCaseIter.Current);
+            var xmlResults = string.Format(_junitXmlResultsFormat, testPass);
+            TestResult result = ParseXmlTestUtil(xmlResults);
 
             Assert.AreEqual(TestOutcome.Passed, result.Outcome);
             Assert.AreEqual(TimeSpan.FromSeconds(0.001), result.Duration);
         }
-
 
         [TestMethod]
         public void PytestFailureResult() {
@@ -110,14 +103,8 @@ namespace TestAdapterTests {
                 test_failures.py:14: AssertionError
             </failure>
         </testcase> ";
-            var xmlResults = string.Format(_xmlResultsFormat, testPass);
-
-            var doc = new XmlDocument();
-            doc.LoadXml(xmlResults);
-            var result = new TestResult(new TestCase());
-            var testCaseIter = doc.CreateNavigator().SelectDescendants("testcase", "", false);
-            testCaseIter.MoveNext();
-            TestResultParser.UpdateVsTestResult(result, testCaseIter.Current);
+            var xmlResults = string.Format(_junitXmlResultsFormat, testPass);
+            TestResult result = ParseXmlTestUtil(xmlResults);
 
             Assert.AreEqual(TestOutcome.Failed, result.Outcome);
             Assert.AreEqual(TimeSpan.FromSeconds(0.001), result.Duration);
@@ -137,14 +124,8 @@ namespace TestAdapterTests {
                 test_failures.py:6: AssertionError
             </error>
         </testcase> ";
-            var xmlResults = string.Format(_xmlResultsFormat, testPass);
-
-            var doc = new XmlDocument();
-            doc.LoadXml(xmlResults);
-            var result = new TestResult(new TestCase());
-            var testCaseIter = doc.CreateNavigator().SelectDescendants("testcase", "", false);
-            testCaseIter.MoveNext();
-            TestResultParser.UpdateVsTestResult(result, testCaseIter.Current);
+            var xmlResults = string.Format(_junitXmlResultsFormat, testPass);
+            TestResult result = ParseXmlTestUtil(xmlResults);
 
             Assert.AreEqual(TestOutcome.Failed, result.Outcome);
             Assert.AreEqual(TimeSpan.FromSeconds(0.001), result.Duration);
@@ -157,14 +138,8 @@ namespace TestAdapterTests {
             var testPass = @"<testcase classname=""test_failures"" file=""test_failures.py"" line=""20"" name=""test_skip"" time=""0.001"">
             <skipped message = ""skipping this test"" type = ""pytest.skip"" > C:\Users\bschnurr\source\repos\Parameters\Parameters\test_failures.py:22: skipping this test </skipped >
           </testcase>";
-            var xmlResults = string.Format(_xmlResultsFormat, testPass);
-
-            var doc = new XmlDocument();
-            doc.LoadXml(xmlResults);
-            var result = new TestResult(new TestCase());
-            var testCaseIter = doc.CreateNavigator().SelectDescendants("testcase", "", false);
-            testCaseIter.MoveNext();
-            TestResultParser.UpdateVsTestResult(result, testCaseIter.Current);
+            var xmlResults = string.Format(_junitXmlResultsFormat, testPass);
+            TestResult result = ParseXmlTestUtil(xmlResults);
 
             Assert.AreEqual(TestOutcome.Skipped, result.Outcome);
             Assert.AreEqual(TimeSpan.FromSeconds(0.001), result.Duration);
@@ -176,14 +151,8 @@ namespace TestAdapterTests {
             var testPass = @"<testcase classname = ""test_failures"" file=""test_failures.py"" line=""24"" name=""test_xfail"" time=""0.200"">
             <skipped message = ""xfailing this test"" type = ""pytest.xfail"" ></skipped>
          </testcase>";
-            var xmlResults = string.Format(_xmlResultsFormat, testPass);
-
-            var doc = new XmlDocument();
-            doc.LoadXml(xmlResults);
-            var result = new TestResult(new TestCase());
-            var testCaseIter = doc.CreateNavigator().SelectDescendants("testcase", "", false);
-            testCaseIter.MoveNext();
-            TestResultParser.UpdateVsTestResult(result, testCaseIter.Current);
+            var xmlResults = string.Format(_junitXmlResultsFormat, testPass);
+            TestResult result = ParseXmlTestUtil(xmlResults);
 
             Assert.AreEqual(TestOutcome.Skipped, result.Outcome);
             Assert.AreEqual(TimeSpan.FromSeconds(0.200), result.Duration);
@@ -199,14 +168,8 @@ namespace TestAdapterTests {
               </system-out>
     
             </testcase>";
-            var xmlResults = string.Format(_xmlResultsFormat, testPass);
-
-            var doc = new XmlDocument();
-            doc.LoadXml(xmlResults);
-            var result = new TestResult(new TestCase());
-            var testCaseIter = doc.CreateNavigator().SelectDescendants("testcase", "", false);
-            testCaseIter.MoveNext();
-            TestResultParser.UpdateVsTestResult(result, testCaseIter.Current);
+            var xmlResults = string.Format(_junitXmlResultsFormat, testPass);
+            TestResult result = ParseXmlTestUtil(xmlResults);
 
             Assert.AreEqual(TestOutcome.Passed, result.Outcome);
             Assert.AreEqual(TimeSpan.FromSeconds(0.002), result.Duration);
@@ -221,34 +184,36 @@ namespace TestAdapterTests {
               </system-err>
     
             </testcase>";
-            var xmlResults = string.Format(_xmlResultsFormat, testPass);
-
-            var doc = new XmlDocument();
-            doc.LoadXml(xmlResults);
-            var result = new TestResult(new TestCase());
-            var testCaseIter = doc.CreateNavigator().SelectDescendants("testcase", "", false);
-            testCaseIter.MoveNext();
-            TestResultParser.UpdateVsTestResult(result, testCaseIter.Current);
+            var xmlResults = string.Format(_junitXmlResultsFormat, testPass);
+            TestResult result = ParseXmlTestUtil(xmlResults);
 
             Assert.AreEqual(TestOutcome.Passed, result.Outcome);
             Assert.AreEqual(TimeSpan.FromSeconds(0.002), result.Duration);
             Assert.IsTrue(result.Messages.Any(item => item.Text.Contains("bad")));
         }
 
-
         [TestMethod]
         [ExpectedException(typeof(ArgumentException))]
         public void PytestWrongXmlNodeThrowsException() {
             var testPass = @"<testcase classname=""test_Parameters"" file=""test_Parameters.py"" line=""42"" name=""test_timedistance_v3[forward]"" time=""0.001""></testcase>";
-            var xmlResults = string.Format(_xmlResultsFormat, testPass);
+            var xmlResults = string.Format(_junitXmlResultsFormat, testPass);
 
             var doc = new XmlDocument();
             doc.LoadXml(xmlResults);
             var result = new TestResult(new TestCase());
             var rootNode = doc.CreateNavigator();
 
-            TestResultParser.UpdateVsTestResult(result, rootNode);
+            JunitXmlTestResultParser.UpdateVsTestResult(result, rootNode);
         }
 
+        private static TestResult ParseXmlTestUtil(string xmlResults) {
+            var doc = new XmlDocument();
+            doc.LoadXml(xmlResults);
+            var result = new TestResult(new TestCase());
+            var testCaseIter = doc.CreateNavigator().SelectDescendants("testcase", "", false);
+            testCaseIter.MoveNext();
+            JunitXmlTestResultParser.UpdateVsTestResult(result, testCaseIter.Current);
+            return result;
+        }
     }
 }
