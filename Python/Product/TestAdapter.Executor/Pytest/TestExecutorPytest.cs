@@ -141,7 +141,9 @@ namespace Microsoft.PythonTools.TestAdapter {
 
                 var resultsXML = executor.Run(testGroup, covPath);
 
-                var pytestIdToResultsMap = TestResultParser.CreatePytestIdToVsTestResultsMap(testGroup, defaultOutcome: TestOutcome.Skipped);
+                var pytestIdToResultsMap = testGroup.Select(tc => new TestResult(tc) { Outcome = TestOutcome.Skipped })
+                .ToDictionary(tr => tr.TestCase.GetPropertyValue<string>(Pytest.Constants.PytestIdProperty, String.Empty), tr => tr);
+
                 //Read pytest results from xml
                 if (File.Exists(resultsXML)) {
                     var xmlTestResultNodes = TestResultParser.Read(resultsXML).CreateNavigator().SelectDescendants("testcase", "", false);

@@ -14,16 +14,11 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Xml;
 using System.Xml.XPath;
-using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
 namespace Microsoft.PythonTools.TestAdapter.Pytest {
     public class TestResultParser {
@@ -128,13 +123,7 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
                 } while (navNode.MoveToNext());
             }
         }
-
-        internal static Dictionary<string, TestResult> CreatePytestIdToVsTestResultsMap(IEnumerable<TestCase> vsTestCases, TestOutcome defaultOutcome) {
-
-            return vsTestCases.Select(tc => new TestResult(tc) { Outcome = defaultOutcome })
-                .ToDictionary(tr => tr.TestCase.GetPropertyValue<string>(Pytest.Constants.PytestIdProperty, String.Empty), tr => tr);
-        }
-
+        
         internal static XPathDocument Read(string xml) {
             var settings = new XmlReaderSettings {
                 XmlResolver = null
