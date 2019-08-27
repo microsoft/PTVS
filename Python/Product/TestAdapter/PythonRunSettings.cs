@@ -221,7 +221,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             bool isWorkspace = false;
             ProjectInfo projInfo = null;
             LaunchConfiguration config = null;
-            IDictionary<string, string> fullEnvironment = null;
+            Dictionary<string, string> fullEnvironment = null;
 
             ThreadHelper.JoinableTaskFactory.Run(async () => {
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
@@ -239,7 +239,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 if (projInfo != null) {
                     try {
                         config = projInfo.GetLaunchConfigurationOrThrow();
-                        fullEnvironment = CondaUtils.GetFullEnvironment(config, _serviceProvider);
+                        fullEnvironment = LaunchConfigurationUtils.GetFullEnvironment(config, _serviceProvider);
                     } catch {
                     }
                     nativeCode = projInfo.GetProperty(PythonConstants.EnableNativeCodeDebugging);
@@ -274,7 +274,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 
             writer.WriteStartElement("Environment");
 
-            IDictionary<string, string> env = fullEnvironment ?? config.Environment;
+            Dictionary<string, string> env = fullEnvironment ?? config.Environment;
             foreach (var keyValue in env) {
                 writer.WriteStartElement("Variable");
                 writer.WriteAttributeString("name", keyValue.Key);

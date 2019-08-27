@@ -122,58 +122,5 @@ namespace Microsoft.PythonTools.Interpreter {
 
             return Enumerable.Empty<KeyValuePair<string, string>>();
         }
-
-        public static IDictionary<string, string> GetFullEnvironment(LaunchConfiguration config, IServiceProvider serviceProvider) {
-            if (config.Interpreter == null) {
-                throw new ArgumentNullException(nameof(Interpreter));
-            }
-            if (serviceProvider == null) {
-                throw new ArgumentNullException(nameof(serviceProvider));
-            }
-
-
-            // Start with global environment, add configured environment,
-            // then add search paths.
-            var baseEnv = System.Environment.GetEnvironmentVariables();
-            // Clear search paths from the global environment. The launch
-            // configuration should include the existing value
-
-            var pathVar = config.Interpreter?.PathEnvironmentVariable;
-            if (string.IsNullOrEmpty(pathVar)) {
-                pathVar = "PYTHONPATH";
-            }
-            baseEnv[pathVar] = string.Empty;
-
-            // TODO: We could introduce a cache so that we don't activate the
-            // environment + capture the env variables every time. Not doing this
-            // right now to minimize risk/complexity so close to release.
-            if (CondaUtils.IsCondaEnvironment(config.Interpreter.GetPrefixPath())) {
-                var condaExe = CondaUtils.GetRootCondaExecutablePath(serviceProvider);
-                var prefixPath = config.Interpreter.GetPrefixPath();
-                if (File.Exists(condaExe) && Directory.Exists(prefixPath)) {
-                    var condaEnv = CondaUtils.CaptureActivationEnvironmentVariablesForPrefix(condaExe, prefixPath);
-                    baseEnv = PathUtils.MergeEnvironments(baseEnv.AsEnumerable<string, string>(), condaEnv, "Path", pathVar);
-                }
-            }
-
-            var env = PathUtils.MergeEnvironments(
-                baseEnv.AsEnumerable<string, string>(),
-                config.GetEnvironmentVariables(),
-                "Path", pathVar
-            );
-            if (config.SearchPaths != null && config.SearchPaths.Any()) {
-                env = PathUtils.MergeEnvironments(
-                    env,
-                    new[] {
-                    new KeyValuePair<string, string>(
-                        pathVar,
-                        PathUtils.JoinPathList(config.SearchPaths)
-                    )
-                    },
-                    pathVar
-                );
-            }
-            return env;
-        }
     }
 }
