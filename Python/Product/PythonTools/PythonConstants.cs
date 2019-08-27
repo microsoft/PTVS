@@ -136,7 +136,7 @@ namespace Microsoft.PythonTools {
         public const string UnitTestPatternSetting = "UnitTestPattern";
         public const string DefaultUnitTestPattern = "test*.py";
         public static readonly Regex DefaultTestFileNameRegex = 
-            new Regex(@"((^test.*)|(^.*_test))\.(py|txt)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            new Regex(@"((^test.*)|(^.*_test))\.(py|txt)$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         public static readonly HashSet<string> PyTestFrameworkConfigFiles =
             new HashSet<string>(StringComparer.OrdinalIgnoreCase) {"pytest.ini", "setup.cfg", "tox.ini"};

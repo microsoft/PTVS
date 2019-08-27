@@ -255,7 +255,15 @@ namespace TestUtilities {
     }
 
     public static class PythonVersionExtensions {
-        public static void AssertInstalled(this PythonVersion pyVersion, string customMessage = "Python interpreter not installed") {
+        public static void AssertInstalled(this PythonVersion pyVersion) {
+            if (pyVersion == null || !File.Exists(pyVersion.InterpreterPath)) {
+                Assert.Inconclusive(
+                    string.Format("Python version {0} is not installed.", pyVersion.Configuration.Version.ToString())
+                );
+            }
+        }
+
+        public static void AssertInstalled(this PythonVersion pyVersion, string customMessage) {
             if (pyVersion == null || !File.Exists(pyVersion.InterpreterPath)) {
                 Assert.Inconclusive(customMessage);
             }
