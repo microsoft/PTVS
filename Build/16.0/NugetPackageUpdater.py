@@ -36,7 +36,6 @@ def get_latest_package_version(url):
     return version
 
 
-
 #Global variables
 show_update_comment = False #if true, it will put comments in the output file stating the packages that were updated
 if input("Show comments in output file (type 1 for true and 0 for false): ") == "1":
@@ -92,52 +91,3 @@ print("-------------------------------------- Finished Exeucuting --------------
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#'https://www.nuget.org/packages/Microsoft.VisualStudio.ImageCatalog'
-
-#versions = tree.xpath('//tbody[@class="no-border"]')
-
-#prices = tree.xpath('.//div[@class="version-history panel-collapse collapse in"]/text()')
-#body/div/div/article/div/table/tbody
-
-
-    #for version in version_elements:
-    #    attributes = version.attrib
-    #    abc = attributes["title"]
