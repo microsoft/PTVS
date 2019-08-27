@@ -236,100 +236,6 @@ namespace Microsoft.PythonTools {
             }
         }
 
-        /// <summary>
-        /// Get the items present in the project
-        /// </summary>
-        public static IEnumerable<string> GetProjectItems(this IVsProject project) {
-            Debug.Assert(project != null, "Project is not null");
-
-            // Each item in VS OM is IVSHierarchy. 
-            IVsHierarchy hierarchy = (IVsHierarchy)project;
-
-            return GetProjectItems(hierarchy, VSConstants.VSITEMID_ROOT);
-        }
-
-        /// <summary>
-        /// Get project items
-        /// </summary>
-        private static IEnumerable<string> GetProjectItems(IVsHierarchy project, uint itemId) {
-
-            object pVar = GetPropertyValue((int)__VSHPROPID.VSHPROPID_FirstChild, itemId, project);
-
-            uint childId = GetItemId(pVar);
-            while (childId != VSConstants.VSITEMID_NIL) {
-                foreach (string item in GetProjectItems(project, childId)) {
-                    yield return item;
-                }
-
-                string childPath = GetCanonicalName(childId, project);
-                yield return childPath;
-
-                pVar = GetPropertyValue((int)__VSHPROPID.VSHPROPID_NextSibling, childId, project);
-                childId = GetItemId(pVar);
-            }
-        }
-
-        /// <summary>
-        /// Convert parameter object to ItemId
-        /// </summary>
-        private static uint GetItemId(object pvar) {
-            if (pvar == null) return VSConstants.VSITEMID_NIL;
-            if (pvar is int) return (uint)(int)pvar;
-            if (pvar is uint) return (uint)pvar;
-            if (pvar is short) return (uint)(short)pvar;
-            if (pvar is ushort) return (uint)(ushort)pvar;
-            if (pvar is long) return (uint)(long)pvar;
-            return VSConstants.VSITEMID_NIL;
-        }
-
-        /// <summary>
-        /// Get the parameter property value
-        /// </summary>
-        private static object GetPropertyValue(int propid, uint itemId, IVsHierarchy vsHierarchy) {
-            if (itemId == VSConstants.VSITEMID_NIL) {
-                return null;
-            }
-
-            try {
-                object o;
-                ErrorHandler.ThrowOnFailure(vsHierarchy.GetProperty(itemId, propid, out o));
-
-                return o;
-            } catch (System.NotImplementedException) {
-                return null;
-            } catch (System.Runtime.InteropServices.COMException) {
-                return null;
-            } catch (System.ArgumentException) {
-                return null;
-            }
-        }
-
-
-        /// <summary>
-        /// Get the canonical name
-        /// </summary>
-        private static string GetCanonicalName(uint itemId, IVsHierarchy hierarchy) {
-            Debug.Assert(itemId != VSConstants.VSITEMID_NIL, "ItemId cannot be nill");
-
-            string strRet = string.Empty;
-            int hr = hierarchy.GetCanonicalName(itemId, out strRet);
-
-            if (hr == VSConstants.E_NOTIMPL) {
-                // Special case E_NOTIMLP to avoid perf hit to throw an exception.
-                return string.Empty;
-            } else {
-                try {
-                    ErrorHandler.ThrowOnFailure(hr);
-                } catch (System.Runtime.InteropServices.COMException) {
-                    strRet = string.Empty;
-                }
-
-
-                // This could be in the case of S_OK, S_FALSE, etc.
-                return strRet;
-            }
-        }
-
         internal static IEnumerable<PythonProjectNode> EnumerateLoadedPythonProjects(this IVsSolution solution) {
             return EnumerateLoadedProjects(solution)
                 .Select(p => p.GetPythonProject())
@@ -642,7 +548,7 @@ namespace Microsoft.PythonTools {
             throw new InvalidOperationException();
         }
 
-        internal static PythonToolsService GetPythonToolsService(this IServiceProvider serviceProvider) {
+        public static PythonToolsService GetPythonToolsService(this IServiceProvider serviceProvider) {
             if (serviceProvider == null) {
                 return null;
             }
