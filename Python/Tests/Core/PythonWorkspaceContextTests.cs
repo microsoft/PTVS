@@ -295,7 +295,6 @@ namespace PythonToolsTests {
 
         }
 
-
         private void TestRegexOne(PythonWorkspaceContext workspaceContext, IList<string> includedWorkspaceFilePaths) {
             var testFileFilterRegex = new Regex(@".*\.(py|txt)$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
             var filteredFilePaths = workspaceContext.EnumerateUserFiles((x) => testFileFilterRegex.IsMatch(x)).ToList();
@@ -315,7 +314,6 @@ namespace PythonToolsTests {
             Assert.AreEqual(filteredFilePaths.Count, 0);
         }
 
-
         private void TestRegexTwo(PythonWorkspaceContext workspaceContext, IList<string> includedWorkspaceFilePaths) {
             var testFileFilterRegex = new Regex(@"((^test.*)|(^.*_test))\.(py|txt)$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
             var filteredFilePaths = workspaceContext.EnumerateUserFiles((x) => testFileFilterRegex.IsMatch(x)).ToList();
@@ -331,7 +329,6 @@ namespace PythonToolsTests {
 
             Assert.AreEqual(filteredFilePaths.Count, 0);
         }
-
 
         private (TestSetupData, IList<string>) GenerateWorkspace() {
             var virtualEnvName = "virtualEnv";
@@ -358,7 +355,6 @@ namespace PythonToolsTests {
             return (testDataSetup, includedWorkspaceFilePaths);
 
         }
-
 
         /// <summary>
         /// Creates a set of files for the workspace which include a fake virtual environment, folders, and files inside all folders. 
