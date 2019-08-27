@@ -141,26 +141,16 @@ namespace Microsoft.PythonTools.TestAdapter {
 
                 var resultsXML = executor.Run(testGroup, covPath);
 
+                // Default TestResults
                 var pytestIdToResultsMap = testGroup.Select(tc => new TestResult(tc) { Outcome = TestOutcome.Skipped })
                 .ToDictionary(tr => tr.TestCase.GetPropertyValue<string>(Pytest.Constants.PytestIdProperty, String.Empty), tr => tr);
 
-                //Read pytest results from xml
                 if (File.Exists(resultsXML)) {
-                    var xmlTestResultNodes = JunitXmlTestResultParser.Read(resultsXML).CreateNavigator().SelectDescendants("testcase", "", false);
-                    foreach (XPathNavigator pytestResultNode in xmlTestResultNodes) {
-                        if (_cancelRequested.WaitOne(0)) {
-                            break;
-                        }
-                        try {
-                            var pytestId = JunitXmlTestResultParser.GetPytestId(pytestResultNode);
-                            if (pytestId != null && pytestIdToResultsMap.TryGetValue(pytestId, out TestResult vsTestResult)) {
-                                JunitXmlTestResultParser.UpdateVsTestResult(vsTestResult, pytestResultNode);
-                            } else {
-                                frameworkHandle.SendMessage(TestMessageLevel.Error, Strings.ErrorTestCaseNotFound.FormatUI(pytestResultNode.OuterXml));
-                            }
-                        } catch (Exception ex) {
-                            frameworkHandle.SendMessage(TestMessageLevel.Error, ex.Message);
-                        }
+                    try {
+                        var doc = JunitXmlTestResultParser.Read(resultsXML);
+                        Parse(doc, pytestIdToResultsMap, frameworkHandle);
+                    } catch (Exception ex) {
+                        frameworkHandle.SendMessage(TestMessageLevel.Error, ex.Message);
                     }
                 } else {
                     frameworkHandle.SendMessage(TestMessageLevel.Error, Strings.PytestResultsXmlNotFound.FormatUI(resultsXML));
@@ -175,6 +165,26 @@ namespace Microsoft.PythonTools.TestAdapter {
 
                 if (codeCoverage) {
                     ExecutorService.AttachCoverageResults(frameworkHandle, covPath);
+                }
+            }
+        }
+
+        private void Parse(XPathDocument doc, Dictionary<string, TestResult> pytestIdToResultsMap, IFrameworkHandle frameworkHandle) {
+            var xmlTestResultNodes = doc.CreateNavigator().SelectDescendants("testcase", "", false);
+
+            foreach (XPathNavigator pytestResultNode in xmlTestResultNodes) {
+                if (_cancelRequested.WaitOne(0)) {
+                    break;
+                }
+                try {
+                    var pytestId = JunitXmlTestResultParser.GetPytestId(pytestResultNode);
+                    if (pytestId != null && pytestIdToResultsMap.TryGetValue(pytestId, out TestResult vsTestResult)) {
+                        JunitXmlTestResultParser.UpdateVsTestResult(vsTestResult, pytestResultNode);
+                    } else {
+                        frameworkHandle.SendMessage(TestMessageLevel.Error, Strings.ErrorTestCaseNotFound.FormatUI(pytestResultNode.OuterXml));
+                    }
+                } catch (Exception ex) {
+                    frameworkHandle.SendMessage(TestMessageLevel.Error, ex.Message);
                 }
             }
         }
