@@ -46,6 +46,23 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Microsoft.Python.Analysis.Engine" />
     <Reference Include="Microsoft.PythonTools.Analyzer" />
+    
+    
+    
+    <Reference Include="Microsoft.VisualStudio.CodeSense.Common, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <Private>True</Private>
+    </Reference>
+
+    <Reference Include="Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+        <Private>True</Private>    
+     </Reference>
+
+    <Reference Include="Microsoft.VisualStudio.Shared.VSCodeDebugProtocol, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+        <Private>True</Private>   
+    </Reference>
+
+
+
     <Reference Include="Microsoft.VisualStudio.InteractiveWindow" />
     <Reference Include="Microsoft.VisualStudio.LanguageServer.Protocol">
       <Private>True</Private>
@@ -191,6 +208,9 @@
       <Project>{a52ac77f-6df9-4387-bb08-8ded3fd95a0f}</Project>
       <Name>VSCommon</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
   </ItemGroup>
   <Import Project="..\TestProjectAfter.settings" />
 </Project>
