@@ -184,7 +184,7 @@ e'''";
             }
         }
 
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(0)]
         public void TrueFalseClassification() {
             var code = "True False";
 
@@ -228,7 +228,7 @@ async def f():
             }
         }
 
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(0)]
         public void ReturnAnnotationClassifications() {
             var code = @"
 def f() -> int:
@@ -252,7 +252,7 @@ def f() -> int:
             }
         }
 
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(0)]
         public void RegexClassifications() {
             var code = @"import re as R
 R.compile('pattern', 'str')
