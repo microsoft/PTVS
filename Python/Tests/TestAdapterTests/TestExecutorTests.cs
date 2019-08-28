@@ -96,6 +96,34 @@ namespace TestAdapterTests {
             ExecuteTests(testEnv, runSettings, expectedTests);
         }
 
+
+        [TestMethod, Priority(1)]
+        [TestCategory("10s")]
+        public void RunUnittestInCondaEnv() {
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest,installFramework:true, installCoverage:false, new List<string>{ "numpy" });
+
+            var testFile1Path = Path.Combine(testEnv.SourceFolderPath, "test_activate.py");
+            File.Copy(TestData.GetPath("TestData", "TestExecutor", "Conda", "test_activate.py"), testFile1Path);
+            
+            var expectedTests = new[] {
+                new TestInfo(
+                    "test_A",
+                    "test_activate.py::Test_activate::test_A",
+                    testFile1Path,
+                    5,
+                    outcome: TestOutcome.Passed
+                )
+            };
+
+            var runSettings = new MockRunSettings(
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+                    .WithTestFilesFromFolder(testEnv.SourceFolderPath)
+                    .ToXml()
+            );
+
+            ExecuteTests(testEnv, runSettings, expectedTests);
+        }
+
         [TestMethod, Priority(0)]
         [TestCategory("10s")]
         public void RunUnittestLargeTestCount() {

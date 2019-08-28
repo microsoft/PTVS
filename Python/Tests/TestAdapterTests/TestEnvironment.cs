@@ -19,6 +19,7 @@ extern alias pt;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 
@@ -41,8 +42,11 @@ namespace TestAdapterTests {
             }
         }
         
-        public static TestEnvironment GetOrCreate(PythonVersion pythonVersion, string testFramework, bool installFramework = true, bool installCoverage = false) {
-            var testEnvironmentId = $"{pythonVersion.ToString().ToLower()}:{testFramework.ToLower()}:{installFramework.ToString()}:{installCoverage.ToString()}";
+
+        public static TestEnvironment GetOrCreate(PythonVersion pythonVersion, string testFramework, bool installFramework = true, bool installCoverage = false, List<string> additionalPackages = default) {
+            additionalPackages = additionalPackages ?? new List<string>();
+
+            var testEnvironmentId = $"{pythonVersion.ToString().ToLower()}:{testFramework.ToLower()}:{installFramework.ToString()}:{installCoverage.ToString()}:{string.Join(",", additionalPackages)}";
             if (_environmentsMap.TryGetValue(testEnvironmentId, out TestEnvironment foundEnv)) {
                 SetDirectories(foundEnv);
                 return foundEnv;
@@ -56,27 +60,28 @@ namespace TestAdapterTests {
             switch (testFramework) {
                 case "Pytest": {
                         var envDir = TestData.GetTempPath();
-                        var packages = new List<string>();
                         if (installFramework) {
-                            packages.Add("pytest");
+                            additionalPackages.Add("pytest");
                         }
                         if (installCoverage) {
-                            packages.Add("coverage");
+                            additionalPackages.Add("coverage");
                         }
-                        pythonVersion.CreateVirtualEnv(envDir, packages);
+                        pythonVersion.CreateVirtualEnv(envDir, additionalPackages);
                         env.InterpreterPath = Path.Combine(envDir, "scripts", "python.exe");
                     }
                     break;
                 default:
-                    if (HasPackage(pythonVersion.PrefixPath, "pytest") || installCoverage) {
+                    if (HasPackage(pythonVersion.PrefixPath, "pytest") 
+                        || installCoverage 
+                        || additionalPackages.Any( p => !HasPackage(pythonVersion.PrefixPath, p))) {
                         // Create an empty virtual env to ensure we don't accidentally rely on pytest
                         // (which was bug https://github.com/microsoft/PTVS/issues/5454)
                         var envDir = TestData.GetTempPath();
-                        var packages = new List<string>();
+                        
                         if (installCoverage) {
-                            packages.Add("coverage");
+                            additionalPackages.Add("coverage");
                         }
-                        pythonVersion.CreateVirtualEnv(envDir, packages);
+                        pythonVersion.CreateVirtualEnv(envDir, additionalPackages);
                         env.InterpreterPath = Path.Combine(envDir, "scripts", "python.exe");
                     } else {
                         env.InterpreterPath = pythonVersion.InterpreterPath;
