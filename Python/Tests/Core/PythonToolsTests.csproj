@@ -46,13 +46,13 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Microsoft.Python.Analysis.Engine" />
     <Reference Include="Microsoft.PythonTools.Analyzer" />
-    <Reference Include="Microsoft.VisualStudio.CodeSense.Common, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <Reference Include="Microsoft.VisualStudio.CodeSense.Common">
       <Private>True</Private>
     </Reference>
-    <Reference Include="Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <Reference Include="Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces">
         <Private>True</Private>    
      </Reference>
-    <Reference Include="Microsoft.VisualStudio.Shared.VSCodeDebugProtocol, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <Reference Include="Microsoft.VisualStudio.Shared.VSCodeDebugProtocol">
         <Private>True</Private>   
     </Reference>
     <Reference Include="Microsoft.VisualStudio.InteractiveWindow" />
