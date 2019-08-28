@@ -95,7 +95,7 @@
     <Compile Include="Pytest\TestExecutorPytest.cs" />
     <Compile Include="Services\DiscovererFactory.cs" />
     <Compile Include="Services\ExecutorService.cs" />
-    <Compile Include="Pytest\TestResultParser.cs" />
+    <Compile Include="Pytest\JunitXmlTestResultParser.cs" />
     <Compile Include="Services\IPythonTestDiscoverer.cs" />
     <Compile Include="Services\ProcessExecute.cs" />
     <Compile Include="Services\PythonDebugMode.cs" />
