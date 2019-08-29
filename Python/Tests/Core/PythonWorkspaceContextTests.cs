@@ -20,6 +20,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
+using Microsoft.PythonTools;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -284,83 +285,84 @@ namespace PythonToolsTests {
             }
         }
 
+        /// <summary>
+        /// This test checks 2 components
+        ///     Ensures that EnumerateWorkSpaceFiles(...) correctly enumerates the workspace directory
+        ///     Checks that the 2 regexes for filtering test files (unit test and pytest) are working correctly
+        /// </summary>
         [TestMethod, Priority(0)]
         public void EnumerateWorkspaceFiles() {
-
             (var testDataSetup, var includedWorkspaceFilePaths) = GenerateWorkspace();
             var workspaceContext = new PythonWorkspaceContext(testDataSetup.Workspace, testDataSetup.OptionsService, testDataSetup.RegistryService);
 
             TestRegexOne(workspaceContext, includedWorkspaceFilePaths);
             TestRegexTwo(workspaceContext, includedWorkspaceFilePaths);
-
         }
 
         private void TestRegexOne(PythonWorkspaceContext workspaceContext, IList<string> includedWorkspaceFilePaths) {
-            var testFileFilterRegex = new Regex(@".*\.(py|txt)$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            var filteredFilePaths = workspaceContext.EnumerateUserFiles((x) => testFileFilterRegex.IsMatch(x)).ToList();
+            var filteredFilePaths = workspaceContext.EnumerateUserFiles(
+                (x) => PythonConstants.TestFileExtensionRegex.IsMatch(PathUtils.GetFileOrDirectoryName(x))
+            ).ToList();
 
-            // Goes through the entire list of included files in the workspace and uses 
-            //      the "if" statement to check if the file should be detected by the workspace's EnumerateUserFilesFunction
-            // If the file should be detected, it is removed from the filteredFilePaths list. 
-            //      If the filteredFilePaths list does not contain the file, it means it failed to detect it and throws an excpetion
+            var expectedFiles = new List<string>();
             foreach (var filePath in includedWorkspaceFilePaths) {
                 var fileName = PathUtils.GetFileOrDirectoryName(filePath).ToLower();
 
                 if ((fileName.EndsWith(".txt") || fileName.EndsWith(".py"))) {
-                    Assert.IsTrue(filteredFilePaths.Remove(filePath));
+                    expectedFiles.Add(filePath);
                 }
             }
 
-            Assert.AreEqual(filteredFilePaths.Count, 0);
+            AssertUtil.CheckCollection(filteredFilePaths, expectedFiles, Enumerable.Empty<string>());
         }
 
         private void TestRegexTwo(PythonWorkspaceContext workspaceContext, IList<string> includedWorkspaceFilePaths) {
-            var testFileFilterRegex = new Regex(@"((^test.*)|(^.*_test))\.(py|txt)$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            var filteredFilePaths = workspaceContext.EnumerateUserFiles((x) => testFileFilterRegex.IsMatch(x)).ToList();
+            var filteredFilePaths = workspaceContext.EnumerateUserFiles(
+                (x) => PythonConstants.DefaultTestFileNameRegex.IsMatch(PathUtils.GetFileOrDirectoryName(x))
+            ).ToList();
 
+            var expectedFiles = new List<string>();
             foreach (var filePath in includedWorkspaceFilePaths) {
                 var fileName = PathUtils.GetFileOrDirectoryName(filePath).ToLower();
-                
+
                 if ((fileName.StartsWith("test") && (fileName.EndsWith(".py") || fileName.EndsWith(".txt"))) ||
                     fileName.EndsWith("_test.py") || fileName.EndsWith("_test.txt")) {
                     Assert.IsTrue(filteredFilePaths.Remove(filePath));
                 }
             }
 
-            Assert.AreEqual(filteredFilePaths.Count, 0);
+            AssertUtil.CheckCollection(filteredFilePaths, expectedFiles, Enumerable.Empty<string>());
         }
 
         private (TestSetupData, IList<string>) GenerateWorkspace() {
             var virtualEnvName = "virtualEnv";
 
-            var Workspace = WorkspaceTestHelper.CreateMockWorkspace(WorkspaceTestHelper.CreateWorkspaceFolder(),  WorkspaceTestHelper.Python37Id);
+            var mockWorkspace = WorkspaceTestHelper.CreateMockWorkspace(WorkspaceTestHelper.CreateWorkspaceFolder(), WorkspaceTestHelper.Python37Id);
             var OptionsService = new WorkspaceTestHelper.MockOptionsService(WorkspaceTestHelper.DefaultFactory);
-            var includedWorkspaceFilePaths = GenerateWorkspaceFiles(Workspace.Location, virtualEnvName, out string virtualEnvPath);
-            includedWorkspaceFilePaths.Add(Path.Combine(Workspace.Location, "app.py")); //Created by WorkspaceTestHelper.CreateWorkspaceFolder() function which is used above
+            var includedWorkspaceFilePaths = GenerateWorkspaceFiles(mockWorkspace.Location, virtualEnvName, out string virtualEnvPath);
+            includedWorkspaceFilePaths.Add(Path.Combine(mockWorkspace.Location, "app.py")); //Created by WorkspaceTestHelper.CreateWorkspaceFolder()
 
-            var workspaceInterpreterFactories = new List<IPythonInterpreterFactory>();
-            workspaceInterpreterFactories.Add(
+            var workspaceInterpreterFactories = new List<IPythonInterpreterFactory>() {
                 new MockPythonInterpreterFactory(
-                    new VisualStudioInterpreterConfiguration("Python|3.7", "Fake interpreter 3.7", Path.Combine(Workspace.Location, virtualEnvName), virtualEnvPath)
+                    new VisualStudioInterpreterConfiguration("Python|3.7", "Fake interpreter 3.7", Path.Combine(mockWorkspace.Location, virtualEnvName), virtualEnvPath)
                 )
-            );
-            var RegistryService = new WorkspaceTestHelper.MockRegistryService(workspaceInterpreterFactories);
+            };
+            var registryService = new WorkspaceTestHelper.MockRegistryService(workspaceInterpreterFactories);
 
-            TestSetupData testDataSetup = new TestSetupData {
+            var testDataSetup = new TestSetupData {
                 OptionsService = OptionsService,
-                RegistryService = RegistryService,
-                Workspace = Workspace,
+                RegistryService = registryService,
+                Workspace = mockWorkspace,
             };
 
             return (testDataSetup, includedWorkspaceFilePaths);
-
         }
 
         /// <summary>
         /// Creates a set of files for the workspace which include a fake virtual environment, folders, and files inside all folders. 
-        /// /// </summary>
-        /// <returns>A list of all the file paths that are are in the workspace but not in execluded folders</returns>
-        private IList<string> GenerateWorkspaceFiles(string workspacePath, string virtualEnvName, out string virtualEnvPath) {
+        /// </summary>
+        /// <returns> A list of all the file paths that are in the workspace, but not in execluded folders</returns>
+        private IList<string> GenerateWorkspaceFiles(string workspacePath, string virtualEnvName, out string virtualEnvExePath) {
             var excludedFolderNames = new List<string>() { virtualEnvName, ".vs" };
             var workspaceFolderNames = new List<string>() { "", "test_folder", "randomFolder", string.Concat(virtualEnvName, "folder") };
             var workspaceFileNames = new List<string>() {
@@ -372,15 +374,15 @@ namespace PythonToolsTests {
             var includedWorkspaceFilePaths = new List<string>();
 
             Directory.CreateDirectory(Path.Combine(workspacePath, virtualEnvName, "scripts"));
-            virtualEnvPath = Path.Combine(workspacePath, virtualEnvName, "scripts", "python.exe");
-            File.AppendAllText(virtualEnvPath, "some text");
+            virtualEnvExePath = Path.Combine(workspacePath, virtualEnvName, "scripts", "python.exe");
+            File.WriteAllText(virtualEnvExePath, "some text");
 
             foreach (var directoryName in excludedFolderNames) {
                 Directory.CreateDirectory(Path.Combine(workspacePath, directoryName));
 
                 foreach (var fileName in workspaceFileNames) {
                     var filePath = Path.Combine(workspacePath, directoryName, fileName);
-                    File.AppendAllText(filePath, "some text");
+                    File.WriteAllText(filePath, "some text");
                 }
             }
 
@@ -389,7 +391,7 @@ namespace PythonToolsTests {
 
                 foreach (var fileName in workspaceFileNames) {
                     var filePath = Path.Combine(workspacePath, directoryName, fileName);
-                    File.AppendAllText(filePath, "some text");
+                    File.WriteAllText(filePath, "some text");
                     includedWorkspaceFilePaths.Add(filePath);
                 }
             }
