@@ -1234,7 +1234,7 @@ namespace ProjectUITests {
                         "",
                         metadata: new Dictionary<string, string>() { { "Visible", "false" } }
                     ),
-                    ProjectGenerator.Import("..\\Imported\\Imported.proj"),
+                    ProjectGenerator.Import("..\\Imported\\Imported.pyproj"),
                     ProjectGenerator.Property("ProjectView", "ProjectFiles")
                 );
 
