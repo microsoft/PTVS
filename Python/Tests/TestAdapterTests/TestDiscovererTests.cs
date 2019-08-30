@@ -700,7 +700,7 @@ namespace TestAdapterTests {
                     discoverer = new UnitTestDiscoverer();
                     break;
                 default:
-                    Assert.Fail();
+                    Assert.Fail($"unknown testframework: {testEnv.TestFramework.ToString()}");
                     break;
             }
 
