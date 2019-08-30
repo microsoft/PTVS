@@ -26,7 +26,7 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 namespace Microsoft.PythonTools.TestAdapter {
 
     /// <summary>
-    /// Note even though we we specify  [DefaultExecutorUri(PythonConstants.UnitTestExecutorUriString)] we still get all .py source files
+    /// Note even though we specify  [DefaultExecutorUri(PythonConstants.UnitTestExecutorUriString)] we still get all .py source files
     /// from all testcontainers.  
     /// </summary>
     [FileExtension(".py")]
@@ -37,7 +37,7 @@ namespace Microsoft.PythonTools.TestAdapter {
     }
 
     /// <summary>
-    /// Note even though we we specify  [DefaultExecutorUri(PythonConstants.PytestExecutorUriString)] we still get all .py source files
+    /// Note even though we specify  [DefaultExecutorUri(PythonConstants.PytestExecutorUriString)] we still get all .py source files
     /// from all testcontainers.  
     /// </summary>
     [FileExtension(".py")]
@@ -47,14 +47,14 @@ namespace Microsoft.PythonTools.TestAdapter {
         }
     }
     
-    public class PythonTestDiscoverer : ITestDiscoverer {
+    public abstract class PythonTestDiscoverer : ITestDiscoverer {
         private TestFrameworkType _frameworkType;
 
         /// <summary>
         /// Create a test framework specific Test Discoverer
         /// </summary>
         /// <param name="frameworkType"></param>
-        public PythonTestDiscoverer(TestFrameworkType frameworkType) {
+        protected PythonTestDiscoverer(TestFrameworkType frameworkType) {
             _frameworkType = frameworkType;
         }
 
