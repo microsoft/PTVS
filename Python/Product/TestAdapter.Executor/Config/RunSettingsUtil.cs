@@ -8,12 +8,13 @@ using System.Xml.XPath;
 
 namespace Microsoft.PythonTools.TestAdapter.Config {
     public class RunSettingsUtil {
-        public static Dictionary<string, PythonProjectSettings> GetSourceToProjSettings(IRunSettings settings) {
+        public static Dictionary<string, PythonProjectSettings> GetSourceToProjSettings(IRunSettings settings, TestFrameworkType filterType) {
             var doc = Read(settings.SettingsXml);
             XPathNodeIterator nodes = doc.CreateNavigator().Select("/RunSettings/Python/TestCases/Project");
             var res = new Dictionary<string, PythonProjectSettings>(StringComparer.OrdinalIgnoreCase);
 
             foreach (XPathNavigator project in nodes) {
+                
                 PythonProjectSettings projSettings = new PythonProjectSettings(
                     project.GetAttribute("name", ""),
                     project.GetAttribute("home", ""),
@@ -28,6 +29,10 @@ namespace Microsoft.PythonTools.TestAdapter.Config {
                     project.GetAttribute("unitTestRootDir", ""),
                     project.GetAttribute("discoveryWaitTime", "")
                 ); 
+
+                if (projSettings.TestFramework != filterType) {
+                    continue;
+                }
 
                 foreach (XPathNavigator environment in project.Select("Environment/Variable")) {
                     projSettings.Environment[environment.GetAttribute("name", "")] = environment.GetAttribute("value", "");

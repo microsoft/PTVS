@@ -25,14 +25,39 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
 namespace Microsoft.PythonTools.TestAdapter {
 
+    /// <summary>
+    /// Note even though we specify  [DefaultExecutorUri(PythonConstants.UnitTestExecutorUriString)] we still get all .py source files
+    /// from all testcontainers.  
+    /// </summary>
+    [FileExtension(".py")]
+    [DefaultExecutorUri(PythonConstants.UnitTestExecutorUriString)]
+    public class UnitTestDiscoverer : PythonTestDiscoverer {
+        public UnitTestDiscoverer() : base(TestFrameworkType.UnitTest) {
+        }
+    }
 
     /// <summary>
-    /// Note even though we we specify  [DefaultExecutorUri(PythonConstants.PytestExecutorUri)] we still get all .py source files
+    /// Note even though we specify  [DefaultExecutorUri(PythonConstants.PytestExecutorUriString)] we still get all .py source files
     /// from all testcontainers.  
     /// </summary>
     [FileExtension(".py")]
     [DefaultExecutorUri(PythonConstants.PytestExecutorUriString)]
-    public class PythonTestDiscoverer : ITestDiscoverer {
+    public class PytestTestDiscoverer : PythonTestDiscoverer {
+        public PytestTestDiscoverer() : base(TestFrameworkType.Pytest) { 
+        }
+    }
+    
+    public abstract class PythonTestDiscoverer : ITestDiscoverer {
+        private TestFrameworkType _frameworkType;
+
+        /// <summary>
+        /// Create a test framework specific Test Discoverer
+        /// </summary>
+        /// <param name="frameworkType"></param>
+        protected PythonTestDiscoverer(TestFrameworkType frameworkType) {
+            _frameworkType = frameworkType;
+        }
+
         public void DiscoverTests(
             IEnumerable<string> sources,
             IDiscoveryContext discoveryContext,
@@ -47,12 +72,12 @@ namespace Microsoft.PythonTools.TestAdapter {
                 throw new ArgumentNullException(nameof(discoverySink));
             }
 
-            var sourceToProjSettings = RunSettingsUtil.GetSourceToProjSettings(discoveryContext.RunSettings);
+            var sourceToProjSettings = RunSettingsUtil.GetSourceToProjSettings(discoveryContext.RunSettings, filterType: _frameworkType);
             if (!sourceToProjSettings.Any()) {
                 return;
             }
 
-            foreach (var testGroup in sources.GroupBy(x => sourceToProjSettings.TryGetValue(x, out PythonProjectSettings project) ? project : null )) {
+            foreach (var testGroup in sources.GroupBy(x => sourceToProjSettings.TryGetValue(x, out PythonProjectSettings project) ? project : null)) {
                 DiscoverTestGroup(testGroup, discoveryContext, logger, discoverySink);
             }
         }
@@ -64,7 +89,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             ITestCaseDiscoverySink discoverySink
         ) {
             PythonProjectSettings settings = testGroup.Key;
-            if (settings == null) {
+            if (settings == null || settings.TestFramework != _frameworkType) {
                 return;
             }
 
