@@ -24,14 +24,14 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
     internal class DiscovererFactory {
 
         public static IPythonTestDiscoverer GetDiscoverer(PythonProjectSettings settings) {
-            switch (settings.TestFramwork) {
+            switch (settings.TestFramework) {
                 case TestFrameworkType.Pytest:
                     return new TestDiscovererPytest(settings);
                 case TestFrameworkType.UnitTest:
                     return new TestDiscovererUnitTest(settings);
                 case TestFrameworkType.None:
                 default:
-                    throw new NotImplementedException($"CreateDiscoveryService TestFrameworkType:{settings.TestFramwork.ToString()} not supported");
+                    throw new NotImplementedException($"CreateDiscoveryService TestFrameworkType:{settings.TestFramework.ToString()} not supported");
             }
         }
     }

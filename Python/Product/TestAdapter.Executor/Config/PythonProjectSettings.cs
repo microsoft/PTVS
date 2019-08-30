@@ -26,7 +26,7 @@ namespace Microsoft.PythonTools.TestAdapter.Config {
         public readonly Dictionary<string, string> TestContainerSources;
         public readonly bool IsWorkspace;
         public readonly bool UseLegacyDebugger;
-        public readonly TestFrameworkType TestFramwork;
+        public readonly TestFrameworkType TestFramework;
         public readonly int DiscoveryWaitTimeInSeconds;
         public PythonProjectSettings(string projectName,
             string projectHome,
@@ -54,8 +54,8 @@ namespace Microsoft.PythonTools.TestAdapter.Config {
             TestContainerSources = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             IsWorkspace = isWorkspace;
             UseLegacyDebugger = useLegacyDebugger;
-            TestFramwork = TestFrameworkType.None;
-            Enum.TryParse<TestFrameworkType>(testFramework, ignoreCase: true, out TestFramwork);
+            TestFramework = TestFrameworkType.None;
+            Enum.TryParse<TestFrameworkType>(testFramework, ignoreCase: true, out TestFramework);
             UnitTestPattern = string.IsNullOrEmpty(unitTestPattern) ? PythonConstants.DefaultUnitTestPattern : unitTestPattern;
             UnitTestRootDir = string.IsNullOrEmpty(unitTestRootDir) ? PythonConstants.DefaultUnitTestRootDirectory : unitTestRootDir;
             DiscoveryWaitTimeInSeconds = Int32.TryParse(discoveryWaitTimeInSeconds, out int parsedWaitTime) ? parsedWaitTime : PythonConstants.DiscoveryTimeoutInSeconds;
@@ -85,7 +85,7 @@ namespace Microsoft.PythonTools.TestAdapter.Config {
                 EnableNativeCodeDebugging == other.EnableNativeCodeDebugging &&
                 IsWorkspace == other.IsWorkspace &&
                 UseLegacyDebugger == other.UseLegacyDebugger &&
-                TestFramwork == other.TestFramwork &&
+                TestFramework == other.TestFramework &&
                 UnitTestPattern == other.UnitTestPattern &&
                 UnitTestRootDir == other.UnitTestRootDir &&
                 SearchPath.Count == other.SearchPath.Count &&
