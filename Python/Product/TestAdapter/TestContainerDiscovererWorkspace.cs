@@ -177,7 +177,9 @@ namespace Microsoft.PythonTools.TestAdapter {
                 _testFilesUpdateWatcher.AddDirectoryWatch(workspace.Location);
                 oldWatcher?.Dispose();
 
-                Predicate<string> testFileFilter = (x) => PythonConstants.TestFileExtensionRegex.IsMatch(x);
+                Predicate<string> testFileFilter = (x) => 
+                    PythonConstants.TestFileExtensionRegex.IsMatch(PathUtils.GetFileOrDirectoryName(x)
+                );
                 foreach (var file in _workspaceContextProvider.Workspace.EnumerateUserFiles(testFileFilter)) {
                     projInfo.AddTestContainer(this, file);
                 }

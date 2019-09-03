@@ -338,7 +338,7 @@ namespace PythonToolsTests {
             var virtualEnvName = "virtualEnv";
 
             var mockWorkspace = WorkspaceTestHelper.CreateMockWorkspace(WorkspaceTestHelper.CreateWorkspaceFolder(), WorkspaceTestHelper.Python37Id);
-            var OptionsService = new WorkspaceTestHelper.MockOptionsService(WorkspaceTestHelper.DefaultFactory);
+            var optionsService = new WorkspaceTestHelper.MockOptionsService(WorkspaceTestHelper.DefaultFactory);
             var includedWorkspaceFilePaths = GenerateWorkspaceFiles(mockWorkspace.Location, virtualEnvName, out string virtualEnvPath);
             includedWorkspaceFilePaths.Add(Path.Combine(mockWorkspace.Location, "app.py")); //Created by WorkspaceTestHelper.CreateWorkspaceFolder()
 
@@ -350,7 +350,7 @@ namespace PythonToolsTests {
             var registryService = new WorkspaceTestHelper.MockRegistryService(workspaceInterpreterFactories);
 
             var testDataSetup = new TestSetupData {
-                OptionsService = OptionsService,
+                OptionsService = optionsService,
                 RegistryService = registryService,
                 Workspace = mockWorkspace,
             };

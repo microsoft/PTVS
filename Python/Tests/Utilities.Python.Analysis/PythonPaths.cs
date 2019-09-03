@@ -258,7 +258,7 @@ namespace TestUtilities {
         public static void AssertInstalled(this PythonVersion pyVersion) {
             if (pyVersion == null || !File.Exists(pyVersion.InterpreterPath)) {
                 if(pyVersion == null) {
-                    Assert.Inconclusive("pyVersion is null");
+                    Assert.Inconclusive("Python interpreter is not installed. pyVersion is null. ");
                 } else {
                     Assert.Inconclusive(string.Format("Python version {0} is not installed.", pyVersion.Configuration.Version.ToString()));
                 }
