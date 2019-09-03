@@ -5484,10 +5484,13 @@
       </Item>
       <Item ItemId=";PythonTestFileDetected" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[A file containing Python tests was detected in the {0} {1}, but the test framework is disabled.]]></Val>
+          <Val><![CDATA[A file which may contain Python tests was detected in the {0} {1}, but the test framework is disabled.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Python テストを含むファイルが {0} {1} で検出されましたが、テスト フレームワークが無効になっています。]]></Val>
+            <Val><![CDATA[Python テストが含まれる可能性のあるファイルが {0} {1} で検出されましたが、テスト フレームワークが無効になっています。]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[A file containing Python tests was detected in the {0} {1}, but the test framework is disabled.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>

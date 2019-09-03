@@ -207,7 +207,7 @@ if __name__ == '__main__':
             var discoveryContext = new MockDiscoveryContext(runSettings);
             var discoverySink = new MockTestCaseDiscoverySink();
             var logger = new MockMessageLogger();
-            var discoverer = new PythonTestDiscoverer();
+            var discoverer = new PytestTestDiscoverer();
             discoverer.DiscoverTests(new[] { testFilePath1, testFilePath2 }, discoveryContext, logger, discoverySink);
 
             Console.WriteLine($"Discovered Tests");
@@ -246,7 +246,7 @@ if __name__ == '__main__':
             var discoveryContext = new MockDiscoveryContext(runSettings);
             var discoverySink = new MockTestCaseDiscoverySink();
             var logger = new MockMessageLogger();
-            var discoverer = new PythonTestDiscoverer();
+            var discoverer = new PytestTestDiscoverer();
             discoverer.DiscoverTests(new[] { testFilePath1 }, discoveryContext, logger, discoverySink);
 
             Console.WriteLine($"Discovered Tests");
@@ -283,8 +283,8 @@ if __name__ == '__main__':
 
             //Check for Partial Results
             Assert.IsTrue(recorder.Results.Any());
-            Assert.IsFalse(recorder.Results.Single( r => r.TestCase.DisplayName == discoverySink.Tests[0].DisplayName).Outcome != TestOutcome.Passed);
-            Assert.IsFalse(recorder.Results.Single(r => r.TestCase.DisplayName == discoverySink.Tests[1].DisplayName).Outcome != TestOutcome.NotFound);
+            Assert.AreEqual(TestOutcome.Passed, recorder.Results.Single( r => r.TestCase.DisplayName == discoverySink.Tests[0].DisplayName).Outcome);
+            Assert.AreEqual(TestOutcome.Skipped, recorder.Results.Single(r => r.TestCase.DisplayName == discoverySink.Tests[1].DisplayName).Outcome);
         }
 
         [TestMethod, Priority(0)]

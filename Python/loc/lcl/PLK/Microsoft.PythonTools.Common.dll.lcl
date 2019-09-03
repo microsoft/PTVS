@@ -5485,8 +5485,8 @@
       <Item ItemId=";PythonTestFileDetected" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[A file which may contain Python tests was detected in the {0} {1}, but the test framework is disabled.]]></Val>
-          <Tgt Cat="Text" Stat="Update" Orig="New">
-            <Val><![CDATA[Wykryto plik zawierający testy języka Python w elemencie {0} {1}, ale struktura testowa jest wyłączona.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[W elemencie {0} {1} wykryto plik mogący zawierać testy języka Python, ale platforma testowa jest wyłączona.]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[A file containing Python tests was detected in the {0} {1}, but the test framework is disabled.]]></Val>

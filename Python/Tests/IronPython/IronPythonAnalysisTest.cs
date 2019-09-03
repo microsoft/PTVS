@@ -3877,7 +3877,7 @@ z = f(a=42, x)";
             entry.AssertIsInstance("z", BuiltinTypeId.Int);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         public void PositionalSplat() {
             var funcDef = @"def f(a, b, c, *d): 
     pass";

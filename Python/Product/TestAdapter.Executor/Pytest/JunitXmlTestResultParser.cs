@@ -14,19 +14,14 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Xml;
 using System.Xml.XPath;
-using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
 namespace Microsoft.PythonTools.TestAdapter.Pytest {
-    public class TestResultParser {
+    public class JunitXmlTestResultParser {
         /// <summary>
         /// Parses the junit xml for test results and matches them to the corresponding original vsTestCase using 
         /// </summary>
@@ -87,6 +82,10 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
         }
 
         internal static void UpdateVsTestResult(TestResult result, XPathNavigator navNode) {
+            if (navNode.Name != "testcase") {
+                throw new ArgumentException("navNode.Name {0} not equal to testcase", navNode.Name);
+            }
+
             result.Outcome = TestOutcome.Passed;
 
             var timeStr = navNode.GetAttribute("time", "");
@@ -110,7 +109,7 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
                             result.Messages.Add(new TestResultMessage(TestResultMessage.StandardErrorCategory, $"{navNode.Value}\n")); //Test Explorer Detail summary wont show link to stacktrace without adding a TestResultMessage
                             break;
                         case "error":
-                            result.Outcome = TestOutcome.None; // occurs when a pytest framework or parse error happens
+                            result.Outcome = TestOutcome.Failed; // occurs when a pytest framework or parse error happens
                             result.ErrorMessage = navNode.GetAttribute("message", "");
                             result.Messages.Add(new TestResultMessage(TestResultMessage.StandardErrorCategory, $"{navNode.Value}\n"));
                             break;
@@ -124,7 +123,7 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
                 } while (navNode.MoveToNext());
             }
         }
-
+        
         internal static XPathDocument Read(string xml) {
             var settings = new XmlReaderSettings {
                 XmlResolver = null
