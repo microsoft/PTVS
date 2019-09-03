@@ -105,11 +105,16 @@ namespace PythonToolsTests {
         public class MockRegistryService : IInterpreterRegistryService {
             public MockRegistryService(IEnumerable<IPythonInterpreterFactory> interpreters) {
                 Interpreters = interpreters ?? Enumerable.Empty<IPythonInterpreterFactory>();
+
             }
 
             public IEnumerable<IPythonInterpreterFactory> Interpreters { get; private set; }
 
-            public IEnumerable<InterpreterConfiguration> Configurations => throw new NotImplementedException();
+            public IEnumerable<InterpreterConfiguration> Configurations { 
+                get {
+                    return Interpreters.Select(x => x.Configuration);
+                }
+            }
 
             public IEnumerable<IPythonInterpreterFactory> InterpretersOrDefault => throw new NotImplementedException();
 

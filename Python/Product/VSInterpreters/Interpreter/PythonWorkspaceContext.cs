@@ -163,7 +163,6 @@ namespace Microsoft.PythonTools.Interpreter {
             var workspaceInterpreterConfigs = _registryService.Configurations
                 .Where(x => PathUtils.IsSubpathOf(_workspace.Location, x.InterpreterPath))
                 .ToList();
-
             foreach (var file in Directory.EnumerateFiles(_workspace.Location).Where(x => predicate(x))) {
                 yield return file;
             }
