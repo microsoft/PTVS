@@ -558,7 +558,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(0)]
         public void ChangeDefault() {
             bool changed = false;
             var container = CreateCompositionContainer();
