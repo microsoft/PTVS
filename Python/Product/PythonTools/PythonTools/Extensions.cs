@@ -548,7 +548,7 @@ namespace Microsoft.PythonTools {
             throw new InvalidOperationException();
         }
 
-        public static PythonToolsService GetPythonToolsService(this IServiceProvider serviceProvider) {
+        internal static PythonToolsService GetPythonToolsService(this IServiceProvider serviceProvider) {
             if (serviceProvider == null) {
                 return null;
             }

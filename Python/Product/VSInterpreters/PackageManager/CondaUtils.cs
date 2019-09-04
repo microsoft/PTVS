@@ -24,7 +24,7 @@ using Microsoft.VisualStudio.ComponentModelHost;
 using Newtonsoft.Json;
 
 namespace Microsoft.PythonTools.Interpreter {
-    static public class CondaUtils {
+    static class CondaUtils {
         private const string EnvironmentStartMarker = "!!!ENVIRONMENT MARKER!!!";
         private static string PrintEnvironmentCode = $"import os, json; print('{EnvironmentStartMarker}'); print(json.dumps(dict(os.environ)))";
 
