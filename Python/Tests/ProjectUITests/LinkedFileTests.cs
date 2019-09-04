@@ -669,7 +669,9 @@ namespace ProjectUITests {
                             @"<Content Include=""{0}"">\s*<Link>{1}</Link>\s*</Content>",
                             Regex.Escape(tempFile),
                             Regex.Escape(Path.GetFileName(tempFile)));
-                        AssertUtil.AreEqual(new Regex(pattern), fileText);
+                        //AssertUtil.AreEqual(new Regex(pattern), fileText);
+                        Regex regex = new Regex(pattern);
+                        AssertUtil.Equals(regex.IsMatch(fileText), true);
                     }
                 }
             }
