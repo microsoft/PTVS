@@ -207,7 +207,7 @@ if __name__ == '__main__':
             var discoveryContext = new MockDiscoveryContext(runSettings);
             var discoverySink = new MockTestCaseDiscoverySink();
             var logger = new MockMessageLogger();
-            var discoverer = new PythonTestDiscoverer();
+            var discoverer = new PytestTestDiscoverer();
             discoverer.DiscoverTests(new[] { testFilePath1, testFilePath2 }, discoveryContext, logger, discoverySink);
 
             Console.WriteLine($"Discovered Tests");
@@ -246,7 +246,7 @@ if __name__ == '__main__':
             var discoveryContext = new MockDiscoveryContext(runSettings);
             var discoverySink = new MockTestCaseDiscoverySink();
             var logger = new MockMessageLogger();
-            var discoverer = new PythonTestDiscoverer();
+            var discoverer = new PytestTestDiscoverer();
             discoverer.DiscoverTests(new[] { testFilePath1 }, discoveryContext, logger, discoverySink);
 
             Console.WriteLine($"Discovered Tests");

@@ -72,7 +72,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 
             _cancelRequested.Reset();
 
-            var sourceToProjSettings = RunSettingsUtil.GetSourceToProjSettings(runContext.RunSettings);
+            var sourceToProjSettings = RunSettingsUtil.GetSourceToProjSettings(runContext.RunSettings, filterType:TestFrameworkType.UnitTest);
             var testColletion = new TestCollection();
 
             foreach (var testGroup in sources.GroupBy(x => sourceToProjSettings[x])) {
@@ -125,14 +125,14 @@ namespace Microsoft.PythonTools.TestAdapter {
                 covPath = ExecutorService.GetCoveragePath(tests);
             }
             // .py file path -> project settings
-            var sourceToSettings = RunSettingsUtil.GetSourceToProjSettings(runContext.RunSettings);
+            var sourceToSettings = RunSettingsUtil.GetSourceToProjSettings(runContext.RunSettings, filterType:TestFrameworkType.UnitTest);
 
             foreach (var testGroup in tests.GroupBy(x => sourceToSettings[x.CodeFilePath])) {
                 if (_cancelRequested.WaitOne(0)) {
                     break;
                 }
                 
-                if (testGroup.Key.TestFramwork != TestFrameworkType.UnitTest) {
+                if (testGroup.Key.TestFramework != TestFrameworkType.UnitTest) {
                     continue;
                 }
 
