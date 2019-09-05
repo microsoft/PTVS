@@ -177,7 +177,7 @@
     </Reference>
     <Reference Include="Microsoft.VisualStudio.Workspace" />
     <Reference Include="Microsoft.VisualStudio.Workspace.VSIntegration.Contracts" />
-    <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed">
+    <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed">
       <HintPath>$(PackagesPath)\Newtonsoft.Json\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
       <IncludeInVSIX>True</IncludeInVSIX>
