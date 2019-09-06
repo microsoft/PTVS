@@ -60,6 +60,10 @@ namespace Microsoft.PythonTools.Interpreter {
         /// <param name="prefixPath">Path to the environment.</param>
         /// <returns><c>true</c> if it is a conda environment.</returns>
         internal static bool IsCondaEnvironment(string prefixPath) {
+            if (string.IsNullOrEmpty(prefixPath)) {
+                return false;
+            }
+
             return File.Exists(Path.Combine(prefixPath, "python.exe")) &&
                 Directory.Exists(Path.Combine(prefixPath, "conda-meta"));
         }

@@ -30,7 +30,8 @@ enum PythonVersion {
     PythonVersion_34 = 0x0304,
     PythonVersion_35 = 0x0305,
     PythonVersion_36 = 0x0306,
-    PythonVersion_37 = 0x0307
+    PythonVersion_37 = 0x0307,
+    PythonVersion_38 = 0x0308
 };
 
 typedef const char* (GetVersionFunc)();
@@ -57,6 +58,7 @@ static PythonVersion GetPythonVersion(HMODULE hMod) {
                 case '5': return PythonVersion_35;
                 case '6': return PythonVersion_36;
                 case '7': return PythonVersion_37;
+                case '8': return PythonVersion_38;
                 }
             }
         }
@@ -231,15 +233,47 @@ public:
     void *co_zombieframe;       /* for optimization only (see frameobject.c) */
 
     static bool IsFor(int majorVersion, int minorVersion) {
-        return majorVersion == 3 && minorVersion >= 7;
+        return majorVersion == 3 && minorVersion == 7;
     }
 
     static bool IsFor(PythonVersion version) {
-        return version >= PythonVersion_37;
+        return version == PythonVersion_37;
     }
 };
 
-// 2.5 - 3.7
+// 3.8
+class PyCodeObject38 : public PyObject {
+public:
+    int co_argcount;            /* #arguments, except *args */
+    int co_posonlyargcount;     /* #positional only arguments */
+    int co_kwonlyargcount;      /* #keyword only arguments */
+    int co_nlocals;             /* #local variables */
+    int co_stacksize;           /* #entries needed for evaluation stack */
+    int co_flags;               /* CO_..., see below */
+    int co_firstlineno;         /* first source line number */
+    PyObject* co_code;          /* instruction opcodes */
+    PyObject* co_consts;        /* list (constants used) */
+    PyObject* co_names;         /* list of strings (names used) */
+    PyObject* co_varnames;      /* tuple of strings (local variable names) */
+    PyObject* co_freevars;      /* tuple of strings (free variable names) */
+    PyObject* co_cellvars;      /* tuple of strings (cell variable names) */
+                                /* The rest doesn't count for hash or comparisons */
+    SSIZE_T* co_cell2arg;       /* Maps cell vars which are arguments. */
+    PyObject* co_filename;      /* unicode (where it was loaded from) */
+    PyObject* co_name;          /* unicode (name, for reference) */
+    PyObject* co_lnotab;        /* string (encoding addr<->lineno mapping) */
+    void* co_zombieframe;       /* for optimization only (see frameobject.c) */
+
+    static bool IsFor(int majorVersion, int minorVersion) {
+        return majorVersion == 3 && minorVersion >= 8;
+    }
+
+    static bool IsFor(PythonVersion version) {
+        return version >= PythonVersion_38;
+    }
+};
+
+// 2.5 - 3.8
 class PyFunctionObject : public PyObject {
 public:
     PyObject *func_code;    /* A code object */
@@ -262,7 +296,7 @@ public:
      */
 };
 
-// 2.4 - 3.7 compatible
+// 2.4 - 3.8 compatible
 typedef struct {
     PyObject_HEAD
     size_t length;      /* Length of raw Unicode data in buffer */
@@ -270,7 +304,7 @@ typedef struct {
     long hash;          /* Hash value; -1 if not set */
 } PyUnicodeObject;
 
-// 2.4 - 3.7 compatible
+// 2.4 - 3.8 compatible
 class PyFrameObject : public PyVarObject {
 public:
     PyFrameObject *f_back;  /* previous frame, or NULL */
@@ -355,7 +389,7 @@ public:
 
 typedef void (*destructor)(PyObject *);
 
-// 2.4 - 3.7
+// 2.4 - 3.8
 class PyMethodDef {
 public:
     char    *ml_name;    /* The name of the built-in function/method */
@@ -363,7 +397,7 @@ public:
 
 
 // 
-// 2.5 - 3.7
+// 2.5 - 3.8
 // While these are compatible there are fields only available on later versions.
 class PyTypeObject : public PyVarObject {
 public:
@@ -373,7 +407,7 @@ public:
     /* Methods to implement standard operations */
 
     destructor tp_dealloc;
-    void *tp_print;
+    void *tp_print; // 3.8: Py_ssize_t tp_vectorcall_offset; (same size as void*)
     void *tp_getattr;
     void *tp_setattr;
     union {
@@ -448,7 +482,7 @@ public:
     unsigned int tp_version_tag;
 };
 
-// 2.4 - 3.7
+// 2.4 - 3.8
 class PyTupleObject : public PyVarObject {
 public:
     PyObject *ob_item[1];
@@ -459,7 +493,7 @@ public:
      */
 };
 
-// 2.4 - 3.7
+// 2.4 - 3.8
 class PyCFunctionObject : public PyObject {
 public:
     PyMethodDef *m_ml;      /* Description of the C function to call */

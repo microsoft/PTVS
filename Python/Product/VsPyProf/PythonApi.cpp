@@ -90,7 +90,7 @@ VsPyProf* VsPyProf::Create(HMODULE pythonModule) {
                 }
 
                 if ((major == 2 && (minor >= 4 && minor <= 7)) ||
-                    (major == 3 && (minor >= 0 && minor <= 7))) {
+                    (major == 3 && (minor >= 0 && minor <= 8))) {
                         return new VsPyProf(pythonModule,
                             major,
                             minor,
@@ -140,6 +140,8 @@ bool VsPyProf::GetUserToken(PyFrameObject* frameObj, DWORD_PTR& func, DWORD_PTR&
             filename = ((PyCodeObject36*)codeObj)->co_filename;
         } else if (PyCodeObject37::IsFor(MajorVersion, MinorVersion)) {
             filename = ((PyCodeObject37*)codeObj)->co_filename;
+        } else if (PyCodeObject38::IsFor(MajorVersion, MinorVersion)) {
+            filename = ((PyCodeObject38*)codeObj)->co_filename;
         }
         module = (DWORD_PTR)filename;
 
@@ -222,6 +224,9 @@ bool VsPyProf::GetUserToken(PyFrameObject* frameObj, DWORD_PTR& func, DWORD_PTR&
             } else if (PyCodeObject37::IsFor(MajorVersion, MinorVersion)) {
                 RegisterName(func, ((PyCodeObject37*)codeObj)->co_name, &moduleName);
                 lineno = ((PyCodeObject37*)codeObj)->co_firstlineno;
+            } else if (PyCodeObject38::IsFor(MajorVersion, MinorVersion)) {
+                RegisterName(func, ((PyCodeObject38*)codeObj)->co_name, &moduleName);
+                lineno = ((PyCodeObject38*)codeObj)->co_firstlineno;
             }
 
             // give the profiler the line number of this function
@@ -260,6 +265,9 @@ wstring VsPyProf::GetClassNameFromFrame(PyFrameObject* frameObj, PyObject *codeO
         } else if (PyCodeObject37::IsFor(MajorVersion, MinorVersion)) {
             argCount = ((PyCodeObject37*)codeObj)->co_argcount;
             argNames = (PyTupleObject*)((PyCodeObject37*)codeObj)->co_varnames;
+        } else if (PyCodeObject38::IsFor(MajorVersion, MinorVersion)) {
+            argCount = ((PyCodeObject38*)codeObj)->co_argcount;
+            argNames = (PyTupleObject*)((PyCodeObject38*)codeObj)->co_varnames;
         }
 
         if (argCount != 0 && argNames && argNames->ob_type == PyTuple_Type) {
@@ -305,6 +313,8 @@ wstring VsPyProf::GetClassNameFromSelf(PyObject* self, PyObject *codeObj) {
             nameObj = ((PyCodeObject36*)codeObj)->co_name;
         } else if (PyCodeObject37::IsFor(MajorVersion, MinorVersion)) {
             nameObj = ((PyCodeObject37*)codeObj)->co_name;
+        } else if (PyCodeObject38::IsFor(MajorVersion, MinorVersion)) {
+            nameObj = ((PyCodeObject38*)codeObj)->co_name;
         }
         GetNameAscii(nameObj, codeName);
 
