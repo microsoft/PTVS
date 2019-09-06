@@ -329,7 +329,8 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             "3.4",
             "3.5",
             "3.6",
-            "3.7"
+            "3.7",
+            "3.8",
         };
 
         private readonly EnvironmentView _view;
