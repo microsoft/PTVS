@@ -78,8 +78,32 @@ namespace ProfilingUITestsRunner {
 
         [TestMethod, Priority(2)]
         [TestCategory("Installed")]
-        public void LaunchProject() {
-            _vs.RunTest(nameof(PUIT.LaunchProject));
+        public void LaunchProjectPython27() {
+            _vs.RunTest(nameof(PUIT.LaunchProjectPython27));
+        }
+
+        [TestMethod, Priority(2)]
+        [TestCategory("Installed")]
+        public void LaunchProjectPython35() {
+            _vs.RunTest(nameof(PUIT.LaunchProjectPython35));
+        }
+
+        [TestMethod, Priority(2)]
+        [TestCategory("Installed")]
+        public void LaunchProjectPython36() {
+            _vs.RunTest(nameof(PUIT.LaunchProjectPython36));
+        }
+
+        [TestMethod, Priority(2)]
+        [TestCategory("Installed")]
+        public void LaunchProjectPython37() {
+            _vs.RunTest(nameof(PUIT.LaunchProjectPython37));
+        }
+
+        [TestMethod, Priority(2)]
+        [TestCategory("Installed")]
+        public void LaunchProjectPython38() {
+            _vs.RunTest(nameof(PUIT.LaunchProjectPython38));
         }
 
         [TestMethod, Priority(2)]
@@ -273,6 +297,18 @@ namespace ProfilingUITestsRunner {
         [TestMethod, Priority(2)]
         [TestCategory("Installed")]
         public void BuiltinsProfilePython37x64() {
+            _vs.RunTest(nameof(PUIT.BuiltinsProfilePython37x64));
+        }
+
+        [TestMethod, Priority(2)]
+        [TestCategory("Installed")]
+        public void BuiltinsProfilePython38() {
+            _vs.RunTest(nameof(PUIT.BuiltinsProfilePython37));
+        }
+
+        [TestMethod, Priority(2)]
+        [TestCategory("Installed")]
+        public void BuiltinsProfilePython38x64() {
             _vs.RunTest(nameof(PUIT.BuiltinsProfilePython37x64));
         }
 

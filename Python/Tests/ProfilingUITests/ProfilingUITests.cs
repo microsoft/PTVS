@@ -232,13 +232,39 @@ namespace ProfilingUITests {
             }
         }
 
-        public void LaunchProject(PythonVisualStudioApp app, ProfileCleanup cleanup, DotNotWaitOnExit optionSetter) {
-            LaunchProjectAndVerifyReport(
-                app,
-                @"TestData\ProfileTest.sln",
-                "HelloWorld",
-                new[] { "Program.f", "time.sleep" }
-            );
+        public void LaunchProjectPython27(PythonVisualStudioApp app, ProfileCleanup cleanup, DotNotWaitOnExit optionSetter) {
+            var version = PythonPaths.Python27_x64 ?? PythonPaths.Python27;
+            version.AssertInstalled();
+
+            LaunchProject(app, version);
+        }
+
+        public void LaunchProjectPython35(PythonVisualStudioApp app, ProfileCleanup cleanup, DotNotWaitOnExit optionSetter) {
+            var version = PythonPaths.Python35_x64 ?? PythonPaths.Python35;
+            version.AssertInstalled();
+
+            LaunchProject(app, version);
+        }
+
+        public void LaunchProjectPython36(PythonVisualStudioApp app, ProfileCleanup cleanup, DotNotWaitOnExit optionSetter) {
+            var version = PythonPaths.Python36_x64 ?? PythonPaths.Python36;
+            version.AssertInstalled();
+
+            LaunchProject(app, version);
+        }
+
+        public void LaunchProjectPython37(PythonVisualStudioApp app, ProfileCleanup cleanup, DotNotWaitOnExit optionSetter) {
+            var version = PythonPaths.Python37_x64 ?? PythonPaths.Python37;
+            version.AssertInstalled();
+
+            LaunchProject(app, version);
+        }
+
+        public void LaunchProjectPython38(PythonVisualStudioApp app, ProfileCleanup cleanup, DotNotWaitOnExit optionSetter) {
+            var version = PythonPaths.Python38_x64 ?? PythonPaths.Python38;
+            version.AssertInstalled();
+
+            LaunchProject(app, version);
         }
 
         public void LaunchProjectWithSpaceInFilename(PythonVisualStudioApp app, ProfileCleanup cleanup, DotNotWaitOnExit optionSetter) {
@@ -1106,6 +1132,24 @@ namespace ProfilingUITests {
             );
         }
 
+        public void BuiltinsProfilePython38(PythonVisualStudioApp app, ProfileCleanup cleanup, DotNotWaitOnExit optionSetter) {
+            BuiltinsProfile(
+                app,
+                PythonPaths.Python38,
+                new[] { "BuiltinsProfile.f", "str.startswith", "isinstance", "marshal.dumps", "array.array.tostring" },
+                new[] { "compile", "exec", "execfile", "_io.TextIOWrapper.read" }
+            );
+        }
+
+        public void BuiltinsProfilePython38x64(PythonVisualStudioApp app, ProfileCleanup cleanup, DotNotWaitOnExit optionSetter) {
+            BuiltinsProfile(
+                app,
+                PythonPaths.Python38_x64,
+                new[] { "BuiltinsProfile.f", "str.startswith", "isinstance", "marshal.dumps", "array.array.tostring" },
+                new[] { "compile", "exec", "execfile", "_io.TextIOWrapper.read" }
+            );
+        }
+
         public void LaunchExecutableUsingInterpreterGuid(PythonVisualStudioApp app, ProfileCleanup cleanup, DotNotWaitOnExit optionSetter) {
             PythonPaths.Python27.AssertInstalled();
 
@@ -1463,6 +1507,17 @@ namespace ProfilingUITests {
                 }
             } finally {
                 app.InvokeOnMainThread(() => profiling.RemoveSession(session, false));
+            }
+        }
+
+        private void LaunchProject(PythonVisualStudioApp app, PythonVersion version) {
+            using (app.SelectDefaultInterpreter(version)) {
+                LaunchProjectAndVerifyReport(
+                    app,
+                    @"TestData\ProfileTest.sln",
+                    "HelloWorld",
+                    new[] { "Program.f", "time.sleep" }
+                );
             }
         }
 
