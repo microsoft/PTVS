@@ -839,10 +839,10 @@ namespace Microsoft.PythonTools.Language {
                     switch ((VSConstants.VSStd97CmdID)prgCmds[i].cmdID) {
                         case VSConstants.VSStd97CmdID.GotoDefn:
                             prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
-                            break;
+                            return VSConstants.S_OK;
                         case VSConstants.VSStd97CmdID.FindReferences:
                             prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
-                            break;
+                            return VSConstants.S_OK;
                     }
                 }
             } else if (pguidCmdGroup == VSConstants.VsStd12) {
@@ -858,7 +858,7 @@ namespace Microsoft.PythonTools.Language {
                             );
                             prgCmds[i].cmdf = (uint)OLECMDF.OLECMDF_SUPPORTED;
                             prgCmds[0].cmdf |= (uint)(canPeek == true ? OLECMDF.OLECMDF_ENABLED : OLECMDF.OLECMDF_INVISIBLE);
-                            break;
+                            return VSConstants.S_OK;
                     }
                 }
             } else if (pguidCmdGroup == GuidList.guidPythonToolsCmdSet) {
@@ -869,13 +869,13 @@ namespace Microsoft.PythonTools.Language {
                             // of the integrated shell.  In the integrated shell we provide our own
                             // command for it so these still show up.
                             prgCmds[i].cmdf = CommandDisabledAndHidden;
-                            break;
+                            return VSConstants.S_OK;
                         case PkgCmdIDList.cmdidExtractMethodIntegratedShell:
                             // C# provides the refactor context menu for the main VS command outside
                             // of the integrated shell.  In the integrated shell we provide our own
                             // command for it so these still show up.
                             prgCmds[i].cmdf = CommandDisabledAndHidden;
-                            break;
+                            return VSConstants.S_OK;
                         case CommonConstants.StartDebuggingCmdId:
                         case CommonConstants.StartWithoutDebuggingCmdId:
                             // Don't enable the command when the file is null or doesn't exist,
@@ -905,23 +905,24 @@ namespace Microsoft.PythonTools.Language {
                     switch ((VSConstants.VSStd2KCmdID)prgCmds[i].cmdID) {
                         case VSConstants.VSStd2KCmdID.FORMATDOCUMENT:
                         case VSConstants.VSStd2KCmdID.FORMATSELECTION:
-
                         case VSConstants.VSStd2KCmdID.SHOWMEMBERLIST:
                         case VSConstants.VSStd2KCmdID.COMPLETEWORD:
                         case VSConstants.VSStd2KCmdID.QUICKINFO:
                         case VSConstants.VSStd2KCmdID.PARAMINFO:
                             prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
-                            break;
+                            return VSConstants.S_OK;
 
                         case VSConstants.VSStd2KCmdID.OUTLN_STOP_HIDING_ALL:
                             if (_textView.GetOutliningTagger()?.Enabled == true) {
                                 prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
+                                return VSConstants.S_OK;
                             }
                             break;
 
                         case VSConstants.VSStd2KCmdID.OUTLN_START_AUTOHIDING:
                             if (_textView.GetOutliningTagger()?.Enabled == false) {
                                 prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
+                                return VSConstants.S_OK;
                             }
                             break;
 
@@ -930,19 +931,15 @@ namespace Microsoft.PythonTools.Language {
                         case VSConstants.VSStd2KCmdID.UNCOMMENT_BLOCK:
                         case VSConstants.VSStd2KCmdID.UNCOMMENTBLOCK:
                             prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
-                            break;
+                            return VSConstants.S_OK;
                         case VSConstants.VSStd2KCmdID.EXTRACTMETHOD:
                             QueryStatusExtractMethod(prgCmds, i);
-                            break;
+                            return VSConstants.S_OK;
                         case VSConstants.VSStd2KCmdID.RENAME:
                             QueryStatusRename(prgCmds, i);
-                            break;
+                            return VSConstants.S_OK;
                     }
                 }
-            }
-
-            if (prgCmds.All(f => f.cmdf != 0)) {
-                return VSConstants.S_OK;
             }
 
             return _next.QueryStatus(ref pguidCmdGroup, cCmds, prgCmds, pCmdText);
