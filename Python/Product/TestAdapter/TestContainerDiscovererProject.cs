@@ -340,7 +340,9 @@ namespace Microsoft.PythonTools.TestAdapter {
                 switch (e.ChangedReason) {
                     case TestFileChangedReason.None:
                         break;
-                    case TestFileChangedReason.Renamed: // TestFileAddRemoveListener rename triggers Added and Removed
+                    case TestFileChangedReason.Renamed:
+                        _testFilesUpdateWatcher.RemoveWatch(e.OldFile);
+                        _testFilesUpdateWatcher.AddWatch(e.File);
                         break;
                     case TestFileChangedReason.Added:
                         _testFilesUpdateWatcher.AddWatch(e.File);
@@ -358,6 +360,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 return;
             }
 
+            // VS uses temp files we need to ignore
             if (!IsTestFile(e.File))
                 return;
 
@@ -388,14 +391,18 @@ namespace Microsoft.PythonTools.TestAdapter {
                     case TestFileChangedReason.Removed:
                         UpdateSolutionTestContainersAndFileWatchers(sources, projectInfo, isAdd: false);
                         break;
+                    case TestFileChangedReason.Renamed:
+                        UpdateSolutionTestContainersAndFileWatchers(new List<string>() { e.OldFile }, projectInfo, isAdd: false);
+                        UpdateSolutionTestContainersAndFileWatchers(sources, projectInfo, isAdd: true);
+                        break;
                     default:
                         //In changed case file watcher observed a file changed event
                         //In this case we just have to fire TestContainerChnaged event
-                        //TestFileAddRemoveListener rename event triggers Added and Removed so Rename isn't needed
                         break;
                 }
                 NotifyContainerChanged();
             }
+            
         }
 
         private bool IsSettingsFile(string file) {

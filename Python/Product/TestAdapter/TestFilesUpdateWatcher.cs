@@ -42,11 +42,12 @@ namespace Microsoft.VisualStudioTools.TestAdapter {
                         var watcher = new FileSystemWatcher(directoryName, filter);
                         _fileWatchers[path] = watcher;
 
-                        watcher.NotifyFilter = NotifyFilters.LastWrite 
-                                            | NotifyFilters.FileName 
-                                            | NotifyFilters.DirectoryName 
+                        watcher.NotifyFilter = NotifyFilters.LastWrite
+                                            | NotifyFilters.FileName
+                                            | NotifyFilters.DirectoryName
                                             | NotifyFilters.CreationTime;
                         watcher.Changed += OnChanged;  //only handle on change  in project mode
+                        watcher.Renamed += OnRenamed;
                         watcher.EnableRaisingEvents = true;
                         return true;
                     } catch (Exception ex) when (!ex.IsCriticalException()) {
@@ -90,6 +91,9 @@ namespace Microsoft.VisualStudioTools.TestAdapter {
                 && _fileWatchers.TryRemove(path, out FileSystemWatcher watcher)) {
                 watcher.EnableRaisingEvents = false;
                 watcher.Changed -= OnChanged;
+                watcher.Renamed -= OnRenamed;
+                watcher.Created -= OnCreated;
+                watcher.Deleted -= OnDeleted;
                 watcher.Dispose();
             }
         }
@@ -134,6 +138,9 @@ namespace Microsoft.VisualStudioTools.TestAdapter {
                 foreach (var watcher in _fileWatchers.Values) {
                     if (watcher != null) {
                         watcher.Changed -= OnChanged;
+                        watcher.Renamed -= OnRenamed;
+                        watcher.Created -= OnCreated;
+                        watcher.Deleted -= OnDeleted;
                         watcher.Dispose();
                     }
                 }
