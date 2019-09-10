@@ -83,6 +83,7 @@
   <ItemGroup>
     <Compile Include="Interpreter\InterpreterUIMode.cs" />
     <Compile Include="Interpreter\LaunchConfiguration.cs" />
+    <Compile Include="Interpreter\LaunchConfigurationUtils.cs" />
     <Compile Include="Interpreter\PythonInterpreterFactoryExtensions.cs" />
     <Compile Include="Interpreter\VisualStudioInterpreterConfiguration.cs" />
     <Compile Include="Interpreter\IPythonWorkspaceContext.cs" />
