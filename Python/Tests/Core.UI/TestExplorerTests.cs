@@ -30,13 +30,13 @@ namespace PythonToolsUITests {
 
         private static TestInfo[] AllPytests = new TestInfo[] {
             // test_pt.py
-            new TestInfo("test_pt_fail", "test_pt", "test_pt", "test_pt.py", 4, "Failed", "assert False"),
-            new TestInfo("test_pt_pass", "test_pt", "test_pt", "test_pt.py", 1, "Passed"),
+            new TestInfo("test__pt_fail", "test_pt", "test_pt", "test_pt.py", 4, "Failed", "assert False"),
+            new TestInfo("test__pt_pass", "test_pt", "test_pt", "test_pt.py", 1, "Passed"),
             new TestInfo("test_method_pass", "test_pt", "TestClassPT", "test_pt.py", 8, "Passed"),
 
             // test_ut.py
-            new TestInfo("test_ut_fail", "test_ut", "TestClassUT", "test_ut.py", 4, "Failed", "AssertionError: Not implemented"),
-            new TestInfo("test_ut_pass", "test_ut", "TestClassUT", "test_ut.py", 7, "Passed"),
+            new TestInfo("test__ut_fail", "test_ut", "TestClassUT", "test_ut.py", 4, "Failed", "AssertionError: Not implemented"),
+            new TestInfo("test__ut_pass", "test_ut", "TestClassUT", "test_ut.py", 7, "Passed"),
 
             // test_mark.py
             new TestInfo("test_webtest", "test_mark", "test_mark", "test_mark.py", 5, "Passed"),

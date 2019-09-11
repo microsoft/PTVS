@@ -211,7 +211,7 @@ namespace TestUtilities.UI.Python {
             get {
                 if (_testExplorer == null) {
                     AutomationElement element = null;
-                    for (int i = 0; i < 10 && element == null; i++) {
+                    for (int i = 0; i < 40 && element == null; i++) {
                         element = Element.FindFirst(TreeScope.Descendants,
                             new AndCondition(
                                 new PropertyCondition(
@@ -224,11 +224,50 @@ namespace TestUtilities.UI.Python {
                                 )
                             )
                         );
-                        if (element == null) {
+                        if (element != null) {
+                            break;
+                        }
+                        System.Threading.Thread.Sleep(500);
+                    }
+                    Assert.IsTrue(element != null, "Missing Text Explorer window");
+                    
+                    AutomationElement searchControl = null;
+                    AutomationElement searchElement = null;
+                    if (element != null) {
+                        for (int i = 0; i < 30 && searchControl == null; i++) {
+                            searchControl = Element.FindFirst(
+                                TreeScope.Descendants,
+                                new PropertyCondition(
+                                    AutomationElement.AutomationIdProperty,
+                                    "SearchControl"
+                                )
+                            );
+                            if (searchControl != null) {
+                                break;
+                            }
                             System.Threading.Thread.Sleep(500);
                         }
+
+                        if (searchControl != null) {
+                            for (int i = 0; i < 30 && searchElement == null; i++) {
+                                searchElement = searchControl.FindFirst(
+                                    TreeScope.Children,
+                                    new PropertyCondition(
+                                        AutomationElement.ClassNameProperty,
+                                        "TextBox"
+                                    )
+                                );
+                                if (searchElement != null) {
+                                    break;
+                                }
+                                System.Threading.Thread.Sleep(500);
+                            }
+                        }
+
                     }
-                    _testExplorer = new PythonTestExplorer(this, element);
+                    Assert.IsTrue(searchElement != null, "Missing Search Bar Textbox");
+
+                    _testExplorer = new PythonTestExplorer(this, element, searchElement);
                 }
                 return _testExplorer;
             }
