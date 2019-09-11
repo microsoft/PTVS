@@ -22,6 +22,7 @@ using System.Linq;
 using System.Net;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
+using System.Threading;
 using System.Xml;
 using System.Xml.XPath;
 using Microsoft.PythonTools.Analysis;
@@ -315,7 +316,7 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
             return searchPaths;
         }
 
-        public string Run(IEnumerable<TestCase> tests, string coveragePath) {
+        public string Run(IEnumerable<TestCase> tests, string coveragePath, ManualResetEvent cancelRequested) {
             string ouputFile = "";
             try {
                 DetachFromSillyManagedProcess(_app, _debugMode);
@@ -348,7 +349,22 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
                                 AttachDebugger(_app, proc, _debugMode, _debugSecret, _debugPort);
                             }
 
-                            proc.Wait();
+                            var handles = new WaitHandle[] { cancelRequested, proc.WaitHandle };
+                            if (proc.WaitHandle != null) {
+                                switch (WaitHandle.WaitAny(handles)) {
+                                    case 0:
+                                        // We've been cancelled
+                                        try {
+                                            proc.Kill();
+                                        } catch (InvalidOperationException) {
+                                            // Process has already exited
+                                        }
+                                        break;
+                                    case 1:
+                                        break;
+                                }
+                            }
+
                         } catch (COMException ex) {
                             Error(Strings.Test_ErrorConnecting);
                             DebugError(ex.ToString());

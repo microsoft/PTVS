@@ -139,7 +139,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                     covPath = ExecutorService.GetCoveragePath(testGroup);
                 }
 
-                var resultsXML = executor.Run(testGroup, covPath);
+                var resultsXML = executor.Run(testGroup, covPath, _cancelRequested);
 
                 // Default TestResults
                 var pytestIdToResultsMap = testGroup.Select(tc => new TestResult(tc) { Outcome = TestOutcome.Skipped })
