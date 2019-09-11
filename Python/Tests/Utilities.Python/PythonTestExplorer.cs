@@ -162,9 +162,9 @@ namespace TestUtilities.UI {
             // Currently child items dont always load on expand, so we need to call
             // it multiple times with delay as a work around.
             InsertTextUsingUIAutomation(_searchBarElement, path[path.Length - 1]);
-            
+
             Thread.Sleep(250);
-            for (int i=0; i < path.Length +1; i++) {
+            for (int i = 0; i < path.Length + 1; i++) {
                 Tests.ExpandAll();
                 Thread.Sleep(250);
             }
