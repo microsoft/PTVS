@@ -228,11 +228,11 @@ namespace TestUtilities.UI.Python {
                             System.Threading.Thread.Sleep(500);
                         }
                     }
-                    Assert.IsTrue(element != null, "Missing Text Explorer window");
+                    Assert.IsNotNull(element, "Missing Text Explorer window");
                     var testExplorer = new AutomationWrapper(element);
               
                     var searchBox = testExplorer.FindByName("Search Test Explorer");
-                    Assert.IsTrue(searchBox != null, "Missing Search Bar Textbox");
+                    Assert.IsNotNull(searchBox, "Missing Search Bar Textbox");
 
                     _testExplorer = new PythonTestExplorer(this, element, new AutomationWrapper(searchBox));
                 }
