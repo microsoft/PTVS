@@ -229,42 +229,12 @@ namespace TestUtilities.UI.Python {
                         }
                     }
                     Assert.IsTrue(element != null, "Missing Text Explorer window");
+                    var testExplorer = new AutomationWrapper(element);
+              
+                    var searchBox = testExplorer.FindByName("Search Test Explorer");
+                    Assert.IsTrue(searchBox != null, "Missing Search Bar Textbox");
 
-                    AutomationElement searchControl = null;
-                    AutomationElement searchBarElement = null;
-                    if (element != null) {
-                        for (int i = 0; i < 30 && searchControl == null; i++) {
-                            searchControl = Element.FindFirst(
-                                TreeScope.Descendants,
-                                new PropertyCondition(
-                                    AutomationElement.AutomationIdProperty,
-                                    "SearchControl"
-                                )
-                            );
-                            if (searchControl == null) {
-                                System.Threading.Thread.Sleep(500);
-                            }
-                        }
-
-                        if (searchControl != null) {
-                            for (int i = 0; i < 30 && searchBarElement == null; i++) {
-                                searchBarElement = searchControl.FindFirst(
-                                    TreeScope.Children,
-                                    new PropertyCondition(
-                                        AutomationElement.ClassNameProperty,
-                                        "TextBox"
-                                    )
-                                );
-                                if (searchBarElement == null) {
-                                    System.Threading.Thread.Sleep(500);
-                                }
-                            }
-                        }
-
-                    }
-                    Assert.IsTrue(searchBarElement != null, "Missing Search Bar Textbox");
-
-                    _testExplorer = new PythonTestExplorer(this, element, searchBarElement);
+                    _testExplorer = new PythonTestExplorer(this, element, new AutomationWrapper(searchBox));
                 }
                 return _testExplorer;
             }

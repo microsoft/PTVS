@@ -88,6 +88,7 @@ namespace TestUtilities.UI {
                 var node = nodes[i];
                 var name = node.GetCurrentPropertyValue(AutomationElement.NameProperty) as string;
 
+                //NameProperty is now getting appended with strings like "Not Run". we can no longer use Equals
                 if (name.Contains(splitPath[depth])) {
                     if (depth == splitPath.Length - 1) {
                         return node;

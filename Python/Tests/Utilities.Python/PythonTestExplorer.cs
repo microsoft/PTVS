@@ -24,7 +24,7 @@ using Microsoft.VisualStudioTools;
 namespace TestUtilities.UI {
     public class PythonTestExplorer : AutomationWrapper {
         private readonly VisualStudioApp _app;
-        private readonly AutomationElement _searchBarElement;
+        private readonly AutomationWrapper _searchBar;
         private PythonTestExplorerGridView _tests;
 
         private static class TestCommands {
@@ -33,10 +33,10 @@ namespace TestUtilities.UI {
             public const string CopyDetails = "TestExplorer.CopyDetails";
         }
 
-        public PythonTestExplorer(VisualStudioApp app, AutomationElement element, AutomationElement searchElement)
+        public PythonTestExplorer(VisualStudioApp app, AutomationElement element, AutomationWrapper searchBarTextBox)
             : base(element) {
             _app = app;
-            _searchBarElement = searchElement ?? throw new ArgumentNullException(nameof(searchElement));
+            _searchBar = searchBarTextBox ?? throw new ArgumentNullException(nameof(searchBarTextBox));
         }
 
         public PythonTestExplorerGridView Tests {
@@ -150,9 +150,7 @@ namespace TestUtilities.UI {
         }
 
         public void ClearSearchBar() {
-            if (_searchBarElement != null) {
-                InsertTextUsingUIAutomation(_searchBarElement, "");
-            }
+            _searchBar.SetValue("");
         }
 
         public AutomationElement WaitForItem(params string[] path) {
@@ -161,34 +159,14 @@ namespace TestUtilities.UI {
             // limit the items on screen and then expand all tree items. 
             // Currently child items dont always load on expand, so we need to call
             // it multiple times with delay as a work around.
-            InsertTextUsingUIAutomation(_searchBarElement, path[path.Length - 1]);
+            _searchBar.SetValue(path[path.Length - 1]);
 
-            Thread.Sleep(250);
             for (int i = 0; i < path.Length + 1; i++) {
                 Tests.ExpandAll();
-                Thread.Sleep(250);
             }
 
             return Tests.WaitForItem(path);
         }
-
-        private void InsertTextUsingUIAutomation(
-            AutomationElement element,
-            string value
-        ) {
-            // Validate arguments / initial setup
-            if (value == null)
-                throw new ArgumentNullException(
-                    "String parameter must not be null.");
-
-            if (element == null)
-                throw new ArgumentNullException(
-                    "AutomationElement parameter must not be null");
-            ValuePattern etb = element.GetCurrentPattern(ValuePattern.Pattern) as ValuePattern;
-            etb.SetValue(value);
-            Thread.Sleep(100);
-        }
-
 
         /// <summary>
         /// Run all tests and wait for the command to be available again.
