@@ -98,7 +98,9 @@ def get_wsgi_handler(handler_name):
 activate_this = os.getenv('WSGI_ALT_VIRTUALENV_ACTIVATE_THIS')
 if not activate_this:
     raise Exception('WSGI_ALT_VIRTUALENV_ACTIVATE_THIS is not set')
-
+if not isinstance(activate_this, str):
+    activate_this = to_str(activate_this)
+        
 def get_virtualenv_handler():
     log('Activating virtualenv with %s\n' % activate_this)
     execfile(activate_this, dict(__file__=activate_this))
