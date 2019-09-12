@@ -131,12 +131,6 @@ namespace Microsoft.PythonTools.TestAdapter {
                 return;
             }
 
-            bool codeCoverage = ExecutorService.EnableCodeCoverage(runContext);
-            string covPath = null;
-            if (codeCoverage) {
-                covPath = ExecutorService.GetCoveragePath(testGroup);
-            }
-
             var testConfig = new PytestConfiguration(runContext);
             using (var executor = new ExecutorService(
                 testConfig,
@@ -144,7 +138,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 frameworkHandle,
                 runContext)
             ) {
-                executor.Run(testGroup, covPath, _cancelRequested);
+                executor.Run(testGroup, _cancelRequested);
             }
             
             var testResults = ParseResults(testConfig.ResultsXmlPath, testGroup, frameworkHandle);
@@ -154,10 +148,6 @@ namespace Microsoft.PythonTools.TestAdapter {
                     break;
                 }
                 frameworkHandle.RecordResult(result);
-            }
-
-            if (codeCoverage) {
-                ExecutorService.AttachCoverageResults(frameworkHandle, covPath);
             }
         }
 

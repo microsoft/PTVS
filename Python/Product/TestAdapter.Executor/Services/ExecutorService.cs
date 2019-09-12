@@ -304,7 +304,21 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
             return searchPaths;
         }
 
-        public void Run(IEnumerable<TestCase> tests, string coveragePath, ManualResetEvent cancelRequested) {
+        public void Run(IEnumerable<TestCase> tests, ManualResetEvent cancelRequested) {
+            bool codeCoverage = ExecutorService.EnableCodeCoverage(_runContext);
+            string coveragePath = null;
+            if (codeCoverage) {
+                coveragePath = ExecutorService.GetCoveragePath(tests);
+            }
+
+            RunInternal(tests, coveragePath, cancelRequested);
+
+            if (codeCoverage) {
+                ExecutorService.AttachCoverageResults(_frameworkHandle, coveragePath);
+            }
+        }
+
+        private void RunInternal(IEnumerable<TestCase> tests, string coveragePath, ManualResetEvent cancelRequested) {
             try {
                 DetachFromSillyManagedProcess(_app, _debugMode);
 
@@ -319,8 +333,8 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
                     env,
                     visible: false,
                     testRedirector,
-                    quoteArgs:true,
-                    elevate:false,
+                    quoteArgs: true,
+                    elevate: false,
                     System.Text.Encoding.UTF8,
                     System.Text.Encoding.UTF8
                 )) {
