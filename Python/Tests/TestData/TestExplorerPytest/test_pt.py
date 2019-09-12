@@ -1,7 +1,7 @@
-def test_pt_pass():
+def test__pt_pass():
     assert True
 
-def test_pt_fail():
+def test__pt_fail():
     assert False
 
 class TestClassPT(object):

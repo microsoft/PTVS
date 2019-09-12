@@ -24,6 +24,7 @@ using Microsoft.VisualStudioTools;
 namespace TestUtilities.UI {
     public class PythonTestExplorer : AutomationWrapper {
         private readonly VisualStudioApp _app;
+        private readonly AutomationWrapper _searchBar;
         private PythonTestExplorerGridView _tests;
 
         private static class TestCommands {
@@ -32,9 +33,10 @@ namespace TestUtilities.UI {
             public const string CopyDetails = "TestExplorer.CopyDetails";
         }
 
-        public PythonTestExplorer(VisualStudioApp app, AutomationElement element)
+        public PythonTestExplorer(VisualStudioApp app, AutomationElement element, AutomationWrapper searchBarTextBox)
             : base(element) {
             _app = app;
+            _searchBar = searchBarTextBox ?? throw new ArgumentNullException(nameof(searchBarTextBox));
         }
 
         public PythonTestExplorerGridView Tests {
@@ -147,12 +149,22 @@ namespace TestUtilities.UI {
             Assert.IsNotNull(Tests, "Tests list is null");
         }
 
+        public void ClearSearchBar() {
+            _searchBar.SetValue("");
+        }
+
         public AutomationElement WaitForItem(params string[] path) {
             // WaitForItem doesn't work well with offscreen items
-            // so collapse to maximize success (up to a point)
-            // TODO: For increased reliability, we'll have to figure out 
-            // how to make WaitForItem work when item is offscreen.
-            Tests.CollapseAll();
+            // so we use the search bar to filter by function name to 
+            // limit the items on screen and then expand all tree items. 
+            // Currently child items dont always load on expand, so we need to call
+            // it multiple times with delay as a work around.
+            _searchBar.SetValue(path[path.Length - 1]);
+
+            for (int i = 0; i < path.Length + 1; i++) {
+                Tests.ExpandAll();
+            }
+
             return Tests.WaitForItem(path);
         }
 
@@ -160,6 +172,7 @@ namespace TestUtilities.UI {
         /// Run all tests and wait for the command to be available again.
         /// </summary>
         public void RunAll(TimeSpan timeout) {
+            ClearSearchBar();
             _app.Dte.ExecuteCommand(TestCommands.RunAllTests);
             Thread.Sleep(100);
             _app.WaitForCommandAvailable(TestCommands.RunAllTests, timeout);

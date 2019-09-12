@@ -16,8 +16,10 @@
 
 using System;
 using System.Diagnostics;
+using System.Drawing;
 using System.Threading;
 using System.Windows.Automation;
+using System.Windows.Input;
 
 namespace TestUtilities.UI {
     public class PythonTestExplorerGridView : ListView {
@@ -64,6 +66,14 @@ namespace TestUtilities.UI {
             }
         }
 
+        public void ExpandAll() {
+            foreach (AutomationElement child in Element.FindAll(TreeScope.Descendants, Condition.TrueCondition)) {
+                if (child.TryGetCurrentPattern(ExpandCollapsePattern.Pattern, out var pattern)) {
+                    ((ExpandCollapsePattern)pattern).Expand();
+                }
+            }
+        }
+
         /// <summary>
         /// Finds the specified item in the tree and returns it.
         /// </summary>
@@ -78,7 +88,8 @@ namespace TestUtilities.UI {
                 var node = nodes[i];
                 var name = node.GetCurrentPropertyValue(AutomationElement.NameProperty) as string;
 
-                if (name.Equals(splitPath[depth], StringComparison.CurrentCulture)) {
+                //NameProperty is now getting appended with strings like "Not Run". we can no longer use Equals
+                if (name.Contains(splitPath[depth])) {
                     if (depth == splitPath.Length - 1) {
                         return node;
                     }
@@ -91,7 +102,7 @@ namespace TestUtilities.UI {
                         Console.WriteLine("Failed to expand {0}", splitPath[depth]);
                     }
                     return FindNode(node.FindAll(TreeScope.Children, Condition.TrueCondition), splitPath, depth + 1);
-                }
+               }
             }
             return null;
         }
