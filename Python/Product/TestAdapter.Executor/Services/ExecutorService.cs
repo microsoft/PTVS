@@ -28,7 +28,6 @@ using System.Xml.XPath;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.TestAdapter.Config;
-using Microsoft.PythonTools.TestAdapter.Utils;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
@@ -46,7 +45,7 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
         private readonly string _debugSecret;
         private readonly int _debugPort;
         private readonly IRunContext _runContext;
-
+        private readonly ITestConfiguration _testConfig;
         /// <summary>
         /// Used to send messages to TestExplorer's Test output pane
         /// </summary>
@@ -72,7 +71,13 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
             }
         }
 
-        public ExecutorService(PythonProjectSettings projectSettings, IFrameworkHandle frameworkHandle, IRunContext runContext) {
+        public ExecutorService(
+            ITestConfiguration config, 
+            PythonProjectSettings projectSettings, 
+            IFrameworkHandle frameworkHandle, 
+            IRunContext runContext
+        ) {
+            _testConfig = config;
             _projectSettings = projectSettings;
             _frameworkHandle = frameworkHandle;
             _runContext = runContext;
@@ -85,11 +90,11 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
 
         }
 
-        public string[] GetArguments(IEnumerable<TestCase> tests, string outputfile, string coveragePath, PythonProjectSettings settings) {
+        public string[] GetArguments(IEnumerable<TestCase> tests, string coveragePath) {
             var arguments = new List<string> {
                 TestLauncherPath,
                 _projectSettings.WorkingDirectory,
-                "pytest",
+                _testConfig.Command,
                 _debugSecret,
                 _debugPort.ToString(),
                 GetDebuggerSearchPath(_projectSettings.UseLegacyDebugger),
@@ -97,25 +102,8 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
                 coveragePath ?? string.Empty
             };
 
-            // For a small set of tests, we'll pass them on the command
-            // line. Once we exceed a certain (arbitrary) number, create
-            // a test list on disk so that we do not overflow the 
-            // 32K argument limit.
-            var testIds = tests.Select(t => t.GetPropertyValue<string>(Pytest.Constants.PytestIdProperty, default));
-            if (testIds.Count() > 5) {
-                var testListFilePath = TestUtils.CreateTestListFile(testIds);
-                arguments.Add(testListFilePath);
-            } else {
-                arguments.Add("dummyfilename"); //expected not to exist, but script excepts something
-                foreach (var testId in testIds) {
-                    arguments.Add(testId);
-                }
-            }
-
-            // output results to xml file
-            arguments.Add(String.Format("--junitxml={0}", outputfile));
-            arguments.Add(String.Format("--rootdir={0}", settings.ProjectHome));
-
+            var testAruguments = _testConfig.GetExecutionArguments(tests, _projectSettings);
+            arguments.AddRange(testAruguments);
             return arguments.ToArray();
         }
 
@@ -316,15 +304,12 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
             return searchPaths;
         }
 
-        public string Run(IEnumerable<TestCase> tests, string coveragePath, ManualResetEvent cancelRequested) {
-            string ouputFile = "";
+        public void Run(IEnumerable<TestCase> tests, string coveragePath, ManualResetEvent cancelRequested) {
             try {
                 DetachFromSillyManagedProcess(_app, _debugMode);
 
                 var env = InitializeEnvironment(tests);
-                ouputFile = GetJunitXmlFile();
-                var arguments = GetArguments(tests, ouputFile, coveragePath, _projectSettings);
-
+                var arguments = GetArguments(tests, coveragePath);
                 var testRedirector = new TestRedirector(_frameworkHandle);
 
                 using (var proc = ProcessOutput.Run(
@@ -379,8 +364,6 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
             } catch (Exception e) {
                 Error(e.ToString());
             }
-
-            return ouputFile;
         }
 
         internal static void AttachDebugger(VisualStudioProxy app, ProcessOutput proc, PythonDebugMode debugMode, string debugSecret, int debugPort) {
@@ -400,13 +383,6 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
                 }
             }
         }
-
-        private string GetJunitXmlFile() {
-            string baseName = "junitresults_";
-            string outPath = Path.Combine(_runContext.TestRunDirectory, baseName + Guid.NewGuid().ToString() + ".xml");
-            return outPath;
-        }
-
 
         [Conditional("DEBUG")]
         private void DebugInfo(string message) {
