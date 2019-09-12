@@ -26,6 +26,7 @@ using TestUtilities.SharedProject;
 using TestUtilities.UI;
 using MessageBoxButton = TestUtilities.MessageBoxButton;
 using MSBuild = Microsoft.Build.Evaluation;
+using Microsoft.PythonTools.Infrastructure;
 
 namespace ProjectUITests {
     public class LinkedFileTests {
@@ -665,10 +666,11 @@ namespace ProjectUITests {
 
                         // verify that the project file contains the correct text for Link
                         var fileText = File.ReadAllText(project.FullName);
-                        var pattern = string.Format(
+                        /*var pattern = string.Format(
                             @"<Content Include=""{0}"">\s*<Link>{1}</Link>\s*</Content>",
                             Regex.Escape(tempFile),
-                            Regex.Escape(Path.GetFileName(tempFile)));
+                            Regex.Escape(Path.GetFileName(tempFile)));*/
+                        var pattern = PathUtils.GetRelativeFilePath(Path.GetDirectoryName(tempFile), tempFile);
                         AssertUtil.AreEqual(new Regex(pattern), fileText);
                     }
                 }
