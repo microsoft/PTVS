@@ -18,8 +18,7 @@ using System.Collections.Generic;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 namespace Microsoft.PythonTools.TestAdapter.Config {
-    public interface ITestConfiguration {
-        
+    internal interface ITestConfiguration {
         string Command { get; }
 
         IList<string> GetExecutionArguments(IEnumerable<TestCase> testCases, PythonProjectSettings settings);

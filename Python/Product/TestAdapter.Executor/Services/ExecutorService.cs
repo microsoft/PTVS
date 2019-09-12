@@ -33,7 +33,7 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
 namespace Microsoft.PythonTools.TestAdapter.Services {
-    public class ExecutorService : IDisposable {
+    internal class ExecutorService : IDisposable {
         private readonly IFrameworkHandle _frameworkHandle;
         private static readonly string TestLauncherPath = PythonToolsInstallPath.GetFile("testlauncher.py");
         private static readonly Guid PythonRemoteDebugPortSupplierUnsecuredId = new Guid("{FEB76325-D127-4E02-B59D-B16D93D46CF5}");
@@ -71,16 +71,16 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
             }
         }
 
-        public ExecutorService(
+        internal ExecutorService(
             ITestConfiguration config, 
             PythonProjectSettings projectSettings, 
             IFrameworkHandle frameworkHandle, 
             IRunContext runContext
         ) {
-            _testConfig = config;
-            _projectSettings = projectSettings;
-            _frameworkHandle = frameworkHandle;
-            _runContext = runContext;
+            _testConfig = config ?? throw new ArgumentNullException(nameof(config));
+            _projectSettings = projectSettings ?? throw new ArgumentNullException(nameof(projectSettings));
+            _frameworkHandle = frameworkHandle ?? throw new ArgumentNullException(nameof(frameworkHandle));
+            _runContext = runContext ?? throw new ArgumentNullException(nameof(runContext)); ;
             _app = VisualStudioProxy.FromEnvironmentVariable(PythonConstants.PythonToolsProcessIdEnvironmentVariable);
 
             GetDebugSettings(_app, _runContext, _projectSettings, out _debugMode, out _debugSecret, out _debugPort);
@@ -90,7 +90,7 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
 
         }
 
-        public string[] GetArguments(IEnumerable<TestCase> tests, string coveragePath) {
+        private string[] GetArguments(IEnumerable<TestCase> tests, string coveragePath) {
             var arguments = new List<string> {
                 TestLauncherPath,
                 _projectSettings.WorkingDirectory,

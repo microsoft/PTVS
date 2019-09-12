@@ -1,5 +1,4 @@
-﻿
-// Python Tools for Visual Studio
+﻿// Python Tools for Visual Studio
 // Copyright(c) Microsoft Corporation
 // All rights reserved.
 //
@@ -25,19 +24,28 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 
 namespace Microsoft.PythonTools.TestAdapter.Pytest {
-    public class PytestConfiguration : ITestConfiguration {
+    internal class PytestConfiguration : ITestConfiguration {
         private readonly IRunContext _runContext;
 
         public PytestConfiguration(IRunContext runContext) {
-            _runContext = runContext;
+            _runContext = runContext ?? throw new ArgumentNullException(nameof(runContext));
             ResultsXmlPath = GetJunitXmlFilePath();
         }
 
         public string Command => "pytest";
 
-        public string ResultsXmlPath { get; private set; }
+        public string ResultsXmlPath { get; }
 
         public IList<string> GetExecutionArguments(IEnumerable<TestCase> tests, PythonProjectSettings settings) {
+            
+            if (tests is null) {
+                throw new ArgumentNullException(nameof(tests));
+            }
+
+            if (settings is null) {
+                throw new ArgumentNullException(nameof(settings));
+            }
+
             var args = new List<string>();
 
             // For a small set of tests, we'll pass them on the command
