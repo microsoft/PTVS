@@ -31,6 +31,7 @@ namespace TestUtilities.UI {
             public const string GroupBy = "TestExplorer.GroupBy";
             public const string RunAllTests = "TestExplorer.RunAllTests";
             public const string CopyDetails = "TestExplorer.CopyDetails";
+            public const string DebugAllTests = "TestExplorer.DebugAllTests";
         }
 
         public PythonTestExplorer(VisualStudioApp app, AutomationElement element, AutomationWrapper searchBarTextBox)
@@ -176,6 +177,14 @@ namespace TestUtilities.UI {
             _app.Dte.ExecuteCommand(TestCommands.RunAllTests);
             Thread.Sleep(100);
             _app.WaitForCommandAvailable(TestCommands.RunAllTests, timeout);
+        }
+
+        /// <summary>
+        /// Debug all tests and wait for the command to be available again.
+        /// </summary>
+        public void DebugAll() {
+            _app.Dte.ExecuteCommand(TestCommands.DebugAllTests);
+            Thread.Sleep(100);
         }
     }
 }

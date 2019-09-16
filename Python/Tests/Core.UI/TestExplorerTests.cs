@@ -90,6 +90,53 @@ namespace PythonToolsUITests {
             }
         }
 
+        public void DebugPytestProject(PythonVisualStudioApp app) {
+            var defaultSetter = new InterpreterWithPackageSetter(app.ServiceProvider, "pytest");
+            using (defaultSetter) {
+                var sln = app.CopyProjectForTest(@"TestData\TestExplorerPytest.sln");
+                var project = app.OpenProject(sln);
+
+                var test = AllPytests.First();
+                DebugTest(app, test, AllPytests);
+            }
+        }
+
+        public void DebugPytestWorkspace(PythonVisualStudioApp app) {
+            var defaultSetter = new InterpreterWithPackageSetter(app.ServiceProvider, "pytest");
+            using (defaultSetter) {
+                var workspaceFolderPath = PrepareWorkspace(
+                    "pytest",
+                    "TestExplorerPytest",
+                    TestData.GetPath("TestData", "TestExplorerPytest")
+                );
+
+                app.OpenFolder(workspaceFolderPath);
+
+                var test = AllPytests.First();
+                DebugTest(app, test, AllPytests);
+            }
+        }
+
+        public void DebugUnittestWorkspace(PythonVisualStudioApp app) {
+            var workspaceFolderPath = PrepareWorkspace(
+              "unittest",
+              "TestExplorerUnittest",
+              TestData.GetPath("TestData", "TestExplorerUnittest")
+          );
+            app.OpenFolder(workspaceFolderPath);
+
+            var test = AllUnittests.First();
+            DebugTest(app, test, AllUnittests);
+        }
+
+        public void DebugUnittestProject(PythonVisualStudioApp app) {
+            var sln = app.CopyProjectForTest(@"TestData\TestExplorerUnittest.sln");
+            app.OpenProject(sln);
+
+            var test = AllUnittests.First();
+            DebugTest(app, test, AllUnittests);
+        }
+
         public void RunAllPytestWorkspace(PythonVisualStudioApp app) {
             var defaultSetter = new InterpreterWithPackageSetter(app.ServiceProvider, "pytest");
             using (defaultSetter) {
@@ -120,6 +167,31 @@ namespace PythonToolsUITests {
             }
 
             return workspaceFolderPath;
+        }
+
+        private static void DebugTest(PythonVisualStudioApp app, TestInfo test, TestInfo[] tests) {
+            var testExplorer = app.OpenTestExplorer();
+            Assert.IsNotNull(testExplorer, "Could not open test explorer");
+
+            Console.WriteLine("Waiting for tests discovery");
+            app.WaitForOutputWindowText("Tests", $"Discovery finished: {tests.Length} tests found", 15_000);
+
+            testExplorer.GroupByProjectNamespaceClass();
+
+            var item = testExplorer.WaitForItem(test.Path);
+            Assert.IsNotNull(item, $"Coult not find {string.Join(":", test.Path)}");
+
+            var breakLineno = test.SourceLine + 1;
+            app.Dte.Debugger.Breakpoints.Add(File: test.SourceFile, Line: breakLineno);
+
+            Console.WriteLine($"Debugging test {test.Name}");
+
+            testExplorer.DebugAll();
+
+            app.WaitForMode(EnvDTE.dbgDebugMode.dbgBreakMode);
+
+            Assert.IsNotNull(app.Dte.Debugger.BreakpointLastHit);
+            Assert.AreEqual(breakLineno, app.Dte.Debugger.BreakpointLastHit.FileLine);
         }
 
         private static void RunAllTests(PythonVisualStudioApp app, TestInfo[] tests) {
