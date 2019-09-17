@@ -1166,7 +1166,7 @@
         <Str Cat="Button">
           <Val><![CDATA[&Publish Now]]></Val>
           <Tgt Cat="Button" Stat="Loc" Orig="New">
-            <Val><![CDATA[今すぐ発行する(&P)]]></Val>
+            <Val><![CDATA[今すぐ公開する(&P)]]></Val>
           </Tgt>
         </Str>
         <Bin BinId="1">
@@ -1178,7 +1178,7 @@
         <Str Cat="Group Box Title">
           <Val><![CDATA[Publish Location]]></Val>
           <Tgt Cat="Group Box Title" Stat="Loc" Orig="New">
-            <Val><![CDATA[発行場所]]></Val>
+            <Val><![CDATA[公開場所]]></Val>
           </Tgt>
         </Str>
         <Bin BinId="1">
@@ -1190,7 +1190,7 @@
         <Str Cat="Static Text">
           <Val><![CDATA[Publishing Folder Location (web site, ftp server, or file path):]]></Val>
           <Tgt Cat="Static Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[発行フォルダーの場所 (Web サイト、FTP サーバー、またはファイル パス):]]></Val>
+            <Val><![CDATA[公開フォルダーの場所 (Web サイト、FTP サーバー、またはファイル パス):]]></Val>
           </Tgt>
         </Str>
         <Bin BinId="1">
@@ -6200,7 +6200,7 @@
         <Str Cat="Text">
           <Val><![CDATA[If the file should be included in the files which are published.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[ファイルを発行対象のファイルに含める場合。]]></Val>
+            <Val><![CDATA[ファイルを公開対象のファイルに含める場合。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

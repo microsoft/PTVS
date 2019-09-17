@@ -26,7 +26,7 @@
         <Str Cat="Static Text">
           <Val><![CDATA[These options are no longer used when publishing web sites. To configure publish settings, add a web.config file to your project.]]></Val>
           <Tgt Cat="Static Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[これらのオプションは、Web サイトを発行する場合には使われなくなりました。発行の設定を構成するには、プロジェクトに web.config ファイルを追加してください。]]></Val>
+            <Val><![CDATA[これらのオプションは、Web サイトを公開する場合には使われなくなりました。公開の設定を構成するには、プロジェクトに web.config ファイルを追加してください。]]></Val>
           </Tgt>
         </Str>
         <Bin BinId="1">
