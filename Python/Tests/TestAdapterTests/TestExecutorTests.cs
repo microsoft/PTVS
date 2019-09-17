@@ -229,6 +229,49 @@ if __name__ == '__main__':
             Assert.IsFalse(recorder.Results.Any(tr => tr.Outcome != TestOutcome.Passed));
         }
 
+        [TestMethod, Priority(0)]
+        [TestCategory("10s")]
+        public void RunPytestSubmoduleWithIniAndDiscovery() {
+            var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
+
+            FileUtils.CopyDirectory(TestData.GetPath("TestData", "TestExplorerPytestSubmodule"), testEnv.SourceFolderPath);
+            var testFilePath1 = Path.Combine(testEnv.SourceFolderPath, "Tests\\test_pt.py");
+            var pytestIniPath = Path.Combine(testEnv.SourceFolderPath, "Tests\\pytest.ini");
+
+            Assert.IsTrue(File.Exists(pytestIniPath), $"File path '{pytestIniPath}' does not exist");
+
+            var runSettings = new MockRunSettings(
+                new MockRunSettingsXmlBuilder(testEnv.TestFramework, testEnv.InterpreterPath, testEnv.ResultsFolderPath, testEnv.SourceFolderPath)
+                    .WithTestFile(testFilePath1)
+                    .ToXml()
+            );
+            var discoveryContext = new MockDiscoveryContext(runSettings);
+            var discoverySink = new MockTestCaseDiscoverySink();
+            var logger = new MockMessageLogger();
+            var discoverer = new PytestTestDiscoverer();
+            discoverer.DiscoverTests(new[] { testFilePath1 }, discoveryContext, logger, discoverySink);
+
+            Console.WriteLine($"Discovered Tests");
+            foreach (var test in discoverySink.Tests) {
+                Console.WriteLine($"{test.DisplayName}");
+            }
+
+            Assert.IsTrue(discoverySink.Tests.Any());
+            Assert.AreEqual(discoverySink.Tests.Count(), 1);
+            Assert.IsTrue(discoverySink.Tests.First().FullyQualifiedName.Contains("Tests\\"));
+
+            var testCases = discoverySink.Tests;
+            var runContext = new MockRunContext(runSettings, testCases, testEnv.ResultsFolderPath);
+            var recorder = new MockTestExecutionRecorder();
+            var executor = new TestExecutorPytest();
+            executor.RunTests(testCases, runContext, recorder);
+
+            PrintTestResults(recorder);
+
+            Assert.AreEqual(recorder.Results.Count(), 1);
+            //Tests will be skipped if pytest.ini location is used for execution instead of rootdir
+            Assert.AreEqual(TestOutcome.Passed, recorder.Results.First().Outcome);
+        }
 
         [TestMethod, Priority(0)]
         [TestCategory("10s")]
