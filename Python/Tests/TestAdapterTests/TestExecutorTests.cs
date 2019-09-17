@@ -258,6 +258,7 @@ if __name__ == '__main__':
 
             Assert.IsTrue(discoverySink.Tests.Any());
             Assert.AreEqual(discoverySink.Tests.Count(), 1);
+            Assert.IsTrue(discoverySink.Tests.First().FullyQualifiedName.Contains("Tests\\"));
 
             var testCases = discoverySink.Tests;
             var runContext = new MockRunContext(runSettings, testCases, testEnv.ResultsFolderPath);
