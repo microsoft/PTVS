@@ -192,6 +192,8 @@ namespace PythonToolsUITests {
 
             Assert.IsNotNull(app.Dte.Debugger.BreakpointLastHit);
             Assert.AreEqual(breakLineno, app.Dte.Debugger.BreakpointLastHit.FileLine);
+
+            app.Dte.Debugger.Stop(WaitForDesignMode: true);
         }
 
         private static void RunAllTests(PythonVisualStudioApp app, TestInfo[] tests) {

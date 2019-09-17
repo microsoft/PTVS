@@ -152,6 +152,7 @@ namespace TestUtilities.UI {
 
         public void ClearSearchBar() {
             _searchBar.SetValue("");
+            Thread.Sleep(500);
         }
 
         public AutomationElement WaitForItem(params string[] path) {
