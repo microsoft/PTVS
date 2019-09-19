@@ -60,9 +60,7 @@ namespace Microsoft.VisualStudioTools.TestAdapter {
             _lastWriteTime = copy._lastWriteTime;
             _cachedTime = copy._cachedTime;
         }
-
-        public int Version { get; private set; }
-
+      
         /// <summary>
         /// Project path
         /// </summary>
