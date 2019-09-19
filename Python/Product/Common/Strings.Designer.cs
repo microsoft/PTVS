@@ -3087,15 +3087,6 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Go to https://aka.ms/VSTestExplorerPython for more details on test discovery configuration..
-        /// </summary>
-        public static string DiscoveryConfigurationMessage {
-            get {
-                return ResourceManager.GetString("DiscoveryConfigurationMessage", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Python Documentation.
         /// </summary>
         public static string DocumentationClassificationType {
@@ -3479,15 +3470,6 @@ namespace Microsoft.PythonTools {
         public static string ErrorTestCaseNotFound {
             get {
                 return ResourceManager.GetString("ErrorTestCaseNotFound", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Matching test container source was not found under folder {0} for test {1}..
-        /// </summary>
-        public static string ErrorTestContainerNotFound {
-            get {
-                return ResourceManager.GetString("ErrorTestContainerNotFound", resourceCulture);
             }
         }
         

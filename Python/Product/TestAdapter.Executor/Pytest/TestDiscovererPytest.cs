@@ -98,7 +98,6 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
             IEnumerable<PytestDiscoveryResults> discoveryResults,
             ITestCaseDiscoverySink discoverySink
         ) {
-            bool showConfigurationHint = false;
             foreach (var result in discoveryResults.MaybeEnumerate()) {
                 var parentMap = result.Parents.ToDictionary(p => p.Id, p => p);
                 foreach (PytestTest test in result.Tests) {
@@ -116,18 +115,12 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
                                 parentMap, 
                                 _settings.ProjectHome);
                             discoverySink?.SendTestCase(tc);
-                        } else {
-                            Warn(Strings.ErrorTestContainerNotFound.FormatUI(_settings.ProjectHome, test.ToString()));
-                            showConfigurationHint = true;
                         }
+                        // Else ingore tests found in other testContainrs that haven't changed.
                     } catch (Exception ex) {
                         Error(ex.Message);
                     }
                 }
-            }
-
-            if (showConfigurationHint) {
-                LogInfo(Strings.DiscoveryConfigurationMessage);
             }
         }
 

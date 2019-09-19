@@ -113,24 +113,17 @@ namespace Microsoft.PythonTools.TestAdapter.UnitTest {
             IEnumerable<UnitTestDiscoveryResults> unitTestResults,
             ITestCaseDiscoverySink discoverySink
         ) {
-            bool showConfigurationHint = false;
             foreach (var test in unitTestResults?.SelectMany(result => result.Tests.Select(test => test)).MaybeEnumerate()) {
                 try {
                     // Note: Test Explorer will show a key not found exception if we use a source path that doesn't match a test container's source.
                     if (_settings.TestContainerSources.TryGetValue(test.Source, out _)) {
                         TestCase tc = test.ToVsTestCase(_settings.ProjectHome);
                         discoverySink?.SendTestCase(tc);
-                    } else {
-                        Warn(Strings.ErrorTestContainerNotFound.FormatUI(_settings.ProjectHome, test.ToString()));
-                        showConfigurationHint = true;
-                    }
+                    } 
+                    // Else ignore tests from testContainers not in our list
                 } catch (Exception ex) {
                     Error(ex.Message);
                 }
-            }
-
-            if (showConfigurationHint) {
-                LogInfo(Strings.DiscoveryConfigurationMessage);
             }
         }
 
