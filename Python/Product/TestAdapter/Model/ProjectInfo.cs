@@ -99,32 +99,14 @@ namespace Microsoft.PythonTools.TestAdapter.Model {
             if (!Path.GetExtension(path).Equals(PythonConstants.FileExtension, StringComparison.OrdinalIgnoreCase))
                 return;
 
-            TestContainer existing;
-            if (!TryGetContainer(path, out existing)) {
-            
-                _containers[path] = new TestContainer(
-                    discoverer,
-                    path,
-                    _projectHome,
-                    ProjectName,
-                    version:0,
-                    Architecture,
-                    IsWorkspace
-                );
-            } 
-            else {
-                RemoveTestContainer(path);
-
-                _containers[path] = new TestContainer(
-                   discoverer,
-                   path,
-                   _projectHome,
-                   ProjectName,
-                   version: existing.Version + 1,
-                   Architecture,
-                   IsWorkspace
-               );
-            }
+            _containers[path] = new TestContainer(
+                discoverer,
+                path,
+                _projectHome,
+                ProjectName,
+                Architecture,
+                IsWorkspace
+            );
         }
 
         public bool RemoveTestContainer(string path) {

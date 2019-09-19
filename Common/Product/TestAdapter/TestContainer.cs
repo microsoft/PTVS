@@ -23,38 +23,51 @@ using Microsoft.VisualStudio.TestWindow.Extensibility.Model;
 
 namespace Microsoft.VisualStudioTools.TestAdapter {
     internal class TestContainer : ITestContainer {
-        private readonly DateTime _timeStamp;
+        private readonly DateTime _lastWriteTime;
+        private readonly DateTime _cachedTime;
         private readonly bool _isWorkspace;
 
-        public TestContainer(ITestContainerDiscoverer discoverer, string source, string projectHome, string projectName, int version, Architecture architecture, bool isWorkspace) {
+        public TestContainer(
+            ITestContainerDiscoverer discoverer,
+            string source,
+            string projectHome,
+            string projectName,
+            Architecture architecture,
+            bool isWorkspace
+        ) {
             Discoverer = discoverer;
             Source = source; // Make sure source matches discovery new TestCase source.
-            Version = version;
             Project = projectHome;
             ProjectName = projectName;
             TargetPlatform = architecture;
-            _timeStamp = GetTimeStamp();
+            _lastWriteTime = GetLastWriteTimeStamp();
+            _cachedTime = DateTime.Now;
             _isWorkspace = isWorkspace;
         }
-        
+
         /// <summary>
         /// Copy constructor
         /// </summary>
         /// <param name="copy"></param>
-        private TestContainer(TestContainer copy)
-            : this(copy.Discoverer, copy.Source, copy.Project, copy.ProjectName, copy.Version, copy.TargetPlatform, copy._isWorkspace) {
-            _timeStamp = copy._timeStamp;
+        private TestContainer(TestContainer copy): this(
+                   copy.Discoverer,
+                   copy.Source,
+                   copy.Project,
+                   copy.ProjectName,
+                   copy.TargetPlatform,
+                   copy._isWorkspace
+        ) {
+            _lastWriteTime = copy._lastWriteTime;
+            _cachedTime = copy._cachedTime;
         }
-
-        public int Version { get; private set; }
-
+      
         /// <summary>
         /// Project path
         /// </summary>
         public string Project { get; private set; }
 
         public string ProjectName { get; private set; }
-             
+
         public int CompareTo(ITestContainer other) {
             var container = other as TestContainer;
             if (container == null) {
@@ -69,10 +82,6 @@ namespace Microsoft.VisualStudioTools.TestAdapter {
             if (result != 0) {
                 return result;
             }
-            
-            if (Version.CompareTo(container.Version) != 0) {
-                return -1;
-            }
 
             result = String.Compare(this.Project, container.Project, StringComparison.Ordinal);
             if (result != 0) {
@@ -84,7 +93,13 @@ namespace Microsoft.VisualStudioTools.TestAdapter {
                 return result;
             }
 
-            return _timeStamp.CompareTo(container._timeStamp);
+            result = _cachedTime.CompareTo(container._cachedTime);
+            if (result != 0) {
+                return result;
+            }
+
+            result = _lastWriteTime.CompareTo(container._lastWriteTime);
+            return result;
         }
 
         public IEnumerable<Guid> DebugEngines {
@@ -123,7 +138,7 @@ namespace Microsoft.VisualStudioTools.TestAdapter {
             return Source + ":" + Discoverer.ExecutorUri.ToString();
         }
 
-        private DateTime GetTimeStamp() {
+        private DateTime GetLastWriteTimeStamp() {
             if (!String.IsNullOrEmpty(this.Source) && File.Exists(this.Source)) {
                 return File.GetLastWriteTime(this.Source);
             } else {
