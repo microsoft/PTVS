@@ -96,11 +96,16 @@ namespace Microsoft.PythonTools.TestAdapter.UnitTest {
                 return;
             }
 
-            List<UnitTestDiscoveryResults> results = null;
             try {
-                results = JsonConvert.DeserializeObject<List<UnitTestDiscoveryResults>>(json);
-                CreateVsTests(results, discoverySink);
-            } catch (InvalidOperationException ex) {
+                var results = JsonConvert.DeserializeObject<List<UnitTestDiscoveryResults>>(json);
+
+                results?
+                    .SelectMany(result => result.Tests.Select(test => TryCreateVsTestCase(test)))
+                    .Where(tc => tc != null && discoverySink != null)
+                    .ToList()
+                    .ForEach(tc => discoverySink.SendTestCase(tc));
+
+                } catch (InvalidOperationException ex) {
                 Error("Failed to parse: {0}".FormatInvariant(ex.Message));
                 Error(json);
             } catch (JsonException ex) {
@@ -109,22 +114,15 @@ namespace Microsoft.PythonTools.TestAdapter.UnitTest {
             }
         }
 
-        private void CreateVsTests(
-            IEnumerable<UnitTestDiscoveryResults> unitTestResults,
-            ITestCaseDiscoverySink discoverySink
-        ) {
-            foreach (var test in unitTestResults?.SelectMany(result => result.Tests.Select(test => test)).MaybeEnumerate()) {
-                try {
-                    // Note: Test Explorer will show a key not found exception if we use a source path that doesn't match a test container's source.
-                    if (_settings.TestContainerSources.TryGetValue(test.Source, out _)) {
-                        TestCase tc = test.ToVsTestCase(_settings.ProjectHome);
-                        discoverySink?.SendTestCase(tc);
-                    } 
-                    // Else ignore tests from testContainers not in our list
-                } catch (Exception ex) {
-                    Error(ex.Message);
-                }
+        private TestCase TryCreateVsTestCase(UnitTestTestCase test) {
+            try {
+                // Note: Test Explorer will show a key not found exception if we use a source path that doesn't match a test container's source.
+                TestCase tc = test.ToVsTestCase(_settings.ProjectHome);
+                return tc;
+            } catch (Exception ex) {
+                Error(ex.Message);
             }
+            return null;
         }
 
         public string[] GetArguments(IEnumerable<string> sources, string outputfilename) {
