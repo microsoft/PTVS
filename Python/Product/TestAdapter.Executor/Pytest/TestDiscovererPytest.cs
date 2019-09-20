@@ -81,10 +81,14 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
                 return;
             }
 
-            List<PytestDiscoveryResults> results = null;
             try {
-                results = JsonConvert.DeserializeObject<List<PytestDiscoveryResults>>(json);
-                CreateVsTests(results, discoverySink);
+                var results = JsonConvert.DeserializeObject<List<PytestDiscoveryResults>>(json);
+                results?
+                    .SelectMany(result => result?.Tests?.Select(test => TryCreateVsTestCase(test)))
+                    .Where(tc => tc != null && discoverySink != null)
+                    .ToList()
+                    .ForEach(tc => discoverySink.SendTestCase(tc));
+
             } catch (InvalidOperationException ex) {
                 Error("Failed to parse: {0}".FormatInvariant(ex.Message));
                 Error(json);
@@ -94,34 +98,14 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
             }
         }
 
-        private void CreateVsTests(
-            IEnumerable<PytestDiscoveryResults> discoveryResults,
-            ITestCaseDiscoverySink discoverySink
-        ) {
-            foreach (var result in discoveryResults.MaybeEnumerate()) {
-                var parentMap = result.Parents.ToDictionary(p => p.Id, p => p);
-                foreach (PytestTest test in result.Tests) {
-                    try {
-                        (string parsedSource, int line) = test.ParseSourceAndLine();
-                        // Note: we use _settings.ProjectHome and not result.root since it is being lowercased
-                        var parsedFullSourcePath = Path.IsPathRooted(parsedSource) ? parsedSource : PathUtils.GetAbsoluteFilePath(_settings.ProjectHome, parsedSource);
-
-                        //Note: Pytest adapter is currently returning lowercase source paths
-                        //Test Explorer will show a key not found exception if we use a source path that doesn't match a test container's source.
-                        if (_settings.TestContainerSources.TryGetValue(parsedFullSourcePath, out string testContainerSourcePath)) {
-                            TestCase tc = test.ToVsTestCase(
-                                testContainerSourcePath, 
-                                line, 
-                                parentMap, 
-                                _settings.ProjectHome);
-                            discoverySink?.SendTestCase(tc);
-                        }
-                        // Else ingore tests found in other testContainrs that haven't changed.
-                    } catch (Exception ex) {
-                        Error(ex.Message);
-                    }
-                }
+        private TestCase TryCreateVsTestCase(PytestTest test) {
+            try {
+                TestCase tc = test.ToVsTestCase(_settings.ProjectHome);
+                return tc;
+            } catch (Exception ex) {
+                Error(ex.Message);
             }
+            return null;
         }
 
         public string[] GetArguments(IEnumerable<string> sources, PythonProjectSettings projSettings, string outputfilename) {
