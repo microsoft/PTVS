@@ -57,7 +57,16 @@ namespace Microsoft.PythonTools.TestAdapter.UnitTest {
             IMessageLogger logger,
             ITestCaseDiscoverySink discoverySink
         ) {
-            _logger = logger;
+            if (sources is null) {
+                throw new ArgumentNullException(nameof(sources));
+            }
+
+            if (discoverySink is null) {
+                throw new ArgumentNullException(nameof(discoverySink));
+            }
+
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger)); 
+
             var workspaceText = _settings.IsWorkspace ? Strings.WorkspaceText : Strings.ProjectText;
             LogInfo(Strings.PythonTestDiscovererStartedMessage.FormatUI(PythonConstants.UnitTestText, _settings.ProjectName, workspaceText, _settings.DiscoveryWaitTimeInSeconds));
 
@@ -99,13 +108,17 @@ namespace Microsoft.PythonTools.TestAdapter.UnitTest {
             try {
                 var results = JsonConvert.DeserializeObject<List<UnitTestDiscoveryResults>>(json);
 
-                results?
-                    .SelectMany(result => result.Tests.Select(test => TryCreateVsTestCase(test)))
-                    .Where(tc => tc != null && discoverySink != null)
-                    .ToList()
-                    .ForEach(tc => discoverySink.SendTestCase(tc));
-
-                } catch (InvalidOperationException ex) {
+                var testcases = results?
+                    .SelectMany(result => result.Tests?.Select(test => TryCreateVsTestCase(test)))
+                    .Where(tc => tc != null);
+              
+                foreach (var tc in testcases) {
+                    // Note: Test Explorer will show a key not found exception if we use a source path that doesn't match a test container's source.
+                    if (_settings.TestContainerSources.TryGetValue(tc.CodeFilePath, out _)) {
+                        discoverySink.SendTestCase(tc);
+                    }
+                }
+            } catch (InvalidOperationException ex) {
                 Error("Failed to parse: {0}".FormatInvariant(ex.Message));
                 Error(json);
             } catch (JsonException ex) {
