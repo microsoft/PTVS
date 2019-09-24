@@ -57,7 +57,16 @@ namespace Microsoft.PythonTools.TestAdapter.UnitTest {
             IMessageLogger logger,
             ITestCaseDiscoverySink discoverySink
         ) {
-            _logger = logger;
+            if (sources is null) {
+                throw new ArgumentNullException(nameof(sources));
+            }
+
+            if (discoverySink is null) {
+                throw new ArgumentNullException(nameof(discoverySink));
+            }
+
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger)); 
+
             var workspaceText = _settings.IsWorkspace ? Strings.WorkspaceText : Strings.ProjectText;
             LogInfo(Strings.PythonTestDiscovererStartedMessage.FormatUI(PythonConstants.UnitTestText, _settings.ProjectName, workspaceText, _settings.DiscoveryWaitTimeInSeconds));
 
@@ -96,10 +105,16 @@ namespace Microsoft.PythonTools.TestAdapter.UnitTest {
                 return;
             }
 
-            List<UnitTestDiscoveryResults> results = null;
             try {
-                results = JsonConvert.DeserializeObject<List<UnitTestDiscoveryResults>>(json);
-                CreateVsTests(results, discoverySink);
+                var results = JsonConvert.DeserializeObject<List<UnitTestDiscoveryResults>>(json);
+                var testcases = ParseDiscoveryResults(results);
+
+                foreach (var tc in testcases) {
+                    // Note: Test Explorer will show a key not found exception if we use a source path that doesn't match a test container's source.
+                    if (_settings.TestContainerSources.TryGetValue(tc.CodeFilePath, out _)) {
+                        discoverySink.SendTestCase(tc);
+                    }
+                }
             } catch (InvalidOperationException ex) {
                 Error("Failed to parse: {0}".FormatInvariant(ex.Message));
                 Error(json);
@@ -109,29 +124,26 @@ namespace Microsoft.PythonTools.TestAdapter.UnitTest {
             }
         }
 
-        private void CreateVsTests(
-            IEnumerable<UnitTestDiscoveryResults> unitTestResults,
-            ITestCaseDiscoverySink discoverySink
-        ) {
-            bool showConfigurationHint = false;
-            foreach (var test in unitTestResults?.SelectMany(result => result.Tests.Select(test => test)).MaybeEnumerate()) {
-                try {
-                    // Note: Test Explorer will show a key not found exception if we use a source path that doesn't match a test container's source.
-                    if (_settings.TestContainerSources.TryGetValue(test.Source, out _)) {
-                        TestCase tc = test.ToVsTestCase(_settings.ProjectHome);
-                        discoverySink?.SendTestCase(tc);
-                    } else {
-                        Warn(Strings.ErrorTestContainerNotFound.FormatUI(_settings.ProjectHome, test.ToString()));
-                        showConfigurationHint = true;
-                    }
-                } catch (Exception ex) {
-                    Error(ex.Message);
-                }
+        internal IEnumerable<TestCase> ParseDiscoveryResults(IList<UnitTestDiscoveryResults> results) {
+            if (results is null) {
+                throw new ArgumentNullException(nameof(results));
             }
 
-            if (showConfigurationHint) {
-                LogInfo(Strings.DiscoveryConfigurationMessage);
+            return results
+                .Where(r => r.Tests != null)
+                .SelectMany(r => r.Tests.Select(test => TryCreateVsTestCase(test)))
+                .Where(tc => tc != null);
+        }
+
+        private TestCase TryCreateVsTestCase(UnitTestTestCase test) {
+            try {
+                // Note: Test Explorer will show a key not found exception if we use a source path that doesn't match a test container's source.
+                TestCase tc = test.ToVsTestCase(_settings.ProjectHome);
+                return tc;
+            } catch (Exception ex) {
+                Error(ex.Message);
             }
+            return null;
         }
 
         public string[] GetArguments(IEnumerable<string> sources, string outputfilename) {

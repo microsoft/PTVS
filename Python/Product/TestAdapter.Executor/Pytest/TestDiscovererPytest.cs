@@ -42,7 +42,16 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
             IMessageLogger logger,
             ITestCaseDiscoverySink discoverySink
         ) {
+            if (sources is null) {
+                throw new ArgumentNullException(nameof(sources));
+            }
+
+            if (discoverySink is null) {
+                throw new ArgumentNullException(nameof(discoverySink));
+            }
+
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
             var workspaceText = _settings.IsWorkspace ? Strings.WorkspaceText : Strings.ProjectText;
             LogInfo(Strings.PythonTestDiscovererStartedMessage.FormatUI(PythonConstants.PytestText, _settings.ProjectName, workspaceText, _settings.DiscoveryWaitTimeInSeconds));
 
@@ -81,10 +90,16 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
                 return;
             }
 
-            List<PytestDiscoveryResults> results = null;
             try {
-                results = JsonConvert.DeserializeObject<List<PytestDiscoveryResults>>(json);
-                CreateVsTests(results, discoverySink);
+                var results = JsonConvert.DeserializeObject<List<PytestDiscoveryResults>>(json);
+                var testcases = ParseDiscoveryResults(results);
+
+                foreach (var tc in testcases) {
+                    // Note: Test Explorer will show a key not found exception if we use a source path that doesn't match a test container's source.
+                    if (_settings.TestContainerSources.TryGetValue(tc.CodeFilePath, out _)) {
+                        discoverySink.SendTestCase(tc);
+                    }
+                }
             } catch (InvalidOperationException ex) {
                 Error("Failed to parse: {0}".FormatInvariant(ex.Message));
                 Error(json);
@@ -94,41 +109,27 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
             }
         }
 
-        private void CreateVsTests(
-            IEnumerable<PytestDiscoveryResults> discoveryResults,
-            ITestCaseDiscoverySink discoverySink
-        ) {
-            bool showConfigurationHint = false;
-            foreach (var result in discoveryResults.MaybeEnumerate()) {
-                var parentMap = result.Parents.ToDictionary(p => p.Id, p => p);
-                foreach (PytestTest test in result.Tests) {
-                    try {
-                        (string parsedSource, int line) = test.ParseSourceAndLine();
-                        // Note: we use _settings.ProjectHome and not result.root since it is being lowercased
-                        var parsedFullSourcePath = Path.IsPathRooted(parsedSource) ? parsedSource : PathUtils.GetAbsoluteFilePath(_settings.ProjectHome, parsedSource);
-
-                        //Note: Pytest adapter is currently returning lowercase source paths
-                        //Test Explorer will show a key not found exception if we use a source path that doesn't match a test container's source.
-                        if (_settings.TestContainerSources.TryGetValue(parsedFullSourcePath, out string testContainerSourcePath)) {
-                            TestCase tc = test.ToVsTestCase(
-                                testContainerSourcePath, 
-                                line, 
-                                parentMap, 
-                                _settings.ProjectHome);
-                            discoverySink?.SendTestCase(tc);
-                        } else {
-                            Warn(Strings.ErrorTestContainerNotFound.FormatUI(_settings.ProjectHome, test.ToString()));
-                            showConfigurationHint = true;
-                        }
-                    } catch (Exception ex) {
-                        Error(ex.Message);
-                    }
-                }
+        internal IEnumerable<TestCase> ParseDiscoveryResults(IList<PytestDiscoveryResults> results) {
+            if (results is null) {
+                throw new ArgumentNullException(nameof(results));
             }
 
-            if (showConfigurationHint) {
-                LogInfo(Strings.DiscoveryConfigurationMessage);
+            var testcases = results
+                .Where(r => r.Tests != null)
+                .SelectMany(r => r.Tests.Select(test => TryCreateVsTestCase(test)))
+                .Where(tc => tc != null);
+
+            return testcases;
+        }
+
+        private TestCase TryCreateVsTestCase(PytestTest test) {
+            try {
+                TestCase tc = test.ToVsTestCase(_settings.ProjectHome);
+                return tc;
+            } catch (Exception ex) {
+                Error(ex.Message);
             }
+            return null;
         }
 
         public string[] GetArguments(IEnumerable<string> sources, PythonProjectSettings projSettings, string outputfilename) {

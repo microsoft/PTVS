@@ -44,17 +44,8 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
 
         public static TestCase ToVsTestCase(
             this PytestTest test,
-            string source,
-            int line,
-            Dictionary<string, PytestParent> parentMap,
             string projectHome
         ) {
-            if (parentMap == null) {
-                throw new ArgumentException(nameof(parentMap));
-            }
-            if (String.IsNullOrWhiteSpace(source)) {
-                throw new ArgumentException(nameof(source) + " " + test.ToString());
-            }
             if (String.IsNullOrWhiteSpace(projectHome)) {
                 throw new ArgumentException(nameof(projectHome));
             }
@@ -62,13 +53,20 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
                 String.IsNullOrWhiteSpace(test.Id)) {
                 throw new FormatException(test.ToString());
             }
+            (string parsedSource, int line) = test.ParseSourceAndLine();
+            // Note: we use _settings.ProjectHome and not result.root since it is being lowercased
+            var sourceFullPath = Path.IsPathRooted(parsedSource) ? parsedSource : PathUtils.GetAbsoluteFilePath(projectHome, parsedSource);
 
-            var pytestId = CreateProperCasedPytestId(source, projectHome, test.Id);
-            var fullyQualifiedName = CreateFullyQualifiedTestNameFromId(source, pytestId);
-            var tc = new TestCase(fullyQualifiedName, PythonConstants.PytestExecutorUri, source) {
+            if (String.IsNullOrWhiteSpace(sourceFullPath)) {
+                throw new FormatException(nameof(sourceFullPath) + " " + test.ToString());
+            }
+
+            var pytestId = CreateProperCasedPytestId(sourceFullPath, projectHome, test.Id);
+            var fullyQualifiedName = CreateFullyQualifiedTestNameFromId(sourceFullPath, pytestId);
+            var tc = new TestCase(fullyQualifiedName, PythonConstants.PytestExecutorUri, sourceFullPath) {
                 DisplayName = test.Name,
                 LineNumber = line,
-                CodeFilePath = source
+                CodeFilePath = sourceFullPath
             };
 
             tc.SetPropertyValue(Constants.PytestIdProperty, pytestId);
