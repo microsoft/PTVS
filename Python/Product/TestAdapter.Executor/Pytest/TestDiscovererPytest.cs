@@ -110,7 +110,11 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
         }
 
         internal IEnumerable<TestCase> ParseDiscoveryResults(IList<PytestDiscoveryResults> results) {
-            var testcases = results?
+            if (results is null) {
+                throw new ArgumentNullException(nameof(results));
+            }
+
+            var testcases = results
                 .Where(r => r.Tests != null)
                 .SelectMany(r => r.Tests.Select(test => TryCreateVsTestCase(test)))
                 .Where(tc => tc != null);

@@ -125,7 +125,11 @@ namespace Microsoft.PythonTools.TestAdapter.UnitTest {
         }
 
         internal IEnumerable<TestCase> ParseDiscoveryResults(IList<UnitTestDiscoveryResults> results) {
-            return results?
+            if (results is null) {
+                throw new ArgumentNullException(nameof(results));
+            }
+
+            return results
                 .Where(r => r.Tests != null)
                 .SelectMany(r => r.Tests.Select(test => TryCreateVsTestCase(test)))
                 .Where(tc => tc != null);

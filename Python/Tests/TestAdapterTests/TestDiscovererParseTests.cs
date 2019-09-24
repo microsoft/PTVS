@@ -14,6 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.PythonTools.TestAdapter.Config;
@@ -30,15 +31,27 @@ namespace TestAdapterTests {
                 projectName: string.Empty,
                 projectHome: projectDir,
                 workingDir: string.Empty,
-            interpreter: string.Empty,
-            pathEnv: string.Empty,
-            nativeDebugging: false,
-            isWorkspace: false,
-            useLegacyDebugger: false,
-            testFramework: string.Empty,
-            unitTestPattern: string.Empty,
-            unitTestRootDir: string.Empty,
-            discoveryWaitTimeInSeconds: string.Empty);
+                interpreter: string.Empty,
+                pathEnv: string.Empty,
+                nativeDebugging: false,
+                isWorkspace: false,
+                useLegacyDebugger: false,
+                testFramework: string.Empty,
+                unitTestPattern: string.Empty,
+                unitTestRootDir: string.Empty,
+                discoveryWaitTimeInSeconds: string.Empty
+            );
+        }
+
+
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentNullException))]
+        public void PytestShouldThrowNullResults() {
+            var settings = CreateMockSettings(projectDir: "dummypath");
+            var discoverer = new TestDiscovererPytest(settings);
+            
+            var testcases = discoverer.ParseDiscoveryResults(null);
+            testcases.Any();
         }
 
         [TestMethod]
@@ -63,6 +76,16 @@ namespace TestAdapterTests {
             Assert.IsFalse(testcases.Any());
         }
 
+
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentNullException))]
+        public void UnnitShouldThrowNullResults() {
+            var settings = CreateMockSettings(projectDir: "dummypath");
+            var discoverer = new TestDiscovererUnitTest(settings);
+
+            var testcases = discoverer.ParseDiscoveryResults(null);
+            testcases.Any();
+        }
 
         [TestMethod]
         public void UnittestShouldHandleEmptyListResults() {
