@@ -16,6 +16,7 @@
 using System;
 using System.IO;
 using System.Text;
+using System.Threading;
 using System.Xml;
 using System.Xml.XPath;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
@@ -88,9 +89,11 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
 
             result.Outcome = TestOutcome.Passed;
 
-            var timeStr = navNode.GetAttribute("time", "");
-            if (Double.TryParse(timeStr, out Double time)) {
+            try {
+                var timeStr = navNode.GetAttribute("time", "");
+                var time = Double.Parse(timeStr, Thread.CurrentThread.CurrentCulture.NumberFormat);
                 result.Duration = TimeSpan.FromSeconds(time);
+            } catch (FormatException) {
             }
 
             if (navNode.HasChildren) {
