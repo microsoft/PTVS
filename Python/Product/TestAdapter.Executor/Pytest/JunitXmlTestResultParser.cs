@@ -14,9 +14,9 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 using System;
+using System.Globalization;
 using System.IO;
 using System.Text;
-using System.Threading;
 using System.Xml;
 using System.Xml.XPath;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
@@ -91,7 +91,7 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
 
             try {
                 var timeStr = navNode.GetAttribute("time", "");
-                var time = Double.Parse(timeStr, Thread.CurrentThread.CurrentCulture.NumberFormat);
+                var time = Double.Parse(timeStr, CultureInfo.InvariantCulture);
                 result.Duration = TimeSpan.FromSeconds(time);
             } catch (FormatException) {
             }

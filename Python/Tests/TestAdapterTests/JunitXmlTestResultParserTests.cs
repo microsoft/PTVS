@@ -209,7 +209,7 @@ namespace TestAdapterTests {
         }
 
         [TestMethod]
-        public void PytestHandlesDurationWithPeriod() {
+        public void PytestHandlesCultureDurationWithPeriod() {
             var test = @"<testcase classname=""test_failures"" file=""test_failures.py"" line=""8"" name=""test_ok"" time=""1.000""></testcase>";
             var xmlResults = string.Format(_junitXmlResultsFormat, test);
             
@@ -217,21 +217,21 @@ namespace TestAdapterTests {
             Thread.CurrentThread.CurrentCulture = new CultureInfo("de-DE");
             TestResult result = ParseXmlTestUtil(xmlResults);
             
-            Assert.AreEqual(TimeSpan.FromSeconds(1000), result.Duration);
+            Assert.AreEqual(TimeSpan.FromSeconds(1), result.Duration);
 
             Thread.CurrentThread.CurrentCulture = currentCulture;
         }
 
         [TestMethod]
-        public void PytestHandlesDurationWithComma() {
-            var test = @"<testcase classname=""test_failures"" file=""test_failures.py"" line=""8"" name=""test_ok"" time=""1,00""></testcase>";
+        public void PytestHandlesCultureDurationThousand() {
+            var test = @"<testcase classname=""test_failures"" file=""test_failures.py"" line=""8"" name=""test_ok"" time=""1000""></testcase>";
             var xmlResults = string.Format(_junitXmlResultsFormat, test);
 
             var currentCulture = Thread.CurrentThread.CurrentCulture;
             Thread.CurrentThread.CurrentCulture = new CultureInfo("de-DE");
             TestResult result = ParseXmlTestUtil(xmlResults);
 
-            Assert.AreEqual(TimeSpan.FromSeconds(1), result.Duration);
+            Assert.AreEqual(TimeSpan.FromSeconds(1000), result.Duration);
 
             Thread.CurrentThread.CurrentCulture = currentCulture;
         }
