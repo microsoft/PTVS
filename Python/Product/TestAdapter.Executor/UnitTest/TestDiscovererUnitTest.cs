@@ -107,11 +107,8 @@ namespace Microsoft.PythonTools.TestAdapter.UnitTest {
 
             try {
                 var results = JsonConvert.DeserializeObject<List<UnitTestDiscoveryResults>>(json);
+                var testcases = ParseDiscoveryResults(results);
 
-                var testcases = results?
-                    .SelectMany(result => result.Tests?.Select(test => TryCreateVsTestCase(test)))
-                    .Where(tc => tc != null);
-              
                 foreach (var tc in testcases) {
                     // Note: Test Explorer will show a key not found exception if we use a source path that doesn't match a test container's source.
                     if (_settings.TestContainerSources.TryGetValue(tc.CodeFilePath, out _)) {
@@ -125,6 +122,13 @@ namespace Microsoft.PythonTools.TestAdapter.UnitTest {
                 Error("Failed to parse: {0}".FormatInvariant(ex.Message));
                 Error(json);
             }
+        }
+
+        internal IEnumerable<TestCase> ParseDiscoveryResults(IList<UnitTestDiscoveryResults> results) {
+            return results?
+                .Where(r => r.Tests != null)
+                .SelectMany(r => r.Tests.Select(test => TryCreateVsTestCase(test)))
+                .Where(tc => tc != null);
         }
 
         private TestCase TryCreateVsTestCase(UnitTestTestCase test) {

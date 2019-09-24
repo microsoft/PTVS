@@ -92,10 +92,7 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
 
             try {
                 var results = JsonConvert.DeserializeObject<List<PytestDiscoveryResults>>(json);
-
-                var testcases = results?
-                    .SelectMany(result => result.Tests?.Select(test => TryCreateVsTestCase(test)))
-                    .Where(tc => tc != null);
+                var testcases = ParseDiscoveryResults(results);
 
                 foreach (var tc in testcases) {
                     // Note: Test Explorer will show a key not found exception if we use a source path that doesn't match a test container's source.
@@ -110,6 +107,15 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
                 Error("Failed to parse: {0}".FormatInvariant(ex.Message));
                 Error(json);
             }
+        }
+
+        internal IEnumerable<TestCase> ParseDiscoveryResults(IList<PytestDiscoveryResults> results) {
+            var testcases = results?
+                .Where(r => r.Tests != null)
+                .SelectMany(r => r.Tests.Select(test => TryCreateVsTestCase(test)))
+                .Where(tc => tc != null);
+
+            return testcases;
         }
 
         private TestCase TryCreateVsTestCase(PytestTest test) {
