@@ -114,7 +114,7 @@
     <Compile Include="..\PythonTools\Guids.cs">
       <Link>Guids.cs</Link>
     </Compile>
-    <Compile Include="Model\ProjectInfo.cs" />
+    <Compile Include="ProjectInfo.cs" />
     <Compile Include="PackageManagerEventSink.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PythonRunSettings.cs" />
