@@ -2251,7 +2251,7 @@
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[&Start without Debugging]]></Val>
             <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
-              <Val><![CDATA[&Ohne Debuggen starten]]></Val>
+              <Val><![CDATA[&Starten ohne Debuggen]]></Val>
             </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
@@ -2260,7 +2260,7 @@
           <Str Cat="Button">
             <Val><![CDATA[Start Without Debugging]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
-              <Val><![CDATA[Ohne Debuggen starten]]></Val>
+              <Val><![CDATA[Starten ohne Debuggen]]></Val>
             </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
