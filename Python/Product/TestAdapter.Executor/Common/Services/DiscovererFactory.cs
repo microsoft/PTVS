@@ -26,9 +26,9 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
         public static IPythonTestDiscoverer GetDiscoverer(PythonProjectSettings settings) {
             switch (settings.TestFramework) {
                 case TestFrameworkType.Pytest:
-                    return new TestDiscovererPytest(settings);
+                    return new Pytest.PytestTestDiscoverer(settings);
                 case TestFrameworkType.UnitTest:
-                    return new TestDiscovererUnitTest(settings);
+                    return new UnitTestTestDiscoverer(settings);
                 case TestFrameworkType.None:
                 default:
                     throw new NotImplementedException($"CreateDiscoveryService TestFrameworkType:{settings.TestFramework.ToString()} not supported");

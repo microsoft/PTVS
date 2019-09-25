@@ -48,7 +48,7 @@ namespace TestAdapterTests {
         [ExpectedException(typeof(ArgumentNullException))]
         public void PytestShouldThrowNullResults() {
             var settings = CreateMockSettings(projectDir: "dummypath");
-            var discoverer = new TestDiscovererPytest(settings);
+            var discoverer = new PytestTestDiscoverer(settings);
             
             var testcases = discoverer.ParseDiscoveryResults(null);
             testcases.Any();
@@ -57,7 +57,7 @@ namespace TestAdapterTests {
         [TestMethod]
         public void PytestShouldHandleEmptyListResults() {
             var settings = CreateMockSettings(projectDir:"dummypath");
-            var discoverer = new TestDiscovererPytest(settings);
+            var discoverer = new PytestTestDiscoverer(settings);
 
             var results = new List<PytestDiscoveryResults>();
             var testcases = discoverer.ParseDiscoveryResults(results);
@@ -68,7 +68,7 @@ namespace TestAdapterTests {
         [TestMethod]
         public void PytestShouldHandleEmptyResults() {
             var settings = CreateMockSettings(projectDir: "dummypath");
-            var discoverer = new TestDiscovererPytest(settings);
+            var discoverer = new PytestTestDiscoverer(settings);
 
             var results = new List<PytestDiscoveryResults>() { new PytestDiscoveryResults() };
             var testcases = discoverer.ParseDiscoveryResults(results);
@@ -81,7 +81,7 @@ namespace TestAdapterTests {
         [ExpectedException(typeof(ArgumentNullException))]
         public void UnnitShouldThrowNullResults() {
             var settings = CreateMockSettings(projectDir: "dummypath");
-            var discoverer = new TestDiscovererUnitTest(settings);
+            var discoverer = new UnitTestTestDiscoverer(settings);
 
             var testcases = discoverer.ParseDiscoveryResults(null);
             testcases.Any();
@@ -90,7 +90,7 @@ namespace TestAdapterTests {
         [TestMethod]
         public void UnittestShouldHandleEmptyListResults() {
             var settings = CreateMockSettings(projectDir: "dummypath");
-            var discoverer = new TestDiscovererUnitTest(settings);
+            var discoverer = new UnitTestTestDiscoverer(settings);
 
             var results = new List<UnitTestDiscoveryResults>();
             var testcases = discoverer.ParseDiscoveryResults(results);
@@ -101,7 +101,7 @@ namespace TestAdapterTests {
         [TestMethod]
         public void UnittestShouldHandleEmptyResults() {
             var settings = CreateMockSettings(projectDir: "dummypath");
-            var discoverer = new TestDiscovererUnitTest(settings);
+            var discoverer = new UnitTestTestDiscoverer(settings);
 
             var results = new List<UnitTestDiscoveryResults>() { new UnitTestDiscoveryResults() };
             var testcases = discoverer.ParseDiscoveryResults(results);
