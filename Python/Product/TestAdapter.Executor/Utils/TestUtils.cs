@@ -17,6 +17,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Xml;
+using System.Xml.XPath;
 
 namespace Microsoft.PythonTools.TestAdapter.Utils {
     static class TestUtils {
@@ -25,6 +27,12 @@ namespace Microsoft.PythonTools.TestAdapter.Utils {
             var testListFilePath = Path.GetTempFileName();
             File.WriteAllLines(testListFilePath, tests, new UTF8Encoding(false));
             return testListFilePath;
+        }
+
+        internal static XPathDocument Read(string xml) {
+            var settings = new XmlReaderSettings();
+            settings.XmlResolver = null;
+            return new XPathDocument(XmlReader.Create(new StringReader(xml), settings));
         }
     }
 }
