@@ -20,13 +20,12 @@ using System.IO;
 using System.Xml;
 using System.Xml.XPath;
 using Microsoft.PythonTools.Analysis;
-using Microsoft.PythonTools.TestAdapter.Utils;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
 namespace Microsoft.PythonTools.TestAdapter.Services {
-    public class CodeCoverage {
+    internal static class CodeCoverage {
 
         internal static bool EnableCodeCoverage(IRunContext runContext) {
             var doc = Read(runContext.RunSettings.SettingsXml);
