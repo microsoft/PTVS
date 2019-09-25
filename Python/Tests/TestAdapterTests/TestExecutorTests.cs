@@ -23,6 +23,8 @@ using System.Linq;
 using System.Text;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.TestAdapter;
+using Microsoft.PythonTools.TestAdapter.Pytest;
+using Microsoft.PythonTools.TestAdapter.UnitTest;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;

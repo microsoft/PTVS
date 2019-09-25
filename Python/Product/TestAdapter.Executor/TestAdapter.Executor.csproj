@@ -95,11 +95,9 @@
     <Compile Include="Pytest\PytestExtensions.cs" />
     <Compile Include="Pytest\PytestTestDiscoverer.cs" />
     <Compile Include="Pytest\PytestTestExecutor.cs" />
-    <Compile Include="Common\Services\DiscovererFactory.cs" />
     <Compile Include="Common\Services\ExecutorService.cs" />
     <Compile Include="Pytest\JunitXmlTestResultParser.cs" />
-    <Compile Include="Common\Services\CodeCoverage.cs" />
-    <Compile Include="Common\Services\IPythonTestDiscoverer.cs" />
+    <Compile Include="Common\Services\CodeCoverage.cs" />   
     <Compile Include="Common\Services\ProcessExecute.cs" />
     <Compile Include="Common\Services\PythonDebugMode.cs" />
     <Compile Include="Common\TestCollection.cs" />

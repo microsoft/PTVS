@@ -32,6 +32,7 @@ using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Ipc.Json;
 using Microsoft.PythonTools.TestAdapter.Config;
 using Microsoft.PythonTools.TestAdapter.Services;
+using Microsoft.PythonTools.TestAdapter.UnitTest;
 using Microsoft.PythonTools.TestAdapter.Utils;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
@@ -79,8 +80,8 @@ namespace Microsoft.PythonTools.TestAdapter {
                 var settings = testGroup.Key;
 
                 try {
-                    var discovery = DiscovererFactory.GetDiscoverer(settings);
-                    discovery.DiscoverTests(testGroup, frameworkHandle, testColletion);
+                    var discovery = new UnitTestTestDiscoverer();
+                    discovery.DiscoverTests(testGroup, settings, frameworkHandle, testColletion);
                 } catch (Exception ex) {
                     frameworkHandle.SendMessage(TestMessageLevel.Error, ex.Message);
                 }
