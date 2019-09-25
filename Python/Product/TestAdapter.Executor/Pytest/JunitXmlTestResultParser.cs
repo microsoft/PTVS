@@ -14,6 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 using System;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Xml;
@@ -88,9 +89,11 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
 
             result.Outcome = TestOutcome.Passed;
 
-            var timeStr = navNode.GetAttribute("time", "");
-            if (Double.TryParse(timeStr, out Double time)) {
+            try {
+                var timeStr = navNode.GetAttribute("time", "");
+                var time = Double.Parse(timeStr, CultureInfo.InvariantCulture);
                 result.Duration = TimeSpan.FromSeconds(time);
+            } catch (FormatException) {
             }
 
             if (navNode.HasChildren) {
