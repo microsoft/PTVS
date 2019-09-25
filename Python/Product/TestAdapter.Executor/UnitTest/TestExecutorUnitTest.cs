@@ -119,10 +119,10 @@ namespace Microsoft.PythonTools.TestAdapter {
             IRunContext runContext,
             IFrameworkHandle frameworkHandle
         ) {
-            bool codeCoverage = ExecutorService.EnableCodeCoverage(runContext);
+            bool codeCoverage = CodeCoverage.EnableCodeCoverage(runContext);
             string covPath = null;
             if (codeCoverage) {
-                covPath = ExecutorService.GetCoveragePath(tests);
+                covPath = CodeCoverage.GetCoveragePath(tests);
             }
             // .py file path -> project settings
             var sourceToSettings = RunSettingsUtil.GetSourceToProjSettings(runContext.RunSettings, filterType:TestFrameworkType.UnitTest);
@@ -150,7 +150,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
 
             if (codeCoverage) {
-                ExecutorService.AttachCoverageResults(frameworkHandle, covPath);
+                CodeCoverage.AttachCoverageResults(frameworkHandle, covPath);
             }
         }
 
