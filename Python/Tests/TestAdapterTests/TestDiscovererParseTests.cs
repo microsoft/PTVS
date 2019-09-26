@@ -25,86 +25,54 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace TestAdapterTests {
     [TestClass]
     public class TestDiscovererParseTests {
-
-        static PythonProjectSettings CreateMockSettings(string projectDir) {
-            return new PythonProjectSettings(
-                projectName: string.Empty,
-                projectHome: projectDir,
-                workingDir: string.Empty,
-                interpreter: string.Empty,
-                pathEnv: string.Empty,
-                nativeDebugging: false,
-                isWorkspace: false,
-                useLegacyDebugger: false,
-                testFramework: string.Empty,
-                unitTestPattern: string.Empty,
-                unitTestRootDir: string.Empty,
-                discoveryWaitTimeInSeconds: string.Empty
-            );
-        }
-
-
         [TestMethod]
         [ExpectedException(typeof(ArgumentNullException))]
         public void PytestShouldThrowNullResults() {
-            var settings = CreateMockSettings(projectDir: "dummypath");
-            var discoverer = new TestDiscovererPytest(settings);
-            
-            var testcases = discoverer.ParseDiscoveryResults(null);
+            var discoverer = new PytestTestDiscoverer();
+            var testcases = discoverer.ParseDiscoveryResults(null, projectHome: "dummypath");
             testcases.Any();
         }
 
         [TestMethod]
         public void PytestShouldHandleEmptyListResults() {
-            var settings = CreateMockSettings(projectDir:"dummypath");
-            var discoverer = new TestDiscovererPytest(settings);
-
+            var discoverer = new PytestTestDiscoverer();
             var results = new List<PytestDiscoveryResults>();
-            var testcases = discoverer.ParseDiscoveryResults(results);
+            var testcases = discoverer.ParseDiscoveryResults(results, projectHome: "dummypath");
 
             Assert.IsFalse(testcases.Any());
         }
 
         [TestMethod]
         public void PytestShouldHandleEmptyResults() {
-            var settings = CreateMockSettings(projectDir: "dummypath");
-            var discoverer = new TestDiscovererPytest(settings);
-
+            var discoverer = new PytestTestDiscoverer();
             var results = new List<PytestDiscoveryResults>() { new PytestDiscoveryResults() };
-            var testcases = discoverer.ParseDiscoveryResults(results);
+            var testcases = discoverer.ParseDiscoveryResults(results, projectHome: "dummypath");
 
             Assert.IsFalse(testcases.Any());
         }
 
-
         [TestMethod]
         [ExpectedException(typeof(ArgumentNullException))]
         public void UnnitShouldThrowNullResults() {
-            var settings = CreateMockSettings(projectDir: "dummypath");
-            var discoverer = new TestDiscovererUnitTest(settings);
-
-            var testcases = discoverer.ParseDiscoveryResults(null);
+            var discoverer = new UnittestTestDiscoverer();
+            var testcases = discoverer.ParseDiscoveryResults(null, projectHome: "dummypath");
             testcases.Any();
         }
 
         [TestMethod]
         public void UnittestShouldHandleEmptyListResults() {
-            var settings = CreateMockSettings(projectDir: "dummypath");
-            var discoverer = new TestDiscovererUnitTest(settings);
-
-            var results = new List<UnitTestDiscoveryResults>();
-            var testcases = discoverer.ParseDiscoveryResults(results);
+            var discoverer = new UnittestTestDiscoverer();
+            var results = new List<UnittestDiscoveryResults>();
+            var testcases = discoverer.ParseDiscoveryResults(results, projectHome: "dummypath");
 
             Assert.IsFalse(testcases.Any());
         }
 
         [TestMethod]
         public void UnittestShouldHandleEmptyResults() {
-            var settings = CreateMockSettings(projectDir: "dummypath");
-            var discoverer = new TestDiscovererUnitTest(settings);
-
-            var results = new List<UnitTestDiscoveryResults>() { new UnitTestDiscoveryResults() };
-            var testcases = discoverer.ParseDiscoveryResults(results);
+            var discoverer = new UnittestTestDiscoverer();
+            var results = new List<UnittestDiscoveryResults>() { new UnittestDiscoveryResults() };
+            var testcases = discoverer.ParseDiscoveryResults(results, projectHome: "dummypath");
 
             Assert.IsFalse(testcases.Any());
         }

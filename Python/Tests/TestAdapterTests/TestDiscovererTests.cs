@@ -20,7 +20,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.PythonTools;
-using Microsoft.PythonTools.TestAdapter;
+using Microsoft.PythonTools.TestAdapter.Pytest;
+using Microsoft.PythonTools.TestAdapter.UnitTest;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -296,7 +297,7 @@ namespace TestAdapterTests {
             var discoveryContext = new MockDiscoveryContext(runSettings);
             var discoverySink = new MockTestCaseDiscoverySink();
             var logger = new MockMessageLogger();
-            var discoverer = new UnitTestDiscoverer();
+            var discoverer = new UnittestTestDiscoverer();
 
             discoverer.DiscoverTests(new[] { testFilePath1, testFilePath2 }, discoveryContext, logger, discoverySink);
 
@@ -331,7 +332,7 @@ namespace TestAdapterTests {
             var discoveryContext = new MockDiscoveryContext(runSettings);
             var discoverySink = new MockTestCaseDiscoverySink();
             var logger = new MockMessageLogger();
-            var discoverer = new UnitTestDiscoverer();
+            var discoverer = new UnittestTestDiscoverer();
 
             discoverer.DiscoverTests(new[] { testFilePath1, testFilePath2 }, discoveryContext, logger, discoverySink);
            
@@ -521,7 +522,7 @@ namespace TestAdapterTests {
             var discoveryContext = new MockDiscoveryContext(runSettings);
             var discoverySink = new MockTestCaseDiscoverySink();
             var logger = new MockMessageLogger();
-            var discoverer = new UnitTestDiscoverer();
+            var discoverer = new UnittestTestDiscoverer();
 
             discoverer.DiscoverTests(new[] { testFilePath }, discoveryContext, logger, discoverySink);
             Assert.AreEqual(0, discoverySink.Tests.Count);
@@ -697,7 +698,7 @@ namespace TestAdapterTests {
                     break;
 
                 case FrameworkUnittest:
-                    discoverer = new UnitTestDiscoverer();
+                    discoverer = new UnittestTestDiscoverer();
                     break;
                 default:
                     Assert.Fail($"unknown testframework: {testEnv.TestFramework.ToString()}");

@@ -19,34 +19,10 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.PythonTools.TestAdapter.Config;
 using Microsoft.PythonTools.TestAdapter.Services;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
 namespace Microsoft.PythonTools.TestAdapter {
-
-    /// <summary>
-    /// Note even though we specify  [DefaultExecutorUri(PythonConstants.UnitTestExecutorUriString)] we still get all .py source files
-    /// from all testcontainers.  
-    /// </summary>
-    [FileExtension(".py")]
-    [DefaultExecutorUri(PythonConstants.UnitTestExecutorUriString)]
-    public class UnitTestDiscoverer : PythonTestDiscoverer {
-        public UnitTestDiscoverer() : base(TestFrameworkType.UnitTest) {
-        }
-    }
-
-    /// <summary>
-    /// Note even though we specify  [DefaultExecutorUri(PythonConstants.PytestExecutorUriString)] we still get all .py source files
-    /// from all testcontainers.  
-    /// </summary>
-    [FileExtension(".py")]
-    [DefaultExecutorUri(PythonConstants.PytestExecutorUriString)]
-    public class PytestTestDiscoverer : PythonTestDiscoverer {
-        public PytestTestDiscoverer() : base(TestFrameworkType.Pytest) { 
-        }
-    }
-    
     public abstract class PythonTestDiscoverer : ITestDiscoverer {
         private TestFrameworkType _frameworkType;
 
@@ -57,6 +33,13 @@ namespace Microsoft.PythonTools.TestAdapter {
         protected PythonTestDiscoverer(TestFrameworkType frameworkType) {
             _frameworkType = frameworkType;
         }
+
+        abstract public void DiscoverTests(
+           IEnumerable<string> sources,
+           PythonProjectSettings settings,
+           IMessageLogger logger,
+           ITestCaseDiscoverySink discoverySink
+        );
 
         public void DiscoverTests(
             IEnumerable<string> sources,
@@ -94,8 +77,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
 
             try {
-                var discovery = DiscovererFactory.GetDiscoverer(settings);
-                discovery.DiscoverTests(testGroup, logger, discoverySink);
+                DiscoverTests(testGroup, settings, logger, discoverySink);
             } catch (Exception ex) {
                 logger.SendMessage(TestMessageLevel.Error, ex.Message);
             }
