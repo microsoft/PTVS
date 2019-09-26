@@ -54,15 +54,15 @@ namespace TestAdapterTests {
         [TestMethod]
         [ExpectedException(typeof(ArgumentNullException))]
         public void UnnitShouldThrowNullResults() {
-            var discoverer = new UnitTestTestDiscoverer();
+            var discoverer = new UnittestTestDiscoverer();
             var testcases = discoverer.ParseDiscoveryResults(null, projectHome: "dummypath");
             testcases.Any();
         }
 
         [TestMethod]
         public void UnittestShouldHandleEmptyListResults() {
-            var discoverer = new UnitTestTestDiscoverer();
-            var results = new List<UnitTestDiscoveryResults>();
+            var discoverer = new UnittestTestDiscoverer();
+            var results = new List<UnittestDiscoveryResults>();
             var testcases = discoverer.ParseDiscoveryResults(results, projectHome: "dummypath");
 
             Assert.IsFalse(testcases.Any());
@@ -70,8 +70,8 @@ namespace TestAdapterTests {
 
         [TestMethod]
         public void UnittestShouldHandleEmptyResults() {
-            var discoverer = new UnitTestTestDiscoverer();
-            var results = new List<UnitTestDiscoveryResults>() { new UnitTestDiscoveryResults() };
+            var discoverer = new UnittestTestDiscoverer();
+            var results = new List<UnittestDiscoveryResults>() { new UnittestDiscoveryResults() };
             var testcases = discoverer.ParseDiscoveryResults(results, projectHome: "dummypath");
 
             Assert.IsFalse(testcases.Any());

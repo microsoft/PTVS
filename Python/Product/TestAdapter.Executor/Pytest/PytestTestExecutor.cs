@@ -37,7 +37,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 
     [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable",
         Justification = "object owned by VS")]
-    public class TestExecutorPytest : ITestExecutor {
+    public class PytestTestExecutor : ITestExecutor {
         private static readonly Guid PythonRemoteDebugPortSupplierUnsecuredId = new Guid("{FEB76325-D127-4E02-B59D-B16D93D46CF5}");
         private static readonly Guid PythonDebugEngineGuid = new Guid("EC1375B7-E2CE-43E8-BF75-DC638DE1F1F9");
         private static readonly Guid NativeDebugEngineGuid = new Guid("3B476D35-A401-11D2-AAD4-00C04F990171");
@@ -45,7 +45,7 @@ namespace Microsoft.PythonTools.TestAdapter {
         private readonly ManualResetEvent _cancelRequested = new ManualResetEvent(false);
         private readonly VisualStudioProxy _app;
 
-        public TestExecutorPytest() {
+        public PytestTestExecutor() {
             _app = VisualStudioProxy.FromEnvironmentVariable(PythonConstants.PythonToolsProcessIdEnvironmentVariable);
         }
 

@@ -297,7 +297,7 @@ namespace TestAdapterTests {
             var discoveryContext = new MockDiscoveryContext(runSettings);
             var discoverySink = new MockTestCaseDiscoverySink();
             var logger = new MockMessageLogger();
-            var discoverer = new UnitTestTestDiscoverer();
+            var discoverer = new UnittestTestDiscoverer();
 
             discoverer.DiscoverTests(new[] { testFilePath1, testFilePath2 }, discoveryContext, logger, discoverySink);
 
@@ -332,7 +332,7 @@ namespace TestAdapterTests {
             var discoveryContext = new MockDiscoveryContext(runSettings);
             var discoverySink = new MockTestCaseDiscoverySink();
             var logger = new MockMessageLogger();
-            var discoverer = new UnitTestTestDiscoverer();
+            var discoverer = new UnittestTestDiscoverer();
 
             discoverer.DiscoverTests(new[] { testFilePath1, testFilePath2 }, discoveryContext, logger, discoverySink);
            
@@ -522,7 +522,7 @@ namespace TestAdapterTests {
             var discoveryContext = new MockDiscoveryContext(runSettings);
             var discoverySink = new MockTestCaseDiscoverySink();
             var logger = new MockMessageLogger();
-            var discoverer = new UnitTestTestDiscoverer();
+            var discoverer = new UnittestTestDiscoverer();
 
             discoverer.DiscoverTests(new[] { testFilePath }, discoveryContext, logger, discoverySink);
             Assert.AreEqual(0, discoverySink.Tests.Count);
@@ -698,7 +698,7 @@ namespace TestAdapterTests {
                     break;
 
                 case FrameworkUnittest:
-                    discoverer = new UnitTestTestDiscoverer();
+                    discoverer = new UnittestTestDiscoverer();
                     break;
                 default:
                     Assert.Fail($"unknown testframework: {testEnv.TestFramework.ToString()}");

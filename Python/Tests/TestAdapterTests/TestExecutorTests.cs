@@ -223,7 +223,7 @@ if __name__ == '__main__':
             var testCases = discoverySink.Tests;
             var runContext = new MockRunContext(runSettings, testCases, testEnv.ResultsFolderPath);
             var recorder = new MockTestExecutionRecorder();
-            var executor = new TestExecutorPytest();
+            var executor = new PytestTestExecutor();
             executor.RunTests(testCases, runContext, recorder);
 
             PrintTestResults(recorder);
@@ -265,7 +265,7 @@ if __name__ == '__main__':
             var testCases = discoverySink.Tests;
             var runContext = new MockRunContext(runSettings, testCases, testEnv.ResultsFolderPath);
             var recorder = new MockTestExecutionRecorder();
-            var executor = new TestExecutorPytest();
+            var executor = new PytestTestExecutor();
             executor.RunTests(testCases, runContext, recorder);
 
             PrintTestResults(recorder);
@@ -314,7 +314,7 @@ if __name__ == '__main__':
             var testCases = discoverySink.Tests;
             var runContext = new MockRunContext(runSettings, testCases, testEnv.ResultsFolderPath);
             var recorder = new MockTestExecutionRecorder();
-            var executor = new TestExecutorPytest();
+            var executor = new PytestTestExecutor();
             executor.RunTests(testCases, runContext, recorder);
 
             //Check for Error Message
@@ -440,7 +440,7 @@ if __name__ == '__main__':
         [TestCategory("10s")]
         public void RunUnittestCancel() {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
-            var executor = new TestExecutorUnitTest();
+            var executor = new UnittestTestExecutor();
             TestCancel(testEnv, executor);
         }
 
@@ -448,7 +448,7 @@ if __name__ == '__main__':
         [TestCategory("10s")]
         public void RunPytestCancel() {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
-            var executor = new TestExecutorPytest();
+            var executor = new PytestTestExecutor();
             TestCancel(testEnv, executor);
         }
 
@@ -992,7 +992,7 @@ if __name__ == '__main__':
             var testCases = new List<TestCase>() { new TestCase("fakeTest", pt.Microsoft.PythonTools.PythonConstants.PytestExecutorUri, differentDummyFilePath) { CodeFilePath = differentDummyFilePath } };
             var runContext = new MockRunContext(runSettings, testCases, "");
             var recorder = new MockTestExecutionRecorder();
-            var executor = new TestExecutorPytest();
+            var executor = new PytestTestExecutor();
 
             //should not throw
             executor.RunTests(testCases, runContext, recorder);
@@ -1011,7 +1011,7 @@ if __name__ == '__main__':
             var testCases = new List<TestCase>() { new TestCase("fakeTest", pt.Microsoft.PythonTools.PythonConstants.PytestExecutorUri, differentDummyFilePath) { CodeFilePath = null } };
             var runContext = new MockRunContext(runSettings, testCases, "");
             var recorder = new MockTestExecutionRecorder();
-            var executor = new TestExecutorPytest();
+            var executor = new PytestTestExecutor();
 
             //should not throw
             executor.RunTests(testCases, runContext, recorder);
@@ -1025,11 +1025,11 @@ if __name__ == '__main__':
             ITestExecutor executor = null;
             switch (testEnv.TestFramework) {
                 case FrameworkPytest:
-                    executor = new TestExecutorPytest();
+                    executor = new PytestTestExecutor();
                     break;
 
                 case FrameworkUnittest:
-                    executor = new TestExecutorUnitTest();
+                    executor = new UnittestTestExecutor();
                     break;
                 default:
                     Assert.Fail();

@@ -49,11 +49,11 @@ namespace Microsoft.PythonTools.TestAdapter.UnitTest {
     /// </summary>
     [FileExtension(".py")]
     [DefaultExecutorUri(PythonConstants.UnitTestExecutorUriString)]
-    public class UnitTestTestDiscoverer : PythonTestDiscoverer {
+    public class UnittestTestDiscoverer : PythonTestDiscoverer {
         private IMessageLogger _logger;
         private static readonly string DiscoveryAdapterPath = PythonToolsInstallPath.GetFile("PythonFiles\\testing_tools\\run_adapter.py");
 
-        public UnitTestTestDiscoverer() : base(TestFrameworkType.UnitTest) {
+        public UnittestTestDiscoverer() : base(TestFrameworkType.UnitTest) {
         }
 
         public override void DiscoverTests(
@@ -111,7 +111,7 @@ namespace Microsoft.PythonTools.TestAdapter.UnitTest {
             }
 
             try {
-                var results = JsonConvert.DeserializeObject<List<UnitTestDiscoveryResults>>(json);
+                var results = JsonConvert.DeserializeObject<List<UnittestDiscoveryResults>>(json);
                 var testcases = ParseDiscoveryResults(results, settings.ProjectHome);
 
                 foreach (var tc in testcases) {
@@ -129,7 +129,7 @@ namespace Microsoft.PythonTools.TestAdapter.UnitTest {
             }
         }
 
-        internal IEnumerable<TestCase> ParseDiscoveryResults(IList<UnitTestDiscoveryResults> results, string projectHome) {
+        internal IEnumerable<TestCase> ParseDiscoveryResults(IList<UnittestDiscoveryResults> results, string projectHome) {
             if (results is null) {
                 throw new ArgumentNullException(nameof(results));
             }
@@ -140,7 +140,7 @@ namespace Microsoft.PythonTools.TestAdapter.UnitTest {
                 .Where(tc => tc != null);
         }
 
-        private TestCase TryCreateVsTestCase(UnitTestTestCase test, string projectHome) {
+        private TestCase TryCreateVsTestCase(UnittestTestCase test, string projectHome) {
             try {
                 // Note: Test Explorer will show a key not found exception if we use a source path that doesn't match a test container's source.
                 TestCase tc = test.ToVsTestCase(projectHome);
