@@ -123,7 +123,7 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
             // so test explorer doesn't use .py as the classname
             if (parts.Length == 2) {
                 var className = Path.GetFileNameWithoutExtension(parts[0]);
-                return $"{parts[0]}::{className}::{parts[1]}";
+                fullyQualifiedName = $"{parts[0]}::{className}::{parts[1]}";
             }
             return FixupParameterSets(fullyQualifiedName);
         }

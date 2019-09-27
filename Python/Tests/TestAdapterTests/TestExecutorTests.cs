@@ -227,7 +227,12 @@ if __name__ == '__main__':
             executor.RunTests(testCases, runContext, recorder);
 
             PrintTestResults(recorder);
-            
+
+            // Check FQN parameter set doesn't contain "."
+            Assert.IsFalse(recorder.Results
+                .Select(tr => tr.TestCase.FullyQualifiedName)
+                .Where(fqn => fqn.IndexOf('[') != -1)
+                .Any(fqn => fqn.Substring(fqn.IndexOf('[')).Contains(".")));
             Assert.IsFalse(recorder.Results.Any(tr => tr.TestCase.DisplayName.Contains(".")));
             Assert.IsFalse(recorder.Results.Any(tr => tr.Outcome != TestOutcome.Passed));
         }
