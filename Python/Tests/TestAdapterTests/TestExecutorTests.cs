@@ -218,7 +218,7 @@ if __name__ == '__main__':
             }
 
             Assert.IsTrue(discoverySink.Tests.Any());
-            Assert.AreEqual(discoverySink.Tests.Count(), 21);
+            Assert.AreEqual(23, discoverySink.Tests.Count());
 
             var testCases = discoverySink.Tests;
             var runContext = new MockRunContext(runSettings, testCases, testEnv.ResultsFolderPath);
@@ -227,7 +227,8 @@ if __name__ == '__main__':
             executor.RunTests(testCases, runContext, recorder);
 
             PrintTestResults(recorder);
-
+            
+            Assert.IsFalse(recorder.Results.Any(tr => tr.TestCase.DisplayName.Contains(".")));
             Assert.IsFalse(recorder.Results.Any(tr => tr.Outcome != TestOutcome.Passed));
         }
 
