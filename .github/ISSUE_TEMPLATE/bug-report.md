@@ -18,12 +18,6 @@ assignees: ''
 **Expected behavior**
 [A clear and concise description of your expectation]
 
-
-**Logs**
-```
-XXX
-```
-
 **Additional context and screenshots**
 [Add any other information such as screenshots, error message, or stack trace]
 
