@@ -64,13 +64,13 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
             var pytestId = CreateProperCasedPytestId(sourceFullPath, projectHome, test.Id);
             var fullyQualifiedName = CreateFullyQualifiedTestNameFromId(sourceFullPath, pytestId);
             var tc = new TestCase(fullyQualifiedName, PythonConstants.PytestExecutorUri, sourceFullPath) {
-                DisplayName = test.Name,
+                DisplayName = FixupParameterSets(test.Name),
                 LineNumber = line,
                 CodeFilePath = sourceFullPath
             };
 
             tc.SetPropertyValue(Constants.PytestIdProperty, pytestId);
-          
+
             foreach (var marker in test.Markers.MaybeEnumerate()) {
                 tc.Traits.Add(new Trait(marker.ToString(), String.Empty));
             }
@@ -91,7 +91,6 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
             idParts[0] = ".\\" + PathUtils.CreateFriendlyFilePath(projectHome, source);
             return String.Join("::", idParts);
         }
-
 
         /// <summary>
         /// Creates a classname that matches the junit testresult generated one so that we can match testresults with testcases
@@ -124,9 +123,28 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
             // so test explorer doesn't use .py as the classname
             if (parts.Length == 2) {
                 var className = Path.GetFileNameWithoutExtension(parts[0]);
-                return $"{parts[0]}::{className}::{parts[1]}";
+                fullyQualifiedName = $"{parts[0]}::{className}::{parts[1]}";
             }
-            return fullyQualifiedName;
+            return FixupParameterSets(fullyQualifiedName);
+        }
+
+        /// <summary>
+        /// Replaces any period  after '[' with '_'
+        /// We override pytest's id generator to replace any string containing "." to replace it with "_"
+        /// but non string values like floats can still contain "." in the parameter list.
+        /// Test Explorer's parsing code will create extra child nodes if it finds a ".", which we dont want
+        /// </summary>
+        /// <param name="funcName"></param>
+        /// <returns></returns>
+        internal static string FixupParameterSets(string funcName) {
+            if (!String.IsNullOrEmpty(funcName)) {
+                int paramStart = funcName.IndexOf('[');
+                if (paramStart != -1) {
+                    var paramStr = funcName.Substring(paramStart);
+                    return funcName.Replace(paramStr, paramStr.Replace(".", "_"));
+                }
+            }
+            return funcName;
         }
 
         /// <summary>
