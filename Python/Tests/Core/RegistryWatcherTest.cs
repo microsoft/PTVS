@@ -20,6 +20,7 @@ using System.Threading;
 using Microsoft.PythonTools;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Win32;
+using TestUtilities;
 
 namespace PythonToolsTests {
     [TestClass]

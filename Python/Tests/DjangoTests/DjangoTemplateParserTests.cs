@@ -26,6 +26,8 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
 using Microsoft.PythonTools.Django.TemplateParsing.DjangoBlocks;
 using Microsoft.PythonTools.Django.TemplateParsing;
+using TestUtilities;
+using Classification = Microsoft.PythonTools.Django.TemplateParsing.Classification;
 
 namespace DjangoTests {
     [TestClass]

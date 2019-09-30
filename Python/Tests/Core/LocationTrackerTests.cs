@@ -25,6 +25,7 @@ using Microsoft.VisualStudio.Text;
 using TestUtilities.Mocks;
 using Microsoft.PythonTools;
 using pythontools::Microsoft.PythonTools.Editor;
+using TestUtilities;
 
 namespace PythonToolsTests {
     [TestClass]
