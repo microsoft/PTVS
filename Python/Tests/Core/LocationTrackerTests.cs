@@ -113,7 +113,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
         public void GetLineLocationsTest() {
             var t = new LocationTracker(TestSnapshots[0]);
 
@@ -136,7 +136,7 @@ namespace PythonToolsTests {
             AssertLines(lines, 10, 17, 1, 10, 15, 0);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
         public void UpdateTrackerSnapshot() {
             var snapshots = TestSnapshots;
 
@@ -165,7 +165,7 @@ namespace PythonToolsTests {
             Assert.IsFalse(t.CanTranslateFrom(6));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
         public void BufferSync_Issue3570() {
             // https://github.com/Microsoft/PTVS/issues/3570
 
@@ -198,7 +198,7 @@ namespace PythonToolsTests {
             Assert.AreEqual("[(1,5,'\r\n')], [(2,1,'    c')], [(2,6,'o')]", changeInfo);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
         public void BufferSync_Issue3733() {
             // https://github.com/Microsoft/PTVS/issues/3733
 
@@ -251,7 +251,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.CORE_UNIT_TEST)]
         public void TranslateLocations() {
             var t = new LocationTracker(TestSnapshots[0]);
 

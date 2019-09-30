@@ -21,7 +21,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace TestAdapterTests {
     [TestClass]
     public class ExecutorServiceTests {
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.CORE_UNIT_TEST)]
         public void TestBestFile() {
             var file1 = "C:\\Some\\Path\\file1.py";
             var file2 = "C:\\Some\\Path\\file2.py";

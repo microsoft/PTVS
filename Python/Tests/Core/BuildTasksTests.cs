@@ -46,7 +46,7 @@ namespace PythonToolsTests {
             AssertListener.Initialize();
         }
 
-        //[TestMethod, Priority(3)]
+        //[TestMethod, Priority(TestExtensions.P3_UNIT_TEST)]
         public void TestResolveProjectHome() {
             var proj = ProjectRootElement.Create();
             var g = proj.AddPropertyGroup();
@@ -87,7 +87,7 @@ namespace PythonToolsTests {
             }
         }
 
-        //[TestMethod, Priority(3)]
+        //[TestMethod, Priority(TestExtensions.P3_UNIT_TEST)]
         [TestCategory("10s"), TestCategory("Installed")]
         public void TestResolveEnvironment() {
             var proj1 = new Project(TestData.GetPath(@"TestData\Targets\Environments1.pyproj"));
@@ -97,7 +97,7 @@ namespace PythonToolsTests {
             Assert.IsTrue(proj2.Build("TestResolveEnvironment", new ILogger[] { new ConsoleLogger(LoggerVerbosity.Detailed) }));
         }
 
-        //[TestMethod, Priority(3)]
+        //[TestMethod, Priority(TestExtensions.P3_UNIT_TEST)]
         [TestCategory("10s"), TestCategory("Installed")]
         public void TestResolveEnvironmentReference() {
             var proj = new Project(TestData.GetPath(@"TestData\Targets\EnvironmentReferences1.pyproj"));
@@ -110,7 +110,7 @@ namespace PythonToolsTests {
             Assert.IsTrue(proj.Build("TestCommands", new ILogger[] { new ConsoleLogger(LoggerVerbosity.Detailed) }));
         }
 
-        //[TestMethod, Priority(3)]
+        //[TestMethod, Priority(TestExtensions.P3_UNIT_TEST)]
         [TestCategory("10s"), TestCategory("60s")]
         public void TestRunPythonCommand() {
             var expectedSearchPath = string.Format("['{0}', '{1}']",

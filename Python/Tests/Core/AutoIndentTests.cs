@@ -33,7 +33,7 @@ namespace PythonToolsTests {
             AssertListener.Initialize();
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.CORE_UNIT_TEST)]
         public void GetIndentation() {
             Assert.AreEqual(0, AutoIndent.GetIndentation("", 4));
             Assert.AreEqual(0, AutoIndent.GetIndentation("p", 4));
@@ -47,7 +47,7 @@ namespace PythonToolsTests {
             Assert.AreEqual(6, AutoIndent.GetIndentation(" \t p", 4));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
         public void GetLineIndentation() {
             AssertIndent("pass\n", 2, 0);
             AssertIndent("def f():\n", 2, 4);

@@ -52,7 +52,7 @@ namespace TestAdapterTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.CORE_UNIT_TEST)]
         [TestCategory("10s")]
         public void RunUnittest() {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
@@ -96,7 +96,7 @@ namespace TestAdapterTests {
             ExecuteTests(testEnv, runSettings, expectedTests);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
         [TestCategory("10s")]
         public void RunUnittestLargeTestCount() {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
@@ -142,7 +142,7 @@ if __name__ == '__main__':
             ExecuteTests(testEnv, runSettings, expectedTests.ToArray());
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.CORE_UNIT_TEST)]
         [TestCategory("10s")]
         public void RunPytest() {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
@@ -189,7 +189,7 @@ if __name__ == '__main__':
         }
 
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
         [TestCategory("10s")]
         public void RunPytestParameterizedAndDiscovery() {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
@@ -229,7 +229,7 @@ if __name__ == '__main__':
             Assert.IsFalse(recorder.Results.Any(tr => tr.Outcome != TestOutcome.Passed));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
         [TestCategory("10s")]
         public void RunPytestSubmoduleWithIniAndDiscovery() {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
@@ -273,7 +273,7 @@ if __name__ == '__main__':
             Assert.AreEqual(TestOutcome.Passed, recorder.Results.First().Outcome);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
         [TestCategory("10s")]
         public void RunPytestMissingPytestIdShowsErrorAndReturnsPartialResults() {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
@@ -330,7 +330,7 @@ if __name__ == '__main__':
             Assert.AreEqual(TestOutcome.Skipped, recorder.Results.Single(r => r.TestCase.DisplayName == discoverySink.Tests[1].DisplayName).Outcome);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
         [TestCategory("10s")]
         public void RunPytestUppercaseFileName() {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
@@ -358,7 +358,7 @@ if __name__ == '__main__':
             ExecuteTests(testEnv, runSettings, expectedTests);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
         [TestCategory("10s")]
         public void RunPytestSubpackages() {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
@@ -397,7 +397,7 @@ if __name__ == '__main__':
             ExecuteTests(testEnv, runSettings, expectedTests);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
         [TestCategory("10s")]
         public void RunPytestLargeTestCount() {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
@@ -434,7 +434,7 @@ if __name__ == '__main__':
             ExecuteTests(testEnv, runSettings, expectedTests.ToArray());
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
         [TestCategory("10s")]
         public void RunUnittestCancel() {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
@@ -442,7 +442,7 @@ if __name__ == '__main__':
             TestCancel(testEnv, executor);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
         [TestCategory("10s")]
         public void RunPytestCancel() {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
@@ -534,7 +534,7 @@ if __name__ == '__main__':
         }
 
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
         [TestCategory("10s")]
         public void RunUnittestRelativeImport() {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
@@ -562,7 +562,7 @@ if __name__ == '__main__':
             ExecuteTests(testEnv, runSettings, expectedTests);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
         [TestCategory("10s")]
         public void RunUnittestInheritance() {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
@@ -629,7 +629,7 @@ if __name__ == '__main__':
             ExecuteTests(testEnv, runSettings, expectedTests);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
         [TestCategory("10s")]
         public void RunUnittestImportError() {
             // A load error is when unittest module fails to load the test (prior to running it)
@@ -669,7 +669,7 @@ if __name__ == '__main__':
             ExecuteTests(testEnv, runSettings, expectedTests);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
         [TestCategory("10s")]
         public void RunUnittestCoverage() {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest, installCoverage: true);
@@ -716,7 +716,7 @@ if __name__ == '__main__':
             ExecuteTests(testEnv, runSettings, expectedTests, expectedCoverages);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
         [TestCategory("10s")]
         public void RunPytestCoverage() {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest, installCoverage: true);
@@ -774,7 +774,7 @@ if __name__ == '__main__':
             ExecuteTests(testEnv, runSettings, expectedTests, expectedCoverages);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
         [TestCategory("10s")]
         public void RunUnitTestStackTrace() {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
@@ -819,7 +819,7 @@ if __name__ == '__main__':
             ExecuteTests(testEnv, runSettings, expectedTests);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
         [TestCategory("10s")]
         public void RunPytestEnvironmentVariable() {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
@@ -848,7 +848,7 @@ if __name__ == '__main__':
             ExecuteTests(testEnv, runSettings, expectedTests);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
         [TestCategory("10s")]
         public void RunPytestDuration() {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
@@ -895,7 +895,7 @@ if __name__ == '__main__':
             ExecuteTests(testEnv, runSettings, expectedTests);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
         [TestCategory("10s")]
         public void RunUnittestDuration() {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
@@ -939,7 +939,7 @@ if __name__ == '__main__':
             ExecuteTests(testEnv, runSettings, expectedTests);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.CORE_UNIT_TEST)]
         [TestCategory("10s")]
         public void RunPytestSetupAndTeardown() {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
@@ -977,7 +977,7 @@ if __name__ == '__main__':
             ExecuteTests(testEnv, runSettings, expectedTests);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
         [TestCategory("10s")]
         public void RunPytestCodeFilePathNotFound() {
             var runSettings = new MockRunSettings(
@@ -996,7 +996,7 @@ if __name__ == '__main__':
             executor.RunTests(testCases, runContext, recorder);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
         [TestCategory("10s")]
         public void RunPytestNullCodeFilePath() {
             var runSettings = new MockRunSettings(

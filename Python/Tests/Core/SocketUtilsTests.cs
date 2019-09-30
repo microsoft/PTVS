@@ -21,7 +21,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace PythonToolsTests {
     [TestClass]
     public class SocketUtilsTests {
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.CORE_UNIT_TEST]
         public void GetRandomPortListener() {
             var listener = SocketUtils.GetRandomPortListener(IPAddress.Loopback, out int port);
             try {

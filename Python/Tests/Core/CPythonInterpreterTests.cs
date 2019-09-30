@@ -32,7 +32,7 @@ namespace PythonToolsTests {
             AssertListener.Initialize();
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.CORE_UNIT_TEST)]
         public void FactoryProvider() {
             var provider = new CPythonInterpreterFactoryProvider(null, false);
             var factories = provider.GetInterpreterFactories().ToArray();
@@ -65,7 +65,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
         public void DiscoverRegistryRace() {
             // https://github.com/Microsoft/PTVS/issues/558
 
@@ -92,7 +92,7 @@ namespace PythonToolsTests {
             AssertUtil.CheckCollection(analyzer.GetAllNames(), new[] { "package_method", "package_method_two" }, new[] { "test_package" });
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(TestExtensions.P2_UNIT_TEST)]
         public void ImportPydFromSearchPath() {
             var analyzer = new PythonAnalysis("Global|PythonCore|2.7-32");
 

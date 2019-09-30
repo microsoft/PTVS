@@ -126,7 +126,7 @@ namespace FactoryProviderSuccess {
             Assert.AreEqual(0, log.AllItems.Count);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
         public void ProviderLoadLog_FileNotFound() {
             var catalogLog = new MockLogger();
 
@@ -306,7 +306,7 @@ namespace FactoryProviderTypeLoadException {
             Assert.AreEqual(1, log.AllItems.Count);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.CORE_UNIT_TEST)]
         public void InvalidInterpreterVersion() {
             try {
                 var lv = new Version(1, 0).ToLanguageVersion();

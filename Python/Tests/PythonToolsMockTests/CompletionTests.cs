@@ -55,7 +55,7 @@ namespace PythonToolsMockTests {
             MockPythonToolsPackage.SuppressTaskProvider = false;
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
         public void GetApplicableSpanCompleteWordTest() {
             var text = "if fob.oar(eggs, spam<=ham) :";
 
@@ -88,7 +88,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
         public void GetApplicableSpanAutoTest() {
             using (var view = new PythonEditor("x = id")) {
                 var snapshot = view.CurrentSnapshot;
@@ -98,7 +98,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
         public void CtrlSpaceCompletions() {
             using (var view = new PythonEditor()) {
                 view.Text = @"def f(param1, param2):
@@ -131,7 +131,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
         public void KeywordCompletions() {
             var code = "def f():\r\n     \r\n    x = abc, oar, \r\n    pass\r\n#2\r\n";
             using (var view = new PythonEditor(code, version: PythonLanguageVersion.V35)) {
@@ -191,7 +191,7 @@ yield_expression = 42
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
         public void LambdaCompletions() {
             // https://github.com/Microsoft/PTVS/issues/1000
             string code = @"
@@ -229,7 +229,7 @@ l(42)
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
         public void CtrlSpaceAfterKeyword() {
             // http://pytools.codeplex.com/workitem/560
             string code = @"
@@ -246,7 +246,7 @@ print
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
         public void CtrlSpaceAfterNumber() {
             // http://pytools.codeplex.com/workitem/2323
             string code = @"
@@ -314,7 +314,7 @@ except (sys."}) {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
         public async Task MemberCompletions() {
             using (var view = new PythonEditor("x = 2\r\nx.")) {
                 // See tests in ExpressionFinder
@@ -362,7 +362,7 @@ except (sys."}) {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
         public void SignatureHelp() {
             var prefixes = new[] { "", "(", "a = ", "f(", "l[", "{", "if " };
             var sigs = new[] { 
@@ -425,7 +425,7 @@ except (sys."}) {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
         public void SignatureHelpStarArgs() {
             SignatureAnalysis sigResult = null;
             using (var view = new PythonEditor(@"def f(a, *b, c=None): pass
@@ -599,7 +599,7 @@ f(1, 2, 3, 4,")) {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
         public void FromImportMultilineCompletions() {
             using (var editor = new PythonEditor()) {
                 editor.Text = "from sys import (";
@@ -620,7 +620,7 @@ f(1, 2, 3, 4,")) {
             }
         }
         
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
         [TestCategory("10s")]
         public void CompletionInTripleQuotedString() {
             string code = @"
@@ -818,7 +818,7 @@ class Baz(Fob, Oar):
             AssertOverrideInsertionContains(PythonLanguageVersion.V33, "str", "index", "index(self", "):\r\n        return super().index(");
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
         public void OverridesWithMismatchedAnalysis() {
             // Here we create a buffer and analyze. We then add some newlines
             // and a def, expecting completions from A (int). Because the def
@@ -851,7 +851,7 @@ class B(dict):
             }
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(TestExtensions.P2_UNIT_TEST)]
         public void HideAdvancedMembers() {
             using (var view = new PythonEditor()) {
                 // No text - expect all non-advanced members
@@ -958,7 +958,7 @@ def func(a):
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
         public void ClassCompletionOutsideFunction() {
             // Note that "eggs_and_spam" is longer than the indentation of each
             // scope.
@@ -991,7 +991,7 @@ class Spam(object):
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
         public void ArgumentNameCompletion() {
             const string code = @"
 def f(param1 = 123, param2 : int = 234):
@@ -1006,7 +1006,7 @@ x = f(";
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
         public void MethodArgumentNameCompletion() {
             const string code = @"
 class MyClass:

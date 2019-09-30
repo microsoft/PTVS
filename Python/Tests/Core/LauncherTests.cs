@@ -24,7 +24,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace PythonToolsTests {
     [TestClass]
     public class LauncherTests {
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.CORE_UNIT_TEST)]
         public void LaunchWebBrowserUriTests() {
             var testCases = new[] {
                 new { Url = "/fob", Port = 1, Expected = "http://localhost:1/fob" },

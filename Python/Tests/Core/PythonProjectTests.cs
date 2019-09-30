@@ -40,7 +40,7 @@ namespace PythonToolsTests {
 
         public TestContext TestContext { get; set; }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
         public void UpdateWorkerRoleServiceDefinitionTest() {
             var doc = new XmlDocument();
             doc.LoadXml(@"<?xml version=""1.0"" encoding=""utf-8""?>
@@ -78,7 +78,7 @@ namespace PythonToolsTests {
 </ServiceDefinition>", doc);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.CORE_UNIT_TEST)]
         public void UpdateWebRoleServiceDefinitionTest() {
             var doc = new XmlDocument();
             doc.LoadXml(@"<?xml version=""1.0"" encoding=""utf-8""?>

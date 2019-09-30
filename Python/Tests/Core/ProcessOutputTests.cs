@@ -34,7 +34,7 @@ namespace PythonToolsTests {
         [TestCleanup]
         public void TestCleanup() => TestEnvironmentImpl.TestCleanup();
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
         public void ArgumentQuoting() {
             foreach (var testCase in new[] {
                 new { Source = "Abc", Expected = "Abc" },
@@ -54,7 +54,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
         public void SplitLines() {
             foreach (var testCase in new[] {
                 new { Source = "A\nB\nC\n", Expected = new[] { "A", "B", "C" } },
@@ -91,7 +91,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.CORE_UNIT_TEST)]
         public void RunInterpreterOutput() {
             foreach (var fact in Factories) {
                 using (var output = ProcessOutput.RunHiddenAndCapture(fact.Configuration.InterpreterPath, "-c", "import sys; print(sys.version)")) {
@@ -113,7 +113,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
         [TestCategory("10s")]
         public void RunInterpreterError() {
             foreach(var fact in Factories) {
@@ -134,7 +134,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
         public void ProcessOutputEncoding() {
             var testDataPath = TestData.GetTempPath();
             var testData = Path.Combine(testDataPath, "ProcessOutputEncoding.txt");
@@ -166,7 +166,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
         public void RunElevatedProcess() {
             var fact = Factories.First();
             var output = new List<string>();

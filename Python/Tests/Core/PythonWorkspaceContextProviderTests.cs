@@ -28,7 +28,7 @@ namespace PythonToolsTests {
             AssertListener.Initialize();
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
         public void AlreadyOpenedWorkspace() {
             var workspaceFolder = WorkspaceTestHelper.CreateWorkspaceFolder();
             var workspace = WorkspaceTestHelper.CreateMockWorkspace(workspaceFolder, WorkspaceTestHelper.PythonNoId);
@@ -45,7 +45,7 @@ namespace PythonToolsTests {
             Assert.AreEqual(WorkspaceTestHelper.DefaultFactory, provider.Workspace.CurrentFactory);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.CORE_UNIT_TEST)]
         public void LoadWorkspace() {
             var workspaceFolder = WorkspaceTestHelper.CreateWorkspaceFolder();
             var workspace = WorkspaceTestHelper.CreateMockWorkspace(workspaceFolder, WorkspaceTestHelper.PythonNoId);
@@ -81,7 +81,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.CORE_UNIT_TEST)]
         public void CloseWorkspace() {
             var workspaceFolder = WorkspaceTestHelper.CreateWorkspaceFolder();
             var workspace = WorkspaceTestHelper.CreateMockWorkspace(workspaceFolder, WorkspaceTestHelper.PythonNoId);
@@ -117,7 +117,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
         public void SwitchWorkspace() {
             var workspaceFolder1 = WorkspaceTestHelper.CreateWorkspaceFolder();
             var workspaceFolder2 = WorkspaceTestHelper.CreateWorkspaceFolder();
