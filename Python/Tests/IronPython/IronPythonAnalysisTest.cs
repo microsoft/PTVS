@@ -776,7 +776,7 @@ x = f(42)";
             AssertUtil.Contains(entry.GetTypeIds("x"), BuiltinTypeId.Int);
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(TestExtensions.CORE_UNIT_TEST)]
         public void CartesianSimple() {
             var code = @"def f(a):
     return a
@@ -916,7 +916,7 @@ s = x['oar']
             entry.AssertIsInstance("s", BuiltinTypeId.Str);
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(TestExtensions.CORE_UNIT_TEST)]
         public void RecursiveLists() {
             var code = @"x = []
 x.append(x)
@@ -1150,7 +1150,7 @@ class D(object):
             );
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(TestExtensions.CORE_UNIT_TEST)]
         public void MutatingCalls() {
             var text1 = @"
 def f(abc):
@@ -2007,7 +2007,7 @@ class BufferedIOBase(object): pass
             Assert.AreEqual("BufferedIOBase", entry.GetValue<IInstanceInfo>("expect_BufferedIOBase")?.ClassInfo?.Name);
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(TestExtensions.CORE_UNIT_TEST)]
         public void ListAppend() {
             var entry = ProcessText(@"
 x = []
@@ -3301,7 +3301,7 @@ f = fn()");
             );
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(TestExtensions.CORE_UNIT_TEST)]
         public void ImportAsReferences() {
             var state = CreateAnalyzer();
             var fobMod = state.AddModule("fob", @"
@@ -3596,7 +3596,7 @@ for abc in x:
             entry.AssertIsInstance("abc", code.IndexOf("print(abc)"), BuiltinTypeId.Int);
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(TestExtensions.CORE_UNIT_TEST)]
         public void SetOperators() {
             var entry = ProcessText(@"
 x = {1, 2, 3}
@@ -4713,7 +4713,7 @@ x = 42
             });
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(TestExtensions.CORE_UNIT_TEST)]
         public void CrossModuleCall() {
             var text1 = @"
 import mod2
@@ -4830,7 +4830,7 @@ a = x().SomeProp
             entry.AssertIsInstance("a", BuiltinTypeId.Int);
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(TestExtensions.CORE_UNIT_TEST)]
         public void StaticMethod() {
             var text = @"
 class x(object):
@@ -4893,7 +4893,7 @@ class x(object):
             entry.AssertDescription("cls", text.IndexOf("return"), "x");
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(TestExtensions.CORE_UNIT_TEST)]
         public void InheritedClassMethod() {
             var text = @"
 class x(object):
@@ -5198,7 +5198,7 @@ abc = 42
         }
 
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(TestExtensions.CORE_UNIT_TEST)]
         public void Defaults() {
             var text = @"
 def f(x = 42):
@@ -5210,7 +5210,7 @@ a = f()
             entry.AssertIsInstance("a", BuiltinTypeId.Int);
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(TestExtensions.CORE_UNIT_TEST)]
         public void Decorator() {
             var text1 = @"
 import mod2
@@ -5553,7 +5553,7 @@ mc2 = MyBaseClass2()
             AssertUtil.ContainsAtLeast(entry.GetMemberNames("mc2", 0, GetMemberOptions.None), /*"base_method",*/ "sub_method");
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(TestExtensions.CORE_UNIT_TEST)]
         public void ClassInit() {
             var text = @"
 class X:

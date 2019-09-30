@@ -34,7 +34,7 @@ namespace DjangoTests {
     public class DjangoTemplateParserTests {
 #region Filter parser tests
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(TestExtensions.CORE_UNIT_TEST)]
         public void FilterRegexTests() {
             var testCases = new[] { 
                 new { Got = ("100"), Expected = DjangoVariable.Number("100", 0) },
@@ -596,7 +596,7 @@ namespace DjangoTests {
             }
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(TestExtensions.CORE_UNIT_TEST)]
         public void TestSimpleBlock() {
             var code = @"<html>
 <head><title></title></head>
@@ -700,7 +700,7 @@ namespace DjangoTests {
             );
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(TestExtensions.CORE_UNIT_TEST)]
         public void TestUnclosedBlock() {
             var code = @"<html>
 <head><title></title></head>
