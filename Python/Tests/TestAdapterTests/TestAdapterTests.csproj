@@ -66,7 +66,7 @@
     <Compile Include="Mocks\MockRunSettingsXmlBuilder.cs" />
     <Compile Include="Mocks\MockTestCaseDiscoverySink.cs" />
     <Compile Include="Mocks\MockTestExecutionRecorder.cs" />
-    <Compile Include="ExecutorServiceTests.cs" />
+    <Compile Include="CodeCoverageTests.cs" />
     <Compile Include="TestDiscovererParseTests.cs" />
     <Compile Include="TestInfo.cs" />
     <Compile Include="TestDiscovererTests.cs" />

@@ -20,7 +20,7 @@ using Newtonsoft.Json;
 
 namespace Microsoft.PythonTools.TestAdapter.UnitTest {
 
-    sealed public class UnitTestTestCase {
+    sealed public class UnittestTestCase {
         [JsonProperty("id")]
         public string Id { get; set; }
 
@@ -37,8 +37,8 @@ namespace Microsoft.PythonTools.TestAdapter.UnitTest {
         }
     }
 
-    sealed public class UnitTestDiscoveryResults {
+    sealed public class UnittestDiscoveryResults {
         [JsonProperty("tests")]
-        public List<UnitTestTestCase> Tests { get; set; }
+        public List<UnittestTestCase> Tests { get; set; }
     }
 }

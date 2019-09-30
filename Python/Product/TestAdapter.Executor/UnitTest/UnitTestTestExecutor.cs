@@ -32,6 +32,7 @@ using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Ipc.Json;
 using Microsoft.PythonTools.TestAdapter.Config;
 using Microsoft.PythonTools.TestAdapter.Services;
+using Microsoft.PythonTools.TestAdapter.UnitTest;
 using Microsoft.PythonTools.TestAdapter.Utils;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
@@ -42,14 +43,14 @@ namespace Microsoft.PythonTools.TestAdapter {
     [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable",
         Justification = "object owned by VS")]
     [ExtensionUri(PythonConstants.UnitTestExecutorUriString)]
-    class TestExecutorUnitTest : ITestExecutor {
+    class UnittestTestExecutor : ITestExecutor {
         private static readonly string TestLauncherPath = PythonToolsInstallPath.GetFile("visualstudio_py_testlauncher.py");
 
         private readonly ManualResetEvent _cancelRequested = new ManualResetEvent(false);
 
         private readonly VisualStudioProxy _app;
 
-        public TestExecutorUnitTest() {
+        public UnittestTestExecutor() {
             _app = VisualStudioProxy.FromEnvironmentVariable(PythonConstants.PythonToolsProcessIdEnvironmentVariable);
         }
 
@@ -79,8 +80,8 @@ namespace Microsoft.PythonTools.TestAdapter {
                 var settings = testGroup.Key;
 
                 try {
-                    var discovery = DiscovererFactory.GetDiscoverer(settings);
-                    discovery.DiscoverTests(testGroup, frameworkHandle, testColletion);
+                    var discovery = new UnittestTestDiscoverer();
+                    discovery.DiscoverTests(testGroup, settings, frameworkHandle, testColletion);
                 } catch (Exception ex) {
                     frameworkHandle.SendMessage(TestMessageLevel.Error, ex.Message);
                 }
@@ -119,10 +120,10 @@ namespace Microsoft.PythonTools.TestAdapter {
             IRunContext runContext,
             IFrameworkHandle frameworkHandle
         ) {
-            bool codeCoverage = ExecutorService.EnableCodeCoverage(runContext);
+            bool codeCoverage = CodeCoverage.EnableCodeCoverage(runContext);
             string covPath = null;
             if (codeCoverage) {
-                covPath = ExecutorService.GetCoveragePath(tests);
+                covPath = CodeCoverage.GetCoveragePath(tests);
             }
             // .py file path -> project settings
             var sourceToSettings = RunSettingsUtil.GetSourceToProjSettings(runContext.RunSettings, filterType:TestFrameworkType.UnitTest);
@@ -150,7 +151,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
 
             if (codeCoverage) {
-                ExecutorService.AttachCoverageResults(frameworkHandle, covPath);
+                CodeCoverage.AttachCoverageResults(frameworkHandle, covPath);
             }
         }
 

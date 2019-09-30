@@ -21,9 +21,9 @@ using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 namespace Microsoft.PythonTools.TestAdapter.UnitTest {
-    public static class UnitTestExtensions {
+    internal static class UnittestExtensions {
 
-        public static TestCase ToVsTestCase(this UnitTestTestCase test, string projectHome) {
+        public static TestCase ToVsTestCase(this UnittestTestCase test, string projectHome) {
             var relativeModulePath = PathUtils.CreateFriendlyFilePath(projectHome, test.Source);
             var fullyQualifiedName = MakeFullyQualifiedTestName(relativeModulePath, test.Id);
             var testCase = new TestCase(fullyQualifiedName, PythonConstants.UnitTestExecutorUri, test.Source) {

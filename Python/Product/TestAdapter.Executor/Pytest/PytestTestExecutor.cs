@@ -26,6 +26,7 @@ using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.TestAdapter.Config;
 using Microsoft.PythonTools.TestAdapter.Pytest;
 using Microsoft.PythonTools.TestAdapter.Services;
+using Microsoft.PythonTools.TestAdapter.Utils;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
@@ -36,7 +37,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 
     [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable",
         Justification = "object owned by VS")]
-    public class TestExecutorPytest : ITestExecutor {
+    public class PytestTestExecutor : ITestExecutor {
         private static readonly Guid PythonRemoteDebugPortSupplierUnsecuredId = new Guid("{FEB76325-D127-4E02-B59D-B16D93D46CF5}");
         private static readonly Guid PythonDebugEngineGuid = new Guid("EC1375B7-E2CE-43E8-BF75-DC638DE1F1F9");
         private static readonly Guid NativeDebugEngineGuid = new Guid("3B476D35-A401-11D2-AAD4-00C04F990171");
@@ -44,7 +45,7 @@ namespace Microsoft.PythonTools.TestAdapter {
         private readonly ManualResetEvent _cancelRequested = new ManualResetEvent(false);
         private readonly VisualStudioProxy _app;
 
-        public TestExecutorPytest() {
+        public PytestTestExecutor() {
             _app = VisualStudioProxy.FromEnvironmentVariable(PythonConstants.PythonToolsProcessIdEnvironmentVariable);
         }
 
@@ -71,8 +72,8 @@ namespace Microsoft.PythonTools.TestAdapter {
                 var settings = testGroup.Key;
 
                 try {
-                    var discovery = DiscovererFactory.GetDiscoverer(settings);
-                    discovery.DiscoverTests(testGroup, frameworkHandle, testCollection);
+                    var discovery = new PytestTestDiscoverer();
+                    discovery.DiscoverTests(testGroup, settings, frameworkHandle, testCollection);
                 } catch (Exception ex) {
                     frameworkHandle.SendMessage(TestMessageLevel.Error, ex.Message);
                 }
@@ -151,10 +152,15 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
         }
 
-        private IEnumerable<TestResult> ParseResults(string resultsXMLPath, IEnumerable<TestCase> testCases, IFrameworkHandle frameworkHandle) {
+        private IEnumerable<TestResult> ParseResults(
+            string resultsXMLPath,
+            IEnumerable<TestCase> testCases,
+            IFrameworkHandle frameworkHandle
+        ) {
             // Default TestResults
-            var pytestIdToResultsMap = testCases.Select(tc => new TestResult(tc) { Outcome = TestOutcome.Skipped })
-            .ToDictionary(tr => tr.TestCase.GetPropertyValue<string>(Pytest.Constants.PytestIdProperty, String.Empty), tr => tr);
+            var pytestIdToResultsMap = testCases
+                .Select(tc => new TestResult(tc) { Outcome = TestOutcome.Skipped })
+                .ToDictionary(tr => tr.TestCase.GetPropertyValue<string>(Pytest.Constants.PytestIdProperty, String.Empty), tr => tr);
 
             if (File.Exists(resultsXMLPath)) {
                 try {
@@ -170,9 +176,13 @@ namespace Microsoft.PythonTools.TestAdapter {
             return pytestIdToResultsMap.Values;
         }
 
-        private void Parse(XPathDocument doc, Dictionary<string, TestResult> pytestIdToResultsMap, IFrameworkHandle frameworkHandle) {
+        private void Parse(
+            XPathDocument doc,
+            Dictionary<string, TestResult> pytestIdToResultsMap,
+            IFrameworkHandle frameworkHandle
+        ) {
             var xmlTestResultNodes = doc.CreateNavigator().SelectDescendants("testcase", "", false);
-
+         
             foreach (XPathNavigator pytestResultNode in xmlTestResultNodes) {
                 if (_cancelRequested.WaitOne(0)) {
                     break;

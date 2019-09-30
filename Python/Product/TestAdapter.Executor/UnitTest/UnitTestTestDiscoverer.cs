@@ -27,18 +27,23 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using Newtonsoft.Json;
 
-namespace Microsoft.PythonTools.TestAdapter.Pytest {
-    internal class TestDiscovererPytest : IPythonTestDiscoverer {
-        private readonly PythonProjectSettings _settings;
+namespace Microsoft.PythonTools.TestAdapter.UnitTest {
+    /// <summary>
+    /// Note even though we specify  [DefaultExecutorUri(PythonConstants.UnitTestExecutorUriString)] we still get all .py source files
+    /// from all testcontainers.  
+    /// </summary>
+    [FileExtension(".py")]
+    [DefaultExecutorUri(PythonConstants.UnitTestExecutorUriString)]
+    public class UnittestTestDiscoverer : PythonTestDiscoverer {
         private IMessageLogger _logger;
         private static readonly string DiscoveryAdapterPath = PythonToolsInstallPath.GetFile("PythonFiles\\testing_tools\\run_adapter.py");
 
-        public TestDiscovererPytest(PythonProjectSettings settings) {
-            _settings = settings;
+        public UnittestTestDiscoverer() : base(TestFrameworkType.UnitTest) {
         }
 
-        public void DiscoverTests(
+        public override void DiscoverTests(
             IEnumerable<string> sources,
+            PythonProjectSettings settings,
             IMessageLogger logger,
             ITestCaseDiscoverySink discoverySink
         ) {
@@ -50,27 +55,27 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
                 throw new ArgumentNullException(nameof(discoverySink));
             }
 
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger)); 
 
-            var workspaceText = _settings.IsWorkspace ? Strings.WorkspaceText : Strings.ProjectText;
-            LogInfo(Strings.PythonTestDiscovererStartedMessage.FormatUI(PythonConstants.PytestText, _settings.ProjectName, workspaceText, _settings.DiscoveryWaitTimeInSeconds));
+            var workspaceText = settings.IsWorkspace ? Strings.WorkspaceText : Strings.ProjectText;
+            LogInfo(Strings.PythonTestDiscovererStartedMessage.FormatUI(PythonConstants.UnitTestText, settings.ProjectName, workspaceText, settings.DiscoveryWaitTimeInSeconds));
 
-            var env = InitializeEnvironment(sources, _settings);
+            var env = InitializeEnvironment(sources, settings);
             var outputFilePath = Path.GetTempFileName();
-            var arguments = GetArguments(sources, _settings, outputFilePath);
+            var arguments = GetArguments(sources, settings, outputFilePath);
 
-            LogInfo("cd " + _settings.WorkingDirectory);
-            LogInfo("set " + _settings.PathEnv + "=" + env[_settings.PathEnv]);
-            LogInfo($"{_settings.InterpreterPath} {string.Join(" ", arguments)}");
+            LogInfo("cd " + settings.WorkingDirectory);
+            LogInfo("set " + settings.PathEnv + "=" + env[settings.PathEnv]);
+            LogInfo($"{settings.InterpreterPath} {string.Join(" ", arguments)}");
 
             try {
                 var stdout = ProcessExecute.RunWithTimeout(
-                    _settings.InterpreterPath,
+                    settings.InterpreterPath,
                     env,
                     arguments,
-                    _settings.WorkingDirectory,
-                    _settings.PathEnv,
-                    _settings.DiscoveryWaitTimeInSeconds
+                    settings.WorkingDirectory,
+                    settings.PathEnv,
+                    settings.DiscoveryWaitTimeInSeconds
                 );
                 if (!String.IsNullOrEmpty(stdout)) {
                     Error(stdout);
@@ -86,17 +91,17 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
             }
 
             string json = File.ReadAllText(outputFilePath);
-            if (string.IsNullOrEmpty(json)) {
+            if (String.IsNullOrEmpty(json)) {
                 return;
             }
 
             try {
-                var results = JsonConvert.DeserializeObject<List<PytestDiscoveryResults>>(json);
-                var testcases = ParseDiscoveryResults(results);
+                var results = JsonConvert.DeserializeObject<List<UnittestDiscoveryResults>>(json);
+                var testcases = ParseDiscoveryResults(results, settings.ProjectHome);
 
                 foreach (var tc in testcases) {
                     // Note: Test Explorer will show a key not found exception if we use a source path that doesn't match a test container's source.
-                    if (_settings.TestContainerSources.TryGetValue(tc.CodeFilePath, out _)) {
+                    if (settings.TestContainerSources.TryGetValue(tc.CodeFilePath, out _)) {
                         discoverySink.SendTestCase(tc);
                     }
                 }
@@ -109,22 +114,21 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
             }
         }
 
-        internal IEnumerable<TestCase> ParseDiscoveryResults(IList<PytestDiscoveryResults> results) {
+        internal IEnumerable<TestCase> ParseDiscoveryResults(IList<UnittestDiscoveryResults> results, string projectHome) {
             if (results is null) {
                 throw new ArgumentNullException(nameof(results));
             }
 
-            var testcases = results
+            return results
                 .Where(r => r.Tests != null)
-                .SelectMany(r => r.Tests.Select(test => TryCreateVsTestCase(test)))
+                .SelectMany(r => r.Tests.Select(test => TryCreateVsTestCase(test, projectHome)))
                 .Where(tc => tc != null);
-
-            return testcases;
         }
 
-        private TestCase TryCreateVsTestCase(PytestTest test) {
+        private TestCase TryCreateVsTestCase(UnittestTestCase test, string projectHome) {
             try {
-                TestCase tc = test.ToVsTestCase(_settings.ProjectHome);
+                // Note: Test Explorer will show a key not found exception if we use a source path that doesn't match a test container's source.
+                TestCase tc = test.ToVsTestCase(projectHome);
                 return tc;
             } catch (Exception ex) {
                 Error(ex.Message);
@@ -132,17 +136,18 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
             return null;
         }
 
-        public string[] GetArguments(IEnumerable<string> sources, PythonProjectSettings projSettings, string outputfilename) {
+        public string[] GetArguments(IEnumerable<string> sources, PythonProjectSettings settings, string outputfilename) {
             var arguments = new List<string>();
             arguments.Add(DiscoveryAdapterPath);
             arguments.Add("discover");
-            arguments.Add("pytest");
+            arguments.Add("unittest");
             arguments.Add("--output-file");
             arguments.Add(outputfilename);
-            //Note pytest specific arguments go after this separator
+            //Note unittest specific options go after this separator
             arguments.Add("--");
-            arguments.Add("--cache-clear");
-            arguments.Add(String.Format("--rootdir={0}", projSettings.ProjectHome));
+            arguments.Add(settings.UnitTestRootDir);
+            arguments.Add(settings.UnitTestPattern);
+
             return arguments.ToArray();
         }
 
@@ -160,12 +165,12 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
             }
 
             env["PYTHONUNBUFFERED"] = "1";
+
             return env;
         }
 
         private string GetSearchPaths(IEnumerable<string> sources, PythonProjectSettings settings) {
             var paths = settings.SearchPath;
-
             paths.Insert(0, settings.WorkingDirectory);
 
             string searchPaths = string.Join(
@@ -177,18 +182,19 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
 
         [Conditional("DEBUG")]
         private void DebugInfo(string message) {
-            _logger?.SendMessage(TestMessageLevel.Informational, message ?? String.Empty);
+            _logger?.SendMessage(TestMessageLevel.Informational, message);
         }
 
         private void LogInfo(string message) {
-            _logger?.SendMessage(TestMessageLevel.Informational, message ?? String.Empty);
+            _logger?.SendMessage(TestMessageLevel.Informational, message);
         }
 
         private void Error(string message) {
-            _logger?.SendMessage(TestMessageLevel.Error, message ?? String.Empty);
+            _logger?.SendMessage(TestMessageLevel.Error, message);
         }
+
         private void Warn(string message) {
-            _logger?.SendMessage(TestMessageLevel.Warning, message ?? String.Empty);
+            _logger?.SendMessage(TestMessageLevel.Warning, message);
         }
     }
 }

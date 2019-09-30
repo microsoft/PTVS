@@ -80,36 +80,35 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\PythonTools\PythonConstants.cs">
-      <Link>PythonConstants.cs</Link>
+      <Link>Common\PythonConstants.cs</Link>
     </Compile>
     <Compile Include="..\VSCommon\Infrastructure\VisualStudioApp.cs">
-      <Link>VisualStudioApp.cs</Link>
+      <Link>Common\VisualStudioApp.cs</Link>
     </Compile>
-    <Compile Include="Config\ITestConfiguration.cs" />
+    <Compile Include="Common\Config\ITestConfiguration.cs" />
     <Compile Include="Pytest\Constants.cs" />
     <Compile Include="Pytest\PytestConfiguration.cs" />
     <Compile Include="Pytest\PytestDiscoveryResults.cs" />
-    <Compile Include="Config\PythonProjectSettings.cs" />
-    <Compile Include="Config\RunSettingsUtil.cs" />
+    <Compile Include="Common\Config\PythonProjectSettings.cs" />
+    <Compile Include="Common\Config\RunSettingsUtil.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Pytest\PytestExtensions.cs" />
-    <Compile Include="Pytest\TestDiscovererPytest.cs" />
-    <Compile Include="Pytest\TestExecutorPytest.cs" />
-    <Compile Include="Services\DiscovererFactory.cs" />
-    <Compile Include="Services\ExecutorService.cs" />
+    <Compile Include="Pytest\PytestTestDiscoverer.cs" />
+    <Compile Include="Pytest\PytestTestExecutor.cs" />
+    <Compile Include="Common\Services\ExecutorService.cs" />
     <Compile Include="Pytest\JunitXmlTestResultParser.cs" />
-    <Compile Include="Services\IPythonTestDiscoverer.cs" />
-    <Compile Include="Services\ProcessExecute.cs" />
-    <Compile Include="Services\PythonDebugMode.cs" />
-    <Compile Include="TestCollection.cs" />
-    <Compile Include="PythonTestDiscoverer.cs" />
-    <Compile Include="TestProtocol.cs" />
-    <Compile Include="TestReader.cs" />
-    <Compile Include="UnitTest\TestExecutorUnitTest.cs" />
-    <Compile Include="UnitTest\TestDiscovererUnitTest.cs" />
+    <Compile Include="Common\Services\CodeCoverage.cs" />   
+    <Compile Include="Common\Services\ProcessExecute.cs" />
+    <Compile Include="Common\Services\PythonDebugMode.cs" />
+    <Compile Include="Common\TestCollection.cs" />
+    <Compile Include="Common\PythonTestDiscoverer.cs" />
+    <Compile Include="Common\TestProtocol.cs" />
+    <Compile Include="Common\TestReader.cs" />
+    <Compile Include="UnitTest\UnitTestTestExecutor.cs" />
+    <Compile Include="UnitTest\UnitTestTestDiscoverer.cs" />
     <Compile Include="UnitTest\UnitTestDiscoveryResults.cs" />
     <Compile Include="UnitTest\UnitTestExtensions.cs" />
-    <Compile Include="Utils\TestUtils.cs" />
+    <Compile Include="Common\Utils\TestUtils.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="PythonFiles\testing_tools\adapter\discovery.py">

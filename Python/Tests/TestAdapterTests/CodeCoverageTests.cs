@@ -31,7 +31,7 @@ namespace TestAdapterTests {
 
             best = CodeCoverage.UpdateBestFile(null, file1);
             Assert.AreEqual(best, file1);
-
+                 
             best = CodeCoverage.UpdateBestFile(best, file2);
             Assert.AreEqual("C:\\Some\\Path", best);
         }

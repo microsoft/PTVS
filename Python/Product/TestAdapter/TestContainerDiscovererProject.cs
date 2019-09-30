@@ -25,7 +25,6 @@ using System.Threading;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Projects;
-using Microsoft.PythonTools.TestAdapter.Model;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestWindow.Extensibility;
@@ -113,7 +112,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 
         public IEnumerable<ITestContainer> TestContainers {
             get {
-                if (IsSolutionMode() && 
+                if (IsSolutionMode() &&
                     (_firstLoad || _isRefresh)) {
                     // The first time through, we don't know about any loaded
                     // projects.
@@ -123,10 +122,10 @@ namespace Microsoft.PythonTools.TestAdapter {
                             _firstLoad = false;
                             _isRefresh = false;
 
-                             _projectMap.Clear();
+                            _projectMap.Clear();
                             _packageManagerEventSink.UnwatchAll();
 
-                             SetupSolution();
+                            SetupSolution();
                         }
                     });
                 }
@@ -241,7 +240,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             var projInfo = new ProjectInfo(pyProj);
             _projectMap[projInfo.ProjectHome] = projInfo;
             var files = FilteredTestOrSettingsFiles(vsProject);
-            UpdateSolutionTestContainersAndFileWatchers(files, projInfo, isAdd: true);
+            UpdateContainersAndListeners(files, projInfo, isAdd: true);
             return files.Any();
         }
 
@@ -300,7 +299,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 && _projectMap.TryRemove(projectHome, out ProjectInfo projToRemove)) {
 
                 var testFilesToRemove = projToRemove.GetAllContainers().Select(t => t.Source);
-                UpdateSolutionTestContainersAndFileWatchers(testFilesToRemove, projToRemove, isAdd: false);
+                UpdateContainersAndListeners(testFilesToRemove, projToRemove, isAdd: false);
                 projToRemove.Dispose();
                 return testFilesToRemove.Any();
             }
@@ -309,10 +308,13 @@ namespace Microsoft.PythonTools.TestAdapter {
 
         private IEnumerable<string> FilteredTestOrSettingsFiles(IVsProject project) {
             return project.GetProjectItems()
-                .Where(s => IsTestFileOrSetting(s));
+                .Where(s => IsTestFile(s) || IsSettingsFile(s));
         }
 
-        public void UpdateSolutionTestContainersAndFileWatchers(IEnumerable<string> sources, ProjectInfo projInfo, bool isAdd) {
+        public void UpdateContainersAndListeners(IEnumerable<string> sources, ProjectInfo projInfo, bool isAdd) {
+            if (projInfo == null)
+                return;
+
             foreach (var path in sources) {
                 if (isAdd) {
                     projInfo.AddTestContainer(this, path);
@@ -328,81 +330,101 @@ namespace Microsoft.PythonTools.TestAdapter {
             return Path.GetExtension(path).Equals(PythonConstants.FileExtension, StringComparison.OrdinalIgnoreCase);
         }
 
-        private bool IsTestFileOrSetting(string path) {
-            return IsSettingsFile(path) || Path.GetExtension(path).Equals(PythonConstants.FileExtension, StringComparison.OrdinalIgnoreCase);
-        }
-
         private void OnProjectItemChanged(object sender, TestFileChangedEventArgs e) {
             if (String.IsNullOrEmpty(e.File))
                 return;
 
             if (IsSettingsFile(e.File)) {
-                switch (e.ChangedReason) {
-                    case TestFileChangedReason.None:
-                        break;
-                    case TestFileChangedReason.Renamed:
-                        _testFilesUpdateWatcher.RemoveWatch(e.OldFile);
-                        _testFilesUpdateWatcher.AddWatch(e.File);
-                        break;
-                    case TestFileChangedReason.Added:
-                        _testFilesUpdateWatcher.AddWatch(e.File);
-                        break;
-                    case TestFileChangedReason.Changed:
-                        _testFilesUpdateWatcher.AddWatch(e.File);
-                        break;
-                    case TestFileChangedReason.Removed:
-                        _testFilesUpdateWatcher.RemoveWatch(e.File);
-                        break;
-                }
-
-                _isRefresh = true;
-                NotifyContainerChanged();
-                return;
+                HandleSettingsChanged(e);
             }
-
             // VS uses temp files we need to ignore
-            if (!IsTestFile(e.File))
+            else if (IsTestFile(e.File)) {
+                HandleSourcesChanged(e);
+            }
+            return;
+        }
+
+        private void HandleSourcesChanged(TestFileChangedEventArgs e) {
+            var projectInfo = FindProjectInfo(e.File, e.Project);
+            if (projectInfo == null)
                 return;
 
-            // bschnurr todo: this is only looking at opened files
-            IVsProject vsProject = e.Project;
+            var sources = new List<string>() { e.File };
+            switch (e.ChangedReason) {
+                case TestFileChangedReason.Added:
+                    UpdateContainersAndListeners(sources, projectInfo, isAdd: true);
+                    break;
+                case TestFileChangedReason.Changed:
+                    //Need to increment version number so Test Explorer notices a change
+                    UpdateContainersAndListeners(sources, projectInfo, isAdd: true);
+                    break;
+                case TestFileChangedReason.Removed:
+                    UpdateContainersAndListeners(sources, projectInfo, isAdd: false);
+                    break;
+                case TestFileChangedReason.Renamed:
+                    var oldFileProjectInfo = FindProjectInfo(e.OldFile);
+                    UpdateContainersAndListeners(new List<string>() { e.OldFile }, oldFileProjectInfo, isAdd: false);
+                    UpdateContainersAndListeners(sources, projectInfo, isAdd: true);
+                    break;
+                default:
+                    //In changed case file watcher observed a file changed event
+                    //In this case we just have to fire TestContainerChnaged event
+                    break;
+            }
+
+            if (ShouldRebuild(e.File) || ShouldRebuild(e.OldFile)) {
+                _isRefresh = true;
+            }
+
+            NotifyContainerChanged();
+        }
+
+        private void HandleSettingsChanged(TestFileChangedEventArgs e) {
+            switch (e.ChangedReason) {
+                case TestFileChangedReason.None:
+                    break;
+                case TestFileChangedReason.Renamed:
+                    _testFilesUpdateWatcher.RemoveWatch(e.OldFile);
+                    _testFilesUpdateWatcher.AddWatch(e.File);
+                    break;
+                case TestFileChangedReason.Added:
+                    _testFilesUpdateWatcher.AddWatch(e.File);
+                    break;
+                case TestFileChangedReason.Changed:
+                    _testFilesUpdateWatcher.AddWatch(e.File);
+                    break;
+                case TestFileChangedReason.Removed:
+                    _testFilesUpdateWatcher.RemoveWatch(e.File);
+                    break;
+            }
+            _isRefresh = true;
+            NotifyContainerChanged();
+        }
+
+        private ProjectInfo FindProjectInfo(string file, IVsProject vsProject = null) {
             if (vsProject == null) {
+                // bschnurr todo: this is only looking at opened files
                 var rdt = (IVsRunningDocumentTable)_serviceProvider.GetService(typeof(SVsRunningDocumentTable));
-                vsProject = VsProjectExtensions.PathToProject(e.File, rdt);
+                vsProject = VsProjectExtensions.PathToProject(file, rdt);
             }
 
-            if (vsProject == null)
-                return;
-
-            string projectHome = vsProject.GetProjectHome();
-            if (projectHome != null &&
-                _projectMap.TryGetValue(projectHome, out ProjectInfo projectInfo)) {
-
-                var sources = new List<string>() { e.File };
-
-                switch (e.ChangedReason) {
-                    case TestFileChangedReason.Added:
-                        UpdateSolutionTestContainersAndFileWatchers(sources, projectInfo, isAdd: true);
-                        break;
-                    case TestFileChangedReason.Changed:
-                        //Need to increment version number so Test Explorer notices a change
-                        UpdateSolutionTestContainersAndFileWatchers(sources, projectInfo, isAdd: true);
-                        break;
-                    case TestFileChangedReason.Removed:
-                        UpdateSolutionTestContainersAndFileWatchers(sources, projectInfo, isAdd: false);
-                        break;
-                    case TestFileChangedReason.Renamed:
-                        UpdateSolutionTestContainersAndFileWatchers(new List<string>() { e.OldFile }, projectInfo, isAdd: false);
-                        UpdateSolutionTestContainersAndFileWatchers(sources, projectInfo, isAdd: true);
-                        break;
-                    default:
-                        //In changed case file watcher observed a file changed event
-                        //In this case we just have to fire TestContainerChnaged event
-                        break;
+            if (vsProject != null) {
+                string projectHome = vsProject.GetProjectHome();
+                if (projectHome != null &&
+                    _projectMap.TryGetValue(projectHome, out ProjectInfo foundProjectInfo)) {
+                    return foundProjectInfo;
                 }
-                NotifyContainerChanged();
             }
-            
+
+            //Renamed  old files are no longer in the project so linear search
+            var projectInfo = _projectMap.Values.FirstOrDefault(p => p.TryGetContainer(file, out _));
+            return projectInfo;
+        }
+
+        private bool ShouldRebuild(string file) {
+            // unittest does update additional files in the directory when __init__.py is added
+            // so trigger a full rebuild
+            return (file != null) && file.EndsWith("__init__.py", StringComparison.OrdinalIgnoreCase);
         }
 
         private bool IsSettingsFile(string file) {

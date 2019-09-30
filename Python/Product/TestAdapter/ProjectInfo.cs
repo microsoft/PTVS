@@ -25,7 +25,7 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestWindow.Extensibility;
 using Microsoft.VisualStudioTools.TestAdapter;
 
-namespace Microsoft.PythonTools.TestAdapter.Model {
+namespace Microsoft.PythonTools.TestAdapter {
     internal class ProjectInfo : IDisposable {
         private readonly PythonProject _pythonProject;
         private readonly IPythonWorkspaceContext _pythonWorkspace;

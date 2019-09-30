@@ -78,6 +78,8 @@ def test_eval(test_input, expected):
         ("\\", "\\"),
         ("\n \n", "\n \n"),
         (":", ":"),
+        ("3.0", "3.0"),
+        (3.0, 3.0),
         (  """
            .. figure:: foo.jpg
 

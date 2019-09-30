@@ -15,17 +15,24 @@
 // permissions and limitations under the License.
 
 using System.Collections.Generic;
-using Microsoft.PythonTools.TestAdapter.Config;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
+using System.IO;
+using System.Text;
+using System.Xml;
+using System.Xml.XPath;
 
+namespace Microsoft.PythonTools.TestAdapter.Utils {
+    static class TestUtils {
 
-namespace Microsoft.PythonTools.TestAdapter.Services {
-    interface IPythonTestDiscoverer {
-        void DiscoverTests(
-            IEnumerable<string> sources,
-            IMessageLogger logger,
-            ITestCaseDiscoverySink discoverySink
-        );
+        internal static string CreateTestListFile(IEnumerable<string> tests) {
+            var testListFilePath = Path.GetTempFileName();
+            File.WriteAllLines(testListFilePath, tests, new UTF8Encoding(false));
+            return testListFilePath;
+        }
+
+        internal static XPathDocument Read(string xml) {
+            var settings = new XmlReaderSettings();
+            settings.XmlResolver = null;
+            return new XPathDocument(XmlReader.Create(new StringReader(xml), settings));
+        }
     }
 }

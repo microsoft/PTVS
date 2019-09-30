@@ -20,7 +20,7 @@ using Microsoft.VisualStudio.Text.Operations;
 using Microsoft.VisualStudio.Utilities;
 
 namespace TestUtilities.Mocks {
-    internal class MockTextUndoHistory : ITextUndoHistory2 {
+    internal class MockTextUndoHistory : ITextUndoHistory {
         public event EventHandler<TextUndoRedoEventArgs> UndoRedoHappened;
 
         public event EventHandler<TextUndoTransactionCompletedEventArgs> UndoTransactionCompleted;
