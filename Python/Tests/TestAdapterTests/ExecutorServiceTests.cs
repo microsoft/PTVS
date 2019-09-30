@@ -17,21 +17,22 @@
 extern alias pt;
 using Microsoft.PythonTools.TestAdapter.Services;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using TestUtilities;
 
 namespace TestAdapterTests {
     [TestClass]
-    public class ExecutorServiceTests {
+    public class CodeCoverageTests {
         [TestMethod, Priority(TestExtensions.CORE_UNIT_TEST)]
         public void TestBestFile() {
             var file1 = "C:\\Some\\Path\\file1.py";
             var file2 = "C:\\Some\\Path\\file2.py";
-            var best = ExecutorService.UpdateBestFile(null, file1);
+            var best = CodeCoverage.UpdateBestFile(null, file1);
             Assert.AreEqual(best, file1);
 
-            best = ExecutorService.UpdateBestFile(null, file1);
+            best = CodeCoverage.UpdateBestFile(null, file1);
             Assert.AreEqual(best, file1);
 
-            best = ExecutorService.UpdateBestFile(best, file2);
+            best = CodeCoverage.UpdateBestFile(best, file2);
             Assert.AreEqual("C:\\Some\\Path", best);
         }
     }
