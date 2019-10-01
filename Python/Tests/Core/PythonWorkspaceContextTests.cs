@@ -35,7 +35,7 @@ namespace PythonToolsTests {
             AssertListener.Initialize();
         }
 
-        [TestMethod, Priority(TestExtensions.CORE_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.CORE_UNIT_TEST)]
         public void DefaultInterpreter() {
             var data = PrepareWorkspace(WorkspaceTestHelper.PythonNoId);
 
@@ -47,7 +47,7 @@ namespace PythonToolsTests {
             Assert.AreEqual(WorkspaceTestHelper.DefaultFactory, workspaceContext.CurrentFactory);
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         public void InstalledInterpreter() {
             var data = PrepareWorkspace(WorkspaceTestHelper.Python27Id);
 
@@ -59,7 +59,7 @@ namespace PythonToolsTests {
             Assert.AreEqual(WorkspaceTestHelper.Python27Factory, workspaceContext.CurrentFactory);
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         public void UnavailableInterpreter() {
             var data = PrepareWorkspace(WorkspaceTestHelper.PythonUnavailableId);
 
@@ -71,7 +71,7 @@ namespace PythonToolsTests {
             Assert.AreEqual(WorkspaceTestHelper.DefaultFactory, workspaceContext.CurrentFactory);
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         public void ChangeInterpreterSetting() {
             var data = PrepareWorkspace(WorkspaceTestHelper.Python27Id);
 
@@ -106,7 +106,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         public void RemoveInterpreterSetting() {
             var data = PrepareWorkspace(WorkspaceTestHelper.Python27Id);
 
@@ -141,7 +141,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         public void RemoveInterpreterSettingAlreadyDefault() {
             var data = PrepareWorkspace(WorkspaceTestHelper.DefaultFactory.Configuration.Id);
 
@@ -176,7 +176,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         public void ChangeDefaultInterpreterInUse() {
             var data = PrepareWorkspace(WorkspaceTestHelper.PythonNoId);
 
@@ -202,7 +202,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         public void ChangeDefaultInterpreterNotInUse() {
             // We don't use the global default
             var data = PrepareWorkspace(WorkspaceTestHelper.Python27Id);
@@ -229,7 +229,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         public void RemoveInterpreterInUse() {
             var data = PrepareWorkspace(WorkspaceTestHelper.Python27Id);
 
@@ -257,7 +257,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         public void RemoveInterpreterNotInUse() {
             var data = PrepareWorkspace(WorkspaceTestHelper.Python27Id);
 
@@ -290,7 +290,7 @@ namespace PythonToolsTests {
         ///     Ensures that EnumerateWorkSpaceFiles(...) correctly enumerates the workspace directory
         ///     Checks that the 2 regexes for filtering test files (unit test and pytest) are working correctly
         /// </summary>
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         public void EnumerateWorkspaceFiles() {
             (var testDataSetup, var includedWorkspaceFilePaths) = GenerateWorkspace();
             var workspaceContext = new PythonWorkspaceContext(testDataSetup.Workspace, testDataSetup.OptionsService, testDataSetup.RegistryService);

@@ -24,16 +24,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TestUtilities {
     public static class TestExtensions {
-        public const int CORE_UNIT_TEST = 0;          // Run on every PR request going into master
-        public const int IMPORTANT_UNIT_TEST = 1;     // Run on every commit into master
-        
-        public const int P2_UNIT_TEST = 20;
-        public const int P3_UNIT_TEST = 30;
-
-        public const int P0_FAILING_UNIT_TEST = 11;
-        public const int P2_FAILING_UNIT_TEST = 21;
-        public const int P3_FAILING_UNIT_TEST = 31;
-
         public static void SetStartupFile(this Project project, string name) {
             Assert.IsNotNull(project, "null project");
             Assert.IsNotNull(project.Properties, "null project properties " + project.Name + " " + project.GetType().FullName + " " + project.Kind);

@@ -25,7 +25,7 @@ using TestUtilities;
 namespace PythonToolsTests {
     [TestClass]
     public class LauncherTests {
-        [TestMethod, Priority(TestExtensions.CORE_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.CORE_UNIT_TEST)]
         public void LaunchWebBrowserUriTests() {
             var testCases = new[] {
                 new { Url = "/fob", Port = 1, Expected = "http://localhost:1/fob" },

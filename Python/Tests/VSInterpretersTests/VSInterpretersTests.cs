@@ -99,7 +99,7 @@ namespace FactoryProviderSuccess {
             }
         }
 
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
         public void ProviderLoadLog_Success() {
             var path = FactoryProviderTypeLoadErrorPath;
 
@@ -126,7 +126,7 @@ namespace FactoryProviderSuccess {
             Assert.AreEqual(0, log.AllItems.Count);
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         public void ProviderLoadLog_FileNotFound() {
             var catalogLog = new MockLogger();
 
@@ -183,7 +183,7 @@ namespace FactoryProviderSuccess {
             }
         }
 
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
         public void ProviderLoadLog_CorruptImage() {
             var catalogLog = new MockLogger();
 
@@ -245,7 +245,7 @@ namespace FactoryProviderTypeLoadException {
             }
         }
 
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
         public void ProviderLoadLog_TypeLoadException() {
             var path = FactoryProviderTypeLoadErrorPath;
 
@@ -277,7 +277,7 @@ namespace FactoryProviderTypeLoadException {
             Assert.IsNotNull(registry.Configurations.FirstOrDefault());
         }
 
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
         public void ProviderLoadLog_SuccessAndFailure() {
             var path = FactoryProviderTypeLoadErrorPath;
 
@@ -306,7 +306,7 @@ namespace FactoryProviderTypeLoadException {
             Assert.AreEqual(1, log.AllItems.Count);
         }
 
-        [TestMethod, Priority(TestExtensions.CORE_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.CORE_UNIT_TEST)]
         public void InvalidInterpreterVersion() {
             try {
                 var lv = new Version(1, 0).ToLanguageVersion();

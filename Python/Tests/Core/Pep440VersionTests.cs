@@ -82,7 +82,7 @@ v1.0rc1 == 1.0rc1 == 1.0c1 == 1.0_pre1 == 1.0preview-1
 1!1.0 == 01!1.0
 ".Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.CORE_UNIT_TEST)]
         public void VersionParsing() {
             foreach (var s in ExampleVersions) {
                 PackageVersion ver;
@@ -91,7 +91,7 @@ v1.0rc1 == 1.0rc1 == 1.0c1 == 1.0_pre1 == 1.0preview-1
             }
         }
 
-        [TestMethod, Priority(TestExtensions.CORE_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.CORE_UNIT_TEST)]
         public void VersionOrdering() {
             var versions = ExampleVersions.Select(PackageVersion.Parse).ToList();
             var rnd = new Random();
@@ -112,7 +112,7 @@ v1.0rc1 == 1.0rc1 == 1.0c1 == 1.0_pre1 == 1.0preview-1
             }
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.CORE_UNIT_TEST)]
         public void VersionNormalization() {
             foreach (var line in ExampleNormalizedVersions) {
                 var versions = line.Split(new[] { "==" }, StringSplitOptions.RemoveEmptyEntries)
@@ -126,7 +126,7 @@ v1.0rc1 == 1.0rc1 == 1.0c1 == 1.0_pre1 == 1.0preview-1
             }
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.CORE_UNIT_TEST)]
         public void LocalVersionEquality() {
             // Numeric sections of local versions are compared (but not
             // normalized!) as integers.

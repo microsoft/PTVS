@@ -46,7 +46,7 @@ namespace DebuggerTests {
         }
 
 
-        //[TestMethod, Priority(TestExtensions.P3_UNIT_TEST)]
+        //[TestMethod, UnitTestPriority(TestExtensions.P3_UNIT_TEST)]
         //public void TestThreads() {
         //    // TODO: Thread creation tests w/ both thread.start_new_thread and threading module.
         //    Assert.Fail("TODO: Thread creation tests w/ both thread.start_new_thread and threading module.");
@@ -60,7 +60,7 @@ namespace DebuggerTests {
 
         #region Enum Children Tests
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         public async Task EnumChildrenTest() {
             const int lastLine = 42;
 
@@ -142,7 +142,7 @@ namespace DebuggerTests {
             }
         }
 
-        [TestMethod, Priority(TestExtensions.P2_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P2_UNIT_TEST)]
         public async Task EnumChildrenTestPrevFrame() {
             const int breakLine = 3;
 
@@ -174,7 +174,7 @@ namespace DebuggerTests {
             await ChildTestAsync("PrevFrame" + EnumChildrenTestName, breakLine, "u1", 1, null);
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         public async Task GeneratorChildrenTest() {
             var children = new List<ChildInfo> {
                 new ChildInfo("gi_code", null),
@@ -320,7 +320,7 @@ namespace DebuggerTests {
 
         #region Set Next Line Tests
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         public async Task SetNextLineTest() {
             if (GetType() == typeof(DebuggerTestsIpy27)) {
                 //http://ironpython.codeplex.com/workitem/30129
@@ -409,7 +409,7 @@ namespace DebuggerTests {
         #region BreakAll Tests
 
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         public async Task TestBreakAll() {
             var debugger = new PythonDebugger();
 
@@ -449,7 +449,7 @@ namespace DebuggerTests {
             }
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         public async Task TestBreakAllThreads() {
             var debugger = new PythonDebugger();
 
@@ -495,7 +495,7 @@ namespace DebuggerTests {
 
         #region Eval Tests
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         public async Task EvalTest() {
             await EvalTestAsync("LocalsTest4.py", 2, "g", 1, EvalResult.Value("baz", "int", "42"));
             await EvalTestAsync("LocalsTest3.py", 2, "f", 0, EvalResult.Value("x", "int", "42"));
@@ -507,7 +507,7 @@ namespace DebuggerTests {
         // and which cannot be used with isinstance and issubclass.
         // https://pytools.codeplex.com/workitem/2770
         // https://pytools.codeplex.com/workitem/2772
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         public async Task EvalPseudoTypeTest() {
             if (this is DebuggerTestsIpy27) {
                 return;
@@ -516,7 +516,7 @@ namespace DebuggerTests {
             await EvalTestAsync("EvalPseudoType.py", 22, "<module>", 0, EvalResult.Value("obj", "PseudoType", "pseudo"));
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         public async Task EvalRawTest() {
             await EvalTestAsync("EvalRawTest.py", 28, "<module>", 0, PythonEvaluationResultReprKind.Raw,
                 EvalResult.Value("n", null, null, 0, PythonEvaluationResultFlags.None));
@@ -605,7 +605,7 @@ namespace DebuggerTests {
         /// <summary>
         /// Verify it takes more than just an items() method for us to treat something like a dictionary.
         /// </summary>
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         public async Task CloseToDictExpansionBug484() {
             PythonThread thread = await RunAndBreakAsync("LocalsTestBug484.py", 7);
             var process = thread.Process;
@@ -637,7 +637,7 @@ namespace DebuggerTests {
             get { return null; }
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         [TestCategory("10s")]
         public async Task Locals() {
             await new LocalsTest(this, "LocalsTest.py", 3) {
@@ -657,7 +657,7 @@ namespace DebuggerTests {
         /// <summary>
         /// https://pytools.codeplex.com/workitem/1347
         /// </summary>
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         [TestCategory("10s")]
         public async Task LocalGlobalsTest() {
             var test = new LocalsTest(this, "LocalGlobalsTest.py", 3);
@@ -680,7 +680,7 @@ namespace DebuggerTests {
         /// <summary>
         /// https://pytools.codeplex.com/workitem/1348
         /// </summary>
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         public virtual async Task LocalClosureVarsTest() {
             var test = new LocalsTest(this, "LocalClosureVarsTest.py", 4) {
                 Locals = { "x", "y" },
@@ -696,7 +696,7 @@ namespace DebuggerTests {
         /// <summary>
         /// https://pytools.codeplex.com/workitem/1710
         /// </summary>
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         public virtual async Task LocalBuiltinUsageTest() {
             var test = new LocalsTest(this, "LocalBuiltinUsageTest.py", 4) {
                 Params = { "start", "end" },
@@ -710,7 +710,7 @@ namespace DebuggerTests {
             await test.RunAsync();
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         public async Task GlobalsTest() {
             var test = new LocalsTest(this, "GlobalsTest.py", 4) {
                 Locals = { "x", "y", "__file__", "__name__", "__builtins__", "__doc__" }
@@ -733,7 +733,7 @@ namespace DebuggerTests {
         }
 
         // https://pytools.codeplex.com/workitem/1334
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         public async Task LocalBooleanTest() {
             var test = new LocalsTest(this, "LocalBooleanTest.py", 2) {
                 Params = {
@@ -750,7 +750,7 @@ namespace DebuggerTests {
             await test.RunAsync();
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         public async Task LocalReprRestrictionsTest() {
             // https://pytools.codeplex.com/workitem/931
             var filename = DebuggerTestPath + "LocalReprRestrictionsTest.py";
@@ -870,7 +870,7 @@ namespace DebuggerTests {
 
         #region Stepping Tests
 
-        [TestMethod, Priority(TestExtensions.P3_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P3_UNIT_TEST)]
         [TestCategory("10s"), TestCategory("60s")]
         public async Task StepTest() {
             // Bug 1315: https://pytools.codeplex.com/workitem/1315
@@ -1029,7 +1029,7 @@ namespace DebuggerTests {
 
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         [TestCategory("10s")]
         public async Task StepStdLib() {
             // http://pytools.codeplex.com/workitem/504 - test option for stepping into std lib.
@@ -1104,7 +1104,7 @@ namespace DebuggerTests {
             }
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         public async Task StepToEntryPoint() {
             // https://pytools.codeplex.com/workitem/1344
             var debugger = new PythonDebugger();
@@ -1138,7 +1138,7 @@ namespace DebuggerTests {
         /// Sets 2 breakpoints on one line after another, hits the 1st one, then steps onto
         /// the next one.  Makes sure we only break in once.
         /// </summary>
-        [TestMethod, Priority(TestExtensions.CORE_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.CORE_UNIT_TEST)]
         public async Task BreakStepStep() {
             // http://pytools.codeplex.com/workitem/815
             
@@ -1171,7 +1171,7 @@ namespace DebuggerTests {
             await StartAndWaitForExitAsync(processRunInfo);
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         public async Task BreakpointNonMainFileRemoved() {
             // http://pytools.codeplex.com/workitem/638
 
@@ -1187,7 +1187,7 @@ namespace DebuggerTests {
         }
 
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         public async Task BreakpointNonMainThreadMainThreadExited() {
             // http://pytools.codeplex.com/workitem/638
 
@@ -1199,7 +1199,7 @@ namespace DebuggerTests {
             }.RunAsync();
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         public async Task TestBreakpointsCollidingFilenames() {
             // http://pytools.codeplex.com/workitem/565
 
@@ -1212,7 +1212,7 @@ namespace DebuggerTests {
             }.RunAsync();
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         public async Task TestBreakpointsRelativePathTopLevel() {
             // http://pytools.codeplex.com/workitem/522
 
@@ -1225,7 +1225,7 @@ namespace DebuggerTests {
             }.RunAsync();
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         public async Task TestBreakpointsRelativePathInPackage() {
             // http://pytools.codeplex.com/workitem/522
 
@@ -1239,7 +1239,7 @@ namespace DebuggerTests {
             }.RunAsync();
         }
 
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
         public async Task TestBreakpointHitOtherThreadStackTrace() {
             // http://pytools.codeplex.com/workitem/483
 
@@ -1310,7 +1310,7 @@ namespace DebuggerTests {
             }
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         public async Task TestBreakpointUpdateConditional() {
             await BreakUpdateBreakpointAndContinue(
                 Path.Combine(DebuggerTestPath, "BreakpointTest5.py"),
@@ -1320,7 +1320,7 @@ namespace DebuggerTests {
             );
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         public async Task TestBreakpointUpdatePassCount() {
             await BreakUpdateBreakpointAndContinue(
                 Path.Combine(DebuggerTestPath, "BreakpointTest5.py"),
@@ -1330,7 +1330,7 @@ namespace DebuggerTests {
             );
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         public async Task TestBreakpointUpdateHitCount() {
             await BreakUpdateBreakpointAndContinue(
                 Path.Combine(DebuggerTestPath, "BreakpointTest5.py"),
@@ -1397,7 +1397,7 @@ namespace DebuggerTests {
             }
         }
 
-        [TestMethod, Priority(TestExtensions.CORE_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.CORE_UNIT_TEST)]
         public async Task TestBreakpoints() {
             await new BreakpointTest(this, "BreakpointTest.py") {
                 Breakpoints = { 1 },
@@ -1405,7 +1405,7 @@ namespace DebuggerTests {
             }.RunAsync();
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         public async Task TestBreakpoints2() {
             await new BreakpointTest(this, "BreakpointTest2.py") {
                 Breakpoints = { 3 },
@@ -1413,7 +1413,7 @@ namespace DebuggerTests {
             }.RunAsync();
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         public async Task TestBreakpoints3() {
             await new BreakpointTest(this, "BreakpointTest3.py") {
                 Breakpoints = { 1 },
@@ -1421,7 +1421,7 @@ namespace DebuggerTests {
             }.RunAsync();
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         public async Task TestBreakpointsConditionalWhenTrue() {
             await new BreakpointTest(this, "BreakpointTest2.py") {
                 Breakpoints = {
@@ -1437,7 +1437,7 @@ namespace DebuggerTests {
             }.RunAsync();
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         public async Task TestBreakpointsConditionalWhenChanged() {
             var expectedReprs = new Queue<string>(new[] { "0", "2", "4", "6", "8" });
 
@@ -1457,7 +1457,7 @@ namespace DebuggerTests {
             Assert.AreEqual(0, expectedReprs.Count);
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         public async Task TestBreakpointsPassCountEvery() {
             var expectedReprs = new Queue<string>(new[] { "2", "5", "8" });
             var expectedHitCounts = new Queue<int>(new[] { 3, 6, 9 });
@@ -1480,7 +1480,7 @@ namespace DebuggerTests {
             Assert.AreEqual(0, expectedHitCounts.Count);
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         public async Task TestBreakpointsPassCountWhenEqual() {
             await new BreakpointTest(this, "BreakpointTest5.py") {
                 Breakpoints = {
@@ -1497,7 +1497,7 @@ namespace DebuggerTests {
             }.RunAsync();
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         public async Task TestBreakpointsPassCountWhenEqualOrGreater() {
             var expectedReprs = new Queue<string>(new[] { "7", "8", "9" });
             var expectedHitCounts = new Queue<int>(new[] { 8, 9, 10 });
@@ -1520,7 +1520,7 @@ namespace DebuggerTests {
             Assert.AreEqual(0, expectedHitCounts.Count);
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         public async Task TestBreakpointsPassCountAndCondition() {
             await new BreakpointTest(this, "BreakpointTest5.py") {
                 Breakpoints = {
@@ -1539,7 +1539,7 @@ namespace DebuggerTests {
             }.RunAsync();
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         public async Task TestBreakpointRemove() {
             await new BreakpointTest(this, "BreakpointTest2.py") {
                 Breakpoints = {
@@ -1549,7 +1549,7 @@ namespace DebuggerTests {
             }.RunAsync();
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         public async Task TestBreakpointFailed() {
             var debugger = new PythonDebugger();
 
@@ -1578,7 +1578,7 @@ namespace DebuggerTests {
 
         #region Call Stack Tests
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         public async Task TestCallStackFunctionNames() {
             var expectedNames = new[] {
                 "InnerClass.InnermostClass.innermost_method in nested_function in OuterClass.outer_method",
@@ -1641,7 +1641,7 @@ namespace DebuggerTests {
             }
         }
 
-        [TestMethod, Priority(TestExtensions.CORE_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         [TestCategory("10s"), TestCategory("60s")]
         public async Task TestExceptions() {
             var debugger = new PythonDebugger();
@@ -1726,7 +1726,7 @@ namespace DebuggerTests {
             }
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         public async Task TestExceptionInEgg() {
             var debugger = new PythonDebugger();
 
@@ -1850,7 +1850,7 @@ namespace DebuggerTests {
         /// <summary>
         /// Test cases for http://pytools.codeplex.com/workitem/367
         /// </summary>
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         [TestCategory("10s")]
         public async Task TestExceptionsSysExitZero() {
             var debugger = new PythonDebugger();
@@ -1907,7 +1907,7 @@ namespace DebuggerTests {
             );
         }
 
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
         public async Task TestExceptionHandlers() {
             var debugger = new PythonDebugger();
 
@@ -1962,7 +1962,7 @@ namespace DebuggerTests {
 
         #region Module Load Tests
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         public async Task TestModuleLoad() {
             var debugger = new PythonDebugger();
 
@@ -2001,7 +2001,7 @@ namespace DebuggerTests {
 
         #region Exit Code Tests
 
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
         [TestCategory("10s")]
         public async Task TestStartup() {
             var debugger = new PythonDebugger();
@@ -2019,7 +2019,7 @@ namespace DebuggerTests {
             await TestExitCodeAsync(debugger, Path.Combine(DebuggerTestPath, "CheckNameAndFile.py"), 0);
         }
 
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
         [TestCategory("10s")]
         public async Task TestWindowsStartup() {
             var debugger = new PythonDebugger();
@@ -2119,7 +2119,7 @@ namespace DebuggerTests {
 
         #region Argument Tests
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         public async Task TestInterpreterArguments() {
             Version.AssertInstalled();
             var debugger = new PythonDebugger();
@@ -2132,7 +2132,7 @@ namespace DebuggerTests {
 
         #region Output Tests
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         public async Task TestOutputRedirection() {
             var debugger = new PythonDebugger();
             var expectedOutput = new Queue<string>(new[] { "stdout", "stderr" });
@@ -2160,7 +2160,7 @@ namespace DebuggerTests {
             }
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         public async Task Test3xStdoutBuffer() {
             if (Version.Version.Is3x()) {
                 var debugger = new PythonDebugger();
@@ -2181,7 +2181,7 @@ namespace DebuggerTests {
             }
         }
 
-        [TestMethod, Priority(TestExtensions.P2_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P2_UNIT_TEST)]
         public async Task TestInputFunction() {
             // 845 Python 3.3 Bad argument type for the debugger output wrappers
             // A change to the Python 3.3 implementation of input() now requires

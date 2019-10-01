@@ -52,7 +52,7 @@ namespace TestAdapterTests {
             }
         }
 
-        [TestMethod, Priority(TestExtensions.CORE_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.CORE_UNIT_TEST)]
         [TestCategory("10s")]
         public void DiscoverPytest() {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
@@ -75,7 +75,7 @@ namespace TestAdapterTests {
             DiscoverTests(testEnv, new[] { testFilePath }, runSettings, expectedTests);
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         [TestCategory("10s")]
         public void DiscoverPytestUppercaseFileName() {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
@@ -96,7 +96,7 @@ namespace TestAdapterTests {
             DiscoverTests(testEnv, new[] { testFilePath }, runSettings, expectedTests);
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         [TestCategory("10s")]
         public void DiscoverPytestTimeoutError() {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
@@ -126,7 +126,7 @@ namespace TestAdapterTests {
             );
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         [TestCategory("10s")]
         public void DiscoverPytestSearchPath() {
             // test_search_path.py has an import at global scope that requires search path to resolve
@@ -155,7 +155,7 @@ namespace TestAdapterTests {
             DiscoverTests(testEnv, new[] { testFilePath }, runSettings, expectedTests);
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         [TestCategory("10s")]
         public void DiscoverPytestSyntaxErrorPartialResults() {
             // one file has a valid passing test,
@@ -181,7 +181,7 @@ namespace TestAdapterTests {
             DiscoverTests(testEnv, new[] { testFilePath1, testFilePath2 }, runSettings, expectedTests);
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         [TestCategory("10s")]
         public void DiscoverPytestSyntaxErrorLogErrors() {
             // one file has a valid passing test,
@@ -218,7 +218,7 @@ namespace TestAdapterTests {
             );
         }
 
-        [TestMethod, Priority(TestExtensions.CORE_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.CORE_UNIT_TEST)]
         [TestCategory("10s")]
         public void DiscoverPytestImportError() {
             // one file has a valid passing test,
@@ -244,7 +244,7 @@ namespace TestAdapterTests {
             DiscoverTests(testEnv, new[] { testFilePath1, testFilePath2 }, runSettings, expectedTests);
         }
 
-        [TestMethod, Priority(TestExtensions.CORE_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.CORE_UNIT_TEST)]
         [TestCategory("10s")]
         public void DiscoverUnitTestImportError() {
             // one file has a valid passing test,
@@ -270,7 +270,7 @@ namespace TestAdapterTests {
             DiscoverTests(testEnv, new[] { testFilePath1, testFilePath2 }, runSettings, expectedTests);
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         [TestCategory("10s")]
         public void DiscoverUnitTestSyntaxErrorPartialResults() {
             // one file has a valid passing test,
@@ -305,7 +305,7 @@ namespace TestAdapterTests {
         }
 
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         [TestCategory("10s")]
         public void DiscoverUnitTestSyntaxErrorLogErrors() {
             // one file has a valid passing test,
@@ -348,7 +348,7 @@ namespace TestAdapterTests {
         }
 
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         [TestCategory("10s")]
         public void DiscoverPytestConfigPythonFiles() {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
@@ -377,7 +377,7 @@ namespace TestAdapterTests {
             DiscoverTests(testEnv, new[] { checkFilePath, testFilePath, exampleFilePath }, runSettings, expectedTests);
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         [TestCategory("10s")]
         public void DiscoverPytestConfigPythonFunctions() {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
@@ -402,7 +402,7 @@ namespace TestAdapterTests {
             DiscoverTests(testEnv, new[] { testFilePath }, runSettings, expectedTests);
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         [TestCategory("10s")]
         public void DiscoverPytestNotInstalled() {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest, installFramework: false);
@@ -428,7 +428,7 @@ namespace TestAdapterTests {
             AssertUtil.Contains(errors, string.Format(ImportErrorFormat, "pytest"));
         }
 
-        [TestMethod, Priority(TestExtensions.CORE_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.CORE_UNIT_TEST)]
         [TestCategory("10s")]
         public void DiscoverUnittest() {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
@@ -454,7 +454,7 @@ namespace TestAdapterTests {
             DiscoverTests(testEnv, new[] { testFile1Path }, runSettings, expectedTests);
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         [TestCategory("10s")]
         public void DiscoverUnittestConfiguration() {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
@@ -482,7 +482,7 @@ namespace TestAdapterTests {
             DiscoverTests(testEnv, new[] { testFilePath }, runSettings, expectedTests);
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         [TestCategory("10s")]
         public void DiscoverUnittestUppercaseFileName() {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
@@ -504,7 +504,7 @@ namespace TestAdapterTests {
         }
 
      
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         [TestCategory("10s")]
         public void DiscoverUnittestTimeoutError() {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
@@ -535,7 +535,7 @@ namespace TestAdapterTests {
         }
 
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         [TestCategory("10s")]
         public void DiscoverUnittestDecoratorsIgnoreLineNumbers() {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
@@ -559,7 +559,7 @@ namespace TestAdapterTests {
         }
 
         [Ignore] //until we fix https://github.com/microsoft/PTVS/issues/5497
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         [TestCategory("10s")]
         public void DiscoverUnittestDecoratorsCorrectLineNumbers() {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
@@ -582,7 +582,7 @@ namespace TestAdapterTests {
             DiscoverTests(testEnv, new[] { testFilePath }, runSettings, expectedTests);
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         [TestCategory("10s")]
         public void DiscoverUnittestRelativeImport() {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
@@ -609,7 +609,7 @@ namespace TestAdapterTests {
             DiscoverTests(testEnv, new[] { testFilePath }, runSettings, expectedTests);
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         [TestCategory("10s")]
         public void DiscoverUnittestInheritance() {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
@@ -639,7 +639,7 @@ namespace TestAdapterTests {
             DiscoverTests(testEnv, new[] { baseTestFilePath, derivedTestFilePath }, runSettings, expectedTests);
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         [TestCategory("10s")]
         public void DiscoverUnitTestWarnings() {
             // one file has a valid passing test,
@@ -662,7 +662,7 @@ namespace TestAdapterTests {
             DiscoverTests(testEnv, new[] { testFilePath }, runSettings, expectedTests);
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         [TestCategory("10s")]
         public void DiscoverPytestWarnings() {
             // one file has a valid passing test,

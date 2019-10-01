@@ -101,7 +101,7 @@ namespace DjangoTests {
             }
         }
 
-        [TestMethod, Priority(TestExtensions.P3_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P3_FAILING_UNIT_TEST)]
         [TestCategory("10s"), TestCategory("60s")]
         public async Task TemplateStepping() {
             Init(DbState.OarApp);
@@ -163,7 +163,7 @@ namespace DjangoTests {
             );
         }
 
-        [TestMethod, Priority(TestExtensions.P3_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P3_FAILING_UNIT_TEST)]
         [TestCategory("10s")]
         public async Task BreakInTemplate() {
             Init(DbState.OarApp);
@@ -186,7 +186,7 @@ namespace DjangoTests {
             }.RunAsync();
         }
 
-        [TestMethod, Priority(TestExtensions.P3_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P3_FAILING_UNIT_TEST)]
         public async Task TemplateLocals() {
             Init(DbState.OarApp);
 

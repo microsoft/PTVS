@@ -78,7 +78,7 @@ namespace PythonToolsTests {
                 notifyKeyChange);
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         public void RegistryWatcherUpdateNonRecursive() {
             string keyName = "RegistryWatcherUpdateNonRecursive";
 
@@ -124,7 +124,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         public void RegistryWatcherAddNonRecursive() {
             string keyName = "RegistryWatcherAddNonRecursive";
 
@@ -173,7 +173,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         public void RegistryWatcherDeleteNonRecursive() {
             string keyName = "RegistryWatcherDeleteNonRecursive";
 
@@ -227,7 +227,7 @@ namespace PythonToolsTests {
 
 
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         public void RegistryWatcherUpdateRecursive() {
             string keyName = "RegistryWatcherUpdateRecursive";
 
@@ -277,7 +277,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         public void RegistryWatcherAddRecursive() {
             string keyName = "RegistryWatcherAddRecursive";
 
@@ -331,7 +331,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
         public void RegistryWatcherDeleteRecursive() {
             string keyName = "RegistryWatcherDeleteRecursive";
 
@@ -405,7 +405,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(TestExtensions.CORE_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.CORE_UNIT_TEST)]
         public void RegistryWatcher100Keys() {
             string keyName = "RegistryWatcher100Keys";
 
