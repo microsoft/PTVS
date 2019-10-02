@@ -125,7 +125,7 @@ name_not_in_os
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.P2_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P2)]
         public void TypeClassification() {
             var code = @"class MyClass(object):
     pass
@@ -197,7 +197,7 @@ e'''";
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.P2_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P2)]
         public void AsyncAwaitClassification() {
             var code = @"
 await f

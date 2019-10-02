@@ -63,7 +63,7 @@ namespace DebuggerTests {
         /// in addition to patching the thread method so that breakpoints on threads created after
         /// attach via the threading module can be hit.
         /// </summary>
-        [TestMethod, Priority(UnitTestPriority.P3_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P3)]
         public virtual async Task AttachThreadingStartNewThread() {
             // http://pytools.codeplex.com/workitem/638
             // http://pytools.codeplex.com/discussions/285741#post724014
@@ -191,7 +191,7 @@ namespace DebuggerTests {
         /// hits resume the thread will eventually return back to Python code, and then we'll block it
         /// because we haven't cleared the stepping bit.
         /// </summary>
-        [TestMethod, Priority(UnitTestPriority.P3_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P3)]
         [TestCategory("10s")]
         public virtual async Task AttachMultithreadedSleeper() {
             // http://pytools.codeplex.com/discussions/285741 1/12/2012 6:20 PM
@@ -228,7 +228,7 @@ namespace DebuggerTests {
         /// 
         /// http://pytools.codeplex.com/workitem/834
         /// </summary>
-        [TestMethod, Priority(UnitTestPriority.P3_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P3)]
         public virtual async Task AttachSingleThreadedSleeper() {
             // http://pytools.codeplex.com/discussions/285741 1/12/2012 6:20 PM
             Process p = Process.Start(Version.InterpreterPath, "-B \"" + TestData.GetPath(@"TestData\DebuggerProject\AttachSingleThreadedSleeper.py") + "\"");
@@ -258,7 +258,7 @@ namespace DebuggerTests {
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.P2_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P2)]
         [TestCategory("10s")]
         public virtual async Task AttachReattachThreadingInited() {
             Process p = Process.Start(Version.InterpreterPath, "-B \"" + TestData.GetPath(@"TestData\DebuggerProject\InfiniteRunThreadingInited.py") + "\"");
@@ -293,7 +293,7 @@ namespace DebuggerTests {
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.P3_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P3)]
         [TestCategory("10s")]
         public virtual async Task AttachReattachInfiniteThreads() {
             Process p = Process.Start(Version.InterpreterPath, "-B \"" + TestData.GetPath(@"TestData\DebuggerProject\InfiniteThreads.py") + "\"");
@@ -716,7 +716,7 @@ int main(int argc, char* argv[]) {
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.P3_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P3)]
         [TestCategory("10s")]
         public virtual async Task AttachAndStepWithBlankSysPrefix() {
             string script = TestData.GetPath(@"TestData\DebuggerProject\InfiniteRunBlankPrefix.py");
@@ -1064,7 +1064,7 @@ int main(int argc, char* argv[]) {
             await TestPtvsdCommandLine("--wait --interface " + ip, new Uri("tcp://" + ip));
         }
 
-        [TestMethod, Priority(UnitTestPriority.P2_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P2)]
         public async Task AttachPtvsdCommandLineWait() {
             if (!HasPtvsdCommandLine) {
                 return;
@@ -1391,7 +1391,7 @@ int main(int argc, char* argv[]) {
         public override async Task AttachWithOutputRedirection() { }
         public override async Task AttachAndStepWithBlankSysPrefix() { }
 
-        [TestMethod, Priority(UnitTestPriority.P2_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P2)]
         public override async Task AttachPtvsdAndStopDebugging() => await base.AttachPtvsdAndStopDebugging();
 
         protected override string PtvsdInterpreterArguments {

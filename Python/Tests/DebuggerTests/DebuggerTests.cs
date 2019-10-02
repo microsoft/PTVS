@@ -46,7 +46,7 @@ namespace DebuggerTests {
         }
 
 
-        //[TestMethod, UnitTestPriority(TestExtensions.P3_UNIT_TEST)]
+        //[TestMethod, Priority(UnitTestPriority.P3)]
         //public void TestThreads() {
         //    // TODO: Thread creation tests w/ both thread.start_new_thread and threading module.
         //    Assert.Fail("TODO: Thread creation tests w/ both thread.start_new_thread and threading module.");
@@ -142,7 +142,7 @@ namespace DebuggerTests {
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.P2_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P2)]
         public async Task EnumChildrenTestPrevFrame() {
             const int breakLine = 3;
 
@@ -870,7 +870,7 @@ namespace DebuggerTests {
 
         #region Stepping Tests
 
-        [TestMethod, Priority(UnitTestPriority.P3_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P3)]
         [TestCategory("10s"), TestCategory("60s")]
         public async Task StepTest() {
             // Bug 1315: https://pytools.codeplex.com/workitem/1315
@@ -2181,7 +2181,7 @@ namespace DebuggerTests {
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.P2_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P2)]
         public async Task TestInputFunction() {
             // 845 Python 3.3 Bad argument type for the debugger output wrappers
             // A change to the Python 3.3 implementation of input() now requires

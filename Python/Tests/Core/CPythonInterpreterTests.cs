@@ -92,7 +92,7 @@ namespace PythonToolsTests {
             AssertUtil.CheckCollection(analyzer.GetAllNames(), new[] { "package_method", "package_method_two" }, new[] { "test_package" });
         }
 
-        [TestMethod, Priority(UnitTestPriority.P2_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P2)]
         public void ImportPydFromSearchPath() {
             var analyzer = new PythonAnalysis("Global|PythonCore|2.7-32");
 

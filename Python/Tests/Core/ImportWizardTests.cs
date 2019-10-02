@@ -297,7 +297,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.P2_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P2)]
         public void ImportWizardVirtualEnv() {
             var python = PythonPaths.Versions.LastOrDefault(pv =>
                 pv.IsCPython &&
@@ -310,7 +310,7 @@ namespace PythonToolsTests {
             ImportWizardVirtualEnvWorker(python, "virtualenv", "lib\\orig-prefix.txt", false);
         }
 
-        [TestMethod, Priority(UnitTestPriority.P2_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P2)]
         public void ImportWizardVEnv() {
             var python = PythonPaths.Versions.LastOrDefault(pv =>
                 pv.IsCPython && File.Exists(Path.Combine(pv.PrefixPath, "Lib", "venv", "__main__.py"))
@@ -319,7 +319,7 @@ namespace PythonToolsTests {
             ImportWizardVirtualEnvWorker(python, "venv", "pyvenv.cfg", false);
         }
 
-        [TestMethod, Priority(UnitTestPriority.P2_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P2)]
         [TestCategory("10s")]
         public void ImportWizardBrokenVirtualEnv() {
             var python = PythonPaths.Versions.LastOrDefault(pv =>
@@ -333,7 +333,7 @@ namespace PythonToolsTests {
             ImportWizardVirtualEnvWorker(python, "virtualenv", "lib\\orig-prefix.txt", true);
         }
 
-        [TestMethod, Priority(UnitTestPriority.P2_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P2)]
         [TestCategory("10s")]
         public void ImportWizardBrokenVEnv() {
             var python = PythonPaths.Versions.LastOrDefault(pv =>

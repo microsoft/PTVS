@@ -68,7 +68,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.P2_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P2)]
         public void CutRenamePaste() {
             var testDef = Generator.Project("DragDropCopyCutPaste",
                 ProjectGenerator.ItemGroup(

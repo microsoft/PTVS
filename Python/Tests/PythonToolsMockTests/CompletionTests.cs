@@ -851,7 +851,7 @@ class B(dict):
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.P2_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P2)]
         public void HideAdvancedMembers() {
             using (var view = new PythonEditor()) {
                 // No text - expect all non-advanced members

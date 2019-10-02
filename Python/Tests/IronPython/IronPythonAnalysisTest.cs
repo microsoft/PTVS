@@ -447,7 +447,7 @@ w.Activate
         }
 
         /*
-        [TestMethod, UnitTestPriority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void OverrideParams() {
             var text = @"
 import System
@@ -864,7 +864,7 @@ y = f('fob', 'oar')";
             entry.AssertIsInstance("y", BuiltinTypeId.Str);
         }
 
-        //        [TestMethod, UnitTestPriority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        //        [TestMethod, Priority(UnitTestPriority.P1)]
         //        public void CartesianMerge() {
         //            var limits = GetLimits();
         //            // Ensure we include enough calls
@@ -1184,7 +1184,7 @@ z = mod1.f('abc')
         }
 
         /* Doesn't pass, we don't have a way to clear the assignments across modules...
-        [TestMethod, UnitTestPriority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void MutatingVariables() {
             using (var state = PythonAnalyzer.CreateSynchronously(InterpreterFactory, Interpreter)) {
 
@@ -6335,7 +6335,7 @@ tyt = tuple(t)
         }
 
 #if FALSE
-        [TestMethod, UnitTestPriority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void SaveStdLib() {
             // only run this once...
             if (GetType() == typeof(AnalysisTest)) {

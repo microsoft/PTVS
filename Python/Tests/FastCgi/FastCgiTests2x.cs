@@ -83,7 +83,7 @@ namespace FastCgiTests {
         }
         /*
          * Currently disabled, we need to unify this w/ where web.config lives in Azure first 
-        [TestMethod, UnitTestPriority(TestExtensions.IMPORTANT_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void ConfigVariables() {
             using (var site = ConfigureIISForDjango(AppCmdPath, InterpreterPath, "DjangoTestApp.settings")) {
                 File.Copy("TestData\\DjangoTestApp\\web.config", Path.Combine(site.SiteDir, "web.config"));
