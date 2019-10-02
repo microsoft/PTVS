@@ -40,7 +40,7 @@ namespace PythonToolsMockTests {
             AssertListener.Initialize();
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void KeywordClassification27() {
             var code = string.Join(Environment.NewLine, PythonKeywords.All(PythonLanguageVersion.V27));
             code += "\r\nTrue\r\nFalse";
@@ -63,7 +63,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void KeywordClassification33() {
             var code = string.Join(Environment.NewLine, PythonKeywords.All(PythonLanguageVersion.V33));
 
@@ -85,7 +85,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void ModuleClassification() {
             var code = @"import abc
 import os
@@ -105,7 +105,7 @@ abc = True
             return new MockTextBuffer(code, PythonCoreConstants.ContentType, "C:\\fob.py");
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void ImportClassifications() {
             // We import a name that is not in os, because otherwise
             // its classification may depend on the current DB for the
@@ -141,7 +141,7 @@ MyClassType = type(mc)
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void ParameterClassification() {
             var code = @"def f(a, b, c):
     a = b
@@ -158,7 +158,7 @@ b = c
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void ParameterAnnotationClassification() {
             var code = @"class A: pass
 class B: pass
@@ -172,7 +172,7 @@ def f(a = A, b : B):
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void MultilineStringClassification() {
             var code = @"t = '''a
 
@@ -184,7 +184,7 @@ e'''";
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void TrueFalseClassification() {
             var code = "True False";
 
@@ -228,7 +228,7 @@ async def f():
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void ReturnAnnotationClassifications() {
             var code = @"
 def f() -> int:
@@ -240,7 +240,7 @@ def f() -> int:
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void DocStringClassifications() {
             var code = @"def f():
     '''doc string'''
@@ -252,7 +252,7 @@ def f() -> int:
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void RegexClassifications() {
             var code = @"import re as R
 R.compile('pattern', 'str')

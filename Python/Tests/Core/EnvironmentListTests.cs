@@ -74,7 +74,7 @@ namespace PythonToolsUITests {
             return MockInterpreterConfiguration(description, version, InterpreterUIMode.Normal);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
         public void HasInterpreters() {
             var sp = new MockServiceProvider();
@@ -109,7 +109,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
         public void InterpretersWithSameNames() {
             var sp = new MockServiceProvider();
@@ -225,7 +225,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void NonDefaultInterpreter() {
             var mockProvider = new MockPythonInterpreterFactoryProvider("Test Provider 1",
                 new MockPythonInterpreterFactory(MockInterpreterConfiguration("Test Factory 1", new Version(2, 7))),
@@ -269,7 +269,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.CORE_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P0)]
         public void AddFactories() {
             var mockService = new MockInterpreterOptionsService();
             using (var wpf = new WpfProxy())
@@ -298,7 +298,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void FactoryWithInvalidPath() {
             using (var wpf = new WpfProxy())
             using (var list = new EnvironmentListProxy(wpf)) {
@@ -333,7 +333,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void FactoryWithValidPath() {
             using (var wpf = new WpfProxy())
             using (var list = new EnvironmentListProxy(wpf)) {
@@ -354,7 +354,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void InstalledFactories() {
             using (var wpf = new WpfProxy())
             using (var list = new EnvironmentListProxy(wpf)) {
@@ -386,7 +386,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void AddUpdateRemoveConfigurableFactory() {
             using (var wpf = new WpfProxy())
             using (var list = new EnvironmentListProxy(wpf)) {
@@ -498,7 +498,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("60s")]
         public async Task AddUpdateRemoveConfigurableFactoryThroughUI() {
             using (var wpf = new WpfProxy())
@@ -558,7 +558,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void ChangeDefault() {
             bool changed = false;
             var container = CreateCompositionContainer();
@@ -626,21 +626,21 @@ namespace PythonToolsUITests {
             return tcs.Task;
         }
 
-        [TestMethod, Priority(UnitTestPriority.CORE_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P0)]
         [TestCategory("10s")]
         public async Task PipExtensionInVirtualEnv() {
             var service = MakeEmptyVEnv();
             await CheckPipExtensionAsync(service);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
         public async Task PipExtensionInCondaEnv() {
             var service = await MakeEmptyCondaEnvAsync(PythonLanguageVersion.V37);
             await CheckPipExtensionAsync(service);
         }
 
-        [TestMethod, Priority(UnitTestPriority.CORE_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P0)]
         [TestCategory("10s")]
         public async Task CondaExtension() {
             var service = await MakeEmptyCondaEnvAsync(PythonLanguageVersion.V37);
@@ -663,7 +663,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public async Task SaveLoadCache() {
             var cachePath = Path.Combine(TestData.GetTempPath(), "pip.cache");
             using (var cache = new TestPipPackageCache(cachePath)) {
@@ -693,7 +693,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public async Task UpdatePackageInfo() {
             var pm = new MockPackageManager();
 
@@ -720,7 +720,7 @@ namespace PythonToolsUITests {
             );
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
         public void VendorInfo() {
             var sp = new MockServiceProvider();
@@ -760,7 +760,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void FileNameEllipsis() {
             TestFileNameEllipsis("C:\\Python\\python.exe", "C:\\", "Python", "\\python.exe");
             TestFileNameEllipsis("C:\\Python\\lib\\", "C:\\", "Python", "\\lib\\");
@@ -772,7 +772,7 @@ namespace PythonToolsUITests {
             TestFileNameEllipsis("", "", "", "");
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void FilterInterpreterPython2() {
             PythonVersion pythonInterpreter =   PythonPaths.Python27_x64 ??
                                                 PythonPaths.Python27;
@@ -781,7 +781,7 @@ namespace PythonToolsUITests {
             FilterPythonInterpreterEnv(pythonInterpreter);
         }
 
-        [TestMethod, Priority(UnitTestPriority.CORE_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P0)]
         public void FilterInterpreterPython3() {
             PythonVersion pythonInterpreter =   PythonPaths.Python37_x64 ??
                                                 PythonPaths.Python37 ??
@@ -794,7 +794,7 @@ namespace PythonToolsUITests {
             FilterPythonInterpreterEnv(pythonInterpreter);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void FilterInterpreterConda2() {
             PythonVersion condaInterpreter = PythonPaths.Anaconda27_x64 ?? PythonPaths.Anaconda27;
 
@@ -802,7 +802,7 @@ namespace PythonToolsUITests {
             FilterCondaInterpreter(condaInterpreter);
         }
 
-        [TestMethod, Priority(UnitTestPriority.CORE_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P0)]
         public void FilterInterpreterConda3() {
             PythonVersion condaInterpreter =    PythonPaths.Anaconda37_x64 ??
                                                 PythonPaths.Anaconda36_x64 ??
@@ -813,7 +813,7 @@ namespace PythonToolsUITests {
             FilterCondaInterpreter(condaInterpreter);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void FilterInterpreterIronpython2() {
             PythonVersion ironpythonInterpreter = PythonPaths.IronPython27_x64 ?? PythonPaths.IronPython27;
             if (ironpythonInterpreter == null) {

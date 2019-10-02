@@ -27,7 +27,7 @@ namespace PythonToolsTests {
     public class InvalidEncodingSquiggleProviderTests {
         #region Test Cases
 
-        [TestMethod, Priority(UnitTestPriority.CORE_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P0)]
         public void EncodingValidation() {
             // https://www.python.org/dev/peps/pep-0263/
             RunTest(string.Empty, Encoding.UTF8, null, 0);

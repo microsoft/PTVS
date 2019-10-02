@@ -40,7 +40,7 @@ namespace PythonToolsTests {
 
         public TestContext TestContext { get; set; }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void UpdateWorkerRoleServiceDefinitionTest() {
             var doc = new XmlDocument();
             doc.LoadXml(@"<?xml version=""1.0"" encoding=""utf-8""?>
@@ -78,7 +78,7 @@ namespace PythonToolsTests {
 </ServiceDefinition>", doc);
         }
 
-        [TestMethod, Priority(UnitTestPriority.CORE_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P0)]
         public void UpdateWebRoleServiceDefinitionTest() {
             var doc = new XmlDocument();
             doc.LoadXml(@"<?xml version=""1.0"" encoding=""utf-8""?>
@@ -118,7 +118,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public async Task LoadAndUnloadModule() {
             var services = PythonToolsTestUtilities.CreateMockServiceProvider().GetEditorServices();
             using (var are = new AutoResetEvent(false))
@@ -181,7 +181,7 @@ namespace PythonToolsTests {
         }
 
 
-        [TestMethod, Priority(UnitTestPriority.P2_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P2_FAILING)]
         public async Task AnalyzeBadEgg() {
             var factories = new[] { InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(3, 4)) };
             var services = PythonToolsTestUtilities.CreateMockServiceProvider().GetEditorServices();

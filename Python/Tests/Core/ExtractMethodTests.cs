@@ -52,7 +52,7 @@ namespace PythonToolsTests {
         [TestCleanup]
         public void TestCleanup() => TestEnvironmentImpl.TestCleanup();
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public async Task TestGlobalNonLocalVars() {
             await SuccessTest("ABC = 42",
 @"def f():
@@ -104,7 +104,7 @@ def f():
 
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public async Task TestDefinitions() {
             await SuccessTest("x = .. = h()",
 @"def f():
@@ -163,7 +163,7 @@ def f(): pass",
 f = g()");
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public async Task TestLeadingComment() {
             await SuccessTest("x = 41",
 @"# fob
@@ -176,7 +176,7 @@ def g():
 x = g()");
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public async Task AssignInIfStatementReadAfter() {
             await ExtractMethodTest(@"class C:
     def fob(self):
@@ -240,7 +240,7 @@ x = g()");
 
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public async Task ExtractMethodIndexExpr() {
             await ExtractMethodTest(@"class C:
     def process_kinect_event(self, e):
@@ -258,7 +258,7 @@ x = g()");
  ), scopeName: "C");
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public async Task TestExtractLambda() {
             // lambda is present in the code
             await ExtractMethodTest(
@@ -287,7 +287,7 @@ def f():
     abc = g()"));
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public async Task TestExtractGenerator() {
             var code = @"def f(imp = imp):
     yield 42";
@@ -301,7 +301,7 @@ def f(imp = g()):
     yield 42"));
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public async Task TestExtractDefaultValue() {
             var code = @"def f(imp = imp):
     pass";
@@ -315,14 +315,14 @@ def f(imp = g()):
     pass"));
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public async Task TestFromImportStar() {
             await ExtractMethodTest(
 @"def f():
     from sys import *", "from sys import *", TestResult.Error(ErrorImportStar));
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public async Task TestExtractDefiniteAssignmentAfter() {
             await SuccessTest("x = 42",
 @"def f():
@@ -340,7 +340,7 @@ def f():
         print x, y");
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public async Task TestExtractDefiniteAssignmentAfterStmtList() {
             await SuccessTest("x = 42",
 @"def f():
@@ -361,7 +361,7 @@ def f():
 
 
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public async Task TestExtractDefiniteAssignmentAfterStmtListRead() {
             await SuccessTest("x = 100",
 @"def f():
@@ -380,7 +380,7 @@ def f():
         print (x, y)");
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         [TestCategory("10s")]
         public async Task TestAllNodes() {
             var prefixes = new string[] { " # fob\r\n", "" };
@@ -500,7 +500,7 @@ def f():
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public async Task TestExtractDefiniteAssignmentAfterStmtListMultipleAssign() {
             await SuccessTest("x = 100; x = 200",
 @"def f():
@@ -521,7 +521,7 @@ def f():
 
 
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public async Task TestExtractFromClass() {
             await ExtractMethodTest(
 @"class C:
@@ -529,7 +529,7 @@ def f():
     oar = 100", "abc .. 100", TestResult.Error(ErrorExtractFromClass));
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public async Task TestExtractSuiteWhiteSpace() {
             await SuccessTest("x .. 200",
 @"def f():
@@ -565,7 +565,7 @@ def f():
         /// <summary>
         /// Test cases that verify we correctly identify when not all paths contain return statements.
         /// </summary>
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public async Task TestNotAllCodePathsReturn() {            
             await TestMissingReturn("for i .. 23", @"def f(x):
     for i in xrange(100):
@@ -625,7 +625,7 @@ def f():
         }
 
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public async Task TestReturnWithOutputVars() {
             await TestReturnWithOutputs("if x .. 100", @"def f(x):
     if x:
@@ -637,7 +637,7 @@ def f():
 ");
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public async Task TestCannotRefactorYield() {
             await TestBadYield("yield 42", @"def f(x):
     yield 42
@@ -649,7 +649,7 @@ def f():
 ");
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public async Task TestContinueWithoutLoop() {
             await TestBadContinue("continue", @"def f(x):
     for i in xrange(100):
@@ -657,7 +657,7 @@ def f():
 ");
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public async Task TestBreakWithoutLoop() {
             await TestBadBreak("break", @"def f(x):
     for i in xrange(100):
@@ -669,7 +669,7 @@ def f():
         /// Test cases which make sure we have the right ranges for each statement when doing extract method
         /// and that we don't mess up the code before/after the statement.
         /// </summary>
-        [TestMethod, Priority(UnitTestPriority.P2_FAILING_UNIT_TEST)] // https://github.com/Microsoft/PTVS/issues/4088
+        [TestMethod, Priority(UnitTestPriority.P2_FAILING)] // https://github.com/Microsoft/PTVS/issues/4088
         public async Task StatementTests() {
             await SuccessTest("b",
 @"def f():
@@ -1108,7 +1108,7 @@ class C:
         g()");
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public async Task ClassTests() {
             await SuccessTest("x = fob",
 @"class C(object):
@@ -1218,7 +1218,7 @@ class C:
 
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public async Task TestComprehensions() {
             await SuccessTest("i % 2 == 0", @"def f():
     x = [i for i in range(100) if i % 2 == 0]", @"def g(i):
@@ -1249,7 +1249,7 @@ def f():
     x = {k:v for k,v in range(100) if g(k, v)}", version: new Version(3, 2));
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public async Task SuccessfulTests() {
             await SuccessTest("x .. 100",
 @"def f():
@@ -1603,7 +1603,7 @@ def f(x):
     return (g())");
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public async Task ExtractAsyncFunction() {
             // Ensure extracted bodies that use await generate async functions
 

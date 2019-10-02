@@ -40,7 +40,7 @@ namespace PythonToolsMockTests {
     public class ProjectTests {
         static PythonProjectGenerator Generator = PythonProjectGenerator.CreateStatic();
 
-        [TestMethod, Priority(UnitTestPriority.P2_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P2_FAILING)]
         public void BasicProjectTest() {
             var sln = Generator.Project(
                 "HelloWorld",
@@ -97,7 +97,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.P2_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P2_FAILING)]
         [TestCategory("Installed")]
         public void ShouldWarnOnRun() {
             var sln = Generator.Project(
@@ -141,7 +141,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.P2_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P2_FAILING)]
         [TestCategory("Installed")] // Requires .targets file to be installed
         public void OAProjectMustBeRightType() {
             var sln = Generator.Project(

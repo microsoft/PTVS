@@ -45,7 +45,7 @@ namespace PythonToolsTests {
                 .GetResult();
         }
 
-        [TestMethod, Priority(UnitTestPriority.CORE_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P0)]
         public void ImportWizardSimple() {
             using (var wpf = new WpfProxy()) {
                 var root = TestData.GetTempPath();
@@ -74,7 +74,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void ImportWizardFiltered() {
             using (var wpf = new WpfProxy()) {
                 var root = TestData.GetTempPath();
@@ -101,7 +101,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void ImportWizardFolders() {
             using (var wpf = new WpfProxy()) {
                 var root = TestData.GetTempPath();
@@ -132,7 +132,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void ImportWizardInterpreter() {
             using (var wpf = new WpfProxy()) {
                 var root = TestData.GetTempPath();
@@ -161,7 +161,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void ImportWizardStartupFile() {
             using (var wpf = new WpfProxy()) {
                 var root = TestData.GetTempPath();
@@ -182,7 +182,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void ImportWizardSemicolons() {
             // https://pytools.codeplex.com/workitem/2022
             using (var wpf = new WpfProxy()) {
@@ -364,7 +364,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.CORE_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P0)]
         public void ImportWizardCustomizations() {
             ImportWizardCustomizationsWorker(DefaultProjectCustomization.Instance, proj => {
                 Assert.AreEqual("Program.py", proj.Descendant("StartupFile").Value);
@@ -397,7 +397,7 @@ namespace PythonToolsTests {
             return task.Result;
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void ImportWizardCandidateStartupFiles() {
             var sourcePath = TestData.GetTempPath();
             // Create a fake set of files to import
@@ -438,7 +438,7 @@ namespace PythonToolsTests {
             );
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void ImportWizardDefaultStartupFile() {
             var files = new[] { "a.py", "b.py", "c.py" };
             var expectedDefault = files[0];

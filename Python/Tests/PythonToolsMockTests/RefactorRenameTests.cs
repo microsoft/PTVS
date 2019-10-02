@@ -274,7 +274,7 @@ namespace PythonToolsMockTests {
             );
         }
 
-        [TestMethod, Priority(UnitTestPriority.P2_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P2_FAILING)]
         public void SanityClassField() {
             RefactorTest("xyz", "abc",
                 new[] {
@@ -464,7 +464,7 @@ abc = 200
             );
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void InheritedClassField() {
 
             RefactorTest("xyz", "abc",
@@ -512,7 +512,7 @@ abc = 200
             );
         }
 
-        [TestMethod, Priority(UnitTestPriority.P3_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P3_FAILING)]
         public void RenameGeneratorVariable() {
             // http://pytools.codeplex.com/workitem/454
             RefactorTest("xyz", "abc",
@@ -684,7 +684,7 @@ a.xyz
             );
         }
 
-        [TestMethod, Priority(UnitTestPriority.P3_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P3_FAILING)]
         [TestCategory("10s")]
         public void SanityParameter() {
             RefactorTest("xyz", "abc",
@@ -824,7 +824,7 @@ abc = 200
             );
         }
 
-        [TestMethod, Priority(UnitTestPriority.P2_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P2_FAILING)]
         public void SanityLocal() {
             RefactorTest("xyz", "abc",
                 new[] {
@@ -885,7 +885,7 @@ def h(abc):
 
         }
 
-        [TestMethod, Priority(UnitTestPriority.P2_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P2_FAILING)]
         public void SanityClosure() {
             RefactorTest("xyz", "abc",
                 new[] {
@@ -945,7 +945,7 @@ abc = 200
             );
         }
 
-        [TestMethod, Priority(UnitTestPriority.P2_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P2_FAILING)]
         public void SanityLambda() {
             RefactorTest("xyz", "abc",
                 new[] {
@@ -1152,7 +1152,7 @@ abc = 200
             );
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void SanitySlices() {
             RefactorTest("xyz", "abc", version: new Version(3, 2),
             inputs: new[] {
@@ -1262,7 +1262,7 @@ xyz = 100
             );
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void SanityNonLocal() {
             RefactorTest("xyz", "abc", version: new Version(3, 2),
             inputs: new[] {
@@ -1457,7 +1457,7 @@ class x(xyz):
             );
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void RenameMetaclass() {
             RefactorTest("xyz", "abc", version: new Version(2, 7),
             inputs: new[] {
@@ -1552,7 +1552,7 @@ fdoc = xyz.func_doc"
             );
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void SanityDelLocal() {
             RefactorTest("xyz", "abc",
             new[] {
@@ -1602,7 +1602,7 @@ def f():
             );
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void SanityDelClassMember() {
             RefactorTest("xyz", "abc",
             new[] {
@@ -1678,7 +1678,7 @@ xyz = 100
             );
         }
 
-        [TestMethod, Priority(UnitTestPriority.P2_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P2_FAILING)]
         public void DelNonLocal() {
             RefactorTest("xyz", "abc", version: new Version(3, 2),
             inputs: new[] {
@@ -1835,7 +1835,7 @@ def f():
 
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void TryStatement() {
             RefactorTest("abc", "xyz",
             new[] {
@@ -1875,7 +1875,7 @@ except Exception as abc:
 
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void FinallyStatement() {
             RefactorTest("xyz", "abc",
             new[] {
@@ -2035,7 +2035,7 @@ print(abc.upper())
         }
 
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void WithStatement() {
             RefactorTest("abc", "xyz", version: new Version(3, 2),
             inputs: new[] {
@@ -2053,7 +2053,7 @@ with abc as abc:
 
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void YieldStatement() {
             RefactorTest("xyz", "abc",
             inputs: new[] {
@@ -2161,7 +2161,7 @@ f(abc)
             );
         }
 
-        [TestMethod, Priority(UnitTestPriority.P2_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P2_FAILING)]
         public void ImportAsStatement() {
             RefactorTest("xyz", "abc",
             new[] {
@@ -2313,7 +2313,7 @@ abc = 200
 
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void NestedFunctions() {
             RefactorTest("h", "g",
                 new[] {
@@ -2387,14 +2387,14 @@ def g(a, b, c):
             );
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void CannotRename() {
             CannotRename("abc", "import abc", ErrorModuleName);
             CannotRename("abc", "from abc import oar", ErrorModuleName);
             CannotRename("abc", "import abc as oar", ErrorModuleName);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void ValidPythonIdentifier() {
             string validUnicodeCharacters = "䶵䶴㐁";
             char invalidIdentifier = '!';

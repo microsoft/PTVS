@@ -55,7 +55,7 @@ namespace IronPythonTests {
 
         #region Test Cases
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void Generics() {
             var text = @"
 import clr
@@ -70,7 +70,7 @@ zzz = y.ReturnsGenericParam()
             AssertUtil.ContainsExactly(entry.GetMemberNames("zzz", 1), "GetEnumerator", "__doc__", "__iter__", "__repr__");
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void Constructors() {
             var text = @"
 from System import AccessViolationException
@@ -94,7 +94,7 @@ n = AccessViolationException.__new__
                 ")";
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void ImportClr() {
             var text = @"
 import clr
@@ -104,7 +104,7 @@ x = 'abc'
             entry.AssertHasAttr("x", "Length");
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void ClrAddReference() {
             var text = @"
 import clr
@@ -117,7 +117,7 @@ from System.Drawing import Point
             Assert.AreEqual(35, members.Count);
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void ClrAddReferenceByName() {
             var text = @"
 import clr
@@ -128,7 +128,7 @@ from Microsoft.Scripting import SourceUnit
             Assert.AreEqual(40, entry.GetMemberNames("SourceUnit", text.IndexOf("from Microsoft.")).ToList().Count);
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void Enum() {
             var entry = ProcessText(@"
 import System
@@ -140,7 +140,7 @@ x = System.StringComparison.OrdinalIgnoreCase
             Assert.AreEqual(x.MemberType, PythonMemberType.EnumInstance);
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void Color() {
 
             var entry = ProcessText(@"
@@ -165,7 +165,7 @@ b = a.some_color
             AssertUtil.ContainsExactly(entry.GetTypes("b", 1).Select(x => x.Name), "Color");
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void BuiltinTypeSignatures() {
             var entry = ProcessText(@"
 import System
@@ -188,7 +188,7 @@ y = int
             Assert.AreEqual(24, result.Length);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void EventReferences() {
             var text = @"
 from System import EventHandler
@@ -228,7 +228,7 @@ a.fob += EventHandler(f)
                 new VariableLocation(5, 23, VariableType.Reference));
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void SystemFromImport() {
             var text = @"
 from System import Environment
@@ -238,7 +238,7 @@ Environment.GetCommandLineArgs()
             Assert.IsTrue(entry.GetMemberNames("Environment", 1).Any(s => s == "CommandLine"));
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void ImportAsIpy() {
             var text = @"
 import System.Collections as coll
@@ -247,7 +247,7 @@ import System.Collections as coll
             Assert.IsTrue(entry.GetMemberNames("coll", 1).Any(s => s == "ArrayList"));
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void SystemImport() {
             var text = @"
 import System
@@ -264,7 +264,7 @@ x = System.Environment
             AssertUtil.Contains(entry.GetMemberNames("x", 1), "GetEnvironmentVariables");
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void SystemMembers() {
             var text = @"
 import System
@@ -280,7 +280,7 @@ args = x.GetCommandLineArgs()
             Assert.IsTrue(entry.GetMemberNames("args", text.IndexOf("args =")).Any(s => s == "AsReadOnly"));
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void NamespaceMembers() {
             var text = @"
 import System
@@ -292,7 +292,7 @@ x = System.Collections
             Assert.IsTrue(x.Contains("ArrayList"));
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void GenericIndexing() {
             // indexing into a generic type should know how the type info
             // flows through
@@ -308,7 +308,7 @@ x = List[int]()
             Assert.IsTrue(self.Contains("AddRange"));
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void ReturnTypesCollapsing() {
             // indexing into a generic type should know how the type info
             // flows through
@@ -329,7 +329,7 @@ mod.
 #endif
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void IronPythonMro() {
             var text = @"
 from System import DivideByZeroException
@@ -352,7 +352,7 @@ from System import DivideByZeroException
                 "object");
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void AssignEvent() {
             var text = @"
 import System
@@ -366,7 +366,7 @@ System.AppDomain.CurrentDomain.AssemblyLoad += f
             Assert.IsTrue(entry.GetMemberNames("args", text.IndexOf("pass")).Any(s => s == "LoadedAssembly"));
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void EventMemberType() {
             var text = @"from System import AppDomain";
             var entry = ProcessText(text);
@@ -374,7 +374,7 @@ System.AppDomain.CurrentDomain.AssemblyLoad += f
             Assert.AreEqual(mem.MemberType, PythonMemberType.Event);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void NegCallProperty() {
             // invalid code, this shouldn't crash us.
             var text = @"
@@ -385,7 +385,7 @@ y = System.Environment.CurrentDirectory()
             ProcessText(text);
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void QuickInfoClr() {
             var text = @"
 import System
@@ -413,7 +413,7 @@ def g():
             //AssertUtil.ContainsExactly(entry.GetVariableDescriptionsByIndex("System.AppDomain.DomainUnload", 1), "event of type System.EventHandler");
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void BuiltinMethodSignaturesClr() {
             var entry = ProcessText(@"
 import clr
@@ -432,7 +432,7 @@ constructed = str().Contains
 
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void BuiltinMethodDocumentationClr() {
             var entry = ProcessText(@"
 import wpf
@@ -465,7 +465,7 @@ class MyArrayList(System.Collections.ArrayList):
         /// <summary>
         /// Verify importing wpf will add a reference to the WPF assemblies
         /// </summary>
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void WpfReferences() {
             var entry = ProcessText(@"
 import wpf
@@ -476,7 +476,7 @@ from System.Windows.Media import Colors
             AssertUtil.Contains(entry.GetMemberNames("wpf", 1), "LoadComponent");
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void XamlEmptyXName() {
             // [Python Tools] Adding attribute through XAML in IronPython application crashes VS.
             // http://pytools.codeplex.com/workitem/743
@@ -500,7 +500,7 @@ from System.Windows.Media import Colors
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void CheckInterpreterV2() {
             using (var interp = DefaultFactoryV2.CreateInterpreter()) {
                 try {
@@ -513,7 +513,7 @@ from System.Windows.Media import Colors
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void SpecialArgTypes() {
             var code = @"def f(*fob, **oar):
     pass
@@ -582,7 +582,7 @@ f(x=42, y = 'abc')
             entry.AssertIsInstance("z", code.IndexOf("pass"), BuiltinTypeId.Int, BuiltinTypeId.Str);
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void TestPackageImportStar() {
             var analyzer = CreateAnalyzer();
 
@@ -598,7 +598,7 @@ f(x=42, y = 'abc')
             analyzer.AssertDescription(quox, "func", "fob.oar.quox.func() -> int");
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void TestClassAssignSameName() {
             var text = @"x = 123
 
@@ -630,7 +630,7 @@ class B:
             entry.AssertIsInstance("B.x", BuiltinTypeId.Int, BuiltinTypeId.Float);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void TestFunctionAssignSameName() {
             var text = @"x = 123
 
@@ -656,7 +656,7 @@ y = f()
         /// Slicing should assume the incoming type
         /// https://pytools.codeplex.com/workitem/1581
         /// </summary>
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void TestBuiltinOperatorsFallback() {
             var code = @"import array
 
@@ -675,7 +675,7 @@ add = array.array('b', b'abcdef') + array.array('b', b'fob')
             );
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void ExcessPositionalArguments() {
             var code = @"def f(a, *args):
     return args[0]
@@ -691,7 +691,7 @@ z = f(None, 'abc', 1)
             entry.AssertIsInstance("z", BuiltinTypeId.Str, BuiltinTypeId.Int);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void ExcessNamedArguments() {
             var code = @"def f(a, **args):
     return args[a]
@@ -709,7 +709,7 @@ w = f(a='p', p=1, q='abc')
             entry.AssertIsInstance("w", BuiltinTypeId.Str, BuiltinTypeId.Int);
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST), Timeout(5000)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING), Timeout(5000)]
         public void RecursiveListComprehensionV32() {
             var code = @"
 def f(x):
@@ -724,7 +724,7 @@ def f(x):
             // If we complete processing then we have succeeded
         }
 
-        [TestMethod, Priority(UnitTestPriority.P2_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P2_FAILING)]
         [TestCategory("ExpectFail")]
         public void CartesianStarArgs() {
             // TODO: Figure out whether this is useful behaviour
@@ -762,7 +762,7 @@ y = f('abc')";
             entry.AssertIsInstance("y", BuiltinTypeId.Str);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void CartesianRecursive() {
             var code = @"def f(a, *args):
     f(a, args)
@@ -776,7 +776,7 @@ x = f(42)";
             AssertUtil.Contains(entry.GetTypeIds("x"), BuiltinTypeId.Int);
         }
 
-        [TestMethod, Priority(UnitTestPriority.CORE_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P0)]
         public void CartesianSimple() {
             var code = @"def f(a):
     return a
@@ -792,7 +792,7 @@ y = f('fob')";
         }
 
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void CartesianLocals() {
             var code = @"def f(a):
     b = a
@@ -808,7 +808,7 @@ y = f('fob')";
             entry.AssertIsInstance("y", BuiltinTypeId.Str);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void CartesianClosures() {
             var code = @"def f(a):
     def g():
@@ -825,7 +825,7 @@ y = f('fob')";
             entry.AssertIsInstance("y", BuiltinTypeId.Str);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void CartesianContainerFactory() {
             var code = @"def list_fact(ctor):
     x = []
@@ -844,7 +844,7 @@ b = list_fact(str)[0]
             entry.AssertIsInstance("b", BuiltinTypeId.Str);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void CartesianLocalsIsInstance() {
             var code = @"def f(a, c):
     if isinstance(c, int):
@@ -892,7 +892,7 @@ y = f('fob', 'oar')";
         //            entry.AssertIsInstance("y", BuiltinTypeId.Int, BuiltinTypeId.Float);
         //        }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void ImportAs() {
             var entry = ProcessTextV2(@"import sys as s, array as a");
 
@@ -903,7 +903,7 @@ y = f('fob', 'oar')";
             AssertUtil.Contains(entry.GetMemberNames("s"), "winver");
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void DictionaryKeyValues() {
             var code = @"x = {'abc': 42, 'oar': 'baz'}
 
@@ -916,7 +916,7 @@ s = x['oar']
             entry.AssertIsInstance("s", BuiltinTypeId.Str);
         }
 
-        [TestMethod, Priority(UnitTestPriority.CORE_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P0)]
         public void RecursiveLists() {
             var code = @"x = []
 x.append(x)
@@ -938,7 +938,7 @@ y2 = f(y)
             entry.AssertIsInstance("y2", BuiltinTypeId.List);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void RecursiveDictionaryKeyValues() {
             var code = @"x = {'abc': 42, 'oar': 'baz'}
 x['abc'] = x
@@ -967,7 +967,7 @@ s = y['x']['y']['value']
             entry.AssertIsInstance("s", BuiltinTypeId.Str);
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void RecursiveTuples() {
             var code = @"class A(object):
     def __init__(self):
@@ -1021,7 +1021,7 @@ a.original()
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void RecursiveSequences() {
             var code = @"
 x = []
@@ -1040,7 +1040,7 @@ y = x[0]
             entry.AssertIsInstance("y", BuiltinTypeId.List, BuiltinTypeId.Int, BuiltinTypeId.Float, BuiltinTypeId.Str);
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void ImportStar() {
             var entry = ProcessText(@"
 from nt import *
@@ -1059,7 +1059,7 @@ from nt import *
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void ImportTrailingComma() {
             var entry = ProcessText(@"
 import nt,
@@ -1070,7 +1070,7 @@ import nt,
             AssertUtil.Contains(members, "abort");
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void ImportStarCorrectRefs() {
             var text1 = @"
 from mod2 import *
@@ -1096,7 +1096,7 @@ class D(object):
         }
 
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void MutatingReferences() {
             var text1 = @"
 import mod2
@@ -1150,7 +1150,7 @@ class D(object):
             );
         }
 
-        [TestMethod, Priority(UnitTestPriority.CORE_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P0)]
         public void MutatingCalls() {
             var text1 = @"
 def f(abc):
@@ -1238,7 +1238,7 @@ mod2.x = 'abc'
         }
         */
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void PrivateMembers() {
             string code = @"
 class C:
@@ -1310,7 +1310,7 @@ xyz = C._C__FOB  # Advanced members completion should work here
 
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void BaseInstanceVariable() {
             var code = @"
 class C:
@@ -1328,7 +1328,7 @@ class D(C):
             entry.AssertHasAttr("self", code.IndexOf("self.fob"), "abc");
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void Mro() {
             // Successful: MRO is A B C D E F object
             var code = @"
@@ -1447,7 +1447,7 @@ z = None
             AssertUtil.ContainsExactly(mroC, "C", "type str", "type object");
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void ImportStarMro() {
             PermutedTest(
                 "mod",
@@ -1469,7 +1469,7 @@ class Test_test2(Test_test1):
             );
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void Iterator() {
             var entry = ProcessText(@"
 A = [1, 2, 3]
@@ -1533,7 +1533,7 @@ c = next(iC)
             entry.AssertIsInstance("c", BuiltinTypeId.Int);
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void Generator2x() {
             var entry = ProcessText(@"
 def f():
@@ -1592,7 +1592,7 @@ d = a.__next__()";
             AssertUtil.ContainsExactly(entry.GetTypeIds("d", 1));
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void Generator3x() {
             var entry = ProcessTextV2(@"
 def f():
@@ -1651,7 +1651,7 @@ d = a.next()";
             entry.AssertIsInstance("d");
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void ListComprehensions() {/*
             var entry = ProcessText(@"
 x = [2,3,4]
@@ -1676,7 +1676,7 @@ def f(abc):
                 new VariableLocation(5, 2, VariableType.Reference));
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void LambdaInComprehension() {
             var text = "x = [(lambda a:[a**i for i in range(a+1)])(j) for j in range(5)]";
 
@@ -1690,7 +1690,7 @@ def f(abc):
             entry.AssertIsInstance("x", BuiltinTypeId.List);
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void Comprehensions() {
             var text = @"
 x = 10; g = (i for i in range(x)); x = 5
@@ -1709,7 +1709,7 @@ list(x for x, in [(7,), (8,), (9,)])
             Assert.IsNotNull(entry);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void ExecReferences() {
             string text = @"
 a = {}
@@ -1723,7 +1723,7 @@ exec b in a
             entry.AssertReferences("b", new VariableLocation(3, 1, VariableType.Definition), new VariableLocation(4, 6, VariableType.Reference));
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void PrivateMemberReferences() {
             string text = @"
 class C:
@@ -1746,7 +1746,7 @@ class C:
                 new VariableLocation(10, 14, VariableType.Reference));
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void GeneratorComprehensions() {
             var text = @"
 x = [2,3,4]
@@ -1805,7 +1805,7 @@ def f(abc):
         }
 
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void ForSequence() {
             var entry = ProcessText(@"
 x = [('abc', 42, True), ('abc', 23, False),]
@@ -1819,7 +1819,7 @@ for some_str, some_int, some_bool in x:
             entry.AssertIsInstance("some_bool", BuiltinTypeId.Bool);
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void ForIterator() {
             var code = @"
 class X(object):
@@ -1837,7 +1837,7 @@ for i in Y():
             entry.AssertIsInstance("i", BuiltinTypeId.Int);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void DynamicAttributes() {
             var entry = ProcessText(@"
 class x(object):
@@ -1861,7 +1861,7 @@ c = y().abc
             entry.AssertIsInstance("c", BuiltinTypeId.Str);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void GetAttr() {
             var entry = ProcessText(@"
 class x(object):
@@ -1879,7 +1879,7 @@ d = getattr(a, 'value', 'fob')
             entry.AssertIsInstance("d", BuiltinTypeId.Int, BuiltinTypeId.Str);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void SetAttr() {
             var entry = ProcessText(@"
 class X(object):
@@ -1897,7 +1897,7 @@ b = x.b
             entry.AssertIsInstance("b", BuiltinTypeId.Float);
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void NoGetAttrForSlots() {
             var code = @"class A(object):
     def __getattr__(self, key):
@@ -1918,7 +1918,7 @@ a.__call__(None, 123)
             entry.AssertIsInstance("y", code.IndexOf("y #"), BuiltinTypeId.Int);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void VarsSpecialization() {
             var entry = ProcessText(@"
 x = vars()
@@ -1931,7 +1931,7 @@ v = x['a']
             entry.AssertIsInstance("v", BuiltinTypeId.Object);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void DirSpecialization() {
             var entry = ProcessText(@"
 x = dir()
@@ -1942,7 +1942,7 @@ v = x[0]
             entry.AssertIsInstance("v", BuiltinTypeId.Str);
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void BuiltinSpecializations() {
             var entry = CreateAnalyzer();
             entry.AddModule("test-module", @"
@@ -2007,7 +2007,7 @@ class BufferedIOBase(object): pass
             Assert.AreEqual("BufferedIOBase", entry.GetValue<IInstanceInfo>("expect_BufferedIOBase")?.ClassInfo?.Name);
         }
 
-        [TestMethod, Priority(UnitTestPriority.CORE_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P0)]
         public void ListAppend() {
             var entry = ProcessText(@"
 x = []
@@ -2054,7 +2054,7 @@ b = a[0]");
             entry.AssertIsInstance("b", "ListTest");
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void Slicing() {
             var entry = ProcessText(@"
 x = [2]
@@ -2089,7 +2089,7 @@ iinst = inst[1]
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void ConstantIndex() {
             var entry = ProcessText(@"
 ZERO = 0
@@ -2107,7 +2107,7 @@ some_bool = x[TWO]
             entry.AssertIsInstance("some_bool", BuiltinTypeId.Bool);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void CtorSignatures() {
             var entry = ProcessText(@"
 class C: pass
@@ -2156,7 +2156,7 @@ class H(object):
         /// <summary>
         /// http://pytools.codeplex.com/workitem/798
         /// </summary>
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void ListSubclassSignatures() {
             var text = @"
 class C(list):
@@ -2173,7 +2173,7 @@ a.count";
         }
 
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void DocStrings() {
             var entry = ProcessText(@"
 def f():
@@ -2258,7 +2258,7 @@ class CInheritedInit(CNewStyleInit):
             Assert.AreEqual("new-style init doc", result[0].Documentation);
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void Ellipsis() {
             var entry = ProcessText(@"
 x = ...
@@ -2269,7 +2269,7 @@ x = ...
             Assert.AreEqual(result[0].Name, "ellipsis");
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void Backquote() {
             var entry = ProcessText(@"x = `42`");
 
@@ -2278,7 +2278,7 @@ x = ...
             Assert.AreEqual(result[0].Name, "str");
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void BuiltinMethodSignatures() {
             var entry = ProcessText(@"
 const = """".capitalize
@@ -2306,7 +2306,7 @@ constructed = list().append
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void Del() {
             string text = @"
 del fob
@@ -2320,7 +2320,7 @@ del fob, oar
             // We do no analysis on del statements, nothing to test
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void TryExcept() {
             string text = @"
 class MyException(Exception): pass
@@ -2343,7 +2343,7 @@ def g():
             entry.AssertIsInstance("e2", text.IndexOf(", e2"), "MyException");
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void ConstantMath() {
 
             var text2x = @"
@@ -2378,7 +2378,7 @@ f = 1 / 2 # f is 'int', should be 'float' under v3.x";
             entry.AssertIsInstance("f", BuiltinTypeId.Float);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void StringConcatenation() {
             var text = @"
 x = u'abc'
@@ -2401,7 +2401,7 @@ oar2 = fob2 + u'ef'";
             entry.AssertIsInstance("oar2", BuiltinTypeId.Unicode);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void StringFormatting() {
             var text = @"
 x = u'abc %d'
@@ -2424,7 +2424,7 @@ oar2 = fob2 % (42, )";
             entry.AssertIsInstance("oar2", BuiltinTypeId.Unicode);
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void StringFormattingV36() {
             var text = @"
 y = f'abc {42}'
@@ -2447,7 +2447,7 @@ f'abc {f(42)}'
             //entry.AssertIsInstance("val",  BuiltinTypeId.Int);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void StringMultiply() {
             var text = @"
 x = u'abc %d'
@@ -2491,7 +2491,7 @@ oar2 = 100 * fob2";
             entry.AssertIsInstance("oar2", BuiltinTypeId.Unicode);
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void NotOperator() {
             var text = @"
 
@@ -2512,7 +2512,7 @@ a = not C()
             AssertUtil.ContainsExactly(entry.GetShortDescriptions("a", 0), "bool");
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void UnaryOperators() {
             var operators = new[] {
                 new { Method = "pos", Operator = "+" },
@@ -2541,7 +2541,7 @@ b = {1}{1}C()
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void TrueDividePython3x() {
             var text = @"
 class C:
@@ -2560,7 +2560,7 @@ c = 'abc' / a
             AssertUtil.ContainsExactly(entry.GetShortDescriptions("c", text.IndexOf("c =")), "float");
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void BinaryOperators() {
             var operators = new[] {
                 new { Method = "add", Operator = "+", Version = PythonLanguageVersion.V27 },
@@ -2633,7 +2633,7 @@ m {1}= m
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void SequenceConcat() {
             var text = @"
 x1 = ()
@@ -2659,7 +2659,7 @@ y3v = y3[0]
             entry.AssertIsInstance("y3v", BuiltinTypeId.Int, BuiltinTypeId.Float);
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void SequenceMultiply() {
             var text = @"
 x = ()
@@ -2700,7 +2700,7 @@ oar2 = 100 * fob2";
             entry.AssertDescription("oar2", text.IndexOf("oar2 ="), "list");
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void SequenceContains() {
             var text = @"
 a_tuple = ()
@@ -2739,7 +2739,7 @@ r2 = 100 not in a_string
 
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void DescriptorNoDescriptor() {
             var text = @"
 class NoDescriptor:
@@ -2761,7 +2761,7 @@ class SomeClass:
         /// Verifies that a line in triple quoted string which ends with a \ (eating the newline) doesn't throw
         /// off our newline tracking.
         /// </summary>
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void ReferencesTripleQuotedStringWithBackslash() {
             // instance variables
             var text = @"
@@ -2787,7 +2787,7 @@ class C(object):
                 new VariableLocation(9, 20, VariableType.Reference));
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void References() {
             // instance variables
             var text = @"
@@ -3131,7 +3131,7 @@ def f(a):
         }
 
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void ListDictArgReferences() {
             var text = @"
 def f(*a, **k):
@@ -3159,7 +3159,7 @@ k = 2
             );
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void KeywordArgReferences() {
             var text = @"
 def f(a):
@@ -3174,7 +3174,7 @@ f(a=1)
             );
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void ReferencesCrossModule() {
             var fobText = @"
 from oar import abc
@@ -3196,7 +3196,7 @@ abc()
             );
         }
 
-        [TestMethod, Priority(UnitTestPriority.P2_FAILING_UNIT_TEST), TestCategory("ExpectFail")]
+        [TestMethod, Priority(UnitTestPriority.P2_FAILING), TestCategory("ExpectFail")]
         public void SuperclassMemberReferencesCrossModule() {
             // https://github.com/Microsoft/PTVS/issues/2271
 
@@ -3223,7 +3223,7 @@ class bcd(abc):
             );
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void ReferencesCrossMultiModule() {
             var fobText = @"
 from oarbaz import abc
@@ -3268,7 +3268,7 @@ from baz import abc2 as abc";
             );
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void ImportStarReferences() {
             var state = CreateAnalyzer();
             var fobMod = state.AddModule("fob", @"
@@ -3301,7 +3301,7 @@ f = fn()");
             );
         }
 
-        [TestMethod, Priority(UnitTestPriority.CORE_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P0)]
         public void ImportAsReferences() {
             var state = CreateAnalyzer();
             var fobMod = state.AddModule("fob", @"
@@ -3361,7 +3361,7 @@ g = f()");
             );
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void ReferencesGeneratorsV3() {
             var text = @"
 [f for f in x]
@@ -3389,7 +3389,7 @@ g = f()");
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void ReferencesGeneratorsV2() {
             var text = @"
 [f for f in x]
@@ -3419,7 +3419,7 @@ g = f()");
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void SignatureDefaults() {
             var entry = ProcessText(@"
 def f(x = None): pass
@@ -3459,7 +3459,7 @@ def m(x = math.atan2(1, 0)): pass
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void SpecialDictMethodsCrossUnitAnalysis() {
             // dict methods which return lists
             foreach (var method in new[] { "x.itervalues()", "x.keys()", "x.iterkeys()", "x.values()" }) {
@@ -3535,7 +3535,7 @@ for fob in abc:
         /// <summary>
         /// Verifies that list indicies don't accumulate classes across multiple analysis
         /// </summary>
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void ListIndiciesCrossModuleAnalysis() {
             for (int i = 0; i < 2; i++) {
                 var code1 = "l = []";
@@ -3565,7 +3565,7 @@ mod1.l.append(a)
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void SpecialListMethodsCrossUnitAnalysis() {
             var code = @"x = []
 def f(z):
@@ -3584,7 +3584,7 @@ oar = x.pop()
             entry.AssertIsInstance("oar", BuiltinTypeId.Int);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void SetLiteral() {
             var code = @"
 x = {2, 3, 4}
@@ -3596,7 +3596,7 @@ for abc in x:
             entry.AssertIsInstance("abc", code.IndexOf("print(abc)"), BuiltinTypeId.Int);
         }
 
-        [TestMethod, Priority(UnitTestPriority.CORE_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P0)]
         public void SetOperators() {
             var entry = ProcessText(@"
 x = {1, 2, 3}
@@ -3639,13 +3639,13 @@ y_xor_x_0 = next(iter(y_xor_x))
 
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void GetVariablesDictionaryGet() {
             var entry = ProcessText(@"x = {42:'abc'}");
             entry.AssertDescription("x.get", "bound built-in method get");
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void DictMethods() {
             var entry = ProcessTextV2("x = {42:'abc'}");
 
@@ -3662,7 +3662,7 @@ y_xor_x_0 = next(iter(y_xor_x))
             entry.AssertIsInstance("x.iteritems().next()[1]", BuiltinTypeId.Str);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void DictUpdate() {
             var entry = ProcessTextV2(@"
 a = {42:100}
@@ -3674,7 +3674,7 @@ b.update(a)
             entry.AssertIsInstance("b.items()[0][1]", BuiltinTypeId.Int);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void DictEnum() {
             var entry = ProcessText(@"
 for x in {42:'abc'}:
@@ -3684,7 +3684,7 @@ for x in {42:'abc'}:
             entry.AssertIsInstance("x", BuiltinTypeId.Int);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void FutureDivision() {
             var entry = ProcessText(@"
 from __future__ import division
@@ -3694,7 +3694,7 @@ x = 1/2
             entry.AssertIsInstance("x", BuiltinTypeId.Float);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void BoundMethodDescription() {
             var entry = ProcessText(@"
 class C:
@@ -3719,7 +3719,7 @@ b = a.f
             entry.AssertDescription("b", "method f of test-module.C objects");
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void LambdaExpression() {
             var entry = ProcessText(@"
 x = lambda a: a
@@ -3740,7 +3740,7 @@ y = x(42)
 
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void LambdaScoping() {
             var code = @"def f(l1, l2):
     l1('abc')
@@ -3766,7 +3766,7 @@ f(lambda x=x:x, lambda x=y:x)";
             entry.AssertIsInstance("x", code.IndexOfEnd("lambda x=y:x"), BuiltinTypeId.Tuple, BuiltinTypeId.Int);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void FunctionScoping() {
             var code = @"x = 100
 
@@ -3791,7 +3791,7 @@ f('abc')
                 new VariableLocation(4, 5, VariableType.Reference));
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void RecursiveClass() {
             var entry = ProcessText(@"
 cls = object
@@ -3810,7 +3810,7 @@ class cls(cls):
             );
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void BadMethod() {
             var entry = ProcessText(@"
 class cls(object): 
@@ -3828,7 +3828,7 @@ fob = abc.f()
             Assert.AreEqual("help", sig.Documentation);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void KeywordArguments() {
             var funcDef = @"def f(a, b, c): 
     pass";
@@ -3865,7 +3865,7 @@ f = x().g";
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void BadKeywordArguments() {
             var code = @"def f(a, b):
     return a
@@ -3877,7 +3877,7 @@ z = f(a=42, x)";
             entry.AssertIsInstance("z", BuiltinTypeId.Int);
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void PositionalSplat() {
             var funcDef = @"def f(a, b, c, *d): 
     pass";
@@ -3925,7 +3925,7 @@ f = x().g";
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void KeywordSplat() {
             var funcDef = @"def f(a, b, c, **d): 
     pass";
@@ -3968,7 +3968,7 @@ f = x().g";
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void ForwardRef() {
             var text = @"
 
@@ -4008,7 +4008,7 @@ class C(object):
             return text.IndexOf(substring);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void Builtins() {
             var text = @"
 booltypetrue = True
@@ -4019,7 +4019,7 @@ booltypefalse = False
             entry.AssertIsInstance("booltypefalse", BuiltinTypeId.Bool);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void DictionaryFunctionTable() {
             var text = @"
 def f(a, b):
@@ -4038,7 +4038,7 @@ x['fob'](42, [])
             entry.AssertIsInstance("b", text.IndexOf("x, y"));
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void DictionaryAssign() {
             var text = @"
 x = {'abc': 42}
@@ -4048,7 +4048,7 @@ y = x['fob']
             entry.AssertIsInstance("y", BuiltinTypeId.Int);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void DictionaryFunctionTableGet2() {
             var text = @"
 def f(a, b):
@@ -4067,7 +4067,7 @@ x.get('fob')(42, [])
             entry.AssertIsInstance("b", text.IndexOf("x, y"));
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void DictionaryFunctionTableGet() {
             var text = @"
 def f(a, b):
@@ -4088,7 +4088,7 @@ if y is not None:
             entry.AssertIsInstance("b", text.IndexOf("x, y"));
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void SimpleGlobals() {
             var text = @"
 class x(object):
@@ -4104,7 +4104,7 @@ x.abc()
             entry.AssertHasAttr("x", entry.ObjectMembers);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void FuncCallInIf() {
             var text = @"
 def Method(a, b, c):
@@ -4119,7 +4119,7 @@ if not Method(42, 'abc', []):
             entry.AssertIsInstance("c", text.IndexOf("print"), BuiltinTypeId.List);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void WithStatement() {
             var text = @"
 class X(object):
@@ -4146,7 +4146,7 @@ with X():
             entry.AssertIsInstance("y", BuiltinTypeId.Int);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void OverrideFunction() {
             var text = @"
 class oar(object):
@@ -4176,7 +4176,7 @@ abc.Cmeth(['fob'], 'oar')
         }
 
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void FunctionOverloads() {
             var text = @"
 def f(a, b, c=0):
@@ -4224,7 +4224,7 @@ f('a', 'b', 1)
         /// <summary>
         /// http://pytools.codeplex.com/workitem/799
         /// </summary>
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void OverrideCompletions() {
             var text = @"
 class oar(list):
@@ -4260,7 +4260,7 @@ class oar(int):
         /// <summary>
         /// https://github.com/Microsoft/PTVS/issues/995
         /// </summary>
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void DictCtor() {
             var text = @"
 d1 = dict({2:3})
@@ -4281,7 +4281,7 @@ x3 = d3[2]
         /// <summary>
         /// https://github.com/Microsoft/PTVS/issues/995
         /// </summary>
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void SpecializedOverride() {
             var text = @"
 class simpledict(dict): pass
@@ -4317,7 +4317,7 @@ x5 = d5[2]
         /// <summary>
         /// https://github.com/Microsoft/PTVS/issues/995
         /// </summary>
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void SpecializedOverride2() {
             var text = @"
 class setdict(dict):
@@ -4335,7 +4335,7 @@ b = a[42]
         /// <summary>
         /// We shouldn't use instance members when invoking special methods
         /// </summary>
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void IterNoInstance() {
             var text = @"
 class me(object):
@@ -4364,7 +4364,7 @@ for v in a: pass
             entry.AssertIsInstance("v", text.IndexOf("pass"));
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void SimpleMethodCall() {
             var text = @"
 class x(object):
@@ -4380,7 +4380,7 @@ a.abc('abc')
             entry.AssertHasAttr("self", text.IndexOf("pass"), entry.ObjectMembers);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void BuiltinRetval() {
             var text = @"
 x = [2,3,4]
@@ -4391,7 +4391,7 @@ a = x.index(2)
             entry.AssertIsInstance("a", BuiltinTypeId.Int);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void BuiltinFuncRetval() {
             var text = @"
 x = ord('a')
@@ -4403,7 +4403,7 @@ y = range(5)
             entry.AssertIsInstance("y", BuiltinTypeId.List);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void FunctionMembers() {
             var text = @"
 def f(x): pass
@@ -4422,7 +4422,7 @@ def f(x): pass
             entry2.AssertIsInstance("f.func_name", BuiltinTypeId.Str);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void RangeIteration() {
             var text = @"
 for i in range(5):
@@ -4432,7 +4432,7 @@ for i in range(5):
             entry.AssertIsInstance("i", BuiltinTypeId.Int);
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void BuiltinImport() {
             var text = @"
 import sys
@@ -4442,7 +4442,7 @@ import sys
             entry.AssertHasAttr("sys", "winver");
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void BuiltinImportInFunc() {
             var text = @"
 def f():
@@ -4453,7 +4453,7 @@ def f():
             entry.AssertHasAttr("sys", text.IndexOf("sys"), "winver");
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void BuiltinImportInClass() {
             var text = @"
 class C:
@@ -4464,7 +4464,7 @@ class C:
             entry.AssertHasAttr("sys", text.IndexOf("sys"), "winver");
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void NoImportClr() {
             var text = @"
 x = 'abc'
@@ -4474,7 +4474,7 @@ x = 'abc'
             entry.AssertHasAttrExact("x", entry.StrMembers);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void MutualRecursion() {
             var text = @"
 class C:
@@ -4499,7 +4499,7 @@ x = D().g(C(), 42)
             entry.AssertHasAttrExact("x", entry.ListMembers.Union(entry.StrMembers).ToArray());
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void MutualGeneratorRecursion() {
             var text = @"
 class C:
@@ -4522,7 +4522,7 @@ x = next(D().g(C(), 42))
             entry.AssertIsInstance("x", BuiltinTypeId.List, BuiltinTypeId.Str);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void DistinctGenerators() {
             var text = @"
 def f(x):
@@ -4544,7 +4544,7 @@ val = next(it)
             entry.AssertIsInstance("val", "S0");
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void ForwardRefVars() {
             var text = @"
 class x(object):
@@ -4561,7 +4561,7 @@ x([])
             entry.AssertDescription("self.abc", text.IndexOf("self.abc"), "list");
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void ReturnFunc() {
             var text = @"
 def g():
@@ -4576,7 +4576,7 @@ x = f()()
             entry.AssertIsInstance("x", BuiltinTypeId.List);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void ReturnArg() {
             var text = @"
 def g(a):
@@ -4588,7 +4588,7 @@ x = g(1)
             entry.AssertIsInstance("x", BuiltinTypeId.Int);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void ReturnArg2() {
             var text = @"
 
@@ -4603,7 +4603,7 @@ x = f(2)()
             entry.AssertIsInstance("x", BuiltinTypeId.Int);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void MemberAssign() {
             var text = @"
 class C:
@@ -4620,7 +4620,7 @@ fob = a.abc
             entry.AssertHasAttrExact("a", "abc", "func", "__doc__", "__class__");
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void MemberAssign2() {
             var text = @"
 class D:
@@ -4640,7 +4640,7 @@ fob = D().func2()
             Assert.Inconclusive("Test not yet implemented");
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void AnnotatedAssign() {
             var text = @"
 x : int = 42
@@ -4680,7 +4680,7 @@ x:C(42) = 1
         }
 
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void UnfinishedDot() {
             // the partial dot should be ignored and we shouldn't see g as
             // a member of D
@@ -4696,7 +4696,7 @@ def g(a, b, c): pass
             entry.AssertHasAttr("self", text.IndexOf("self."), entry.ObjectMembers);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void CrossModule() {
             var text1 = @"
 import mod2
@@ -4713,7 +4713,7 @@ x = 42
             });
         }
 
-        [TestMethod, Priority(UnitTestPriority.CORE_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P0)]
         public void CrossModuleCall() {
             var text1 = @"
 import mod2
@@ -4730,7 +4730,7 @@ def f(x):
             });
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void CrossModuleCallType() {
             var text1 = @"
 import mod2
@@ -4748,7 +4748,7 @@ class c:
             });
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void CrossModuleCallType2() {
             var text1 = @"
 from mod2 import c
@@ -4768,7 +4768,7 @@ class c:
             });
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void CrossModuleFuncAndType() {
             var text1 = @"
 class Something(object):
@@ -4797,7 +4797,7 @@ a = x
             });
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void MembersAfterError() {
             var text = @"
 class X(object):
@@ -4816,7 +4816,7 @@ class X(object):
         }
 
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void Property() {
             var text = @"
 class x(object):
@@ -4830,7 +4830,7 @@ a = x().SomeProp
             entry.AssertIsInstance("a", BuiltinTypeId.Int);
         }
 
-        [TestMethod, Priority(UnitTestPriority.CORE_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P0)]
         public void StaticMethod() {
             var text = @"
 class x(object):
@@ -4844,7 +4844,7 @@ a = x().StaticMethod(4.0)
             entry.AssertIsInstance("a", BuiltinTypeId.Float);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void InheritedStaticMethod() {
             var text = @"
 class x(object):
@@ -4861,7 +4861,7 @@ a = y().StaticMethod(4.0)
             entry.AssertIsInstance("a", BuiltinTypeId.Float);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void ClassMethod() {
             var text = @"
 class x(object):
@@ -4893,7 +4893,7 @@ class x(object):
             entry.AssertDescription("cls", text.IndexOf("return"), "x");
         }
 
-        [TestMethod, Priority(UnitTestPriority.CORE_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P0)]
         public void InheritedClassMethod() {
             var text = @"
 class x(object):
@@ -4920,7 +4920,7 @@ b = y.ClassMethod()
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void UserDescriptor() {
             var text = @"
 class mydesc(object):
@@ -4959,7 +4959,7 @@ oar = C().x
             entry.AssertHasAttr("inst", text.IndexOf("return 42"), "instfunc");
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void AssignSelf() {
             var text = @"
 class x(object):
@@ -4973,7 +4973,7 @@ class x(object):
             entry.AssertIsInstance("self.x", text.IndexOf("pass"), BuiltinTypeId.Str);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void AssignToMissingMember() {
             var text = @"
 class test():
@@ -5062,7 +5062,7 @@ min(a, D())
             });
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void MoveClass() {
             var fobSrc = "";
 
@@ -5109,7 +5109,7 @@ class C(object):
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void Package() {
             var src1 = "";
 
@@ -5133,7 +5133,7 @@ abc = 42
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void PackageRelativeImport() {
             using (var state = CreateAnalyzer()) {
                 state.CreateProjectOnDisk = true;
@@ -5149,7 +5149,7 @@ abc = 42
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void PackageRelativeImportPep328() {
             var imports = new Dictionary<string, string>() {
                 { "from .moduleY import spam", "spam"},
@@ -5181,7 +5181,7 @@ abc = 42
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void PackageRelativeImportAliasedMember() {
             // similar to unittest package which has unittest.main which contains a function called "main".
             // Make sure we see the function, not the module.
@@ -5198,7 +5198,7 @@ abc = 42
         }
 
 
-        [TestMethod, Priority(UnitTestPriority.CORE_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P0)]
         public void Defaults() {
             var text = @"
 def f(x = 42):
@@ -5210,7 +5210,7 @@ a = f()
             entry.AssertIsInstance("a", BuiltinTypeId.Int);
         }
 
-        [TestMethod, Priority(UnitTestPriority.CORE_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P0)]
         public void Decorator() {
             var text1 = @"
 import mod2
@@ -5240,7 +5240,7 @@ class MyClass(object):
         }
 
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void DecoratorFlow() {
             var text1 = @"
 import mod2
@@ -5286,7 +5286,7 @@ class MyClass(object):
             });
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void DecoratorTypes() {
             var text = @"
 def nop(fn):
@@ -5346,7 +5346,7 @@ x = items(0)
             entry.AssertIsInstance("x", BuiltinTypeId.List, BuiltinTypeId.Set, BuiltinTypeId.Str);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void DecoratorReturnTypes_NoDecorator() {
             // https://pytools.codeplex.com/workitem/1694
             var text = @"# without decorator
@@ -5365,7 +5365,7 @@ retGivenBool = returnsGiven(True)
             entry.AssertIsInstance("retGivenBool", BuiltinTypeId.Bool);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void DecoratorReturnTypes_DecoratorNoParams() {
             // https://pytools.codeplex.com/workitem/1694
             var text = @"# with decorator without wrap
@@ -5390,7 +5390,7 @@ retGivenBool = returnsGivenWithDecorator1(True)
             entry.AssertIsInstance("retGivenBool", BuiltinTypeId.Bool);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void DecoratorReturnTypes_DecoratorWithParams() {
             // https://pytools.codeplex.com/workitem/1694
             var text = @"
@@ -5417,7 +5417,7 @@ retGivenBool = returnsGivenWithDecorator2(True)";
             entry.AssertIsInstance("retGivenBool", BuiltinTypeId.Bool);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void DecoratorOverflow() {
             var text1 = @"
 import mod2
@@ -5444,7 +5444,7 @@ def decorator_b(fn):
             });
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void ProcessDecorators() {
             var text = @"
 def d(fn):
@@ -5464,7 +5464,7 @@ def my_fn():
             entry.AssertIsInstance("fn", text.IndexOf("return"), BuiltinTypeId.Function);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void NoProcessDecorators() {
             var text = @"
 def d(fn):
@@ -5484,7 +5484,7 @@ def my_fn():
             entry.AssertIsInstance("fn", text.IndexOf("return"), BuiltinTypeId.Function);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void DecoratorReferences() {
             var text = @"
 def d1(f):
@@ -5523,7 +5523,7 @@ class cls_d2(object): pass
             AssertUtil.ContainsExactly(entry.GetValues("cls_d2").Select(v => v.MemberType), PythonMemberType.Class);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void DecoratorClass() {
             var text = @"
 def dec1(C):
@@ -5553,7 +5553,7 @@ mc2 = MyBaseClass2()
             AssertUtil.ContainsAtLeast(entry.GetMemberNames("mc2", 0, GetMemberOptions.None), /*"base_method",*/ "sub_method");
         }
 
-        [TestMethod, Priority(UnitTestPriority.CORE_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P0)]
         public void ClassInit() {
             var text = @"
 class X:
@@ -5567,7 +5567,7 @@ a = X(2)
             entry.AssertIsInstance("value", text.IndexOf("self."), BuiltinTypeId.Int);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void InstanceCall() {
             var text = @"
 class X:
@@ -5586,7 +5586,7 @@ a = x(2)
         /// Verifies that regardless of how we get to imports/function return values that
         /// we properly understand the imported value.
         /// </summary>
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void ImportScopesOrder() {
             var text1 = @"
 import _io
@@ -5634,7 +5634,7 @@ import imp as impp
             });
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void ClassNew() {
             var text = @"
 class X:
@@ -5653,7 +5653,7 @@ a = X(2)
             entry.AssertIsInstance("a.value", BuiltinTypeId.Int);
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void Global() {
             var text = @"
 x = None
@@ -5675,7 +5675,7 @@ a, b = f()
             entry.AssertIsInstance("y", BuiltinTypeId.NoneType, BuiltinTypeId.Int);
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void Nonlocal() {
             var text = @"
 def f():
@@ -5727,7 +5727,7 @@ a = f(None)
             entry.AssertIsInstance("a", BuiltinTypeId.NoneType, BuiltinTypeId.Int);
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void IsInstance() {
             var text = @"
 x = None
@@ -5864,7 +5864,7 @@ print(z)";
             entry = ProcessText("if isinstance(x, list):", allowParseErrors: true);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void NestedIsInstance() {
             var code = @"
 def f():
@@ -5884,7 +5884,7 @@ def f():
             entry.AssertIsInstance("w", code.IndexOf("pass"), BuiltinTypeId.Int);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void NestedIsInstance1908() {
             // https://pytools.codeplex.com/workitem/1908
             var code = @"
@@ -5901,7 +5901,7 @@ def f(x):
             entry.AssertIsInstance("y", code.IndexOf("pass"), BuiltinTypeId.Object, BuiltinTypeId.Float);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void IsInstanceUserDefinedType() {
             var text = @"
 class C(object):
@@ -5918,7 +5918,7 @@ def f(a):
             entry.AssertIsInstance("a", text.IndexOf("print(a)"), "C");
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void IsInstanceNested() {
             var text = @"
 class R: pass
@@ -5960,7 +5960,7 @@ r2 = fn(123, None, 4.5)
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void IsInstanceAndLambdaScopes() {
             // https://github.com/Microsoft/PTVS/issues/2801
             var text = @"if isinstance(p, dict):
@@ -5981,7 +5981,7 @@ r2 = fn(123, None, 4.5)
   <statements>", dump);
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void IsInstanceReferences() {
             var text = @"def fob():
     oar = get_b()
@@ -6004,7 +6004,7 @@ r2 = fn(123, None, 4.5)
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void FunctoolsDecoratorReferences() {
             var text = @"from functools import wraps
 
@@ -6062,7 +6062,7 @@ n1 = g(1)";
             );
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void QuickInfo() {
             var text = @"
 import sys
@@ -6174,7 +6174,7 @@ def with_params_default_starargs(*args, **kwargs):
             entry.AssertDocumentation("return_func_class().return_func", "some help");
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void CompletionDocumentation() {
             var text = @"
 import sys
@@ -6207,7 +6207,7 @@ def g():
             AssertUtil.Contains(entry.GetCompletionDocumentation("", "min", 1).First(), "min(");
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void MemberType() {
             var text = @"
 import sys
@@ -6245,7 +6245,7 @@ def g():
             entry.AssertAttrIsType("", "sys", PythonMemberType.Module);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void RecurisveDataStructures() {
             var text = @"
 d = {}
@@ -6259,7 +6259,7 @@ d[0] = d
         /// <summary>
         /// Variable is refered to in the base class, defined in the derived class, we should know the type information.
         /// </summary>
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void BaseReferencedDerivedDefined() {
             var text = @"
 class Base(object):
@@ -6282,7 +6282,7 @@ pass
         /// Test case where we have a member but we don't have any type information for the member.  It should
         /// still show up as a member.
         /// </summary>
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void NoTypesButIsMember() {
             var text = @"
 def f(x, y):
@@ -6304,7 +6304,7 @@ f(1)
         /// Test case where we have a member but we don't have any type information for the member.  It should
         /// still show up as a member.
         /// </summary>
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void SequenceFromSequence() {
             var text = @"
 x = []
@@ -6353,7 +6353,7 @@ tyt = tuple(t)
 #endif
 
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void SubclassFindAllRefs() {
             string text = @"
 class Base(object):
@@ -6387,7 +6387,7 @@ class Derived(Base):
         /// <summary>
         /// Verifies that constructing lists / tuples from more lists/tuples doesn't cause an infinite analysis as we keep creating more lists/tuples.
         /// </summary>
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void ListRecursion() {
             string text = @"
 def f(x):
@@ -6403,7 +6403,7 @@ abc = f(())
 
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void TypeIntersectionUserDefinedTypes() {
             string text = @"
 class C1(object):
@@ -6422,7 +6422,7 @@ c = C2()
             AssertUtil.DoesntContain(entry.GetMemberNames("c", 0, GetMemberOptions.IntersectMultipleResults), new[] { "fob", "oar" });
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void UpdateMethodMultiFiles() {
             string text1 = @"
 def f(abc):
@@ -6450,7 +6450,7 @@ mod1.f(42)
             state.AssertIsInstance(entry1, "abc", text1.IndexOf("pass"), BuiltinTypeId.Int);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void MetaClassesV2() {
 
             string text = @"class C(type):
@@ -6480,7 +6480,7 @@ class D(object):
             entry.AssertHasParameters("cls.inst_method", i, "self");
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void MetaClassesV3() {
             var text = @"class C(type):
     def f(self):
@@ -6511,7 +6511,7 @@ class D(object, metaclass = C):
         /// <summary>
         /// Tests assigning odd things to the metaclass variable.
         /// </summary>
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void InvalidMetaClassValues() {
             var assigns = new[] { "[1,2,3]", "(1,2)", "1", "abc", "1.0", "lambda x: 42", "C.f", "C().f", "f", "{2:3}" };
 
@@ -6557,12 +6557,12 @@ class D(metaclass = " + assign + @"):
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void FromImport() {
             ProcessText("from #   blah", allowParseErrors: true);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void SelfNestedMethod() {
             // http://pytools.codeplex.com/workitem/648
             var code = @"class MyClass:
@@ -6580,7 +6580,7 @@ x = MyClass().func1()
             entry.AssertIsInstance("x", BuiltinTypeId.Str);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void Super() {
             var code = @"
 class Base1(object):
@@ -6653,7 +6653,7 @@ class Derived3(object):
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void ParameterAnnotation() {
             var text = @"
 s = None
@@ -6667,7 +6667,7 @@ def f(s: s = 123):
             entry.AssertIsInstance("s", text.IndexOf("return"), BuiltinTypeId.Int, BuiltinTypeId.NoneType);
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void ParameterAnnotationLambda() {
             var text = @"
 s = None
@@ -6681,7 +6681,7 @@ def f(s: lambda s: s > 0 = 123):
             entry.AssertIsInstance("s", text.IndexOf("return"), BuiltinTypeId.Int);
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void ReturnAnnotation() {
             var text = @"
 s = None
@@ -6695,7 +6695,7 @@ def f(s = 123) -> s:
             entry.AssertIsInstance("s", text.IndexOf("return"), BuiltinTypeId.Int);
         }
         
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void FunctoolsWraps() {
             var text = @"
 from functools import wraps, update_wrapper
@@ -6745,7 +6745,7 @@ test1_result = test1()
             state.AssertIsInstance("test2a.test_attr", BuiltinTypeId.Int);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void MultilineFunctionDescription() {
             var code = @"class A:
     def fn(self):
@@ -6759,7 +6759,7 @@ test1_result = test1()
             );
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void SysModulesGetSpecialization() {
             var code = @"import sys
 modules = sys.modules
@@ -6781,7 +6781,7 @@ builtins3 = modules.pop('__builtin__')
             Assert.AreEqual("__builtin__", entry.GetValue<AnalysisValue>("builtins3").Name);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void ClassInstanceAttributes() {
             var code = @"
 class A:
@@ -6802,7 +6802,7 @@ p3 = a.abc
             entry.AssertIsInstance("p2", BuiltinTypeId.Int, BuiltinTypeId.Float);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void RecursiveGetDescriptor() {
             // see https://pytools.codeplex.com/workitem/2955
             var entry = ProcessText(@"
@@ -6817,7 +6817,7 @@ x = A().wg");
             Assert.IsNotNull(entry);
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void Coroutine() {
             var code = @"
 async def g():
@@ -6835,7 +6835,7 @@ async def f():
             entry.AssertIsInstance("g2", code.IndexOf("x ="), BuiltinTypeId.Generator);
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void AsyncWithStatement() {
             var text = @"
 class X(object):
@@ -6860,7 +6860,7 @@ async def f():
             entry.AssertIsInstance("y", text.IndexOf("pass #y"), BuiltinTypeId.Int);
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void AsyncForIterator() {
             var code = @"
 class X:
@@ -6880,7 +6880,7 @@ async def f():
         }
 
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void RecursiveDecorators() {
             // See https://github.com/Microsoft/PTVS/issues/542
             // Should not crash/OOM
@@ -6896,7 +6896,7 @@ def f():
             ProcessText(code);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void NullNamedArgument() {
             CallDelegate callable = (node, unit, args, keywordArgNames) => {
                 bool anyNull = false;
@@ -6921,7 +6921,7 @@ def f():
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void DefaultModuleAttributes() {
             var entry3 = ProcessTextV2("x = 1");
             AssertUtil.ContainsExactly(entry3.GetNamesNoBuiltins(), "__builtins__", "__file__", "__name__", "__package__", "__cached__", "__spec__", "x");
@@ -6941,7 +6941,7 @@ def f():
             entry2.AssertIsInstance("__package__", BuiltinTypeId.Bytes);
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void CrossModuleBaseClasses() {
             var analyzer = CreateAnalyzer();
             var entryA = analyzer.AddModule("A", @"class ClsA(object): pass");
@@ -6958,7 +6958,7 @@ x = ClsB.x");
             analyzer.AssertIsInstance(entryB, "x", BuiltinTypeId.Int);
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void UndefinedVariableDiagnostic() {
             PythonAnalysis entry;
             string code;
@@ -7013,7 +7013,7 @@ with f() as v2:
             entry.AssertDiagnostics();
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void UncallableObjectDiagnostic() {
             var code = @"class MyClass:
     pass
@@ -7035,7 +7035,7 @@ y = mcc()
             );
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void OsPathMembers() {
             var code = @"import os.path as P
 ";
@@ -7050,7 +7050,7 @@ y = mcc()
             AssertUtil.ContainsAtLeast(entry.GetMemberNames("P"), "abspath", "dirname");
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void UnassignedClassMembers() {
             var code = @"
 from typing import NamedTuple

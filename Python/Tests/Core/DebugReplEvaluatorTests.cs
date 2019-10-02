@@ -90,7 +90,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.P2_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P2_FAILING)]
         public async Task DisplayVariables() {
             await AttachAsync("DebugReplTest1.py", 3);
 
@@ -98,7 +98,7 @@ namespace PythonToolsTests {
             Assert.AreEqual("'hello'", ExecuteText("a"));
         }
 
-        [TestMethod, Priority(UnitTestPriority.P3_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P3_FAILING)]
         public async Task DisplayFunctionLocalsAndGlobals() {
             await AttachAsync("DebugReplTest2.py", 13);
 
@@ -106,7 +106,7 @@ namespace PythonToolsTests {
             Assert.AreEqual("5", ExecuteText("print(global_val)"));
         }
 
-        [TestMethod, Priority(UnitTestPriority.P3_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P3_FAILING)]
         public async Task ErrorInInput() {
             await AttachAsync("DebugReplTest2.py", 13);
 
@@ -117,7 +117,7 @@ NameError: name 'does_not_exist' is not defined
 ".Replace("\r\n", "\n"), _window.Error.Replace("\r\n", "\n"));
         }
 
-        [TestMethod, Priority(UnitTestPriority.P3_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P3_FAILING)]
         public async Task ChangeVariables() {
             await AttachAsync("DebugReplTest2.py", 13);
 
@@ -125,7 +125,7 @@ NameError: name 'does_not_exist' is not defined
             Assert.AreEqual("1", ExecuteText("print(innermost_val)"));
         }
 
-        [TestMethod, Priority(UnitTestPriority.P3_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P3_FAILING)]
         public async Task ChangeVariablesAndRefreshFrames() {
             // This is really a test for PythonProcess' RefreshFramesAsync
             // but it's convenient to have it here, as this is the exact
@@ -156,7 +156,7 @@ NameError: name 'does_not_exist' is not defined
             Assert.AreEqual("1", variables[0].StringRepr);
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public async Task AvailableScopes() {
             await AttachAsync("DebugReplTest1.py", 3);
 
@@ -185,7 +185,7 @@ NameError: name 'does_not_exist' is not defined
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public virtual async Task ChangeModule() {
             await AttachAsync("DebugReplTest1.py", 3);
 
@@ -215,7 +215,7 @@ NameError: name 'does_not_exist' is not defined
             Assert.AreEqual("'hello'", ExecuteText("a"));
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public virtual async Task ChangeFrame() {
             await AttachAsync("DebugReplTest2.py", 13);
 
@@ -249,7 +249,7 @@ NameError: name 'does_not_exist' is not defined
             Assert.AreEqual("1", ExecuteCommand(new DebugReplFrameCommand(), ""));
         }
 
-        [TestMethod, Priority(UnitTestPriority.P3_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P3_FAILING)]
         [TestCategory("10s")]
         public async Task ChangeThread() {
             await AttachAsync("DebugReplTest3.py", 39);
@@ -279,7 +279,7 @@ NameError: name 'does_not_exist' is not defined
             Assert.AreEqual("'thread1'", ExecuteText("t1_val"));
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public virtual async Task ChangeProcess() {
             await AttachAsync("DebugReplTest4A.py", 3);
             await AttachAsync("DebugReplTest4B.py", 3);
@@ -306,7 +306,7 @@ NameError: name 'does_not_exist' is not defined
             Assert.AreEqual("60", ExecuteText("b2"));
         }
 
-        [TestMethod, Priority(UnitTestPriority.P3_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P3_FAILING)]
         [TestCategory("10s")]
         public async Task Abort() {
             await AttachAsync("DebugReplTest5.py", 3);
@@ -319,7 +319,7 @@ NameError: name 'does_not_exist' is not defined
             Assert.AreEqual("Abort is not supported.", _window.Error.TrimEnd());
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public async Task StepInto() {
             // Make sure that we don't step into the internal repl code
             // http://pytools.codeplex.com/workitem/777
@@ -497,13 +497,13 @@ NameError: name 'does_not_exist' is not defined
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.P2_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P2_FAILING)]
         public override async Task ChangeFrame() => await base.ChangeFrame();
 
-        [TestMethod, Priority(UnitTestPriority.P2_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P2_FAILING)]
         public override async Task ChangeModule() => await base.ChangeModule();
 
-        [TestMethod, Priority(UnitTestPriority.P2_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P2_FAILING)]
         public override async Task ChangeProcess() => await base.ChangeProcess();
     }
 }

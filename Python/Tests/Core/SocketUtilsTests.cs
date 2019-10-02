@@ -22,7 +22,7 @@ using TestUtilities;
 namespace PythonToolsTests {
     [TestClass]
     public class SocketUtilsTests {
-        [TestMethod, Priority(UnitTestPriority.CORE_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P0)]
         public void GetRandomPortListener() {
             var listener = SocketUtils.GetRandomPortListener(IPAddress.Loopback, out int port);
             try {

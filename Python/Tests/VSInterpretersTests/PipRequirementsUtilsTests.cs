@@ -27,7 +27,7 @@ using TestUtilities;
 namespace VSInterpretersTests {
     [TestClass]
     public class PipRequirementsUtilsTests {
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void MergeRequirements() {
             // Comments should be preserved, only package specs should change.
             AssertUtil.AreEqual(
@@ -102,7 +102,7 @@ namespace VSInterpretersTests {
             );
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void MergeRequirementsMismatchedCase() {
             AssertUtil.AreEqual(
                 PipRequirementsUtils.MergeRequirements(new[] {
@@ -142,7 +142,7 @@ namespace VSInterpretersTests {
             );
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public async Task DetectReqPkgMissingPython2Async() {
             PythonVersion pythonInterpreter =   PythonPaths.Python27_x64 ??
                                                 PythonPaths.Python27;
@@ -151,7 +151,7 @@ namespace VSInterpretersTests {
             await DetectReqPkgMissingAsync(pythonInterpreter);
         }
 
-        [TestMethod, Priority(UnitTestPriority.CORE_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P0)]
         public async Task DetectReqPkgMissingPython3Async() {
             PythonVersion pythonInterpreter =   PythonPaths.Python37_x64 ??
                                                 PythonPaths.Python37 ??

@@ -33,7 +33,7 @@ namespace PythonToolsTests {
         [TestCleanup]
         public void TestCleanup() => TestEnvironmentImpl.TestCleanup();
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void TestCommentCurrentLine() {
             var editorTestToolset = new EditorTestToolset();
             var view = editorTestToolset.CreatePythonTextView(@"print 'hello'
@@ -62,7 +62,7 @@ print 'goodbye'
                 view.GetText());
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void TestUnCommentCurrentLine() {
             var editorTestToolset = new EditorTestToolset();
             var view = editorTestToolset.CreatePythonTextView(@"#print 'hello'
@@ -87,7 +87,7 @@ print 'goodbye'",
                 view.GetText());
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void TestComment() {
             var editorTestToolset = new EditorTestToolset();
             var view = editorTestToolset.CreatePythonTextView(@"print 'hello'
@@ -105,7 +105,7 @@ print 'goodbye'
                  view.GetText());
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void TestCommentEmptyLine() {
             var editorTestToolset = new EditorTestToolset();
             var view = editorTestToolset.CreatePythonTextView(@"print 'hello'
@@ -129,7 +129,7 @@ print 'goodbye'
             return new MockTextBuffer(code, PythonCoreConstants.ContentType, "C:\\fob.py");
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void TestCommentWhiteSpaceLine() {
             var editorTestToolset = new EditorTestToolset();
             var view = editorTestToolset.CreatePythonTextView(@"print 'hello'
@@ -149,7 +149,7 @@ print 'goodbye'
                  view.GetText());
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void TestCommentIndented() {
             var editorTestToolset = new EditorTestToolset();
             var view = editorTestToolset.CreatePythonTextView(@"def f():
@@ -170,7 +170,7 @@ print 'goodbye'
                     view.GetText());
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void TestCommentIndentedBlankLine() {
             var editorTestToolset = new EditorTestToolset();
             var view = editorTestToolset.CreatePythonTextView(@"def f():
@@ -194,7 +194,7 @@ print 'goodbye'
                     view.GetText());
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void TestCommentBlankLine() {
             var editorTestToolset = new EditorTestToolset();
             var view = editorTestToolset.CreatePythonTextView(@"print('hi')
@@ -212,7 +212,7 @@ print('bye')",
              view.GetText());
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void TestCommentIndentedWhiteSpaceLine() {
             var editorTestToolset = new EditorTestToolset();
             var view = editorTestToolset.CreatePythonTextView(@"def f():
@@ -236,7 +236,7 @@ print('bye')",
                     view.GetText());
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void TestUnCommentIndented() {
             var editorTestToolset = new EditorTestToolset();
             var view = editorTestToolset.CreatePythonTextView(@"def f():
@@ -257,7 +257,7 @@ print('bye')",
                     view.GetText());
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void TestUnComment() {
             var editorTestToolset = new EditorTestToolset();
             var view = editorTestToolset.CreatePythonTextView(@"#print 'hello'
@@ -276,7 +276,7 @@ print 'goodbye'";
         /// <summary>
         /// http://pytools.codeplex.com/workitem/814
         /// </summary>
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void TestCommentStartOfLastLine() {
             var editorTestToolset = new EditorTestToolset();
             var view = editorTestToolset.CreatePythonTextView(@"print 'hello'
@@ -293,7 +293,7 @@ print 'goodbye'";
             Assert.AreEqual(expected, view.GetText());
         }
 
-        [TestMethod, Priority(UnitTestPriority.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void TestCommentAfterCodeIsNotUncommented() {
             var editorTestToolset = new EditorTestToolset();
             var view = editorTestToolset.CreatePythonTextView(@"print 'hello' #comment that should stay a comment

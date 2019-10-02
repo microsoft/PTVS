@@ -43,7 +43,7 @@ namespace PythonToolsTests {
         #region Test Cases
 
         #region Outlining Regions
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void OutlineRegions() {
             string content = @"print('Hello World')
 #region
@@ -66,7 +66,7 @@ class someClass:
                 new ExpectedTag(141, 269, "#  region someClass\r\nclass someClass:\r\n    def this( self ):\r\n        return self._hidden_variable * 2\r\n#    endregion someClass"));
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void OutlineUnbalancedRegions() {
             string content = @"#region
 #endregion
@@ -82,7 +82,7 @@ class someClass:
 
         #region Outlining Cells
 
-        [TestMethod, Priority(UnitTestPriority.CORE_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P0)]
         public void OutlineCells() {
             string content = @"pass
 #%% cell 1
@@ -110,7 +110,7 @@ pass
 
         #region Outline Compound Statements
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void OutlineIf() {
             string content = @"if param:
     print('hello')
@@ -140,7 +140,7 @@ if param and \
                 new ExpectedTag(235, 291, "\r\n    print('hello')\r\n    print('world')\r\n    print('!')"));
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void OutlineWhile() {
             string content = @"while b and c and d \
     and e \
@@ -151,7 +151,7 @@ if param and \
                new ExpectedTag(21, 66, "\r\n    and e \\\r\n    and f:\r\n    print('hello')"));
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void OutlineFor() {
             string content = @"for x in [ 
     1,
@@ -177,7 +177,7 @@ for x in [1,2,3,4]:
                 new ExpectedTag(158, 215, "\r\n    print('for2')\r\n    print('for2')\r\n    print('for2')"));
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void OutlineTry() {
             string content = @"
 try: 
@@ -213,7 +213,7 @@ finally:
                 new ExpectedTag(333, 379, "\r\n    print('finally2')\r\n    print('finally2')"));
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void OutlineWith() {
             string content = @"with open('file.txt') as f:
     line = f.readline()
@@ -224,7 +224,7 @@ finally:
                 new ExpectedTag(27, 94, "\r\n    line = f.readline()\r\n    line = line.strip()\r\n    print(line)"));
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void OutlineFuncDef() {
             string content = @"@decorator_stmt_made_up
 def f():
@@ -241,7 +241,7 @@ def f():
                 new ExpectedTag(94, 134, "\r\n        print('g')\r\n        print('g')"));
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void OutlineClassDef() {
             string content = @"class SomeClass:
     def this( self ):
@@ -251,7 +251,7 @@ def f():
                 new ExpectedTag(16, 60, "\r\n    def this( self ):\r\n        return self"));
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void OutlineDecorated() {
             string content = @"
 @decorator_stmt(a,
@@ -266,7 +266,7 @@ def f():
 
         #region Outlining Statements
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void OutlineLists() {
             string content = @"a = [1,
      2,
@@ -288,7 +288,7 @@ def f():
                 new ExpectedTag(43, 103, "2,\r\n         3,\r\n         5, 6, 7,\r\n         9,\r\n         10"));
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void OutlineTuple() {
             string content = @"( 'value1', 
   'value2',
@@ -298,7 +298,7 @@ def f():
                 new ExpectedTag(2, 37, "'value1', \r\n  'value2',\r\n  'value3'"));
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void OutlineDictionary() {
             string content = @"dict = {""hello"":""world"",
         ""hello"":""world"",""hello"":[1,
@@ -324,7 +324,7 @@ def f():
                 new ExpectedTag(186, 281, "\"tuple1\",\r\n                  \"tuple2\",\r\n                  \"tuple3\",\r\n                  \"tuple4\""));
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void OutlineParenthesesExpression() {
             string content = @"
 (   'abc'
@@ -337,7 +337,7 @@ def f():
                 new ExpectedTag(6, 45, "'abc'\r\n    'def'\r\n    'qrt'\r\n    'quox'"));
         }
 
-        [TestMethod, Priority(UnitTestPriority.CORE_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P0)]
         public void OutlineCallExpression() {
             string content = @"function_call(arg1,
               arg2,
@@ -347,7 +347,7 @@ def f():
                 new ExpectedTag(14, 60, "arg1,\r\n              arg2,\r\n              arg3"));
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void OutlineFromImportStatement() {
             string content = @"from sys import argv \
 as c, \
@@ -357,7 +357,7 @@ path as p";
                 new ExpectedTag(16, 42, "argv \\\r\nas c, \\\r\npath as p"));
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void OutlineSetExpression() {
             string content = @"{1,
  2,
@@ -367,7 +367,7 @@ path as p";
                 new ExpectedTag(1, 12, "1,\r\n 2,\r\n 3"));
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void OutlineConstantExpression() {
             string content = @"'''this
 is
@@ -413,7 +413,7 @@ string'''";
 
         #region REPL prompt removal
 
-        [TestMethod, Priority(UnitTestPriority.CORE_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P0)]
         public void RemoveReplPrompts() {
             Assert.AreEqual("", ReplPromptHelpers.RemovePrompts("", null));
             Assert.AreEqual("", ReplPromptHelpers.RemovePrompts(">>>", null));

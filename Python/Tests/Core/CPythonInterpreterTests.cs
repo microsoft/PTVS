@@ -32,7 +32,7 @@ namespace PythonToolsTests {
             AssertListener.Initialize();
         }
 
-        [TestMethod, Priority(UnitTestPriority.CORE_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P0)]
         public void FactoryProvider() {
             var provider = new CPythonInterpreterFactoryProvider(null, false);
             var factories = provider.GetInterpreterFactories().ToArray();
@@ -65,7 +65,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.SUPPLEMENTARY_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void DiscoverRegistryRace() {
             // https://github.com/Microsoft/PTVS/issues/558
 
@@ -79,7 +79,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.P2_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P2_FAILING)]
         public void ImportFromSearchPath() {
             var analyzer = new PythonAnalysis(PythonLanguageVersion.V35);
             analyzer.AddModule("test-module", "from test_package import *");
@@ -106,7 +106,7 @@ namespace PythonToolsTests {
             AssertUtil.CheckCollection(analyzer.GetAllNames(), new[] { "system" }, new[] { "spam" });
         }
 
-        [TestMethod, Priority(UnitTestPriority.P2_FAILING_UNIT_TEST)] // https://github.com/Microsoft/PTVS/issues/4226
+        [TestMethod, Priority(UnitTestPriority.P2_FAILING)] // https://github.com/Microsoft/PTVS/issues/4226
         public void ImportFromZipFile() {
             var analyzer = new PythonAnalysis(PythonLanguageVersion.V35);
             analyzer.AddModule("test-module", "from test_package import *; from test_package.sub_package import *");
