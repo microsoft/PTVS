@@ -72,7 +72,7 @@ namespace Microsoft.PythonTools.Project {
                 searchPath = await GetOutputPathAsync();
             }
 
-            (ProjectMgr as PythonProjectNode)?.OnInvalidateSearchPath(searchPath, this);
+            (ProjectMgr as PythonProjectNode)?.OnUpdateSearchPath(searchPath, this);
         }
 
         private async Task<string> GetOutputPathAsync(int retries = 10) {
@@ -120,7 +120,7 @@ namespace Microsoft.PythonTools.Project {
 
         public override bool Remove(bool removeFromStorage) {
             if (base.Remove(removeFromStorage)) {
-                (ProjectMgr as PythonProjectNode)?.OnInvalidateSearchPath(null, this);
+                (ProjectMgr as PythonProjectNode)?.OnUpdateSearchPath(null, this);
                 return true;
             }
             return false;

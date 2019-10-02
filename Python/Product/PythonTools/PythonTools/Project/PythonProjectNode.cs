@@ -961,11 +961,11 @@ namespace Microsoft.PythonTools.Project {
                 _searchPaths.GetAbsolutePersistedSearchPaths();
         }
 
-        internal void OnInvalidateSearchPath(string absolutePath, object moniker) {
+        internal void OnUpdateSearchPath(string absolutePath, object moniker) {
             if (string.IsNullOrEmpty(absolutePath)) {
                 // Clear all paths associated with this moniker
                 _searchPaths.RemoveByMoniker(moniker);
-            } else if (!_searchPaths.AddOrReplace(moniker, absolutePath, false)) {
+            } else if (!_searchPaths.AddOrReplace(moniker, absolutePath, true)) {
                 // Didn't change a search path, so we need to trigger reanalysis
                 // manually.
                 UpdateAnalyzerSearchPaths();
