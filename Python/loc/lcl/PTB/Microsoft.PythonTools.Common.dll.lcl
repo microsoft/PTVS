@@ -3590,7 +3590,7 @@
         <Str Cat="Text">
           <Val><![CDATA[When the selection contains a return statement, all code paths must return.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Quando a seleção contém uma instrução de retorno todos os códigos devem retornar.]]></Val>
+            <Val><![CDATA[Quando a seleção contém uma instrução return todos os códigos devem retornar.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -5484,10 +5484,13 @@
       </Item>
       <Item ItemId=";PythonTestFileDetected" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[A file containing Python tests was detected in the {0} {1}, but the test framework is disabled.]]></Val>
+          <Val><![CDATA[A file which may contain Python tests was detected in the {0} {1}, but the test framework is disabled.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Um arquivo que contém testes Python foi detectado no {0} {1}, mas a estrutura de teste está desabilitada.]]></Val>
+            <Val><![CDATA[Um arquivo que pode conter testes do Python foi detectado no {0} {1}, mas a estrutura de teste está desabilitada.]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[A file containing Python tests was detected in the {0} {1}, but the test framework is disabled.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
