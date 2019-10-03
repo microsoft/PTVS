@@ -153,11 +153,14 @@ namespace Microsoft.PythonTools.TestAdapter {
             _testFilesUpdateWatcher.FileChangedEvent += OnProjectItemChanged;
             oldTestFilesUpdateWatcher?.Dispose();
 
-            var solution = (IVsSolution)_serviceProvider.GetService(typeof(SVsSolution));
-
-            // add all source files
-            foreach (var project in VsProjectExtensions.EnumerateLoadedProjects(solution)) {
-                LoadProject(project);
+            try {
+                // add all source files
+                var solution = (IVsSolution)_serviceProvider.GetService(typeof(SVsSolution));
+                foreach (var project in VsProjectExtensions.EnumerateLoadedProjects(solution)) {
+                    LoadProject(project);
+                }
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
+                Trace.WriteLine("Exception : " + ex.Message);
             }
 
             _setupComplete = true;
@@ -238,9 +241,9 @@ namespace Microsoft.PythonTools.TestAdapter {
             _packageManagerEventSink.WatchPackageManagers(pyProj.GetInterpreterFactory());
 
             var projInfo = new ProjectInfo(pyProj);
-            _projectMap[projInfo.ProjectHome] = projInfo;
             var files = FilteredTestOrSettingsFiles(vsProject);
             UpdateContainersAndListeners(files, projInfo, isAdd: true);
+            _projectMap[projInfo.ProjectHome] = projInfo;
             return files.Any();
         }
 
