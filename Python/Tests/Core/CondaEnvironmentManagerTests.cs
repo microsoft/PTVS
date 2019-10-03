@@ -60,7 +60,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P0)]
         [TestCategory("10s")]
         public async Task CreateEnvironmentByPath() {
             var mgr = CreateEnvironmentManager();
@@ -75,7 +75,7 @@ namespace PythonToolsUITests {
             AssertCondaMetaFiles(envPath, "python-2.7.*.json");
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
         public async Task CreateEnvironmentByPathNonExistingPackage() {
             var mgr = CreateEnvironmentManager();
@@ -95,7 +95,7 @@ namespace PythonToolsUITests {
             Assert.IsFalse(Directory.Exists(envPath), "Environment folder was found.");
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P0)]
         [TestCategory("10s")]
         public async Task CreateEnvironmentByName() {
             var mgr = CreateEnvironmentManager();
@@ -112,7 +112,7 @@ namespace PythonToolsUITests {
             AssertCondaMetaFiles(envPath, "python-2.7.*.json");
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
         public async Task CreateEnvironmentByNameRelativePath() {
             var mgr = CreateEnvironmentManager();
@@ -132,7 +132,7 @@ namespace PythonToolsUITests {
             AssertCondaMetaFiles(envPath, "python-2.7.*.json");
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
         public async Task CreateEnvironmentByNameInvalidChars() {
             var mgr = CreateEnvironmentManager();
@@ -146,7 +146,7 @@ namespace PythonToolsUITests {
             Assert.IsTrue(ui.OutputText.Any(line => line.Contains($"Failed to create '{envName}'")));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
         public async Task CreateEnvironmentByPathFromEnvironmentFileCondaOnly() {
             var mgr = CreateEnvironmentManager();
@@ -162,7 +162,7 @@ namespace PythonToolsUITests {
             AssertCondaMetaFiles(envPath, "cookies-2.2.1*.json", "python-*.json");
         }
 
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         [TestCategory("10s")]
         public async Task CreateEnvironmentByPathFromEnvironmentFileCondaAndPip() {
             var mgr = CreateEnvironmentManager();
@@ -179,7 +179,7 @@ namespace PythonToolsUITests {
             AssertCondaMetaFiles(envPath, "flask-*.json", "python-3.4.*.json");
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
         public async Task CreateEnvironmentByPathFromEnvironmentFileNonExisting() {
             var mgr = CreateEnvironmentManager();
@@ -194,7 +194,7 @@ namespace PythonToolsUITests {
             Assert.IsTrue(ui.OutputText.Any(line => line.Contains($"Failed to create '{envPath}'")));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
         public async Task CreateEnvironmentByPathFromExistingEnvironment() {
             var mgr = CreateEnvironmentManager();
@@ -208,7 +208,7 @@ namespace PythonToolsUITests {
             AssertCondaMetaFiles(envPath, "flask-*.json", "python-2.7.*.json");
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
         public async Task ExportEnvironmentFile() {
             var mgr = CreateEnvironmentManager();
@@ -228,7 +228,7 @@ namespace PythonToolsUITests {
             AssertUtil.Contains(definition, "python=2.7.", "flask=0.12.");
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
         public async Task ExportExplicitSpecificationFile() {
             var mgr = CreateEnvironmentManager();
@@ -248,7 +248,7 @@ namespace PythonToolsUITests {
             AssertUtil.Contains(definition, "python-2.7.", "flask-0.12.");
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P0)]
         [TestCategory("10s")]
         public async Task DeleteEnvironment() {
             var mgr = CreateEnvironmentManager();
@@ -261,7 +261,7 @@ namespace PythonToolsUITests {
             Assert.IsFalse(Directory.Exists(envPath), "Environment folder was not deleted.");
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
         public async Task DeleteEnvironmentNonExisting() {
             var mgr = CreateEnvironmentManager();

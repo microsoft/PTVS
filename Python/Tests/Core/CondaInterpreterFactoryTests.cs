@@ -29,7 +29,7 @@ namespace PythonToolsTests {
             AssertListener.Initialize();
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void CondaWatchEnvironmentsTxtWithoutCondafolder() {
             // We start with no .conda folder
             var userProfileFolder = TestData.GetTempPath();
@@ -44,7 +44,7 @@ namespace PythonToolsTests {
             TestTriggerDiscovery(userProfileFolder, triggerDiscovery);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void CondaWatchEnvironmentsTxtWithCondafolder() {
             // We start with a .conda folder but no environments.txt
             var userProfileFolder = TestData.GetTempPath();
@@ -59,7 +59,7 @@ namespace PythonToolsTests {
             TestTriggerDiscovery(userProfileFolder, triggerDiscovery);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P0)]
         public void CondaWatchEnvironmentsTxtWithCondafolderAndEnvTxt() {
             // We start with a .conda folder and environments.txt
             var userProfileFolder = TestData.GetTempPath();

@@ -56,11 +56,12 @@ Copy from the PTVS `binaries` folder into `C:\ConcordSDK\Tools\Glass` folder:
 
 ```
 Microsoft.PythonTools.*
+Microsoft.Python.*
 DkmDebugger.vsdconfig
 Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces.dll
 ```
 
-Copy `Microsoft.PythonTools.*` to `C:\ConcordSDK\Tools\Glass\Remote Debugger\x64`
+Copy `Microsoft.PythonTools.*` and `Microsoft.Python.*` to `C:\ConcordSDK\Tools\Glass\Remote Debugger\x64`
 
 
 ## Copy PTVS tests
@@ -70,7 +71,7 @@ Copy `PythonTests` folder such that it is located at `C:\ConcordSDK\PythonTests`
 Copy these files from `C:\ConcordSDK\PythonTests` into `C:\ConcordSDK\Tools\Glass` folder:
 
 ```
-RegisterPythonEngine.cmd
+
 PythonEngine.regdef
 ```
 
@@ -89,3 +90,10 @@ To run tests:
 ```
 vstest.console.exe C:\ConcordSDK\PythonTests\PythonConcord.GlassTestRoot /TestAdapterPath:C:\concordsdk\tools\testadapter\
 ```
+
+
+
+delete [RegisterPythonEngine.cmd]
+
+
+

@@ -32,7 +32,7 @@ namespace PythonToolsTests {
             AssertListener.Initialize();
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void WatchWorkspaceFolderChanged() {
             var workspaceFolder1 = TestData.GetTempPath();
             Directory.CreateDirectory(workspaceFolder1);
@@ -60,7 +60,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void WatchWorkspaceSettingsChanged() {
             var workspaceFolder = TestData.GetTempPath();
             Directory.CreateDirectory(workspaceFolder);
@@ -77,7 +77,7 @@ namespace PythonToolsTests {
             TestTriggerDiscovery(workspaceContext, triggerDiscovery, null, true);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P0)]
         public void WatchWorkspaceVirtualEnvCreated() {
             var python = PythonPaths.Python37_x64 ?? PythonPaths.Python37;
 
@@ -104,7 +104,7 @@ namespace PythonToolsTests {
             Assert.AreEqual("Workspace|Workspace|env", configs[0].Id);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P0)]
         public void DetectLocalEnvOutsideWorkspace() {
             var python = PythonPaths.Python37_x64 ?? PythonPaths.Python37;
 
@@ -143,7 +143,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void WatchWorkspaceVirtualEnvRenamed() {
             const string ENV_NAME = "env";
             var workspaceContext = CreateEnvAndGetWorkspaceService(ENV_NAME);
@@ -157,7 +157,7 @@ namespace PythonToolsTests {
             Assert.AreEqual("Workspace|Workspace|env1", configs[0].Id);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void WatchWorkspaceVirtualEnvDeleted() {
             const string ENV_NAME = "env";
             var workspaceContext = CreateEnvAndGetWorkspaceService(ENV_NAME);
