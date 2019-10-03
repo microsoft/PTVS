@@ -3590,7 +3590,7 @@
         <Str Cat="Text">
           <Val><![CDATA[When the selection contains a return statement, all code paths must return.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Jeśli wybór zawiera instrukcję powrotu, wszystkie ścieżki kodu muszą powracać.]]></Val>
+            <Val><![CDATA[Jeśli wybór zawiera instrukcję return, wszystkie ścieżki kodu muszą powracać.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -5459,7 +5459,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Publish]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Publikuj]]></Val>
+            <Val><![CDATA[Opublikuj]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
