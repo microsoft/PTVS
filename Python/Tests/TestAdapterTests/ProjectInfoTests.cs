@@ -31,7 +31,7 @@ namespace TestAdapterTests {
     public class ProjectInfoTests {
         /// <summary>
         /// Recreate collection was modified while iterating exception
-        ///  System.InvalidOperationException: Collection was modified; enumeration operation may not execute.
+        /// System.InvalidOperationException: Collection was modified; enumeration operation may not execute.
         /// Test shouldn't throw
         /// </summary>
         /// <returns></returns>
@@ -45,22 +45,22 @@ namespace TestAdapterTests {
             //Simualte rebuid workspace
             projectMap[projectName] = new ProjectInfo(dumpyProject);
 
-            var rebuildTasks = Enumerable.Range(1, 100)
+            var rebuildTasks = Enumerable.Range(1, 10)
                 .Select(i => Task.Run(async
                     () => {
                         projectMap.Clear();
-                        var project = new ProjectInfo(dumpyProject);
-                        foreach (int j in Enumerable.Range(1, 10000)) {
-                            project.AddTestContainer(dummyDiscoverer, j.ToString() + ".py");
+                        projectMap[projectName] = new ProjectInfo(dumpyProject);
+                        foreach (int j in Enumerable.Range(1, 1000)) {
+                            projectMap[projectName].AddTestContainer(dummyDiscoverer, j.ToString() + ".py");
                         }
-                        projectMap[projectName] = project;
+                        
                         await Task.Delay(100);
                     }
                 )
             );
 
             //Simulate Get TestContainers
-            var iterateTasks = Enumerable.Range(1, 1000)
+            var iterateTasks = Enumerable.Range(1, 100)
                 .Select(i => Task.Run(async
                     () => {
                         var items = projectMap.Values.SelectMany(p => p.GetAllContainers()).ToList();
@@ -70,6 +70,8 @@ namespace TestAdapterTests {
             );
 
             await Task.WhenAll(rebuildTasks.Concat(iterateTasks));
+
+            Assert.AreEqual(1000, projectMap[projectName].GetAllContainers().Count());
         }
     }
 }
