@@ -31,6 +31,7 @@ namespace TestAdapterTests {
     public class ProjectInfoTests {
         /// <summary>
         /// Recreate collection was modified while iterating exception
+        ///  System.InvalidOperationException: Collection was modified; enumeration operation may not execute.
         /// Test shouldn't throw
         /// </summary>
         /// <returns></returns>
@@ -41,6 +42,7 @@ namespace TestAdapterTests {
             var projectName = "dummyName";
             PythonProject dumpyProject = new MockPythonProject("dummyHome", projectName);
 
+            //Simualte rebuid workspace
             projectMap[projectName] = new ProjectInfo(dumpyProject);
 
             var rebuildTasks = Enumerable.Range(1, 100)
@@ -57,6 +59,7 @@ namespace TestAdapterTests {
                 )
             );
 
+            //Simulate Get TestContainers
             var iterateTasks = Enumerable.Range(1, 1000)
                 .Select(i => Task.Run(async
                     () => {
