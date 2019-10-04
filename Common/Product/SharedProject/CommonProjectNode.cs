@@ -1189,10 +1189,15 @@ namespace Microsoft.VisualStudioTools.Project {
                 _projectDocListenerForStartupFileUpdates.Dispose();
                 _projectDocListenerForStartupFileUpdates = null;
             }
-            LibraryManager libraryManager = Site.GetService(GetLibraryManagerType()) as LibraryManager;
-            if (null != libraryManager) {
-                libraryManager.UnregisterHierarchy(InteropSafeHierarchy);
+
+            var libraryManagerType = GetLibraryManagerType();
+            if (libraryManagerType != null) {
+                var libraryManager = Site.GetService(libraryManagerType) as LibraryManager;
+                if (libraryManager != null) {
+                    libraryManager.UnregisterHierarchy(InteropSafeHierarchy);
+                }
             }
+
             if (_watcher != null) {
                 _watcher.EnableRaisingEvents = false;
                 _watcher.Dispose();
@@ -1216,9 +1221,12 @@ namespace Microsoft.VisualStudioTools.Project {
 
         public override void Load(string filename, string location, string name, uint flags, ref Guid iidProject, out int canceled) {
             base.Load(filename, location, name, flags, ref iidProject, out canceled);
-            LibraryManager libraryManager = Site.GetService(GetLibraryManagerType()) as LibraryManager;
-            if (null != libraryManager) {
-                libraryManager.RegisterHierarchy(InteropSafeHierarchy);
+            var libraryManagerType = GetLibraryManagerType();
+            if (libraryManagerType != null) {
+                var libraryManager = Site.GetService(libraryManagerType) as LibraryManager;
+                if (libraryManager != null) {
+                    libraryManager.RegisterHierarchy(InteropSafeHierarchy);
+                }
             }
         }
 
@@ -1666,6 +1674,12 @@ namespace Microsoft.VisualStudioTools.Project {
             // in the registry hive so that more editors can be added without changing this part of the
             // code. Dynamic languages only make usage of one Editor Factory and therefore we will return 
             // that guid
+            var editorType = GetEditorFactoryType();
+            if (editorType == null) {
+                guidEditorType = Guid.Empty;
+                return VSConstants.E_NOTIMPL;
+            }
+
             guidEditorType = GetEditorFactoryType().GUID;
             return VSConstants.S_OK;
         }

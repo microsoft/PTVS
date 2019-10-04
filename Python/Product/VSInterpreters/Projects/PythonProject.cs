@@ -15,7 +15,6 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Threading.Tasks;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Projects {
@@ -52,19 +51,6 @@ namespace Microsoft.PythonTools.Projects {
 
         public abstract IPythonInterpreterFactory GetInterpreterFactory();
 
-        /// <summary>
-        /// Gets the current analyzer for the project, or null if no analyzer is available.
-        /// </summary>
-        [Obsolete("Use the async version if possible")]
-        public abstract ProjectAnalyzer Analyzer { get; }
-
-        /// <summary>
-        /// Gets the current analyzer for the project. May wait while creating an analyzer
-        /// if necessary, where the <see cref="Analyzer"/> property would return null.
-        /// </summary>
-        public abstract Task<ProjectAnalyzer> GetAnalyzerAsync();
-
-        public abstract event EventHandler ProjectAnalyzerChanged;
         public abstract event EventHandler<PythonProjectPropertyChangedArgs> ProjectPropertyChanged;
 
         public abstract event EventHandler ActiveInterpreterChanged;

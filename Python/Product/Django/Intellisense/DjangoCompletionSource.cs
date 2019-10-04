@@ -18,7 +18,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.PythonTools.Django.TemplateParsing;
-using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
 using Microsoft.WebTools.Languages.Html.Editor.Document;
@@ -26,11 +25,8 @@ using Microsoft.WebTools.Languages.Shared.Text;
 
 namespace Microsoft.PythonTools.Django.Intellisense {
     internal class DjangoCompletionSource : DjangoCompletionSourceBase {
-        private readonly IServiceProvider _serviceProvider;
-
-        public DjangoCompletionSource(IGlyphService glyphService, VsProjectAnalyzer analyzer, IServiceProvider serviceProvider, ITextBuffer textBuffer)
+        public DjangoCompletionSource(IGlyphService glyphService, IDjangoProjectAnalyzer analyzer, ITextBuffer textBuffer)
             : base(glyphService, analyzer, textBuffer) {
-            _serviceProvider = serviceProvider;
         }
 
         public override void AugmentCompletionSession(ICompletionSession session, IList<CompletionSet> completionSets) {
@@ -65,7 +61,7 @@ namespace Microsoft.PythonTools.Django.Intellisense {
             var artifactText = doc.HtmlEditorTree.ParseTree.Text.GetText(artifact.InnerRange.Start, artifact.InnerRange.Length);
             artifact.Parse(artifactText);
 
-            var completionSet = GetCompletionSet(session.GetOptions(_serviceProvider), _analyzer, artifact.TokenKind, artifactText, artifact.InnerRange.Start, triggerPoint, out _);
+            var completionSet = GetCompletionSet(_analyzer, artifact.TokenKind, artifactText, artifact.InnerRange.Start, triggerPoint, out _);
             completionSets.Add(completionSet);
         }
 

@@ -24,10 +24,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
+using Microsoft.Python.Parsing;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Options;
-using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Project;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
@@ -192,10 +192,6 @@ namespace TestUtilities.UI.Python {
             var options = (IPythonOptions)automation;
             var replOptions = options.Interactive;
             Assert.IsNotNull(replOptions, "Could not find options for " + description);
-
-            var oldAddNewLineAtEndOfFullyTypedWord = options.Intellisense.AddNewLineAtEndOfFullyTypedWord;
-            app.OnDispose(() => options.Intellisense.AddNewLineAtEndOfFullyTypedWord = oldAddNewLineAtEndOfFullyTypedWord);
-            options.Intellisense.AddNewLineAtEndOfFullyTypedWord = settings.AddNewLineAtEndOfFullyTypedWord;
 
             var interpreters = app.ComponentModel.GetService<IInterpreterRegistryService>();
             var replId = PythonReplEvaluatorProvider.GetEvaluatorId(

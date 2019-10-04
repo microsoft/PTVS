@@ -16,8 +16,6 @@
 
 using System;
 using System.Threading.Tasks;
-using Microsoft.PythonTools.Intellisense;
-using Microsoft.VisualStudio.Text;
 
 namespace Microsoft.PythonTools.Editor {
     /// <summary>
@@ -28,11 +26,11 @@ namespace Microsoft.PythonTools.Editor {
     /// IntelliSense features that require using another base class.
     /// Implement no-op handlers by returning <see cref="Task.CompletedTask"/>.
     /// </remarks>
-    interface IPythonTextBufferInfoEventSink {
+    internal interface IPythonTextBufferInfoEventSink {
         Task PythonTextBufferEventAsync(PythonTextBufferInfo sender, PythonTextBufferInfoEventArgs e);
     }
 
-    enum PythonTextBufferInfoEvents {
+    internal enum PythonTextBufferInfoEvents {
         None = 0,
         NewAnalysisEntry,
         NewParseTree,
@@ -46,23 +44,15 @@ namespace Microsoft.PythonTools.Editor {
         AnalyzerExpired,
     }
 
-    class PythonTextBufferInfoEventArgs : EventArgs {
+    internal class PythonTextBufferInfoEventArgs : EventArgs {
         public PythonTextBufferInfoEventArgs(PythonTextBufferInfoEvents eventType) {
             Event = eventType;
         }
 
-        public PythonTextBufferInfoEventArgs(
-            PythonTextBufferInfoEvents eventType,
-            AnalysisEntry entry
-        ) : this(eventType) {
-            AnalysisEntry = entry;
-        }
-
         public PythonTextBufferInfoEvents Event { get; }
-        public AnalysisEntry AnalysisEntry { get; }
     }
 
-    class PythonTextBufferInfoNestedEventArgs : PythonTextBufferInfoEventArgs {
+    internal class PythonTextBufferInfoNestedEventArgs : PythonTextBufferInfoEventArgs {
         public PythonTextBufferInfoNestedEventArgs(PythonTextBufferInfoEvents eventType, EventArgs e)
             : base(eventType) {
             NestedEventArgs = e;
@@ -71,7 +61,7 @@ namespace Microsoft.PythonTools.Editor {
         public EventArgs NestedEventArgs { get; }
     }
 
-    class PythonNewTextBufferInfoEventArgs : PythonTextBufferInfoEventArgs {
+    internal class PythonNewTextBufferInfoEventArgs : PythonTextBufferInfoEventArgs {
         public PythonNewTextBufferInfoEventArgs(PythonTextBufferInfoEvents eventType, PythonTextBufferInfo newInfo)
             : base(eventType) {
             NewTextBufferInfo = newInfo;

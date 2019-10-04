@@ -14,16 +14,17 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
-using System.Linq;
-using Microsoft.PythonTools.Parsing;
+using Microsoft.Python.Parsing;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.BraceCompletion;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Utilities;
 
-namespace Microsoft.PythonTools.Editor.BraceCompletion {
+namespace Microsoft.PythonTools.Editor {
     [Export(typeof(IBraceCompletionContextProvider))]
     [BracePair('(', ')')]
     [BracePair('[', ']')]
@@ -31,12 +32,13 @@ namespace Microsoft.PythonTools.Editor.BraceCompletion {
     [BracePair('"', '"')]
     [BracePair('\'', '\'')]
     [ContentType(PythonCoreConstants.ContentType)]
-    internal sealed class BraceCompletionContextProvider : IBraceCompletionContextProvider {
-        [Import]
-        internal PythonEditorServices EditorServices = null;
+    internal class BraceCompletionContextProvider : IBraceCompletionContextProvider {
+        [Import(typeof(SVsServiceProvider))]
+        internal IServiceProvider Site = null;
 
         public bool TryCreateContext(ITextView textView, SnapshotPoint openingPoint, char openingBrace, char closingBrace, out IBraceCompletionContext context) {
-            if (IsValidBraceCompletionContext(EditorServices.GetBufferInfo(openingPoint.Snapshot.TextBuffer), openingPoint)) {
+            var bi = PythonTextBufferInfo.ForBuffer(Site, openingPoint.Snapshot.TextBuffer);
+            if (IsValidBraceCompletionContext(bi, openingPoint, openingBrace)) {
                 context = new BraceCompletionContext();
                 return true;
             } else {
@@ -45,7 +47,7 @@ namespace Microsoft.PythonTools.Editor.BraceCompletion {
             }
         }
 
-        private static bool IsValidBraceCompletionContext(PythonTextBufferInfo buffer, SnapshotPoint openingPoint) {
+        private static bool IsValidBraceCompletionContext(PythonTextBufferInfo buffer, SnapshotPoint openingPoint, char openingBrace) {
             if (buffer == null) {
                 return false;
             }
@@ -55,16 +57,32 @@ namespace Microsoft.PythonTools.Editor.BraceCompletion {
                 return false;
             }
 
-            // If we have a token here that is in any of these categories, we do
-            // not want to complete.
-            var category = buffer.GetTokenAtPoint(openingPoint)?.Category ?? TokenCategory.None;
-            return !(
-                category == TokenCategory.Comment ||
-                category == TokenCategory.LineComment ||
-                category == TokenCategory.DocComment ||
-                category == TokenCategory.StringLiteral ||
-                category == TokenCategory.IncompleteMultiLineStringLiteral
-            );
+            switch (openingBrace) {
+                case '(':
+                case '[':
+                case '{': {
+                    // Valid anywhere, including comments / strings
+                    return true;
+                }
+
+                case '"':
+                case '\'': {
+                    // Not valid in comment / strings, so user can easily type triple-quotes
+                    var category = buffer.GetTokenAtPoint(openingPoint)?.Category ?? TokenCategory.None;
+                    return !(
+                        category == TokenCategory.Comment ||
+                        category == TokenCategory.LineComment ||
+                        category == TokenCategory.DocComment ||
+                        category == TokenCategory.StringLiteral ||
+                        category == TokenCategory.IncompleteMultiLineStringLiteral
+                    );
+                }
+
+                default: {
+                    Debug.Fail("Unexpected opening brace character.");
+                    return false;
+                }
+            }
         }
     }
 }

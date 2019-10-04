@@ -19,7 +19,7 @@ using Microsoft.PythonTools.Debugger;
 
 namespace Microsoft.PythonTools.Options {
     class PythonDebugOptionsService : IPythonDebugOptionsService {
-        DebuggerOptions debugOptions;
+        PythonDebuggingOptions debugOptions;
 
         public PythonDebugOptionsService(IServiceProvider serviceProvider) {
             debugOptions = ((PythonToolsService)serviceProvider

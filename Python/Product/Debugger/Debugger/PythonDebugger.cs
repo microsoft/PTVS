@@ -15,7 +15,7 @@
 // permissions and limitations under the License.
 
 using System.IO;
-using Microsoft.PythonTools.Parsing;
+using Microsoft.Python.Parsing;
 
 namespace Microsoft.PythonTools.Debugger {
     class PythonDebugger {

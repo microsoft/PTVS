@@ -21,11 +21,9 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.PythonTools.Editor;
+using Microsoft.Python.Parsing;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
-using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.InteractiveWindow.Commands;
 using Microsoft.VisualStudio.Utilities;
@@ -112,12 +110,12 @@ namespace Microsoft.PythonTools.Repl {
             return Enumerable.Empty<KeyValuePair<string, string>>();
         }
 
-        public override CompletionResult[] GetMemberNames(string text) {
-            return _thread?.GetMemberNames(text) ?? new CompletionResult[0];
+        public override Task<CompletionResult[]> GetMemberNamesAsync(string text, CancellationToken ct) {
+            return Task.FromResult(_thread?.GetMemberNames(text) ?? new CompletionResult[0]);
         }
 
-        public override OverloadDoc[] GetSignatureDocumentation(string text) {
-            return _thread?.GetSignatureDocumentation(text) ?? new OverloadDoc[0];
+        public override Task<OverloadDoc[]> GetSignatureDocumentationAsync(string text, CancellationToken ct) {
+            return Task.FromResult(_thread?.GetSignatureDocumentation(text) ?? new OverloadDoc[0]);
         }
 
         public override void AbortExecution() {
@@ -294,13 +292,6 @@ namespace Microsoft.PythonTools.Repl {
                     WriteError(Strings.ReplNotStarted);
                 }
                 return ExecutionResult.Success;
-            }
-
-            foreach (var buffer in CurrentWindow.TextView.BufferGraph.GetTextBuffers(b => b.ContentType.IsOfType(PythonCoreConstants.ContentType))) {
-                var tb = PythonTextBufferInfo.TryGetForBuffer(buffer);
-                if (tb != null) {
-                    tb.DoNotParse = true;
-                }
             }
 
             if (!quiet) {

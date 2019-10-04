@@ -53,6 +53,5 @@ namespace Microsoft.PythonTools.Django.Intellisense {
 
             return allBuffers;
         }
-
     }
 }

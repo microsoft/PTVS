@@ -55,9 +55,6 @@
     </Reference>
     <Reference Include="Microsoft.Build, Version=$(MicrosoftBuildAssemblyVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="Microsoft.Python.Analysis.Engine">
-      <Aliases>global,analysis</Aliases>
-    </Reference>
     <Reference Include="Microsoft.VisualStudio.InteractiveWindow" />
     <Reference Include="Microsoft.VisualStudio.VsInteractiveWindow" />
     <Reference Include="Microsoft.VisualStudio.TextManager.Interop, Version=7.1.40304.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
@@ -116,9 +113,18 @@
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
     <Reference Include="WindowsBase" />
+    <Reference Include="Microsoft.Python.Core">
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.Python.Parsing">
+      <Private>True</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AddImportTests.cs" />
+    <Compile Include="BraceCompletionUITests.cs" />
+    <Compile Include="SmartIndentUITests.cs" />
+    <Compile Include="SignatureHelpUITests.cs" />
     <Compile Include="InfoBarUITests.cs" />
     <Compile Include="ErrorListTaskListTests.cs" />
     <Compile Include="BasicProjectTests.cs" />

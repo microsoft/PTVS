@@ -65,6 +65,10 @@
       <IncludeInVSIX>True</IncludeInVSIX>
       <Private>False</Private>
     </ProjectReference>
+    <ProjectReference Include="..\Ipc.Json\Ipc.Json.csproj">
+      <Project>{e1e1613d-0c96-42f9-9f2d-052c72533297}</Project>
+      <Name>Ipc.Json</Name>
+    </ProjectReference>
     <ProjectReference Include="..\RunElevated\RunElevated.csproj">
       <Project>{4e18d41e-5e73-461f-9289-f6709257171a}</Project>
       <Name>Microsoft.PythonTools.RunElevated</Name>
@@ -182,19 +186,15 @@
       <Private>True</Private>
       <IncludeInVSIX>True</IncludeInVSIX>
     </Reference>
-    <Reference Include="Microsoft.Python.Analysis.Engine">
+    <Reference Include="Microsoft.Python.Core">
       <Private>True</Private>
       <IncludeInVSIX>True</IncludeInVSIX>
     </Reference>
-    <Reference Include="Microsoft.Python.LanguageServer.Core">
+    <Reference Include="Microsoft.Python.Parsing">
       <Private>True</Private>
       <IncludeInVSIX>True</IncludeInVSIX>
     </Reference>
-    <Reference Include="Microsoft.PythonTools.Ipc.Json">
-      <Private>True</Private>
-      <IncludeInVSIX>True</IncludeInVSIX>
-    </Reference>
-    <Reference Include="Microsoft.PythonTools.Analyzer">
+    <Reference Include="Microsoft.Extensions.FileSystemGlobbing">
       <Private>True</Private>
       <IncludeInVSIX>True</IncludeInVSIX>
     </Reference>
@@ -258,8 +258,28 @@
     <Reference Include="Microsoft.Internal.VisualStudio.Shell.Embeddable">
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
+    <Reference Include="Microsoft.VisualStudio.LanguageServer.Protocol">
+      <Private>True</Private>
+      <IncludeInVSIX>True</IncludeInVSIX>
+    </Reference>
+    <Reference Include="StreamJsonRpc" />
+    <Reference Include="System.Net.Http" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="PythonTools\Editor\BraceCompletion\BraceCompletionContext.cs" />
+    <Compile Include="PythonTools\Editor\BraceCompletion\BraceCompletionContextProvider.cs" />
+    <Compile Include="PythonTools\Editor\Formatting\PythonFormatterAutopep8.cs" />
+    <Compile Include="PythonTools\Editor\Formatting\PythonFormatterRangeNotSupportedException.cs" />
+    <Compile Include="PythonTools\Editor\Formatting\PythonFormatterModuleNotFoundException.cs" />
+    <Compile Include="PythonTools\Editor\Formatting\PythonFormatterYapf.cs" />
+    <Compile Include="PythonTools\Editor\Formatting\PythonFormatter.cs" />
+    <Compile Include="PythonTools\Editor\Formatting\LspDiffTextEditFactory.cs" />
+    <Compile Include="PythonTools\LanguageServerClient\LspEditorUtilities.cs" />
+    <Compile Include="PythonTools\Editor\Formatting\PythonFormatterBlack.cs" />
+    <Compile Include="PythonTools\Editor\Formatting\DiffMatchPatch.cs" />
+    <Compile Include="PythonTools\Editor\Formatting\IPythonFormatter.cs" />
+    <Compile Include="PythonTools\Editor\Formatting\PythonFormatCommandHandler.cs" />
+    <Compile Include="PythonTools\Editor\Indent\SmartIndent.cs" />
     <Compile Include="PythonTools\Debugger\CustomDebugAdapterProtocolExtension.cs" />
     <Compile Include="PythonTools\Debugger\DebugAdapterLauncher.cs" />
     <Compile Include="PythonTools\Debugger\DebugAdapterProcess.cs" />
@@ -269,6 +289,24 @@
     <Compile Include="PythonTools\Commands\CurrentEnvironmentListCommand.cs" />
     <Compile Include="PythonTools\Commands\CurrentEnvironmentCommand.cs" />
     <Compile Include="PythonTools\Commands\SwitchToEnvironmentCommand.cs" />
+    <Compile Include="PythonTools\Editor\BraceHighlight\BraceHighlightTagger.cs" />
+    <Compile Include="PythonTools\Editor\BraceHighlight\BraceHighlightTaggerProvider.cs" />
+    <Compile Include="PythonTools\Editor\CodeSnippet\ExpansionClient.cs" />
+    <Compile Include="PythonTools\Editor\CodeSnippet\PythonInsertSnippetCommandHandler.cs" />
+    <Compile Include="PythonTools\Editor\CodeSnippet\PythonSnippetManager.cs" />
+    <Compile Include="PythonTools\Editor\Comment\CommentHelper.cs" />
+    <Compile Include="PythonTools\Editor\EditorExtensions.cs" />
+    <Compile Include="PythonTools\Editor\IPythonTextBufferInfoEventSink.cs" />
+    <Compile Include="PythonTools\IVsFeatureFlags.cs" />
+    <Compile Include="PythonTools\Editor\LanguagePreferences.cs" />
+    <Compile Include="PythonTools\Editor\Comment\PythonCommentSelectionCommandHandler.cs" />
+    <Compile Include="PythonTools\Editor\Paste\PythonPasteCommandHandler.cs" />
+    <Compile Include="PythonTools\Editor\PythonTextBufferInfo.cs" />
+    <Compile Include="PythonTools\Editor\ReplWindowCreationListener.cs" />
+    <Compile Include="PythonTools\Editor\Indent\AutoIndent.cs" />
+    <Compile Include="PythonTools\Editor\TokenizerExtensions.cs" />
+    <Compile Include="PythonTools\Editor\Typing\PythonReturnKeyCommandHandler.cs" />
+    <Compile Include="PythonTools\Editor\Indent\SmartIndentProvider.cs" />
     <Compile Include="PythonTools\Environments\EnvironmentSwitcherFileContext.cs" />
     <Compile Include="PythonTools\Environments\EnvironmentSwitcherProjectContext.cs" />
     <Compile Include="PythonTools\Environments\EnvironmentSwitcherWorkspaceContext.cs" />
@@ -290,9 +328,14 @@
     <Compile Include="PythonTools\Environments\EnvironmentViewBase.cs" />
     <Compile Include="PythonTools\Environments\ProjectView.cs" />
     <Compile Include="PythonTools\Environments\UserSpecifiedCondaLocator.cs" />
-    <Compile Include="PythonTools\Intellisense\WorkspaceAnalyzer.cs" />
-    <Compile Include="PythonTools\Intellisense\WorkspaceAnalysis.cs" />
-    <Compile Include="PythonTools\Options\CondaOptions.cs" />
+    <Compile Include="PythonTools\Intellisense\CodeCellAnalysis.cs" />
+    <Compile Include="PythonTools\Intellisense\ParameterResult.cs" />
+    <Compile Include="PythonTools\Intellisense\PythonMemberType.cs" />
+    <Compile Include="PythonTools\LanguageServerClient\PythonFilePathToContentTypeProvider.cs" />
+    <Compile Include="PythonTools\LanguageServerClient\PythonLanguageClientMetadata.cs" />
+    <Compile Include="PythonTools\LanguageServerClient\ReplDocument.cs" />
+    <Compile Include="PythonTools\PythonLanguageInfo.cs" />
+    <Compile Include="PythonTools\Options\PythonCondaOptions.cs" />
     <Compile Include="PythonTools\Options\PythonCondaOptionsControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -345,51 +388,10 @@
     <Compile Include="PythonTools\Debugger\NoStartupFileException.cs" />
     <Compile Include="PythonTools\Debugger\DebugLaunchHelper.cs" />
     <Compile Include="PythonTools\Debugger\ProvideDebugAdapterAttributes.cs" />
-    <Compile Include="PythonTools\Editor\IPythonTextBufferInfoEventSink.cs" />
-    <Compile Include="PythonTools\Editor\IVsFeatureFlags.cs" />
-    <Compile Include="PythonTools\Editor\PythonEditorServices.cs" />
-    <Compile Include="PythonTools\Editor\PythonTextBufferInfo.cs" />
-    <Compile Include="PythonTools\Editor\ReplPromptHelpers.cs" />
-    <Compile Include="PythonTools\Editor\TokenizerExtensions.cs" />
-    <Compile Include="PythonTools\Intellisense\AbnormalAnalysisExitEventArgs.cs" />
-    <Compile Include="PythonTools\Intellisense\AnalysisVariable.cs" />
-    <Compile Include="PythonTools\Intellisense\BufferParser.cs" />
-    <Compile Include="PythonTools\Intellisense\CodeCellAnalysis.cs" />
-    <Compile Include="PythonTools\Intellisense\CompletionOptions.cs" />
-    <Compile Include="PythonTools\Intellisense\ExpansionCompletionSource.cs" />
-    <Compile Include="PythonTools\Intellisense\ExpressionAtPoint.cs" />
-    <Compile Include="PythonTools\Intellisense\BufferAnalysisSquiggleProviderBase.cs" />
-    <Compile Include="PythonTools\Intellisense\PreviewChangesService.cs" />
+    <Compile Include="PythonTools\Editor\Paste\ReplPromptHelpers.cs" />
     <Compile Include="PythonTools\Intellisense\CompletionResult.cs" />
-    <Compile Include="PythonTools\Intellisense\ExtractMethodSuggestedActionSourceProvider.cs" />
-    <Compile Include="PythonTools\Intellisense\InterpreterLog.cs" />
-    <Compile Include="PythonTools\Intellisense\LocationTracker.cs" />
-    <Compile Include="PythonTools\Intellisense\NavigationInfo.cs" />
-    <Compile Include="PythonTools\Intellisense\FileCookie.cs" />
-    <Compile Include="PythonTools\Intellisense\IIntellisenseCookie.cs" />
-    <Compile Include="PythonTools\Intellisense\AnalysisEntry.cs" />
-    <Compile Include="PythonTools\Intellisense\QuickInfo.cs" />
-    <Compile Include="PythonTools\Intellisense\InvalidEncodingSquiggleProvider.cs" />
-    <Compile Include="PythonTools\Editor\BraceCompletion\BraceCompletionContext.cs" />
-    <Compile Include="PythonTools\Editor\BraceCompletion\BraceCompletionContextProvider.cs" />
-    <Compile Include="PythonTools\Intellisense\UriEqualityComparer.cs" />
     <Compile Include="PythonTools\Logging\ActivityLogLogger.cs" />
-    <Compile Include="PythonTools\Navigation\Navigable\NavigableSymbol.cs" />
-    <Compile Include="PythonTools\Navigation\Navigable\NavigableSymbolSourceProvider.cs" />
-    <Compile Include="PythonTools\Navigation\Navigable\NavigableSymbolSource.cs" />
-    <Compile Include="PythonTools\Navigation\Peek\PythonPeekResultSource.cs" />
-    <Compile Include="PythonTools\Options\CodeFormattingCategory.cs" />
-    <Compile Include="PythonTools\Options\DiagnosticsOptions.cs" />
-    <Compile Include="PythonTools\Options\LanguageServerOptions.cs" />
-    <Compile Include="PythonTools\Options\LanguageServerOptionsControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="PythonTools\Options\LanguageServerOptionsControl.Designer.cs">
-      <DependentUpon>LanguageServerOptionsControl.cs</DependentUpon>
-    </Compile>
-    <Compile Include="PythonTools\Options\LanguageServerOptionsPage.cs">
-      <SubType>Component</SubType>
-    </Compile>
+    <Compile Include="PythonTools\Options\PythonDiagnosticsOptions.cs" />
     <Compile Include="PythonTools\Options\PythonDiagnosticsOptionsControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -399,14 +401,23 @@
     <Compile Include="PythonTools\Options\PythonDiagnosticsOptionsPage.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="PythonTools\Navigation\Peek\PythonPeekableItem.cs" />
-    <Compile Include="PythonTools\Navigation\Peek\PythonPeekableItemSource.cs" />
-    <Compile Include="PythonTools\Navigation\Peek\PythonPeekableItemSourceProvider.cs" />
     <Compile Include="PythonTools\Environments\AddEnvironmentDialog.xaml.cs">
       <DependentUpon>AddEnvironmentDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="PythonTools\Project\DeprecatedReferenceNode.cs" />
     <Compile Include="PythonTools\PythonFeedbackDiagnosticFileProvider.cs" />
+    <Compile Include="PythonTools\LanguageServerClient\PythonLanguageClientInitializationOptions.cs" />
+    <Compile Include="PythonTools\LanguageServerClient\PythonLanguageClient.cs" />
+    <Compile Include="PythonTools\LanguageServerClient\PythonLanguageClientCustomTarget.cs" />
+    <Compile Include="PythonTools\LanguageServerClient\PythonLanguageClientMiddleLayer.cs" />
+    <Compile Include="PythonTools\LanguageServerClient\PythonLanguageClientStartInfo.cs" />
+    <Compile Include="PythonTools\Intellisense\PythonMemberTypeExtensions.cs" />
+    <Compile Include="PythonTools\Editor\TokenCache.cs" />
+    <Compile Include="PythonTools\Repl\Completion\ReplRemoteCompletionBroker.cs" />
+    <Compile Include="PythonTools\Repl\Completion\ReplAsyncCompletionCommitManagerProvider.cs" />
+    <Compile Include="PythonTools\Repl\Completion\ReplAsyncCompletionSource.cs" />
+    <Compile Include="PythonTools\Repl\Completion\ReplAsyncCompletionCommitManager.cs" />
+    <Compile Include="PythonTools\Repl\Completion\ReplAsyncCompletionSourceProvider.cs" />
     <Compile Include="PythonTools\WorkspaceInfoBarManager.cs" />
     <Compile Include="PythonTools\Wpf\ModernDialog.cs" />
     <Compile Include="PythonTools\Wpf\ModernDialogHeaderControl.xaml.cs">
@@ -442,24 +453,18 @@
     <Compile Include="PythonTools\Repl\ReplOutputClassificationFormatDefinitions.cs" />
     <Compile Include="PythonTools\Repl\ReplOutputClassifier.cs" />
     <Compile Include="PythonTools\Repl\ReplOutputClassifierProvider.cs" />
-    <Compile Include="PythonTools\Intellisense\PythonSuggestedActionsSource.cs" />
-    <Compile Include="PythonTools\Intellisense\PythonSuggestedActionsSourceProvider.cs" />
-    <Compile Include="PythonTools\Intellisense\PythonSuggestedImportAction.cs" />
     <Compile Include="PythonTools\Repl\ResizingAdorner.cs" />
     <Compile Include="PythonTools\Repl\SelectableReplEvaluator.cs" />
     <Compile Include="PythonTools\Repl\ZoomableInlineAdornment.cs" />
-    <Compile Include="PythonTools\Options\GeneralOptions.cs" />
-    <Compile Include="PythonTools\Options\DebuggerOptions.cs" />
-    <Compile Include="PythonTools\Options\AdvancedEditorOptions.cs" />
+    <Compile Include="PythonTools\Options\PythonGeneralOptions.cs" />
+    <Compile Include="PythonTools\Options\PythonDebuggingOptions.cs" />
+    <Compile Include="PythonTools\Options\PythonFormattingOptions.cs" />
     <Compile Include="Legacy\ObsoleteResources.cs" />
     <Compile Include="ProvideLanguageTemplatesAttribute.cs" />
     <Compile Include="PythonToolsService.cs" />
     <Compile Include="PythonTools\AzureToolsContracts.cs" />
-    <Compile Include="PythonTools\Intellisense\EntryEventArgs.cs" />
-    <Compile Include="PythonTools\Intellisense\TaskProvider.cs" />
     <Compile Include="PythonTools\Logging\InMemoryLogger.cs" />
     <Compile Include="PythonTools\Logging\PythonToolsLogger.cs" />
-    <Compile Include="PythonTools\Intellisense\ExpansionClient.cs" />
     <Compile Include="PythonTools\Options\IPythonToolsOptionsService.cs" />
     <Compile Include="PythonTools\Options\PythonGeneralOptionsControl.cs">
       <SubType>UserControl</SubType>
@@ -472,7 +477,6 @@
     </Compile>
     <Compile Include="PythonTools\Options\PythonToolsOptionsService.cs" />
     <Compile Include="PythonTools\Environments\AddVirtualEnvironmentOperation.cs" />
-    <Compile Include="PythonTools\Project\AnalyzerChangingEventArgs.cs" />
     <Compile Include="PythonTools\Project\Attributes.cs" />
     <Compile Include="ProvideComponentPickerPropertyPageAttribute.cs" />
     <Compile Include="ProvideDiffSupportedContentTypeAttribute.cs" />
@@ -481,17 +485,9 @@
     <Compile Include="PythonTools\Commands\OpenInterpreterListCommand.cs" />
     <Compile Include="PythonTools\InterpreterList\InterpreterListToolWindow.cs" />
     <Compile Include="PythonTools\Environments\InterpreterView.cs" />
-    <Compile Include="PythonTools\Navigation\NavigateTo\PythonNavigateToItemDisplay.cs" />
-    <Compile Include="PythonTools\Navigation\NavigateTo\PythonNavigateToItemDisplayFactory.cs" />
-    <Compile Include="PythonTools\Navigation\NavigateTo\PythonNavigateToItemProviderFactory.cs" />
-    <Compile Include="PythonTools\Navigation\NavigateTo\PythonNavigateToItemProvider.cs" />
-    <Compile Include="PythonTools\Intellisense\CompletionComparer.cs" />
-    <Compile Include="PythonTools\Intellisense\FuzzyStringMatcher.cs" />
-    <Compile Include="PythonTools\Intellisense\FuzzyCompletionSet.cs" />
-    <Compile Include="PythonTools\Options\InterpreterPlaceholder.cs">
+    <Compile Include="PythonTools\Project\InterpreterPlaceholder.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="PythonTools\Options\SurveyNewsPolicy.cs" />
     <Compile Include="PythonTools\Project\CustomCommand.cs" />
     <Compile Include="PythonTools\Project\IAsyncCommand.cs" />
     <Compile Include="PythonTools\Project\ImportWizard\ProjectCustomizations.cs" />
@@ -512,8 +508,6 @@
     <Compile Include="PythonTools\Project\LoadedProjectInterpreterFactoryProvider.cs" />
     <Compile Include="PythonTools\Project\PythonProjectImageName.cs" />
     <Compile Include="PythonTools\Environments\VirtualEnv.cs" />
-    <Compile Include="PythonTools\PythonAnalysisClassifier.cs" />
-    <Compile Include="PythonTools\PythonAnalysisClassifierProvider.cs" />
     <Compile Include="PythonTools\PeekableEnumerator.cs" />
     <Compile Include="PythonTools\Repl\InteractiveWindowEvents.cs" />
     <Compile Include="PythonTools\Logging\VsTelemetryLogger.cs" />
@@ -542,47 +536,18 @@
     <Compile Include="PythonTools\Project\InterpretersPackageNode.cs" />
     <Compile Include="PythonTools\Project\InterpretersPackageNodeProperties.cs" />
     <Compile Include="PythonTools\Commands\OpenDebugReplCommand.cs" />
-    <Compile Include="PythonTools\Commands\RemoveImportsCommand.cs" />
     <Compile Include="PythonTools\DiagnosticsProvider.cs" />
     <Compile Include="PythonTools\Commands\ExecuteInReplCommand.cs" />
     <Compile Include="PythonTools\Commands\FillParagraphCommand.cs" />
     <Compile Include="PythonTools\Commands\OpenReplCommand.cs" />
     <Compile Include="PythonTools\Commands\SendToReplCommand.cs" />
-    <Compile Include="PythonTools\Intellisense\IContentTypeMetadata.cs" />
-    <Compile Include="PythonTools\Intellisense\IOrderableContentTypeMetadata.cs" />
-    <Compile Include="PythonTools\Intellisense\RefactoringIconKind.cs" />
-    <Compile Include="PythonTools\Navigation\TextViewFilter.cs" />
-    <Compile Include="PythonTools\Options\PythonFormattingWrappingOptionsPage.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="PythonTools\Options\OptionCategory.cs" />
-    <Compile Include="PythonTools\Options\OptionInfo.cs" />
-    <Compile Include="PythonTools\Options\OptionsTreeView.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="PythonTools\Options\PythonFormattingGeneralOptionsControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="PythonTools\Options\PythonFormattingGeneralOptionsControl.Designer.cs">
-      <DependentUpon>PythonFormattingGeneralOptionsControl.cs</DependentUpon>
-    </Compile>
-    <Compile Include="PythonTools\Options\PythonFormattingGeneralOptionsPage.cs">
-      <SubType>Component</SubType>
-    </Compile>
     <Compile Include="PythonTools\Options\PythonFormattingOptionsControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="PythonTools\Options\PythonFormattingOptionsControl.Designer.cs">
       <DependentUpon>PythonFormattingOptionsControl.cs</DependentUpon>
     </Compile>
-    <Compile Include="PythonTools\Options\PythonFormattingNewLinesOptionsPage.cs" />
     <Compile Include="PythonTools\Options\PythonFormattingOptionsPage.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="PythonTools\Options\PythonFormattingSpacingOptionsPage.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="PythonTools\Options\PythonFormattingStatementsOptionsPage.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="PythonTools\Options\PythonInteractiveOptions.cs" />
@@ -591,8 +556,6 @@
     <Compile Include="PythonTools\Project\PythonEncodingDetector.cs" />
     <Compile Include="PythonTools\Project\PythonProjectReferenceNode.cs" />
     <Compile Include="PythonTools\Project\PythonReferenceContainerNode.cs" />
-    <Compile Include="PythonTools\Refactoring\ExtractMethodRequestView.cs" />
-    <Compile Include="PythonTools\Refactoring\RenameVariableRequestView.cs" />
     <Compile Include="PythonTools\Repl\DebugReplFrameCommand.cs" />
     <Compile Include="PythonTools\Repl\DebugReplFrameDownCommand.cs" />
     <Compile Include="PythonTools\Repl\DebugReplFramesCommand.cs" />
@@ -609,13 +572,7 @@
     <Compile Include="PythonTools\Repl\IPythonInteractiveIntellisense.cs" />
     <Compile Include="PythonTools\Repl\PythonDebugReplEvaluator.cs" />
     <Compile Include="PythonTools\Repl\PythonDebugReplEvaluatorProvider.cs" />
-    <Compile Include="PythonTools\Editor\SmartIndentProvider.cs" />
-    <Compile Include="PythonTools\Intellisense\XamlTextViewCreationListener.cs" />
     <Compile Include="PythonTools\IVsPython.cs" />
-    <Compile Include="PythonTools\Navigation\PythonFileLibraryNode.cs" />
-    <Compile Include="PythonTools\Navigation\WaitForCompleteAnalysisDialog.xaml.cs">
-      <DependentUpon>WaitForCompleteAnalysisDialog.xaml</DependentUpon>
-    </Compile>
     <Compile Include="PythonTools\Project\DefaultLauncherProvider.cs" />
     <Compile Include="PythonTools\Project\DefaultPythonLauncherOptions.cs">
       <SubType>UserControl</SubType>
@@ -650,8 +607,6 @@
     <Compile Include="PythonTools\Project\StartWithErrorsDialog.Designer.cs">
       <DependentUpon>StartWithErrorsDialog.cs</DependentUpon>
     </Compile>
-    <Compile Include="PythonTools\Editor\AutoIndent.cs" />
-    <Compile Include="PythonTools\Intellisense\AnalysisPriority.cs" />
     <Compile Include="PythonTools\ISnapshotTextReader.cs" />
     <Compile Include="PythonTools\PythonAutomation.cs" />
     <Compile Include="PythonTools\Options\IPythonOptions.cs" />
@@ -663,62 +618,13 @@
     <Compile Include="PythonTools\Project\DefaultPythonLauncher.cs" />
     <Compile Include="PythonTools\Project\CurrentWorkingDirectoryNode.cs" />
     <Compile Include="PythonTools\Project\PythonProjectNodeProperties.cs" />
-    <Compile Include="PythonTools\Refactoring\FilePreviewItem.cs" />
-    <Compile Include="PythonTools\Refactoring\IPreviewItem.cs" />
-    <Compile Include="PythonTools\Refactoring\LocationPreviewItem.cs" />
-    <Compile Include="PythonTools\Refactoring\PreviewChangesEngine.cs" />
-    <Compile Include="PythonTools\Refactoring\PreviewList.cs" />
-    <Compile Include="PythonTools\Refactoring\RenameVariableRequest.cs" />
-    <Compile Include="PythonTools\Refactoring\RenameVariableUserInput.cs" />
-    <Compile Include="PythonTools\Refactoring\IRenameVariableInput.cs" />
-    <Compile Include="PythonTools\Refactoring\ExtractMethodDialog.xaml.cs">
-      <DependentUpon>ExtractMethodDialog.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="PythonTools\Refactoring\ExtractMethodRequest.cs" />
-    <Compile Include="PythonTools\Refactoring\ExtractMethodResult.cs" />
-    <Compile Include="PythonTools\Refactoring\ExtractMethodUserInput.cs" />
-    <Compile Include="PythonTools\Refactoring\IExtractMethodInput.cs" />
-    <Compile Include="PythonTools\Refactoring\MethodExtractor.cs" />
-    <Compile Include="PythonTools\Refactoring\RenameVariableDialog.xaml.cs">
-      <DependentUpon>RenameVariableDialog.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="PythonTools\Refactoring\VariableRenamer.cs" />
     <Compile Include="PythonTools\Repl\LoadReplCommand.cs" />
     <Compile Include="PythonTools\Repl\OverloadDoc.cs" />
-    <Compile Include="PythonTools\PythonClassifier.cs" />
     <Compile Include="PythonTools\PythonPredefinedClassificationTypeNames.cs" />
-    <Compile Include="PythonTools\Editor\BraceMatcher.cs" />
-    <Compile Include="PythonTools\Editor\EditorExtensions.cs" />
-    <Compile Include="PythonTools\Editor\LanguagePreferences.cs" />
-    <Compile Include="PythonTools\Editor\ReplWindowCreationListener.cs" />
     <Compile Include="PythonTools\Extensions.cs" />
-    <Compile Include="PythonTools\Intellisense\CompletionAnalysis.cs" />
-    <Compile Include="PythonTools\Intellisense\CompletionSource.cs" />
-    <Compile Include="PythonTools\Intellisense\CompletionSourceProvider.cs" />
-    <Compile Include="PythonTools\Intellisense\ExpressionAnalysis.cs" />
-    <Compile Include="PythonTools\Intellisense\ProjectAnalyzer.cs" />
-    <Compile Include="PythonTools\Intellisense\PythonParameter.cs" />
-    <Compile Include="PythonTools\Intellisense\PythonSignature.cs" />
-    <Compile Include="PythonTools\Intellisense\AsyncQuickInfoSource.cs" />
-    <Compile Include="PythonTools\Intellisense\AsyncQuickInfoSourceProvider.cs" />
-    <Compile Include="PythonTools\Intellisense\ReverseExpressionParser.cs" />
-    <Compile Include="PythonTools\Intellisense\SignatureAnalysis.cs" />
-    <Compile Include="PythonTools\Intellisense\SignatureHelpSource.cs" />
-    <Compile Include="PythonTools\Intellisense\SignatureHelpSourceProvider.cs" />
-    <Compile Include="PythonTools\Intellisense\SnapshotCookie.cs" />
     <Compile Include="PythonTools\Options\PythonDialogPage.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="PythonTools\Options\PythonAdvancedEditorOptionsPage.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="PythonTools\Options\PythonAdvancedEditorOptionsControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="PythonTools\Options\PythonAdvancedEditorOptionsControl.Designer.cs">
-      <DependentUpon>PythonAdvancedEditorOptionsControl.cs</DependentUpon>
-    </Compile>
-    <Compile Include="PythonTools\OutliningTaggerProvider.cs" />
     <Compile Include="PythonTools\Options\PythonDebuggingOptionsControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -736,28 +642,17 @@
     </Compile>
     <Compile Include="PythonTools\Project\PythonFolderNode.cs" />
     <Compile Include="PythonTools\Project\PythonNonCodeFileNode.cs" />
-    <Compile Include="PythonTools\PythonClassifierProvider.cs" />
     <Compile Include="PythonTools\PythonCoreConstants.cs" />
     <Compile Include="PythonTools\Repl\ReplIntellisenseMode.cs" />
     <Compile Include="PythonTools\Repl\SwitchModuleCommand.cs" />
     <Compile Include="PythonTools\SnapshotSpanSourceCodeReader.cs" />
-    <Compile Include="PythonTools\Intellisense\IntellisenseController.cs" />
-    <Compile Include="PythonTools\Intellisense\IntellisenseControllerProvider.cs" />
-    <Compile Include="PythonTools\Navigation\CodeWindowManager.cs" />
-    <Compile Include="PythonTools\Navigation\DropDownBarClient.cs" />
-    <Compile Include="PythonTools\Navigation\EditFilter.cs" />
     <Compile Include="PythonConstants.cs" />
-    <Compile Include="PythonTools\Navigation\PythonLibraryManager.cs" />
-    <Compile Include="PythonTools\Navigation\PythonLibraryNode.cs" />
-    <Compile Include="PythonTools\Navigation\PythonLanguageInfo.cs" />
-    <Compile Include="PythonTools\Project\PythonEditorFactory.cs" />
     <Compile Include="PythonTools\Project\PythonFileNode.cs" />
     <Compile Include="PythonTools\Project\PythonGeneralPropertyPage.cs" />
     <Compile Include="PythonTools\Project\PythonProjectFactory.cs" />
     <Compile Include="PythonTools\Project\PythonProjectNode.cs" />
     <Compile Include="PythonTools\Project\PythonProjectPackage.cs" />
     <Compile Include="Guids.cs" />
-    <Compile Include="PythonTools\TokenCache.cs" />
     <Compile Include="PythonToolsPackage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PkgCmdID.cs" />
@@ -786,6 +681,7 @@
     <Compile Include="PythonTools\Repl\PythonInteractiveEvaluator.CommandProcessorThread.cs" />
     <Content Include="images\AddPackage_16x.png" />
     <Content Include="images\AddPackage_16x.svg" />
+    <Content Include="PythonTools\LanguageServerClient\NOTES.txt" />
     <Content Include="Theme\Microsoft.PythonTools.theme.v16.0.pkgdef" />
     <Content Include="Theme\Repl\Microsoft.PythonTools.Repl.theme.v15.0.pkgdef" />
     <Content Include="Theme\Repl\Microsoft.PythonTools.Repl.theme.v16.0.pkgdef" />
@@ -802,41 +698,6 @@
     <None Include="Theme\Repl\light.vstheme" />
     <None Include="Theme\Repl\additionalcontrast.vstheme" />
     <None Include="Theme\Repl\make_theme_pkgdef.py" />
-    <Content Include="$(PackagesPath)\Microsoft.VisualStudio.Python.LanguageServer\lib\vs16\scrape_module.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-      <VSIXSubPath>.</VSIXSubPath>
-    </Content>
-    <Content Include="$(PackagesPath)\Microsoft.VisualStudio.Python.LanguageServer\lib\vs16\BuiltinScraper.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-      <VSIXSubPath>.</VSIXSubPath>
-    </Content>
-    <Content Include="$(PackagesPath)\Microsoft.VisualStudio.Python.LanguageServer\lib\vs16\ExtensionScraper.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-      <VSIXSubPath>.</VSIXSubPath>
-    </Content>
-    <Content Include="$(PackagesPath)\Microsoft.VisualStudio.Python.LanguageServer\lib\vs16\IronPythonScraper.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-      <VSIXSubPath>.</VSIXSubPath>
-    </Content>
-    <Content Include="$(PackagesPath)\Microsoft.VisualStudio.Python.LanguageServer\lib\vs16\PythonScraper.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-      <VSIXSubPath>.</VSIXSubPath>
-    </Content>
-    <Content Include="$(PackagesPath)\Microsoft.VisualStudio.Python.LanguageServer\lib\vs16\get_search_paths.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-      <VSIXSubPath>.</VSIXSubPath>
-    </Content>
-    <Content Include="$(PackagesPath)\Microsoft.VisualStudio.Python.LanguageServer\lib\vs16\typing-stub.pyi">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-      <VSIXSubPath>.</VSIXSubPath>
-    </Content>
     <Content Include="NoInterpreters.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
@@ -1054,7 +915,45 @@
       <SubType>Designer</SubType>
     </VSCTCompile>
   </ItemGroup>
+  <!-- <Target Name="_IncludeLanguageServer" BeforeTargets="AssignTargetPaths;GetVSIXSourceItems">
+    <ItemGroup>
+      <LanguageServerFiles Include="$(BuildRoot)packages\LanguageServer\**\*" />
+      <LanguageServerFiles>
+        <IncludeInVSIX>true</IncludeInVSIX>
+        <Link>LanguageServer\%(RecursiveDir)%(Filename)%(Extension)</Link>
+        <VSIXSubPath>LanguageServer\%(RecursiveDir)</VSIXSubPath>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </LanguageServerFiles>
+      <Content Include="@(LanguageServerFiles)" />
+      <FileWrites Include="@(LanguageServerFiles)" />
+    </ItemGroup>
+  </Target> -->
   <ItemGroup>
+    <Content Include="$(PackagesPath)Python-Language-Server-win-x64.zip">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>.</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(PackagesPath)Python-Language-Server-win-x86.zip">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>.</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(PackagesPath)Microsoft.Extensions.FileSystemGlobbing\lib\netstandard2.0\Microsoft.Extensions.FileSystemGlobbing.dll">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>.</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(PackagesPath)Microsoft.Python.Parsing\lib\netstandard2.0\Microsoft.Python.Core.dll">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>.</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(PackagesPath)Microsoft.Python.Parsing\lib\netstandard2.0\Microsoft.Python.Parsing.dll">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>.</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="ptvsd_launcher.py">
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -1064,7 +963,6 @@
       <ManifestResourceName>Microsoft.VisualStudioTools.SharedProject</ManifestResourceName>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="PythonTools\Options\LanguageServerOptionsControl.resx" />
     <EmbeddedResource Include="PythonTools\Options\PythonCondaOptionsControl.resx">
       <DependentUpon>PythonCondaOptionsControl.cs</DependentUpon>
     </EmbeddedResource>
@@ -1073,9 +971,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="PythonTools\Options\PythonGeneralOptionsControl.resx">
       <DependentUpon>PythonGeneralOptionsControl.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="PythonTools\Options\PythonFormattingGeneralOptionsControl.resx">
-      <DependentUpon>PythonFormattingGeneralOptionsControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="PythonTools\Options\PythonFormattingOptionsControl.resx">
       <DependentUpon>PythonFormattingOptionsControl.cs</DependentUpon>
@@ -1101,9 +996,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="PythonTools\Project\StartWithErrorsDialog.resx">
       <DependentUpon>StartWithErrorsDialog.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="PythonTools\Options\PythonAdvancedEditorOptionsControl.resx">
-      <DependentUpon>PythonAdvancedEditorOptionsControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="PythonTools\Options\PythonDebuggingOptionsControl.resx">
       <DependentUpon>PythonDebuggingOptionsControl.cs</DependentUpon>
@@ -1150,12 +1042,6 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="PythonTools\Navigation\WaitForCompleteAnalysisDialog.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
     <Page Include="images\images.xaml">
       <SubType>Designer</SubType>
     </Page>
@@ -1194,18 +1080,6 @@
     <Page Include="PythonTools\Wpf\ModernDialogHeaderControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="PythonTools\Refactoring\ExtractMethodDialog.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="PythonTools\Refactoring\RenameVariableDialog.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
     </Page>
   </ItemGroup>
   <ItemGroup />

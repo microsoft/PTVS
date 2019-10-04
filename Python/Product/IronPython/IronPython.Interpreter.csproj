@@ -59,8 +59,6 @@
     <Reference Include="IronPython" />
     <Reference Include="IronPython.Modules" />
     <Reference Include="IronPython.Wpf" />
-    <Reference Include="Microsoft.Python.Analysis.Engine" />
-    <Reference Include="Microsoft.PythonTools.Analyzer" />
     <Reference Include="Microsoft.Dynamic" />
     <Reference Include="Microsoft.Scripting" />
     <Reference Include="Microsoft.CSharp" />
@@ -76,40 +74,17 @@
     <Reference Include="System.Xaml" />
     <Reference Include="System.Xml" />
     <Reference Include="WindowsBase" />
+    <Reference Include="Microsoft.Python.Parsing">
+      <Private>True</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\VSInterpreters\RegistryWatcher.cs">
       <Link>RegistryWatcher.cs</Link>
     </Compile>
     <Compile Include="Interpreter\AssemblyInfo.cs" />
-    <Compile Include="Interpreter\IronPythonBuiltinFunction.cs" />
-    <Compile Include="Interpreter\IronPythonBuiltinFunctionTarget.cs" />
-    <Compile Include="Interpreter\IronPythonBuiltinMethodDescriptor.cs" />
-    <Compile Include="Interpreter\IronPythonBuiltinModule.cs" />
-    <Compile Include="Interpreter\IronPythonConstant.cs" />
-    <Compile Include="Interpreter\IronPythonConstructorFunction.cs" />
-    <Compile Include="Interpreter\IronPythonConstructorFunctionTarget.cs" />
-    <Compile Include="Interpreter\IronPythonEvent.cs" />
-    <Compile Include="Interpreter\IronPythonExtensionProperty.cs" />
-    <Compile Include="Interpreter\IronPythonField.cs" />
-    <Compile Include="Interpreter\IronPythonGenericMember.cs" />
-    <Compile Include="Interpreter\IronPythonInterpreter.cs" />
     <Compile Include="Interpreter\IronPythonInterpreterFactory.cs" />
     <Compile Include="Interpreter\IronPythonInterpreterFactoryProvider.cs" />
-    <Compile Include="Interpreter\IronPythonModule.cs" />
-    <Compile Include="Interpreter\IronPythonModuleContext.cs" />
-    <Compile Include="Interpreter\IronPythonNamespace.cs" />
-    <Compile Include="Interpreter\IronPythonNewClsParameterInfo.cs" />
-    <Compile Include="Interpreter\IronPythonParameterInfo.cs" />
-    <Compile Include="Interpreter\IronPythonProperty.cs" />
-    <Compile Include="Interpreter\IronPythonType.cs" />
-    <Compile Include="Interpreter\IronPythonTypeGroup.cs" />
-    <Compile Include="Interpreter\ObjectIdentityHandle.cs" />
-    <Compile Include="Interpreter\PythonObject.cs" />
-    <Compile Include="Interpreter\RemoteInterpreter.cs" />
-    <Compile Include="Interpreter\RemoteInterpreterProxy.cs" />
-    <Compile Include="Interpreter\XamlAnalysis.cs" />
-    <Compile Include="Interpreter\XamlProjectEntry.cs" />
   </ItemGroup>
   <Import Project="..\ProjectAfter.settings" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -43,7 +43,7 @@ print 'goodbye'
 
             editorTestToolset.UIThread.Invoke(() => {
                 view.Caret.MoveTo(view.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(0).Start);
-                view.CommentOrUncommentBlock(true);
+                CommentHelper.CommentOrUncommentBlock(view, true);
             });
 
             Assert.AreEqual(@"#print 'hello'
@@ -53,7 +53,7 @@ print 'goodbye'
 
             editorTestToolset.UIThread.Invoke(() => {
                 view.Caret.MoveTo(view.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(1).Start);
-                view.CommentOrUncommentBlock(true);
+                CommentHelper.CommentOrUncommentBlock(view, true);
             });
 
             Assert.AreEqual(@"#print 'hello'
@@ -70,7 +70,7 @@ print 'goodbye'
 
             editorTestToolset.UIThread.Invoke(() => {
                 view.Caret.MoveTo(view.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(0).Start);
-                view.CommentOrUncommentBlock(false);
+                CommentHelper.CommentOrUncommentBlock(view, false);
             });
 
             Assert.AreEqual(@"print 'hello'
@@ -79,7 +79,7 @@ print 'goodbye'
 
             editorTestToolset.UIThread.Invoke(() => {
                 view.Caret.MoveTo(view.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(1).Start);
-                view.CommentOrUncommentBlock(false);
+                CommentHelper.CommentOrUncommentBlock(view, false);
             });
 
             Assert.AreEqual(@"print 'hello'
@@ -96,7 +96,7 @@ print 'goodbye'
 
             editorTestToolset.UIThread.Invoke(() => {
                 view.SelectAll();
-                view.CommentOrUncommentBlock(true);
+                CommentHelper.CommentOrUncommentBlock(view, true);
             });
 
             Assert.AreEqual(@"#print 'hello'
@@ -115,7 +115,7 @@ print 'goodbye'
 
             editorTestToolset.UIThread.Invoke(() => {
                 view.SelectAll();
-                view.CommentOrUncommentBlock(true);
+                CommentHelper.CommentOrUncommentBlock(view, true);
             });
 
             Assert.AreEqual(@"#print 'hello'
@@ -139,7 +139,7 @@ print 'goodbye'
 
             editorTestToolset.UIThread.Invoke(() => {
                 view.SelectAll();
-                view.CommentOrUncommentBlock(true);
+                CommentHelper.CommentOrUncommentBlock(view, true);
             });
 
             Assert.AreEqual(@"#print 'hello'
@@ -160,7 +160,7 @@ print 'goodbye'
             editorTestToolset.UIThread.Invoke(() => {
                 view.Select(@"    print 'hello'
     print 'still here'");
-                view.CommentOrUncommentBlock(true);
+                CommentHelper.CommentOrUncommentBlock(view, true);
             });
 
             Assert.AreEqual(@"def f():
@@ -183,7 +183,7 @@ print 'goodbye'
                 view.Select(@"    print 'hello'
 
     print 'still here'");
-                view.CommentOrUncommentBlock(true);
+                CommentHelper.CommentOrUncommentBlock(view, true);
             });
 
             Assert.AreEqual(@"def f():
@@ -203,7 +203,7 @@ print('bye')");
 
             editorTestToolset.UIThread.Invoke(() => {
                 view.Caret.MoveTo(view.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(1).Start);
-                view.CommentOrUncommentBlock(true);
+                CommentHelper.CommentOrUncommentBlock(view, true);
             });
 
             Assert.AreEqual(@"print('hi')
@@ -225,7 +225,7 @@ print('bye')",
                 view.Select(@"    print 'hello'
   
     print 'still here'");
-                view.CommentOrUncommentBlock(true);
+                CommentHelper.CommentOrUncommentBlock(view, true);
             });
 
             Assert.AreEqual(@"def f():
@@ -247,7 +247,7 @@ print('bye')",
             editorTestToolset.UIThread.Invoke(() => {
                 view.Select(@"    #print 'hello'
     #print 'still here'");
-                view.CommentOrUncommentBlock(false);
+                CommentHelper.CommentOrUncommentBlock(view, false);
             });
 
             Assert.AreEqual(@"def f():
@@ -265,7 +265,7 @@ print('bye')",
 
             editorTestToolset.UIThread.Invoke(() => {
                 view.SelectAll();
-                view.CommentOrUncommentBlock(false);
+                CommentHelper.CommentOrUncommentBlock(view, false);
             });
 
             var expected = @"print 'hello'
@@ -285,7 +285,7 @@ print 'goodbye'");
             editorTestToolset.UIThread.Invoke(() => {
                 view.Select(@"print 'hello'
 ");
-                view.CommentOrUncommentBlock(true);
+                CommentHelper.CommentOrUncommentBlock(view, true);
             });
 
             var expected = @"#print 'hello'
@@ -302,7 +302,7 @@ print 'goodbye'");
 
             editorTestToolset.UIThread.Invoke(() => {
                 view.Select(0, view.GetText().IndexOf("print 'goodbye'"));
-                view.CommentOrUncommentBlock(false);
+                CommentHelper.CommentOrUncommentBlock(view, false);
             });
 
             Assert.AreEqual(@"print 'hello' #comment that should stay a comment

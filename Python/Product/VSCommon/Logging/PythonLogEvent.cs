@@ -136,5 +136,9 @@ namespace Microsoft.PythonTools.Logging {
         /// Add an environment from the python toolbar
         /// </summary>
         AddEnvFromToolbar,
+        /// <summary>
+        /// Format document
+        /// </summary>
+        FormatDocument,
     }
 }

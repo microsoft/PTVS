@@ -22,10 +22,11 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 #if DJANGO_HTML_EDITOR
-using Microsoft.PythonTools.Django.Analysis;
+using Microsoft.PythonTools.Django.Intellisense;
 #endif
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
+using Microsoft.PythonTools.LanguageServerClient;
 using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio;
@@ -86,10 +87,9 @@ namespace Microsoft.PythonTools.Django.Project {
             }
         }
 
-        public VsProjectAnalyzer Analyzer {
-            get {
-                return _innerVsHierarchy.GetProject().GetPythonProject().GetProjectAnalyzer() as VsProjectAnalyzer;
-            }
+        public IDjangoProjectAnalyzer GetAnalyzer() {
+            var project = _innerVsHierarchy.GetProject().GetPythonProject();
+            return project != null ? new DjangoProjectAnalyzer(project) : null;
         }
 
         #region IVsAggregatableProject
@@ -126,14 +126,6 @@ namespace Microsoft.PythonTools.Django.Project {
             menuItem = new OleMenuCommand(AddNewItem, menuCommandID);
             AddCommand(menuItem);
 
-#if DJANGO_HTML_EDITOR
-            var pyProj = _innerVsHierarchy.GetProject().GetPythonProject();
-            if (pyProj != null) {
-                RegisterExtension(pyProj.GetProjectAnalyzer() as VsProjectAnalyzer);
-                pyProj.ProjectAnalyzerChanging += OnProjectAnalyzerChanging;
-            }
-#endif
-
             object extObject;
             ErrorHandler.ThrowOnFailure(
                 _innerVsHierarchy.GetProperty(
@@ -157,24 +149,6 @@ namespace Microsoft.PythonTools.Django.Project {
         }
 
         #endregion
-
-#if DJANGO_HTML_EDITOR
-        private void OnProjectAnalyzerChanging(object sender, AnalyzerChangingEventArgs e) {
-            var pyProj = sender as IPythonProject;
-            if (pyProj != null) {
-                RegisterExtension(e.New as VsProjectAnalyzer);
-            }
-        }
-
-        private void RegisterExtension(VsProjectAnalyzer newAnalyzer) {
-            if (newAnalyzer == null) {
-                return;
-            }
-            newAnalyzer.RegisterExtensionAsync(typeof(DjangoAnalyzer))
-                .HandleAllExceptions(serviceProvider, GetType(), allowUI: false)
-                .DoNotWait();
-        }
-#endif
 
         private void AddCommand(OleMenuCommand menuItem) {
             _menuService.AddCommand(menuItem);

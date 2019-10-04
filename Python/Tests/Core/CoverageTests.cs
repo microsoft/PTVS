@@ -18,10 +18,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using Microsoft.PythonTools.Parsing.Ast;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.Python.Parsing.Ast;
 using Microsoft.PythonTools.CodeCoverage;
 using Microsoft.PythonTools.Commands;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.Python;
 

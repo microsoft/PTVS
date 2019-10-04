@@ -1905,7 +1905,8 @@ namespace DjangoUITests {
             var doc = app.GetDocument(item.Document.FullName);
 
             if (wait) {
-                pyProj.GetAnalyzer().WaitForCompleteAnalysis(_ => true);
+                // LSC
+                //pyProj.GetAnalyzer().WaitForCompleteAnalysis(_ => true);
             }
 
             return doc;

@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Microsoft.Python.Parsing;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.TestAdapter.Pytest;
 using Microsoft.PythonTools.TestAdapter.UnitTest;
@@ -338,7 +339,7 @@ namespace TestAdapterTests {
            
             var errors = string.Join(Environment.NewLine, logger.GetErrors());
 
-            if (Version.Version > Microsoft.PythonTools.Parsing.PythonLanguageVersion.V27) {
+            if (Version.Version > PythonLanguageVersion.V27) {
                 AssertUtil.Contains(errors,
                     "SyntaxError: invalid syntax"
                 );

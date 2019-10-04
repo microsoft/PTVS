@@ -14,22 +14,21 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.PythonTools.Django.Analysis;
 using Microsoft.PythonTools.Django.TemplateParsing;
 using Microsoft.PythonTools.Intellisense;
-using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Django.Intellisense {
     internal class ProjectBlockCompletionContextBase : IDjangoCompletionContext {
-        private readonly VsProjectAnalyzer _analyzer;
+        private readonly IDjangoProjectAnalyzer _analyzer;
         private readonly string _filename;
         private HashSet<string> _loopVars;
 
-        public ProjectBlockCompletionContextBase(VsProjectAnalyzer analyzer, string filename) {
-            _analyzer = analyzer;
-            _filename = filename;
+        public ProjectBlockCompletionContextBase(IDjangoProjectAnalyzer analyzer, string filename) {
+            _analyzer = analyzer ?? throw new ArgumentNullException(nameof(analyzer));
+            _filename = filename ?? throw new ArgumentNullException(nameof(filename));
         }
 
         protected void AddLoopVariable(string name) {
@@ -52,7 +51,7 @@ namespace Microsoft.PythonTools.Django.Intellisense {
             }
         }
 
-        public Dictionary<string, TagInfo> Filters {
+        public Dictionary<string, string> Filters {
             get {
                 return _analyzer.GetFilters();
             }

@@ -193,7 +193,8 @@ namespace DebuggerUITests {
                 var project = app.OpenProject(sln, "BreakpointInfo.py");
                 var bpInfo = project.ProjectItems.Item("BreakpointInfo.py");
 
-                project.GetPythonProject().GetAnalyzer().WaitForCompleteAnalysis(x => true);
+                // LSC
+                //project.GetPythonProject().GetAnalyzer().WaitForCompleteAnalysis(x => true);
 
                 var bp = app.Dte.Debugger.Breakpoints.Add(File: "BreakpointInfo.py", Line: 2);
                 Assert.AreEqual("Python", bp.Item(1).Language);

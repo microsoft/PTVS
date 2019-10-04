@@ -20,14 +20,18 @@ using System.ComponentModel.Composition;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.LanguageServerClient;
 using Microsoft.VisualStudio.Imaging;
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.InteractiveWindow.Shell;
+using Microsoft.VisualStudio.LanguageServer.Client;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Utilities;
 using Microsoft.VisualStudioTools;
+using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.Repl {
     [Export(typeof(InteractiveWindowProvider))]
@@ -44,8 +48,8 @@ namespace Microsoft.PythonTools.Repl {
 
         private readonly IServiceProvider _serviceProvider;
         private readonly IInteractiveEvaluatorProvider[] _evaluators;
+        private readonly IContentTypeRegistryService _contentTypeService;
         private readonly IVsInteractiveWindowFactory _windowFactory;
-        private readonly IContentType _pythonContentType;
 
         private static readonly object VsInteractiveWindowKey = new object();
 
@@ -60,8 +64,8 @@ namespace Microsoft.PythonTools.Repl {
         ) {
             _serviceProvider = serviceProvider;
             _evaluators = evaluators;
+            _contentTypeService = contentTypeService;
             _windowFactory = factory;
-            _pythonContentType = contentTypeService.GetContentType(PythonCoreConstants.ContentType);
         }
 
         public IEnumerable<IVsInteractiveWindow> AllOpenWindows {
@@ -153,13 +157,20 @@ namespace Microsoft.PythonTools.Repl {
                 curId = GetNextId();
             }
 
+            var contentTypeName = PythonFilePathToContentTypeProvider.GetContentTypeNameForREPL(curId);
+            var contentType = PythonFilePathToContentTypeProvider.GetOrCreateContentType(
+                _contentTypeService,
+                contentTypeName,
+                new[] { PythonCoreConstants.ReplContentType }
+            );
+            var evaluator = new SelectableReplEvaluator(_serviceProvider, _evaluators, replId, curId.ToString());
             var window = CreateInteractiveWindowInternal(
-                new SelectableReplEvaluator(_serviceProvider, _evaluators, replId, curId.ToString()),
-                _pythonContentType,
+                evaluator,
+                contentType,
                 true,
                 curId,
                 Strings.ReplCaptionNoEvaluator,
-                typeof(Navigation.PythonLanguageInfo).GUID,
+                GuidList.guidPythonLanguageServiceGuid,
                 "PythonInteractive"
             );
 
@@ -175,6 +186,11 @@ namespace Microsoft.PythonTools.Repl {
                     _lruWindows.Remove(window);
                 }
             };
+
+            _serviceProvider.GetUIThread().InvokeTaskSync(
+                () => evaluator.InitializeLanguageServerAsync(curId),
+                CancellationToken.None
+            );
 
             return window;
         }
@@ -211,13 +227,14 @@ namespace Microsoft.PythonTools.Repl {
 
             int curId = GetNextId();
 
+            var contentType = PythonFilePathToContentTypeProvider.GetOrCreateContentType(_contentTypeService, curId.ToString());
             var window = CreateInteractiveWindowInternal(
                 _evaluators.Select(p => p.GetEvaluator(replId)).FirstOrDefault(e => e != null),
-                _pythonContentType,
+                contentType,
                 false,
                 curId,
                 title,
-                typeof(Navigation.PythonLanguageInfo).GUID,
+                GuidList.guidPythonLanguageServiceGuid,
                 replId
             );
 
@@ -284,7 +301,22 @@ namespace Microsoft.PythonTools.Repl {
             if (toolWindow != null) {
                 toolWindow.BitmapImageMoniker = KnownMonikers.PYInteractiveWindow;
             }
-            replWindow.SetLanguage(GuidList.guidPythonLanguageServiceGuid, contentType);
+
+            // Initializes the command filters with the base Python content type
+            // so that our MEF exports, such as ReplWindowCreationListener, are activated.
+            var pythonContentType = PythonFilePathToContentTypeProvider.GetOrCreateContentType(_contentTypeService, PythonCoreConstants.ContentType);
+            replWindow.SetLanguage(GuidList.guidPythonLanguageServiceGuid, pythonContentType);
+
+            // SetLanguage above has set the content type on interactive window properties to base python content type
+            // We need to change it again to the derived content type to match the content type passed to LSC.
+            // Note: This prevents textmate colorization from working, comment this out to see that work.
+            // Note: Completions don't actually work on the window:
+            //       - LSC does not catch the input text buffer creation
+            //       - AsyncCompletionSource implementation uses the wrong text buffer to pass to RemoteCompletionBroker
+            replWindow.InteractiveWindow.Properties[typeof(IContentType)] = contentType;
+            if (replWindow.InteractiveWindow.CurrentLanguageBuffer != null) {
+                replWindow.InteractiveWindow.CurrentLanguageBuffer.ChangeContentType(contentType, null);
+            }
 
             var selectEval = evaluator as SelectableReplEvaluator;
             if (selectEval != null) {

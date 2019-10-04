@@ -24,11 +24,12 @@ using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using Microsoft.Python.Parsing;
+using Microsoft.PythonTools;
 using Microsoft.PythonTools.Environments;
 using Microsoft.PythonTools.EnvironmentsList;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Win32;
@@ -36,6 +37,7 @@ using PythonToolsTests;
 using TestUtilities;
 using TestUtilities.Mocks;
 using TestUtilities.Python;
+using InterpreterUIMode = Microsoft.PythonTools.Interpreter.InterpreterUIMode;
 
 namespace PythonToolsUITests {
     [TestClass]
@@ -55,7 +57,7 @@ namespace PythonToolsUITests {
         }
 
 
-        private static InterpreterConfiguration MockInterpreterConfiguration(string description, Version version, InterpreterUIMode uiMode) {
+        private static Microsoft.PythonTools.Interpreter.InterpreterConfiguration MockInterpreterConfiguration(string description, Version version, InterpreterUIMode uiMode) {
             return new VisualStudioInterpreterConfiguration(
                 $"Mock|{Guid.NewGuid()}",
                 description,
@@ -70,7 +72,7 @@ namespace PythonToolsUITests {
             );
         }
 
-        private static InterpreterConfiguration MockInterpreterConfiguration(string description, Version version) {
+        private static Microsoft.PythonTools.Interpreter.InterpreterConfiguration MockInterpreterConfiguration(string description, Version version) {
             return MockInterpreterConfiguration(description, version, InterpreterUIMode.Normal);
         }
 

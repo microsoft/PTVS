@@ -178,9 +178,7 @@ namespace Microsoft.PythonTools {
             }
 
             writer.WriteLine("General Options:");
-            writer.WriteLine("    AutoAnalyzeStandardLibrary: {0}", pyService.GeneralOptions.AutoAnalyzeStandardLibrary);
             writer.WriteLine("    ClearGlobalPythonPath: {0}", pyService.GeneralOptions.ClearGlobalPythonPath);
-            writer.WriteLine("    CrossModuleAnalysisLimit: {0}", pyService.GeneralOptions.CrossModuleAnalysisLimit);
             writer.WriteLine("    ElevatePip: {0}", pyService.GeneralOptions.ElevatePip);
             writer.WriteLine("    IndentationInconsistencySeverity: {0}", pyService.GeneralOptions.IndentationInconsistencySeverity);
             writer.WriteLine("    InvalidEncodingWarning: {0}", pyService.GeneralOptions.InvalidEncodingWarning);
@@ -193,18 +191,7 @@ namespace Microsoft.PythonTools {
             writer.WriteLine();
 
             writer.WriteLine("Advanced Options:");
-            writer.WriteLine("    AddNewLineAtEndOfFullyTypedWord: {0}", pyService.AdvancedOptions.AddNewLineAtEndOfFullyTypedWord);
-            writer.WriteLine("    AutoListIdentifiers: {0}", pyService.AdvancedOptions.AutoListIdentifiers);
-            writer.WriteLine("    AutoListMembers: {0}", pyService.AdvancedOptions.AutoListMembers);
-            writer.WriteLine("    ColorNames: {0}", pyService.AdvancedOptions.ColorNames);
-            writer.WriteLine("    ColorNamesWithAnalysis: {0}", pyService.AdvancedOptions.ColorNamesWithAnalysis);
-            writer.WriteLine("    CompletionCommittedBy: {0}", pyService.AdvancedOptions.CompletionCommittedBy);
-            writer.WriteLine("    EnterCommitsIntellisense: {0}", pyService.AdvancedOptions.EnterCommitsIntellisense);
-            writer.WriteLine("    EnterOutliningModeOnOpen: {0}", pyService.AdvancedOptions.EnterOutliningModeOnOpen);
-            writer.WriteLine("    FilterCompletions: {0}", pyService.AdvancedOptions.FilterCompletions);
-            writer.WriteLine("    HideAdvancedMembers: {0}", pyService.AdvancedOptions.HideAdvancedMembers);
-            writer.WriteLine("    IntersectMembers: {0}", pyService.AdvancedOptions.IntersectMembers);
-            writer.WriteLine("    PasteRemovesReplPrompts: {0}", pyService.AdvancedOptions.PasteRemovesReplPrompts);
+            writer.WriteLine("    PasteRemovesReplPrompts: {0}", pyService.FormattingOptions.PasteRemovesReplPrompts);
             writer.WriteLine();
 
             writer.WriteLine("Debugger Options:");
@@ -293,20 +280,6 @@ namespace Microsoft.PythonTools {
                 ));
             }
             writer.WriteLine();
-
-            if (includeAnalysisLog) {
-                writer.WriteLine("Environment Analysis Logs: ");
-                foreach (var provider in knownProviders) {
-                    foreach (var factory in provider.GetInterpreterFactories().OfType<IPythonInterpreterFactoryWithLog>()) {
-                        writer.WriteLine(((IPythonInterpreterFactory)factory).Configuration.Description);
-                        string analysisLog = factory.GetAnalysisLogContent(CultureInfo.InvariantCulture);
-                        if (!string.IsNullOrEmpty(analysisLog)) {
-                            writer.WriteLine(analysisLog);
-                        }
-                        writer.WriteLine();
-                    }
-                }
-            }
         }
 
         private static string GetProjectProperty(EnvDTE.Project project, string name) {

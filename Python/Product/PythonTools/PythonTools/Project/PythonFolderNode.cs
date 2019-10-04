@@ -16,7 +16,6 @@
 
 using System;
 using System.Linq;
-using Microsoft.PythonTools.Analysis;
 using Microsoft.VisualStudio.Imaging;
 using Microsoft.VisualStudio.Imaging.Interop;
 using Microsoft.VisualStudioTools;

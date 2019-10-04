@@ -47,10 +47,6 @@
     <Reference Include="Microsoft.Build, Version=$(MicrosoftBuildAssemblyVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Microsoft.Build.Framework, Version=$(MicrosoftBuildAssemblyVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="Microsoft.Python.Analysis.Engine">
-      <Aliases>global,analysis</Aliases>
-    </Reference>
-    <Reference Include="Microsoft.PythonTools.Analyzer" />
     <Reference Include="Microsoft.VisualStudio.ComponentModelHost" />
     <Reference Include="Microsoft.VisualStudio.CoreUtility" />
     <Reference Include="Microsoft.VisualStudio.Language.Intellisense" />
@@ -95,17 +91,17 @@
     <Reference Include="Microsoft.VisualStudio.Threading" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AssemblySetup.cs" />
-    <Compile Include="ClassifierTests.cs" />
-    <Compile Include="CompletionTests.cs" />
-    <Compile Include="EditorTests.cs" />
-    <Compile Include="MockClipboardService.cs" />
-    <Compile Include="MockPythonToolsPackage.cs" />
-    <Compile Include="NavigableTests.cs" />
-    <Compile Include="ProjectTests.cs" />
-    <Compile Include="PythonEditor.cs" />
-    <Compile Include="RefactorRenameTests.cs" />
-    <Compile Include="SquiggleTests.cs" />
+    <None Include="AssemblySetup.cs" />
+    <None Include="ClassifierTests.cs" />
+    <None Include="CompletionTests.cs" />
+    <None Include="EditorTests.cs" />
+    <None Include="MockClipboardService.cs" />
+    <None Include="MockPythonToolsPackage.cs" />
+    <None Include="NavigableTests.cs" />
+    <None Include="ProjectTests.cs" />
+    <None Include="PythonEditor.cs" />
+    <None Include="RefactorRenameTests.cs" />
+    <None Include="SquiggleTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(BuildRoot)Common\Tests\MockVsTests\MockVsTests.csproj">

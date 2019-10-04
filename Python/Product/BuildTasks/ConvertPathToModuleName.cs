@@ -18,7 +18,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.BuildTasks {
     /// <summary>
@@ -54,7 +54,13 @@ namespace Microsoft.PythonTools.BuildTasks {
 
             foreach (var path in Paths) {
                 try {
+#if BUILDTASKS_CORE
+                    // LSC
+                    System.Diagnostics.Debug.Fail("ConvertPathToModuleName task needs to be reimplemented without dependency on LS binaries");
+                    modules.Add(new TaskItem(string.Empty));
+#else
                     modules.Add(new TaskItem(ModulePath.FromFullPath(path.ItemSpec, PathLimit).ModuleName));
+#endif
                 } catch (ArgumentException ex) {
                     modules.Add(new TaskItem(string.Empty));
                     if (!IgnoreErrors) {

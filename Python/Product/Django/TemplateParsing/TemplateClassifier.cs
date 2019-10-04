@@ -109,6 +109,10 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
             var classifications = artifact.GetClassifications();
             foreach (var classification in classifications) {
                 var cls = GetClassification(classification.Classification);
+                if (cls == null) {
+                    continue;
+                }
+
                 int clsStart = artifactStart + classification.Span.Start;
                 int clsLen = Math.Min(sourceSnapshot.Length - clsStart, classification.Span.Length);
                 var clsSpan = new SnapshotSpan(sourceSnapshot, clsStart, clsLen);

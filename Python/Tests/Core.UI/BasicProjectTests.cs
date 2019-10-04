@@ -14,7 +14,6 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-extern alias analysis;
 extern alias pythontools;
 extern alias util;
 extern alias vsinterpreters;
@@ -30,19 +29,12 @@ using System.Threading;
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Input;
-using analysis::Microsoft.PythonTools.Interpreter;
-using analysis::Microsoft.PythonTools.Parsing;
 using EnvDTE;
 using EnvDTE80;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Text.Editor;
 using pythontools::Microsoft.PythonTools;
-using pythontools::Microsoft.PythonTools.Editor;
-using pythontools::Microsoft.PythonTools.Intellisense;
 using pythontools::Microsoft.PythonTools.Project;
 using pythontools::Microsoft.VisualStudioTools;
 using pythontools::Microsoft.VisualStudioTools.Project.Automation;
@@ -762,214 +754,6 @@ namespace PythonToolsUITests {
             }
         }
 
-        public void DotNetSearchPathReferences(VisualStudioApp app) {
-            var sln = app.CopyProjectForTest(@"TestData\AssemblyReference\SearchPathReference.sln");
-            var projectDir = Path.Combine(PathUtils.GetParent(sln), "PythonApplication");
-            var project = app.OpenProject(sln);
-            CompileFile(Path.Combine(projectDir, "ClassLibrary.cs"), "ClassLibrary3.dll");
-            var dllPath = Path.Combine(TestData.GetTempPath(), "ClassLibrary3.dll");
-            File.Move(Path.Combine(projectDir, "ClassLibrary3.dll"), dllPath);
-
-            project.GetPythonProject()._searchPaths.Add(Path.GetDirectoryName(dllPath), false);
-
-            var program = project.ProjectItems.Item("Program3.py");
-            var window = program.Open();
-            window.Activate();
-
-            Thread.Sleep(2000); // allow time to reload the new DLL
-            project.GetPythonProject().GetAnalyzer().WaitForCompleteAnalysis(_ => true);
-
-            var doc = app.GetDocument(program.Document.FullName);
-            var snapshot = doc.TextView.TextBuffer.CurrentSnapshot;
-            WaitForDescription(app.ServiceProvider, doc.TextView, snapshot, "a", "str");
-
-            // TODO: https://github.com/Microsoft/PTVS/issues/1549
-            // We don't detect when DLLs change if they are implicitly picked
-            // up via search paths. They need an actual project reference
-            //CompileFile("ClassLibraryBool.cs", dllPath);
-            //
-            //WaitForDescription(app.ServiceProvider, doc.TextView, snapshot, "a", "bool");
-        }
-
-        /// <summary>
-        /// Opens a project w/ a reference to a .NET project.  Makes sure we get completion after a build, changes the assembly, rebuilds, makes
-        /// sure the completion info changes.
-        /// </summary>
-        public void DotNetProjectReferences(VisualStudioApp app) {
-            var sln = app.CopyProjectForTest(@"TestData\ProjectReference\ProjectReference.sln");
-            var project = app.OpenProject(sln, expectedProjects: 2, projectName: "PythonApplication");
-
-            app.Dte.Solution.SolutionBuild.Build(WaitForBuildToFinish: true);
-            var program = project.ProjectItems.Item("Program.py");
-            var window = program.Open();
-            window.Activate();
-
-            var doc = app.GetDocument(program.Document.FullName);
-            var snapshot = doc.TextView.TextBuffer.CurrentSnapshot;
-            AssertUtil.ContainsExactly(GetVariableDescriptions(app.ServiceProvider, doc.TextView, "a", snapshot), "str");
-
-            var lib = app.GetProject("ClassLibrary");
-            var classFile = lib.ProjectItems.Item("Class1.cs");
-            window = classFile.Open();
-            window.Activate();
-            doc = app.GetDocument(classFile.Document.FullName);
-
-            doc.Invoke(() => {
-                using (var edit = doc.TextView.TextBuffer.CreateEdit()) {
-                    edit.Delete(0, doc.TextView.TextBuffer.CurrentSnapshot.Length);
-                    edit.Insert(0, @"namespace ClassLibrary1
-{
-    public class Class1
-    {
-        public bool X
-        {
-            get { return true; }
-        }
-    }
-}
-");
-                    edit.Apply();
-                }
-            });
-            classFile.Save();
-
-            // rebuild
-            app.Dte.Solution.SolutionBuild.Build(WaitForBuildToFinish: true);
-
-            WaitForDescription(app.ServiceProvider, doc.TextView, snapshot, "a", "bool");
-        }
-
-        private static void WaitForDescription(IServiceProvider serviceProvider, ITextView view, ITextSnapshot snapshot, string variable, params string[] expected) {
-            IEnumerable<string> descriptions = new string[0];
-            for (int i = 0; i < 100; i++) {
-                descriptions = GetVariableDescriptions(serviceProvider, view, variable, snapshot);
-                if (descriptions.ToSet().ContainsExactly(expected)) {
-                    break;
-                }
-
-                Thread.Sleep(100);
-            }
-            AssertUtil.ContainsExactly(descriptions, expected);
-        }
-
-        /// <summary>
-        /// Opens a project w/ a reference to a .NET assembly (not a project).  Makes sure we get completion against the assembly, changes the assembly, rebuilds, makes
-        /// sure the completion info changes.
-        /// </summary>
-        public void DotNetAssemblyReferences(VisualStudioApp app) {
-            var sln = app.CopyProjectForTest(@"TestData\AssemblyReference\AssemblyReference.sln");
-            var projectDir = Path.Combine(PathUtils.GetParent(sln), "PythonApplication");
-            var project = app.OpenProject(sln);
-            CompileFile(Path.Combine(projectDir, "ClassLibrary.cs"), "ClassLibrary.dll");
-
-            var program = project.ProjectItems.Item("Program.py");
-            var window = program.Open();
-            window.Activate();
-
-            Thread.Sleep(2000); // allow time to reload the new DLL
-            project.GetPythonProject().GetAnalyzer().WaitForCompleteAnalysis(_ => true);
-
-            var doc = app.GetDocument(program.Document.FullName);
-            var snapshot = doc.TextView.TextBuffer.CurrentSnapshot;
-            AssertUtil.ContainsExactly(GetVariableDescriptions(app.ServiceProvider, doc.TextView, "a", snapshot), "str");
-
-            CompileFile(Path.Combine(projectDir, "ClassLibraryBool.cs"), "ClassLibrary.dll");
-
-            WaitForDescription(app.ServiceProvider, doc.TextView, snapshot, "a", "bool");
-        }
-
-
-        /// <summary>
-        /// Opens a project w/ a reference to a .NET assembly (not a project).  Makes sure we get completion against the assembly, changes the assembly, rebuilds, makes
-        /// sure the completion info changes.
-        /// </summary>
-        public void MultipleDotNetAssemblyReferences(VisualStudioApp app) {
-            var sln = app.CopyProjectForTest(@"TestData\AssemblyReference\AssemblyReference.sln");
-            var projectDir = Path.Combine(PathUtils.GetParent(sln), "PythonApplication");
-            var project = app.OpenProject(sln);
-
-            CompileFile(Path.Combine(projectDir, "ClassLibrary.cs"), "ClassLibrary.dll");
-            CompileFile(Path.Combine(projectDir, "ClassLibrary2.cs"), "ClassLibrary2.dll");
-
-            var program = project.ProjectItems.Item("Program2.py");
-            System.Threading.Tasks.Task.Run(() => {
-                var window = program.Open();
-                window.Activate();
-            });
-
-            var pyProject = project.GetPythonProject();
-            VsProjectAnalyzer analyzer = pyProject?.TryGetAnalyzer();
-            for (int retries = 0; analyzer == null && retries < 10; ++retries) {
-                Thread.Sleep(1000);
-                if (pyProject == null) {
-                    pyProject = project.GetPythonProject();
-                }
-                if (pyProject != null) {
-                    analyzer = pyProject.TryGetAnalyzer();
-                }
-            }
-            Assert.IsNotNull(analyzer, "Unable to get analyzer for project");
-
-            analyzer.WaitForCompleteAnalysis(_ => true);
-
-            var doc = app.GetDocument(program.FileNames[0]);
-            var snapshot = doc.TextView.TextBuffer.CurrentSnapshot;
-            AssertUtil.ContainsExactly(GetVariableDescriptions(app.ServiceProvider, doc.TextView, "a", snapshot), "str");
-            AssertUtil.ContainsExactly(GetVariableDescriptions(app.ServiceProvider, doc.TextView, "b", snapshot), "int");
-
-            // verify getting signature help doesn't crash...  This used to crash because IronPython
-            // used the empty path for an assembly and throws an exception.  We now handle the exception
-            // in RemoteInterpreter.GetBuiltinFunctionDocumentation and RemoteInterpreter.GetPythonTypeDocumentation
-            List<string> docs = null;
-            for (int retries = 10; retries > 0; --retries) {
-                docs = GetSignatures(app, doc.TextView, "Class1.Fob(", snapshot).Signatures.Select(s => s.Documentation).ToList();
-                if (!docs.Any(d => d.Contains("still being calculated"))) {
-                    break;
-                }
-                Thread.Sleep(100);
-            }
-            AssertUtil.ContainsExactly(docs, "built-in function Class1.Fob()");
-
-            // recompile one file, we should still have type info for both DLLs, with one updated
-            CompileFile(Path.Combine(projectDir, "ClassLibraryBool.cs"), "ClassLibrary.dll");
-
-            Assert.IsTrue(analyzer.WaitForAnalysisStarted(TimeSpan.FromSeconds(30)), "Analysis did not restart");
-            analyzer.WaitForCompleteAnalysis(_ => true);
-
-            AssertUtil.ContainsExactly(GetVariableDescriptions(app.ServiceProvider, doc.TextView, "a", snapshot), "bool");
-            AssertUtil.ContainsExactly(GetVariableDescriptions(app.ServiceProvider, doc.TextView, "b", snapshot), "int");
-
-            // recompile the 2nd file, we should then have updated types for both DLLs
-            CompileFile(Path.Combine(projectDir, "ClassLibrary2Char.cs"), "ClassLibrary2.dll");
-
-            Thread.Sleep(2000); // allow time to reload the new DLL
-            analyzer.WaitForCompleteAnalysis(_ => true);
-
-            AssertUtil.ContainsExactly(GetVariableDescriptions(app.ServiceProvider, doc.TextView, "a", snapshot), "bool");
-            AssertUtil.ContainsExactly(GetVariableDescriptions(app.ServiceProvider, doc.TextView, "b", snapshot), "Char");
-        }
-
-        private static IEnumerable<string> GetVariableDescriptions(IServiceProvider serviceProvider, ITextView view, string variable, ITextSnapshot snapshot) {
-            return serviceProvider.GetUIThread().InvokeTaskSync(async () => {
-                var index = snapshot.GetText().IndexOf(variable + " =");
-                var entry = snapshot.TextBuffer.TryGetAnalysisEntry();
-                if (entry == null) {
-                    return Enumerable.Empty<string>();
-                }
-                return await entry.Analyzer.GetValueDescriptionsAsync(entry, variable, new SnapshotPoint(snapshot, index));
-            }, CancellationTokens.After5s);
-        }
-
-        private static SignatureAnalysis GetSignatures(VisualStudioApp app, ITextView textView, string text, ITextSnapshot snapshot) {
-            var index = snapshot.GetText().IndexOf(text);
-            var span = snapshot.CreateTrackingSpan(new Span(index, text.Length), SpanTrackingMode.EdgeInclusive);
-            return app.GetService<PythonToolsService>().GetSignatures(
-                textView,
-                snapshot,
-                span
-            );
-        }
-
         private static void CompileFile(string file, string outname) {
             Assert.IsTrue(Path.IsPathRooted(file), $"{file} is not a full path");
             string loc = typeof(string).Assembly.Location;
@@ -995,86 +779,6 @@ namespace PythonToolsUITests {
                 Console.WriteLine();
 
                 Assert.AreEqual(0, proc.ExitCode);
-            }
-        }
-
-        /// <summary>
-        /// Opens a project w/ a reference to a .NET assembly (not a project).  Makes sure we get completion against the assembly, changes the assembly, rebuilds, makes
-        /// sure the completion info changes.
-        /// </summary>
-        public void MultiProjectAnalysis(VisualStudioApp app) {
-            var project = app.OpenProject(@"TestData\MultiProjectAnalysis\MultiProjectAnalysis.sln", projectName: "PythonApplication", expectedProjects: 2);
-
-            var program = project.ProjectItems.Item("Program.py");
-            var window = program.Open();
-            window.Activate();
-
-            Thread.Sleep(2000);
-
-            var doc = app.GetDocument(program.Document.FullName);
-            var snapshot = doc.TextView.TextBuffer.CurrentSnapshot;
-
-            Assert.AreEqual(GetVariableDescriptions(app.ServiceProvider, doc.TextView, "a", snapshot).First(), "int");
-        }
-
-        public async Task CProjectReference(PythonVisualStudioApp app) {
-            var pythons = PythonPaths.Versions.Where(p => p.Version.Is3x() && !p.Isx64).Reverse().Take(2).ToList();
-            Assert.AreEqual(2, pythons.Count, "Two different 32-bit Python 3 interpreters required");
-            var buildPython = pythons[0];
-            var testPython = pythons[1];
-            buildPython.AssertInstalled();
-            testPython.AssertInstalled();
-
-            var slnFile = app.CopyProjectForTest(@"TestData\ProjectReference\CProjectReference.sln");
-            var slnDir = PathUtils.GetParent(slnFile);
-
-            var vcproj = Path.Combine(slnDir, "NativeModule", "NativeModule.vcxproj");
-            File.WriteAllText(vcproj, File.ReadAllText(vcproj)
-                .Replace("$(PYTHON_INCLUDE)", Path.Combine(buildPython.PrefixPath, "include"))
-                .Replace("$(PYTHON_LIB)", Path.Combine(buildPython.PrefixPath, "libs"))
-            );
-
-            using (var evt = new AutoResetEvent(false))
-            using (var dis = app.SelectDefaultInterpreter(buildPython)) {
-                var project = app.OpenProject(slnFile, projectName: "PythonApplication2", expectedProjects: 2);
-
-                var sln = app.GetService<IVsSolution4>(typeof(SVsSolution));
-                sln.EnsureSolutionIsLoaded((uint)__VSBSLFLAGS.VSBSLFLAGS_None);
-                var pyproj = project.GetPythonProject();
-
-                app.Dte.Solution.SolutionBuild.Clean(true);
-
-                var analyzer = pyproj.GetAnalyzer();
-                var t = Task.Run(() => Assert.IsTrue(analyzer.WaitForAnalysisStarted(TimeSpan.FromSeconds(30.0))));
-
-                app.Dte.Solution.SolutionBuild.Build(true);
-
-                await t;
-
-                Assert.IsTrue(File.Exists(Path.Combine(slnDir, "Debug", "native_module.pyd")), ".pyd was not created");
-
-                var searchPaths = app.ServiceProvider.GetUIThread().Invoke(() => pyproj.GetSearchPaths().ToArray());
-                AssertUtil.ContainsExactly(searchPaths, Path.Combine(slnDir, "Debug"));
-
-                analyzer.WaitForCompleteAnalysis(_ => true);
-
-                var modules = new string[0];
-                for (int retries = 10; retries > 0 && !modules.Contains("native_module"); --retries) {
-                    Thread.Sleep(1000);
-                    modules = (await analyzer.GetModulesAsync()).Select(x => x.Name).OrderBy(k => k).ToArray();
-                }
-                AssertUtil.ContainsAtLeast(modules, "native_module");
-
-                pyproj.ProjectAnalyzerChanged += (s, e) => { try { evt.Set(); } catch { } };
-                dis.SetDefault(app.InterpreterService.FindInterpreter(testPython.Id));
-                Assert.IsTrue(evt.WaitOne(10000), "Timed out waiting for analyzer change");
-
-                analyzer = pyproj.GetAnalyzer();
-                for (int retries = 10; retries > 0 && !modules.Contains("native_module"); --retries) {
-                    Thread.Sleep(1000);
-                    modules = (await analyzer.GetModulesAsync()).Select(x => x.Name).OrderBy(k => k).ToArray();
-                }
-                AssertUtil.ContainsAtLeast(modules, "native_module");
             }
         }
 
@@ -1519,59 +1223,6 @@ namespace PythonToolsUITests {
             }
             Assert.AreEqual(expected, text);
         }
-
-        //[TestMethod, Priority(0)]
-        //[HostType("VSTestHost"), TestCategory("Installed")]
-        //public void CopyFullPath() {
-        //    foreach (var projectType in ProjectTypes) {
-        //        var def = new ProjectDefinition(
-        //            "HelloWorld",
-        //            projectType,
-        //            Compile("server"),
-        //            Folder("IncFolder", isExcluded: false),
-        //            Folder("ExcFolder", isExcluded: true),
-        //            Compile("app", isExcluded: true),
-        //            Compile("missing", isMissing: true)
-        //        );
-
-        //        using (var solution = def.Generate().ToVs()) {
-        //            var projectDir = Path.GetDirectoryName(solution.GetProject("HelloWorld").FullName);
-
-        //            CheckCopyFullPath(solution,
-        //                              solution.WaitForItem("HelloWorld", "IncFolder"),
-        //                              projectDir + "\\IncFolder\\");
-        //            var excFolder = solution.WaitForItem("HelloWorld", "ExcFolder");
-        //            if (excFolder == null) {
-        //                solution.SelectProject(solution.GetProject("HelloWorld"));
-        //                solution.ExecuteCommand("Project.ShowAllFiles");
-        //                excFolder = solution.WaitForItem("HelloWorld", "ExcFolder");
-        //            }
-        //            CheckCopyFullPath(solution, excFolder, projectDir + "\\ExcFolder\\");
-        //            CheckCopyFullPath(solution,
-        //                              solution.WaitForItem("HelloWorld", "server" + def.ProjectType.CodeExtension),
-        //                              projectDir + "\\server" + def.ProjectType.CodeExtension);
-        //            CheckCopyFullPath(solution,
-        //                              solution.WaitForItem("HelloWorld", "app" + def.ProjectType.CodeExtension),
-        //                              projectDir + "\\app" + def.ProjectType.CodeExtension);
-        //            CheckCopyFullPath(solution,
-        //                              solution.WaitForItem("HelloWorld", "missing" + def.ProjectType.CodeExtension),
-        //                              projectDir + "\\missing" + def.ProjectType.CodeExtension);
-        //        }
-        //    }
-        //}
-
-        //private void CheckCopyFullPath(IVisualStudioInstance vs, ITreeNode element, string expected) {
-        //    string clipboardText = "";
-        //    Console.WriteLine("Checking CopyFullPath on:{0}", expected);
-        //    AutomationWrapper.Select(element);
-        //    VSTestContext.DTE.ExecuteCommand("Python.CopyFullPath");
-
-        //    var app = ((VisualStudioInstance)vs).App;
-        //    app.ServiceProvider.GetUIThread().Invoke(() => clipboardText = System.Windows.Clipboard.GetText());
-
-        //    Assert.AreEqual(expected, clipboardText);
-        //}
-
 
         private static void CountIs(Dictionary<string, int> count, string key, int expected) {
             int actual;

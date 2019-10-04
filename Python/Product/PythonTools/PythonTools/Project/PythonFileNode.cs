@@ -21,7 +21,6 @@ using System.IO;
 using System.Security;
 using System.Text;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Imaging;
 using Microsoft.VisualStudio.Imaging.Interop;
@@ -155,14 +154,6 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public override bool Remove(bool removeFromStorage) {
-            var analyzer = TryGetAnalyzer();
-            if (analyzer != null) {
-                var entry = analyzer.GetAnalysisEntryFromPath(Url);
-                if (entry != null) {
-                    analyzer.UnloadFileAsync(entry).DoNotWait();
-                }
-            }
-
             if (Url.EndsWithOrdinal(PythonConstants.FileExtension, ignoreCase: true) && removeFromStorage) {
                 TryDelete(Url + "c");
                 TryDelete(Url + "o");
@@ -187,14 +178,6 @@ namespace Microsoft.PythonTools.Project {
             set {
                 base.FileName = value;
             }
-        }
-
-        private VsProjectAnalyzer TryGetAnalyzer() {
-            return ((PythonProjectNode)ProjectMgr).TryGetAnalyzer();
-        }
-
-        public AnalysisEntry TryGetAnalysisEntry() {
-            return TryGetAnalyzer()?.GetAnalysisEntryFromPath(Url);
         }
 
         private void TryRename(string oldFile, string newFile) {
@@ -223,36 +206,7 @@ namespace Microsoft.PythonTools.Project {
                 TryRename(oldFileName + "o", newFileName + "o");
             }
 
-            if (res != null) {
-                // Analyzer has not changed, but because the filename has we need to
-                // do a transfer.
-                var oldEntry = TryGetAnalyzer()?.GetAnalysisEntryFromPath(oldFileName);
-                if (oldEntry != null) {
-                    oldEntry.Analyzer.TransferFileFromOldAnalyzer(oldEntry, GetMkDocument())
-                        .HandleAllExceptions(ProjectMgr.Site, GetType())
-                        .DoNotWait();
-                }
-            }
             return res;
-        }
-
-        internal override int IncludeInProject(bool includeChildren) {
-            var analyzer = TryGetAnalyzer();
-            analyzer?.AnalyzeFileAsync(Url).DoNotWait();
-
-            return base.IncludeInProject(includeChildren);
-        }
-
-        internal override int ExcludeFromProject() {
-            var analyzer = TryGetAnalyzer();
-            if (analyzer != null) {
-                var analysis = analyzer.GetAnalysisEntryFromPath(Url);
-                if (analysis != null) {
-                    analyzer.UnloadFileAsync(analysis).DoNotWait();
-                }
-            }
-
-            return base.ExcludeFromProject();
         }
 
         protected override ImageMoniker CodeFileIconMoniker {

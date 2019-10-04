@@ -25,6 +25,7 @@
     
     <ProjectFile Include="EnvironmentsList\EnvironmentsList.csproj"/>
 
+    <ProjectFile Include="Ipc.Json\Ipc.Json.csproj"/>
     <ProjectFile Include="TestAdapter\TestAdapter.csproj"/>
 
     <ProjectFile Include="ProjectWizards\ProjectWizards.csproj"/>

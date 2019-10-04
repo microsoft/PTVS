@@ -84,16 +84,6 @@ namespace TestUtilities.Python {
             componentModel.AddExtension<IInterpreterRegistryService>(() => optService.Value);
             componentModel.AddExtension<IInterpreterOptionsService>(() => optService.Value);
 
-            var editorServices = CreatePythonEditorServices(serviceProvider, componentModel);
-            componentModel.AddExtension(() => editorServices);
-
-            if (suppressTaskProvider) {
-                serviceProvider.AddService(typeof(ErrorTaskProvider), null, true);
-                serviceProvider.AddService(typeof(CommentTaskProvider), null, true);
-            } else {
-                serviceProvider.AddService(typeof(ErrorTaskProvider), ErrorTaskProvider.CreateService, true);
-                serviceProvider.AddService(typeof(CommentTaskProvider), CommentTaskProvider.CreateService, true);
-            }
             serviceProvider.AddService(typeof(UIThreadBase), new MockUIThread());
             var optionsService = new MockPythonToolsOptionsService();
             serviceProvider.AddService(typeof(IPythonToolsOptionsService), optionsService, true);
@@ -105,30 +95,6 @@ namespace TestUtilities.Python {
 
         class LazyComponentGetter<T> : Lazy<T> {
             public LazyComponentGetter(MockComponentModel model) : base(() => (T)model.GetService(typeof(T))) { }
-        }
-
-        private static PythonEditorServices CreatePythonEditorServices(IServiceContainer site, MockComponentModel model) {
-            var services = new PythonEditorServices(site);
-
-            // We don't have a full composition service availabe, to this code emulates
-            // ComponentModel.DefaultCompositionService.SatisfyImportsOnce(services)
-            // *just* enough for PythonEditorServices.
-            foreach (var field in services.GetType().GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)) {
-                if (!field.GetCustomAttributes().OfType<ImportAttribute>().Any()) {
-                    continue;
-                }
-                if (!field.FieldType.IsGenericType || field.FieldType.GetGenericTypeDefinition() != typeof(Lazy<>)) {
-                    field.SetValue(services, model.GetService(field.FieldType));
-                } else {
-                    var svcType = field.FieldType.GetGenericArguments()[0];
-                    var svc = model.GetService(svcType);
-                    field.SetValue(
-                        services,
-                        Activator.CreateInstance(typeof(LazyComponentGetter<>).MakeGenericType(svcType), model)
-                    );
-                }
-            }
-            return services;
         }
     }
 }

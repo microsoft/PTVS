@@ -38,10 +38,6 @@ namespace Microsoft.PythonTools.Commands {
             _serviceProvider = serviceProvider;
         }
 
-        internal static IVsInteractiveWindow/*!*/ EnsureReplWindow(IServiceProvider serviceProvider, VsProjectAnalyzer analyzer, PythonProjectNode project, IPythonWorkspaceContext workspace) {
-            return EnsureReplWindow(serviceProvider, analyzer.InterpreterFactory.Configuration, project, workspace);
-        }
-
         internal static IVsInteractiveWindow/*!*/ EnsureReplWindow(IServiceProvider serviceProvider, InterpreterConfiguration config, PythonProjectNode project, IPythonWorkspaceContext workspace) {
             var compModel = serviceProvider.GetComponentModel();
             var provider = compModel.GetService<InteractiveWindowProvider>();

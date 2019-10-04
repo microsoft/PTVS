@@ -16,6 +16,7 @@
 
 using System.IO;
 using System.Linq;
+using Microsoft.Python.Parsing;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;

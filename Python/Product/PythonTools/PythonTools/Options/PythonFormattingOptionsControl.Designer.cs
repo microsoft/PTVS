@@ -23,41 +23,40 @@ namespace Microsoft.PythonTools.Options {
         /// the contents of this method with the code editor.
         /// </summary>
         private void InitializeComponent() {
-            this.components = new System.ComponentModel.Container();
+            System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(PythonFormattingOptionsControl));
-            this._optionsTree = new Microsoft.PythonTools.Options.OptionsTreeView();
-            this._editorHost = new System.Windows.Forms.Integration.ElementHost();
+            this._pasteRemovesReplPrompts = new System.Windows.Forms.CheckBox();
+            tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
+            tableLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
-            // _optionsTree
+            // tableLayoutPanel1
             // 
-            resources.ApplyResources(this._optionsTree, "_optionsTree");
-            this._optionsTree.DrawMode = System.Windows.Forms.TreeViewDrawMode.OwnerDrawText;
-            this._optionsTree.HotTracking = true;
-            this._optionsTree.Name = "_optionsTree";
-            this._optionsTree.ShowLines = false;
+            resources.ApplyResources(tableLayoutPanel1, "tableLayoutPanel1");
+            tableLayoutPanel1.Controls.Add(this._pasteRemovesReplPrompts, 0, 0);
+            tableLayoutPanel1.Name = "tableLayoutPanel1";
             // 
-            // _editorHost
+            // _pasteRemovesReplPrompts
             // 
-            resources.ApplyResources(this._editorHost, "_editorHost");
-            this._editorHost.Name = "_editorHost";
-            this._editorHost.Child = null;
+            resources.ApplyResources(this._pasteRemovesReplPrompts, "_pasteRemovesReplPrompts");
+            this._pasteRemovesReplPrompts.AutoEllipsis = true;
+            this._pasteRemovesReplPrompts.Name = "_pasteRemovesReplPrompts";
+            this._pasteRemovesReplPrompts.UseVisualStyleBackColor = true;
             // 
-            // PythonFormattingOptionsControl
+            // PythonFormattingGeneralOptionsControl
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Controls.Add(this._editorHost);
-            this.Controls.Add(this._optionsTree);
-            this.Name = "PythonFormattingOptionsControl";
+            this.Controls.Add(tableLayoutPanel1);
+            this.Name = "PythonFormattingGeneralOptionsControl";
+            tableLayoutPanel1.ResumeLayout(false);
+            tableLayoutPanel1.PerformLayout();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
         #endregion
-
-        private OptionsTreeView _optionsTree;
-        private System.Windows.Forms.Integration.ElementHost _editorHost;
-
+        private System.Windows.Forms.CheckBox _pasteRemovesReplPrompts;
     }
 }

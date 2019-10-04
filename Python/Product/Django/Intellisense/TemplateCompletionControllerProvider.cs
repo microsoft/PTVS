@@ -38,9 +38,9 @@ namespace Microsoft.PythonTools.Django.Intellisense {
 
         [ImportingConstructor]
         public TemplateCompletionControllerProvider([Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider, ICompletionBroker completionBroker, IAsyncQuickInfoBroker quickInfoBroker, ISignatureHelpBroker signatureHelpBroker) {
-            _completionBroker = completionBroker;
-            _quickInfoBroker = quickInfoBroker;
-            _signatureHelpBroker = signatureHelpBroker;
+            _completionBroker = completionBroker ?? throw new ArgumentNullException(nameof(completionBroker));
+            _quickInfoBroker = quickInfoBroker ?? throw new ArgumentNullException(nameof(quickInfoBroker));
+            _signatureHelpBroker = signatureHelpBroker ?? throw new ArgumentNullException(nameof(signatureHelpBroker));
             _pyService = (PythonToolsService)serviceProvider.GetService(typeof(PythonToolsService));
         }
 

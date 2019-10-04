@@ -16,11 +16,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Xml;
-using Microsoft.PythonTools.Parsing;
-using Microsoft.PythonTools.Parsing.Ast;
+using Microsoft.Python.Core.Text;
+using Microsoft.Python.Parsing.Ast;
 
 namespace Microsoft.PythonTools.CodeCoverage {
     /// <summary>
@@ -62,7 +59,7 @@ namespace Microsoft.PythonTools.CodeCoverage {
 
         public string ModuleName {
             get {
-                return Analysis.ModulePath.FromFullPath(_filename).ModuleName;
+                return ModulePath.FromFullPath(_filename).ModuleName;
             }
         }
 

@@ -18,6 +18,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestRunnerInterop;
 
 namespace PythonToolsUITestsRunner {
+    [Ignore] // https://github.com/microsoft/PTVS/issues/5320
     [TestClass]
     public class RemoveImportTests {
         #region UI test boilerplate

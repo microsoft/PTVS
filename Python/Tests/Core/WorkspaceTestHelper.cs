@@ -142,10 +142,6 @@ namespace PythonToolsTests {
                 throw new NotImplementedException();
             }
 
-            public void GetSerializationInfo(IPythonInterpreterFactory factory, out string assembly, out string typeName, out Dictionary<string, object> properties) {
-                throw new NotImplementedException();
-            }
-
             internal void SimulateChangeInterpreters(IEnumerable<IPythonInterpreterFactory> interpreters) {
                 Interpreters = interpreters ?? Enumerable.Empty<IPythonInterpreterFactory>();
                 InterpretersChanged?.Invoke(this, EventArgs.Empty);

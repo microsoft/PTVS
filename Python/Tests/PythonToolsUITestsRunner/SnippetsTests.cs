@@ -82,18 +82,21 @@ namespace PythonToolsUITestsRunner {
             _vs.RunTest(nameof(PythonToolsUITests.SnippetsTests.TestInsertSnippetEmptySelectionNonEmptyLine));
         }
 
+        [Ignore] // https://github.com/microsoft/PTVS/issues/5765
         [TestMethod, Priority(VsTestContext.P2_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void TestTestClassSnippet() {
             _vs.RunTest(nameof(PythonToolsUITests.SnippetsTests.TestTestClassSnippet));
         }
 
+        [Ignore] // https://github.com/microsoft/PTVS/issues/5765
         [TestMethod, Priority(VsTestContext.P2_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void TestTestClassSnippetBadImport() {
             _vs.RunTest(nameof(PythonToolsUITests.SnippetsTests.TestTestClassSnippetBadImport));
         }
 
+        [Ignore] // https://github.com/microsoft/PTVS/issues/5765
         [TestMethod, Priority(VsTestContext.P2_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void TestTestClassSnippetImportAs() {

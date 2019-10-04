@@ -22,23 +22,31 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Utilities;
 
 namespace Microsoft.PythonTools.Django.Intellisense {
-    [Export(typeof(ICompletionSourceProvider)), ContentType(TemplateTagContentType.ContentTypeName), Order, Name("DjangoCompletionSourceProvider")]
+    [Export(typeof(ICompletionSourceProvider))]
+    [ContentType(TemplateTagContentType.ContentTypeName)]
+    [Order]
+    [Name(nameof(DjangoCompletionSourceProvider))]
     internal class DjangoCompletionSourceProvider : ICompletionSourceProvider {
         internal readonly IGlyphService _glyphService;
         internal readonly IServiceProvider _serviceProvider;
 
         [ImportingConstructor]
         public DjangoCompletionSourceProvider([Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider, IGlyphService glyphService) {
-            _serviceProvider = serviceProvider;
-            _glyphService = glyphService;
+            _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+            _glyphService = glyphService ?? throw new ArgumentNullException(nameof(glyphService));
         }
 
         public ICompletionSource TryCreateCompletionSource(ITextBuffer textBuffer) {
+            if (textBuffer == null) {
+                throw new ArgumentNullException(nameof(textBuffer));
+            }
+
             var filename = textBuffer.GetFileName();
             if (filename != null) {
                 var project = DjangoPackage.GetProject(_serviceProvider, filename);
-                if (project != null) {
-                    return new DjangoCompletionSource(_glyphService, project.Analyzer, _serviceProvider, textBuffer);
+                var analyzer = project?.GetAnalyzer();
+                if (analyzer != null) {
+                    return new DjangoCompletionSource(_glyphService, analyzer, textBuffer);
                 }
             }
             return null;

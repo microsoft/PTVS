@@ -19,9 +19,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
+using Microsoft.Python.Parsing;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Options;
-using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Repl;
 
 namespace Microsoft.PythonTools {
@@ -30,7 +30,7 @@ namespace Microsoft.PythonTools {
     /// can be fetched using Dte.GetObject("VsPython").
     /// </summary>
     [ComVisible(true)]
-    public sealed class PythonAutomation : IVsPython, IPythonOptions3, IPythonIntellisenseOptions {
+    public sealed class PythonAutomation : IVsPython, IPythonOptions3 {
         private readonly IServiceProvider _serviceProvider;
         private readonly PythonToolsService _pyService;
         private AutomationInteractiveOptions _interactiveOptions;
@@ -42,10 +42,6 @@ namespace Microsoft.PythonTools {
         }
 
         #region IPythonOptions Members
-
-        IPythonIntellisenseOptions IPythonOptions.Intellisense {
-            get { return this; }
-        }
 
         IPythonInteractiveOptions IPythonOptions.Interactive {
             get {
@@ -72,16 +68,6 @@ namespace Microsoft.PythonTools {
             }
             set {
                 _pyService.GeneralOptions.IndentationInconsistencySeverity = value;
-                _pyService.GeneralOptions.Save();
-            }
-        }
-
-        bool IPythonOptions.AutoAnalyzeStandardLibrary {
-            get {
-                return _pyService.GeneralOptions.AutoAnalyzeStandardLibrary;
-            }
-            set {
-                _pyService.GeneralOptions.AutoAnalyzeStandardLibrary = value;
                 _pyService.GeneralOptions.Save();
             }
         }
@@ -143,62 +129,6 @@ namespace Microsoft.PythonTools {
             set {
                 _pyService.GeneralOptions.PromptForPackageInstallation = value;
                 _pyService.GeneralOptions.Save();
-            }
-        }
-
-
-        #endregion
-
-        #region IPythonIntellisenseOptions Members
-
-        bool IPythonIntellisenseOptions.AddNewLineAtEndOfFullyTypedWord {
-            get {
-                return _pyService.AdvancedOptions.AddNewLineAtEndOfFullyTypedWord;
-            }
-            set {
-                _pyService.AdvancedOptions.AddNewLineAtEndOfFullyTypedWord = value;
-                _pyService.AdvancedOptions.Save();
-            }
-        }
-
-        bool IPythonIntellisenseOptions.EnterCommitsCompletion {
-            get {
-                return _pyService.AdvancedOptions.EnterCommitsIntellisense;
-            }
-            set {
-                _pyService.AdvancedOptions.EnterCommitsIntellisense = value;
-                _pyService.AdvancedOptions.Save();
-            }
-        }
-
-        bool IPythonIntellisenseOptions.UseMemberIntersection {
-            get {
-                return _pyService.AdvancedOptions.IntersectMembers;
-            }
-            set {
-                _pyService.AdvancedOptions.IntersectMembers = value;
-                _pyService.AdvancedOptions.Save();
-
-            }
-        }
-
-        string IPythonIntellisenseOptions.CompletionCommittedBy {
-            get {
-                return _pyService.AdvancedOptions.CompletionCommittedBy;
-            }
-            set {
-                _pyService.AdvancedOptions.CompletionCommittedBy = value;
-                _pyService.AdvancedOptions.Save();
-            }
-        }
-
-        bool IPythonIntellisenseOptions.AutoListIdentifiers {
-            get {
-                return _pyService.AdvancedOptions.AutoListIdentifiers;
-            }
-            set {
-                _pyService.AdvancedOptions.AutoListIdentifiers = value;
-                _pyService.AdvancedOptions.Save();
             }
         }
 

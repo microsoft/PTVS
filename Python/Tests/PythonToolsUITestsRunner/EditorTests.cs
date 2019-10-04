@@ -39,117 +39,46 @@ namespace PythonToolsUITestsRunner {
         public static void ClassCleanup() => VsTestContext.Instance.Dispose();
         #endregion
 
-        [TestMethod, Priority(2)]
-        [TestCategory("Installed")]
-        public void AutomaticBraceCompletion() {
-            _vs.RunTest(nameof(PythonToolsUITests.EditorTests.AutomaticBraceCompletion));
-        }
+        //[TestMethod, Priority(VsTestContext.P2_FAILING_UI_TEST)]
+        //[TestCategory("Installed")]
+        //public void CompletionsCaseSensitive() {
+        //    _vs.RunTest(nameof(PythonToolsUITests.EditorTests.CompletionsCaseSensitive));
+        //}
 
-        [TestMethod, Priority(0)]
-        [TestCategory("Installed")]
-        public void UnregisteredFileExtensionEditor() {
-            _vs.RunTest(nameof(PythonToolsUITests.EditorTests.UnregisteredFileExtensionEditor));
-        }
+        //[TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
+        //[TestCategory("Installed")]
+        //public void TypingTest() {
+        //    _vs.RunTest(nameof(PythonToolsUITests.EditorTests.TypingTest));
+        //}
 
-        [TestMethod, Priority(0)]
-        [TestCategory("Installed")]
-        public void OutliningTest() {
-            _vs.RunTest(nameof(PythonToolsUITests.EditorTests.OutliningTest));
-        }
+        //[TestMethod, Priority(VsTestContext.P2_FAILING_UI_TEST)]
+        //[TestCategory("Installed")]
+        //public void CompletionTests() {
+        //    _vs.RunTest(nameof(PythonToolsUITests.EditorTests.CompletionTests));
+        //}
 
-        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
-        [TestCategory("Installed")]
-        public void OutlineNestedFuncDef() {
-            _vs.RunTest(nameof(PythonToolsUITests.EditorTests.OutlineNestedFuncDef));
-        }
-
-        [TestMethod, Priority(0)]
-        [TestCategory("Installed")]
-        public void OutliningBadForStatement() {
-            _vs.RunTest(nameof(PythonToolsUITests.EditorTests.OutliningBadForStatement));
-        }
-
-        [TestMethod, Priority(0)]
-        [TestCategory("Installed")]
-        public void ClassificationTest() {
-            _vs.RunTest(nameof(PythonToolsUITests.EditorTests.ClassificationTest));
-        }
-
-        [TestMethod, Priority(0)]
-        [TestCategory("Installed")]
-        public void ClassificationMultiLineStringTest() {
-            _vs.RunTest(nameof(PythonToolsUITests.EditorTests.ClassificationMultiLineStringTest));
-        }
-
-        /// <summary>
-        /// http://pytools.codeplex.com/workitem/749
-        /// </summary>
-        [TestMethod, Priority(0)]
-        [TestCategory("Installed")]
-        public void ClassificationMultiLineStringTest2() {
-            _vs.RunTest(nameof(PythonToolsUITests.EditorTests.ClassificationMultiLineStringTest2));
-        }
-
-        [TestMethod, Priority(VsTestContext.P2_FAILING_UI_TEST)]
-        [TestCategory("Installed")]
-        public void SignaturesTest() {
-            _vs.RunTest(nameof(PythonToolsUITests.EditorTests.SignaturesTest));
-        }
-
-        [TestMethod, Priority(2)]
-        [TestCategory("Installed")]
-        public void MultiLineSignaturesTest() {
-            _vs.RunTest(nameof(PythonToolsUITests.EditorTests.MultiLineSignaturesTest));
-        }
-
-        [TestMethod, Priority(VsTestContext.P2_FAILING_UI_TEST)]
-        [TestCategory("Installed")]
-        public void CompletionsCaseSensitive() {
-            _vs.RunTest(nameof(PythonToolsUITests.EditorTests.CompletionsCaseSensitive));
-        }
-
-        [TestMethod, Priority(2)]
-        [TestCategory("Installed")]
-        public void AutoIndent() {
-            _vs.RunTest(nameof(PythonToolsUITests.EditorTests.AutoIndent));
-        }
-
-        [TestMethod, Priority(2)]
-        [TestCategory("Installed")]
-        public void AutoIndentExisting() {
-            _vs.RunTest(nameof(PythonToolsUITests.EditorTests.AutoIndentExisting));
-        }
-
-        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
-        [TestCategory("Installed")]
-        public void TypingTest() {
-            _vs.RunTest(nameof(PythonToolsUITests.EditorTests.TypingTest));
-        }
-
-        [TestMethod, Priority(VsTestContext.P2_FAILING_UI_TEST)]
-        [TestCategory("Installed")]
-        public void CompletionTests() {
-            _vs.RunTest(nameof(PythonToolsUITests.EditorTests.CompletionTests));
-        }
-
+        [Ignore] // https://github.com/microsoft/PTVS/issues/5892
         [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void OpenInvalidUnicodeFile() {
             _vs.RunTest(nameof(PythonToolsUITests.EditorTests.OpenInvalidUnicodeFile));
         }
 
+        [Ignore] // https://github.com/microsoft/PTVS/issues/5891
         [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void IndentationInconsistencyWarning() {
             _vs.RunTest(nameof(PythonToolsUITests.EditorTests.IndentationInconsistencyWarning));
         }
 
+        [Ignore] // https://github.com/microsoft/PTVS/issues/5891
         [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void IndentationInconsistencyError() {
             _vs.RunTest(nameof(PythonToolsUITests.EditorTests.IndentationInconsistencyError));
         }
 
+        [Ignore] // https://github.com/microsoft/PTVS/issues/5891
         [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void IndentationInconsistencyIgnore() {
@@ -168,22 +97,16 @@ namespace PythonToolsUITestsRunner {
             _vs.RunTest(nameof(PythonToolsUITests.EditorTests.ImportSelf));
         }
 
+        [TestMethod, Priority(0), TestCategory("Squiggle")]
+        [TestCategory("Installed")]
+        public void ImportMissing() {
+            _vs.RunTest(nameof(PythonToolsUITests.EditorTests.ImportMissing));
+        }
+
         [TestMethod, Priority(VsTestContext.P2_FAILING_UI_TEST), TestCategory("Squiggle")]
         [TestCategory("Installed")]
-        public void ImportMissingThenAddThenExcludeFile() {
-            _vs.RunTest(nameof(PythonToolsUITests.EditorTests.ImportMissingThenAddThenExcludeFile));
-        }
-
-        [TestMethod, Priority(2), TestCategory("Squiggle")]
-        [TestCategory("Installed")]
-        public void ImportPresentThenAddThenRemoveReference() {
-            _vs.RunTest(nameof(PythonToolsUITests.EditorTests.ImportPresentThenAddThenRemoveReference));
-        }
-
-        [TestMethod, Priority(0)]
-        [TestCategory("Installed")]
-        public void DefaultAnalyzerForNonProjectFile() {
-            _vs.RunTest(nameof(PythonToolsUITests.EditorTests.DefaultAnalyzerForNonProjectFile));
+        public void ImportMissingThenAddFile() {
+            _vs.RunTest(nameof(PythonToolsUITests.EditorTests.ImportMissingThenAddFile));
         }
     }
 }

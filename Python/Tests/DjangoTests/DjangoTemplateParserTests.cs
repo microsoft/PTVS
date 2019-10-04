@@ -21,7 +21,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.PythonTools.Django.Analysis;
-using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
 using Microsoft.PythonTools.Django.TemplateParsing.DjangoBlocks;
@@ -785,7 +784,9 @@ namespace DjangoTests {
             _variables = variables;
             _filters = new Dictionary<string, TagInfo>();
             foreach (var filter in filters) {
-                _filters[filter] = new TagInfo("", null);
+                // LSC
+                //_filters[filter] = new TagInfo("", null);
+                _filters[filter] = new TagInfo("");
             }
         }
 

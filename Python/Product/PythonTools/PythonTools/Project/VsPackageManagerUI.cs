@@ -25,7 +25,7 @@ namespace Microsoft.PythonTools.Project {
     class VsPackageManagerUI : IPackageManagerUI {
         private readonly IServiceProvider _site;
         private readonly Redirector _outputWindow;
-        private readonly GeneralOptions _options;
+        private readonly PythonGeneralOptions _options;
         private readonly bool _alwaysElevate;
 
         public VsPackageManagerUI(IServiceProvider provider, bool alwaysElevate = false) {

@@ -345,7 +345,7 @@ namespace Microsoft.PythonTools.Environments {
                 !string.IsNullOrEmpty(VersionName);
         }
 
-        private void SetCustomVariables(InterpreterConfiguration config) {
+        private void SetCustomVariables(Interpreter.InterpreterConfiguration config) {
             Description = config.Description;
             InterpreterPath = config.InterpreterPath;
             WindowsInterpreterPath = config.GetWindowsInterpreterPath();

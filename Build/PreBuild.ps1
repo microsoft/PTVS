@@ -7,10 +7,11 @@ $need_symlink = @(
     "python",
     "python2",
     "MicroBuild.Core",
+    "Microsoft.Python.Parsing",
+    "Microsoft.Extensions.FileSystemGlobbing",
     "Microsoft.VSSDK.BuildTools",
     "Microsoft.VSSDK.Debugger.VSDConfigTool",
-    "Newtonsoft.Json",
-    "Microsoft.VisualStudio.Python.LanguageServer"
+    "Newtonsoft.Json"
 )
 
 if (-not $vstarget) {
@@ -57,7 +58,17 @@ try {
         Write-Host "Creating symlink for $_.$($versions[$_])"
         New-Item -ItemType Junction "$outdir\$_" -Value "$outdir\$_.$($versions[$_])"
     } | Out-Null
-    
+
+    $container = "python-language-server-daily"
+    $ver = "0.4.127" # important: keep in sync with Python\Product\Core\Properties\AssemblyInfo.cs
+    "Downloading language server $ver from CDN"
+    @("x86", "x64") | %{
+        $filename = "Python-Language-Server-win-$_.$ver"
+        Invoke-WebRequest "https://pvsc.azureedge.net/$container/$filename.nupkg" -OutFile "$outdir\Python-Language-Server-win-$_.zip"
+        # Expand-Archive "$outdir\$filename.zip" -DestinationPath "$outdir\LanguageServer\$_" -Force
+        # Write-Host "Expanded $filename"
+    }
+
 } finally {
     popd
 }

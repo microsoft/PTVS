@@ -56,10 +56,8 @@ namespace TestUtilities.UI.Python {
             Assert.IsNotNull(PythonToolsService, "Failed to get PythonToolsService");
 
             // Disable AutoListIdentifiers for tests
-            var ao = PythonToolsService.AdvancedOptions;
+            var ao = PythonToolsService.FormattingOptions;
             Assert.IsNotNull(ao, "Failed to get AdvancedOptions");
-            var oldALI = ao.AutoListIdentifiers;
-            ao.AutoListIdentifiers = false;
 
             var orwoodProp = Dte.Properties["Environment", "ProjectsAndSolution"].Item("OnRunWhenOutOfDate");
             Assert.IsNotNull(orwoodProp, "Failed to get OnRunWhenOutOfDate property");
@@ -67,7 +65,6 @@ namespace TestUtilities.UI.Python {
             orwoodProp.Value = 1;
 
             OnDispose(() => {
-                ao.AutoListIdentifiers = oldALI;
                 orwoodProp.Value = oldOrwood;
             });
         }

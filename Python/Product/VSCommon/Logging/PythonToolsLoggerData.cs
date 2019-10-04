@@ -207,4 +207,15 @@ namespace Microsoft.PythonTools.Logging {
         public string Version { get; set; }
         public bool IsIronPython { get; set; }
     }
+
+    sealed class FormatDocumentInfo : PythonToolsLoggerData {
+        public string Version { get; set; }
+        public string Formatter { get; set; }
+        public long TimeMilliseconds { get; set; }
+        public bool IsError { get; set; }
+        public bool IsErrorModuleNotInstalled { get; set; }
+        public bool IsErrorInstallingModule { get; set; }
+        public bool IsErrorRangeNotSupported { get; set; }
+        public bool IsRange { get; set; }
+    }
 }

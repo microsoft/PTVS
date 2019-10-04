@@ -45,6 +45,7 @@ namespace PythonToolsUITestsRunner {
             _vs.RunTest(nameof(PythonToolsUITests.ErrorListTaskListTests.ErrorList));
         }
 
+        [Ignore] // https://github.com/microsoft/PTVS/issues/5886
         [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void CommentTaskList() {

@@ -24,8 +24,8 @@ using System.Reflection;
 using System.Runtime.Remoting;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.PythonTools.Analysis;
-using Microsoft.PythonTools.Analysis.Values;
+using Microsoft.PythonTools.Analysis; // OK: LocationInfo, BAD: IProjectEntry, PythonAnalyzer, IAnalysisSet, AnalysisUnit, AnalysisSet, EncodedLocation
+using Microsoft.PythonTools.Analysis.Values; // BAD: IBuiltinClassInfo, IInstanceInfo, IAnalysisValue
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Interpreter.Ast;

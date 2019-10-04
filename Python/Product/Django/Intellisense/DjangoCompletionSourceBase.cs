@@ -18,22 +18,20 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Microsoft.PythonTools.Django.Analysis;
 using Microsoft.PythonTools.Django.TemplateParsing;
-using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
 
 namespace Microsoft.PythonTools.Django.Intellisense {
     internal abstract class DjangoCompletionSourceBase : ICompletionSource {
         protected readonly IGlyphService _glyphService;
-        protected readonly VsProjectAnalyzer _analyzer;
+        protected readonly IDjangoProjectAnalyzer _analyzer;
         protected readonly ITextBuffer _buffer;
 
-        protected DjangoCompletionSourceBase(IGlyphService glyphService, VsProjectAnalyzer analyzer, ITextBuffer textBuffer) {
-            _glyphService = glyphService;
-            _analyzer = analyzer;
-            _buffer = textBuffer;
+        protected DjangoCompletionSourceBase(IGlyphService glyphService, IDjangoProjectAnalyzer analyzer, ITextBuffer textBuffer) {
+            _glyphService = glyphService ?? throw new ArgumentNullException(nameof(glyphService));
+            _analyzer = analyzer ?? throw new ArgumentNullException(nameof(analyzer));
+            _buffer = textBuffer ?? throw new ArgumentNullException(nameof(textBuffer));
         }
 
         #region ICompletionSource Members
@@ -44,7 +42,7 @@ namespace Microsoft.PythonTools.Django.Intellisense {
         /// <param name="templateText">The text of the template tag which we are offering a completion in</param>
         /// <param name="templateStart">The offset in the buffer where the template starts</param>
         /// <param name="triggerPoint">The point in the buffer where the completion was triggered</param>
-        internal CompletionSet GetCompletionSet(CompletionOptions options, VsProjectAnalyzer analyzer, TemplateTokenKind kind, string templateText, int templateStart, SnapshotPoint triggerPoint, out ITrackingSpan applicableSpan) {
+        internal CompletionSet GetCompletionSet(IDjangoProjectAnalyzer analyzer, TemplateTokenKind kind, string templateText, int templateStart, SnapshotPoint triggerPoint, out ITrackingSpan applicableSpan) {
             int position = triggerPoint.Position - templateStart;
             IEnumerable<CompletionInfo> tags;
             IDjangoCompletionContext context;
@@ -86,19 +84,22 @@ namespace Microsoft.PythonTools.Django.Intellisense {
 
             var completions = tags
                 .OrderBy(tag => tag.DisplayText, StringComparer.OrdinalIgnoreCase)
-                .Select(tag => new DynamicallyVisibleCompletion(
+                .Select(tag => new Completion(
                     tag.DisplayText,
                     tag.InsertionText,
                     StripDocumentation(tag.Documentation),
                     _glyphService.GetGlyph(tag.Glyph, StandardGlyphItem.GlyphItemPublic),
                     "tag"));
-            return new FuzzyCompletionSet(
+
+            var completionSet = new CompletionSet(
                 "PythonDjangoTags",
                 Resources.DjangoTagsCompletionSetDisplayName,
                 applicableSpan,
                 completions,
-                options,
-                CompletionComparer.UnderscoresLast);
+                Enumerable.Empty<Completion>()
+            );
+
+            return completionSet;
         }
 
         private ITrackingSpan GetWordSpan(string templateText, int templateStart, SnapshotPoint triggerPoint) {
@@ -155,11 +156,11 @@ namespace Microsoft.PythonTools.Django.Intellisense {
                     }
                     // otherwise elif both starts and ends a block, 
                     // so depth remains the same.
-                } else if (DjangoAnalyzer._nestedEndTags.Contains(cmd)) {
+                } else if (BuiltinTags._nestedEndTags.Contains(cmd)) {
                     depth++;
-                } else if (DjangoAnalyzer._nestedStartTags.Contains(cmd)) {
+                } else if (BuiltinTags._nestedStartTags.Contains(cmd)) {
                     if (depth == 0) {
-                        included.Add(DjangoAnalyzer._nestedTags[cmd]);
+                        included.Add(BuiltinTags._nestedTags[cmd]);
                         if (cmd == "if") {
                             included.Add("elif");
                         }
@@ -173,7 +174,7 @@ namespace Microsoft.PythonTools.Django.Intellisense {
             }
 
             foreach (var value in results) {
-                if (!(DjangoAnalyzer._nestedEndTags.Contains(value.DisplayText) || value.DisplayText == "elif") ||
+                if (!(BuiltinTags._nestedEndTags.Contains(value.DisplayText) || value.DisplayText == "elif") ||
                     included.Contains(value.DisplayText)) {
                     yield return value;
                 }

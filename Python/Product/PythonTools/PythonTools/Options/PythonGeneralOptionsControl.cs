@@ -16,7 +16,7 @@
 
 using System;
 using System.Windows.Forms;
-using Microsoft.PythonTools.Parsing;
+using Microsoft.Python.Parsing;
 
 namespace Microsoft.PythonTools.Options {
     public partial class PythonGeneralOptionsControl : UserControl {
@@ -36,9 +36,9 @@ namespace Microsoft.PythonTools.Options {
                     case WarningIndex: 
                         return Severity.Warning;
                     case DontIndex: 
-                        return Severity.Ignore;
+                        return Severity.Suppressed;
                     default:
-                        return Severity.Ignore;
+                        return Severity.Suppressed;
                 }
             }
             set {

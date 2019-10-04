@@ -18,19 +18,19 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Python.Parsing;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.VisualStudioTools;
 using TestUtilities;
-using TestUtilities.Mocks;
 using TestUtilities.Python;
+using InterpreterConfiguration = Microsoft.PythonTools.Interpreter.InterpreterConfiguration;
+using InterpreterUIMode = Microsoft.PythonTools.Interpreter.InterpreterUIMode;
 
 namespace PythonToolsTests {
     [TestClass]
@@ -123,7 +123,7 @@ namespace PythonToolsTests {
                     }
                 );
                 are.WaitOne(10000);
-                var names = evaluator.GetMemberNames("");
+                var names = await evaluator.GetMemberNamesAsync("", CancellationToken.None);
                 Assert.IsNotNull(names);
                 AssertUtil.ContainsAtLeast(names.Select(m => m.Name), "my_new_value");
             }
@@ -199,7 +199,7 @@ f()",
                 int counter = 0;
                 foreach (var testCase in testCases) {
                     Console.WriteLine("Test case {0}", ++counter);
-                    AssertUtil.AreEqual(ReplEditFilter.JoinToCompleteStatements(ReplEditFilter.SplitAndDedent(testCase.Code), Microsoft.PythonTools.Parsing.PythonLanguageVersion.V35), testCase.Expected);
+                    AssertUtil.AreEqual(ReplEditFilter.JoinToCompleteStatements(ReplEditFilter.SplitAndDedent(testCase.Code), PythonLanguageVersion.V35), testCase.Expected);
                 }
             }
         }

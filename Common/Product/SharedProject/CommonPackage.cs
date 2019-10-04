@@ -204,7 +204,10 @@ namespace Microsoft.VisualStudioTools {
                 AddService<UIThreadBase>(_uiThread, true);
             }
 
-            AddService(GetLibraryManagerType(), CreateLibraryManager, true);
+            var libraryManagerType = GetLibraryManagerType();
+            if (libraryManagerType != null) {
+                AddService(libraryManagerType, CreateLibraryManager, true);
+            }
 
             var crinfo = new OLECRINFO {
                 cbSize = (uint)Marshal.SizeOf(typeof(OLECRINFO)),

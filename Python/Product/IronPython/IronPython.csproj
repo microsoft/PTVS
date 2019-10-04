@@ -51,7 +51,6 @@
     <Reference Include="IronPython" />
     <Reference Include="IronPython.Modules" />
     <Reference Include="IronPython.Wpf" />
-    <Reference Include="Microsoft.Python.Analysis.Engine" />
     <Reference Include="Microsoft.Dynamic" />
     <Reference Include="Microsoft.Scripting" />
     <Reference Include="Microsoft.VisualStudio.ComponentModelHost" />

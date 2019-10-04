@@ -22,7 +22,6 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -476,18 +475,20 @@ namespace Microsoft.PythonTools.Interpreter {
                     }
 
                     if (packages == null) {
-                        // Pip failed, so return a directory listing
-                        var paths = await PythonLibraryPath.GetDatabaseSearchPathsAsync(_factory.Configuration, null);
+                        // LSC
+                        packages = new List<PackageSpec>();
+                        //// Pip failed, so return a directory listing
+                        //var paths = await PythonLibraryPath.GetSearchPathsAsync(_factory.Configuration, null);
 
-                        packages = await Task.Run(() => paths.Where(p => !p.IsStandardLibrary && Directory.Exists(p.Path))
-                            .SelectMany(p => PathUtils.EnumerateDirectories(p.Path, recurse: false))
-                            .Select(path => Path.GetFileName(path))
-                            .Select(name => PackageNameRegex.Match(name))
-                            .Where(match => match.Success)
-                            .Select(match => new PackageSpec(match.Groups["name"].Value))
-                            .Where(p => p.IsValid)
-                            .OrderBy(p => p.Name)
-                            .ToList());
+                        //packages = await Task.Run(() => paths.Where(p => !p.IsStandardLibrary && Directory.Exists(p.Path))
+                        //    .SelectMany(p => PathUtils.EnumerateDirectories(p.Path, recurse: false))
+                        //    .Select(path => Path.GetFileName(path))
+                        //    .Select(name => PackageNameRegex.Match(name))
+                        //    .Where(match => match.Success)
+                        //    .Select(match => new PackageSpec(match.Groups["name"].Value))
+                        //    .Where(p => p.IsValid)
+                        //    .OrderBy(p => p.Name)
+                        //    .ToList());
                     }
                 } finally {
                     concurrencyLock?.Dispose();
@@ -638,13 +639,15 @@ namespace Microsoft.PythonTools.Interpreter {
             }
 
             if (paths == null) {
-                try {
-                    paths = (await PythonLibraryPath.GetDatabaseSearchPathsAsync(_factory.Configuration, null))
-                        .Select(p => p.Path)
-                        .ToArray();
-                } catch (InvalidOperationException) {
-                    return;
-                }
+                paths = Enumerable.Empty<string>().ToList();
+                // LSC
+                //try {
+                //    paths = (await PythonLibraryPath.GetDatabaseSearchPathsAsync(_factory.Configuration, null))
+                //        .Select(p => p.Path)
+                //        .ToArray();
+                //} catch (InvalidOperationException) {
+                //    return;
+                //}
             }
 
             paths = paths

@@ -16,9 +16,7 @@
 
 using System;
 using System.IO;
-using System.Threading;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Text;
@@ -68,46 +66,14 @@ namespace Microsoft.PythonTools.Project {
             }
 
             public string[] FindMethods(string className, int? paramCount) {
-                var fileInfo = _node.TryGetAnalysisEntry();
-                if (fileInfo == null) {
-                    return Array.Empty<string>();
-                }
-                return fileInfo.Analyzer.WaitForRequest(fileInfo.Analyzer.FindMethodsAsync(
-                    fileInfo,
-                    _node.GetTextBuffer(),
-                    className,
-                    paramCount
-                ), "PythonNonCodeFileNode.FindMethods");
+                return Array.Empty<string>();
             }
 
             public InsertionPoint GetInsertionPoint(string className) {
-                var fileInfo = _node.TryGetAnalysisEntry();
-                if (fileInfo == null) {
-                    return null;
-                }
-                return fileInfo.Analyzer.WaitForRequest(fileInfo.Analyzer.GetInsertionPointAsync(
-                    Buffer?.CurrentSnapshot,
-                    className,
-                    fileInfo
-                ), "PythonNonCodeFileNode.GetInsertionPoint");
+                return null;
             }
 
             public MethodInformation GetMethodInfo(string className, string methodName) {
-                var fileInfo = _node.TryGetAnalysisEntry();
-                if (fileInfo == null) {
-                    return null;
-                }
-                var info = fileInfo.Analyzer.WaitForRequest(
-                    fileInfo.Analyzer.GetMethodInfoAsync(fileInfo, _node.GetTextBuffer(), className, methodName),
-                    "PythonNonCodeFileNode.GetMethodInfo"
-                );
-                if (info != null) {
-                    return new MethodInformation(
-                        info.start,
-                        info.end,
-                        info.found
-                    );
-                }
                 return null;
             }
         }

@@ -45,27 +45,11 @@ namespace Microsoft.PythonTools.Django.Analysis {
         internal static readonly Dictionary<string, string> _knownFilters = MakeKnownFiltersTable();
         
         public DjangoAnalyzer() {
-            foreach (var tagName in _nestedEndTags) {
+            foreach (var tagName in DjangoNestedTags._nestedEndTags) {
                 _tags[tagName] = new TagInfo("", null);
             }
         }
 
-        internal static readonly Dictionary<string, string> _nestedTags = new Dictionary<string, string>() {
-            { "for", "endfor" },
-            { "if", "endif" },
-            { "ifequal", "endifequal" },
-            { "ifnotequal", "endifnotequal" },
-            { "ifchanged", "endifchanged" },
-            { "autoescape", "endautoescape" },
-            { "comment", "endcomment" },
-            { "filter", "endfilter" },
-            { "spaceless", "endspaceless" },
-            { "with", "endwith" },
-            { "empty", "endfor" },
-            { "else", "endif" },
-        };
-        internal static readonly HashSet<string> _nestedEndTags = MakeNestedEndTags();
-        internal static readonly HashSet<string> _nestedStartTags = MakeNestedStartTags();
 
         internal static class Commands {
             public const string GetTags = "getTags";
@@ -676,21 +660,6 @@ namespace Microsoft.PythonTools.Django.Analysis {
             }
 
             return null;
-        }
-        private static HashSet<string> MakeNestedEndTags() {
-            HashSet<string> res = new HashSet<string>();
-            foreach (var value in _nestedTags.Values) {
-                res.Add(value);
-            }
-            return res;
-        }
-
-        private static HashSet<string> MakeNestedStartTags() {
-            HashSet<string> res = new HashSet<string>();
-            foreach (var key in _nestedTags.Keys) {
-                res.Add(key);
-            }
-            return res;
         }
     }
 }

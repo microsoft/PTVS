@@ -14,10 +14,14 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System.Collections;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Interpreter {
     public static class PackageManagerFactoryExtensions {
@@ -41,7 +45,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 var libraryPath = !string.IsNullOrEmpty(configuration.LibraryPath) ? configuration.LibraryPath : Path.Combine(prefixPath, "Lib");
                 var sitePackagesPath = !string.IsNullOrEmpty(configuration.SitePackagesPath) ? configuration.SitePackagesPath : Path.Combine(libraryPath, "site-packages");
                 var requiresInitPyFiles = ModulePath.PythonVersionRequiresInitPyFiles(configuration.Version);
-                foreach (var mp in ModulePath.GetModulesInLib(libraryPath, sitePackagesPath, requiresInitPyFiles)) {
+                foreach (var mp in GetModulesInLib(libraryPath, sitePackagesPath, requiresInitPyFiles)) {
                     if (mp.ModuleName == moduleName) {
                         return true;
                     }
@@ -49,6 +53,25 @@ namespace Microsoft.PythonTools.Interpreter {
 
                 return false;
             });
+        }
+
+        // LSC: replacement for ModulePath.GetModulesInLib which disappeared, this is an approximation
+        private static IEnumerable<ModulePath> GetModulesInLib(
+            string libraryPath,
+            string sitePackagesPath,
+            bool requiresInitPyFiles
+        ) {
+            var folderPaths = Directory
+                .EnumerateDirectories(libraryPath, "*", SearchOption.AllDirectories)
+                .Where(folderPath => !PathUtils.IsSameDirectory(folderPath, sitePackagesPath))
+                .Where(folderPath => !requiresInitPyFiles || File.Exists(Path.Combine(folderPath, "__init__.py")))
+                .Prepend(libraryPath);
+
+            foreach (var filePath in folderPaths.SelectMany(
+                folderPath => Directory.EnumerateFiles(folderPath, "*.py").Where(ModulePath.IsPythonFile))
+            ) {
+                yield return ModulePath.FromFullPath(filePath, libraryPath);
+            }
         }
     }
 }

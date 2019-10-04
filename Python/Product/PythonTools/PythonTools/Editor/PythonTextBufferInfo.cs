@@ -22,10 +22,10 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.PythonTools.Analysis;
+using Microsoft.Python.Parsing;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
-using Microsoft.PythonTools.Parsing;
+using Microsoft.PythonTools.LanguageServerClient;
 using Microsoft.PythonTools.Projects;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.InteractiveWindow;
@@ -37,13 +37,16 @@ using Microsoft.VisualStudio.Utilities;
 using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Editor {
-    sealed class PythonTextBufferInfo {
+    internal sealed class PythonTextBufferInfo {
         private static readonly object PythonTextBufferInfoKey = new { Id = "PythonTextBufferInfo" };
 
-        public static PythonTextBufferInfo ForBuffer(PythonEditorServices services, ITextBuffer buffer) {
+        private static readonly object _testFilename = new { Name = "TestFilename" };
+        private static readonly object _testDocumentUri = new { Name = "DocumentUri" };
+
+        public static PythonTextBufferInfo ForBuffer(IServiceProvider site, ITextBuffer buffer) {
             var bi = (buffer ?? throw new ArgumentNullException(nameof(buffer))).Properties.GetOrCreateSingletonProperty(
                 PythonTextBufferInfoKey,
-                () => new PythonTextBufferInfo(services, buffer)
+                () => new PythonTextBufferInfo(site, buffer)
             );
             if (bi._replace) {
                 bi = bi.ReplaceBufferInfo();
@@ -85,25 +88,28 @@ namespace Microsoft.PythonTools.Editor {
 
         private readonly object _lock = new object();
 
-        private AnalysisEntry _analysisEntry;
-        private TaskCompletionSource<AnalysisEntry> _waitingForEntry;
+        // LSC
+        //private AnalysisEntry _analysisEntry;
+        //private TaskCompletionSource<AnalysisEntry> _waitingForEntry;
 
         private readonly ConcurrentDictionary<object, IPythonTextBufferInfoEventSink> _eventSinks;
 
         private readonly Lazy<string> _filename;
         private readonly Lazy<Uri> _documentUri;
         private readonly TokenCache _tokenCache;
-        private readonly LocationTracker _locationTracker;
+        // LSC
+        //private readonly LocationTracker _locationTracker;
 
         private readonly bool _hasChangedOnBackground;
         private bool _replace;
 
         internal PythonLanguageVersion _defaultLanguageVersion;
 
-        private readonly AnalysisLogWriter _traceLog;
+        // LSC
+        //private readonly AnalysisLogWriter _traceLog;
 
-        private PythonTextBufferInfo(PythonEditorServices services, ITextBuffer buffer) {
-            Services = services;
+        private PythonTextBufferInfo(IServiceProvider site, ITextBuffer buffer) {
+            Site = site;
             Buffer = buffer;
             _eventSinks = new ConcurrentDictionary<object, IPythonTextBufferInfoEventSink>();
             _filename = new Lazy<string>(GetOrCreateFilename);
@@ -125,15 +131,16 @@ namespace Microsoft.PythonTools.Editor {
                 buffer2.ChangedOnBackground += Buffer_TextContentChangedOnBackground;
             }
 
-            _locationTracker = new LocationTracker(Buffer.CurrentSnapshot);
+            // LSC
+            //_locationTracker = new LocationTracker(Buffer.CurrentSnapshot);
 
-            _traceLog = OpenTraceLog();
+            //_traceLog = OpenTraceLog();
         }
 
         private PythonTextBufferInfo ReplaceBufferInfo() {
             TraceWithStack("ReplaceBufferInfo");
 
-            var newInfo = new PythonTextBufferInfo(Services, Buffer);
+            var newInfo = new PythonTextBufferInfo(Site, Buffer);
             foreach (var sink in _eventSinks) {
                 newInfo._eventSinks[sink.Key] = sink.Value;
             }
@@ -148,18 +155,19 @@ namespace Microsoft.PythonTools.Editor {
                 buffer2.ChangedOnBackground -= Buffer_TextContentChangedOnBackground;
             }
 
-            Interlocked.Exchange(ref _waitingForEntry, null)?.TrySetResult(null);
+            // LSC
+            //Interlocked.Exchange(ref _waitingForEntry, null)?.TrySetResult(null);
 
             InvokeSinks(new PythonNewTextBufferInfoEventArgs(PythonTextBufferInfoEvents.NewTextBufferInfo, newInfo));
 
-            _traceLog?.Dispose();
+            //_traceLog?.Dispose();
 
             return newInfo;
         }
 
         private string GetOrCreateFilename() {
             string path;
-            if (Buffer.Properties.TryGetProperty(VsProjectAnalyzer._testFilename, out path)) {
+            if (Buffer.Properties.TryGetProperty(_testFilename, out path)) {
                 return path;
             }
 
@@ -182,7 +190,7 @@ namespace Microsoft.PythonTools.Editor {
         }
 
         private Uri GetOrCreateDocumentUri() {
-            if (Buffer.Properties.TryGetProperty(VsProjectAnalyzer._testDocumentUri, out Uri uri)) {
+            if (Buffer.Properties.TryGetProperty(_testDocumentUri, out Uri uri)) {
                 return uri;
             }
 
@@ -215,27 +223,33 @@ namespace Microsoft.PythonTools.Editor {
         public string Filename => _filename.Value;
         public Uri DocumentUri => _documentUri.Value;
 
-        public PythonEditorServices Services { get; }
+        public IServiceProvider Site { get; }
 
-        public PythonLanguageVersion LanguageVersion => AnalysisEntry?.Analyzer.LanguageVersion ?? _defaultLanguageVersion;
+        public PythonLanguageVersion LanguageVersion {
+            get {
+                var client = PythonLanguageClient.FindLanguageClient(Buffer);
+                return client?.Factory?.Configuration.Version.ToLanguageVersion() ?? _defaultLanguageVersion;
+            }
+        }
 
         #region Events
 
-        private void OnNewAnalysisEntry(AnalysisEntry entry) {
-            Trace("OnNewAnalysisEntry", entry?.Analyzer);
-            ClearTokenCache();
-            InvokeSinks(new PythonTextBufferInfoEventArgs(PythonTextBufferInfoEvents.NewAnalysisEntry, entry));
-        }
+        // LSC
+        //private void OnNewAnalysisEntry(AnalysisEntry entry) {
+        //    Trace("OnNewAnalysisEntry", entry?.Analyzer);
+        //    ClearTokenCache();
+        //    InvokeSinks(new PythonTextBufferInfoEventArgs(PythonTextBufferInfoEvents.NewAnalysisEntry, entry));
+        //}
 
-        private void AnalysisEntry_ParseComplete(object sender, EventArgs e) {
-            Trace("ParseComplete");
-            InvokeSinks(new PythonTextBufferInfoEventArgs(PythonTextBufferInfoEvents.NewParseTree, (AnalysisEntry)sender));
-        }
+        //private void AnalysisEntry_ParseComplete(object sender, EventArgs e) {
+        //    Trace("ParseComplete");
+        //    InvokeSinks(new PythonTextBufferInfoEventArgs(PythonTextBufferInfoEvents.NewParseTree, (AnalysisEntry)sender));
+        //}
 
-        private void AnalysisEntry_AnalysisComplete(object sender, EventArgs e) {
-            Trace("AnalysisComplete");
-            InvokeSinks(new PythonTextBufferInfoEventArgs(PythonTextBufferInfoEvents.NewAnalysis, (AnalysisEntry)sender));
-        }
+        //private void AnalysisEntry_AnalysisComplete(object sender, EventArgs e) {
+        //    Trace("AnalysisComplete");
+        //    InvokeSinks(new PythonTextBufferInfoEventArgs(PythonTextBufferInfoEvents.NewAnalysis, (AnalysisEntry)sender));
+        //}
 
         private void Buffer_TextContentChanged(object sender, TextContentChangedEventArgs e) {
             Trace("TextContentChanged");
@@ -308,14 +322,13 @@ namespace Microsoft.PythonTools.Editor {
 
         public bool RemoveSink(object key) {
             Trace("RemoveSink", key, _eventSinks.ContainsKey(key));
-
             return _eventSinks.TryRemove(key, out _);
         }
 
         private void InvokeSinks(PythonTextBufferInfoEventArgs e) {
             foreach (var sink in _eventSinks.Values) {
                 sink.PythonTextBufferEventAsync(this, e)
-                    .HandleAllExceptions(Services.Site, GetType())
+                    .HandleAllExceptions(Site, GetType())
                     .DoNotWait();
             }
         }
@@ -324,167 +337,168 @@ namespace Microsoft.PythonTools.Editor {
 
         #region Analysis Info
 
-        public AnalysisEntry AnalysisEntry {
-            get {
-                var entry = Volatile.Read(ref _analysisEntry);
-                if (entry != null && (entry.Analyzer == null || !entry.Analyzer.IsActive)) {
-                    // Analyzer has closed, so clear it out from our info.
-                    TraceWithStack("AnalyzerExpired", entry.Analyzer);
-                    var previous = TrySetAnalysisEntry(null, entry);
-                    if (previous != entry) {
-                        // The entry has already been updated, so return the new one
-                        return previous;
-                    }
-                    InvokeSinks(new PythonTextBufferInfoEventArgs(PythonTextBufferInfoEvents.AnalyzerExpired));
-                    return null;
-                }
-                return entry;
-            }
-        }
+        // LSC
+        //public AnalysisEntry AnalysisEntry {
+        //    get {
+        //        var entry = Volatile.Read(ref _analysisEntry);
+        //        if (entry != null && (entry.Analyzer == null || !entry.Analyzer.IsActive)) {
+        //            // Analyzer has closed, so clear it out from our info.
+        //            TraceWithStack("AnalyzerExpired", entry.Analyzer);
+        //            var previous = TrySetAnalysisEntry(null, entry);
+        //            if (previous != entry) {
+        //                // The entry has already been updated, so return the new one
+        //                return previous;
+        //            }
+        //            InvokeSinks(new PythonTextBufferInfoEventArgs(PythonTextBufferInfoEvents.AnalyzerExpired));
+        //            return null;
+        //        }
+        //        return entry;
+        //    }
+        //}
 
-        /// <summary>
-        /// Returns the current analysis entry if it is not null. Otherwise
-        /// waits for a non-null entry to be set and returns it. If cancelled,
-        /// return null.
-        /// </summary>
-        public Task<AnalysisEntry> GetAnalysisEntryAsync(CancellationToken cancellationToken) {
-            var entry = AnalysisEntry;
-            if (entry != null) {
-                Trace("GetAnalysisEntryAsync", "completed synchronously");
-                return Task.FromResult(entry);
-            }
-            TraceWithStack("GetAnalysisEntryAsync", "waiting");
-            var tcs = Volatile.Read(ref _waitingForEntry);
-            if (tcs != null) {
-                return tcs.Task;
-            }
-            tcs = new TaskCompletionSource<AnalysisEntry>();
-            tcs = Interlocked.CompareExchange(ref _waitingForEntry, tcs, null) ?? tcs;
-            entry = AnalysisEntry;
-            if (entry != null) {
-                tcs.TrySetResult(entry);
-            } else if (cancellationToken.CanBeCanceled) {
-                cancellationToken.Register(() => tcs.TrySetResult(null));
-            }
-            return tcs.Task;
-        }
+        ///// <summary>
+        ///// Returns the current analysis entry if it is not null. Otherwise
+        ///// waits for a non-null entry to be set and returns it. If cancelled,
+        ///// return null.
+        ///// </summary>
+        //public Task<AnalysisEntry> GetAnalysisEntryAsync(CancellationToken cancellationToken) {
+        //    var entry = AnalysisEntry;
+        //    if (entry != null) {
+        //        Trace("GetAnalysisEntryAsync", "completed synchronously");
+        //        return Task.FromResult(entry);
+        //    }
+        //    TraceWithStack("GetAnalysisEntryAsync", "waiting");
+        //    var tcs = Volatile.Read(ref _waitingForEntry);
+        //    if (tcs != null) {
+        //        return tcs.Task;
+        //    }
+        //    tcs = new TaskCompletionSource<AnalysisEntry>();
+        //    tcs = Interlocked.CompareExchange(ref _waitingForEntry, tcs, null) ?? tcs;
+        //    entry = AnalysisEntry;
+        //    if (entry != null) {
+        //        tcs.TrySetResult(entry);
+        //    } else if (cancellationToken.CanBeCanceled) {
+        //        cancellationToken.Register(() => tcs.TrySetResult(null));
+        //    }
+        //    return tcs.Task;
+        //}
 
-        /// <summary>
-        /// Changes the analysis entry to <paramref name="entry"/> if the current
-        /// entry matches <paramref name="ifCurrent"/>. Returns the current analysis
-        /// entry, regardless of whether it changed or not.
-        /// </summary>
-        public AnalysisEntry TrySetAnalysisEntry(AnalysisEntry entry, AnalysisEntry ifCurrent) {
-            var previous = Interlocked.CompareExchange(ref _analysisEntry, entry, ifCurrent);
+        ///// <summary>
+        ///// Changes the analysis entry to <paramref name="entry"/> if the current
+        ///// entry matches <paramref name="ifCurrent"/>. Returns the current analysis
+        ///// entry, regardless of whether it changed or not.
+        ///// </summary>
+        //public AnalysisEntry TrySetAnalysisEntry(AnalysisEntry entry, AnalysisEntry ifCurrent) {
+        //    var previous = Interlocked.CompareExchange(ref _analysisEntry, entry, ifCurrent);
 
-            if (previous != ifCurrent) {
-                TraceWithStack("FailedToSetAnalysisEntry", previous?.Analyzer, entry?.Analyzer, ifCurrent?.Analyzer);
-                return previous;
-            }
+        //    if (previous != ifCurrent) {
+        //        TraceWithStack("FailedToSetAnalysisEntry", previous?.Analyzer, entry?.Analyzer, ifCurrent?.Analyzer);
+        //        return previous;
+        //    }
 
-            if (previous != null) {
-                previous.AnalysisComplete -= AnalysisEntry_AnalysisComplete;
-                previous.ParseComplete -= AnalysisEntry_ParseComplete;
-                previous.Analyzer.BufferDetached(previous, Buffer);
-            }
-            if (entry != null) {
-                entry.AnalysisComplete += AnalysisEntry_AnalysisComplete;
-                entry.ParseComplete += AnalysisEntry_ParseComplete;
+        //    if (previous != null) {
+        //        previous.AnalysisComplete -= AnalysisEntry_AnalysisComplete;
+        //        previous.ParseComplete -= AnalysisEntry_ParseComplete;
+        //        previous.Analyzer.BufferDetached(previous, Buffer);
+        //    }
+        //    if (entry != null) {
+        //        entry.AnalysisComplete += AnalysisEntry_AnalysisComplete;
+        //        entry.ParseComplete += AnalysisEntry_ParseComplete;
 
-                Interlocked.Exchange(ref _waitingForEntry, null)?.TrySetResult(entry);
-            }
+        //        Interlocked.Exchange(ref _waitingForEntry, null)?.TrySetResult(entry);
+        //    }
 
-            TraceWithStack("TrySetAnalysisEntry", entry?.Analyzer, ifCurrent?.Analyzer);
-            OnNewAnalysisEntry(entry);
+        //    TraceWithStack("TrySetAnalysisEntry", entry?.Analyzer, ifCurrent?.Analyzer);
+        //    OnNewAnalysisEntry(entry);
 
-            return entry;
-        }
+        //    return entry;
+        //}
 
-        public void ClearAnalysisEntry() {
-            var previous = Interlocked.Exchange(ref _analysisEntry, null);
-            TraceWithStack("ClearAnalysisEntry", previous?.Analyzer);
+        //public void ClearAnalysisEntry() {
+        //    var previous = Interlocked.Exchange(ref _analysisEntry, null);
+        //    TraceWithStack("ClearAnalysisEntry", previous?.Analyzer);
 
-            if (previous != null) {
-                previous.AnalysisComplete -= AnalysisEntry_AnalysisComplete;
-                previous.ParseComplete -= AnalysisEntry_ParseComplete;
-                previous.Analyzer.BufferDetached(previous, Buffer);
+        //    if (previous != null) {
+        //        previous.AnalysisComplete -= AnalysisEntry_AnalysisComplete;
+        //        previous.ParseComplete -= AnalysisEntry_ParseComplete;
+        //        previous.Analyzer.BufferDetached(previous, Buffer);
 
-                OnNewAnalysisEntry(null);
-            }
-        }
+        //        OnNewAnalysisEntry(null);
+        //    }
+        //}
 
-        private readonly SortedDictionary<int, ITextSnapshot> _expectParse = new SortedDictionary<int, ITextSnapshot>();
-        private readonly SortedDictionary<int, ITextSnapshot> _expectAnalysis = new SortedDictionary<int, ITextSnapshot>();
-        private ITextSnapshot _lastSentSnapshot;
+        //private readonly SortedDictionary<int, ITextSnapshot> _expectParse = new SortedDictionary<int, ITextSnapshot>();
+        //private readonly SortedDictionary<int, ITextSnapshot> _expectAnalysis = new SortedDictionary<int, ITextSnapshot>();
+        //private ITextSnapshot _lastSentSnapshot;
 
-        public ITextSnapshot LastAnalysisSnapshot { get; private set; }
+        //public ITextSnapshot LastAnalysisSnapshot { get; private set; }
 
-        public ITextSnapshot LastSentSnapshot {
-            get {
-                lock (_lock) {
-                    return _lastSentSnapshot;
-                }
-            }
-        }
+        //public ITextSnapshot LastSentSnapshot {
+        //    get {
+        //        lock (_lock) {
+        //            return _lastSentSnapshot;
+        //        }
+        //    }
+        //}
 
-        public void ClearSentSnapshot() {
-            lock (_lock) {
-                _lastSentSnapshot = null;
-                _expectAnalysis.Clear();
-                _expectParse.Clear();
-            }
-        }
+        //public void ClearSentSnapshot() {
+        //    lock (_lock) {
+        //        _lastSentSnapshot = null;
+        //        _expectAnalysis.Clear();
+        //        _expectParse.Clear();
+        //    }
+        //}
 
-        public ITextSnapshot AddSentSnapshot(ITextSnapshot sent) {
-            lock (_lock) {
-                var prevSent = _lastSentSnapshot;
-                Trace("AddSentSnapshot", prevSent?.Version?.VersionNumber, sent?.Version?.VersionNumber);
-                if (prevSent != null && prevSent.Version.VersionNumber > sent.Version.VersionNumber) {
-                    return prevSent;
-                }
-                _lastSentSnapshot = sent;
-                _expectAnalysis[sent.Version.VersionNumber] = sent;
-                _expectParse[sent.Version.VersionNumber] = sent;
-                return prevSent;
-            }
-        }
+        //public ITextSnapshot AddSentSnapshot(ITextSnapshot sent) {
+        //    lock (_lock) {
+        //        var prevSent = _lastSentSnapshot;
+        //        Trace("AddSentSnapshot", prevSent?.Version?.VersionNumber, sent?.Version?.VersionNumber);
+        //        if (prevSent != null && prevSent.Version.VersionNumber > sent.Version.VersionNumber) {
+        //            return prevSent;
+        //        }
+        //        _lastSentSnapshot = sent;
+        //        _expectAnalysis[sent.Version.VersionNumber] = sent;
+        //        _expectParse[sent.Version.VersionNumber] = sent;
+        //        return prevSent;
+        //    }
+        //}
 
-        public bool UpdateLastReceivedParse(int version) {
-            lock (_lock) {
-                Trace("UpdateLastReceivedParse", version, _expectParse.ContainsKey(version) ? "expected" : "unexpected");
-                var toRemove = _expectParse.Keys.TakeWhile(k => k < version).ToArray();
-                foreach (var i in toRemove) {
-                    Debug.WriteLine($"Skipped parse for version {i}");
-                    Trace("SkipParse", i);
-                    _expectParse.Remove(i);
-                }
-                return _expectParse.Remove(version);
-            }
-        }
+        //public bool UpdateLastReceivedParse(int version) {
+        //    lock (_lock) {
+        //        Trace("UpdateLastReceivedParse", version, _expectParse.ContainsKey(version) ? "expected" : "unexpected");
+        //        var toRemove = _expectParse.Keys.TakeWhile(k => k < version).ToArray();
+        //        foreach (var i in toRemove) {
+        //            Debug.WriteLine($"Skipped parse for version {i}");
+        //            Trace("SkipParse", i);
+        //            _expectParse.Remove(i);
+        //        }
+        //        return _expectParse.Remove(version);
+        //    }
+        //}
 
-        public bool UpdateLastReceivedAnalysis(int version) {
-            lock (_lock) {
-                Trace("UpdateLastReceivedAnalysis", version, _expectAnalysis.ContainsKey(version) ? "expected" : "unexpected");
+        //public bool UpdateLastReceivedAnalysis(int version) {
+        //    lock (_lock) {
+        //        Trace("UpdateLastReceivedAnalysis", version, _expectAnalysis.ContainsKey(version) ? "expected" : "unexpected");
 
-                var toRemove = _expectAnalysis.Keys.TakeWhile(k => k < version).ToArray();
-                foreach (var i in toRemove) {
-                    Debug.WriteLine($"Skipped analysis for version {i}");
-                    Trace("SkipAnalysis", i);
-                    _expectAnalysis.Remove(i);
-                }
-                if (_expectAnalysis.TryGetValue(version, out var snapshot)) {
-                    _expectAnalysis.Remove(version);
-                    if (snapshot.Version.VersionNumber > (LastAnalysisSnapshot?.Version.VersionNumber ?? -1)) {
-                        LastAnalysisSnapshot = snapshot;
-                        _locationTracker.UpdateBaseSnapshot(snapshot);
-                        return true;
-                    }
-                }
-                return false;
-            }
-        }
+        //        var toRemove = _expectAnalysis.Keys.TakeWhile(k => k < version).ToArray();
+        //        foreach (var i in toRemove) {
+        //            Debug.WriteLine($"Skipped analysis for version {i}");
+        //            Trace("SkipAnalysis", i);
+        //            _expectAnalysis.Remove(i);
+        //        }
+        //        if (_expectAnalysis.TryGetValue(version, out var snapshot)) {
+        //            _expectAnalysis.Remove(version);
+        //            if (snapshot.Version.VersionNumber > (LastAnalysisSnapshot?.Version.VersionNumber ?? -1)) {
+        //                LastAnalysisSnapshot = snapshot;
+        //                _locationTracker.UpdateBaseSnapshot(snapshot);
+        //                return true;
+        //            }
+        //        }
+        //        return false;
+        //    }
+        //}
 
-        public LocationTracker LocationTracker => _locationTracker;
+        //public LocationTracker LocationTracker => _locationTracker;
 
         /// <summary>
         /// Returns the first token containing or adjacent to the specified point.
@@ -581,27 +595,28 @@ namespace Microsoft.PythonTools.Editor {
             }
         }
 
-        public bool DoNotParse {
-            get => Buffer.Properties.ContainsProperty(BufferParser.DoNotParse);
-            set {
-                if (value) {
-                    Buffer.Properties[BufferParser.DoNotParse] = BufferParser.DoNotParse;
-                } else {
-                    Buffer.Properties.RemoveProperty(BufferParser.DoNotParse);
-                }
-            }
-        }
+        // LSC
+        //public bool DoNotParse {
+        //    get => Buffer.Properties.ContainsProperty(BufferParser.DoNotParse);
+        //    set {
+        //        if (value) {
+        //            Buffer.Properties[BufferParser.DoNotParse] = BufferParser.DoNotParse;
+        //        } else {
+        //            Buffer.Properties.RemoveProperty(BufferParser.DoNotParse);
+        //        }
+        //    }
+        //}
 
-        public bool ParseImmediately {
-            get => Buffer.Properties.ContainsProperty(BufferParser.ParseImmediately);
-            set {
-                if (value) {
-                    Buffer.Properties[BufferParser.ParseImmediately] = BufferParser.ParseImmediately;
-                } else {
-                    Buffer.Properties.RemoveProperty(BufferParser.ParseImmediately);
-                }
-            }
-        }
+        //public bool ParseImmediately {
+        //    get => Buffer.Properties.ContainsProperty(BufferParser.ParseImmediately);
+        //    set {
+        //        if (value) {
+        //            Buffer.Properties[BufferParser.ParseImmediately] = BufferParser.ParseImmediately;
+        //        } else {
+        //            Buffer.Properties.RemoveProperty(BufferParser.ParseImmediately);
+        //        }
+        //    }
+        //}
 
         #endregion
 
@@ -631,46 +646,47 @@ namespace Microsoft.PythonTools.Editor {
 
         #region Diagnostic Tracing
 
-        private static readonly Lazy<bool> _shouldUseTraceLog = new Lazy<bool>(GetShouldUseTraceLog);
-        private static bool GetShouldUseTraceLog() {
-            using (var root = Win32.Registry.CurrentUser.OpenSubKey(PythonCoreConstants.LoggingRegistrySubkey, false)) {
-                var value = root?.GetValue("BufferInfo", null);
-                int? asInt = value as int?;
-                if (asInt.HasValue) {
-                    if (asInt.GetValueOrDefault() == 0) {
-                        // REG_DWORD but 0 means no logging
-                        return false;
-                    }
-                } else if (string.IsNullOrEmpty(value as string)) {
-                    // Empty string or no value means no logging
-                    return false;
-                }
-            }
-            return true;
-        }
+        // LSC
+        //private static readonly Lazy<bool> _shouldUseTraceLog = new Lazy<bool>(GetShouldUseTraceLog);
+        //private static bool GetShouldUseTraceLog() {
+        //    using (var root = Win32.Registry.CurrentUser.OpenSubKey(PythonCoreConstants.LoggingRegistrySubkey, false)) {
+        //        var value = root?.GetValue("BufferInfo", null);
+        //        int? asInt = value as int?;
+        //        if (asInt.HasValue) {
+        //            if (asInt.GetValueOrDefault() == 0) {
+        //                // REG_DWORD but 0 means no logging
+        //                return false;
+        //            }
+        //        } else if (string.IsNullOrEmpty(value as string)) {
+        //            // Empty string or no value means no logging
+        //            return false;
+        //        }
+        //    }
+        //    return true;
+        //}
 
-        private AnalysisLogWriter OpenTraceLog() {
-            if (!_shouldUseTraceLog.Value) {
-                return null;
-            }
-            return new AnalysisLogWriter(
-                PathUtils.GetAvailableFilename(Path.GetTempPath(), "PythonTools_Buffer_{0}_{1:yyyyMMddHHmmss}".FormatInvariant(PathUtils.GetFileOrDirectoryName(_filename.Value), DateTime.Now), ".log"),
-                false,
-                false,
-                cacheSize: 1
-            );
-        }
+        //private AnalysisLogWriter OpenTraceLog() {
+        //    if (!_shouldUseTraceLog.Value) {
+        //        return null;
+        //    }
+        //    return new AnalysisLogWriter(
+        //        PathUtils.GetAvailableFilename(Path.GetTempPath(), "PythonTools_Buffer_{0}_{1:yyyyMMddHHmmss}".FormatInvariant(PathUtils.GetFileOrDirectoryName(_filename.Value), DateTime.Now), ".log"),
+        //        false,
+        //        false,
+        //        cacheSize: 1
+        //    );
+        //}
 
-        internal void Trace(string eventName, params object[] args) {
-            _traceLog?.Log(eventName, args);
+        private void Trace(string eventName, params object[] args) {
+            //_traceLog?.Log(eventName, args);
         }
 
         private void TraceWithStack(string eventName, params object[] args) {
-            if (_traceLog != null) {
-                var stack = new StackTrace(1, true).ToString().Replace("\r\n", "").Replace("\n", "");
-                _traceLog.Log(eventName, args.Concat(Enumerable.Repeat(stack, 1)).ToArray());
-                _traceLog.Flush();
-            }
+            //if (_traceLog != null) {
+            //    var stack = new StackTrace(1, true).ToString().Replace("\r\n", "").Replace("\n", "");
+            //    _traceLog.Log(eventName, args.Concat(Enumerable.Repeat(stack, 1)).ToArray());
+            //    _traceLog.Flush();
+            //}
         }
 
         #endregion
@@ -679,165 +695,166 @@ namespace Microsoft.PythonTools.Editor {
     static class PythonTextBufferInfoExtensions {
         public static PythonTextBufferInfo TryGetInfo(this ITextBuffer buffer) => PythonTextBufferInfo.TryGetForBuffer(buffer);
 
-        public static AnalysisEntry TryGetAnalysisEntry(this ITextBuffer buffer) => PythonTextBufferInfo.TryGetForBuffer(buffer)?.AnalysisEntry;
+        // LSC
+        //public static AnalysisEntry TryGetAnalysisEntry(this ITextBuffer buffer) => PythonTextBufferInfo.TryGetForBuffer(buffer)?.AnalysisEntry;
 
-        public static Task<AnalysisEntry> GetAnalysisEntryAsync(this ITextBuffer buffer, PythonEditorServices services = null, CancellationToken cancellationToken = default(CancellationToken)) {
-            var bi = services == null ? PythonTextBufferInfo.TryGetForBuffer(buffer) : services.GetBufferInfo(buffer);
-            if (bi != null) {
-                return bi.GetAnalysisEntryAsync(cancellationToken);
-            }
-            return Task.FromResult<AnalysisEntry>(null);
-        }
+        //public static Task<AnalysisEntry> GetAnalysisEntryAsync(this ITextBuffer buffer, PythonEditorServices services = null, CancellationToken cancellationToken = default(CancellationToken)) {
+        //    var bi = services == null ? PythonTextBufferInfo.TryGetForBuffer(buffer) : services.GetBufferInfo(buffer);
+        //    if (bi != null) {
+        //        return bi.GetAnalysisEntryAsync(cancellationToken);
+        //    }
+        //    return Task.FromResult<AnalysisEntry>(null);
+        //}
 
-        public static AnalysisEntry TryGetAnalysisEntry(this ITextView view, IServiceProvider site) {
-            var entry = view.TextBuffer.TryGetAnalysisEntry();
-            if (entry != null) {
-                return entry;
-            }
+        //public static AnalysisEntry TryGetAnalysisEntry(this ITextView view, IServiceProvider site) {
+        //    var entry = view.TextBuffer.TryGetAnalysisEntry();
+        //    if (entry != null) {
+        //        return entry;
+        //    }
 
-            var diffViewer = site.GetComponentModel().GetService<IWpfDifferenceViewerFactoryService>();
-            var viewer = diffViewer?.TryGetViewerForTextView(view);
-            if (viewer != null) {
-                entry = viewer.DifferenceBuffer.RightBuffer.TryGetAnalysisEntry() ??
-                    viewer.DifferenceBuffer.LeftBuffer.TryGetAnalysisEntry();
-                if (entry != null) {
-                    return entry;
-                }
-            }
+        //    var diffViewer = site.GetComponentModel().GetService<IWpfDifferenceViewerFactoryService>();
+        //    var viewer = diffViewer?.TryGetViewerForTextView(view);
+        //    if (viewer != null) {
+        //        entry = viewer.DifferenceBuffer.RightBuffer.TryGetAnalysisEntry() ??
+        //            viewer.DifferenceBuffer.LeftBuffer.TryGetAnalysisEntry();
+        //        if (entry != null) {
+        //            return entry;
+        //        }
+        //    }
 
-            return null;
-        }
+        //    return null;
+        //}
 
-        public static async Task<ProjectAnalyzer> FindAnalyzerAsync(this IServiceProvider site, ITextView view) {
-            ProjectAnalyzer analyzer;
+        //public static async Task<ProjectAnalyzer> FindAnalyzerAsync(this IServiceProvider site, ITextView view) {
+        //    ProjectAnalyzer analyzer;
 
-            var bi = view.TextBuffer.TryGetInfo();
-            if (bi != null && (analyzer = await FindAnalyzerAsync(site, bi)) != null) {
-                return analyzer;
-            }
+        //    var bi = view.TextBuffer.TryGetInfo();
+        //    if (bi != null && (analyzer = await FindAnalyzerAsync(site, bi)) != null) {
+        //        return analyzer;
+        //    }
 
-            site.MustBeCalledFromUIThread();
-            var diffViewer = site.GetComponentModel().GetService<IWpfDifferenceViewerFactoryService>();
-            var viewer = diffViewer?.TryGetViewerForTextView(view);
-            if (viewer != null) {
-                bi = viewer.DifferenceBuffer.RightBuffer.TryGetInfo();
-                if (bi != null && (analyzer = await FindAnalyzerAsync(site, bi)) != null) {
-                    return analyzer;
-                }
-                bi = viewer.DifferenceBuffer.LeftBuffer.TryGetInfo();
-                if (bi != null && (analyzer = await FindAnalyzerAsync(site, bi)) != null) {
-                    return analyzer;
-                }
-            }
+        //    site.MustBeCalledFromUIThread();
+        //    var diffViewer = site.GetComponentModel().GetService<IWpfDifferenceViewerFactoryService>();
+        //    var viewer = diffViewer?.TryGetViewerForTextView(view);
+        //    if (viewer != null) {
+        //        bi = viewer.DifferenceBuffer.RightBuffer.TryGetInfo();
+        //        if (bi != null && (analyzer = await FindAnalyzerAsync(site, bi)) != null) {
+        //            return analyzer;
+        //        }
+        //        bi = viewer.DifferenceBuffer.LeftBuffer.TryGetInfo();
+        //        if (bi != null && (analyzer = await FindAnalyzerAsync(site, bi)) != null) {
+        //            return analyzer;
+        //        }
+        //    }
 
-            return null;
-        }
+        //    return null;
+        //}
 
-        public static async Task<ProjectAnalyzer> FindAnalyzerAsync(this IServiceProvider site, PythonTextBufferInfo buffer) {
-            ProjectAnalyzer analyzer;
+        //public static async Task<ProjectAnalyzer> FindAnalyzerAsync(this IServiceProvider site, PythonTextBufferInfo buffer) {
+        //    ProjectAnalyzer analyzer;
 
-            // If we have an analyzer in Properties, we will use that
-            // NOTE: This should only be used for tests.
-            if (buffer.Buffer.Properties.TryGetProperty(VsProjectAnalyzer._testAnalyzer, out analyzer)) {
-                return analyzer;
-            }
+        //    // If we have an analyzer in Properties, we will use that
+        //    // NOTE: This should only be used for tests.
+        //    if (buffer.Buffer.Properties.TryGetProperty(VsProjectAnalyzer._testAnalyzer, out analyzer)) {
+        //        return analyzer;
+        //    }
 
-            // If we have a REPL evaluator we'll use its analyzer
-            if (buffer.Buffer.GetInteractiveWindow()?.Evaluator is IPythonInteractiveIntellisense evaluator) {
-                return await evaluator.GetAnalyzerAsync();
-            }
+        //    // If we have a REPL evaluator we'll use its analyzer
+        //    if (buffer.Buffer.GetInteractiveWindow()?.Evaluator is IPythonInteractiveIntellisense evaluator) {
+        //        return await evaluator.GetAnalyzerAsync();
+        //    }
 
-            // If the file is associated with a project, use its analyzer
-            analyzer = await site.GetUIThread().InvokeTask(() => {
-                var p = site.GetProjectFromFile(buffer.Filename);
-                if (p != null) {
-                    return p.GetAnalyzerAsync();
-                }
-                return Task.FromResult<VsProjectAnalyzer>(null);
-            });
-            if (analyzer != null) {
-                return analyzer;
-            }
+        //    // If the file is associated with a project, use its analyzer
+        //    analyzer = await site.GetUIThread().InvokeTask(() => {
+        //        var p = site.GetProjectFromFile(buffer.Filename);
+        //        if (p != null) {
+        //            return p.GetAnalyzerAsync();
+        //        }
+        //        return Task.FromResult<VsProjectAnalyzer>(null);
+        //    });
+        //    if (analyzer != null) {
+        //        return analyzer;
+        //    }
 
-            var workspaceAnalysis = site.GetComponentModel().GetService<WorkspaceAnalysis>();
-            analyzer = await workspaceAnalysis.GetAnalyzerAsync();
-            if (analyzer != null) {
-                return analyzer;
-            }
+        //    var workspaceAnalysis = site.GetComponentModel().GetService<WorkspaceAnalysis>();
+        //    analyzer = await workspaceAnalysis.GetAnalyzerAsync();
+        //    if (analyzer != null) {
+        //        return analyzer;
+        //    }
 
-            return null;
-        }
+        //    return null;
+        //}
 
-        public static async Task<ProjectAnalyzer> FindAnalyzerAsync(this IServiceProvider site, string filename) {
-            return (await FindAllAnalyzersForFile(site, filename, true)).FirstOrDefault() ??
-                (await site.GetPythonToolsService().GetSharedAnalyzerAsync());
-        }
+        //public static async Task<ProjectAnalyzer> FindAnalyzerAsync(this IServiceProvider site, string filename) {
+        //    return (await FindAllAnalyzersForFile(site, filename, true)).FirstOrDefault() ??
+        //        (await site.GetPythonToolsService().GetSharedAnalyzerAsync());
+        //}
 
-        public static Task<IReadOnlyList<ProjectAnalyzer>> FindAllAnalyzersForFile(this IServiceProvider site, string filename) {
-            return FindAllAnalyzersForFile(site, filename, false);
-        }
+        //public static Task<IReadOnlyList<ProjectAnalyzer>> FindAllAnalyzersForFile(this IServiceProvider site, string filename) {
+        //    return FindAllAnalyzersForFile(site, filename, false);
+        //}
 
-        private static async Task<IReadOnlyList<ProjectAnalyzer>> FindAllAnalyzersForFile(this IServiceProvider site, string filename, bool firstOnly) {
-            if (string.IsNullOrEmpty(filename)) {
-                throw new ArgumentNullException(nameof(filename));
-            }
+        //private static async Task<IReadOnlyList<ProjectAnalyzer>> FindAllAnalyzersForFile(this IServiceProvider site, string filename, bool firstOnly) {
+        //    if (string.IsNullOrEmpty(filename)) {
+        //        throw new ArgumentNullException(nameof(filename));
+        //    }
 
-            var found = new HashSet<ProjectAnalyzer>();
+        //    var found = new HashSet<ProjectAnalyzer>();
 
-            // If we have an open document, return that
-            var buffer = site.GetTextBufferFromOpenFile(filename)?.TryGetInfo();
-            if (buffer != null) {
-                var analyzer = await site.FindAnalyzerAsync(buffer);
-                if (analyzer != null) {
-                    found.Add(analyzer);
-                    if (firstOnly) {
-                        return found.ToArray();
-                    }
-                }
-            }
+        //    // If we have an open document, return that
+        //    var buffer = site.GetTextBufferFromOpenFile(filename)?.TryGetInfo();
+        //    if (buffer != null) {
+        //        var analyzer = await site.FindAnalyzerAsync(buffer);
+        //        if (analyzer != null) {
+        //            found.Add(analyzer);
+        //            if (firstOnly) {
+        //                return found.ToArray();
+        //            }
+        //        }
+        //    }
 
-            var workspaceAnalysis = site.GetComponentModel().GetService<WorkspaceAnalysis>();
-            var workspaceAnalyzer = workspaceAnalysis.TryGetWorkspaceAnalyzer();
-            if (workspaceAnalyzer != null) {
-                found.Add(workspaceAnalyzer);
-                if (firstOnly) {
-                    return found.ToArray();
-                }
-            }
+        //    var workspaceAnalysis = site.GetComponentModel().GetService<WorkspaceAnalysis>();
+        //    var workspaceAnalyzer = workspaceAnalysis.TryGetWorkspaceAnalyzer();
+        //    if (workspaceAnalyzer != null) {
+        //        found.Add(workspaceAnalyzer);
+        //        if (firstOnly) {
+        //            return found.ToArray();
+        //        }
+        //    }
 
-            // Yield all loaded projects containing the file
-            var sln = (IVsSolution)site.GetService(typeof(SVsSolution));
-            if (sln != null) {
-                if (Path.IsPathRooted(filename)) {
-                    foreach (var project in sln.EnumerateLoadedPythonProjects()) {
-                        if (project.FindNodeByFullPath(filename) != null) {
-                            var analyzer = project.TryGetAnalyzer();
-                            if (analyzer != null) {
-                                found.Add(analyzer);
-                                if (firstOnly) {
-                                    return found.ToArray();
-                                }
-                            }
-                        }
-                    }
-                } else {
-                    var withSlash = "\\" + filename;
-                    foreach (var project in sln.EnumerateLoadedPythonProjects()) {
-                        if (project.AllVisibleDescendants.Any(n => n.Url.Equals(filename, StringComparison.OrdinalIgnoreCase) ||
-                            n.Url.EndsWithOrdinal(withSlash, ignoreCase: true))) {
-                            var analyzer = project.TryGetAnalyzer();
-                            if (analyzer != null) {
-                                found.Add(analyzer);
-                                if (firstOnly) {
-                                    return found.ToArray();
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+        //    // Yield all loaded projects containing the file
+        //    var sln = (IVsSolution)site.GetService(typeof(SVsSolution));
+        //    if (sln != null) {
+        //        if (Path.IsPathRooted(filename)) {
+        //            foreach (var project in sln.EnumerateLoadedPythonProjects()) {
+        //                if (project.FindNodeByFullPath(filename) != null) {
+        //                    var analyzer = project.TryGetAnalyzer();
+        //                    if (analyzer != null) {
+        //                        found.Add(analyzer);
+        //                        if (firstOnly) {
+        //                            return found.ToArray();
+        //                        }
+        //                    }
+        //                }
+        //            }
+        //        } else {
+        //            var withSlash = "\\" + filename;
+        //            foreach (var project in sln.EnumerateLoadedPythonProjects()) {
+        //                if (project.AllVisibleDescendants.Any(n => n.Url.Equals(filename, StringComparison.OrdinalIgnoreCase) ||
+        //                    n.Url.EndsWithOrdinal(withSlash, ignoreCase: true))) {
+        //                    var analyzer = project.TryGetAnalyzer();
+        //                    if (analyzer != null) {
+        //                        found.Add(analyzer);
+        //                        if (firstOnly) {
+        //                            return found.ToArray();
+        //                        }
+        //                    }
+        //                }
+        //            }
+        //        }
+        //    }
 
-            return found.ToArray();
-        }
+        //    return found.ToArray();
+        //}
     }
 }

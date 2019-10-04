@@ -16,13 +16,12 @@
 
 using System.Linq;
 using Microsoft.PythonTools.Django.TemplateParsing;
-using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio.Text;
 using Microsoft.WebTools.Languages.Html.Editor.Document;
 
 namespace Microsoft.PythonTools.Django.Intellisense {
     internal class ProjectBlockCompletionContext : ProjectBlockCompletionContextBase {
-        public ProjectBlockCompletionContext(VsProjectAnalyzer analyzer, ITextBuffer buffer)
+        public ProjectBlockCompletionContext(IDjangoProjectAnalyzer analyzer, ITextBuffer buffer)
             : base(analyzer, buffer.GetFileName()) {
 
             var doc = HtmlEditorDocument.TryFromTextBuffer(buffer);

@@ -27,6 +27,9 @@
     <Compile Include="AddImportTests.cs" />
     <Compile Include="BasicProjectTests.cs" />
     <Compile Include="BuildTasksUITests.cs" />
+    <Compile Include="BraceCompletionUITests.cs" />
+    <Compile Include="SmartIndentUITests.cs" />
+    <Compile Include="SignatureHelpUITests.cs" />
     <Compile Include="EditorTests.cs" />
     <Compile Include="InfoBarUITests.cs" />
     <Compile Include="ErrorListTaskListTests.cs" />

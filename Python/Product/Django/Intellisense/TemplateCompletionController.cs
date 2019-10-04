@@ -14,6 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
@@ -32,12 +33,12 @@ namespace Microsoft.PythonTools.Django.Intellisense {
             IAsyncQuickInfoBroker quickInfoBroker,
             ISignatureHelpBroker signatureBroker) :
             base(textView, subjectBuffers, completionBroker, quickInfoBroker, signatureBroker) {
-            _pyService = pyService;
+            _pyService = pyService ?? throw new ArgumentNullException(nameof(pyService));
         }
 
         public override bool IsTriggerChar(char typedCharacter) {
             const string triggerChars = " |.";
-            return _pyService.AdvancedOptions.AutoListMembers && !HasActiveCompletionSession && triggerChars.IndexOf(typedCharacter) >= 0;
+            return !HasActiveCompletionSession && triggerChars.IndexOf(typedCharacter) >= 0;
         }
 
         public override bool IsCommitChar(char typedCharacter) {
@@ -49,7 +50,7 @@ namespace Microsoft.PythonTools.Django.Intellisense {
                 return true;
             }
 
-            return _pyService.AdvancedOptions.CompletionCommittedBy.IndexOf(typedCharacter) > 0;
+            return false;
         }
 
         protected override bool IsRetriggerChar(ICompletionSession session, char typedCharacter) {

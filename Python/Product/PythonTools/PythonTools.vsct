@@ -1168,7 +1168,7 @@ permissions and limitations under the License.
     <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidDebugReplWindow" mod1="Alt Shift" key1="I" editor="guidVSStd97"/>
     <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidSendToRepl" key1="E" mod1="Control" key2="E" editor="guidVSStd97"/>
     <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidSendToRepl" key1="E" mod1="Control" key2="E" mod2="Control" editor="guidVSStd97"/>
-    <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidSendToRepl" key1="VK_RETURN" mod1="Control" editor="guidEditorFactory"/>
+    <!--<KeyBinding guid="guidPythonToolsCmdSet" id="cmdidSendToRepl" key1="VK_RETURN" mod1="Control" editor="guidEditorFactory"/>-->
     <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidFillParagraph" key1="E" mod1="Control" key2="P" mod2="Control" editor="guidVSStd97"/>
     <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidReplWindow" key1="I" mod1="Alt" editor="guidVSStd97"/>
     <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidInterpreterList" key1="K" mod1="Control" key2="VK_OEM_3" editor="guidVSStd97"/>
@@ -1186,7 +1186,7 @@ permissions and limitations under the License.
     <!-- This is the package guid. -->
     <GuidSymbol name="guidPythonToolsPkg" value="{6dbd7c1e-1f1b-496d-ac7c-c55dae66c783}" />
     <GuidSymbol name="guidReplWindow" value="{7EE13E74-F6FD-4C7E-9896-1B89D62A513E}" />
-    <GuidSymbol name="guidEditorFactory" value="{888888c4-36f9-4453-90aa-29fa4d2e5706}" />
+    <!--<GuidSymbol name="guidEditorFactory" value="{888888c4-36f9-4453-90aa-29fa4d2e5706}" />-->
     <GuidSymbol name="guidPythonToolbarUIContext" value="{2F07BD4C-A28C-405B-923D-09EBA2946E67}" />
 
     <!-- This is our command set GUID and associated commands -->

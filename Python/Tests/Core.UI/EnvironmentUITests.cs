@@ -20,10 +20,10 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
+using Microsoft.Python.Parsing;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools;
@@ -247,12 +247,6 @@ namespace PythonToolsUITests {
         public void DeleteVEnv(PythonVisualStudioApp app) {
             using (var procs = new ProcessScope("Microsoft.PythonTools.Analyzer"))
             using (var dis = InitPython3(app)) {
-                var options = app.GetService<PythonToolsService>().GeneralOptions;
-                var oldAutoAnalyze = options.AutoAnalyzeStandardLibrary;
-                app.OnDispose(() => { options.AutoAnalyzeStandardLibrary = oldAutoAnalyze; options.Save(); });
-                options.AutoAnalyzeStandardLibrary = false;
-                options.Save();
-
                 var project = CreateTemporaryProject(app);
 
                 TreeNode env = app.CreateProjectVirtualEnvironment(project, out string envName, out string envPath);

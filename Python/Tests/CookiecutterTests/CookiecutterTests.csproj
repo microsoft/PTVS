@@ -59,9 +59,6 @@
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
     <Reference Include="System.Web" />
-    <Reference Include="Microsoft.VisualStudio.Web.HTML">
-      <HintPath>$(DevEnvDir)Microsoft.VisualStudio.Web.Html.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ContextItemViewModelComparer.cs" />

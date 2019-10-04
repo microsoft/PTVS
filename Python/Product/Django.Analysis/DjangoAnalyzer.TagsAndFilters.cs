@@ -24,7 +24,8 @@ namespace Microsoft.PythonTools.Django.Analysis {
     partial class DjangoAnalyzer {
         #region Known Tags / Filters
 
-        private static Dictionary<string, string> MakeKnownFiltersTable() {
+        // LSC: temporary made public
+        public static Dictionary<string, string> MakeKnownFiltersTable() {
             return new Dictionary<string, string>() {
                 { "dictsort", @"Takes a list of dicts, returns that list sorted by the property given in the argument." },
                 { "dictsortreversed", @"Takes a list of dicts, returns that list sorted in reverse order by the property given in the argument." },
@@ -274,7 +275,8 @@ they will be silently ignored.
             };
         }
 
-        private static Dictionary<string, string> MakeKnownTagsTable() {
+        // LSC: temporary made public
+        public static Dictionary<string, string> MakeKnownTagsTable() {
             return new Dictionary<string, string>() { 
                 {"elif", "adds an additional condition to an if block"},
                 {"endfor", "ends a for block"},

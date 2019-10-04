@@ -18,9 +18,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using Microsoft.PythonTools.Django.Analysis;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio.Language.Intellisense;
 
 namespace Microsoft.PythonTools.Django.TemplateParsing {
@@ -275,7 +274,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
             return keys.Select(kv => new CompletionInfo(kv.Key, kv.Value.ToGlyphGroup(), kv.Key));
         }
 
-        internal static IEnumerable<CompletionInfo> ToCompletionInfo(Dictionary<string, TagInfo> dictionary, StandardGlyphGroup glyph) {
+        internal static IEnumerable<CompletionInfo> ToCompletionInfo(Dictionary<string, string> dictionary, StandardGlyphGroup glyph) {
             if (dictionary == null) {
                 return Enumerable.Empty<CompletionInfo>();
             }
@@ -283,7 +282,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                 key.Key, 
                 glyph, 
                 key.Key, 
-                key.Value.Documentation
+                key.Value
             ));
         }
 

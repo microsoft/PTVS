@@ -1,7 +1,3 @@
-# the quick brown fox jumped over the slow lazy dog the quick brown fox jumped over the slow lazy dog
-def f():
+def f ( one, two, three, four, five, six, seven, eight, nine, ten, eleven, twelve ) :
     pass
-
-# short comment
-def g():
-    pass
+def g ():    return 5 ** 2

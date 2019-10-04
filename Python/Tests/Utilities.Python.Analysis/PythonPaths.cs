@@ -20,9 +20,10 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using Microsoft.IronPythonTools.Interpreter;
+using Microsoft.Python.Parsing;
+using Microsoft.PythonTools;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TestUtilities {
@@ -215,11 +216,11 @@ namespace TestUtilities {
     }
 
     public class PythonVersion {
-        public readonly InterpreterConfiguration Configuration;
+        public readonly Microsoft.PythonTools.Interpreter.InterpreterConfiguration Configuration;
         public readonly bool IsCPython;
         public readonly bool IsIronPython;
 
-        public PythonVersion(InterpreterConfiguration config, bool ironPython = false, bool cPython = false) {
+        public PythonVersion(Microsoft.PythonTools.Interpreter.InterpreterConfiguration config, bool ironPython = false, bool cPython = false) {
             Configuration = config;
             IsCPython = cPython;
             IsIronPython = ironPython;
