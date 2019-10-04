@@ -197,5 +197,21 @@ namespace Microsoft.PythonTools.Infrastructure {
                 throw new OperationCanceledException("semaphore was disposed", ex);
             }
         }
+
+        public static IDisposable Lock(this SemaphoreSlim semaphore) {
+            var res = new SemaphoreLock(semaphore);
+            try {
+                try {
+                    semaphore.Wait();
+                    var res2 = res;
+                    res = null;
+                    return res2;
+                } finally {
+                    res?.Reset();
+                }
+            } catch (ObjectDisposedException ex) {
+                throw new OperationCanceledException("semaphore was disposed", ex);
+            }
+        }
     }
 }

@@ -53,6 +53,10 @@ namespace Microsoft.PythonTools.Interpreter {
         private string _environmentsTxtFolder;
         private string _environmentsTxtPath;
 
+        private static readonly KeyValuePair<string, string>[] UnbufferedEnv = new[] {
+            new KeyValuePair<string, string>("PYTHONUNBUFFERED", "1")
+        };
+
         internal event EventHandler DiscoveryStarted;
 
         [ImportingConstructor]
@@ -258,7 +262,11 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         internal static CondaInfoResult ExecuteCondaInfo(string condaPath) {
-            using (var output = ProcessOutput.RunHiddenAndCapture(condaPath, "info", "--json")) {
+            var activationVars = CondaUtils.GetActivationEnvironmentVariablesForRoot(condaPath);
+            var envVars = activationVars.Union(UnbufferedEnv).ToArray();
+
+            var args = new[] { "info", "--json" };
+            using (var output = ProcessOutput.Run(condaPath, args, null, envVars, false, null)) {
                 output.Wait();
                 if (output.ExitCode == 0) {
                     var json = string.Join(Environment.NewLine, output.StandardOutputLines);

@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.ComponentModelHost;
@@ -27,6 +28,9 @@ namespace Microsoft.PythonTools.Interpreter {
     static class CondaUtils {
         private const string EnvironmentStartMarker = "!!!ENVIRONMENT MARKER!!!";
         private static string PrintEnvironmentCode = $"import os, json; print('{EnvironmentStartMarker}'); print(json.dumps(dict(os.environ)))";
+
+        private static readonly Dictionary<CondaCacheKey, KeyValuePair<string, string>[]> _activationCache = new Dictionary<CondaCacheKey, KeyValuePair<string, string>[]>();
+        private static readonly SemaphoreSlim _activationCacheLock = new SemaphoreSlim(1);
 
         internal static string GetCondaExecutablePath(string prefixPath, bool allowBatch = true) {
             if (!Directory.Exists(prefixPath)) {
@@ -69,42 +73,103 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         /// <summary>
+        /// Activate the root conda environment, capture and return its environment variables.
+        /// </summary>
+        /// <param name="condaPath">Path to the root conda environment's conda.exe</param>
+        /// <returns>List of environment variables.</returns>
+        /// <remarks>Result is cached, it is safe to call multiple times.</remarks>
+        internal static Task<IEnumerable<KeyValuePair<string, string>>> GetActivationEnvironmentVariablesForRootAsync(string condaPath) {
+            return CaptureActivationEnvironmentVariablesAsync(condaPath, null);
+        }
+
+        /// <summary>
         /// Activate the root conda environment, capture and return its environment variables
         /// </summary>
         /// <param name="condaPath">Path to the root conda environment's conda.exe</param>
         /// <returns>List of environment variables.</returns>
-        internal async static Task<IEnumerable<KeyValuePair<string, string>>> CaptureActivationEnvironmentVariablesForRootAsync(string condaPath) {
-            var activateBat = Path.Combine(Path.GetDirectoryName(condaPath), "activate.bat");
-            if (File.Exists(activateBat)) {
-                using (var proc = ProcessOutput.RunHiddenAndCapture(activateBat, new[] { "&", "python.exe", "-c", PrintEnvironmentCode })) {
-                    await proc;
-                    if (proc.ExitCode == 0) {
-                        return ParseEnvironmentVariables(proc);
-                    }
-                }
-            }
-
-            return Enumerable.Empty<KeyValuePair<string, string>>();
+        /// <remarks>Result is cached, it is safe to call multiple times.</remarks>
+        internal static IEnumerable<KeyValuePair<string, string>> GetActivationEnvironmentVariablesForRoot(string condaPath) {
+            return CaptureActivationEnvironmentVariables(condaPath, null);
         }
 
         /// <summary>
         /// Activate the specified conda environment, capture and return its environment variables.
         /// </summary>
-        /// <param name="condaPath">Path to the base conda environment's conda.exe</param>
+        /// <param name="condaPath">Path to the root conda environment's conda.exe</param>
         /// <param name="prefixPath">Path to the conda environment to activate.</param>
         /// <returns>List of environment variables.</returns>
-        internal static IEnumerable<KeyValuePair<string, string>> CaptureActivationEnvironmentVariablesForPrefix(string condaPath, string prefixPath) {
+        /// <remarks>Result is cached, it is safe to call multiple times.</remarks>
+        internal static Task<IEnumerable<KeyValuePair<string, string>>> GetActivationEnvironmentVariablesForPrefixAsync(string condaPath, string prefixPath) {
+            return CaptureActivationEnvironmentVariablesAsync(condaPath, prefixPath);
+        }
+
+        /// <summary>
+        /// Activate the specified conda environment, capture and return its environment variables.
+        /// </summary>
+        /// <param name="condaPath">Path to the root conda environment's conda.exe</param>
+        /// <param name="prefixPath">Path to the conda environment to activate.</param>
+        /// <returns>List of environment variables.</returns>
+        /// <remarks>Result is cached, it is safe to call multiple times.</remarks>
+        internal static IEnumerable<KeyValuePair<string, string>> GetActivationEnvironmentVariablesForPrefix(string condaPath, string prefixPath) {
+            return CaptureActivationEnvironmentVariables(condaPath, prefixPath);
+        }
+
+        private async static Task<IEnumerable<KeyValuePair<string, string>>> CaptureActivationEnvironmentVariablesAsync(string condaPath, string prefixPath) {
+            using (await _activationCacheLock.LockAsync(CancellationToken.None)) {
+                var condaKey = new CondaCacheKey(condaPath, prefixPath);
+
+                if (!_activationCache.TryGetValue(condaKey, out KeyValuePair<string, string>[] activationVariables)) {
+                    activationVariables = null;
+
+                    using (var proc = StartCaptureProcess(condaPath, prefixPath)) {
+                        if (proc != null) {
+                            await proc;
+                            if (proc.ExitCode == 0) {
+                                activationVariables = ParseEnvironmentVariables(proc).ToArray();
+                            }
+                        }
+                    }
+
+                    _activationCache[condaKey] = activationVariables ?? new KeyValuePair<string, string>[0];
+                }
+
+                return activationVariables;
+            }
+        }
+
+        private static IEnumerable<KeyValuePair<string, string>> CaptureActivationEnvironmentVariables(string condaPath, string prefixPath) {
+            using (_activationCacheLock.Lock()) {
+                var condaKey = new CondaCacheKey(condaPath, prefixPath);
+
+                if (!_activationCache.TryGetValue(condaKey, out KeyValuePair<string, string>[] activationVariables)) {
+                    activationVariables = null;
+
+                    using (var proc = StartCaptureProcess(condaPath, prefixPath)) {
+                        if (proc != null) {
+                            proc.Wait();
+                            if (proc.ExitCode == 0) {
+                                activationVariables = ParseEnvironmentVariables(proc).ToArray();
+                            }
+                        }
+                    }
+
+                    _activationCache[condaKey] = activationVariables ?? new KeyValuePair<string, string>[0];
+                }
+
+                return activationVariables;
+            }
+        }
+
+        private static ProcessOutput StartCaptureProcess(string condaPath, string prefixPath) {
             var activateBat = Path.Combine(Path.GetDirectoryName(condaPath), "activate.bat");
             if (File.Exists(activateBat)) {
-                using (var proc = ProcessOutput.RunHiddenAndCapture(activateBat, new[] { prefixPath, "&", "python.exe", "-c", PrintEnvironmentCode })) {
-                    proc.Wait();
-                    if (proc.ExitCode == 0) {
-                        return ParseEnvironmentVariables(proc);
-                    }
-                }
+                var args = prefixPath != null
+                    ? new[] { prefixPath, "&", "python.exe", "-c", PrintEnvironmentCode }
+                    : new[] { "&", "python.exe", "-c", PrintEnvironmentCode };
+                return ProcessOutput.RunHiddenAndCapture(activateBat, args);
             }
 
-            return Enumerable.Empty<KeyValuePair<string, string>>();
+            return null;
         }
 
         private static IEnumerable<KeyValuePair<string, string>> ParseEnvironmentVariables(ProcessOutput proc) {
@@ -125,6 +190,38 @@ namespace Microsoft.PythonTools.Interpreter {
             }
 
             return Enumerable.Empty<KeyValuePair<string, string>>();
+        }
+
+        class CondaCacheKey {
+            public CondaCacheKey(string condaPath, string prefixPath = null) {
+                CondaExecutablePath = condaPath ?? throw new ArgumentNullException(nameof(condaPath));
+                PrefixPath = prefixPath ?? string.Empty;
+            }
+
+            public string CondaExecutablePath { get; }
+
+            public string PrefixPath { get; }
+
+            public override bool Equals(object obj) {
+                var other = obj as CondaCacheKey;
+                if (other == null) {
+                    return false;
+                }
+
+                if (!other.CondaExecutablePath.Equals(CondaExecutablePath, StringComparison.OrdinalIgnoreCase)) {
+                    return false;
+                }
+
+                if (!other.PrefixPath.Equals(PrefixPath, StringComparison.OrdinalIgnoreCase)) {
+                    return false;
+                }
+
+                return true;
+            }
+
+            public override int GetHashCode() {
+                return CondaExecutablePath.GetHashCode() ^ PrefixPath.GetHashCode();
+            }
         }
     }
 }

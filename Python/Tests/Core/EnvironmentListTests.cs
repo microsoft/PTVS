@@ -965,7 +965,7 @@ namespace PythonToolsUITests {
                 DeleteFolder.Add(env);
             }
             var condaExePath = Path.Combine(python.PrefixPath, "scripts", "conda.exe");
-            var envVariables = await CondaUtils.CaptureActivationEnvironmentVariablesForRootAsync(condaExePath);
+            var envVariables = await CondaUtils.GetActivationEnvironmentVariablesForRootAsync(condaExePath);
             using (var proc = ProcessOutput.Run(
                 condaExePath,
                 new[] { "create", "-p", env, "python={0}".FormatInvariant(version.ToVersion().ToString()), "-y" },

@@ -43,14 +43,11 @@ namespace Microsoft.PythonTools.Interpreter {
             }
             baseEnv[pathVar] = string.Empty;
 
-            // TODO: We could introduce a cache so that we don't activate the
-            // environment + capture the env variables every time. Not doing this
-            // right now to minimize risk/complexity so close to release.
             if (CondaUtils.IsCondaEnvironment(config.Interpreter.GetPrefixPath())) {
                 var condaExe = CondaUtils.GetRootCondaExecutablePath(serviceProvider);
                 var prefixPath = config.Interpreter.GetPrefixPath();
                 if (File.Exists(condaExe) && Directory.Exists(prefixPath)) {
-                    var condaEnv = CondaUtils.CaptureActivationEnvironmentVariablesForPrefix(condaExe, prefixPath);
+                    var condaEnv = CondaUtils.GetActivationEnvironmentVariablesForPrefix(condaExe, prefixPath);
                     baseEnv = PathUtils.MergeEnvironments(baseEnv.AsEnumerable<string, string>(), condaEnv, "Path", pathVar);
                 }
             }
