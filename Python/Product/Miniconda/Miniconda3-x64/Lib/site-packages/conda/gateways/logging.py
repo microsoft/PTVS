@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
+# Copyright (C) 2012 Anaconda, Inc
+# SPDX-License-Identifier: BSD-3-Clause
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 from functools import partial
-import logging
+import logging  # lgtm [py/import-and-import-from]
 from logging import DEBUG, ERROR, Filter, Formatter, INFO, StreamHandler, WARN, getLogger
 import re
 import sys
@@ -10,11 +12,21 @@ import sys
 from .. import CondaError
 from .._vendor.auxlib.decorators import memoize
 from ..common.io import attach_stderr_handler
+from ..common.compat import string_types
 
 log = getLogger(__name__)
 TRACE = 5  # TRACE LOG LEVEL
 VERBOSITY_LEVELS = (WARN, INFO, DEBUG, TRACE)
 
+if sys.version_info[0] == 2:
+    def another_to_unicode(val):
+        # ignore flake8 on this because it finds this as an error on py3 even though it is guarded
+        if isinstance(val, basestring) and not isinstance(val, unicode):  # NOQA
+            return unicode(val, encoding='utf-8')  # NOQA
+        return val
+else:
+    def another_to_unicode(val):
+        return val
 
 class TokenURLFilter(Filter):
     TOKEN_URL_PATTERN = re.compile(
@@ -31,7 +43,22 @@ class TokenURLFilter(Filter):
     TOKEN_REPLACE = partial(TOKEN_URL_PATTERN.sub, r'\1\2\3/t/<TOKEN>/')
 
     def filter(self, record):
-        record.msg = self.TOKEN_REPLACE(record.msg)
+        '''
+        Since Python 2's getMessage() is incapable of handling any
+        strings that are not unicode when it interpolates the message
+        with the arguments, we fix that here by doing it ourselves.
+
+        At the same time we replace tokens in the arguments which was
+        not happening until now.
+        '''
+
+        record.msg = another_to_unicode(self.TOKEN_REPLACE(record.msg))
+        if record.args:
+            new_args = tuple(self.TOKEN_REPLACE(another_to_unicode(arg))
+                             if isinstance(arg, string_types) else arg
+                             for arg in record.args)
+            record.msg = record.msg % new_args
+            record.args = None
         return True
 
 
@@ -55,6 +82,7 @@ class StdStreamHandler(StreamHandler):
             return getattr(sys, self.sys_stream)
         return super(StdStreamHandler, self).__getattribute__(attr)
 
+    '''
     def emit(self, record):
         # in contrast to the Python 2.7 StreamHandler, this has no special Unicode handling;
         # however, this backports the Python >=3.2 terminator attribute and additionally makes it
@@ -67,9 +95,62 @@ class StdStreamHandler(StreamHandler):
             stream.write(msg)
             stream.write(terminator)
             self.flush()
-        except (KeyboardInterrupt, SystemExit):
-            raise
-        except:
+        except Exception:
+            self.handleError(record)
+
+    '''
+
+    # Updated Python 2.7.15's stdlib, with terminator and unicode support.
+    def emit(self, record):
+        """
+        Emit a record.
+
+        If a formatter is specified, it is used to format the record.
+        The record is then written to the stream with a trailing newline.  If
+        exception information is present, it is formatted using
+        traceback.print_exception and appended to the stream.  If the stream
+        has an 'encoding' attribute, it is used to determine how to do the
+        output to the stream.
+        """
+
+        try:
+            unicode
+            _unicode = True
+        except NameError:
+            _unicode = False
+
+        try:
+            msg = self.format(record)
+            stream = self.stream
+            fs = "%s"
+            if not _unicode:  # if no unicode support...
+                stream.write(fs % msg)
+            else:
+                try:
+                    if (isinstance(msg, unicode) and  # NOQA
+                            getattr(stream, 'encoding', None)):
+                        ufs = u'%s'
+                        try:
+                            stream.write(ufs % msg)
+                        except UnicodeEncodeError:
+                            # Printing to terminals sometimes fails. For example,
+                            # with an encoding of 'cp1251', the above write will
+                            # work if written to a stream opened or wrapped by
+                            # the codecs module, but fail when writing to a
+                            # terminal even when the codepage is set to cp1251.
+                            # An extra encoding step seems to be needed.
+                            stream.write((ufs % msg).encode(stream.encoding))
+                    else:
+                        stream.write(fs % msg)
+                except UnicodeError:
+                    stream.write(fs % msg.encode("UTF-8"))
+            terminator = getattr(record, "terminator", self.terminator)
+            stream.write(terminator)
+            self.flush()
+        # How does conda handle Ctrl-C? Find out..
+        # except (KeyboardInterrupt, SystemExit):
+        #     raise
+        except Exception:
             self.handleError(record)
 
 
@@ -85,7 +166,6 @@ def initialize_logging():
     initialize_std_loggers()
 
 
-@memoize
 def initialize_std_loggers():
     # Set up special loggers 'conda.stdout'/'conda.stderr' which output directly to the
     # corresponding sys streams, filter token urls and don't propagate.
@@ -93,6 +173,7 @@ def initialize_std_loggers():
 
     for stream in ('stdout', 'stderr'):
         logger = getLogger('conda.%s' % stream)
+        logger.handlers = []
         logger.setLevel(INFO)
         handler = StdStreamHandler(stream)
         handler.setLevel(INFO)
@@ -102,6 +183,7 @@ def initialize_std_loggers():
         logger.propagate = False
 
         stdlog_logger = getLogger('conda.%slog' % stream)
+        stdlog_logger.handlers = []
         stdlog_logger.setLevel(DEBUG)
         stdlog_handler = StdStreamHandler(stream)
         stdlog_handler.terminator = ''
@@ -111,6 +193,7 @@ def initialize_std_loggers():
         stdlog_logger.propagate = False
 
     verbose_logger = getLogger('conda.stdout.verbose')
+    verbose_logger.handlers = []
     verbose_logger.setLevel(INFO)
     verbose_handler = StdStreamHandler('stdout')
     verbose_handler.setLevel(INFO)

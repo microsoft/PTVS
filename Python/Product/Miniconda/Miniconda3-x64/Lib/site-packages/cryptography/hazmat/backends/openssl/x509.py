@@ -6,7 +6,6 @@ from __future__ import absolute_import, division, print_function
 
 import datetime
 import operator
-import warnings
 
 from cryptography import utils, x509
 from cryptography.exceptions import UnsupportedAlgorithm
@@ -30,7 +29,7 @@ class _Certificate(object):
         self._x509 = x509
 
     def __repr__(self):
-        return "<Certificate(subject={0}, ...)>".format(self.subject)
+        return "<Certificate(subject={}, ...)>".format(self.subject)
 
     def __eq__(self, other):
         if not isinstance(other, x509.Certificate):
@@ -59,17 +58,8 @@ class _Certificate(object):
             return x509.Version.v3
         else:
             raise x509.InvalidVersion(
-                "{0} is not a valid X509 version".format(version), version
+                "{} is not a valid X509 version".format(version), version
             )
-
-    @property
-    def serial(self):
-        warnings.warn(
-            "Certificate serial is deprecated, use serial_number instead.",
-            utils.PersistentlyDeprecated,
-            stacklevel=2
-        )
-        return self.serial_number
 
     @property
     def serial_number(self):
@@ -117,7 +107,7 @@ class _Certificate(object):
             return x509._SIG_OIDS_TO_HASH[oid]
         except KeyError:
             raise UnsupportedAlgorithm(
-                "Signature algorithm OID:{0} not recognized".format(oid)
+                "Signature algorithm OID:{} not recognized".format(oid)
             )
 
     @property
@@ -238,11 +228,21 @@ class _CertificateRevocationList(object):
         h.update(der)
         return h.finalize()
 
+    @utils.cached_property
+    def _sorted_crl(self):
+        # X509_CRL_get0_by_serial sorts in place, which breaks a variety of
+        # things we don't want to break (like iteration and the signature).
+        # Let's dupe it and sort that instead.
+        dup = self._backend._lib.X509_CRL_dup(self._x509_crl)
+        self._backend.openssl_assert(dup != self._backend._ffi.NULL)
+        dup = self._backend._ffi.gc(dup, self._backend._lib.X509_CRL_free)
+        return dup
+
     def get_revoked_certificate_by_serial_number(self, serial_number):
         revoked = self._backend._ffi.new("X509_REVOKED **")
         asn1_int = _encode_asn1_int_gc(self._backend, serial_number)
         res = self._backend._lib.X509_CRL_get0_by_serial(
-            self._x509_crl, revoked, asn1_int
+            self._sorted_crl, revoked, asn1_int
         )
         if res == 0:
             return None
@@ -251,7 +251,7 @@ class _CertificateRevocationList(object):
                 revoked[0] != self._backend._ffi.NULL
             )
             return _RevokedCertificate(
-                self._backend, self._x509_crl, revoked[0]
+                self._backend, self._sorted_crl, revoked[0]
             )
 
     @property
@@ -261,7 +261,7 @@ class _CertificateRevocationList(object):
             return x509._SIG_OIDS_TO_HASH[oid]
         except KeyError:
             raise UnsupportedAlgorithm(
-                "Signature algorithm OID:{0} not recognized".format(oid)
+                "Signature algorithm OID:{} not recognized".format(oid)
             )
 
     @property
@@ -413,7 +413,7 @@ class _CertificateSigningRequest(object):
             return x509._SIG_OIDS_TO_HASH[oid]
         except KeyError:
             raise UnsupportedAlgorithm(
-                "Signature algorithm OID:{0} not recognized".format(oid)
+                "Signature algorithm OID:{} not recognized".format(oid)
             )
 
     @property
@@ -429,6 +429,14 @@ class _CertificateSigningRequest(object):
     @utils.cached_property
     def extensions(self):
         x509_exts = self._backend._lib.X509_REQ_get_extensions(self._x509_req)
+        x509_exts = self._backend._ffi.gc(
+            x509_exts,
+            lambda x: self._backend._lib.sk_X509_EXTENSION_pop_free(
+                x, self._backend._ffi.addressof(
+                    self._backend._lib._original_lib, "X509_EXTENSION_free"
+                )
+            )
+        )
         return _CSR_EXTENSION_PARSER.parse(self._backend, x509_exts)
 
     def public_bytes(self, encoding):
@@ -516,3 +524,23 @@ class _SignedCertificateTimestamp(object):
         # we only have precerts.
         assert entry_type == self._backend._lib.CT_LOG_ENTRY_TYPE_PRECERT
         return x509.certificate_transparency.LogEntryType.PRE_CERTIFICATE
+
+    @property
+    def _signature(self):
+        ptrptr = self._backend._ffi.new("unsigned char **")
+        res = self._backend._lib.SCT_get0_signature(self._sct, ptrptr)
+        self._backend.openssl_assert(res > 0)
+        self._backend.openssl_assert(ptrptr[0] != self._backend._ffi.NULL)
+        return self._backend._ffi.buffer(ptrptr[0], res)[:]
+
+    def __hash__(self):
+        return hash(self._signature)
+
+    def __eq__(self, other):
+        if not isinstance(other, _SignedCertificateTimestamp):
+            return NotImplemented
+
+        return self._signature == other._signature
+
+    def __ne__(self, other):
+        return not self == other

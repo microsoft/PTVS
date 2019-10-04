@@ -14,13 +14,8 @@
 
 #define _CRT_SECURE_NO_DEPRECATE
 #include <windows.h>
-#define NO_SHLWAPI_GDI
-#define NO_SHLWAPI_STREAM
-#define NO_SHLWAPI_REG
-#include <shlwapi.h>
 #pragma comment (lib, "user32.lib")
 #pragma comment (lib, "kernel32.lib")
-#pragma comment (lib, "shlwapi.lib")
 #include <stdio.h>
 #include <math.h>
 
@@ -74,7 +69,7 @@ main(
     char msg[300];
     DWORD dwWritten;
     int chars;
-    char *s;
+    const char *s;
 
     /*
      * Make sure children (cl.exe and link.exe) are kept quiet.
@@ -688,6 +683,17 @@ SubstituteFile(
     return 0;
 }
 
+BOOL FileExists(LPCTSTR szPath)
+{
+#ifndef INVALID_FILE_ATTRIBUTES
+    #define INVALID_FILE_ATTRIBUTES ((DWORD)-1) 
+#endif
+    DWORD pathAttr = GetFileAttributes(szPath);
+    return (pathAttr != INVALID_FILE_ATTRIBUTES && 
+	    !(pathAttr & FILE_ATTRIBUTE_DIRECTORY));
+}
+
+
 /*
  * QualifyPath --
  *
@@ -701,13 +707,8 @@ QualifyPath(
     const char *szPath)
 {
     char szCwd[MAX_PATH + 1];
-    char szTmp[MAX_PATH + 1];
-    char *p;
-    GetCurrentDirectory(MAX_PATH, szCwd);
-    while ((p = strchr(szPath, '/')) && *p)
-	*p = '\\';
-    PathCombine(szTmp, szCwd, szPath);
-    PathCanonicalize(szCwd, szTmp);
+
+	GetFullPathName(szPath, sizeof(szCwd)-1, szCwd, NULL);
     printf("%s\n", szCwd);
     return 0;
 }
@@ -765,7 +766,7 @@ static int LocateDependencyHelper(const char *dir, const char *keypath)
 	strncpy(path+dirlen+1, finfo.cFileName, sublen);
 	path[dirlen+1+sublen] = '\\';
 	strncpy(path+dirlen+1+sublen+1, keypath, keylen+1);
-	if (PathFileExists(path)) {
+	if (FileExists(path)) {
 	    /* Found a match, print to stdout */
 	    path[dirlen+1+sublen] = '\0';
 	    QualifyPath(path);

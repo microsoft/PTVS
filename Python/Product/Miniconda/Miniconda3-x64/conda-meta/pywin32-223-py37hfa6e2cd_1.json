@@ -1,11 +1,14 @@
 {
-  "arch": "x86_64",
   "build": "py37hfa6e2cd_1",
   "build_number": 1,
+  "channel": "https://repo.anaconda.com/pkgs/main/win-64",
+  "constrains": [],
   "depends": [
     "python >=3.7,<3.8.0a0",
     "vc 14.*"
   ],
+  "extracted_package_dir": "C:\\ProgramData\\Miniconda3\\pkgs\\pywin32-223-py37hfa6e2cd_1",
+  "features": "",
   "files": [
     "Lib/site-packages/__pycache__/pythoncom.cpython-37.pyc",
     "Lib/site-packages/adodbapi/__init__.py",
@@ -1039,17 +1042,27 @@
     "Scripts/pywin32_postinstall.py",
     "Scripts/pywin32_testall.py"
   ],
-  "installed_by": "Miniconda3-4.5.11-Windows-x86_64.exe",
+  "fn": "pywin32-223-py37hfa6e2cd_1.conda",
+  "legacy_bz2_md5": "f109e28513833e67c4e0ef4a5cdb9cae",
+  "legacy_bz2_size": 9728770,
   "license": "PSF",
   "link": {
-    "source": "C:\\Users\\huvalo\\Documents\\Miniconda\\pkgs\\pywin32-223-py37hfa6e2cd_1",
-    "type": "hard-link"
+    "source": "C:\\ProgramData\\Miniconda3\\pkgs\\pywin32-223-py37hfa6e2cd_1",
+    "type": 1
   },
-  "md5": "f109e28513833e67c4e0ef4a5cdb9cae",
+  "md5": "b47127551a7f47baa965a011481580da",
   "name": "pywin32",
-  "platform": "win",
+  "package_tarball_full_path": "C:\\ProgramData\\Miniconda3\\pkgs\\pywin32-223-py37hfa6e2cd_1.conda",
+  "paths_data": {
+    "paths": [],
+    "paths_version": 1
+  },
+  "requested_spec": "pywin32==223=py37hfa6e2cd_1",
+  "sha256": "df62331eb65f1dcd6567231704d913213ec9134e6168f0591a9421a8f53f93a3",
+  "size": 5620902,
   "subdir": "win-64",
   "timestamp": 1533163798658,
-  "url": "https://repo.anaconda.com/pkgs/main/win-64/pywin32-223-py37hfa6e2cd_1.tar.bz2",
+  "track_features": "",
+  "url": "https://repo.anaconda.com/pkgs/main/win-64/pywin32-223-py37hfa6e2cd_1.conda",
   "version": "223"
 }

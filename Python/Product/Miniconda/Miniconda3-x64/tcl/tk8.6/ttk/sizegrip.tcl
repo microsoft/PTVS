@@ -9,7 +9,7 @@
 switch -- [tk windowingsystem] {
     x11 -
     win32 {
-	option add *TSizegrip.cursor [ttk::cursor seresize]
+	option add *TSizegrip.cursor [ttk::cursor seresize] widgetDefault
     }
     aqua {
     	# Aqua sizegrips use default Arrow cursor.

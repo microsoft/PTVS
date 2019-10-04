@@ -2,17 +2,26 @@ from __future__ import absolute_import
 
 import logging
 import sys
-from email.parser import FeedParser  # type: ignore
+from email.parser import FeedParser
 
 from pip._vendor import pkg_resources
 from pip._vendor.packaging import specifiers, version
 
 from pip._internal import exceptions
+from pip._internal.utils.misc import display_path
+from pip._internal.utils.typing import MYPY_CHECK_RUNNING
+
+if MYPY_CHECK_RUNNING:
+    from typing import Optional
+    from email.message import Message
+    from pip._vendor.pkg_resources import Distribution
+
 
 logger = logging.getLogger(__name__)
 
 
 def check_requires_python(requires_python):
+    # type: (Optional[str]) -> bool
     """
     Check if the python version in use match the `requires_python` specifier.
 
@@ -33,18 +42,23 @@ def check_requires_python(requires_python):
 
 
 def get_metadata(dist):
+    # type: (Distribution) -> Message
     if (isinstance(dist, pkg_resources.DistInfoDistribution) and
             dist.has_metadata('METADATA')):
-        return dist.get_metadata('METADATA')
+        metadata = dist.get_metadata('METADATA')
     elif dist.has_metadata('PKG-INFO'):
-        return dist.get_metadata('PKG-INFO')
+        metadata = dist.get_metadata('PKG-INFO')
+    else:
+        logger.warning("No metadata found in %s", display_path(dist.location))
+        metadata = ''
+
+    feed_parser = FeedParser()
+    feed_parser.feed(metadata)
+    return feed_parser.close()
 
 
 def check_dist_requires_python(dist):
-    metadata = get_metadata(dist)
-    feed_parser = FeedParser()
-    feed_parser.feed(metadata)
-    pkg_info_dict = feed_parser.close()
+    pkg_info_dict = get_metadata(dist)
     requires_python = pkg_info_dict.get('Requires-Python')
     try:
         if not check_requires_python(requires_python):
@@ -63,6 +77,7 @@ def check_dist_requires_python(dist):
 
 
 def get_installer(dist):
+    # type: (Distribution) -> str
     if dist.has_metadata('INSTALLER'):
         for line in dist.get_metadata_lines('INSTALLER'):
             if line.strip():

@@ -2,11 +2,11 @@ from __future__ import absolute_import
 
 import sys
 
-from pip._internal import index
-from pip._internal.basecommand import Command
 from pip._internal.cache import WheelCache
-from pip._internal.compat import stdlib_pkgs
+from pip._internal.cli.base_command import Command
+from pip._internal.models.format_control import FormatControl
 from pip._internal.operations.freeze import freeze
+from pip._internal.utils.compat import stdlib_pkgs
 
 DEV_PKGS = {'pip', 'setuptools', 'distribute', 'wheel'}
 
@@ -71,7 +71,7 @@ class FreezeCommand(Command):
         self.parser.insert_option_group(0, self.cmd_opts)
 
     def run(self, options, args):
-        format_control = index.FormatControl(set(), set())
+        format_control = FormatControl(set(), set())
         wheel_cache = WheelCache(options.cache_dir, format_control)
         skip = set(stdlib_pkgs)
         if not options.freeze_all:

@@ -5,10 +5,34 @@
 from __future__ import absolute_import, division, print_function
 
 import abc
+import warnings
 
 import six
 
 from cryptography import utils
+from cryptography.hazmat._oid import ObjectIdentifier
+
+
+class EllipticCurveOID(object):
+    SECP192R1 = ObjectIdentifier("1.2.840.10045.3.1.1")
+    SECP224R1 = ObjectIdentifier("1.3.132.0.33")
+    SECP256K1 = ObjectIdentifier("1.3.132.0.10")
+    SECP256R1 = ObjectIdentifier("1.2.840.10045.3.1.7")
+    SECP384R1 = ObjectIdentifier("1.3.132.0.34")
+    SECP521R1 = ObjectIdentifier("1.3.132.0.35")
+    BRAINPOOLP256R1 = ObjectIdentifier("1.3.36.3.3.2.8.1.1.7")
+    BRAINPOOLP384R1 = ObjectIdentifier("1.3.36.3.3.2.8.1.1.11")
+    BRAINPOOLP512R1 = ObjectIdentifier("1.3.36.3.3.2.8.1.1.13")
+    SECT163K1 = ObjectIdentifier("1.3.132.0.1")
+    SECT163R2 = ObjectIdentifier("1.3.132.0.15")
+    SECT233K1 = ObjectIdentifier("1.3.132.0.26")
+    SECT233R1 = ObjectIdentifier("1.3.132.0.27")
+    SECT283K1 = ObjectIdentifier("1.3.132.0.16")
+    SECT283R1 = ObjectIdentifier("1.3.132.0.17")
+    SECT409K1 = ObjectIdentifier("1.3.132.0.36")
+    SECT409R1 = ObjectIdentifier("1.3.132.0.37")
+    SECT571K1 = ObjectIdentifier("1.3.132.0.38")
+    SECT571R1 = ObjectIdentifier("1.3.132.0.39")
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -68,7 +92,7 @@ class EllipticCurvePrivateKey(object):
         Bit size of a secret scalar for the curve.
         """
 
-    @abc.abstractproperty
+    @abc.abstractmethod
     def sign(self, data, signature_algorithm):
         """
         Signs the data
@@ -127,6 +151,22 @@ class EllipticCurvePublicKey(object):
         """
         Verifies the signature of the data.
         """
+
+    @classmethod
+    def from_encoded_point(cls, curve, data):
+        utils._check_bytes("data", data)
+
+        if not isinstance(curve, EllipticCurve):
+            raise TypeError("curve must be an EllipticCurve instance")
+
+        if len(data) == 0:
+            raise ValueError("data must not be an empty byte string")
+
+        if six.indexbytes(data, 0) not in [0x02, 0x03, 0x04]:
+            raise ValueError("Unsupported elliptic curve point type")
+
+        from cryptography.hazmat.backends.openssl.backend import backend
+        return backend.load_elliptic_curve_public_bytes(curve, data)
 
 
 EllipticCurvePublicKeyWithSerialization = EllipticCurvePublicKey
@@ -319,6 +359,14 @@ class EllipticCurvePublicNumbers(object):
         return backend.load_elliptic_curve_public_numbers(self)
 
     def encode_point(self):
+        warnings.warn(
+            "encode_point has been deprecated on EllipticCurvePublicNumbers"
+            " and will be removed in a future version. Please use "
+            "EllipticCurvePublicKey.public_bytes to obtain both "
+            "compressed and uncompressed point encoding.",
+            utils.DeprecatedIn25,
+            stacklevel=2,
+        )
         # key_size is in bits. Convert to bytes and round up
         byte_length = (self.curve.key_size + 7) // 8
         return (
@@ -330,6 +378,14 @@ class EllipticCurvePublicNumbers(object):
     def from_encoded_point(cls, curve, data):
         if not isinstance(curve, EllipticCurve):
             raise TypeError("curve must be an EllipticCurve instance")
+
+        warnings.warn(
+            "Support for unsafe construction of public numbers from "
+            "encoded data will be removed in a future version. "
+            "Please use EllipticCurvePublicKey.from_encoded_point",
+            utils.DeprecatedIn25,
+            stacklevel=2,
+        )
 
         if data.startswith(b'\x04'):
             # key_size is in bits. Convert to bytes and round up
@@ -409,3 +465,36 @@ class EllipticCurvePrivateNumbers(object):
 
 class ECDH(object):
     pass
+
+
+_OID_TO_CURVE = {
+    EllipticCurveOID.SECP192R1: SECP192R1,
+    EllipticCurveOID.SECP224R1: SECP224R1,
+    EllipticCurveOID.SECP256K1: SECP256K1,
+    EllipticCurveOID.SECP256R1: SECP256R1,
+    EllipticCurveOID.SECP384R1: SECP384R1,
+    EllipticCurveOID.SECP521R1: SECP521R1,
+    EllipticCurveOID.BRAINPOOLP256R1: BrainpoolP256R1,
+    EllipticCurveOID.BRAINPOOLP384R1: BrainpoolP384R1,
+    EllipticCurveOID.BRAINPOOLP512R1: BrainpoolP512R1,
+    EllipticCurveOID.SECT163K1: SECT163K1,
+    EllipticCurveOID.SECT163R2: SECT163R2,
+    EllipticCurveOID.SECT233K1: SECT233K1,
+    EllipticCurveOID.SECT233R1: SECT233R1,
+    EllipticCurveOID.SECT283K1: SECT283K1,
+    EllipticCurveOID.SECT283R1: SECT283R1,
+    EllipticCurveOID.SECT409K1: SECT409K1,
+    EllipticCurveOID.SECT409R1: SECT409R1,
+    EllipticCurveOID.SECT571K1: SECT571K1,
+    EllipticCurveOID.SECT571R1: SECT571R1,
+}
+
+
+def get_curve_for_oid(oid):
+    try:
+        return _OID_TO_CURVE[oid]
+    except KeyError:
+        raise LookupError(
+            "The provided object identifier has no matching elliptic "
+            "curve class"
+        )

@@ -1,0 +1,39 @@
+{
+  "build": "2",
+  "build_number": 2,
+  "channel": "https://repo.anaconda.com/pkgs/main/win-64",
+  "constrains": [],
+  "depends": [
+    "python"
+  ],
+  "extracted_package_dir": "C:\\ProgramData\\Miniconda3\\pkgs\\powershell_shortcut-0.0.1-2",
+  "features": "",
+  "files": [
+    "Menu/Iconleak-Atrous-PSConsole.ico",
+    "Menu/powershell_shortcut.json",
+    "Menu/powershell_shortcut.json"
+  ],
+  "fn": "powershell_shortcut-0.0.1-2.conda",
+  "legacy_bz2_md5": "6f70b49b7c7ce51e3fdce9256f4fd83c",
+  "legacy_bz2_size": 205632,
+  "license": "BSD",
+  "link": {
+    "source": "C:\\ProgramData\\Miniconda3\\pkgs\\powershell_shortcut-0.0.1-2",
+    "type": 1
+  },
+  "md5": "b87f48e3fdf008ad99e7cfce9f35679e",
+  "name": "powershell_shortcut",
+  "package_tarball_full_path": "C:\\ProgramData\\Miniconda3\\pkgs\\powershell_shortcut-0.0.1-2.conda",
+  "paths_data": {
+    "paths": [],
+    "paths_version": 1
+  },
+  "requested_spec": "powershell_shortcut==0.0.1=2",
+  "sha256": "003e0abebc7b5e3f840e54a177c45130d93a8dda61748e1e6540a23938a23605",
+  "size": 264992,
+  "subdir": "win-64",
+  "timestamp": 1553960702381,
+  "track_features": "",
+  "url": "https://repo.anaconda.com/pkgs/main/win-64/powershell_shortcut-0.0.1-2.conda",
+  "version": "0.0.1"
+}

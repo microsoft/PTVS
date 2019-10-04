@@ -2,11 +2,13 @@ from __future__ import absolute_import
 import errno
 import warnings
 import hmac
+import socket
 
 from binascii import hexlify, unhexlify
 from hashlib import md5, sha1, sha256
 
 from ..exceptions import SSLError, InsecurePlatformWarning, SNIMissingWarning
+from ..packages import six
 
 
 SSLContext = None
@@ -53,6 +55,26 @@ except ImportError:
     OP_NO_SSLv2, OP_NO_SSLv3 = 0x1000000, 0x2000000
     OP_NO_COMPRESSION = 0x20000
 
+
+# Python 2.7 doesn't have inet_pton on non-Linux so we fallback on inet_aton in
+# those cases. This means that we can only detect IPv4 addresses in this case.
+if hasattr(socket, 'inet_pton'):
+    inet_pton = socket.inet_pton
+else:
+    # Maybe we can use ipaddress if the user has urllib3[secure]?
+    try:
+        from pip._vendor import ipaddress
+
+        def inet_pton(_, host):
+            if isinstance(host, bytes):
+                host = host.decode('ascii')
+            return ipaddress.ip_address(host)
+
+    except ImportError:  # Platform-specific: Non-Linux
+        def inet_pton(_, host):
+            return socket.inet_aton(host)
+
+
 # A secure default.
 # Sources for more information on TLS ciphers:
 #
@@ -92,10 +114,7 @@ try:
 except ImportError:
     import sys
 
-    class SSLContext(object):  # Platform-specific: Python 2 & 3.1
-        supports_set_ciphers = ((2, 7) <= sys.version_info < (3,) or
-                                (3, 2) <= sys.version_info)
-
+    class SSLContext(object):  # Platform-specific: Python 2
         def __init__(self, protocol_version):
             self.protocol = protocol_version
             # Use default values from a real SSLContext
@@ -118,12 +137,6 @@ except ImportError:
                 raise SSLError("CA directories not supported in older Pythons")
 
         def set_ciphers(self, cipher_suite):
-            if not self.supports_set_ciphers:
-                raise TypeError(
-                    'Your version of Python does not support setting '
-                    'a custom cipher suite. Please upgrade to Python '
-                    '2.7, 3.2, or later if you need this functionality.'
-                )
             self.ciphers = cipher_suite
 
         def wrap_socket(self, socket, server_hostname=None, server_side=False):
@@ -144,10 +157,7 @@ except ImportError:
                 'ssl_version': self.protocol,
                 'server_side': server_side,
             }
-            if self.supports_set_ciphers:  # Platform-specific: Python 2.7+
-                return wrap_socket(socket, ciphers=self.ciphers, **kwargs)
-            else:  # Platform-specific: Python 2.6
-                return wrap_socket(socket, **kwargs)
+            return wrap_socket(socket, ciphers=self.ciphers, **kwargs)
 
 
 def assert_fingerprint(cert, fingerprint):
@@ -183,7 +193,7 @@ def resolve_cert_reqs(candidate):
     the wrap_socket function/method from the ssl module.
     Defaults to :data:`ssl.CERT_NONE`.
     If given a string it is assumed to be the name of the constant in the
-    :mod:`ssl` module or its abbrevation.
+    :mod:`ssl` module or its abbreviation.
     (So you can specify `REQUIRED` instead of `CERT_REQUIRED`.
     If it's neither `None` nor a string we assume it is already the numeric
     constant which can directly be passed to wrap_socket.
@@ -253,6 +263,8 @@ def create_urllib3_context(ssl_version=None, cert_reqs=None,
     """
     context = SSLContext(ssl_version or ssl.PROTOCOL_SSLv23)
 
+    context.set_ciphers(ciphers or DEFAULT_CIPHERS)
+
     # Setting the default here, as we may have no ssl module on import
     cert_reqs = ssl.CERT_REQUIRED if cert_reqs is None else cert_reqs
 
@@ -267,9 +279,6 @@ def create_urllib3_context(ssl_version=None, cert_reqs=None,
         options |= OP_NO_COMPRESSION
 
     context.options |= options
-
-    if getattr(context, 'supports_set_ciphers', True):  # Platform-specific: Python 2.6
-        context.set_ciphers(ciphers or DEFAULT_CIPHERS)
 
     context.verify_mode = cert_reqs
     if getattr(context, 'check_hostname', None) is not None:  # Platform-specific: Python 3.2
@@ -293,8 +302,7 @@ def ssl_wrap_socket(sock, keyfile=None, certfile=None, cert_reqs=None,
         A pre-made :class:`SSLContext` object. If none is provided, one will
         be created using :func:`create_urllib3_context`.
     :param ciphers:
-        A string of ciphers we wish the client to support. This is not
-        supported on Python 2.6 as the ssl module does not support it.
+        A string of ciphers we wish the client to support.
     :param ca_cert_dir:
         A directory containing CA certificates in multiple separate files, as
         supported by OpenSSL's -CApath flag or the capath argument to
@@ -311,7 +319,7 @@ def ssl_wrap_socket(sock, keyfile=None, certfile=None, cert_reqs=None,
     if ca_certs or ca_cert_dir:
         try:
             context.load_verify_locations(ca_certs, ca_cert_dir)
-        except IOError as e:  # Platform-specific: Python 2.6, 2.7, 3.2
+        except IOError as e:  # Platform-specific: Python 2.7
             raise SSLError(e)
         # Py33 raises FileNotFoundError which subclasses OSError
         # These are not equivalent unless we check the errno attribute
@@ -325,17 +333,49 @@ def ssl_wrap_socket(sock, keyfile=None, certfile=None, cert_reqs=None,
 
     if certfile:
         context.load_cert_chain(certfile, keyfile)
-    if HAS_SNI:  # Platform-specific: OpenSSL with enabled SNI
-        return context.wrap_socket(sock, server_hostname=server_hostname)
 
-    warnings.warn(
-        'An HTTPS request has been made, but the SNI (Subject Name '
-        'Indication) extension to TLS is not available on this platform. '
-        'This may cause the server to present an incorrect TLS '
-        'certificate, which can cause validation failures. You can upgrade to '
-        'a newer version of Python to solve this. For more information, see '
-        'https://urllib3.readthedocs.io/en/latest/advanced-usage.html'
-        '#ssl-warnings',
-        SNIMissingWarning
-    )
+    # If we detect server_hostname is an IP address then the SNI
+    # extension should not be used according to RFC3546 Section 3.1
+    # We shouldn't warn the user if SNI isn't available but we would
+    # not be using SNI anyways due to IP address for server_hostname.
+    if ((server_hostname is not None and not is_ipaddress(server_hostname))
+            or IS_SECURETRANSPORT):
+        if HAS_SNI and server_hostname is not None:
+            return context.wrap_socket(sock, server_hostname=server_hostname)
+
+        warnings.warn(
+            'An HTTPS request has been made, but the SNI (Server Name '
+            'Indication) extension to TLS is not available on this platform. '
+            'This may cause the server to present an incorrect TLS '
+            'certificate, which can cause validation failures. You can upgrade to '
+            'a newer version of Python to solve this. For more information, see '
+            'https://urllib3.readthedocs.io/en/latest/advanced-usage.html'
+            '#ssl-warnings',
+            SNIMissingWarning
+        )
+
     return context.wrap_socket(sock)
+
+
+def is_ipaddress(hostname):
+    """Detects whether the hostname given is an IP address.
+
+    :param str hostname: Hostname to examine.
+    :return: True if the hostname is an IP address, False otherwise.
+    """
+    if six.PY3 and isinstance(hostname, bytes):
+        # IDN A-label bytes are ASCII compatible.
+        hostname = hostname.decode('ascii')
+
+    families = [socket.AF_INET]
+    if hasattr(socket, 'AF_INET6'):
+        families.append(socket.AF_INET6)
+
+    for af in families:
+        try:
+            inet_pton(af, hostname)
+        except (socket.error, ValueError, OSError):
+            pass
+        else:
+            return True
+    return False

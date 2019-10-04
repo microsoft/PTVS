@@ -1,10 +1,13 @@
 {
-  "arch": "x86_64",
   "build": "py37_0",
   "build_number": 0,
+  "channel": "https://repo.anaconda.com/pkgs/main/win-64",
+  "constrains": [],
   "depends": [
     "python >=3.7,<3.8.0a0"
   ],
+  "extracted_package_dir": "C:\\ProgramData\\Miniconda3\\pkgs\\asn1crypto-0.24.0-py37_0",
+  "features": "",
   "files": [
     "Lib/site-packages/asn1crypto-0.24.0-py3.7.egg-info/PKG-INFO",
     "Lib/site-packages/asn1crypto-0.24.0-py3.7.egg-info/SOURCES.txt",
@@ -65,17 +68,27 @@
     "Lib/site-packages/asn1crypto/version.py",
     "Lib/site-packages/asn1crypto/x509.py"
   ],
-  "installed_by": "Miniconda3-4.5.11-Windows-x86_64.exe",
+  "fn": "asn1crypto-0.24.0-py37_0.conda",
+  "legacy_bz2_md5": "3a4916054f7d730b17e5d8a4343d9b59",
+  "legacy_bz2_size": 158117,
   "license": "MIT",
   "link": {
-    "source": "C:\\Users\\huvalo\\Documents\\Miniconda\\pkgs\\asn1crypto-0.24.0-py37_0",
-    "type": "hard-link"
+    "source": "C:\\ProgramData\\Miniconda3\\pkgs\\asn1crypto-0.24.0-py37_0",
+    "type": 1
   },
-  "md5": "3a4916054f7d730b17e5d8a4343d9b59",
+  "md5": "47dd9a2d831ef1abd1fe2b4a76f8498f",
   "name": "asn1crypto",
-  "platform": "win",
+  "package_tarball_full_path": "C:\\ProgramData\\Miniconda3\\pkgs\\asn1crypto-0.24.0-py37_0.conda",
+  "paths_data": {
+    "paths": [],
+    "paths_version": 1
+  },
+  "requested_spec": "asn1crypto==0.24.0=py37_0",
+  "sha256": "96f2481f44bf32be9243af1c733c00a05e12bba142158dd1715ba47e4bb17c1c",
+  "size": 160214,
   "subdir": "win-64",
   "timestamp": 1531569034102,
-  "url": "https://repo.anaconda.com/pkgs/main/win-64/asn1crypto-0.24.0-py37_0.tar.bz2",
+  "track_features": "",
+  "url": "https://repo.anaconda.com/pkgs/main/win-64/asn1crypto-0.24.0-py37_0.conda",
   "version": "0.24.0"
 }

@@ -9,8 +9,6 @@ import ipaddress
 import warnings
 from email.utils import parseaddr
 
-import idna
-
 import six
 from six.moves import urllib_parse
 
@@ -30,6 +28,20 @@ _GENERAL_NAMES = {
     7: "iPAddress",
     8: "registeredID",
 }
+
+
+def _lazy_import_idna():
+    # Import idna lazily becase it allocates a decent amount of memory, and
+    # we're only using it in deprecated paths.
+    try:
+        import idna
+        return idna
+    except ImportError:
+        raise ImportError(
+            "idna is not installed, but a deprecated feature that requires it"
+            " was used. See: https://cryptography.io/en/latest/faq/#importe"
+            "rror-idna-is-not-installed"
+        )
 
 
 class UnsupportedGeneralNameType(Exception):
@@ -60,7 +72,7 @@ class RFC822Name(object):
                     "This means unicode characters should be encoded via "
                     "idna. Support for passing unicode strings (aka U-label) "
                     "will be removed in a future version.",
-                    utils.DeprecatedIn21,
+                    utils.PersistentlyDeprecated2017,
                     stacklevel=2,
                 )
         else:
@@ -83,6 +95,7 @@ class RFC822Name(object):
         return instance
 
     def _idna_encode(self, value):
+        idna = _lazy_import_idna()
         _, address = parseaddr(value)
         parts = address.split(u"@")
         return parts[0] + "@" + idna.encode(parts[1]).decode("ascii")
@@ -104,6 +117,7 @@ class RFC822Name(object):
 
 
 def _idna_encode(value):
+    idna = _lazy_import_idna()
     # Retain prefixes '*.' for common/alt names and '.' for name constraints
     for prefix in ['*.', '.']:
         if value.startswith(prefix):
@@ -125,7 +139,7 @@ class DNSName(object):
                     "This means unicode characters should be encoded via "
                     "idna. Support for passing unicode strings (aka U-label) "
                     "will be removed in a future version.",
-                    utils.DeprecatedIn21,
+                    utils.PersistentlyDeprecated2017,
                     stacklevel=2,
                 )
         else:
@@ -170,7 +184,7 @@ class UniformResourceIdentifier(object):
                     "This means unicode characters should be encoded via "
                     "idna. Support for passing unicode strings (aka U-label) "
                     " will be removed in a future version.",
-                    utils.DeprecatedIn21,
+                    utils.PersistentlyDeprecated2017,
                     stacklevel=2,
                 )
         else:
@@ -187,11 +201,12 @@ class UniformResourceIdentifier(object):
         return instance
 
     def _idna_encode(self, value):
+        idna = _lazy_import_idna()
         parsed = urllib_parse.urlparse(value)
         if parsed.port:
             netloc = (
                 idna.encode(parsed.hostname) +
-                ":{0}".format(parsed.port).encode("ascii")
+                ":{}".format(parsed.port).encode("ascii")
             ).decode("ascii")
         else:
             netloc = idna.encode(parsed.hostname).decode("ascii")
@@ -235,7 +250,7 @@ class DirectoryName(object):
     value = utils.read_only_property("_value")
 
     def __repr__(self):
-        return "<DirectoryName(value={0})>".format(self.value)
+        return "<DirectoryName(value={})>".format(self.value)
 
     def __eq__(self, other):
         if not isinstance(other, DirectoryName):
@@ -261,7 +276,7 @@ class RegisteredID(object):
     value = utils.read_only_property("_value")
 
     def __repr__(self):
-        return "<RegisteredID(value={0})>".format(self.value)
+        return "<RegisteredID(value={})>".format(self.value)
 
     def __eq__(self, other):
         if not isinstance(other, RegisteredID):
@@ -299,7 +314,7 @@ class IPAddress(object):
     value = utils.read_only_property("_value")
 
     def __repr__(self):
-        return "<IPAddress(value={0})>".format(self.value)
+        return "<IPAddress(value={})>".format(self.value)
 
     def __eq__(self, other):
         if not isinstance(other, IPAddress):
@@ -329,7 +344,7 @@ class OtherName(object):
     value = utils.read_only_property("_value")
 
     def __repr__(self):
-        return "<OtherName(type_id={0}, value={1!r})>".format(
+        return "<OtherName(type_id={}, value={!r})>".format(
             self.type_id, self.value)
 
     def __eq__(self, other):

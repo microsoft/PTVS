@@ -1,0 +1,43 @@
+{
+  "build": "h1df5818_7",
+  "build_number": 7,
+  "channel": "https://repo.anaconda.com/pkgs/main/win-64",
+  "constrains": [],
+  "depends": [
+    "vc 14.*"
+  ],
+  "extracted_package_dir": "C:\\ProgramData\\Miniconda3\\pkgs\\libiconv-1.15-h1df5818_7",
+  "features": "",
+  "files": [
+    "Library/bin/charset.dll",
+    "Library/bin/iconv.dll",
+    "Library/include/iconv.h",
+    "Library/include/libcharset.h",
+    "Library/include/localcharset.h",
+    "Library/lib/charset.lib",
+    "Library/lib/iconv.lib"
+  ],
+  "fn": "libiconv-1.15-h1df5818_7.conda",
+  "legacy_bz2_md5": "cf3a121e3e744f0520d8fee6acdd2869",
+  "legacy_bz2_size": 679659,
+  "license": "GPL and LGPL",
+  "link": {
+    "source": "C:\\ProgramData\\Miniconda3\\pkgs\\libiconv-1.15-h1df5818_7",
+    "type": 1
+  },
+  "md5": "c11b04ba8fe614dc1480b14b8dc7cd4f",
+  "name": "libiconv",
+  "package_tarball_full_path": "C:\\ProgramData\\Miniconda3\\pkgs\\libiconv-1.15-h1df5818_7.conda",
+  "paths_data": {
+    "paths": [],
+    "paths_version": 1
+  },
+  "requested_spec": "libiconv==1.15=h1df5818_7",
+  "sha256": "290e8cb48a4f000fcb823c09838a2c410838c99a2e7486bae1a02217fcf88e0f",
+  "size": 640739,
+  "subdir": "win-64",
+  "timestamp": 1510602931208,
+  "track_features": "",
+  "url": "https://repo.anaconda.com/pkgs/main/win-64/libiconv-1.15-h1df5818_7.conda",
+  "version": "1.15"
+}

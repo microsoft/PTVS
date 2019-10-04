@@ -24,7 +24,7 @@ _RULES_VC = 1
 # For modifications that are not backward-compatible, you *must* change
 # the major version.
 RULES_VERSION_MAJOR = 1
-RULES_VERSION_MINOR = 0
+RULES_VERSION_MINOR = 2
 
 # The PROJECT macro must be defined by parent makefile.
 !if "$(PROJECT)" == ""
@@ -393,7 +393,7 @@ MSG = ^
 !endif
 
 
-# If INSTALLDIR set to tcl installation root dir then reset to the
+# If INSTALLDIR set to Tcl installation root dir then reset to the
 # lib dir for installing extensions 
 !if exist("$(_INSTALLDIR)\include\tcl.h")
 _INSTALLDIR=$(_INSTALLDIR)\lib
@@ -535,7 +535,6 @@ NMAKEHLPC = $(_TCLDIR)\win\nmakehlp.c
 
 # We always build nmakehlp even if it exists since we do not know
 # what source it was built from.
-!message *** Using $(NMAKEHLPC)
 !if [$(cc32) -nologo "$(NMAKEHLPC)" -link -subsystem:console > nul]
 !endif
 
@@ -590,7 +589,6 @@ FPOPTS  = $(FPOPTS) -QI0f
 OPTIMIZATIONS = $(FPOPTS)
 
 !if [nmakehlp -c -O2]
-!message *** Compiler has 'Optimizations'
 OPTIMIZING = 1
 OPTIMIZATIONS   = $(OPTIMIZATIONS) -O2
 !else
@@ -1077,12 +1075,24 @@ TCL_INCLUDES    = -I"$(WINDIR)" -I"$(GENERICDIR)"
 
 !if $(TCLINSTALL) # Building against an installed Tcl
 
+# When building extensions, we need to locate tclsh. Depending on version
+# of Tcl we are building against, this may or may not have a "t" suffix.
+# Try various possibilities in turn.
 TCLSH		= $(_TCLDIR)\bin\tclsh$(TCL_VERSION)$(SUFX).exe
 !if !exist("$(TCLSH)") && $(TCL_THREADS)
 TCLSH           = $(_TCLDIR)\bin\tclsh$(TCL_VERSION)t$(SUFX).exe
 !endif
+!if !exist("$(TCLSH)")
+TCLSH           = $(_TCLDIR)\bin\tclsh$(TCL_VERSION)$(SUFX:t=).exe
+!endif
+
 TCLSTUBLIB	= $(_TCLDIR)\lib\tclstub$(TCL_VERSION).lib
 TCLIMPLIB	= $(_TCLDIR)\lib\tcl$(TCL_VERSION)$(SUFX).lib
+# When building extensions, may be linking against Tcl that does not add
+# "t" suffix (e.g. 8.5 or 8.7). If lib not found check for that possibility.
+!if !exist("$(TCLIMPLIB)")
+TCLIMPLIB	= $(_TCLDIR)\lib\tcl$(TCL_VERSION)$(SUFX:t=).lib
+!endif
 TCL_LIBRARY	= $(_TCLDIR)\lib
 TCLREGLIB	= $(_TCLDIR)\lib\tclreg13$(SUFX:t=).lib
 TCLDDELIB	= $(_TCLDIR)\lib\tcldde14$(SUFX:t=).lib
@@ -1095,8 +1105,16 @@ TCLSH		= $(_TCLDIR)\win\$(BUILDDIRTOP)\tclsh$(TCL_VERSION)$(SUFX).exe
 !if !exist($(TCLSH)) && $(TCL_THREADS)
 TCLSH		= $(_TCLDIR)\win\$(BUILDDIRTOP)\tclsh$(TCL_VERSION)t$(SUFX).exe
 !endif
+!if !exist($(TCLSH))
+TCLSH		= $(_TCLDIR)\win\$(BUILDDIRTOP)\tclsh$(TCL_VERSION)$(SUFX:t=).exe
+!endif
 TCLSTUBLIB	= $(_TCLDIR)\win\$(BUILDDIRTOP)\tclstub$(TCL_VERSION).lib
 TCLIMPLIB	= $(_TCLDIR)\win\$(BUILDDIRTOP)\tcl$(TCL_VERSION)$(SUFX).lib
+# When building extensions, may be linking against Tcl that does not add
+# "t" suffix (e.g. 8.5 or 8.7). If lib not found check for that possibility.
+!if !exist("$(TCLIMPLIB)")
+TCLIMPLIB	= $(_TCLDIR)\win\$(BUILDDIRTOP)\tcl$(TCL_VERSION)$(SUFX:t=).lib
+!endif
 TCL_LIBRARY	= $(_TCLDIR)\library
 TCLREGLIB	= $(_TCLDIR)\win\$(BUILDDIRTOP)\tclreg13$(SUFX:t=).lib
 TCLDDELIB	= $(_TCLDIR)\win\$(BUILDDIRTOP)\tcldde14$(SUFX:t=).lib
@@ -1140,11 +1158,23 @@ TK_INCLUDES    = -I"$(WINDIR)" -I"$(GENERICDIR)"
 WISH		= $(_TKDIR)\bin\$(WISHNAME)
 TKSTUBLIB	= $(_TKDIR)\lib\$(TKSTUBLIBNAME)
 TKIMPLIB	= $(_TKDIR)\lib\$(TKIMPLIBNAME)
+# When building extensions, may be linking against Tk that does not add
+# "t" suffix (e.g. 8.5 or 8.7). If lib not found check for that possibility.
+!if !exist("$(TKIMPLIB)")
+TKIMPLIBNAME	= tk$(TK_VERSION)$(SUFX:t=).lib
+TKIMPLIB	= $(_TKDIR)\lib\$(TKIMPLIBNAME)
+!endif
 TK_INCLUDES     = -I"$(_TKDIR)\include"
 !else # Building against Tk sources
 WISH		= $(_TKDIR)\win\$(BUILDDIRTOP)\$(WISHNAME)
 TKSTUBLIB	= $(_TKDIR)\win\$(BUILDDIRTOP)\$(TKSTUBLIBNAME)
 TKIMPLIB	= $(_TKDIR)\win\$(BUILDDIRTOP)\$(TKIMPLIBNAME)
+# When building extensions, may be linking against Tk that does not add
+# "t" suffix (e.g. 8.5 or 8.7). If lib not found check for that possibility.
+!if !exist("$(TKIMPLIB)")
+TKIMPLIBNAME	= tk$(TK_VERSION)$(SUFX:t=).lib
+TKIMPLIB	= $(_TKDIR)\win\$(BUILDDIRTOP)\$(TKIMPLIBNAME)
+!endif
 TK_INCLUDES     = -I"$(_TKDIR)\generic" -I"$(_TKDIR)\win" -I"$(_TKDIR)\xlib"
 !endif # TKINSTALL
 tklibs = "$(TKSTUBLIB)" "$(TKIMPLIB)"
@@ -1179,7 +1209,7 @@ RESFILE = $(TMP_DIR)\$(PROJECT).res
 # SCRIPT_INSTALL_DIR - where scripts should be installed
 # INCLUDE_INSTALL_DIR - where C include files should be installed
 # DEMO_INSTALL_DIR - where demos should be installed
-# PRJ_INSTALL_DIR - where package will be installed (not set for tcl and tk)
+# PRJ_INSTALL_DIR - where package will be installed (not set for Tcl and Tk)
 
 !if $(DOING_TCL) || $(DOING_TK)
 LIB_INSTALL_DIR		= $(_INSTALLDIR)\lib
@@ -1201,7 +1231,7 @@ BIN_INSTALL_DIR		= $(PRJ_INSTALL_DIR)
 DOC_INSTALL_DIR		= $(PRJ_INSTALL_DIR)
 SCRIPT_INSTALL_DIR	= $(PRJ_INSTALL_DIR)
 DEMO_INSTALL_DIR	= $(PRJ_INSTALL_DIR)\demos
-INCLUDE_INSTALL_DIR	= $(_TCLDIR)\include
+INCLUDE_INSTALL_DIR	= $(_INSTALLDIR)\..\include
 
 !endif
 
@@ -1717,7 +1747,6 @@ TCLNMAKECONFIG = "$(OUT_DIR)\tcl.nmake"
 !message *** Output directory will be '$(OUT_DIR)'
 !message *** Installation, if selected, will be in '$(_INSTALLDIR)'
 !message *** Suffix for binaries will be '$(SUFX)'
-!message *** Compiler version $(VCVER). Target machine is $(MACHINE)
-!message *** Host architecture is $(NATIVE_ARCH)
+!message *** Compiler version $(VCVER). Target $(MACHINE), host $(NATIVE_ARCH).
 
 !endif # ifdef _RULES_VC
