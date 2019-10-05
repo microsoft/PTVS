@@ -42,7 +42,7 @@ namespace Microsoft.PythonTools.Project {
         protected IPackageManager PackageManager { get; set; }
 
         protected bool IsGloballySuppressed =>
-            !Site.GetPythonToolsService().GeneralOptions.PromptForPackageInstallation;
+          !Site.GetPythonToolsService().GeneralOptions.PromptForPackageInstallation;
 
         protected abstract void Suppress();
 
@@ -119,6 +119,8 @@ namespace Microsoft.PythonTools.Project {
         private PythonProjectNode Project { get; }
 
         public override async Task CheckAsync() {
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
             if (IsCreated || IsGloballySuppressed) {
                 return;
             }
