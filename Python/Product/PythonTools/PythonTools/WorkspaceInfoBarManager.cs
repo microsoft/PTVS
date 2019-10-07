@@ -35,6 +35,7 @@ namespace Microsoft.PythonTools {
         private CondaEnvCreateInfoBar _condaEnvCreateInfoBar;
         private VirtualEnvCreateInfoBar _virtualEnvCreateInfoBar;
         private TestFrameworkWorkspaceInfoBar _testFrameworkInfoBar;
+        private PythonNotSupportedWorkspaceInfoBar _pythonSupportInfoBar;
         private bool _infoBarCheckTriggered;
 
         public WorkspaceInfoBarManager(IServiceProvider serviceProvider) {
@@ -50,17 +51,22 @@ namespace Microsoft.PythonTools {
 
         private void OnWorkspaceInitialized(object sender, PythonWorkspaceContextEventArgs e) {
             var workspace = e.Workspace;
+            _infoBarCheckTriggered = false;
 
             _packageInstallInfoBar = new PackageInstallWorkspaceInfoBar(_serviceProvider, workspace);
             _condaEnvCreateInfoBar = new CondaEnvCreateWorkspaceInfoBar(_serviceProvider, workspace);
             _virtualEnvCreateInfoBar = new VirtualEnvCreateWorkspaceInfoBar(_serviceProvider, workspace);
             _testFrameworkInfoBar = new TestFrameworkWorkspaceInfoBar(_serviceProvider, workspace);
+            _pythonSupportInfoBar = new PythonNotSupportedWorkspaceInfoBar(_serviceProvider, workspace);
 
             workspace.AddActionOnClose(_packageInstallInfoBar, (obj => ((PythonInfoBar)obj).Dispose()));
             workspace.AddActionOnClose(_condaEnvCreateInfoBar, (obj => ((PythonInfoBar)obj).Dispose()));
             workspace.AddActionOnClose(_virtualEnvCreateInfoBar, (obj => ((PythonInfoBar)obj).Dispose()));
             workspace.AddActionOnClose(_testFrameworkInfoBar, (obj => ((PythonInfoBar)obj).Dispose()));
-            _infoBarCheckTriggered = false;
+            workspace.AddActionOnClose(_pythonSupportInfoBar, (obj => ((PythonInfoBar)obj).Dispose()));
+
+            workspace.ActiveInterpreterChanged += TriggerPythonNotSupportedInforBar;
+            workspace.AddActionOnClose(_pythonSupportInfoBar, (obj) => workspace.ActiveInterpreterChanged -= TriggerPythonNotSupportedInforBar);
 
             // When we see a Python file opened in the workspace, we trigger info bar checks.
             // Python files may have already been opened by the time this runs, so we'll check
@@ -128,8 +134,17 @@ namespace Microsoft.PythonTools {
                 _condaEnvCreateInfoBar.CheckAsync(),
                 _virtualEnvCreateInfoBar.CheckAsync(),
                 _packageInstallInfoBar.CheckAsync(),
-                _testFrameworkInfoBar.CheckAsync()
+                _testFrameworkInfoBar.CheckAsync(),
+                _pythonSupportInfoBar.CheckAsync()
             );
+        }
+
+        private async void TriggerPythonNotSupportedInforBar(object sender, EventArgs e) {
+            TriggerPythonNotSupportedInforBarAsync().HandleAllExceptions(_serviceProvider, GetType()).DoNotWait();
+        }
+
+        private async Task TriggerPythonNotSupportedInforBarAsync() {
+            await _pythonSupportInfoBar.CheckAsync();
         }
 
         public int OnAfterFirstDocumentLock(uint docCookie, uint dwRDTLockType, uint dwReadLocksRemaining, uint dwEditLocksRemaining) {

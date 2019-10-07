@@ -167,6 +167,18 @@ namespace Microsoft.PythonTools.Logging {
         public const string Ignore = "Ignore";
     }
 
+    sealed class PythonVersionNotSupportedInfoBarInfo : PythonToolsLoggerData {
+        public string Action { get; set; }
+        public string Context { get; set; }
+        public Version PythonVersion { get; set; }
+    }
+
+    static class PythonVersionNotSupportedInfoBarAction {
+        public const string Prompt = "Prompt";
+        public const string MoreInfo = "MoreInfo";
+        public const string Ignore = "Ignore";
+    }
+
     sealed class PackageInstallInfoBarInfo : PythonToolsLoggerData {
         public string Action { get; set; }
         public string Context { get; set; }

@@ -2943,7 +2943,7 @@ Please specify at least one package.</value>
 {2} is "project" or "workspace"
 {3} is an integer wait time in seconds</comment>
   </data>
-    <data name="PythonTestDiscovererTimeoutErrorMessage" xml:space="preserve">
+  <data name="PythonTestDiscovererTimeoutErrorMessage" xml:space="preserve">
     <value>Python test discovery timeout, possibly due to blocking call. Go to https://aka.ms/VSTestExplorerPython for more details on test discovery.</value>
   </data>
   <data name="UnitTestEnableInfoBarAction" xml:space="preserve">
@@ -2968,6 +2968,14 @@ Please specify at least one package.</value>
     <value>Results for pytest not found {0}</value>
     <comment>{0} is the expected file path</comment>
   </data>
-
-    
+  <data name="DoNotShowMessageAgain" xml:space="preserve">
+    <value>Do not show this message again</value>
+  </data>
+  <data name="PythonVersionNotSupportInfoBarText" xml:space="preserve">
+    <value>Certain features may not work properly because you are using Python {0}, but VS doesn't officially support it. </value>
+    <comment>{0} is the Python version</comment>
+  </data>
+  <data name="PythonVersionNotSupportMoreInformation" xml:space="preserve">
+    <value>More information</value>
+  </data>
 </root>
