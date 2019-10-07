@@ -241,7 +241,6 @@ namespace Microsoft.PythonTools.Project {
                 _activePackageManagers = null;
 
                 foreach (var pm in oldPms.MaybeEnumerate()) {
-                    pm.DisableNotifications();
                     pm.InstalledFilesChanged -= PackageManager_InstalledFilesChanged;
                 }
 
@@ -1098,7 +1097,6 @@ namespace Microsoft.PythonTools.Project {
                 _reanalyzeProjectNotification.Dispose();
 
                 foreach (var pm in _activePackageManagers.MaybeEnumerate()) {
-                    pm.DisableNotifications();
                     pm.InstalledFilesChanged -= PackageManager_InstalledFilesChanged;
                 }
 
