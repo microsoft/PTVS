@@ -40,16 +40,16 @@ namespace TestAdapterTests {
             ITestContainerDiscoverer dummyDiscoverer = null;
             var projectMap = new ConcurrentDictionary<string, ProjectInfo>();
             var projectName = "dummyName";
-            PythonProject dumpyProject = new MockPythonProject("dummyHome", projectName);
+            PythonProject dummyProject = new MockPythonProject("dummyHome", projectName);
 
-            //Simualte rebuid workspace
-            projectMap[projectName] = new ProjectInfo(dumpyProject);
+            //Simulate rebuid workspace
+            projectMap[projectName] = new ProjectInfo(dummyProject);
 
             var rebuildTasks = Enumerable.Range(1, 10)
                 .Select(i => Task.Run(async
                     () => {
                         projectMap.Clear();
-                        projectMap[projectName] = new ProjectInfo(dumpyProject);
+                        projectMap[projectName] = new ProjectInfo(dummyProject);
                         foreach (int j in Enumerable.Range(1, 1000)) {
                             projectMap[projectName].AddTestContainer(dummyDiscoverer, j.ToString() + ".py");
                         }
