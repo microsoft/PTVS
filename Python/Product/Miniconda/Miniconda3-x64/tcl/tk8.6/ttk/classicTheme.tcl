@@ -98,8 +98,12 @@ namespace eval ttk::theme::classic {
 	ttk::style configure Heading -font TkHeadingFont -relief raised
 	ttk::style configure Treeview -background $colors(-window)
 	ttk::style map Treeview \
-	    -background [list selected $colors(-selectbg)] \
-	    -foreground [list selected $colors(-selectfg)] ;
+	    -background [list disabled $colors(-frame)\
+				{!disabled !selected} $colors(-window) \
+				selected $colors(-selectbg)] \
+	    -foreground [list disabled $colors(-disabledfg) \
+				{!disabled !selected} black \
+				selected $colors(-selectfg)]
 
 	#
 	# Toolbar buttons:

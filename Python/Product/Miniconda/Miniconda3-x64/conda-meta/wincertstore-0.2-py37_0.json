@@ -1,26 +1,39 @@
 {
-  "arch": "x86_64",
   "build": "py37_0",
   "build_number": 0,
+  "channel": "https://repo.anaconda.com/pkgs/main/win-64",
+  "constrains": [],
   "depends": [
     "python >=3.7,<3.8.0a0"
   ],
+  "extracted_package_dir": "C:\\ProgramData\\Miniconda3\\pkgs\\wincertstore-0.2-py37_0",
+  "features": "",
   "files": [
     "Lib/site-packages/__pycache__/wincertstore.cpython-37.pyc",
     "Lib/site-packages/wincertstore-0.2-py3.7.egg-info",
     "Lib/site-packages/wincertstore.py"
   ],
-  "installed_by": "Miniconda3-4.5.11-Windows-x86_64.exe",
+  "fn": "wincertstore-0.2-py37_0.conda",
+  "legacy_bz2_md5": "0418cf653523e6ef0174c259efaa78b4",
+  "legacy_bz2_size": 13785,
   "license": "PSF 2",
   "link": {
-    "source": "C:\\Users\\huvalo\\Documents\\Miniconda\\pkgs\\wincertstore-0.2-py37_0",
-    "type": "hard-link"
+    "source": "C:\\ProgramData\\Miniconda3\\pkgs\\wincertstore-0.2-py37_0",
+    "type": 1
   },
-  "md5": "0418cf653523e6ef0174c259efaa78b4",
+  "md5": "d1028822b9bd55d63172d7a8881b2b00",
   "name": "wincertstore",
-  "platform": "win",
+  "package_tarball_full_path": "C:\\ProgramData\\Miniconda3\\pkgs\\wincertstore-0.2-py37_0.conda",
+  "paths_data": {
+    "paths": [],
+    "paths_version": 1
+  },
+  "requested_spec": "wincertstore==0.2=py37_0",
+  "sha256": "00d6c74ebd1a4661555c1209d8e02ff46585283d580478889b6112d5a38b55a8",
+  "size": 14104,
   "subdir": "win-64",
   "timestamp": 1530221279113,
-  "url": "https://repo.anaconda.com/pkgs/main/win-64/wincertstore-0.2-py37_0.tar.bz2",
+  "track_features": "",
+  "url": "https://repo.anaconda.com/pkgs/main/win-64/wincertstore-0.2-py37_0.conda",
   "version": "0.2"
 }

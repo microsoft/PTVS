@@ -88,18 +88,18 @@ bind ComboboxPopdown	<ButtonPress> \
 ### Option database settings.
 #
 
-option add *TCombobox*Listbox.font TkTextFont
-option add *TCombobox*Listbox.relief flat
-option add *TCombobox*Listbox.highlightThickness 0
+option add *TCombobox*Listbox.font TkTextFont widgetDefault
+option add *TCombobox*Listbox.relief flat widgetDefault
+option add *TCombobox*Listbox.highlightThickness 0 widgetDefault
 
 ## Platform-specific settings.
 #
 switch -- [tk windowingsystem] {
     x11 {
-	option add *TCombobox*Listbox.background white
+	option add *TCombobox*Listbox.background white widgetDefault
     }
     aqua {
-	option add *TCombobox*Listbox.borderWidth 0
+	option add *TCombobox*Listbox.borderWidth 0 widgetDefault
     }
 }
 

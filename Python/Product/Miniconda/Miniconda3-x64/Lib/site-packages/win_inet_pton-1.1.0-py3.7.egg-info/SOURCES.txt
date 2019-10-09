@@ -1,0 +1,10 @@
+LICENSE
+MANIFEST.in
+README.rst
+setup.cfg
+setup.py
+win_inet_pton.py
+win_inet_pton.egg-info/PKG-INFO
+win_inet_pton.egg-info/SOURCES.txt
+win_inet_pton.egg-info/dependency_links.txt
+win_inet_pton.egg-info/top_level.txt

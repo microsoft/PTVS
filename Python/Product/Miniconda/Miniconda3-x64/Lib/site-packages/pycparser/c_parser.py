@@ -3,7 +3,7 @@
 #
 # CParser class: Parser and AST builder for the C language
 #
-# Eli Bendersky [http://eli.thegreenplace.net]
+# Eli Bendersky [https://eli.thegreenplace.net/]
 # License: BSD
 #------------------------------------------------------------------------------
 import re
@@ -616,6 +616,59 @@ class CParser(PLYParser):
         """
         p[0] = p[1]
 
+    # A pragma is generally considered a decorator rather than an actual statement.
+    # Still, for the purposes of analyzing an abstract syntax tree of C code,
+    # pragma's should not be ignored and were previously treated as a statement.
+    # This presents a problem for constructs that take a statement such as labeled_statements,
+    # selection_statements, and iteration_statements, causing a misleading structure
+    # in the AST. For example, consider the following C code.
+    #
+    #   for (int i = 0; i < 3; i++)
+    #       #pragma omp critical
+    #       sum += 1;
+    #
+    # This code will compile and execute "sum += 1;" as the body of the for loop.
+    # Previous implementations of PyCParser would render the AST for this
+    # block of code as follows:
+    #
+    #   For:
+    #     DeclList:
+    #       Decl: i, [], [], []
+    #         TypeDecl: i, []
+    #           IdentifierType: ['int']
+    #         Constant: int, 0
+    #     BinaryOp: <
+    #       ID: i
+    #       Constant: int, 3
+    #     UnaryOp: p++
+    #       ID: i
+    #     Pragma: omp critical
+    #   Assignment: +=
+    #     ID: sum
+    #     Constant: int, 1
+    #
+    # This AST misleadingly takes the Pragma as the body of the loop and the
+    # assignment then becomes a sibling of the loop.
+    #
+    # To solve edge cases like these, the pragmacomp_or_statement rule groups
+    # a pragma and its following statement (which would otherwise be orphaned)
+    # using a compound block, effectively turning the above code into:
+    #
+    #   for (int i = 0; i < 3; i++) {
+    #       #pragma omp critical
+    #       sum += 1;
+    #   }
+    def p_pragmacomp_or_statement(self, p):
+        """ pragmacomp_or_statement     : pppragma_directive statement
+                                        | statement
+        """
+        if isinstance(p[1], c_ast.Pragma) and len(p) == 3:
+            p[0] = c_ast.Compound(
+                block_items=[p[1], p[2]],
+                coord=self._token_coord(p, 1))
+        else:
+            p[0] = p[1]
+
     # In C, declarations can come several in a line:
     #   int x, *px, romulo = 5;
     #
@@ -855,6 +908,7 @@ class CParser(PLYParser):
                                         | struct_or_union TYPEID
         """
         klass = self._select_struct_union_class(p[1])
+        # None means no list of members
         p[0] = klass(
             name=p[2],
             decls=None,
@@ -862,22 +916,40 @@ class CParser(PLYParser):
 
     def p_struct_or_union_specifier_2(self, p):
         """ struct_or_union_specifier : struct_or_union brace_open struct_declaration_list brace_close
+                                      | struct_or_union brace_open brace_close
         """
         klass = self._select_struct_union_class(p[1])
-        p[0] = klass(
-            name=None,
-            decls=p[3],
-            coord=self._token_coord(p, 2))
+        if len(p) == 4:
+            # Empty sequence means an empty list of members
+            p[0] = klass(
+                name=None,
+                decls=[],
+                coord=self._token_coord(p, 2))
+        else:
+            p[0] = klass(
+                name=None,
+                decls=p[3],
+                coord=self._token_coord(p, 2))
+
 
     def p_struct_or_union_specifier_3(self, p):
         """ struct_or_union_specifier   : struct_or_union ID brace_open struct_declaration_list brace_close
+                                        | struct_or_union ID brace_open brace_close
                                         | struct_or_union TYPEID brace_open struct_declaration_list brace_close
+                                        | struct_or_union TYPEID brace_open brace_close
         """
         klass = self._select_struct_union_class(p[1])
-        p[0] = klass(
-            name=p[2],
-            decls=p[4],
-            coord=self._token_coord(p, 2))
+        if len(p) == 5:
+            # Empty sequence means an empty list of members
+            p[0] = klass(
+                name=p[2],
+                decls=[],
+                coord=self._token_coord(p, 2))
+        else:
+            p[0] = klass(
+                name=p[2],
+                decls=p[4],
+                coord=self._token_coord(p, 2))
 
     def p_struct_or_union(self, p):
         """ struct_or_union : STRUCT
@@ -938,6 +1010,11 @@ class CParser(PLYParser):
         """ struct_declaration : SEMI
         """
         p[0] = None
+
+    def p_struct_declaration_3(self, p):
+        """ struct_declaration : pppragma_directive
+        """
+        p[0] = [p[1]]
 
     def p_struct_declarator_list(self, p):
         """ struct_declarator_list  : struct_declarator
@@ -1405,44 +1482,44 @@ class CParser(PLYParser):
             coord=self._token_coord(p, 1))
 
     def p_labeled_statement_1(self, p):
-        """ labeled_statement : ID COLON statement """
+        """ labeled_statement : ID COLON pragmacomp_or_statement """
         p[0] = c_ast.Label(p[1], p[3], self._token_coord(p, 1))
 
     def p_labeled_statement_2(self, p):
-        """ labeled_statement : CASE constant_expression COLON statement """
+        """ labeled_statement : CASE constant_expression COLON pragmacomp_or_statement """
         p[0] = c_ast.Case(p[2], [p[4]], self._token_coord(p, 1))
 
     def p_labeled_statement_3(self, p):
-        """ labeled_statement : DEFAULT COLON statement """
+        """ labeled_statement : DEFAULT COLON pragmacomp_or_statement """
         p[0] = c_ast.Default([p[3]], self._token_coord(p, 1))
 
     def p_selection_statement_1(self, p):
-        """ selection_statement : IF LPAREN expression RPAREN statement """
+        """ selection_statement : IF LPAREN expression RPAREN pragmacomp_or_statement """
         p[0] = c_ast.If(p[3], p[5], None, self._token_coord(p, 1))
 
     def p_selection_statement_2(self, p):
-        """ selection_statement : IF LPAREN expression RPAREN statement ELSE statement """
+        """ selection_statement : IF LPAREN expression RPAREN statement ELSE pragmacomp_or_statement """
         p[0] = c_ast.If(p[3], p[5], p[7], self._token_coord(p, 1))
 
     def p_selection_statement_3(self, p):
-        """ selection_statement : SWITCH LPAREN expression RPAREN statement """
+        """ selection_statement : SWITCH LPAREN expression RPAREN pragmacomp_or_statement """
         p[0] = fix_switch_cases(
                 c_ast.Switch(p[3], p[5], self._token_coord(p, 1)))
 
     def p_iteration_statement_1(self, p):
-        """ iteration_statement : WHILE LPAREN expression RPAREN statement """
+        """ iteration_statement : WHILE LPAREN expression RPAREN pragmacomp_or_statement """
         p[0] = c_ast.While(p[3], p[5], self._token_coord(p, 1))
 
     def p_iteration_statement_2(self, p):
-        """ iteration_statement : DO statement WHILE LPAREN expression RPAREN SEMI """
+        """ iteration_statement : DO pragmacomp_or_statement WHILE LPAREN expression RPAREN SEMI """
         p[0] = c_ast.DoWhile(p[5], p[2], self._token_coord(p, 1))
 
     def p_iteration_statement_3(self, p):
-        """ iteration_statement : FOR LPAREN expression_opt SEMI expression_opt SEMI expression_opt RPAREN statement """
+        """ iteration_statement : FOR LPAREN expression_opt SEMI expression_opt SEMI expression_opt RPAREN pragmacomp_or_statement """
         p[0] = c_ast.For(p[3], p[5], p[7], p[9], self._token_coord(p, 1))
 
     def p_iteration_statement_4(self, p):
-        """ iteration_statement : FOR LPAREN declaration expression_opt SEMI expression_opt RPAREN statement """
+        """ iteration_statement : FOR LPAREN declaration expression_opt SEMI expression_opt RPAREN pragmacomp_or_statement """
         p[0] = c_ast.For(c_ast.DeclList(p[3], self._token_coord(p, 1)),
                          p[4], p[6], p[8], self._token_coord(p, 1))
 
@@ -1697,8 +1774,18 @@ class CParser(PLYParser):
         """ constant    : FLOAT_CONST
                         | HEX_FLOAT_CONST
         """
+        if 'x' in p[1].lower():
+            t = 'float'
+        else:
+            if p[1][-1] in ('f', 'F'):
+                t = 'float'
+            elif p[1][-1] in ('l', 'L'):
+                t = 'long double'
+            else:
+                t = 'double'
+
         p[0] = c_ast.Constant(
-            'float', p[1], self._token_coord(p, 1))
+            t, p[1], self._token_coord(p, 1))
 
     def p_constant_3(self, p):
         """ constant    : CHAR_CONST
@@ -1761,22 +1848,3 @@ class CParser(PLYParser):
                             column=self.clex.find_tok_column(p)))
         else:
             self._parse_error('At end of input', self.clex.filename)
-
-
-#------------------------------------------------------------------------------
-if __name__ == "__main__":
-    import pprint
-    import time, sys
-
-    #t1 = time.time()
-    #parser = CParser(lex_optimize=True, yacc_debug=True, yacc_optimize=False)
-    #sys.write(time.time() - t1)
-
-    #buf = '''
-        #int (*k)(int);
-    #'''
-
-    ## set debuglevel to 2 for debugging
-    #t = parser.parse(buf, 'x.c', debuglevel=0)
-    #t.show(showcoord=True)
-

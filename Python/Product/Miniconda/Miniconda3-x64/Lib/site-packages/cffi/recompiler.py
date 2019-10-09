@@ -893,6 +893,12 @@ class Recompiler:
             else:
                 flags.append("_CFFI_F_CHECK_FIELDS")
             if tp.packed:
+                if tp.packed > 1:
+                    raise NotImplementedError(
+                        "%r is declared with 'pack=%r'; only 0 or 1 are "
+                        "supported in API mode (try to use \"...;\", which "
+                        "does not require a 'pack' declaration)" %
+                        (tp, tp.packed))
                 flags.append("_CFFI_F_PACKED")
         else:
             flags.append("_CFFI_F_EXTERNAL")
@@ -1534,27 +1540,3 @@ def recompile(ffi, module_name, preamble, tmpdir='.', call_c_compiler=True,
         else:
             return None, updated
 
-def _verify(ffi, module_name, preamble, *args, **kwds):
-    # FOR TESTS ONLY
-    from testing.udir import udir
-    import imp
-    assert module_name not in sys.modules, "module name conflict: %r" % (
-        module_name,)
-    kwds.setdefault('tmpdir', str(udir))
-    outputfilename = recompile(ffi, module_name, preamble, *args, **kwds)
-    module = imp.load_dynamic(module_name, outputfilename)
-    #
-    # hack hack hack: copy all *bound methods* from module.ffi back to the
-    # ffi instance.  Then calls like ffi.new() will invoke module.ffi.new().
-    for name in dir(module.ffi):
-        if not name.startswith('_'):
-            attr = getattr(module.ffi, name)
-            if attr is not getattr(ffi, name, object()):
-                setattr(ffi, name, attr)
-    def typeof_disabled(*args, **kwds):
-        raise NotImplementedError
-    ffi._typeof = typeof_disabled
-    for name in dir(ffi):
-        if not name.startswith('_') and not hasattr(module.ffi, name):
-            setattr(ffi, name, NotImplemented)
-    return module.lib

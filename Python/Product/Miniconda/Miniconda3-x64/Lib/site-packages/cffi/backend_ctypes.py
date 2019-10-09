@@ -636,6 +636,10 @@ class CTypesBackend(object):
                 if isinstance(init, bytes):
                     init = [init[i:i+1] for i in range(len(init))]
                 else:
+                    if isinstance(init, CTypesGenericArray):
+                        if (len(init) != len(blob) or
+                            not isinstance(init, CTypesArray)):
+                            raise TypeError("length/type mismatch: %s" % (init,))
                     init = tuple(init)
                 if len(init) > len(blob):
                     raise IndexError("too many initializers")
@@ -730,7 +734,8 @@ class CTypesBackend(object):
         return self._new_struct_or_union('union', name, ctypes.Union)
 
     def complete_struct_or_union(self, CTypesStructOrUnion, fields, tp,
-                                 totalsize=-1, totalalignment=-1, sflags=0):
+                                 totalsize=-1, totalalignment=-1, sflags=0,
+                                 pack=0):
         if totalsize >= 0 or totalalignment >= 0:
             raise NotImplementedError("the ctypes backend of CFFI does not support "
                                       "structures completed by verify(); please "
@@ -751,6 +756,8 @@ class CTypesBackend(object):
                 bfield_types[fname] = Ellipsis
         if sflags & 8:
             struct_or_union._pack_ = 1
+        elif pack:
+            struct_or_union._pack_ = pack
         struct_or_union._fields_ = cfields
         CTypesStructOrUnion._bfield_types = bfield_types
         #

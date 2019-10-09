@@ -1,0 +1,10 @@
+pycosat>=0.6.3
+requests>=2.12.4
+ruamel_yaml>=0.11.14
+
+[:platform_system == "Windows"]
+menuinst
+
+[:python_version < "3.4"]
+enum34
+futures

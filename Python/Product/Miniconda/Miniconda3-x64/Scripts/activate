@@ -1,4 +1,6 @@
 #!/bin/sh
-_CONDA_ROOT="$(cygpath 'C:/Users/huvalo/Documents/Miniconda')"
+_CONDA_ROOT="C:/ProgramData/Miniconda3"
+# Copyright (C) 2012 Anaconda, Inc
+# SPDX-License-Identifier: BSD-3-Clause
 \. "$_CONDA_ROOT/etc/profile.d/conda.sh" || return $?
-_conda_activate "$@"
+conda activate "$@"

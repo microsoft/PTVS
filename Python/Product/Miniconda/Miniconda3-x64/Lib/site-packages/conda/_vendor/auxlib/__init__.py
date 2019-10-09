@@ -66,6 +66,17 @@ class _Null(object):
     def __len__(self):
         return 0
 
+    def __eq__(self, other):
+        return isinstance(other, _Null)
+
+    def __hash__(self):
+        return hash(_Null)
+
+    def __json__(self):
+        return 'null'
+
+    to_json = __json__
+
 
 # Use this NULL object when needing to distinguish a value from None
 # For example, when parsing json, you may need to determine if a json key was given and set

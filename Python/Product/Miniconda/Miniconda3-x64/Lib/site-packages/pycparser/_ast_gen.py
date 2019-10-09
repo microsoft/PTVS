@@ -7,7 +7,7 @@
 # The design of this module was inspired by astgen.py from the
 # Python 2.5 code-base.
 #
-# Eli Bendersky [http://eli.thegreenplace.net]
+# Eli Bendersky [https://eli.thegreenplace.net/]
 # License: BSD
 #-----------------------------------------------------------------
 import pprint
@@ -63,6 +63,7 @@ class NodeCfg(object):
         contents: a list of contents - attributes and child nodes
         See comment at the top of the configuration file for details.
     """
+
     def __init__(self, name, contents):
         self.name = name
         self.all_entries = []
@@ -84,6 +85,8 @@ class NodeCfg(object):
     def generate_source(self):
         src = self._gen_init()
         src += '\n' + self._gen_children()
+        src += '\n' + self._gen_iter()
+
         src += '\n' + self._gen_attr_names()
         return src
 
@@ -131,6 +134,33 @@ class NodeCfg(object):
 
         return src
 
+    def _gen_iter(self):
+        src = '    def __iter__(self):\n'
+
+        if self.all_entries:
+            for child in self.child:
+                src += (
+                    '        if self.%(child)s is not None:\n' +
+                    '            yield self.%(child)s\n') % (dict(child=child))
+
+            for seq_child in self.seq_child:
+                src += (
+                    '        for child in (self.%(child)s or []):\n'
+                    '            yield child\n') % (dict(child=seq_child))
+
+            if not (self.child or self.seq_child):
+                # Empty generator
+                src += (
+                    '        return\n' +
+                    '        yield\n')
+        else:
+            # Empty generator
+            src += (
+                '        return\n' +
+                '        yield\n')
+
+        return src
+
     def _gen_attr_names(self):
         src = "    attr_names = (" + ''.join("%r, " % nm for nm in self.attr) + ')'
         return src
@@ -150,7 +180,7 @@ r'''#-----------------------------------------------------------------
 #
 # AST Node classes.
 #
-# Eli Bendersky [http://eli.thegreenplace.net]
+# Eli Bendersky [https://eli.thegreenplace.net/]
 # License: BSD
 #-----------------------------------------------------------------
 
@@ -159,11 +189,38 @@ r'''#-----------------------------------------------------------------
 _PROLOGUE_CODE = r'''
 import sys
 
+def _repr(obj):
+    """
+    Get the representation of an object, with dedicated pprint-like format for lists.
+    """
+    if isinstance(obj, list):
+        return '[' + (',\n '.join((_repr(e).replace('\n', '\n ') for e in obj))) + '\n]'
+    else:
+        return repr(obj) 
 
 class Node(object):
     __slots__ = ()
     """ Abstract base class for AST nodes.
     """
+    def __repr__(self):
+        """ Generates a python representation of the current node
+        """
+        result = self.__class__.__name__ + '('
+        
+        indent = ''
+        separator = ''
+        for name in self.__slots__[:-2]:
+            result += separator
+            result += indent
+            result += name + '=' + (_repr(getattr(self, name)).replace('\n', '\n  ' + (' ' * (len(name) + len(self.__class__.__name__)))))
+            
+            separator = ','
+            indent = '\n ' + (' ' * len(self.__class__.__name__))
+        
+        result += indent + ')'
+        
+        return result
+
     def children(self):
         """ A sequence of all children that are Nodes
         """
@@ -253,26 +310,29 @@ class NodeVisitor(object):
         *   Modeled after Python's own AST visiting facilities
             (the ast module of Python 3.0)
     """
+
+    _method_cache = None
+
     def visit(self, node):
         """ Visit a node.
         """
-        method = 'visit_' + node.__class__.__name__
-        visitor = getattr(self, method, self.generic_visit)
+
+        if self._method_cache is None:
+            self._method_cache = {}
+
+        visitor = self._method_cache.get(node.__class__.__name__, None)
+        if visitor is None:
+            method = 'visit_' + node.__class__.__name__
+            visitor = getattr(self, method, self.generic_visit)
+            self._method_cache[node.__class__.__name__] = visitor
+
         return visitor(node)
 
     def generic_visit(self, node):
         """ Called if no explicit visitor function exists for a
             node. Implements preorder visiting of the node.
         """
-        for c_name, c in node.children():
+        for c in node:
             self.visit(c)
 
-
 '''
-
-
-if __name__ == "__main__":
-    import sys
-    ast_gen = ASTCodeGenerator('_c_ast.cfg')
-    ast_gen.generate(open('c_ast.py', 'w'))
-

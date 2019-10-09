@@ -1,27 +1,40 @@
 {
-  "arch": "x86_64",
   "build": "hc54c509_2",
   "build_number": 2,
+  "channel": "https://repo.anaconda.com/pkgs/main/win-64",
+  "constrains": [],
   "depends": [
     "vc 14.*"
   ],
+  "extracted_package_dir": "C:\\ProgramData\\Miniconda3\\pkgs\\yaml-0.1.7-hc54c509_2",
+  "features": "",
   "files": [
     "Library/bin/yaml.dll",
     "Library/include/yaml.h",
     "Library/lib/yaml.lib",
     "Library/lib/yaml_static.lib"
   ],
-  "installed_by": "Miniconda3-4.5.11-Windows-x86_64.exe",
+  "fn": "yaml-0.1.7-hc54c509_2.conda",
+  "legacy_bz2_md5": "eaeee418b8ac33d392ea03bb9b6f389d",
+  "legacy_bz2_size": 105323,
   "license": "MIT",
   "link": {
-    "source": "C:\\Users\\huvalo\\Documents\\Miniconda\\pkgs\\yaml-0.1.7-hc54c509_2",
-    "type": "hard-link"
+    "source": "C:\\ProgramData\\Miniconda3\\pkgs\\yaml-0.1.7-hc54c509_2",
+    "type": 1
   },
-  "md5": "eaeee418b8ac33d392ea03bb9b6f389d",
+  "md5": "21e5484513ed47e95f7a26a9d8e31701",
   "name": "yaml",
-  "platform": "win",
+  "package_tarball_full_path": "C:\\ProgramData\\Miniconda3\\pkgs\\yaml-0.1.7-hc54c509_2.conda",
+  "paths_data": {
+    "paths": [],
+    "paths_version": 1
+  },
+  "requested_spec": "yaml==0.1.7=hc54c509_2",
+  "sha256": "18237d37225b52f37b1abac408cf5bcdc5e03e7ad1e987f03cf1ec044455eac9",
+  "size": 90457,
   "subdir": "win-64",
   "timestamp": 1510609877038,
-  "url": "https://repo.anaconda.com/pkgs/main/win-64/yaml-0.1.7-hc54c509_2.tar.bz2",
+  "track_features": "",
+  "url": "https://repo.anaconda.com/pkgs/main/win-64/yaml-0.1.7-hc54c509_2.conda",
   "version": "0.1.7"
 }

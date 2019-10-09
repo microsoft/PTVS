@@ -1,0 +1,3 @@
+[console_scripts]
+cph = conda_package_handling.cli:main
+
