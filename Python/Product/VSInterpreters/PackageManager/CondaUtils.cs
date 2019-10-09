@@ -79,50 +79,30 @@ namespace Microsoft.PythonTools.Interpreter {
         /// <returns>List of environment variables.</returns>
         /// <remarks>Result is cached, it is safe to call multiple times.</remarks>
         internal static Task<IEnumerable<KeyValuePair<string, string>>> GetActivationEnvironmentVariablesForRootAsync(string condaPath) {
-            return CaptureActivationEnvironmentVariablesAsync(condaPath, null);
-        }
-
-        /// <summary>
-        /// Activate the root conda environment, capture and return its environment variables
-        /// </summary>
-        /// <param name="condaPath">Path to the root conda environment's conda.exe</param>
-        /// <returns>List of environment variables.</returns>
-        /// <remarks>Result is cached, it is safe to call multiple times.</remarks>
-        internal static IEnumerable<KeyValuePair<string, string>> GetActivationEnvironmentVariablesForRoot(string condaPath) {
-            return CaptureActivationEnvironmentVariables(condaPath, null);
+            return GetActivationEnvironmentVariablesForPrefixAsync(condaPath, null);
         }
 
         /// <summary>
         /// Activate the specified conda environment, capture and return its environment variables.
         /// </summary>
         /// <param name="condaPath">Path to the root conda environment's conda.exe</param>
-        /// <param name="prefixPath">Path to the conda environment to activate.</param>
+        /// <param name="prefixPath">Path to the conda environment to activate, or <c>null</c> to activate the root environment.</param>
         /// <returns>List of environment variables.</returns>
         /// <remarks>Result is cached, it is safe to call multiple times.</remarks>
-        internal static Task<IEnumerable<KeyValuePair<string, string>>> GetActivationEnvironmentVariablesForPrefixAsync(string condaPath, string prefixPath) {
-            return CaptureActivationEnvironmentVariablesAsync(condaPath, prefixPath);
-        }
-
-        /// <summary>
-        /// Activate the specified conda environment, capture and return its environment variables.
-        /// </summary>
-        /// <param name="condaPath">Path to the root conda environment's conda.exe</param>
-        /// <param name="prefixPath">Path to the conda environment to activate.</param>
-        /// <returns>List of environment variables.</returns>
-        /// <remarks>Result is cached, it is safe to call multiple times.</remarks>
-        internal static IEnumerable<KeyValuePair<string, string>> GetActivationEnvironmentVariablesForPrefix(string condaPath, string prefixPath) {
-            return CaptureActivationEnvironmentVariables(condaPath, prefixPath);
-        }
-
-        private async static Task<IEnumerable<KeyValuePair<string, string>>> CaptureActivationEnvironmentVariablesAsync(string condaPath, string prefixPath) {
+        internal async static Task<IEnumerable<KeyValuePair<string, string>>> GetActivationEnvironmentVariablesForPrefixAsync(string condaPath, string prefixPath) {
             using (await _activationCacheLock.LockAsync(CancellationToken.None)) {
                 var condaKey = new CondaCacheKey(condaPath, prefixPath);
 
                 if (!_activationCache.TryGetValue(condaKey, out KeyValuePair<string, string>[] activationVariables)) {
                     activationVariables = null;
 
-                    using (var proc = StartCaptureProcess(condaPath, prefixPath)) {
-                        if (proc != null) {
+                    var activateBat = Path.Combine(Path.GetDirectoryName(condaPath), "activate.bat");
+                    if (File.Exists(activateBat)) {
+                        var args = prefixPath != null
+                            ? new[] { prefixPath, "&", "python.exe", "-c", PrintEnvironmentCode }
+                            : new[] { "&", "python.exe", "-c", PrintEnvironmentCode };
+
+                        using (var proc = ProcessOutput.RunHiddenAndCapture(activateBat, args)) {
                             await proc;
                             if (proc.ExitCode == 0) {
                                 activationVariables = ParseEnvironmentVariables(proc).ToArray();
@@ -130,46 +110,12 @@ namespace Microsoft.PythonTools.Interpreter {
                         }
                     }
 
-                    _activationCache[condaKey] = activationVariables ?? new KeyValuePair<string, string>[0];
-                }
-
-                return activationVariables;
-            }
-        }
-
-        private static IEnumerable<KeyValuePair<string, string>> CaptureActivationEnvironmentVariables(string condaPath, string prefixPath) {
-            using (_activationCacheLock.Lock()) {
-                var condaKey = new CondaCacheKey(condaPath, prefixPath);
-
-                if (!_activationCache.TryGetValue(condaKey, out KeyValuePair<string, string>[] activationVariables)) {
-                    activationVariables = null;
-
-                    using (var proc = StartCaptureProcess(condaPath, prefixPath)) {
-                        if (proc != null) {
-                            proc.Wait();
-                            if (proc.ExitCode == 0) {
-                                activationVariables = ParseEnvironmentVariables(proc).ToArray();
-                            }
-                        }
-                    }
 
                     _activationCache[condaKey] = activationVariables ?? new KeyValuePair<string, string>[0];
                 }
 
                 return activationVariables;
             }
-        }
-
-        private static ProcessOutput StartCaptureProcess(string condaPath, string prefixPath) {
-            var activateBat = Path.Combine(Path.GetDirectoryName(condaPath), "activate.bat");
-            if (File.Exists(activateBat)) {
-                var args = prefixPath != null
-                    ? new[] { prefixPath, "&", "python.exe", "-c", PrintEnvironmentCode }
-                    : new[] { "&", "python.exe", "-c", PrintEnvironmentCode };
-                return ProcessOutput.RunHiddenAndCapture(activateBat, args);
-            }
-
-            return null;
         }
 
         private static IEnumerable<KeyValuePair<string, string>> ParseEnvironmentVariables(ProcessOutput proc) {

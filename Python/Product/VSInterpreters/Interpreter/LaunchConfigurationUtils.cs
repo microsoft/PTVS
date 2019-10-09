@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.VisualStudio.Shell;
 
 namespace Microsoft.PythonTools.Interpreter {
     public class LaunchConfigurationUtils {
@@ -47,7 +48,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 var condaExe = CondaUtils.GetRootCondaExecutablePath(serviceProvider);
                 var prefixPath = config.Interpreter.GetPrefixPath();
                 if (File.Exists(condaExe) && Directory.Exists(prefixPath)) {
-                    var condaEnv = CondaUtils.GetActivationEnvironmentVariablesForPrefix(condaExe, prefixPath);
+                    var condaEnv = ThreadHelper.JoinableTaskFactory.Run(() => CondaUtils.GetActivationEnvironmentVariablesForPrefixAsync(condaExe, prefixPath));
                     baseEnv = PathUtils.MergeEnvironments(baseEnv.AsEnumerable<string, string>(), condaEnv, "Path", pathVar);
                 }
             }

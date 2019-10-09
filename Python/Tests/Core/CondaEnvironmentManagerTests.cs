@@ -16,7 +16,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.Composition.Hosting;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -25,10 +24,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
-using TestUtilities.Mocks;
 
 namespace PythonToolsUITests {
     [TestClass]
@@ -101,10 +98,10 @@ namespace PythonToolsUITests {
             var mgr = CreateEnvironmentManager();
             var ui = new MockCondaEnvironmentManagerUI();
 
-            var envName = GetUnusedEnvironmentName(mgr);
+            var envName = await GetUnusedEnvironmentNameAsync(mgr);
             bool result = await mgr.CreateAsync(envName, Python27Packages, ui, CancellationToken.None);
 
-            var envPath = EnqueueEnvironmentDeletion(mgr, envName);
+            var envPath = await EnqueueEnvironmentDeletionAsync(mgr, envName);
 
             Assert.IsTrue(result, "Create failed.");
             Assert.IsTrue(Directory.Exists(envPath), "Environment folder not found.");
@@ -120,11 +117,11 @@ namespace PythonToolsUITests {
 
             // Relative path passed to conda.exe using -n (by name) argument.
             // It's created in a subfolder of the usual default location.
-            var envName = GetUnusedEnvironmentName(mgr);
+            var envName = await GetUnusedEnvironmentNameAsync(mgr);
             var envRelName = "relative\\" + envName;
             bool result = await mgr.CreateAsync(envRelName, Python27Packages, ui, CancellationToken.None);
 
-            var envPath = EnqueueEnvironmentDeletion(mgr, envName);
+            var envPath = await EnqueueEnvironmentDeletionAsync(mgr, envName);
 
             Assert.IsTrue(result, "Create failed.");
             Assert.IsTrue(Directory.Exists(envPath), "Environment folder not found.");
@@ -168,15 +165,14 @@ namespace PythonToolsUITests {
             var mgr = CreateEnvironmentManager();
             var ui = new MockCondaEnvironmentManagerUI();
 
-            // python 3.4 conda package, flask conda package and flask_testing pip package
+            // python 3.7 conda package, flask conda package and flask_testing pip package
             var envPath = Path.Combine(TestData.GetTempPath(), "conda-and-pip");
             var envFilePath = TestData.GetPath("TestData", "CondaEnvironments", "conda-and-pip.yml");
             var result = await mgr.CreateFromEnvironmentFileAsync(envPath, envFilePath, ui, CancellationToken.None);
 
             Assert.IsTrue(result, "Create failed.");
-            AssertSitePackagesFile(envPath, @"flask\__init__.py");
-            AssertSitePackagesFile(envPath, @"flask_testing\__init__.py");
-            AssertCondaMetaFiles(envPath, "flask-*.json", "python-3.4.*.json");
+            AssertSitePackagesFile(envPath, @"bottle.py");
+            AssertCondaMetaFiles(envPath, "zlib-*.json", "python-3.7.*.json");
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
@@ -297,8 +293,8 @@ namespace PythonToolsUITests {
             Assert.IsTrue(File.Exists(Path.Combine(envPath, "Lib", "site-packages", fileRelativePath)), $"{fileRelativePath} not found.");
         }
 
-        private static string EnqueueEnvironmentDeletion(CondaEnvironmentManager mgr, string envName) {
-            var envPath = GetEnvironmentPath(mgr, envName);
+        private async static Task<string> EnqueueEnvironmentDeletionAsync(CondaEnvironmentManager mgr, string envName) {
+            var envPath = await GetEnvironmentPathAsync(mgr, envName);
             if (envPath != null) {
                 DeleteFolder.Add(envPath);
             } else {
@@ -307,14 +303,14 @@ namespace PythonToolsUITests {
             return envPath;
         }
 
-        private static string GetEnvironmentPath(CondaEnvironmentManager mgr, string envName) {
-            var info = CondaEnvironmentFactoryProvider.ExecuteCondaInfo(mgr.CondaPath);
+        private async static Task<string> GetEnvironmentPathAsync(CondaEnvironmentManager mgr, string envName) {
+            var info = await CondaEnvironmentFactoryProvider.ExecuteCondaInfoAsync(mgr.CondaPath);
             return info.EnvironmentFolders.SingleOrDefault(absPath => string.Compare(PathUtils.GetFileOrDirectoryName(absPath), envName, StringComparison.OrdinalIgnoreCase) == 0);
         }
 
-        private static string GetUnusedEnvironmentName(CondaEnvironmentManager mgr) {
+        private async static Task<string> GetUnusedEnvironmentNameAsync(CondaEnvironmentManager mgr) {
             // Avoid names already used by any of the existing environments.
-            var info = CondaEnvironmentFactoryProvider.ExecuteCondaInfo(mgr.CondaPath);
+            var info = await CondaEnvironmentFactoryProvider.ExecuteCondaInfoAsync(mgr.CondaPath);
             var used = info.EnvironmentFolders.Select(absPath => PathUtils.GetFileOrDirectoryName(absPath));
             string name;
 

@@ -19,6 +19,7 @@ using System.IO;
 using System.Threading;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.Threading;
 using TestUtilities;
 
 namespace PythonToolsTests {
@@ -78,7 +79,7 @@ namespace PythonToolsTests {
         private static void TestTriggerDiscovery(string userProfileFolder, Action triggerDiscovery) {
             using (var evt = new AutoResetEvent(false))
             using (var globalProvider = new CPythonInterpreterFactoryProvider(null, false))
-            using (var condaProvider = new CondaEnvironmentFactoryProvider(globalProvider, null, true, userProfileFolder)) {
+            using (var condaProvider = new CondaEnvironmentFactoryProvider(globalProvider, null, new JoinableTaskFactory(new JoinableTaskContext()), true, userProfileFolder)) {
                 // This initializes the provider, discovers the initial set
                 // of factories and starts watching the filesystem.
                 var configs = condaProvider.GetInterpreterConfigurations();
