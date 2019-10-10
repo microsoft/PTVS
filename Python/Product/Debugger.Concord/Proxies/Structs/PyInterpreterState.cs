@@ -19,6 +19,7 @@ using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Debugger;
 
 namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
+    [StructProxy(StructName = "_is")]
     internal class PyInterpreterState : StructProxy {
         private class Fields {
             public StructField<PointerProxy<PyInterpreterState>> next;
