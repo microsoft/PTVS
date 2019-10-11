@@ -1166,7 +1166,7 @@
         <Str Cat="Button">
           <Val><![CDATA[&Publish Now]]></Val>
           <Tgt Cat="Button" Stat="Loc" Orig="New">
-            <Val><![CDATA[今すぐ発行する(&P)]]></Val>
+            <Val><![CDATA[今すぐ公開する(&P)]]></Val>
           </Tgt>
         </Str>
         <Bin BinId="1">
@@ -1178,7 +1178,7 @@
         <Str Cat="Group Box Title">
           <Val><![CDATA[Publish Location]]></Val>
           <Tgt Cat="Group Box Title" Stat="Loc" Orig="New">
-            <Val><![CDATA[発行場所]]></Val>
+            <Val><![CDATA[公開場所]]></Val>
           </Tgt>
         </Str>
         <Bin BinId="1">
@@ -1190,7 +1190,7 @@
         <Str Cat="Static Text">
           <Val><![CDATA[Publishing Folder Location (web site, ftp server, or file path):]]></Val>
           <Tgt Cat="Static Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[発行フォルダーの場所 (Web サイト、FTP サーバー、またはファイル パス):]]></Val>
+            <Val><![CDATA[公開フォルダーの場所 (Web サイト、FTP サーバー、またはファイル パス):]]></Val>
           </Tgt>
         </Str>
         <Bin BinId="1">
@@ -2698,7 +2698,7 @@
           <Str Cat="Button">
             <Val><![CDATA[Opens an interactive window for this environment.]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
-              <Val><![CDATA[この環境の対話型ウィンドウを開きます。]]></Val>
+              <Val><![CDATA[この環境のインタラクティブ ウィンドウを開きます。]]></Val>
             </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
@@ -2947,7 +2947,7 @@
           <Str Cat="Combo Box">
             <Val><![CDATA[Selects the current module scope that the interactive window is using.]]></Val>
             <Tgt Cat="Combo Box" Stat="Loc" Orig="New">
-              <Val><![CDATA[対話型ウィンドウが使用している現在のモジュール スコープを選択します。]]></Val>
+              <Val><![CDATA[インタラクティブ ウィンドウが使用している現在のモジュール スコープを選択します。]]></Val>
             </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
@@ -3058,7 +3058,7 @@
           <Str Cat="Button">
             <Val><![CDATA[Sends the current editor selection to a Python Interactive window.]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
-              <Val><![CDATA[Python Interactive ウィンドウにエディターの現在の選択範囲を送信します。]]></Val>
+              <Val><![CDATA[Python インタラクティブ ウィンドウにエディターの現在の選択範囲を送信します。]]></Val>
             </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
@@ -3310,7 +3310,7 @@
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[P&ython Interactive Window]]></Val>
             <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
-              <Val><![CDATA[Python Interactive ウィンドウ(&Y)]]></Val>
+              <Val><![CDATA[Python インタラクティブ ウィンドウ(&Y)]]></Val>
             </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
@@ -3328,7 +3328,7 @@
           <Str Cat="Button">
             <Val><![CDATA[Opens the Python Interactive window.]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
-              <Val><![CDATA[Python Interactive ウィンドウを開きます。]]></Val>
+              <Val><![CDATA[Python インタラクティブ ウィンドウを開きます。]]></Val>
             </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
@@ -3358,7 +3358,7 @@
           <Str Cat="Button">
             <Val><![CDATA[Create a new interactive window]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
-              <Val><![CDATA[新しい対話型ウィンドウ]]></Val>
+              <Val><![CDATA[新しいインタラクティブ ウィンドウ]]></Val>
             </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
@@ -3388,7 +3388,7 @@
           <Str Cat="Button">
             <Val><![CDATA[Opens the Python Debug Interactive window.]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
-              <Val><![CDATA[Python デバッグ対話型ウィンドウを開きます。]]></Val>
+              <Val><![CDATA[Python デバッグ インタラクティブ ウィンドウを開きます。]]></Val>
             </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
@@ -3652,7 +3652,7 @@
           <Str Cat="Menu Item">
             <Val><![CDATA[Python Interactive Window]]></Val>
             <Tgt Cat="Menu Item" Stat="Loc" Orig="New">
-              <Val><![CDATA[Python Interactive ウィンドウ]]></Val>
+              <Val><![CDATA[Python インタラクティブ ウィンドウ]]></Val>
             </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
@@ -3953,7 +3953,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Provides IntelliSense, projects, templates, debugging, interactive windows, and other support for Python developers.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Python 開発者向けの IntelliSense、プロジェクト、テンプレート、デバッグ、対話型ウィンドウ、および他のサポートを提供します。]]></Val>
+            <Val><![CDATA[Python 開発者向けの IntelliSense、プロジェクト、テンプレート、デバッグ、インタラクティブ ウィンドウ、および他のサポートを提供します。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -4001,7 +4001,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Interactive Windows]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[対話型ウィンドウ]]></Val>
+            <Val><![CDATA[インタラクティブ ウィンドウ]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -4019,7 +4019,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Debug Interactive Window]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Debug Interactive ウィンドウ]]></Val>
+            <Val><![CDATA[Debug インタラクティブ ウィンドウ]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -6200,7 +6200,7 @@
         <Str Cat="Text">
           <Val><![CDATA[If the file should be included in the files which are published.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[ファイルを発行対象のファイルに含める場合。]]></Val>
+            <Val><![CDATA[ファイルを公開対象のファイルに含める場合。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
