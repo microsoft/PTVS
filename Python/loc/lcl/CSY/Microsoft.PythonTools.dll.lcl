@@ -4064,7 +4064,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Wrapping]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Obtékání]]></Val>
+            <Val><![CDATA[Zalamování]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
