@@ -2698,7 +2698,7 @@
           <Str Cat="Button">
             <Val><![CDATA[Opens an interactive window for this environment.]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
-              <Val><![CDATA[開啟適用於此環境的互動式視窗。]]></Val>
+              <Val><![CDATA[開啟適用於此環境的互動視窗。]]></Val>
             </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
@@ -2947,7 +2947,7 @@
           <Str Cat="Combo Box">
             <Val><![CDATA[Selects the current module scope that the interactive window is using.]]></Val>
             <Tgt Cat="Combo Box" Stat="Loc" Orig="New">
-              <Val><![CDATA[選取互動式視窗目前正使用的現有模組範圍。]]></Val>
+              <Val><![CDATA[選取互動視窗目前正使用的現有模組範圍。]]></Val>
             </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
@@ -3058,7 +3058,7 @@
           <Str Cat="Button">
             <Val><![CDATA[Sends the current editor selection to a Python Interactive window.]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
-              <Val><![CDATA[將目前編輯器選取範圍傳送至 Python 互動式視窗。]]></Val>
+              <Val><![CDATA[將目前編輯器選取範圍傳送至 Python 互動視窗。]]></Val>
             </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
@@ -3310,7 +3310,7 @@
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[P&ython Interactive Window]]></Val>
             <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
-              <Val><![CDATA[Python 互動式視窗(&Y)]]></Val>
+              <Val><![CDATA[Python 互動視窗(&Y)]]></Val>
             </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
@@ -3328,7 +3328,7 @@
           <Str Cat="Button">
             <Val><![CDATA[Opens the Python Interactive window.]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
-              <Val><![CDATA[開啟 Python 互動式視窗。]]></Val>
+              <Val><![CDATA[開啟 Python 互動視窗。]]></Val>
             </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
@@ -3358,7 +3358,7 @@
           <Str Cat="Button">
             <Val><![CDATA[Create a new interactive window]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
-              <Val><![CDATA[建立新的互動式視窗]]></Val>
+              <Val><![CDATA[建立新的互動視窗]]></Val>
             </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
@@ -3388,7 +3388,7 @@
           <Str Cat="Button">
             <Val><![CDATA[Opens the Python Debug Interactive window.]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
-              <Val><![CDATA[開啟 Python 互動式偵錯視窗。]]></Val>
+              <Val><![CDATA[開啟 Python 互動偵錯視窗。]]></Val>
             </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
@@ -3652,7 +3652,7 @@
           <Str Cat="Menu Item">
             <Val><![CDATA[Python Interactive Window]]></Val>
             <Tgt Cat="Menu Item" Stat="Loc" Orig="New">
-              <Val><![CDATA[Python 互動式視窗]]></Val>
+              <Val><![CDATA[Python 互動視窗]]></Val>
             </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
@@ -3953,7 +3953,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Provides IntelliSense, projects, templates, debugging, interactive windows, and other support for Python developers.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[為 Python 開發人員提供 IntelliSense、專案、範本、偵錯、互動式視窗與其他支援。]]></Val>
+            <Val><![CDATA[為 Python 開發人員提供 IntelliSense、專案、範本、偵錯、互動視窗與其他支援。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -4001,7 +4001,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Interactive Windows]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[互動式視窗]]></Val>
+            <Val><![CDATA[互動視窗]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -4019,7 +4019,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Debug Interactive Window]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[互動式偵錯視窗]]></Val>
+            <Val><![CDATA[互動偵錯視窗]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
