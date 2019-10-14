@@ -143,7 +143,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.P1)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void WatchWorkspaceVirtualEnvRenamed() {
             const string ENV_NAME = "env";
             var workspaceContext = CreateEnvAndGetWorkspaceService(ENV_NAME);

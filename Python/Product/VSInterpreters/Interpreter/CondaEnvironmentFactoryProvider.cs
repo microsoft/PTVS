@@ -67,8 +67,9 @@ namespace Microsoft.PythonTools.Interpreter {
         public CondaEnvironmentFactoryProvider(
             [Import] CPythonInterpreterFactoryProvider globalProvider,
             [Import] ICondaLocatorProvider condaLocatorProvider,
+            [Import] JoinableTaskContext joinableTaskContext,
             [Import("Microsoft.VisualStudioTools.MockVsTests.IsMockVs", AllowDefault = true)] object isMockVs = null
-        ) : this(globalProvider, condaLocatorProvider, ThreadHelper.JoinableTaskFactory, isMockVs == null) {
+        ) : this(globalProvider, condaLocatorProvider, joinableTaskContext.Factory, isMockVs == null) {
         }
 
         public CondaEnvironmentFactoryProvider(
