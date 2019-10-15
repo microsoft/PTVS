@@ -134,7 +134,7 @@ namespace Microsoft.PythonTools.Project {
             _virtualEnvCreateInfoBar = new VirtualEnvCreateProjectInfoBar(Site, this);
             _packageInstallInfoBar = new PackageInstallProjectInfoBar(Site, this);
             _testFrameworkInfoBar = new TestFrameworkProjectInfoBar(Site, this);
-            _pythonSupportInfoBar = new PythonNotSupportedProjectInfoBar(Site, this);
+            _pythonSupportInfoBar = new PythonNotSupportedInfoBar(Site, InfoBarContexts.Project, () => ActiveInterpreter);
         }
 
         private static KeyValuePair<string, string>[] outputGroupNames = {

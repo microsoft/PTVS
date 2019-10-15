@@ -3096,15 +3096,6 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Do not show this message again.
-        /// </summary>
-        public static string DoNotShowMessageAgain {
-            get {
-                return ResourceManager.GetString("DoNotShowMessageAgain", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Do not show this warning again..
         /// </summary>
         public static string DontShowAgain {
@@ -5604,7 +5595,16 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Certain features may not work properly because you are using Python {0}, but VS doesn&apos;t officially support it. .
+        ///   Looks up a localized string similar to Don&apos;t show this message again.
+        /// </summary>
+        public static string PythonVersionNotSupportedDontShowMessageAgain {
+            get {
+                return ResourceManager.GetString("PythonVersionNotSupportedDontShowMessageAgain", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You are using Python {0} and some features might not work because VS doesn&apos;t support it yet..
         /// </summary>
         public static string PythonVersionNotSupportInfoBarText {
             get {
@@ -5613,11 +5613,11 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to More information.
+        ///   Looks up a localized string similar to More info.
         /// </summary>
-        public static string PythonVersionNotSupportMoreInformation {
+        public static string PythonVersionNotSupportMoreInfo {
             get {
-                return ResourceManager.GetString("PythonVersionNotSupportMoreInformation", resourceCulture);
+                return ResourceManager.GetString("PythonVersionNotSupportMoreInfo", resourceCulture);
             }
         }
         

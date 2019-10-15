@@ -21,6 +21,7 @@ using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Logging;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -35,7 +36,7 @@ namespace Microsoft.PythonTools {
         private CondaEnvCreateInfoBar _condaEnvCreateInfoBar;
         private VirtualEnvCreateInfoBar _virtualEnvCreateInfoBar;
         private TestFrameworkWorkspaceInfoBar _testFrameworkInfoBar;
-        private PythonNotSupportedWorkspaceInfoBar _pythonSupportInfoBar;
+        private PythonNotSupportedInfoBar _pythonSupportInfoBar;
         private bool _infoBarCheckTriggered;
 
         public WorkspaceInfoBarManager(IServiceProvider serviceProvider) {
@@ -57,7 +58,7 @@ namespace Microsoft.PythonTools {
             _condaEnvCreateInfoBar = new CondaEnvCreateWorkspaceInfoBar(_serviceProvider, workspace);
             _virtualEnvCreateInfoBar = new VirtualEnvCreateWorkspaceInfoBar(_serviceProvider, workspace);
             _testFrameworkInfoBar = new TestFrameworkWorkspaceInfoBar(_serviceProvider, workspace);
-            _pythonSupportInfoBar = new PythonNotSupportedWorkspaceInfoBar(_serviceProvider, workspace);
+            _pythonSupportInfoBar = new PythonNotSupportedInfoBar(_serviceProvider, InfoBarContexts.Workspace, () => workspace.CurrentFactory);
 
             workspace.AddActionOnClose(_packageInstallInfoBar, (obj => ((PythonInfoBar)obj).Dispose()));
             workspace.AddActionOnClose(_condaEnvCreateInfoBar, (obj => ((PythonInfoBar)obj).Dispose()));
