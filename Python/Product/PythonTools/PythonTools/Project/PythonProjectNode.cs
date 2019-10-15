@@ -97,7 +97,7 @@ namespace Microsoft.PythonTools.Project {
         private readonly VirtualEnvCreateInfoBar _virtualEnvCreateInfoBar;
         private readonly PackageInstallInfoBar _packageInstallInfoBar;
         private readonly TestFrameworkInfoBar _testFrameworkInfoBar;
-        private readonly PythonNotSupportedInfoBar _pythonSupportInfoBar;
+        private readonly PythonNotSupportedInfoBar _pythonVersionNotSupportedInfoBar;
 
         private readonly SemaphoreSlim _recreatingAnalyzer = new SemaphoreSlim(1);
 
@@ -134,7 +134,7 @@ namespace Microsoft.PythonTools.Project {
             _virtualEnvCreateInfoBar = new VirtualEnvCreateProjectInfoBar(Site, this);
             _packageInstallInfoBar = new PackageInstallProjectInfoBar(Site, this);
             _testFrameworkInfoBar = new TestFrameworkProjectInfoBar(Site, this);
-            _pythonSupportInfoBar = new PythonNotSupportedInfoBar(Site, InfoBarContexts.Project, () => ActiveInterpreter);
+            _pythonVersionNotSupportedInfoBar = new PythonNotSupportedInfoBar(Site, InfoBarContexts.Project, () => ActiveInterpreter);
         }
 
         private static KeyValuePair<string, string>[] outputGroupNames = {
@@ -747,7 +747,7 @@ namespace Microsoft.PythonTools.Project {
                 _virtualEnvCreateInfoBar.CheckAsync(),
                 _packageInstallInfoBar.CheckAsync(),
                 _testFrameworkInfoBar.CheckAsync(),
-                _pythonSupportInfoBar.CheckAsync()
+                _pythonVersionNotSupportedInfoBar.CheckAsync()
             );
         }
 
@@ -1097,7 +1097,7 @@ namespace Microsoft.PythonTools.Project {
                 _virtualEnvCreateInfoBar.Dispose();
                 _packageInstallInfoBar.Dispose();
                 _testFrameworkInfoBar.Dispose();
-                _pythonSupportInfoBar.Dispose();
+                _pythonVersionNotSupportedInfoBar.Dispose();
 
                 _reanalyzeProjectNotification.Dispose();
 
@@ -1375,7 +1375,7 @@ namespace Microsoft.PythonTools.Project {
             }
 
             var factory = ActiveInterpreter;
-            _pythonSupportInfoBar.CheckAsync();
+            _pythonVersionNotSupportedInfoBar.CheckAsync();
 
             Site.GetUIThread().InvokeTask(async () => {
                 await ReanalyzeProject(factory).HandleAllExceptions(Site, GetType());
