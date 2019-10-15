@@ -33,7 +33,7 @@ namespace Microsoft.PythonTools.Project {
         private GeneralOptions _options;
         private String _context;
 
-        private string _moreInformationLink = @"https://github.com/microsoft/PTVS/issues/1"; //TODO Raymon  Change URL
+        private string _moreInformationLink = @"https://go.microsoft.com/fwlink/?LinkId=2108304";
         private readonly Version _pythonVersionNotSupported = new Version("3.8");
         private bool _infoBarTriggered = false;
 
