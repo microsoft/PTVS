@@ -21,16 +21,9 @@
   
   <PropertyGroup>
     <!--NOTE: GlassDir has a trailing slash-->
-    <!-- <GlassDir Condition="'?(GlassDir)'==''">$(GetFullPath('..\GlassStandAlone\Glass\'))</GlassDir>-->
     <PythonTestRootDir Condition="'?(PythonTestRootDir)'==''">$(GetFullPath('.\Python\'))</PythonTestRootDir>
     <GlassPath Condition="'?(GlassPath)'==''">$(GlassDir)glass2.exe</GlassPath>
   </PropertyGroup>
-  
-  <!-- Global setup scripts for Glass. -->
-  <!--<Setup>
-   <RunScript RunAs="Admin">$(GlassDir)RegisterGlass.cmd</RunScript>
-    <RunScript RunAs="Admin">RegisterPythonEngine.cmd</RunScript>
-  </Setup>-->
 
   <!-- The source files in a directory will be compiled in the order of the compilation rule definition. -->
   <DebuggeeCompileRules>
