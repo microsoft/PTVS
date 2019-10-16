@@ -5604,11 +5604,11 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to You are using Python {0} and some features might not work because VS doesn&apos;t support it yet..
+        ///   Looks up a localized string similar to You are using Python {0} and some features might not work because Visual Studio doesn&apos;t support it yet..
         /// </summary>
-        public static string PythonVersionNotSupportInfoBarText {
+        public static string PythonVersionNotSupportedInfoBarText {
             get {
-                return ResourceManager.GetString("PythonVersionNotSupportInfoBarText", resourceCulture);
+                return ResourceManager.GetString("PythonVersionNotSupportedInfoBarText", resourceCulture);
             }
         }
         

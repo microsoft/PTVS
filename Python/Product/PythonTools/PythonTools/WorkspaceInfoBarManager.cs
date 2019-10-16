@@ -64,10 +64,12 @@ namespace Microsoft.PythonTools {
             workspace.AddActionOnClose(_condaEnvCreateInfoBar, (obj => ((PythonInfoBar)obj).Dispose()));
             workspace.AddActionOnClose(_virtualEnvCreateInfoBar, (obj => ((PythonInfoBar)obj).Dispose()));
             workspace.AddActionOnClose(_testFrameworkInfoBar, (obj => ((PythonInfoBar)obj).Dispose()));
-            workspace.AddActionOnClose(_pythonVersionNotSupportedInfoBar, (obj => ((PythonInfoBar)obj).Dispose()));
+            workspace.AddActionOnClose(
+                _pythonVersionNotSupportedInfoBar,
+                 obj => { ((PythonInfoBar)obj).Dispose(); workspace.ActiveInterpreterChanged -= TriggerPythonNotSupportedInforBar; }
+            );
 
             workspace.ActiveInterpreterChanged += TriggerPythonNotSupportedInforBar;
-            workspace.AddActionOnClose(_pythonVersionNotSupportedInfoBar, (obj) => workspace.ActiveInterpreterChanged -= TriggerPythonNotSupportedInforBar);
 
             // When we see a Python file opened in the workspace, we trigger info bar checks.
             // Python files may have already been opened by the time this runs, so we'll check
@@ -140,7 +142,7 @@ namespace Microsoft.PythonTools {
             );
         }
 
-        private async void TriggerPythonNotSupportedInforBar(object sender, EventArgs e) {
+        private void TriggerPythonNotSupportedInforBar(object sender, EventArgs e) {
             TriggerPythonNotSupportedInforBarAsync().HandleAllExceptions(_serviceProvider, GetType()).DoNotWait();
         }
 

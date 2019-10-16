@@ -170,7 +170,7 @@ namespace Microsoft.PythonTools.Logging {
     sealed class PythonVersionNotSupportedInfoBarInfo : PythonToolsLoggerData {
         public string Action { get; set; }
         public string Context { get; set; }
-        public Version PythonVersion { get; set; }
+        public string PythonVersion { get; set; }
     }
 
     static class PythonVersionNotSupportedInfoBarAction {
