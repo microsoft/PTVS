@@ -21,7 +21,7 @@ if "%RegistryRoot%"=="ERROR" goto IncorrectRegRootFormatError
 
 echo Importing PythonEngine.regdef to registry...
 if exist %tmp%\PythonEngine.reg del %tmp%\PythonEngine.reg>NUL
-call %~dp0GlassRegGen.exe %~dp0PythonEngine.regdef %RegistryRoot% %tmp%\PythonEngine.reg
+call C:\GlassTesting\GlassStandAlone\Glass\GlassRegGen.exe %~dp0PythonEngine.regdef %RegistryRoot% %tmp%\PythonEngine.reg
 if NOT "%ERRORLEVEL%"=="0" goto GlassRegGenError
 
 REM Clear natvis diagnostics unless specifically enabled via a glass setup script specific to the test

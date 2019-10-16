@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<!-- This file defines the properties used for Python 3.6 64-bit debugging. -->
+<PropertyGroup xmlns="http://schemas.microsoft.com/vstudio/diagnostics/glasstestmanagement/2014">
+  <!--<PythonExe CopyToEnvironment="true">C:\Program Files (x86)\Microsoft Visual Studio\Shared\Python36_64\python.exe</PythonExe>-->
+  <PythonExe CopyToEnvironment="true">C:\Program Files\Python37\python.exe</PythonExe>
+</PropertyGroup>

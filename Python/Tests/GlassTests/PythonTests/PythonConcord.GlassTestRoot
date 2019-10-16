@@ -7,20 +7,30 @@
   <Setup>
     <ImportPropertyGroup>tools\RunSettings.GlassTestProps</ImportPropertyGroup>
     <RunScript Condition="Exists('tools\internal\PrepGlass.cmd')" RunAs="VSUser">tools\internal\PrepGlass.cmd &quot;$(GlassDir)&quot;</RunScript>
+    <!-- Process the regdef file to create the .reg file for Glass registration. -->
+    <RunScript RunAs="VSUser">"$(GlassDir)GlassRegGen.exe" "$(GlassDir)ConGlass.regdef" "$(GlassDir)glass2.exe.regroot" "$(GlassDir)ConGlass.reg"</RunScript>
+    <RunScript RunAs="VSUser">"$(GlassDir)GlassRegGen.exe" "$(GlassDir)PythonEngine.regdef" "$(GlassDir)glass2.exe.regroot" "$(GlassDir)PythonConGlass.reg"</RunScript>
   </Setup>
+  <TestSetup>
+    <RunScript RunAs="Admin">..\GlassStandAlone\tools\RegImport.cmd "$(GlassDir)ConGlass.reg" $(RunAs64)</RunScript>
+    <RunScript RunAs="Admin">..\GlassStandAlone\tools\RegImport.cmd "$(GlassDir)PythonConGlass.reg" $(RunAs64)</RunScript>
+  </TestSetup>
+  <TestCleanup>
+    <RunScript RunAs="Admin">..\GlassStandAlone\tools\RegDelete.cmd "$(GlassDir)glass2.exe.regroot" $(RunAs64)</RunScript>
+  </TestCleanup>
   
   <PropertyGroup>
     <!--NOTE: GlassDir has a trailing slash-->
-    <GlassDir Condition="'?(GlassDir)'==''">$(GetFullPath('..\tools\glass\'))</GlassDir>
+    <!-- <GlassDir Condition="'?(GlassDir)'==''">$(GetFullPath('..\GlassStandAlone\Glass\'))</GlassDir>-->
     <PythonTestRootDir Condition="'?(PythonTestRootDir)'==''">$(GetFullPath('.\Python\'))</PythonTestRootDir>
     <GlassPath Condition="'?(GlassPath)'==''">$(GlassDir)glass2.exe</GlassPath>
   </PropertyGroup>
   
   <!-- Global setup scripts for Glass. -->
-  <Setup>
-    <RunScript RunAs="Admin">$(GlassDir)RegisterGlass.cmd</RunScript>
-    <RunScript RunAs="Admin">$(GlassDir)RegisterPythonEngine.cmd</RunScript>
-  </Setup>
+  <!--<Setup>
+   <RunScript RunAs="Admin">$(GlassDir)RegisterGlass.cmd</RunScript>
+    <RunScript RunAs="Admin">RegisterPythonEngine.cmd</RunScript>
+  </Setup>-->
 
   <!-- The source files in a directory will be compiled in the order of the compilation rule definition. -->
   <DebuggeeCompileRules>
@@ -34,8 +44,8 @@
   </DebuggeeCompileRules>
   
   <TestGroups>
-    <TestGroup Include="Python\Python.GlassTestGroup"/>
-    <TestGroup Include="Python2x\Python2x.GlassTestGroup"/>
+     <TestGroup Include="Python\Python.GlassTestGroup"/>
+   <TestGroup Include="Python2x\Python2x.GlassTestGroup"/>
     <TestGroup Include="Python3x\Python3x.GlassTestGroup"/>
   </TestGroups>
 </GlassTestRoot>

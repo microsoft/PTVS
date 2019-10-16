@@ -16,20 +16,20 @@ Windows Registry Editor Version 5.00
 "HitCountBP"=dword:00000000
 "JustMyCodeStepping"=dword:00000001
 "EngineClass"="Microsoft.PythonTools.Debugger.DebugEngine.AD7Engine"
-"EngineAssembly"="Microsoft.PythonTools.Debugger, Version=15.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"
+"EngineAssembly"="Microsoft.PythonTools.Debugger, Version=16.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"
 "LoadProgramProviderUnderWOW64"=dword:00000001
 "AlwaysLoadProgramProviderLocal"=dword:00000001
 "LoadUnderWOW64"=dword:00000001
 
 [$RootKey$\CLSID\{0DA53AFE-069E-47A3-AE34-32610A8253A3}]
-"Assembly"="Microsoft.PythonTools.Debugger, Version=15.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"
+"Assembly"="Microsoft.PythonTools.Debugger, Version=16.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"
 "Class"="Microsoft.PythonTools.Debugger.DebugEngine.AD7Engine"
 "InprocServer32"="C:\\windows\\SYSTEM32\\MSCOREE.DLL"
 "CodeBase"="$GlassInstallDir$\\Microsoft.PythonTools.Debugger.dll"
 "ThreadingModel"="Free"
 
 [$RootKey$\CLSID\{FA452F5D-539E-4B55-BCC6-5DE7E342BC44}]
-"Assembly"="Microsoft.PythonTools.Debugger, Version=15.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"
+"Assembly"="Microsoft.PythonTools.Debugger, Version=16.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"
 "Class"="Microsoft.PythonTools.Debugger.DebugEngine.AD7ProgramProvider"
 "InprocServer32"="C:\\windows\\SYSTEM32\\MSCOREE.DLL"
 "CodeBase"="$GlassInstallDir$\\Microsoft.PythonTools.Debugger.dll"
