@@ -552,7 +552,6 @@ namespace Microsoft.PythonTools {
             if (serviceProvider == null) {
                 return null;
             }
-
 #if DEBUG
             // https://github.com/Microsoft/PTVS/issues/1205
             // Help see when this function is being incorrectly called from off
