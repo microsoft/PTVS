@@ -2251,7 +2251,7 @@
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[&Start without Debugging]]></Val>
             <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
-              <Val><![CDATA[&Ohne Debuggen starten]]></Val>
+              <Val><![CDATA[&Starten ohne Debuggen]]></Val>
             </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
@@ -2260,7 +2260,7 @@
           <Str Cat="Button">
             <Val><![CDATA[Start Without Debugging]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
-              <Val><![CDATA[Ohne Debuggen starten]]></Val>
+              <Val><![CDATA[Starten ohne Debuggen]]></Val>
             </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
@@ -2680,7 +2680,7 @@
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[Open I&nteractive Window]]></Val>
             <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
-              <Val><![CDATA[&Interaktives Fenster öffnen]]></Val>
+              <Val><![CDATA[&Interactive-Fenster öffnen]]></Val>
             </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
@@ -3058,7 +3058,7 @@
           <Str Cat="Button">
             <Val><![CDATA[Sends the current editor selection to a Python Interactive window.]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
-              <Val><![CDATA[Sendet die aktuelle Editor-Auswahl an ein interaktives Python-Fenster.]]></Val>
+              <Val><![CDATA[Sendet die aktuelle Editor-Auswahl an ein Interactive-Fenster für Python.]]></Val>
             </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
@@ -3310,7 +3310,7 @@
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[P&ython Interactive Window]]></Val>
             <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
-              <Val><![CDATA[Interaktives Python-&Fenster]]></Val>
+              <Val><![CDATA[Interactive-&Fenster für Python]]></Val>
             </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
@@ -3328,7 +3328,7 @@
           <Str Cat="Button">
             <Val><![CDATA[Opens the Python Interactive window.]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
-              <Val><![CDATA[Öffnet das interaktive Python-Fenster.]]></Val>
+              <Val><![CDATA[Öffnet das Interactive-Fenster für Python.]]></Val>
             </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
@@ -3388,7 +3388,7 @@
           <Str Cat="Button">
             <Val><![CDATA[Opens the Python Debug Interactive window.]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
-              <Val><![CDATA[Öffnet das interaktive Python-Debugfenster.]]></Val>
+              <Val><![CDATA[Öffnet das Interactive-Fenster für das Python-Debugging.]]></Val>
             </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
@@ -3652,7 +3652,7 @@
           <Str Cat="Menu Item">
             <Val><![CDATA[Python Interactive Window]]></Val>
             <Tgt Cat="Menu Item" Stat="Loc" Orig="New">
-              <Val><![CDATA[Interaktives Python-Fenster]]></Val>
+              <Val><![CDATA[Interactive-Fenster für Python]]></Val>
             </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
@@ -4001,7 +4001,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Interactive Windows]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Interaktive Fenster]]></Val>
+            <Val><![CDATA[Interactive-Fenster]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -4019,7 +4019,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Debug Interactive Window]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Fenster zum interaktiven Debuggen]]></Val>
+            <Val><![CDATA[Interactive-Fenster zum Debuggen]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

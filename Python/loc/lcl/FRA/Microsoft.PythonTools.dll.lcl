@@ -4064,7 +4064,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Wrapping]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Retour à la ligne]]></Val>
+            <Val><![CDATA[Enveloppement]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
