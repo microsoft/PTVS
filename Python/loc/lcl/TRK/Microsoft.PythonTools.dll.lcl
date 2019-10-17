@@ -3388,7 +3388,7 @@
           <Str Cat="Button">
             <Val><![CDATA[Opens the Python Debug Interactive window.]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
-              <Val><![CDATA[Etkileşimli Python Hata Ayıklama penceresini açar.]]></Val>
+              <Val><![CDATA[Python Hata Ayıklama Etkileşimli penceresini açar.]]></Val>
             </Tgt>
           </Str>
           <Disp Icon="Str" Expand="true" />
