@@ -9,9 +9,9 @@ Setup Glass Testing Environment
 		Select "Development with C++" workload			
 	Download Drop.exe
 	Find the file path of the latest version of Glass
-	Create a root folder where all your glass and test files will be located
+    Create a root folder where all your glass and test files will be located
 		Use this exact folder name because the file paths for the Concord Python files are hard coded
-		"C:\GlassTesting"
+        "C:\GlassTesting"
 	Download the Glass files with Drop.exe
 	Put "PythonTests" folder and all subfiles into "C:\GlassTesting" folder
 	Install the glass test adapter extension from "C:\GlassTesting\GlassStandAlone\Glass.TestAdapter.vsix"
@@ -20,7 +20,7 @@ Setup Glass Testing Environment
 		DkmDebugger.vsdconfig". Located in PTVS build output folder
 		Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces.dll
 	Transfer all files that start with "Microsoft.Python" to "C:\GlassTesting\GlassStandAlone\Glass" and "C:\GlassTesting\GlassStandAlone\Glass\Remote Debugger\x64"
-	Transfer "PythonEngine.refdeg" to "C:\GlassTesting\GlassStandAlone\Glass"
+	Transfer "PythonEngine.regdef" to "C:\GlassTesting\GlassStandAlone\Glass"
 	
 Running Glass Tests
 	Run VS as admin and load "C:\GlassTesting\PythonTests" in open folder environment

@@ -9,7 +9,7 @@
       </Setup>
       <TestSetup>
         <ImportPropertyGroup>..\Python\Python36.32.GlassTestProps</ImportPropertyGroup>
-        <RunScript Condition="Exists('$(TestDir)\setup.py')" RunAs="VSUser">..\..\GlassStandAlone\tools\RunPythonSetupPy.cmd "$(PythonExe)" "$(TestDir)\$(OutDir)"</RunScript>
+        <RunScript Condition="Exists('$(TestDir)\setup.py')" RunAs="VSUser">..\tools\RunPythonSetupPy.cmd "$(PythonExe)" "$(TestDir)\$(OutDir)"</RunScript>
       </TestSetup>
     </StandardConfiguration>
     <StandardConfiguration Name="36-64" TargetArchitecture="x64">
@@ -20,7 +20,7 @@
       </Setup>
       <TestSetup>
         <ImportPropertyGroup>..\Python\Python36.64.GlassTestProps</ImportPropertyGroup>
-        <RunScript Condition="Exists('$(TestDir)\setup.py')" RunAs="VSUser">..\..\GlassStandAlone\tools\RunPythonSetupPy.cmd "$(PythonExe)" "$(TestDir)\$(OutDir)"</RunScript>
+        <RunScript Condition="Exists('$(TestDir)\setup.py')" RunAs="VSUser">..\tools\RunPythonSetupPy.cmd "$(PythonExe)" "$(TestDir)\$(OutDir)"</RunScript>
       </TestSetup>
     </StandardConfiguration>
     <StandardConfiguration Name="37-32" TargetArchitecture="x86">
@@ -31,7 +31,7 @@
       </Setup>
       <TestSetup>
         <ImportPropertyGroup>..\Python\Python37.32.GlassTestProps</ImportPropertyGroup>
-        <RunScript Condition="Exists('$(TestDir)\setup.py')" RunAs="VSUser">..\..\GlassStandAlone\tools\RunPythonSetupPy.cmd "$(PythonExe)" "$(TestDir)\$(OutDir)"</RunScript>
+        <RunScript Condition="Exists('$(TestDir)\setup.py')" RunAs="VSUser">..\tools\RunPythonSetupPy.cmd "$(PythonExe)" "$(TestDir)\$(OutDir)"</RunScript>
       </TestSetup>
     </StandardConfiguration>
     <StandardConfiguration Name="37-64" TargetArchitecture="x64">
@@ -42,7 +42,7 @@
       </Setup>
       <TestSetup>
         <ImportPropertyGroup>..\Python\Python37.64.GlassTestProps</ImportPropertyGroup>
-        <RunScript Condition="Exists('$(TestDir)\setup.py')" RunAs="VSUser">..\..\GlassStandAlone\tools\RunPythonSetupPy.cmd "$(PythonExe)" "$(TestDir)\$(OutDir)"</RunScript>
+        <RunScript Condition="Exists('$(TestDir)\setup.py')" RunAs="VSUser">..\tools\RunPythonSetupPy.cmd "$(PythonExe)" "$(TestDir)\$(OutDir)"</RunScript>
       </TestSetup>
     </StandardConfiguration>
     <StandardConfiguration Name="38-32" TargetArchitecture="x86">
@@ -53,7 +53,7 @@
       </Setup>
       <TestSetup>
         <ImportPropertyGroup>..\Python\Python38.32.GlassTestProps</ImportPropertyGroup>
-        <RunScript Condition="Exists('$(TestDir)\setup.py')" RunAs="VSUser">..\..\GlassStandAlone\tools\RunPythonSetupPy.cmd "$(PythonExe)" "$(TestDir)\$(OutDir)"</RunScript>
+        <RunScript Condition="Exists('$(TestDir)\setup.py')" RunAs="VSUser">..\tools\RunPythonSetupPy.cmd "$(PythonExe)" "$(TestDir)\$(OutDir)"</RunScript>
       </TestSetup>
     </StandardConfiguration>
     <StandardConfiguration Name="38-64" TargetArchitecture="x64">
@@ -64,7 +64,7 @@
       </Setup>
       <TestSetup>
         <ImportPropertyGroup>..\Python\Python38.64.GlassTestProps</ImportPropertyGroup>
-        <RunScript Condition="Exists('$(TestDir)\setup.py')" RunAs="VSUser">..\..\GlassStandAlone\tools\RunPythonSetupPy.cmd "$(PythonExe)" "$(TestDir)\$(OutDir)"</RunScript>
+        <RunScript Condition="Exists('$(TestDir)\setup.py')" RunAs="VSUser">..\tools\RunPythonSetupPy.cmd "$(PythonExe)" "$(TestDir)\$(OutDir)"</RunScript>
       </TestSetup>
     </StandardConfiguration>
     <StandardConfiguration Name="27-32" TargetArchitecture="x86">
@@ -73,7 +73,7 @@
       </Setup>
       <TestSetup>
         <ImportPropertyGroup>..\Python\Python27.32.GlassTestProps</ImportPropertyGroup>
-        <RunScript Condition="Exists('$(TestDir)\setup.py')" RunAs="VSUser">..\..\GlassStandAlone\tools\RunPythonSetupPy.cmd "$(PythonExe)" "$(TestDir)\$(OutDir)"</RunScript>
+        <RunScript Condition="Exists('$(TestDir)\setup.py')" RunAs="VSUser">..\tools\RunPythonSetupPy.cmd "$(PythonExe)" "$(TestDir)\$(OutDir)"</RunScript>
       </TestSetup>
     </StandardConfiguration>
     <StandardConfiguration Name="27-64" TargetArchitecture="x64">
@@ -82,7 +82,7 @@
       </Setup>
       <TestSetup>
         <ImportPropertyGroup>..\Python\Python27.64.GlassTestProps</ImportPropertyGroup>
-        <RunScript Condition="Exists('$(TestDir)\setup.py')" RunAs="VSUser">..\..\GlassStandAlone\tools\RunPythonSetupPy.cmd "$(PythonExe)" "$(TestDir)\$(OutDir)"</RunScript>
+        <RunScript Condition="Exists('$(TestDir)\setup.py')" RunAs="VSUser">..\tools\RunPythonSetupPy.cmd "$(PythonExe)" "$(TestDir)\$(OutDir)"</RunScript>
       </TestSetup>
     </StandardConfiguration>
   </Configurations>

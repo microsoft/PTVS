@@ -37,8 +37,8 @@
   </DebuggeeCompileRules>
   
   <TestGroups>
-     <TestGroup Include="Python\Python.GlassTestGroup"/>
-   <TestGroup Include="Python2x\Python2x.GlassTestGroup"/>
+    <TestGroup Include="Python\Python.GlassTestGroup"/>
+    <TestGroup Include="Python2x\Python2x.GlassTestGroup"/>
     <TestGroup Include="Python3x\Python3x.GlassTestGroup"/>
   </TestGroups>
 </GlassTestRoot>
