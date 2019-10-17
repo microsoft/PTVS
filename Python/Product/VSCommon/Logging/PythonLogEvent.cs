@@ -113,6 +113,10 @@ namespace Microsoft.PythonTools.Logging {
         /// </summary>
         ConfigureTestFrameworkInfoBar,
         /// <summary>
+        /// Warn Python 38 support
+        /// </summary>
+        PythonNotSupportedInfoBar,
+        /// <summary>
         /// Create conda environment
         /// </summary>
         CreateCondaEnv,
