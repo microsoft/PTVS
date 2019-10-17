@@ -146,8 +146,8 @@ namespace Microsoft.PythonTools {
             TriggerPythonNotSupportedInforBarAsync().HandleAllExceptions(_serviceProvider, GetType()).DoNotWait();
         }
 
-        private async Task TriggerPythonNotSupportedInforBarAsync() {
-            await _pythonVersionNotSupportedInfoBar.CheckAsync();
+        private Task TriggerPythonNotSupportedInforBarAsync() {
+            return _pythonVersionNotSupportedInfoBar.CheckAsync();
         }
 
         public int OnAfterFirstDocumentLock(uint docCookie, uint dwRDTLockType, uint dwReadLocksRemaining, uint dwEditLocksRemaining) {
