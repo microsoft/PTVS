@@ -1375,9 +1375,9 @@ namespace Microsoft.PythonTools.Project {
             }
 
             var factory = ActiveInterpreter;
-            _pythonVersionNotSupportedInfoBar.CheckAsync();
 
             Site.GetUIThread().InvokeTask(async () => {
+                await _pythonVersionNotSupportedInfoBar.CheckAsync();
                 await ReanalyzeProject(factory).HandleAllExceptions(Site, GetType());
             }).DoNotWait();
         }

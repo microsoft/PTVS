@@ -29,30 +29,30 @@ namespace Microsoft.PythonTools.Project {
     internal class PythonNotSupportedInfoBar : PythonInfoBar {
         private const string _moreInformationLink = @"https://go.microsoft.com/fwlink/?LinkId=2108304";
         private readonly Version _pythonVersionNotSupported = new Version("3.8");
-        private Func<IPythonInterpreterFactory> _getActiveInterpreterFunc;
+        private readonly Func<IPythonInterpreterFactory> _getActiveInterpreterFunc;
         private IPythonInterpreterFactory _interpreterTriggeredInfoBar;
-        private String _context;
+        private readonly string _context;
 
-        public PythonNotSupportedInfoBar(IServiceProvider site, string context, Func<IPythonInterpreterFactory> activeInterpreter) : base(site) {
-            _getActiveInterpreterFunc = activeInterpreter;
-            _context = context;
+        public PythonNotSupportedInfoBar(IServiceProvider site, string context, Func<IPythonInterpreterFactory> getActiveInterpreterFunc) : base(site) {
+            _getActiveInterpreterFunc = getActiveInterpreterFunc ?? throw new ArgumentNullException(nameof(getActiveInterpreterFunc));
+            _context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
-        private IPythonInterpreterFactory ActiveInterpreter { get { return _getActiveInterpreterFunc(); } }
-
-        public override Task CheckAsync() {
-            ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+        public async override Task CheckAsync() {
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+            var activeInterpreter = _getActiveInterpreterFunc();
 
             if (IsCreated ||
                 !Site.GetPythonToolsService().GeneralOptions.PromptForPythonVersionNotSupported ||
                 _interpreterTriggeredInfoBar != null ||
-                ActiveInterpreter == null ||
-                ActiveInterpreter.Configuration.Version < _pythonVersionNotSupported
+                activeInterpreter == null ||
+                activeInterpreter.Configuration.Version < _pythonVersionNotSupported
             ) {
-                return Task.CompletedTask;
+                return;
             }
 
-            var infoBarTextSpanMessage = new InfoBarTextSpan(Strings.PythonVersionNotSupportedInfoBarText.FormatUI(ActiveInterpreter.Configuration.Version));
+            _interpreterTriggeredInfoBar = activeInterpreter;
+            var infoBarTextSpanMessage = new InfoBarTextSpan(Strings.PythonVersionNotSupportedInfoBarText.FormatUI(_interpreterTriggeredInfoBar.Configuration.Version));
             var infoBarMessage = new List<IVsInfoBarTextSpan>() { infoBarTextSpanMessage };
             var actionItems = new List<InfoBarActionItem>() {
                 new InfoBarHyperlink(Strings.PythonVersionNotSupportMoreInfo, (Action)MoreInformationAction),
@@ -61,9 +61,6 @@ namespace Microsoft.PythonTools.Project {
 
             LogEvent(PythonVersionNotSupportedInfoBarAction.Prompt);
             Create(new InfoBarModel(infoBarMessage, actionItems, KnownMonikers.StatusInformation));
-            _interpreterTriggeredInfoBar = ActiveInterpreter;
-
-            return Task.CompletedTask;
         }
 
         private void MoreInformationAction() {
@@ -82,14 +79,12 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private void LogEvent(string action) {
-            var logInterpreter = _interpreterTriggeredInfoBar ?? ActiveInterpreter;
-
             Logger?.LogEvent(
                 PythonLogEvent.PythonNotSupportedInfoBar,
                 new PythonVersionNotSupportedInfoBarInfo() {
                     Action = action,
                     Context = _context,
-                    PythonVersion = logInterpreter.Configuration.Version.ToString()
+                    PythonVersion = _interpreterTriggeredInfoBar.Configuration.Version.ToString()
                 }
             );
         }
