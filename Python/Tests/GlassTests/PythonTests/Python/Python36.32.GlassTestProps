@@ -1,9 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 
-<!-- This file defines the properties used for Python 3.6 32-bit debugging. -->
 <PropertyGroup xmlns="http://schemas.microsoft.com/vstudio/diagnostics/glasstestmanagement/2014">
-  <!--<PythonExe CopyToEnvironment="true">$(Registry:HKEY_LOCAL_MACHINE\SOFTWARE\Python\PythonCore\3.6\InstallPath@ExecutablePath)</PythonExe>-->
-  <!--<PythonExe CopyToEnvironment="true">$(Registry:HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Python\PythonCore\3.6-32\InstallPath@ExecutablePath)</PythonExe>-->
-  <!--<PythonExe CopyToEnvironment="true">C:\Program Files (x86)\Microsoft Visual Studio\Shared\Python36_86\python.exe</PythonExe>-->
   <PythonExe CopyToEnvironment="true">C:\Program Files (x86)\Python36-32\python.exe</PythonExe>
 </PropertyGroup>
