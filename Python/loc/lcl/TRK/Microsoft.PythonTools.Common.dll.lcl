@@ -5153,7 +5153,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Pytest is enabled in the {0} {1}, but it is not installed in the active environment.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Python testi {0} {1} konumunda etkinleştirildi ancak etkin ortama yüklenmedi.]]></Val>
+            <Val><![CDATA[Pytest, {0} {1} konumunda etkinleştirildi ancak etkin ortama yüklenmedi.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -5162,7 +5162,7 @@
         <Str Cat="Text">
           <Val><![CDATA[A pytest configuration file was detected in the {0} {1}, but pytest is not installed or enabled.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[{0} {1} konumunda bir Pyhton testi yapılandırma dosyası algılandı ancak Python testi yüklü değil veya etkileştirilmemiş.]]></Val>
+            <Val><![CDATA[{0} {1} konumunda bir pytest yapılandırma dosyası algılandı ancak pytest yüklü değil veya etkileştirilmemiş.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -5189,7 +5189,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Results for pytest not found {0}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[pytest sonuçları bulunamadı {0}]]></Val>
+            <Val><![CDATA[Pytest sonuçları bulunamadı {0}]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -5569,6 +5569,9 @@
       <Item ItemId=";PythonVersionNotSupportedInfoBarText" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[You are using Python {0} and some features might not work because Visual Studio doesn't support it yet.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Python {0} kullanıyorsunuz, ancak Visual Studio henüz bu sürümü desteklemediğinden bazı özellikler çalışmıyor olabilir.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>

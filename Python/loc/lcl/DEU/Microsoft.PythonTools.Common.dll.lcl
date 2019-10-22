@@ -5569,6 +5569,9 @@
       <Item ItemId=";PythonVersionNotSupportedInfoBarText" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[You are using Python {0} and some features might not work because Visual Studio doesn't support it yet.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Sie verwenden Python {0}, und einige Features funktionieren möglicherweise nicht, weil Visual Studio diese Version noch nicht unterstützt.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
