@@ -5189,7 +5189,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Results for pytest not found {0}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[ Nie znaleziono wyników dla testu pytest {0}]]></Val>
+            <Val><![CDATA[ Nie znaleziono wyników dla testu pytest: {0}]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -5544,6 +5544,33 @@
           <Val><![CDATA[Root _directory:]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[_Katalog główny:]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";PythonVersionNotSupportMoreInfo" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[More info]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Więcej informacji]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";PythonVersionNotSupportedDontShowMessageAgain" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Don't show this message again]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Nie pokazuj ponownie tego komunikatu]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";PythonVersionNotSupportedInfoBarText" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[You are using Python {0} and some features might not work because Visual Studio doesn't support it yet.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Korzystasz z języka Python {0} i niektóre funkcje mogą nie działać, ponieważ nie są jeszcze obsługiwane przez program Visual Studio.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
