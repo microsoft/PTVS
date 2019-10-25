@@ -3064,15 +3064,6 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";DiscoveryConfigurationMessage" ItemType="0" PsrId="211" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Go to https://aka.ms/VSTestExplorerPython for more details on test discovery configuration.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Дополнительные сведения о конфигурации обнаружения тестов см. на странице https://aka.ms/VSTestExplorerPython.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
       <Item ItemId=";DocumentationClassificationType" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Python Documentation]]></Val>
@@ -3442,15 +3433,6 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";ErrorTestContainerNotFound" ItemType="0" PsrId="211" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Matching test container source was not found under folder {0} for test {1}.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[В папке {0} для теста {1} не найден соответствующий исходный файл контейнера теста.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
       <Item ItemId=";ExecuteInReplCommand_ExecuteFile" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Execute File in P&ython Interactive]]></Val>
@@ -3590,7 +3572,7 @@
         <Str Cat="Text">
           <Val><![CDATA[When the selection contains a return statement, all code paths must return.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Если выбранный фрагмент содержит оператор return, все пути кода должны возвращать значения.]]></Val>
+            <Val><![CDATA[Если выбранный фрагмент содержит оператор return, все пути к кода должны возвращать значения.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -5171,7 +5153,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Pytest is enabled in the {0} {1}, but it is not installed in the active environment.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Платформа pytest не установлена в активной среде, но здесь она включена: {0} {1}.]]></Val>
+            <Val><![CDATA[Платформа pytest включена в {0} {1}, но не установлена в активной среде.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -5180,7 +5162,7 @@
         <Str Cat="Text">
           <Val><![CDATA[A pytest configuration file was detected in the {0} {1}, but pytest is not installed or enabled.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Платформа pytest не установлена или не включена, но здесь обнаружен ее файл конфигурации: {0} {1}.]]></Val>
+            <Val><![CDATA[Файл конфигурации платформы pytest обнаружен в {0} {1}, но платформа pytest не установлена или не включена.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -5207,7 +5189,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Results for pytest not found {0}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Результаты для pytest не найдены {0}]]></Val>
+            <Val><![CDATA[Результаты для pytest не найдены {0}.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -5485,8 +5467,8 @@
       <Item ItemId=";PythonTestFileDetected" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[A file which may contain Python tests was detected in the {0} {1}, but the test framework is disabled.]]></Val>
-          <Tgt Cat="Text" Stat="Update" Orig="New">
-            <Val><![CDATA[Платформа тестирования отключена, но здесь обнаружен файл, содержащий тесты Python: {0} {1}.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Платформа тестирования отключена, но в {0} {1} обнаружен файл, который может содержать тесты Python.]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[A file containing Python tests was detected in the {0} {1}, but the test framework is disabled.]]></Val>
@@ -5562,6 +5544,33 @@
           <Val><![CDATA[Root _directory:]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[Корне_вой каталог:]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";PythonVersionNotSupportMoreInfo" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[More info]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Дополнительная информация]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";PythonVersionNotSupportedDontShowMessageAgain" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Don't show this message again]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Больше не показывать это сообщение]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";PythonVersionNotSupportedInfoBarText" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[You are using Python {0} and some features might not work because Visual Studio doesn't support it yet.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Вы используете Python версии {0}. Некоторые функции могут не работать, так как Visual Studio еще не поддерживает эту версию.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

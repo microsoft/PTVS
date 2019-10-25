@@ -1,12 +1,15 @@
 {
-  "arch": "x86_64",
   "build": "py37hfa6e2cd_0",
   "build_number": 0,
+  "channel": "https://repo.anaconda.com/pkgs/main/win-64",
+  "constrains": [],
   "depends": [
     "python >=3.7,<3.8.0a0",
     "vc 14.*",
     "yaml >=0.1.7,<0.2.0a0"
   ],
+  "extracted_package_dir": "C:\\ProgramData\\Miniconda3\\pkgs\\ruamel_yaml-0.15.46-py37hfa6e2cd_0",
+  "features": "",
   "files": [
     "Lib/site-packages/ruamel_yaml-0.15.46-py3.7.egg-info",
     "Lib/site-packages/ruamel_yaml/__init__.py",
@@ -66,18 +69,28 @@
     "Lib/site-packages/ruamel_yaml/tokens.py",
     "Lib/site-packages/ruamel_yaml/util.py"
   ],
-  "installed_by": "Miniconda3-4.5.11-Windows-x86_64.exe",
+  "fn": "ruamel_yaml-0.15.46-py37hfa6e2cd_0.conda",
+  "legacy_bz2_md5": "163e6e1230812be0d46c0b8a0e1734ff",
+  "legacy_bz2_size": 267846,
   "license": "MIT",
   "license_family": "MIT",
   "link": {
-    "source": "C:\\Users\\huvalo\\Documents\\Miniconda\\pkgs\\ruamel_yaml-0.15.46-py37hfa6e2cd_0",
-    "type": "hard-link"
+    "source": "C:\\ProgramData\\Miniconda3\\pkgs\\ruamel_yaml-0.15.46-py37hfa6e2cd_0",
+    "type": 1
   },
-  "md5": "163e6e1230812be0d46c0b8a0e1734ff",
+  "md5": "e473e6721dccb0706ae0a5875386cd5e",
   "name": "ruamel_yaml",
-  "platform": "win",
+  "package_tarball_full_path": "C:\\ProgramData\\Miniconda3\\pkgs\\ruamel_yaml-0.15.46-py37hfa6e2cd_0.conda",
+  "paths_data": {
+    "paths": [],
+    "paths_version": 1
+  },
+  "requested_spec": "ruamel_yaml==0.15.46=py37hfa6e2cd_0",
+  "sha256": "be1322458a577a4f2905aea29242713fa61e2ddbebe8ed6cedbe5996d207601f",
+  "size": 250231,
   "subdir": "win-64",
   "timestamp": 1532969036543,
-  "url": "https://repo.anaconda.com/pkgs/main/win-64/ruamel_yaml-0.15.46-py37hfa6e2cd_0.tar.bz2",
+  "track_features": "",
+  "url": "https://repo.anaconda.com/pkgs/main/win-64/ruamel_yaml-0.15.46-py37hfa6e2cd_0.conda",
   "version": "0.15.46"
 }

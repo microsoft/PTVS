@@ -8,9 +8,17 @@
 # be tested in an installation.
 
 import os
+import re
 import sys
 import traceback
-from os.path import isdir, isfile, join, exists
+from os.path import isfile, join, exists, basename
+from os import environ
+from subprocess import check_output, STDOUT, CalledProcessError
+
+try:
+    import winreg
+except ImportError:
+    import _winreg as winreg
 
 ROOT_PREFIX = sys.prefix
 
@@ -18,6 +26,21 @@ ROOT_PREFIX = sys.prefix
 # Ideally, exceptions will get returned to NSIS and logged there,
 # etc, but this is a stopgap solution for now.
 old_excepthook = sys.excepthook
+
+
+# this sucks.  It is copied from _nsis.py because it can't be a relative import.
+# _nsis.py must be standalone.
+def ensure_comspec_set():
+    if basename(environ.get("COMSPEC", "")).lower() != "cmd.exe":
+        cmd_exe = join(environ.get('SystemRoot'), 'System32', 'cmd.exe')
+        if not isfile(cmd_exe):
+            cmd_exe = join(environ.get('windir'), 'System32', 'cmd.exe')
+        if not isfile(cmd_exe):
+            print("cmd.exe could not be found. "
+                     "Looked in SystemRoot and windir env vars.\n")
+        else:
+            environ['COMSPEC'] = cmd_exe
+
 
 def gui_excepthook(exctype, value, tb):
     try:
@@ -45,7 +68,38 @@ else:
     def err(x):
         OutputDebugString('_nsis.py: Error: ' + x)
 
-def mk_menus(remove=False, prefix=None):
+
+class NSISReg:
+    def __init__(self, reg_path):
+        self.reg_path = reg_path
+        if exists(join(ROOT_PREFIX, '.nonadmin')):
+            self.main_key = winreg.HKEY_CURRENT_USER
+        else:
+            self.main_key = winreg.HKEY_LOCAL_MACHINE
+
+    def set(self, name, value):
+        try:
+            winreg.CreateKey(self.main_key, self.reg_path)
+            registry_key = winreg.OpenKey(self.main_key, self.reg_path, 0,
+                                           winreg.KEY_WRITE)
+            winreg.SetValueEx(registry_key, name, 0, winreg.REG_SZ, value)
+            winreg.CloseKey(registry_key)
+            return True
+        except WindowsError:
+            return False
+
+    def get(self, name):
+        try:
+            registry_key = winreg.OpenKey(self.main_key, self.reg_path, 0,
+                                           winreg.KEY_READ)
+            value, regtype = winreg.QueryValueEx(registry_key, name)
+            winreg.CloseKey(registry_key)
+            return value
+        except WindowsError:
+            return None
+
+
+def mk_menus(remove=False, prefix=None, pkg_names=[]):
     try:
         import menuinst
     except (ImportError, OSError):
@@ -55,7 +109,6 @@ def mk_menus(remove=False, prefix=None):
     menu_dir = join(prefix, 'Menu')
     if not os.path.isdir(menu_dir):
         return
-    pkg_names = [s.strip() for s in sys.argv[2:]]
     for fn in os.listdir(menu_dir):
         if not fn.endswith('.json'):
             continue
@@ -119,11 +172,13 @@ def run_post_install():
         return
     env = os.environ
     env['PREFIX'] = str(ROOT_PREFIX)
-    try:
-        args = [env['COMSPEC'], '/c', path]
-    except KeyError:
-        err("Error: COMSPEC undefined\n")
-        return
+    cmd_exe = os.path.join(os.environ['SystemRoot'], 'System32', 'cmd.exe')
+    if not os.path.isfile(cmd_exe):
+        cmd_exe = os.path.join(os.environ['windir'], 'System32', 'cmd.exe')
+    if not os.path.isfile(cmd_exe):
+        err("Error: running %s failed.  cmd.exe could not be found.  "
+            "Looked in SystemRoot and windir env vars.\n" % path)
+    args = [cmd_exe, '/d', '/c', path]
     import subprocess
     try:
         subprocess.check_call(args, env=env)
@@ -132,7 +187,7 @@ def run_post_install():
 
 
 allusers = (not exists(join(ROOT_PREFIX, '.nonadmin')))
-out('allusers is %s\n' % allusers)
+# out('allusers is %s\n' % allusers)
 
 # This must be the same as conda's binpath_from_arg() in conda/cli/activate.py
 PATH_SUFFIXES = ('',
@@ -178,14 +233,61 @@ def add_to_path(pyversion, arch):
     broadcast_environment_settings_change()
 
 
+def rm_regkeys():
+    cmdproc_reg_entry = NSISReg('Software\Microsoft\Command Processor')
+    cmdproc_autorun_val = cmdproc_reg_entry.get('AutoRun')
+    conda_hook_regex_pat = r'((\s+&\s+)?\"[^\"]*?conda[-_]hook\.bat\")'
+    if join(ROOT_PREFIX, 'condabin') in (cmdproc_autorun_val or ''):
+        cmdproc_autorun_newval = re.sub(conda_hook_regex_pat, '',
+                cmdproc_autorun_val)
+        try:
+            cmdproc_reg_entry.set('AutoRun', cmdproc_autorun_newval)
+        except:
+            # Hey, at least we made an attempt to cleanup
+            pass
+
+
+def win_del(dirname):
+    # check_output uses comspec as the default shell when setting the parameter `shell=True`
+    ensure_comspec_set()
+    out = "unknown error (exception not caught)"
+    # first, remove all files
+    try:
+        out = check_output('DEL /F/Q/S *.* > NUL', shell=True, stderr=STDOUT, cwd=dirname)
+    except CalledProcessError as e:
+            # error code 5 indicates a permission error.  We ignore those, but raise for anything else
+            if e.returncode != 5:
+                print("Removing folder {} the fast way failed. Output was: {}".format(dirname, out))
+                raise
+            else:
+                print("removing dir contents the fast way failed. Output was: {}".format(out))
+    else:
+        print("Unexpected error removing dirname {}. Uninstall was probably not successful".format(dirname))
+    # next, remove folder hierarchy
+    try:
+        out = check_output('RD /S /Q "{}" > NUL'.format(dirname), shell=True, stderr=STDOUT)
+    except CalledProcessError as e:
+            # error code 5 indicates a permission error.  We ignore those, but raise for anything else
+            if e.returncode != 5:
+                print("Removing folder {} the fast way failed. Output was: {}".format(dirname, out))
+                raise
+            else:
+                print("removing dir folders the fast way failed. Output was: {}".format(out))
+    else:
+        print("Unexpected error removing dirname {}. Uninstall was probably not successful".format(dirname))
+
+
 def main():
     cmd = sys.argv[1].strip()
     if cmd == 'mkmenus':
-        mk_menus(remove=False)
+        pkg_names = [s.strip() for s in sys.argv[2:]]
+        mk_menus(remove=False, pkg_names=pkg_names)
     elif cmd == 'post_install':
         run_post_install()
     elif cmd == 'rmmenus':
         rm_menus()
+    elif cmd == 'rmreg':
+        rm_regkeys()
     elif cmd == 'mkdirs':
         mk_dirs()
     elif cmd == 'addpath':
@@ -204,6 +306,9 @@ def main():
         add_to_path(pyver, arch)
     elif cmd == 'rmpath':
         remove_from_path()
+    elif cmd == 'del':
+        assert len(sys.argv) == 3
+        win_del(sys.argv[2].strip())
     else:
         sys.exit("ERROR: did not expect %r" % cmd)
 

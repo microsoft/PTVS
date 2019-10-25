@@ -3064,15 +3064,6 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";DiscoveryConfigurationMessage" ItemType="0" PsrId="211" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Go to https://aka.ms/VSTestExplorerPython for more details on test discovery configuration.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Pour plus d'informations sur la configuration de la découverte de tests, accédez à https://aka.ms/VSTestExplorerPython.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
       <Item ItemId=";DocumentationClassificationType" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Python Documentation]]></Val>
@@ -3442,15 +3433,6 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";ErrorTestContainerNotFound" ItemType="0" PsrId="211" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Matching test container source was not found under folder {0} for test {1}.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[La source du conteneur de test correspondante est introuvable sous le dossier {0} pour le test {1}.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
       <Item ItemId=";ExecuteInReplCommand_ExecuteFile" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Execute File in P&ython Interactive]]></Val>
@@ -3590,7 +3572,7 @@
         <Str Cat="Text">
           <Val><![CDATA[When the selection contains a return statement, all code paths must return.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Quand la sélection contient une instruction return, tous les chemins de code doivent retourner une valeur.]]></Val>
+            <Val><![CDATA[Quand la sélection contient une instruction return, tous les chemins du code doivent retourner une valeur.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -3869,7 +3851,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Wrapping]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Retour à la ligne]]></Val>
+            <Val><![CDATA[Enveloppement]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -5207,7 +5189,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Results for pytest not found {0}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Résultats introuvables pour pytest {0}]]></Val>
+            <Val><![CDATA[Résultats de pytest introuvables {0}]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -5485,8 +5467,8 @@
       <Item ItemId=";PythonTestFileDetected" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[A file which may contain Python tests was detected in the {0} {1}, but the test framework is disabled.]]></Val>
-          <Tgt Cat="Text" Stat="Update" Orig="New">
-            <Val><![CDATA[Un fichier contenant des tests Python a été détecté dans {0} {1}, mais le framework de tests est désactivé.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Un fichier contenant éventuellement des tests Python a été détecté dans {0} {1}, mais le framework de tests est désactivé.]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[A file containing Python tests was detected in the {0} {1}, but the test framework is disabled.]]></Val>
@@ -5562,6 +5544,33 @@
           <Val><![CDATA[Root _directory:]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[Répertoire raci_ne :]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";PythonVersionNotSupportMoreInfo" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[More info]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Informations supplémentaires]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";PythonVersionNotSupportedDontShowMessageAgain" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Don't show this message again]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Ne plus afficher ce message]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";PythonVersionNotSupportedInfoBarText" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[You are using Python {0} and some features might not work because Visual Studio doesn't support it yet.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Vous utilisez Python {0}. Certaines fonctionnalités risquent de ne pas fonctionner, car Visual Studio ne les prend pas encore en charge.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -7697,7 +7706,7 @@
         <Str Cat="Text">
           <Val><![CDATA[# Not wrapped:]D;]A;# There should be one-- and preferably only one --obvious way to do it.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[# Pas de retour à la ligne :]D;]A;# Il doit y avoir une (et de préférence une seule) façon évidente de le faire.]]></Val>
+            <Val><![CDATA[# Pas enveloppé :]D;]A;# Il doit y avoir une (et de préférence une seule) façon évidente de le faire.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -7706,7 +7715,7 @@
         <Str Cat="Text">
           <Val><![CDATA[# Wrapped to 40 columns:]D;]A;# There should be one-- and preferably]D;]A;# only one --obvious way to do it.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[# Retour à la ligne à 40 colonnes :]D;]A;# Il doit y avoir une (et de préférence]D;]A;# une seule) façon de le faire.]]></Val>
+            <Val><![CDATA[# Enveloppé sur 40 colonnes :]D;]A;# Il doit y avoir une (et de préférence]D;]A;# une seule) façon de le faire.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -7715,7 +7724,7 @@
         <Str Cat="Text">
           <Val><![CDATA[If checked, comments are wrapped to the specified width. If unchecked, comments are not modified.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Si la case est cochée, les commentaires sont inclus dans un wrapper de la largeur spécifiée. Si la case est décochée, les commentaires ne sont pas modifiés.]]></Val>
+            <Val><![CDATA[Si la case est cochée, les commentaires sont enveloppés à la largeur spécifiée. Si la case est décochée, les commentaires ne sont pas modifiés.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -7724,7 +7733,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Wrap comments that are too wide]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Inclure dans un wrapper les commentaires trop longs]]></Val>
+            <Val><![CDATA[Envelopper les commentaires trop longs]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -7733,7 +7742,7 @@
         <Str Cat="Text">
           <Val><![CDATA[# Sets the width for wrapping comments]D;]A;# and documentation strings.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[# Définit la largeur des chaînes des commentaires]D;]A;# et de la documentation avant un retour à la ligne.]]></Val>
+            <Val><![CDATA[# Définit la largeur pour l'enveloppement des chaînes des commentaires]D;]A;# et de la documentation.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

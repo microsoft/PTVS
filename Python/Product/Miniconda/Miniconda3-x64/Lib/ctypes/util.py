@@ -320,9 +320,17 @@ elif os.name == "posix":
             # See issue #9998
             # Yes calling _findLib_prefix twice is deliberate, because _get_soname ditches
             # the full path.
-            return _findLib_prefix(_get_soname(_findLib_prefix(name))) or \
-                   _findSoname_ldconfig(name) or \
-                   _get_soname(_findLib_gcc(name) or _findLib_ld(name))
+            # When objdump is unavailable this returns None
+            so_name = _get_soname(_findLib_prefix(name)) or name
+            if so_name != name:
+                return _findLib_prefix(so_name) or \
+                       _findLib_prefix(name) or \
+                       _findSoname_ldconfig(name) or \
+                       _get_soname(_findLib_gcc(name) or _findLib_ld(name))
+            else:
+                 return _findLib_prefix(name) or \
+                        _findSoname_ldconfig(name) or \
+                        _get_soname(_findLib_gcc(name) or _findLib_ld(name))
 
 ################################################################
 # test code

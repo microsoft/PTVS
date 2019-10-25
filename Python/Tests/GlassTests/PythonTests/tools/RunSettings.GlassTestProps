@@ -4,6 +4,7 @@
 us pull glass from the binaries output directory instead of from <ConcordSDKRoot>\tools\glass. We might
 also want to use this to set things like the path where we pick up the C++ compiler from.-->
 <PropertyGroup xmlns="http://schemas.microsoft.com/vstudio/diagnostics/glasstestmanagement/2014">
+  <RunAs64 Condition="'?(RunAs64)'==''">false</RunAs64>
   <UseEnlistmentBinDir>false</UseEnlistmentBinDir>
   <UseEnlistmentBinDir Condition="Exists('..\..\..\..\..\..\out\bin\x86chk\')">true</UseEnlistmentBinDir>
 
@@ -20,7 +21,7 @@ also want to use this to set things like the path where we pick up the C++ compi
 
   <!--NOTE: GlassDir has a trailing slash-->
   <GlassDir Condition=" '$(UseEnlistmentOutput)'=='true' ">$(BinDir)SuiteBin\ConcordSDK\Tools\glass\</GlassDir>
-  <GlassDir Condition=" '$(UseEnlistmentOutput)'!='true' ">$(BinDir)Tools\glass\</GlassDir>
+  <GlassDir Condition=" '$(UseEnlistmentOutput)'!='true' ">$(BinDir)GlassStandAlone\Glass\</GlassDir>
 
   <!-- This can be overwritten to run Glass tests against a specific version of the CRT/VC Tools. -->
   <!-- By default, for internals we will grab VC Tools and the CRT from VCDrop.txt. -->

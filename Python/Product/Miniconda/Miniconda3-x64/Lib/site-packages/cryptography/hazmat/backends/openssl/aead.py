@@ -18,10 +18,10 @@ def _aead_cipher_name(cipher):
     if isinstance(cipher, ChaCha20Poly1305):
         return b"chacha20-poly1305"
     elif isinstance(cipher, AESCCM):
-        return "aes-{0}-ccm".format(len(cipher._key) * 8).encode("ascii")
+        return "aes-{}-ccm".format(len(cipher._key) * 8).encode("ascii")
     else:
         assert isinstance(cipher, AESGCM)
-        return "aes-{0}-gcm".format(len(cipher._key) * 8).encode("ascii")
+        return "aes-{}-gcm".format(len(cipher._key) * 8).encode("ascii")
 
 
 def _aead_setup(backend, cipher_name, key, nonce, tag, tag_len, operation):
@@ -54,12 +54,14 @@ def _aead_setup(backend, cipher_name, key, nonce, tag, tag_len, operation):
             ctx, backend._lib.EVP_CTRL_AEAD_SET_TAG, tag_len, backend._ffi.NULL
         )
 
+    nonce_ptr = backend._ffi.from_buffer(nonce)
+    key_ptr = backend._ffi.from_buffer(key)
     res = backend._lib.EVP_CipherInit_ex(
         ctx,
         backend._ffi.NULL,
         backend._ffi.NULL,
-        key,
-        nonce,
+        key_ptr,
+        nonce_ptr,
         int(operation == _ENCRYPT)
     )
     backend.openssl_assert(res != 0)

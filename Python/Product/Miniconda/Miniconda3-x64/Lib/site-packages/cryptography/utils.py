@@ -20,14 +20,22 @@ class CryptographyDeprecationWarning(UserWarning):
 # Several APIs were deprecated with no specific end-of-life date because of the
 # ubiquity of their use. They should not be removed until we agree on when that
 # cycle ends.
-PersistentlyDeprecated = CryptographyDeprecationWarning
-DeprecatedIn21 = CryptographyDeprecationWarning
-DeprecatedIn23 = CryptographyDeprecationWarning
+PersistentlyDeprecated2017 = CryptographyDeprecationWarning
+PersistentlyDeprecated2018 = CryptographyDeprecationWarning
+DeprecatedIn25 = CryptographyDeprecationWarning
+DeprecatedIn27 = CryptographyDeprecationWarning
 
 
 def _check_bytes(name, value):
     if not isinstance(value, bytes):
-        raise TypeError("{0} must be bytes".format(name))
+        raise TypeError("{} must be bytes".format(name))
+
+
+def _check_byteslike(name, value):
+    try:
+        memoryview(value)
+    except TypeError:
+        raise TypeError("{} must be bytes-like".format(name))
 
 
 def read_only_property(name):
@@ -90,7 +98,7 @@ def verify_interface(iface, klass):
     for method in iface.__abstractmethods__:
         if not hasattr(klass, method):
             raise InterfaceNotImplemented(
-                "{0} is missing a {1!r} method".format(klass, method)
+                "{} is missing a {!r} method".format(klass, method)
             )
         if isinstance(getattr(iface, method), abc.abstractproperty):
             # Can't properly verify these yet.
@@ -99,8 +107,8 @@ def verify_interface(iface, klass):
         actual = signature(getattr(klass, method))
         if sig != actual:
             raise InterfaceNotImplemented(
-                "{0}.{1}'s signature differs from the expected. Expected: "
-                "{2!r}. Received: {3!r}".format(
+                "{}.{}'s signature differs from the expected. Expected: "
+                "{!r}. Received: {!r}".format(
                     klass, method, sig, actual
                 )
             )
@@ -152,7 +160,7 @@ def deprecated(value, module_name, message, warning_class):
 
 
 def cached_property(func):
-    cached_name = "_cached_{0}".format(func)
+    cached_name = "_cached_{}".format(func)
     sentinel = object()
 
     def inner(instance):

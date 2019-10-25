@@ -34,7 +34,6 @@ namespace Microsoft.PythonTools.Interpreter {
         private readonly List<PackageSpec> _packages;
         private CancellationTokenSource _currentRefresh;
         private bool _isReady, _everCached;
-        private KeyValuePair<string, string>[] _activatedEnvironmentVariables;
 
         private List<FileSystemWatcher> _libWatchers;
         private Timer _refreshIsCurrentTrigger;
@@ -112,25 +111,23 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        private void EnsureActivated() {
-            if (_activatedEnvironmentVariables == null) {
-                var prefixPath = _factory.Configuration.GetPrefixPath();
-                if (_condaLocatorProvider != null && Directory.Exists(prefixPath) && CondaUtils.IsCondaEnvironment(prefixPath)) {
-                    var rootConda = _condaLocatorProvider.FindLocator()?.CondaExecutablePath;
-                    if (File.Exists(rootConda)) {
-                        var env = CondaUtils.CaptureActivationEnvironmentVariablesForPrefix(rootConda, prefixPath);
-                        _activatedEnvironmentVariables = env.Union(UnbufferedEnv).ToArray();
-                    } else {
-                        // Normally, the root is required for this environment to have been discovered,
-                        // but it could be that the user added this as a custom environment and then
-                        // uninstalled the root. When that's the case, there is no way to activate,
-                        // so proceed without activation env variables.
-                        _activatedEnvironmentVariables = UnbufferedEnv;
-                    }
+        private async Task<KeyValuePair<string, string>[]> GetEnvironmentVariables() {
+            var prefixPath = _factory.Configuration.GetPrefixPath();
+            if (_condaLocatorProvider != null && Directory.Exists(prefixPath) && CondaUtils.IsCondaEnvironment(prefixPath)) {
+                var rootConda = _condaLocatorProvider.FindLocator()?.CondaExecutablePath;
+                if (File.Exists(rootConda)) {
+                    var env = await CondaUtils.GetActivationEnvironmentVariablesForPrefixAsync(rootConda, prefixPath);
+                    return env.Union(UnbufferedEnv).ToArray();
                 } else {
-                    // Not a conda environment, no activation necessary.
-                    _activatedEnvironmentVariables = UnbufferedEnv;
+                    // Normally, the root is required for this environment to have been discovered,
+                    // but it could be that the user added this as a custom environment and then
+                    // uninstalled the root. When that's the case, there is no way to activate,
+                    // so proceed without activation env variables.
+                    return UnbufferedEnv;
                 }
+            } else {
+                // Not a conda environment, no activation necessary.
+                return UnbufferedEnv;
             }
         }
 
@@ -161,13 +158,13 @@ namespace Microsoft.PythonTools.Interpreter {
                 }
             }
             try {
-                EnsureActivated();
+                var envVars = await GetEnvironmentVariables();
 
                 using (var proc = ProcessOutput.Run(
                     _factory.Configuration.InterpreterPath,
                     _commands.CheckIsReady(),
                     _factory.Configuration.GetPrefixPath(),
-                    _activatedEnvironmentVariables,
+                    envVars,
                     false,
                     null
                 )) {
@@ -200,13 +197,13 @@ namespace Microsoft.PythonTools.Interpreter {
                 ui?.OnOperationStarted(this, operation);
                 ui?.OnOutputTextReceived(this, Strings.InstallingPipStarted);
 
-                EnsureActivated();
+                var envVars = await GetEnvironmentVariables();
 
                 using (var proc = ProcessOutput.Run(
                     _factory.Configuration.InterpreterPath,
                     _commands.Prepare(),
                     _factory.Configuration.GetPrefixPath(),
-                    _activatedEnvironmentVariables,
+                    envVars,
                     false,
                     PackageManagerUIRedirector.Get(this, ui),
                     elevate: await ShouldElevate(ui, operation)
@@ -235,14 +232,14 @@ namespace Microsoft.PythonTools.Interpreter {
                 ui?.OnOutputTextReceived(this, operation);
                 ui?.OnOperationStarted(this, Strings.ExecutingCommandStarted.FormatUI(arguments));
 
-                EnsureActivated();
+                var envVars = await GetEnvironmentVariables();
 
                 try {
                     using (var output = ProcessOutput.Run(
                         _factory.Configuration.InterpreterPath,
                         new[] { args.Trim() },
                         _factory.Configuration.GetPrefixPath(),
-                        _activatedEnvironmentVariables,
+                        envVars,
                         false,
                         PackageManagerUIRedirector.Get(this, ui),
                         quoteArgs: false,
@@ -285,14 +282,14 @@ namespace Microsoft.PythonTools.Interpreter {
                 ui?.OnOperationStarted(this, operation);
                 ui?.OnOutputTextReceived(this, Strings.InstallingPackageStarted.FormatUI(name));
 
-                EnsureActivated();
+                var envVars = await GetEnvironmentVariables();
 
                 try {
                     using (var output = ProcessOutput.Run(
                         _factory.Configuration.InterpreterPath,
                         args,
                         _factory.Configuration.GetPrefixPath(),
-                        _activatedEnvironmentVariables,
+                        envVars,
                         false,
                         PackageManagerUIRedirector.Get(this, ui),
                         quoteArgs: false,
@@ -335,13 +332,13 @@ namespace Microsoft.PythonTools.Interpreter {
                     ui?.OnOperationStarted(this, operation);
                     ui?.OnOutputTextReceived(this, Strings.UninstallingPackageStarted.FormatUI(name));
 
-                    EnsureActivated();
+                    var envVars = await GetEnvironmentVariables();
 
                     using (var output = ProcessOutput.Run(
                         _factory.Configuration.InterpreterPath,
                         args,
                         _factory.Configuration.GetPrefixPath(),
-                        _activatedEnvironmentVariables,
+                        envVars,
                         false,
                         PackageManagerUIRedirector.Get(this, ui),
                         elevate: await ShouldElevate(ui, operation)
@@ -425,13 +422,13 @@ namespace Microsoft.PythonTools.Interpreter {
 
                 var concurrencyLock = alreadyHasConcurrencyLock ? null : await _concurrencyLock.LockAsync(cancellationToken);
                 try {
-                    EnsureActivated();
+                    var envVars = await GetEnvironmentVariables();
 
                     using (var proc = ProcessOutput.Run(
                         _factory.Configuration.InterpreterPath,
                         args,
                         _factory.Configuration.GetPrefixPath(),
-                        _activatedEnvironmentVariables,
+                        envVars,
                         false,
                         null
                     )) {

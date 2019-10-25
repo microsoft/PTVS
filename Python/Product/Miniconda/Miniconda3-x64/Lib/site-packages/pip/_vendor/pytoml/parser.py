@@ -1,40 +1,41 @@
 import string, re, sys, datetime
 from .core import TomlError
+from .utils import rfc3339_re, parse_rfc3339_re
 
 if sys.version_info[0] == 2:
     _chr = unichr
 else:
     _chr = chr
 
-def load(fin, translate=lambda t, x, v: v):
-    return loads(fin.read(), translate=translate, filename=getattr(fin, 'name', repr(fin)))
+def load(fin, translate=lambda t, x, v: v, object_pairs_hook=dict):
+    return loads(fin.read(), translate=translate, object_pairs_hook=object_pairs_hook, filename=getattr(fin, 'name', repr(fin)))
 
-def loads(s, filename='<string>', translate=lambda t, x, v: v):
+def loads(s, filename='<string>', translate=lambda t, x, v: v, object_pairs_hook=dict):
     if isinstance(s, bytes):
         s = s.decode('utf-8')
 
     s = s.replace('\r\n', '\n')
 
-    root = {}
-    tables = {}
+    root = object_pairs_hook()
+    tables = object_pairs_hook()
     scope = root
 
     src = _Source(s, filename=filename)
-    ast = _p_toml(src)
+    ast = _p_toml(src, object_pairs_hook=object_pairs_hook)
 
     def error(msg):
         raise TomlError(msg, pos[0], pos[1], filename)
 
-    def process_value(v):
+    def process_value(v, object_pairs_hook):
         kind, text, value, pos = v
         if kind == 'str' and value.startswith('\n'):
             value = value[1:]
         if kind == 'array':
             if value and any(k != value[0][0] for k, t, v, p in value[1:]):
                 error('array-type-mismatch')
-            value = [process_value(item) for item in value]
+            value = [process_value(item, object_pairs_hook=object_pairs_hook) for item in value]
         elif kind == 'table':
-            value = dict([(k, process_value(value[k])) for k in value])
+            value = object_pairs_hook([(k, process_value(value[k], object_pairs_hook=object_pairs_hook)) for k in value])
         return translate(kind, text, value)
 
     for kind, value, pos in ast:
@@ -42,7 +43,7 @@ def loads(s, filename='<string>', translate=lambda t, x, v: v):
             k, v = value
             if k in scope:
                 error('duplicate_keys. Key "{0}" was used more than once.'.format(k))
-            scope[k] = process_value(v)
+            scope[k] = process_value(v, object_pairs_hook=object_pairs_hook)
         else:
             is_table_array = (kind == 'table_array')
             cur = tables
@@ -50,19 +51,19 @@ def loads(s, filename='<string>', translate=lambda t, x, v: v):
                 if isinstance(cur.get(name), list):
                     d, cur = cur[name][-1]
                 else:
-                    d, cur = cur.setdefault(name, (None, {}))
+                    d, cur = cur.setdefault(name, (None, object_pairs_hook()))
 
-            scope = {}
+            scope = object_pairs_hook()
             name = value[-1]
             if name not in cur:
                 if is_table_array:
-                    cur[name] = [(scope, {})]
+                    cur[name] = [(scope, object_pairs_hook())]
                 else:
-                    cur[name] = (scope, {})
+                    cur[name] = (scope, object_pairs_hook())
             elif isinstance(cur[name], list):
                 if not is_table_array:
                     error('table_type_mismatch')
-                cur[name].append((scope, {}))
+                cur[name].append((scope, object_pairs_hook()))
             else:
                 if is_table_array:
                     error('table_type_mismatch')
@@ -73,7 +74,7 @@ def loads(s, filename='<string>', translate=lambda t, x, v: v):
 
     def merge_tables(scope, tables):
         if scope is None:
-            scope = {}
+            scope = object_pairs_hook()
         for k in tables:
             if k in scope:
                 error('key_table_conflict')
@@ -179,13 +180,13 @@ _ws_re = re.compile(r'[ \t]*')
 def _p_ws(s):
     s.expect_re(_ws_re)
 
-_escapes = { 'b': '\b', 'n': '\n', 'r': '\r', 't': '\t', '"': '"', '\'': '\'',
-    '\\': '\\', '/': '/', 'f': '\f' }
+_escapes = { 'b': '\b', 'n': '\n', 'r': '\r', 't': '\t', '"': '"',
+    '\\': '\\', 'f': '\f' }
 
 _basicstr_re = re.compile(r'[^"\\\000-\037]*')
 _short_uni_re = re.compile(r'u([0-9a-fA-F]{4})')
 _long_uni_re = re.compile(r'U([0-9a-fA-F]{8})')
-_escapes_re = re.compile('[bnrt"\'\\\\/f]')
+_escapes_re = re.compile(r'[btnfr\"\\]')
 _newline_esc_re = re.compile('\n[ \t\n]*')
 def _p_basicstr_content(s, content=_basicstr_re):
     res = []
@@ -196,7 +197,10 @@ def _p_basicstr_content(s, content=_basicstr_re):
         if s.consume_re(_newline_esc_re):
             pass
         elif s.consume_re(_short_uni_re) or s.consume_re(_long_uni_re):
-            res.append(_chr(int(s.last().group(1), 16)))
+            v = int(s.last().group(1), 16)
+            if 0xd800 <= v < 0xe000:
+                s.fail()
+            res.append(_chr(v))
         else:
             s.expect_re(_escapes_re)
             res.append(_escapes[s.last().group(0)])
@@ -220,12 +224,11 @@ def _p_key(s):
     return s.expect_re(_key_re).group(0)
 
 _float_re = re.compile(r'[+-]?(?:0|[1-9](?:_?\d)*)(?:\.\d(?:_?\d)*)?(?:[eE][+-]?(?:\d(?:_?\d)*))?')
-_datetime_re = re.compile(r'(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(\.\d+)?(?:Z|([+-]\d{2}):(\d{2}))')
 
-_basicstr_ml_re = re.compile(r'(?:(?:|"|"")[^"\\\000-\011\013-\037])*')
-_litstr_re = re.compile(r"[^'\000-\037]*")
-_litstr_ml_re = re.compile(r"(?:(?:|'|'')(?:[^'\000-\011\013-\037]))*")
-def _p_value(s):
+_basicstr_ml_re = re.compile(r'(?:""?(?!")|[^"\\\000-\011\013-\037])*')
+_litstr_re = re.compile(r"[^'\000\010\012-\037]*")
+_litstr_ml_re = re.compile(r"(?:(?:|'|'')(?:[^'\000-\010\013-\037]))*")
+def _p_value(s, object_pairs_hook):
     pos = s.pos()
 
     if s.consume('true'):
@@ -251,24 +254,9 @@ def _p_value(s):
             s.expect('\'')
         return 'str', r, r, pos
 
-    if s.consume_re(_datetime_re):
+    if s.consume_re(rfc3339_re):
         m = s.last()
-        s0 = m.group(0)
-        r = map(int, m.groups()[:6])
-        if m.group(7):
-            micro = float(m.group(7))
-        else:
-            micro = 0
-
-        if m.group(8):
-            g = int(m.group(8), 10) * 60 + int(m.group(9), 10)
-            tz = _TimeZone(datetime.timedelta(0, g * 60))
-        else:
-            tz = _TimeZone(datetime.timedelta(0, 0))
-
-        y, m, d, H, M, S = r
-        dt = datetime.datetime(y, m, d, H, M, S, int(micro * 1000000), tz)
-        return 'datetime', s0, dt, pos
+        return 'datetime', m.group(0), parse_rfc3339_re(m), pos
 
     if s.consume_re(_float_re):
         m = s.last().group(0)
@@ -283,7 +271,7 @@ def _p_value(s):
         with s:
             while True:
                 _p_ews(s)
-                items.append(_p_value(s))
+                items.append(_p_value(s, object_pairs_hook=object_pairs_hook))
                 s.commit()
                 _p_ews(s)
                 s.expect(',')
@@ -294,13 +282,13 @@ def _p_value(s):
 
     if s.consume('{'):
         _p_ws(s)
-        items = {}
+        items = object_pairs_hook()
         if not s.consume('}'):
             k = _p_key(s)
             _p_ws(s)
             s.expect('=')
             _p_ws(s)
-            items[k] = _p_value(s)
+            items[k] = _p_value(s, object_pairs_hook=object_pairs_hook)
             _p_ws(s)
             while s.consume(','):
                 _p_ws(s)
@@ -308,14 +296,14 @@ def _p_value(s):
                 _p_ws(s)
                 s.expect('=')
                 _p_ws(s)
-                items[k] = _p_value(s)
+                items[k] = _p_value(s, object_pairs_hook=object_pairs_hook)
                 _p_ws(s)
             s.expect('}')
         return 'table', None, items, pos
 
     s.fail()
 
-def _p_stmt(s):
+def _p_stmt(s, object_pairs_hook):
     pos = s.pos()
     if s.consume(   '['):
         is_array = s.consume('[')
@@ -335,40 +323,19 @@ def _p_stmt(s):
     _p_ws(s)
     s.expect('=')
     _p_ws(s)
-    value = _p_value(s)
+    value = _p_value(s, object_pairs_hook=object_pairs_hook)
     return 'kv', (key, value), pos
 
 _stmtsep_re = re.compile(r'(?:[ \t]*(?:#[^\n]*)?\n)+[ \t]*')
-def _p_toml(s):
+def _p_toml(s, object_pairs_hook):
     stmts = []
     _p_ews(s)
     with s:
-        stmts.append(_p_stmt(s))
+        stmts.append(_p_stmt(s, object_pairs_hook=object_pairs_hook))
         while True:
             s.commit()
             s.expect_re(_stmtsep_re)
-            stmts.append(_p_stmt(s))
+            stmts.append(_p_stmt(s, object_pairs_hook=object_pairs_hook))
     _p_ews(s)
     s.expect_eof()
     return stmts
-
-class _TimeZone(datetime.tzinfo):
-    def __init__(self, offset):
-        self._offset = offset
-
-    def utcoffset(self, dt):
-        return self._offset
-
-    def dst(self, dt):
-        return None
-
-    def tzname(self, dt):
-        m = self._offset.total_seconds() // 60
-        if m < 0:
-            res = '-'
-            m = -m
-        else:
-            res = '+'
-        h = m // 60
-        m = m - h * 60
-        return '{}{:.02}{:.02}'.format(res, h, m)

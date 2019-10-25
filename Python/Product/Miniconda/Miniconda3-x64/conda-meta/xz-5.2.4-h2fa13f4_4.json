@@ -1,0 +1,58 @@
+{
+  "build": "h2fa13f4_4",
+  "build_number": 4,
+  "channel": "https://repo.anaconda.com/pkgs/main/win-64",
+  "constrains": [],
+  "depends": [
+    "vc 14.*"
+  ],
+  "extracted_package_dir": "C:\\ProgramData\\Miniconda3\\pkgs\\xz-5.2.4-h2fa13f4_4",
+  "features": "",
+  "files": [
+    "Library/bin/liblzma.dll",
+    "Library/bin/lzmainfo.exe",
+    "Library/bin/unxz.exe",
+    "Library/bin/xz.exe",
+    "Library/bin/xz_static.exe",
+    "Library/include/lzma.h",
+    "Library/include/lzma/base.h",
+    "Library/include/lzma/bcj.h",
+    "Library/include/lzma/block.h",
+    "Library/include/lzma/check.h",
+    "Library/include/lzma/container.h",
+    "Library/include/lzma/delta.h",
+    "Library/include/lzma/filter.h",
+    "Library/include/lzma/hardware.h",
+    "Library/include/lzma/index.h",
+    "Library/include/lzma/index_hash.h",
+    "Library/include/lzma/lzma12.h",
+    "Library/include/lzma/stream_flags.h",
+    "Library/include/lzma/version.h",
+    "Library/include/lzma/vli.h",
+    "Library/lib/liblzma.lib",
+    "Library/lib/liblzma_static.lib"
+  ],
+  "fn": "xz-5.2.4-h2fa13f4_4.conda",
+  "legacy_bz2_md5": "4d85f36274b4d66be67bb1fffd81613f",
+  "legacy_bz2_size": 831687,
+  "license": "LGPL-2.1 and GPL-2.0",
+  "link": {
+    "source": "C:\\ProgramData\\Miniconda3\\pkgs\\xz-5.2.4-h2fa13f4_4",
+    "type": 1
+  },
+  "md5": "a5afe1b43aaad483a569858a0af6725a",
+  "name": "xz",
+  "package_tarball_full_path": "C:\\ProgramData\\Miniconda3\\pkgs\\xz-5.2.4-h2fa13f4_4.conda",
+  "paths_data": {
+    "paths": [],
+    "paths_version": 1
+  },
+  "requested_spec": "xz==5.2.4=h2fa13f4_4",
+  "sha256": "6840d0879d0d69c89e8ef77157e5228ac6cc2767240ec1c929753f1571c4d6a2",
+  "size": 469398,
+  "subdir": "win-64",
+  "timestamp": 1526494081589,
+  "track_features": "",
+  "url": "https://repo.anaconda.com/pkgs/main/win-64/xz-5.2.4-h2fa13f4_4.conda",
+  "version": "5.2.4"
+}

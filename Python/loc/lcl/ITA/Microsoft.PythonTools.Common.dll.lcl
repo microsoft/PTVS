@@ -3064,15 +3064,6 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";DiscoveryConfigurationMessage" ItemType="0" PsrId="211" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Go to https://aka.ms/VSTestExplorerPython for more details on test discovery configuration.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Per altri dettagli sulla configurazione dell'individuazione dei test, vedere https://aka.ms/VSTestExplorerPython.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
       <Item ItemId=";DocumentationClassificationType" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Python Documentation]]></Val>
@@ -3438,15 +3429,6 @@
           <Val><![CDATA[Testcase not found for test result: {0}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[Test case non trovato per il risultato del test: {0}]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";ErrorTestContainerNotFound" ItemType="0" PsrId="211" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Matching test container source was not found under folder {0} for test {1}.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[L'origine del contenitore di test corrispondente non è stata trovata nella cartella {0} per il test {1}.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -5485,8 +5467,8 @@
       <Item ItemId=";PythonTestFileDetected" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[A file which may contain Python tests was detected in the {0} {1}, but the test framework is disabled.]]></Val>
-          <Tgt Cat="Text" Stat="Update" Orig="New">
-            <Val><![CDATA[Nel {1} {0} è stato rilevato un file contenente test Python, ma il framework di test è disabilitato.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Nel {1} {0} è stato rilevato un file che potrebbe contenere test Python, ma il framework di test è disabilitato.]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[A file containing Python tests was detected in the {0} {1}, but the test framework is disabled.]]></Val>
@@ -5562,6 +5544,33 @@
           <Val><![CDATA[Root _directory:]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[_Directory radice:]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";PythonVersionNotSupportMoreInfo" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[More info]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Altre informazioni]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";PythonVersionNotSupportedDontShowMessageAgain" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Don't show this message again]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Non visualizzare più questo messaggio]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";PythonVersionNotSupportedInfoBarText" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[You are using Python {0} and some features might not work because Visual Studio doesn't support it yet.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Si usa Python {0} e alcune funzionalità potrebbero non funzionare perché non è ancora supportato in Visual Studio.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -7697,7 +7706,7 @@
         <Str Cat="Text">
           <Val><![CDATA[# Not wrapped:]D;]A;# There should be one-- and preferably only one --obvious way to do it.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[# Not wrapped:]D;]A;# There should be one-- and preferably only one --obvious way to do it.]]></Val>
+            <Val><![CDATA[# Nessun ritorno a capo:]D;]A;# Deve esserci preferibilmente un solo modo ovvio per farlo.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -7715,7 +7724,7 @@
         <Str Cat="Text">
           <Val><![CDATA[If checked, comments are wrapped to the specified width. If unchecked, comments are not modified.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Se questa opzione è selezionata, viene eseguito il wrapping dei commenti alla lunghezza specificata. Se è deselezionata, i commenti non vengono modificati.]]></Val>
+            <Val><![CDATA[Se questa opzione è selezionata, ai commenti viene applicato il ritorno a capo alla posizione specificata. Se è deselezionata, i commenti non vengono modificati.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

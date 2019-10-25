@@ -34,7 +34,7 @@ namespace eval ttk {
 
 ### Option database settings.
 #
-option add *TEntry.cursor [ttk::cursor text]
+option add *TEntry.cursor [ttk::cursor text] widgetDefault
 
 ### Bindings.
 #
@@ -418,7 +418,7 @@ proc ttk::entry::DragOut {w mode} {
 # 	Suspend autoscroll.
 #
 proc ttk::entry::DragIn {w} {
-    ttk::CancelRepeat 
+    ttk::CancelRepeat
 }
 
 ## <ButtonRelease-1> binding
@@ -432,7 +432,7 @@ proc ttk::entry::Release {w} {
 ## AutoScroll
 #	Called repeatedly when the mouse is outside an entry window
 #	with Button 1 down.  Scroll the window left or right,
-#	depending on where the mouse left the window, and extend 
+#	depending on where the mouse left the window, and extend
 #	the selection according to the current selection mode.
 #
 # TODO: AutoScroll should repeat faster (50ms) than normal autorepeat.

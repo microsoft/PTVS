@@ -36,7 +36,7 @@ namespace PythonToolsTests {
             return s.Replace(' ', '\u00B7').Replace('\t', '\u2409');
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P0)]
         public void CodeCellMarkers() {
             foreach (var trueMarker in new[] {
                 "#%%",
@@ -63,7 +63,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void EmptyCodeCell() {
             var buffer = new MockTextBuffer(@"# comment here
 
@@ -109,7 +109,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P0)]
         public void FindStartOfCodeCell() {
             var code = new MockTextBuffer(@"x
 # ...
@@ -129,7 +129,7 @@ x
             AssertCellStart(code, 8, 6);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P0)]
         public void FindEndOfCodeCell() {
             var code = new MockTextBuffer(@"x
 # ...
@@ -151,7 +151,7 @@ x
             AssertCellEnd(code, 8, 8, withWhitespace: true);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void FindStartOfCodeCellWithComment() {
             var code = new MockTextBuffer(@"
 # Preceding comment
@@ -176,7 +176,7 @@ x
             AssertCellStart(code, 12, 8);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void FindEndOfCodeCellWithComment() {
             var code = new MockTextBuffer(@"
 # Preceding comment
@@ -203,7 +203,7 @@ x
             AssertCellEnd(code, 12, 11);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void FindStartOfEmptyCodeCell() {
             var code = new MockTextBuffer(@"
 #%% empty cell here
@@ -218,7 +218,7 @@ x
             AssertCellStart(code, 4, 3);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void FindEndOfEmptyCodeCell() {
             var code = new MockTextBuffer(@"
 #%% empty cell here
@@ -242,7 +242,7 @@ x
             AssertUtil.AreEqual(tags.Select(t => t.Span.Span.ToString()), spans);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void OutlineCodeCell() {
             AssertTags(new MockTextBuffer(@"#%% cell 1
 

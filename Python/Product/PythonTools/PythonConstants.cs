@@ -177,6 +177,9 @@ namespace Microsoft.PythonTools {
         // Suppress the prompt for pytest configuration project property
         public const string SuppressConfigureTestFrameworkPrompt = "SuppressConfigureTestFrameworkPrompt";
 
+        // Suppress the prompt for python version not supported property
+        public const string SuppressPythonVersionNotSupportedPrompt = "SuppressPythonVersionNotSupportedPrompt";
+
         // Launch option to ignore pause on exist settings
         internal const string NeverPauseOnExit = "NeverPauseOnExit";
 

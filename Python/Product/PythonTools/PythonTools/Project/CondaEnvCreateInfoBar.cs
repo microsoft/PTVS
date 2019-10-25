@@ -18,7 +18,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.PythonTools.Environments;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
@@ -119,6 +118,8 @@ namespace Microsoft.PythonTools.Project {
         private PythonProjectNode Project { get; }
 
         public override async Task CheckAsync() {
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
             if (IsCreated || IsGloballySuppressed) {
                 return;
             }
@@ -179,6 +180,8 @@ namespace Microsoft.PythonTools.Project {
         private IPythonWorkspaceContext Workspace { get; }
 
         public override async Task CheckAsync() {
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
             if (IsCreated || IsGloballySuppressed) {
                 return;
             }

@@ -2219,7 +2219,7 @@
         <Str Cat="Text">
           <Val><![CDATA[{0} Interactive Window]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[{0} 互動式視窗]]></Val>
+            <Val><![CDATA[{0} 互動視窗]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -2609,7 +2609,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Python debug interactive window. Type $help for a list of commands.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Python 偵錯互動式視窗。鍵入 $help 可取得命令清單。]]></Val>
+            <Val><![CDATA[Python 偵錯互動視窗。鍵入 $help 可取得命令清單。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -3064,15 +3064,6 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";DiscoveryConfigurationMessage" ItemType="0" PsrId="211" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Go to https://aka.ms/VSTestExplorerPython for more details on test discovery configuration.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[如需測試探索組態的詳細資料，請前往 https://aka.ms/VSTestExplorerPython。]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
       <Item ItemId=";DocumentationClassificationType" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Python Documentation]]></Val>
@@ -3374,7 +3365,7 @@
         <Str Cat="Text">
           <Val><![CDATA[An error occurred opening this interactive window.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[開啟此互動式視窗時發生錯誤。]]></Val>
+            <Val><![CDATA[開啟此互動視窗時發生錯誤。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -3438,15 +3429,6 @@
           <Val><![CDATA[Testcase not found for test result: {0}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[找不到測試結果的測試案例: {0}]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";ErrorTestContainerNotFound" ItemType="0" PsrId="211" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Matching test container source was not found under folder {0} for test {1}.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[在測試 {1} 的資料夾 {0} 下找不到相符的測試容器來源。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -3725,7 +3707,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Failed to collect files to publish.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[無法收集要發行的檔案。]]></Val>
+            <Val><![CDATA[無法收集要發佈的檔案。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -3734,7 +3716,7 @@
         <Str Cat="Text">
           <Val><![CDATA[An error occurred while collecting files to publish. Review the details below and retry or cancel the operation.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[收集要發行的檔案時發生錯誤。請檢閱以下詳細資料，然後重試或取消該作業。]]></Val>
+            <Val><![CDATA[收集要發佈的檔案時發生錯誤。請檢閱以下詳細資料，然後重試或取消該作業。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -5090,7 +5072,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Publishing folder location ({0}): ]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[正在發行資料夾位置 ({0}): ]]></Val>
+            <Val><![CDATA[正在發佈資料夾位置 ({0}): ]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -5117,7 +5099,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Publishing Python projects has recently changed.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[正在發行最近有變更的 Python 專案。]]></Val>
+            <Val><![CDATA[正在發佈最近有變更的 Python 專案。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -5126,7 +5108,7 @@
         <Str Cat="Text">
           <Val><![CDATA[These changes will allow you to deploy more reliably and quickly, but first you may need to configure your project or deployment target.]D;]A;]D;]A;When you publish, we will no longer automatically generate a web.config file. You can add one using Add New Item and customize as necessary for your site.]D;]A;]D;]A;There are no restrictions on the version of Python you may be using when you deploy, however, we will no longer include virtual environments or the Python runtime when you deploy. Only libraries that are directly included in your project will be published.]D;]A;]D;]A;Please refer to <a href="https://aka.ms/pythononappservice">aka.ms/PythonOnAppService</a> for information about configuring and publishing to Azure App Service.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[這些變更可讓您更快速且確實地部署，但您可能必須先設定專案或部署目標。]D;]A;]D;]A;當您發行時，我們將不再自動產生 web.config 檔案。您可使用 [新增項目]5D; 新增檔案，然後視您網站的需要進行自訂。]D;]A;]D;]A;部署時所能使用的 Python 版本不受限制，但當您部署時，我們將不再包含虛擬環境或 Python 執行階段。只有直接包含在您專案中的程式庫才會發行。]D;]A;]D;]A;如需設定及發行至 Azure App Service 的相關資訊，請參閱 <a href="https://aka.ms/pythononappservice">aka.ms/PythonOnAppService</a>。]]></Val>
+            <Val><![CDATA[這些變更可讓您更快速且確實地部署，但您可能必須先設定專案或部署目標。]D;]A;]D;]A;當您發佈時，我們將不再自動產生 web.config 檔案。您可使用 [新增項目]5D; 新增檔案，然後視您網站的需要進行自訂。]D;]A;]D;]A;部署時所能使用的 Python 版本不受限制，但當您部署時，我們將不再包含虛擬環境或 Python 執行階段。只有直接包含在您專案中的程式庫才會發佈。]D;]A;]D;]A;如需設定及發佈至 Azure App Service 的相關資訊，請參閱 <a href="https://aka.ms/pythononappservice">aka.ms/PythonOnAppService</a>。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -5207,7 +5189,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Results for pytest not found {0}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[找不到 pytest 的結果 {0}]]></Val>
+            <Val><![CDATA[在 {0} 中找不到 pytest 的結果]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -5562,6 +5544,33 @@
           <Val><![CDATA[Root _directory:]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[根目錄(_D):]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";PythonVersionNotSupportMoreInfo" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[More info]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[其他資訊]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";PythonVersionNotSupportedDontShowMessageAgain" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Don't show this message again]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[不要再顯示此訊息]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";PythonVersionNotSupportedInfoBarText" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[You are using Python {0} and some features might not work because Visual Studio doesn't support it yet.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[您目前使用 Python {0}，但因為 Visual Studio 尚不支援它，所以某些功能可能無法運作。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -6011,7 +6020,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Current interactive window is disconnected.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[目前的互動式視窗已中斷連線。]]></Val>
+            <Val><![CDATA[目前的互動視窗已中斷連線。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -6020,7 +6029,7 @@
         <Str Cat="Text">
           <Val><![CDATA[The interactive window has become disconnected from the Python process. Please reset the window.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[互動式視窗已中斷與 Python 處理序的連線。請重設該視窗。]]></Val>
+            <Val><![CDATA[互動視窗已中斷與 Python 處理序的連線。請重設該視窗。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -6029,7 +6038,7 @@
         <Str Cat="Text">
           <Val><![CDATA[The interactive window has encountered an issue. Please reset the window]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[互動式視窗發生問題。請重設該視窗]]></Val>
+            <Val><![CDATA[互動視窗發生問題。請重設該視窗]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -6047,7 +6056,7 @@
         <Str Cat="Text">
           <Val><![CDATA[The interactive window could not be started because the associated Python environment could not be found.]D;]A;]D;]A;If this version of Python has recently been uninstalled, you can close this window.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[因為找不到相關聯的 Python 環境，所以無法啟動互動式視窗。]D;]A;]D;]A;如果最近已解除安裝這個版本的 Python，可關閉此視窗。]]></Val>
+            <Val><![CDATA[因為找不到相關聯的 Python 環境，所以無法啟動互動視窗。]D;]A;]D;]A;如果最近已解除安裝這個版本的 Python，可關閉此視窗。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -6065,7 +6074,7 @@
         <Str Cat="Text">
           <Val><![CDATA[&#x1b;[94;21m{0} interactive window &#x1b;[m[PTVS {1}-{2}]5D;]D;]A;Type $help for a list of commands.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[&#x1b;[94;21m{0} 互動式視窗 &#x1b;[m[PTVS {1}-{2}]5D;]D;]A;鍵入 $help 可取得命令清單。]]></Val>
+            <Val><![CDATA[&#x1b;[94;21m{0} 互動視窗 &#x1b;[m[PTVS {1}-{2}]5D;]D;]A;鍵入 $help 可取得命令清單。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -6092,7 +6101,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Cannot change module because the interactive window needs to be reset.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[因為必須重設互動式視窗，所以無法變更模組。]]></Val>
+            <Val><![CDATA[因為必須重設互動視窗，所以無法變更模組。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -6110,7 +6119,7 @@
         <Str Cat="Text">
           <Val><![CDATA[The interactive window has not yet started.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[尚未啟動互動式視窗。]]></Val>
+            <Val><![CDATA[尚未啟動互動視窗。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -6119,7 +6128,7 @@
         <Str Cat="Text">
           <Val><![CDATA[An error occurred opening the interactive window.]D;]A;]D;]A;{0}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[開啟互動式視窗時發生錯誤。]D;]A;]D;]A;{0}]]></Val>
+            <Val><![CDATA[開啟互動視窗時發生錯誤。]D;]A;]D;]A;{0}]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -6128,7 +6137,7 @@
         <Str Cat="Text">
           <Val><![CDATA[The associated project "{0}" has changed its configuration. These changes will not be reflected until you reset this interactive window.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[相關聯之專案 '{0}' 的設定已變更。這些變更必須在重設此互動式視窗之後才會生效。]]></Val>
+            <Val><![CDATA[相關聯之專案 '{0}' 的設定已變更。這些變更必須在重設此互動視窗之後才會生效。]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[The associated project '{0}' has changed its configuration. These changes will not be reflected until you reset this interactive window.]]></Val>
@@ -6224,7 +6233,7 @@
         <Str Cat="Text">
           <Val><![CDATA[This directory can contain a set of initialization scripts (Python files) for the Python interactive window in ]D;]A;Visual Studio. Feel free to add your own files to import modules, define functions, or whatever you like.]D;]A;]D;]A;Whenever the interactive window for this environment is reset, each .py file in this directory will be ]D;]A;executed in alphabetical order.]D;]A;]D;]A;Visit http://aka.ms/ptvsdocs for more information about what interactive window functionality can be ]D;]A;modified from these scripts.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[此目錄可能包含 Visual Studio 中 Python 互動式視窗的一組初始化指令碼]D;]A;(Python 檔案)。您可以隨時新增自己的檔案，以匯入模組、定義函式或執行任何想要的動作。]D;]A;]D;]A;每次重設此環境的互動式視窗時，都會依字母順序執行此目錄中的]D;]A;每個 .py 檔案。]D;]A;]D;]A;如需可從這些指令碼修改之互動式視窗功能的詳細資訊，]D;]A;請瀏覽 http://aka.ms/ptvsdocs。]]></Val>
+            <Val><![CDATA[此目錄可能包含 Visual Studio 中 Python 互動視窗的一組初始化指令碼]D;]A;(Python 檔案)。您可以隨時新增自己的檔案，以匯入模組、定義函式或執行任何想要的動作。]D;]A;]D;]A;每次重設此環境的互動視窗時，都會依字母順序執行此目錄中的]D;]A;每個 .py 檔案。]D;]A;]D;]A;如需可從這些指令碼修改之互動視窗功能的詳細資訊，]D;]A;請瀏覽 http://aka.ms/ptvsdocs。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -6278,7 +6287,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Congratulations, you opened over 2 billion interactive windows this session! Now you need to restart Visual Studio to open any more.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[恭喜，此工作階段已開啟過超過 20 億個互動式視窗! 您現在必須重新啟動 Visual Studio，才可開啟更多視窗。]]></Val>
+            <Val><![CDATA[恭喜，此工作階段已開啟過超過 20 億個互動視窗! 您現在必須重新啟動 Visual Studio，才可開啟更多視窗。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -6296,7 +6305,7 @@
         <Str Cat="Text">
           <Val><![CDATA[The associated workspace "{0}" has changed its configuration. These changes will not be reflected until you reset this interactive window.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[相關聯之工作區 "{0}" 的設定已變更。這些變更必須在重設此互動式視窗之後才會生效。]]></Val>
+            <Val><![CDATA[相關聯之工作區 "{0}" 的設定已變更。這些變更必須在重設此互動視窗之後才會生效。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

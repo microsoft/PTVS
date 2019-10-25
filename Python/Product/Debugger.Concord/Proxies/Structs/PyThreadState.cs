@@ -20,6 +20,7 @@ using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Debugger;
 
 namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
+    [StructProxy(StructName = "_ts")]
     internal class PyThreadState : StructProxy {
         private class Fields {
             public StructField<PointerProxy<PyThreadState>> next;

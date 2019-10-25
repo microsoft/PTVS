@@ -97,6 +97,7 @@ namespace Microsoft.PythonTools.Project {
         private readonly VirtualEnvCreateInfoBar _virtualEnvCreateInfoBar;
         private readonly PackageInstallInfoBar _packageInstallInfoBar;
         private readonly TestFrameworkInfoBar _testFrameworkInfoBar;
+        private readonly PythonNotSupportedInfoBar _pythonVersionNotSupportedInfoBar;
 
         private readonly SemaphoreSlim _recreatingAnalyzer = new SemaphoreSlim(1);
 
@@ -133,6 +134,7 @@ namespace Microsoft.PythonTools.Project {
             _virtualEnvCreateInfoBar = new VirtualEnvCreateProjectInfoBar(Site, this);
             _packageInstallInfoBar = new PackageInstallProjectInfoBar(Site, this);
             _testFrameworkInfoBar = new TestFrameworkProjectInfoBar(Site, this);
+            _pythonVersionNotSupportedInfoBar = new PythonNotSupportedInfoBar(Site, InfoBarContexts.Project, () => ActiveInterpreter);
         }
 
         private static KeyValuePair<string, string>[] outputGroupNames = {
@@ -241,7 +243,6 @@ namespace Microsoft.PythonTools.Project {
                 _activePackageManagers = null;
 
                 foreach (var pm in oldPms.MaybeEnumerate()) {
-                    pm.DisableNotifications();
                     pm.InstalledFilesChanged -= PackageManager_InstalledFilesChanged;
                 }
 
@@ -744,7 +745,8 @@ namespace Microsoft.PythonTools.Project {
                 _condaEnvCreateInfoBar.CheckAsync(),
                 _virtualEnvCreateInfoBar.CheckAsync(),
                 _packageInstallInfoBar.CheckAsync(),
-                _testFrameworkInfoBar.CheckAsync()
+                _testFrameworkInfoBar.CheckAsync(),
+                _pythonVersionNotSupportedInfoBar.CheckAsync()
             );
         }
 
@@ -961,11 +963,11 @@ namespace Microsoft.PythonTools.Project {
                 _searchPaths.GetAbsolutePersistedSearchPaths();
         }
 
-        internal void OnUpdateSearchPath(string absolutePath, object moniker) {
+        internal void OnInvalidateSearchPath(string absolutePath, object moniker) {
             if (string.IsNullOrEmpty(absolutePath)) {
                 // Clear all paths associated with this moniker
                 _searchPaths.RemoveByMoniker(moniker);
-            } else if (!_searchPaths.AddOrReplace(moniker, absolutePath, true)) {
+            } else if (!_searchPaths.AddOrReplace(moniker, absolutePath, false)) {
                 // Didn't change a search path, so we need to trigger reanalysis
                 // manually.
                 UpdateAnalyzerSearchPaths();
@@ -1094,11 +1096,11 @@ namespace Microsoft.PythonTools.Project {
                 _virtualEnvCreateInfoBar.Dispose();
                 _packageInstallInfoBar.Dispose();
                 _testFrameworkInfoBar.Dispose();
+                _pythonVersionNotSupportedInfoBar.Dispose();
 
                 _reanalyzeProjectNotification.Dispose();
 
                 foreach (var pm in _activePackageManagers.MaybeEnumerate()) {
-                    pm.DisableNotifications();
                     pm.InstalledFilesChanged -= PackageManager_InstalledFilesChanged;
                 }
 
@@ -1373,6 +1375,7 @@ namespace Microsoft.PythonTools.Project {
             var factory = ActiveInterpreter;
 
             Site.GetUIThread().InvokeTask(async () => {
+                await _pythonVersionNotSupportedInfoBar.CheckAsync();
                 await ReanalyzeProject(factory).HandleAllExceptions(Site, GetType());
             }).DoNotWait();
         }

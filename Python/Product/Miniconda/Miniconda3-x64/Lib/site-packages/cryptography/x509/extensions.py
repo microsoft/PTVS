@@ -8,6 +8,7 @@ import abc
 import datetime
 import hashlib
 import ipaddress
+import warnings
 from enum import Enum
 
 from asn1crypto.keys import PublicKeyInfo
@@ -24,7 +25,7 @@ from cryptography.x509.certificate_transparency import (
 from cryptography.x509.general_name import GeneralName, IPAddress, OtherName
 from cryptography.x509.name import RelativeDistinguishedName
 from cryptography.x509.oid import (
-    CRLEntryExtensionOID, ExtensionOID, ObjectIdentifier
+    CRLEntryExtensionOID, ExtensionOID, OCSPExtensionOID, ObjectIdentifier,
 )
 
 
@@ -35,7 +36,10 @@ def _key_identifier_from_public_key(public_key):
             serialization.PublicFormat.PKCS1,
         )
     elif isinstance(public_key, EllipticCurvePublicKey):
-        data = public_key.public_numbers().encode_point()
+        data = public_key.public_bytes(
+            serialization.Encoding.X962,
+            serialization.PublicFormat.UncompressedPoint
+        )
     else:
         # This is a very slow way to do this.
         serialized = public_key.public_bytes(
@@ -43,7 +47,7 @@ def _key_identifier_from_public_key(public_key):
             serialization.PublicFormat.SubjectPublicKeyInfo
         )
 
-        data = six.binary_type(PublicKeyInfo.load(serialized)['public_key'])
+        data = bytes(PublicKeyInfo.load(serialized)['public_key'])
 
     return hashlib.sha1(data).digest()
 
@@ -78,7 +82,7 @@ class Extensions(object):
             if ext.oid == oid:
                 return ext
 
-        raise ExtensionNotFound("No {0} extension was found".format(oid), oid)
+        raise ExtensionNotFound("No {} extension was found".format(oid), oid)
 
     def get_extension_for_class(self, extclass):
         if extclass is UnrecognizedExtension:
@@ -93,7 +97,7 @@ class Extensions(object):
                 return ext
 
         raise ExtensionNotFound(
-            "No {0} extension was found".format(extclass), extclass.oid
+            "No {} extension was found".format(extclass), extclass.oid
         )
 
     def __iter__(self):
@@ -107,7 +111,7 @@ class Extensions(object):
 
     def __repr__(self):
         return (
-            "<Extensions({0})>".format(self._extensions)
+            "<Extensions({})>".format(self._extensions)
         )
 
 
@@ -134,7 +138,7 @@ class CRLNumber(object):
         return hash(self.crl_number)
 
     def __repr__(self):
-        return "<CRLNumber({0})>".format(self.crl_number)
+        return "<CRLNumber({})>".format(self.crl_number)
 
     crl_number = utils.read_only_property("_crl_number")
 
@@ -185,8 +189,21 @@ class AuthorityKeyIdentifier(object):
 
     @classmethod
     def from_issuer_subject_key_identifier(cls, ski):
+        if isinstance(ski, SubjectKeyIdentifier):
+            digest = ski.digest
+        else:
+            digest = ski.value.digest
+            warnings.warn(
+                "Extension objects are deprecated as arguments to "
+                "from_issuer_subject_key_identifier and support will be "
+                "removed soon. Please migrate to passing a "
+                "SubjectKeyIdentifier directly.",
+                utils.DeprecatedIn27,
+                stacklevel=2,
+            )
+
         return cls(
-            key_identifier=ski.value.digest,
+            key_identifier=digest,
             authority_cert_issuer=None,
             authority_cert_serial_number=None
         )
@@ -279,7 +296,7 @@ class AuthorityInformationAccess(object):
         return len(self._descriptions)
 
     def __repr__(self):
-        return "<AuthorityInformationAccess({0})>".format(self._descriptions)
+        return "<AuthorityInformationAccess({})>".format(self._descriptions)
 
     def __eq__(self, other):
         if not isinstance(other, AuthorityInformationAccess):
@@ -426,7 +443,7 @@ class CRLDistributionPoints(object):
         return len(self._distribution_points)
 
     def __repr__(self):
-        return "<CRLDistributionPoints({0})>".format(self._distribution_points)
+        return "<CRLDistributionPoints({})>".format(self._distribution_points)
 
     def __eq__(self, other):
         if not isinstance(other, CRLDistributionPoints):
@@ -467,7 +484,7 @@ class FreshestCRL(object):
         return len(self._distribution_points)
 
     def __repr__(self):
-        return "<FreshestCRL({0})>".format(self._distribution_points)
+        return "<FreshestCRL({})>".format(self._distribution_points)
 
     def __eq__(self, other):
         if not isinstance(other, FreshestCRL):
@@ -541,8 +558,8 @@ class DistributionPoint(object):
     def __repr__(self):
         return (
             "<DistributionPoint(full_name={0.full_name}, relative_name={0.rela"
-            "tive_name}, reasons={0.reasons}, crl_issuer={0.crl_is"
-            "suer})>".format(self)
+            "tive_name}, reasons={0.reasons}, crl_issuer={0.crl_issuer})>"
+            .format(self)
         )
 
     def __eq__(self, other):
@@ -673,7 +690,7 @@ class CertificatePolicies(object):
         return len(self._policies)
 
     def __repr__(self):
-        return "<CertificatePolicies({0})>".format(self._policies)
+        return "<CertificatePolicies({})>".format(self._policies)
 
     def __eq__(self, other):
         if not isinstance(other, CertificatePolicies):
@@ -834,7 +851,7 @@ class ExtendedKeyUsage(object):
         return len(self._usages)
 
     def __repr__(self):
-        return "<ExtendedKeyUsage({0})>".format(self._usages)
+        return "<ExtendedKeyUsage({})>".format(self._usages)
 
     def __eq__(self, other):
         if not isinstance(other, ExtendedKeyUsage):
@@ -852,6 +869,41 @@ class ExtendedKeyUsage(object):
 @utils.register_interface(ExtensionType)
 class OCSPNoCheck(object):
     oid = ExtensionOID.OCSP_NO_CHECK
+
+    def __eq__(self, other):
+        if not isinstance(other, OCSPNoCheck):
+            return NotImplemented
+
+        return True
+
+    def __ne__(self, other):
+        return not self == other
+
+    def __hash__(self):
+        return hash(OCSPNoCheck)
+
+    def __repr__(self):
+        return "<OCSPNoCheck()>"
+
+
+@utils.register_interface(ExtensionType)
+class PrecertPoison(object):
+    oid = ExtensionOID.PRECERT_POISON
+
+    def __eq__(self, other):
+        if not isinstance(other, PrecertPoison):
+            return NotImplemented
+
+        return True
+
+    def __ne__(self, other):
+        return not self == other
+
+    def __hash__(self):
+        return hash(PrecertPoison)
+
+    def __repr__(self):
+        return "<PrecertPoison()>"
 
 
 @utils.register_interface(ExtensionType)
@@ -1184,7 +1236,7 @@ class GeneralNames(object):
         return list(objs)
 
     def __repr__(self):
-        return "<GeneralNames({0})>".format(self._general_names)
+        return "<GeneralNames({})>".format(self._general_names)
 
     def __eq__(self, other):
         if not isinstance(other, GeneralNames):
@@ -1219,7 +1271,7 @@ class SubjectAlternativeName(object):
         return self._general_names.get_values_for_type(type)
 
     def __repr__(self):
-        return "<SubjectAlternativeName({0})>".format(self._general_names)
+        return "<SubjectAlternativeName({})>".format(self._general_names)
 
     def __eq__(self, other):
         if not isinstance(other, SubjectAlternativeName):
@@ -1254,7 +1306,7 @@ class IssuerAlternativeName(object):
         return self._general_names.get_values_for_type(type)
 
     def __repr__(self):
-        return "<IssuerAlternativeName({0})>".format(self._general_names)
+        return "<IssuerAlternativeName({})>".format(self._general_names)
 
     def __eq__(self, other):
         if not isinstance(other, IssuerAlternativeName):
@@ -1289,7 +1341,7 @@ class CertificateIssuer(object):
         return self._general_names.get_values_for_type(type)
 
     def __repr__(self):
-        return "<CertificateIssuer({0})>".format(self._general_names)
+        return "<CertificateIssuer({})>".format(self._general_names)
 
     def __eq__(self, other):
         if not isinstance(other, CertificateIssuer):
@@ -1318,7 +1370,7 @@ class CRLReason(object):
         self._reason = reason
 
     def __repr__(self):
-        return "<CRLReason(reason={0})>".format(self._reason)
+        return "<CRLReason(reason={})>".format(self._reason)
 
     def __eq__(self, other):
         if not isinstance(other, CRLReason):
@@ -1346,7 +1398,7 @@ class InvalidityDate(object):
         self._invalidity_date = invalidity_date
 
     def __repr__(self):
-        return "<InvalidityDate(invalidity_date={0})>".format(
+        return "<InvalidityDate(invalidity_date={})>".format(
             self._invalidity_date
         )
 
@@ -1392,10 +1444,183 @@ class PrecertificateSignedCertificateTimestamps(object):
 
     def __repr__(self):
         return (
-            "<PrecertificateSignedCertificateTimestamps({0})>".format(
+            "<PrecertificateSignedCertificateTimestamps({})>".format(
                 list(self)
             )
         )
+
+    def __hash__(self):
+        return hash(tuple(self._signed_certificate_timestamps))
+
+    def __eq__(self, other):
+        if not isinstance(other, PrecertificateSignedCertificateTimestamps):
+            return NotImplemented
+
+        return (
+            self._signed_certificate_timestamps ==
+            other._signed_certificate_timestamps
+        )
+
+    def __ne__(self, other):
+        return not self == other
+
+
+@utils.register_interface(ExtensionType)
+class OCSPNonce(object):
+    oid = OCSPExtensionOID.NONCE
+
+    def __init__(self, nonce):
+        if not isinstance(nonce, bytes):
+            raise TypeError("nonce must be bytes")
+
+        self._nonce = nonce
+
+    def __eq__(self, other):
+        if not isinstance(other, OCSPNonce):
+            return NotImplemented
+
+        return self.nonce == other.nonce
+
+    def __ne__(self, other):
+        return not self == other
+
+    def __hash__(self):
+        return hash(self.nonce)
+
+    def __repr__(self):
+        return "<OCSPNonce(nonce={0.nonce!r})>".format(self)
+
+    nonce = utils.read_only_property("_nonce")
+
+
+@utils.register_interface(ExtensionType)
+class IssuingDistributionPoint(object):
+    oid = ExtensionOID.ISSUING_DISTRIBUTION_POINT
+
+    def __init__(self, full_name, relative_name, only_contains_user_certs,
+                 only_contains_ca_certs, only_some_reasons, indirect_crl,
+                 only_contains_attribute_certs):
+        if (
+            only_some_reasons and (
+                not isinstance(only_some_reasons, frozenset) or not all(
+                    isinstance(x, ReasonFlags) for x in only_some_reasons
+                )
+            )
+        ):
+            raise TypeError(
+                "only_some_reasons must be None or frozenset of ReasonFlags"
+            )
+
+        if only_some_reasons and (
+            ReasonFlags.unspecified in only_some_reasons or
+            ReasonFlags.remove_from_crl in only_some_reasons
+        ):
+            raise ValueError(
+                "unspecified and remove_from_crl are not valid reasons in an "
+                "IssuingDistributionPoint"
+            )
+
+        if not (
+            isinstance(only_contains_user_certs, bool) and
+            isinstance(only_contains_ca_certs, bool) and
+            isinstance(indirect_crl, bool) and
+            isinstance(only_contains_attribute_certs, bool)
+        ):
+            raise TypeError(
+                "only_contains_user_certs, only_contains_ca_certs, "
+                "indirect_crl and only_contains_attribute_certs "
+                "must all be boolean."
+            )
+
+        crl_constraints = [
+            only_contains_user_certs, only_contains_ca_certs,
+            indirect_crl, only_contains_attribute_certs
+        ]
+
+        if len([x for x in crl_constraints if x]) > 1:
+            raise ValueError(
+                "Only one of the following can be set to True: "
+                "only_contains_user_certs, only_contains_ca_certs, "
+                "indirect_crl, only_contains_attribute_certs"
+            )
+
+        if (
+            not any([
+                only_contains_user_certs, only_contains_ca_certs,
+                indirect_crl, only_contains_attribute_certs, full_name,
+                relative_name, only_some_reasons
+            ])
+        ):
+            raise ValueError(
+                "Cannot create empty extension: "
+                "if only_contains_user_certs, only_contains_ca_certs, "
+                "indirect_crl, and only_contains_attribute_certs are all False"
+                ", then either full_name, relative_name, or only_some_reasons "
+                "must have a value."
+            )
+
+        self._only_contains_user_certs = only_contains_user_certs
+        self._only_contains_ca_certs = only_contains_ca_certs
+        self._indirect_crl = indirect_crl
+        self._only_contains_attribute_certs = only_contains_attribute_certs
+        self._only_some_reasons = only_some_reasons
+        self._full_name = full_name
+        self._relative_name = relative_name
+
+    def __repr__(self):
+        return (
+            "<IssuingDistributionPoint(full_name={0.full_name}, "
+            "relative_name={0.relative_name}, "
+            "only_contains_user_certs={0.only_contains_user_certs}, "
+            "only_contains_ca_certs={0.only_contains_ca_certs}, "
+            "only_some_reasons={0.only_some_reasons}, "
+            "indirect_crl={0.indirect_crl}, "
+            "only_contains_attribute_certs="
+            "{0.only_contains_attribute_certs})>".format(self)
+        )
+
+    def __eq__(self, other):
+        if not isinstance(other, IssuingDistributionPoint):
+            return NotImplemented
+
+        return (
+            self.full_name == other.full_name and
+            self.relative_name == other.relative_name and
+            self.only_contains_user_certs == other.only_contains_user_certs and
+            self.only_contains_ca_certs == other.only_contains_ca_certs and
+            self.only_some_reasons == other.only_some_reasons and
+            self.indirect_crl == other.indirect_crl and
+            self.only_contains_attribute_certs ==
+            other.only_contains_attribute_certs
+        )
+
+    def __ne__(self, other):
+        return not self == other
+
+    def __hash__(self):
+        return hash((
+            self.full_name,
+            self.relative_name,
+            self.only_contains_user_certs,
+            self.only_contains_ca_certs,
+            self.only_some_reasons,
+            self.indirect_crl,
+            self.only_contains_attribute_certs,
+        ))
+
+    full_name = utils.read_only_property("_full_name")
+    relative_name = utils.read_only_property("_relative_name")
+    only_contains_user_certs = utils.read_only_property(
+        "_only_contains_user_certs"
+    )
+    only_contains_ca_certs = utils.read_only_property(
+        "_only_contains_ca_certs"
+    )
+    only_some_reasons = utils.read_only_property("_only_some_reasons")
+    indirect_crl = utils.read_only_property("_indirect_crl")
+    only_contains_attribute_certs = utils.read_only_property(
+        "_only_contains_attribute_certs"
+    )
 
 
 @utils.register_interface(ExtensionType)

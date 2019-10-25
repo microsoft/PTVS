@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+# Copyright (C) 2012 Anaconda, Inc
+# SPDX-License-Identifier: BSD-3-Clause
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import os
@@ -27,7 +30,7 @@ def find_executable(executable, include_others=True):
     else:
         dir_paths = []
 
-    dir_paths.extend(os.environ[str('PATH')].split(os.pathsep))
+    dir_paths.extend(os.environ.get('PATH', '').split(os.pathsep))
 
     for dir_path in dir_paths:
         if on_win:

@@ -11,8 +11,8 @@ def main():  # needed for console script
         import os.path
         path = os.path.dirname(os.path.dirname(__file__))
         sys.path[0:0] = [path]
-    import wheel.tool
-    sys.exit(wheel.tool.main())
+    import wheel.cli
+    sys.exit(wheel.cli.main())
 
 
 if __name__ == "__main__":

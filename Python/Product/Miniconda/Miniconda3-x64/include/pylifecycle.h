@@ -44,6 +44,8 @@ PyAPI_FUNC(void) Py_SetPythonHome(const wchar_t *);
 PyAPI_FUNC(wchar_t *) Py_GetPythonHome(void);
 
 #ifndef Py_LIMITED_API
+PyAPI_FUNC(void) _Py_SetProgramFullPath(const wchar_t *);
+
 /* Only used by applications that embed the interpreter and need to
  * override the standard encoding determination mechanism
  */
@@ -51,14 +53,27 @@ PyAPI_FUNC(int) Py_SetStandardStreamEncoding(const char *encoding,
                                              const char *errors);
 
 /* PEP 432 Multi-phase initialization API (Private while provisional!) */
-PyAPI_FUNC(_PyInitError) _Py_InitializeCore(const _PyCoreConfig *);
+PyAPI_FUNC(_PyInitError) _Py_InitializeCore(
+    PyInterpreterState **interp_p,
+    const _PyCoreConfig *config);
 PyAPI_FUNC(int) _Py_IsCoreInitialized(void);
+PyAPI_FUNC(_PyInitError) _Py_InitializeFromConfig(
+    const _PyCoreConfig *config);
+#ifdef Py_BUILD_CORE
+PyAPI_FUNC(void) _Py_Initialize_ReadEnvVarsNoAlloc(void);
+#endif
+
+PyAPI_FUNC(PyObject *) _Py_GetGlobalVariablesAsDict(void);
 
 PyAPI_FUNC(_PyInitError) _PyCoreConfig_Read(_PyCoreConfig *);
 PyAPI_FUNC(void) _PyCoreConfig_Clear(_PyCoreConfig *);
 PyAPI_FUNC(int) _PyCoreConfig_Copy(
     _PyCoreConfig *config,
     const _PyCoreConfig *config2);
+PyAPI_FUNC(PyObject *) _PyCoreConfig_AsDict(const _PyCoreConfig *config);
+PyAPI_FUNC(void) _PyCoreConfig_SetGlobalConfig(
+    const _PyCoreConfig *config);
+
 
 PyAPI_FUNC(_PyInitError) _PyMainInterpreterConfig_Read(
     _PyMainInterpreterConfig *config,
@@ -67,19 +82,26 @@ PyAPI_FUNC(void) _PyMainInterpreterConfig_Clear(_PyMainInterpreterConfig *);
 PyAPI_FUNC(int) _PyMainInterpreterConfig_Copy(
     _PyMainInterpreterConfig *config,
     const _PyMainInterpreterConfig *config2);
+/* Used by _testcapi.get_main_config() */
+PyAPI_FUNC(PyObject*) _PyMainInterpreterConfig_AsDict(
+    const _PyMainInterpreterConfig *config);
 
-PyAPI_FUNC(_PyInitError) _Py_InitializeMainInterpreter(const _PyMainInterpreterConfig *);
-#endif
+PyAPI_FUNC(_PyInitError) _Py_InitializeMainInterpreter(
+        PyInterpreterState *interp,
+        const _PyMainInterpreterConfig *config);
+#endif   /* !defined(Py_LIMITED_API) */
+
 
 /* Initialization and finalization */
 PyAPI_FUNC(void) Py_Initialize(void);
 PyAPI_FUNC(void) Py_InitializeEx(int);
 #ifndef Py_LIMITED_API
-PyAPI_FUNC(_PyInitError) _Py_InitializeEx_Private(int, int);
 PyAPI_FUNC(void) _Py_FatalInitError(_PyInitError err) _Py_NO_RETURN;
 #endif
 PyAPI_FUNC(void) Py_Finalize(void);
+#if !defined(Py_LIMITED_API) || Py_LIMITED_API+0 >= 0x03060000
 PyAPI_FUNC(int) Py_FinalizeEx(void);
+#endif
 PyAPI_FUNC(int) Py_IsInitialized(void);
 
 /* Subinterpreter support */

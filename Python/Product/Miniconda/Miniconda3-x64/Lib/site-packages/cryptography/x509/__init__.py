@@ -21,8 +21,9 @@ from cryptography.x509.extensions import (
     DeltaCRLIndicator, DistributionPoint, DuplicateExtension, ExtendedKeyUsage,
     Extension, ExtensionNotFound, ExtensionType, Extensions, FreshestCRL,
     GeneralNames, InhibitAnyPolicy, InvalidityDate, IssuerAlternativeName,
-    KeyUsage, NameConstraints, NoticeReference, OCSPNoCheck, PolicyConstraints,
-    PolicyInformation, PrecertificateSignedCertificateTimestamps, ReasonFlags,
+    IssuingDistributionPoint, KeyUsage, NameConstraints, NoticeReference,
+    OCSPNoCheck, OCSPNonce, PolicyConstraints, PolicyInformation,
+    PrecertPoison, PrecertificateSignedCertificateTimestamps, ReasonFlags,
     SubjectAlternativeName, SubjectKeyIdentifier, TLSFeature, TLSFeatureType,
     UnrecognizedExtension, UserNotice
 )
@@ -133,6 +134,7 @@ __all__ = [
     "Extension",
     "ExtendedKeyUsage",
     "FreshestCRL",
+    "IssuingDistributionPoint",
     "TLSFeature",
     "TLSFeatureType",
     "OCSPNoCheck",
@@ -182,4 +184,6 @@ __all__ = [
     "UnrecognizedExtension",
     "PolicyConstraints",
     "PrecertificateSignedCertificateTimestamps",
+    "PrecertPoison",
+    "OCSPNonce",
 ]

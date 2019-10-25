@@ -5595,6 +5595,33 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Don&apos;t show this message again.
+        /// </summary>
+        public static string PythonVersionNotSupportedDontShowMessageAgain {
+            get {
+                return ResourceManager.GetString("PythonVersionNotSupportedDontShowMessageAgain", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You are using Python {0} and some features might not work because Visual Studio doesn&apos;t support it yet..
+        /// </summary>
+        public static string PythonVersionNotSupportedInfoBarText {
+            get {
+                return ResourceManager.GetString("PythonVersionNotSupportedInfoBarText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to More info.
+        /// </summary>
+        public static string PythonVersionNotSupportMoreInfo {
+            get {
+                return ResourceManager.GetString("PythonVersionNotSupportMoreInfo", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Launches web sites using the Python debugger. This enables the web server commands specified in the project file, and launches a browser window when the server has started..
         /// </summary>
         public static string PythonWebLauncherDescription {

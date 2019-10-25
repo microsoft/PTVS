@@ -3064,15 +3064,6 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";DiscoveryConfigurationMessage" ItemType="0" PsrId="211" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Go to https://aka.ms/VSTestExplorerPython for more details on test discovery configuration.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Test bulma yapılandırması hakkında daha ayrıntılı bilgi için https://aka.ms/VSTestExplorerPython adresine gidin.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
       <Item ItemId=";DocumentationClassificationType" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Python Documentation]]></Val>
@@ -3438,15 +3429,6 @@
           <Val><![CDATA[Testcase not found for test result: {0}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[{0} test sonucu için test çalışması bulunamadı]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";ErrorTestContainerNotFound" ItemType="0" PsrId="211" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Matching test container source was not found under folder {0} for test {1}.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[{0} klasörünün altında {1} testi için eşleşen test kapsayıcısı bulunamadı.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -5171,7 +5153,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Pytest is enabled in the {0} {1}, but it is not installed in the active environment.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Python testi {0} {1} konumunda etkinleştirildi ancak etkin ortama yüklenmedi.]]></Val>
+            <Val><![CDATA[Pytest, {0} {1} konumunda etkinleştirildi ancak etkin ortama yüklenmedi.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -5180,7 +5162,7 @@
         <Str Cat="Text">
           <Val><![CDATA[A pytest configuration file was detected in the {0} {1}, but pytest is not installed or enabled.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[{0} {1} konumunda bir Pyhton testi yapılandırma dosyası algılandı ancak Python testi yüklü değil veya etkileştirilmemiş.]]></Val>
+            <Val><![CDATA[{0} {1} konumunda bir pytest yapılandırma dosyası algılandı ancak pytest yüklü değil veya etkileştirilmemiş.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -5207,7 +5189,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Results for pytest not found {0}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[pytest sonuçları bulunamadı {0}]]></Val>
+            <Val><![CDATA[Pytest sonuçları bulunamadı {0}]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -5485,8 +5467,8 @@
       <Item ItemId=";PythonTestFileDetected" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[A file which may contain Python tests was detected in the {0} {1}, but the test framework is disabled.]]></Val>
-          <Tgt Cat="Text" Stat="Update" Orig="New">
-            <Val><![CDATA[{0} {1} konumunda Python testleri içeren bir dosya algılandı ancak test çerçevesi devre dışı.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[{0} {1} konumunda Python testleri içerebilecek bir dosya algılandı, ancak test çerçevesi devre dışı.]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[A file containing Python tests was detected in the {0} {1}, but the test framework is disabled.]]></Val>
@@ -5562,6 +5544,33 @@
           <Val><![CDATA[Root _directory:]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[Kök _dizin:]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";PythonVersionNotSupportMoreInfo" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[More info]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Daha fazla bilgi]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";PythonVersionNotSupportedDontShowMessageAgain" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Don't show this message again]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Bu iletiyi bir daha gösterme]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";PythonVersionNotSupportedInfoBarText" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[You are using Python {0} and some features might not work because Visual Studio doesn't support it yet.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Python {0} kullanıyorsunuz, ancak Visual Studio henüz bu sürümü desteklemediğinden bazı özellikler çalışmıyor olabilir.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -7697,7 +7706,7 @@
         <Str Cat="Text">
           <Val><![CDATA[# Not wrapped:]D;]A;# There should be one-- and preferably only one --obvious way to do it.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[# Sarmalanmadı:]D;]A;# Bu işlemi gerçekleştirmek için bir açık yol (tercihen tek bir yol) olmalıdır.]]></Val>
+            <Val><![CDATA[# Kaydırılmadı:]D;]A;# Bu işlemi gerçekleştirmek için bir açık yol (tercihen tek bir yol) olmalıdır.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -7706,7 +7715,7 @@
         <Str Cat="Text">
           <Val><![CDATA[# Wrapped to 40 columns:]D;]A;# There should be one-- and preferably]D;]A;# only one --obvious way to do it.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[# 40 sütuna sarmalandı:]D;]A;# Bu işlemi gerçekleştirmek için bir açık yol (tercihen]D;]A;# tek bir yol) olmalıdır.]]></Val>
+            <Val><![CDATA[# 40 sütuna kaydırıldı:]D;]A;# Bu işlemi gerçekleştirmek için bir açık yol (tercihen]D;]A;# tek bir yol) olmalıdır.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -7733,7 +7742,7 @@
         <Str Cat="Text">
           <Val><![CDATA[# Sets the width for wrapping comments]D;]A;# and documentation strings.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[# Sarmalama açıklamaları]D;]A;# ve belge dizelerinin genişliğini ayarlar.]]></Val>
+            <Val><![CDATA[# Açıklamaları ve belge dizelerini]D;]A;# kaydırmak için genişliği ayarlar.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

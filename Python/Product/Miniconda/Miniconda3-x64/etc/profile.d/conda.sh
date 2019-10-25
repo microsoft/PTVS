@@ -1,50 +1,45 @@
-_CONDA_EXE="$(cygpath 'C:/Users/huvalo/Documents/Miniconda\Scripts\conda.exe')"
-_conda_set_vars() {
-    # set _CONDA_SHELL_FLAVOR
-    if [ -n "${BASH_VERSION:+x}" ]; then
-        _CONDA_SHELL_FLAVOR=bash
-    elif [ -n "${ZSH_VERSION:+x}" ]; then
-        _CONDA_SHELL_FLAVOR=zsh
-    elif [ -n "${KSH_VERSION:+x}" ]; then
-        _CONDA_SHELL_FLAVOR=ksh
-    elif [ -n "${POSH_VERSION:+x}" ]; then
-        _CONDA_SHELL_FLAVOR=posh
+export CONDA_EXE='C:/ProgramData/Miniconda3\Scripts\conda.exe'
+export _CE_M=''
+export _CE_CONDA=''
+export CONDA_PYTHON_EXE='C:/ProgramData/Miniconda3\python.exe'
+
+# Copyright (C) 2012 Anaconda, Inc
+# SPDX-License-Identifier: BSD-3-Clause
+
+__add_sys_prefix_to_path() {
+    # In dev-mode CONDA_EXE is python.exe and on Windows
+    # it is in a different relative location to condabin.
+    if [ -n "${_CE_CONDA}" ] && [ -n "${WINDIR+x}" ]; then
+        SYSP=$(\dirname "${CONDA_EXE}")
     else
-        # default to dash; if we run into a problem here, please raise an issue
-        _CONDA_SHELL_FLAVOR=dash
+        SYSP=$(\dirname "${CONDA_EXE}")
+        SYSP=$(\dirname "${SYSP}")
     fi
 
-    if [ -z "${_CONDA_EXE+x}" ]; then
-        if [ -n "${_CONDA_ROOT:+x}" ]; then
-            # typically this should be for dev only; _CONDA_EXE should be written at top of file
-            # for normal installs
-            _CONDA_EXE="$_CONDA_ROOT/conda/shell/bin/conda"
-        fi
-        if ! [ -f "${_CONDA_EXE-x}" ]; then
-            _CONDA_EXE="$PWD/conda/shell/bin/conda"
-        fi
+    if [ -n "${WINDIR+x}" ]; then
+        PATH="${SYSP}/bin:${PATH}"
+        PATH="${SYSP}/Scripts:${PATH}"
+        PATH="${SYSP}/Library/bin:${PATH}"
+        PATH="${SYSP}/Library/usr/bin:${PATH}"
+        PATH="${SYSP}/Library/mingw-w64/bin:${PATH}"
+        PATH="${SYSP}:${PATH}"
+    else
+        PATH="${SYSP}/bin:${PATH}"
     fi
-
-    # We're not allowing PS1 to be unbound. It must at least be set.
-    # However, we're not exporting it, which can cause problems when starting a second shell
-    # via a first shell (i.e. starting zsh from bash).
-    if [ -z "${PS1+x}" ]; then
-        PS1=
-    fi
-
+    \export PATH
 }
 
-
-_conda_hashr() {
-    case "$_CONDA_SHELL_FLAVOR" in
-        zsh) \rehash;;
-        posh) ;;
-        *) \hash -r;;
-    esac
+__conda_hashr() {
+    if [ -n "${ZSH_VERSION:+x}" ]; then
+        \rehash
+    elif [ -n "${POSH_VERSION:+x}" ]; then
+        :  # pass
+    else
+        \hash -r
+    fi
 }
 
-
-_conda_activate() {
+__conda_activate() {
     if [ -n "${CONDA_PS1_BACKUP:+x}" ]; then
         # Handle transition from shell activated with conda <= 4.3 to a subsequent activation
         # after conda updated to >= 4.4. See issue #6173.
@@ -52,57 +47,77 @@ _conda_activate() {
         \unset CONDA_PS1_BACKUP
     fi
 
+    \local cmd="$1"
+    shift
     \local ask_conda
-    ask_conda="$(PS1="$PS1" $_CONDA_EXE shell.posix activate "$@")" || \return $?
+    OLDPATH="${PATH}"
+    __add_sys_prefix_to_path
+    ask_conda="$(PS1="$PS1" "$CONDA_EXE" $_CE_M $_CE_CONDA shell.posix "$cmd" "$@")" || \return $?
+    PATH="${OLDPATH}"
     \eval "$ask_conda"
-
-    _conda_hashr
+    __conda_hashr
 }
 
-_conda_deactivate() {
+__conda_reactivate() {
     \local ask_conda
-    ask_conda="$(PS1="$PS1" $_CONDA_EXE shell.posix deactivate "$@")" || \return $?
+    OLDPATH="${PATH}"
+    __add_sys_prefix_to_path
+    ask_conda="$(PS1="$PS1" "$CONDA_EXE" $_CE_M $_CE_CONDA shell.posix reactivate)" || \return $?
+    PATH="${OLDPATH}"
     \eval "$ask_conda"
-
-    _conda_hashr
+    __conda_hashr
 }
-
-_conda_reactivate() {
-    \local ask_conda
-    ask_conda="$(PS1="$PS1" $_CONDA_EXE shell.posix reactivate)" || \return $?
-    \eval "$ask_conda"
-
-    _conda_hashr
-}
-
 
 conda() {
     if [ "$#" -lt 1 ]; then
-        $_CONDA_EXE
+        "$CONDA_EXE" $_CE_M $_CE_CONDA
     else
         \local cmd="$1"
         shift
         case "$cmd" in
-            activate)
-                _conda_activate "$@"
+            activate|deactivate)
+                __conda_activate "$cmd" "$@"
                 ;;
-            deactivate)
-                _conda_deactivate "$@"
-                ;;
-            install|update|uninstall|remove)
-                $_CONDA_EXE "$cmd" "$@" && _conda_reactivate
+            install|update|upgrade|remove|uninstall)
+                OLDPATH="${PATH}"
+                __add_sys_prefix_to_path
+                "$CONDA_EXE" $_CE_M $_CE_CONDA "$cmd" "$@"
+                \local t1=$?
+                PATH="${OLDPATH}"
+                if [ $t1 = 0 ]; then
+                    __conda_reactivate
+                else
+                    return $t1
+                fi
                 ;;
             *)
-                $_CONDA_EXE "$cmd" "$@"
+                OLDPATH="${PATH}"
+                __add_sys_prefix_to_path
+                "$CONDA_EXE" $_CE_M $_CE_CONDA "$cmd" "$@"
+                \local t1=$?
+                PATH="${OLDPATH}"
+                return $t1
                 ;;
         esac
     fi
 }
 
-
-_conda_set_vars
-
 if [ -z "${CONDA_SHLVL+x}" ]; then
     \export CONDA_SHLVL=0
+    # In dev-mode CONDA_EXE is python.exe and on Windows
+    # it is in a different relative location to condabin.
+    if [ -n "${_CE_CONDA+x}" ] && [ -n "${WINDIR+x}" ]; then
+        PATH="$(\dirname "$CONDA_EXE")/condabin${PATH:+":${PATH}"}"
+    else
+        PATH="$(\dirname "$(\dirname "$CONDA_EXE")")/condabin${PATH:+":${PATH}"}"
+    fi
+    \export PATH
+
+    # We're not allowing PS1 to be unbound. It must at least be set.
+    # However, we're not exporting it, which can cause problems when starting a second shell
+    # via a first shell (i.e. starting zsh from bash).
+    if [ -z "${PS1+x}" ]; then
+        PS1=
+    fi
 fi
 

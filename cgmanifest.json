@@ -23,9 +23,19 @@
             "Component": {
                 "Type": "other",
                 "Other": {
+                    "Name": "bzip2",
+                    "Version": "1.0.8",
+                    "DownloadUrl": "https://repo.anaconda.com/pkgs/main/win-64/bzip2-1.0.8-he774522_0.tar.bz2"
+                }
+            }
+        },
+        {
+            "Component": {
+                "Type": "other",
+                "Other": {
                     "Name": "ca-certificates",
-                    "Version": "2018.03.07-0",
-                    "DownloadUrl": "https://repo.anaconda.com/pkgs/main/win-64/ca-certificates-2018.03.07-0.tar.bz2"
+                    "Version": "2019.5.15-0",
+                    "DownloadUrl": "https://repo.anaconda.com/pkgs/main/win-64/ca-certificates-2019.5.15-0.tar.bz2"
                 }
             }
         },
@@ -34,8 +44,8 @@
                 "Type": "other",
                 "Other": {
                     "Name": "certifi",
-                    "Version": "2018.8.24",
-                    "DownloadUrl": "https://repo.anaconda.com/pkgs/main/win-64/certifi-2018.8.24-py37_1.tar.bz2"
+                    "Version": "2019.6.16",
+                    "DownloadUrl": "https://repo.anaconda.com/pkgs/main/win-64/certifi-2019.6.16-py37_0.tar.bz2"
                 }
             }
         },
@@ -44,8 +54,8 @@
                 "Type": "other",
                 "Other": {
                     "Name": "cffi",
-                    "Version": "1.11.5",
-                    "DownloadUrl": "https://repo.anaconda.com/pkgs/main/win-64/cffi-1.11.5-py37h74b6da3_1.tar.bz2"
+                    "Version": "1.12.3",
+                    "DownloadUrl": "https://repo.anaconda.com/pkgs/main/win-64/cffi-1.12.3-py37h7a1dbc1_0.tar.bz2"
                 }
             }
         },
@@ -64,8 +74,8 @@
                 "Type": "other",
                 "Other": {
                     "Name": "conda",
-                    "Version": "4.5.11",
-                    "DownloadUrl": "https://repo.anaconda.com/pkgs/main/win-64/conda-4.5.11-py37_0.tar.bz2"
+                    "Version": "4.7.10",
+                    "DownloadUrl": "https://repo.anaconda.com/pkgs/main/win-64/conda-4.7.10-py37_0.tar.bz2"
                 }
             }
         },
@@ -73,9 +83,9 @@
             "Component": {
                 "Type": "other",
                 "Other": {
-                    "Name": "conda-env",
-                    "Version": "2.6.0",
-                    "DownloadUrl": "https://repo.anaconda.com/pkgs/main/win-64/conda-env-2.6.0-1.tar.bz2"
+                    "Name": "conda-package-handling",
+                    "Version": "1.3.11",
+                    "DownloadUrl": "https://repo.anaconda.com/pkgs/main/win-64/conda-package-handling-1.3.11-py37_0.tar.bz2"
                 }
             }
         },
@@ -94,8 +104,8 @@
                 "Type": "other",
                 "Other": {
                     "Name": "cryptography",
-                    "Version": "2.3.1",
-                    "DownloadUrl": "https://repo.anaconda.com/pkgs/main/win-64/cryptography-2.3.1-py37h74b6da3_0.tar.bz2"
+                    "Version": "2.7",
+                    "DownloadUrl": "https://repo.anaconda.com/pkgs/main/win-64/cryptography-2.7-py37h7a1dbc1_0.tar.bz2"
                 }
             }
         },
@@ -104,8 +114,58 @@
                 "Type": "other",
                 "Other": {
                     "Name": "idna",
-                    "Version": "2.7",
-                    "DownloadUrl": "https://repo.anaconda.com/pkgs/main/win-64/idna-2.7-py37_0.tar.bz2"
+                    "Version": "2.8",
+                    "DownloadUrl": "https://repo.anaconda.com/pkgs/main/win-64/idna-2.8-py37_0.tar.bz2"
+                }
+            }
+        },
+        {
+            "Component": {
+                "Type": "other",
+                "Other": {
+                    "Name": "libarchive",
+                    "Version": "3.3.3",
+                    "DownloadUrl": "https://repo.anaconda.com/pkgs/main/win-64/libarchive-3.3.3-h0643e63_5.tar.bz2"
+                }
+            }
+        },
+        {
+            "Component": {
+                "Type": "other",
+                "Other": {
+                    "Name": "libiconv",
+                    "Version": "1.15",
+                    "DownloadUrl": "https://repo.anaconda.com/pkgs/main/win-64/libiconv-1.15-h1df5818_7.tar.bz2"
+                }
+            }
+        },
+        {
+            "Component": {
+                "Type": "other",
+                "Other": {
+                    "Name": "libxml2",
+                    "Version": "2.9.9",
+                    "DownloadUrl": "https://repo.anaconda.com/pkgs/main/win-64/libxml2-2.9.9-h464c3ec_0.tar.bz2"
+                }
+            }
+        },
+        {
+            "Component": {
+                "Type": "other",
+                "Other": {
+                    "Name": "lz4-c",
+                    "Version": "1.8.1.2",
+                    "DownloadUrl": "https://repo.anaconda.com/pkgs/main/win-64/lz4-c-1.8.1.2-h2fa13f4_0.tar.bz2"
+                }
+            }
+        },
+        {
+            "Component": {
+                "Type": "other",
+                "Other": {
+                    "Name": "lzo",
+                    "Version": "2.10",
+                    "DownloadUrl": "https://repo.anaconda.com/pkgs/main/win-64/lzo-2.10-h6df0209_2.tar.bz2"
                 }
             }
         },
@@ -114,8 +174,8 @@
                 "Type": "other",
                 "Other": {
                     "Name": "menuinst",
-                    "Version": "1.4.14",
-                    "DownloadUrl": "https://repo.anaconda.com/pkgs/main/win-64/menuinst-1.4.14-py37hfa6e2cd_0.tar.bz2"
+                    "Version": "1.4.16",
+                    "DownloadUrl": "https://repo.anaconda.com/pkgs/main/win-64/menuinst-1.4.16-py37he774522_0.tar.bz2"
                 }
             }
         },
@@ -124,8 +184,8 @@
                 "Type": "other",
                 "Other": {
                     "Name": "openssl",
-                    "Version": "1.0.2p",
-                    "DownloadUrl": "https://repo.anaconda.com/pkgs/main/win-64/openssl-1.0.2p-hfa6e2cd_0.tar.bz2"
+                    "Version": "1.1.1c",
+                    "DownloadUrl": "https://repo.anaconda.com/pkgs/main/win-64/openssl-1.1.1c-he774522_1.tar.bz2"
                 }
             }
         },
@@ -134,8 +194,18 @@
                 "Type": "other",
                 "Other": {
                     "Name": "pip",
-                    "Version": "10.0.1",
-                    "DownloadUrl": "https://repo.anaconda.com/pkgs/main/win-64/pip-10.0.1-py37_0.tar.bz2"
+                    "Version": "19.1.1",
+                    "DownloadUrl": "https://repo.anaconda.com/pkgs/main/win-64/pip-19.1.1-py37_0.tar.bz2"
+                }
+            }
+        },
+        {
+            "Component": {
+                "Type": "other",
+                "Other": {
+                    "Name": "powershell_shortcut",
+                    "Version": "0.0.1-2",
+                    "DownloadUrl": "https://repo.anaconda.com/pkgs/main/win-64/powershell_shortcut-0.0.1-2.tar.bz2"
                 }
             }
         },
@@ -154,8 +224,8 @@
                 "Type": "other",
                 "Other": {
                     "Name": "pycparser",
-                    "Version": "2.18",
-                    "DownloadUrl": "https://repo.anaconda.com/pkgs/main/win-64/pycparser-2.18-py37_1.tar.bz2"
+                    "Version": "2.19",
+                    "DownloadUrl": "https://repo.anaconda.com/pkgs/main/win-64/pycparser-2.19-py37_0.tar.bz2"
                 }
             }
         },
@@ -164,8 +234,8 @@
                 "Type": "other",
                 "Other": {
                     "Name": "pyopenssl",
-                    "Version": "18.0.0",
-                    "DownloadUrl": "https://repo.anaconda.com/pkgs/main/win-64/pyopenssl-18.0.0-py37_0.tar.bz2"
+                    "Version": "19.0.0",
+                    "DownloadUrl": "https://repo.anaconda.com/pkgs/main/win-64/pyopenssl-19.0.0-py37_0.tar.bz2"
                 }
             }
         },
@@ -174,8 +244,8 @@
                 "Type": "other",
                 "Other": {
                     "Name": "pysocks",
-                    "Version": "1.6.8",
-                    "DownloadUrl": "https://repo.anaconda.com/pkgs/main/win-64/pysocks-1.6.8-py37_0.tar.bz2"
+                    "Version": "1.7.0",
+                    "DownloadUrl": "https://repo.anaconda.com/pkgs/main/win-64/pysocks-1.7.0-py37_0.tar.bz2"
                 }
             }
         },
@@ -184,8 +254,18 @@
                 "Type": "other",
                 "Other": {
                     "Name": "python",
-                    "Version": "3.7.0",
-                    "DownloadUrl": "https://repo.anaconda.com/pkgs/main/win-64/python-3.7.0-hea74fb7_0.tar.bz2"
+                    "Version": "3.7.3",
+                    "DownloadUrl": "https://repo.anaconda.com/pkgs/main/win-64/python-3.7.3-h8c8aaf0_1.tar.bz2"
+                }
+            }
+        },
+        {
+            "Component": {
+                "Type": "other",
+                "Other": {
+                    "Name": "python-libarchive-c",
+                    "Version": "2.8",
+                    "DownloadUrl": "https://repo.anaconda.com/pkgs/main/win-64/python-libarchive-c-2.8-py37_11.tar.bz2"
                 }
             }
         },
@@ -204,8 +284,8 @@
                 "Type": "other",
                 "Other": {
                     "Name": "requests",
-                    "Version": "2.19.1",
-                    "DownloadUrl": "https://repo.anaconda.com/pkgs/main/win-64/requests-2.19.1-py37_0.tar.bz2"
+                    "Version": "2.22.0",
+                    "DownloadUrl": "https://repo.anaconda.com/pkgs/main/win-64/requests-2.22.0-py37_0.tar.bz2"
                 }
             }
         },
@@ -224,8 +304,8 @@
                 "Type": "other",
                 "Other": {
                     "Name": "setuptools",
-                    "Version": "40.2.0",
-                    "DownloadUrl": "https://repo.anaconda.com/pkgs/main/win-64/setuptools-40.2.0-py37_0.tar.bz2"
+                    "Version": "41.0.1",
+                    "DownloadUrl": "https://repo.anaconda.com/pkgs/main/win-64/setuptools-41.0.1-py37_0.tar.bz2"
                 }
             }
         },
@@ -234,8 +314,28 @@
                 "Type": "other",
                 "Other": {
                     "Name": "six",
-                    "Version": "1.11.0",
-                    "DownloadUrl": "https://repo.anaconda.com/pkgs/main/win-64/six-1.11.0-py37_1.tar.bz2"
+                    "Version": "1.12.0",
+                    "DownloadUrl": "https://repo.anaconda.com/pkgs/main/win-64/six-1.12.0-py37_0.tar.bz2"
+                }
+            }
+        },
+        {
+            "Component": {
+                "Type": "other",
+                "Other": {
+                    "Name": "sqlite",
+                    "Version": "3.29.0",
+                    "DownloadUrl": "https://repo.anaconda.com/pkgs/main/win-64/sqlite-3.29.0-he774522_0.tar.bz2"
+                }
+            }
+        },
+        {
+            "Component": {
+                "Type": "other",
+                "Other": {
+                    "Name": "tqdm",
+                    "Version": "4.32.1",
+                    "DownloadUrl": "https://files.pythonhosted.org/packages/36/64/071ce46cbb8cd02e5fa88cc6abf31e51724db858a5ffb3f56dc1c6311f3a/tqdm-4.32.1.tar.gz"
                 }
             }
         },
@@ -244,8 +344,8 @@
                 "Type": "other",
                 "Other": {
                     "Name": "urllib3",
-                    "Version": "1.23",
-                    "DownloadUrl": "https://repo.anaconda.com/pkgs/main/win-64/urllib3-1.23-py37_0.tar.bz2"
+                    "Version": "1.24.2",
+                    "DownloadUrl": "https://repo.anaconda.com/pkgs/main/win-64/urllib3-1.24.2-py37_0.tar.bz2"
                 }
             }
         },
@@ -254,8 +354,8 @@
                 "Type": "other",
                 "Other": {
                     "Name": "wheel",
-                    "Version": "0.31.1",
-                    "DownloadUrl": "https://repo.anaconda.com/pkgs/main/win-64/wheel-0.31.1-py37_0.tar.bz2"
+                    "Version": "0.33.4",
+                    "DownloadUrl": "https://repo.anaconda.com/pkgs/main/win-64/wheel-0.33.4-py37_0.tar.bz2"
                 }
             }
         },
@@ -274,8 +374,18 @@
                 "Type": "other",
                 "Other": {
                     "Name": "win_inet_pton",
-                    "Version": "1.0.1",
-                    "DownloadUrl": "https://repo.anaconda.com/pkgs/main/win-64/win_inet_pton-1.0.1-py37_1.tar.bz2"
+                    "Version": "1.1.0",
+                    "DownloadUrl": "https://repo.anaconda.com/pkgs/main/win-64/win_inet_pton-1.1.0-py37_0.tar.bz2"
+                }
+            }
+        },
+        {
+            "Component": {
+                "Type": "other",
+                "Other": {
+                    "Name": "xz",
+                    "Version": "5.2.4",
+                    "DownloadUrl": "https://repo.anaconda.com/pkgs/main/win-64/xz-5.2.4-h2fa13f4_4.tar.bz2"
                 }
             }
         },
@@ -286,6 +396,26 @@
                     "Name": "yaml",
                     "Version": "0.1.7",
                     "DownloadUrl": "https://repo.anaconda.com/pkgs/main/win-64/yaml-0.1.7-hc54c509_2.tar.bz2"
+                }
+            }
+        },
+        {
+            "Component": {
+                "Type": "other",
+                "Other": {
+                    "Name": "zlib",
+                    "Version": "1.2.11",
+                    "DownloadUrl": "https://repo.anaconda.com/pkgs/main/win-64/zlib-1.2.11-h62dcd97_3.tar.bz2"
+                }
+            }
+        },
+        {
+            "Component": {
+                "Type": "other",
+                "Other": {
+                    "Name": "zstd",
+                    "Version": "1.3.7",
+                    "DownloadUrl": "https://repo.anaconda.com/pkgs/main/win-64/zstd-1.3.7-h508b16e_0.tar.bz2"
                 }
             }
         }

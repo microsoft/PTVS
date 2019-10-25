@@ -131,8 +131,12 @@ namespace eval ttk::theme::clam {
 	    -font TkHeadingFont -relief raised -padding {3}
 	ttk::style configure Treeview -background $colors(-window)
 	ttk::style map Treeview \
-	    -background [list selected $colors(-selectbg)] \
-	    -foreground [list selected $colors(-selectfg)] ;
+	    -background [list disabled $colors(-frame)\
+				{!disabled !selected} $colors(-window) \
+				selected $colors(-selectbg)] \
+	    -foreground [list disabled $colors(-disabledfg) \
+				{!disabled !selected} black \
+				selected $colors(-selectfg)]
 
     	ttk::style configure TLabelframe \
 	    -labeloutside true -labelmargins {0 0 0 4} \
