@@ -38,7 +38,7 @@
                             <ColumnDefinition Width="auto" />
                         </Grid.ColumnDefinitions>
 
-                        <TextBlock Grid.Column="0" 
+                        <TextBlock Grid.Column="0"
                                    Text="{Binding Mode=OneWay,Converter={StaticResource FileNameEllipsisHead}}" />
                         <TextBlock Grid.Column="1"
                                    Text="{Binding Mode=OneWay,Converter={StaticResource FileNameEllipsisBody}}"
