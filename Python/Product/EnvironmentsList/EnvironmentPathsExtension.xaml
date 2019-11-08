@@ -131,7 +131,7 @@
                             <Button Command="{x:Static l:EnvironmentView.OpenInteractiveScripts}"
                                     CommandParameter="{Binding}"
                                     Style="{StaticResource NavigationButton}"
-                                    Margin="12 6 6 6"
+                                    Margin="6 6 6 6"
                                     HorizontalAlignment="Left"
                                     AutomationProperties.Name="{x:Static l:Resources.EnvironmentPathsExtensionOpenInteractiveScriptsLabel}">
                                 <Grid Background="Transparent">
@@ -154,7 +154,7 @@
                             but should be replaced with a more general startup
                             script tool.
                             -->
-                            <CheckBox Margin="12 6 6 6"
+                            <CheckBox Margin="6 6 6 6"
                                       Loaded="IsIPythonModeEnabled_Loaded"
                                       IsChecked="{Binding IsIPythonModeEnabled}"
                                       Content="{x:Static l:Resources.EnvironmentPathsExtensionEnableIPythonLabel}"
