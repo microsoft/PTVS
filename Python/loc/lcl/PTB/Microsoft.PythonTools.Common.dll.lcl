@@ -5189,7 +5189,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Results for pytest not found {0}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Resultados do pytest não localizados {0}]]></Val>
+            <Val><![CDATA[Resultados do pytest não encontrados {0}]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
