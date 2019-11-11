@@ -92,7 +92,7 @@
       <Button guid="guidPythonProfilingCmdSet" id="cmdidStartPythonProfiling" priority="0x0100" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="PythonMenu"/>
         <Strings>
-          <ButtonText>Launch &amp;Python Profiling...</ButtonText>
+          <ButtonText>La&amp;unch Python Profiling...</ButtonText>
           <CanonicalName>Launch Profiling</CanonicalName>
           <LocCanonicalName>Launch Profiling</LocCanonicalName>
         </Strings>
