@@ -12,6 +12,13 @@
                             <local:FileNameEllipsisConverter IncludeHead="True" x:Key="FileNameEllipsisHead" />
                             <local:FileNameEllipsisConverter IncludeBody="True" x:Key="FileNameEllipsisBody" />
                             <local:FileNameEllipsisConverter IncludeTail="True" x:Key="FileNameEllipsisTail" />
+                            <Style TargetType="TextBlock">
+                                <Style.Triggers>
+                                    <Trigger Property="Text" Value="">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
                         </Grid.Resources>
 
                         <Grid.ColumnDefinitions>
