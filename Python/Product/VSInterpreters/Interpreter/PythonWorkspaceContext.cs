@@ -159,8 +159,13 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         public IEnumerable<string> EnumerateUserFiles(Predicate<string> predicate) {
+            if (string.IsNullOrEmpty(_workspace.Location)) {
+                yield break;
+            }
+
             var workspaceCacheDirPath = Path.Combine(_workspace.Location, ".vs");
             var workspaceInterpreterConfigs = _registryService.Configurations
+                .Where(x => !String.IsNullOrEmpty(x.InterpreterPath))
                 .Where(x => PathUtils.IsSubpathOf(_workspace.Location, x.InterpreterPath))
                 .ToList();
             foreach (var file in Directory.EnumerateFiles(_workspace.Location).Where(x => predicate(x))) {
