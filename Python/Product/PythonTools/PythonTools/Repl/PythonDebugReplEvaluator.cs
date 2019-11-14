@@ -163,8 +163,14 @@ namespace Microsoft.PythonTools.Repl {
             } else {
                 if (CustomDebugAdapterProtocolExtension.CanUseExperimental()) {
                     var tid = _serviceProvider.GetDTE().Debugger.CurrentThread.ID;
-                    var result = CustomDebugAdapterProtocolExtension.EvaluateReplRequest(text, tid);
-                    CurrentWindow.Write(result);
+                    (bool isSuccessful, string message) result = CustomDebugAdapterProtocolExtension.EvaluateReplRequest(text, tid);
+
+                    if (!result.isSuccessful) {
+                        CurrentWindow.WriteError(result.message);
+                        return ExecutionResult.Failed;
+                    }
+
+                    CurrentWindow.Write(result.message);
                 }
             }
 
@@ -284,9 +290,10 @@ namespace Microsoft.PythonTools.Repl {
             } else if (CustomDebugAdapterProtocolExtension.CanUseExperimental()) {
                 var expression = string.Format(CultureInfo.InvariantCulture, "':'.join(dir({0}))", text ?? "");
                 var tid = _serviceProvider.GetDTE().Debugger.CurrentThread.ID;
-                var result = CustomDebugAdapterProtocolExtension.EvaluateReplRequest(text, tid);
-                if (result != null) {
-                    var completionResults = result
+                (bool isSuccessful, string message) result = CustomDebugAdapterProtocolExtension.EvaluateReplRequest(text, tid);
+
+                if (result.isSuccessful) {
+                    var completionResults = result.message
                                     .Split(':')
                                     .Where(r => !string.IsNullOrEmpty(r))
                                     .Select(r => new CompletionResult(r, Interpreter.PythonMemberType.Field))
