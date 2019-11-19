@@ -67,10 +67,13 @@ namespace TestUtilities.UI {
         }
 
         public void ExpandAll() {
-            foreach (AutomationElement child in Element.FindAll(TreeScope.Descendants, Condition.TrueCondition)) {
-                if (child.TryGetCurrentPattern(ExpandCollapsePattern.Pattern, out var pattern)) {
-                    ((ExpandCollapsePattern)pattern).Expand();
+            try {
+                foreach (AutomationElement child in Element.FindAll(TreeScope.Descendants, Condition.TrueCondition)) {
+                    if (child.TryGetCurrentPattern(ExpandCollapsePattern.Pattern, out var pattern)) {
+                        ((ExpandCollapsePattern)pattern).Expand();
+                    }
                 }
+            } catch (InvalidOperationException) {
             }
         }
 
@@ -80,7 +83,12 @@ namespace TestUtilities.UI {
         /// <param name="path"></param>
         /// <returns></returns>
         public AutomationElement FindItem(params string[] path) {
-            return FindNode(Element.FindAll(TreeScope.Children, Condition.TrueCondition), path, 0);
+            try {
+                return FindNode(Element.FindAll(TreeScope.Children, Condition.TrueCondition), path, 0);
+            } catch (InvalidOperationException) {
+            }
+
+            return null;
         }
 
         protected static AutomationElement FindNode(AutomationElementCollection nodes, string[] splitPath, int depth) {
