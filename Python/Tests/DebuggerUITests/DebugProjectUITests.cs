@@ -343,7 +343,7 @@ namespace DebuggerUITests {
         }
 
         /*
-        //[TestMethod, Priority(0)]
+        //[TestMethod, Priority(UITestPriority.P0)]
         //[TestCategory("Installed")]
         public void TestBreakAll() {
             var project = OpenDebuggerProjectAndBreak("BreakAllTest.py", 1);

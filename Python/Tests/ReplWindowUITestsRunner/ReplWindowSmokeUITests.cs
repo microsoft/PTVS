@@ -43,43 +43,43 @@ namespace ReplWindowUITestsRunner {
 
         #region Smoke tests
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
         public void ExecuteInReplSysArgv() {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.ExecuteInReplSysArgv), Interpreter);
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
         public void ExecuteInReplSysArgvScriptArgs() {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.ExecuteInReplSysArgvScriptArgs), Interpreter);
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
         public void ExecuteInReplSysPath() {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.ExecuteInReplSysPath), Interpreter);
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
         public void ExecuteInReplUnicodeFilename() {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.ExecuteInReplUnicodeFilename), Interpreter);
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
         public void CwdImport() {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.CwdImport), Interpreter);
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
         public void QuitAndReset() {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.QuitAndReset), Interpreter);
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
         public void PrintAllCharacters() {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.PrintAllCharacters), Interpreter);

@@ -39,121 +39,121 @@ namespace ProjectUITestsRunner {
         public static void ClassCleanup() => VsTestContext.Instance.Dispose();
         #endregion
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void MoveToMissingFolderKeyboard() {
             _vs.RunTest(nameof(ProjectUITests.NewDragDropCopyCutPaste.MoveToMissingFolderKeyboard));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void MoveToMissingFolderMouse() {
             _vs.RunTest(nameof(ProjectUITests.NewDragDropCopyCutPaste.MoveToMissingFolderMouse));
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
         public void MoveExcludedFolderKeyboard() {
             _vs.RunTest(nameof(ProjectUITests.NewDragDropCopyCutPaste.MoveExcludedFolderKeyboard));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void MoveExcludedFolderMouse() {
             _vs.RunTest(nameof(ProjectUITests.NewDragDropCopyCutPaste.MoveExcludedFolderMouse));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void MoveExcludedItemToFolderKeyboard() {
             _vs.RunTest(nameof(ProjectUITests.NewDragDropCopyCutPaste.MoveExcludedItemToFolderKeyboard));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void MoveExcludedItemToFolderMouse() {
             _vs.RunTest(nameof(ProjectUITests.NewDragDropCopyCutPaste.MoveExcludedItemToFolderMouse));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void MoveDuplicateFileNameSkipMoveKeyboard() {
             _vs.RunTest(nameof(ProjectUITests.NewDragDropCopyCutPaste.MoveDuplicateFileNameSkipMoveKeyboard));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void MoveDuplicateFileNameSkipMoveMouse() {
             _vs.RunTest(nameof(ProjectUITests.NewDragDropCopyCutPaste.MoveDuplicateFileNameSkipMoveMouse));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void MoveDuplicateFileNamesSkipOneKeyboard() {
             _vs.RunTest(nameof(ProjectUITests.NewDragDropCopyCutPaste.MoveDuplicateFileNamesSkipOneKeyboard));
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
         public void MoveDuplicateFileNamesSkipOneMouse() {
             _vs.RunTest(nameof(ProjectUITests.NewDragDropCopyCutPaste.MoveDuplicateFileNamesSkipOneMouse));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void MoveDuplicateFileNamesFoldersSkipOneKeyboard() {
             _vs.RunTest(nameof(ProjectUITests.NewDragDropCopyCutPaste.MoveDuplicateFileNamesFoldersSkipOneKeyboard));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void MoveDuplicateFileNamesFoldersSkipOneMouse() {
             _vs.RunTest(nameof(ProjectUITests.NewDragDropCopyCutPaste.MoveDuplicateFileNamesFoldersSkipOneMouse));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void MoveDuplicateFileNamesCrossProjectSkipOneKeyboard() {
             _vs.RunTest(nameof(ProjectUITests.NewDragDropCopyCutPaste.MoveDuplicateFileNamesCrossProjectSkipOneKeyboard));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void MoveDuplicateFileNamesCrossProjectSkipOneMouse() {
             _vs.RunTest(nameof(ProjectUITests.NewDragDropCopyCutPaste.MoveDuplicateFileNamesCrossProjectSkipOneMouse));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void MoveDuplicateFileNameCrossProjectSkipMoveKeyboard() {
             _vs.RunTest(nameof(ProjectUITests.NewDragDropCopyCutPaste.MoveDuplicateFileNameCrossProjectSkipMoveKeyboard));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void MoveDuplicateFileNameCrossProjectSkipMoveMouse() {
             _vs.RunTest(nameof(ProjectUITests.NewDragDropCopyCutPaste.MoveDuplicateFileNameCrossProjectSkipMoveMouse));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void MoveDuplicateFileNameCrossProjectCSharpSkipMoveKeyboard() {
             _vs.RunTest(nameof(ProjectUITests.NewDragDropCopyCutPaste.MoveDuplicateFileNameCrossProjectCSharpSkipMoveKeyboard));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void MoveDuplicateFileNameCrossProjectCSharpSkipMoveMouse() {
             _vs.RunTest(nameof(ProjectUITests.NewDragDropCopyCutPaste.MoveDuplicateFileNameCrossProjectCSharpSkipMoveMouse));
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
         public void MoveFileFromFolderToLinkedFolderKeyboard() {
             _vs.RunTest(nameof(ProjectUITests.NewDragDropCopyCutPaste.MoveFileFromFolderToLinkedFolderKeyboard));
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
         public void MoveFileFromFolderToLinkedFolderMouse() {
             _vs.RunTest(nameof(ProjectUITests.NewDragDropCopyCutPaste.MoveFileFromFolderToLinkedFolderMouse));
