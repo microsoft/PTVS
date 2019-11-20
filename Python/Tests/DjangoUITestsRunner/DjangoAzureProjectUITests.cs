@@ -39,7 +39,7 @@ namespace DjangoUITestsRunner {
         public static void ClassCleanup() => VsTestContext.Instance.Dispose();
         #endregion
 
-        [TestMethod, Priority(VsTestContext.P2_FAILING_UI_TEST)]
+        [TestMethod, Priority(UITestPriority.P2_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void AddCloudProject() {
             _vs.RunTest(nameof(DjangoUITests.DjangoAzureProjectUITests.AddCloudProject));

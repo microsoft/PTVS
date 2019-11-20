@@ -43,49 +43,49 @@ namespace ReplWindowUITestsRunner {
 
         #region IPython tests
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
         public void IPythonMode() {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.IPythonMode), Interpreter);
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
         public void IPythonCtrlBreakAborts() {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.IPythonCtrlBreakAborts), Interpreter);
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
         public void IPythonSimpleCompletion() {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.IPythonSimpleCompletion), Interpreter);
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
         public void IPythonSimpleSignatureHelp() {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.IPythonSimpleSignatureHelp), Interpreter);
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
         public void IPythonInlineGraph() {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.IPythonInlineGraph), Interpreter);
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
         public void IPythonStartInInteractive() {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.IPythonStartInInteractive), Interpreter);
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
         public void ExecuteInIPythonReplSysArgv() {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.ExecuteInIPythonReplSysArgv), Interpreter);
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
         public void ExecuteInIPythonReplSysArgvScriptArgs() {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.ExecuteInIPythonReplSysArgvScriptArgs), Interpreter);

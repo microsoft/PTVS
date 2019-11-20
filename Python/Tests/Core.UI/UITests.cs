@@ -39,7 +39,7 @@ using Path = System.IO.Path;
 namespace PythonToolsUITests {
     //[TestClass]
     public class UITests {
-        //[TestMethod, Priority(0)]
+        //[TestMethod, Priority(UITestPriority.P0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void DeferredSaveWithDot(PythonVisualStudioApp app) {
             string fullname;
@@ -72,7 +72,7 @@ namespace PythonToolsUITests {
             fullname = app.Dte.Solution.FullName;
         }
 
-        //[TestMethod, Priority(0)]
+        //[TestMethod, Priority(UITestPriority.P0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void AbsolutePaths(PythonVisualStudioApp app) {
             var proj = File.ReadAllText(TestData.GetPath(@"TestData\AbsolutePath\AbsolutePath.pyproj"));
@@ -89,7 +89,7 @@ namespace PythonToolsUITests {
             Assert.IsNotNull(programPy);
         }
 
-        //[TestMethod, Priority(0)]
+        //[TestMethod, Priority(UITestPriority.P0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void CopyPasteFile(PythonVisualStudioApp app) {
             var project = app.OpenProject(@"TestData\HelloWorld.sln");
@@ -114,7 +114,7 @@ namespace PythonToolsUITests {
             Assert.IsNotNull(window.WaitForItem("Solution 'HelloWorld' (1 of 1 project)", "HelloWorld", "Program - Copy (2).py"));
         }
 
-        //[TestMethod, Priority(0)]
+        //[TestMethod, Priority(UITestPriority.P0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void AddNewFolder(PythonVisualStudioApp app) {
             var project = app.OpenProject(@"TestData\HelloWorld.sln");
@@ -128,7 +128,7 @@ namespace PythonToolsUITests {
             app.OpenSolutionExplorer().WaitForChildOfProject(project, "MyNewFolder");
         }
 
-        //[TestMethod, Priority(0)]
+        //[TestMethod, Priority(UITestPriority.P0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void AddSearchPathRelativePath(PythonVisualStudioApp app) {
             var project = app.OpenProject(@"TestData\AddSearchPaths.sln");
@@ -147,7 +147,7 @@ namespace PythonToolsUITests {
             Assert.AreEqual("<SearchPath>..\\Outlining\\</SearchPath>", actual);
         }
 
-        //[TestMethod, Priority(0)]
+        //[TestMethod, Priority(UITestPriority.P0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void LoadSearchPath(PythonVisualStudioApp app) {
             var project = app.OpenProject(@"TestData\LoadSearchPaths.sln");
@@ -197,7 +197,7 @@ namespace PythonToolsUITests {
             Assert.IsNull(path4, "NotHere came back");
         }
 
-        //[TestMethod, Priority(0)]
+        //[TestMethod, Priority(UITestPriority.P0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void AddNewFolderNested(PythonVisualStudioApp app) {
             var project = app.OpenProject(@"TestData\HelloWorld.sln");
@@ -225,7 +225,7 @@ namespace PythonToolsUITests {
             app.OpenSolutionExplorer().WaitForChildOfProject(project, "FolderX", "FolderY", "BreakpointTest.py");
         }
 
-        //[TestMethod, Priority(0)]
+        //[TestMethod, Priority(UITestPriority.P0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void RenameProjectToExisting(PythonVisualStudioApp app) {
             var project = app.OpenProject(@"TestData\RenameProjectTestUI.sln");
@@ -265,7 +265,7 @@ namespace PythonToolsUITests {
             Assert.IsNotNull(window.WaitForItem("Solution 'RenameProjectTestUI' (1 of 1 project)", "HelloWorldExisting"));
         }
 
-        //[TestMethod, Priority(0)]
+        //[TestMethod, Priority(UITestPriority.P0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void RenameItemsTest(PythonVisualStudioApp app) {
             var project = app.OpenProject(@"TestData\RenameItemsTestUI.sln");
@@ -306,7 +306,7 @@ namespace PythonToolsUITests {
             Assert.IsNotNull(window.WaitForChildOfProject(project, "NewName.txt"));
         }
 
-        //[TestMethod, Priority(0)]
+        //[TestMethod, Priority(UITestPriority.P0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void CrossProjectCopy(PythonVisualStudioApp app) {
             app.OpenProject(@"TestData\HelloWorld2.sln", expectedProjects: 2);
@@ -325,7 +325,7 @@ namespace PythonToolsUITests {
             Assert.IsNotNull(window.WaitForChildOfProject(proj2, "TestFolder3"));
         }
 
-        //[TestMethod, Priority(0)]
+        //[TestMethod, Priority(UITestPriority.P0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void CrossProjectCutPaste(PythonVisualStudioApp app) {
             app.OpenProject(@"TestData\HelloWorld2.sln", expectedProjects: 2);
@@ -344,7 +344,7 @@ namespace PythonToolsUITests {
             Assert.IsNull(window.WaitForChildOfProjectRemoved(proj1, "TestFolder2"));
         }
 
-        //[TestMethod, Priority(0)]
+        //[TestMethod, Priority(UITestPriority.P0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void CutPaste(PythonVisualStudioApp app) {
             app.OpenProject(@"TestData\HelloWorld2.sln", expectedProjects: 2);
@@ -363,7 +363,7 @@ namespace PythonToolsUITests {
             Assert.IsNull(window.WaitForChildOfProjectRemoved(proj, "TestFolder", "SubItem.py"));
         }
 
-        //[TestMethod, Priority(0)]
+        //[TestMethod, Priority(UITestPriority.P0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void CopyFolderOnToSelf(PythonVisualStudioApp app) {
             app.OpenProject(@"TestData\HelloWorld2.sln", expectedProjects: 2);
@@ -387,7 +387,7 @@ namespace PythonToolsUITests {
             Assert.IsNotNull(window.WaitForChildOfProject(proj, "TestFolder - Copy"));
         }
 
-        //[TestMethod, Priority(0)]
+        //[TestMethod, Priority(UITestPriority.P0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void DragDropTest(PythonVisualStudioApp app) {
             var project = app.OpenProject(@"TestData\DragDropTest.sln");
@@ -409,7 +409,7 @@ namespace PythonToolsUITests {
         /// <summary>
         /// Drag a file onto another file in the same directory, nothing should happen
         /// </summary>
-        //[TestMethod, Priority(0)]
+        //[TestMethod, Priority(UITestPriority.P0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void DragDropFileToFileTest(PythonVisualStudioApp app) {
             var project = app.OpenProject(@"TestData\DragDropTest.sln");
@@ -430,7 +430,7 @@ namespace PythonToolsUITests {
         /// <summary>
         /// Drag a file onto it's containing folder, dialog should appear
         /// </summary>
-        //[TestMethod, Priority(0)]
+        //[TestMethod, Priority(UITestPriority.P0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void DragDropFileToContainingFolderTest(PythonVisualStudioApp app) {
             var project = app.OpenProject(@"TestData\DragDropTest.sln");
@@ -446,7 +446,7 @@ namespace PythonToolsUITests {
             window.WaitForChildOfProject(project, "TestFolder", "SubItem2.py");
         }
 
-        //[TestMethod, Priority(0)]
+        //[TestMethod, Priority(UITestPriority.P0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void DragLeaveTest(PythonVisualStudioApp app) {
             var project = app.OpenProject(@"TestData\DragDropTest.sln");
@@ -468,7 +468,7 @@ namespace PythonToolsUITests {
             window.WaitForChildOfProject(project, "TestFolder2", "SubItem.py");
         }
 
-        //[TestMethod, Priority(0)]
+        //[TestMethod, Priority(UITestPriority.P0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void DragLeaveFolderTest(PythonVisualStudioApp app) {
             var project = app.OpenProject(@"TestData\DragDropTest.sln");
@@ -490,7 +490,7 @@ namespace PythonToolsUITests {
             window.WaitForChildOfProject(project, "TestFolder2", "SubFolder");
         }
 
-        //[TestMethod, Priority(0)]
+        //[TestMethod, Priority(UITestPriority.P0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void CopyFolderInToSelf(PythonVisualStudioApp app) {
             app.OpenProject(@"TestData\HelloWorld2.sln", expectedProjects: 2);
@@ -520,7 +520,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        //[TestMethod, Priority(0)]
+        //[TestMethod, Priority(UITestPriority.P0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void MultiSelectCopyAndPaste(PythonVisualStudioApp app) {
             app.OpenProject(@"TestData\DebuggerProject.sln");
@@ -557,7 +557,7 @@ namespace PythonToolsUITests {
         /// <summary>
         /// http://pytools.codeplex.com/workitem/1222
         /// </summary>
-        //[TestMethod, Priority(0)]
+        //[TestMethod, Priority(UITestPriority.P0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void DjangoMultiSelectContextMenu(PythonVisualStudioApp app) {
             app.OpenProject(@"TestData\DjangoApplication.sln");
@@ -583,7 +583,7 @@ namespace PythonToolsUITests {
         /// <summary>
         /// http://pytools.codeplex.com/workitem/1223
         /// </summary>
-        //[TestMethod, Priority(0)]
+        //[TestMethod, Priority(UITestPriority.P0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void DjangoIncludeInProject(PythonVisualStudioApp app) {
             app.OpenProject(@"TestData\DjangoApplication.sln");
@@ -607,7 +607,7 @@ namespace PythonToolsUITests {
         /// <summary>
         /// http://pytools.codeplex.com/workitem/1223
         /// </summary>
-        //[TestMethod, Priority(0)]
+        //[TestMethod, Priority(UITestPriority.P0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void AddItemPreviousSiblingNotVisible(PythonVisualStudioApp app) {
             var project = app.OpenProject(@"TestData\AddItemPreviousSiblingNotVisible.sln");
@@ -656,7 +656,7 @@ namespace PythonToolsUITests {
         /// <summary>
         /// https://pytools.codeplex.com/workitem/1251
         /// </summary>
-        //[TestMethod, Priority(0)]
+        //[TestMethod, Priority(UITestPriority.P0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void AddExistingItem(PythonVisualStudioApp app) {
             var project = app.OpenProject(@"TestData\AddExistingItem.sln");
@@ -673,7 +673,7 @@ namespace PythonToolsUITests {
         /// <summary>
         /// https://pytools.codeplex.com/workitem/1221
         /// </summary>
-        //[TestMethod, Priority(0)]
+        //[TestMethod, Priority(UITestPriority.P0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void AddNewFileOverwritingExistingFileNotInProject(PythonVisualStudioApp app) {
             var project = app.OpenProject(@"TestData\AddExistingItem.sln");
@@ -731,7 +731,7 @@ namespace PythonToolsUITests {
             #endregion
         }
 
-        //[TestMethod, Priority(0)]
+        //[TestMethod, Priority(UITestPriority.P0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void NewProject(PythonVisualStudioApp app) {
             using (var newProjDialog = NewProjectDialog.FromDte(app)) {
@@ -764,7 +764,7 @@ namespace PythonToolsUITests {
             Assert.IsNotNull(project.ProjectItems.Item(itemName));
         }
 
-        //[TestMethod, Priority(0)]
+        //[TestMethod, Priority(UITestPriority.P0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void TransferItem(PythonVisualStudioApp app) {
             var project = app.OpenProject(@"TestData\HelloWorld.sln");
@@ -793,7 +793,7 @@ namespace PythonToolsUITests {
             System.IO.File.Delete(filename);
         }
 
-        //[TestMethod, Priority(0)]
+        //[TestMethod, Priority(UITestPriority.P0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void SaveAs(PythonVisualStudioApp app) {
             var project = app.OpenProject(@"TestData\SaveAsUI.sln");
@@ -822,7 +822,7 @@ namespace PythonToolsUITests {
         /// 
         /// https://pytools.codeplex.com/workitem/1277
         /// </summary>
-        //[TestMethod, Priority(0)]
+        //[TestMethod, Priority(UITestPriority.P0)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestSearchExcludedFiles(PythonVisualStudioApp app) {
             var project = app.OpenProject(@"TestData\FindInAllFiles.sln");

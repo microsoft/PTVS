@@ -45,6 +45,7 @@
     <Compile Include="NativeMethods.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TestFailedException.cs" />
+    <Compile Include="UITestPriority.cs" />
     <Compile Include="VisualStudioApp.cs" />
     <Compile Include="VsInstance.cs" />
     <Compile Include="VsTestContext.cs" />

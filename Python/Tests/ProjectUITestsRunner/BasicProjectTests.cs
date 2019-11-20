@@ -39,31 +39,31 @@ namespace ProjectUITestsRunner {
         public static void ClassCleanup() => VsTestContext.Instance.Dispose();
         #endregion
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void ProjectAddItem() {
             _vs.RunTest(nameof(ProjectUITests.BasicProjectTests.ProjectAddItem));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void CleanSolution() {
             _vs.RunTest(nameof(ProjectUITests.BasicProjectTests.CleanSolution));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void BuildSolution() {
             _vs.RunTest(nameof(ProjectUITests.BasicProjectTests.BuildSolution));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void OpenCommandHere() {
             _vs.RunTest(nameof(ProjectUITests.BasicProjectTests.OpenCommandHere));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void PasteFileWhileOpenInEditor() {
             _vs.RunTest(nameof(ProjectUITests.BasicProjectTests.PasteFileWhileOpenInEditor));
@@ -73,55 +73,55 @@ namespace ProjectUITestsRunner {
         /// Checks various combinations of item visibility from within the users project
         /// and from imported projects and how it's controlled by the Visible metadata.
         /// </summary>
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
         public void ItemVisibility() {
             _vs.RunTest(nameof(ProjectUITests.BasicProjectTests.ItemVisibility));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void ProjectAddExistingExcludedFolder() {
             _vs.RunTest(nameof(ProjectUITests.BasicProjectTests.ProjectAddExistingExcludedFolder));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void RenameFile() {
             _vs.RunTest(nameof(ProjectUITests.BasicProjectTests.RenameFile));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void RenameFileExistsInHierarchy() {
             _vs.RunTest(nameof(ProjectUITests.BasicProjectTests.RenameFileExistsInHierarchy));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void RenameFileExistsInHierarchy_FileOpen_Cancel() {
             _vs.RunTest(nameof(ProjectUITests.BasicProjectTests.RenameFileExistsInHierarchy_FileOpen_Cancel));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void RenameFileExistsInHierarchy_FileOpen_Save() {
             _vs.RunTest(nameof(ProjectUITests.BasicProjectTests.RenameFileExistsInHierarchy_FileOpen_Save));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void RenameFileExistsInHierarchy_FileOpen_DontSave() {
             _vs.RunTest(nameof(ProjectUITests.BasicProjectTests.RenameFileExistsInHierarchy_FileOpen_DontSave));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void IsDocumentInProject() {
             _vs.RunTest(nameof(ProjectUITests.BasicProjectTests.IsDocumentInProject));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void DeleteFolderWithReadOnlyFile() {
             _vs.RunTest(nameof(ProjectUITests.BasicProjectTests.DeleteFolderWithReadOnlyFile));

@@ -96,7 +96,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        ////[TestMethod, Priority(0)]
+        ////[TestMethod, Priority(UITestPriority.P0)]
         //[HostType("VSTestHost"), TestCategory("Installed")]
         public void ObjectBrowserBasicTest(VisualStudioApp app) {
             var project = app.OpenProject(@"TestData\Outlining.sln");
@@ -122,7 +122,7 @@ namespace PythonToolsUITests {
             Assert.AreEqual(1, nodeCount, "Node count: " + nodeCount.ToString());
         }
 
-        ////[TestMethod, Priority(0)]
+        ////[TestMethod, Priority(UITestPriority.P0)]
         //[HostType("VSTestHost"), TestCategory("Installed")]
         public void ObjectBrowserSearchTextTest(VisualStudioApp app) {
             var project = app.OpenProject(@"TestData\ObjectBrowser.sln");
@@ -173,7 +173,7 @@ namespace PythonToolsUITests {
             AssertNodes(objectBrowser, false, expectedNodesBeforeSearch);
         }
 
-        ////[TestMethod, Priority(0)]
+        ////[TestMethod, Priority(UITestPriority.P0)]
         //[HostType("VSTestHost"), TestCategory("Installed")]
         public void ObjectBrowserExpandTypeBrowserTest(VisualStudioApp app) {
             var project = app.OpenProject(@"TestData\Inheritance.sln");
@@ -209,7 +209,7 @@ namespace PythonToolsUITests {
             Assert.AreEqual(1, nodeCount, "Node count: " + nodeCount.ToString());
         }
 
-        ////[TestMethod, Priority(0)]
+        ////[TestMethod, Priority(UITestPriority.P0)]
         //[HostType("VSTestHost"), TestCategory("Installed")]
         public void ObjectBrowserCommentsTest(VisualStudioApp app) {
             var project = app.OpenProject(@"TestData\Inheritance.sln");
@@ -270,7 +270,7 @@ namespace PythonToolsUITests {
             System.Threading.Thread.Sleep(1000);
         }
 
-        ////[TestMethod, Priority(0)]
+        ////[TestMethod, Priority(UITestPriority.P0)]
         //[HostType("VSTestHost"), TestCategory("Installed")]
         public void ObjectBrowserInheritanceRelationshipTest(VisualStudioApp app) {
             var project = app.OpenProject(@"TestData\Inheritance.sln");
@@ -321,7 +321,7 @@ namespace PythonToolsUITests {
             System.Threading.Thread.Sleep(1000);
         }
 
-        ////[TestMethod, Priority(0)]
+        ////[TestMethod, Priority(UITestPriority.P0)]
         //[HostType("VSTestHost"), TestCategory("Installed")]
         public void ObjectBrowserNavigationTest(VisualStudioApp app) {
             var project = app.OpenProject(@"TestData\MultiModule.sln");
@@ -382,7 +382,7 @@ namespace PythonToolsUITests {
             System.Threading.Thread.Sleep(1000);
         }
 
-        ////[TestMethod, Priority(0)]
+        ////[TestMethod, Priority(UITestPriority.P0)]
         //[HostType("VSTestHost"), TestCategory("Installed")]
         public void ObjectBrowserContextMenuBasicTest(VisualStudioApp app) {
             var project = app.OpenProject(@"TestData\MultiModule.sln");
@@ -457,7 +457,7 @@ namespace PythonToolsUITests {
             Keyboard.PressAndRelease(System.Windows.Input.Key.Escape);
         }
 
-        ////[TestMethod, Priority(0)]
+        ////[TestMethod, Priority(UITestPriority.P0)]
         //[HostType("VSTestHost"), TestCategory("Installed")]
         public void ObjectBrowserTypeBrowserViewTest(VisualStudioApp app) {
             var project = app.OpenProject(@"TestData\MultiModule.sln");
@@ -513,7 +513,7 @@ namespace PythonToolsUITests {
             Assert.AreEqual(3, nodeCount, "Node count: " + nodeCount.ToString());
         }
 
-        ////[TestMethod, Priority(0)]
+        ////[TestMethod, Priority(UITestPriority.P0)]
         //[HostType("VSTestHost"), TestCategory("Installed")]
         public void ObjectBrowserTypeBrowserSortTest(VisualStudioApp app) {
             var project = app.OpenProject(@"TestData\MultiModule.sln");
@@ -601,7 +601,7 @@ namespace PythonToolsUITests {
             Assert.AreEqual("class Teacher(MyModule.SchoolMember)\n", str, "");
         }
 
-        ////[TestMethod, Priority(0)]
+        ////[TestMethod, Priority(UITestPriority.P0)]
         //[HostType("VSTestHost"), TestCategory("Installed")]
         public void ObjectBrowserNavigateVarContextMenuTest(VisualStudioApp app) {
             var project = app.OpenProject(@"TestData\MultiModule.sln");
@@ -666,7 +666,7 @@ namespace PythonToolsUITests {
             Assert.AreEqual(3, lineNo, "Line number: " + lineNo.ToString());
         }
 
-        ////[TestMethod, Priority(0)]
+        ////[TestMethod, Priority(UITestPriority.P0)]
         //[HostType("VSTestHost"), TestCategory("Installed")]
         public void ObjectBrowserFindAllReferencesTest(VisualStudioApp app) {
             var project = app.OpenProject(@"TestData\MultiModule.sln");
@@ -728,7 +728,7 @@ namespace PythonToolsUITests {
             Assert.IsTrue(str.Contains("2 matches found"), str);
         }
 
-        ////[TestMethod, Priority(0)]
+        ////[TestMethod, Priority(UITestPriority.P0)]
         //[HostType("VSTestHost"), TestCategory("Installed")]
         public void NavigateTo(VisualStudioApp app) {
             app.OpenProject(@"TestData\Navigation.sln");
@@ -754,7 +754,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        ////[TestMethod, Priority(0)]
+        ////[TestMethod, Priority(UITestPriority.P0)]
         //[HostType("VSTestHost"), TestCategory("Installed")]
         public void ResourceViewIsDisabledTest(VisualStudioApp app) {
             var project = app.OpenProject(@"TestData\Outlining.sln");

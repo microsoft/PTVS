@@ -39,103 +39,103 @@ namespace PythonToolsUITestsRunner {
         public static void ClassCleanup() => VsTestContext.Instance.Dispose();
         #endregion
 
-        [TestMethod, Priority(VsTestContext.P2_FAILING_UI_TEST)]
+        [TestMethod, Priority(UITestPriority.P2_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void DocString() {
             _vs.RunTest(nameof(PythonToolsUITests.AddImportTests.DocString));
         }
 
-        [TestMethod, Priority(VsTestContext.P2_FAILING_UI_TEST)]
+        [TestMethod, Priority(UITestPriority.P2_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void UnicodeDocString() {
             _vs.RunTest(nameof(PythonToolsUITests.AddImportTests.UnicodeDocString));
         }
 
-        [TestMethod, Priority(VsTestContext.P2_FAILING_UI_TEST)]
+        [TestMethod, Priority(UITestPriority.P2_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void DocStringFuture() {
             _vs.RunTest(nameof(PythonToolsUITests.AddImportTests.DocStringFuture));
         }
 
-        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
+        [TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void ImportFunctionFrom() {
             _vs.RunTest(nameof(PythonToolsUITests.AddImportTests.ImportFunctionFrom));
         }
 
-        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
+        [TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void ImportFunctionFromSubpackage() {
             _vs.RunTest(nameof(PythonToolsUITests.AddImportTests.ImportFunctionFromSubpackage));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void ImportWithErrors() {
             _vs.RunTest(nameof(PythonToolsUITests.AddImportTests.ImportWithErrors));
         }
 
-        [TestMethod, Priority(VsTestContext.P2_FAILING_UI_TEST)]
+        [TestMethod, Priority(UITestPriority.P2_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void ImportBuiltinFunction() {
             _vs.RunTest(nameof(PythonToolsUITests.AddImportTests.ImportBuiltinFunction));
         }
 
-        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
+        [TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void ImportFunctionFromExistingFromImport() {
             _vs.RunTest(nameof(PythonToolsUITests.AddImportTests.ImportFunctionFromExistingFromImport));
         }
 
-        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
+        [TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void ImportFunctionFromExistingFromImportAsName() {
             _vs.RunTest(nameof(PythonToolsUITests.AddImportTests.ImportFunctionFromExistingFromImportAsName));
         }
 
-        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
+        [TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void ImportFunctionFromExistingFromImportParens() {
             _vs.RunTest(nameof(PythonToolsUITests.AddImportTests.ImportFunctionFromExistingFromImportParens));
         }
 
-        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
+        [TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void ImportFunctionFromExistingFromImportParensAsName() {
             _vs.RunTest(nameof(PythonToolsUITests.AddImportTests.ImportFunctionFromExistingFromImportParensAsName));
         }
 
-        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
+        [TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void ImportFunctionFromExistingFromImportParensAsNameTrailingComma() {
             _vs.RunTest(nameof(PythonToolsUITests.AddImportTests.ImportFunctionFromExistingFromImportParensAsNameTrailingComma));
         }
 
-        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
+        [TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void ImportFunctionFromExistingFromImportParensTrailingComma() {
             _vs.RunTest(nameof(PythonToolsUITests.AddImportTests.ImportFunctionFromExistingFromImportParensTrailingComma));
         }
 
-        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
+        [TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void ImportPackage() {
             _vs.RunTest(nameof(PythonToolsUITests.AddImportTests.ImportPackage));
         }
 
-        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
+        [TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void ImportSubPackage() {
             _vs.RunTest(nameof(PythonToolsUITests.AddImportTests.ImportSubPackage));
         }
 
-        [TestMethod, Priority(VsTestContext.P2_FAILING_UI_TEST)]
+        [TestMethod, Priority(UITestPriority.P2_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void Parameters() {
             _vs.RunTest(nameof(PythonToolsUITests.AddImportTests.Parameters));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void AssignedWithoutTypeInfo() {
             _vs.RunTest(nameof(PythonToolsUITests.AddImportTests.AssignedWithoutTypeInfo));

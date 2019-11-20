@@ -41,7 +41,7 @@ namespace DebuggerUITestsRunner {
         public static void ClassCleanup() => VsTestContext.Instance.Dispose();
         #endregion
 
-        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
+        [TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void DebugPurePythonProject() {
             _vs.RunTest(nameof(DebuggerUITests.MixedModeDebugProjectUITests.DebugPurePythonProject), Interpreter);

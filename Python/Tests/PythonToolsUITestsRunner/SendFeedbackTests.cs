@@ -40,7 +40,7 @@ namespace PythonToolsUITestsRunner {
         #endregion
 
         // Note: Report a problem feature requires the user to be signed in to VS
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
         public void ReportAProblemDiagnostics() {
             _vs.RunTest(nameof(PythonToolsUITests.SendFeedbackTests.ReportAProblemDiagnostics));
