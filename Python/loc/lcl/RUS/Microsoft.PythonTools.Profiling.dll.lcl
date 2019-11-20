@@ -542,10 +542,13 @@
         <Disp Icon="Menu" Expand="true" Disp="true" LocTbl="false" />
         <Item ItemId=";{c6e7bafe-d4b6-4e04-85af-9c83f18d8c78},256" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
-            <Val><![CDATA[Launch &Python Profiling...]]></Val>
+            <Val><![CDATA[La&unch Python Profiling...]]></Val>
             <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
               <Val><![CDATA[Запуск &профилирования Python...]]></Val>
             </Tgt>
+            <Prev Cat="Button" IgnoreHK="true">
+              <Val><![CDATA[Launch &Python Profiling...]]></Val>
+            </Prev>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>
