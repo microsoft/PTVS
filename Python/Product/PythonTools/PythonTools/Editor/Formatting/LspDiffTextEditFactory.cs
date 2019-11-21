@@ -117,6 +117,7 @@ namespace Microsoft.PythonTools.Editor.Formatting {
                                     Start = start,
                                 }
                             };
+                            action = Action.Insert;
                         } else if (action == Action.Delete) {
                             action = Action.Replace;
                         }
