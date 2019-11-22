@@ -186,7 +186,6 @@ four_hundred=4* 100
         }
 
         [TestMethod, Priority(0)]
-        [Ignore]
         public void EditBugDeletesCode() {
             // using autopep8, applying this diff deletes some decorators
             VerifyTextEdits(
@@ -233,39 +232,83 @@ bottle.abort()
 ",
                 @"--- original/routes.py
 +++ fixed/routes.py
-@@ -4,6 +4,7 @@
- import bottle
+@@ -5,35 +5,37 @@
  from bottle import route, view
  from datetime import datetime
-+
  
++
  @route('/')
  @route('/home')
-@@ -14,6 +15,7 @@
-         year=datetime.now().year
+ @view('index')
+ def home():
+     """"""Renders the home page.""""""
+     return dict(
+-        year = datetime.now().year
++        year=datetime.now().year
      )
- 
 +
+ 
  @route('/contact')
  @view('contact')
  def contact():
-@@ -23,6 +25,7 @@
-         message='Your contact page.',
-         year=datetime.now().year
+     """"""Renders the contact page.""""""
+     return dict(
+-        title = 'Contact',
+-        message = 'Your contact page.',
+-        year = datetime.now().year
++        title='Contact',
++        message='Your contact page.',
++        year=datetime.now().year
      )
 +
  
  @route('/about')
  @view('about')
-@@ -35,6 +38,5 @@
+ def about():
+     """"""Renders the about page.""""""
+     return dict(
+-        title = 'About',
+-        message = 'Your application description page.',
+-        year = datetime.now().year
++        title='About',
++        message='Your application description page.',
++        year=datetime.now().year
      )
- 
- 
 -
+ 
+ 
  bottle.app
- bottle.abort()
 ",
-                new TextEdit[0]
+                 new TextEdit[] {
+                    new TextEdit() {
+                        Range = new Range() { Start = new Position(7, 0), End = new Position(7, 0) },
+                        NewText = "\r\n",
+                    },
+                    new TextEdit() {
+                        Range = new Range() { Start = new Position(13, 0), End = new Position(14, 0) },
+                        NewText = "        year=datetime.now().year\r\n",
+                    },
+                    new TextEdit() {
+                        Range = new Range() { Start = new Position(15, 0), End = new Position(15, 0) },
+                        NewText = "\r\n",
+                    },
+                    new TextEdit() {
+                        Range = new Range() { Start = new Position(21, 0), End = new Position(24, 0) },
+                        NewText = "        title='Contact',\r\n        message='Your contact page.',\r\n        year=datetime.now().year\r\n",
+                    },
+                    new TextEdit() {
+                        Range = new Range() { Start = new Position(25, 0), End = new Position(25, 0) },
+                        NewText = "\r\n",
+                    },
+                    new TextEdit() {
+                        Range = new Range() { Start = new Position(31, 0), End = new Position(34, 0) },
+                        NewText = "        title='About',\r\n        message='Your application description page.',\r\n        year=datetime.now().year\r\n",
+                    },
+                     new TextEdit() {
+                        Range = new Range() { Start = new Position(35, 0), End = new Position(36, 0) },
+                        NewText = null,
+                    },
+                }
             );
         }
 
