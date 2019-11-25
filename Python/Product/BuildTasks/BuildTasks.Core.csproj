@@ -50,6 +50,12 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="Microsoft.Python.Parsing">
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.Python.Core">
+      <Private>True</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\VSInterpreters\Interpreter\CPythonInterpreterFactoryConstants.cs">
@@ -91,8 +97,10 @@
     <Compile Include="..\VSInterpreters\Interpreter\VisualStudioInterpreterConfiguration.cs">
       <Link>Interpreter\VisualStudioInterpreterConfiguration.cs</Link>
     </Compile>
+    <Compile Include="..\VSInterpreters\ModulePath.cs">
+      <Link>Interpreter\ModulePath.cs</Link>
+    </Compile>
     <Compile Include="ConvertPathToModuleName.cs" />
-    <Compile Include="Interpreter\PythonLanguageVersion.cs" />
     <Compile Include="PythonCommand.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ResolveEnvironment.cs" />
