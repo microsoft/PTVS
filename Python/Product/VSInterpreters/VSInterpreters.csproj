@@ -150,6 +150,7 @@
     <Compile Include="PackageManager\PipPackageManager.cs" />
     <Compile Include="Interpreter\PythonInterpreterInformation.cs" />
     <Compile Include="Interpreter\PythonRegistrySearch.cs" />
+    <Compile Include="PythonLibraryPath.cs" />
     <Compile Include="RegistryWatcher.cs" />
     <Compile Include="PythonWorkspaceContextEventArgs.cs" />
     <Compile Include="WorkspaceExtensions.cs" />
