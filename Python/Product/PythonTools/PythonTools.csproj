@@ -679,6 +679,10 @@
   <ItemGroup>
     <!-- VSIX -->
     <Compile Include="PythonTools\Repl\PythonInteractiveEvaluator.CommandProcessorThread.cs" />
+    <Content Include="get_search_paths.py">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="images\AddPackage_16x.png" />
     <Content Include="images\AddPackage_16x.svg" />
     <Content Include="PythonTools\LanguageServerClient\NOTES.txt" />
