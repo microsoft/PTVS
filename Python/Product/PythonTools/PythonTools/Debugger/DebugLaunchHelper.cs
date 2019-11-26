@@ -153,7 +153,7 @@ namespace Microsoft.PythonTools.Debugger {
         }
 
         public static unsafe DebugTargetInfo CreateDebugTargetInfo(IServiceProvider provider, LaunchConfiguration config) {
-            if (config.Interpreter.Version < new Version(2, 6)) {
+            if (config.Interpreter.Version < new Version(2, 6) && config.Interpreter.Version > new Version(0, 0)) {
                 // We don't support Python 2.5 now that our debugger needs the json module
                 throw new NotSupportedException(Strings.DebuggerPythonVersionNotSupported);
             }
