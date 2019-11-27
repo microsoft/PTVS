@@ -107,7 +107,7 @@ namespace Microsoft.PythonTools.Editor.Formatting {
                             throw new FormatException("patch parsing error");
                         }
 
-                        edit.Range.End = new Position(line, character);
+                        edit.Range.End = new Position(line-1, diffs[i].text.Length - 2);
                         break;
 
                     case Operation.INSERT:

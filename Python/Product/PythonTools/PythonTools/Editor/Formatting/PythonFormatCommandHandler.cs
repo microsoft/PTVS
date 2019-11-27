@@ -97,7 +97,7 @@ namespace Microsoft.PythonTools.Editor {
                 GetConfiguration(textDoc, out var formatter, out var factory, out var extraArgs)) {
 
                 var snapshot = textBuffer.CurrentSnapshot;
-                var range = isFormatSelection ? GetRange(textView, textBuffer) : null;
+                var range =GetRange(textView, textBuffer);
 
                 FormatDocumentAsync(textDoc, snapshot, formatter, factory, range, extraArgs)
                     .HandleAllExceptions(_site, GetType())

@@ -181,8 +181,6 @@ four_hundred=4* 100
                     },
                 }
             );
-
-            Assert.Fail("result is technically correct, but VS cannot handle this");
         }
 
         [TestMethod, Priority(0)]
