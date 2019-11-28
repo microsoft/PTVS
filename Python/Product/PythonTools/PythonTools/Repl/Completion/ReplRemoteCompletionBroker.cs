@@ -19,6 +19,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Python.Parsing;
+using Microsoft.Python.Parsing.Ast;
 using Microsoft.PythonTools.LanguageServerClient;
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.Language.Intellisense.AsyncCompletion.Data;
@@ -146,11 +148,15 @@ namespace Microsoft.PythonTools.Repl.Completion {
             // this code here is just good enough to test simple cases
             // in old codebase, we used to get the expression from the analyzer
             var expression = triggerPoint.Snapshot.GetText();
-            if (expression.EndsWith(".")) {
-                expression = expression.Substring(0, expression.Length - 1);
+
+            var finder = new ExpressionFinder(expression, PythonLanguageVersion.V37, FindExpressionOptions.Complete);
+            var Node = finder.GetExpression(triggerPoint.Position);
+            if(Node is MemberExpression me) {
+                var target = me.Target;
+                return target?.ToCodeString(finder.Ast);
             }
 
-            return expression;
+            return null;
         }
 
         private async Task<LSP.CompletionItem[]> GetAnalysisCompletionsAsync(
