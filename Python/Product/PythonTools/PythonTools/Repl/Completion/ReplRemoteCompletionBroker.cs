@@ -19,6 +19,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Python.Parsing;
+using Microsoft.Python.Parsing.Ast;
 using Microsoft.PythonTools.LanguageServerClient;
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.Language.Intellisense.AsyncCompletion.Data;
@@ -124,7 +126,7 @@ namespace Microsoft.PythonTools.Repl.Completion {
         ) {
             await TaskScheduler.Default;
 
-            string expression = GetExpressionAtPoint(triggerPoint);
+            string expression = GetExpressionAtPoint(triggerPoint, eval.LanguageVersion);
             if (!string.IsNullOrEmpty(expression)) {
                 var members = await eval.GetMemberNamesAsync(expression, token);
 
@@ -141,16 +143,17 @@ namespace Microsoft.PythonTools.Repl.Completion {
             return new LSP.CompletionItem[0];
         }
 
-        private static string GetExpressionAtPoint(SnapshotPoint triggerPoint) {
-            // TODO: need to get the expression at the trigger point
-            // this code here is just good enough to test simple cases
-            // in old codebase, we used to get the expression from the analyzer
-            var expression = triggerPoint.Snapshot.GetText();
-            if (expression.EndsWith(".")) {
-                expression = expression.Substring(0, expression.Length - 1);
+        private static string GetExpressionAtPoint(SnapshotPoint triggerPoint, PythonLanguageVersion version) {
+            var code = triggerPoint.Snapshot.GetText();
+
+            var finder = new ExpressionFinder(code, version, FindExpressionOptions.Complete);
+            var node = finder.GetExpression(triggerPoint.Position);
+            if (node is MemberExpression me) {
+                var target = me.Target;
+                return target?.ToCodeString(finder.Ast);
             }
 
-            return expression;
+            return null;
         }
 
         private async Task<LSP.CompletionItem[]> GetAnalysisCompletionsAsync(

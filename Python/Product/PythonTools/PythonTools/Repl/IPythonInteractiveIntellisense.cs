@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Python.Parsing;
 using Microsoft.PythonTools.Intellisense;
 
 namespace Microsoft.PythonTools.Repl {
@@ -28,5 +29,6 @@ namespace Microsoft.PythonTools.Repl {
         Task<OverloadDoc[]> GetSignatureDocumentationAsync(string text, CancellationToken ct);
         Uri DocumentUri { get; }
         Uri NextDocumentUri();
+        PythonLanguageVersion LanguageVersion { get; }
     }
 }

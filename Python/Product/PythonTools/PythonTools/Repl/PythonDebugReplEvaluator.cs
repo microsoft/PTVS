@@ -256,6 +256,8 @@ namespace Microsoft.PythonTools.Repl {
 
         public string DisplayName => Strings.DebugReplDisplayName;
 
+        public PythonLanguageVersion LanguageVersion => _activeEvaluator?.LanguageVersion ?? PythonLanguageVersion.None;
+
         public IEnumerable<KeyValuePair<string, string>> GetAvailableScopesAndPaths() {
             if (_activeEvaluator != null) {
                 return _activeEvaluator.GetAvailableScopesAndPaths();
