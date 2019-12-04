@@ -20,6 +20,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Python.Parsing;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
@@ -294,6 +295,8 @@ namespace Microsoft.PythonTools.Repl {
         public string CurrentScopeName => (_evaluator as IMultipleScopeEvaluator)?.CurrentScopeName;
         public string CurrentScopePath => (_evaluator as IMultipleScopeEvaluator)?.CurrentScopePath;
         public bool EnableMultipleScopes => (_evaluator as IMultipleScopeEvaluator)?.EnableMultipleScopes ?? false;
+
+        public PythonLanguageVersion LanguageVersion => (_evaluator as IPythonInteractiveIntellisense)?.LanguageVersion ?? PythonLanguageVersion.None;
 
         private void Evaluator_MultipleScopeSupportChanged(object sender, EventArgs e) {
             MultipleScopeSupportChanged?.Invoke(this, e);

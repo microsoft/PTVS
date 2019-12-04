@@ -126,7 +126,7 @@ namespace Microsoft.PythonTools.Repl.Completion {
         ) {
             await TaskScheduler.Default;
 
-            string expression = GetExpressionAtPoint(triggerPoint);
+            string expression = GetExpressionAtPoint(triggerPoint, eval.LanguageVersion);
             if (!string.IsNullOrEmpty(expression)) {
                 var members = await eval.GetMemberNamesAsync(expression, token);
 
@@ -143,15 +143,12 @@ namespace Microsoft.PythonTools.Repl.Completion {
             return new LSP.CompletionItem[0];
         }
 
-        private static string GetExpressionAtPoint(SnapshotPoint triggerPoint) {
-            // TODO: need to get the expression at the trigger point
-            // this code here is just good enough to test simple cases
-            // in old codebase, we used to get the expression from the analyzer
-            var expression = triggerPoint.Snapshot.GetText();
+        private static string GetExpressionAtPoint(SnapshotPoint triggerPoint, PythonLanguageVersion version) {
+            var code = triggerPoint.Snapshot.GetText();
 
-            var finder = new ExpressionFinder(expression, PythonLanguageVersion.V37, FindExpressionOptions.Complete);
-            var Node = finder.GetExpression(triggerPoint.Position);
-            if(Node is MemberExpression me) {
+            var finder = new ExpressionFinder(code, version, FindExpressionOptions.Complete);
+            var node = finder.GetExpression(triggerPoint.Position);
+            if (node is MemberExpression me) {
                 var target = me.Target;
                 return target?.ToCodeString(finder.Ast);
             }
