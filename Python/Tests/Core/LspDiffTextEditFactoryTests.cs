@@ -312,40 +312,57 @@ bottle.abort()
 
         [TestMethod, Priority(0)]
         public void EditMany() {
-            VerifyTextEdits(@"1
-            2
-            3
-            four_hundred=4* 100
-            5
+            VerifyTextEdits(
+            @" 1
+ 2
+ 3
+four_hundred=4* 100
+5
 
-            seven=[1,2, 3]
+seven=[1,2, 3]
 
-            nine = ( 1,
-            2,
-            3,
-            4)
-            end = 13",
+nine = ( 1,
+2,
+3,
+4)
+end = 13",
             @"@@ -1,13 +1,11 @@
-             1
-             2
-             3
-            -four_hundred=4* 100
-            +four_hundred = 4 * 100
-             5
-
-            -seven=[1,2, 3]
-            +seven = [1, 2, 3]
-
-            -nine = ( 1,
-            -2,
-            -3,
-            -4)
-            +nine = (1, 2, 3, 4)
-             end = 13
-            +
-            ",
-             new TextEdit[] { });
-            Assert.Inconclusive();
+ 1
+ 2
+ 3
+-four_hundred=4* 100
++four_hundred = 4 * 100
+ 5
+ 
+-seven=[1,2, 3]
++seven = [1, 2, 3]
+ 
+-nine = ( 1,
+-2,
+-3,
+-4)
++nine = (1, 2, 3, 4)
+ end = 13
++
+",
+             new TextEdit[] {
+                new TextEdit() {
+                        Range = new Range() { Start = new Position(2, 1), End = new Position(3, 19) },
+                        NewText = "\r\nfour_hundred = 4 * 100",
+                    },
+                new TextEdit() {
+                        Range = new Range() { Start = new Position(5, 0), End = new Position(6, 14) },
+                        NewText = "\r\nseven = [1, 2, 3]",
+                    },
+                new TextEdit() {
+                    Range = new Range() { Start = new Position(7, 0), End = new Position(11, 2) },
+                    NewText = "\r\nnine = (1, 2, 3, 4)",
+                },
+                new TextEdit() {
+                    Range = new Range() { Start = new Position(12, 8), End = new Position(12, 8) },
+                    NewText = "\r\n",
+                }
+             });
         }
 
         private void VerifyTextEdits(string text, string diff, TextEdit[] expected) {
