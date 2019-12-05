@@ -349,7 +349,6 @@ bottle.abort()
         }
 
         private void VerifyTextEdits(string text, string diff, TextEdit[] expected) {
-            var lines = text.Split(new[] { '\r', '\n' });
             var actual = LspDiffTextEditFactory.GetEdits(text, diff);
             Assert.AreEqual(expected.Length, actual.Length);
             for (int i = 0; i < expected.Length; i++) {

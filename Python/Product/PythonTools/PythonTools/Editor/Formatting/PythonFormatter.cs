@@ -49,8 +49,6 @@ namespace Microsoft.PythonTools.Editor.Formatting {
 
             var diff = await RunToolAsync(interpreterExePath, documentFilePath, range, extraArgs);
             var edits = LspDiffTextEditFactory.GetEdits(documentContents, diff);
-
-
             return edits;
         }
 

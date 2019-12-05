@@ -30,7 +30,7 @@ namespace Microsoft.PythonTools.Editor.Formatting {
         protected override string[] GetToolCommandArgs(string documentFilePath, Range range, string[] extraArgs) {
             if (range != null) {
                 // TODO: localization
-              //  throw new PythonFormatterRangeNotSupportedException("Black does not support the Format Selection command.");
+                throw new PythonFormatterRangeNotSupportedException("Black does not support the Format Selection command.");
             }
 
             return new[] { "-m", "black", "--diff", documentFilePath };
