@@ -50,24 +50,6 @@ namespace Microsoft.PythonTools.Editor.Formatting {
             var diff = await RunToolAsync(interpreterExePath, documentFilePath, range, extraArgs);
             var edits = LspDiffTextEditFactory.GetEdits(documentContents, diff);
 
-            //If we are adding text to the end of file make sure we aren't starting or ending outside the 
-            //doc and also check we dont add double newlines at EOF
-            foreach ( var edit in edits) {
-                bool editingEOF = false;
-                if (edit.Range.Start.Line > range.End.Line) {
-                    edit.Range.Start = range.End;
-                    edit.Range.End = range.End;
-                    editingEOF = true;
-                }
-                
-                if (edit.Range.End.Line > range.End.Line) {
-                    edit.Range.End = range.End;
-                    editingEOF = true;
-                }
-                if (editingEOF && edit.NewText.EndsWith($"{ Environment.NewLine}{Environment.NewLine}")) {
-                    edit.NewText = edit.NewText.TrimEndNewline();
-                }
-            }
 
             return edits;
         }
@@ -76,7 +58,7 @@ namespace Microsoft.PythonTools.Editor.Formatting {
 
         protected virtual async Task<string> RunToolAsync(string interpreterExePath, string documentFilePath, Range range, string[] extraArgs) {
             var output = ProcessOutput.RunHiddenAndCapture(
-                interpreterExePath, 
+                interpreterExePath,
                 GetToolCommandArgs(documentFilePath, range, extraArgs)
             );
 

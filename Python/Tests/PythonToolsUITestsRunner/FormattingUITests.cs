@@ -45,7 +45,7 @@ namespace PythonToolsUITestsRunner {
             _vs.RunTest(nameof(PythonToolsUITests.FormattingUITests.FormatAutopep8));
         }
 
-        [Ignore] // https://github.com/microsoft/PTVS/issues/5879
+        // https://github.com/microsoft/PTVS/issues/5879
         [TestMethod, Priority(0)]
         [TestCategory("Installed")]
         public void FormatBlack() {

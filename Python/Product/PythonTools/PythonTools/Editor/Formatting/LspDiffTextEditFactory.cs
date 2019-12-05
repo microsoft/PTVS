@@ -53,13 +53,6 @@ namespace Microsoft.PythonTools.Editor.Formatting {
 
             var patches = new diff_match_patch().patch_fromText(diffOutputText);
 
-            // Put back the new lines on every diff, since those were ignored
-            foreach (var p in patches) {
-                foreach (var d in p.diffs) {
-                    d.text += Environment.NewLine;
-                }
-            }
-
             var edits = patches.SelectMany(p => GetEdits(documentText, p));
             return edits.ToArray();
         }
@@ -81,18 +74,9 @@ namespace Microsoft.PythonTools.Editor.Formatting {
             TextEdit edit = null;
             var action = Action.Unknown;
 
-            for (int i = 0; i < diffs.Count; i++) {
-                var start = new Position(line, character);
-                // Compute the line/character after the diff is applied.
-                for (int curr = 0; curr < diffs[i].text.Length; curr++) {
-                    if (diffs[i].text[curr] != '\n') {
-                        character += 1;
-                    } else {
-                        character = 0;
-                        line++;
-                    }
-                }
+            var start = new Position(line, character);
 
+            for (int i = 0; i < diffs.Count; i++) {
                 switch (diffs[i].operation) {
                     case Operation.DELETE:
                         if (edit == null) {
@@ -106,8 +90,7 @@ namespace Microsoft.PythonTools.Editor.Formatting {
                         } else if (action == Action.Insert || action == Action.Replace) {
                             throw new FormatException("patch parsing error");
                         }
-
-                        edit.Range.End = new Position(line-1, diffs[i].text.Length - 2);
+                        edit.Range.End = new Position(line, diffs[i].text.Length);
                         break;
 
                     case Operation.INSERT:
@@ -126,7 +109,12 @@ namespace Microsoft.PythonTools.Editor.Formatting {
                         // of the document, so inserts should reset the current line/character
                         // position to the start.
                         line = start.Line;
-                        character = start.Character;
+
+                        //only add newline before text if not inserting at begining of file
+                        if (edit.Range.Start.Line != 0 || edit.Range.Start.Character != 0) {
+                            edit.NewText += Environment.NewLine;
+                        }
+
                         edit.NewText += diffs[i].text;
                         break;
 
@@ -149,13 +137,18 @@ namespace Microsoft.PythonTools.Editor.Formatting {
                         break;
                 }
 
+                // Find the end of the current line and append the next change to this position
+                // because the editor wont allow you to add lines that are outside the original document.
+                character = diffs[i].text.Length;
+                start = new Position(line, character);
+                line++;
             }
 
             if (edit != null) {
                 if (edit.Range.End == null) {
                     edit.Range.End = action == Action.Insert
                         ? edit.Range.Start
-                        : new Position(line, character);
+                        : new Position(line - 1, character); //readjust line to account for final ++
                 }
 
                 yield return edit;
