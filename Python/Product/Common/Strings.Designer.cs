@@ -4618,6 +4618,33 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Language server initialization failed.\n\n{0}.
+        /// </summary>
+        public static string LanguageClientInitializeFailed {
+            get {
+                return ResourceManager.GetString("LanguageClientInitializeFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Node.js was not found. It is required to run the language server..
+        /// </summary>
+        public static string LanguageClientNodejsNotFound {
+            get {
+                return ResourceManager.GetString("LanguageClientNodejsNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Node.js based language server was not found..
+        /// </summary>
+        public static string LanguageClientNodejsServerNotFound {
+            get {
+                return ResourceManager.GetString("LanguageClientNodejsServerNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} (alias of {1}).
         /// </summary>
         public static string LibraryNodeAliasOf {
