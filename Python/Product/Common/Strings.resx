@@ -2968,6 +2968,14 @@ Please specify at least one package.</value>
     <value>Results for pytest not found {0}</value>
     <comment>{0} is the expected file path</comment>
   </data>
-
-    
+  <data name="LanguageClientNodejsNotFound" xml:space="preserve">
+    <value>Node.js was not found. It is required to run the language server.</value>
+  </data>
+  <data name="LanguageClientNodejsServerNotFound" xml:space="preserve">
+    <value>Node.js based language server was not found.</value>
+  </data>
+  <data name="LanguageClientInitializeFailed" xml:space="preserve">
+    <value>Language server initialization failed.\n\n{0}</value>
+    <comment>{0} is the error details</comment>
+  </data>
 </root>

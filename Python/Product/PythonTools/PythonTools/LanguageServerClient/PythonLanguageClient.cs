@@ -16,16 +16,13 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.Composition;
 using System.Diagnostics;
-using System.IO;
-using System.IO.Compression;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 using Microsoft.Python.Core.Disposables;
 using Microsoft.Python.Parsing;
-using Microsoft.PythonTools;
 using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
@@ -34,15 +31,13 @@ using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.LanguageServer.Client;
 using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Threading;
-using Microsoft.VisualStudio.Utilities;
 using Microsoft.VisualStudio.Workspace.VSIntegration.Contracts;
 using Microsoft.VisualStudioTools;
 using StreamJsonRpc;
-using Task = System.Threading.Tasks.Task;
 using LSP = Microsoft.VisualStudio.LanguageServer.Protocol;
+using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.LanguageServerClient {
     /// <summary>
@@ -59,11 +54,12 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         private readonly ILanguageClientBroker _broker;
         private readonly PythonProjectNode _project;
         private readonly IInteractiveWindow _replWindow;
-        private string _serverFolderPath;
+        private PythonLanguageServer _server;
         private JsonRpc _rpc;
         private DisposableBag _disposables;
 
         private static readonly List<PythonLanguageClient> _languageClients = new List<PythonLanguageClient>();
+
 
         public PythonLanguageClient(
             IServiceProvider site,
@@ -314,19 +310,12 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 #pragma warning restore CS0067
 
         public async Task<Connection> ActivateAsync(CancellationToken token) {
-            await Task.Yield();
-
-            var info = PythonLanguageClientStartInfo.Create(_serverFolderPath);
-
-            var process = new Process {
-                StartInfo = info
-            };
-
-            if (process.Start()) {
-                return new Connection(process.StandardOutput.BaseStream, process.StandardInput.BaseStream);
+            if (_server == null) {
+                Debug.Fail("Should not have called StartAsync when _server is null.");
+                return null;
             }
 
-            return null;
+            return await _server.ActivateAsync();
         }
 
         public async Task OnLoadedAsync() {
@@ -336,10 +325,6 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
             // Force initialization of python tools service by requesting it
             _site.GetPythonToolsService();
-
-            var shell = _site.GetService<SVsShell, IVsShell>();
-            shell.GetProperty((int)__VSSPROPID4.VSSPROPID_LocalAppDataDir, out object localAppDataDir);
-            _serverFolderPath = PythonLanguageClientStartInfo.EnsureLanguageServer((string)localAppDataDir);
 
             var interpreterPath = string.Empty;
             var interpreterVersion = string.Empty;
@@ -389,38 +374,24 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 return;
             }
 
-            InitializationOptions = new PythonInitializationOptions {
-                // we need to read from the workspace settings in order to populate this correctly
-                // (or from the project)
-                interpreter = new PythonInitializationOptions.Interpreter {
-                    properties = new PythonInitializationOptions.Interpreter.InterpreterProperties {
-                        InterpreterPath = interpreterPath,
-                        Version = interpreterVersion,
-                        DatabasePath = _serverFolderPath,
-                    }
-                },
-                searchPaths = searchPaths.ToArray(),
-                typeStubSearchPaths = new[] {
-                    Path.Combine(_serverFolderPath, "Typeshed")
-                },
-                excludeFiles = new[] {
-                    "**/Lib/**",
-                    "**/site-packages/**",
-                    "**/node_modules",
-                    "**/bower_components",
-                    "**/.git",
-                    "**/.svn",
-                    "**/.hg",
-                    "**/CVS",
-                    "**/.DS_Store",
-                    "**/.git/objects/**",
-                    "**/.git/subtree-cache/**",
-                    "**/node_modules/*/**",
-                    ".vscode/*.py",
-                    "**/site-packages/**/*.py"
-                },
-                rootPathOverride = rootPath
-            };
+            PythonLanguageVersion langVersion;
+            try {
+                langVersion = new Version(interpreterVersion).ToLanguageVersion();
+            } catch (InvalidOperationException) {
+                langVersion = PythonLanguageVersion.None;
+            }
+
+            _server = PythonLanguageServer.Create(_site, langVersion);
+            if (_server == null) {
+                return;
+            }
+
+            InitializationOptions = _server.CreateInitializationOptions(
+                interpreterPath,
+                interpreterVersion,
+                rootPath,
+                searchPaths
+            );
 
             await StartAsync.InvokeAsync(this, EventArgs.Empty);
         }
@@ -434,6 +405,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
 
         public Task OnServerInitializeFailedAsync(Exception e) {
+            MessageBox.Show(Strings.LanguageClientInitializeFailed.FormatUI(e), Strings.ProductTitle);
             return Task.CompletedTask;
         }
 
