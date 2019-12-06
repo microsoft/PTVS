@@ -72,8 +72,6 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             var serverFolderPath = GetServerLocation();
 
             return new PythonInitializationOptions {
-                // we need to read from the workspace settings in order to populate this correctly
-                // (or from the project)
                 interpreter = new PythonInitializationOptions.Interpreter {
                     properties = new PythonInitializationOptions.Interpreter.InterpreterProperties {
                         InterpreterPath = interpreterPath,
@@ -81,7 +79,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                         DatabasePath = serverFolderPath,
                     }
                 },
-                searchPaths = searchPaths.ToArray(),
+                searchPaths = searchPaths?.ToArray() ?? new string[0],
                 typeStubSearchPaths = new[] {
                         Path.Combine(serverFolderPath, "Typeshed")
                     },
