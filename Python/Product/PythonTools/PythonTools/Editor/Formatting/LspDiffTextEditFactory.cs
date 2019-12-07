@@ -111,8 +111,8 @@ namespace Microsoft.PythonTools.Editor.Formatting {
                         line = start.Line;
 
                         //only add newline before text if not inserting at begining of file
-                        bool fileHead = edit.Range.Start.Line == 0 && edit.Range.Start.Character == 0;
-                        if (!fileHead) {
+                        bool isPatchStart = (line == patch.start1) && (edit.Range.Start.Character == 0);
+                        if (!isPatchStart) {
                             edit.NewText += Environment.NewLine;
                         }
 
