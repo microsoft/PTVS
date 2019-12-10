@@ -38,9 +38,10 @@ namespace Microsoft.PythonTools.Repl.Completion {
         private readonly ITextView _textView;
         private readonly ITextStructureNavigatorSelectorService _navigatorService;
 
-        private const string ResolvePropertyKey = "resolve";
-        public const string ProtocolItemKey = "protocolItem";
-        public const string TriggerPointKey = "triggerPoint";
+        // Use different keys from the original VS implementation to avoid conflicts
+        private const string ResolvePropertyKey = "repl-resolve";
+        public const string ProtocolItemKey = "repl-protocolItem";
+        public const string TriggerPointKey = "repl-triggerPoint";
 
         public ReplAsyncCompletionSource(ReplRemoteCompletionBroker broker, ITextView textView, ITextStructureNavigatorSelectorService textStructureNavigatorSelectorService) {
             _broker = broker;
