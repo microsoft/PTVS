@@ -27,6 +27,8 @@ using Microsoft.VisualStudio.Threading;
 using Microsoft.VisualStudioTools;
 using LSP = Microsoft.VisualStudio.LanguageServer.Protocol;
 using LS = Microsoft.VisualStudio.LiveShare.LanguageServices;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
 
 namespace Microsoft.PythonTools.LiveShare {
     internal class PythonLanguageServiceProviderCallback : ILanguageServiceProviderCallback {
@@ -55,13 +57,13 @@ namespace Microsoft.PythonTools.LiveShare {
         public event AsyncEventHandler<LanguageServiceNotifyEventArgs> NotifyAsync;
 #pragma warning restore 0067
 
-        private async Task<VsProjectAnalyzer> FindAnalyzerAsync(TextDocumentIdentifier document) {
-            if (document?.Uri == null) {
+        private async Task<VsProjectAnalyzer> FindAnalyzerAsync(Uri uri) {
+            if (uri == null) {
                 return null;
             }
 
-            if (!_analyzerCache.TryGetValue(document.Uri, out var analyzer)) {
-                var filePath = document.Uri.LocalPath;
+            if (!_analyzerCache.TryGetValue(uri, out var analyzer)) {
+                var filePath = uri.LocalPath;
                 if (string.IsNullOrEmpty(filePath)) {
                     return null;
                 }
@@ -73,7 +75,7 @@ namespace Microsoft.PythonTools.LiveShare {
                     );
                 }
 
-                analyzer = _analyzerCache.GetOrAdd(document.Uri, analyzer);
+                analyzer = _analyzerCache.GetOrAdd(uri, analyzer);
             }
 
             return analyzer;
@@ -88,6 +90,14 @@ namespace Microsoft.PythonTools.LiveShare {
         }
 
         public async Task<TOut> RequestAsync<TIn, TOut>(LS.LspRequest<TIn, TOut> method, TIn param, RequestContext context, CancellationToken cancellationToken) {
+            // Note that the LSP types TIn and TOut are defined in an assembly
+            // (Microsoft.VisualStudio.LanguageServer.Protocol) referenced by
+            // LiveShare and that assembly may be from a different version than
+            // the one referenced in PTVS. There is no binding redirect since
+            // backwards compatibility is not guaranteed in that assembly, so
+            // we cannot cast between TIn/TOut and our referenced types.
+            // We can convert between our types and the ones passed in TIn and TOut
+            // via the intermediate JSON format which is backwards compatible.
             if (method.Name == Methods.Initialize.Name) {
                 var capabilities = new ServerCapabilities {
                     CompletionProvider = new LSP.CompletionOptions {
@@ -100,8 +110,16 @@ namespace Microsoft.PythonTools.LiveShare {
                     DefinitionProvider = true,
                     ReferencesProvider = true
                 };
-                object result = new InitializeResult { Capabilities = capabilities };
-                return (TOut)(result);
+                var result = new InitializeResult { Capabilities = capabilities };
+
+                // Convert between our type and TOut via a JSON object
+                try {
+                    var resultObj = JObject.FromObject(result);
+                    var res = resultObj.ToObject<TOut>();
+                    return res;
+                } catch (JsonException) {
+                    return default(TOut);
+                }
             }
 
             if (method.Name == Methods.TextDocumentCompletion.Name ||
@@ -110,21 +128,45 @@ namespace Microsoft.PythonTools.LiveShare {
                 method.Name == Methods.TextDocumentReferences.Name ||
                 method.Name == Methods.TextDocumentSignatureHelp.Name
             ) {
-                var doc = (param as TextDocumentPositionParams)?.TextDocument;
-                if (doc == null) {
+                Uri uri = null;
+                JObject paramObj;
+
+                // Convert to JSON object to get document URI, and pass that
+                // object to the analyzer, which accepts any serializable
+                // type, including JObject.
+                try {
+                    paramObj = JObject.FromObject(param);
+                    var uriObj = paramObj.SelectToken("textDocument.uri");
+                    if (uriObj is JValue uriVal && uriVal.Type == JTokenType.String) {
+                        uri = new Uri((string)uriVal.Value);
+                    }
+                } catch (JsonException) {
                     return default(TOut);
                 }
 
-                var analyzer = await FindAnalyzerAsync(doc);
+                if (uri == null) {
+                    return default(TOut);
+                }
+
+                var analyzer = await FindAnalyzerAsync(uri);
                 if (analyzer == null) {
                     return default(TOut);
                 }
 
                 if (method.Name == Methods.TextDocumentDefinition.Name) {
-                    return (TOut)(object)await analyzer.SendLanguageServerRequestAsync<TIn, Location[]>(method.Name, param);
+                    var result = await analyzer.SendLanguageServerRequestAsync<JObject, Location[]>(method.Name, paramObj);
+
+                    // Convert between our type and TOut via a JSON object
+                    try {
+                        var resultObj = JArray.FromObject(result);
+                        var res = resultObj.ToObject<TOut>();
+                        return res;
+                    } catch (JsonException) {
+                        return default(TOut);
+                    }
                 }
 
-                var entry = analyzer.GetAnalysisEntryFromUri(doc.Uri);
+                var entry = analyzer.GetAnalysisEntryFromUri(uri);
                 if (entry != null) {
                     var buffers = entry.TryGetBufferParser()?.AllBuffers;
                     if (buffers != null) {
@@ -134,7 +176,7 @@ namespace Microsoft.PythonTools.LiveShare {
                     }
                 }
 
-                return await analyzer.SendLanguageServerRequestAsync<TIn, TOut>(method.Name, param);
+                return await analyzer.SendLanguageServerRequestAsync<JObject, TOut>(method.Name, paramObj);
             }
 
             return default(TOut);
