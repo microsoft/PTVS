@@ -15,8 +15,8 @@
                         CanExecute="OpenInFileExplorer_CanExecute"
                         Executed="OpenInFileExplorer_Executed" />
         <CommandBinding Command="{x:Static l:EnvironmentPathsExtension.OpenInBrowser}"
-                                                            CanExecute="OpenInBrowser_CanExecute"
-                                                            Executed="OpenInBrowser_Executed" />
+                        CanExecute="OpenInBrowser_CanExecute"
+                        Executed="OpenInBrowser_Executed" />
     </UserControl.CommandBindings>
     <UserControl.Resources>
         <ResourceDictionary>
@@ -362,7 +362,9 @@
                                            Content="{x:Static l:Resources.EnvironmentPathsExtensionBrokenEnvironmentLabel}"/>
                                 </Grid>
                             </Button>
-                            <Grid Background="Transparent"
+                            <Grid
+                                x:Name="SupportUrl"
+                                Background="Transparent"
                                   Margin="6 9 6 6">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="auto" />
@@ -373,7 +375,6 @@
                                                     Style="{StaticResource HelpImage}"
                                                     IsTabStop="False"/>
                                 <vsui:HyperlinkButton
-                                    x:Name="SupportUrl"
                                     Grid.Column="1"
                                     HorizontalAlignment="Left"
                                     Content="{x:Static l:Resources.EnvironmentPathsExtensionSupportInformationLabel}"
@@ -387,6 +388,9 @@
                         </StackPanel>
 
                         <DataTemplate.Triggers>
+                            <DataTrigger Binding="{Binding SupportUrl,Mode=OneWay}" Value="">
+                                <Setter TargetName="SupportUrl" Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
                             <DataTrigger Binding="{Binding IsBroken}" Value="False">
                                 <Setter TargetName="BrokenEnvironmentUrl" Property="Visibility" Value="Collapsed" />
                             </DataTrigger>
