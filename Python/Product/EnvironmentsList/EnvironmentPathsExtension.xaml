@@ -21,9 +21,9 @@
     <UserControl.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/Microsoft.PythonTools;component/PythonTools/Wpf/ModernStyles.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/Microsoft.PythonTools.EnvironmentsList;component/EnvironmentView.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/Microsoft.PythonTools.EnvironmentsList;component/FileNameLabel.xaml" />
-                <ResourceDictionary Source="pack://application:,,,/Microsoft.PythonTools;component/PythonTools/Wpf/ModernStyles.xaml" />
                 <ResourceDictionary>
                     <wpf:Lambda x:Key="BoolToVisible">(bool b) => b ? Visibility.Visible : Visibility.Collapsed</wpf:Lambda>
                     <wpf:Lambda x:Key="BoolToCollapsed">(bool b) => b ? Visibility.Collapsed : Visibility.Visible</wpf:Lambda>
