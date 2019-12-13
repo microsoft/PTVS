@@ -66,8 +66,9 @@ def g ():    return 5 ** 2
     pass
 
 
-def g(): return 5 ** 2
-", new[] { Span.FromBounds(0, 83), Span.FromBounds(93, 214) });
+def g():
+    return 5 ** 2
+", new[] { Span.FromBounds(0, 81), Span.FromBounds(91, 182), Span.FromBounds(93, 219) });
         }
 
         public void FormatYapf(PythonVisualStudioApp app) {

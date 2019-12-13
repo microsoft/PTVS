@@ -35,8 +35,8 @@ namespace PythonToolsTests {
 ",
                 new TextEdit[] {
                     new TextEdit() {
-                        Range = new Range() { Start = new Position(0, 0), End = new Position(1, 0) },
-                        NewText = "hundred = 100\r\n",
+                        Range = new Range() { Start = new Position(0, 0), End = new Position(0, 11) },
+                        NewText = "hundred = 100",
                     },
                 }
             );
@@ -65,8 +65,8 @@ four_hundred=4* 100
 ",
                 new TextEdit[] {
                     new TextEdit() {
-                        Range = new Range() { Start = new Position(3, 0), End = new Position(4, 0) },
-                        NewText = "four_hundred = 4 * 100\r\n",
+                        Range = new Range() { Start = new Position(2, 1), End = new Position(3, 19) },
+                        NewText = "\r\nfour_hundred = 4 * 100",
                     },
                 }
             );
@@ -96,12 +96,12 @@ four_hundred=4* 100
 ",
                 new TextEdit[] {
                     new TextEdit() {
-                        Range = new Range() { Start = new Position(1, 0), End = new Position(2, 0) },
-                        NewText = "two_hundred = 2 * 100\r\n",
+                        Range = new Range() { Start = new Position(0, 1), End = new Position(1, 18) },
+                        NewText = "\r\ntwo_hundred = 2 * 100",
                     },
                     new TextEdit() {
-                        Range = new Range() { Start = new Position(3, 0), End = new Position(4, 0) },
-                        NewText = "four_hundred = 4 * 100\r\n",
+                        Range = new Range() { Start = new Position(2, 1), End = new Position(3, 19) },
+                        NewText = "\r\nfour_hundred = 4 * 100",
                     },
                 }
             );
@@ -131,8 +131,8 @@ four_hundred=4* 100
 ",
                 new TextEdit[] {
                     new TextEdit() {
-                        Range = new Range() { Start = new Position(2, 0), End = new Position(4, 0) },
-                        NewText = "three_hundred = 3 * 100\r\nfour_hundred = 4 * 100\r\n",
+                        Range = new Range() { Start = new Position(1, 1), End = new Position(3, 19) },
+                        NewText = "\r\nthree_hundred = 3 * 100\r\nfour_hundred = 4 * 100",
                     },
                 }
             );
@@ -155,8 +155,8 @@ four_hundred=4* 100
 ",
                 new TextEdit[] {
                     new TextEdit() {
-                        Range = new Range() { Start = new Position(0, 0), End = new Position(2, 0) },
-                        NewText = "list = [1, 2, 3]\r\n",
+                        Range = new Range() { Start = new Position(0, 0), End = new Position(1, 6) },
+                        NewText = "list = [1, 2, 3]",
                     },
                 }
             );
@@ -176,13 +176,11 @@ four_hundred=4* 100
 ",
                 new TextEdit[] {
                     new TextEdit() {
-                        Range = new Range() { Start = new Position(1, 0), End = new Position(1, 0) },
+                        Range = new Range() { Start = new Position(0, 3), End = new Position(0, 3) },
                         NewText = "\r\n",
                     },
                 }
             );
-
-            Assert.Fail("result is technically correct, but VS cannot handle this");
         }
 
         [TestMethod, Priority(0)]
@@ -281,31 +279,31 @@ bottle.abort()
 ",
                  new TextEdit[] {
                     new TextEdit() {
-                        Range = new Range() { Start = new Position(7, 0), End = new Position(7, 0) },
+                        Range = new Range() { Start = new Position(6, 0), End = new Position(6, 0) },
                         NewText = "\r\n",
                     },
                     new TextEdit() {
-                        Range = new Range() { Start = new Position(13, 0), End = new Position(14, 0) },
-                        NewText = "        year=datetime.now().year\r\n",
+                        Range = new Range() { Start = new Position(12, 16), End = new Position(13, 34) },
+                        NewText = "\r\n        year=datetime.now().year",
                     },
                     new TextEdit() {
-                        Range = new Range() { Start = new Position(15, 0), End = new Position(15, 0) },
+                        Range = new Range() { Start = new Position(14, 5), End = new Position(14, 5) },
                         NewText = "\r\n",
                     },
                     new TextEdit() {
-                        Range = new Range() { Start = new Position(21, 0), End = new Position(24, 0) },
-                        NewText = "        title='Contact',\r\n        message='Your contact page.',\r\n        year=datetime.now().year\r\n",
+                        Range = new Range() { Start = new Position(20, 16), End = new Position(23, 34) },
+                        NewText = "\r\n        title='Contact',\r\n        message='Your contact page.',\r\n        year=datetime.now().year",
                     },
                     new TextEdit() {
-                        Range = new Range() { Start = new Position(25, 0), End = new Position(25, 0) },
+                        Range = new Range() { Start = new Position(24, 5), End = new Position(24, 5) },
                         NewText = "\r\n",
                     },
                     new TextEdit() {
-                        Range = new Range() { Start = new Position(31, 0), End = new Position(34, 0) },
-                        NewText = "        title='About',\r\n        message='Your application description page.',\r\n        year=datetime.now().year\r\n",
+                        Range = new Range() { Start = new Position(30, 16), End = new Position(33, 34) },
+                        NewText = "\r\n        title='About',\r\n        message='Your application description page.',\r\n        year=datetime.now().year",
                     },
                      new TextEdit() {
-                        Range = new Range() { Start = new Position(35, 0), End = new Position(36, 0) },
+                        Range = new Range() { Start = new Position(34, 5), End = new Position(35, 0) },
                         NewText = null,
                     },
                 }
@@ -314,40 +312,57 @@ bottle.abort()
 
         [TestMethod, Priority(0)]
         public void EditMany() {
-            //            var before = @"1
-            //2
-            //3
-            //four_hundred=4* 100
-            //5
+            VerifyTextEdits(
+            @" 1
+ 2
+ 3
+four_hundred=4* 100
+5
 
-            //seven=[1,2, 3]
+seven=[1,2, 3]
 
-            //nine = ( 1,
-            //2,
-            //3,
-            //4)
-            //end = 13";
-
-            //            var output = @"@@ -1,13 +1,11 @@
-            // 1
-            // 2
-            // 3
-            //-four_hundred=4* 100
-            //+four_hundred = 4 * 100
-            // 5
-
-            //-seven=[1,2, 3]
-            //+seven = [1, 2, 3]
-
-            //-nine = ( 1,
-            //-2,
-            //-3,
-            //-4)
-            //+nine = (1, 2, 3, 4)
-            // end = 13
-            //+
-            //";
-            Assert.Inconclusive();
+nine = ( 1,
+2,
+3,
+4)
+end = 13",
+            @"@@ -1,13 +1,11 @@
+ 1
+ 2
+ 3
+-four_hundred=4* 100
++four_hundred = 4 * 100
+ 5
+ 
+-seven=[1,2, 3]
++seven = [1, 2, 3]
+ 
+-nine = ( 1,
+-2,
+-3,
+-4)
++nine = (1, 2, 3, 4)
+ end = 13
++
+",
+             new TextEdit[] {
+                new TextEdit() {
+                        Range = new Range() { Start = new Position(2, 1), End = new Position(3, 19) },
+                        NewText = "\r\nfour_hundred = 4 * 100",
+                    },
+                new TextEdit() {
+                        Range = new Range() { Start = new Position(5, 0), End = new Position(6, 14) },
+                        NewText = "\r\nseven = [1, 2, 3]",
+                    },
+                new TextEdit() {
+                    Range = new Range() { Start = new Position(7, 0), End = new Position(11, 2) },
+                    NewText = "\r\nnine = (1, 2, 3, 4)",
+                },
+                new TextEdit() {
+                    Range = new Range() { Start = new Position(12, 8), End = new Position(12, 8) },
+                    NewText = "\r\n",
+                }
+             });
         }
 
         private void VerifyTextEdits(string text, string diff, TextEdit[] expected) {
