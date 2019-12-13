@@ -136,19 +136,26 @@ namespace Microsoft.PythonTools.Repl {
 
         private IContentType ContentType { get; set; }
 
-        internal async Task InitializeLanguageServerAsync(int curId) {
-            var textBuffer = _window.CurrentLanguageBuffer;
-            textBuffer.Properties[LanguageClientConstants.ClientNamePropertyKey] = _documentUri.ToString();
-
-            var contentTypeService = _serviceProvider.GetComponentModel().GetService<IContentTypeRegistryService>();
-            var contentTypeName = PythonFilePathToContentTypeProvider.GetContentTypeNameForREPL(curId);
-            ContentType = PythonFilePathToContentTypeProvider.GetOrCreateContentType(contentTypeService, contentTypeName);
+        internal async Task InitializeLanguageServerAsync() {
+            ContentType = (IContentType)_window.Properties[typeof(IContentType)];
 
             await PythonLanguageClient.EnsureLanguageClientAsync(
                 _serviceProvider,
                 _window,
                 ContentType.TypeName
             );
+        }
+
+        internal async Task RestartLanguageServerAsync() {
+            if (ContentType != null) {
+                PythonLanguageClient.DisposeLanguageClient(ContentType.TypeName);
+
+                await PythonLanguageClient.EnsureLanguageClientAsync(
+                    _serviceProvider,
+                    _window,
+                    ContentType.TypeName
+                );
+            }
         }
 
         private PythonProjectNode GetAssociatedPythonProject(InterpreterConfiguration interpreter = null) {
@@ -633,19 +640,26 @@ namespace Microsoft.PythonTools.Repl {
             _window.TextView.Options.SetOptionValue(InteractiveWindowOptions.SmartUpDown, UseSmartHistoryKeys);
             _commands = GetInteractiveCommands(_serviceProvider, _window, this);
 
+            await InitializeLanguageServerAsync();
+
             return ExecutionResult.Success;
         }
 
         public async Task<ExecutionResult> ResetAsync(bool initialize = true) {
             await UpdatePropertiesFromProjectMonikerAsync();
             await UpdatePropertiesFromWorkspaceMonikerAsync();
-            return await ResetWorkerAsync(initialize, false);
+
+            var res = await ResetWorkerAsync(initialize, false);
+            await RestartLanguageServerAsync();
+            return res;
         }
 
         public async Task<ExecutionResult> ResetAsync(bool initialize, bool quiet) {
             await UpdatePropertiesFromProjectMonikerAsync();
             await UpdatePropertiesFromWorkspaceMonikerAsync();
-            return await ResetWorkerAsync(initialize, quiet);
+            var res = await ResetWorkerAsync(initialize, quiet);
+            await RestartLanguageServerAsync();
+            return res;
         }
 
         protected abstract Task<ExecutionResult> ResetWorkerAsync(bool initialize, bool quiet);

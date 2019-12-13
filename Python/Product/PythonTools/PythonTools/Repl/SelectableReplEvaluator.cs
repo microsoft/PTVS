@@ -374,12 +374,5 @@ namespace Microsoft.PythonTools.Repl {
             return (await (_evaluator as IPythonInteractiveIntellisense)?.GetSignatureDocumentationAsync(text, ct))
                 ?? new OverloadDoc[0];
         }
-
-        public async Task InitializeLanguageServerAsync(int curId) {
-            var evaluator = _evaluator as PythonCommonInteractiveEvaluator;
-            if (evaluator != null) {
-                await evaluator.InitializeLanguageServerAsync(curId);
-            }
-        }
     }
 }
