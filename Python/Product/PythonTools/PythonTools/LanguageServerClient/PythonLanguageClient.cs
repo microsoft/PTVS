@@ -81,12 +81,6 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             _replWindow = replWindow;
             _disposables = new DisposableBag(GetType().Name);
 
-            if (replWindow != null) {
-                // TODO: need to hook into Reset REPL to restart language server, environment settings may have changed
-                ReplDocument = new ReplDocument(site, replWindow, this);
-                _disposables.Add(ReplDocument);
-            }
-
             var pythonWorkspaceProvider = site.GetComponentModel().GetService<IPythonWorkspaceContextProvider>();
             var pythonWorkspace = pythonWorkspaceProvider?.Workspace;
             if (pythonWorkspace != null) {
@@ -271,8 +265,6 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             }
         }
 
-        public ReplDocument ReplDocument { get; }
-
         public string ContentTypeName { get; }
 
         public IPythonInterpreterFactory Factory { get; private set; }
@@ -394,10 +386,6 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
 
         public async Task OnServerInitializedAsync() {
-            if (ReplDocument != null) {
-                await ReplDocument.InitializeAsync();
-            }
-
             IsInitialized = true;
         }
 

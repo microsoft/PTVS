@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Python.Core.Disposables;
 using Microsoft.PythonTools.Infrastructure;
@@ -74,6 +75,19 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             }
         }
 
+        public async Task<LSP.CompletionItem[]> GetCompletions(SnapshotPoint triggerPoint, LSP.CompletionContext context, CancellationToken token) {
+            var completionParams = new LSP.CompletionParams() {
+                TextDocument = new LSP.TextDocumentIdentifier() {
+                    Uri = DocumentUri,
+                },
+                Position = GetDocumentPosition(triggerPoint.GetPosition()),
+                Context = context,
+            };
+
+            var res = await _client.InvokeTextDocumentCompletionAsync(completionParams, token);
+            return res?.Items ?? Array.Empty<LSP.CompletionItem>();
+        }
+
         private void OnSubmissionBufferAdded(object sender, SubmissionBufferAddedEventArgs e) {
             if (e.NewBuffer is ITextBuffer2 buffer) {
                 SetCurrentBuffer(buffer);
@@ -82,14 +96,12 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
         private void SetCurrentBuffer(ITextBuffer2 buffer) {
             if (_currentInputBuffer != null) {
-                //_currentInputBuffer.ChangedOnBackground -= OnReplInputBufferBackgroundChange;
                 _currentInputBuffer.ChangedHighPriority -= OnReplInputBufferBackgroundChange;
                 _previousCellsLineCount += _currentInputBuffer.CurrentSnapshot.LineCount - 1;
             }
 
             _currentInputBuffer = buffer;
 
-            //buffer.ChangedOnBackground += OnReplInputBufferBackgroundChange;
             buffer.ChangedHighPriority += OnReplInputBufferBackgroundChange;
         }
 
@@ -99,7 +111,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 .DoNotWait();
         }
 
-        public async Task OnReplDidChangeTextDocumentAsync(ITextSnapshot before, ITextSnapshot after, IEnumerable<ITextChange> textChanges) {
+        private async Task OnReplDidChangeTextDocumentAsync(ITextSnapshot before, ITextSnapshot after, IEnumerable<ITextChange> textChanges) {
             var contentChanges = new List<LSP.TextDocumentContentChangeEvent>();
 
             // The changes in textChanges all apply to the same original document state. The changes sent to the
@@ -146,7 +158,6 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
         public void Dispose() {
             if (_currentInputBuffer != null) {
-                //_currentInputBuffer.ChangedOnBackground -= OnReplInputBufferBackgroundChange;
                 _currentInputBuffer.ChangedHighPriority -= OnReplInputBufferBackgroundChange;
             }
 

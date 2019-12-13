@@ -20,6 +20,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Python.Parsing;
 using Microsoft.PythonTools.Intellisense;
+using Microsoft.VisualStudio.Text;
+using LSP = Microsoft.VisualStudio.LanguageServer.Protocol;
 
 namespace Microsoft.PythonTools.Repl {
     interface IPythonInteractiveIntellisense {
@@ -27,8 +29,7 @@ namespace Microsoft.PythonTools.Repl {
         IEnumerable<KeyValuePair<string, string>> GetAvailableScopesAndPaths();
         Task<CompletionResult[]> GetMemberNamesAsync(string text, CancellationToken ct);
         Task<OverloadDoc[]> GetSignatureDocumentationAsync(string text, CancellationToken ct);
-        Uri DocumentUri { get; }
-        Uri NextDocumentUri();
+        Task<LSP.CompletionItem[]> GetAnalysisCompletions(SnapshotPoint triggerPoint, LSP.CompletionContext context, CancellationToken token);
         PythonLanguageVersion LanguageVersion { get; }
     }
 }

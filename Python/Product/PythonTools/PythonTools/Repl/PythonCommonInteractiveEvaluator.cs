@@ -33,7 +33,6 @@ using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.InteractiveWindow.Commands;
-using Microsoft.VisualStudio.LanguageServer.Client;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
@@ -41,6 +40,7 @@ using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
 using Microsoft.VisualStudio.Utilities;
 using Microsoft.VisualStudioTools;
 using Task = System.Threading.Tasks.Task;
+using LSP = Microsoft.VisualStudio.LanguageServer.Protocol;
 
 namespace Microsoft.PythonTools.Repl {
     [InteractiveWindowRole("Execution")]
@@ -99,6 +99,8 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             if (disposing) {
+                Document?.Dispose();
+
                 if (ContentType != null) {
                     PythonLanguageClient.DisposeLanguageClient(ContentType.TypeName);
                 }
@@ -134,28 +136,37 @@ namespace Microsoft.PythonTools.Repl {
 
         internal bool AssociatedWorkspaceHasChanged { get; set; }
 
-        private IContentType ContentType { get; set; }
+        private IContentType ContentType => (IContentType)_window?.Properties[typeof(IContentType)];
 
-        internal async Task InitializeLanguageServerAsync() {
-            ContentType = (IContentType)_window.Properties[typeof(IContentType)];
+        private ReplDocument Document { get; set; }
+
+        internal virtual async Task InitializeLanguageServerAsync() {
+            if (ContentType == null) {
+                Debug.Fail("ContentType should have been set before evaluator initialization.");
+                return;
+            }
 
             await PythonLanguageClient.EnsureLanguageClientAsync(
                 _serviceProvider,
                 _window,
                 ContentType.TypeName
             );
+
+            var client = PythonLanguageClient.FindLanguageClient(ContentType.TypeName);
+            if (client != null) {
+                Document = new ReplDocument(_serviceProvider, _window, client);
+                await Document.InitializeAsync();
+            }
         }
 
         internal async Task RestartLanguageServerAsync() {
             if (ContentType != null) {
                 PythonLanguageClient.DisposeLanguageClient(ContentType.TypeName);
-
-                await PythonLanguageClient.EnsureLanguageClientAsync(
-                    _serviceProvider,
-                    _window,
-                    ContentType.TypeName
-                );
+                Document?.Dispose();
+                Document = null;
             }
+
+            await InitializeLanguageServerAsync();
         }
 
         private PythonProjectNode GetAssociatedPythonProject(InterpreterConfiguration interpreter = null) {
@@ -301,6 +312,10 @@ namespace Microsoft.PythonTools.Repl {
         public abstract Task<OverloadDoc[]> GetSignatureDocumentationAsync(string text, CancellationToken ct);
 
         public abstract void AbortExecution();
+
+        public Task<LSP.CompletionItem[]> GetAnalysisCompletions(SnapshotPoint triggerPoint, LSP.CompletionContext context, CancellationToken token) {
+            return Document.GetCompletions(triggerPoint, context, token);
+        }
 
         public bool CanExecuteCode(string text) {
             return CanExecuteCode(text, out _);

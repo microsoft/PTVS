@@ -120,6 +120,10 @@ namespace Microsoft.PythonTools.Repl {
             return result;
         }
 
+        internal override Task InitializeLanguageServerAsync() {
+            // Don't run a language server for debug repl, at least for now
+            return Task.CompletedTask;
+        }
 
         private async void OnModulesChanged(object sender, EventArgs e) {
             await RefreshAvailableScopes();
@@ -200,7 +204,6 @@ namespace Microsoft.PythonTools.Repl {
 
         public PythonProcess Process {
             get { return _process; }
-
         }
 
         public int ProcessId {

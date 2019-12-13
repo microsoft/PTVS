@@ -32,6 +32,7 @@ using Microsoft.VisualStudio.InteractiveWindow.Commands;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Utilities;
 using Microsoft.VisualStudioTools;
+using LSP = Microsoft.VisualStudio.LanguageServer.Protocol;
 
 namespace Microsoft.PythonTools.Repl {
     [InteractiveWindowRole("Debug")]
@@ -621,6 +622,11 @@ namespace Microsoft.PythonTools.Repl {
 
         public string GetPrompt() {
             return _activeEvaluator?.GetPrompt();
+        }
+
+        public Task<LSP.CompletionItem[]> GetAnalysisCompletions(SnapshotPoint triggerPoint, LSP.CompletionContext context, CancellationToken token) {
+            // No analysis completions for debug repl
+            return Task.FromResult(Array.Empty<LSP.CompletionItem>());
         }
     }
 
