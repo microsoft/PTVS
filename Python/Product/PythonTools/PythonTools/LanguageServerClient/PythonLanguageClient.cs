@@ -49,6 +49,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
     internal class PythonLanguageClient : ILanguageClient, ILanguageClientCustomMessage2, IDisposable {
         private readonly IServiceProvider _site;
         private readonly IVsFolderWorkspaceService _workspaceService;
+        private readonly IPythonWorkspaceContextProvider _pythonWorkspaceProvider;
         private readonly IInterpreterOptionsService _optionsService;
         private readonly IInterpreterRegistryService _registryService;
         private readonly ILanguageClientBroker _broker;
@@ -65,6 +66,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             IServiceProvider site,
             string contentTypeName,
             IVsFolderWorkspaceService workspaceService,
+            IPythonWorkspaceContextProvider pythonWorkspaceProvider,
             IInterpreterOptionsService optionsService,
             IInterpreterRegistryService registryService,
             ILanguageClientBroker broker,
@@ -74,6 +76,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             _site = site ?? throw new ArgumentNullException(nameof(site));
             ContentTypeName = contentTypeName ?? throw new ArgumentNullException(nameof(contentTypeName));
             _workspaceService = workspaceService ?? throw new ArgumentNullException(nameof(workspaceService));
+            _pythonWorkspaceProvider = pythonWorkspaceProvider ?? throw new ArgumentNullException(nameof(pythonWorkspaceProvider));
             _optionsService = optionsService ?? throw new ArgumentNullException(nameof(optionsService));
             _registryService = registryService ?? throw new ArgumentNullException(nameof(registryService));
             _broker = broker ?? throw new ArgumentNullException(nameof(broker));
@@ -81,8 +84,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             _replWindow = replWindow;
             _disposables = new DisposableBag(GetType().Name);
 
-            var pythonWorkspaceProvider = site.GetComponentModel().GetService<IPythonWorkspaceContextProvider>();
-            var pythonWorkspace = pythonWorkspaceProvider?.Workspace;
+            var pythonWorkspace = _pythonWorkspaceProvider?.Workspace;
             if (pythonWorkspace != null) {
                 pythonWorkspace.ActiveInterpreterChanged += OnWorkspaceChanged;
                 pythonWorkspace.SearchPathsSettingChanged += OnWorkspaceChanged;
@@ -108,7 +110,6 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 }
             });
 
-            MiddleLayer = new PythonLanguageClientMiddleLayer(site.GetPythonToolsService(), site.GetComponentModel().GetService<PythonSnippetManager>(), null);
             CustomMessageTarget = new PythonLanguageClientCustomTarget(site);
         }
 
@@ -125,8 +126,11 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 throw new ArgumentNullException(nameof(contentTypeName));
             }
 
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
             var componentModel = serviceProvider.GetComponentModel();
             var workspaceService = componentModel.GetService<IVsFolderWorkspaceService>();
+            var pythonWorkspaceProvider = componentModel.GetService<IPythonWorkspaceContextProvider>();
             var optionsService = componentModel.GetService<IInterpreterOptionsService>();
             var registryService = componentModel.GetService<IInterpreterRegistryService>();
             var broker = componentModel.GetService<ILanguageClientBroker>();
@@ -134,6 +138,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             await EnsureLanguageClientAsync(
                 serviceProvider,
                 workspaceService,
+                pythonWorkspaceProvider,
                 optionsService,
                 registryService,
                 broker,
@@ -156,8 +161,11 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 throw new ArgumentNullException(nameof(contentTypeName));
             }
 
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
             var componentModel = serviceProvider.GetComponentModel();
             var workspaceService = componentModel.GetService<IVsFolderWorkspaceService>();
+            var pythonWorkspaceProvider = componentModel.GetService<IPythonWorkspaceContextProvider>();
             var optionsService = componentModel.GetService<IInterpreterOptionsService>();
             var registryService = componentModel.GetService<IInterpreterRegistryService>();
             var broker = componentModel.GetService<ILanguageClientBroker>();
@@ -165,6 +173,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             await EnsureLanguageClientAsync(
                 serviceProvider,
                 workspaceService,
+                pythonWorkspaceProvider,
                 optionsService,
                 registryService,
                 broker,
@@ -174,39 +183,10 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             );
         }
 
-        private static async Task EnsureLanguageClientAsync(
-            IServiceProvider serviceProvider,
-            string contentTypeName
-        ) {
-            if (serviceProvider == null) {
-                throw new ArgumentNullException(nameof(serviceProvider));
-            }
-
-            if (contentTypeName == null) {
-                throw new ArgumentNullException(nameof(contentTypeName));
-            }
-
-            var componentModel = serviceProvider.GetComponentModel();
-            var workspaceService = componentModel.GetService<IVsFolderWorkspaceService>();
-            var optionsService = componentModel.GetService<IInterpreterOptionsService>();
-            var registryService = componentModel.GetService<IInterpreterRegistryService>();
-            var broker = componentModel.GetService<ILanguageClientBroker>();
-
-            await EnsureLanguageClientAsync(
-                serviceProvider,
-                workspaceService,
-                optionsService,
-                registryService,
-                broker,
-                contentTypeName,
-                null,
-                null
-            );
-        }
-
         public static async Task EnsureLanguageClientAsync(
             IServiceProvider site,
             IVsFolderWorkspaceService workspaceService,
+            IPythonWorkspaceContextProvider pythonWorkspaceProvider,
             IInterpreterOptionsService optionsService,
             IInterpreterRegistryService registryService,
             ILanguageClientBroker broker,
@@ -221,7 +201,17 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             PythonLanguageClient client = null;
             lock (_languageClients) {
                 if (!_languageClients.Any(lc => lc.ContentTypeName == contentTypeName)) {
-                    client = new PythonLanguageClient(site, contentTypeName, workspaceService, optionsService, registryService, broker, project, replWindow);
+                    client = new PythonLanguageClient(
+                        site,
+                        contentTypeName,
+                        workspaceService,
+                        pythonWorkspaceProvider,
+                        optionsService,
+                        registryService,
+                        broker,
+                        project,
+                        replWindow
+                    );
                     _languageClients.Add(client);
                 }
             }
@@ -329,7 +319,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                     evaluator = selEvaluator.Evaluator as PythonCommonInteractiveEvaluator;
                 }
 
-                if (evaluator != null) {
+                if (evaluator?.Configuration != null) {
                     interpreterPath = evaluator.Configuration.Interpreter.InterpreterPath;
                     interpreterVersion = evaluator.LanguageVersion.ToVersion().ToString();
                     searchPaths.AddRange(evaluator.Configuration.SearchPaths);
@@ -404,10 +394,18 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
 
         public Task InvokeTextDocumentDidOpenAsync(LSP.DidOpenTextDocumentParams request) {
+            if (_rpc == null) {
+                return Task.CompletedTask;
+            }
+
             return _rpc.NotifyWithParameterObjectAsync("textDocument/didOpen", request);
         }
 
         public Task InvokeTextDocumentDidChangeAsync(LSP.DidChangeTextDocumentParams request) {
+            if (_rpc == null) {
+                return Task.CompletedTask;
+            }
+
             return _rpc.NotifyWithParameterObjectAsync("textDocument/didChange", request);
         }
 
@@ -415,6 +413,10 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             LSP.CompletionParams request,
             CancellationToken cancellationToken = default(CancellationToken)
         ) {
+            if (_rpc == null) {
+                return Task.FromResult(new LSP.CompletionList());
+            }
+
             return _rpc.InvokeWithParameterObjectAsync<LSP.CompletionList>("textDocument/completion", request);
         }
 
@@ -474,6 +476,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             EnsureLanguageClientAsync(
                 _site,
                 _workspaceService,
+                _pythonWorkspaceProvider,
                 _optionsService,
                 _registryService,
                 _broker,

@@ -23,11 +23,11 @@ using StreamJsonRpc;
 using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.LanguageServerClient {
-    class PythonLanguageClientCustomTarget {
+    internal class PythonLanguageClientCustomTarget {
         private readonly IServiceProvider _site;
 
         public PythonLanguageClientCustomTarget(IServiceProvider site) {
-            _site = site;
+            _site = site ?? throw new ArgumentNullException(nameof(site));
         }
 
         [JsonRpcMethod("telemetry/event")]

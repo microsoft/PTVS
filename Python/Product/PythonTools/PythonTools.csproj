@@ -411,7 +411,6 @@
     <Compile Include="PythonTools\PythonFeedbackDiagnosticFileProvider.cs" />
     <Compile Include="PythonTools\LanguageServerClient\PythonLanguageClient.cs" />
     <Compile Include="PythonTools\LanguageServerClient\PythonLanguageClientCustomTarget.cs" />
-    <Compile Include="PythonTools\LanguageServerClient\PythonLanguageClientMiddleLayer.cs" />
     <Compile Include="PythonTools\Intellisense\PythonMemberTypeExtensions.cs" />
     <Compile Include="PythonTools\Editor\TokenCache.cs" />
     <Compile Include="PythonTools\Repl\Completion\ExpressionFinder.cs" />
