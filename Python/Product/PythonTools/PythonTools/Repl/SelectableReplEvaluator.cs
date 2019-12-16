@@ -24,12 +24,13 @@ using Microsoft.Python.Parsing;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.LanguageServerClient;
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.InteractiveWindow.Commands;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Utilities;
 using Task = System.Threading.Tasks.Task;
+using LSP = Microsoft.VisualStudio.LanguageServer.Protocol;
 
 namespace Microsoft.PythonTools.Repl {
     [InteractiveWindowRole("Execution")]
@@ -145,9 +146,6 @@ namespace Microsoft.PythonTools.Repl {
         public string DisplayName => (_evaluator as IPythonInteractiveEvaluator)?.DisplayName;
 
         public bool LiveCompletionsOnly => (_evaluator as IPythonInteractiveIntellisense)?.LiveCompletionsOnly ?? false;
-
-        public Uri DocumentUri => (_evaluator as IPythonInteractiveIntellisense)?.DocumentUri;
-        public Uri NextDocumentUri() => (_evaluator as IPythonInteractiveIntellisense)?.NextDocumentUri();
 
         // Test methods
         internal string PrimaryPrompt => ((dynamic)_evaluator)?.PrimaryPrompt ?? ">>> ";
@@ -375,11 +373,9 @@ namespace Microsoft.PythonTools.Repl {
                 ?? new OverloadDoc[0];
         }
 
-        public async Task InitializeLanguageServerAsync(int curId) {
-            var evaluator = _evaluator as PythonCommonInteractiveEvaluator;
-            if (evaluator != null) {
-                await evaluator.InitializeLanguageServerAsync(curId);
-            }
+        public async Task<LSP.CompletionItem[]> GetAnalysisCompletions(SnapshotPoint triggerPoint, LSP.CompletionContext context, CancellationToken token) {
+            return (await (_evaluator as IPythonInteractiveIntellisense)?.GetAnalysisCompletions(triggerPoint, context, token))
+                ?? Array.Empty<LSP.CompletionItem>();
         }
     }
 }

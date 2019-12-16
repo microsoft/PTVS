@@ -187,11 +187,6 @@ namespace Microsoft.PythonTools.Repl {
                 }
             };
 
-            _serviceProvider.GetUIThread().InvokeTaskSync(
-                () => evaluator.InitializeLanguageServerAsync(curId),
-                CancellationToken.None
-            );
-
             return window;
         }
 

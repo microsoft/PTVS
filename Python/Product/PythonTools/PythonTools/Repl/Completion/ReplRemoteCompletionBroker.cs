@@ -21,7 +21,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Python.Parsing;
 using Microsoft.Python.Parsing.Ast;
-using Microsoft.PythonTools.LanguageServerClient;
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.Language.Intellisense.AsyncCompletion.Data;
 using Microsoft.VisualStudio.Text;
@@ -37,16 +36,15 @@ namespace Microsoft.PythonTools.Repl.Completion {
             CompletionTrigger trigger
         ) {
             var textBuffer = triggerPoint.Snapshot.TextBuffer;
-            var client = PythonLanguageClient.FindLanguageClient(textBuffer);
             var window = textBuffer.GetInteractiveWindow();
             var eval = window?.Evaluator as IPythonInteractiveIntellisense;
 
-            if (client != null && client.ReplDocument != null && client.ReplDocument.DocumentUri != null && eval != null) {
+            if (eval != null) {
                 if (eval.LiveCompletionsOnly) {
                     var result = await GetLiveCompletionsAsync(triggerPoint, trigger, eval, token);
                     return ToResolveTaskTuple(result);
                 } else {
-                    var result = await GetAnalysisAndLiveCompletionsAsync(triggerPoint, trigger, client, eval, token);
+                    var result = await GetAnalysisAndLiveCompletionsAsync(triggerPoint, trigger, eval, token);
                     return ToResolveTaskTuple(result);
                 }
             }
@@ -66,13 +64,19 @@ namespace Microsoft.PythonTools.Repl.Completion {
             return typedChar == '.';
         }
 
-        private async Task<LSP.CompletionItem[]> DoRequestAsync(
-            PythonLanguageClient client,
-            LSP.CompletionParams parameters,
-            CancellationToken token = default(CancellationToken)
+        private async Task<LSP.CompletionItem[]> GetAnalysisAndLiveCompletionsAsync(
+            SnapshotPoint triggerPoint,
+            CompletionTrigger trigger,
+            IPythonInteractiveIntellisense eval,
+            CancellationToken token
         ) {
-            var res = await client.InvokeTextDocumentCompletionAsync(parameters, token);
-            return res?.Items ?? Array.Empty<LSP.CompletionItem>();
+            var analysisCompletionsTask = eval.GetAnalysisCompletions(triggerPoint, trigger != null ? GetContextFromTrigger(trigger) : null, token);
+            var liveCompletionsTask = GetLiveCompletionsAsync(triggerPoint, trigger, eval, token);
+
+            await Task.WhenAll(analysisCompletionsTask, liveCompletionsTask);
+
+            var completions = MergeCompletions(analysisCompletionsTask.Result, liveCompletionsTask.Result);
+            return completions;
         }
 
         private LSP.CompletionContext GetContextFromTrigger(CompletionTrigger trigger) {
@@ -100,22 +104,6 @@ namespace Microsoft.PythonTools.Repl.Completion {
             }
 
             return context;
-        }
-
-        private async Task<LSP.CompletionItem[]> GetAnalysisAndLiveCompletionsAsync(
-            SnapshotPoint triggerPoint,
-            CompletionTrigger trigger,
-            PythonLanguageClient client,
-            IPythonInteractiveIntellisense eval,
-            CancellationToken token
-        ) {
-            var analysisCompletionsTask = GetAnalysisCompletionsAsync(triggerPoint, trigger, client, token);
-            var liveCompletionsTask = GetLiveCompletionsAsync(triggerPoint, trigger, eval, token);
-
-            await Task.WhenAll(analysisCompletionsTask, liveCompletionsTask);
-
-            var completions = MergeCompletions(analysisCompletionsTask.Result, liveCompletionsTask.Result);
-            return completions;
         }
 
         private async Task<LSP.CompletionItem[]> GetLiveCompletionsAsync(
@@ -154,28 +142,6 @@ namespace Microsoft.PythonTools.Repl.Completion {
             }
 
             return null;
-        }
-
-        private async Task<LSP.CompletionItem[]> GetAnalysisCompletionsAsync(
-            SnapshotPoint triggerPoint,
-            CompletionTrigger trigger,
-            PythonLanguageClient client,
-            CancellationToken token
-        ) {
-            var completionParams = new LSP.CompletionParams() {
-                TextDocument = new LSP.TextDocumentIdentifier() {
-                    Uri = client.ReplDocument.DocumentUri,
-                },
-                Position = client.ReplDocument.GetDocumentPosition(triggerPoint.GetPosition()),
-            };
-
-            if (trigger != null) {
-                completionParams.Context = GetContextFromTrigger(trigger);
-            }
-
-            var completions = await DoRequestAsync(client, completionParams, token);
-
-            return completions;
         }
 
         private static Tuple<LSP.CompletionItem, Func<LSP.CompletionItem, Task<LSP.CompletionItem>>>[] ToResolveTaskTuple(
