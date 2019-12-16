@@ -126,6 +126,8 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 throw new ArgumentNullException(nameof(contentTypeName));
             }
 
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
             var componentModel = serviceProvider.GetComponentModel();
             var workspaceService = componentModel.GetService<IVsFolderWorkspaceService>();
             var pythonWorkspaceProvider = componentModel.GetService<IPythonWorkspaceContextProvider>();
@@ -159,6 +161,8 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 throw new ArgumentNullException(nameof(contentTypeName));
             }
 
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
             var componentModel = serviceProvider.GetComponentModel();
             var workspaceService = componentModel.GetService<IVsFolderWorkspaceService>();
             var pythonWorkspaceProvider = componentModel.GetService<IPythonWorkspaceContextProvider>();
@@ -175,38 +179,6 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 broker,
                 contentTypeName,
                 project,
-                null
-            );
-        }
-
-        private static async Task EnsureLanguageClientAsync(
-            IServiceProvider serviceProvider,
-            string contentTypeName
-        ) {
-            if (serviceProvider == null) {
-                throw new ArgumentNullException(nameof(serviceProvider));
-            }
-
-            if (contentTypeName == null) {
-                throw new ArgumentNullException(nameof(contentTypeName));
-            }
-
-            var componentModel = serviceProvider.GetComponentModel();
-            var workspaceService = componentModel.GetService<IVsFolderWorkspaceService>();
-            var pythonWorkspaceProvider = componentModel.GetService<IPythonWorkspaceContextProvider>();
-            var optionsService = componentModel.GetService<IInterpreterOptionsService>();
-            var registryService = componentModel.GetService<IInterpreterRegistryService>();
-            var broker = componentModel.GetService<ILanguageClientBroker>();
-
-            await EnsureLanguageClientAsync(
-                serviceProvider,
-                workspaceService,
-                pythonWorkspaceProvider,
-                optionsService,
-                registryService,
-                broker,
-                contentTypeName,
-                null,
                 null
             );
         }
