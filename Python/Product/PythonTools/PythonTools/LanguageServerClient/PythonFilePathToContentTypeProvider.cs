@@ -51,6 +51,9 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         [Import]
         public ILanguageClientBroker Broker;
 
+        [Import]
+        public IPythonWorkspaceContextProvider PythonWorkspaceContextProvider;
+
         public bool TryGetContentTypeForFilePath(string filePath, out IContentType contentType) {
             contentType = null;
 
@@ -69,10 +72,11 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
             if (contentTypeName != null) {
                 contentType = GetOrCreateContentType(ContentTypeRegistryService, contentTypeName);
-
+                
                 Site.GetUIThread().InvokeTaskSync(() => PythonLanguageClient.EnsureLanguageClientAsync(
                     Site,
                     WorkspaceService,
+                    PythonWorkspaceContextProvider,
                     OptionsService,
                     RegistryService,
                     Broker,
