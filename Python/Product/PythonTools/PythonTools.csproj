@@ -274,6 +274,7 @@
     <Compile Include="PythonTools\Editor\Formatting\PythonFormatterYapf.cs" />
     <Compile Include="PythonTools\Editor\Formatting\PythonFormatter.cs" />
     <Compile Include="PythonTools\Editor\Formatting\LspDiffTextEditFactory.cs" />
+    <Compile Include="PythonTools\LanguageServerClient\LiveShareExtensions.cs" />
     <Compile Include="PythonTools\LanguageServerClient\LspEditorUtilities.cs" />
     <Compile Include="PythonTools\Editor\Formatting\PythonFormatterBlack.cs" />
     <Compile Include="PythonTools\Editor\Formatting\DiffMatchPatch.cs" />

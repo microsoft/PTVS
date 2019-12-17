@@ -23,12 +23,12 @@ using Microsoft.VisualStudio.LiveShare.LanguageServices;
 using Microsoft.VisualStudio.Shell;
 
 namespace Microsoft.PythonTools.LiveShare {
-    [ExportCollaborationService(typeof(PythonLanguageClient), Scope = SessionScope.Host)]
-    internal class PythonLanguageClientFactory : ICollaborationServiceFactory {
+    [ExportCollaborationService(typeof(PythonCollaborationService), Scope = SessionScope.Host)]
+    internal class PythonCollaborationServiceFactory : ICollaborationServiceFactory {
         private readonly IServiceProvider _serviceProvider;
 
         [ImportingConstructor]
-        public PythonLanguageClientFactory([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider) {
+        public PythonCollaborationServiceFactory([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider) {
             _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
         }
 
@@ -38,7 +38,7 @@ namespace Microsoft.PythonTools.LiveShare {
                 return null;
             }
 
-            var pythonClient = new PythonLanguageClient(_serviceProvider);
+            var pythonClient = new PythonCollaborationService(_serviceProvider);
             await pythonClient.InitializeAsync(languageServerHostService);
             return pythonClient;
         }

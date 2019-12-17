@@ -420,6 +420,14 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             return _rpc.InvokeWithParameterObjectAsync<LSP.CompletionList>("textDocument/completion", request);
         }
 
+        public Task<TResult> InvokeWithParameterObjectAsync<TResult>(string targetName, object argument = null, CancellationToken cancellationToken = default) {
+            if (_rpc == null) {
+                return Task.FromResult(default(TResult));
+            }
+
+            return _rpc.InvokeWithParameterObjectAsync<TResult>(targetName, argument, cancellationToken);
+        }
+
         private void Stop() {
             _site.GetUIThread().InvokeTaskSync(async () => {
                 await StopAsync?.Invoke(this, EventArgs.Empty);

@@ -29,7 +29,7 @@ using Microsoft.VisualStudio.Workspace.VSIntegration.Contracts;
 using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.LanguageServerClient {
-    abstract class PythonFilePathToContentTypeProvider : IFilePathToContentTypeProvider {
+    internal abstract class PythonFilePathToContentTypeProvider : IFilePathToContentTypeProvider {
         [Import(typeof(SVsServiceProvider))]
         public IServiceProvider Site;
 
@@ -56,6 +56,17 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
         public bool TryGetContentTypeForFilePath(string filePath, out IContentType contentType) {
             contentType = null;
+
+            ThreadHelper.ThrowIfNotOnUIThread();
+
+            // In LiveShare client scenario, we'll be called with files in temp
+            // folder created by LiveShare, do not create a content type or
+            // start a language server for those! Default content type will be
+            // Python, and LiveShare will pass that to the host who will dispatch
+            // to its correct language server.
+            if (Site.IsInLiveShareClientSession()) {
+                return false;
+            }
 
             // Force the package to load, since this is a MEF component, there is no guarantee it has been loaded.
             Site.GetPythonToolsService();
@@ -144,20 +155,21 @@ namespace Microsoft.PythonTools.LanguageServerClient {
     }
 
     [Export(typeof(IFilePathToContentTypeProvider))]
+    [Export(typeof(PyFilePathToContentTypeProvider))]
     [Name(nameof(PyFilePathToContentTypeProvider))]
     [FileExtension(PythonConstants.FileExtension)]
-    class PyFilePathToContentTypeProvider : PythonFilePathToContentTypeProvider {
+    internal class PyFilePathToContentTypeProvider : PythonFilePathToContentTypeProvider {
     }
 
     [Export(typeof(IFilePathToContentTypeProvider))]
     [Name(nameof(PywFilePathToContentTypeProvider))]
     [FileExtension(PythonConstants.WindowsFileExtension)]
-    class PywFilePathToContentTypeProvider : PythonFilePathToContentTypeProvider {
+    internal class PywFilePathToContentTypeProvider : PythonFilePathToContentTypeProvider {
     }
 
     [Export(typeof(IFilePathToContentTypeProvider))]
     [Name(nameof(PyiFilePathToContentTypeProvider))]
     [FileExtension(PythonConstants.StubFileExtension)]
-    class PyiFilePathToContentTypeProvider : PythonFilePathToContentTypeProvider {
+    internal class PyiFilePathToContentTypeProvider : PythonFilePathToContentTypeProvider {
     }
 }
