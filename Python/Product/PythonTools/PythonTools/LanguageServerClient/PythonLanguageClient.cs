@@ -23,17 +23,12 @@ using System.Threading.Tasks;
 using System.Windows;
 using Microsoft.Python.Core.Disposables;
 using Microsoft.Python.Parsing;
-using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Project;
-using Microsoft.PythonTools.Repl;
-using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.LanguageServer.Client;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Threading;
-using Microsoft.VisualStudio.Workspace.VSIntegration.Contracts;
 using Microsoft.VisualStudioTools;
 using StreamJsonRpc;
 using LSP = Microsoft.VisualStudio.LanguageServer.Protocol;
@@ -48,176 +43,93 @@ namespace Microsoft.PythonTools.LanguageServerClient {
     /// </remarks>
     internal class PythonLanguageClient : ILanguageClient, ILanguageClientCustomMessage2, IDisposable {
         private readonly IServiceProvider _site;
-        private readonly IVsFolderWorkspaceService _workspaceService;
-        private readonly IPythonWorkspaceContextProvider _pythonWorkspaceProvider;
-        private readonly IInterpreterOptionsService _optionsService;
-        private readonly IInterpreterRegistryService _registryService;
-        private readonly ILanguageClientBroker _broker;
-        private readonly PythonProjectNode _project;
-        private readonly IInteractiveWindow _replWindow;
+        private readonly JoinableTaskContext _joinableTaskContext;
+        private readonly IPythonLanguageClientContext _clientContext;
+        private readonly DisposableBag _disposables;
         private PythonLanguageServer _server;
         private JsonRpc _rpc;
-        private DisposableBag _disposables;
 
         private static readonly List<PythonLanguageClient> _languageClients = new List<PythonLanguageClient>();
 
-
-        public PythonLanguageClient(
+        private PythonLanguageClient(
             IServiceProvider site,
-            string contentTypeName,
-            IVsFolderWorkspaceService workspaceService,
-            IPythonWorkspaceContextProvider pythonWorkspaceProvider,
-            IInterpreterOptionsService optionsService,
-            IInterpreterRegistryService registryService,
-            ILanguageClientBroker broker,
-            PythonProjectNode project,
-            IInteractiveWindow replWindow
+            JoinableTaskContext joinableTaskContext,
+            IPythonLanguageClientContext clientContext
         ) {
             _site = site ?? throw new ArgumentNullException(nameof(site));
-            ContentTypeName = contentTypeName ?? throw new ArgumentNullException(nameof(contentTypeName));
-            _workspaceService = workspaceService ?? throw new ArgumentNullException(nameof(workspaceService));
-            _pythonWorkspaceProvider = pythonWorkspaceProvider ?? throw new ArgumentNullException(nameof(pythonWorkspaceProvider));
-            _optionsService = optionsService ?? throw new ArgumentNullException(nameof(optionsService));
-            _registryService = registryService ?? throw new ArgumentNullException(nameof(registryService));
-            _broker = broker ?? throw new ArgumentNullException(nameof(broker));
-            _project = project;
-            _replWindow = replWindow;
+            _joinableTaskContext = joinableTaskContext ?? throw new ArgumentNullException(nameof(joinableTaskContext));
+            _clientContext = clientContext ?? throw new ArgumentNullException(nameof(clientContext));
             _disposables = new DisposableBag(GetType().Name);
 
-            var pythonWorkspace = _pythonWorkspaceProvider?.Workspace;
-            if (pythonWorkspace != null) {
-                pythonWorkspace.ActiveInterpreterChanged += OnWorkspaceChanged;
-                pythonWorkspace.SearchPathsSettingChanged += OnWorkspaceChanged;
-                pythonWorkspace.AddActionOnClose(this, OnWorkspaceClosed);
-            }
+            _clientContext.InterpreterChanged += OnInterpreterChanged;
+            _clientContext.SearchPathsChanged += OnSearchPathsChanged;
+            _clientContext.Closed += OnClosed;
 
-            if (project != null) {
-                project.LanguageServerRestart += OnProjectChanged;
-                project.AddActionOnClose(this, OnProjectClosed);
-            }
-
-            _optionsService.DefaultInterpreterChanged += OnDefaultInterpreterChanged;
             _disposables.Add(() => {
-                _optionsService.DefaultInterpreterChanged -= OnDefaultInterpreterChanged;
-
-                if (project != null) {
-                    project.LanguageServerRestart -= OnProjectChanged;
-                }
-
-                if (pythonWorkspace != null) {
-                    pythonWorkspace.ActiveInterpreterChanged -= OnWorkspaceChanged;
-                    pythonWorkspace.SearchPathsSettingChanged -= OnWorkspaceChanged;
-                }
+                _clientContext.InterpreterChanged -= OnInterpreterChanged;
+                _clientContext.SearchPathsChanged -= OnSearchPathsChanged;
+                _clientContext.Closed -= OnClosed;
             });
+
+            if (clientContext is IDisposable disposable) {
+                _disposables.Add(disposable);
+            }
 
             CustomMessageTarget = new PythonLanguageClientCustomTarget(site);
         }
 
         public static async Task EnsureLanguageClientAsync(
-            IServiceProvider serviceProvider,
-            IInteractiveWindow replWindow,
-            string contentTypeName
-        ) {
-            if (serviceProvider == null) {
-                throw new ArgumentNullException(nameof(serviceProvider));
-            }
-
-            if (contentTypeName == null) {
-                throw new ArgumentNullException(nameof(contentTypeName));
-            }
-
-            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
-            var componentModel = serviceProvider.GetComponentModel();
-            var workspaceService = componentModel.GetService<IVsFolderWorkspaceService>();
-            var pythonWorkspaceProvider = componentModel.GetService<IPythonWorkspaceContextProvider>();
-            var optionsService = componentModel.GetService<IInterpreterOptionsService>();
-            var registryService = componentModel.GetService<IInterpreterRegistryService>();
-            var broker = componentModel.GetService<ILanguageClientBroker>();
-
-            await EnsureLanguageClientAsync(
-                serviceProvider,
-                workspaceService,
-                pythonWorkspaceProvider,
-                optionsService,
-                registryService,
-                broker,
-                contentTypeName,
-                null,
-                replWindow
-            );
-        }
-
-        private static async Task EnsureLanguageClientAsync(
-            IServiceProvider serviceProvider,
-            PythonProjectNode project,
-            string contentTypeName
-        ) {
-            if (serviceProvider == null) {
-                throw new ArgumentNullException(nameof(serviceProvider));
-            }
-
-            if (contentTypeName == null) {
-                throw new ArgumentNullException(nameof(contentTypeName));
-            }
-
-            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
-            var componentModel = serviceProvider.GetComponentModel();
-            var workspaceService = componentModel.GetService<IVsFolderWorkspaceService>();
-            var pythonWorkspaceProvider = componentModel.GetService<IPythonWorkspaceContextProvider>();
-            var optionsService = componentModel.GetService<IInterpreterOptionsService>();
-            var registryService = componentModel.GetService<IInterpreterRegistryService>();
-            var broker = componentModel.GetService<ILanguageClientBroker>();
-
-            await EnsureLanguageClientAsync(
-                serviceProvider,
-                workspaceService,
-                pythonWorkspaceProvider,
-                optionsService,
-                registryService,
-                broker,
-                contentTypeName,
-                project,
-                null
-            );
-        }
-
-        public static async Task EnsureLanguageClientAsync(
             IServiceProvider site,
-            IVsFolderWorkspaceService workspaceService,
-            IPythonWorkspaceContextProvider pythonWorkspaceProvider,
-            IInterpreterOptionsService optionsService,
-            IInterpreterRegistryService registryService,
-            ILanguageClientBroker broker,
-            string contentTypeName,
-            PythonProjectNode project,
-            IInteractiveWindow replWindow
+            JoinableTaskContext joinableTaskContext,
+            IPythonLanguageClientContext clientContext
         ) {
-            if (contentTypeName == null) {
-                throw new ArgumentNullException(nameof(contentTypeName));
+            if (site == null) {
+                throw new ArgumentNullException(nameof(site));
+            }
+
+            if (joinableTaskContext == null) {
+                throw new ArgumentNullException(nameof(joinableTaskContext));
+            }
+
+            if (clientContext == null) {
+                throw new ArgumentNullException(nameof(clientContext));
+            }
+
+            await joinableTaskContext.Factory.SwitchToMainThreadAsync();
+
+            var broker = site.GetComponentModel().GetService<ILanguageClientBroker>();
+
+            await EnsureLanguageClientAsync(site, joinableTaskContext, clientContext, broker);
+        }
+
+        internal static async Task EnsureLanguageClientAsync(
+            IServiceProvider site,
+            JoinableTaskContext joinableTaskContext,
+            IPythonLanguageClientContext clientContext,
+            ILanguageClientBroker broker
+        ) {
+            if (site == null) {
+                throw new ArgumentNullException(nameof(site));
+            }
+
+            if (clientContext == null) {
+                throw new ArgumentNullException(nameof(clientContext));
+            }
+
+            if (broker == null) {
+                throw new ArgumentNullException(nameof(broker));
             }
 
             PythonLanguageClient client = null;
             lock (_languageClients) {
-                if (!_languageClients.Any(lc => lc.ContentTypeName == contentTypeName)) {
-                    client = new PythonLanguageClient(
-                        site,
-                        contentTypeName,
-                        workspaceService,
-                        pythonWorkspaceProvider,
-                        optionsService,
-                        registryService,
-                        broker,
-                        project,
-                        replWindow
-                    );
+                if (!_languageClients.Any(lc => lc.ContentTypeName == clientContext.ContentTypeName)) {
+                    client = new PythonLanguageClient(site, joinableTaskContext, clientContext);
                     _languageClients.Add(client);
                 }
             }
 
             if (client != null) {
-                await broker.LoadAsync(new PythonLanguageClientMetadata(null, contentTypeName), client);
+                await broker.LoadAsync(new PythonLanguageClientMetadata(null, clientContext.ContentTypeName), client);
             }
         }
 
@@ -255,9 +167,9 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             }
         }
 
-        public string ContentTypeName { get; }
+        public string ContentTypeName => _clientContext.ContentTypeName;
 
-        public IPythonInterpreterFactory Factory { get; private set; }
+        public InterpreterConfiguration Configuration => _clientContext.InterpreterConfiguration;
 
         public string Name => "Python Language Extension";
 
@@ -301,73 +213,32 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
 
         public async Task OnLoadedAsync() {
-            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+            await _joinableTaskContext.Factory.SwitchToMainThreadAsync();
 
-            var workspace = _workspaceService.CurrentWorkspace;
+            var interpreterPath = _clientContext.InterpreterConfiguration?.InterpreterPath;
+            var version = _clientContext.InterpreterConfiguration?.Version;
+            var searchPaths = _clientContext.SearchPaths.ToList();
+            string rootPath = _clientContext.RootPath;
 
-            // Force initialization of python tools service by requesting it
-            _site.GetPythonToolsService();
-
-            var interpreterPath = string.Empty;
-            var interpreterVersion = string.Empty;
-            var searchPaths = new List<string>();
-            string rootPath = null;
-
-            if (_replWindow != null) {
-                var evaluator = _replWindow.Evaluator as PythonCommonInteractiveEvaluator;
-                if (_replWindow.Evaluator is SelectableReplEvaluator selEvaluator) {
-                    evaluator = selEvaluator.Evaluator as PythonCommonInteractiveEvaluator;
-                }
-
-                if (evaluator?.Configuration != null) {
-                    interpreterPath = evaluator.Configuration.Interpreter.InterpreterPath;
-                    interpreterVersion = evaluator.LanguageVersion.ToVersion().ToString();
-                    searchPaths.AddRange(evaluator.Configuration.SearchPaths);
-                }
-            } else if (_project != null) {
-                Factory = _project.ActiveInterpreter;
-                if (Factory != null) {
-                    interpreterPath = Factory.Configuration.InterpreterPath;
-                    interpreterVersion = Factory.Configuration.Version.ToString();
-                    searchPaths.AddRange(_project._searchPaths.GetAbsoluteSearchPaths());
-                    rootPath = _project.ProjectHome;
-                }
-            } else if (workspace != null) {
-                Factory = workspace.GetInterpreterFactory(_registryService, _optionsService);
-                if (Factory != null) {
-                    interpreterPath = Factory.Configuration.InterpreterPath;
-                    interpreterVersion = Factory.Configuration.Version.ToString();
-                    // VSCode captures the python.exe env variables, uses PYTHONPATH to build this list
-                    searchPaths.AddRange(workspace.GetAbsoluteSearchPaths());
-                    rootPath = workspace.Location;
-                }
-            } else {
-                Factory = _optionsService.DefaultInterpreter;
-                if (Factory != null) {
-                    interpreterPath = Factory.Configuration.InterpreterPath;
-                    interpreterVersion = Factory.Configuration.Version.ToString();
-                }
-            }
-
-            if (string.IsNullOrEmpty(interpreterPath) || string.IsNullOrEmpty(interpreterVersion)) {
+            if (string.IsNullOrEmpty(interpreterPath) || version == null) {
                 return;
             }
 
             PythonLanguageVersion langVersion;
             try {
-                langVersion = new Version(interpreterVersion).ToLanguageVersion();
+                langVersion = version.ToLanguageVersion();
             } catch (InvalidOperationException) {
                 langVersion = PythonLanguageVersion.None;
             }
 
-            _server = PythonLanguageServer.Create(_site, langVersion);
+            _server = PythonLanguageServer.Create(_site, _joinableTaskContext, langVersion);
             if (_server == null) {
                 return;
             }
 
             InitializationOptions = _server.CreateInitializationOptions(
                 interpreterPath,
-                interpreterVersion,
+                version.ToString(),
                 rootPath,
                 searchPaths
             );
@@ -439,59 +310,30 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
 
         private async Task RestartAsync() {
+            // Disposing of the current language client will dispose of the context
+            // so we first make a copy of it to use when initializing the new client.
             var site = _site;
-            var project = _project;
-            var contentTypeName = ContentTypeName;
-            var replWindow = _replWindow;
+            var context = (IPythonLanguageClientContext)_clientContext.Clone();
 
             DisposeLanguageClient(ContentTypeName);
 
-            if (replWindow != null) {
-                await EnsureLanguageClientAsync(site, replWindow, contentTypeName);
-            } else {
-                await EnsureLanguageClientAsync(site, project, contentTypeName);
-            }
+            await EnsureLanguageClientAsync(
+                site,
+                _joinableTaskContext,
+                context
+            );
         }
 
-        private void OnProjectChanged(object sender, EventArgs e) {
+        private void OnInterpreterChanged(object sender, EventArgs e) {
             Restart();
         }
 
-        private void OnProjectClosed(object key) {
-            PythonLanguageClient.DisposeLanguageClient(ContentTypeName);
-        }
-
-        private void OnWorkspaceChanged(object sender, EventArgs e) {
+        private void OnSearchPathsChanged(object sender, EventArgs e) {
             Restart();
         }
 
-        private void OnWorkspaceClosed(object key) {
+        private void OnClosed(object sender, EventArgs e) {
             PythonLanguageClient.DisposeLanguageClient(ContentTypeName);
-        }
-
-        private void OnDefaultInterpreterChanged(object sender, EventArgs e) {
-            if (_optionsService.DefaultInterpreter == Factory) {
-                return;
-            }
-
-            if (_project != null || _workspaceService.CurrentWorkspace != null) {
-                // This event happens while loading the project or workspace.
-                // We rely on custom events from those to handle restarts.
-                return;
-            }
-
-            DisposeLanguageClient(ContentTypeName);
-            EnsureLanguageClientAsync(
-                _site,
-                _workspaceService,
-                _pythonWorkspaceProvider,
-                _optionsService,
-                _registryService,
-                _broker,
-                ContentTypeName,
-                _project,
-                _replWindow
-            ).HandleAllExceptions(_site, GetType()).DoNotWait();
         }
     }
 }

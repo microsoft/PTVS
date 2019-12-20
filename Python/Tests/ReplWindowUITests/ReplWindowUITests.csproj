@@ -124,10 +124,6 @@
       <Project>{D092D54E-FF29-4D32-9AEE-4EF704C92F67}</Project>
       <Name>TestUtilities</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Core\PythonToolsTests.csproj">
-      <Project>{61d65f46-7957-47c1-8ba3-48d192236d5d}</Project>
-      <Name>PythonToolsTests</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Utilities.Python.Analysis\TestUtilities.Python.Analysis.csproj">
       <Project>{A731C4C3-3741-4080-A946-C47574C1F3BF}</Project>
       <Name>TestUtilities.Python.Analysis</Name>

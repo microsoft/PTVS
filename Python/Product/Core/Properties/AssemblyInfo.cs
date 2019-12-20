@@ -52,8 +52,7 @@ using Microsoft.VisualStudio.Shell;
 //[assembly: ProvideCodeBase(AssemblyName = "Microsoft.Python.Core", CodeBase = @"LanguageServer\x86\Microsoft.Python.Core.dll")]
 //[assembly: ProvideCodeBase(AssemblyName = "Microsoft.Python.Parsing", CodeBase = @"LanguageServer\x86\Microsoft.Python.Parsing.dll")]
 
-//[assembly: ProvideRawCodeBase(AssemblyName = "Microsoft.VisualStudio.LanguageServer.Protocol", CodeBase = @"$PackageFolder$\Microsoft.VisualStudio.LanguageServer.Protocol.dll", Version = "16.4.20.64006", Culture = "neutral", PublicKeyToken = "b03f5f7f11d50a3a")]
-[assembly: ProvideRawCodeBase(AssemblyName = "Microsoft.VisualStudio.LanguageServer.Protocol", CodeBase = @"$PackageFolder$\Microsoft.VisualStudio.LanguageServer.Protocol.dll", Version = "16.3.57.17344", Culture = "neutral", PublicKeyToken = "b03f5f7f11d50a3a")]
+[assembly: ProvideRawCodeBase(AssemblyName = "Microsoft.VisualStudio.LanguageServer.Protocol", CodeBase = @"$PackageFolder$\Microsoft.VisualStudio.LanguageServer.Protocol.dll", Version = "16.5.1030.2059", Culture = "neutral", PublicKeyToken = "b03f5f7f11d50a3a")]
 
 [assembly: ProvideCodeBase(AssemblyName = "Microsoft.PythonTools", CodeBase = "Microsoft.PythonTools.dll", Version = AssemblyVersionInfo.StableVersion)]
 [assembly: ProvideCodeBase(AssemblyName = "Microsoft.PythonTools.Attacher", CodeBase = "Microsoft.PythonTools.Attacher.exe", Version = AssemblyVersionInfo.StableVersion)]

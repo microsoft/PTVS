@@ -145,7 +145,7 @@
     <None Include="source.extension.vsixmanifest" />
     <Content Include="License_en-US.rtf" />
     <Content Include="$(PackagesPath)\Newtonsoft.Json\lib\net45\Newtonsoft.Json.dll" />
-    <Content Include="$(PackagesPath)\Microsoft.VisualStudio.LanguageServer.Protocol.16.3.57\lib\netstandard1.0\Microsoft.VisualStudio.LanguageServer.Protocol.dll" />
+    <Content Include="..\..\References\Dev$(VSTarget)\Microsoft.VisualStudio.LanguageServer.Protocol.dll" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />

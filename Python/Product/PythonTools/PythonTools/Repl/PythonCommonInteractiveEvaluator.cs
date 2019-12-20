@@ -146,16 +146,26 @@ namespace Microsoft.PythonTools.Repl {
                 return;
             }
 
-            await PythonLanguageClient.EnsureLanguageClientAsync(
-                _serviceProvider,
-                _window,
-                ContentType.TypeName
-            );
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-            var client = PythonLanguageClient.FindLanguageClient(ContentType.TypeName);
-            if (client != null) {
-                Document = new ReplDocument(_serviceProvider, _window, client);
-                await Document.InitializeAsync();
+            var evaluator = _window.Evaluator as PythonCommonInteractiveEvaluator;
+            if (evaluator == null && _window.Evaluator is SelectableReplEvaluator selEvaluator) {
+                evaluator = selEvaluator.Evaluator as PythonCommonInteractiveEvaluator;
+            }
+
+            if (evaluator != null) {
+                var context = new PythonLanguageClientContextRepl(evaluator, ContentType.TypeName);
+                await PythonLanguageClient.EnsureLanguageClientAsync(
+                    _serviceProvider,
+                    ThreadHelper.JoinableTaskContext,
+                    context
+                );
+
+                var client = PythonLanguageClient.FindLanguageClient(ContentType.TypeName);
+                if (client != null) {
+                    Document = new ReplDocument(_serviceProvider, _window, client);
+                    await Document.InitializeAsync();
+                }
             }
         }
 

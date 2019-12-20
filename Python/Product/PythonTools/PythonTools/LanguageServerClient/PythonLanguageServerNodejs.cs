@@ -24,15 +24,18 @@ using Microsoft.Python.Parsing;
 using Microsoft.VisualStudio.LanguageServer.Client;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudio.Threading;
 using Microsoft.Win32;
 using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.LanguageServerClient {
     internal class PythonLanguageServerNodejs : PythonLanguageServer {
         private readonly IServiceProvider _site;
+        private readonly JoinableTaskContext _joinableTaskContext;
 
-        public PythonLanguageServerNodejs(IServiceProvider site) {
+        public PythonLanguageServerNodejs(IServiceProvider site, JoinableTaskContext joinableTaskContext) {
             _site = site ?? throw new ArgumentNullException(nameof(site));
+            _joinableTaskContext = joinableTaskContext ?? throw new ArgumentNullException(nameof(joinableTaskContext));
         }
 
         private static bool IsEnabled => IsEnvVarEnabled("PTVS_NODE_SERVER_ENABLED");
@@ -52,7 +55,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
 
         public async override Task<Connection> ActivateAsync() {
-            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+            await _joinableTaskContext.Factory.SwitchToMainThreadAsync();
 
             var nodePath = GetNodeExecutablePath();
             if (!File.Exists(nodePath)) {
@@ -166,7 +169,9 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
 
         private string GetNodePathFromSharedComponent() {
-            ThreadHelper.ThrowIfNotOnUIThread();
+            if (!_joinableTaskContext.IsOnMainThread) {
+                throw new InvalidOperationException("Must be called from main thread.");
+            }
 
             // The Node.js installed by component id Microsoft.VisualStudio.Package.NodeJs
             var shell = _site.GetService<SVsShell, IVsShell>();

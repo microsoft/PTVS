@@ -67,9 +67,9 @@ namespace Microsoft.PythonTools.LiveShare {
                     return Initialize<TOut>();
                 case Methods.TextDocumentCompletionName:
                 case Methods.TextDocumentHoverName:
+                case Methods.TextDocumentSignatureHelpName:
                 case Methods.TextDocumentDefinitionName:
                 case Methods.TextDocumentReferencesName:
-                case Methods.TextDocumentSignatureHelpName:
                     return await DispatchToLanguageServer(method, param, cancellationToken);
                 default:
                     return default(TOut);
@@ -111,7 +111,7 @@ namespace Microsoft.PythonTools.LiveShare {
         /// Helper function for tests, enabling this class to be tested without needing
         /// a service provider or UI thread.
         /// </summary>
-        internal void SetAnalyzer(Uri documentUri, PythonLanguageClient client) {
+        internal void SetClient(Uri documentUri, PythonLanguageClient client) {
             _clientCache[documentUri] = client;
         }
 

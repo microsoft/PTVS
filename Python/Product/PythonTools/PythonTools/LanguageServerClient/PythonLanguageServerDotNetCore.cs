@@ -25,17 +25,19 @@ using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.LanguageServer.Client;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudio.Threading;
 using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.LanguageServerClient {
     internal class PythonLanguageServerDotNetCore : PythonLanguageServer {
         private readonly IServiceProvider _site;
-
+        private readonly JoinableTaskContext _joinableTaskContext;
         private const string ExeName = "Microsoft.Python.LanguageServer.exe";
         private const string DllName = "Microsoft.Python.LanguageServer.dll";
 
-        public PythonLanguageServerDotNetCore(IServiceProvider site) {
+        public PythonLanguageServerDotNetCore(IServiceProvider site, JoinableTaskContext joinableTaskContext) {
             _site = site ?? throw new ArgumentNullException(nameof(site));
+            _joinableTaskContext = joinableTaskContext ?? throw new ArgumentNullException(nameof(joinableTaskContext));
         }
 
 #if DEBUG
@@ -49,7 +51,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 #endif
 
         public async override Task<Connection> ActivateAsync() {
-            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+            await _joinableTaskContext.Factory.SwitchToMainThreadAsync();
 
             var serverFolderPath = GetServerLocation();
 
@@ -135,25 +137,38 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
 
         private string GetServerLocation() {
-            ThreadHelper.ThrowIfNotOnUIThread();
+            // For testing, allow to specify via env var the location
+            // of an extracted language server
+            var lsExtractedFolderPath = Environment.GetEnvironmentVariable("PTVS_DOTNETCORE_SERVER_LOCATION");
+            if (Directory.Exists(lsExtractedFolderPath)) {
+                return lsExtractedFolderPath;
+            }
+
+            if (!_joinableTaskContext.IsOnMainThread) {
+                throw new InvalidOperationException("Must be called from main thread.");
+            }
 
             var shell = _site.GetService<SVsShell, IVsShell>();
             shell.GetProperty((int)__VSSPROPID4.VSSPROPID_LocalAppDataDir, out object localAppDataFolderPath);
 
+            lsExtractedFolderPath = Path.Combine((string)localAppDataFolderPath, "PythonLanguageServer");
+            if (!Directory.Exists(lsExtractedFolderPath)) {
+                ExtractToFolder(lsExtractedFolderPath);
+            }
+
+            return lsExtractedFolderPath;
+        }
+
+        internal static void ExtractToFolder(string lsExtractedFolderPath) {
             var lsZipFolderPath = Path.GetDirectoryName(typeof(PythonLanguageServerDotNetCore).Assembly.Location);
             var lsZipFileName = "Python-Language-Server-win-{0}.zip".FormatInvariant(Environment.Is64BitOperatingSystem ? "x64" : "x86");
             var lsZipFilePath = Path.Combine(lsZipFolderPath, lsZipFileName);
 
-            var lsExtractedFolderPath = Path.Combine((string)localAppDataFolderPath, "PythonLanguageServer");
-            if (!Directory.Exists(lsExtractedFolderPath)) {
-                if (File.Exists(lsZipFilePath)) {
-                    ZipFile.ExtractToDirectory(lsZipFilePath, lsExtractedFolderPath);
-                } else {
-                    throw new FileNotFoundException("Python Language Server archive file not found.", lsZipFilePath);
-                }
+            if (File.Exists(lsZipFilePath)) {
+                ZipFile.ExtractToDirectory(lsZipFilePath, lsExtractedFolderPath);
+            } else {
+                throw new FileNotFoundException("Python Language Server archive file not found.", lsZipFilePath);
             }
-
-            return lsExtractedFolderPath;
         }
 
         /// <summary>

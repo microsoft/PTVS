@@ -20,12 +20,9 @@ using System.Threading;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Project;
-using Microsoft.VisualStudio.Editor;
-using Microsoft.VisualStudio.LanguageServer.Client;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Threading;
 using Microsoft.VisualStudio.Utilities;
-using Microsoft.VisualStudio.Workspace;
-using Microsoft.VisualStudio.Workspace.VSIntegration.Contracts;
 using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.LanguageServerClient {
@@ -37,22 +34,13 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         public IContentTypeRegistryService ContentTypeRegistryService;
 
         [Import]
-        public IVsEditorAdaptersFactoryService EditorAdapterFactoryService;
-
-        [Import]
-        public IVsFolderWorkspaceService WorkspaceService;
+        public IPythonWorkspaceContextProvider PythonWorkspaceContextProvider;
 
         [Import]
         public IInterpreterOptionsService OptionsService;
 
         [Import]
-        public IInterpreterRegistryService RegistryService;
-
-        [Import]
-        public ILanguageClientBroker Broker;
-
-        [Import]
-        public IPythonWorkspaceContextProvider PythonWorkspaceContextProvider;
+        public JoinableTaskContext JoinableTaskContext;
 
         public bool TryGetContentTypeForFilePath(string filePath, out IContentType contentType) {
             contentType = null;
@@ -68,36 +56,50 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 return false;
             }
 
-            // Force the package to load, since this is a MEF component, there is no guarantee it has been loaded.
+            // Force the package to load, since this is a MEF component,
+            // there is no guarantee it has been loaded.
             Site.GetPythonToolsService();
 
-            string contentTypeName;
             var project = Site.GetProjectContainingFile(filePath);
             if (project != null) {
-                contentTypeName = GetContentTypeNameForProject(project);
-            } else if (WorkspaceService.CurrentWorkspace != null) {
-                contentTypeName = GetContentTypeNameForWorkspace(WorkspaceService.CurrentWorkspace);
+                contentType = ProcessProject(project);
+            } else if (PythonWorkspaceContextProvider.Workspace != null) {
+                contentType = ProcessWorkspace(PythonWorkspaceContextProvider.Workspace);
             } else {
-                contentTypeName = GetContentTypeNameForLoosePythonFile();
-            }
-
-            if (contentTypeName != null) {
-                contentType = GetOrCreateContentType(ContentTypeRegistryService, contentTypeName);
-                
-                Site.GetUIThread().InvokeTaskSync(() => PythonLanguageClient.EnsureLanguageClientAsync(
-                    Site,
-                    WorkspaceService,
-                    PythonWorkspaceContextProvider,
-                    OptionsService,
-                    RegistryService,
-                    Broker,
-                    contentTypeName,
-                    project,
-                    null
-                ), CancellationToken.None);
+                contentType = ProcessGlobal();
             }
 
             return contentType != null;
+        }
+
+        private IContentType ProcessProject(PythonProjectNode project) {
+            var contentTypeName = GetContentTypeNameForProject(project);
+            var context = new PythonLanguageClientContextProject(project, contentTypeName);
+            return EnsureContentTypeAndLanguageClient(contentTypeName, context);
+        }
+
+        private IContentType ProcessWorkspace(IPythonWorkspaceContext workspace) {
+            var contentTypeName = GetContentTypeNameForWorkspace(workspace);
+            var context = new PythonLanguageClientContextWorkspace(workspace, contentTypeName);
+            return EnsureContentTypeAndLanguageClient(contentTypeName, context);
+        }
+
+        private IContentType ProcessGlobal() {
+            var contentTypeName = GetContentTypeNameForGlobalPythonFile();
+            var context = new PythonLanguageClientContextGlobal(OptionsService, contentTypeName);
+            return EnsureContentTypeAndLanguageClient(contentTypeName, context);
+        }
+
+        private IContentType EnsureContentTypeAndLanguageClient(string contentTypeName, IPythonLanguageClientContext context) {
+            var contentType = GetOrCreateContentType(ContentTypeRegistryService, contentTypeName);
+
+            Site.GetUIThread().InvokeTaskSync(() => PythonLanguageClient.EnsureLanguageClientAsync(
+                Site,
+                JoinableTaskContext,
+                context
+            ), CancellationToken.None);
+
+            return contentType;
         }
 
         public static string GetContentTypeNameForProject(PythonProjectNode project) {
@@ -105,24 +107,15 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             return "PythonProject:{0}".FormatInvariant(project.ProjectIDGuid);
         }
 
-        public static string GetContentTypeNameForProject(IPythonProject project) {
-            // To avoid having to track project renames, use the project guid, not the project name
-            if (project is PythonProjectNode pythonProject) {
-                return GetContentTypeNameForProject(pythonProject);
-            }
-
-            return null;
-        }
-
-        public static string GetContentTypeNameForWorkspace(IWorkspace workspace) {
-            return "PythonWorkspace:{0}".FormatInvariant(workspace.GetName());
+        public static string GetContentTypeNameForWorkspace(IPythonWorkspaceContext workspace) {
+            return "PythonWorkspace:{0}".FormatInvariant(workspace.WorkspaceName);
         }
 
         public static string GetContentTypeNameForREPL(int windowId) {
             return "PythonInteractive:{0}".FormatInvariant(windowId);
         }
 
-        public static string GetContentTypeNameForLoosePythonFile() {
+        public static string GetContentTypeNameForGlobalPythonFile() {
             return "PythonFile";
         }
 
