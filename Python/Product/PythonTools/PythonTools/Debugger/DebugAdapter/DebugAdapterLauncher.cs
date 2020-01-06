@@ -49,7 +49,6 @@ namespace Microsoft.PythonTools.Debugger {
             }
 
             DebugLaunchInfo debugLaunchInfo = (DebugLaunchInfo)_debugInfo;
-            //var ptvsdAdapterDirectory = Path.GetDirectoryName(PythonToolsInstallPath.GetFile(@"C:\Users\Raymon G\Desktop\MainDrive\ptvsd 5.0\ptvsd\adapter\__init__.py"));
             var ptvsdAdapterDirectory = Path.GetDirectoryName(PythonToolsInstallPath.GetFile("Packages\\ptvsd\\adapter\\__init__.py"));
 
             DebugAdapterProcess targetProcess = new DebugAdapterProcess(targetInterop, $"\"{ptvsdAdapterDirectory}\"");
