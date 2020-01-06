@@ -24,9 +24,9 @@ using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 
 namespace Microsoft.PythonTools.Debugger {
-    internal sealed class DebugAdapterProcessStream : Stream {
+    internal sealed class DebugRemoteAdapterProcessStream : Stream {
         private readonly NetworkStream _networkStream;
-        public DebugAdapterProcessStream(NetworkStream networkStream) {
+        public DebugRemoteAdapterProcessStream(NetworkStream networkStream) {
             _networkStream = networkStream;
         }
 
@@ -66,7 +66,7 @@ namespace Microsoft.PythonTools.Debugger {
                 _networkStream.Write(buffer, offset, count);
             } catch (IOException ex) when (IsExpectedError(ex.InnerException as SocketException)) {
                 // This is a case where the debuggee has exited, but the adapter host attempts to write to it.
-                Debug.WriteLine($"Attempt to write after stream is closed.", nameof(DebugAdapterProcessStream));
+                Debug.WriteLine($"Attempt to write after stream is closed.", nameof(DebugRemoteAdapterProcessStream));
             }
         }
 

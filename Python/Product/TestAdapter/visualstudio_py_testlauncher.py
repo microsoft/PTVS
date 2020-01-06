@@ -247,7 +247,7 @@ def main():
     
     sys.path[0] = os.getcwd()
     if opts.debugger_search_path:
-        sys.path.append(opts.debugger_search_path)
+        sys.path.insert(1, opts.debugger_search_path)
 
     if opts.result_port:
         _channel = _IpcChannel(socket.create_connection(('127.0.0.1', opts.result_port)))
@@ -265,9 +265,8 @@ def main():
         wait_for_attach()
     elif opts.port:   
         from ptvsd import enable_attach, wait_for_attach
-        from ptvsd.attach_server import DEFAULT_PORT
         
-        enable_attach(('127.0.0.1', getattr(opts, 'port', DEFAULT_PORT)), redirect_output = True)
+        enable_attach(('127.0.0.1', getattr(opts, 'port', 5678)))
         wait_for_attach()
     elif opts.mixed_mode:
         # For mixed-mode attach, there's no ptvsd and hence no wait_for_attach(), 
@@ -355,7 +354,6 @@ def main():
                         message = message,
                         test = test
                     )
-
         if _IS_OLD_UNITTEST:
             def _makeResult(self):
                 return VsTestResult(self.stream, self.descriptions, self.verbosity)

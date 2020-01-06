@@ -33,7 +33,7 @@ def load_debugger(secret, port, debugger_search_path, mixed_mode):
     # Load the debugger package
     try:
         if debugger_search_path:
-            sys.path.append(debugger_search_path)
+            sys.path.insert(1, debugger_search_path)
         
         if secret and port:
             # Start tests with legacy debugger
@@ -49,7 +49,7 @@ def load_debugger(secret, port, debugger_search_path, mixed_mode):
             # Start tests with new debugger
             from ptvsd import enable_attach, wait_for_attach
             
-            enable_attach(('127.0.0.1', port), redirect_output = True)
+            enable_attach(('127.0.0.1', port))
             wait_for_attach()
         elif mixed_mode:
             # For mixed-mode attach, there's no ptvsd and hence no wait_for_attach(), 

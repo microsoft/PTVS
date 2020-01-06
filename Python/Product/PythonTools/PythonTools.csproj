@@ -261,10 +261,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="PythonTools\Debugger\CustomDebugAdapterProtocolExtension.cs" />
-    <Compile Include="PythonTools\Debugger\DebugAdapterLauncher.cs" />
-    <Compile Include="PythonTools\Debugger\DebugAdapterProcess.cs" />
-    <Compile Include="PythonTools\Debugger\DebugAdapterProcessStream.cs" />
-    <Compile Include="PythonTools\Debugger\DebugAdapterRemoteProcess.cs" />
+    <Compile Include="PythonTools\Debugger\DebugAdapter\DebugAdapterLauncher.cs" />
+    <Compile Include="PythonTools\Debugger\DebugAdapter\DebugAdapterProcess.cs" />
+    <Compile Include="PythonTools\Debugger\DebugAdapter\DebugAdapterRemoteProcess.cs" />
+    <Compile Include="PythonTools\Debugger\DebugAdapter\DebugAdapterRemoteProcessStream.cs" />
+    <Compile Include="PythonTools\Debugger\DebugAdapter\DebugInfo.cs" />
     <Compile Include="PythonTools\Debugger\PtvsdVersionHelper.cs" />
     <Compile Include="PythonTools\Commands\CurrentEnvironmentListCommand.cs" />
     <Compile Include="PythonTools\Commands\CurrentEnvironmentCommand.cs" />
