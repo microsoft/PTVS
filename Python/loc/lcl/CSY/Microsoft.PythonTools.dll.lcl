@@ -5363,7 +5363,7 @@
         <Str Cat="Text">
           <Val><![CDATA[An 'Import' of the file '{1}' was found in the project file '{0}'. This file is not registered as a safe file to import, and could contain targets and tasks that are harmful.  If this imported file is indeed considered safe, then it can be registered by writing to the registry key {2}.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[V souboru projektu {0} se našel import souboru {1}. Tento soubor není registrovaný jako soubor bezpečný pro import a může obsahovat škodlivé cíle a úlohy. Pokud tento importovaný soubor skutečně považujete za bezpečný, můžete ho zaregistrovat zápisem do klíče registru {2}.]]></Val>
+            <Val><![CDATA[V souboru projektu {0} se našel Import souboru {1}. Tento soubor není registrovaný jako soubor bezpečný pro import a může obsahovat škodlivé cíle a úkoly. Pokud se tento importovaný soubor skutečně považuje za bezpečný, dá se zaregistrovat zápisem do klíče registru {2}.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -5372,7 +5372,7 @@
         <Str Cat="Text">
           <Val><![CDATA[One or more items named '{1}' were found in the project file '{0}'. These items normally should not be specified in the project file. They can change the way targets and tasks are executed during project load, and this could have harmful effects.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[V souboru projektu {0} se našla jedna nebo více položek s názvem {1}. Tyto položky by se do souboru projektu obvykle neměly zadávat. Můžou změnit způsob, jakým se provádějí cíle a úlohy během načítání projektu, a to může mít škodlivé účinky.]]></Val>
+            <Val><![CDATA[V souboru projektu {0} se našla jedna nebo víc položek s názvem {1}. Tyto položky by se do souboru projektu obvykle neměly zadávat. Můžou změnit způsob, jakým se provádějí cíle a úkoly během načítání projektu, a to může mít škodlivé účinky.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -5390,7 +5390,7 @@
         <Str Cat="Text">
           <Val><![CDATA[A property named '{1}' was found in the project file '{0}'.  This property normally should not be specified in the project file.  Its value can change the way targets and tasks are executed during project load, and this could have harmful effects.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[V souboru projektu {0} se našla vlastnost s názvem {1}. Tato vlastnost by se do souboru projektu obvykle neměla zadávat. Její hodnota může změnit způsob, jakým se provádějí cíle a úlohy během načítání projektu, a to může mít škodlivé účinky.]]></Val>
+            <Val><![CDATA[V souboru projektu {0} se našla vlastnost s názvem {1}. Tato vlastnost by se do souboru projektu obvykle neměla zadávat. Její hodnota může změnit způsob, jakým se provádějí cíle a úkoly během načítání projektu, a to může mít škodlivé účinky.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
