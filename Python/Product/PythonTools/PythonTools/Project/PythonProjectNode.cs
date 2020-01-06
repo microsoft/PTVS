@@ -508,11 +508,9 @@ namespace Microsoft.PythonTools.Project {
             if (!IsProjectOpened)
                 return;
 
-            if (this.IsAppxPackageableProject()) {
-                EnvDTE.Project automationObject = (EnvDTE.Project)GetAutomationObject();
+            var automationObject = (EnvDTE.Project)GetAutomationObject();
 
-                this.BuildProject.SetGlobalProperty(ProjectFileConstants.Platform, automationObject.ConfigurationManager.ActiveConfiguration.PlatformName);
-            }
+            this.BuildProject.SetGlobalProperty(ProjectFileConstants.Platform, automationObject.ConfigurationManager.ActiveConfiguration.PlatformName);
         }
 
         protected override bool SupportsIconMonikers {
