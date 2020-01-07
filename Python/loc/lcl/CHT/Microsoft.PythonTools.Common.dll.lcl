@@ -7697,7 +7697,7 @@
         <Str Cat="Text">
           <Val><![CDATA[workspace]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[工作空間]]></Val>
+            <Val><![CDATA[工作區]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
