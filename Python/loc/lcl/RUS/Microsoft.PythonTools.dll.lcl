@@ -5372,7 +5372,7 @@
         <Str Cat="Text">
           <Val><![CDATA[One or more items named '{1}' were found in the project file '{0}'. These items normally should not be specified in the project file. They can change the way targets and tasks are executed during project load, and this could have harmful effects.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[В файле проекта "{0}" найден один или более элементов "{1}". Обычно эти элементы не определяются в файле проекта. Они позволяют изменять способ выполнения целей и задач во время загрузки проекта, что может иметь не желательные эффекты.]]></Val>
+            <Val><![CDATA[В файле проекта "{0}" обнаружены элементы с именем "{1}". Обычно эти элементы не определяются в файле проекта. Они могут изменять выполнение целей и задач при загрузке проекта, что может иметь нежелательные последствия.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -5390,7 +5390,7 @@
         <Str Cat="Text">
           <Val><![CDATA[A property named '{1}' was found in the project file '{0}'.  This property normally should not be specified in the project file.  Its value can change the way targets and tasks are executed during project load, and this could have harmful effects.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[В файле проекта "{0}" было обнаружено свойство с именем "{1}". Обычно это свойство не определяется в файле проекта. Его значение позволяет изменять способ выполнения целей и задач во время загрузки проекта, что может иметь не желательные эффекты.]]></Val>
+            <Val><![CDATA[В файле проекта "{0}" обнаружено свойство с именем "{1}". Обычно это свойство не определяется в файле проекта. Его значение может изменять выполнение целей и задач при загрузке проекта, что может иметь нежелательные последствия.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
