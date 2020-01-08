@@ -201,7 +201,7 @@ namespace Microsoft.PythonTools.Debugger {
             launchJson.ShowReturnValue = debugService.ShowFunctionReturnValue;
         }
 
-        [DllImport("shell32.dll")]
+        [DllImport("shell32.dll", SetLastError = true)]
         private static extern IntPtr CommandLineToArgvW([MarshalAs(UnmanagedType.LPWStr)] string lpCmdLine, out int pNumArgs);
 
         private static IEnumerable<string> GetParsedCommandLineArguments(string command) {
