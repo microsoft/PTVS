@@ -18,9 +18,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Runtime.InteropServices;
-using Microsoft.PythonTools.Debugger.DebugEngine;
+using System.Web;
+using System.Windows.Forms;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces;
 using Microsoft.VisualStudio.Shell;
@@ -43,16 +43,16 @@ namespace Microsoft.PythonTools.Debugger {
 
         public ITargetHostProcess LaunchAdapter(IAdapterLaunchInfo launchInfo, ITargetHostInterop targetInterop) {
             if (launchInfo.LaunchType == LaunchType.Attach) {
-                DebugAttachInfo debugAttachInfo = (DebugAttachInfo)_debugInfo;
+                var debugAttachInfo = (DebugAttachInfo)_debugInfo;
 
                 return DebugAdapterRemoteProcess.Attach(debugAttachInfo);
             }
 
-            DebugLaunchInfo debugLaunchInfo = (DebugLaunchInfo)_debugInfo;
+            var debugLaunchInfo = (DebugLaunchInfo)_debugInfo;
             var ptvsdAdapterDirectory = Path.GetDirectoryName(PythonToolsInstallPath.GetFile("Packages\\ptvsd\\adapter\\__init__.py"));
 
-            DebugAdapterProcess targetProcess = new DebugAdapterProcess(targetInterop, $"\"{ptvsdAdapterDirectory}\"");
-            return targetProcess.StartProcess(debugLaunchInfo.Python.FirstOrDefault(), debugLaunchInfo.WebPageUrl);
+            var targetProcess = new DebugAdapterProcess(targetInterop, ptvsdAdapterDirectory);
+            return targetProcess.StartProcess(debugLaunchInfo.InterpreterPathAndArguments.FirstOrDefault(), debugLaunchInfo.WebPageUrl);
         }
 
         public void UpdateLaunchOptions(IAdapterLaunchInfo adapterLaunchInfo) {
@@ -72,35 +72,51 @@ namespace Microsoft.PythonTools.Debugger {
             var adapterLaunchInfoJson = JObject.Parse(adapterLaunchJson);
             adapterLaunchInfoJson = adapterLaunchInfoJson.Value<JObject>("ConfigurationProperties") ?? adapterLaunchInfoJson;//Based on the VS version, the JSON could be nested in ConfigurationProperties
 
-            DebugLaunchInfo debugLaunchInfo = new DebugLaunchInfo() {
-                Cwd = adapterLaunchInfoJson.Value<string>("cwd"),
+            var debugLaunchInfo = new DebugLaunchInfo() {
+                CurrentWorkingDirectory = adapterLaunchInfoJson.Value<string>("cwd"),
                 Console = "externalTerminal",
             };
 
-            SetInterpreterOptions(debugLaunchInfo, adapterLaunchInfoJson);
-            SetProgramInfo(debugLaunchInfo, adapterLaunchInfoJson);
+            SetInterpreterPathAndArguments(debugLaunchInfo, adapterLaunchInfoJson);
+            SetScriptPathAndArguments(debugLaunchInfo, adapterLaunchInfoJson);
             SetEnvVariables(debugLaunchInfo, adapterLaunchInfoJson);
             SetLaunchDebugOptions(debugLaunchInfo, adapterLaunchInfoJson);
 
             return debugLaunchInfo;
-
         }
-        private static void SetInterpreterOptions(DebugLaunchInfo debugLaunchInfo, JObject adapterLaunchInfoJson) {
-            debugLaunchInfo.Python = new List<string>() {
+
+        private static void SetInterpreterPathAndArguments(DebugLaunchInfo debugLaunchInfo, JObject adapterLaunchInfoJson) {
+            debugLaunchInfo.InterpreterPathAndArguments = new List<string>() {
                 adapterLaunchInfoJson.Value<string>("exe").Replace("\"", "")
             };
 
             string interpreterArgs = adapterLaunchInfoJson.Value<string>("interpreterArgs");
-            debugLaunchInfo.Python.AddRange(GetParsedCommandLineArguments(interpreterArgs));
+            try {
+                debugLaunchInfo.InterpreterPathAndArguments.AddRange(GetParsedCommandLineArguments(interpreterArgs));
+            } catch (Exception) {
+                MessageBox.Show(Strings.UnableToParseInterpreterArgs.FormatUI(interpreterArgs), Strings.ProductTitle, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                debugLaunchInfo.ScriptPathAndArguments = new List<string> {
+                    adapterLaunchInfoJson.Value<string>("exe")
+                };
+            }
         }
-        private static void SetProgramInfo(DebugLaunchInfo debugLaunchInfo, JObject adapterLaunchInfoJson) {
-            debugLaunchInfo.Program = new List<string> {
+
+        private static void SetScriptPathAndArguments(DebugLaunchInfo debugLaunchInfo, JObject adapterLaunchInfoJson) {
+            debugLaunchInfo.ScriptPathAndArguments = new List<string> {
                 adapterLaunchInfoJson.Value<string>("scriptName")
             };
 
             string scriptArgs = adapterLaunchInfoJson.Value<string>("scriptArgs");
-            debugLaunchInfo.Program.AddRange(GetParsedCommandLineArguments(scriptArgs));
+            try {
+                debugLaunchInfo.ScriptPathAndArguments.AddRange(GetParsedCommandLineArguments(scriptArgs));
+            } catch (Exception) {
+                MessageBox.Show(Strings.UnableToParseScriptArgs.FormatUI(scriptArgs), Strings.ProductTitle, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                debugLaunchInfo.ScriptPathAndArguments = new List<string> {
+                    adapterLaunchInfoJson.Value<string>("scriptName")
+                };
+            }
         }
+
         private static void SetEnvVariables(DebugLaunchInfo debugLaunchInfo, JObject adapterLaunchInfoJson) {
             var env = new Dictionary<string, string>();
             foreach (var envVariable in adapterLaunchInfoJson.Value<JArray>("env")) {
@@ -109,6 +125,7 @@ namespace Microsoft.PythonTools.Debugger {
 
             debugLaunchInfo.Env = env.Count == 0 ? null : env;
         }
+
         private static void SetLaunchDebugOptions(DebugLaunchInfo debugLaunchInfo, JObject adapterLaunchInfoJson) {
             string[] options = SplitDebugOptions(adapterLaunchInfoJson.Value<string>("options"));
 
@@ -116,7 +133,7 @@ namespace Microsoft.PythonTools.Debugger {
             if (djangoOption != null) {
                 string[] parsedOption = djangoOption.Split('=');
                 if (parsedOption.Length == 2) {
-                    debugLaunchInfo.DebugDjango = parsedOption[1].ToLower().Trim().Equals("true");
+                    debugLaunchInfo.DebugDjango = parsedOption[1].Trim().Equals("true");
                 }
             }
 
@@ -124,13 +141,13 @@ namespace Microsoft.PythonTools.Debugger {
             if (webPageUrlOption != null) {
                 string[] parsedOption = webPageUrlOption.Split('=');
                 if (parsedOption.Length == 2) {
-                    debugLaunchInfo.WebPageUrl = WebUtility.UrlDecode(parsedOption[1].ToLower().Trim());
+                    debugLaunchInfo.WebPageUrl = HttpUtility.UrlDecode(parsedOption[1]);
                 }
             }
         }
 
         private static string[] SplitDebugOptions(string options) {
-            List<string> res = new List<string>();
+            var res = new List<string>();
             int lastStart = 0;
             for (int i = 0; i < options.Length; i++) {
                 if (options[i] == ';') {
@@ -152,10 +169,10 @@ namespace Microsoft.PythonTools.Debugger {
         #endregion
 
         #region Attach
-        public static DebugAttachInfo GetTcpAttachDebugInfo(IAdapterLaunchInfo adapterLaunchInfo) {
-            DebugAttachInfo debugAttachInfo = new DebugAttachInfo();
+        private static DebugAttachInfo GetTcpAttachDebugInfo(IAdapterLaunchInfo adapterLaunchInfo) {
+            var debugAttachInfo = new DebugAttachInfo();
 
-            adapterLaunchInfo.DebugPort.GetPortName(out string adapterHostPortInfo);
+            adapterLaunchInfo.DebugPort.GetPortName(out var adapterHostPortInfo);
             debugAttachInfo.RemoteUri = new Uri(adapterHostPortInfo);
 
             var uriInfo = new Uri(adapterHostPortInfo);
@@ -185,29 +202,26 @@ namespace Microsoft.PythonTools.Debugger {
         }
 
         [DllImport("shell32.dll")]
-        static extern IntPtr CommandLineToArgvW([MarshalAs(UnmanagedType.LPWStr)] string lpCmdLine, out int pNumArgs);
+        private static extern IntPtr CommandLineToArgvW([MarshalAs(UnmanagedType.LPWStr)] string lpCmdLine, out int pNumArgs);
 
         private static IEnumerable<string> GetParsedCommandLineArguments(string command) {
-            if (String.IsNullOrEmpty(command)) {
+            if (string.IsNullOrEmpty(command)) {
                 yield break;
             }
 
-            IntPtr argPointer = CommandLineToArgvW(command, out int argumentCount);
-            string[] arguments = new string[argumentCount];
+            IntPtr argPointer = CommandLineToArgvW(command, out var argumentCount);
+            if (argPointer == IntPtr.Zero) {
+                throw new System.ComponentModel.Win32Exception();
+            }
 
-            if (argPointer != IntPtr.Zero) {
-                try {
-                    for (int i = 0; i < arguments.Length; i++) {
-                        yield return Marshal.PtrToStringUni(Marshal.ReadIntPtr(argPointer, i * IntPtr.Size));
-                    }
-
-                } finally {
-                    Marshal.FreeHGlobal(argPointer);
+            try {
+                for (int i = 0; i < argumentCount; i++) {
+                    yield return Marshal.PtrToStringUni(Marshal.ReadIntPtr(argPointer, i * IntPtr.Size));
                 }
+
+            } finally {
+                Marshal.FreeHGlobal(argPointer);
             }
         }
-
     }
 }
-
-

@@ -247,7 +247,7 @@ def main():
     
     sys.path[0] = os.getcwd()
     if opts.debugger_search_path:
-        sys.path.insert(1, opts.debugger_search_path)
+        sys.path.insert(0, opts.debugger_search_path)
 
     if opts.result_port:
         _channel = _IpcChannel(socket.create_connection(('127.0.0.1', opts.result_port)))
@@ -286,6 +286,9 @@ def main():
             if isTracing.value != 0:
                 break
             sleep(0.1)
+
+    if opts.debugger_search_path:
+        del sys.path[0]
 
     all_tests = list(opts.tests or [])
     if opts.test_list:

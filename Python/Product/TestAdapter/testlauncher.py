@@ -33,7 +33,7 @@ def load_debugger(secret, port, debugger_search_path, mixed_mode):
     # Load the debugger package
     try:
         if debugger_search_path:
-            sys.path.insert(1, debugger_search_path)
+            sys.path.insert(0, debugger_search_path)
         
         if secret and port:
             # Start tests with legacy debugger
@@ -69,6 +69,10 @@ def load_debugger(secret, port, debugger_search_path, mixed_mode):
                 if isTracing.value != 0:
                     break
                 sleep(0.1)
+
+        if debugger_search_path:
+            del sys.path[0]
+
     except:
         traceback.print_exc()
         print('''

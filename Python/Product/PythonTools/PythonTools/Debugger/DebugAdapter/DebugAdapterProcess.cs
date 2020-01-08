@@ -15,13 +15,14 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Windows.Forms;
 using Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudioTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Debugger {
-    sealed class DebugAdapterProcess {
+    internal sealed class DebugAdapterProcess {
         private readonly ITargetHostInterop _targetInterop;
         private readonly string _debuggerAdapterDirectory;
 
@@ -29,16 +30,20 @@ namespace Microsoft.PythonTools.Debugger {
         private string _webBrowserUrl;
 
         public DebugAdapterProcess(ITargetHostInterop targetInterop, string debuggerAdapterDirectory) {
-            _targetInterop = targetInterop;
-            _debuggerAdapterDirectory = debuggerAdapterDirectory;
+            _targetInterop = targetInterop ?? throw new ArgumentNullException(nameof(targetInterop));
+            _debuggerAdapterDirectory = debuggerAdapterDirectory ?? throw new ArgumentNullException(nameof(debuggerAdapterDirectory));
         }
 
         public ITargetHostProcess StartProcess(string pythonExePath, string webBrowserUrl) {
+            if (string.IsNullOrEmpty(pythonExePath)) {
+                MessageBox.Show(Strings.PythonInterpreterPathNullOrEmpty, Strings.ProductTitle, MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return null;
+            }
+
             _webBrowserUrl = webBrowserUrl;
+            _targetHostProcess = _targetInterop.ExecuteCommandAsync(pythonExePath, "\"" + _debuggerAdapterDirectory + "\"");
 
-            _targetHostProcess = _targetInterop.ExecuteCommandAsync(pythonExePath, _debuggerAdapterDirectory);
-
-            if (!string.IsNullOrEmpty(webBrowserUrl) && Uri.TryCreate(webBrowserUrl, UriKind.RelativeOrAbsolute, out Uri uri)) {
+            if (!string.IsNullOrEmpty(webBrowserUrl) && Uri.TryCreate(webBrowserUrl, UriKind.RelativeOrAbsolute, out var uri)) {
                 OnPortOpenedHandler.CreateHandler(uri.Port, null, null, () => _targetHostProcess.HasExited, LaunchBrowserDebugger);
             }
 
@@ -48,7 +53,7 @@ namespace Microsoft.PythonTools.Debugger {
         private void LaunchBrowserDebugger() {
             var vsDebugger = (IVsDebugger2)VisualStudio.Shell.ServiceProvider.GlobalProvider.GetService(typeof(SVsShellDebugger));
 
-            VsDebugTargetInfo2 info = new VsDebugTargetInfo2();
+            var info = new VsDebugTargetInfo2();
             var infoSize = Marshal.SizeOf(info);
             info.cbSize = (uint)infoSize;
             info.bstrExe = _webBrowserUrl;
@@ -65,6 +70,5 @@ namespace Microsoft.PythonTools.Debugger {
                 }
             }
         }
-
     }
 }

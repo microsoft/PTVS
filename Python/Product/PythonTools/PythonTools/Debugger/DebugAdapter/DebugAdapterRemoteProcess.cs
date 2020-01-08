@@ -23,16 +23,15 @@ using System.Threading.Tasks;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Logging;
 using Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces;
-using Newtonsoft.Json.Linq;
 
 namespace Microsoft.PythonTools.Debugger {
-    sealed class DebugAdapterRemoteProcess : ITargetHostProcess, IDisposable {
+    internal sealed class DebugAdapterRemoteProcess : ITargetHostProcess, IDisposable {
         private const int _debuggerConnectionTimeout = 20000; // 20 seconds
         private DebugRemoteAdapterProcessStream _stream;
         private bool _debuggerConnected = false;
 
-        private DebugAdapterRemoteProcess() {}
-        
+        private DebugAdapterRemoteProcess() { }
+
         public static ITargetHostProcess Attach(DebugAttachInfo debugAttachInfo) {
             var attachedProcess = new DebugAdapterRemoteProcess();
             return attachedProcess.ConnectSocket(debugAttachInfo.RemoteUri) ? attachedProcess : null;
@@ -86,9 +85,7 @@ namespace Microsoft.PythonTools.Debugger {
                 PtvsdVersionHelper.VerifyPtvsdVersionError);
         }
 
-        private void OnLegacyDebugger(object sender, EventArgs e) {
-            PtvsdVersionHelper.VerifyPtvsdVersionLegacy();
-        }
+        private void OnLegacyDebugger(object sender, EventArgs e) => PtvsdVersionHelper.VerifyPtvsdVersionLegacy();
 
         public IntPtr Handle => IntPtr.Zero;
 
@@ -102,7 +99,7 @@ namespace Microsoft.PythonTools.Debugger {
         public event DataReceivedEventHandler ErrorDataReceived;
 
         public void Dispose() {
-            if(_stream != null) {
+            if (_stream != null) {
                 _stream.Dispose();
             }
         }

@@ -1,33 +1,49 @@
-﻿using System;
+﻿// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABILITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
+
+using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace Microsoft.PythonTools.Debugger {
 
     [JsonObject(MemberSerialization.OptIn)]
-    public abstract class DebugInfo {
-        [JsonProperty("stopOnEntry")] 
+    internal abstract class DebugInfo {
+        [JsonProperty("stopOnEntry")]
         public bool? StopOnEntry { get; set; }
 
-        [JsonProperty("promptBeforeRunningWithBuildError")] 
+        [JsonProperty("promptBeforeRunningWithBuildError")]
         public bool? PromptBeforeRunningWithBuildError { get; set; }
 
-        [JsonProperty("redirectOutput")] 
+        [JsonProperty("redirectOutput")]
         public bool? RedirectOutput { get; set; }
 
-        [JsonProperty("waitOnAbnormalExit")] 
+        [JsonProperty("waitOnAbnormalExit")]
         public bool? WaitOnAbnormalExit { get; set; }
 
-        [JsonProperty("waitOnNormalExit")] 
+        [JsonProperty("waitOnNormalExit")]
         public bool? WaitOnNormalExit { get; set; }
 
-        [JsonProperty("breakOnSystemExitZero")] 
+        [JsonProperty("breakOnSystemExitZero")]
         public bool? BreakOnSystemExitZero { get; set; }
 
         [JsonProperty("debugStdLib")]
         public bool? DebugStdLib { get; set; }
 
-        [JsonProperty("showReturnValue")] 
+        [JsonProperty("showReturnValue")]
         public bool? ShowReturnValue { get; set; }
 
         [JsonProperty("env")]
@@ -36,34 +52,7 @@ namespace Microsoft.PythonTools.Debugger {
         //[JsonProperty("rules")]
         //public Rule[] Rules { get; set; }//TODO Will be added later
 
-        public abstract string GetJsonString();
-    }
-
-    [JsonObject(MemberSerialization.OptIn)]
-    public class DebugLaunchInfo : DebugInfo {
-        [JsonProperty("cwd")]
-        public string Cwd { get; set; }
-
-        [JsonProperty("python")]
-        public List<string> Python { get; set; } //Interpreter path and arguments
-        //public string Python { get; set; }
-
-        [JsonProperty("console")]
-        public string Console { get; set; }
-
-        [JsonProperty("program")]
-        //public string Program { get; set; }
-        public List<string> Program { get; set; } //Script path and arguments
-
-        [JsonProperty("code")] 
-        public string Code { get; set; }
-
-        [JsonProperty("django")] 
-        public bool DebugDjango { get; set; }
-
-        public string WebPageUrl { get; set; }
-
-        public override string GetJsonString() {
+        public string GetJsonString() {
             var jsonSettings = new JsonSerializerSettings() {
                 TypeNameHandling = TypeNameHandling.None,
                 NullValueHandling = NullValueHandling.Ignore
@@ -71,10 +60,34 @@ namespace Microsoft.PythonTools.Debugger {
 
             return JsonConvert.SerializeObject(this, Formatting.Indented, jsonSettings);
         }
+
     }
 
     [JsonObject(MemberSerialization.OptIn)]
-    public class DebugAttachInfo : DebugInfo {
+    internal class DebugLaunchInfo : DebugInfo {
+        [JsonProperty("cwd")]
+        public string CurrentWorkingDirectory { get; set; }
+
+        [JsonProperty("python")]
+        public List<string> InterpreterPathAndArguments { get; set; }
+        //public string Python { get; set; }
+
+        [JsonProperty("console")]
+        public string Console { get; set; }
+
+        [JsonProperty("program")]
+        //public string Program { get; set; }
+        public List<string> ScriptPathAndArguments { get; set; }
+
+        [JsonProperty("django")]
+        public bool DebugDjango { get; set; }
+
+        public string WebPageUrl { get; set; }
+
+    }
+
+    [JsonObject(MemberSerialization.OptIn)]
+    internal class DebugAttachInfo : DebugInfo {
         [JsonProperty("host")]
         public string Host { get; set; }
 
@@ -83,14 +96,6 @@ namespace Microsoft.PythonTools.Debugger {
 
         public Uri RemoteUri { get; set; }
 
-        public override string GetJsonString() {
-            var jsonSettings = new JsonSerializerSettings() {
-                TypeNameHandling = TypeNameHandling.None,
-                NullValueHandling = NullValueHandling.Ignore
-            };
-
-            return JsonConvert.SerializeObject(this, Formatting.Indented, jsonSettings);
-        }
     }
 
     //TODO will be added later

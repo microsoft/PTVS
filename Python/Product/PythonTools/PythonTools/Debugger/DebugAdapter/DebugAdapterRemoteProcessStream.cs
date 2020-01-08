@@ -75,17 +75,16 @@ namespace Microsoft.PythonTools.Debugger {
             base.Dispose(disposing);
         }
 
-        private static bool IsExpectedError(SocketException ex) {
-            return ex?.SocketErrorCode == SocketError.ConnectionReset || ex?.SocketErrorCode == SocketError.ConnectionAborted;
-        }
+        private static bool IsExpectedError(SocketException ex) 
+            => ex?.SocketErrorCode == SocketError.ConnectionReset || ex?.SocketErrorCode == SocketError.ConnectionAborted;
 
         private void CheckForResponse(byte[] buffer, int count) {
-            if(Disconnected == null && Initialized == null) {
+            if (Disconnected == null && Initialized == null) {
                 return;
             }
 
             var text = Encoding.UTF8.GetString(buffer, 0, count);
-            var splitter = new string[]{ "\r", "\n" };
+            var splitter = new string[] { "\r", "\n" };
             var jsonBlocks = text
                 .Replace("Content-Length", "\r\nContent-Length")
                 .Split(splitter, StringSplitOptions.RemoveEmptyEntries)
@@ -93,7 +92,7 @@ namespace Microsoft.PythonTools.Debugger {
             foreach (var jsonBlock in jsonBlocks) {
                 try {
                     var json = JObject.Parse(jsonBlock);
-                    if(!json.TryGetValue("command", out JToken tok)) {
+                    if (!json.TryGetValue("command", out var tok)) {
                         json.TryGetValue("event", out tok);
                     }
                     var name = tok.Value<string>();
