@@ -24,9 +24,9 @@ using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 
 namespace Microsoft.PythonTools.Debugger {
-    internal sealed class DebugAdapterProcessStream : Stream {
+    internal sealed class DebugRemoteAdapterProcessStream : Stream {
         private readonly NetworkStream _networkStream;
-        public DebugAdapterProcessStream(NetworkStream networkStream) {
+        public DebugRemoteAdapterProcessStream(NetworkStream networkStream) {
             _networkStream = networkStream;
         }
 
@@ -66,7 +66,7 @@ namespace Microsoft.PythonTools.Debugger {
                 _networkStream.Write(buffer, offset, count);
             } catch (IOException ex) when (IsExpectedError(ex.InnerException as SocketException)) {
                 // This is a case where the debuggee has exited, but the adapter host attempts to write to it.
-                Debug.WriteLine($"Attempt to write after stream is closed.", nameof(DebugAdapterProcessStream));
+                Debug.WriteLine($"Attempt to write after stream is closed.", nameof(DebugRemoteAdapterProcessStream));
             }
         }
 
@@ -75,17 +75,16 @@ namespace Microsoft.PythonTools.Debugger {
             base.Dispose(disposing);
         }
 
-        private static bool IsExpectedError(SocketException ex) {
-            return ex?.SocketErrorCode == SocketError.ConnectionReset || ex?.SocketErrorCode == SocketError.ConnectionAborted;
-        }
+        private static bool IsExpectedError(SocketException ex) 
+            => ex?.SocketErrorCode == SocketError.ConnectionReset || ex?.SocketErrorCode == SocketError.ConnectionAborted;
 
         private void CheckForResponse(byte[] buffer, int count) {
-            if(Disconnected == null && Initialized == null) {
+            if (Disconnected == null && Initialized == null) {
                 return;
             }
 
             var text = Encoding.UTF8.GetString(buffer, 0, count);
-            var splitter = new string[]{ "\r", "\n" };
+            var splitter = new string[] { "\r", "\n" };
             var jsonBlocks = text
                 .Replace("Content-Length", "\r\nContent-Length")
                 .Split(splitter, StringSplitOptions.RemoveEmptyEntries)
@@ -93,7 +92,7 @@ namespace Microsoft.PythonTools.Debugger {
             foreach (var jsonBlock in jsonBlocks) {
                 try {
                     var json = JObject.Parse(jsonBlock);
-                    if(!json.TryGetValue("command", out JToken tok)) {
+                    if (!json.TryGetValue("command", out var tok)) {
                         json.TryGetValue("event", out tok);
                     }
                     var name = tok.Value<string>();

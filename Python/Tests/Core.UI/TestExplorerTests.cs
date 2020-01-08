@@ -174,7 +174,7 @@ namespace PythonToolsUITests {
             Assert.IsNotNull(testExplorer, "Could not open test explorer");
 
             Console.WriteLine("Waiting for tests discovery");
-            app.WaitForOutputWindowText("Tests", $"Discovery finished: {tests.Length} tests found", 15_000);
+            app.WaitForOutputWindowText("Tests", $"discovery finished: {tests.Length} Tests found", 15_000);
 
             testExplorer.GroupByProjectNamespaceClass();
 
@@ -201,7 +201,7 @@ namespace PythonToolsUITests {
             Assert.IsNotNull(testExplorer, "Could not open test explorer");
 
             Console.WriteLine("Waiting for tests discovery");
-            app.WaitForOutputWindowText("Tests", $"Discovery finished: {tests.Length} tests found", 15_000);
+            app.WaitForOutputWindowText("Tests", $"discovery finished: {tests.Length} Tests found", 15_000);
 
             testExplorer.GroupByProjectNamespaceClass();
 

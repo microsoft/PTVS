@@ -2978,4 +2978,15 @@ Please specify at least one package.</value>
   <data name="PythonVersionNotSupportMoreInfo" xml:space="preserve">
     <value>More info</value>
   </data>
+  <data name="UnableToParseInterpreterArgs" xml:space="preserve">
+    <value>Unable to parse interpreter arguments "{0}". Script will launch without them.</value>
+    <comment>{0} Interpreter arguments which are set by VS and the user</comment>
+  </data>
+  <data name="UnableToParseScriptArgs" xml:space="preserve">
+    <value>Unable to parse script arguments "{0}". Script will launch without them. </value>
+    <comment>{0} Script arguments which are set by VS and the user</comment>
+  </data>
+  <data name="PythonInterpreterPathNullOrEmpty" xml:space="preserve">
+    <value>Unable to start debugging because the Python interpreter path is null or empty</value>
+  </data>
 </root>

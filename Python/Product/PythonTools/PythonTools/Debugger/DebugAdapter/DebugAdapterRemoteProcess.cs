@@ -23,26 +23,18 @@ using System.Threading.Tasks;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Logging;
 using Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces;
-using Newtonsoft.Json.Linq;
 
 namespace Microsoft.PythonTools.Debugger {
-    sealed class DebugAdapterRemoteProcess : ITargetHostProcess, IDisposable {
+    internal sealed class DebugAdapterRemoteProcess : ITargetHostProcess, IDisposable {
         private const int _debuggerConnectionTimeout = 20000; // 20 seconds
-        private DebugAdapterProcessStream _stream;
+        private DebugRemoteAdapterProcessStream _stream;
         private bool _debuggerConnected = false;
 
-        private DebugAdapterRemoteProcess() {}
+        private DebugAdapterRemoteProcess() { }
 
-        public static ITargetHostProcess Attach(string attachJson) {
-            var process = new DebugAdapterRemoteProcess();
-            var attached = process.AttachProcess(attachJson);
-            return attached ? process : null;
-        }
-
-        private bool AttachProcess(string attachJson) {
-            var json = JObject.Parse(attachJson);
-            var uri = new Uri(json["remote"].Value<string>());
-            return ConnectSocket(uri);
+        public static ITargetHostProcess Attach(DebugAttachInfo debugAttachInfo) {
+            var attachedProcess = new DebugAdapterRemoteProcess();
+            return attachedProcess.ConnectSocket(debugAttachInfo.RemoteUri) ? attachedProcess : null;
         }
 
         private bool ConnectSocket(Uri uri) {
@@ -58,13 +50,13 @@ namespace Microsoft.PythonTools.Debugger {
             var logger = (IPythonToolsLogger)VisualStudio.Shell.ServiceProvider.GlobalProvider.GetService(typeof(IPythonToolsLogger));
 
             Debug.WriteLine("Connecting to remote debugger at {0}", uri.ToString());
-            Microsoft.VisualStudio.Shell.ThreadHelper.JoinableTaskFactory.Run(() => Task.WhenAny(
+            VisualStudio.Shell.ThreadHelper.JoinableTaskFactory.Run(() => Task.WhenAny(
                     Task.Factory.FromAsync(socket.BeginConnect, socket.EndConnect, endpoint, null),
                     Task.Delay(_debuggerConnectionTimeout)));
             try {
                 if (socket.Connected) {
                     _debuggerConnected = true;
-                    _stream = new DebugAdapterProcessStream(new NetworkStream(socket, ownsSocket: true));
+                    _stream = new DebugRemoteAdapterProcessStream(new NetworkStream(socket, ownsSocket: true));
                     _stream.Disconnected += OnDisconnected;
                     _stream.Initialized += OnInitialized;
                     _stream.LegacyDebugger += OnLegacyDebugger;
@@ -93,9 +85,7 @@ namespace Microsoft.PythonTools.Debugger {
                 PtvsdVersionHelper.VerifyPtvsdVersionError);
         }
 
-        private void OnLegacyDebugger(object sender, EventArgs e) {
-            PtvsdVersionHelper.VerifyPtvsdVersionLegacy();
-        }
+        private void OnLegacyDebugger(object sender, EventArgs e) => PtvsdVersionHelper.VerifyPtvsdVersionLegacy();
 
         public IntPtr Handle => IntPtr.Zero;
 
@@ -109,7 +99,7 @@ namespace Microsoft.PythonTools.Debugger {
         public event DataReceivedEventHandler ErrorDataReceived;
 
         public void Dispose() {
-            if(_stream != null) {
+            if (_stream != null) {
                 _stream.Dispose();
             }
         }

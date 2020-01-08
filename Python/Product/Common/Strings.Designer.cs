@@ -5433,6 +5433,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unable to start debugging because the Python interpreter path is null or empty.
+        /// </summary>
+        public static string PythonInterpreterPathNullOrEmpty {
+            get {
+                return ResourceManager.GetString("PythonInterpreterPathNullOrEmpty", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &amp;Python.
         /// </summary>
         public static string PythonMenuLabel {
@@ -7270,6 +7279,24 @@ namespace Microsoft.PythonTools {
         public static string UnableToElevate {
             get {
                 return ResourceManager.GetString("UnableToElevate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to parse interpreter arguments &quot;{0}&quot;. Script will launch without them..
+        /// </summary>
+        public static string UnableToParseInterpreterArgs {
+            get {
+                return ResourceManager.GetString("UnableToParseInterpreterArgs", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to parse script arguments &quot;{0}&quot;. Script will launch without them. .
+        /// </summary>
+        public static string UnableToParseScriptArgs {
+            get {
+                return ResourceManager.GetString("UnableToParseScriptArgs", resourceCulture);
             }
         }
         
