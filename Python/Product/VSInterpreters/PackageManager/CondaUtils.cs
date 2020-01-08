@@ -89,12 +89,12 @@ namespace Microsoft.PythonTools.Interpreter {
         /// <param name="prefixPath">Path to the conda environment to activate, or <c>null</c> to activate the root environment.</param>
         /// <returns>List of environment variables.</returns>
         /// <remarks>Result is cached, it is safe to call multiple times.</remarks>
-        internal async static Task<IEnumerable<KeyValuePair<string, string>>> GetActivationEnvironmentVariablesForPrefixAsync(string condaPath, string prefixPath) {
+        internal static async Task<IEnumerable<KeyValuePair<string, string>>> GetActivationEnvironmentVariablesForPrefixAsync(string condaPath, string prefixPath) {
             using (await _activationCacheLock.LockAsync(CancellationToken.None)) {
                 var condaKey = new CondaCacheKey(condaPath, prefixPath);
 
                 if (!_activationCache.TryGetValue(condaKey, out KeyValuePair<string, string>[] activationVariables)) {
-                    activationVariables = null;
+                    activationVariables = new KeyValuePair<string, string>[0];
 
                     var activateBat = Path.Combine(Path.GetDirectoryName(condaPath), "activate.bat");
                     if (File.Exists(activateBat)) {
@@ -110,8 +110,7 @@ namespace Microsoft.PythonTools.Interpreter {
                         }
                     }
 
-
-                    _activationCache[condaKey] = activationVariables ?? new KeyValuePair<string, string>[0];
+                    _activationCache[condaKey] = activationVariables;
                 }
 
                 return activationVariables;
