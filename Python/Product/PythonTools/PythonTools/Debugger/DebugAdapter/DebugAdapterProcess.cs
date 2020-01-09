@@ -16,10 +16,11 @@
 
 using System;
 using System.Runtime.InteropServices;
+using System.Timers;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces;
 using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudioTools.Infrastructure;
+using Timer = System.Timers.Timer;
 
 namespace Microsoft.PythonTools.Debugger {
     internal sealed class DebugAdapterProcess {
@@ -43,11 +44,19 @@ namespace Microsoft.PythonTools.Debugger {
             _webBrowserUrl = webBrowserUrl;
             _targetHostProcess = _targetInterop.ExecuteCommandAsync(pythonExePath, "\"" + _debuggerAdapterDirectory + "\"");
 
-            if (!string.IsNullOrEmpty(webBrowserUrl) && Uri.TryCreate(webBrowserUrl, UriKind.RelativeOrAbsolute, out var uri)) {
-                OnPortOpenedHandler.CreateHandler(uri.Port, null, null, () => _targetHostProcess.HasExited, LaunchBrowserDebugger);
+            if (!string.IsNullOrEmpty(webBrowserUrl) && Uri.TryCreate(webBrowserUrl, UriKind.RelativeOrAbsolute, out _)) {
+                Timer timer = new Timer(5000);
+                timer.Elapsed += OnBrowserLaunchElapsedTimer;
+                timer.AutoReset = false;
+                timer.Start();
             }
 
             return _targetHostProcess;
+        }
+
+        private void OnBrowserLaunchElapsedTimer(object sender, ElapsedEventArgs e) {
+            Uri.TryCreate(_webBrowserUrl, UriKind.RelativeOrAbsolute, out var uri);
+            OnPortOpenedHandler.CreateHandler(uri.Port, null, null, () => _targetHostProcess.HasExited, LaunchBrowserDebugger);
         }
 
         private void LaunchBrowserDebugger() {
