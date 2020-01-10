@@ -16,24 +16,13 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.Build.Tasks;
-using Microsoft.Python.Parsing;
-using Microsoft.PythonTools.Common.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Project;
-using Microsoft.PythonTools.Repl;
-using Microsoft.VisualStudio.InteractiveWindow;
 
 namespace Microsoft.PythonTools.LanguageServerClient {
     internal class PythonLanguageClientContextFixed : IPythonLanguageClientContext {
-#pragma warning disable CS0067
-        public event EventHandler InterpreterChanged;
-        public event EventHandler SearchPathsChanged;
-        public event EventHandler Closed;
-#pragma warning restore CS0067
+        public event EventHandler InterpreterChanged { add { } remove { } }
+        public event EventHandler SearchPathsChanged { add { } remove { } }
+        public event EventHandler Closed { add { } remove { } }
 
         public PythonLanguageClientContextFixed(
             string contentTypeName,

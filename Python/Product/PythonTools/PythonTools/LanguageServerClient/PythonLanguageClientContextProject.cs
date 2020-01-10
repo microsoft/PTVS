@@ -16,9 +16,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.PythonTools.Common.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Project;
@@ -26,7 +23,6 @@ using Microsoft.PythonTools.Project;
 namespace Microsoft.PythonTools.LanguageServerClient {
     internal class PythonLanguageClientContextProject : IPythonLanguageClientContext, IDisposable {
         private readonly PythonProjectNode _project;
-        private readonly string _contentTypeName;
         private readonly DisposableBag _disposables;
 
         public event EventHandler InterpreterChanged;
@@ -35,7 +31,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
         public PythonLanguageClientContextProject(PythonProjectNode project, string contentTypeName) {
             _project = project ?? throw new ArgumentNullException(nameof(project));
-            _contentTypeName = contentTypeName ?? throw new ArgumentNullException(nameof(contentTypeName));
+            ContentTypeName = contentTypeName ?? throw new ArgumentNullException(nameof(contentTypeName));
             _disposables = new DisposableBag(GetType().Name);
 
             _project.LanguageServerInterpreterChanged += OnInterpreterChanged;
@@ -48,7 +44,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             _project.AddActionOnClose(this, (obj) => Closed?.Invoke(this, EventArgs.Empty));
         }
 
-        public string ContentTypeName => _contentTypeName;
+        public string ContentTypeName { get; }
 
         public InterpreterConfiguration InterpreterConfiguration => _project.ActiveInterpreter?.Configuration;
 

@@ -16,17 +16,12 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.PythonTools.Common.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Project;
 
 namespace Microsoft.PythonTools.LanguageServerClient {
     internal class PythonLanguageClientContextWorkspace : IPythonLanguageClientContext, IDisposable {
         private readonly IPythonWorkspaceContext _pythonWorkspace;
-        private readonly string _contentTypeName;
         private readonly DisposableBag _disposables;
 
         public event EventHandler InterpreterChanged;
@@ -38,7 +33,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             string contentTypeName
         ) {
             _pythonWorkspace = pythonWorkspace ?? throw new ArgumentNullException(nameof(pythonWorkspace));
-            _contentTypeName = contentTypeName ?? throw new ArgumentNullException(nameof(contentTypeName));
+            ContentTypeName = contentTypeName ?? throw new ArgumentNullException(nameof(contentTypeName));
             _disposables = new DisposableBag(GetType().Name);
 
             _pythonWorkspace.ActiveInterpreterChanged += OnInterpreterChanged;
@@ -51,7 +46,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             _pythonWorkspace.AddActionOnClose(this, (obj) => Closed?.Invoke(this, EventArgs.Empty));
         }
 
-        public string ContentTypeName => _contentTypeName;
+        public string ContentTypeName { get; }
 
         public InterpreterConfiguration InterpreterConfiguration => _pythonWorkspace.CurrentFactory?.Configuration;
 

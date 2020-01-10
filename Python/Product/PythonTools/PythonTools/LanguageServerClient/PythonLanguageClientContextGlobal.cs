@@ -17,19 +17,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.Python.Parsing;
 using Microsoft.PythonTools.Common.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Project;
-using Microsoft.PythonTools.Repl;
-using Microsoft.VisualStudio.InteractiveWindow;
 
 namespace Microsoft.PythonTools.LanguageServerClient {
     internal class PythonLanguageClientContextGlobal : IPythonLanguageClientContext, IDisposable {
         private readonly IInterpreterOptionsService _optionsService;
-        private readonly string _contentTypeName;
         private readonly DisposableBag _disposables;
 
         private IPythonInterpreterFactory _factory;
@@ -46,7 +39,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             string contentTypeName
         ) {
             _optionsService = optionsService ?? throw new ArgumentNullException(nameof(optionsService));
-            _contentTypeName = contentTypeName ?? throw new ArgumentNullException(nameof(contentTypeName));
+            ContentTypeName = contentTypeName ?? throw new ArgumentNullException(nameof(contentTypeName));
             _disposables = new DisposableBag(GetType().Name);
 
             _factory = _optionsService.DefaultInterpreter;
@@ -57,7 +50,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             });
         }
 
-        public string ContentTypeName => _contentTypeName;
+        public string ContentTypeName { get; }
 
         public InterpreterConfiguration InterpreterConfiguration => _factory?.Configuration;
 

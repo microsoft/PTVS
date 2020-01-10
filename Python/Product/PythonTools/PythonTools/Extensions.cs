@@ -273,6 +273,8 @@ namespace Microsoft.PythonTools {
         }
 
         internal static InterpreterConfiguration GetInterpreterConfigurationAtCaret(this ITextView textView, IServiceProvider serviceProvider) {
+            serviceProvider.GetUIThread().MustBeCalledFromUIThread();
+
             var client = PythonLanguageClient.FindLanguageClient(textView.TextBuffer);
             if (client?.Configuration != null) {
                 return client.Configuration;

@@ -16,36 +16,26 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.Python.Parsing;
-using Microsoft.PythonTools.Common.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Project;
 using Microsoft.PythonTools.Repl;
-using Microsoft.VisualStudio.InteractiveWindow;
 
 namespace Microsoft.PythonTools.LanguageServerClient {
     internal class PythonLanguageClientContextRepl : IPythonLanguageClientContext {
         private readonly PythonCommonInteractiveEvaluator _evaluator;
-        private readonly string _contentTypeName;
 
-#pragma warning disable CS0067
-        public event EventHandler InterpreterChanged;
-        public event EventHandler SearchPathsChanged;
-        public event EventHandler Closed;
-#pragma warning restore CS0067
+        public event EventHandler InterpreterChanged { add { } remove { } }
+        public event EventHandler SearchPathsChanged { add { } remove { } }
+        public event EventHandler Closed { add { } remove { } }
 
         public PythonLanguageClientContextRepl(
             PythonCommonInteractiveEvaluator evaluator,
             string contentTypeName
         ) {
             _evaluator = evaluator ?? throw new ArgumentNullException(nameof(evaluator));
-            _contentTypeName = contentTypeName ?? throw new ArgumentNullException(nameof(contentTypeName));
+            ContentTypeName = contentTypeName ?? throw new ArgumentNullException(nameof(contentTypeName));
         }
 
-        public string ContentTypeName => _contentTypeName;
+        public string ContentTypeName { get; }
 
         public InterpreterConfiguration InterpreterConfiguration  => _evaluator.Configuration.Interpreter;
 

@@ -160,7 +160,7 @@ namespace Microsoft.PythonTools.Commands {
                     var activeView = CommonPackage.GetActiveTextView(_serviceProvider);
 
                     InterpreterConfiguration config;
-                    if (activeView != null && (config = activeView.GetInterpreterConfigurationAtCaret(_serviceProvider)) != null) {
+                    if ((config = activeView?.GetInterpreterConfigurationAtCaret(_serviceProvider)) != null) {
                         if (activeView.Selection.Mode == TextSelectionMode.Box ||
                             config?.IsRunnable() != true) {
                             cmd.Enabled = false;
