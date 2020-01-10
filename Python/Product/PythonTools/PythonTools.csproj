@@ -259,6 +259,7 @@
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.LanguageServer.Protocol">
+      <HintPath>..\..\References\Dev$(VSTarget)\Microsoft.VisualStudio.LanguageServer.Protocol.dll</HintPath>
       <Private>True</Private>
       <IncludeInVSIX>True</IncludeInVSIX>
     </Reference>
@@ -274,6 +275,7 @@
     <Compile Include="PythonTools\Editor\Formatting\PythonFormatterYapf.cs" />
     <Compile Include="PythonTools\Editor\Formatting\PythonFormatter.cs" />
     <Compile Include="PythonTools\Editor\Formatting\LspDiffTextEditFactory.cs" />
+    <Compile Include="PythonTools\LanguageServerClient\LiveShareExtensions.cs" />
     <Compile Include="PythonTools\LanguageServerClient\LspEditorUtilities.cs" />
     <Compile Include="PythonTools\Editor\Formatting\PythonFormatterBlack.cs" />
     <Compile Include="PythonTools\Editor\Formatting\DiffMatchPatch.cs" />
@@ -332,6 +334,12 @@
     <Compile Include="PythonTools\Intellisense\ParameterResult.cs" />
     <Compile Include="PythonTools\Intellisense\PythonMemberType.cs" />
     <Compile Include="PythonTools\LanguageServerClient\PythonFilePathToContentTypeProvider.cs" />
+    <Compile Include="PythonTools\LanguageServerClient\IPythonLanguageClientContext.cs" />
+    <Compile Include="PythonTools\LanguageServerClient\PythonLanguageClientContextFixed.cs" />
+    <Compile Include="PythonTools\LanguageServerClient\PythonLanguageClientContextGlobal.cs" />
+    <Compile Include="PythonTools\LanguageServerClient\PythonLanguageClientContextRepl.cs" />
+    <Compile Include="PythonTools\LanguageServerClient\PythonLanguageClientContextWorkspace.cs" />
+    <Compile Include="PythonTools\LanguageServerClient\PythonLanguageClientContextProject.cs" />
     <Compile Include="PythonTools\LanguageServerClient\PythonLanguageClientMetadata.cs" />
     <Compile Include="PythonTools\LanguageServerClient\PythonLanguageServer.cs" />
     <Compile Include="PythonTools\LanguageServerClient\PythonLanguageServerDotNetCore.cs" />

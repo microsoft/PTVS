@@ -94,7 +94,9 @@ namespace Microsoft.PythonTools.Project {
 
         private readonly SemaphoreSlim _recreatingAnalyzer = new SemaphoreSlim(1);
 
-        public event EventHandler LanguageServerRestart;
+        public event EventHandler LanguageServerInterpreterChanged;
+
+        public event EventHandler LanguageServerSearchPathsChanged;
 
         public PythonProjectNode(IServiceProvider serviceProvider) : base(serviceProvider, null) {
             _logger = serviceProvider.GetPythonToolsService().Logger;
@@ -906,7 +908,7 @@ namespace Microsoft.PythonTools.Project {
             // Update solution explorer
             RefreshSearchPaths();
 
-            LanguageServerRestart?.Invoke(this, EventArgs.Empty);
+            LanguageServerSearchPathsChanged?.Invoke(this, EventArgs.Empty);
         }
 
         /// <summary>
@@ -926,7 +928,7 @@ namespace Microsoft.PythonTools.Project {
             } else if (!_searchPaths.AddOrReplace(moniker, absolutePath, false)) {
                 // Didn't change a search path, so we need to trigger reanalysis
                 // manually.
-                LanguageServerRestart?.Invoke(this, EventArgs.Empty);
+                LanguageServerSearchPathsChanged?.Invoke(this, EventArgs.Empty);
             }
         }
 
@@ -1216,7 +1218,7 @@ namespace Microsoft.PythonTools.Project {
                 return;
             }
 
-            LanguageServerRestart?.Invoke(this, EventArgs.Empty);
+            LanguageServerInterpreterChanged?.Invoke(this, EventArgs.Empty);
         }
 
         protected override string AssemblyReferenceTargetMoniker {

@@ -21,7 +21,7 @@ using Microsoft.VisualStudio.Threading;
 using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.LiveShare {
-    internal class PythonLanguageClient : ICollaborationService, IAsyncDisposable {
+    internal class PythonCollaborationService : ICollaborationService, IAsyncDisposable {
         private static string[] PythonContentTypes = new string[] { PythonCoreConstants.ContentType };
         private static DocumentFilter[] PythonDocumentFilters = new[] {
             new DocumentFilter() { Language = "python" }
@@ -30,7 +30,7 @@ namespace Microsoft.PythonTools.LiveShare {
         private IAsyncDisposable _languageServiceProviderService;
         private readonly IServiceProvider _serviceProvider;
 
-        public PythonLanguageClient(IServiceProvider serviceProvider) {
+        public PythonCollaborationService(IServiceProvider serviceProvider) {
             _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
         }
 

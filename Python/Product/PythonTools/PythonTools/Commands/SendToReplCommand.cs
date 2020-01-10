@@ -159,10 +159,10 @@ namespace Microsoft.PythonTools.Commands {
 
                     var activeView = CommonPackage.GetActiveTextView(_serviceProvider);
 
-                    IPythonInterpreterFactory factory;
-                    if (activeView != null && (factory = activeView.GetInterpreterFactoryAtCaret(_serviceProvider)) != null) {
+                    InterpreterConfiguration config;
+                    if ((config = activeView?.GetInterpreterConfigurationAtCaret(_serviceProvider)) != null) {
                         if (activeView.Selection.Mode == TextSelectionMode.Box ||
-                            factory?.IsRunnable() != true) {
+                            config?.IsRunnable() != true) {
                             cmd.Enabled = false;
                         } else {
                             cmd.Enabled = true;

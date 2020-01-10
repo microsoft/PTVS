@@ -16,23 +16,24 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
-using Microsoft.Python.Parsing;
-using Microsoft.VisualStudio.LanguageServer.Client;
-using Microsoft.VisualStudio.Threading;
+using Microsoft.Build.Tasks;
+using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.LanguageServerClient {
-    internal abstract class PythonLanguageServer {
-        public static PythonLanguageServer Create(IServiceProvider site, JoinableTaskContext joinableTaskContext, PythonLanguageVersion version) {
-            if (PythonLanguageServerNodejs.IsPreferred(version)) {
-                return new PythonLanguageServerNodejs(site, joinableTaskContext);
-            }
+    internal interface IPythonLanguageClientContext : ICloneable {
+        string ContentTypeName { get; }
 
-            return new PythonLanguageServerDotNetCore(site, joinableTaskContext);
-        }
+        InterpreterConfiguration InterpreterConfiguration { get; }
 
-        public abstract Task<Connection> ActivateAsync();
+        string RootPath { get; }
 
-        public abstract object CreateInitializationOptions(string interpreterPath, string interpreterVersion, string rootPath, IEnumerable<string> searchPaths);
+        IEnumerable<string> SearchPaths { get; }
+
+        event EventHandler InterpreterChanged;
+        event EventHandler SearchPathsChanged;
+        event EventHandler Closed;
     }
 }

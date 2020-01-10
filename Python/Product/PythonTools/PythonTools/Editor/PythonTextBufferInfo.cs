@@ -136,7 +136,7 @@ namespace Microsoft.PythonTools.Editor {
         public PythonLanguageVersion LanguageVersion {
             get {
                 var client = PythonLanguageClient.FindLanguageClient(Buffer);
-                return client?.Factory?.Configuration.Version.ToLanguageVersion() ?? _defaultLanguageVersion;
+                return client?.Configuration.Version.ToLanguageVersion() ?? _defaultLanguageVersion;
             }
         }
 

@@ -16,34 +16,32 @@
 
 using System;
 using System.Collections.Concurrent;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.PythonTools.Editor;
-using Microsoft.PythonTools.Intellisense;
+using Microsoft.PythonTools.LanguageServerClient;
 using Microsoft.VisualStudio.LanguageServer.Protocol;
 using Microsoft.VisualStudio.LiveShare.LanguageServices;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Threading;
-using Microsoft.VisualStudioTools;
-using LSP = Microsoft.VisualStudio.LanguageServer.Protocol;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using LS = Microsoft.VisualStudio.LiveShare.LanguageServices;
+using LSP = Microsoft.VisualStudio.LanguageServer.Protocol;
 
 namespace Microsoft.PythonTools.LiveShare {
     internal class PythonLanguageServiceProviderCallback : ILanguageServiceProviderCallback {
         private readonly IServiceProvider _serviceProvider;
-        private readonly UIThreadBase _uiThread;
 
-        // Cache analyzers for the session to avoid UI thread marshalling
-        private readonly ConcurrentDictionary<Uri, VsProjectAnalyzer> _analyzerCache;
+        // Cache clients for the session to avoid UI thread marshalling
+        private readonly ConcurrentDictionary<Uri, PythonLanguageClient> _clientCache;
 
         public PythonLanguageServiceProviderCallback(IServiceProvider serviceProvider) {
             _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-            _uiThread = _serviceProvider.GetUIThread();
-            _analyzerCache = new ConcurrentDictionary<Uri, VsProjectAnalyzer>(UriEqualityComparer.Default);
+            _clientCache = new ConcurrentDictionary<Uri, PythonLanguageClient>(UriEqualityComparer.Default);
         }
 
         private PythonLanguageServiceProviderCallback() {
-            _analyzerCache = new ConcurrentDictionary<Uri, VsProjectAnalyzer>(UriEqualityComparer.Default);
+            _clientCache = new ConcurrentDictionary<Uri, PythonLanguageClient>(UriEqualityComparer.Default);
         }
 
         /// <summary>
@@ -55,89 +53,117 @@ namespace Microsoft.PythonTools.LiveShare {
         public event AsyncEventHandler<LanguageServiceNotifyEventArgs> NotifyAsync;
 #pragma warning restore 0067
 
-        private async Task<VsProjectAnalyzer> FindAnalyzerAsync(TextDocumentIdentifier document) {
-            if (document?.Uri == null) {
+        public async Task<TOut> RequestAsync<TIn, TOut>(LS.LspRequest<TIn, TOut> method, TIn param, RequestContext context, CancellationToken cancellationToken) {
+            // Note that the LSP types TIn and TOut are defined in an assembly
+            // (Microsoft.VisualStudio.LanguageServer.Protocol) referenced by
+            // LiveShare and that assembly may be from a different version than
+            // the one referenced in PTVS. There is no binding redirect since
+            // backwards compatibility is not guaranteed in that assembly, so
+            // we cannot cast between TIn/TOut and our referenced types.
+            // We can convert between our types and the ones passed in TIn and TOut
+            // via the intermediate JSON format which is backwards compatible.
+            switch (method.Name) {
+                case Methods.InitializeName:
+                    return Initialize<TOut>();
+                case Methods.TextDocumentCompletionName:
+                case Methods.TextDocumentHoverName:
+                case Methods.TextDocumentSignatureHelpName:
+                case Methods.TextDocumentDefinitionName:
+                case Methods.TextDocumentReferencesName:
+                    return await DispatchToLanguageServer(method, param, cancellationToken);
+                default:
+                    return default(TOut);
+            }
+        }
+
+        private async Task<PythonLanguageClient> FindClientAsync(Uri uri) {
+            if (uri == null) {
                 return null;
             }
 
-            if (!_analyzerCache.TryGetValue(document.Uri, out var analyzer)) {
-                var filePath = document.Uri.LocalPath;
-                if (string.IsNullOrEmpty(filePath)) {
-                    return null;
+            if (!_clientCache.TryGetValue(uri, out var client)) {
+                client = await GetOrCreateClientAsync(uri);
+                if (client != null) {
+                    client = _clientCache.GetOrAdd(uri, client);
                 }
-
-                if (_uiThread != null) {
-                    // TODO: Use URI for more accurate lookup
-                    analyzer = await _uiThread.InvokeTask(async () =>
-                        (await _serviceProvider.FindAllAnalyzersForFile(filePath)).FirstOrDefault() as VsProjectAnalyzer
-                    );
-                }
-
-                analyzer = _analyzerCache.GetOrAdd(document.Uri, analyzer);
             }
 
-            return analyzer;
+            return client;
+        }
+
+        private async Task<PythonLanguageClient> GetOrCreateClientAsync(Uri uri) {
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+            var filePath = uri.LocalPath;
+            if (string.IsNullOrEmpty(filePath)) {
+                return null;
+            }
+
+            var contentTypeProvider = _serviceProvider.GetComponentModel().GetService<PyFilePathToContentTypeProvider>();
+            if (contentTypeProvider.TryGetContentTypeForFilePath(filePath, out var contentType)) {
+                return PythonLanguageClient.FindLanguageClient(contentType.TypeName);
+            }
+
+            return null;
         }
 
         /// <summary>
         /// Helper function for tests, enabling this class to be tested without needing
         /// a service provider or UI thread.
         /// </summary>
-        internal void SetAnalyzer(Uri documentUri, VsProjectAnalyzer analyzer) {
-            _analyzerCache[documentUri] = analyzer;
+        internal void SetClient(Uri documentUri, PythonLanguageClient client) {
+            _clientCache[documentUri] = client;
         }
 
-        public async Task<TOut> RequestAsync<TIn, TOut>(LS.LspRequest<TIn, TOut> method, TIn param, RequestContext context, CancellationToken cancellationToken) {
-            if (method.Name == Methods.Initialize.Name) {
-                var capabilities = new ServerCapabilities {
-                    CompletionProvider = new LSP.CompletionOptions {
-                        TriggerCharacters = new[] { "." }
-                    },
-                    SignatureHelpProvider = new SignatureHelpOptions {
-                        TriggerCharacters = new[] { "(", ",", ")" }
-                    },
-                    HoverProvider = true,
-                    DefinitionProvider = true,
-                    ReferencesProvider = true
-                };
-                object result = new InitializeResult { Capabilities = capabilities };
-                return (TOut)(result);
+        private static TOut Initialize<TOut>() {
+            var capabilities = new ServerCapabilities {
+                CompletionProvider = new LSP.CompletionOptions {
+                    TriggerCharacters = new[] { "." }
+                },
+                SignatureHelpProvider = new SignatureHelpOptions {
+                    TriggerCharacters = new[] { "(", ",", ")" }
+                },
+                HoverProvider = true,
+                DefinitionProvider = true,
+                ReferencesProvider = true
+            };
+            var result = new InitializeResult { Capabilities = capabilities };
+
+            // Convert between our type and TOut via a JSON object
+            try {
+                var jsonObj = JObject.FromObject(result);
+                return jsonObj.ToObject<TOut>();
+            } catch (JsonException) {
+                return default(TOut);
+            }
+        }
+
+        private async Task<TOut> DispatchToLanguageServer<TIn, TOut>(LS.LspRequest<TIn, TOut> method, TIn param, CancellationToken cancellationToken) {
+            var uri = GetDocumentUri(param);
+            var client = await FindClientAsync(uri);
+            if (client == null) {
+                return default(TOut);
             }
 
-            if (method.Name == Methods.TextDocumentCompletion.Name ||
-                method.Name == Methods.TextDocumentHover.Name ||
-                method.Name == Methods.TextDocumentDefinition.Name ||
-                method.Name == Methods.TextDocumentReferences.Name ||
-                method.Name == Methods.TextDocumentSignatureHelp.Name
-            ) {
-                var doc = (param as TextDocumentPositionParams)?.TextDocument;
-                if (doc == null) {
-                    return default(TOut);
-                }
+            var result = await client.InvokeWithParameterObjectAsync<TOut>(method.Name, param, cancellationToken);
+            return result;
+        }
 
-                var analyzer = await FindAnalyzerAsync(doc);
-                if (analyzer == null) {
-                    return default(TOut);
-                }
+        private Uri GetDocumentUri<TIn>(TIn param) {
+            Uri uri = null;
 
-                if (method.Name == Methods.TextDocumentDefinition.Name) {
-                    return (TOut)(object)await analyzer.SendLanguageServerRequestAsync<TIn, Location[]>(method.Name, param);
+            // Convert to JSON object to get document URI
+            try {
+                var paramObj = JObject.FromObject(param);
+                var uriObj = paramObj.SelectToken("textDocument.uri");
+                if (uriObj is JValue uriVal && uriVal.Type == JTokenType.String) {
+                    uri = new Uri((string)uriVal.Value);
                 }
-
-                var entry = analyzer.GetAnalysisEntryFromUri(doc.Uri);
-                if (entry != null) {
-                    var buffers = entry.TryGetBufferParser()?.AllBuffers;
-                    if (buffers != null) {
-                        foreach (var b in buffers) {
-                            await entry.EnsureCodeSyncedAsync(b);
-                        }
-                    }
-                }
-
-                return await analyzer.SendLanguageServerRequestAsync<TIn, TOut>(method.Name, param);
+            } catch (JsonException) {
+                return null;
             }
 
-            return default(TOut);
+            return uri;
         }
     }
 }

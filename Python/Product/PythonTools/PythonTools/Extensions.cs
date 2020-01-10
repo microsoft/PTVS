@@ -257,8 +257,8 @@ namespace Microsoft.PythonTools {
             }
 
             var client = PythonLanguageClient.FindLanguageClient(textView.TextBuffer);
-            if (client?.Factory != null) {
-                return client.Factory.Configuration.Version.ToLanguageVersion();
+            if (client?.Configuration != null) {
+                return client.Configuration.Version.ToLanguageVersion();
             }
 
             var defaultInterp = serviceProvider.GetPythonToolsService().InterpreterOptionsService.DefaultInterpreter;
@@ -272,38 +272,16 @@ namespace Microsoft.PythonTools {
             return PythonLanguageVersion.None;
         }
 
-        internal static IPythonInterpreterFactory GetInterpreterFactoryAtCaret(this ITextView textView, IServiceProvider serviceProvider) {
+        internal static InterpreterConfiguration GetInterpreterConfigurationAtCaret(this ITextView textView, IServiceProvider serviceProvider) {
+            serviceProvider.GetUIThread().MustBeCalledFromUIThread();
+
             var client = PythonLanguageClient.FindLanguageClient(textView.TextBuffer);
-            if (client?.Factory != null) {
-                return client.Factory;
+            if (client?.Configuration != null) {
+                return client.Configuration;
             }
 
-            return serviceProvider.GetPythonToolsService().InterpreterOptionsService.DefaultInterpreter;
+            return serviceProvider.GetPythonToolsService().InterpreterOptionsService.DefaultInterpreter?.Configuration;
         }
-
-        internal static InterpreterConfiguration GetInterpreterConfigurationAtCaret(this ITextView textView, IServiceProvider serviceProvider) {
-            return textView.GetInterpreterFactoryAtCaret(serviceProvider)?.Configuration;
-        }
-
-        /// <summary>
-        /// Returns the active VsProjectAnalyzer being used for where the caret is currently located in this view.
-        /// </summary>
-        //internal static VsProjectAnalyzer GetAnalyzerAtCaret(this ITextView textView, IServiceProvider serviceProvider) {
-        //    return GetAnalysisAtCaret(textView, serviceProvider)?.Analyzer;
-        //}
-
-        /// <summary>
-        /// Returns the AnalysisEntry being used for where the caret is currently located in this view.
-        /// 
-        /// Returns null if the caret isn't in Python code or an analysis doesn't exist for some reason.
-        /// </summary>
-        //internal static AnalysisEntry GetAnalysisAtCaret(this ITextView textView, IServiceProvider serviceProvider) {
-        //    var buffer = textView.GetPythonBufferAtCaret();
-        //    if (buffer != null) {
-        //        return buffer.TryGetAnalysisEntry();
-        //    }
-        //    return textView.TryGetAnalysisEntry(serviceProvider);
-        //}
 
         /// <summary>
         /// Returns the ITextBuffer whose content type is Python for the current caret position in the text view.
