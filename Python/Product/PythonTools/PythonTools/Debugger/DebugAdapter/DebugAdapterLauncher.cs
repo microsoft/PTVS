@@ -133,7 +133,7 @@ namespace Microsoft.PythonTools.Debugger {
             if (djangoOption != null) {
                 string[] parsedOption = djangoOption.Split('=');
                 if (parsedOption.Length == 2) {
-                    debugLaunchInfo.DebugDjango = parsedOption[1].Trim().Equals("true");
+                    debugLaunchInfo.DebugDjango = parsedOption[1].Trim().ToLower().Equals("true");
                 }
             }
 
