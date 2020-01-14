@@ -50,7 +50,6 @@ namespace Microsoft.PythonTools.Interpreter {
         private string _unitTestRootDirectory;
         private string _unitTestPattern;
 
-
         // These are set in initialize
         private IPythonInterpreterFactory _factory;
         private bool? _factoryIsDefault;
@@ -63,6 +62,19 @@ namespace Microsoft.PythonTools.Interpreter {
             _optionsService = optionsService ?? throw new ArgumentNullException(nameof(optionsService));
             _registryService = registryService ?? throw new ArgumentNullException(nameof(registryService));
             _workspaceSettingsMgr = _workspace.GetSettingsManager();
+
+            // Initialization in 2 phases (Constructor + Initialize) is needed to
+            // break a circular dependency.
+            // We create a partially initialized object that can be used by
+            // WorkspaceInterpreterFactoryProvider to discover the interpreters
+            // in this workspace (it needs the interpreter setting to do that).
+            // Once that is done, the IPythonInterpreterFactory on this object
+            // can be resolved in Initialize.
+            _interpreter = ReadInterpreterSetting();
+            _searchPaths = ReadSearchPathsSetting();
+            _testFramework = GetStringProperty(TestFrameworkProperty);
+            _unitTestRootDirectory = GetStringProperty(UnitTestRootDirectoryProperty);
+            _unitTestPattern = GetStringProperty(UnitTestPatternProperty);
         }
 
         public event EventHandler InterpreterSettingChanged;
@@ -99,12 +111,6 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         public void Initialize() {
-            _interpreter = ReadInterpreterSetting();
-            _searchPaths = ReadSearchPathsSetting();
-            _testFramework = GetStringProperty(TestFrameworkProperty);
-            _unitTestRootDirectory = GetStringProperty(UnitTestRootDirectoryProperty);
-            _unitTestPattern = GetStringProperty(UnitTestPatternProperty);
-
             RefreshCurrentFactory();
 
             _workspaceSettingsMgr.OnWorkspaceSettingsChanged += OnSettingsChanged;
