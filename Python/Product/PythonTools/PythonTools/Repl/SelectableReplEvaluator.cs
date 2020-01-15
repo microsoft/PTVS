@@ -224,7 +224,7 @@ namespace Microsoft.PythonTools.Repl {
                 }
             }
         }
-
+        
         private void UpdateCaption() {
             var window = CurrentWindow;
             if (window == null) {
@@ -241,7 +241,10 @@ namespace Microsoft.PythonTools.Repl {
                 return;
             }
 
-            var display = DisplayName;
+            var id = InteractiveWindowProvider.GetVsInteractiveWindowId(window);
+
+            var display = (id > 0) ? DisplayName + " | " + id : DisplayName;
+            
             if (!string.IsNullOrEmpty(display)) {
                 twp.Caption = Strings.ReplCaption.FormatUI(display);
             } else {

@@ -48,6 +48,7 @@ namespace Microsoft.PythonTools.Repl {
         private readonly IContentType _pythonContentType;
 
         private static readonly object VsInteractiveWindowKey = new object();
+        private static readonly object VsInteractiveWindowId = new object();
 
         private const string SavedWindowsCategoryBase = "InteractiveWindows\\";
 
@@ -278,7 +279,7 @@ namespace Microsoft.PythonTools.Repl {
                 creationFlags
             );
 #endif
-
+            replWindow.InteractiveWindow.Properties[VsInteractiveWindowId] = id;
             replWindow.InteractiveWindow.Properties[VsInteractiveWindowKey] = replWindow;
             var toolWindow = replWindow as ToolWindowPane;
             if (toolWindow != null) {
@@ -299,6 +300,11 @@ namespace Microsoft.PythonTools.Repl {
         internal static IVsInteractiveWindow GetVsInteractiveWindow(IInteractiveWindow window) {
             IVsInteractiveWindow wnd = null;
             return (window?.Properties.TryGetProperty(VsInteractiveWindowKey, out wnd) ?? false) ? wnd : null;
+        }
+
+        internal static int GetVsInteractiveWindowId(IInteractiveWindow window) {
+            int id = -1;
+            return (window?.Properties.TryGetProperty(VsInteractiveWindowId, out id) ?? false) ? id : -1;
         }
 
         internal static void Close(object obj) {
