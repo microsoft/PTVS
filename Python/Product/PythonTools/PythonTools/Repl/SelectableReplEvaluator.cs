@@ -241,12 +241,11 @@ namespace Microsoft.PythonTools.Repl {
                 return;
             }
 
-            var id = InteractiveWindowProvider.GetVsInteractiveWindowId(window);
-
-            var display = (id > 0) ? DisplayName + " | " + id : DisplayName;
+            var display = DisplayName;
             
             if (!string.IsNullOrEmpty(display)) {
-                twp.Caption = Strings.ReplCaption.FormatUI(display);
+                var id = InteractiveWindowProvider.GetVsInteractiveWindowId(window);
+                twp.Caption = Strings.ReplCaption.FormatUI(display, id);
             } else {
                 twp.Caption = Strings.ReplCaptionNoEvaluator;
             }
