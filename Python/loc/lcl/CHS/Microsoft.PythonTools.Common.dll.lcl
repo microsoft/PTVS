@@ -5383,6 +5383,15 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";PythonInterpreterPathNullOrEmpty" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Unable to start debugging because the Python interpreter path is null or empty]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[由于 Python 解释器路径为 null 或为空，无法启动调试]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";PythonMenuLabel" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[&Python]]></Val>
@@ -7212,6 +7221,24 @@
           <Val><![CDATA[Visual Studio was unable to launch the elevated process.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[Visual Studio 无法启动该提升进程。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";UnableToParseInterpreterArgs" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Unable to parse interpreter arguments "{0}". Script will launch without them.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[无法分析解释器参数 "{0}"。将在不使用这些参数的情况下启动脚本。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";UnableToParseScriptArgs" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Unable to parse script arguments "{0}". Script will launch without them. ]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[无法分析脚本参数 "{0}"。将在不使用这些参数的情况下启动脚本。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
