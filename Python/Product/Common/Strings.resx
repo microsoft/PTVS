@@ -1035,8 +1035,8 @@ Your web browser will not be opened.</value>
     <value>Unknown command '{0}', use '$help' for a list of commands.</value>
   </data>
   <data name="ReplCaption" xml:space="preserve">
-    <value>{0} Interactive</value>
-    <comment>{0} is the name of the Python environment</comment>
+    <value>{0} Interactive {1}</value>
+    <comment>{0} is the name of the Python environment, {1} is the window id</comment>
   </data>
   <data name="ReplCaptionNoEvaluator" xml:space="preserve">
     <value>Python Interactive</value>

@@ -6064,7 +6064,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} Interactive.
+        ///   Looks up a localized string similar to {0} Interactive {1}.
         /// </summary>
         public static string ReplCaption {
             get {
