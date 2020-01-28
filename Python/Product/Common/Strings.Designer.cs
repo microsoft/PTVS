@@ -3096,7 +3096,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Do not show this warning again..
+        ///   Looks up a localized string similar to Don&apos;t show this warning again..
         /// </summary>
         public static string DontShowAgain {
             get {
@@ -5613,7 +5613,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to You are using Python {0} and some features might not work because Visual Studio doesn&apos;t support it yet..
+        ///   Looks up a localized string similar to You&apos;re using Python {0}. Some new features might not work as expected until Visual Studio officially supports this version..
         /// </summary>
         public static string PythonVersionNotSupportedInfoBarText {
             get {
