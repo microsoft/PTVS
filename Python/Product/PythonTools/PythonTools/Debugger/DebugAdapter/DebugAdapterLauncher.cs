@@ -35,11 +35,12 @@ namespace Microsoft.PythonTools.Debugger {
         public const string VSCodeDebugEngineId = "{86432F39-ADFD-4C56-AA8F-AF8FCDC66039}";
         public static Guid VSCodeDebugEngine = new Guid(VSCodeDebugEngineId);
 
+        private IDebugAdapterHostContext _adapterHostContext;
         private DebugInfo _debugInfo;
 
         public DebugAdapterLauncher() { }
 
-        public void Initialize(IDebugAdapterHostContext context) { }
+        public void Initialize(IDebugAdapterHostContext context) => _adapterHostContext = context;
 
         public ITargetHostProcess LaunchAdapter(IAdapterLaunchInfo launchInfo, ITargetHostInterop targetInterop) {
             if (launchInfo.LaunchType == LaunchType.Attach) {
@@ -51,8 +52,8 @@ namespace Microsoft.PythonTools.Debugger {
             var debugLaunchInfo = (DebugLaunchInfo)_debugInfo;
             var ptvsdAdapterDirectory = Path.GetDirectoryName(PythonToolsInstallPath.GetFile("Packages\\ptvsd\\adapter\\__init__.py"));
 
-            var targetProcess = new DebugAdapterProcess(targetInterop, ptvsdAdapterDirectory);
-            return targetProcess.StartProcess(debugLaunchInfo.InterpreterPathAndArguments.FirstOrDefault(), debugLaunchInfo.WebPageUrl);
+            var targetProcess = new DebugAdapterProcess(_adapterHostContext, targetInterop, ptvsdAdapterDirectory);
+            return targetProcess.StartProcess(debugLaunchInfo.InterpreterPathAndArguments.FirstOrDefault(), debugLaunchInfo.LaunchWebPageUrl);
         }
 
         public void UpdateLaunchOptions(IAdapterLaunchInfo adapterLaunchInfo) {
@@ -141,7 +142,7 @@ namespace Microsoft.PythonTools.Debugger {
             if (webPageUrlOption != null) {
                 string[] parsedOption = webPageUrlOption.Split('=');
                 if (parsedOption.Length == 2) {
-                    debugLaunchInfo.WebPageUrl = HttpUtility.UrlDecode(parsedOption[1]);
+                    debugLaunchInfo.LaunchWebPageUrl = HttpUtility.UrlDecode(parsedOption[1]);
                 }
             }
         }
