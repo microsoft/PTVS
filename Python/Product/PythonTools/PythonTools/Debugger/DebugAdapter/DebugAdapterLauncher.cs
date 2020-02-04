@@ -40,7 +40,7 @@ namespace Microsoft.PythonTools.Debugger {
 
         public DebugAdapterLauncher() { }
 
-        public void Initialize(IDebugAdapterHostContext context) => _adapterHostContext = context;
+        public void Initialize(IDebugAdapterHostContext context) => _adapterHostContext = context ?? throw new ArgumentNullException(nameof(context));
 
         public ITargetHostProcess LaunchAdapter(IAdapterLaunchInfo launchInfo, ITargetHostInterop targetInterop) {
             if (launchInfo.LaunchType == LaunchType.Attach) {

@@ -24,6 +24,8 @@ using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.PythonTools.Debugger {
     internal sealed class DebugAdapterProcess {
+        private static readonly Regex UrlParserRegex = new Regex(".*(https?:\\/\\/\\S+:[0-9]+\\/?).*", RegexOptions.Compiled);
+
         private readonly IDebugAdapterHostContext _adapterHostContext;
         private readonly ITargetHostInterop _targetInterop;
         private readonly string _debuggerAdapterDirectory;
@@ -32,7 +34,7 @@ namespace Microsoft.PythonTools.Debugger {
         private string _webBrowserUrl;
 
         public DebugAdapterProcess(IDebugAdapterHostContext adapterHostContext, ITargetHostInterop targetInterop, string debuggerAdapterDirectory) {
-            _adapterHostContext = adapterHostContext ?? throw new ArgumentNullException(nameof(targetInterop));
+            _adapterHostContext = adapterHostContext ?? throw new ArgumentNullException(nameof(adapterHostContext));
             _targetInterop = targetInterop ?? throw new ArgumentNullException(nameof(targetInterop));
             _debuggerAdapterDirectory = debuggerAdapterDirectory ?? throw new ArgumentNullException(nameof(debuggerAdapterDirectory));
         }
@@ -56,7 +58,7 @@ namespace Microsoft.PythonTools.Debugger {
         private void MonitorLaunchBrowserMessage(object sender, PreviewProtocolEventEventArgs e) {
             if (e.Event.Type.Equals("output") &&
                 e.Event is OutputEvent message &&
-                Regex.Matches(message.Output, ".*(https?:\\/\\/\\S+:[0-9]+\\/?).*").Count == 1
+                UrlParserRegex.Matches(message.Output).Count == 1
             ) {
                 var vsDebugger = (IVsDebugger2)VisualStudio.Shell.ServiceProvider.GlobalProvider.GetService(typeof(SVsShellDebugger));
 
