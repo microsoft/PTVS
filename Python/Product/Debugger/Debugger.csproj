@@ -182,26 +182,22 @@
     </ProjectReference>
   </ItemGroup>
   <Import Project="..\ProjectAfter.settings" />
-
-  
   <PropertyGroup>
     <BundledDebugPyVersion>1.0.0b1</BundledDebugPyVersion>
   </PropertyGroup>
-
-  
-  <Target Name="_GatherDebugPy" BeforeTargets="_IncludeDebugPy" Condition="!Exists('$(IntermediateOutputPath)Packages\debugpy\__init__.py')">
+  <Target Name="_GatherDebugPy" BeforeTargets="_IncludeDebugPy" Condition="!Exists('$(IntermediateOutputPath)debugpy\__init__.py')">
     <PropertyGroup>
       <PipCommand>"$(PackagesPath)python\tools\python.exe" -m pip install debugpy==$(BundledDebugPyVersion)</PipCommand>
-      <PipCommand>$(PipCommand) --no-compile --upgrade --target "$(IntermediateOutputPath)Packages"</PipCommand>
+      <PipCommand>$(PipCommand) --no-compile --upgrade --target "$(IntermediateOutputPath)</PipCommand>
     </PropertyGroup>
     <Exec Command="$(PipCommand)" />
   </Target>
   <Target Name="_IncludeDebugPy" BeforeTargets="AssignTargetPaths;GetVSIXSourceItems">
     <ItemGroup>
-      <DebugPyFiles Include="$(IntermediateOutputPath)Packages\debugpy\**\*" />
+      <DebugPyFiles Include="$(IntermediateOutputPath)debugpy\**\*" />
       <DebugPyFiles>
         <IncludeInVSIX>true</IncludeInVSIX>
-        <Link>Packages\debugpy\%(RecursiveDir)%(Filename)%(Extension)</Link>
+        <Link>debugpy\%(RecursiveDir)%(Filename)%(Extension)</Link>
         <VSIXSubPath>debugpy\%(RecursiveDir)</VSIXSubPath>
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </DebugPyFiles>
@@ -209,9 +205,7 @@
       <FileWrites Include="@(DebugPyFiles)" />
     </ItemGroup>
   </Target>
-
-
-  <Target Name="_UpdateebugPyVersion" AfterTargets="PrepareForBuild" Condition="'$(Language)' == 'C#'" Inputs="$(BuildRoot)\Python\Product\Debugger\DebugPyVersion.cs" Outputs="$(IntermediateOutputPath)\DebugPyVersion.g.cs">
+  <Target Name="_UpdateDebugPyVersion" AfterTargets="PrepareForBuild" Condition="'$(Language)' == 'C#'" Inputs="$(BuildRoot)\Python\Product\Debugger\DebugPyVersion.cs" Outputs="$(IntermediateOutputPath)\DebugPyVersion.g.cs">
     <ItemGroup>
       <_DebugPyVersionOldItems Include="@(Compile)" Condition="'%(Filename)' == 'DebugPyVersion'" />
       <Compile Remove="@(_DebugPyVersionOldItems)" />
