@@ -18,7 +18,7 @@
 namespace Microsoft.PythonTools.Debugger {
     static class DebugPyVersion {
         // These version string is automatically updated at build.
-        // See PTVSDVersion in Debugger.csproj
+        // See BundledDebugPyVersion in Debugger.csproj
         public const string Version = "1.0.0";
     }
 }
