@@ -53,7 +53,7 @@ namespace Microsoft.PythonTools.Debugger {
             if (PackageVersion.TryParse(response.Debugger.Version, out PackageVersion runningVersion)) {
                 var bundledDebugPyVersion = PackageVersion.Parse(DebugPyVersion.Version);
                 if (runningVersion.CompareTo(bundledDebugPyVersion) < 0) {
-                    ShowDebugPyMessage(
+                    ShowDebuggingErrorMessage(
                         Strings.InstalledPtvsdOutdatedTitle,
                         Strings.InstalledPtvsdOutdatedMessage.FormatUI(response.Debugger.Version, DebugPyVersion.Version),
                         allowDisable: false,
@@ -63,8 +63,8 @@ namespace Microsoft.PythonTools.Debugger {
             }
         }
 
-        public static void VerifyDebugPyVersionError(DebugPyVersionArguments args, ProtocolException ex) {
-            ShowDebugPyMessage(
+        public static void ShowDebugPyVersionError(DebugPyVersionArguments args, ProtocolException ex) {
+            ShowDebuggingErrorMessage(
                 Strings.InstalledPtvsdOutdatedTitle,
                 Strings.InstalledPtvsdOutdatedMessage.FormatUI("unknown", DebugPyVersion.Version),
                 allowDisable: false,
@@ -72,8 +72,8 @@ namespace Microsoft.PythonTools.Debugger {
             );
         }
 
-        public static void VerifyDebugPyVersionLegacy() {
-            ShowDebugPyMessage(
+        public static void ShowLegacyPtvsdVersionError() {
+            ShowDebuggingErrorMessage(
                 Strings.InstalledPtvsdOutdatedTitle,
                 Strings.InstalledPtvsdOutdatedMessage.FormatUI("3.*", DebugPyVersion.Version),
                 allowDisable: false,
@@ -82,7 +82,7 @@ namespace Microsoft.PythonTools.Debugger {
         }
 
         public static void ShowDebugPyIncompatibleEnvError() {
-            ShowDebugPyMessage(
+            ShowDebuggingErrorMessage(
                 Strings.PtvsdIncompatibleEnvTitle,
                 Strings.PtvsdIncompatibleEnvMessage,
                 allowDisable: true,
@@ -91,7 +91,7 @@ namespace Microsoft.PythonTools.Debugger {
         }
 
         public static void ShowDebugPyModuleNotFoundError() {
-            ShowDebugPyMessage(
+            ShowDebuggingErrorMessage(
                 Strings.ImportPtvsdModuleNotFoundTitle,
                 Strings.ImportPtvsdModuleNotFoundMessage,
                 allowDisable: false,
@@ -99,7 +99,7 @@ namespace Microsoft.PythonTools.Debugger {
             );
         }
 
-        private static void ShowDebugPyMessage(string main, string content, bool allowDisable, bool isError) {
+        private static void ShowDebuggingErrorMessage(string main, string content, bool allowDisable, bool isError) {
             var serviceProvider = VisualStudio.Shell.ServiceProvider.GlobalProvider;
             try {
                 serviceProvider.GetUIThread().Invoke(() => {

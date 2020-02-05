@@ -82,10 +82,10 @@ namespace Microsoft.PythonTools.Debugger {
             CustomDebugAdapterProtocolExtension.SendRequest(
                 new DebugPyVersionRequest(),
                 DebugPyVersionHelper.VerifyDebugPyVersion,
-                DebugPyVersionHelper.VerifyDebugPyVersionError);
+                DebugPyVersionHelper.ShowDebugPyVersionError);
         }
 
-        private void OnLegacyDebugger(object sender, EventArgs e) => DebugPyVersionHelper.VerifyDebugPyVersionLegacy();
+        private void OnLegacyDebugger(object sender, EventArgs e) => DebugPyVersionHelper.ShowLegacyPtvsdVersionError();
 
         public IntPtr Handle => IntPtr.Zero;
 
