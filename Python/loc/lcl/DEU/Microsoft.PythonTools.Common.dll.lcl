@@ -3075,10 +3075,13 @@
       </Item>
       <Item ItemId=";DontShowAgain" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Do not show this warning again.]]></Val>
+          <Val><![CDATA[Don't show this warning again.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[Diese Warnung nicht mehr anzeigen]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Do not show this warning again.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -5577,10 +5580,13 @@
       </Item>
       <Item ItemId=";PythonVersionNotSupportedInfoBarText" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[You are using Python {0} and some features might not work because Visual Studio doesn't support it yet.]]></Val>
+          <Val><![CDATA[You're using Python {0}. Some new features might not work as expected until Visual Studio officially supports this version.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Sie verwenden Python {0}, und einige Features funktionieren möglicherweise nicht, weil Visual Studio diese Version noch nicht unterstützt.]]></Val>
+            <Val><![CDATA[Sie verwenden Python {0}. Einige neue Features funktionieren möglicherweise nicht wie erwartet, bis Visual Studio diese Version offiziell unterstützt.]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[You are using Python {0} and some features might not work because Visual Studio doesn't support it yet.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -6000,10 +6006,13 @@
       </Item>
       <Item ItemId=";ReplCaption" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[{0} Interactive]]></Val>
+          <Val><![CDATA[{0} Interactive {1}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[{0} (interaktiv)]]></Val>
+            <Val><![CDATA[{0} Interactive {1}]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[{0} Interactive]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
