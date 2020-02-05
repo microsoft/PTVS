@@ -36,7 +36,7 @@ namespace Microsoft.PythonTools.Debugger {
         public PythonVersionInfo Python { get; set; }
 
         [JsonProperty("platform")]
-        public DebugPyPlatfromInfo Platfrom { get; set; }
+        public DebugPyPlatformInfo Platfrom { get; set; }
 
         [JsonProperty("process")]
         public DebugPyProcessInfo Process { get; set; }
@@ -54,8 +54,8 @@ namespace Microsoft.PythonTools.Debugger {
                 var bundledDebugPyVersion = PackageVersion.Parse(DebugPyVersion.Version);
                 if (runningVersion.CompareTo(bundledDebugPyVersion) < 0) {
                     ShowDebuggingErrorMessage(
-                        Strings.InstalledPtvsdOutdatedTitle,
-                        Strings.InstalledPtvsdOutdatedMessage.FormatUI(response.Debugger.Version, DebugPyVersion.Version),
+                        Strings.InstalledDebugPyOutdatedTitle,
+                        Strings.InstalledDebugPyOutdatedMessage.FormatUI(response.Debugger.Version, DebugPyVersion.Version),
                         allowDisable: false,
                         isError: false
                     );
@@ -65,8 +65,8 @@ namespace Microsoft.PythonTools.Debugger {
 
         public static void ShowDebugPyVersionError(DebugPyVersionArguments args, ProtocolException ex) {
             ShowDebuggingErrorMessage(
-                Strings.InstalledPtvsdOutdatedTitle,
-                Strings.InstalledPtvsdOutdatedMessage.FormatUI("unknown", DebugPyVersion.Version),
+                Strings.InstalledDebugPyOutdatedTitle,
+                Strings.InstalledDebugPyOutdatedMessage.FormatUI("unknown", DebugPyVersion.Version),
                 allowDisable: false,
                 isError: false
             );
@@ -74,8 +74,8 @@ namespace Microsoft.PythonTools.Debugger {
 
         public static void ShowLegacyPtvsdVersionError() {
             ShowDebuggingErrorMessage(
-                Strings.InstalledPtvsdOutdatedTitle,
-                Strings.InstalledPtvsdOutdatedMessage.FormatUI("3.*", DebugPyVersion.Version),
+                Strings.InstalledDebugPyOutdatedTitle,
+                Strings.InstalledDebugPyOutdatedMessage.FormatUI("3.*", DebugPyVersion.Version),
                 allowDisable: false,
                 isError: false
             );
@@ -152,7 +152,7 @@ namespace Microsoft.PythonTools.Debugger {
         public PythonImplementationInfo Implementation { get; set; }
     }
 
-    internal class DebugPyPlatfromInfo {
+    internal class DebugPyPlatformInfo {
         [JsonProperty("name")]
         public string Name { get; set; }
     }

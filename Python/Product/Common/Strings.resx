@@ -2701,11 +2701,11 @@ Please specify at least one package.</value>
     <value>Run Mypy</value>
     <comment>Mypy is a product name and should not be localized</comment>
   </data>
-  <data name="InstalledPtvsdOutdatedTitle" xml:space="preserve">
+  <data name="InstalledDebugPyOutdatedTitle" xml:space="preserve">
     <value>Debugger package is outdated</value>
   </data>
-  <data name="InstalledPtvsdOutdatedMessage" xml:space="preserve">
-    <value>You have an old version of ptvsd installed in the current environment (version {0}), but version {1} is included with Visual Studio. Please upgrade or uninstall ptvsd to get the latest functionality.</value>
+  <data name="InstalledDebugPyOutdatedMessage" xml:space="preserve">
+    <value>You have an old version of DebugPy installed in the current environment (version {0}), but version {1} is included with Visual Studio. Please upgrade or uninstall DebugPy to get the latest functionality.</value>
   </data>
   <data name="UpgradedMscorlibReference" xml:space="preserve">
     <value>A reference to 'mscorlib' was added to this project.</value>
