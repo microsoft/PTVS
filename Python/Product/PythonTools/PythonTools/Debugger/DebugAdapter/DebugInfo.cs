@@ -82,7 +82,7 @@ namespace Microsoft.PythonTools.Debugger {
         [JsonProperty("django")]
         public bool DebugDjango { get; set; }
 
-        public string WebPageUrl { get; set; }
+        public string LaunchWebPageUrl { get; set; }
 
     }
 

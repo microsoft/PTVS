@@ -16,22 +16,25 @@
 
 using System;
 using System.Runtime.InteropServices;
-using System.Threading;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces;
+using Microsoft.VisualStudio.Shared.VSCodeDebugProtocol.Messages;
 using Microsoft.VisualStudio.Shell.Interop;
-using Timer = System.Threading.Timer;
 
 namespace Microsoft.PythonTools.Debugger {
     internal sealed class DebugAdapterProcess {
+        private static readonly Regex UrlParserRegex = new Regex(".*(https?:\\/\\/\\S+:[0-9]+\\/?).*", RegexOptions.Compiled);
+
+        private readonly IDebugAdapterHostContext _adapterHostContext;
         private readonly ITargetHostInterop _targetInterop;
         private readonly string _debuggerAdapterDirectory;
 
         private ITargetHostProcess _targetHostProcess;
         private string _webBrowserUrl;
-        private Timer _timer;
 
-        public DebugAdapterProcess(ITargetHostInterop targetInterop, string debuggerAdapterDirectory) {
+        public DebugAdapterProcess(IDebugAdapterHostContext adapterHostContext, ITargetHostInterop targetInterop, string debuggerAdapterDirectory) {
+            _adapterHostContext = adapterHostContext ?? throw new ArgumentNullException(nameof(adapterHostContext));
             _targetInterop = targetInterop ?? throw new ArgumentNullException(nameof(targetInterop));
             _debuggerAdapterDirectory = debuggerAdapterDirectory ?? throw new ArgumentNullException(nameof(debuggerAdapterDirectory));
         }
@@ -46,36 +49,38 @@ namespace Microsoft.PythonTools.Debugger {
             _targetHostProcess = _targetInterop.ExecuteCommandAsync(pythonExePath, "\"" + _debuggerAdapterDirectory + "\"");
 
             if (!string.IsNullOrEmpty(webBrowserUrl) && Uri.TryCreate(webBrowserUrl, UriKind.RelativeOrAbsolute, out _)) {
-                _timer = new Timer(OnBrowserLaunchElapsedTimer, null, 5000, Timeout.Infinite);
+                _adapterHostContext.Events.PreviewProtocolEvent += MonitorLaunchBrowserMessage;
             }
 
             return _targetHostProcess;
         }
 
-        private void OnBrowserLaunchElapsedTimer(object state) {
-            Uri.TryCreate(_webBrowserUrl, UriKind.RelativeOrAbsolute, out var uri);
-            OnPortOpenedHandler.CreateHandler(uri.Port, null, null, () => _targetHostProcess.HasExited, LaunchBrowserDebugger);
-            _timer.Dispose();
-        }
+        private void MonitorLaunchBrowserMessage(object sender, PreviewProtocolEventEventArgs e) {
+            if (e.Event.Type.Equals("output") &&
+                e.Event is OutputEvent message &&
+                UrlParserRegex.Matches(message.Output).Count == 1
+            ) {
+                var vsDebugger = (IVsDebugger2)VisualStudio.Shell.ServiceProvider.GlobalProvider.GetService(typeof(SVsShellDebugger));
 
-        private void LaunchBrowserDebugger() {
-            var vsDebugger = (IVsDebugger2)VisualStudio.Shell.ServiceProvider.GlobalProvider.GetService(typeof(SVsShellDebugger));
+                var info = new VsDebugTargetInfo2();
+                var infoSize = Marshal.SizeOf(info);
+                info.cbSize = (uint)infoSize;
+                info.bstrExe = _webBrowserUrl;
+                info.dlo = (uint)_DEBUG_LAUNCH_OPERATION3.DLO_LaunchBrowser;
+                info.LaunchFlags = (uint)__VSDBGLAUNCHFLAGS4.DBGLAUNCH_UseDefaultBrowser | (uint)__VSDBGLAUNCHFLAGS.DBGLAUNCH_NoDebug;
+                IntPtr infoPtr = Marshal.AllocCoTaskMem(infoSize);
+                Marshal.StructureToPtr(info, infoPtr, false);
 
-            var info = new VsDebugTargetInfo2();
-            var infoSize = Marshal.SizeOf(info);
-            info.cbSize = (uint)infoSize;
-            info.bstrExe = _webBrowserUrl;
-            info.dlo = (uint)_DEBUG_LAUNCH_OPERATION3.DLO_LaunchBrowser;
-            info.LaunchFlags = (uint)__VSDBGLAUNCHFLAGS4.DBGLAUNCH_UseDefaultBrowser | (uint)__VSDBGLAUNCHFLAGS.DBGLAUNCH_NoDebug;
-            IntPtr infoPtr = Marshal.AllocCoTaskMem(infoSize);
-            Marshal.StructureToPtr(info, infoPtr, false);
-
-            try {
-                vsDebugger.LaunchDebugTargets2(1, infoPtr);
-            } finally {
-                if (infoPtr != IntPtr.Zero) {
-                    Marshal.FreeCoTaskMem(infoPtr);
+                try {
+                    vsDebugger.LaunchDebugTargets2(1, infoPtr);
+                } finally {
+                    if (infoPtr != IntPtr.Zero) {
+                        Marshal.FreeCoTaskMem(infoPtr);
+                    }
                 }
+
+                _adapterHostContext.Events.PreviewProtocolEvent -= MonitorLaunchBrowserMessage;
+
             }
         }
     }
