@@ -266,7 +266,7 @@
     <Compile Include="PythonTools\Debugger\DebugAdapter\DebugAdapterRemoteProcess.cs" />
     <Compile Include="PythonTools\Debugger\DebugAdapter\DebugAdapterRemoteProcessStream.cs" />
     <Compile Include="PythonTools\Debugger\DebugAdapter\DebugInfo.cs" />
-    <Compile Include="PythonTools\Debugger\PtvsdVersionHelper.cs" />
+    <Compile Include="PythonTools\Debugger\DebugPyVersionHelper.cs" />
     <Compile Include="PythonTools\Commands\CurrentEnvironmentListCommand.cs" />
     <Compile Include="PythonTools\Commands\CurrentEnvironmentCommand.cs" />
     <Compile Include="PythonTools\Commands\SwitchToEnvironmentCommand.cs" />

@@ -4365,20 +4365,20 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to You have an old version of ptvsd installed in the current environment (version {0}), but version {1} is included with Visual Studio. Please upgrade or uninstall ptvsd to get the latest functionality..
+        ///   Looks up a localized string similar to You have an old version of DebugPy installed in the current environment (version {0}), but version {1} is included with Visual Studio. Please upgrade or uninstall DebugPy to get the latest functionality..
         /// </summary>
-        public static string InstalledPtvsdOutdatedMessage {
+        public static string InstalledDebugPyOutdatedMessage {
             get {
-                return ResourceManager.GetString("InstalledPtvsdOutdatedMessage", resourceCulture);
+                return ResourceManager.GetString("InstalledDebugPyOutdatedMessage", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Debugger package is outdated.
         /// </summary>
-        public static string InstalledPtvsdOutdatedTitle {
+        public static string InstalledDebugPyOutdatedTitle {
             get {
-                return ResourceManager.GetString("InstalledPtvsdOutdatedTitle", resourceCulture);
+                return ResourceManager.GetString("InstalledDebugPyOutdatedTitle", resourceCulture);
             }
         }
         

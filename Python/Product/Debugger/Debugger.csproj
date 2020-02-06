@@ -159,7 +159,7 @@
     <Compile Include="Debugger\TryHandlerWalker.cs" />
     <Compile Include="Debugger\FrameKind.cs" />
     <Compile Include="Guids.cs" />
-    <Compile Include="PtvsdVersion.cs" />
+    <Compile Include="DebugPyVersion.cs" />
     <Compile Include="VsPackageMessage.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -183,44 +183,44 @@
   </ItemGroup>
   <Import Project="..\ProjectAfter.settings" />
   <PropertyGroup>
-    <BundledPTVSDVersion>5.0.0a12</BundledPTVSDVersion>
+    <BundledDebugPyVersion>1.0.0b1</BundledDebugPyVersion>
   </PropertyGroup>
-  <Target Name="_GatherPtvsd" BeforeTargets="_IncludePtvsd" Condition="!Exists('$(IntermediateOutputPath)Packages\ptvsd\__init__.py')">
+  <Target Name="_GatherDebugPy" BeforeTargets="_IncludeDebugPy" Condition="!Exists('$(IntermediateOutputPath)debugpy\__init__.py')">
     <PropertyGroup>
-      <PipCommand>"$(PackagesPath)python\tools\python.exe" -m pip install ptvsd==$(BundledPTVSDVersion)</PipCommand>
-      <PipCommand>$(PipCommand) --no-compile --upgrade --target "$(IntermediateOutputPath)Packages"</PipCommand>
+      <PipCommand>"$(PackagesPath)python\tools\python.exe" -m pip install debugpy==$(BundledDebugPyVersion)</PipCommand>
+      <PipCommand>$(PipCommand) --no-compile --upgrade --target "$(IntermediateOutputPath)</PipCommand>
     </PropertyGroup>
     <Exec Command="$(PipCommand)" />
   </Target>
-  <Target Name="_IncludePtvsd" BeforeTargets="AssignTargetPaths;GetVSIXSourceItems">
+  <Target Name="_IncludeDebugPy" BeforeTargets="AssignTargetPaths;GetVSIXSourceItems">
     <ItemGroup>
-      <PtvsdFiles Include="$(IntermediateOutputPath)Packages\ptvsd\**\*" />
-      <PtvsdFiles>
+      <DebugPyFiles Include="$(IntermediateOutputPath)debugpy\**\*" />
+      <DebugPyFiles>
         <IncludeInVSIX>true</IncludeInVSIX>
-        <Link>Packages\ptvsd\%(RecursiveDir)%(Filename)%(Extension)</Link>
-        <VSIXSubPath>Packages\ptvsd\%(RecursiveDir)</VSIXSubPath>
+        <Link>debugpy\%(RecursiveDir)%(Filename)%(Extension)</Link>
+        <VSIXSubPath>debugpy\%(RecursiveDir)</VSIXSubPath>
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </PtvsdFiles>
-      <Content Include="@(PtvsdFiles)" />
-      <FileWrites Include="@(PtvsdFiles)" />
+      </DebugPyFiles>
+      <Content Include="@(DebugPyFiles)" />
+      <FileWrites Include="@(DebugPyFiles)" />
     </ItemGroup>
   </Target>
-  <Target Name="_UpdatePtvsdVersion" AfterTargets="PrepareForBuild" Condition="'$(Language)' == 'C#'" Inputs="$(BuildRoot)\Python\Product\Debugger\PtvsdVersion.cs" Outputs="$(IntermediateOutputPath)\PtvsdVersion.g.cs">
+  <Target Name="_UpdateDebugPyVersion" AfterTargets="PrepareForBuild" Condition="'$(Language)' == 'C#'" Inputs="$(BuildRoot)\Python\Product\Debugger\DebugPyVersion.cs" Outputs="$(IntermediateOutputPath)\DebugPyVersion.g.cs">
     <ItemGroup>
-      <_PtvsdVersionOldItems Include="@(Compile)" Condition="'%(Filename)' == 'PtvsdVersion'" />
-      <Compile Remove="@(_PtvsdVersionOldItems)" />
-      <_PtvsdVersionNewItem Include="$(IntermediateOutputPath)\PtvsdVersion.g.cs" />
+      <_DebugPyVersionOldItems Include="@(Compile)" Condition="'%(Filename)' == 'DebugPyVersion'" />
+      <Compile Remove="@(_DebugPyVersionOldItems)" />
+      <_DebugPyVersionNewItem Include="$(IntermediateOutputPath)\DebugPyVersion.g.cs" />
     </ItemGroup>
     <PropertyGroup>
-      <OriginalPtvsdVersionText>$([System.IO.File]::ReadAllText('$(BuildRoot)\Python\Product\Debugger\PtvsdVersion.cs'))</OriginalPtvsdVersionText>
-      <PtvsdVersionText>$(OriginalPtvsdVersionText.Replace(` Version = "1.0.0"`, ` Version = "$(BundledPTVSDVersion)"`))</PtvsdVersionText>
+      <OriginalDebugPyVersionText>$([System.IO.File]::ReadAllText('$(BuildRoot)\Python\Product\Debugger\DebugPyVersion.cs'))</OriginalDebugPyVersionText>
+      <DebugPyVersionText>$(OriginalDebugPyVersionText.Replace(` Version = "1.0.0"`, ` Version = "$(BundledDebugPyVersion)"`))</DebugPyVersionText>
     </PropertyGroup>
-    <WriteLinesToFile File="@(_PtvsdVersionNewItem)" Lines="$(PtvsdVersionText)" Overwrite="true" />
+    <WriteLinesToFile File="@(_DebugPyVersionNewItem)" Lines="$(DebugPyVersionText)" Overwrite="true" />
     <ItemGroup>
-      <Compile Include="@(_PtvsdVersionNewItem)">
-        <Link>PtvsdVersion.cs</Link>
+      <Compile Include="@(_DebugPyVersionNewItem)">
+        <Link>DebugPyVersion.cs</Link>
       </Compile>
-      <FileWrites Include="@(_PtvsdVersionNewItem)" />
+      <FileWrites Include="@(_DebugPyVersionNewItem)" />
     </ItemGroup>
   </Target>
 </Project>

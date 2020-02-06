@@ -50,10 +50,11 @@ namespace Microsoft.PythonTools.Debugger {
             }
 
             var debugLaunchInfo = (DebugLaunchInfo)_debugInfo;
-            var ptvsdAdapterDirectory = Path.GetDirectoryName(PythonToolsInstallPath.GetFile("Packages\\ptvsd\\adapter\\__init__.py"));
-
-            var targetProcess = new DebugAdapterProcess(_adapterHostContext, targetInterop, ptvsdAdapterDirectory);
-            return targetProcess.StartProcess(debugLaunchInfo.InterpreterPathAndArguments.FirstOrDefault(), debugLaunchInfo.LaunchWebPageUrl);
+            var debugPydAdapterDirectory = Path.GetDirectoryName(PythonToolsInstallPath.GetFile("debugpy\\adapter\\__init__.py"));
+            var targetProcess = new DebugAdapterProcess(targetInterop, debugPydAdapterDirectory);
+            
+            return targetProcess.StartProcess(debugLaunchInfo.InterpreterPathAndArguments.FirstOrDefault(), debugLaunchInfo.
+            );
         }
 
         public void UpdateLaunchOptions(IAdapterLaunchInfo adapterLaunchInfo) {
