@@ -25,37 +25,37 @@ using Microsoft.VisualStudioTools;
 using Newtonsoft.Json;
 
 namespace Microsoft.PythonTools.Debugger {
-    internal class PtvsdVersionArguments {
+    internal class DebugPyVersionArguments {
     }
 
-    internal class PtvsdVersionResponse : ResponseBody {
-        [JsonProperty("ptvsd")]
-        public PtvsdDebuggerVersion Debugger { get; set; }
+    internal class DebugPyVersionResponse : ResponseBody {
+        [JsonProperty("debugpy")]
+        public DebugPyDebuggerVersion Debugger { get; set; }
 
         [JsonProperty("python")]
         public PythonVersionInfo Python { get; set; }
 
         [JsonProperty("platform")]
-        public PtvsdPlatfromInfo Platfrom { get; set; }
+        public DebugPyPlatformInfo Platfrom { get; set; }
 
         [JsonProperty("process")]
-        public PtvsdProcessInfo Process { get; set; }
+        public DebugPyProcessInfo Process { get; set; }
 
     }
 
-    internal class PtvsdVersionRequest : DebugRequestWithResponse<PtvsdVersionArguments, PtvsdVersionResponse> {
-        public PtvsdVersionRequest(): base("ptvsd_systemInfo") {
+    internal class DebugPyVersionRequest : DebugRequestWithResponse<DebugPyVersionArguments, DebugPyVersionResponse> {
+        public DebugPyVersionRequest(): base("debugpySystemInfo") {
         }
     }
 
-    internal class PtvsdVersionHelper {
-        public static void VerifyPtvsdVersion(PtvsdVersionArguments args, PtvsdVersionResponse response) {
+    internal class DebugPyVersionHelper {
+        public static void VerifyDebugPyVersion(DebugPyVersionArguments args, DebugPyVersionResponse response) {
             if (PackageVersion.TryParse(response.Debugger.Version, out PackageVersion runningVersion)) {
-                var bundledPtvsdVersion = PackageVersion.Parse(PtvsdVersion.Version);
-                if (runningVersion.CompareTo(bundledPtvsdVersion) < 0) {
-                    ShowPtvsdMessage(
-                        Strings.InstalledPtvsdOutdatedTitle,
-                        Strings.InstalledPtvsdOutdatedMessage.FormatUI(response.Debugger.Version, PtvsdVersion.Version),
+                var bundledDebugPyVersion = PackageVersion.Parse(DebugPyVersion.Version);
+                if (runningVersion.CompareTo(bundledDebugPyVersion) < 0) {
+                    ShowDebuggingErrorMessage(
+                        Strings.InstalledDebugPyOutdatedTitle,
+                        Strings.InstalledDebugPyOutdatedMessage.FormatUI(response.Debugger.Version, DebugPyVersion.Version),
                         allowDisable: false,
                         isError: false
                     );
@@ -63,26 +63,26 @@ namespace Microsoft.PythonTools.Debugger {
             }
         }
 
-        public static void VerifyPtvsdVersionError(PtvsdVersionArguments args, ProtocolException ex) {
-            ShowPtvsdMessage(
-                Strings.InstalledPtvsdOutdatedTitle,
-                Strings.InstalledPtvsdOutdatedMessage.FormatUI("unknown", PtvsdVersion.Version),
+        public static void ShowDebugPyVersionError(DebugPyVersionArguments args, ProtocolException ex) {
+            ShowDebuggingErrorMessage(
+                Strings.InstalledDebugPyOutdatedTitle,
+                Strings.InstalledDebugPyOutdatedMessage.FormatUI("unknown", DebugPyVersion.Version),
                 allowDisable: false,
                 isError: false
             );
         }
 
-        public static void VerifyPtvsdVersionLegacy() {
-            ShowPtvsdMessage(
-                Strings.InstalledPtvsdOutdatedTitle,
-                Strings.InstalledPtvsdOutdatedMessage.FormatUI("3.*", PtvsdVersion.Version),
+        public static void ShowLegacyPtvsdVersionError() {
+            ShowDebuggingErrorMessage(
+                Strings.InstalledDebugPyOutdatedTitle,
+                Strings.InstalledDebugPyOutdatedMessage.FormatUI("3.*", DebugPyVersion.Version),
                 allowDisable: false,
                 isError: false
             );
         }
 
-        public static void ShowPtvsdIncompatibleEnvError() {
-            ShowPtvsdMessage(
+        public static void ShowDebugPyIncompatibleEnvError() {
+            ShowDebuggingErrorMessage(
                 Strings.PtvsdIncompatibleEnvTitle,
                 Strings.PtvsdIncompatibleEnvMessage,
                 allowDisable: true,
@@ -90,8 +90,8 @@ namespace Microsoft.PythonTools.Debugger {
             );
         }
 
-        public static void ShowPtvsdModuleNotFoundError() {
-            ShowPtvsdMessage(
+        public static void ShowDebugPyModuleNotFoundError() {
+            ShowDebuggingErrorMessage(
                 Strings.ImportPtvsdModuleNotFoundTitle,
                 Strings.ImportPtvsdModuleNotFoundMessage,
                 allowDisable: false,
@@ -99,7 +99,7 @@ namespace Microsoft.PythonTools.Debugger {
             );
         }
 
-        private static void ShowPtvsdMessage(string main, string content, bool allowDisable, bool isError) {
+        private static void ShowDebuggingErrorMessage(string main, string content, bool allowDisable, bool isError) {
             var serviceProvider = VisualStudio.Shell.ServiceProvider.GlobalProvider;
             try {
                 serviceProvider.GetUIThread().Invoke(() => {
@@ -131,12 +131,12 @@ namespace Microsoft.PythonTools.Debugger {
                     }
                 });
             } catch (Exception ex) when (!ex.IsCriticalException()) {
-                ex.ReportUnhandledException(serviceProvider, typeof(PtvsdVersionHelper));
+                ex.ReportUnhandledException(serviceProvider, typeof(DebugPyVersionHelper));
             }
         }
     }
 
-    internal class PtvsdDebuggerVersion {
+    internal class DebugPyDebuggerVersion {
         [JsonProperty("version")]
         public string Version { get; set; }
     }
@@ -152,7 +152,7 @@ namespace Microsoft.PythonTools.Debugger {
         public PythonImplementationInfo Implementation { get; set; }
     }
 
-    internal class PtvsdPlatfromInfo {
+    internal class DebugPyPlatformInfo {
         [JsonProperty("name")]
         public string Name { get; set; }
     }
@@ -170,7 +170,7 @@ namespace Microsoft.PythonTools.Debugger {
         public string Description { get; set; }
     }
 
-    internal class PtvsdProcessInfo {
+    internal class DebugPyProcessInfo {
         [JsonProperty("pid")]
         public int ProcessId { get; set; }
         [JsonProperty("bitness")]
@@ -179,3 +179,5 @@ namespace Microsoft.PythonTools.Debugger {
         public string Executable { get; set; }
     }
 }
+
+

@@ -23,7 +23,6 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
-using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -537,9 +536,6 @@ namespace Microsoft.PythonTools.TestAdapter {
                 if (_debugMode == PythonDebugMode.PythonOnly) {
                     arguments.Add("-p");
                     arguments.Add(_debugPort.ToString());
-
-                    arguments.Add("-d");
-                    arguments.Add(ExecutorService.GetDebuggerSearchPath(_settings.UseLegacyDebugger));
 
                     if (_settings.UseLegacyDebugger) {
                         arguments.Add("-s");
