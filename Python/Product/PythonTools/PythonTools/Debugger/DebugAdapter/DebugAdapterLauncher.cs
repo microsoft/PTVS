@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Web;
 using System.Windows.Forms;
@@ -63,7 +64,7 @@ namespace Microsoft.PythonTools.Debugger {
                 _debugInfo = GetTcpAttachDebugInfo(adapterLaunchInfo);
             }
 
-            AddDebugOptions(adapterLaunchInfo, _debugInfo);
+            AddDebuggerOptions(adapterLaunchInfo, _debugInfo);
 
             adapterLaunchInfo.LaunchJson = _debugInfo.GetJsonString();
         }
@@ -185,7 +186,7 @@ namespace Microsoft.PythonTools.Debugger {
 
         #endregion
 
-        private static void AddDebugOptions(IAdapterLaunchInfo adapterLaunchInfo, DebugInfo launchJson) {
+        private static void AddDebuggerOptions(IAdapterLaunchInfo adapterLaunchInfo, DebugInfo launchJson) {
             var debugService = (IPythonDebugOptionsService)Package.GetGlobalService(typeof(IPythonDebugOptionsService));
 
             // Stop on entry should always be true for VS Debug Adapter Host.
@@ -200,6 +201,15 @@ namespace Microsoft.PythonTools.Debugger {
             launchJson.BreakOnSystemExitZero = debugService.BreakOnSystemExitZero;
             launchJson.DebugStdLib = debugService.DebugStdLib;
             launchJson.ShowReturnValue = debugService.ShowFunctionReturnValue;
+
+            PathRule excludePTVSInstallDirectory = new PathRule() {
+                Path = PathUtils.GetParent(typeof(DebugAdapterLauncher).Assembly.Location),
+                Include = false,
+            };
+
+            launchJson.Rules = new List<PathRule>() {
+                excludePTVSInstallDirectory
+            };
         }
 
         [DllImport("shell32.dll", SetLastError = true)]

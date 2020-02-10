@@ -49,8 +49,8 @@ namespace Microsoft.PythonTools.Debugger {
         [JsonProperty("env")]
         public Dictionary<string, string> Env { get; set; }
 
-        //[JsonProperty("rules")]
-        //public Rule[] Rules { get; set; }//TODO Will be added later
+        [JsonProperty("rules")]
+        public IList<PathRule> Rules { get; set; }
 
         public string GetJsonString() {
             var jsonSettings = new JsonSerializerSettings() {
@@ -60,7 +60,6 @@ namespace Microsoft.PythonTools.Debugger {
 
             return JsonConvert.SerializeObject(this, Formatting.Indented, jsonSettings);
         }
-
     }
 
     [JsonObject(MemberSerialization.OptIn)]
@@ -70,20 +69,17 @@ namespace Microsoft.PythonTools.Debugger {
 
         [JsonProperty("python")]
         public List<string> InterpreterPathAndArguments { get; set; }
-        //public string Python { get; set; }
 
         [JsonProperty("console")]
         public string Console { get; set; }
 
         [JsonProperty("program")]
-        //public string Program { get; set; }
         public List<string> ScriptPathAndArguments { get; set; }
 
         [JsonProperty("django")]
         public bool DebugDjango { get; set; }
 
         public string LaunchWebPageUrl { get; set; }
-
     }
 
     [JsonObject(MemberSerialization.OptIn)]
@@ -95,16 +91,13 @@ namespace Microsoft.PythonTools.Debugger {
         public int Port { get; set; }
 
         public Uri RemoteUri { get; set; }
-
     }
 
-    //TODO will be added later
-    //public class Rule {
-    //    [JsonProperty("path")]
-    //    public string Foo { get; set; }
+    public class PathRule {
+        [JsonProperty("path")]
+        public string Path { get; set; }
 
-    //    [JsonProperty("D")]
-    //    public bool? Include { get; set; }
-    //}
-
+        [JsonProperty("include")]
+        public bool? Include { get; set; }
+    }
 }
