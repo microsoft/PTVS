@@ -4441,6 +4441,9 @@
       <Item ItemId=";InstalledDebugPyOutdatedMessage" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[You have an old version of DebugPy installed in the current environment (version {0}), but version {1} is included with Visual Studio. Please upgrade or uninstall DebugPy to get the latest functionality.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[In der aktuellen Umgebung ist eine ältere Version von DebugPy installiert (Version {0}), aber Version {1} ist in Visual Studio enthalten. Aktualisieren oder deinstallieren Sie DebugPy, um die neuesten Funktionen zu erhalten.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
