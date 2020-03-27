@@ -74,7 +74,10 @@ namespace Microsoft.PythonTools.Debugger {
         public string Console { get; set; }
 
         [JsonProperty("program")]
-        public List<string> ScriptPathAndArguments { get; set; }
+        public string Script { get; set; }
+
+        [JsonProperty("args")]
+        public List<string> ScriptArguments { get; set; }
 
         [JsonProperty("django")]
         public bool DebugDjango { get; set; }

@@ -97,25 +97,21 @@ namespace Microsoft.PythonTools.Debugger {
                 debugLaunchInfo.InterpreterPathAndArguments.AddRange(GetParsedCommandLineArguments(interpreterArgs));
             } catch (Exception) {
                 MessageBox.Show(Strings.UnableToParseInterpreterArgs.FormatUI(interpreterArgs), Strings.ProductTitle, MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                debugLaunchInfo.ScriptPathAndArguments = new List<string> {
+                debugLaunchInfo.ScriptArguments = new List<string> {
                     adapterLaunchInfoJson.Value<string>("exe")
                 };
             }
         }
 
         private static void SetScriptPathAndArguments(DebugLaunchInfo debugLaunchInfo, JObject adapterLaunchInfoJson) {
-            debugLaunchInfo.ScriptPathAndArguments = new List<string> {
-                adapterLaunchInfoJson.Value<string>("scriptName")
-            };
+            debugLaunchInfo.Script = adapterLaunchInfoJson.Value<string>("scriptName");
+            debugLaunchInfo.ScriptArguments = new List<string>();
 
             string scriptArgs = adapterLaunchInfoJson.Value<string>("scriptArgs");
             try {
-                debugLaunchInfo.ScriptPathAndArguments.AddRange(GetParsedCommandLineArguments(scriptArgs));
+                debugLaunchInfo.ScriptArguments.AddRange(GetParsedCommandLineArguments(scriptArgs));
             } catch (Exception) {
                 MessageBox.Show(Strings.UnableToParseScriptArgs.FormatUI(scriptArgs), Strings.ProductTitle, MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                debugLaunchInfo.ScriptPathAndArguments = new List<string> {
-                    adapterLaunchInfoJson.Value<string>("scriptName")
-                };
             }
         }
 

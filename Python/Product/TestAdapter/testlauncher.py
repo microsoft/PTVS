@@ -58,9 +58,9 @@ def load_debugger(secret, port, mixed_mode):
         elif port:
             # Start tests with new debugger
             import debugpy 
-            
-            debugpy.enable_attach(('localhost', port))
-            debugpy.wait_for_attach()
+
+            debugpy.listen(('localhost', port))
+            debugpy.wait_for_client()
         elif mixed_mode:
             # For mixed-mode attach, there's no ptvsd and hence no wait_for_attach(), 
             # so we have to use Win32 API in a loop to do the same thing.
