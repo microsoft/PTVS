@@ -22,7 +22,6 @@ using System.Windows.Forms;
 using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.PythonTools.Debugger.Transports;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Debugger.Interop;
 
@@ -120,8 +119,9 @@ namespace Microsoft.PythonTools.Debugger.Remote {
         }
 
         public int GetPortSupplierName(out string pbstrName) {
-            // TODO: Localization - leave untranslated for now, unsure of impact
-            pbstrName = "Python remote (ptvsd)";
+            pbstrName = PythonDebugOptionsServiceHelper.Options.UseLegacyDebugger
+                ? Strings.RemoteDebugPortSupplierNamePtvsd
+                : Strings.RemoteDebugPortSupplierNameDebugPy;
             return VSConstants.S_OK;
         }
 
@@ -132,7 +132,9 @@ namespace Microsoft.PythonTools.Debugger.Remote {
         }
 
         public int GetDescription(enum_PORT_SUPPLIER_DESCRIPTION_FLAGS[] pdwFlags, out string pbstrText) {
-            pbstrText = Strings.RemoteDebugPortSupplierDescription;
+            pbstrText = PythonDebugOptionsServiceHelper.Options.UseLegacyDebugger
+                ? Strings.RemoteDebugPortSupplierDescriptionPtvsd
+                : Strings.RemoteDebugPortSupplierDescriptionDebugPy;
             return VSConstants.S_OK;
         }
     }
