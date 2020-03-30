@@ -5820,11 +5820,38 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Allows debugging a Python process on a remote machine running any OS, if it can be connected to via TCP, and remote debugging has been enabled by using the &apos;ptvsd&apos; module. Specify the secret, hostname and port to connect to in the &apos;Qualifier&apos; textbox, e.g. &apos;tcp://secret@localhost:5678&apos;. .
+        ///   Looks up a localized string similar to Allows debugging a Python process on a remote machine running any OS, if it can be connected to via TCP, and remote debugging has been enabled by using the &apos;debugpy&apos; module. Specify the hostname and port to connect to in the &apos;Qualifier&apos; textbox, e.g. &apos;tcp://localhost:5678&apos;..
         /// </summary>
-        public static string RemoteDebugPortSupplierDescription {
+        public static string RemoteDebugPortSupplierDescriptionDebugPy {
             get {
-                return ResourceManager.GetString("RemoteDebugPortSupplierDescription", resourceCulture);
+                return ResourceManager.GetString("RemoteDebugPortSupplierDescriptionDebugPy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Allows debugging a Python process on a remote machine running any OS, if it can be connected to via TCP, and remote debugging has been enabled by using the &apos;ptvsd&apos; module. Specify the secret, hostname and port to connect to in the &apos;Qualifier&apos; textbox, e.g. &apos;tcp://secret@localhost:5678&apos;..
+        /// </summary>
+        public static string RemoteDebugPortSupplierDescriptionPtvsd {
+            get {
+                return ResourceManager.GetString("RemoteDebugPortSupplierDescriptionPtvsd", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Python remote (debugpy).
+        /// </summary>
+        public static string RemoteDebugPortSupplierNameDebugPy {
+            get {
+                return ResourceManager.GetString("RemoteDebugPortSupplierNameDebugPy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Python remote (ptvsd).
+        /// </summary>
+        public static string RemoteDebugPortSupplierNamePtvsd {
+            get {
+                return ResourceManager.GetString("RemoteDebugPortSupplierNamePtvsd", resourceCulture);
             }
         }
         
