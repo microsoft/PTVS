@@ -249,22 +249,22 @@ namespace DebuggerUITestsRunner {
     }
 
     [TestClass]
-    public class DebugProjectUITestsVS : DebugProjectUITests {
+    public class DebugProjectUITestsLegacyPtvsd : DebugProjectUITests {
         protected override bool UseVsCodeDebugger => false;
         protected override string Interpreter => ""; // Use the existing global default
     }
 
-    public abstract class DebugProjectUITestsExperimental : DebugProjectUITests {
+    public abstract class DebugProjectUITestsDebugPy : DebugProjectUITests {
         protected override bool UseVsCodeDebugger => true;
     }
 
     [TestClass]
-    public class DebugProjectUITestsExperimental27 : DebugProjectUITestsExperimental {
+    public class DebugProjectUITestsDebugPy27 : DebugProjectUITestsDebugPy {
         protected override string Interpreter => "Python27|Python27_x64";
     }
 
     [TestClass]
-    public class DebugProjectUITestsExperimental37 : DebugProjectUITestsExperimental {
+    public class DebugProjectUITestsDebugPy37 : DebugProjectUITestsDebugPy {
         protected override string Interpreter => "Python37|Python37_x64";
     }
 }

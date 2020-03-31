@@ -76,12 +76,7 @@
   </Target>
 
   <!-- Import the VS SDK headers -->
-  <ImportGroup Condition="Exists('$(DevEnvDir)..\..\VSSDK')">
-    <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\VSSDK\Microsoft.VsSDK.targets" />
-  </ImportGroup>
-  <ImportGroup Condition="!Exists('$(DevEnvDir)..\..\VSSDK')">
-    <Import Project="$(VSSDKInstall)\Microsoft.VsSDK.targets" />
-  </ImportGroup>
+  <Import Project="$(PackagesPath)Microsoft.VSSDK.BuildTools\tools\vssdk\Microsoft.VsSDK.targets" />
 
   <!-- For non-debug builds, don't copy debug symbols -->
   <Target Name="_ClearVSIXSourceItemLocalOnly"

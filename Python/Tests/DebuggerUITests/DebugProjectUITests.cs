@@ -520,7 +520,7 @@ namespace DebuggerUITests {
             using (SelectDefaultInterpreter(app, interpreter))
             using (new PythonOptionsSetter(app.Dte, useLegacyDebugger: !useVsCodeDebugger)) {
                 string exceptionDescription = useVsCodeDebugger ? "" : "Exception";
-                ExceptionTest(app, "SimpleException.py", "Exception Thrown", exceptionDescription, "Exception", 3);
+                ExceptionTest(app, "SimpleException.py", exceptionDescription, "Exception", 3);
             }
         }
 
@@ -529,16 +529,15 @@ namespace DebuggerUITests {
             using (SelectDefaultInterpreter(app, interpreter))
             using (new PythonOptionsSetter(app.Dte, useLegacyDebugger: !useVsCodeDebugger)) {
                 string exceptionDescription = useVsCodeDebugger ? "bad value" : "ValueError: bad value";
-                ExceptionTest(app, "SimpleException2.py", "Exception Thrown", exceptionDescription, "ValueError", 3);
+                ExceptionTest(app, "SimpleException2.py", exceptionDescription, "ValueError", 3);
             }
         }
 
         public void SimpleExceptionUnhandled(PythonVisualStudioApp app, bool useVsCodeDebugger, string interpreter, DotNotWaitOnNormalExit optionSetter) {
             using (SelectDefaultInterpreter(app, interpreter))
             using (new PythonOptionsSetter(app.Dte, waitOnAbnormalExit: false, useLegacyDebugger: !useVsCodeDebugger)) {
-                string exceptionTitle = useVsCodeDebugger ? "Exception Unhandled" : "Exception User-Unhandled";
                 string exceptionDescription = useVsCodeDebugger ? "bad value" : "ValueError: bad value";
-                ExceptionTest(app, "SimpleExceptionUnhandled.py", exceptionTitle, exceptionDescription, "ValueError", 2, true);
+                ExceptionTest(app, "SimpleExceptionUnhandled.py", exceptionDescription, "ValueError", 2, true);
             }
         }
 
@@ -917,7 +916,7 @@ namespace DebuggerUITests {
             Assert.IsTrue(exists, "Python script was expected to create file '{0}'.", createdFilePath);
         }
 
-        private static void ExceptionTest(PythonVisualStudioApp app, string filename, string expectedTitle, string expectedDescription, string exceptionType, int expectedLine, bool isUnhandled=false) {
+        private static void ExceptionTest(PythonVisualStudioApp app, string filename, string expectedDescription, string exceptionType, int expectedLine, bool isUnhandled=false) {
             var debug3 = (Debugger3)app.Dte.Debugger;
             using (new DebuggingGeneralOptionsSetter(app.Dte, enableJustMyCode: true)) {
                 OpenDebuggerProject(app, filename);
@@ -935,11 +934,10 @@ namespace DebuggerUITests {
                 exceptionSettings.SetBreakWhenThrown(true, exceptionSettings.Item(exceptionType));
                 debug3.ExceptionGroups.ResetAll();
 
-                var excepAdorner = app.WaitForExceptionAdornment();
+                var excepAdorner = app.WaitForExceptionAdornment(isUnhandled);
                 AutomationWrapper.DumpElement(excepAdorner.Element);
 
                 Assert.AreEqual(expectedDescription, excepAdorner.Description.TrimEnd());
-                Assert.AreEqual(expectedTitle, excepAdorner.Title.TrimEnd());
 
                 Assert.AreEqual((uint)expectedLine, ((StackFrame2)debug3.CurrentThread.StackFrames.Item(1)).LineNumber);
 

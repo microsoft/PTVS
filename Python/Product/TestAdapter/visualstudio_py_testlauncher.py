@@ -261,9 +261,9 @@ def main():
         wait_for_attach()
     elif opts.port:   
         import debugpy
-        
-        debugpy.enable_attach(('127.0.0.1', getattr(opts, 'port', 5678)))
-        debugpy.wait_for_attach()
+
+        debugpy.listen(('127.0.0.1', getattr(opts, 'port', 5678)))
+        debugpy.wait_for_client()
     elif opts.mixed_mode:
         # For mixed-mode attach, there's no ptvsd and hence no wait_for_attach(), 
         # so we have to use Win32 API in a loop to do the same thing.
