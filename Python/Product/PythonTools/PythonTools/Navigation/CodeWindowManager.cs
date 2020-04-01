@@ -123,11 +123,12 @@ namespace Microsoft.PythonTools.Navigation {
 
         private int RemoveDropDownBar() {
             var cpc = (IConnectionPointContainer)_window;
-            if (cpc != null) {
+            if (cpc != null && _cookieVsCodeWindowEvents != 0) {
                 IConnectionPoint cp;
                 cpc.FindConnectionPoint(typeof(IVsCodeWindowEvents).GUID, out cp);
                 if (cp != null) {
                     cp.Unadvise(_cookieVsCodeWindowEvents);
+                    _cookieVsCodeWindowEvents = 0;
                 }
             }
 
