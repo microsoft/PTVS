@@ -183,7 +183,7 @@
   </ItemGroup>
   <Import Project="..\ProjectAfter.settings" />
   <PropertyGroup>
-    <BundledDebugPyVersion>1.0.0b4</BundledDebugPyVersion>
+    <BundledDebugPyVersion>1.0.0b5</BundledDebugPyVersion>
   </PropertyGroup>
   <Target Name="_GatherDebugPy" BeforeTargets="_IncludeDebugPy" Condition="!Exists('$(IntermediateOutputPath)debugpy\__init__.py')">
     <PropertyGroup>
