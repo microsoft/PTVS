@@ -5776,11 +5776,38 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";RemoteDebugPortSupplierDescription" ItemType="0" PsrId="211" Leaf="true">
+      <Item ItemId=";RemoteDebugPortSupplierDescriptionDebugPy" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Allows debugging a Python process on a remote machine running any OS, if it can be connected to via TCP, and remote debugging has been enabled by using the 'ptvsd' module. Specify the secret, hostname and port to connect to in the 'Qualifier' textbox, e.g. 'tcp://secret@localhost:5678'. ]]></Val>
+          <Val><![CDATA[Allows debugging a Python process on a remote machine running any OS, if it can be connected to via TCP, and remote debugging has been enabled by using the 'debugpy' module. Specify the hostname and port to connect to in the 'Qualifier' textbox, e.g. 'tcp://localhost:5678'.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Umożliwia debugowanie procesu języka Python na zdalnej maszynie z dowolnym systemem operacyjnym, jeśli można nawiązać połączenie za pośrednictwem protokołu TCP i włączono zdalne debugowanie przy użyciu modułu „ptvsd”. Określ wpis tajny, nazwę hosta i port, aby nawiązać połączenie z polem tekstowym „Qualifier”, np. „tcp://secret@localhost:5678”. ]]></Val>
+            <Val><![CDATA[Umożliwia debugowanie procesu języka Python na zdalnej maszynie z dowolnym systemem operacyjnym, jeśli można nawiązać połączenie za pośrednictwem protokołu TCP i włączono zdalne debugowanie przy użyciu modułu „debugpy”. Określ nazwę hosta i port, aby nawiązać połączenie z polem tekstowym „Qualifier”, np. „tcp://localhost:5678”. ]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";RemoteDebugPortSupplierDescriptionPtvsd" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Allows debugging a Python process on a remote machine running any OS, if it can be connected to via TCP, and remote debugging has been enabled by using the 'ptvsd' module. Specify the secret, hostname and port to connect to in the 'Qualifier' textbox, e.g. 'tcp://secret@localhost:5678'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Umożliwia debugowanie procesu języka Python na zdalnej maszynie z dowolnym systemem operacyjnym, jeśli można nawiązać połączenie za pośrednictwem protokołu TCP i włączono zdalne debugowanie przy użyciu modułu „ptvsd”. Określ wpis tajny, nazwę hosta i port, aby nawiązać połączenie z polem tekstowym „Qualifier”, np. „tcp://secret@localhost:5678”.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";RemoteDebugPortSupplierNameDebugPy" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Python remote (debugpy)]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Python — zdalne (debugpy)]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";RemoteDebugPortSupplierNamePtvsd" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Python remote (ptvsd)]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Python — zdalne (ptvsd)]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
