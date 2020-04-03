@@ -5776,11 +5776,38 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";RemoteDebugPortSupplierDescription" ItemType="0" PsrId="211" Leaf="true">
+      <Item ItemId=";RemoteDebugPortSupplierDescriptionDebugPy" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Allows debugging a Python process on a remote machine running any OS, if it can be connected to via TCP, and remote debugging has been enabled by using the 'ptvsd' module. Specify the secret, hostname and port to connect to in the 'Qualifier' textbox, e.g. 'tcp://secret@localhost:5678'. ]]></Val>
+          <Val><![CDATA[Allows debugging a Python process on a remote machine running any OS, if it can be connected to via TCP, and remote debugging has been enabled by using the 'debugpy' module. Specify the hostname and port to connect to in the 'Qualifier' textbox, e.g. 'tcp://localhost:5678'.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[임의의 OS를 실행하는 원격 컴퓨터(TCP를 통해 연결할 수 있는 경우)에서 Python 프로세스 디버깅을 허용합니다. 'ptvsd' 모듈을 사용하여 원격 디버깅이 사용하도록 설정되었습니다. '한정자' 텍스트 상자에 연결을 위한 암호, 호스트 이름 및 포트를 'tcp://secret@localhost:5678'과 같이 지정하세요. ]]></Val>
+            <Val><![CDATA[임의의 OS를 실행하는 원격 머신(TCP를 통해 연결할 수 있는 경우)에서 Python 프로세스 디버깅을 허용합니다. 'debugpy' 모듈을 사용하여 원격 디버깅이 사용하도록 설정되었습니다. '한정자' 텍스트 상자에 연결하기 위해 호스트 이름과 포트를 지정하세요(예: 'tcp://localhost:5678').]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";RemoteDebugPortSupplierDescriptionPtvsd" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Allows debugging a Python process on a remote machine running any OS, if it can be connected to via TCP, and remote debugging has been enabled by using the 'ptvsd' module. Specify the secret, hostname and port to connect to in the 'Qualifier' textbox, e.g. 'tcp://secret@localhost:5678'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[임의의 OS를 실행하는 원격 머신(TCP를 통해 연결할 수 있는 경우)에서 Python 프로세스 디버깅을 허용합니다. 'ptvsd' 모듈을 사용하여 원격 디버깅이 사용하도록 설정되었습니다. '한정자' 텍스트 상자에 연결하기 위해 비밀, 호스트 이름 및 포트를 지정하세요(예: 'tcp://secret@localhost:5678').]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";RemoteDebugPortSupplierNameDebugPy" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Python remote (debugpy)]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Python 원격(debugpy)]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";RemoteDebugPortSupplierNamePtvsd" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Python remote (ptvsd)]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Python 원격(ptvsd)]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

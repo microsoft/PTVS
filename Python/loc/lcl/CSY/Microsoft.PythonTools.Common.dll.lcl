@@ -5776,11 +5776,38 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";RemoteDebugPortSupplierDescription" ItemType="0" PsrId="211" Leaf="true">
+      <Item ItemId=";RemoteDebugPortSupplierDescriptionDebugPy" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Allows debugging a Python process on a remote machine running any OS, if it can be connected to via TCP, and remote debugging has been enabled by using the 'ptvsd' module. Specify the secret, hostname and port to connect to in the 'Qualifier' textbox, e.g. 'tcp://secret@localhost:5678'. ]]></Val>
+          <Val><![CDATA[Allows debugging a Python process on a remote machine running any OS, if it can be connected to via TCP, and remote debugging has been enabled by using the 'debugpy' module. Specify the hostname and port to connect to in the 'Qualifier' textbox, e.g. 'tcp://localhost:5678'.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Umožňuje ladit proces Pythonu na vzdáleném počítači s libovolným operačním systémem, pokud se dá připojit přes TCP a pokud bylo vzdálené ladění povoleno pomocí modulu ptvsd. Do textového pole Kvalifikátor zadejte tajný kód, název hostitele a port, ke kterému se chcete připojit, např. tcp://tajny_kod@mistni_hostitel:5678. ]]></Val>
+            <Val><![CDATA[Umožní ladit pythonový proces na vzdáleném počítači, na kterém běží jakýkoli operační systém. Podmínkou je, že musí být možné ho připojit pomocí protokolu TCP a musí na něm být povolené vzdálené ladění pomocí modulu debugpy. Pokud se chcete připojit k textovému poli Qualifier, zadejte název hostitele a port, např. tcp://localhost:5678.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";RemoteDebugPortSupplierDescriptionPtvsd" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Allows debugging a Python process on a remote machine running any OS, if it can be connected to via TCP, and remote debugging has been enabled by using the 'ptvsd' module. Specify the secret, hostname and port to connect to in the 'Qualifier' textbox, e.g. 'tcp://secret@localhost:5678'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Umožní ladit pythonový proces na vzdáleném počítači, na kterém běží jakýkoli operační systém. Podmínkou je, že musí být možné ho připojit pomocí protokolu TCP a musí na něm být povolené vzdálené ladění pomocí modulu ptvsd. Pokud se chcete připojit k textovému poli Qualifier, zadejte název hostitele a port, např. tcp://localhost:5678.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";RemoteDebugPortSupplierNameDebugPy" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Python remote (debugpy)]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Vzdálený Python (debugpy)]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";RemoteDebugPortSupplierNamePtvsd" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Python remote (ptvsd)]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Vzdálený Python (ptvsd)]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
