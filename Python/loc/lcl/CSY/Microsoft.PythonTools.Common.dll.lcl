@@ -5789,7 +5789,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Allows debugging a Python process on a remote machine running any OS, if it can be connected to via TCP, and remote debugging has been enabled by using the 'ptvsd' module. Specify the secret, hostname and port to connect to in the 'Qualifier' textbox, e.g. 'tcp://secret@localhost:5678'.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Umožní ladit pythonový proces na vzdáleném počítači, na kterém běží jakýkoli operační systém. Podmínkou je, že musí být možné ho připojit pomocí protokolu TCP a musí na něm být povolené vzdálené ladění pomocí modulu ptvsd. Pokud se chcete připojit k textovému poli Qualifier, zadejte název hostitele a port, např. tcp://localhost:5678.]]></Val>
+            <Val><![CDATA[Umožní ladit pythonový proces na vzdáleném počítači, na kterém běží jakýkoli operační systém. Podmínkou je, že musí být možné ho připojit pomocí protokolu TCP a musí na něm být povolené vzdálené ladění pomocí modulu ptvsd. Pokud se chcete připojit k textovému poli Qualifier, zadejte název hostitele a port, např. tcp://secret@localhost:5678.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
