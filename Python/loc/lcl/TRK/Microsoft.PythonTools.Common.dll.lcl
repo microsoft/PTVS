@@ -5789,7 +5789,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Allows debugging a Python process on a remote machine running any OS, if it can be connected to via TCP, and remote debugging has been enabled by using the 'ptvsd' module. Specify the secret, hostname and port to connect to in the 'Qualifier' textbox, e.g. 'tcp://secret@localhost:5678'.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Herhangi bir işletim sisteminin çalıştığı uzak makinedeki Python işlemine TCP aracılığıyla bağlanılabiliyorsa ve 'ptvsd' modülü kullanılarak uzaktan hata ayıklama etkinleştirilmişse bu işlemde hata ayıklama yapılmasını sağlar. 'Niteleyici' metin kutusunda gizli diziyi, konak adını ve bağlanılacak bağlantı noktasını belirtin; örneğin, 'tcp://gizlidizi@localhost:5678'.]]></Val>
+            <Val><![CDATA[Herhangi bir işletim sisteminin çalıştığı uzak makinedeki Python işlemine TCP aracılığıyla bağlanılabiliyorsa ve 'ptvsd' modülü kullanılarak uzaktan hata ayıklama etkinleştirilmişse bu işlemde hata ayıklama yapılmasını sağlar. 'Niteleyici' metin kutusunda gizli diziyi, konak adını ve bağlanılacak bağlantı noktasını belirtin; örneğin, 'tcp://secret@localhost:5678'.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
