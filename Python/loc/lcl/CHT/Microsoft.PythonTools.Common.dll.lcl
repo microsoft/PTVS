@@ -5776,11 +5776,38 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";RemoteDebugPortSupplierDescription" ItemType="0" PsrId="211" Leaf="true">
+      <Item ItemId=";RemoteDebugPortSupplierDescriptionDebugPy" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Allows debugging a Python process on a remote machine running any OS, if it can be connected to via TCP, and remote debugging has been enabled by using the 'ptvsd' module. Specify the secret, hostname and port to connect to in the 'Qualifier' textbox, e.g. 'tcp://secret@localhost:5678'. ]]></Val>
+          <Val><![CDATA[Allows debugging a Python process on a remote machine running any OS, if it can be connected to via TCP, and remote debugging has been enabled by using the 'debugpy' module. Specify the hostname and port to connect to in the 'Qualifier' textbox, e.g. 'tcp://localhost:5678'.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[若可透過 TCP 連線且已使用 'ptvsd' 模組啟用了遠端偵錯，則允許為執行任何 OS 之遠端電腦上的 Python 處理序進行偵錯。請在 [限定詞]5D; 文字方塊中，為連線指定密碼、主機名稱與連接埠，例如 'tcp://secret@localhost:5678'。 ]]></Val>
+            <Val><![CDATA[若可透過 TCP 連線到執行任何 OS 的遠端電腦，而且已使用 'debugpy' 模組啟用了遠端偵錯，則允許在該遠端電腦上對 Python 處理序進行偵錯。請在 [限定詞]5D; 文字方塊中，指定要連線的目標主機名稱與連接埠，例如 'tcp://localhost:5678'。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";RemoteDebugPortSupplierDescriptionPtvsd" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Allows debugging a Python process on a remote machine running any OS, if it can be connected to via TCP, and remote debugging has been enabled by using the 'ptvsd' module. Specify the secret, hostname and port to connect to in the 'Qualifier' textbox, e.g. 'tcp://secret@localhost:5678'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[若可透過 TCP 連線到執行任何 OS 的遠端電腦，而且已使用 'ptvsd' 模組啟用了遠端偵錯，則允許在該遠端電腦上對 Python 處理序進行偵錯。請在 [限定詞]5D; 文字方塊中，指定要連線的目標祕密、主機名稱與連接埠，例如 'tcp://secret@localhost:5678'。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";RemoteDebugPortSupplierNameDebugPy" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Python remote (debugpy)]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Python 遠端 (debugpy)]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";RemoteDebugPortSupplierNamePtvsd" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Python remote (ptvsd)]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Python 遠端 (ptvsd)]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
