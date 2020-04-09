@@ -284,8 +284,6 @@
         <Compile Include="Intellisense\ProjectBlockCompletionContextBase.cs" />
         <Compile Include="Intellisense\TemplateCompletionController.cs" />
         <Compile Include="Intellisense\TemplateCompletionControllerProvider.cs" />
-        <Compile Include="Intellisense\TemplateMainController.cs" />
-        <Compile Include="Intellisense\TemplateTextViewConnectionListener.cs" />
         <Compile Include="Intellisense\TextBufferExtensions.cs" />
         <Compile Include="TemplateContentType.cs" />
         <Compile Include="TemplateParsing\DjangoBlock.cs" />
