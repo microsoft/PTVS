@@ -408,10 +408,8 @@ namespace Microsoft.PythonTools.Environments {
 
             // new versions of python >= 3.8 from the windows store have a different executable name (ie. python3.8.exe) in the 
             // registry InstallPath, compared to what is in the venv folder (python.exe) so search for both if interpExe is not found.
-            interpExe = PathUtils.FindFile(prefixPath, interpExe, firstCheck: scripts);
-            interpExe = interpExe == null ? PathUtils.FindFile(prefixPath, "python.exe", firstCheck: scripts) : interpExe;
-            winterpExe = PathUtils.FindFile(prefixPath, winterpExe, firstCheck: scripts);
-            winterpExe = winterpExe == null ? PathUtils.FindFile(prefixPath, "pythonw.exe", firstCheck: scripts) : winterpExe;
+            interpExe = PathUtils.FindFile(prefixPath, interpExe, firstCheck: scripts) ?? PathUtils.FindFile(prefixPath, "python.exe", firstCheck: scripts);
+            winterpExe = PathUtils.FindFile(prefixPath, winterpExe, firstCheck: scripts) ?? PathUtils.FindFile(prefixPath, "pythonw.exe", firstCheck: scripts);
             pathVar = baseInterpreter.Configuration.PathEnvironmentVariable;
         }
 
