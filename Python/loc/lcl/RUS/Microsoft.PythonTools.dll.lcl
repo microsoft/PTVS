@@ -2323,7 +2323,7 @@
           <Str Cat="Button">
             <Val><![CDATA[Add Environment]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
-              <Val><![CDATA[Добавить среду]]></Val>
+              <Val><![CDATA[Добавить окружение]]></Val>
             </Tgt>
             <Prev Cat="Button">
               <Val><![CDATA[Add Remove Environments]]></Val>
@@ -2800,7 +2800,7 @@
           <Str Cat="Button" IgnoreHK="true">
             <Val><![CDATA[Add &Conda Environment...]]></Val>
             <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
-              <Val><![CDATA[Добавить среду &Conda…]]></Val>
+              <Val><![CDATA[Добавить окружение &Conda…]]></Val>
             </Tgt>
             <Prev Cat="Button" IgnoreHK="true">
               <Val><![CDATA[Create &Conda Environment...]]></Val>
@@ -2812,7 +2812,7 @@
           <Str Cat="Button">
             <Val><![CDATA[Add Conda Environment]]></Val>
             <Tgt Cat="Button" Stat="Loc" Orig="New">
-              <Val><![CDATA[Добавить среду Conda]]></Val>
+              <Val><![CDATA[Добавить окружение Conda]]></Val>
             </Tgt>
             <Prev Cat="Button">
               <Val><![CDATA[Create Conda Environment]]></Val>
