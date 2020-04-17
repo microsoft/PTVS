@@ -287,7 +287,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Add Environment...]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Добавить среду…]]></Val>
+            <Val><![CDATA[Добавить окружение…]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -386,7 +386,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Add environment]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Добавить среду]]></Val>
+            <Val><![CDATA[Добавление окружения]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
