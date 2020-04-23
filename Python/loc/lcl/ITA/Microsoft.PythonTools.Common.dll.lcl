@@ -6032,7 +6032,7 @@
         <Str Cat="Text">
           <Val><![CDATA[{0} Interactive {1}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[{1} interattiva di {0}]]></Val>
+            <Val><![CDATA[Finestra interattiva di {0} - {1}]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[{0} Interactive]]></Val>
