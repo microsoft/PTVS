@@ -5477,7 +5477,7 @@
         <Str Cat="Text">
           <Val><![CDATA[A file which may contain Python tests was detected in the {0} {1}, but the test framework is disabled.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Se ha detectado un archivo que puede contener pruebas de Python en {0} {1}, pero el marco de pruebas está deshabilitado.]]></Val>
+            <Val><![CDATA[Se ha detectado un archivo que puede contener pruebas de Python en el {1} {0}, pero el marco de pruebas está deshabilitado.]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[A file containing Python tests was detected in the {0} {1}, but the test framework is disabled.]]></Val>
@@ -6032,7 +6032,7 @@
         <Str Cat="Text">
           <Val><![CDATA[{0} Interactive {1}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[{0} interactiva {1}]]></Val>
+            <Val><![CDATA[{0} interactivo {1}]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[{0} Interactive]]></Val>
