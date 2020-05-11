@@ -52,6 +52,9 @@ namespace Microsoft.PythonTools.Debugger {
         [JsonProperty("rules")]
         public IList<PathRule> Rules { get; set; }
 
+        [JsonProperty("variablePresentation")]
+        public VariablePresentation VariablePresentation { get; set; }
+
         public string GetJsonString() {
             var jsonSettings = new JsonSerializerSettings() {
                 TypeNameHandling = TypeNameHandling.None,
@@ -102,5 +105,24 @@ namespace Microsoft.PythonTools.Debugger {
 
         [JsonProperty("include")]
         public bool? Include { get; set; }
+    }
+
+    public class VariablePresentation {
+        [JsonProperty("special")]
+        public string Special { get; set; }
+
+        [JsonProperty("function")]
+        public string Function { get; set; }
+
+        [JsonProperty("class_")]
+        public string Class { get; set; }
+
+        [JsonProperty("protected")]
+        public string Protected { get; set; }
+    }
+
+    public static class PresentationMode {
+        public const string Group = "group";
+        public const string Inline = "inline";
     }
 }

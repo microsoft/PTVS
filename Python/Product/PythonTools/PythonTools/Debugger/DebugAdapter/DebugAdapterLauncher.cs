@@ -198,7 +198,15 @@ namespace Microsoft.PythonTools.Debugger {
             launchJson.DebugStdLib = debugService.DebugStdLib;
             launchJson.ShowReturnValue = debugService.ShowFunctionReturnValue;
 
-            PathRule excludePTVSInstallDirectory = new PathRule() {
+            // Disable grouping functionality for now, later we'll add an option to control this
+            launchJson.VariablePresentation = new VariablePresentation {
+                Special = PresentationMode.Inline,
+                Function = PresentationMode.Inline,
+                Class = PresentationMode.Inline,
+                Protected = PresentationMode.Inline
+            };
+
+            var excludePTVSInstallDirectory = new PathRule() {
                 Path = PathUtils.GetParent(typeof(DebugAdapterLauncher).Assembly.Location),
                 Include = false,
             };
