@@ -995,7 +995,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Scraping {0}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[{0} をスクラップしています]]></Val>
+            <Val><![CDATA[{0} をスクレイピングしています]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -1004,7 +1004,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Scraping standard library]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[標準ライブラリをスクラップしています]]></Val>
+            <Val><![CDATA[標準ライブラリをスクレイピングしています]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

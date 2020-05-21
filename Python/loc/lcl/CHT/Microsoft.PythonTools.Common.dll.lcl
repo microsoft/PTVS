@@ -995,7 +995,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Scraping {0}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[正在消除 {0}]]></Val>
+            <Val><![CDATA[正在抓取 {0}]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -1004,7 +1004,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Scraping standard library]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[正在消除標準程式庫]]></Val>
+            <Val><![CDATA[正在抓取標準程式庫]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
