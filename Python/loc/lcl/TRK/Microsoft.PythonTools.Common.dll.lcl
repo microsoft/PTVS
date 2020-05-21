@@ -995,7 +995,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Scraping {0}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[{0} atılıyor]]></Val>
+            <Val><![CDATA[{0} kazınıyor]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -1004,7 +1004,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Scraping standard library]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Standart kitaplık verileri atılıyor]]></Val>
+            <Val><![CDATA[Standart kitaplık kazınıyor]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
