@@ -995,7 +995,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Scraping {0}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Wycinanie {0}]]></Val>
+            <Val><![CDATA[Wydobywanie — {0}]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -1004,7 +1004,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Scraping standard library]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Wycinanie biblioteki standardowej]]></Val>
+            <Val><![CDATA[Wydobywanie — biblioteka standardowa]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
