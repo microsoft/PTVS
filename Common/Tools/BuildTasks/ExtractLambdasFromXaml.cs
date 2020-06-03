@@ -29,6 +29,8 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.VisualStudioTools.Wpf;
 
+#pragma warning disable CA1303 // Do not pass literals as localized parameters (this is a build utility that does not need localization)
+
 namespace Microsoft.VisualStudioTools.BuildTasks {
     public class ExtractLambdasFromXaml : Task {
         private struct LambdaInfo {
@@ -426,3 +428,5 @@ namespace Microsoft.VisualStudioTools.BuildTasks {
 #endif
     }
 }
+
+#pragma warning restore CA1303
