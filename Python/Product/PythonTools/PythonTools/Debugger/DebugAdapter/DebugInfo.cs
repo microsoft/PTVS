@@ -16,7 +16,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace Microsoft.PythonTools.Debugger {
 
@@ -51,6 +53,9 @@ namespace Microsoft.PythonTools.Debugger {
 
         [JsonProperty("rules")]
         public IList<PathRule> Rules { get; set; }
+
+        [JsonProperty("variablePresentation")]
+        public VariablePresentation VariablePresentation { get; set; }
 
         public string GetJsonString() {
             var jsonSettings = new JsonSerializerSettings() {
@@ -102,5 +107,28 @@ namespace Microsoft.PythonTools.Debugger {
 
         [JsonProperty("include")]
         public bool? Include { get; set; }
+    }
+
+    public class VariablePresentation {
+        [JsonProperty("special")]
+        public PresentationMode Special { get; set; }
+
+        [JsonProperty("function")]
+        public PresentationMode Function { get; set; }
+
+        [JsonProperty("class_")]
+        public PresentationMode Class { get; set; }
+
+        [JsonProperty("protected")]
+        public PresentationMode Protected { get; set; }
+    }
+
+    [JsonConverter(typeof(StringEnumConverter))]
+    public enum PresentationMode {
+        [EnumMember(Value="group")]
+        Group,
+
+        [EnumMember(Value = "inline")]
+        Inline,
     }
 }

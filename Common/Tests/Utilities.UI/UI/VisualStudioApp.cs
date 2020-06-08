@@ -484,8 +484,8 @@ namespace TestUtilities.UI {
             return WaitForDialogToReplace(_mainWindowHandle, null);
         }
 
-        public ExceptionHelperAdornment WaitForExceptionAdornment(bool isUnhandled) {
-            var control = FindByName(isUnhandled ? "Exception Unhandled Notification" : "Exception Thrown Notification");
+        public ExceptionHelperAdornment WaitForExceptionAdornment() {
+            var control = FindByName("Exception Thrown Notification");
             if (control != null) {
                 var parent = TreeWalker.RawViewWalker.GetParent(control);
                 Assert.IsNotNull(parent);
