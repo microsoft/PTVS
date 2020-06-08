@@ -24,3 +24,5 @@ Prior to Visual Studio 2017, Python support was released as a standalone extensi
 
 
 Thank you for using and supporting Python Tools for Visual Studio.
+
+
