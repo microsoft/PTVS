@@ -16,7 +16,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace Microsoft.PythonTools.Debugger {
 
@@ -109,20 +111,24 @@ namespace Microsoft.PythonTools.Debugger {
 
     public class VariablePresentation {
         [JsonProperty("special")]
-        public string Special { get; set; }
+        public PresentationMode Special { get; set; }
 
         [JsonProperty("function")]
-        public string Function { get; set; }
+        public PresentationMode Function { get; set; }
 
         [JsonProperty("class_")]
-        public string Class { get; set; }
+        public PresentationMode Class { get; set; }
 
         [JsonProperty("protected")]
-        public string Protected { get; set; }
+        public PresentationMode Protected { get; set; }
     }
 
-    public static class PresentationMode {
-        public const string Group = "group";
-        public const string Inline = "inline";
+    [JsonConverter(typeof(StringEnumConverter))]
+    public enum PresentationMode {
+        [EnumMember(Value="group")]
+        Group,
+
+        [EnumMember(Value = "inline")]
+        Inline,
     }
 }
