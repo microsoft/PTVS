@@ -50,7 +50,6 @@
       <Menu guid="guidPythonProfilingCmdSet" id="menuIdPerfToolbar" priority="0x0000" type="ToolWindowToolbar">
         <Parent guid="guidPythonProfilingCmdSet" id="0"/>
         <CommandFlag>DefaultDocked</CommandFlag>
-        <CommandFlag>NoToolbarClose</CommandFlag>
         <CommandFlag>AlwaysCreate</CommandFlag>
         <CommandFlag>TextChanges</CommandFlag>
         <Strings>
