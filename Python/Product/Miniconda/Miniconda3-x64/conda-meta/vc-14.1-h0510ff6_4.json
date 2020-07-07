@@ -1,0 +1,36 @@
+{
+  "build": "h0510ff6_4",
+  "build_number": 4,
+  "channel": "https://repo.anaconda.com/pkgs/main/win-64",
+  "constrains": [],
+  "depends": [
+    "vs2015_runtime >=14.15.26706"
+  ],
+  "extracted_package_dir": "C:\\ProgramData\\Miniconda3\\pkgs\\vc-14.1-h0510ff6_4",
+  "features": "",
+  "files": [],
+  "fn": "vc-14.1-h0510ff6_4.conda",
+  "legacy_bz2_md5": "00bfe39f46f67409a376939cd2ab5039",
+  "legacy_bz2_size": 6188,
+  "license": "Modified BSD License (3-clause)",
+  "license_family": "BSD",
+  "link": {
+    "source": "C:\\ProgramData\\Miniconda3\\pkgs\\vc-14.1-h0510ff6_4",
+    "type": 1
+  },
+  "md5": "dc9507a39ab328597820486c729cd279",
+  "name": "vc",
+  "package_tarball_full_path": "C:\\ProgramData\\Miniconda3\\pkgs\\vc-14.1-h0510ff6_4.conda",
+  "paths_data": {
+    "paths": [],
+    "paths_version": 1
+  },
+  "requested_spec": "vc==14.1=h0510ff6_4",
+  "sha256": "fc76602035974e386f09ee2a0786475914f315cc96fea7115d4adc0e44c3bd7e",
+  "size": 6416,
+  "subdir": "win-64",
+  "timestamp": 1537475644228,
+  "track_features": "vc14",
+  "url": "https://repo.anaconda.com/pkgs/main/win-64/vc-14.1-h0510ff6_4.conda",
+  "version": "14.1"
+}

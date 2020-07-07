@@ -19,6 +19,7 @@ using System.IO;
 using System.Threading;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.Threading;
 using TestUtilities;
 
 namespace PythonToolsTests {
@@ -29,7 +30,7 @@ namespace PythonToolsTests {
             AssertListener.Initialize();
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void CondaWatchEnvironmentsTxtWithoutCondafolder() {
             // We start with no .conda folder
             var userProfileFolder = TestData.GetTempPath();
@@ -44,7 +45,7 @@ namespace PythonToolsTests {
             TestTriggerDiscovery(userProfileFolder, triggerDiscovery);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void CondaWatchEnvironmentsTxtWithCondafolder() {
             // We start with a .conda folder but no environments.txt
             var userProfileFolder = TestData.GetTempPath();
@@ -59,7 +60,7 @@ namespace PythonToolsTests {
             TestTriggerDiscovery(userProfileFolder, triggerDiscovery);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P0)]
         public void CondaWatchEnvironmentsTxtWithCondafolderAndEnvTxt() {
             // We start with a .conda folder and environments.txt
             var userProfileFolder = TestData.GetTempPath();
@@ -78,7 +79,7 @@ namespace PythonToolsTests {
         private static void TestTriggerDiscovery(string userProfileFolder, Action triggerDiscovery) {
             using (var evt = new AutoResetEvent(false))
             using (var globalProvider = new CPythonInterpreterFactoryProvider(null, false))
-            using (var condaProvider = new CondaEnvironmentFactoryProvider(globalProvider, null, true, userProfileFolder)) {
+            using (var condaProvider = new CondaEnvironmentFactoryProvider(globalProvider, null, new JoinableTaskFactory(new JoinableTaskContext()), true, userProfileFolder)) {
                 // This initializes the provider, discovers the initial set
                 // of factories and starts watching the filesystem.
                 var configs = condaProvider.GetInterpreterConfigurations();

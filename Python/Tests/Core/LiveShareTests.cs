@@ -41,7 +41,7 @@ namespace PythonToolsTests {
             PrepareLanguageServer();
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public async Task LiveShareCallback_Initialize() {
             var cb = PythonLanguageServiceProviderCallback.CreateTestInstance();
 
@@ -61,7 +61,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P0)]
         public async Task LiveShareCallback_Completion() {
             var cb = PythonLanguageServiceProviderCallback.CreateTestInstance();
 
@@ -92,7 +92,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public async Task LiveShareCallback_Hover() {
             var cb = PythonLanguageServiceProviderCallback.CreateTestInstance();
 
@@ -123,7 +123,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public async Task LiveShareCallback_Definition() {
             var cb = PythonLanguageServiceProviderCallback.CreateTestInstance();
 
@@ -160,7 +160,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public async Task LiveShareCallback_References() {
             var cb = PythonLanguageServiceProviderCallback.CreateTestInstance();
 

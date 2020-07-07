@@ -492,31 +492,15 @@ namespace TestUtilities.UI {
             return WaitForDialogToReplace(_mainWindowHandle, null);
         }
 
-        public ExceptionHelperDialog WaitForException() {
-            var window = FindByName("Exception Helper Indicator Window");
-            if (window != null) {
-                var innerPane = window.FindFirst(TreeScope.Descendants,
-                    new PropertyCondition(
-                        AutomationElement.ControlTypeProperty,
-                        ControlType.Pane
-                    )
-                );
-                Assert.IsNotNull(innerPane);
-                return new ExceptionHelperDialog(innerPane);
-            }
-
-            Assert.Fail("Failed to find exception helper window");
-            return null;
-        }
-
         public ExceptionHelperAdornment WaitForExceptionAdornment() {
-            var control = FindByAutomationId("TheExceptionControl");
+            var control = FindByName("Exception Thrown Notification");
             if (control != null) {
                 var parent = TreeWalker.RawViewWalker.GetParent(control);
                 Assert.IsNotNull(parent);
                 return new ExceptionHelperAdornment(parent);
             }
 
+            DumpVS();
             Assert.Fail("Failed to find exception helper adornment");
             return null;
         }

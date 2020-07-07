@@ -925,7 +925,7 @@ Some manual steps will be required to configure your project.</value>
     <comment>Used with InstallRequirementsIntoGlobalEnv if no description can be obtained from the project.</comment>
   </data>
   <data name="DontShowAgain" xml:space="preserve">
-    <value>Do not show this warning again.</value>
+    <value>Don't show this warning again.</value>
   </data>
   <data name="DownloadAndInstall" xml:space="preserve">
     <value>&amp;Download and install now
@@ -1035,8 +1035,8 @@ Your web browser will not be opened.</value>
     <value>Unknown command '{0}', use '$help' for a list of commands.</value>
   </data>
   <data name="ReplCaption" xml:space="preserve">
-    <value>{0} Interactive</value>
-    <comment>{0} is the name of the Python environment</comment>
+    <value>{0} Interactive {1}</value>
+    <comment>{0} is the name of the Python environment, {1} is the window id</comment>
   </data>
   <data name="ReplCaptionNoEvaluator" xml:space="preserve">
     <value>Python Interactive</value>
@@ -1450,8 +1450,17 @@ Please refer to &lt;a href="https://aka.ms/pythononappservice"&gt;aka.ms/PythonO
     <value>Unrecognized remote debugging transport '{0}'.</value>
     <comment>{0} is the uri scheme</comment>
   </data>
-  <data name="RemoteDebugPortSupplierDescription" xml:space="preserve">
-    <value>Allows debugging a Python process on a remote machine running any OS, if it can be connected to via TCP, and remote debugging has been enabled by using the 'ptvsd' module. Specify the secret, hostname and port to connect to in the 'Qualifier' textbox, e.g. 'tcp://secret@localhost:5678'. </value>
+  <data name="RemoteDebugPortSupplierNamePtvsd" xml:space="preserve">
+    <value>Python remote (ptvsd)</value>
+  </data>
+  <data name="RemoteDebugPortSupplierNameDebugPy" xml:space="preserve">
+    <value>Python remote (debugpy)</value>
+  </data>
+  <data name="RemoteDebugPortSupplierDescriptionPtvsd" xml:space="preserve">
+    <value>Allows debugging a Python process on a remote machine running any OS, if it can be connected to via TCP, and remote debugging has been enabled by using the 'ptvsd' module. Specify the secret, hostname and port to connect to in the 'Qualifier' textbox, e.g. 'tcp://secret@localhost:5678'.</value>
+  </data>
+  <data name="RemoteDebugPortSupplierDescriptionDebugPy" xml:space="preserve">
+    <value>Allows debugging a Python process on a remote machine running any OS, if it can be connected to via TCP, and remote debugging has been enabled by using the 'debugpy' module. Specify the hostname and port to connect to in the 'Qualifier' textbox, e.g. 'tcp://localhost:5678'.</value>
   </data>
   <data name="RemoteProcessAuthenticationErrorWarning" xml:space="preserve">
     <value>{0}
@@ -2701,11 +2710,11 @@ Please specify at least one package.</value>
     <value>Run Mypy</value>
     <comment>Mypy is a product name and should not be localized</comment>
   </data>
-  <data name="InstalledPtvsdOutdatedTitle" xml:space="preserve">
+  <data name="InstalledDebugPyOutdatedTitle" xml:space="preserve">
     <value>Debugger package is outdated</value>
   </data>
-  <data name="InstalledPtvsdOutdatedMessage" xml:space="preserve">
-    <value>You have an old version of ptvsd installed in the current environment (version {0}), but version {1} is included with Visual Studio. Please upgrade or uninstall ptvsd to get the latest functionality.</value>
+  <data name="InstalledDebugPyOutdatedMessage" xml:space="preserve">
+    <value>You have an old version of DebugPy installed in the current environment (version {0}), but version {1} is included with Visual Studio. Please upgrade or uninstall DebugPy to get the latest functionality.</value>
   </data>
   <data name="UpgradedMscorlibReference" xml:space="preserve">
     <value>A reference to 'mscorlib' was added to this project.</value>
@@ -2943,7 +2952,7 @@ Please specify at least one package.</value>
 {2} is "project" or "workspace"
 {3} is an integer wait time in seconds</comment>
   </data>
-    <data name="PythonTestDiscovererTimeoutErrorMessage" xml:space="preserve">
+  <data name="PythonTestDiscovererTimeoutErrorMessage" xml:space="preserve">
     <value>Python test discovery timeout, possibly due to blocking call. Go to https://aka.ms/VSTestExplorerPython for more details on test discovery.</value>
   </data>
   <data name="UnitTestEnableInfoBarAction" xml:space="preserve">
@@ -2977,5 +2986,26 @@ Please specify at least one package.</value>
   <data name="LanguageClientInitializeFailed" xml:space="preserve">
     <value>Language server initialization failed.\n\n{0}</value>
     <comment>{0} is the error details</comment>
+  </data>
+  <data name="PythonVersionNotSupportedDontShowMessageAgain" xml:space="preserve">
+    <value>Don't show this message again</value>
+  </data>
+  <data name="PythonVersionNotSupportedInfoBarText" xml:space="preserve">
+    <value>You're using Python {0}. Some new features might not work as expected until Visual Studio officially supports this version.</value>
+    <comment>{0} is the Python version</comment>
+  </data>
+  <data name="PythonVersionNotSupportMoreInfo" xml:space="preserve">
+    <value>More info</value>
+  </data>
+  <data name="UnableToParseInterpreterArgs" xml:space="preserve">
+    <value>Unable to parse interpreter arguments "{0}". Script will launch without them.</value>
+    <comment>{0} Interpreter arguments which are set by VS and the user</comment>
+  </data>
+  <data name="UnableToParseScriptArgs" xml:space="preserve">
+    <value>Unable to parse script arguments "{0}". Script will launch without them. </value>
+    <comment>{0} Script arguments which are set by VS and the user</comment>
+  </data>
+  <data name="PythonInterpreterPathNullOrEmpty" xml:space="preserve">
+    <value>Unable to start debugging because the Python interpreter path is null or empty</value>
   </data>
 </root>

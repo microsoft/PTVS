@@ -15,21 +15,21 @@ TCL_DLL_FILE="tcl86t.dll"
 TCL_VERSION='8.6'
 TCL_MAJOR_VERSION='8'
 TCL_MINOR_VERSION='6'
-TCL_PATCH_LEVEL='8.6.8'
+TCL_PATCH_LEVEL='8.6.9'
 
 # C compiler to use for compilation.
 TCL_CC='cl'
 
 # -D flags for use with the C compiler.
-TCL_DEFS='-nologo -c /D_ATL_XP_TARGETING /DUNICODE /D_UNICODE  -W3 -wd4311 -wd4312 -wd4311 -wd4312 -FpC:\build\cpython\externals\tcl-core-8.6.8.0\win\Release_AMD64_VC13\tcl_ThreadedDynamic\  -fp:strict -O2 -GS -GL -MD -I"C:\build\cpython\externals\tcl-core-8.6.8.0\win\..\win" -I"C:\build\cpython\externals\tcl-core-8.6.8.0\win\..\generic"  -I"C:\build\cpython\externals\tcl-core-8.6.8.0\win\..\libtommath"  -DTCL_TOMMATH -DMP_PREC=4 -Dinline=__inline -DHAVE_ZLIB=1 -D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE -DTCL_CFGVAL_ENCODING=\"cp1252\" -DSTDC_HEADERS -DTCL_THREADS=1 -DUSE_THREAD_ALLOC=1 -DNDEBUG -DTCL_CFG_OPTIMIZED -DTCL_CFG_DO64BIT   -DBUILD_tcl'
+TCL_DEFS='-nologo -c /D_ATL_XP_TARGETING /DUNICODE /D_UNICODE  -W3 -wd4311 -wd4312 -wd4311 -wd4312 -FpC:\_work\11\b\tcl-core-8.6.9.0\win\Release_AMD64_VC13\tcl_ThreadedDynamic\  -fp:strict -O2 -GS -GL -MD -I"C:\_work\11\b\tcl-core-8.6.9.0\win\..\win" -I"C:\_work\11\b\tcl-core-8.6.9.0\win\..\generic"  -I"C:\_work\11\b\tcl-core-8.6.9.0\win\..\libtommath"  -DTCL_TOMMATH -DMP_PREC=4 -Dinline=__inline -DHAVE_ZLIB=1 -D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE -DTCL_CFGVAL_ENCODING=\"cp1252\" -DSTDC_HEADERS -DTCL_THREADS=1 -DUSE_THREAD_ALLOC=1 -DNDEBUG -DTCL_CFG_OPTIMIZED -DTCL_CFG_DO64BIT   -DBUILD_tcl'
 
 # If TCL was built with debugging symbols, generated libraries contain
 # this string at the end of the library name (before the extension).
 TCL_DBGX=t
 
 # Default flags used in an optimized and debuggable build, respectively.
-TCL_CFLAGS_DEBUG='-nologo -c -W3 -YX -FpC:\build\cpython\externals\tcl-core-8.6.8.0\win\Release_AMD64_VC13\tcl_ThreadedDynamic\ -MDd'
-TCL_CFLAGS_OPTIMIZE='-nologo -c -W3 -YX -FpC:\build\cpython\externals\tcl-core-8.6.8.0\win\Release_AMD64_VC13\tcl_ThreadedDynamic\ -MD'
+TCL_CFLAGS_DEBUG='-nologo -c -W3 -YX -FpC:\_work\11\b\tcl-core-8.6.9.0\win\Release_AMD64_VC13\tcl_ThreadedDynamic\ -MDd'
+TCL_CFLAGS_OPTIMIZE='-nologo -c -W3 -YX -FpC:\_work\11\b\tcl-core-8.6.9.0\win\Release_AMD64_VC13\tcl_ThreadedDynamic\ -MD'
 
 # Default linker flags used in an optimized and debuggable build, respectively.
 TCL_LDFLAGS_DEBUG='-nologo -machine:AMD64 -debug -debugtype:cv'
@@ -55,11 +55,11 @@ TCL_LIBS='kernel32.lib advapi32.lib netapi32.lib user32.lib userenv.lib ws2_32.l
 
 # Top-level directory in which Tcl's platform-independent files are
 # installed.
-TCL_PREFIX='C:\build\cpython\externals\tcltk-8.6.8.0\amd64'
+TCL_PREFIX='C:\_work\11\b\tcltk-8.6.9.0\amd64'
 
 # Top-level directory in which Tcl's platform-specific files (e.g.
 # executables) are installed.
-TCL_EXEC_PREFIX='C:\build\cpython\externals\tcltk-8.6.8.0\amd64\bin'
+TCL_EXEC_PREFIX='C:\_work\11\b\tcltk-8.6.9.0\amd64\bin'
 
 # Flags to pass to cc when compiling the components of a shared library:
 TCL_SHLIB_CFLAGS=''
@@ -115,11 +115,11 @@ TCL_BUILD_LIB_SPEC=''
 
 # String to pass to linker to pick up the Tcl library from its
 # installed directory.
-TCL_LIB_SPEC='C:\build\cpython\externals\tcltk-8.6.8.0\amd64\lib\tcl86t.lib'
+TCL_LIB_SPEC='C:\_work\11\b\tcltk-8.6.9.0\amd64\lib\tcl86t.lib'
 
 # String to pass to the compiler so that an extension can
 # find installed Tcl headers.
-TCL_INCLUDE_SPEC='-IC:\build\cpython\externals\tcltk-8.6.8.0\amd64\include'
+TCL_INCLUDE_SPEC='-IC:\_work\11\b\tcltk-8.6.9.0\amd64\include'
 
 # Indicates whether a version numbers should be used in -l switches
 # ("ok" means it's safe to use switches like -ltcl7.5;  "nodots" means
@@ -146,7 +146,7 @@ TCL_UNSHARED_LIB_SUFFIX='86t.lib'
 # different place than the directory containing the source files, this
 # points to the location of the sources, not the location where Tcl was
 # compiled.
-TCL_SRC_DIR='C:\build\cpython\externals\tcl-core-8.6.8.0\win\..'
+TCL_SRC_DIR='C:\_work\11\b\tcl-core-8.6.9.0\win\..'
 
 # List of standard directories in which to look for packages during
 # "package require" commands.  Contains the "prefix" directory plus also
@@ -164,17 +164,17 @@ TCL_STUB_LIB_FLAG='tclstub86.lib'
 
 # String to pass to linker to pick up the Tcl stub library from its
 # build directory.
-TCL_BUILD_STUB_LIB_SPEC='-LC:\build\cpython\externals\tcl-core-8.6.8.0\win\Release_AMD64_VC13 tclstub86.lib'
+TCL_BUILD_STUB_LIB_SPEC='-LC:\_work\11\b\tcl-core-8.6.9.0\win\Release_AMD64_VC13 tclstub86.lib'
 
 # String to pass to linker to pick up the Tcl stub library from its
 # installed directory.
-TCL_STUB_LIB_SPEC='-LC:\build\cpython\externals\tcltk-8.6.8.0\amd64\lib tclstub86.lib'
+TCL_STUB_LIB_SPEC='-LC:\_work\11\b\tcltk-8.6.9.0\amd64\lib tclstub86.lib'
 
 # Path to the Tcl stub library in the build directory.
-TCL_BUILD_STUB_LIB_PATH='C:\build\cpython\externals\tcl-core-8.6.8.0\win\Release_AMD64_VC13\tclstub86.lib'
+TCL_BUILD_STUB_LIB_PATH='C:\_work\11\b\tcl-core-8.6.9.0\win\Release_AMD64_VC13\tclstub86.lib'
 
 # Path to the Tcl stub library in the install directory.
-TCL_STUB_LIB_PATH='C:\build\cpython\externals\tcltk-8.6.8.0\amd64\lib\tclstub86.lib'
+TCL_STUB_LIB_PATH='C:\_work\11\b\tcltk-8.6.9.0\amd64\lib\tclstub86.lib'
 
 # Flag, 1: we built Tcl with threads enabled, 0 we didn't
 TCL_THREADS=1

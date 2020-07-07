@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 import socket
-from .wait import wait_for_read
-from .selectors import HAS_SELECT, SelectorError
+from .wait import NoWayToWaitForSocketError, wait_for_read
+from ..contrib import _appengine_environ
 
 
 def is_connection_dropped(conn):  # Platform-specific
@@ -19,14 +19,11 @@ def is_connection_dropped(conn):  # Platform-specific
         return False
     if sock is None:  # Connection already closed (such as by httplib).
         return True
-
-    if not HAS_SELECT:
-        return False
-
     try:
-        return bool(wait_for_read(sock, timeout=0.0))
-    except SelectorError:
-        return True
+        # Returns True if readable, which here means it's been dropped
+        return wait_for_read(sock, timeout=0.0)
+    except NoWayToWaitForSocketError:  # Platform-specific: AppEngine
+        return False
 
 
 # This function is copied from socket.py in the Python 2.7 standard
@@ -108,6 +105,13 @@ def _has_ipv6(host):
     """ Returns True if the system can bind an IPv6 address. """
     sock = None
     has_ipv6 = False
+
+    # App Engine doesn't support IPV6 sockets and actually has a quota on the
+    # number of sockets that can be used, so just early out here instead of
+    # creating a socket needlessly.
+    # See https://github.com/urllib3/urllib3/issues/1446
+    if _appengine_environ.is_appengine_sandbox():
+        return False
 
     if socket.has_ipv6:
         # has_ipv6 returns true if cPython was compiled with IPv6 support.

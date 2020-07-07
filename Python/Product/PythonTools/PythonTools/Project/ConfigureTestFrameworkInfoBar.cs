@@ -18,7 +18,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Infrastructure;
@@ -256,6 +255,8 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public override async Task CheckAsync() {
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
             var infoBarData = new TestFrameworkInfoBarData {
                 InterpreterOptionsService = Site.GetPythonToolsService().InterpreterOptionsService,
                 InterpreterFactory = Project.ActiveInterpreter,
@@ -297,6 +298,8 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public override async Task CheckAsync() {
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
             var infoBarData = new TestFrameworkInfoBarData {
                 InterpreterOptionsService = Site.GetPythonToolsService().InterpreterOptionsService,
                 InterpreterFactory = WorkspaceContext.CurrentFactory,

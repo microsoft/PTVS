@@ -28,7 +28,7 @@ namespace VSInterpretersTests {
             AssertListener.Initialize();
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P0)]
         public void InvalidInterpreterVersion() {
             try {
                 var lv = new Version(1, 0).ToLanguageVersion();

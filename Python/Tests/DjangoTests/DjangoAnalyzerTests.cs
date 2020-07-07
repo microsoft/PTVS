@@ -52,17 +52,17 @@ namespace DjangoTests {
             Assert.AreEqual(value, values.Single().GetConstantValueAsString());
         }
 
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void TestRender() {
             TestSingleRenderVariable("test_render.html");
         }
 
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void TestRenderToResponse() {
             TestSingleRenderVariable("test_render_to_response.html");
         }
 
-        [TestMethod, Priority(TestExtensions.P2_FAILING_UNIT_TEST)] // https://github.com/Microsoft/PTVS/issues/4144
+        [TestMethod, Priority(UnitTestPriority.P2_FAILING)] // https://github.com/Microsoft/PTVS/issues/4144
         public void TestCustomFilter() {
             var proj = AnalyzerTest(TestData.GetPath("TestData\\DjangoAnalysisTestApp"), out var langVersion);
 
@@ -90,7 +90,7 @@ namespace DjangoTests {
             );
         }
 
-        [TestMethod, Priority(TestExtensions.P2_FAILING_UNIT_TEST)] // https://github.com/Microsoft/PTVS/issues/4144
+        [TestMethod, Priority(UnitTestPriority.P2_FAILING)] // https://github.com/Microsoft/PTVS/issues/4144
         public void TestCustomTag() {
             var proj = AnalyzerTest(TestData.GetPath("TestData\\DjangoAnalysisTestApp"), out var langVersion);
 
@@ -122,7 +122,7 @@ namespace DjangoTests {
             );
         }
 
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void TestListView() {
             var proj = AnalyzerTest(TestData.GetPath("TestData\\DjangoAnalysisTestApp"), out _);
             var templates = TestData.GetPath("TestData\\DjangoAnalysisTestApp\\myapp\\templates\\myapp\\");
@@ -132,7 +132,7 @@ namespace DjangoTests {
             AssertUtil.ContainsExactly(detailsVars.Keys, "latest_poll_list");
         }
 
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void TestDetailsView() {
             var proj = AnalyzerTest(TestData.GetPath("TestData\\DjangoAnalysisTestApp"), out _);
             var templates = TestData.GetPath("TestData\\DjangoAnalysisTestApp\\myapp\\templates\\myapp\\");

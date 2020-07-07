@@ -39,13 +39,13 @@ namespace PythonToolsUITestsRunner {
         public static void ClassCleanup() => VsTestContext.Instance.Dispose();
         #endregion
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(UITestPriority.P2_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void SmartIndent() {
             _vs.RunTest(nameof(PythonToolsUITests.SmartIndentUITests.SmartIndent));
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
         public void SmartIndentExisting() {
             _vs.RunTest(nameof(PythonToolsUITests.SmartIndentUITests.SmartIndentExisting));

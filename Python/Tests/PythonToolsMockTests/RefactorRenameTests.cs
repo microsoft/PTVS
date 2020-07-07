@@ -59,7 +59,7 @@ namespace PythonToolsMockTests {
         }
 
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(UnitTestPriority.P2)]
         public void PrivateMemberMangling() {
             RefactorTest("xyz", "__f",
                 new[] {
@@ -274,7 +274,7 @@ namespace PythonToolsMockTests {
             );
         }
 
-        [TestMethod, Priority(TestExtensions.P2_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P2_FAILING)]
         public void SanityClassField() {
             RefactorTest("xyz", "abc",
                 new[] {
@@ -464,7 +464,7 @@ abc = 200
             );
         }
 
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void InheritedClassField() {
 
             RefactorTest("xyz", "abc",
@@ -512,7 +512,7 @@ abc = 200
             );
         }
 
-        [TestMethod, Priority(TestExtensions.P3_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P3_FAILING)]
         public void RenameGeneratorVariable() {
             // http://pytools.codeplex.com/workitem/454
             RefactorTest("xyz", "abc",
@@ -526,7 +526,7 @@ abc = 200
             );
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(UnitTestPriority.P2)]
         public void TypelessForVariable() {
             RefactorTest("baz", "abc",
                 new[] {
@@ -544,7 +544,7 @@ abc = 200
             );
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(UnitTestPriority.P2)]
         [TestCategory("10s")]
         public void TupleForVariable() {
             RefactorTest("baz", "abc",
@@ -638,7 +638,7 @@ abc = 200
             );
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(UnitTestPriority.P2)]
         public void SanityInstanceField() {
             RefactorTest("xyz", "abc",
                 new[] {
@@ -684,7 +684,7 @@ a.xyz
             );
         }
 
-        [TestMethod, Priority(3)]
+        [TestMethod, Priority(UnitTestPriority.P3_FAILING)]
         [TestCategory("10s")]
         public void SanityParameter() {
             RefactorTest("xyz", "abc",
@@ -824,7 +824,7 @@ abc = 200
             );
         }
 
-        [TestMethod, Priority(TestExtensions.P2_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P2_FAILING)]
         public void SanityLocal() {
             RefactorTest("xyz", "abc",
                 new[] {
@@ -885,7 +885,7 @@ def h(abc):
 
         }
 
-        [TestMethod, Priority(TestExtensions.P2_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P2_FAILING)]
         public void SanityClosure() {
             RefactorTest("xyz", "abc",
                 new[] {
@@ -945,7 +945,7 @@ abc = 200
             );
         }
 
-        [TestMethod, Priority(TestExtensions.P2_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P2_FAILING)]
         public void SanityLambda() {
             RefactorTest("xyz", "abc",
                 new[] {
@@ -999,7 +999,7 @@ abc = 200
             );
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(UnitTestPriority.P2)]
         public void SanityInlineIf() {
             RefactorTest("xyz", "abc",
                 new[] {
@@ -1029,7 +1029,7 @@ abc = 200
             );
         }
 
-        [TestMethod, Priority(3)]
+        [TestMethod, Priority(UnitTestPriority.P3)]
         public void SanityGenerator() {
             RefactorTest("xyz", "abc",
                 new[] {
@@ -1095,7 +1095,7 @@ abc = 200
             );
         }
 
-        [TestMethod, Priority(3)]
+        [TestMethod, Priority(UnitTestPriority.P3)]
         public void SanityGeneratorFilter() {
             RefactorTest("xyz", "abc",
                 new[] {
@@ -1152,7 +1152,7 @@ abc = 200
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void SanitySlices() {
             RefactorTest("xyz", "abc", version: new Version(3, 2),
             inputs: new[] {
@@ -1179,7 +1179,7 @@ x = y[xyz-1:xyz:xyz+1]
 
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(UnitTestPriority.P2)]
         public void SanityGlobal() {
             RefactorTest("xyz", "abc",
                 new[] {
@@ -1262,7 +1262,7 @@ xyz = 100
             );
         }
 
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void SanityNonLocal() {
             RefactorTest("xyz", "abc", version: new Version(3, 2),
             inputs: new[] {
@@ -1339,7 +1339,7 @@ abc = 100
             );
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(UnitTestPriority.P2)]
         [TestCategory("10s")]
         public void SanityRenameClass() {
             RefactorTest("xyz", "abc",
@@ -1457,7 +1457,7 @@ class x(xyz):
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void RenameMetaclass() {
             RefactorTest("xyz", "abc", version: new Version(2, 7),
             inputs: new[] {
@@ -1495,7 +1495,7 @@ class x(metaclass=xyz):
 
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(UnitTestPriority.P2)]
         public void SanityRenameFunction() {
             RefactorTest("xyz", "abc",
             new[] {
@@ -1552,7 +1552,7 @@ fdoc = xyz.func_doc"
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void SanityDelLocal() {
             RefactorTest("xyz", "abc",
             new[] {
@@ -1571,7 +1571,7 @@ def f():
             );
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(UnitTestPriority.P2)]
         public void SanityDelInstanceMember() {
             RefactorTest("xyz", "abc",
             new[] {
@@ -1602,7 +1602,7 @@ def f():
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void SanityDelClassMember() {
             RefactorTest("xyz", "abc",
             new[] {
@@ -1631,7 +1631,7 @@ def f():
             );
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(UnitTestPriority.P2)]
         public void SanityDelGlobal() {
             RefactorTest("xyz", "abc",
             new[] {
@@ -1678,7 +1678,7 @@ xyz = 100
             );
         }
 
-        [TestMethod, Priority(TestExtensions.P2_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P2_FAILING)]
         public void DelNonLocal() {
             RefactorTest("xyz", "abc", version: new Version(3, 2),
             inputs: new[] {
@@ -1706,7 +1706,7 @@ abc = 100
 
         }
 
-        [TestMethod, Priority(3)]
+        [TestMethod, Priority(UnitTestPriority.P3)]
         [TestCategory("10s")]
         public void Decorators() {
             RefactorTest("abc", "xyz",
@@ -1835,7 +1835,7 @@ def f():
 
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void TryStatement() {
             RefactorTest("abc", "xyz",
             new[] {
@@ -1875,7 +1875,7 @@ except Exception as abc:
 
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void FinallyStatement() {
             RefactorTest("xyz", "abc",
             new[] {
@@ -1900,7 +1900,7 @@ finally:
             );
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(UnitTestPriority.P2)]
         public void RaiseStatement() {
             RefactorTest("xyz", "abc", version: new Version(2, 7),
             inputs: new[] {
@@ -1935,7 +1935,7 @@ raise Exception() from xyz
             );
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(UnitTestPriority.P2)]
         public void ExecStatement() {
             RefactorTest("xyz", "abc", version: new Version(2, 7),
             inputs: new[] {
@@ -2014,7 +2014,7 @@ exec('abc = 1', xyz, xyz)
             );
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(UnitTestPriority.P2)]
         public void IsInstanceScope() {
             RefactorTest("abc", "xyz", version: new Version(3, 2),
             inputs: new[] {
@@ -2035,7 +2035,7 @@ print(abc.upper())
         }
 
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void WithStatement() {
             RefactorTest("abc", "xyz", version: new Version(3, 2),
             inputs: new[] {
@@ -2053,7 +2053,7 @@ with abc as abc:
 
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void YieldStatement() {
             RefactorTest("xyz", "abc",
             inputs: new[] {
@@ -2072,7 +2072,7 @@ def a():
             );
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(UnitTestPriority.P2)]
         public void KeywordParameter() {
             RefactorTest("xyz", "abc",
             new[] {
@@ -2161,7 +2161,7 @@ f(abc)
             );
         }
 
-        [TestMethod, Priority(TestExtensions.P2_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P2_FAILING)]
         public void ImportAsStatement() {
             RefactorTest("xyz", "abc",
             new[] {
@@ -2218,7 +2218,7 @@ x = xyz
             );
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(UnitTestPriority.P2)]
         public void FromImportAsStatement() {
             RefactorTest("xyz", "abc",
             new[] {
@@ -2258,7 +2258,7 @@ x = xyz
 
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(UnitTestPriority.P2)]
         public void Annotations() {
             RefactorTest("xyz", "abc", version: new Version(3, 2),
                 inputs: new[] {
@@ -2313,7 +2313,7 @@ abc = 200
 
         }
 
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void NestedFunctions() {
             RefactorTest("h", "g",
                 new[] {
@@ -2342,7 +2342,7 @@ def g(a, b, c):
 
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(UnitTestPriority.P2)]
         public void CrossModuleRename() {
             RefactorTest("xyz", "abc",
                 new[] {
@@ -2387,14 +2387,14 @@ def g(a, b, c):
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void CannotRename() {
             CannotRename("abc", "import abc", ErrorModuleName);
             CannotRename("abc", "from abc import oar", ErrorModuleName);
             CannotRename("abc", "import abc as oar", ErrorModuleName);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void ValidPythonIdentifier() {
             string validUnicodeCharacters = "䶵䶴㐁";
             char invalidIdentifier = '!';

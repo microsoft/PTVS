@@ -342,7 +342,7 @@ class StructOrUnion(StructOrUnionOrEnum):
     fixedlayout = None
     completed = 0
     partial = False
-    packed = False
+    packed = 0
 
     def __init__(self, name, fldnames, fldtypes, fldbitsize, fldquals=None):
         self.name = name
@@ -414,11 +414,14 @@ class StructOrUnion(StructOrUnionOrEnum):
             fldtypes = [tp.get_cached_btype(ffi, finishlist)
                         for tp in self.fldtypes]
             lst = list(zip(self.fldnames, fldtypes, self.fldbitsize))
-            sflags = 0
+            extra_flags = ()
             if self.packed:
-                sflags = 8    # SF_PACKED
+                if self.packed == 1:
+                    extra_flags = (8,)    # SF_PACKED
+                else:
+                    extra_flags = (0, self.packed)
             ffi._backend.complete_struct_or_union(BType, lst, self,
-                                                  -1, -1, sflags)
+                                                  -1, -1, *extra_flags)
             #
         else:
             fldtypes = []

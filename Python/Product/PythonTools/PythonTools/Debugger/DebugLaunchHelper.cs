@@ -130,15 +130,24 @@ namespace Microsoft.PythonTools.Debugger {
                 ["remoteMachine"] = "",
                 ["args"] = GetArgs(config),
                 ["options"] = GetOptions(provider, config),
-                ["env"] = envArray
+                ["env"] = envArray,
+                ["interpreterArgs"] = config.InterpreterArguments,
             };
-            
+
+            if (config.Environment == null) {
+                jsonObj["scriptName"] = config.ScriptName?.Trim();
+                jsonObj["scriptArgs"] = config.ScriptArguments?.Trim();
+            } else {
+                jsonObj["scriptName"] = DoSubstitutions(config.Environment, config.ScriptName?.Trim());
+                jsonObj["scriptArgs"] = DoSubstitutions(config.Environment, config.ScriptArguments?.Trim());
+            }
+
             // Note: these are optional, but special. These override the pkgdef version of the adapter settings
             // for other settings see the documentation for VSCodeDebugAdapterHost Launch Configuration
             // jsonObj["$adapter"] = "{path - to - adapter executable}";
             // jsonObj["$adapterArgs"] = "";
             // jsonObj["$adapterRuntime"] = "";
-            
+
             return jsonObj.ToString();
         }
 
@@ -153,7 +162,7 @@ namespace Microsoft.PythonTools.Debugger {
         }
 
         public static unsafe DebugTargetInfo CreateDebugTargetInfo(IServiceProvider provider, LaunchConfiguration config) {
-            if (config.Interpreter.Version < new Version(2, 6)) {
+            if (config.Interpreter.Version < new Version(2, 6) && config.Interpreter.Version > new Version(0, 0)) {
                 // We don't support Python 2.5 now that our debugger needs the json module
                 throw new NotSupportedException(Strings.DebuggerPythonVersionNotSupported);
             }

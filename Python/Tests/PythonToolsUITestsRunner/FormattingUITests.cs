@@ -39,20 +39,20 @@ namespace PythonToolsUITestsRunner {
         public static void ClassCleanup() => VsTestContext.Instance.Dispose();
         #endregion
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void FormatAutopep8() {
             _vs.RunTest(nameof(PythonToolsUITests.FormattingUITests.FormatAutopep8));
         }
 
         // https://github.com/microsoft/PTVS/issues/5879
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void FormatBlack() {
             _vs.RunTest(nameof(PythonToolsUITests.FormattingUITests.FormatBlack));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void FormatYapf() {
             _vs.RunTest(nameof(PythonToolsUITests.FormattingUITests.FormatYapf));

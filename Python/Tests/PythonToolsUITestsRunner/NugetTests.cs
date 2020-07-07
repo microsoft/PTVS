@@ -39,13 +39,13 @@ namespace PythonToolsUITestsRunner {
         public static void ClassCleanup() => VsTestContext.Instance.Dispose();
         #endregion
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void AddDifferentFileType() {
             _vs.RunTest(nameof(PythonToolsUITests.NugetTests.AddDifferentFileType));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void FileNamesResolve() {
             _vs.RunTest(nameof(PythonToolsUITests.NugetTests.FileNamesResolve));

@@ -41,8 +41,13 @@ namespace eval ttk::theme::aqua {
 	ttk::style configure Heading -font TkHeadingFont
 	ttk::style configure Treeview -rowheight 18 -background White
 	ttk::style map Treeview \
-	    -background {{selected background} systemHighlightSecondary
-		    selected systemHighlight}
+	    -background [list disabled systemDialogBackgroundInactive \
+				{!disabled !selected} systemWindowBody \
+				{selected background} systemHighlightSecondary \
+				selected systemHighlight] \
+	    -foreground [list disabled systemModelessDialogInactiveText \
+				{!disabled !selected} black \
+				selected systemModelessDialogActiveText]
 
 	# Enable animation for ttk::progressbar widget:
 	ttk::style configure TProgressbar -period 100 -maxphase 255

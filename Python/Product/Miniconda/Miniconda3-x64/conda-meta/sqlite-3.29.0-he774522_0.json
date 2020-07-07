@@ -1,0 +1,38 @@
+{
+  "build": "he774522_0",
+  "build_number": 0,
+  "channel": "https://repo.anaconda.com/pkgs/main/win-64",
+  "constrains": [],
+  "depends": [
+    "vc >=14.1,<15.0a0"
+  ],
+  "extracted_package_dir": "C:\\ProgramData\\Miniconda3\\pkgs\\sqlite-3.29.0-he774522_0",
+  "features": "",
+  "files": [
+    "Library/bin/sqlite3.dll",
+    "Library/bin/sqlite3.exe",
+    "Library/include/sqlite3.h",
+    "Library/lib/sqlite3.lib"
+  ],
+  "fn": "sqlite-3.29.0-he774522_0.tar.bz2",
+  "license": "Public-Domain (http://www.sqlite.org/copyright.html)",
+  "link": {
+    "source": "C:\\ProgramData\\Miniconda3\\pkgs\\sqlite-3.29.0-he774522_0",
+    "type": 1
+  },
+  "md5": "aa1f14ecb00c376fbb1d2c0b2700acf8",
+  "name": "sqlite",
+  "package_tarball_full_path": "C:\\ProgramData\\Miniconda3\\pkgs\\sqlite-3.29.0-he774522_0.tar.bz2",
+  "paths_data": {
+    "paths": [],
+    "paths_version": 1
+  },
+  "requested_spec": "sqlite==3.29.0=he774522_0",
+  "sha256": "c2ae38d77efbed676de39782b1d0cccee2b447e522cf814508cd0063e886a619",
+  "size": 985030,
+  "subdir": "win-64",
+  "timestamp": 1563287062546,
+  "track_features": "",
+  "url": "https://repo.anaconda.com/pkgs/main/win-64/sqlite-3.29.0-he774522_0.tar.bz2",
+  "version": "3.29.0"
+}

@@ -536,9 +536,6 @@ namespace Microsoft.PythonTools.TestAdapter {
                     arguments.Add("-p");
                     arguments.Add(_debugPort.ToString());
 
-                    arguments.Add("-d");
-                    arguments.Add(ExecutorService.GetDebuggerSearchPath(_settings.UseLegacyDebugger));
-
                     if (_settings.UseLegacyDebugger) {
                         arguments.Add("-s");
                         arguments.Add(_debugSecret);

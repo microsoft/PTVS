@@ -39,37 +39,37 @@ namespace DebuggerUITestsRunner {
         public static void ClassCleanup() => VsTestContext.Instance.Dispose();
         #endregion
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
         public void AttachBasic() {
             _vs.RunTest(nameof(DebuggerUITests.AttachUITests.AttachBasic));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void AttachBreakImmediately() {
             _vs.RunTest(nameof(DebuggerUITests.AttachUITests.AttachBreakImmediately));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void AttachUserSetsBreakpoint() {
             _vs.RunTest(nameof(DebuggerUITests.AttachUITests.AttachUserSetsBreakpoint));
         }
 
-        [TestMethod, Priority(VsTestContext.P2_FAILING_UI_TEST)]
+        [TestMethod, Priority(UITestPriority.P2_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void AttachThreadsBreakAllAndSetExitFlag() {
             _vs.RunTest(nameof(DebuggerUITests.AttachUITests.AttachThreadsBreakAllAndSetExitFlag));
         }
 
-        [TestMethod, Priority(VsTestContext.P2_FAILING_UI_TEST)]
+        [TestMethod, Priority(UITestPriority.P2_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void AttachThreadsBreakOneAndSetExitFlag() {
             _vs.RunTest(nameof(DebuggerUITests.AttachUITests.AttachThreadsBreakOneAndSetExitFlag));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void AttachLotsOfThreads() {
             _vs.RunTest(nameof(DebuggerUITests.AttachUITests.AttachLotsOfThreads));

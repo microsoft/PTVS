@@ -3096,7 +3096,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Do not show this warning again..
+        ///   Looks up a localized string similar to Don&apos;t show this warning again..
         /// </summary>
         public static string DontShowAgain {
             get {
@@ -4365,20 +4365,20 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to You have an old version of ptvsd installed in the current environment (version {0}), but version {1} is included with Visual Studio. Please upgrade or uninstall ptvsd to get the latest functionality..
+        ///   Looks up a localized string similar to You have an old version of DebugPy installed in the current environment (version {0}), but version {1} is included with Visual Studio. Please upgrade or uninstall DebugPy to get the latest functionality..
         /// </summary>
-        public static string InstalledPtvsdOutdatedMessage {
+        public static string InstalledDebugPyOutdatedMessage {
             get {
-                return ResourceManager.GetString("InstalledPtvsdOutdatedMessage", resourceCulture);
+                return ResourceManager.GetString("InstalledDebugPyOutdatedMessage", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Debugger package is outdated.
         /// </summary>
-        public static string InstalledPtvsdOutdatedTitle {
+        public static string InstalledDebugPyOutdatedTitle {
             get {
-                return ResourceManager.GetString("InstalledPtvsdOutdatedTitle", resourceCulture);
+                return ResourceManager.GetString("InstalledDebugPyOutdatedTitle", resourceCulture);
             }
         }
         
@@ -5460,6 +5460,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unable to start debugging because the Python interpreter path is null or empty.
+        /// </summary>
+        public static string PythonInterpreterPathNullOrEmpty {
+            get {
+                return ResourceManager.GetString("PythonInterpreterPathNullOrEmpty", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &amp;Python.
         /// </summary>
         public static string PythonMenuLabel {
@@ -5618,6 +5627,33 @@ namespace Microsoft.PythonTools {
         public static string PythonTestPropertyPageUnittestRootDirectoryLabel {
             get {
                 return ResourceManager.GetString("PythonTestPropertyPageUnittestRootDirectoryLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Don&apos;t show this message again.
+        /// </summary>
+        public static string PythonVersionNotSupportedDontShowMessageAgain {
+            get {
+                return ResourceManager.GetString("PythonVersionNotSupportedDontShowMessageAgain", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You&apos;re using Python {0}. Some new features might not work as expected until Visual Studio officially supports this version..
+        /// </summary>
+        public static string PythonVersionNotSupportedInfoBarText {
+            get {
+                return ResourceManager.GetString("PythonVersionNotSupportedInfoBarText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to More info.
+        /// </summary>
+        public static string PythonVersionNotSupportMoreInfo {
+            get {
+                return ResourceManager.GetString("PythonVersionNotSupportMoreInfo", resourceCulture);
             }
         }
         
@@ -5811,11 +5847,38 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Allows debugging a Python process on a remote machine running any OS, if it can be connected to via TCP, and remote debugging has been enabled by using the &apos;ptvsd&apos; module. Specify the secret, hostname and port to connect to in the &apos;Qualifier&apos; textbox, e.g. &apos;tcp://secret@localhost:5678&apos;. .
+        ///   Looks up a localized string similar to Allows debugging a Python process on a remote machine running any OS, if it can be connected to via TCP, and remote debugging has been enabled by using the &apos;debugpy&apos; module. Specify the hostname and port to connect to in the &apos;Qualifier&apos; textbox, e.g. &apos;tcp://localhost:5678&apos;..
         /// </summary>
-        public static string RemoteDebugPortSupplierDescription {
+        public static string RemoteDebugPortSupplierDescriptionDebugPy {
             get {
-                return ResourceManager.GetString("RemoteDebugPortSupplierDescription", resourceCulture);
+                return ResourceManager.GetString("RemoteDebugPortSupplierDescriptionDebugPy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Allows debugging a Python process on a remote machine running any OS, if it can be connected to via TCP, and remote debugging has been enabled by using the &apos;ptvsd&apos; module. Specify the secret, hostname and port to connect to in the &apos;Qualifier&apos; textbox, e.g. &apos;tcp://secret@localhost:5678&apos;..
+        /// </summary>
+        public static string RemoteDebugPortSupplierDescriptionPtvsd {
+            get {
+                return ResourceManager.GetString("RemoteDebugPortSupplierDescriptionPtvsd", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Python remote (debugpy).
+        /// </summary>
+        public static string RemoteDebugPortSupplierNameDebugPy {
+            get {
+                return ResourceManager.GetString("RemoteDebugPortSupplierNameDebugPy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Python remote (ptvsd).
+        /// </summary>
+        public static string RemoteDebugPortSupplierNamePtvsd {
+            get {
+                return ResourceManager.GetString("RemoteDebugPortSupplierNamePtvsd", resourceCulture);
             }
         }
         
@@ -6055,7 +6118,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} Interactive.
+        ///   Looks up a localized string similar to {0} Interactive {1}.
         /// </summary>
         public static string ReplCaption {
             get {
@@ -7270,6 +7333,24 @@ namespace Microsoft.PythonTools {
         public static string UnableToElevate {
             get {
                 return ResourceManager.GetString("UnableToElevate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to parse interpreter arguments &quot;{0}&quot;. Script will launch without them..
+        /// </summary>
+        public static string UnableToParseInterpreterArgs {
+            get {
+                return ResourceManager.GetString("UnableToParseInterpreterArgs", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to parse script arguments &quot;{0}&quot;. Script will launch without them. .
+        /// </summary>
+        public static string UnableToParseScriptArgs {
+            get {
+                return ResourceManager.GetString("UnableToParseScriptArgs", resourceCulture);
             }
         }
         

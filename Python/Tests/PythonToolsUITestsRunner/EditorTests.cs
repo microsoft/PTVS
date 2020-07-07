@@ -39,74 +39,58 @@ namespace PythonToolsUITestsRunner {
         public static void ClassCleanup() => VsTestContext.Instance.Dispose();
         #endregion
 
-        //[TestMethod, Priority(VsTestContext.P2_FAILING_UI_TEST)]
+        //[TestMethod, Priority(UITestPriority.P2_FAILING_UI_TEST)]
         //[TestCategory("Installed")]
         //public void CompletionsCaseSensitive() {
         //    _vs.RunTest(nameof(PythonToolsUITests.EditorTests.CompletionsCaseSensitive));
         //}
 
-        //[TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
+        //[TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST)]
         //[TestCategory("Installed")]
         //public void TypingTest() {
         //    _vs.RunTest(nameof(PythonToolsUITests.EditorTests.TypingTest));
         //}
 
-        //[TestMethod, Priority(VsTestContext.P2_FAILING_UI_TEST)]
+        //[TestMethod, Priority(UITestPriority.P2_FAILING_UI_TEST)]
         //[TestCategory("Installed")]
         //public void CompletionTests() {
         //    _vs.RunTest(nameof(PythonToolsUITests.EditorTests.CompletionTests));
         //}
 
-        [Ignore] // https://github.com/microsoft/PTVS/issues/5892
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void OpenInvalidUnicodeFile() {
             _vs.RunTest(nameof(PythonToolsUITests.EditorTests.OpenInvalidUnicodeFile));
         }
 
-        [Ignore] // https://github.com/microsoft/PTVS/issues/5891
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void IndentationInconsistencyWarning() {
             _vs.RunTest(nameof(PythonToolsUITests.EditorTests.IndentationInconsistencyWarning));
         }
 
-        [Ignore] // https://github.com/microsoft/PTVS/issues/5891
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void IndentationInconsistencyError() {
             _vs.RunTest(nameof(PythonToolsUITests.EditorTests.IndentationInconsistencyError));
         }
 
-        [Ignore] // https://github.com/microsoft/PTVS/issues/5891
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void IndentationInconsistencyIgnore() {
             _vs.RunTest(nameof(PythonToolsUITests.EditorTests.IndentationInconsistencyIgnore));
         }
 
-        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST), TestCategory("Squiggle")]
+        [TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST), TestCategory("Squiggle")]
         [TestCategory("Installed")]
         public void ImportPresent() {
             _vs.RunTest(nameof(PythonToolsUITests.EditorTests.ImportPresent));
         }
 
-        [TestMethod, Priority(0), TestCategory("Squiggle")]
+        [TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST), TestCategory("Squiggle")]
         [TestCategory("Installed")]
         public void ImportSelf() {
             _vs.RunTest(nameof(PythonToolsUITests.EditorTests.ImportSelf));
-        }
-
-        [TestMethod, Priority(0), TestCategory("Squiggle")]
-        [TestCategory("Installed")]
-        public void ImportMissing() {
-            _vs.RunTest(nameof(PythonToolsUITests.EditorTests.ImportMissing));
-        }
-
-        [TestMethod, Priority(VsTestContext.P2_FAILING_UI_TEST), TestCategory("Squiggle")]
-        [TestCategory("Installed")]
-        public void ImportMissingThenAddFile() {
-            _vs.RunTest(nameof(PythonToolsUITests.EditorTests.ImportMissingThenAddFile));
         }
     }
 }

@@ -7,18 +7,21 @@ from __future__ import absolute_import, division, print_function
 import datetime
 import ipaddress
 
-from asn1crypto.core import Integer, SequenceOf
+import asn1crypto.core
+
+import six
 
 from cryptography import x509
 from cryptography.x509.extensions import _TLS_FEATURE_TYPE_TO_ENUM
 from cryptography.x509.name import _ASN1_TYPE_TO_ENUM
 from cryptography.x509.oid import (
-    CRLEntryExtensionOID, CertificatePoliciesOID, ExtensionOID
+    CRLEntryExtensionOID, CertificatePoliciesOID, ExtensionOID,
+    OCSPExtensionOID,
 )
 
 
-class _Integers(SequenceOf):
-    _child_spec = Integer
+class _Integers(asn1crypto.core.SequenceOf):
+    _child_spec = asn1crypto.core.Integer
 
 
 def _obj2txt(backend, obj):
@@ -132,7 +135,7 @@ def _decode_general_name(backend, gn):
             if "1" in bits[prefix:]:
                 raise ValueError("Invalid netmask")
 
-            ip = ipaddress.ip_network(base.exploded + u"/{0}".format(prefix))
+            ip = ipaddress.ip_network(base.exploded + u"/{}".format(prefix))
         else:
             ip = ipaddress.ip_address(data)
 
@@ -157,7 +160,7 @@ def _decode_general_name(backend, gn):
     else:
         # x400Address or ediPartyName
         raise x509.UnsupportedGeneralNameType(
-            "{0} is not a supported type".format(
+            "{} is not a supported type".format(
                 x509._GENERAL_NAMES.get(gn.type, gn.type)
             ),
             gn.type
@@ -199,11 +202,11 @@ class _X509ExtensionParser(object):
             )
             if oid in seen_oids:
                 raise x509.DuplicateExtension(
-                    "Duplicate {0} extension found".format(oid), oid
+                    "Duplicate {} extension found".format(oid), oid
                 )
 
-            # This OID is only supported in OpenSSL 1.1.0+ but we want
-            # to support it in all versions of OpenSSL so we decode it
+            # These OIDs are only supported in OpenSSL 1.1.0+ but we want
+            # to support them in all versions of OpenSSL so we decode them
             # ourselves.
             if oid == ExtensionOID.TLS_FEATURE:
                 data = backend._lib.X509_EXTENSION_get_data(ext)
@@ -212,6 +215,17 @@ class _X509ExtensionParser(object):
                     [_TLS_FEATURE_TYPE_TO_ENUM[x.native] for x in parsed]
                 )
                 extensions.append(x509.Extension(oid, critical, value))
+                seen_oids.add(oid)
+                continue
+            elif oid == ExtensionOID.PRECERT_POISON:
+                data = backend._lib.X509_EXTENSION_get_data(ext)
+                parsed = asn1crypto.core.Null.load(
+                    _asn1_string_to_bytes(backend, data)
+                )
+                assert parsed == asn1crypto.core.Null()
+                extensions.append(x509.Extension(
+                    oid, critical, x509.PrecertPoison()
+                ))
                 seen_oids.add(oid)
                 continue
 
@@ -231,7 +245,7 @@ class _X509ExtensionParser(object):
                 if ext_data == backend._ffi.NULL:
                     backend._consume_errors()
                     raise ValueError(
-                        "The {0} extension is invalid and can't be "
+                        "The {} extension is invalid and can't be "
                         "parsed".format(oid)
                     )
 
@@ -365,7 +379,14 @@ def _decode_authority_key_identifier(backend, akid):
 
 def _decode_authority_information_access(backend, aia):
     aia = backend._ffi.cast("Cryptography_STACK_OF_ACCESS_DESCRIPTION *", aia)
-    aia = backend._ffi.gc(aia, backend._lib.sk_ACCESS_DESCRIPTION_free)
+    aia = backend._ffi.gc(
+        aia,
+        lambda x: backend._lib.sk_ACCESS_DESCRIPTION_pop_free(
+            x, backend._ffi.addressof(
+                backend._lib._original_lib, "ACCESS_DESCRIPTION_free"
+            )
+        )
+    )
     num = backend._lib.sk_ACCESS_DESCRIPTION_num(aia)
     access_descriptions = []
     for i in range(num):
@@ -450,6 +471,30 @@ def _decode_general_subtrees(backend, stack_subtrees):
     return subtrees
 
 
+def _decode_issuing_dist_point(backend, idp):
+    idp = backend._ffi.cast("ISSUING_DIST_POINT *", idp)
+    idp = backend._ffi.gc(idp, backend._lib.ISSUING_DIST_POINT_free)
+    if idp.distpoint != backend._ffi.NULL:
+        full_name, relative_name = _decode_distpoint(backend, idp.distpoint)
+    else:
+        full_name = None
+        relative_name = None
+
+    only_user = idp.onlyuser == 255
+    only_ca = idp.onlyCA == 255
+    indirect_crl = idp.indirectCRL == 255
+    only_attr = idp.onlyattr == 255
+    if idp.onlysomereasons != backend._ffi.NULL:
+        only_some_reasons = _decode_reasons(backend, idp.onlysomereasons)
+    else:
+        only_some_reasons = None
+
+    return x509.IssuingDistributionPoint(
+        full_name, relative_name, only_user, only_ca, only_some_reasons,
+        indirect_crl, only_attr
+    )
+
+
 def _decode_policy_constraints(backend, pc):
     pc = backend._ffi.cast("POLICY_CONSTRAINTS *", pc)
     pc = backend._ffi.gc(pc, backend._lib.POLICY_CONSTRAINTS_free)
@@ -498,44 +543,7 @@ def _decode_dist_points(backend, cdps):
         reasons = None
         cdp = backend._lib.sk_DIST_POINT_value(cdps, i)
         if cdp.reasons != backend._ffi.NULL:
-            # We will check each bit from RFC 5280
-            # ReasonFlags ::= BIT STRING {
-            #      unused                  (0),
-            #      keyCompromise           (1),
-            #      cACompromise            (2),
-            #      affiliationChanged      (3),
-            #      superseded              (4),
-            #      cessationOfOperation    (5),
-            #      certificateHold         (6),
-            #      privilegeWithdrawn      (7),
-            #      aACompromise            (8) }
-            reasons = []
-            get_bit = backend._lib.ASN1_BIT_STRING_get_bit
-            if get_bit(cdp.reasons, 1):
-                reasons.append(x509.ReasonFlags.key_compromise)
-
-            if get_bit(cdp.reasons, 2):
-                reasons.append(x509.ReasonFlags.ca_compromise)
-
-            if get_bit(cdp.reasons, 3):
-                reasons.append(x509.ReasonFlags.affiliation_changed)
-
-            if get_bit(cdp.reasons, 4):
-                reasons.append(x509.ReasonFlags.superseded)
-
-            if get_bit(cdp.reasons, 5):
-                reasons.append(x509.ReasonFlags.cessation_of_operation)
-
-            if get_bit(cdp.reasons, 6):
-                reasons.append(x509.ReasonFlags.certificate_hold)
-
-            if get_bit(cdp.reasons, 7):
-                reasons.append(x509.ReasonFlags.privilege_withdrawn)
-
-            if get_bit(cdp.reasons, 8):
-                reasons.append(x509.ReasonFlags.aa_compromise)
-
-            reasons = frozenset(reasons)
+            reasons = _decode_reasons(backend, cdp.reasons)
 
         if cdp.CRLissuer != backend._ffi.NULL:
             crl_issuer = _decode_general_names(backend, cdp.CRLissuer)
@@ -543,32 +551,9 @@ def _decode_dist_points(backend, cdps):
         # Certificates may have a crl_issuer/reasons and no distribution
         # point so make sure it's not null.
         if cdp.distpoint != backend._ffi.NULL:
-            # Type 0 is fullName, there is no #define for it in the code.
-            if cdp.distpoint.type == _DISTPOINT_TYPE_FULLNAME:
-                full_name = _decode_general_names(
-                    backend, cdp.distpoint.name.fullname
-                )
-            # OpenSSL code doesn't test for a specific type for
-            # relativename, everything that isn't fullname is considered
-            # relativename.  Per RFC 5280:
-            #
-            # DistributionPointName ::= CHOICE {
-            #      fullName                [0]      GeneralNames,
-            #      nameRelativeToCRLIssuer [1]      RelativeDistinguishedName }
-            else:
-                rns = cdp.distpoint.name.relativename
-                rnum = backend._lib.sk_X509_NAME_ENTRY_num(rns)
-                attributes = set()
-                for i in range(rnum):
-                    rn = backend._lib.sk_X509_NAME_ENTRY_value(
-                        rns, i
-                    )
-                    backend.openssl_assert(rn != backend._ffi.NULL)
-                    attributes.add(
-                        _decode_x509_name_entry(backend, rn)
-                    )
-
-                relative_name = x509.RelativeDistinguishedName(attributes)
+            full_name, relative_name = _decode_distpoint(
+                backend, cdp.distpoint
+            )
 
         dist_points.append(
             x509.DistributionPoint(
@@ -577,6 +562,67 @@ def _decode_dist_points(backend, cdps):
         )
 
     return dist_points
+
+
+# ReasonFlags ::= BIT STRING {
+#      unused                  (0),
+#      keyCompromise           (1),
+#      cACompromise            (2),
+#      affiliationChanged      (3),
+#      superseded              (4),
+#      cessationOfOperation    (5),
+#      certificateHold         (6),
+#      privilegeWithdrawn      (7),
+#      aACompromise            (8) }
+_REASON_BIT_MAPPING = {
+    1: x509.ReasonFlags.key_compromise,
+    2: x509.ReasonFlags.ca_compromise,
+    3: x509.ReasonFlags.affiliation_changed,
+    4: x509.ReasonFlags.superseded,
+    5: x509.ReasonFlags.cessation_of_operation,
+    6: x509.ReasonFlags.certificate_hold,
+    7: x509.ReasonFlags.privilege_withdrawn,
+    8: x509.ReasonFlags.aa_compromise,
+}
+
+
+def _decode_reasons(backend, reasons):
+    # We will check each bit from RFC 5280
+    enum_reasons = []
+    for bit_position, reason in six.iteritems(_REASON_BIT_MAPPING):
+        if backend._lib.ASN1_BIT_STRING_get_bit(reasons, bit_position):
+            enum_reasons.append(reason)
+
+    return frozenset(enum_reasons)
+
+
+def _decode_distpoint(backend, distpoint):
+    if distpoint.type == _DISTPOINT_TYPE_FULLNAME:
+        full_name = _decode_general_names(backend, distpoint.name.fullname)
+        return full_name, None
+
+    # OpenSSL code doesn't test for a specific type for
+    # relativename, everything that isn't fullname is considered
+    # relativename.  Per RFC 5280:
+    #
+    # DistributionPointName ::= CHOICE {
+    #      fullName                [0]      GeneralNames,
+    #      nameRelativeToCRLIssuer [1]      RelativeDistinguishedName }
+    rns = distpoint.name.relativename
+    rnum = backend._lib.sk_X509_NAME_ENTRY_num(rns)
+    attributes = set()
+    for i in range(rnum):
+        rn = backend._lib.sk_X509_NAME_ENTRY_value(
+            rns, i
+        )
+        backend.openssl_assert(rn != backend._ffi.NULL)
+        attributes.add(
+            _decode_x509_name_entry(backend, rn)
+        )
+
+    relative_name = x509.RelativeDistinguishedName(attributes)
+
+    return None, relative_name
 
 
 def _decode_crl_distribution_points(backend, cdps):
@@ -659,7 +705,7 @@ def _decode_crl_reason(backend, enum):
     try:
         return x509.CRLReason(_CRL_ENTRY_REASON_CODE_TO_ENUM[code])
     except KeyError:
-        raise ValueError("Unsupported reason code: {0}".format(code))
+        raise ValueError("Unsupported reason code: {}".format(code))
 
 
 def _decode_invalidity_date(backend, inv_date):
@@ -719,7 +765,7 @@ def _asn1_string_to_utf8(backend, asn1_string):
     res = backend._lib.ASN1_STRING_to_UTF8(buf, asn1_string)
     if res == -1:
         raise ValueError(
-            "Unsupported ASN1 string type. Type: {0}".format(asn1_string.type)
+            "Unsupported ASN1 string type. Type: {}".format(asn1_string.type)
         )
 
     backend.openssl_assert(buf[0] != backend._ffi.NULL)
@@ -752,6 +798,12 @@ def _parse_asn1_generalized_time(backend, generalized_time):
         backend, backend._ffi.cast("ASN1_STRING *", generalized_time)
     )
     return datetime.datetime.strptime(time, "%Y%m%d%H%M%SZ")
+
+
+def _decode_nonce(backend, nonce):
+    nonce = backend._ffi.cast("ASN1_OCTET_STRING *", nonce)
+    nonce = backend._ffi.gc(nonce, backend._lib.ASN1_OCTET_STRING_free)
+    return x509.OCSPNonce(_asn1_string_to_bytes(backend, nonce))
 
 
 _EXTENSION_HANDLERS_NO_SCT = {
@@ -793,6 +845,15 @@ _CRL_EXTENSION_HANDLERS = {
     ExtensionOID.AUTHORITY_INFORMATION_ACCESS: (
         _decode_authority_information_access
     ),
+    ExtensionOID.ISSUING_DISTRIBUTION_POINT: _decode_issuing_dist_point,
+}
+
+_OCSP_REQ_EXTENSION_HANDLERS = {
+    OCSPExtensionOID.NONCE: _decode_nonce,
+}
+
+_OCSP_BASICRESP_EXTENSION_HANDLERS = {
+    OCSPExtensionOID.NONCE: _decode_nonce,
 }
 
 _CERTIFICATE_EXTENSION_PARSER_NO_SCT = _X509ExtensionParser(
@@ -823,4 +884,16 @@ _CRL_EXTENSION_PARSER = _X509ExtensionParser(
     ext_count=lambda backend, x: backend._lib.X509_CRL_get_ext_count(x),
     get_ext=lambda backend, x, i: backend._lib.X509_CRL_get_ext(x, i),
     handlers=_CRL_EXTENSION_HANDLERS,
+)
+
+_OCSP_REQ_EXT_PARSER = _X509ExtensionParser(
+    ext_count=lambda backend, x: backend._lib.OCSP_REQUEST_get_ext_count(x),
+    get_ext=lambda backend, x, i: backend._lib.OCSP_REQUEST_get_ext(x, i),
+    handlers=_OCSP_REQ_EXTENSION_HANDLERS,
+)
+
+_OCSP_BASICRESP_EXT_PARSER = _X509ExtensionParser(
+    ext_count=lambda backend, x: backend._lib.OCSP_BASICRESP_get_ext_count(x),
+    get_ext=lambda backend, x, i: backend._lib.OCSP_BASICRESP_get_ext(x, i),
+    handlers=_OCSP_BASICRESP_EXTENSION_HANDLERS,
 )

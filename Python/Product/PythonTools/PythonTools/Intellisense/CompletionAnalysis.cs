@@ -104,7 +104,9 @@ namespace Microsoft.PythonTools.Intellisense {
                 ? ((SourceSpan)completions._applicableSpan.Value).ToSnapshotSpan(_snapshot)
                 : new SnapshotSpan(point, 0);
             _span = bufferInfo.CurrentSnapshot.CreateTrackingSpan(snapshotSpan, SpanTrackingMode.EdgeInclusive);
-            var members = completions.items.MaybeEnumerate().Select(c => new CompletionResult(
+            var members = completions.items.MaybeEnumerate()
+                .Where(c => c != null)
+                .Select(c => new CompletionResult(
                 // if a method stub generation (best guess by comparing length),
                 // merge entry based on label, for everything else, use insertion text
                 c.filterText ?? (c.insertText != null && c.insertText.Length <= c.label.Length ? c.insertText : c.label),

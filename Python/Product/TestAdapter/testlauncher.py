@@ -1,6 +1,18 @@
-# Copyright (c) Microsoft Corporation. All rights reserved.
-# Licensed under the MIT License.
-
+# Python Tools for Visual Studio
+# Copyright(c) Microsoft Corporation
+# All rights reserved.
+# 
+# Licensed under the Apache License, Version 2.0 (the License); you may not use
+# this file except in compliance with the License. You may obtain a copy of the
+# License at http://www.apache.org/licenses/LICENSE-2.0
+# 
+# THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+# OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+# IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+# MERCHANTABILITY OR NON-INFRINGEMENT.
+# 
+# See the Apache Version 2.0 License for specific language governing
+# permissions and limitations under the License.
 
 import io
 import os
@@ -8,10 +20,13 @@ import sys
 import traceback
 
 def main():
-    cwd, testRunner, secret, port, debugger_search_path, mixed_mode, coverage_file, test_file, args = parse_argv()
-    sys.path[0] = os.getcwd()
+    cwd, testRunner, secret, port, mixed_mode, coverage_file, test_file, args = parse_argv()
+
+    load_debugger(secret, port, mixed_mode)
+
     os.chdir(cwd)
-    load_debugger(secret, port, debugger_search_path, mixed_mode)
+    sys.path[0] = cwd
+
     run(testRunner, coverage_file, test_file, args)
 
 def parse_argv():
@@ -21,20 +36,15 @@ def parse_argv():
     2. Test runner, `pytest` or `nose`
     3. debugSecret
     4. debugPort
-    5. Debugger search path
-    6. Mixed-mode debugging (non-empty string to enable, empty string to disable)
-    7. Enable code coverage and specify filename
-    8. TestFile, with a list of testIds to run
-    9. Rest of the arguments are passed into the test runner.
+    5. Mixed-mode debugging (non-empty string to enable, empty string to disable)
+    6. Enable code coverage and specify filename
+    7. TestFile, with a list of testIds to run
+    8. Rest of the arguments are passed into the test runner.
     """
-    return (sys.argv[1], sys.argv[2], sys.argv[3], int(sys.argv[4]), sys.argv[5], sys.argv[6], sys.argv[7], sys.argv[8], sys.argv[9:])
+    return (sys.argv[1], sys.argv[2], sys.argv[3], int(sys.argv[4]), sys.argv[5], sys.argv[6], sys.argv[7], sys.argv[8:])
 
-def load_debugger(secret, port, debugger_search_path, mixed_mode):
-    # Load the debugger package
+def load_debugger(secret, port, mixed_mode):
     try:
-        if debugger_search_path:
-            sys.path.append(debugger_search_path)
-        
         if secret and port:
             # Start tests with legacy debugger
             import ptvsd
@@ -47,10 +57,10 @@ def load_debugger(secret, port, debugger_search_path, mixed_mode):
             wait_for_attach()
         elif port:
             # Start tests with new debugger
-            from ptvsd import enable_attach, wait_for_attach
-            
-            enable_attach(('127.0.0.1', port), redirect_output = True)
-            wait_for_attach()
+            import debugpy 
+
+            debugpy.listen(('localhost', port))
+            debugpy.wait_for_client()
         elif mixed_mode:
             # For mixed-mode attach, there's no ptvsd and hence no wait_for_attach(), 
             # so we have to use Win32 API in a loop to do the same thing.
@@ -69,6 +79,7 @@ def load_debugger(secret, port, debugger_search_path, mixed_mode):
                 if isTracing.value != 0:
                     break
                 sleep(0.1)
+
     except:
         traceback.print_exc()
         print('''

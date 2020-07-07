@@ -15,7 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.IO;
 using System.Linq;
 using Microsoft.PythonTools.Infrastructure;
@@ -31,22 +31,22 @@ namespace Microsoft.PythonTools.TestAdapter {
         private readonly IPythonWorkspaceContext _pythonWorkspace;
         private readonly string _projectHome;
         private readonly string _projectName;
-        private readonly Dictionary<string, TestContainer> _containers;
+        private readonly ConcurrentDictionary<string, TestContainer> _containers;
 
         public ProjectInfo(PythonProject project) {
             _pythonProject = project;
             _pythonWorkspace = null;
             _projectHome = _pythonProject.ProjectHome;
             _projectName = _pythonProject.ProjectName;
-            _containers = new Dictionary<string, TestContainer>(StringComparer.OrdinalIgnoreCase);
+            _containers = new ConcurrentDictionary<string, TestContainer>(StringComparer.OrdinalIgnoreCase);
         }
 
-        public ProjectInfo( IPythonWorkspaceContext workspace) {
+        public ProjectInfo(IPythonWorkspaceContext workspace) {
             _pythonProject = null;
             _pythonWorkspace = workspace;
             _projectHome = workspace.Location;
             _projectName = workspace.WorkspaceName;
-            _containers = new Dictionary<string, TestContainer>(StringComparer.OrdinalIgnoreCase);
+            _containers = new ConcurrentDictionary<string, TestContainer>(StringComparer.OrdinalIgnoreCase);
         }
 
         public void Dispose() {
@@ -56,7 +56,8 @@ namespace Microsoft.PythonTools.TestAdapter {
         public bool IsWorkspace => _pythonWorkspace != null;
 
         public TestContainer[] GetAllContainers() {
-            return _containers.Select(x => x.Value).ToArray();
+            //ConcurrentDictionary.ToArray() locks before copying
+            return _containers.Values.ToArray();
         }
 
         public bool TryGetContainer(string path, out TestContainer container) {
@@ -65,7 +66,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 
         public LaunchConfiguration GetLaunchConfigurationOrThrow() {
             if (IsWorkspace) {
-                if(!_pythonWorkspace.CurrentFactory.Configuration.IsAvailable()) {
+                if (!_pythonWorkspace.CurrentFactory.Configuration.IsAvailable()) {
                     throw new Exception("MissingEnvironment");
                 }
 
@@ -73,11 +74,11 @@ namespace Microsoft.PythonTools.TestAdapter {
                     WorkingDirectory = _pythonWorkspace.Location,
                     SearchPaths = _pythonWorkspace.GetAbsoluteSearchPaths().ToList(),
                     Environment = PathUtils.ParseEnvironment(_pythonWorkspace.GetStringProperty(PythonConstants.EnvironmentSetting) ?? "")
-            };
+                };
 
                 return config;
             }
-            
+
             return _pythonProject.GetLaunchConfigurationOrThrow();
         }
 
@@ -110,7 +111,7 @@ namespace Microsoft.PythonTools.TestAdapter {
         }
 
         public bool RemoveTestContainer(string path) {
-            return _containers.Remove(path);
+            return _containers.TryRemove(path, out _);
         }
 
         private Architecture Architecture => Architecture.Default;

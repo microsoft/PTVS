@@ -96,6 +96,15 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             }
         }
 
+        private void OpenInBrowser_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
+            e.CanExecute = true;
+        }
+
+        private void OpenInBrowser_Executed(object sender, ExecutedRoutedEventArgs e) {
+            var url = (string)e.Parameter;
+            Process.Start(url)?.Dispose();
+        }
+
         private void IsIPythonModeEnabled_Loaded(object sender, RoutedEventArgs e) {
             var ev = (e.Source as FrameworkElement)?.DataContext as EnvironmentView;
             if (ev == null) {

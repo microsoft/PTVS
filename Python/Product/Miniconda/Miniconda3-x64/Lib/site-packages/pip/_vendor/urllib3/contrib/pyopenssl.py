@@ -47,6 +47,12 @@ import OpenSSL.SSL
 from cryptography import x509
 from cryptography.hazmat.backends.openssl import backend as openssl_backend
 from cryptography.hazmat.backends.openssl.x509 import _Certificate
+try:
+    from cryptography.x509 import UnsupportedExtension
+except ImportError:
+    # UnsupportedExtension is gone in cryptography >= 2.1.0
+    class UnsupportedExtension(Exception):
+        pass
 
 from socket import timeout, error as SocketError
 from io import BytesIO
@@ -157,6 +163,9 @@ def _dnsname_to_stdlib(name):
     from ASCII bytes. We need to idna-encode that string to get it back, and
     then on Python 3 we also need to convert to unicode via UTF-8 (the stdlib
     uses PyUnicode_FromStringAndSize on it, which decodes via UTF-8).
+
+    If the name cannot be idna-encoded then we return None signalling that
+    the name given should be skipped.
     """
     def idna_encode(name):
         """
@@ -166,14 +175,19 @@ def _dnsname_to_stdlib(name):
         """
         from pip._vendor import idna
 
-        for prefix in [u'*.', u'.']:
-            if name.startswith(prefix):
-                name = name[len(prefix):]
-                return prefix.encode('ascii') + idna.encode(name)
-        return idna.encode(name)
+        try:
+            for prefix in [u'*.', u'.']:
+                if name.startswith(prefix):
+                    name = name[len(prefix):]
+                    return prefix.encode('ascii') + idna.encode(name)
+            return idna.encode(name)
+        except idna.core.IDNAError:
+            return None
 
     name = idna_encode(name)
-    if sys.version_info >= (3, 0):
+    if name is None:
+        return None
+    elif sys.version_info >= (3, 0):
         name = name.decode('utf-8')
     return name
 
@@ -199,7 +213,7 @@ def get_subj_alt_name(peer_cert):
     except x509.ExtensionNotFound:
         # No such extension, return the empty list.
         return []
-    except (x509.DuplicateExtension, x509.UnsupportedExtension,
+    except (x509.DuplicateExtension, UnsupportedExtension,
             x509.UnsupportedGeneralNameType, UnicodeError) as e:
         # A problem has been found with the quality of the certificate. Assume
         # no SAN field is present.
@@ -217,9 +231,10 @@ def get_subj_alt_name(peer_cert):
     # Sadly the DNS names need to be idna encoded and then, on Python 3, UTF-8
     # decoded. This is pretty frustrating, but that's what the standard library
     # does with certificates, and so we need to attempt to do the same.
+    # We also want to skip over names which cannot be idna encoded.
     names = [
-        ('DNS', _dnsname_to_stdlib(name))
-        for name in ext.get_values_for_type(x509.DNSName)
+        ('DNS', name) for name in map(_dnsname_to_stdlib, ext.get_values_for_type(x509.DNSName))
+        if name is not None
     ]
     names.extend(
         ('IP Address', str(name))
@@ -267,8 +282,7 @@ class WrappedSocket(object):
             else:
                 raise
         except OpenSSL.SSL.WantReadError:
-            rd = util.wait_for_read(self.socket, self.socket.gettimeout())
-            if not rd:
+            if not util.wait_for_read(self.socket, self.socket.gettimeout()):
                 raise timeout('The read operation timed out')
             else:
                 return self.recv(*args, **kwargs)
@@ -289,8 +303,7 @@ class WrappedSocket(object):
             else:
                 raise
         except OpenSSL.SSL.WantReadError:
-            rd = util.wait_for_read(self.socket, self.socket.gettimeout())
-            if not rd:
+            if not util.wait_for_read(self.socket, self.socket.gettimeout()):
                 raise timeout('The read operation timed out')
             else:
                 return self.recv_into(*args, **kwargs)
@@ -303,8 +316,7 @@ class WrappedSocket(object):
             try:
                 return self.connection.send(data)
             except OpenSSL.SSL.WantWriteError:
-                wr = util.wait_for_write(self.socket, self.socket.gettimeout())
-                if not wr:
+                if not util.wait_for_write(self.socket, self.socket.gettimeout()):
                     raise timeout()
                 continue
             except OpenSSL.SSL.SysCallError as e:
@@ -418,7 +430,7 @@ class PyOpenSSLContext(object):
             self._ctx.load_verify_locations(BytesIO(cadata))
 
     def load_cert_chain(self, certfile, keyfile=None, password=None):
-        self._ctx.use_certificate_file(certfile)
+        self._ctx.use_certificate_chain_file(certfile)
         if password is not None:
             self._ctx.set_passwd_cb(lambda max_length, prompt_twice, userdata: password)
         self._ctx.use_privatekey_file(keyfile or certfile)
@@ -440,8 +452,7 @@ class PyOpenSSLContext(object):
             try:
                 cnx.do_handshake()
             except OpenSSL.SSL.WantReadError:
-                rd = util.wait_for_read(sock, sock.gettimeout())
-                if not rd:
+                if not util.wait_for_read(sock, sock.gettimeout()):
                     raise timeout('select timed out')
                 continue
             except OpenSSL.SSL.Error as e:

@@ -17,7 +17,14 @@ from cryptography.x509.extensions import Extension, ExtensionType
 from cryptography.x509.name import Name
 
 
-_UNIX_EPOCH = datetime.datetime(1970, 1, 1)
+_EARLIEST_UTC_TIME = datetime.datetime(1950, 1, 1)
+
+
+def _reject_duplicate_extension(extension, extensions):
+    # This is quadratic in the number of extensions
+    for e in extensions:
+        if e.oid == extension.oid:
+            raise ValueError('This extension has already been set.')
 
 
 def _convert_to_naive_utc_time(time):
@@ -258,6 +265,24 @@ class CertificateRevocationList(object):
         """
 
     @abc.abstractmethod
+    def __len__(self):
+        """
+        Number of revoked certificates in the CRL.
+        """
+
+    @abc.abstractmethod
+    def __getitem__(self, idx):
+        """
+        Returns a revoked certificate (or slice of revoked certificates).
+        """
+
+    @abc.abstractmethod
+    def __iter__(self):
+        """
+        Iterator over the revoked certificates
+        """
+
+    @abc.abstractmethod
     def is_signature_valid(self, public_key):
         """
         Verifies signature of revocation list against given public key.
@@ -388,11 +413,8 @@ class CertificateSigningRequestBuilder(object):
             raise TypeError("extension must be an ExtensionType")
 
         extension = Extension(extension.oid, critical, extension)
+        _reject_duplicate_extension(extension, self._extensions)
 
-        # TODO: This is quadratic in the number of extensions
-        for e in self._extensions:
-            if e.oid == extension.oid:
-                raise ValueError('This extension has already been set.')
         return CertificateSigningRequestBuilder(
             self._subject_name, self._extensions + [extension]
         )
@@ -494,9 +516,9 @@ class CertificateBuilder(object):
         if self._not_valid_before is not None:
             raise ValueError('The not valid before may only be set once.')
         time = _convert_to_naive_utc_time(time)
-        if time <= _UNIX_EPOCH:
-            raise ValueError('The not valid before date must be after the unix'
-                             ' epoch (1970 January 1).')
+        if time < _EARLIEST_UTC_TIME:
+            raise ValueError('The not valid before date must be on or after'
+                             ' 1950 January 1).')
         if self._not_valid_after is not None and time > self._not_valid_after:
             raise ValueError(
                 'The not valid before date must be before the not valid after '
@@ -517,9 +539,9 @@ class CertificateBuilder(object):
         if self._not_valid_after is not None:
             raise ValueError('The not valid after may only be set once.')
         time = _convert_to_naive_utc_time(time)
-        if time <= _UNIX_EPOCH:
-            raise ValueError('The not valid after date must be after the unix'
-                             ' epoch (1970 January 1).')
+        if time < _EARLIEST_UTC_TIME:
+            raise ValueError('The not valid after date must be on or after'
+                             ' 1950 January 1.')
         if (self._not_valid_before is not None and
                 time < self._not_valid_before):
             raise ValueError(
@@ -540,11 +562,7 @@ class CertificateBuilder(object):
             raise TypeError("extension must be an ExtensionType")
 
         extension = Extension(extension.oid, critical, extension)
-
-        # TODO: This is quadratic in the number of extensions
-        for e in self._extensions:
-            if e.oid == extension.oid:
-                raise ValueError('This extension has already been set.')
+        _reject_duplicate_extension(extension, self._extensions)
 
         return CertificateBuilder(
             self._issuer_name, self._subject_name,
@@ -602,9 +620,9 @@ class CertificateRevocationListBuilder(object):
         if self._last_update is not None:
             raise ValueError('Last update may only be set once.')
         last_update = _convert_to_naive_utc_time(last_update)
-        if last_update <= _UNIX_EPOCH:
-            raise ValueError('The last update date must be after the unix'
-                             ' epoch (1970 January 1).')
+        if last_update < _EARLIEST_UTC_TIME:
+            raise ValueError('The last update date must be on or after'
+                             ' 1950 January 1.')
         if self._next_update is not None and last_update > self._next_update:
             raise ValueError(
                 'The last update date must be before the next update date.'
@@ -620,9 +638,9 @@ class CertificateRevocationListBuilder(object):
         if self._next_update is not None:
             raise ValueError('Last update may only be set once.')
         next_update = _convert_to_naive_utc_time(next_update)
-        if next_update <= _UNIX_EPOCH:
-            raise ValueError('The last update date must be after the unix'
-                             ' epoch (1970 January 1).')
+        if next_update < _EARLIEST_UTC_TIME:
+            raise ValueError('The last update date must be on or after'
+                             ' 1950 January 1.')
         if self._last_update is not None and next_update < self._last_update:
             raise ValueError(
                 'The next update date must be after the last update date.'
@@ -640,11 +658,7 @@ class CertificateRevocationListBuilder(object):
             raise TypeError("extension must be an ExtensionType")
 
         extension = Extension(extension.oid, critical, extension)
-
-        # TODO: This is quadratic in the number of extensions
-        for e in self._extensions:
-            if e.oid == extension.oid:
-                raise ValueError('This extension has already been set.')
+        _reject_duplicate_extension(extension, self._extensions)
         return CertificateRevocationListBuilder(
             self._issuer_name, self._last_update, self._next_update,
             self._extensions + [extension], self._revoked_certificates
@@ -706,9 +720,9 @@ class RevokedCertificateBuilder(object):
         if self._revocation_date is not None:
             raise ValueError('The revocation date may only be set once.')
         time = _convert_to_naive_utc_time(time)
-        if time <= _UNIX_EPOCH:
-            raise ValueError('The revocation date must be after the unix'
-                             ' epoch (1970 January 1).')
+        if time < _EARLIEST_UTC_TIME:
+            raise ValueError('The revocation date must be on or after'
+                             ' 1950 January 1.')
         return RevokedCertificateBuilder(
             self._serial_number, time, self._extensions
         )
@@ -718,11 +732,7 @@ class RevokedCertificateBuilder(object):
             raise TypeError("extension must be an ExtensionType")
 
         extension = Extension(extension.oid, critical, extension)
-
-        # TODO: This is quadratic in the number of extensions
-        for e in self._extensions:
-            if e.oid == extension.oid:
-                raise ValueError('This extension has already been set.')
+        _reject_duplicate_extension(extension, self._extensions)
         return RevokedCertificateBuilder(
             self._serial_number, self._revocation_date,
             self._extensions + [extension]

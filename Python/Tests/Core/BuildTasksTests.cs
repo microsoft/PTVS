@@ -38,7 +38,7 @@ namespace PythonToolsTests {
     // files from outside VS, so we either need to switch to discovering
     // the executable and relying on console output to check results, or
     // just run these within a VS instance.
-    
+
     //[TestClass]
     public class BuildTasksTests {
         [ClassInitialize]
@@ -46,7 +46,7 @@ namespace PythonToolsTests {
             AssertListener.Initialize();
         }
 
-        //[TestMethod, Priority(3)]
+        //[TestMethod, Priority(UnitTestPriority.P3)]
         public void TestResolveProjectHome() {
             var proj = ProjectRootElement.Create();
             var g = proj.AddPropertyGroup();
@@ -56,7 +56,7 @@ namespace PythonToolsTests {
             g.AddProperty("_PythonToolsPath", TestData.GetPath(""));
 
             proj.AddImport(TestData.GetPath("Microsoft.PythonTools.targets"));
-            
+
             var target = proj.AddTarget("TestOutput");
             foreach (var variable in new[] { "ProjectHome", "QualifiedProjectHome", "StartupFile", "StartupPath", "Expected" }) {
                 var task = target.AddTask("Message");
@@ -67,7 +67,7 @@ namespace PythonToolsTests {
             errTask.Condition = "$(Expected) != $(QualifiedProjectHome)";
             errTask.SetParameter("Text", "Expected did not match QualifiedProjectHome");
 
-            
+
             var loc = PathUtils.EnsureEndSeparator(TestData.GetTempPath());
             proj.Save(Path.Combine(loc, string.Format("test.proj")));
 
@@ -87,7 +87,7 @@ namespace PythonToolsTests {
             }
         }
 
-        //[TestMethod, Priority(3)]
+        //[TestMethod, Priority(UnitTestPriority.P3)]
         [TestCategory("10s"), TestCategory("Installed")]
         public void TestResolveEnvironment() {
             var proj1 = new Project(TestData.GetPath(@"TestData\Targets\Environments1.pyproj"));
@@ -97,21 +97,21 @@ namespace PythonToolsTests {
             Assert.IsTrue(proj2.Build("TestResolveEnvironment", new ILogger[] { new ConsoleLogger(LoggerVerbosity.Detailed) }));
         }
 
-        //[TestMethod, Priority(3)]
-        [TestCategory("10s"), TestCategory("Installed")]
+        //[TestMethod, Priority(UnitTestPriority.P3)]
+        //[TestCategory("10s"), TestCategory("Installed")]
         public void TestResolveEnvironmentReference() {
             var proj = new Project(TestData.GetPath(@"TestData\Targets\EnvironmentReferences1.pyproj"));
             Assert.IsTrue(proj.Build("TestResolveEnvironment", new ILogger[] { new ConsoleLogger(LoggerVerbosity.Detailed) }));
         }
 
-        //[TestMethod, Priority(3), TestCategory("Installed")]
+        //[TestMethod, Priority(UnitTestPriority.P3), TestCategory("Installed")]
         public void TestCommandDefinitions() {
             var proj = new Project(TestData.GetPath(@"TestData\Targets\Commands1.pyproj"));
             Assert.IsTrue(proj.Build("TestCommands", new ILogger[] { new ConsoleLogger(LoggerVerbosity.Detailed) }));
         }
 
-        //[TestMethod, Priority(3)]
-        [TestCategory("10s"), TestCategory("60s")]
+        //[TestMethod, Priority(UnitTestPriority.P3)]
+        //[TestCategory("10s"), TestCategory("60s")]
         public void TestRunPythonCommand() {
             var expectedSearchPath = string.Format("['{0}', '{1}']",
                 TestData.GetPath(@"TestData").Replace("\\", "\\\\"),

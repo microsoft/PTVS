@@ -22,15 +22,6 @@ namespace TestUtilities.UI {
             : base(element) {
         }
 
-        public string Title {
-            get {
-                // There are no automation name or id we can use to locate the adorner title
-                // Don't be surprised if this breaks when they rearrange the controls
-                var title = FindFirstByControlType(ControlType.Text);
-                return title.GetCurrentPropertyValue(AutomationElement.NameProperty) as string;
-            }
-        }
-
         public string Description {
             get {
                 var desc = FindByAutomationId("ExceptionDescription");

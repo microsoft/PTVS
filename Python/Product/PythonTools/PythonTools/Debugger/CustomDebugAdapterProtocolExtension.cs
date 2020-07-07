@@ -16,6 +16,7 @@
 
 using System;
 using System.Runtime.InteropServices;
+using System.Threading;
 using Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces;
 using Microsoft.VisualStudio.Shared.VSCodeDebugProtocol;
 using Microsoft.VisualStudio.Shared.VSCodeDebugProtocol.Messages;
@@ -41,16 +42,33 @@ namespace Microsoft.PythonTools.Debugger {
             return stackTraceResponse.StackFrames[0].Source.Path;
         }
 
-        public static string EvaluateReplRequest(string expression, int threadId) {
+        public static (bool isSuccessful, string resultMessage) EvaluateReplRequest(string expression, int threadId) {
             var stackTraceResponse = Evaluator?._hostOperations.SendRequestSync(new StackTraceRequest(threadId));
             var fid = stackTraceResponse.StackFrames[0].Id;
-            var response = Evaluator?._hostOperations.SendRequestSync(
+
+            AutoResetEvent adapterResponseEvent = new AutoResetEvent(false);
+            bool isSuccessful = false;
+            string requestResponse = "";
+
+            Evaluator?._hostOperations.SendRequest(
                 new EvaluateRequest(expression.Replace("\n", "@LINE@")) {
                     FrameId = fid,
                     Context = EvaluateArguments.ContextValue.Repl
+                },
+                (EvaluateArguments e, EvaluateResponse r) => {
+                    isSuccessful = true;
+                    requestResponse = r.Result;
+                    adapterResponseEvent.Set();
+                },
+                (EvaluateArguments e, ProtocolException p) => {
+                    requestResponse = p.Message;
+                    adapterResponseEvent.Set();
                 }
             );
-            return response?.Result;
+
+            adapterResponseEvent.WaitOne();
+
+            return (isSuccessful, requestResponse);
         }
 
         public static void SendRequest<TArgs, TResponse>(DebugRequestWithResponse<TArgs, TResponse> request, Action<TArgs, TResponse> completionFunc, Action<TArgs, ProtocolException> errorFunc = null)

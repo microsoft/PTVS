@@ -94,7 +94,6 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
                 _testConfig.Command,
                 _debugSecret,
                 _debugPort.ToString(),
-                GetDebuggerSearchPath(_projectSettings.UseLegacyDebugger),
                 _debugMode == PythonDebugMode.PythonAndNative ? "mixed" : string.Empty,
                 coveragePath ?? string.Empty
             };
@@ -296,14 +295,6 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
 
         private void Error(string message) {
             _frameworkHandle.SendMessage(TestMessageLevel.Error, message);
-        }
-
-        internal static string GetDebuggerSearchPath(bool isLegacy) {
-            if (isLegacy) {
-                return Path.GetDirectoryName(Path.GetDirectoryName(PythonToolsInstallPath.GetFile("ptvsd\\__init__.py")));
-            }
-
-            return Path.GetDirectoryName(Path.GetDirectoryName(PythonToolsInstallPath.GetFile("Packages\\ptvsd\\__init__.py")));
         }
 
         internal static void DetachFromSillyManagedProcess(VisualStudioProxy app, PythonDebugMode debugMode) {

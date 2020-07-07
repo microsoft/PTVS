@@ -17,11 +17,12 @@
 using System.Net;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using TestUtilities;
 
 namespace PythonToolsTests {
     [TestClass]
     public class SocketUtilsTests {
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P0)]
         public void GetRandomPortListener() {
             var listener = SocketUtils.GetRandomPortListener(IPAddress.Loopback, out int port);
             try {

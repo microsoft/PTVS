@@ -39,73 +39,73 @@ namespace ProjectUITestsRunner {
         public static void ClassCleanup() => VsTestContext.Instance.Dispose();
         #endregion
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void RenameLinkedNode() {
             _vs.RunTest(nameof(ProjectUITests.LinkedFileTests.RenameLinkedNode));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void MoveLinkedNode() {
             _vs.RunTest(nameof(ProjectUITests.LinkedFileTests.MoveLinkedNode));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void MultiProjectMove() {
             _vs.RunTest(nameof(ProjectUITests.LinkedFileTests.MultiProjectMove));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void MultiProjectMoveExists2() {
             _vs.RunTest(nameof(ProjectUITests.LinkedFileTests.MultiProjectMoveExists2));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void MoveLinkedNodeOpen() {
             _vs.RunTest(nameof(ProjectUITests.LinkedFileTests.MoveLinkedNodeOpen));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void MoveLinkedNodeOpenEdited() {
             _vs.RunTest(nameof(ProjectUITests.LinkedFileTests.MoveLinkedNodeOpenEdited));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void MoveLinkedNodeFileExistsButNotInProject() {
             _vs.RunTest(nameof(ProjectUITests.LinkedFileTests.MoveLinkedNodeFileExistsButNotInProject));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void DeleteLinkedNode() {
             _vs.RunTest(nameof(ProjectUITests.LinkedFileTests.DeleteLinkedNode));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void LinkedFileInProjectIgnored() {
             _vs.RunTest(nameof(ProjectUITests.LinkedFileTests.LinkedFileInProjectIgnored));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void SaveAsCreateLink() {
             _vs.RunTest(nameof(ProjectUITests.LinkedFileTests.SaveAsCreateLink));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void SaveAsCreateFile() {
             _vs.RunTest(nameof(ProjectUITests.LinkedFileTests.SaveAsCreateFile));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void SaveAsCreateFileNewDirectory() {
             _vs.RunTest(nameof(ProjectUITests.LinkedFileTests.SaveAsCreateFileNewDirectory));
@@ -114,7 +114,7 @@ namespace ProjectUITestsRunner {
         /// <summary>
         /// Adding a duplicate link to the same item
         /// </summary>
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
         public void AddExistingItem() {
             _vs.RunTest(nameof(ProjectUITests.LinkedFileTests.AddExistingItem));
@@ -123,7 +123,7 @@ namespace ProjectUITestsRunner {
         /// <summary>
         /// Adding a link to a folder which is already linked in somewhere else.
         /// </summary>
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
         public void AddExistingItemAndItemIsAlreadyLinked() {
             _vs.RunTest(nameof(ProjectUITests.LinkedFileTests.AddExistingItemAndItemIsAlreadyLinked));
@@ -136,7 +136,7 @@ namespace ProjectUITestsRunner {
         /// this verifies we deal with the project name string comparison correctly (including a \ at the end of the
         /// path).
         /// </summary>
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
         public void AddExistingItemAndLinkAlreadyExists() {
             _vs.RunTest(nameof(ProjectUITests.LinkedFileTests.AddExistingItemAndLinkAlreadyExists));
@@ -145,7 +145,7 @@ namespace ProjectUITestsRunner {
         /// <summary>
         /// Adding new linked item when file of same name exists (when the file only exists on disk)
         /// </summary>
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
         public void AddExistingItemAndFileByNameExistsOnDiskButNotInProject() {
             _vs.RunTest(nameof(ProjectUITests.LinkedFileTests.AddExistingItemAndFileByNameExistsOnDiskButNotInProject));
@@ -154,7 +154,7 @@ namespace ProjectUITestsRunner {
         /// <summary>
         /// Adding new linked item when file of same name exists (both in the project and on disk)
         /// </summary>
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
         public void AddExistingItemAndFileByNameExistsOnDiskAndInProject() {
             _vs.RunTest(nameof(ProjectUITests.LinkedFileTests.AddExistingItemAndFileByNameExistsOnDiskAndInProject));
@@ -163,7 +163,7 @@ namespace ProjectUITestsRunner {
         /// <summary>
         /// Adding new linked item when file of same name exists (in the project, but not on disk)
         /// </summary>
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
         public void AddExistingItemAndFileByNameExistsInProjectButNotOnDisk() {
             _vs.RunTest(nameof(ProjectUITests.LinkedFileTests.AddExistingItemAndFileByNameExistsInProjectButNotOnDisk));
@@ -173,7 +173,7 @@ namespace ProjectUITestsRunner {
         /// Adding new linked item when the file lives in the project dir but not in the directory we selected
         /// Add Existing Item from.  We should add the file to the directory where it lives.
         /// </summary>
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
         public void AddExistingItemAsLinkButFileExistsInProjectDirectory() {
             _vs.RunTest(nameof(ProjectUITests.LinkedFileTests.AddExistingItemAsLinkButFileExistsInProjectDirectory));
@@ -182,7 +182,7 @@ namespace ProjectUITestsRunner {
         /// <summary>
         /// Reaming the file name in the Link attribute is ignored.
         /// </summary>
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void RenamedLinkedFile() {
             _vs.RunTest(nameof(ProjectUITests.LinkedFileTests.RenamedLinkedFile));
@@ -191,7 +191,7 @@ namespace ProjectUITestsRunner {
         /// <summary>
         /// A link path outside of our project dir will result in the link being ignored.
         /// </summary>
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void BadLinkPath() {
             _vs.RunTest(nameof(ProjectUITests.LinkedFileTests.BadLinkPath));
@@ -200,7 +200,7 @@ namespace ProjectUITestsRunner {
         /// <summary>
         /// A rooted link path is ignored.
         /// </summary>
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void RootedLinkIgnored() {
             _vs.RunTest(nameof(ProjectUITests.LinkedFileTests.RootedLinkIgnored));
@@ -209,7 +209,7 @@ namespace ProjectUITestsRunner {
         /// <summary>
         /// A rooted link path is ignored.
         /// </summary>
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void RootedIncludeIgnored() {
             _vs.RunTest(nameof(ProjectUITests.LinkedFileTests.RootedIncludeIgnored));
@@ -219,7 +219,7 @@ namespace ProjectUITestsRunner {
         /// Test linked files with a project home set (done by save as in this test)
         /// https://nodejstools.codeplex.com/workitem/1511
         /// </summary>
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
         public void TestLinkedWithProjectHome() {
             _vs.RunTest(nameof(ProjectUITests.LinkedFileTests.TestLinkedWithProjectHome));

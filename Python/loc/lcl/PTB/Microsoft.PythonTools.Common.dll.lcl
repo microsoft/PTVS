@@ -995,7 +995,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Scraping {0}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Recortando {0}]]></Val>
+            <Val><![CDATA[Extraindo {0}]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -1004,7 +1004,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Scraping standard library]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Recortando a biblioteca padrão]]></Val>
+            <Val><![CDATA[Extraindo a biblioteca padrão]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -3064,15 +3064,6 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";DiscoveryConfigurationMessage" ItemType="0" PsrId="211" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Go to https://aka.ms/VSTestExplorerPython for more details on test discovery configuration.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Acesse https://aka.ms/VSTestExplorerPython para obter mais detalhes sobre a configuração da detecção de testes.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
       <Item ItemId=";DocumentationClassificationType" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Python Documentation]]></Val>
@@ -3084,10 +3075,13 @@
       </Item>
       <Item ItemId=";DontShowAgain" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Do not show this warning again.]]></Val>
+          <Val><![CDATA[Don't show this warning again.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[Não mostrar este aviso novamente.]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Do not show this warning again.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -3442,15 +3436,6 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";ErrorTestContainerNotFound" ItemType="0" PsrId="211" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Matching test container source was not found under folder {0} for test {1}.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[A fonte do contêiner de teste correspondente não foi localizada na pasta {0} para o teste {1}.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
       <Item ItemId=";ExecuteInReplCommand_ExecuteFile" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Execute File in P&ython Interactive]]></Val>
@@ -3590,7 +3575,7 @@
         <Str Cat="Text">
           <Val><![CDATA[When the selection contains a return statement, all code paths must return.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Quando a seleção contém uma instrução de retorno todos os códigos devem retornar.]]></Val>
+            <Val><![CDATA[Quando a seleção contém uma instrução return todos os códigos devem retornar.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -3869,7 +3854,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Wrapping]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Encapsulamento]]></Val>
+            <Val><![CDATA[Quebra de linha]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -4453,19 +4438,16 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";InstalledPtvsdOutdatedMessage" ItemType="0" PsrId="211" Leaf="true">
+      <Item ItemId=";InstalledDebugPyOutdatedMessage" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[You have an old version of ptvsd installed in the current environment (version {0}), but version {1} is included with Visual Studio. Please upgrade or uninstall ptvsd to get the latest functionality.]]></Val>
+          <Val><![CDATA[You have an old version of DebugPy installed in the current environment (version {0}), but version {1} is included with Visual Studio. Please upgrade or uninstall DebugPy to get the latest functionality.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Você tem uma versão antiga do ptvsd instalada no ambiente atual (versão {0}), mas a versão {1} está incluída no Visual Studio. Atualize ou desinstale o ptvsd para obter a funcionalidade mais recente.]]></Val>
+            <Val><![CDATA[Você tem uma versão antiga do DebugPy instalada no ambiente atual (versão {0}), mas a versão {1} está incluída no Visual Studio. Atualize ou desinstale o DebugPy para obter a funcionalidade mais recente.]]></Val>
           </Tgt>
-          <Prev Cat="Text">
-            <Val><![CDATA[You have an old version of ptvsd installed in the current environment (version {0}), but version {1} is included with Visual Studio. Please upgrade or uninstall ptvsd to get the latest functionality]]></Val>
-          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";InstalledPtvsdOutdatedTitle" ItemType="0" PsrId="211" Leaf="true">
+      <Item ItemId=";InstalledDebugPyOutdatedTitle" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Debugger package is outdated]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -5171,7 +5153,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Pytest is enabled in the {0} {1}, but it is not installed in the active environment.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Pytest está habilitado no {0} {1}, mas não está instalado no ambiente ativo.]]></Val>
+            <Val><![CDATA[O Pytest está habilitado no {1} {0}, mas não está instalado no ambiente ativo.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -5207,7 +5189,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Results for pytest not found {0}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Resultados do pytest não localizados {0}]]></Val>
+            <Val><![CDATA[Os resultados do pytest não foram encontrados {0}]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -5401,6 +5383,15 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";PythonInterpreterPathNullOrEmpty" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Unable to start debugging because the Python interpreter path is null or empty]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Não é possível iniciar a depuração porque o caminho do interpretador do Python é nulo ou está vazio]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";PythonMenuLabel" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[&Python]]></Val>
@@ -5484,10 +5475,13 @@
       </Item>
       <Item ItemId=";PythonTestFileDetected" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[A file containing Python tests was detected in the {0} {1}, but the test framework is disabled.]]></Val>
+          <Val><![CDATA[A file which may contain Python tests was detected in the {0} {1}, but the test framework is disabled.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Um arquivo que contém testes Python foi detectado no {0} {1}, mas a estrutura de teste está desabilitada.]]></Val>
+            <Val><![CDATA[Um arquivo que pode conter testes do Python foi detectado no {0} {1}, mas a estrutura de teste está desabilitada.]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[A file containing Python tests was detected in the {0} {1}, but the test framework is disabled.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -5560,6 +5554,36 @@
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[_Diretório raiz:]]></Val>
           </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";PythonVersionNotSupportMoreInfo" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[More info]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Mais informações]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";PythonVersionNotSupportedDontShowMessageAgain" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Don't show this message again]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Não mostrar esta mensagem novamente]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";PythonVersionNotSupportedInfoBarText" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[You're using Python {0}. Some new features might not work as expected until Visual Studio officially supports this version.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Você está usando o Python {0}. Alguns novos recursos podem não funcionar como esperado até que o Visual Studio dê suporte oficialmente a essa versão.]]></Val>
+          </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[You are using Python {0} and some features might not work because Visual Studio doesn't support it yet.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -5752,11 +5776,38 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";RemoteDebugPortSupplierDescription" ItemType="0" PsrId="211" Leaf="true">
+      <Item ItemId=";RemoteDebugPortSupplierDescriptionDebugPy" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Allows debugging a Python process on a remote machine running any OS, if it can be connected to via TCP, and remote debugging has been enabled by using the 'ptvsd' module. Specify the secret, hostname and port to connect to in the 'Qualifier' textbox, e.g. 'tcp://secret@localhost:5678'. ]]></Val>
+          <Val><![CDATA[Allows debugging a Python process on a remote machine running any OS, if it can be connected to via TCP, and remote debugging has been enabled by using the 'debugpy' module. Specify the hostname and port to connect to in the 'Qualifier' textbox, e.g. 'tcp://localhost:5678'.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Permite a depuração de um processo do Python em um computador remoto executando qualquer SO, se ele pode ser conectado via TCP e a depuração remota foi habilitada usando o módulo de 'ptvsd'. Especifique o segredo, o nome do host e a porta para se conectar à caixa de texto 'Qualificador', por exemplo, 'tcp://secret@localhost:5678'. ]]></Val>
+            <Val><![CDATA[Permite a depuração de um processo do Python em um computador remoto executando qualquer SO, caso ele possa ser conectado via TCP e a depuração remota tenha sido habilitada usando o módulo 'debugpy'. Especifique o nome do host e a porta à qual se conectar na caixa de texto 'Qualificador', por exemplo, 'tcp://localhost:5678'.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";RemoteDebugPortSupplierDescriptionPtvsd" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Allows debugging a Python process on a remote machine running any OS, if it can be connected to via TCP, and remote debugging has been enabled by using the 'ptvsd' module. Specify the secret, hostname and port to connect to in the 'Qualifier' textbox, e.g. 'tcp://secret@localhost:5678'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Permite a depuração de um processo do Python em um computador remoto executando qualquer SO, caso ele possa ser conectado via TCP e a depuração remota tenha sido habilitada usando o módulo 'ptvsd'. Especifique o segredo, o nome do host e a porta à qual se conectar na caixa de texto 'Qualificador', por exemplo, 'tcp://secret@localhost:5678'.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";RemoteDebugPortSupplierNameDebugPy" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Python remote (debugpy)]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Remoto do Python (debugpy)]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";RemoteDebugPortSupplierNamePtvsd" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Python remote (ptvsd)]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Remoto do Python (ptvsd)]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -5979,10 +6030,13 @@
       </Item>
       <Item ItemId=";ReplCaption" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[{0} Interactive]]></Val>
+          <Val><![CDATA[{0} Interactive {1}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[{0} Interativo]]></Val>
+            <Val><![CDATA[{0} Interativo {1}]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[{0} Interactive]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -7200,6 +7254,24 @@
           <Val><![CDATA[Visual Studio was unable to launch the elevated process.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[O Visual Studio não pôde iniciar o processo elevado.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";UnableToParseInterpreterArgs" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Unable to parse interpreter arguments "{0}". Script will launch without them.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Não é possível analisar os argumentos do interpretador "{0}". O script será iniciado sem eles.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";UnableToParseScriptArgs" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Unable to parse script arguments "{0}". Script will launch without them. ]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Não é possível analisar os argumentos de script "{0}". O script será iniciado sem eles. ]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

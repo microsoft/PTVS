@@ -136,6 +136,35 @@ except AttributeError:
 # Constant used by test_platform to test linux_distribution().
 _UNIXCONFDIR = '/etc'
 
+# Helper for comparing two version number strings.
+# Based on the description of the PHP's version_compare():
+# http://php.net/manual/en/function.version-compare.php
+
+_ver_stages = {
+    # any string not found in this dict, will get 0 assigned
+    'dev': 10,
+    'alpha': 20, 'a': 20,
+    'beta': 30, 'b': 30,
+    'c': 40,
+    'RC': 50, 'rc': 50,
+    # number, will get 100 assigned
+    'pl': 200, 'p': 200,
+}
+
+_component_re = re.compile(r'([0-9]+|[._+-])')
+
+def _comparable_version(version):
+    result = []
+    for v in _component_re.split(version):
+        if v not in '._+-':
+            try:
+                v = int(v, 10)
+                t = 100
+            except ValueError:
+                t = _ver_stages.get(v, 0)
+            result.extend((t, v))
+    return result
+
 ### Platform specific APIs
 
 _libc_search = re.compile(b'(__libc_init)'
@@ -144,9 +173,7 @@ _libc_search = re.compile(b'(__libc_init)'
                           b'|'
                           br'(libc(_\w+)?\.so(?:\.(\d[0-9.]*))?)', re.ASCII)
 
-def libc_ver(executable=sys.executable, lib='', version='',
-
-             chunksize=16384):
+def libc_ver(executable=sys.executable, lib='', version='', chunksize=16384):
 
     """ Tries to determine the libc version that the file executable
         (which defaults to the Python interpreter) is linked against.
@@ -161,6 +188,7 @@ def libc_ver(executable=sys.executable, lib='', version='',
         The file is read and scanned in chunks of chunksize bytes.
 
     """
+    V = _comparable_version
     if hasattr(os.path, 'realpath'):
         # Python 2.2 introduced os.path.realpath(); it is used
         # here to work around problems with Cygwin not being
@@ -169,17 +197,19 @@ def libc_ver(executable=sys.executable, lib='', version='',
     with open(executable, 'rb') as f:
         binary = f.read(chunksize)
         pos = 0
-        while 1:
+        while pos < len(binary):
             if b'libc' in binary or b'GLIBC' in binary:
                 m = _libc_search.search(binary, pos)
             else:
                 m = None
-            if not m:
-                binary = f.read(chunksize)
-                if not binary:
+            if not m or m.end() == len(binary):
+                chunk = f.read(chunksize)
+                if chunk:
+                    binary = binary[max(pos, len(binary) - 1000):] + chunk
+                    pos = 0
+                    continue
+                if not m:
                     break
-                pos = 0
-                continue
             libcinit, glibc, glibcversion, so, threads, soversion = [
                 s.decode('latin1') if s is not None else s
                 for s in m.groups()]
@@ -189,12 +219,12 @@ def libc_ver(executable=sys.executable, lib='', version='',
                 if lib != 'glibc':
                     lib = 'glibc'
                     version = glibcversion
-                elif glibcversion > version:
+                elif V(glibcversion) > V(version):
                     version = glibcversion
             elif so:
                 if lib != 'glibc':
                     lib = 'libc'
-                    if soversion and soversion > version:
+                    if soversion and (not version or V(soversion) > V(version)):
                         version = soversion
                     if threads and version[-len(threads):] != threads:
                         version = version + threads
@@ -213,27 +243,29 @@ def _dist_try_harder(distname, version, id):
     if os.path.exists('/var/adm/inst-log/info'):
         # SuSE Linux stores distribution information in that file
         distname = 'SuSE'
-        for line in open('/var/adm/inst-log/info'):
-            tv = line.split()
-            if len(tv) == 2:
-                tag, value = tv
-            else:
-                continue
-            if tag == 'MIN_DIST_VERSION':
-                version = value.strip()
-            elif tag == 'DIST_IDENT':
-                values = value.split('-')
-                id = values[2]
+        with open('/var/adm/inst-log/info') as f:
+            for line in f:
+                tv = line.split()
+                if len(tv) == 2:
+                    tag, value = tv
+                else:
+                    continue
+                if tag == 'MIN_DIST_VERSION':
+                    version = value.strip()
+                elif tag == 'DIST_IDENT':
+                    values = value.split('-')
+                    id = values[2]
         return distname, version, id
 
     if os.path.exists('/etc/.installed'):
         # Caldera OpenLinux has some infos in that file (thanks to Colin Kong)
-        for line in open('/etc/.installed'):
-            pkg = line.split('-')
-            if len(pkg) >= 2 and pkg[0] == 'OpenLinux':
-                # XXX does Caldera support non Intel platforms ? If yes,
-                #     where can we find the needed id ?
-                return 'OpenLinux', pkg[1], id
+        with open('/etc/.installed') as f:
+            for line in f:
+                pkg = line.split('-')
+                if len(pkg) >= 2 and pkg[0] == 'OpenLinux':
+                    # XXX does Caldera support non Intel platforms ? If yes,
+                    #     where can we find the needed id ?
+                    return 'OpenLinux', pkg[1], id
 
     if os.path.isdir('/usr/lib/setup'):
         # Check for slackware version tag file (thanks to Greg Andruk)
@@ -388,6 +420,7 @@ def popen(cmd, mode='r', bufsize=-1):
     import warnings
     warnings.warn('use os.popen instead', DeprecationWarning, stacklevel=2)
     return os.popen(cmd, mode, bufsize)
+
 
 def _norm_version(version, build=''):
 

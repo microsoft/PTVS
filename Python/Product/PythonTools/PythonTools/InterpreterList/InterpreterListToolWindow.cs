@@ -209,6 +209,13 @@ namespace Microsoft.PythonTools.InterpreterList {
                 try {
                     Directory.CreateDirectory(path);
                     File.WriteAllText(PathUtils.GetAbsoluteFilePath(path, "readme.txt"), Strings.ReplScriptPathReadmeContents);
+                } catch (IOException) {
+                    // CreateDirectory may throw FileNotFoundException
+                    // instead of UnauthorizedAccessException (https://github.com/dotnet/corefx/issues/26561),
+                    // so handle both.
+                    return false;
+                } catch (UnauthorizedAccessException) {
+                    return false;
                 } catch (Exception ex) when (!ex.IsCriticalException()) {
                     TaskDialog.ForException(_site, ex, issueTrackerUrl: Strings.IssueTrackerUrl).ShowModal();
                     return false;

@@ -43,62 +43,62 @@ namespace ReplWindowUITestsRunner {
 
         #region Basic tests
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
         public void RegressionImportSysBackspace() {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.RegressionImportSysBackspace), Interpreter);
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
         public void RegressionImportMultipleModules() {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.RegressionImportMultipleModules), Interpreter);
         }
 
         //[Ignore] // https://github.com/Microsoft/PTVS/issues/2762
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
         public void SyntaxHighlightingRaiseException() {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.SyntaxHighlightingRaiseException), Interpreter);
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
         public void PrintWithParens() {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.PrintWithParens), Interpreter);
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
         public void UndeletableIndent() {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.UndeletableIndent), Interpreter);
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
         public void InlineImage() {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.InlineImage), Interpreter);
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
         public void ImportCompletions() {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.ImportCompletions), Interpreter);
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
         public void Comments() {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.Comments), Interpreter);
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
         public void NoSnippets() {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.NoSnippets), Interpreter);
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
         public void TestPydocRedirected() {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.TestPydocRedirected), Interpreter);

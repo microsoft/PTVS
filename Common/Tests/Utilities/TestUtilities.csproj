@@ -129,6 +129,7 @@
     <Compile Include="Mocks\Undo\NullMergeUndoTransactionPolicy.cs" />
     <Compile Include="Mocks\TextVersionWorkaround.cs" />
     <Compile Include="Mocks\KeyWeakReferenceComparer.cs" />
+    <Compile Include="UnitTestPriority.cs" />
     <Compile Include="ProcessScope.cs" />
     <Compile Include="SessionHolder.cs" />
     <Compile Include="SharedProject\SymbolicLinkItem.cs" />

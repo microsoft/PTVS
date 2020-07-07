@@ -136,8 +136,8 @@
     <Reference Include="Microsoft.VisualStudio.Debugger.Interop.11.0" />
     <Reference Include="Microsoft.VisualStudio.Debugger.Interop.14.0" />
     <Reference Include="Microsoft.VisualStudio.Debugger.InteropA, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-    <Reference Include="Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces, Version=1.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
-    <Reference Include="Microsoft.VisualStudio.Shared.VSCodeDebugProtocol, Version=15.8.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces, Version=1.4.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.VisualStudio.Shared.VSCodeDebugProtocol, Version=16.5.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Designer.Interfaces, Version=1.0.5000.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
@@ -210,6 +210,7 @@
     <Reference Include="System.Messaging" />
     <Reference Include="System.Net" />
     <Reference Include="System.Numerics" />
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Web" />
     <Reference Include="System.Web.ApplicationServices" />
     <Reference Include="System.Web.Extensions" />
@@ -283,11 +284,12 @@
     <Compile Include="PythonTools\Editor\Formatting\PythonFormatCommandHandler.cs" />
     <Compile Include="PythonTools\Editor\Indent\SmartIndent.cs" />
     <Compile Include="PythonTools\Debugger\CustomDebugAdapterProtocolExtension.cs" />
-    <Compile Include="PythonTools\Debugger\DebugAdapterLauncher.cs" />
-    <Compile Include="PythonTools\Debugger\DebugAdapterProcess.cs" />
-    <Compile Include="PythonTools\Debugger\DebugAdapterProcessStream.cs" />
-    <Compile Include="PythonTools\Debugger\DebugAdapterRemoteProcess.cs" />
-    <Compile Include="PythonTools\Debugger\PtvsdVersionHelper.cs" />
+    <Compile Include="PythonTools\Debugger\DebugAdapter\DebugAdapterLauncher.cs" />
+    <Compile Include="PythonTools\Debugger\DebugAdapter\DebugAdapterProcess.cs" />
+    <Compile Include="PythonTools\Debugger\DebugAdapter\DebugAdapterRemoteProcess.cs" />
+    <Compile Include="PythonTools\Debugger\DebugAdapter\DebugAdapterRemoteProcessStream.cs" />
+    <Compile Include="PythonTools\Debugger\DebugAdapter\DebugInfo.cs" />
+    <Compile Include="PythonTools\Debugger\DebugPyVersionHelper.cs" />
     <Compile Include="PythonTools\Commands\CurrentEnvironmentListCommand.cs" />
     <Compile Include="PythonTools\Commands\CurrentEnvironmentCommand.cs" />
     <Compile Include="PythonTools\Commands\SwitchToEnvironmentCommand.cs" />
@@ -371,6 +373,7 @@
     <Compile Include="PythonTools\Project\ConfigureTestFrameworkInfoBar.cs" />
     <Compile Include="PythonTools\Project\PythonInfoBar.cs" />
     <Compile Include="PythonTools\Project\PackageInstallInfoBar.cs" />
+    <Compile Include="PythonTools\Project\PythonNotSupportedInfoBar.cs" />
     <Compile Include="PythonTools\Project\PythonTestPropertyPage.cs" />
     <Compile Include="PythonTools\Project\PythonTestPropertyPageView.xaml.cs">
       <DependentUpon>PythonTestPropertyPageView.xaml</DependentUpon>

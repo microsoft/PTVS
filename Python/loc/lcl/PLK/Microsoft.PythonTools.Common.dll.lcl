@@ -995,7 +995,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Scraping {0}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Wycinanie {0}]]></Val>
+            <Val><![CDATA[Wydobywanie — {0}]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -1004,7 +1004,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Scraping standard library]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Wycinanie biblioteki standardowej]]></Val>
+            <Val><![CDATA[Wydobywanie — biblioteka standardowa]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -3064,15 +3064,6 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";DiscoveryConfigurationMessage" ItemType="0" PsrId="211" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Go to https://aka.ms/VSTestExplorerPython for more details on test discovery configuration.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Przejdź na stronę https://aka.ms/VSTestExplorerPython, aby uzyskać więcej informacji na temat konfiguracji odnajdywania testów.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
       <Item ItemId=";DocumentationClassificationType" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Python Documentation]]></Val>
@@ -3084,10 +3075,13 @@
       </Item>
       <Item ItemId=";DontShowAgain" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Do not show this warning again.]]></Val>
+          <Val><![CDATA[Don't show this warning again.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Nie pokazuj ponownie tego ostrzeżenia.]]></Val>
+            <Val><![CDATA[Nie pokazuj tego ostrzeżenia ponownie.]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Do not show this warning again.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -3442,15 +3436,6 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";ErrorTestContainerNotFound" ItemType="0" PsrId="211" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Matching test container source was not found under folder {0} for test {1}.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Nie znaleziono pasującego źródła kontenera testu w folderze {0} dla testu {1}.]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
       <Item ItemId=";ExecuteInReplCommand_ExecuteFile" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Execute File in P&ython Interactive]]></Val>
@@ -3590,7 +3575,7 @@
         <Str Cat="Text">
           <Val><![CDATA[When the selection contains a return statement, all code paths must return.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Jeśli wybór zawiera instrukcję powrotu, wszystkie ścieżki kodu muszą powracać.]]></Val>
+            <Val><![CDATA[Jeśli wybór zawiera instrukcję return, wszystkie ścieżki w kodzie muszą coś zwracać.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -4453,19 +4438,16 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";InstalledPtvsdOutdatedMessage" ItemType="0" PsrId="211" Leaf="true">
+      <Item ItemId=";InstalledDebugPyOutdatedMessage" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[You have an old version of ptvsd installed in the current environment (version {0}), but version {1} is included with Visual Studio. Please upgrade or uninstall ptvsd to get the latest functionality.]]></Val>
+          <Val><![CDATA[You have an old version of DebugPy installed in the current environment (version {0}), but version {1} is included with Visual Studio. Please upgrade or uninstall DebugPy to get the latest functionality.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Masz w bieżącym środowisku zainstalowaną starą wersję modułu ptvsd (wersja {0}), ale wersja {1} jest dołączona do programu Visual Studio. Uaktualnij lub odinstaluj moduł ptvsd, aby uzyskać najnowsze funkcje.]]></Val>
+            <Val><![CDATA[Masz w bieżącym środowisku zainstalowaną starą wersję modułu DebugPy (wersja {0}), ale wersja {1} jest dołączona do programu Visual Studio. Uaktualnij lub odinstaluj moduł DebugPy, aby uzyskać najnowsze funkcje.]]></Val>
           </Tgt>
-          <Prev Cat="Text">
-            <Val><![CDATA[You have an old version of ptvsd installed in the current environment (version {0}), but version {1} is included with Visual Studio. Please upgrade or uninstall ptvsd to get the latest functionality]]></Val>
-          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";InstalledPtvsdOutdatedTitle" ItemType="0" PsrId="211" Leaf="true">
+      <Item ItemId=";InstalledDebugPyOutdatedTitle" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Debugger package is outdated]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -5171,7 +5153,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Pytest is enabled in the {0} {1}, but it is not installed in the active environment.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Struktura pytest jest włączona w elemencie {0} {1}, ale nie jest zainstalowana w aktywnym środowisku.]]></Val>
+            <Val><![CDATA[Struktura pytest jest włączona w elemencie {1} o nazwie {0}, ale nie jest zainstalowana w aktywnym środowisku.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -5207,7 +5189,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Results for pytest not found {0}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[ Nie znaleziono wyników dla testu pytest {0}]]></Val>
+            <Val><![CDATA[ Nie znaleziono wyników dla testu pytest: {0}]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -5401,6 +5383,15 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";PythonInterpreterPathNullOrEmpty" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Unable to start debugging because the Python interpreter path is null or empty]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Nie można rozpocząć debugowania, ponieważ ścieżka interpretera języka Python ma wartość null lub jest pusta]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";PythonMenuLabel" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[&Python]]></Val>
@@ -5459,7 +5450,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Publish]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Publikuj]]></Val>
+            <Val><![CDATA[Opublikuj]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -5563,6 +5554,36 @@
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[_Katalog główny:]]></Val>
           </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";PythonVersionNotSupportMoreInfo" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[More info]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Więcej informacji]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";PythonVersionNotSupportedDontShowMessageAgain" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Don't show this message again]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Nie pokazuj ponownie tego komunikatu]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";PythonVersionNotSupportedInfoBarText" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[You're using Python {0}. Some new features might not work as expected until Visual Studio officially supports this version.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Używasz języka Python {0}. Niektóre nowe funkcje mogą nie działać zgodnie z oczekiwaniami, dopóki program Visual Studio nie będzie oficjalnie obsługiwać tej wersji.]]></Val>
+          </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[You are using Python {0} and some features might not work because Visual Studio doesn't support it yet.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -5755,11 +5776,38 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";RemoteDebugPortSupplierDescription" ItemType="0" PsrId="211" Leaf="true">
+      <Item ItemId=";RemoteDebugPortSupplierDescriptionDebugPy" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Allows debugging a Python process on a remote machine running any OS, if it can be connected to via TCP, and remote debugging has been enabled by using the 'ptvsd' module. Specify the secret, hostname and port to connect to in the 'Qualifier' textbox, e.g. 'tcp://secret@localhost:5678'. ]]></Val>
+          <Val><![CDATA[Allows debugging a Python process on a remote machine running any OS, if it can be connected to via TCP, and remote debugging has been enabled by using the 'debugpy' module. Specify the hostname and port to connect to in the 'Qualifier' textbox, e.g. 'tcp://localhost:5678'.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Umożliwia debugowanie procesu języka Python na zdalnej maszynie z dowolnym systemem operacyjnym, jeśli można nawiązać połączenie za pośrednictwem protokołu TCP i włączono zdalne debugowanie przy użyciu modułu „ptvsd”. Określ wpis tajny, nazwę hosta i port, aby nawiązać połączenie z polem tekstowym „Qualifier”, np. „tcp://secret@localhost:5678”. ]]></Val>
+            <Val><![CDATA[Umożliwia debugowanie procesu języka Python na zdalnej maszynie z dowolnym systemem operacyjnym, jeśli można nawiązać połączenie za pośrednictwem protokołu TCP i włączono zdalne debugowanie przy użyciu modułu „debugpy”. Określ nazwę hosta i port, aby nawiązać połączenie z polem tekstowym „Qualifier”, np. „tcp://localhost:5678”. ]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";RemoteDebugPortSupplierDescriptionPtvsd" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Allows debugging a Python process on a remote machine running any OS, if it can be connected to via TCP, and remote debugging has been enabled by using the 'ptvsd' module. Specify the secret, hostname and port to connect to in the 'Qualifier' textbox, e.g. 'tcp://secret@localhost:5678'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Umożliwia debugowanie procesu języka Python na zdalnej maszynie z dowolnym systemem operacyjnym, jeśli można nawiązać połączenie za pośrednictwem protokołu TCP i włączono zdalne debugowanie przy użyciu modułu „ptvsd”. Określ wpis tajny, nazwę hosta i port, aby nawiązać połączenie z polem tekstowym „Qualifier”, np. „tcp://secret@localhost:5678”.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";RemoteDebugPortSupplierNameDebugPy" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Python remote (debugpy)]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Python — zdalne (debugpy)]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";RemoteDebugPortSupplierNamePtvsd" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Python remote (ptvsd)]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Python — zdalne (ptvsd)]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -5982,10 +6030,13 @@
       </Item>
       <Item ItemId=";ReplCaption" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[{0} Interactive]]></Val>
+          <Val><![CDATA[{0} Interactive {1}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[{0} Interactive]]></Val>
+            <Val><![CDATA[{0} interaktywne {1}]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[{0} Interactive]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -7203,6 +7254,24 @@
           <Val><![CDATA[Visual Studio was unable to launch the elevated process.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[Program Visual Studio nie mógł uruchomić procesu o podwyższonym poziomie.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";UnableToParseInterpreterArgs" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Unable to parse interpreter arguments "{0}". Script will launch without them.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Nie można przeanalizować argumentów interpretera „{0}”. Skrypt zostanie uruchomiony bez nich.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";UnableToParseScriptArgs" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Unable to parse script arguments "{0}". Script will launch without them. ]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Nie można przeanalizować argumentów skryptu „{0}”. Skrypt zostanie uruchomiony bez nich.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

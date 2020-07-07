@@ -995,7 +995,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Scraping {0}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[{0} をスクラップしています]]></Val>
+            <Val><![CDATA[{0} をスクレイピングしています]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -1004,7 +1004,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Scraping standard library]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[標準ライブラリをスクラップしています]]></Val>
+            <Val><![CDATA[標準ライブラリをスクレイピングしています]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -2219,7 +2219,7 @@
         <Str Cat="Text">
           <Val><![CDATA[{0} Interactive Window]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[{0} Interactive ウィンドウ]]></Val>
+            <Val><![CDATA[{0} インタラクティブ ウィンドウ]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -2609,7 +2609,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Python debug interactive window. Type $help for a list of commands.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Python デバッグの対話型ウィンドウ。コマンドの一覧については、$help と入力してください。]]></Val>
+            <Val><![CDATA[Python デバッグのインタラクティブ ウィンドウ。コマンドの一覧については、$help と入力してください。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -3064,15 +3064,6 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";DiscoveryConfigurationMessage" ItemType="0" PsrId="211" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Go to https://aka.ms/VSTestExplorerPython for more details on test discovery configuration.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[テスト検出構成の詳細については、https://aka.ms/VSTestExplorerPython をご覧ください。]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
       <Item ItemId=";DocumentationClassificationType" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Python Documentation]]></Val>
@@ -3084,10 +3075,13 @@
       </Item>
       <Item ItemId=";DontShowAgain" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Do not show this warning again.]]></Val>
+          <Val><![CDATA[Don't show this warning again.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[今後、この警告メッセージを表示しない。]]></Val>
+            <Val><![CDATA[この警告を今後表示しない。]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Do not show this warning again.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -3374,7 +3368,7 @@
         <Str Cat="Text">
           <Val><![CDATA[An error occurred opening this interactive window.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[この対話型ウィンドウを開いているときにエラーが発生しました。]]></Val>
+            <Val><![CDATA[このインタラクティブ ウィンドウを開いているときにエラーが発生しました。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -3438,15 +3432,6 @@
           <Val><![CDATA[Testcase not found for test result: {0}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[テスト結果のテスト ケースが見つかりません: {0}]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";ErrorTestContainerNotFound" ItemType="0" PsrId="211" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Matching test container source was not found under folder {0} for test {1}.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[テスト {1} に一致するテスト コンテナーのソースがフォルダー {0} に見つかりませんでした。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -3725,7 +3710,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Failed to collect files to publish.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[発行するファイルを収集できませんでした。]]></Val>
+            <Val><![CDATA[公開するファイルを収集できませんでした。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -3734,7 +3719,7 @@
         <Str Cat="Text">
           <Val><![CDATA[An error occurred while collecting files to publish. Review the details below and retry or cancel the operation.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[発行するファイルの収集中にエラーが発生しました。下の詳細を確認し、操作を再試行するか取り消してください。]]></Val>
+            <Val><![CDATA[公開するファイルの収集中にエラーが発生しました。下の詳細を確認し、操作を再試行するか取り消してください。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -4453,19 +4438,16 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";InstalledPtvsdOutdatedMessage" ItemType="0" PsrId="211" Leaf="true">
+      <Item ItemId=";InstalledDebugPyOutdatedMessage" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[You have an old version of ptvsd installed in the current environment (version {0}), but version {1} is included with Visual Studio. Please upgrade or uninstall ptvsd to get the latest functionality.]]></Val>
+          <Val><![CDATA[You have an old version of DebugPy installed in the current environment (version {0}), but version {1} is included with Visual Studio. Please upgrade or uninstall DebugPy to get the latest functionality.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[現在の環境には前のバージョンの ptvsd (バージョン {0}) がインストールされていますが、Visual Studio にはバージョン {1} が含まれています。ptvsd をアップグレードするかアンインストールして、最新機能を入手してください。]]></Val>
+            <Val><![CDATA[現在の環境には前のバージョンの DebugPy (バージョン {0}) がインストールされていますが、Visual Studio にはバージョン {1} が含まれています。DebugPy をアップグレードするかアンインストールして、最新機能を入手してください。]]></Val>
           </Tgt>
-          <Prev Cat="Text">
-            <Val><![CDATA[You have an old version of ptvsd installed in the current environment (version {0}), but version {1} is included with Visual Studio. Please upgrade or uninstall ptvsd to get the latest functionality]]></Val>
-          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";InstalledPtvsdOutdatedTitle" ItemType="0" PsrId="211" Leaf="true">
+      <Item ItemId=";InstalledDebugPyOutdatedTitle" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Debugger package is outdated]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
@@ -5090,7 +5072,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Publishing folder location ({0}): ]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[フォルダーの場所 ({0}) を発行しています: ]]></Val>
+            <Val><![CDATA[フォルダーの場所 ({0}) を公開しています: ]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -5117,7 +5099,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Publishing Python projects has recently changed.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Python プロジェクトの発行は、最近変更されました。]]></Val>
+            <Val><![CDATA[Python プロジェクトの公開は、最近変更されました。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -5126,7 +5108,7 @@
         <Str Cat="Text">
           <Val><![CDATA[These changes will allow you to deploy more reliably and quickly, but first you may need to configure your project or deployment target.]D;]A;]D;]A;When you publish, we will no longer automatically generate a web.config file. You can add one using Add New Item and customize as necessary for your site.]D;]A;]D;]A;There are no restrictions on the version of Python you may be using when you deploy, however, we will no longer include virtual environments or the Python runtime when you deploy. Only libraries that are directly included in your project will be published.]D;]A;]D;]A;Please refer to <a href="https://aka.ms/pythononappservice">aka.ms/PythonOnAppService</a> for information about configuring and publishing to Azure App Service.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[これらの変更により、デプロイの信頼性と速度が向上しますが、最初にプロジェクトまたはデプロイ ターゲットを構成する必要のある場合があります。]D;]A;]D;]A;発行すると、web.config ファイルは自動的には生成されなくなります。このファイルは、[新しい項目の追加]5D; を使って追加し、サイトの必要に合わせてカスタマイズすることができます。]D;]A;]D;]A;デプロイ時に使用できる Python のバージョンに制限はありませんが、デプロイ時に仮想環境または Python ランタイムが組み込まれることはなくなります。プロジェクトに直接組み込んだライブラリだけが発行されます。]D;]A;]D;]A;Azure App Service の構成と発行に関する情報は、<a href="https://aka.ms/pythononappservice">aka.ms/PythonOnAppService</a> をご覧ください。]]></Val>
+            <Val><![CDATA[これらの変更により、デプロイの信頼性と速度が向上しますが、最初にプロジェクトまたはデプロイ ターゲットを構成する必要のある場合があります。]D;]A;]D;]A;公開すると、web.config ファイルは自動的には生成されなくなります。このファイルは、[新しい項目の追加]5D; を使って追加し、サイトの必要に合わせてカスタマイズすることができます。]D;]A;]D;]A;デプロイ時に使用できる Python のバージョンに制限はありませんが、デプロイ時に仮想環境または Python ランタイムが組み込まれることはなくなります。プロジェクトに直接組み込んだライブラリだけが公開されます。]D;]A;]D;]A;Azure App Service の構成と公開に関する情報は、<a href="https://aka.ms/pythononappservice">aka.ms/PythonOnAppService</a> をご覧ください。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -5171,7 +5153,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Pytest is enabled in the {0} {1}, but it is not installed in the active environment.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[pytest は {0} {1} で有効になっていますが、アクティブな環境にインストールされていません。]]></Val>
+            <Val><![CDATA[pytest は {0} {1}で有効になっていますが、アクティブな環境にインストールされていません。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -5401,6 +5383,15 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";PythonInterpreterPathNullOrEmpty" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Unable to start debugging because the Python interpreter path is null or empty]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Python インタープリター パスが null または空であるため、デバッグを開始できません]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";PythonMenuLabel" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[&Python]]></Val>
@@ -5563,6 +5554,36 @@
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[ルート ディレクトリ(_D):]]></Val>
           </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";PythonVersionNotSupportMoreInfo" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[More info]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[詳細情報]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";PythonVersionNotSupportedDontShowMessageAgain" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Don't show this message again]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[このメッセージを今後表示しない]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";PythonVersionNotSupportedInfoBarText" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[You're using Python {0}. Some new features might not work as expected until Visual Studio officially supports this version.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Python {0} を使用しています。いくつかの新機能は Visual Studio が正式にこのバージョンをサポートするまで、期待どおりに動作しない可能性があります。]]></Val>
+          </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[You are using Python {0} and some features might not work because Visual Studio doesn't support it yet.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -5755,11 +5776,38 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";RemoteDebugPortSupplierDescription" ItemType="0" PsrId="211" Leaf="true">
+      <Item ItemId=";RemoteDebugPortSupplierDescriptionDebugPy" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Allows debugging a Python process on a remote machine running any OS, if it can be connected to via TCP, and remote debugging has been enabled by using the 'ptvsd' module. Specify the secret, hostname and port to connect to in the 'Qualifier' textbox, e.g. 'tcp://secret@localhost:5678'. ]]></Val>
+          <Val><![CDATA[Allows debugging a Python process on a remote machine running any OS, if it can be connected to via TCP, and remote debugging has been enabled by using the 'debugpy' module. Specify the hostname and port to connect to in the 'Qualifier' textbox, e.g. 'tcp://localhost:5678'.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Python プロセスに TCP 経由で接続することができ、'ptvsd' モジュールを使ってリモート デバッグを有効にしてある場合に、任意の OS を実行しているリモート コンピューター上での Python プロセスのデバッグを可能にします。[修飾子]5D; テキスト ボックスに、接続するシークレット、ホスト名、ポートを指定します (例: 'tcp://secret@localhost:5678')。 ]]></Val>
+            <Val><![CDATA[Python プロセスに TCP 経由で接続することができ、'debugpy' モジュールを使ってリモート デバッグを有効にしてある場合に、任意の OS を実行しているリモート マシン上での Python プロセスのデバッグを可能にします。[修飾子]5D; テキスト ボックスに、接続するホスト名とポートを指定します (例: 'tcp://localhost:5678')。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";RemoteDebugPortSupplierDescriptionPtvsd" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Allows debugging a Python process on a remote machine running any OS, if it can be connected to via TCP, and remote debugging has been enabled by using the 'ptvsd' module. Specify the secret, hostname and port to connect to in the 'Qualifier' textbox, e.g. 'tcp://secret@localhost:5678'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Python プロセスに TCP 経由で接続することができ、'ptvsd' モジュールを使ってリモート デバッグを有効にしてある場合に、任意の OS を実行しているリモート マシン上での Python プロセスのデバッグを可能にします。[修飾子]5D; テキスト ボックスに、接続するシークレット、ホスト名、ポートを指定します (例: 'tcp://secret@localhost:5678')。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";RemoteDebugPortSupplierNameDebugPy" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Python remote (debugpy)]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Python リモート (debugpy)]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";RemoteDebugPortSupplierNamePtvsd" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Python remote (ptvsd)]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Python リモート (ptvsd)]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -5982,10 +6030,13 @@
       </Item>
       <Item ItemId=";ReplCaption" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[{0} Interactive]]></Val>
+          <Val><![CDATA[{0} Interactive {1}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[{0} Interactive]]></Val>
+            <Val><![CDATA[{0} 対話型 {1}]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[{0} Interactive]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -6011,7 +6062,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Current interactive window is disconnected.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[現在の対話型ウィンドウは切断されています。]]></Val>
+            <Val><![CDATA[現在のインタラクティブ ウィンドウは切断されています。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -6020,7 +6071,7 @@
         <Str Cat="Text">
           <Val><![CDATA[The interactive window has become disconnected from the Python process. Please reset the window.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[対話型ウィンドウが Python プロセスから切断されました。ウィンドウをリセットしてください。]]></Val>
+            <Val><![CDATA[インタラクティブ ウィンドウが Python プロセスから切断されました。ウィンドウをリセットしてください。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -6029,7 +6080,7 @@
         <Str Cat="Text">
           <Val><![CDATA[The interactive window has encountered an issue. Please reset the window]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[対話型ウィンドウで問題が発生しました。ウィンドウをリセットしてください]]></Val>
+            <Val><![CDATA[インタラクティブ ウィンドウで問題が発生しました。ウィンドウをリセットしてください]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -6047,7 +6098,7 @@
         <Str Cat="Text">
           <Val><![CDATA[The interactive window could not be started because the associated Python environment could not be found.]D;]A;]D;]A;If this version of Python has recently been uninstalled, you can close this window.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[関連付けられた Python 環境が見つからなかったため、対話型ウィンドウを開始できませんでした。]D;]A;]D;]A;このバージョンの Python を最近アンインストールした場合は、このウィンドウを閉じることができます。]]></Val>
+            <Val><![CDATA[関連付けられた Python 環境が見つからなかったため、インタラクティブ ウィンドウを開始できませんでした。]D;]A;]D;]A;このバージョンの Python を最近アンインストールした場合は、このウィンドウを閉じることができます。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -6065,7 +6116,7 @@
         <Str Cat="Text">
           <Val><![CDATA[&#x1b;[94;21m{0} interactive window &#x1b;[m[PTVS {1}-{2}]5D;]D;]A;Type $help for a list of commands.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[&#x1b;[94;21m{0} 対話型ウィンドウ &#x1b;[m[PTVS {1}-{2}]5D;]D;]A;「$help」を入力すると、コマンドの一覧が表示されます。]]></Val>
+            <Val><![CDATA[&#x1b;[94;21m{0} インタラクティブ ウィンドウ &#x1b;[m[PTVS {1}-{2}]5D;]D;]A;「$help」を入力すると、コマンドの一覧が表示されます。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -6092,7 +6143,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Cannot change module because the interactive window needs to be reset.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[対話型ウィンドウをリセットする必要があるため、モジュールを変更できません。]]></Val>
+            <Val><![CDATA[インタラクティブ ウィンドウをリセットする必要があるため、モジュールを変更できません。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -6110,7 +6161,7 @@
         <Str Cat="Text">
           <Val><![CDATA[The interactive window has not yet started.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[対話型ウィンドウがまだ開始されていません。]]></Val>
+            <Val><![CDATA[インタラクティブ ウィンドウがまだ開始されていません。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -6119,7 +6170,7 @@
         <Str Cat="Text">
           <Val><![CDATA[An error occurred opening the interactive window.]D;]A;]D;]A;{0}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[対話型ウィンドウを開いている時にエラーが発生しました。]D;]A;]D;]A;{0}]]></Val>
+            <Val><![CDATA[インタラクティブ ウィンドウを開いている時にエラーが発生しました。]D;]A;]D;]A;{0}]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -6128,7 +6179,7 @@
         <Str Cat="Text">
           <Val><![CDATA[The associated project "{0}" has changed its configuration. These changes will not be reflected until you reset this interactive window.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[関連付けられたプロジェクト "{0}" の構成が変更されました。これらの変更は、この対話型ウィンドウをリセットするまでは、反映されません。]]></Val>
+            <Val><![CDATA[関連付けられたプロジェクト "{0}" の構成が変更されました。これらの変更は、このインタラクティブ ウィンドウをリセットするまでは、反映されません。]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[The associated project '{0}' has changed its configuration. These changes will not be reflected until you reset this interactive window.]]></Val>
@@ -6224,7 +6275,7 @@
         <Str Cat="Text">
           <Val><![CDATA[This directory can contain a set of initialization scripts (Python files) for the Python interactive window in ]D;]A;Visual Studio. Feel free to add your own files to import modules, define functions, or whatever you like.]D;]A;]D;]A;Whenever the interactive window for this environment is reset, each .py file in this directory will be ]D;]A;executed in alphabetical order.]D;]A;]D;]A;Visit http://aka.ms/ptvsdocs for more information about what interactive window functionality can be ]D;]A;modified from these scripts.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[このディレクトリには、Visual Studio の Python 対話型ウィンドウ用の初期化スクリプト (Python ファイル) の]D;]A;セットを含めることができます。独自のファイルを自由に追加して、モジュールのインポートや、関数の定義など、必要な処理を行うことができます。]D;]A;]D;]A;この環境の対話型ウィンドウをリセットすると、このディレクトリにある各 .py ファイルが]D;]A;英字順に実行されます。]D;]A;]D;]A;これらのスクリプトから変更できる対話型ウィンドウの機能について詳しくは、http://aka.ms/ptvsdocs を]D;]A;ご覧ください。]]></Val>
+            <Val><![CDATA[このディレクトリには、Visual Studio の Python インタラクティブ ウィンドウ用の初期化スクリプト (Python ファイル) の]D;]A;セットを含めることができます。独自のファイルを自由に追加して、モジュールのインポートや、関数の定義など、必要な処理を行うことができます。]D;]A;]D;]A;この環境のインタラクティブ ウィンドウをリセットすると、このディレクトリにある各 .py ファイルが]D;]A;英字順に実行されます。]D;]A;]D;]A;これらのスクリプトから変更できるインタラクティブ ウィンドウの機能について詳しくは、http://aka.ms/ptvsdocs を]D;]A;ご覧ください。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -6278,7 +6329,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Congratulations, you opened over 2 billion interactive windows this session! Now you need to restart Visual Studio to open any more.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[このセッションで開いた対話型ウィンドウの数が 20 億個を超えました。これ以上開くには、Visual Studio を再起動する必要があります。]]></Val>
+            <Val><![CDATA[このセッションで開いたインタラクティブ ウィンドウの数が 20 億個を超えました。これ以上開くには、Visual Studio を再起動する必要があります。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -6296,7 +6347,7 @@
         <Str Cat="Text">
           <Val><![CDATA[The associated workspace "{0}" has changed its configuration. These changes will not be reflected until you reset this interactive window.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[関連付けられたワークスペース "{0}" の構成が変更されました。これらの変更は、この対話型ウィンドウをリセットするまでは、反映されません。]]></Val>
+            <Val><![CDATA[関連付けられたワークスペース "{0}" の構成が変更されました。これらの変更は、このインタラクティブ ウィンドウをリセットするまでは、反映されません。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -7203,6 +7254,24 @@
           <Val><![CDATA[Visual Studio was unable to launch the elevated process.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[Visual Studio が、昇格されたプロセスを起動できませんでした。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";UnableToParseInterpreterArgs" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Unable to parse interpreter arguments "{0}". Script will launch without them.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[インタープリターの引数 "{0}" を解析できません。スクリプトが引数なしで起動します。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";UnableToParseScriptArgs" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Unable to parse script arguments "{0}". Script will launch without them. ]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[スクリプトの引数 "{0}" を解析できません。スクリプトが引数なしで起動します。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

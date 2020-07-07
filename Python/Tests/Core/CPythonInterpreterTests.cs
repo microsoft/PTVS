@@ -32,7 +32,7 @@ namespace PythonToolsTests {
             AssertListener.Initialize();
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P0)]
         public void FactoryProvider() {
             var provider = new CPythonInterpreterFactoryProvider(null, false);
             var factories = provider.GetInterpreterFactories().ToArray();
@@ -57,7 +57,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void DiscoverRegistryRace() {
             // https://github.com/Microsoft/PTVS/issues/558
 
@@ -71,7 +71,7 @@ namespace PythonToolsTests {
             }
         }
 
-        //[TestMethod, Priority(TestExtensions.P2_FAILING_UNIT_TEST)]
+        //[TestMethod, Priority(UnitTestPriority.P2_FAILING)]
         //public void ImportFromSearchPath() {
         //    var analyzer = new PythonAnalysis(PythonLanguageVersion.V35);
         //    analyzer.AddModule("test-module", "from test_package import *");
@@ -84,7 +84,7 @@ namespace PythonToolsTests {
         //    AssertUtil.CheckCollection(analyzer.GetAllNames(), new[] { "package_method", "package_method_two" }, new[] { "test_package" });
         //}
 
-        //[TestMethod, Priority(2)]
+        //[TestMethod, Priority(UnitTestPriority.P2)]
         //public void ImportPydFromSearchPath() {
         //    var analyzer = new PythonAnalysis("Global|PythonCore|2.7-32");
 
@@ -98,14 +98,13 @@ namespace PythonToolsTests {
         //    AssertUtil.CheckCollection(analyzer.GetAllNames(), new[] { "system" }, new[] { "spam" });
         //}
 
-        //[TestMethod, Priority(TestExtensions.P2_FAILING_UNIT_TEST)] // https://github.com/Microsoft/PTVS/issues/4226
+        //[TestMethod, Priority(UnitTestPriority.P2_FAILING)] // https://github.com/Microsoft/PTVS/issues/4226
         //public void ImportFromZipFile() {
         //    var analyzer = new PythonAnalysis(PythonLanguageVersion.V35);
         //    analyzer.AddModule("test-module", "from test_package import *; from test_package.sub_package import *");
         //    analyzer.WaitForAnalysis();
         //    AssertUtil.CheckCollection(analyzer.GetAllNames(), null,
         //        new[] { "package_method", "package_method_two", "test_package", "subpackage_method", "subpackage_method_two" });
-
         //    analyzer.SetSearchPaths(TestData.GetPath("TestData\\AddImport.zip"));
         //    analyzer.ReanalyzeAll();
 

@@ -118,6 +118,10 @@
       <Project>{d092d54e-ff29-4d32-9aee-4ef704c92f67}</Project>
       <Name>TestUtilities</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\Product\Common\Common.csproj">
+      <Project>{b3db0521-d9e3-4f48-9e2e-e5ecae886049}</Project>
+      <Name>Common</Name>
+    </ProjectReference>
     <ProjectReference Include="..\TestRunnerInterop\TestRunnerInterop.csproj">
       <Project>{3e8c485b-905a-4dbc-b059-161ccb1ad591}</Project>
       <Name>TestRunnerInterop</Name>

@@ -39,62 +39,62 @@ namespace DjangoUITestsRunner {
         public static void ClassCleanup() => VsTestContext.Instance.Dispose();
         #endregion
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void NewDjangoProject() {
             _vs.RunTest(nameof(DjangoUITests.DjangoProjectUITests.NewDjangoProject));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void NewDjangoProjectSafeProjectName() {
             _vs.RunTest(nameof(DjangoUITests.DjangoProjectUITests.NewDjangoProjectSafeProjectName));
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
         public void DjangoCollectStaticFilesCommand() {
             _vs.RunTest(nameof(DjangoUITests.DjangoProjectUITests.DjangoCollectStaticFilesCommand));
         }
 
-        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
+        [TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void DjangoShellCommand() {
             _vs.RunTest(nameof(DjangoUITests.DjangoProjectUITests.DjangoShellCommand));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void DjangoCommandsNonDjangoApp() {
             _vs.RunTest(nameof(DjangoUITests.DjangoProjectUITests.DjangoCommandsNonDjangoApp));
         }
 
-        [TestMethod, Priority(VsTestContext.P2_FAILING_UI_TEST)]
+        [TestMethod, Priority(UITestPriority.P2_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void StartNewApp() {
             _vs.RunTest(nameof(DjangoUITests.DjangoProjectUITests.StartNewApp));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void StartNewAppDuplicateName() {
             _vs.RunTest(nameof(DjangoUITests.DjangoProjectUITests.StartNewAppDuplicateName));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void StartNewAppSameAsProjectName() {
             _vs.RunTest(nameof(DjangoUITests.DjangoProjectUITests.StartNewAppSameAsProjectName));
         }
 
         [Ignore] // https://devdiv.visualstudio.com/DevDiv/_workitems?id=433488
-        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
+        [TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void DebugProjectProperties() {
             _vs.RunTest(nameof(DjangoUITests.DjangoProjectUITests.DebugProjectProperties));
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
         public void DjangoProjectWithSubdirectory() {
             _vs.RunTest(nameof(DjangoUITests.DjangoProjectUITests.DjangoProjectWithSubdirectory));
