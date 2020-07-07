@@ -28,29 +28,20 @@ using Microsoft.VisualStudio.Shell;
 [assembly: CLSCompliant(false)]
 [assembly: NeutralResourcesLanguage("en-US")]
 
-// [assembly: ProvideRawCodeBase(
-//     AssemblyName = "Microsoft.Python.Core", CodeBase = @"$PackageFolder$\LanguageServer\x86\Microsoft.Python.Core.dll",
-//     Version = LSConstants.Version, Culture = LSConstants.Culture, PublicKeyToken = LSConstants.PublicKeyToken
-// )]
-
-// [assembly: ProvideRawCodeBase(
-//     AssemblyName = "Microsoft.Python.Parsing", CodeBase = @"$PackageFolder$\LanguageServer\x86\Microsoft.Python.Parsing.dll",
-//     Version = LSConstants.Version, Culture = LSConstants.Culture, PublicKeyToken = LSConstants.PublicKeyToken
-// )]
-
 [assembly: ProvideRawCodeBase(
      AssemblyName = "Microsoft.Python.Core", CodeBase = @"$PackageFolder$\Microsoft.Python.Core.dll",
-     Version = LSConstants.Version, Culture = LSConstants.Culture, PublicKeyToken = LSConstants.PublicKeyToken
+     Version = ParserNuGetPackageInfo.Version, Culture = ParserNuGetPackageInfo.Culture, PublicKeyToken = ParserNuGetPackageInfo.PublicKeyToken
  )]
 
 [assembly: ProvideRawCodeBase(
      AssemblyName = "Microsoft.Python.Parsing", CodeBase = @"$PackageFolder$\Microsoft.Python.Parsing.dll",
-     Version = LSConstants.Version, Culture = LSConstants.Culture, PublicKeyToken = LSConstants.PublicKeyToken
+     Version = ParserNuGetPackageInfo.Version, Culture = ParserNuGetPackageInfo.Culture, PublicKeyToken = ParserNuGetPackageInfo.PublicKeyToken
  )]
 
 // LSC - can't use these on build machine for unknown reason (it fails to load the assembly when registering)
-//[assembly: ProvideCodeBase(AssemblyName = "Microsoft.Python.Core", CodeBase = @"LanguageServer\x86\Microsoft.Python.Core.dll")]
-//[assembly: ProvideCodeBase(AssemblyName = "Microsoft.Python.Parsing", CodeBase = @"LanguageServer\x86\Microsoft.Python.Parsing.dll")]
+// We'll move this code into this repo at some point and we can make these entries like the ones for in-product assemblies
+//[assembly: ProvideCodeBase(AssemblyName = "Microsoft.Python.Core", CodeBase = @"$PackageFolder$\Microsoft.Python.Core.dll")]
+//[assembly: ProvideCodeBase(AssemblyName = "Microsoft.Python.Parsing", CodeBase = @"$PackageFolder$\Microsoft.Python.Parsing.dll")]
 
 [assembly: ProvideRawCodeBase(AssemblyName = "Microsoft.VisualStudio.LanguageServer.Protocol", CodeBase = @"$PackageFolder$\Microsoft.VisualStudio.LanguageServer.Protocol.dll", Version = "16.5.1030.2059", Culture = "neutral", PublicKeyToken = "b03f5f7f11d50a3a")]
 
@@ -67,9 +58,9 @@ using Microsoft.VisualStudio.Shell;
 [assembly: ProvideCodeBase(AssemblyName = "Microsoft.PythonTools.VSInterpreters", CodeBase = "Microsoft.PythonTools.VSInterpreters.dll", Version = AssemblyVersionInfo.StableVersion)]
 [assembly: ProvideCodeBase(AssemblyName = "Microsoft.PythonTools.Workspace", CodeBase = "Microsoft.PythonTools.Workspace.dll", Version = AssemblyVersionInfo.StableVersion)]
 
-internal static class LSConstants {
-    // important: keep in sync with Build\PreBuild.ps1
-    public const string Version = "0.4.127.0"; //previous: 0.4.108
+internal static class ParserNuGetPackageInfo {
+    // important: keep in sync with Build\16.0\package.config
+    public const string Version = "0.4.127.0";
     public const string Culture = "neutral";
     public const string PublicKeyToken = "b03f5f7f11d50a3a";
 }

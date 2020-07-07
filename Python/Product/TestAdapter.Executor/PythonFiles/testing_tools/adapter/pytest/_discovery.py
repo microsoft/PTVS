@@ -12,7 +12,7 @@ from ._pytest_item import parse_item
 #note: this must match testlauncher.py
 def patch_translate_non_printable():
     import _pytest.compat
-    translate_non_printable =  getattr(_pytest.compat, "_translate_non_printable")
+    translate_non_printable =  getattr(_pytest.compat, "_translate_non_printable", None)
 
     if translate_non_printable:
         def _translate_non_printable_patched(s):

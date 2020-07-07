@@ -36,7 +36,7 @@ namespace PythonToolsTests {
         [TestCleanup]
         public void TestCleanup() => TestEnvironmentImpl.TestCleanup();
 
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public async Task TestCodeFormattingSelection() {
             var input = @"print('Hello World')
 
@@ -74,7 +74,7 @@ class Oar(object):
             await CodeFormattingTest(input, selection, expected, "    def say_hello .. method_end", options);
         }
 
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public async Task TestCodeFormattingMidLineSelection() {
             var input = @"
 def f(x):
@@ -99,7 +99,7 @@ def f(x):
             await CodeFormattingTest(input, selection, expected, " x + 1", options);
         }
 
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public async Task TestCodeFormattingEndOfFile() {
             var input = @"print('Hello World')
 
@@ -123,7 +123,7 @@ class Oar(object):
             await CodeFormattingTest(input, new Span(input.Length, 0), input, null, options);
         }
 
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public async Task TestCodeFormattingInMethodExpression() {
             var input = @"print('Hello World')
 
@@ -147,7 +147,7 @@ class Oar(object):
             await CodeFormattingTest(input, "method_end", input, null, options);
         }
 
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public async Task TestCodeFormattingStartOfMethodSelection() {
             var input = @"print('Hello World')
 
@@ -185,7 +185,7 @@ class Oar(object):
             await CodeFormattingTest(input, selection, expected, "    def say_hello .. ):", options);
         }
 
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public async Task FormatDocument() {
             var input = @"fob('Hello World')";
             var expected = @"fob( 'Hello World' )";
@@ -194,7 +194,7 @@ class Oar(object):
             await CodeFormattingTest(input, new Span(0, input.Length), expected, null, options, false);
         }
 
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public async Task FormatDocument2() {
             var input = @"import sys
 import abc

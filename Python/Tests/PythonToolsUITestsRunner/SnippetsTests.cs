@@ -40,70 +40,70 @@ namespace PythonToolsUITestsRunner {
         #endregion
 
 
-        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
+        [TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void TestBasicSnippetsTab() {
             _vs.RunTest(nameof(PythonToolsUITests.SnippetsTests.TestBasicSnippetsTab));
         }
 
-        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
+        [TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void TestPassSelected() {
             _vs.RunTest(nameof(PythonToolsUITests.SnippetsTests.TestPassSelected));
         }
 
-        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
+        [TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void TestPassSelectedIndented() {
             _vs.RunTest(nameof(PythonToolsUITests.SnippetsTests.TestPassSelectedIndented));
         }
 
-        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
+        [TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void TestSurroundWith() {
             _vs.RunTest(nameof(PythonToolsUITests.SnippetsTests.TestSurroundWith));
         }
 
-        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
+        [TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void TestSurroundWithMultiline() {
             _vs.RunTest(nameof(PythonToolsUITests.SnippetsTests.TestSurroundWithMultiline));
         }
 
-        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
+        [TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void TestInsertSnippet() {
             _vs.RunTest(nameof(PythonToolsUITests.SnippetsTests.TestInsertSnippet));
         }
 
-        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
+        [TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void TestInsertSnippetEmptySelectionNonEmptyLine() {
             _vs.RunTest(nameof(PythonToolsUITests.SnippetsTests.TestInsertSnippetEmptySelectionNonEmptyLine));
         }
 
         [Ignore] // https://github.com/microsoft/PTVS/issues/5765
-        [TestMethod, Priority(VsTestContext.P2_FAILING_UI_TEST)]
+        [TestMethod, Priority(UITestPriority.P2_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void TestTestClassSnippet() {
             _vs.RunTest(nameof(PythonToolsUITests.SnippetsTests.TestTestClassSnippet));
         }
 
         [Ignore] // https://github.com/microsoft/PTVS/issues/5765
-        [TestMethod, Priority(VsTestContext.P2_FAILING_UI_TEST)]
+        [TestMethod, Priority(UITestPriority.P2_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void TestTestClassSnippetBadImport() {
             _vs.RunTest(nameof(PythonToolsUITests.SnippetsTests.TestTestClassSnippetBadImport));
         }
 
         [Ignore] // https://github.com/microsoft/PTVS/issues/5765
-        [TestMethod, Priority(VsTestContext.P2_FAILING_UI_TEST)]
+        [TestMethod, Priority(UITestPriority.P2_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void TestTestClassSnippetImportAs() {
             _vs.RunTest(nameof(PythonToolsUITests.SnippetsTests.TestTestClassSnippetImportAs));
         }
 
-        [TestMethod, Priority(VsTestContext.P2_FAILING_UI_TEST)]
+        [TestMethod, Priority(UITestPriority.P2_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void TestTestClassSnippetUnitTestImported() {
             _vs.RunTest(nameof(PythonToolsUITests.SnippetsTests.TestTestClassSnippetUnitTestImported));
@@ -112,7 +112,7 @@ namespace PythonToolsUITestsRunner {
         /// <summary>
         /// Starting a nested session should dismiss the initial session
         /// </summary>
-        [TestMethod, Priority(VsTestContext.P0_FAILING_UI_TEST)]
+        [TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void TestNestedSession() {
             _vs.RunTest(nameof(PythonToolsUITests.SnippetsTests.TestNestedSession));

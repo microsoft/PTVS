@@ -20,11 +20,12 @@ using Microsoft.PythonTools;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Project.Web;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using TestUtilities;
 
 namespace PythonToolsTests {
     [TestClass]
     public class LauncherTests {
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P0)]
         public void LaunchWebBrowserUriTests() {
             var testCases = new[] {
                 new { Url = "/fob", Port = 1, Expected = "http://localhost:1/fob" },

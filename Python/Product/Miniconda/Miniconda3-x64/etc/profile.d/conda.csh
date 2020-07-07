@@ -1,13 +1,10 @@
-setenv _CONDA_EXE "C:/Users/huvalo/Documents/Miniconda\Scripts\conda.exe"
-setenv _CONDA_ROOT "/c/ci/conda_1534866589042/_h_env"
+setenv CONDA_EXE `cygpath C:/ProgramData/Miniconda3\Scripts\conda.exe`
+setenv _CONDA_ROOT `cygpath C:/ProgramData/Miniconda3`
+setenv _CONDA_EXE `cygpath C:/ProgramData/Miniconda3\Scripts\conda.exe`
+setenv CONDA_PYTHON_EXE `cygpath C:/ProgramData/Miniconda3\python.exe`
+echo "Copyright (C) 2012 Anaconda, Inc" > /dev/null
+echo "SPDX-License-Identifier: BSD-3-Clause" > /dev/null
 
-# Recommended way to make the conda command available in csh is
-#   $ sudo ln -s <CONDA_ROOT>/etc/profile.d/conda.csh /etc/profile.d/conda.csh
-# or in ~/.cshrc add the line
-#   source <CONDA_ROOT>/etc/profile.d/conda.csh
-
-# This block should only be for dev work. Under normal installs, _CONDA_EXE will be templated
-# in at the top of this file.
 if (! $?_CONDA_EXE) then
   set _CONDA_EXE="${PWD}/conda/shell/bin/conda"
 else
@@ -17,8 +14,14 @@ else
 endif
 
 if ("`alias conda`" == "") then
-    if ($?_CONDA_ROOT) then
-        alias conda source "${_CONDA_ROOT}/etc/profile.d/conda.csh"
+    if ($?_CONDA_EXE) then
+        # _CONDA_PFX is named so as not to cause confusion with CONDA_PREFIX
+        # If nested backticks were possible we wouldn't use any variables here.
+        set _CONDA_PFX=`dirname "${_CONDA_EXE}"`
+        set _CONDA_PFX=`dirname "${_CONDA_PFX}"`
+        alias conda source "${_CONDA_PFX}/etc/profile.d/conda.csh"
+        # And for good measure, get rid of it afterwards.
+        unset _CONDA_PFX
     else
         alias conda source "${PWD}/conda/shell/etc/profile.d/conda.csh"
     endif
@@ -27,6 +30,7 @@ if ("`alias conda`" == "") then
         set prompt=""
     endif
 else
+    set PATH="`dirname ${_CONDA_EXE}`:$PATH"
     switch ( "${1}" )
         case "activate":
             set ask_conda="`(setenv prompt '${prompt}' ; '${_CONDA_EXE}' shell.csh activate '${2}' ${argv[3-]})`" || exit ${status}
@@ -38,7 +42,7 @@ else
             eval "${ask_conda}"
             rehash
             breaksw
-        case "install" | "update" | "uninstall" | "remove":
+        case "install" | "update" | "upgrade" | "remove" | "uninstall":
             $_CONDA_EXE $argv[1-]
             set ask_conda="`(setenv prompt '${prompt}' ; '${_CONDA_EXE}' shell.csh reactivate)`" || exit ${status}
             eval "${ask_conda}"

@@ -63,7 +63,7 @@ namespace DebuggerTests {
         /// in addition to patching the thread method so that breakpoints on threads created after
         /// attach via the threading module can be hit.
         /// </summary>
-        [TestMethod, Priority(3)]
+        [TestMethod, Priority(UnitTestPriority.P3)]
         public virtual async Task AttachThreadingStartNewThread() {
             // http://pytools.codeplex.com/workitem/638
             // http://pytools.codeplex.com/discussions/285741#post724014
@@ -143,7 +143,7 @@ namespace DebuggerTests {
             }
         }
 
-        [TestMethod, Priority(TestExtensions.P2_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P2_FAILING)]
         [TestCategory("10s"), TestCategory("60s")]
         public virtual async Task AttachReattach() {
             Process p = Process.Start(Version.InterpreterPath, "-B \"" + TestData.GetPath(@"TestData\DebuggerProject\InfiniteRun.py") + "\"");
@@ -191,7 +191,7 @@ namespace DebuggerTests {
         /// hits resume the thread will eventually return back to Python code, and then we'll block it
         /// because we haven't cleared the stepping bit.
         /// </summary>
-        [TestMethod, Priority(3)]
+        [TestMethod, Priority(UnitTestPriority.P3)]
         [TestCategory("10s")]
         public virtual async Task AttachMultithreadedSleeper() {
             // http://pytools.codeplex.com/discussions/285741 1/12/2012 6:20 PM
@@ -228,7 +228,7 @@ namespace DebuggerTests {
         /// 
         /// http://pytools.codeplex.com/workitem/834
         /// </summary>
-        [TestMethod, Priority(3)]
+        [TestMethod, Priority(UnitTestPriority.P3)]
         public virtual async Task AttachSingleThreadedSleeper() {
             // http://pytools.codeplex.com/discussions/285741 1/12/2012 6:20 PM
             Process p = Process.Start(Version.InterpreterPath, "-B \"" + TestData.GetPath(@"TestData\DebuggerProject\AttachSingleThreadedSleeper.py") + "\"");
@@ -258,7 +258,7 @@ namespace DebuggerTests {
             }
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(UnitTestPriority.P2)]
         [TestCategory("10s")]
         public virtual async Task AttachReattachThreadingInited() {
             Process p = Process.Start(Version.InterpreterPath, "-B \"" + TestData.GetPath(@"TestData\DebuggerProject\InfiniteRunThreadingInited.py") + "\"");
@@ -293,7 +293,7 @@ namespace DebuggerTests {
             }
         }
 
-        [TestMethod, Priority(3)]
+        [TestMethod, Priority(UnitTestPriority.P3)]
         [TestCategory("10s")]
         public virtual async Task AttachReattachInfiniteThreads() {
             Process p = Process.Start(Version.InterpreterPath, "-B \"" + TestData.GetPath(@"TestData\DebuggerProject\InfiniteThreads.py") + "\"");
@@ -328,7 +328,7 @@ namespace DebuggerTests {
             }
         }
 
-        [TestMethod, Priority(TestExtensions.P2_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P2_FAILING)]
         [TestCategory("10s")]
         public virtual async Task AttachTimeout() {
             string cast = "(PyCodeObject*)";
@@ -370,7 +370,7 @@ int main(int argc, char* argv[]) {
         /// <summary>
         /// Attempts to attach w/ code only running on new threads which are initialized using PyGILState_Ensure
         /// </summary>
-        [TestMethod, Priority(TestExtensions.P2_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P2_FAILING)]
         [TestCategory("10s")]
         public virtual async Task AttachNewThread_PyGILState_Ensure() {
             var hostCode = @"#include <Python.h>
@@ -493,7 +493,7 @@ void main()
         /// <summary>
         /// Attempts to attach w/ code only running on new threads which are initialized using PyThreadState_New
         /// </summary>
-        [TestMethod, Priority(TestExtensions.P2_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P2_FAILING)]
         [TestCategory("10s")]
         public virtual async Task AttachNewThread_PyThreadState_New() {
             var hostCode = @"#include <Windows.h>
@@ -621,7 +621,7 @@ void main()
             }
         }
 
-        [TestMethod, Priority(TestExtensions.P2_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P2_FAILING)]
         [TestCategory("10s")]
         public virtual async Task AttachTimeoutThreadsInitialized() {
             string cast = "(PyCodeObject*)";
@@ -716,7 +716,7 @@ int main(int argc, char* argv[]) {
             }
         }
 
-        [TestMethod, Priority(3)]
+        [TestMethod, Priority(UnitTestPriority.P3)]
         [TestCategory("10s")]
         public virtual async Task AttachAndStepWithBlankSysPrefix() {
             string script = TestData.GetPath(@"TestData\DebuggerProject\InfiniteRunBlankPrefix.py");
@@ -770,7 +770,7 @@ int main(int argc, char* argv[]) {
             }
         }
 
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         [TestCategory("10s")]
         public virtual async Task AttachWithOutputRedirection() {
             var expectedOutput = new[] { "stdout", "stderr" };
@@ -1011,22 +1011,22 @@ int main(int argc, char* argv[]) {
             AssertUtil.ArrayEquals(expectedOutput, actualOutput);
         }
 
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public async Task AttachPtvsdImport() {
             await TestPtvsdImport("secret=None", new Uri("tcp://localhost"));
         }
 
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public async Task AttachPtvsdCommandLine() {
             await TestPtvsdCommandLine("--wait", new Uri("tcp://localhost"));
         }
 
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public async Task AttachPtvsdImportSecret() {
             await TestPtvsdImport("secret='secret'", new Uri("tcp://secret@localhost"));
         }
 
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public async Task AttachPtvsdCommandLineSecret() {
             await TestPtvsdCommandLine("--wait --secret secret", new Uri("tcp://secret@localhost"));
         }
@@ -1047,24 +1047,24 @@ int main(int argc, char* argv[]) {
             return ip;
         }
 
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public async Task AttachPtvsdImportAddress() {
             var ip = GetNetworkInterface();
             await TestPtvsdImport("secret=None, address=('" + ip + "', 8765)", new Uri("tcp://" + ip + ":8765"));
         }
 
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public async Task AttachPtvsdCommandLinePort() {
             await TestPtvsdCommandLine("--wait --port 8765", new Uri("tcp://localhost:8765"));
         }
 
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public async Task AttachPtvsdCommandLineInterface() {
             var ip = GetNetworkInterface();
             await TestPtvsdCommandLine("--wait --interface " + ip, new Uri("tcp://" + ip));
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(UnitTestPriority.P2)]
         public async Task AttachPtvsdCommandLineWait() {
             if (!HasPtvsdCommandLine) {
                 return;
@@ -1100,7 +1100,7 @@ int main(int argc, char* argv[]) {
             });
         }
 
-        [TestMethod, Priority(TestExtensions.P3_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P3_FAILING)]
         public async Task AttachPtvsdCommandLineNoWait() {
             if (!HasPtvsdCommandLine) {
                 return;
@@ -1151,7 +1151,7 @@ int main(int argc, char* argv[]) {
         }
 
         // https://github.com/Microsoft/PTVS/issues/2842
-        [TestMethod, Priority(TestExtensions.P2_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P2_FAILING)]
         public virtual async Task AttachPtvsdAndStopDebugging() {
             if (!HasPtvsdCommandLine) {
                 return;
@@ -1391,7 +1391,7 @@ int main(int argc, char* argv[]) {
         public override async Task AttachWithOutputRedirection() { }
         public override async Task AttachAndStepWithBlankSysPrefix() { }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(UnitTestPriority.P2)]
         public override async Task AttachPtvsdAndStopDebugging() => await base.AttachPtvsdAndStopDebugging();
 
         protected override string PtvsdInterpreterArguments {

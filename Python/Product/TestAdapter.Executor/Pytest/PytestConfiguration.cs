@@ -66,6 +66,10 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
             // output results to xml file
             args.Add(String.Format("--junitxml={0}", ResultsXmlPath));
             args.Add(String.Format("--rootdir={0}", settings.ProjectHome));
+            args.Add("-o");
+            args.Add("junit_logging=all");
+            args.Add("-o");
+            args.Add("junit_family=xunit1");
 
             return args;
         }

@@ -39,49 +39,49 @@ namespace PythonToolsUITestsRunner {
         public static void ClassCleanup() => VsTestContext.Instance.Dispose();
         #endregion
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void RunAllUnittestProject() {
             _vs.RunTest(nameof(PythonToolsUITests.TestExplorerTests.RunAllUnittestProject));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void RunAllUnittestWorkspace() {
             _vs.RunTest(nameof(PythonToolsUITests.TestExplorerTests.RunAllUnittestWorkspace));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void RunAllPytestProject() {
             _vs.RunTest(nameof(PythonToolsUITests.TestExplorerTests.RunAllPytestProject));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void RunAllPytestWorkspace() {
             _vs.RunTest(nameof(PythonToolsUITests.TestExplorerTests.RunAllPytestWorkspace));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void DebugPytestProject() {
             _vs.RunTest(nameof(PythonToolsUITests.TestExplorerTests.DebugPytestProject));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void DebugPytestWorkspace() {
             _vs.RunTest(nameof(PythonToolsUITests.TestExplorerTests.DebugPytestWorkspace));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void DebugUnittestProject() {
             _vs.RunTest(nameof(PythonToolsUITests.TestExplorerTests.DebugUnittestProject));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void DebugUnittestWorkspace() {
             _vs.RunTest(nameof(PythonToolsUITests.TestExplorerTests.DebugUnittestWorkspace));

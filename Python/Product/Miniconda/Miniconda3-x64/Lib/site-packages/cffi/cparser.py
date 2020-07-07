@@ -16,6 +16,13 @@ try:
 except ImportError:
     lock = None
 
+def _workaround_for_static_import_finders():
+    # Issue #392: packaging tools like cx_Freeze can not find these
+    # because pycparser uses exec dynamic import.  This is an obscure
+    # workaround.  This function is never called.
+    import pycparser.yacctab
+    import pycparser.lextab
+
 CDEF_SOURCE_STRING = "<cdef source string>"
 _r_comment = re.compile(r"/\*.*?\*/|//([^\n\\]|\\.)*?$",
                         re.DOTALL | re.MULTILINE)
@@ -137,6 +144,14 @@ def _preprocess_extern_python(csource):
     parts.append(csource)
     return ''.join(parts)
 
+def _warn_for_string_literal(csource):
+    if '"' in csource:
+        import warnings
+        warnings.warn("String literal found in cdef() or type source. "
+                      "String literals are ignored here, but you should "
+                      "remove them anyway because some character sequences "
+                      "confuse pre-parsing.")
+
 def _preprocess(csource):
     # Remove comments.  NOTE: this only work because the cdef() section
     # should not contain any string literal!
@@ -163,6 +178,9 @@ def _preprocess(csource):
     #
     # Replace `extern "Python"` with start/end markers
     csource = _preprocess_extern_python(csource)
+    #
+    # Now there should not be any string literal left; warn if we get one
+    _warn_for_string_literal(csource)
     #
     # Replace "[...]" with "[__dotdotdotarray__]"
     csource = _r_partial_array.sub('[__dotdotdotarray__]', csource)
@@ -306,11 +324,25 @@ class Parser(object):
             msg = 'parse error\n%s' % (msg,)
         raise CDefError(msg)
 
-    def parse(self, csource, override=False, packed=False, dllexport=False):
+    def parse(self, csource, override=False, packed=False, pack=None,
+                    dllexport=False):
+        if packed:
+            if packed != True:
+                raise ValueError("'packed' should be False or True; use "
+                                 "'pack' to give another value")
+            if pack:
+                raise ValueError("cannot give both 'pack' and 'packed'")
+            pack = 1
+        elif pack:
+            if pack & (pack - 1):
+                raise ValueError("'pack' must be a power of two, not %r" %
+                    (pack,))
+        else:
+            pack = 0
         prev_options = self._options
         try:
             self._options = {'override': override,
-                             'packed': packed,
+                             'packed': pack,
                              'dllexport': dllexport}
             self._internal_parse(csource)
         finally:
@@ -785,12 +817,20 @@ class Parser(object):
         # or positive/negative number
         if isinstance(exprnode, pycparser.c_ast.Constant):
             s = exprnode.value
-            if s.startswith('0'):
-                if s.startswith('0x') or s.startswith('0X'):
-                    return int(s, 16)
-                return int(s, 8)
-            elif '1' <= s[0] <= '9':
-                return int(s, 10)
+            if '0' <= s[0] <= '9':
+                s = s.rstrip('uUlL')
+                try:
+                    if s.startswith('0'):
+                        return int(s, 8)
+                    else:
+                        return int(s, 10)
+                except ValueError:
+                    if len(s) > 1:
+                        if s.lower()[0:2] == '0x':
+                            return int(s, 16)
+                        elif s.lower()[0:2] == '0b':
+                            return int(s, 2)
+                raise CDefError("invalid constant %r" % (s,))
             elif s[0] == "'" and s[-1] == "'" and (
                     len(s) == 3 or (len(s) == 4 and s[1] == "\\")):
                 return ord(s[-2])

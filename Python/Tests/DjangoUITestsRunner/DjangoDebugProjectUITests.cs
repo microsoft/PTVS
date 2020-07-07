@@ -39,7 +39,7 @@ namespace DjangoUITestsRunner {
         public static void ClassCleanup() => VsTestContext.Instance.Dispose();
         #endregion
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void DebugDjangoProject() {
             _vs.RunTest(nameof(DjangoUITests.DjangoDebugProjectUITests.DebugDjangoProject));

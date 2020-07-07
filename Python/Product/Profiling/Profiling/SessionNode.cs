@@ -159,7 +159,7 @@ namespace Microsoft.PythonTools.Profiling {
                     if (itemid == VSConstants.VSITEMID_ROOT) {
                         pvar = ReportsItemId;
                     } else if (itemid == ReportsItemId && Reports.Count > 0) {
-                        pvar = Reports.First().Key;
+                        pvar = (int)Reports.First().Key;
                     } else {
                         pvar = VSConstants.VSITEMID_NIL;
                     }
@@ -171,12 +171,13 @@ namespace Microsoft.PythonTools.Profiling {
                         var items = Reports.Keys.ToArray();
                         for (int i = 0; i < items.Length; i++) {
                             if (items[i] > (int)itemid) {
-                                pvar = itemid + 1;
+                                pvar = (int)(itemid + 1);
                                 break;
                             }
                         }
                     }
                     break;
+
 
                 case __VSHPROPID.VSHPROPID_ItemDocCookie:
                     if (itemid == VSConstants.VSITEMID_ROOT) {

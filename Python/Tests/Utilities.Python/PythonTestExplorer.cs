@@ -152,7 +152,7 @@ namespace TestUtilities.UI {
 
         public void ClearSearchBar() {
             _searchBar.SetValue("");
-            Thread.Sleep(500);
+            Thread.Sleep(1000);
         }
 
         public AutomationElement WaitForItem(params string[] path) {
@@ -163,7 +163,7 @@ namespace TestUtilities.UI {
             // it multiple times with delay as a work around.
             _searchBar.SetValue(path[path.Length - 1]);
 
-            for (int i = 0; i < path.Length + 1; i++) {
+            for (int i = 0; i < path.Length + 2; i++) {
                 Tests.ExpandAll();
             }
 

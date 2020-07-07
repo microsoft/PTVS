@@ -491,7 +491,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Failed to start performance monitor.]D;]A;]D;]A;Output:]D;]A;{0}]D;]A;]D;]A;Error:]D;]A;{1}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Non è stato possibile avviare il monitoraggio delle prestazioni.]D;]A;]D;]A;Output:]D;]A;{0}]D;]A;]D;]A;Errore:]D;]A;{1}]]></Val>
+            <Val><![CDATA[Non è stato possibile avviare Monitor prestazioni.]D;]A;]D;]A;Output:]D;]A;{0}]D;]A;]D;]A;Errore:]D;]A;{1}]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -500,7 +500,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Failed to shut down performance monitor.]D;]A;]D;]A;Output:]D;]A;{0}]D;]A;]D;]A;Error:]D;]A;{1}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Non è stato possibile arrestare il monitoraggio delle prestazioni.]D;]A;]D;]A;Output:]D;]A;{0}]D;]A;]D;]A;Errore:]D;]A;{1}]]></Val>
+            <Val><![CDATA[Non è stato possibile arrestare Monitor prestazioni.]D;]A;]D;]A;Output:]D;]A;{0}]D;]A;]D;]A;Errore:]D;]A;{1}]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -509,7 +509,7 @@
         <Str Cat="Text">
           <Val><![CDATA[Unable to stop performance monitor: {0}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Non è possibile arrestare il monitoraggio delle prestazioni: {0}]]></Val>
+            <Val><![CDATA[Non è possibile arrestare Monitor prestazioni: {0}]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -542,10 +542,13 @@
         <Disp Icon="Menu" Expand="true" Disp="true" LocTbl="false" />
         <Item ItemId=";{c6e7bafe-d4b6-4e04-85af-9c83f18d8c78},256" ItemType=";Button" PsrId="240" Leaf="true">
           <Str Cat="Button" IgnoreHK="true">
-            <Val><![CDATA[Launch &Python Profiling...]]></Val>
+            <Val><![CDATA[La&unch Python Profiling...]]></Val>
             <Tgt Cat="Button" IgnoreHK="true" Stat="Loc" Orig="New">
-              <Val><![CDATA[Avvia profilatura &Python...]]></Val>
+              <Val><![CDATA[Avvia profilatura Pyt&hon...]]></Val>
             </Tgt>
+            <Prev Cat="Button" IgnoreHK="true">
+              <Val><![CDATA[Launch &Python Profiling...]]></Val>
+            </Prev>
           </Str>
           <Disp Icon="Str" Expand="true" />
         </Item>

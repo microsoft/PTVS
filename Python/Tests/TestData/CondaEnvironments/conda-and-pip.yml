@@ -1,6 +1,6 @@
 name: conda-and-pip
 dependencies:
-  - python=3.4
-  - flask
+  - python=3.7
+  - zlib
   - pip:
-    - Flask-Testing
+    - bottle

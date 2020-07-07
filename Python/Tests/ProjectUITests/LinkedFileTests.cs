@@ -20,6 +20,7 @@ using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading;
 using EnvDTE;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.SharedProject;
@@ -664,11 +665,19 @@ namespace ProjectUITests {
                         project.Save();
 
                         // verify that the project file contains the correct text for Link
+                        // (file path is relative to home folder)
+                        var projectHomeFolder = project.Properties.Item("ProjectHome").Value as string;
                         var fileText = File.ReadAllText(project.FullName);
+                        var relativeTempFile = PathUtils.GetRelativeFilePath(
+                            projectHomeFolder,
+                            tempFile
+                        );
+
                         var pattern = string.Format(
                             @"<Content Include=""{0}"">\s*<Link>{1}</Link>\s*</Content>",
-                            Regex.Escape(tempFile),
+                            Regex.Escape(relativeTempFile),
                             Regex.Escape(Path.GetFileName(tempFile)));
+
                         AssertUtil.AreEqual(new Regex(pattern), fileText);
                     }
                 }

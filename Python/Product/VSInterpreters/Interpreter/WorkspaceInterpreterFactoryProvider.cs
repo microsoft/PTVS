@@ -20,6 +20,7 @@ using System.ComponentModel.Composition;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using Microsoft.Python.Parsing;
 using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Interpreter {
@@ -302,6 +303,12 @@ namespace Microsoft.PythonTools.Interpreter {
 
             var arch = CPythonInterpreterFactoryProvider.ArchitectureFromExe(interpreterPath);
             var version = CPythonInterpreterFactoryProvider.VersionFromSysVersionInfo(interpreterPath);
+
+            try {
+                version.ToLanguageVersion();
+            } catch (InvalidOperationException) {
+                version = new Version(0, 0);
+            }
 
             var name = Path.GetFileName(prefixPath);
             var description = name;

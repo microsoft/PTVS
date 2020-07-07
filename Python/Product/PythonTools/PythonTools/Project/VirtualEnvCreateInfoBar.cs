@@ -39,7 +39,7 @@ namespace Microsoft.PythonTools.Project {
         protected string Context { get; set; }
 
         protected bool IsGloballySuppressed =>
-            !Site.GetPythonToolsService().GeneralOptions.PromptForEnvCreate;
+          !Site.GetPythonToolsService().GeneralOptions.PromptForEnvCreate;
 
         protected abstract void ShowAddEnvironmentDialog();
 
@@ -102,10 +102,12 @@ namespace Microsoft.PythonTools.Project {
         private PythonProjectNode Project { get; }
 
         public override async Task CheckAsync() {
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
             if (IsCreated || IsGloballySuppressed) {
                 return;
             }
-
+        
             RequirementsTxtPath = Project.GetRequirementsTxtPath();
             Caption = Project.Caption;
             Context = InfoBarContexts.Project;
@@ -150,6 +152,8 @@ namespace Microsoft.PythonTools.Project {
         private IPythonWorkspaceContext Workspace { get; }
 
         public override async Task CheckAsync() {
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
             if (IsCreated || IsGloballySuppressed) {
                 return;
             }

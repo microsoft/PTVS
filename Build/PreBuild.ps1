@@ -60,7 +60,7 @@ try {
     } | Out-Null
 
     $container = "python-language-server-daily"
-    $ver = "0.4.127" # important: keep in sync with Python\Product\Core\Properties\AssemblyInfo.cs
+    $ver = "0.5.51"
     "Downloading language server $ver from CDN"
     @("x86", "x64") | %{
         $filename = "Python-Language-Server-win-$_.$ver"

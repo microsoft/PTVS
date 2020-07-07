@@ -167,8 +167,6 @@
     <Compile Include="Intellisense\ProjectBlockCompletionContextBase.cs" />
     <Compile Include="Intellisense\TemplateCompletionController.cs" />
     <Compile Include="Intellisense\TemplateCompletionControllerProvider.cs" />
-    <Compile Include="Intellisense\TemplateMainController.cs" />
-    <Compile Include="Intellisense\TemplateTextViewConnectionListener.cs" />
     <Compile Include="Project\DjangoProjectConfig.cs" />
     <Compile Include="Project\DjangoPropertyPage.cs" />
     <Compile Include="Project\IDjangoProject.cs" />

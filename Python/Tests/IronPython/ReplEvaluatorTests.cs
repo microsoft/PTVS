@@ -47,7 +47,7 @@ namespace IronPythonTests {
             }
         }
 
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void IronPythonModuleName() {
             using (var replEval = Evaluator) {
                 var replWindow = new MockReplWindow(replEval);
@@ -61,7 +61,7 @@ namespace IronPythonTests {
             }
         }
 
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public async Task IronPythonSignatures() {
             using (var replEval = Evaluator) {
                 var replWindow = new MockReplWindow(replEval);
@@ -80,7 +80,7 @@ namespace IronPythonTests {
             }
         }
 
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void IronPythonCommentInput() {
             // http://pytools.codeplex.com/workitem/649
             using (var replEval = Evaluator) {
@@ -92,7 +92,7 @@ namespace IronPythonTests {
             }
         }
 
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void ConsoleWriteLineTest() {
             // http://pytools.codeplex.com/workitem/649
             using (var replEval = Evaluator) {
@@ -119,7 +119,7 @@ namespace IronPythonTests {
             }
         }
 
-        //[TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
+        //[TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         //public void GenericMethodCompletions() {
         //    // http://pytools.codeplex.com/workitem/661
         //    using (var replEval = Evaluator) {
@@ -153,7 +153,7 @@ namespace IronPythonTests {
         //    }
         //}
 
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public async Task NoTraceFunction() {
             // http://pytools.codeplex.com/workitem/662
             using (var replEval = Evaluator) {
@@ -169,7 +169,7 @@ namespace IronPythonTests {
             }
         }
 
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void CommentFollowedByBlankLine() {
             // http://pytools.codeplex.com/workitem/659
             using (var replEval = Evaluator) {
@@ -184,7 +184,7 @@ namespace IronPythonTests {
 
 
 
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void AttachSupportMultiThreaded() {
             // http://pytools.codeplex.com/workitem/663
             using (var replEval = Evaluator) {

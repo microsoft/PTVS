@@ -2,7 +2,6 @@ from __future__ import absolute_import
 import datetime
 import logging
 import os
-import sys
 import socket
 from socket import error as SocketError, timeout as SocketTimeout
 import warnings
@@ -56,10 +55,11 @@ port_by_scheme = {
     'https': 443,
 }
 
-# When updating RECENT_DATE, move it to
-# within two years of the current date, and no
-# earlier than 6 months ago.
-RECENT_DATE = datetime.date(2016, 1, 1)
+# When updating RECENT_DATE, move it to within two years of the current date,
+# and not less than 6 months ago.
+# Example: if Today is 2018-01-01, then RECENT_DATE should be any date on or
+# after 2016-01-01 (today - 2 years) AND before 2017-07-01 (today - 6 months)
+RECENT_DATE = datetime.date(2017, 6, 30)
 
 
 class DummyConnection(object):
@@ -77,9 +77,6 @@ class HTTPConnection(_HTTPConnection, object):
 
       - ``strict``: See the documentation on :class:`urllib3.connectionpool.HTTPConnectionPool`
       - ``source_address``: Set the source address for the current connection.
-
-        .. note:: This is ignored for Python 2.6. It is only applied for 2.7 and 3.x
-
       - ``socket_options``: Set specific options on the underlying socket. If not specified, then
         defaults are loaded from ``HTTPConnection.default_socket_options`` which includes disabling
         Nagle's algorithm (sets TCP_NODELAY to 1) unless the connection is behind a proxy.
@@ -107,22 +104,43 @@ class HTTPConnection(_HTTPConnection, object):
         if six.PY3:  # Python 3
             kw.pop('strict', None)
 
-        # Pre-set source_address in case we have an older Python like 2.6.
+        # Pre-set source_address.
         self.source_address = kw.get('source_address')
-
-        if sys.version_info < (2, 7):  # Python 2.6
-            # _HTTPConnection on Python 2.6 will balk at this keyword arg, but
-            # not newer versions. We can still use it when creating a
-            # connection though, so we pop it *after* we have saved it as
-            # self.source_address.
-            kw.pop('source_address', None)
 
         #: The socket options provided by the user. If no options are
         #: provided, we use the default options.
         self.socket_options = kw.pop('socket_options', self.default_socket_options)
 
-        # Superclass also sets self.source_address in Python 2.7+.
         _HTTPConnection.__init__(self, *args, **kw)
+
+    @property
+    def host(self):
+        """
+        Getter method to remove any trailing dots that indicate the hostname is an FQDN.
+
+        In general, SSL certificates don't include the trailing dot indicating a
+        fully-qualified domain name, and thus, they don't validate properly when
+        checked against a domain name that includes the dot. In addition, some
+        servers may not expect to receive the trailing dot when provided.
+
+        However, the hostname with trailing dot is critical to DNS resolution; doing a
+        lookup with the trailing dot will properly only resolve the appropriate FQDN,
+        whereas a lookup without a trailing dot will search the system's search domain
+        list. Thus, it's important to keep the original host around for use only in
+        those cases where it's appropriate (i.e., when doing DNS lookup to establish the
+        actual TCP connection across which we're going to send HTTP requests).
+        """
+        return self._dns_host.rstrip('.')
+
+    @host.setter
+    def host(self, value):
+        """
+        Setter for the `host` property.
+
+        We assume that only urllib3 uses the _dns_host attribute; httplib itself
+        only uses `host`, and it seems reasonable that other libraries follow suit.
+        """
+        self._dns_host = value
 
     def _new_conn(self):
         """ Establish a socket connection and set nodelay settings on it.
@@ -138,7 +156,7 @@ class HTTPConnection(_HTTPConnection, object):
 
         try:
             conn = connection.create_connection(
-                (self.host, self.port), self.timeout, **extra_kw)
+                (self._dns_host, self.port), self.timeout, **extra_kw)
 
         except SocketTimeout as e:
             raise ConnectTimeoutError(
@@ -153,10 +171,7 @@ class HTTPConnection(_HTTPConnection, object):
 
     def _prepare_conn(self, conn):
         self.sock = conn
-        # the _tunnel_host attribute was added in python 2.6.3 (via
-        # http://hg.python.org/cpython/rev/0f57b30a152f) so pythons 2.6(0-2) do
-        # not have them.
-        if getattr(self, '_tunnel_host', None):
+        if self._tunnel_host:
             # TODO: Fix tunnel so it doesn't depend on self.sock state.
             self._tunnel()
             # Mark this connection as not reusable
@@ -187,13 +202,13 @@ class HTTPConnection(_HTTPConnection, object):
         self.endheaders()
 
         if body is not None:
-            stringish_types = six.string_types + (six.binary_type,)
+            stringish_types = six.string_types + (bytes,)
             if isinstance(body, stringish_types):
                 body = (body,)
             for chunk in body:
                 if not chunk:
                     continue
-                if not isinstance(chunk, six.binary_type):
+                if not isinstance(chunk, bytes):
                     chunk = chunk.encode('utf8')
                 len_str = hex(len(chunk))[2:]
                 self.send(len_str.encode('utf-8'))
@@ -212,7 +227,7 @@ class HTTPSConnection(HTTPConnection):
 
     def __init__(self, host, port=None, key_file=None, cert_file=None,
                  strict=None, timeout=socket._GLOBAL_DEFAULT_TIMEOUT,
-                 ssl_context=None, **kw):
+                 ssl_context=None, server_hostname=None, **kw):
 
         HTTPConnection.__init__(self, host, port, strict=strict,
                                 timeout=timeout, **kw)
@@ -220,6 +235,7 @@ class HTTPSConnection(HTTPConnection):
         self.key_file = key_file
         self.cert_file = cert_file
         self.ssl_context = ssl_context
+        self.server_hostname = server_hostname
 
         # Required property for Google AppEngine 1.9.0 which otherwise causes
         # HTTPS requests to go out as HTTP. (See Issue #356)
@@ -240,6 +256,7 @@ class HTTPSConnection(HTTPConnection):
             keyfile=self.key_file,
             certfile=self.cert_file,
             ssl_context=self.ssl_context,
+            server_hostname=self.server_hostname
         )
 
 
@@ -282,12 +299,9 @@ class VerifiedHTTPSConnection(HTTPSConnection):
     def connect(self):
         # Add certificate verification
         conn = self._new_conn()
-
         hostname = self.host
-        if getattr(self, '_tunnel_host', None):
-            # _tunnel_host was added in Python 2.6.3
-            # (See: http://hg.python.org/cpython/rev/0f57b30a152f)
 
+        if self._tunnel_host:
             self.sock = conn
             # Calls self._set_hostport(), so self.host is
             # self._tunnel_host below.
@@ -297,6 +311,10 @@ class VerifiedHTTPSConnection(HTTPSConnection):
 
             # Override the host with the one we're requesting data from.
             hostname = self._tunnel_host
+
+        server_hostname = hostname
+        if self.server_hostname is not None:
+            server_hostname = self.server_hostname
 
         is_time_off = datetime.date.today() < RECENT_DATE
         if is_time_off:
@@ -322,7 +340,7 @@ class VerifiedHTTPSConnection(HTTPSConnection):
             certfile=self.cert_file,
             ca_certs=self.ca_certs,
             ca_cert_dir=self.ca_cert_dir,
-            server_hostname=hostname,
+            server_hostname=server_hostname,
             ssl_context=context)
 
         if self.assert_fingerprint:
@@ -343,7 +361,7 @@ class VerifiedHTTPSConnection(HTTPSConnection):
                     'for details.)'.format(hostname)),
                     SubjectAltNameWarning
                 )
-            _match_hostname(cert, self.assert_hostname or hostname)
+            _match_hostname(cert, self.assert_hostname or server_hostname)
 
         self.is_verified = (
             context.verify_mode == ssl.CERT_REQUIRED or

@@ -160,32 +160,33 @@ namespace Microsoft.PythonTools.TestAdapter {
         }
 
         private void SetupWorkspace(IPythonWorkspaceContext workspace) {
-            if (workspace == null)
+            if (workspace == null ||
+                GetTestFramework(workspace) == TestFrameworkType.None)
                 return;
 
-            TestFrameworkType testFrameworkType = GetTestFramework(workspace);
+            try {
+                Predicate<string> testFileFilter = (x) => PythonConstants.TestFileExtensionRegex.IsMatch(PathUtils.GetFileOrDirectoryName(x));
 
-            if (testFrameworkType != TestFrameworkType.None) {
                 var projInfo = new ProjectInfo(workspace);
-                _projectMap[projInfo.ProjectHome] = projInfo;
-
-                var oldWatcher = _testFilesUpdateWatcher;
-                _testFilesUpdateWatcher = new TestFilesUpdateWatcher();
-                _testFilesUpdateWatcher.FileChangedEvent += OnWorkspaceFileChanged;
-                _testFilesUpdateWatcher.AddDirectoryWatch(workspace.Location);
-                oldWatcher?.Dispose();
-
-                Predicate<string> testFileFilter = (x) => 
-                    PythonConstants.TestFileExtensionRegex.IsMatch(PathUtils.GetFileOrDirectoryName(x)
-                );
                 foreach (var file in _workspaceContextProvider.Workspace.EnumerateUserFiles(testFileFilter)) {
                     projInfo.AddTestContainer(this, file);
                 }
 
-                workspace.ActiveInterpreterChanged -= OnActiveInterpreterChanged;
-                workspace.ActiveInterpreterChanged += OnActiveInterpreterChanged;
-                _packageManagerEventSink.WatchPackageManagers(workspace.CurrentFactory);
+                _projectMap[projInfo.ProjectHome] = projInfo;
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
+                Trace.WriteLine("Exception : " + ex.Message);
             }
+
+            // Register listeners
+            var oldWatcher = _testFilesUpdateWatcher;
+            _testFilesUpdateWatcher = new TestFilesUpdateWatcher();
+            _testFilesUpdateWatcher.FileChangedEvent += OnWorkspaceFileChanged;
+            _testFilesUpdateWatcher.AddDirectoryWatch(workspace.Location);
+            oldWatcher?.Dispose();
+
+            workspace.ActiveInterpreterChanged -= OnActiveInterpreterChanged;
+            workspace.ActiveInterpreterChanged += OnActiveInterpreterChanged;
+            _packageManagerEventSink.WatchPackageManagers(workspace.CurrentFactory);
         }
 
         private static TestFrameworkType GetTestFramework(IPythonWorkspaceContext workspace) {

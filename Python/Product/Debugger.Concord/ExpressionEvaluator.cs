@@ -500,7 +500,7 @@ namespace Microsoft.PythonTools.Debugger.Concord {
                 var childResults = pyEvalResult.GetChildren(this, result, inspectionContext);
                 completionRoutine(
                     new DkmGetChildrenAsyncResult(
-                        new DkmEvaluationResult[0],
+                        childResults.Take(initialRequestSize).ToArray(),
                         DkmEvaluationResultEnumContext.Create(
                             childResults.Count,
                             result.StackFrame,

@@ -39,49 +39,49 @@ namespace PythonToolsUITestsRunner {
         public static void ClassCleanup() => VsTestContext.Instance.Dispose();
         #endregion
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void LoadRelativeProjects() {
             _vs.RunTest(nameof(PythonToolsUITests.ProjectHomeTests.LoadRelativeProjects));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void AddDeleteItem() {
             _vs.RunTest(nameof(PythonToolsUITests.ProjectHomeTests.AddDeleteItem));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void AddDeleteItem2() {
             _vs.RunTest(nameof(PythonToolsUITests.ProjectHomeTests.AddDeleteItem2));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void AddDeleteFolder() {
             _vs.RunTest(nameof(PythonToolsUITests.ProjectHomeTests.AddDeleteFolder));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void AddDeleteSubfolder() {
             _vs.RunTest(nameof(PythonToolsUITests.ProjectHomeTests.AddDeleteSubfolder));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void SaveProjectAndCheckProjectHome() {
             _vs.RunTest(nameof(PythonToolsUITests.ProjectHomeTests.SaveProjectAndCheckProjectHome));
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
         public void DragDropRelocatedTest() {
             _vs.RunTest(nameof(PythonToolsUITests.ProjectHomeTests.DragDropRelocatedTest));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void CutPasteRelocatedTest() {
             _vs.RunTest(nameof(PythonToolsUITests.ProjectHomeTests.CutPasteRelocatedTest));

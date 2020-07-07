@@ -1,0 +1,48 @@
+{
+  "build": "h508b16e_0",
+  "build_number": 0,
+  "channel": "https://repo.anaconda.com/pkgs/main/win-64",
+  "constrains": [],
+  "depends": [
+    "vc >=14.1,<15.0a0",
+    "xz >=5.2.4,<6.0a0",
+    "zlib >=1.2.11,<1.3.0a0"
+  ],
+  "extracted_package_dir": "C:\\ProgramData\\Miniconda3\\pkgs\\zstd-1.3.7-h508b16e_0",
+  "features": "",
+  "files": [
+    "Library/bin/libzstd.dll",
+    "Library/bin/zstd.exe",
+    "Library/include/cover.h",
+    "Library/include/zbuff.h",
+    "Library/include/zdict.h",
+    "Library/include/zstd.h",
+    "Library/include/zstd_errors.h",
+    "Library/lib/libzstd_static.lib",
+    "Library/lib/zstd.lib"
+  ],
+  "fn": "zstd-1.3.7-h508b16e_0.conda",
+  "legacy_bz2_md5": "251803bb127a0b26ee8c92106d3ab1ae",
+  "legacy_bz2_size": 549313,
+  "license": "BSD 3-Clause",
+  "license_family": "BSD",
+  "link": {
+    "source": "C:\\ProgramData\\Miniconda3\\pkgs\\zstd-1.3.7-h508b16e_0",
+    "type": 1
+  },
+  "md5": "d9afbcac59b6f2ae0578fcff0790eb9f",
+  "name": "zstd",
+  "package_tarball_full_path": "C:\\ProgramData\\Miniconda3\\pkgs\\zstd-1.3.7-h508b16e_0.conda",
+  "paths_data": {
+    "paths": [],
+    "paths_version": 1
+  },
+  "requested_spec": "zstd==1.3.7=h508b16e_0",
+  "sha256": "21bb946ae6eb4661c4c7cc0552e330a51d818b66f3f883bd93ca7410df597477",
+  "size": 345573,
+  "subdir": "win-64",
+  "timestamp": 1541460124785,
+  "track_features": "",
+  "url": "https://repo.anaconda.com/pkgs/main/win-64/zstd-1.3.7-h508b16e_0.conda",
+  "version": "1.3.7"
+}

@@ -1,0 +1,124 @@
+{
+  "build": "py_0",
+  "build_number": 0,
+  "channel": "https://repo.anaconda.com/pkgs/main/noarch",
+  "constrains": [],
+  "depends": [
+    "python"
+  ],
+  "extracted_package_dir": "C:\\ProgramData\\Miniconda3\\pkgs\\tqdm-4.32.1-py_0",
+  "features": "",
+  "files": [
+    "Lib/site-packages/tqdm-4.32.1.dist-info/INSTALLER",
+    "Lib/site-packages/tqdm-4.32.1.dist-info/LICENCE",
+    "Lib/site-packages/tqdm-4.32.1.dist-info/METADATA",
+    "Lib/site-packages/tqdm-4.32.1.dist-info/RECORD",
+    "Lib/site-packages/tqdm-4.32.1.dist-info/WHEEL",
+    "Lib/site-packages/tqdm-4.32.1.dist-info/entry_points.txt",
+    "Lib/site-packages/tqdm-4.32.1.dist-info/top_level.txt",
+    "Lib/site-packages/tqdm/__init__.py",
+    "Lib/site-packages/tqdm/__main__.py",
+    "Lib/site-packages/tqdm/_main.py",
+    "Lib/site-packages/tqdm/_monitor.py",
+    "Lib/site-packages/tqdm/_tqdm.py",
+    "Lib/site-packages/tqdm/_tqdm_gui.py",
+    "Lib/site-packages/tqdm/_tqdm_notebook.py",
+    "Lib/site-packages/tqdm/_tqdm_pandas.py",
+    "Lib/site-packages/tqdm/_utils.py",
+    "Lib/site-packages/tqdm/_version.py",
+    "Lib/site-packages/tqdm/auto/__init__.py",
+    "Lib/site-packages/tqdm/autonotebook/__init__.py",
+    "Lib/site-packages/tqdm/tqdm.1",
+    "Scripts/tqdm-script.py",
+    "Scripts/tqdm.exe",
+    "Lib/site-packages/tqdm/__pycache__/__init__.cpython-37.pyc",
+    "Lib/site-packages/tqdm/__pycache__/__main__.cpython-37.pyc",
+    "Lib/site-packages/tqdm/__pycache__/_main.cpython-37.pyc",
+    "Lib/site-packages/tqdm/__pycache__/_monitor.cpython-37.pyc",
+    "Lib/site-packages/tqdm/__pycache__/_tqdm.cpython-37.pyc",
+    "Lib/site-packages/tqdm/__pycache__/_tqdm_gui.cpython-37.pyc",
+    "Lib/site-packages/tqdm/__pycache__/_tqdm_notebook.cpython-37.pyc",
+    "Lib/site-packages/tqdm/__pycache__/_tqdm_pandas.cpython-37.pyc",
+    "Lib/site-packages/tqdm/__pycache__/_utils.cpython-37.pyc",
+    "Lib/site-packages/tqdm/__pycache__/_version.cpython-37.pyc",
+    "Lib/site-packages/tqdm/auto/__pycache__/__init__.cpython-37.pyc",
+    "Lib/site-packages/tqdm/autonotebook/__pycache__/__init__.cpython-37.pyc"
+  ],
+  "fn": "tqdm-4.32.1-py_0.tar.bz2",
+  "license": "MPLv2.0, MIT",
+  "license_family": "MIT",
+  "link": {
+    "source": "C:\\ProgramData\\Miniconda3\\pkgs\\tqdm-4.32.1-py_0",
+    "type": 1
+  },
+  "md5": "df66f76a4047823d6d50a56d3927a299",
+  "name": "tqdm",
+  "noarch": "python",
+  "package_tarball_full_path": "C:\\ProgramData\\Miniconda3\\pkgs\\tqdm-4.32.1-py_0.tar.bz2",
+  "package_type": "noarch_python",
+  "paths_data": {
+    "paths": [
+      {
+        "_path": "Scripts/tqdm-script.py",
+        "path_type": "windows_python_entry_point_script"
+      },
+      {
+        "_path": "Lib/site-packages/tqdm/__pycache__/__init__.cpython-37.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "Lib/site-packages/tqdm/__pycache__/__main__.cpython-37.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "Lib/site-packages/tqdm/__pycache__/_main.cpython-37.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "Lib/site-packages/tqdm/__pycache__/_monitor.cpython-37.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "Lib/site-packages/tqdm/__pycache__/_tqdm.cpython-37.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "Lib/site-packages/tqdm/__pycache__/_tqdm_gui.cpython-37.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "Lib/site-packages/tqdm/__pycache__/_tqdm_notebook.cpython-37.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "Lib/site-packages/tqdm/__pycache__/_tqdm_pandas.cpython-37.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "Lib/site-packages/tqdm/__pycache__/_utils.cpython-37.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "Lib/site-packages/tqdm/__pycache__/_version.cpython-37.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "Lib/site-packages/tqdm/auto/__pycache__/__init__.cpython-37.pyc",
+        "path_type": "pyc_file"
+      },
+      {
+        "_path": "Lib/site-packages/tqdm/autonotebook/__pycache__/__init__.cpython-37.pyc",
+        "path_type": "pyc_file"
+      }
+    ],
+    "paths_version": 1
+  },
+  "requested_spec": "tqdm==4.32.1=py_0",
+  "sha256": "59fac66f511ef2db7c87982f9136164bb0365379ec7786b2ee41353b877f495a",
+  "size": 49003,
+  "subdir": "noarch",
+  "timestamp": 1559863493799,
+  "track_features": "",
+  "url": "https://repo.anaconda.com/pkgs/main/noarch/tqdm-4.32.1-py_0.tar.bz2",
+  "version": "4.32.1"
+}

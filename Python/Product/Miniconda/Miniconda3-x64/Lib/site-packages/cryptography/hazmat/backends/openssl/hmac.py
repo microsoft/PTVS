@@ -9,10 +9,9 @@ from cryptography import utils
 from cryptography.exceptions import (
     InvalidSignature, UnsupportedAlgorithm, _Reasons
 )
-from cryptography.hazmat.primitives import constant_time, hashes, mac
+from cryptography.hazmat.primitives import constant_time, hashes
 
 
-@utils.register_interface(mac.MACContext)
 @utils.register_interface(hashes.HashContext)
 class _HMACContext(object):
     def __init__(self, backend, key, algorithm, ctx=None):
@@ -25,15 +24,16 @@ class _HMACContext(object):
             ctx = self._backend._ffi.gc(
                 ctx, self._backend._lib.Cryptography_HMAC_CTX_free
             )
-            name = self._backend._build_openssl_digest_name(algorithm)
-            evp_md = self._backend._lib.EVP_get_digestbyname(name)
+            evp_md = self._backend._evp_md_from_algorithm(algorithm)
             if evp_md == self._backend._ffi.NULL:
                 raise UnsupportedAlgorithm(
-                    "{0} is not a supported hash on this backend".format(name),
+                    "{} is not a supported hash on this backend".format(
+                        algorithm.name),
                     _Reasons.UNSUPPORTED_HASH
                 )
+            key_ptr = self._backend._ffi.from_buffer(key)
             res = self._backend._lib.HMAC_Init_ex(
-                ctx, key, len(key), evp_md, self._backend._ffi.NULL
+                ctx, key_ptr, len(key), evp_md, self._backend._ffi.NULL
             )
             self._backend.openssl_assert(res != 0)
 
@@ -55,7 +55,8 @@ class _HMACContext(object):
         )
 
     def update(self, data):
-        res = self._backend._lib.HMAC_Update(self._ctx, data, len(data))
+        data_ptr = self._backend._ffi.from_buffer(data)
+        res = self._backend._lib.HMAC_Update(self._ctx, data_ptr, len(data))
         self._backend.openssl_assert(res != 0)
 
     def finalize(self):

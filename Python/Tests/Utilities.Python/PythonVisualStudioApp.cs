@@ -295,7 +295,7 @@ namespace TestUtilities.UI.Python {
             IVsInteractiveWindow window = null;
             for (int retries = 20; retries > 0 && window == null; --retries) {
                 System.Threading.Thread.Sleep(100);
-                window = iwp?.AllOpenWindows.FirstOrDefault(w => ((ToolWindowPane)w).Caption == title);
+                window = iwp?.AllOpenWindows.FirstOrDefault(w => ((ToolWindowPane)w).Caption.StartsWith(title));
             }
             if (window == null) {
                 Trace.TraceWarning(
@@ -314,7 +314,7 @@ namespace TestUtilities.UI.Python {
 
         public ReplWindowProxy GetInteractiveWindow(string title, ReplWindowProxySettings settings = null) {
             var iwp = GetService<IComponentModel>(typeof(SComponentModel))?.GetService<InteractiveWindowProvider>();
-            var window = iwp?.AllOpenWindows.FirstOrDefault(w => ((ToolWindowPane)w).Caption == title);
+            var window = iwp?.AllOpenWindows.FirstOrDefault(w => ((ToolWindowPane)w).Caption.StartsWith(title));
             if (window == null) {
                 Trace.TraceWarning(
                     "Failed to find {0} in {1}",

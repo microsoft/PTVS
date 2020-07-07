@@ -55,7 +55,7 @@ namespace PythonToolsMockTests {
             MockPythonToolsPackage.SuppressTaskProvider = false;
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void GetApplicableSpanCompleteWordTest() {
             var text = "if fob.oar(eggs, spam<=ham) :";
 
@@ -88,7 +88,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void GetApplicableSpanAutoTest() {
             using (var view = new PythonEditor("x = id")) {
                 var snapshot = view.CurrentSnapshot;
@@ -98,7 +98,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void CtrlSpaceCompletions() {
             using (var view = new PythonEditor()) {
                 view.Text = @"def f(param1, param2):
@@ -131,7 +131,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void KeywordCompletions() {
             var code = "def f():\r\n     \r\n    x = abc, oar, \r\n    pass\r\n#2\r\n";
             using (var view = new PythonEditor(code, version: PythonLanguageVersion.V35)) {
@@ -158,7 +158,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void KeywordOrIdentifierCompletions() {
             // http://pytools.codeplex.com/workitem/560
             string code = @"
@@ -191,7 +191,7 @@ yield_expression = 42
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void LambdaCompletions() {
             // https://github.com/Microsoft/PTVS/issues/1000
             string code = @"
@@ -206,7 +206,7 @@ l(42)
             }
         }
 
-        [TestMethod, Priority(TestExtensions.P2_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P2_FAILING)]
         public void TrueFalseNoneCompletions() {
             // http://pytools.codeplex.com/workitem/1905
             foreach (var version in new[] { PythonLanguageVersion.V27, PythonLanguageVersion.V33 }) {
@@ -229,7 +229,7 @@ l(42)
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void CtrlSpaceAfterKeyword() {
             // http://pytools.codeplex.com/workitem/560
             string code = @"
@@ -246,7 +246,7 @@ print
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void CtrlSpaceAfterNumber() {
             // http://pytools.codeplex.com/workitem/2323
             string code = @"
@@ -264,7 +264,7 @@ print
             }
         }
 
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void ExceptionCompletions() {
             using (var vs = new MockVs()) {
                 foreach (var ver in new[] { PythonLanguageVersion.V36, PythonLanguageVersion.V27 }) {
@@ -314,7 +314,7 @@ except (sys."}) {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public async Task MemberCompletions() {
             using (var view = new PythonEditor("x = 2\r\nx.")) {
                 // See tests in ExpressionFinder
@@ -362,7 +362,7 @@ except (sys."}) {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void SignatureHelp() {
             var prefixes = new[] { "", "(", "a = ", "f(", "l[", "{", "if " };
             var sigs = new[] { 
@@ -425,7 +425,7 @@ except (sys."}) {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void SignatureHelpStarArgs() {
             SignatureAnalysis sigResult = null;
             using (var view = new PythonEditor(@"def f(a, *b, c=None): pass
@@ -444,7 +444,7 @@ f(1, 2, 3, 4,")) {
             }
         }
 
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void ImportCompletions() {
             using (var view = new PythonEditor()) {
                 view.Text = "import  ";
@@ -476,7 +476,7 @@ f(1, 2, 3, 4,")) {
             }
         }
 
-        [TestMethod, Priority(TestExtensions.P2_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P2_FAILING)]
         public void FromImportCompletions() {
             using (var view = new PythonEditor()) {
                 IEnumerable<string> completions = null;
@@ -547,7 +547,7 @@ f(1, 2, 3, 4,")) {
         }
 
 
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void FromOSPathImportCompletions2x() {
             using (var vs = new MockVs()) {
                 var factory = vs.Invoke(() => vs.GetPyService().InterpreterRegistryService.Interpreters.LastOrDefault(p => p.Configuration.Version.Major == 2));
@@ -555,7 +555,7 @@ f(1, 2, 3, 4,")) {
             }
         }
 
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void FromOSPathImportCompletions3x() {
             using (var vs = new MockVs()) {
                 var factory = vs.Invoke(() => vs.GetPyService().InterpreterRegistryService.Interpreters.LastOrDefault(p => p.Configuration.Version.Major == 3));
@@ -599,7 +599,7 @@ f(1, 2, 3, 4,")) {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void FromImportMultilineCompletions() {
             using (var editor = new PythonEditor()) {
                 editor.Text = "from sys import (";
@@ -620,7 +620,7 @@ f(1, 2, 3, 4,")) {
             }
         }
         
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
         public void CompletionInTripleQuotedString() {
             string code = @"
@@ -641,7 +641,7 @@ sys.
             }
         }
 
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void GotoDefinition() {
             using (var vs = new MockVs()) {
                 string code = @"
@@ -660,7 +660,7 @@ C().fff";
             }
         }
 
-        [TestMethod, Priority(TestExtensions.P2_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P2_FAILING)]
         public void QuickInfo() {
             string code = @"
 x = ""ABCDEFGHIJKLMNOPQRSTUVWYXZ""
@@ -716,7 +716,7 @@ e): <unknown type>");
             }
         }
 
-        [TestMethod, Priority(TestExtensions.P2_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P2_FAILING)]
         public void NormalOverrideCompletions() {
             using (var view2 = new PythonEditor(version: PythonLanguageVersion.V27))
             using (var view3 = new PythonEditor(version: PythonLanguageVersion.V33)) {
@@ -809,7 +809,7 @@ class Baz(Fob, Oar):
             }
         }
 
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void BuiltinOverrideCompletions() {
             AssertOverrideInsertionContains(PythonLanguageVersion.V27, "str", "capitalize", "capitalize(self):\r\n        return super(Fob, self).capitalize()");
             AssertOverrideInsertionContains(PythonLanguageVersion.V33, "str", "capitalize", "capitalize(self):\r\n        return super().capitalize()");
@@ -818,7 +818,7 @@ class Baz(Fob, Oar):
             AssertOverrideInsertionContains(PythonLanguageVersion.V33, "str", "index", "index(self", "):\r\n        return super().index(");
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void OverridesWithMismatchedAnalysis() {
             // Here we create a buffer and analyze. We then add some newlines
             // and a def, expecting completions from A (int). Because the def
@@ -851,7 +851,7 @@ class B(dict):
             }
         }
 
-        [TestMethod, Priority(2)]
+        [TestMethod, Priority(UnitTestPriority.P2)]
         public void HideAdvancedMembers() {
             using (var view = new PythonEditor()) {
                 // No text - expect all non-advanced members
@@ -905,7 +905,7 @@ class B(dict):
             }
         }
 
-        [TestMethod, Priority(TestExtensions.P2_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P2_FAILING)]
         public void CompletionWithLongDocString() {
             using (var vs = new MockVs()) {
                 var docString = GenerateText(100, 72, "    ").ToArray();
@@ -958,7 +958,7 @@ def func(a):
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void ClassCompletionOutsideFunction() {
             // Note that "eggs_and_spam" is longer than the indentation of each
             // scope.
@@ -991,7 +991,7 @@ class Spam(object):
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void ArgumentNameCompletion() {
             const string code = @"
 def f(param1 = 123, param2 : int = 234):
@@ -1006,7 +1006,7 @@ x = f(";
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void MethodArgumentNameCompletion() {
             const string code = @"
 class MyClass:
@@ -1030,7 +1030,7 @@ x = m.f(";
             }
         }
 
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void YieldFromExpressionCompletion() {
             const string code = @"
 def f():
@@ -1059,7 +1059,7 @@ def g():
             }
         }
 
-        [TestMethod, Priority(TestExtensions.P0_FAILING_UNIT_TEST)]
+        [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void AwaitExpressionCompletion() {
             const string code = @"
 async def f():

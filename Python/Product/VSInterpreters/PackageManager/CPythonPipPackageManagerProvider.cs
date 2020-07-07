@@ -35,32 +35,27 @@ namespace Microsoft.PythonTools.Interpreter {
         private static readonly PipPackageManagerCommands CommandsV27AndLater = new PipCommandsV27AndLater();
 
         private readonly ICondaLocatorProvider _condaLocatorProvider;
-        //private readonly Dictionary<IPythonInterpreterFactory, IPackageManager> _packageManagerMap;
+        private readonly Dictionary<IPythonInterpreterFactory, IPackageManager> _packageManagerMap;
 
         [ImportingConstructor]
         public CPythonPipPackageManagerProvider(
             [Import] ICondaLocatorProvider condaLocatorProvider
         ) {
             _condaLocatorProvider = condaLocatorProvider;
-            //_packageManagerMap = new Dictionary<IPythonInterpreterFactory, IPackageManager>();
+            _packageManagerMap = new Dictionary<IPythonInterpreterFactory, IPackageManager>();
         }
 
         public IEnumerable<IPackageManager> GetPackageManagers(IPythonInterpreterFactory factory) {
             IPackageManager pm = null;
+            lock (_packageManagerMap) {
+                if (!_packageManagerMap.TryGetValue(factory, out pm)) {
+                    pm = TryCreatePackageManager(factory);
+                    if (pm != null) {
+                        _packageManagerMap.Add(factory, pm);
+                    }
+                }
+            }
 
-            // TODO: reusing instances is causing instability, so turning it off for now
-            // https://github.com/microsoft/PTVS/issues/5517
-
-            //lock (_packageManagerMap) {
-            //    if (!_packageManagerMap.TryGetValue(factory, out pm)) {
-            //        pm = TryCreatePackageManager(factory);
-            //        if (pm != null) {
-            //            _packageManagerMap.Add(factory, pm);
-            //        }
-            //    }
-            //}
-
-            pm = TryCreatePackageManager(factory);
             if (pm != null) {
                 yield return pm;
             }

@@ -165,7 +165,7 @@ permissions and limitations under the License.
   <Target Name="PythonRunPyLintCommand"
           Label="resource:Microsoft.PythonTools.Common;Microsoft.PythonTools.Common.Strings;RunPyLintLabel"
           Returns="@(Commands)">
-    <CreatePythonCommandItem Target="pylint.lint"
+    <CreatePythonCommandItem Target="pylint"
                              TargetType="module"
                              Arguments="&quot;--msg-template={abspath}({line},{column}): {category} {msg_id}: {msg} [{C}:{symbol}]&quot; -r n @(Compile, ' ')"
                              WorkingDirectory="$(MSBuildProjectDirectory)"

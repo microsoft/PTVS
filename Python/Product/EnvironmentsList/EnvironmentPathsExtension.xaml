@@ -4,7 +4,8 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:l="clr-namespace:Microsoft.PythonTools.EnvironmentsList"
-             xmlns:wpf="clr-namespace:Microsoft.VisualStudioTools.Wpf"
+             xmlns:wpf="clr-namespace:Microsoft.VisualStudioTools.Wpf" 
+             xmlns:vsui="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.15.0"
              UseLayoutRounding="True"
              mc:Ignorable="d" 
              Focusable="False"
@@ -13,13 +14,16 @@
         <CommandBinding Command="{x:Static l:EnvironmentPathsExtension.OpenInFileExplorer}"
                         CanExecute="OpenInFileExplorer_CanExecute"
                         Executed="OpenInFileExplorer_Executed" />
+        <CommandBinding Command="{x:Static l:EnvironmentPathsExtension.OpenInBrowser}"
+                        CanExecute="OpenInBrowser_CanExecute"
+                        Executed="OpenInBrowser_Executed" />
     </UserControl.CommandBindings>
     <UserControl.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/Microsoft.PythonTools;component/PythonTools/Wpf/ModernStyles.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/Microsoft.PythonTools.EnvironmentsList;component/EnvironmentView.xaml" />
                 <ResourceDictionary Source="pack://application:,,,/Microsoft.PythonTools.EnvironmentsList;component/FileNameLabel.xaml" />
-
                 <ResourceDictionary>
                     <wpf:Lambda x:Key="BoolToVisible">(bool b) => b ? Visibility.Visible : Visibility.Collapsed</wpf:Lambda>
                     <wpf:Lambda x:Key="BoolToCollapsed">(bool b) => b ? Visibility.Collapsed : Visibility.Visible</wpf:Lambda>
@@ -358,29 +362,29 @@
                                            Content="{x:Static l:Resources.EnvironmentPathsExtensionBrokenEnvironmentLabel}"/>
                                 </Grid>
                             </Button>
-                            <Button x:Name="SupportUrl"
-                                    Command="{x:Static l:EnvironmentPathsExtension.OpenInBrowser}"
-                                    CommandParameter="{Binding SupportUrl,Mode=OneWay}"
-                                    ToolTip="{Binding SupportUrl,Mode=OneWay}"
-                                    Style="{StaticResource NavigationButton}"
-                                    Margin="6 9 6 4"
-                                    HorizontalAlignment="Left"
-                                    AutomationProperties.Name="{x:Static l:Resources.EnvironmentPathsExtensionSupportInformationLabel}"
-                                    AutomationProperties.HelpText="{Binding SupportUrl,Mode=OneWay}">
-                                <Grid Background="Transparent">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="auto" />
-                                        <ColumnDefinition />
-                                    </Grid.ColumnDefinitions>
-                                    <ContentControl Grid.Column="0"
+                            <Grid
+                                x:Name="SupportUrl"
+                                Background="Transparent"
+                                  Margin="6 9 6 6">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="auto" />
+                                    <ColumnDefinition />
+                                </Grid.ColumnDefinitions>
+                                <ContentControl Grid.Column="0"
                                                     Margin="3 0"
                                                     Style="{StaticResource HelpImage}"
                                                     IsTabStop="False"/>
-                                    <Label Grid.Column="1" Style="{StaticResource FileNameLabel}"
-                                           Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=Button}}"
-                                           Content="{x:Static l:Resources.EnvironmentPathsExtensionSupportInformationLabel}"/>
-                                </Grid>
-                            </Button>
+                                <vsui:HyperlinkButton
+                                    Grid.Column="1"
+                                    HorizontalAlignment="Left"
+                                    Content="{x:Static l:Resources.EnvironmentPathsExtensionSupportInformationLabel}"
+                                    Command="{x:Static l:EnvironmentPathsExtension.OpenInBrowser}"
+                                    CommandParameter="{Binding SupportUrl,Mode=OneWay}"
+                                    ToolTip="{Binding SupportUrl,Mode=OneWay}"
+                                    AutomationProperties.Name="{x:Static l:Resources.EnvironmentPathsExtensionSupportInformationLabel}"
+                                    AutomationProperties.HelpText="{Binding SupportUrl,Mode=OneWay}">
+                                </vsui:HyperlinkButton>
+                            </Grid>
                         </StackPanel>
 
                         <DataTemplate.Triggers>

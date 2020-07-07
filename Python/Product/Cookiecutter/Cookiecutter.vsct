@@ -42,7 +42,6 @@
       <Menu guid="guidCookiecutterCmdSet" id="WindowToolBarId" type="ToolWindowToolbar" priority="0x100">
         <Parent guid="guidCookiecutterCmdSet" id="0" />
         <CommandFlag>DefaultDocked</CommandFlag>
-        <CommandFlag>NoToolbarClose</CommandFlag>
         <CommandFlag>AlwaysCreate</CommandFlag>
         <CommandFlag>TextChanges</CommandFlag>
         <Strings>

@@ -57,6 +57,13 @@ class HashContext(object):
         """
 
 
+@six.add_metaclass(abc.ABCMeta)
+class ExtendableOutputFunction(object):
+    """
+    An interface for extendable output functions.
+    """
+
+
 @utils.register_interface(HashContext)
 class Hash(object):
     def __init__(self, algorithm, backend, ctx=None):
@@ -82,8 +89,7 @@ class Hash(object):
     def update(self, data):
         if self._ctx is None:
             raise AlreadyFinalized("Context was already finalized.")
-        if not isinstance(data, bytes):
-            raise TypeError("data must be bytes.")
+        utils._check_byteslike("data", data)
         self._ctx.update(data)
 
     def copy(self):
@@ -106,6 +112,20 @@ class SHA1(object):
     name = "sha1"
     digest_size = 20
     block_size = 64
+
+
+@utils.register_interface(HashAlgorithm)
+class SHA512_224(object):  # noqa: N801
+    name = "sha512-224"
+    digest_size = 28
+    block_size = 128
+
+
+@utils.register_interface(HashAlgorithm)
+class SHA512_256(object):  # noqa: N801
+    name = "sha512-256"
+    digest_size = 32
+    block_size = 128
 
 
 @utils.register_interface(HashAlgorithm)
@@ -137,6 +157,64 @@ class SHA512(object):
 
 
 @utils.register_interface(HashAlgorithm)
+class SHA3_224(object):  # noqa: N801
+    name = "sha3-224"
+    digest_size = 28
+
+
+@utils.register_interface(HashAlgorithm)
+class SHA3_256(object):  # noqa: N801
+    name = "sha3-256"
+    digest_size = 32
+
+
+@utils.register_interface(HashAlgorithm)
+class SHA3_384(object):  # noqa: N801
+    name = "sha3-384"
+    digest_size = 48
+
+
+@utils.register_interface(HashAlgorithm)
+class SHA3_512(object):  # noqa: N801
+    name = "sha3-512"
+    digest_size = 64
+
+
+@utils.register_interface(HashAlgorithm)
+@utils.register_interface(ExtendableOutputFunction)
+class SHAKE128(object):
+    name = "shake128"
+
+    def __init__(self, digest_size):
+        if not isinstance(digest_size, six.integer_types):
+            raise TypeError("digest_size must be an integer")
+
+        if digest_size < 1:
+            raise ValueError("digest_size must be a positive integer")
+
+        self._digest_size = digest_size
+
+    digest_size = utils.read_only_property("_digest_size")
+
+
+@utils.register_interface(HashAlgorithm)
+@utils.register_interface(ExtendableOutputFunction)
+class SHAKE256(object):
+    name = "shake256"
+
+    def __init__(self, digest_size):
+        if not isinstance(digest_size, six.integer_types):
+            raise TypeError("digest_size must be an integer")
+
+        if digest_size < 1:
+            raise ValueError("digest_size must be a positive integer")
+
+        self._digest_size = digest_size
+
+    digest_size = utils.read_only_property("_digest_size")
+
+
+@utils.register_interface(HashAlgorithm)
 class MD5(object):
     name = "md5"
     digest_size = 16
@@ -151,13 +229,9 @@ class BLAKE2b(object):
     block_size = 128
 
     def __init__(self, digest_size):
-        if (
-            digest_size > self._max_digest_size or
-            digest_size < self._min_digest_size
-        ):
-            raise ValueError("Digest size must be {0}-{1}".format(
-                self._min_digest_size, self._max_digest_size)
-            )
+
+        if digest_size != 64:
+            raise ValueError("Digest size must be 64")
 
         self._digest_size = digest_size
 
@@ -172,13 +246,9 @@ class BLAKE2s(object):
     _min_digest_size = 1
 
     def __init__(self, digest_size):
-        if (
-            digest_size > self._max_digest_size or
-            digest_size < self._min_digest_size
-        ):
-            raise ValueError("Digest size must be {0}-{1}".format(
-                self._min_digest_size, self._max_digest_size)
-            )
+
+        if digest_size != 32:
+            raise ValueError("Digest size must be 32")
 
         self._digest_size = digest_size
 

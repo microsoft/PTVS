@@ -110,5 +110,11 @@
     <!-- Allows assemblies to specify their own version -->
     <SuppressCommonAssemblyVersion Condition="'$(SuppressCommonAssemblyVersion)' == ''">false</SuppressCommonAssemblyVersion>
   </PropertyGroup>
+  <PropertyGroup>
+    <PackagePreprocessorDefinitions>
+      <!-- VsDdeApplication is defined incorrectly in Microsoft.Wix4.Swix.Tools.targets so we hard code it until they fix it -->
+      VsDdeApplication16=VisualStudio.16.0
+    </PackagePreprocessorDefinitions>
+  </PropertyGroup>
 
 </Project>

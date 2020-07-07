@@ -39,7 +39,7 @@ namespace ProjectUITestsRunner {
         public static void ClassCleanup() => VsTestContext.Instance.Dispose();
         #endregion
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void RunWithoutStartupFile() {
             _vs.RunTest(nameof(ProjectUITests.ScriptProjectTests.RunWithoutStartupFile));
@@ -49,13 +49,13 @@ namespace ProjectUITestsRunner {
         /// Renaming the folder containing the startup script should update the startup script
         /// https://nodejstools.codeplex.com/workitem/476
         /// </summary>
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void RenameStartupFileFolder() {
             _vs.RunTest(nameof(ProjectUITests.ScriptProjectTests.RenameStartupFileFolder));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
         public void RenameStartupFile() {
             _vs.RunTest(nameof(ProjectUITests.ScriptProjectTests.RenameStartupFile));
