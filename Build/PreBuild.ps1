@@ -58,17 +58,6 @@ try {
         Write-Host "Creating symlink for $_.$($versions[$_])"
         New-Item -ItemType Junction "$outdir\$_" -Value "$outdir\$_.$($versions[$_])"
     } | Out-Null
-
-    $container = "python-language-server-daily"
-    $ver = "0.5.51"
-    "Downloading language server $ver from CDN"
-    @("x86", "x64") | %{
-        $filename = "Python-Language-Server-win-$_.$ver"
-        Invoke-WebRequest "https://pvsc.azureedge.net/$container/$filename.nupkg" -OutFile "$outdir\Python-Language-Server-win-$_.zip"
-        # Expand-Archive "$outdir\$filename.zip" -DestinationPath "$outdir\LanguageServer\$_" -Force
-        # Write-Host "Expanded $filename"
-    }
-
 } finally {
     popd
 }

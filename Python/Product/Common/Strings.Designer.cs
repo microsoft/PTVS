@@ -4636,11 +4636,11 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Node.js based language server was not found..
+        ///   Looks up a localized string similar to Pylance was not found. Ensure that environment variable PTVS_PYLANCE_STARTUP_FILE is pointing to server.js or server.bundle.js.
         /// </summary>
-        public static string LanguageClientNodejsServerNotFound {
+        public static string LanguageClientPylanceNotFound {
             get {
-                return ResourceManager.GetString("LanguageClientNodejsServerNotFound", resourceCulture);
+                return ResourceManager.GetString("LanguageClientPylanceNotFound", resourceCulture);
             }
         }
         

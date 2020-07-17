@@ -23,7 +23,7 @@ using Microsoft.Build.Tasks;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.LanguageServerClient {
-    internal interface IPythonLanguageClientContext : ICloneable {
+    public interface IPythonLanguageClientContext : ICloneable {
         string ContentTypeName { get; }
 
         InterpreterConfiguration InterpreterConfiguration { get; }

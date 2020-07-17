@@ -55,7 +55,8 @@ namespace Microsoft.PythonTools.Interpreter {
             });
         }
 
-        // LSC: replacement for ModulePath.GetModulesInLib which disappeared, this is an approximation
+        // TODO: Pylance
+        // Replacement for ModulePath.GetModulesInLib which disappeared, this is an approximation
         private static IEnumerable<ModulePath> GetModulesInLib(
             string libraryPath,
             string sitePackagesPath,

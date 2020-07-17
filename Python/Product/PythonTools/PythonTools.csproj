@@ -335,17 +335,15 @@
     <Compile Include="PythonTools\Intellisense\CodeCellAnalysis.cs" />
     <Compile Include="PythonTools\Intellisense\ParameterResult.cs" />
     <Compile Include="PythonTools\Intellisense\PythonMemberType.cs" />
-    <Compile Include="PythonTools\LanguageServerClient\PythonFilePathToContentTypeProvider.cs" />
     <Compile Include="PythonTools\LanguageServerClient\IPythonLanguageClientContext.cs" />
+    <Compile Include="PythonTools\LanguageServerClient\NodeEnvironmentProvider.cs" />
     <Compile Include="PythonTools\LanguageServerClient\PythonLanguageClientContextFixed.cs" />
     <Compile Include="PythonTools\LanguageServerClient\PythonLanguageClientContextGlobal.cs" />
     <Compile Include="PythonTools\LanguageServerClient\PythonLanguageClientContextRepl.cs" />
     <Compile Include="PythonTools\LanguageServerClient\PythonLanguageClientContextWorkspace.cs" />
     <Compile Include="PythonTools\LanguageServerClient\PythonLanguageClientContextProject.cs" />
-    <Compile Include="PythonTools\LanguageServerClient\PythonLanguageClientMetadata.cs" />
     <Compile Include="PythonTools\LanguageServerClient\PythonLanguageServer.cs" />
-    <Compile Include="PythonTools\LanguageServerClient\PythonLanguageServerDotNetCore.cs" />
-    <Compile Include="PythonTools\LanguageServerClient\PythonLanguageServerNodejs.cs" />
+    <Compile Include="PythonTools\LanguageServerClient\PythonLanguageServerPylance.cs" />
     <Compile Include="PythonTools\LanguageServerClient\ReplDocument.cs" />
     <Compile Include="PythonTools\PythonLanguageInfo.cs" />
     <Compile Include="PythonTools\Options\PythonCondaOptions.cs" />
@@ -698,7 +696,6 @@
     </Content>
     <Content Include="images\AddPackage_16x.png" />
     <Content Include="images\AddPackage_16x.svg" />
-    <Content Include="PythonTools\LanguageServerClient\NOTES.txt" />
     <Content Include="Theme\Microsoft.PythonTools.theme.v16.0.pkgdef" />
     <Content Include="Theme\Repl\Microsoft.PythonTools.Repl.theme.v15.0.pkgdef" />
     <Content Include="Theme\Repl\Microsoft.PythonTools.Repl.theme.v16.0.pkgdef" />

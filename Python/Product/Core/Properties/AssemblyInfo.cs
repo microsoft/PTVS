@@ -38,8 +38,9 @@ using Microsoft.VisualStudio.Shell;
      Version = ParserNuGetPackageInfo.Version, Culture = ParserNuGetPackageInfo.Culture, PublicKeyToken = ParserNuGetPackageInfo.PublicKeyToken
  )]
 
-// LSC - can't use these on build machine for unknown reason (it fails to load the assembly when registering)
-// We'll move this code into this repo at some point and we can make these entries like the ones for in-product assemblies
+// TODO: Pylance
+// Can't use these attributes on build machine for unknown reason (it fails to load the assembly when registering)
+// We'll move these projects into this repo at some point and we can use these ProvideCodeBase at that point and eliminate the ones above
 //[assembly: ProvideCodeBase(AssemblyName = "Microsoft.Python.Core", CodeBase = @"$PackageFolder$\Microsoft.Python.Core.dll")]
 //[assembly: ProvideCodeBase(AssemblyName = "Microsoft.Python.Parsing", CodeBase = @"$PackageFolder$\Microsoft.Python.Parsing.dll")]
 

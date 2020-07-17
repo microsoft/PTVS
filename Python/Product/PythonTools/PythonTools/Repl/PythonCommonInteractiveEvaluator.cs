@@ -100,10 +100,6 @@ namespace Microsoft.PythonTools.Repl {
 
             if (disposing) {
                 Document?.Dispose();
-
-                if (ContentType != null) {
-                    PythonLanguageClient.DisposeLanguageClient(ContentType.TypeName);
-                }
             }
         }
 
@@ -153,25 +149,28 @@ namespace Microsoft.PythonTools.Repl {
                 evaluator = selEvaluator.Evaluator as PythonCommonInteractiveEvaluator;
             }
 
-            if (evaluator != null) {
-                var context = new PythonLanguageClientContextRepl(evaluator, ContentType.TypeName);
-                await PythonLanguageClient.EnsureLanguageClientAsync(
-                    _serviceProvider,
-                    ThreadHelper.JoinableTaskContext,
-                    context
-                );
+            // TODO: Pylance
+            // Activation will now be automatic, but we'll still need to maintain a ReplDocument
+            //if (evaluator != null) {
+            //    var context = new PythonLanguageClientContextRepl(evaluator, ContentType.TypeName);
+            //    await PythonLanguageClient.EnsureLanguageClientAsync(
+            //        _serviceProvider,
+            //        ThreadHelper.JoinableTaskContext,
+            //        context
+            //    );
 
-                var client = PythonLanguageClient.FindLanguageClient(ContentType.TypeName);
-                if (client != null) {
-                    Document = new ReplDocument(_serviceProvider, _window, client);
-                    await Document.InitializeAsync();
-                }
-            }
+            //    var client = PythonLanguageClient.FindLanguageClient(ContentType.TypeName);
+            //    if (client != null) {
+            //        Document = new ReplDocument(_serviceProvider, _window, client);
+            //        await Document.InitializeAsync();
+            //    }
+            //}
         }
 
         internal async Task RestartLanguageServerAsync() {
             if (ContentType != null) {
-                PythonLanguageClient.DisposeLanguageClient(ContentType.TypeName);
+                // TODO: Pylance
+                //PythonLanguageClient.DisposeLanguageClient(ContentType.TypeName);
                 Document?.Dispose();
                 Document = null;
             }

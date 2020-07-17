@@ -16,8 +16,8 @@
 
 using System;
 using System.Diagnostics;
-using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudio.Threading;
 using Newtonsoft.Json.Linq;
 using StreamJsonRpc;
 using Task = System.Threading.Tasks.Task;
@@ -25,15 +25,17 @@ using Task = System.Threading.Tasks.Task;
 namespace Microsoft.PythonTools.LanguageServerClient {
     internal class PythonLanguageClientCustomTarget {
         private readonly IServiceProvider _site;
+        private readonly JoinableTaskContext _joinableTaskContext;
 
-        public PythonLanguageClientCustomTarget(IServiceProvider site) {
+        public PythonLanguageClientCustomTarget(IServiceProvider site, JoinableTaskContext joinableTaskContext) {
             _site = site ?? throw new ArgumentNullException(nameof(site));
+            _joinableTaskContext = joinableTaskContext;
         }
 
         [JsonRpcMethod("telemetry/event")]
         public void OnTelemetryEvent(JToken arg) {
-            var telemetry = arg as JObject;
-            if (telemetry != null) {
+            if (arg is JObject telemetry) {
+                // TODO: forward this to VS telemetry
                 Trace.WriteLine(telemetry.ToString());
             }
         }
@@ -44,24 +46,23 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
         [JsonRpcMethod("python/reportProgress")]
         public async Task OnReportProgressAsync(JToken arg) {
-            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+            if (arg != null) {
+                await _joinableTaskContext.Factory.SwitchToMainThreadAsync();
 
-            var msg = arg.ToString();
-            var statusBar = _site.GetService(typeof(SVsStatusbar)) as IVsStatusbar;
-            statusBar?.SetText(msg);
+                // TODO: output window as well/instead?
+                var msg = arg.ToString();
+                var statusBar = _site.GetService(typeof(SVsStatusbar)) as IVsStatusbar;
+                statusBar?.SetText(msg);
+            }
         }
 
         [JsonRpcMethod("python/endProgress")]
         public async Task OnEndProgressAsync() {
-            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+            await _joinableTaskContext.Factory.SwitchToMainThreadAsync();
 
+            // TODO: localize text
             var statusBar = _site.GetService(typeof(SVsStatusbar)) as IVsStatusbar;
             statusBar?.SetText("Python analysis done");
-        }
-
-        public string OnCustomRequest(string test) {
-            // Example of a request from server. Don't know if we have any of those.
-            return string.Empty;
         }
     }
 }

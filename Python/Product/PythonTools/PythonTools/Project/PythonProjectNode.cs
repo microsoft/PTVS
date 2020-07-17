@@ -281,7 +281,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private void PackageManager_InstalledFilesChanged(object sender, EventArgs e) {
-            // LSC
+            // TODO: Pylance
             //try {
             //    _reanalyzeProjectNotification.Change(500, Timeout.Infinite);
             //} catch (ObjectDisposedException) {

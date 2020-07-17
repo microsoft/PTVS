@@ -2980,8 +2980,8 @@ Please specify at least one package.</value>
   <data name="LanguageClientNodejsNotFound" xml:space="preserve">
     <value>Node.js was not found. It is required to run the language server.</value>
   </data>
-  <data name="LanguageClientNodejsServerNotFound" xml:space="preserve">
-    <value>Node.js based language server was not found.</value>
+  <data name="LanguageClientPylanceNotFound" xml:space="preserve">
+    <value>Pylance was not found. Ensure that environment variable PTVS_PYLANCE_STARTUP_FILE is pointing to server.js or server.bundle.js</value>
   </data>
   <data name="LanguageClientInitializeFailed" xml:space="preserve">
     <value>Language server initialization failed.\n\n{0}</value>

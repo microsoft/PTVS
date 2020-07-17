@@ -20,7 +20,11 @@ using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Project;
 
 namespace Microsoft.PythonTools.Django.Intellisense {
-    // LSC: This only returns the fixed tags and filters now, it no longer analyzes user code
+    /// <summary>
+    /// Historically, this provided information on variable, tags and filters
+    /// defined in the project, in addition to those built in to django.
+    /// Now, this only returns a fixed list built in tags and filters.
+    /// </summary>
     internal class DjangoProjectAnalyzer : IDjangoProjectAnalyzer {
         private readonly IPythonProject _project;
         private Dictionary<string, string> _tags = BuiltinTags.MakeKnownTagsTable();

@@ -158,12 +158,7 @@ namespace Microsoft.PythonTools.Repl {
                 curId = GetNextId();
             }
 
-            var contentTypeName = PythonFilePathToContentTypeProvider.GetContentTypeNameForREPL(curId);
-            var contentType = PythonFilePathToContentTypeProvider.GetOrCreateContentType(
-                _contentTypeService,
-                contentTypeName,
-                new[] { PythonCoreConstants.ReplContentType }
-            );
+            var contentType = _contentTypeService.GetContentType(PythonCoreConstants.ContentType);
             var evaluator = new SelectableReplEvaluator(_serviceProvider, _evaluators, replId, curId.ToString());
             var window = CreateInteractiveWindowInternal(
                 evaluator,
@@ -223,7 +218,7 @@ namespace Microsoft.PythonTools.Repl {
 
             int curId = GetNextId();
 
-            var contentType = PythonFilePathToContentTypeProvider.GetOrCreateContentType(_contentTypeService, curId.ToString());
+            var contentType = _contentTypeService.GetContentType(PythonCoreConstants.ContentType);
             var window = CreateInteractiveWindowInternal(
                 _evaluators.Select(p => p.GetEvaluator(replId)).FirstOrDefault(e => e != null),
                 contentType,
@@ -300,19 +295,8 @@ namespace Microsoft.PythonTools.Repl {
 
             // Initializes the command filters with the base Python content type
             // so that our MEF exports, such as ReplWindowCreationListener, are activated.
-            var pythonContentType = PythonFilePathToContentTypeProvider.GetOrCreateContentType(_contentTypeService, PythonCoreConstants.ContentType);
+            var pythonContentType = _contentTypeService.GetContentType(PythonCoreConstants.ContentType);
             replWindow.SetLanguage(GuidList.guidPythonLanguageServiceGuid, pythonContentType);
-
-            // SetLanguage above has set the content type on interactive window properties to base python content type
-            // We need to change it again to the derived content type to match the content type passed to LSC.
-            // Note: This prevents textmate colorization from working, comment this out to see that work.
-            // Note: Completions don't actually work on the window:
-            //       - LSC does not catch the input text buffer creation
-            //       - AsyncCompletionSource implementation uses the wrong text buffer to pass to RemoteCompletionBroker
-            replWindow.InteractiveWindow.Properties[typeof(IContentType)] = contentType;
-            if (replWindow.InteractiveWindow.CurrentLanguageBuffer != null) {
-                replWindow.InteractiveWindow.CurrentLanguageBuffer.ChangeContentType(contentType, null);
-            }
 
             var selectEval = evaluator as SelectableReplEvaluator;
             if (selectEval != null) {

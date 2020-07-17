@@ -15,24 +15,16 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
-using Microsoft.Python.Parsing;
 using Microsoft.VisualStudio.LanguageServer.Client;
 using Microsoft.VisualStudio.Threading;
 
 namespace Microsoft.PythonTools.LanguageServerClient {
     internal abstract class PythonLanguageServer {
-        public static PythonLanguageServer Create(IServiceProvider site, JoinableTaskContext joinableTaskContext, PythonLanguageVersion version) {
-            if (PythonLanguageServerNodejs.IsPreferred(version)) {
-                return new PythonLanguageServerNodejs(site, joinableTaskContext);
-            }
-
-            return new PythonLanguageServerDotNetCore(site, joinableTaskContext);
+        public static PythonLanguageServer Create(IServiceProvider site, JoinableTaskContext joinableTaskContext) {
+            return new PythonLanguageServerPylance(site, joinableTaskContext);
         }
 
         public abstract Task<Connection> ActivateAsync();
-
-        public abstract object CreateInitializationOptions(string interpreterPath, string interpreterVersion, string rootPath, IEnumerable<string> searchPaths);
     }
 }

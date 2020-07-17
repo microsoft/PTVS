@@ -99,10 +99,14 @@ namespace Microsoft.PythonTools.LiveShare {
                 return null;
             }
 
-            var contentTypeProvider = _serviceProvider.GetComponentModel().GetService<PyFilePathToContentTypeProvider>();
-            if (contentTypeProvider.TryGetContentTypeForFilePath(filePath, out var contentType)) {
-                return PythonLanguageClient.FindLanguageClient(contentType.TypeName);
-            }
+            // TODO: Pylance
+            // With Pylance and a single Language Client instance, we should
+            // no longer need a custom implementation for LiveShare support
+            // (this whole project goes away)
+            //var contentTypeProvider = _serviceProvider.GetComponentModel().GetService<PyFilePathToContentTypeProvider>();
+            //if (contentTypeProvider.TryGetContentTypeForFilePath(filePath, out var contentType)) {
+            //    return PythonLanguageClient.FindLanguageClient(contentType.TypeName);
+            //}
 
             return null;
         }

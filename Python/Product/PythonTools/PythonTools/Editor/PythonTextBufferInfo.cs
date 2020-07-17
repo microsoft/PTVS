@@ -135,8 +135,10 @@ namespace Microsoft.PythonTools.Editor {
 
         public PythonLanguageVersion LanguageVersion {
             get {
-                var client = PythonLanguageClient.FindLanguageClient(Buffer);
-                return client?.Configuration.Version.ToLanguageVersion() ?? _defaultLanguageVersion;
+                // TODO: Pylance
+                return PythonLanguageVersion.V37;
+                //var client = PythonLanguageClient.FindLanguageClient(Buffer);
+                //return client?.Configuration.Version.ToLanguageVersion() ?? _defaultLanguageVersion;
             }
         }
 

@@ -16,20 +16,19 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Composition;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using Microsoft.Python.Core.Disposables;
-using Microsoft.Python.Parsing;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.LanguageServer.Client;
 using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Threading;
-using Microsoft.VisualStudioTools;
+using Microsoft.VisualStudio.Utilities;
 using StreamJsonRpc;
 using LSP = Microsoft.VisualStudio.LanguageServer.Protocol;
 using Task = System.Threading.Tasks.Task;
@@ -41,137 +40,36 @@ namespace Microsoft.PythonTools.LanguageServerClient {
     /// <remarks>
     /// See documentation at https://docs.microsoft.com/en-us/visualstudio/extensibility/adding-an-lsp-extension?view=vs-2019
     /// </remarks>
-    internal class PythonLanguageClient : ILanguageClient, ILanguageClientCustomMessage2, IDisposable {
-        private readonly IServiceProvider _site;
-        private readonly JoinableTaskContext _joinableTaskContext;
-        private readonly IPythonLanguageClientContext _clientContext;
+    [Export(typeof(ILanguageClient))]
+    [ContentType(PythonCoreConstants.ContentType)]
+    public class PythonLanguageClient : ILanguageClient, ILanguageClientCustomMessage2, IDisposable {
+        [Import(typeof(SVsServiceProvider))]
+        public IServiceProvider Site;
+
+        [Import]
+        public IContentTypeRegistryService ContentTypeRegistryService;
+
+        [Import]
+        public IPythonWorkspaceContextProvider PythonWorkspaceContextProvider;
+
+        //[Import]
+        //public IInterpreterOptionsService OptionsService;
+
+        [Import]
+        public JoinableTaskContext JoinableTaskContext;
+
+        private IPythonLanguageClientContext _clientContext;
         private readonly DisposableBag _disposables;
         private PythonLanguageServer _server;
         private JsonRpc _rpc;
 
-        private static readonly List<PythonLanguageClient> _languageClients = new List<PythonLanguageClient>();
-
-        private PythonLanguageClient(
-            IServiceProvider site,
-            JoinableTaskContext joinableTaskContext,
-            IPythonLanguageClientContext clientContext
-        ) {
-            _site = site ?? throw new ArgumentNullException(nameof(site));
-            _joinableTaskContext = joinableTaskContext ?? throw new ArgumentNullException(nameof(joinableTaskContext));
-            _clientContext = clientContext ?? throw new ArgumentNullException(nameof(clientContext));
+        public PythonLanguageClient() {
             _disposables = new DisposableBag(GetType().Name);
-
-            _clientContext.InterpreterChanged += OnInterpreterChanged;
-            _clientContext.SearchPathsChanged += OnSearchPathsChanged;
-            _clientContext.Closed += OnClosed;
-
-            _disposables.Add(() => {
-                _clientContext.InterpreterChanged -= OnInterpreterChanged;
-                _clientContext.SearchPathsChanged -= OnSearchPathsChanged;
-                _clientContext.Closed -= OnClosed;
-            });
-
-            if (clientContext is IDisposable disposable) {
-                _disposables.Add(disposable);
-            }
-
-            CustomMessageTarget = new PythonLanguageClientCustomTarget(site);
         }
 
-        public static async Task EnsureLanguageClientAsync(
-            IServiceProvider site,
-            JoinableTaskContext joinableTaskContext,
-            IPythonLanguageClientContext clientContext
-        ) {
-            if (site == null) {
-                throw new ArgumentNullException(nameof(site));
-            }
+        public string ContentTypeName => PythonCoreConstants.ContentType;
 
-            if (joinableTaskContext == null) {
-                throw new ArgumentNullException(nameof(joinableTaskContext));
-            }
-
-            if (clientContext == null) {
-                throw new ArgumentNullException(nameof(clientContext));
-            }
-
-            await joinableTaskContext.Factory.SwitchToMainThreadAsync();
-
-            var broker = site.GetComponentModel().GetService<ILanguageClientBroker>();
-
-            await EnsureLanguageClientAsync(site, joinableTaskContext, clientContext, broker);
-        }
-
-        internal static async Task EnsureLanguageClientAsync(
-            IServiceProvider site,
-            JoinableTaskContext joinableTaskContext,
-            IPythonLanguageClientContext clientContext,
-            ILanguageClientBroker broker
-        ) {
-            if (site == null) {
-                throw new ArgumentNullException(nameof(site));
-            }
-
-            if (clientContext == null) {
-                throw new ArgumentNullException(nameof(clientContext));
-            }
-
-            if (broker == null) {
-                throw new ArgumentNullException(nameof(broker));
-            }
-
-            PythonLanguageClient client = null;
-            lock (_languageClients) {
-                if (!_languageClients.Any(lc => lc.ContentTypeName == clientContext.ContentTypeName)) {
-                    client = new PythonLanguageClient(site, joinableTaskContext, clientContext);
-                    _languageClients.Add(client);
-                }
-            }
-
-            if (client != null) {
-                await broker.LoadAsync(new PythonLanguageClientMetadata(null, clientContext.ContentTypeName), client);
-            }
-        }
-
-        public static PythonLanguageClient FindLanguageClient(string contentTypeName) {
-            if (contentTypeName == null) {
-                throw new ArgumentNullException(nameof(contentTypeName));
-            }
-
-            lock (_languageClients) {
-                return _languageClients.SingleOrDefault(lc => lc.ContentTypeName == contentTypeName);
-            }
-        }
-
-        public static PythonLanguageClient FindLanguageClient(ITextBuffer textBuffer) {
-            if (textBuffer == null) {
-                throw new ArgumentNullException(nameof(textBuffer));
-            }
-
-            return FindLanguageClient(textBuffer.ContentType.TypeName);
-        }
-
-        public static void DisposeLanguageClient(string contentTypeName) {
-            if (contentTypeName == null) {
-                throw new ArgumentNullException(nameof(contentTypeName));
-            }
-
-            PythonLanguageClient client = null;
-            lock (_languageClients) {
-                client = _languageClients.SingleOrDefault(lc => lc.ContentTypeName == contentTypeName);
-                if (client != null) {
-                    _languageClients.Remove(client);
-                    client.Stop();
-                    client.Dispose();
-                }
-            }
-        }
-
-        public string ContentTypeName => _clientContext.ContentTypeName;
-
-        public InterpreterConfiguration Configuration => _clientContext.InterpreterConfiguration;
-
-        public string Name => "Python Language Extension";
+        public string Name => "Pylance";
 
         public IEnumerable<string> ConfigurationSections {
             get {
@@ -181,14 +79,10 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             }
         }
 
-        // called from Microsoft.VisualStudio.LanguageServer.Client.RemoteLanguageClientInstance.InitializeAsync
-        // which sets Capabilities, RootPath, ProcessId, and InitializationOptions (to this property value)
-        // initParam.Capabilities.TextDocument.Rename = new DynamicRegistrationSetting(false); ??
-        // 
-        // in vscode, the equivalent is in src/client/activation/languageserver/analysisoptions
         public object InitializationOptions { get; private set; }
 
-        // TODO: what do we do with this?
+        // TODO: investigate how this can be used, VS does not allow currently
+        // for the server to dynamically register file watching.
         public IEnumerable<string> FilesToWatch => null;
 
         public object MiddleLayer { get; private set; }
@@ -213,40 +107,35 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
 
         public async Task OnLoadedAsync() {
-            await _joinableTaskContext.Factory.SwitchToMainThreadAsync();
+            await JoinableTaskContext.Factory.SwitchToMainThreadAsync();
 
-            var interpreterPath = _clientContext.InterpreterConfiguration?.InterpreterPath;
-            var version = _clientContext.InterpreterConfiguration?.Version;
-            var searchPaths = _clientContext.SearchPaths.ToList();
-            string rootPath = _clientContext.RootPath;
+            // Force the package to load, since this is a MEF component,
+            // there is no guarantee it has been loaded.
+            Site.GetPythonToolsService();
 
-            if (string.IsNullOrEmpty(interpreterPath) || version == null) {
+            if (PythonWorkspaceContextProvider.Workspace != null) {
+                _clientContext = new PythonLanguageClientContextWorkspace(PythonWorkspaceContextProvider.Workspace, PythonCoreConstants.ContentType);
+            } else {
+                // TODO
+                _clientContext = null;
+                MessageBox.Show("Pylance only supports workspaces right now.", Strings.ProductTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
-            PythonLanguageVersion langVersion;
-            try {
-                langVersion = version.ToLanguageVersion();
-            } catch (InvalidOperationException) {
-                langVersion = PythonLanguageVersion.None;
-            }
-
-            _server = PythonLanguageServer.Create(_site, _joinableTaskContext, langVersion);
+            _server = PythonLanguageServer.Create(Site, JoinableTaskContext);
             if (_server == null) {
                 return;
             }
 
-            InitializationOptions = _server.CreateInitializationOptions(
-                interpreterPath,
-                version.ToString(),
-                rootPath,
-                searchPaths
-            );
+            InitializationOptions = null;
+
+            CustomMessageTarget = new PythonLanguageClientCustomTarget(Site, JoinableTaskContext);
 
             await StartAsync.InvokeAsync(this, EventArgs.Empty);
         }
 
         public async Task OnServerInitializedAsync() {
+            await SendDidChangeConfiguration();
             IsInitialized = true;
         }
 
@@ -280,6 +169,17 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             return _rpc.NotifyWithParameterObjectAsync("textDocument/didChange", request);
         }
 
+        public Task InvokeDidChangeConfigurationAsync(
+            LSP.DidChangeConfigurationParams request,
+            CancellationToken cancellationToken = default(CancellationToken)
+        ) {
+            if (_rpc == null) {
+                return Task.CompletedTask;
+            }
+
+            return _rpc.NotifyWithParameterObjectAsync("workspace/didChangeConfiguration", request);
+        }
+
         public Task<LSP.CompletionList> InvokeTextDocumentCompletionAsync(
             LSP.CompletionParams request,
             CancellationToken cancellationToken = default(CancellationToken)
@@ -299,41 +199,61 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             return _rpc.InvokeWithParameterObjectAsync<TResult>(targetName, argument, cancellationToken);
         }
 
-        private void Stop() {
-            _site.GetUIThread().InvokeTaskSync(async () => {
-                await StopAsync?.Invoke(this, EventArgs.Empty);
-            }, CancellationToken.None);
-        }
-
-        private void Restart() {
-            _site.GetUIThread().InvokeTaskSync(RestartAsync, CancellationToken.None);
-        }
-
-        private async Task RestartAsync() {
-            // Disposing of the current language client will dispose of the context
-            // so we first make a copy of it to use when initializing the new client.
-            var site = _site;
-            var context = (IPythonLanguageClientContext)_clientContext.Clone();
-
-            DisposeLanguageClient(ContentTypeName);
-
-            await EnsureLanguageClientAsync(
-                site,
-                _joinableTaskContext,
-                context
-            );
-        }
-
         private void OnInterpreterChanged(object sender, EventArgs e) {
-            Restart();
+            SendDidChangeConfiguration().DoNotWait();
         }
 
         private void OnSearchPathsChanged(object sender, EventArgs e) {
-            Restart();
+            SendDidChangeConfiguration().DoNotWait();
         }
 
-        private void OnClosed(object sender, EventArgs e) {
-            PythonLanguageClient.DisposeLanguageClient(ContentTypeName);
+        private async Task SendDidChangeConfiguration() {
+            // TODO: client context needs to also provide the settings that are currently hard coded here
+            // so that workspace can get it from PythonSettings.json and projects from their .pyproj, etc.
+            var settings = new Settings {
+                python = new Settings.PythonSettings {
+                    pythonPath = _clientContext.InterpreterConfiguration.InterpreterPath,
+                    venvPath = string.Empty,
+                    analysis = new Settings.PythonSettings.PythonAnalysisSettings {
+                        logLevel = "log",
+                        autoSearchPaths = false,
+                        diagnosticMode = "openFilesOnly",
+                        diagnosticSeverityOverrides = new Dictionary<string, string>(),
+                        extraPaths = _clientContext.SearchPaths.ToArray(),
+                        stubPath = string.Empty,
+                        typeCheckingMode = "basic",
+                        useLibraryCodeForTypes = true
+                    }
+                }
+            };
+
+            var config = new LSP.DidChangeConfigurationParams() {
+                Settings = settings
+            };
+            await InvokeDidChangeConfigurationAsync(config);
+        }
+
+        [Serializable]
+        public sealed class Settings {
+            [Serializable]
+            public class PythonSettings {
+                [Serializable]
+                public class PythonAnalysisSettings {
+                    public string[] typeshedPaths;
+                    public string stubPath;
+                    public Dictionary<string, string> diagnosticSeverityOverrides;
+                    public string diagnosticMode; // TODO: make this an enum
+                    public string logLevel; // TODO: make this an enum
+                    public bool? autoSearchPaths;
+                    public string[] extraPaths;
+                    public string typeCheckingMode; // TODO: make this an enum
+                    public bool? useLibraryCodeForTypes;
+                }
+                public PythonAnalysisSettings analysis;
+                public string pythonPath;
+                public string venvPath;
+            }
+            public PythonSettings python;
         }
     }
 }

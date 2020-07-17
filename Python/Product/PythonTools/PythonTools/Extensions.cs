@@ -256,10 +256,11 @@ namespace Microsoft.PythonTools {
                 return evaluator.LanguageVersion;
             }
 
-            var client = PythonLanguageClient.FindLanguageClient(textView.TextBuffer);
-            if (client?.Configuration != null) {
-                return client.Configuration.Version.ToLanguageVersion();
-            }
+            // TODO: Pylance
+            //var client = PythonLanguageClient.FindLanguageClient(textView.TextBuffer);
+            //if (client?.Configuration != null) {
+            //    return client.Configuration.Version.ToLanguageVersion();
+            //}
 
             var defaultInterp = serviceProvider.GetPythonToolsService().InterpreterOptionsService.DefaultInterpreter;
             if (defaultInterp?.Configuration != null) {
@@ -275,10 +276,11 @@ namespace Microsoft.PythonTools {
         internal static InterpreterConfiguration GetInterpreterConfigurationAtCaret(this ITextView textView, IServiceProvider serviceProvider) {
             serviceProvider.GetUIThread().MustBeCalledFromUIThread();
 
-            var client = PythonLanguageClient.FindLanguageClient(textView.TextBuffer);
-            if (client?.Configuration != null) {
-                return client.Configuration;
-            }
+            // TODO
+            //var client = PythonLanguageClient.FindLanguageClient(textView.TextBuffer);
+            //if (client?.Configuration != null) {
+            //    return client.Configuration;
+            //}
 
             return serviceProvider.GetPythonToolsService().InterpreterOptionsService.DefaultInterpreter?.Configuration;
         }
