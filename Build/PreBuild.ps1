@@ -5,7 +5,6 @@ param ($vstarget, $source, $outdir)
 # These packages require a versionless symlink pointing to the versioned install.
 $need_symlink = @(
     "python",
-    "python2",
     "MicroBuild.Core",
     "Microsoft.VSSDK.BuildTools",
     "Microsoft.VSSDK.Debugger.VSDConfigTool",
