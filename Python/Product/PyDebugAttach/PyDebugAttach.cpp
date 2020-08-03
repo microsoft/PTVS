@@ -272,6 +272,8 @@ BOOL PatchFunction(LPSTR exportingDll, PVOID replacingFunc, LPVOID newFunction) 
         return FALSE;
     }
 
+#pragma warning(push)
+#pragma warning(disable:6263) // Using _alloca in a loop: this can quickly overflow stack. Note that this is _malloca, not _alloca, and will allocate on heap if needed.
     while (!EnumProcessModules(hProcess, hMods, modSize, &modsNeeded)) {
         // try again w/ more space...
         _freea(hMods);
@@ -282,11 +284,16 @@ BOOL PatchFunction(LPSTR exportingDll, PVOID replacingFunc, LPVOID newFunction) 
         }
         modSize = modsNeeded;
     }
+#pragma warning(pop)
 
     for (DWORD tmp = 0; tmp < modsNeeded / sizeof(HMODULE); tmp++) {
         PIMAGE_DOS_HEADER dosHeader = (PIMAGE_DOS_HEADER)hMods[tmp];
 
         PatchIAT(dosHeader, replacingFunc, exportingDll, newFunction);
+    }
+
+    if (hMods != nullptr) {
+        _freea(hMods);
     }
 
     return TRUE;
@@ -420,7 +427,7 @@ void SuspendThreads(ThreadMap &suspendedThreads, Py_AddPendingCall* addPendingCa
 
 
                         if (te.th32ThreadID != curThreadId && suspendedThreads.find(te.th32ThreadID) == suspendedThreads.end()) {
-                            auto hThread = OpenThread(THREAD_ALL_ACCESS, FALSE, te.th32ThreadID);
+                            HANDLE hThread = OpenThread(THREAD_ALL_ACCESS, FALSE, te.th32ThreadID);
                             if (hThread != nullptr) {
                                 SuspendThread(hThread);
 
@@ -578,7 +585,7 @@ ConnectionInfo GetConnectionInfo() {
     char* pBuf;
 
     wchar_t fullMappingName[1024];
-    _snwprintf_s(fullMappingName, sizeof(fullMappingName) / sizeof(fullMappingName[0]), L"PythonDebuggerMemory%d", GetCurrentProcessId());
+    _snwprintf_s(fullMappingName, sizeof(fullMappingName) / sizeof(fullMappingName[0]), L"PythonDebuggerMemory%d", (int)GetCurrentProcessId());
 
     hMapFile = OpenFileMapping(
         FILE_MAP_ALL_ACCESS,   // read/write access
@@ -1201,6 +1208,8 @@ DWORD __stdcall AttachWorker(LPVOID arg) {
         return 0;
     }
 
+#pragma warning(push)
+#pragma warning(disable:6263) // Using _alloca in a loop: this can quickly overflow stack. Note that this is _malloca, not _alloca, and will allocate on heap if needed.
     DWORD modsNeeded;
     while (!EnumProcessModules(hProcess, hMods, modSize, &modsNeeded)) {
         // try again w/ more space...
@@ -1211,6 +1220,8 @@ DWORD __stdcall AttachWorker(LPVOID arg) {
         }
         modSize = modsNeeded;
     }
+#pragma warning(pop)
+
     bool attached = false;
     {
         // scoped to clean connection info before we unload
@@ -1250,6 +1261,11 @@ DWORD __stdcall AttachWorker(LPVOID arg) {
             // unload ourselves and exit if we failed to attach...
             FreeLibraryAndExitThread(hModule, 0);
     }
+
+    if (hMods != nullptr) {
+        _freea(hMods);
+    }
+
     return 0;
 }
 
@@ -1535,6 +1551,8 @@ void Attach() {
         modsNeeded = 0;
         return;
     } else {
+#pragma warning(push)
+#pragma warning(disable:6263) // Using _alloca in a loop: this can quickly overflow stack. Note that this is _malloca, not _alloca, and will allocate on heap if needed.
         while (!EnumProcessModules(hProcess, hMods, modSize, &modsNeeded)) {
             // try again w/ more space...
             _freea(hMods);
@@ -1545,6 +1563,7 @@ void Attach() {
             }
             modSize = modsNeeded;
         }
+#pragma warning(pop)
 
         for (size_t i = 0; i < modsNeeded / sizeof(HMODULE); i++) {
             bool isDebug;
@@ -1597,6 +1616,10 @@ void Attach() {
 
     DWORD threadId;
     CreateThread(NULL, 0, &AttachWorker, NULL, 0, &threadId);
+
+    if (hMods != nullptr) {
+        _freea(hMods);
+    }
 }
 
 
@@ -1621,6 +1644,8 @@ void Detach() {
         return;
     }
 
+#pragma warning(push)
+#pragma warning(disable:6263) // Using _alloca in a loop: this can quickly overflow stack. Note that this is _malloca, not _alloca, and will allocate on heap if needed.
     while (!EnumProcessModules(hProcess, hMods, modSize, &modsNeeded)) {
         // try again w/ more space...
         _freea(hMods);
@@ -1631,6 +1656,7 @@ void Detach() {
         }
         modSize = modsNeeded;
     }
+#pragma warning(pop)
 
     for (size_t i = 0; i < modsNeeded / sizeof(HMODULE); i++) {
         bool isDebug;
@@ -1647,5 +1673,9 @@ void Detach() {
                 }
             }
         }
+    }
+
+    if (hMods != nullptr) {
+        _freea(hMods);
     }
 }

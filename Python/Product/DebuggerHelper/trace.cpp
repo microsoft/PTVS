@@ -383,6 +383,8 @@ void OnEvalComplete() {
 }
 
 
+#pragma warning(push)
+#pragma warning(disable:6320) // Exception-filter expression is the constant EXCEPTION_EXECUTE_HANDLER
 void EvalLoop(void (*bp)()) {
     evalLoopThreadId = GetCurrentThreadId();
     bp();
@@ -442,6 +444,7 @@ void EvalLoop(void (*bp)()) {
         evalLoopThreadId = 0;
     }
 }
+#pragma warning(pop)
 
 
 static void TraceLine(void* frame) {
