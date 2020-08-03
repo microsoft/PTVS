@@ -427,7 +427,8 @@ void SuspendThreads(ThreadMap &suspendedThreads, Py_AddPendingCall* addPendingCa
 
 
                         if (te.th32ThreadID != curThreadId && suspendedThreads.find(te.th32ThreadID) == suspendedThreads.end()) {
-                            HANDLE hThreadToSuspend = OpenThread(THREAD_ALL_ACCESS, FALSE, te.th32ThreadID);
+                            HANDLE hThreadToSuspend{};
+                            hThreadToSuspend = OpenThread(THREAD_ALL_ACCESS, FALSE, te.th32ThreadID);
                             if (hThreadToSuspend != nullptr) {
                                 SuspendThread(hThreadToSuspend);
 
