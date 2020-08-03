@@ -418,8 +418,8 @@ void SuspendThreads(ThreadMap &suspendedThreads, Py_AddPendingCall* addPendingCa
         suspended = false;
         HANDLE h = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
         if (h != INVALID_HANDLE_VALUE) {
-
             THREADENTRY32 te;
+            memset(&te, 0, sizeof(te));
             te.dwSize = sizeof(te);
             if (Thread32First(h, &te)) {
                 do {
