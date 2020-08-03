@@ -427,16 +427,16 @@ void SuspendThreads(ThreadMap &suspendedThreads, Py_AddPendingCall* addPendingCa
 
 
                         if (te.th32ThreadID != curThreadId && suspendedThreads.find(te.th32ThreadID) == suspendedThreads.end()) {
-                            HANDLE hThread = OpenThread(THREAD_ALL_ACCESS, FALSE, te.th32ThreadID);
-                            if (hThread != nullptr) {
-                                SuspendThread(hThread);
+                            HANDLE hThreadToSuspend = OpenThread(THREAD_ALL_ACCESS, FALSE, te.th32ThreadID);
+                            if (hThreadToSuspend != nullptr) {
+                                SuspendThread(hThreadToSuspend);
 
                                 bool addingPendingCall = false;
 
                                 CONTEXT context;
                                 memset(&context, 0x00, sizeof(CONTEXT));
                                 context.ContextFlags = CONTEXT_ALL;
-                                GetThreadContext(hThread, &context);
+                                GetThreadContext(hThreadToSuspend, &context);
 
 #if defined(_X86_)
                                 if(context.Eip >= *((DWORD*)addPendingCall) && context.Eip <= (*((DWORD*)addPendingCall)) + 0x100) {
@@ -450,11 +450,11 @@ void SuspendThreads(ThreadMap &suspendedThreads, Py_AddPendingCall* addPendingCa
 
                                 if (addingPendingCall) {
                                     // we appear to be adding a pending call via this thread - wait for this to finish so we can add our own pending call...
-                                    ResumeThread(hThread);
+                                    ResumeThread(hThreadToSuspend);
                                     SwitchToThread();   // yield to the resumed thread if it's on our CPU...
-                                    CloseHandle(hThread);
+                                    CloseHandle(hThreadToSuspend);
                                 } else {
-                                    suspendedThreads[te.th32ThreadID] = hThread;
+                                    suspendedThreads[te.th32ThreadID] = hThreadToSuspend;
                                 }
                                 suspended = true;
                             }
