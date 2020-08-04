@@ -450,9 +450,10 @@ void SuspendThreads(ThreadMap &suspendedThreads, Py_AddPendingCall* addPendingCa
 
                                 if (addingPendingCall) {
                                     // we appear to be adding a pending call via this thread - wait for this to finish so we can add our own pending call...
-                                    //ResumeThread(hThreadToSuspend);
-                                    //SwitchToThread();   // yield to the resumed thread if it's on our CPU...
-                                    //CloseHandle(hThreadToSuspend);
+                                    ResumeThread(hThreadToSuspend);
+                                    SwitchToThread();   // yield to the resumed thread if it's on our CPU...
+                                    CloseHandle(hThreadToSuspend);
+                                    hThreadToSuspend = nullptr;
                                 } else {
                                     suspendedThreads[te.th32ThreadID] = hThreadToSuspend;
                                 }
