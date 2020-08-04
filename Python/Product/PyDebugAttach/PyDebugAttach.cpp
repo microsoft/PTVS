@@ -427,36 +427,36 @@ void SuspendThreads(ThreadMap &suspendedThreads, Py_AddPendingCall* addPendingCa
 
 
                         if (te.th32ThreadID != curThreadId && suspendedThreads.find(te.th32ThreadID) == suspendedThreads.end()) {
-                            HANDLE hThreadToSuspend{};
-                            hThreadToSuspend = OpenThread(THREAD_ALL_ACCESS, FALSE, te.th32ThreadID);
+                            HANDLE hThreadToSuspend = OpenThread(THREAD_ALL_ACCESS, FALSE, te.th32ThreadID);
                             if (hThreadToSuspend != nullptr) {
                                 SuspendThread(hThreadToSuspend);
+                                addPendingCall;
 
-                                bool addingPendingCall = false;
-
-                                CONTEXT context;
-                                memset(&context, 0x00, sizeof(CONTEXT));
-                                context.ContextFlags = CONTEXT_ALL;
-                                GetThreadContext(hThreadToSuspend, &context);
-
-#if defined(_X86_)
-                                if(context.Eip >= *((DWORD*)addPendingCall) && context.Eip <= (*((DWORD*)addPendingCall)) + 0x100) {
-                                    addingPendingCall = true;
-                                }
-#elif defined(_AMD64_)
-                                if (context.Rip >= *((DWORD64*)addPendingCall) && context.Rip <= *((DWORD64*)addPendingCall + 0x100)) {
-                                    addingPendingCall = true;
-                                }
-#endif
-
-                                if (addingPendingCall) {
-                                    // we appear to be adding a pending call via this thread - wait for this to finish so we can add our own pending call...
-                                    ResumeThread(hThreadToSuspend);
-                                    SwitchToThread();   // yield to the resumed thread if it's on our CPU...
-                                    CloseHandle(hThreadToSuspend);
-                                } else {
-                                    suspendedThreads[te.th32ThreadID] = hThreadToSuspend;
-                                }
+//                                bool addingPendingCall = false;
+//
+//                                CONTEXT context;
+//                                memset(&context, 0x00, sizeof(CONTEXT));
+//                                context.ContextFlags = CONTEXT_ALL;
+//                                GetThreadContext(hThreadToSuspend, &context);
+//
+//#if defined(_X86_)
+//                                if(context.Eip >= *((DWORD*)addPendingCall) && context.Eip <= (*((DWORD*)addPendingCall)) + 0x100) {
+//                                    addingPendingCall = true;
+//                                }
+//#elif defined(_AMD64_)
+//                                if (context.Rip >= *((DWORD64*)addPendingCall) && context.Rip <= *((DWORD64*)addPendingCall + 0x100)) {
+//                                    addingPendingCall = true;
+//                                }
+//#endif
+//
+//                                if (addingPendingCall) {
+//                                    // we appear to be adding a pending call via this thread - wait for this to finish so we can add our own pending call...
+//                                    ResumeThread(hThreadToSuspend);
+//                                    SwitchToThread();   // yield to the resumed thread if it's on our CPU...
+//                                    CloseHandle(hThreadToSuspend);
+//                                } else {
+//                                    suspendedThreads[te.th32ThreadID] = hThreadToSuspend;
+//                                }
                                 suspended = true;
                             }
                         }
