@@ -1,3 +1,0 @@
-Flask<1
-azure-storage<1
-pymongo<3
