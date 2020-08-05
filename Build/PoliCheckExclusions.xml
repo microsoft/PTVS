@@ -1,0 +1,3 @@
+<PoliCheckExclusions>
+  <Exclusion Type="FolderPathFull">MINICONDA3-X64</Exclusion>
+</PoliCheckExclusions>
