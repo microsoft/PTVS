@@ -1,0 +1,9 @@
+{
+  "tool": "Credential Scanner",
+  "suppressions": [
+    {
+      "folder": "Python\\Product\\Miniconda\\Miniconda3-x64",
+      "_justification": "Folder to be suppressed for external libraries."
+    }
+  ]
+}
