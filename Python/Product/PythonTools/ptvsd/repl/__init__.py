@@ -648,7 +648,7 @@ due to the exec, so we do it here"""
     def run_one_command(self, cur_modules, cur_ps1, cur_ps2):
         # runs a single iteration of an input, execute file, etc...
         # This is extracted into it's own method so we play nice w/ IronPython thread abort.
-        # Otherwise we have a nested exception hanging around and the 2nd abort doesn't
+        # Otherwise we have a nested exception around and the 2nd abort doesn't
         # work (that's probably an IronPython bug)
         try:    
             new_modules = get_cur_module_set()

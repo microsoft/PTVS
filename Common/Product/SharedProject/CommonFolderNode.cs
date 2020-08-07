@@ -246,7 +246,7 @@ namespace Microsoft.VisualStudioTools.Project {
         public override void Close() {
             base.Close();
 
-            // make sure this thing isn't hanging around...
+            // make sure this thing doesn't stick around...
             ProjectMgr.TryDeactivateSymLinkWatcher(this);
         }
 
