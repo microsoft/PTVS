@@ -17,6 +17,7 @@
 using System;
 using System.ComponentModel.Composition;
 using System.Threading.Tasks;
+using Microsoft.VisualStudio.Threading;
 using Microsoft.VisualStudio.Workspace.VSIntegration.Contracts;
 
 namespace Microsoft.PythonTools.Interpreter {
@@ -27,7 +28,7 @@ namespace Microsoft.PythonTools.Interpreter {
         private readonly IVsFolderWorkspaceService _workspaceService;
         private readonly Lazy<IInterpreterOptionsService> _optionsService;
         private readonly Lazy<IInterpreterRegistryService> _registryService;
-
+        private readonly JoinableTaskContext _joinableTaskContext;
         private readonly object _currentContextLock = new object();
         private IPythonWorkspaceContext _currentContext;
         private bool _initialized;
@@ -36,7 +37,8 @@ namespace Microsoft.PythonTools.Interpreter {
         public PythonWorkspaceContextProvider(
             [Import] IVsFolderWorkspaceService workspaceService,
             [Import] Lazy<IInterpreterOptionsService> optionsService,
-            [Import] Lazy<IInterpreterRegistryService> registryService
+            [Import] Lazy<IInterpreterRegistryService> registryService,
+            [Import] JoinableTaskContext joinableTaskContext
         ) {
             // Don't use registry service from the constructor, since that imports
             // all the factory providers, which may import IPythonWorkspaceContextProvider
@@ -44,7 +46,7 @@ namespace Microsoft.PythonTools.Interpreter {
             _workspaceService = workspaceService;
             _optionsService = optionsService;
             _registryService = registryService;
-
+            _joinableTaskContext = joinableTaskContext;
             _workspaceService.OnActiveWorkspaceChanged += OnActiveWorkspaceChanged;
         }
 
@@ -81,11 +83,11 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        private Task OnActiveWorkspaceChanged(object sender, EventArgs e) {
+        private async Task OnActiveWorkspaceChanged(object sender, EventArgs e) {
+            await _joinableTaskContext.Factory.SwitchToMainThreadAsync();
+
             CloseCurrentContext();
             InitializeCurrentContext();
-
-            return Task.CompletedTask;
         }
 
         private void CloseCurrentContext() {
