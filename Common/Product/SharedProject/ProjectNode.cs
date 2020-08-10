@@ -3781,7 +3781,7 @@ namespace Microsoft.VisualStudioTools.Project {
         [SuppressMessage("Microsoft.Security.Xml", "CA3053:UseXmlSecureResolver")]
         protected void PersistXMLFragments() {
             if (IsFlavorDirty()) {
-                XmlDocument doc = new XmlDocument();
+                XmlDocument doc = new XmlDocument() { XmlResolver = null };
                 XmlElement root = doc.CreateElement("ROOT");
 
                 // We will need the list of configuration inside the loop, so get it before entering the loop
