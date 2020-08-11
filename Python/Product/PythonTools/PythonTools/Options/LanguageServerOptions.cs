@@ -32,22 +32,26 @@ namespace Microsoft.PythonTools.Options {
 
         public string TypeShedPath { get; set; }
         public bool SuppressTypeShed { get; set; }
+        public bool ServerDisabled { get; set; }
 
         public void Load() {
             TypeShedPath = _pyService.LoadString(nameof(TypeShedPath), Category);
             SuppressTypeShed = _pyService.LoadBool(nameof(SuppressTypeShed), Category) ?? false;
+            ServerDisabled = _pyService.LoadBool(nameof(ServerDisabled), Category) ?? false;
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
         public void Save() {
             _pyService.SaveString(nameof(TypeShedPath), Category, TypeShedPath);
             _pyService.SaveBool(nameof(SuppressTypeShed), Category, SuppressTypeShed);
+            _pyService.SaveBool(nameof(ServerDisabled), Category, ServerDisabled);
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
         public void Reset() {
             TypeShedPath = string.Empty;
             SuppressTypeShed = false;
+            ServerDisabled = false;
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
