@@ -1968,7 +1968,7 @@ namespace Microsoft.VisualStudio.Repl {
         }
 
         public string ReadStandardInput() {
-            // shouldn't be called on the UI thread because we'll hang
+            // shouldn't be called on the UI thread because we'll stop responding
             Debug.Assert(!CheckAccess());
 
             bool wasRunning = _isRunning;

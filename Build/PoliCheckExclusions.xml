@@ -1,0 +1,4 @@
+<PoliCheckExclusions>
+  <Exclusion Type="FolderPathFull">MINICONDA3-X64</Exclusion>
+  <Exclusion Type="FileType">.LCL</Exclusion>
+</PoliCheckExclusions>

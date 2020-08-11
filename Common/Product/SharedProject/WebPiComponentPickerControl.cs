@@ -314,7 +314,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// http://support.microsoft.com/kb/149501
         /// 
         /// So we go in and muck about with the This is a static! control's window style so that
-        /// we don't hang VS if the user alt-tabs away.
+        /// VS doesn't stop responding if the user alt-tabs away.
         /// </summary>
         private void SetWindowStyleOnStaticHostControl() {
             var target = (NativeMethods.GetParent(Handle));

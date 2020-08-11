@@ -146,8 +146,8 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             // before their Dispose is complete.  TaskProvider does this - it wants
             // to wait for the task provider thread to exit, but the same thread
             // maybe attempting to get back onto the UI thread.  If we yank out
-            // the UI thread first then it never makes it over and we just hang
-            // and deadlock.
+            // the UI thread first then it never makes it over and we just stop
+            // responding and deadlock.
             foreach (var package in _loadedPackages) {
                 package.Dispose();
             }

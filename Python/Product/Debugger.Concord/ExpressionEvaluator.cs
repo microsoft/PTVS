@@ -702,7 +702,7 @@ namespace Microsoft.PythonTools.Debugger.Concord {
 
                     if (!_evalAbortedEvent.WaitOne(20000)) {
                         // This is a catastrophic error, since we can't report func eval completion unless we can stop the process,
-                        // and VS will hang until we do report completion. At this point we can only kill the debuggee so that the
+                        // and VS will stop responding until we do report completion. At this point we can only kill the debuggee so that the
                         // VS at least gets back to a reasonable state.
                         _evalAbortedEvent = null;
                         process.Terminate(1);

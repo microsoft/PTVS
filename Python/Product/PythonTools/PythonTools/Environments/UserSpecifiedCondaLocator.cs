@@ -30,19 +30,17 @@ namespace Microsoft.PythonTools.Environments {
     [ExportMetadata("Priority", 100)]
     sealed class UserSpecifiedCondaLocator : ICondaLocator {
         private readonly IServiceProvider _site;
-        private readonly PythonToolsService _pythonToolsService;
 
         [ImportingConstructor]
         public UserSpecifiedCondaLocator(
             [Import(typeof(SVsServiceProvider), AllowDefault = true)] IServiceProvider site = null
         ) {
             _site = site;
-            _pythonToolsService = site?.GetPythonToolsService();
         }
 
         public string CondaExecutablePath {
             get {
-                return _pythonToolsService?.CondaOptions.CustomCondaExecutablePath;
+                return _site?.GetPythonToolsService()?.CondaOptions.CustomCondaExecutablePath;
             }
         }
     }

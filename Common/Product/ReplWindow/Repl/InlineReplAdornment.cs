@@ -52,7 +52,7 @@ namespace Microsoft.VisualStudio.Repl {
             if (manager != null) {
                 var adornment = new ZoomableInlineAdornment(uiElement, view);
                 // Event is unhooked in ReplWindow.  If we don't we'll receive the event multiple
-                // times leading to very jerky / hang like behavior where we've setup a new event
+                // times leading to very jerky / not responding behavior where we've setup a new event
                 // loop in the repl window.
                 adornment.Loaded += onLoaded;
                 manager.AddAdornment(adornment, targetLoc);

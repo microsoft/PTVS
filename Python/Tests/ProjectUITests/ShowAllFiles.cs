@@ -806,7 +806,7 @@ namespace ProjectUITests {
 
 
         /// <summary>
-        /// Creating & deleting files rapidly shouldn't leave a file hanging around
+        /// Creating & deleting files rapidly shouldn't leave a file behind
         /// 
         /// https://nodejstools.codeplex.com/workitem/380
         /// </summary>

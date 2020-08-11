@@ -272,6 +272,8 @@ BOOL PatchFunction(LPSTR exportingDll, PVOID replacingFunc, LPVOID newFunction) 
         return FALSE;
     }
 
+#pragma warning(push)
+#pragma warning(disable:6263) // Using _alloca in a loop: this can quickly overflow stack. Note that this is _malloca, not _alloca, and will allocate on heap if needed.
     while (!EnumProcessModules(hProcess, hMods, modSize, &modsNeeded)) {
         // try again w/ more space...
         _freea(hMods);
@@ -282,11 +284,16 @@ BOOL PatchFunction(LPSTR exportingDll, PVOID replacingFunc, LPVOID newFunction) 
         }
         modSize = modsNeeded;
     }
+#pragma warning(pop)
 
     for (DWORD tmp = 0; tmp < modsNeeded / sizeof(HMODULE); tmp++) {
         PIMAGE_DOS_HEADER dosHeader = (PIMAGE_DOS_HEADER)hMods[tmp];
 
         PatchIAT(dosHeader, replacingFunc, exportingDll, newFunction);
+    }
+
+    if (hMods != nullptr) {
+        _freea(hMods);
     }
 
     return TRUE;
@@ -411,8 +418,8 @@ void SuspendThreads(ThreadMap &suspendedThreads, Py_AddPendingCall* addPendingCa
         suspended = false;
         HANDLE h = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
         if (h != INVALID_HANDLE_VALUE) {
-
             THREADENTRY32 te;
+            memset(&te, 0, sizeof(te));
             te.dwSize = sizeof(te);
             if (Thread32First(h, &te)) {
                 do {
@@ -420,16 +427,16 @@ void SuspendThreads(ThreadMap &suspendedThreads, Py_AddPendingCall* addPendingCa
 
 
                         if (te.th32ThreadID != curThreadId && suspendedThreads.find(te.th32ThreadID) == suspendedThreads.end()) {
-                            auto hThread = OpenThread(THREAD_ALL_ACCESS, FALSE, te.th32ThreadID);
-                            if (hThread != nullptr) {
-                                SuspendThread(hThread);
+                            HANDLE hThreadToSuspend = OpenThread(THREAD_ALL_ACCESS, FALSE, te.th32ThreadID);
+                            if (hThreadToSuspend != nullptr) {
+                                SuspendThread(hThreadToSuspend);
 
                                 bool addingPendingCall = false;
 
                                 CONTEXT context;
                                 memset(&context, 0x00, sizeof(CONTEXT));
                                 context.ContextFlags = CONTEXT_ALL;
-                                GetThreadContext(hThread, &context);
+                                GetThreadContext(hThreadToSuspend, &context);
 
 #if defined(_X86_)
                                 if(context.Eip >= *((DWORD*)addPendingCall) && context.Eip <= (*((DWORD*)addPendingCall)) + 0x100) {
@@ -443,11 +450,12 @@ void SuspendThreads(ThreadMap &suspendedThreads, Py_AddPendingCall* addPendingCa
 
                                 if (addingPendingCall) {
                                     // we appear to be adding a pending call via this thread - wait for this to finish so we can add our own pending call...
-                                    ResumeThread(hThread);
+                                    ResumeThread(hThreadToSuspend);
                                     SwitchToThread();   // yield to the resumed thread if it's on our CPU...
-                                    CloseHandle(hThread);
+                                    CloseHandle(hThreadToSuspend);
+                                    hThreadToSuspend = nullptr;
                                 } else {
-                                    suspendedThreads[te.th32ThreadID] = hThread;
+                                    suspendedThreads[te.th32ThreadID] = hThreadToSuspend;
                                 }
                                 suspended = true;
                             }
@@ -578,7 +586,7 @@ ConnectionInfo GetConnectionInfo() {
     char* pBuf;
 
     wchar_t fullMappingName[1024];
-    _snwprintf_s(fullMappingName, sizeof(fullMappingName) / sizeof(fullMappingName[0]), L"PythonDebuggerMemory%d", GetCurrentProcessId());
+    _snwprintf_s(fullMappingName, sizeof(fullMappingName) / sizeof(fullMappingName[0]), L"PythonDebuggerMemory%d", (int)GetCurrentProcessId());
 
     hMapFile = OpenFileMapping(
         FILE_MAP_ALL_ACCESS,   // read/write access
@@ -1201,6 +1209,8 @@ DWORD __stdcall AttachWorker(LPVOID arg) {
         return 0;
     }
 
+#pragma warning(push)
+#pragma warning(disable:6263) // Using _alloca in a loop: this can quickly overflow stack. Note that this is _malloca, not _alloca, and will allocate on heap if needed.
     DWORD modsNeeded;
     while (!EnumProcessModules(hProcess, hMods, modSize, &modsNeeded)) {
         // try again w/ more space...
@@ -1211,6 +1221,8 @@ DWORD __stdcall AttachWorker(LPVOID arg) {
         }
         modSize = modsNeeded;
     }
+#pragma warning(pop)
+
     bool attached = false;
     {
         // scoped to clean connection info before we unload
@@ -1250,6 +1262,11 @@ DWORD __stdcall AttachWorker(LPVOID arg) {
             // unload ourselves and exit if we failed to attach...
             FreeLibraryAndExitThread(hModule, 0);
     }
+
+    if (hMods != nullptr) {
+        _freea(hMods);
+    }
+
     return 0;
 }
 
@@ -1535,6 +1552,8 @@ void Attach() {
         modsNeeded = 0;
         return;
     } else {
+#pragma warning(push)
+#pragma warning(disable:6263) // Using _alloca in a loop: this can quickly overflow stack. Note that this is _malloca, not _alloca, and will allocate on heap if needed.
         while (!EnumProcessModules(hProcess, hMods, modSize, &modsNeeded)) {
             // try again w/ more space...
             _freea(hMods);
@@ -1545,6 +1564,7 @@ void Attach() {
             }
             modSize = modsNeeded;
         }
+#pragma warning(pop)
 
         for (size_t i = 0; i < modsNeeded / sizeof(HMODULE); i++) {
             bool isDebug;
@@ -1597,6 +1617,10 @@ void Attach() {
 
     DWORD threadId;
     CreateThread(NULL, 0, &AttachWorker, NULL, 0, &threadId);
+
+    if (hMods != nullptr) {
+        _freea(hMods);
+    }
 }
 
 
@@ -1621,6 +1645,8 @@ void Detach() {
         return;
     }
 
+#pragma warning(push)
+#pragma warning(disable:6263) // Using _alloca in a loop: this can quickly overflow stack. Note that this is _malloca, not _alloca, and will allocate on heap if needed.
     while (!EnumProcessModules(hProcess, hMods, modSize, &modsNeeded)) {
         // try again w/ more space...
         _freea(hMods);
@@ -1631,6 +1657,7 @@ void Detach() {
         }
         modSize = modsNeeded;
     }
+#pragma warning(pop)
 
     for (size_t i = 0; i < modsNeeded / sizeof(HMODULE); i++) {
         bool isDebug;
@@ -1647,5 +1674,9 @@ void Detach() {
                 }
             }
         }
+    }
+
+    if (hMods != nullptr) {
+        _freea(hMods);
     }
 }
