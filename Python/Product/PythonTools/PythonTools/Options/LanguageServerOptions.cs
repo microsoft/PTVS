@@ -9,7 +9,7 @@
 // THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
 // OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
 // IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
-// MERCHANTABILITY OR NON-INFRINGEMENT.
+// MERCHANTABLITY OR NON-INFRINGEMENT.
 //
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
@@ -32,22 +32,26 @@ namespace Microsoft.PythonTools.Options {
 
         public string TypeShedPath { get; set; }
         public bool SuppressTypeShed { get; set; }
+        public bool ServerDisabled { get; set; }
 
         public void Load() {
             TypeShedPath = _pyService.LoadString(nameof(TypeShedPath), Category);
             SuppressTypeShed = _pyService.LoadBool(nameof(SuppressTypeShed), Category) ?? false;
+            ServerDisabled = _pyService.LoadBool(nameof(ServerDisabled), Category) ?? false;
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
         public void Save() {
             _pyService.SaveString(nameof(TypeShedPath), Category, TypeShedPath);
             _pyService.SaveBool(nameof(SuppressTypeShed), Category, SuppressTypeShed);
+            _pyService.SaveBool(nameof(ServerDisabled), Category, ServerDisabled);
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
         public void Reset() {
             TypeShedPath = string.Empty;
             SuppressTypeShed = false;
+            ServerDisabled = false;
             Changed?.Invoke(this, EventArgs.Empty);
         }
 

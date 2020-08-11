@@ -100,6 +100,7 @@ namespace Microsoft.PythonTools.Project {
         private readonly PythonNotSupportedInfoBar _pythonVersionNotSupportedInfoBar;
 
         private readonly SemaphoreSlim _recreatingAnalyzer = new SemaphoreSlim(1);
+        private int _analyzerAbnormalExitCount;
 
         public PythonProjectNode(IServiceProvider serviceProvider) : base(serviceProvider, null) {
             _services = serviceProvider.GetEditorServices();
@@ -1191,6 +1192,8 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private void AnalysisProcessExited(object sender, AbnormalAnalysisExitEventArgs e) {
+            _analyzerAbnormalExitCount++;
+
             if (_logger == null) {
                 return;
             }
@@ -1210,11 +1213,13 @@ namespace Microsoft.PythonTools.Project {
                 return;
             }
 
-            var factory = ActiveInterpreter;
+            if (_analyzerAbnormalExitCount < 5) {
+                var factory = ActiveInterpreter;
 
-            Site.GetUIThread().InvokeTask(async () => {
-                await ReanalyzeProject(factory).HandleAllExceptions(Site, GetType());
-            }).DoNotWait();
+                Site.GetUIThread().InvokeTask(async () => {
+                    await ReanalyzeProject(factory).HandleAllExceptions(Site, GetType());
+                }).DoNotWait();
+            }
         }
 
         private void HookErrorsAndWarnings(VsProjectAnalyzer res) {

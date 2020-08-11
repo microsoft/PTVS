@@ -48,6 +48,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private readonly SemaphoreSlim _recreatingAnalyzer;
         private VsProjectAnalyzer _analyzer;
+        private int _analyzerAbnormalExitCount;
 
         public event EventHandler WorkspaceAnalyzerChanged;
 
@@ -352,6 +353,8 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private void OnAnalysisProcessExited(object sender, AbnormalAnalysisExitEventArgs e) {
+            _analyzerAbnormalExitCount++;
+
             if (_logger == null) {
                 return;
             }
@@ -367,8 +370,10 @@ namespace Microsoft.PythonTools.Intellisense {
                 msg.ToString()
             );
 
-            // Start a new analyzer
-            ReanalyzeAsync().HandleAllExceptions(_site).DoNotWait();
+            if (_analyzerAbnormalExitCount < 5) {
+                // Start a new analyzer
+                ReanalyzeAsync().HandleAllExceptions(_site).DoNotWait();
+            }
         }
 
         private void OnInstalledFilesChanged(object sender, EventArgs e) {
