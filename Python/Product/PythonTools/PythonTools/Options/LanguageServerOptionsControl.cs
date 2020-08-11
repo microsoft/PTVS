@@ -41,7 +41,7 @@ namespace Microsoft.PythonTools.Options {
             try {
                 typeShedPathTextBox.Text = _options.TypeShedPath;
                 suppressTypeShedCheckbox.Checked = _options.SuppressTypeShed;
-                _disableLanguageServerCheckbox.Checked = _options.ServerDisabled;
+                disableLanguageServerCheckbox.Checked = _options.ServerDisabled;
             } finally {
                 _changing = false;
             }
@@ -68,7 +68,7 @@ namespace Microsoft.PythonTools.Options {
 
         private void _enableLanguageServer_CheckedChanged(object sender, EventArgs e) {
             if (!_changing) {
-                _options.ServerDisabled = _disableLanguageServerCheckbox.Checked;
+                _options.ServerDisabled = disableLanguageServerCheckbox.Checked;
             }
         }
     }
