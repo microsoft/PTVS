@@ -18,6 +18,7 @@ using System;
 using System.Threading;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.Threading;
 using TestUtilities;
 
 namespace PythonToolsTests {
@@ -38,7 +39,8 @@ namespace PythonToolsTests {
             var provider = new PythonWorkspaceContextProvider(
                 workspaceService,
                 new Lazy<IInterpreterOptionsService>(() => optionsService),
-                new Lazy<IInterpreterRegistryService>(() => registryService)
+                new Lazy<IInterpreterRegistryService>(() => registryService),
+                new JoinableTaskContext()
             );
 
             Assert.AreEqual(workspaceFolder, provider.Workspace.Location);
@@ -55,7 +57,8 @@ namespace PythonToolsTests {
             var provider = new PythonWorkspaceContextProvider(
                 workspaceService,
                 new Lazy<IInterpreterOptionsService>(() => optionsService),
-                new Lazy<IInterpreterRegistryService>(() => registryService)
+                new Lazy<IInterpreterRegistryService>(() => registryService),
+                new JoinableTaskContext()
             );
 
             Assert.AreEqual(null, provider.Workspace);
@@ -91,7 +94,8 @@ namespace PythonToolsTests {
             var provider = new PythonWorkspaceContextProvider(
                 workspaceService,
                 new Lazy<IInterpreterOptionsService>(() => optionsService),
-                new Lazy<IInterpreterRegistryService>(() => registryService)
+                new Lazy<IInterpreterRegistryService>(() => registryService),
+                new JoinableTaskContext()
             );
 
             Assert.AreEqual(workspaceFolder, provider.Workspace.Location);
@@ -129,7 +133,8 @@ namespace PythonToolsTests {
             var provider = new PythonWorkspaceContextProvider(
                 workspaceService,
                 new Lazy<IInterpreterOptionsService>(() => optionsService),
-                new Lazy<IInterpreterRegistryService>(() => registryService)
+                new Lazy<IInterpreterRegistryService>(() => registryService),
+                new JoinableTaskContext()
             );
 
             Assert.AreEqual(workspaceFolder1, provider.Workspace.Location);
