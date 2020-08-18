@@ -74,11 +74,13 @@ namespace Microsoft.PythonTools.Options {
             resources.ApplyResources(this.browseTypeShedPathButton, "browseTypeShedPathButton");
             this.browseTypeShedPathButton.Name = "browseTypeShedPathButton";
             this.browseTypeShedPathButton.UseVisualStyleBackColor = true;
+            this.browseTypeShedPathButton.Click += new System.EventHandler(this.browseTypeShedPathButton_Click);
             // 
             // typeShedPathTextBox
             // 
             resources.ApplyResources(this.typeShedPathTextBox, "typeShedPathTextBox");
             this.typeShedPathTextBox.Name = "typeShedPathTextBox";
+            this.typeShedPathTextBox.TextChanged += new System.EventHandler(this.TypeShedPath_TextChanged);
             // 
             // typeShedPathLabel
             // 
