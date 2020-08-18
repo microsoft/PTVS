@@ -190,6 +190,9 @@ namespace Microsoft.PythonTools.Debugger {
             // continue when it sees "stopped" event with "reason=entry".
             launchJson.StopOnEntry = true;
 
+            // Force this to false to prevent subprocess debugging, which we do not support yet in PTVS
+            launchJson.SubProcess = false;
+
             launchJson.PromptBeforeRunningWithBuildError = debugService.PromptBeforeRunningWithBuildError;
             launchJson.RedirectOutput = debugService.TeeStandardOutput;
             launchJson.WaitOnAbnormalExit = debugService.WaitOnAbnormalExit;
