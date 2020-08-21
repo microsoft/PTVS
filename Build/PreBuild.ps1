@@ -56,7 +56,11 @@ try {
         Write-Host "Creating symlink for $_.$($versions[$_])"
         New-Item -ItemType Junction "$outdir\$_" -Value "$outdir\$_.$($versions[$_])"
     } | Out-Null
-    
+
+    $debugpyver = Get-Content "$buildroot\Build\debugpy-version.txt" -Raw 
+    Write-Host "Downloading debugpy version $debugpyver"
+    $debugpyarglist = "install_debugpy.py", $debugpyver, $outdir
+    Start-Process -Wait -NoNewWindow "$outdir\python\tools\python.exe" -ErrorAction Stop -ArgumentList $debugpyarglist
 } finally {
     popd
 }

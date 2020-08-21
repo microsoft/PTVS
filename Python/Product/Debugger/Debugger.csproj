@@ -182,19 +182,9 @@
     </ProjectReference>
   </ItemGroup>
   <Import Project="..\ProjectAfter.settings" />
-  <PropertyGroup>
-    <BundledDebugPyVersion>1.0.0rc1</BundledDebugPyVersion>
-  </PropertyGroup>
-  <Target Name="_GatherDebugPy" BeforeTargets="_IncludeDebugPy" Condition="!Exists('$(IntermediateOutputPath)debugpy\__init__.py')">
-    <PropertyGroup>
-      <PipCommand>"$(PackagesPath)python\tools\python.exe" -m pip install debugpy==$(BundledDebugPyVersion)</PipCommand>
-      <PipCommand>$(PipCommand) --no-compile --upgrade --target "$(IntermediateOutputPath)</PipCommand>
-    </PropertyGroup>
-    <Exec Command="$(PipCommand)" />
-  </Target>
   <Target Name="_IncludeDebugPy" BeforeTargets="AssignTargetPaths;GetVSIXSourceItems">
     <ItemGroup>
-      <DebugPyFiles Include="$(IntermediateOutputPath)debugpy\**\*" />
+      <DebugPyFiles Include="$(PackagesPath)debugpy\**\*" />
       <DebugPyFiles>
         <IncludeInVSIX>true</IncludeInVSIX>
         <Link>debugpy\%(RecursiveDir)%(Filename)%(Extension)</Link>
@@ -212,6 +202,7 @@
       <_DebugPyVersionNewItem Include="$(IntermediateOutputPath)\DebugPyVersion.g.cs" />
     </ItemGroup>
     <PropertyGroup>
+      <BundledDebugPyVersion>$([System.IO.File]::ReadAllText('$(BuildRoot)\Build\debugpy-version.txt'))</BundledDebugPyVersion>
       <OriginalDebugPyVersionText>$([System.IO.File]::ReadAllText('$(BuildRoot)\Python\Product\Debugger\DebugPyVersion.cs'))</OriginalDebugPyVersionText>
       <DebugPyVersionText>$(OriginalDebugPyVersionText.Replace(` Version = "1.0.0"`, ` Version = "$(BundledDebugPyVersion)"`))</DebugPyVersionText>
     </PropertyGroup>
