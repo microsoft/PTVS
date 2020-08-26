@@ -626,6 +626,17 @@ The web.config file will be configured to resolve URIs matching this pattern to 
     <value>Failed to upload file: {0}</value>
     <comment>{0} is error details</comment>
   </data>
+  <data name="PublishProjectFailed" xml:space="preserve">
+    <value>Publishing of the project {0} failed</value>
+    <comment>{0} is project name</comment>
+  </data>
+  <data name="PublishProjectUnknownScheme" xml:space="preserve">
+    <value>Publish failed: Unknown publish scheme ({0})</value>
+    <comment>{0} is URI scheme such as 'file' or 'ftp'</comment>
+  </data>
+  <data name="PublishProjectNotConfigured" xml:space="preserve">
+    <value>Project is not configured for publishing in project properties.</value>
+  </data>
   <data name="PublishPropertyControl_LocationLabel" xml:space="preserve">
     <value>Publishing folder location ({0}): </value>
     <comment>{0} is a dynamically built list of location types
