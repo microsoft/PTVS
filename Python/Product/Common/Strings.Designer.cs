@@ -5114,33 +5114,6 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Publishing of the project {0} failed.
-        /// </summary>
-        public static string PublishProjectFailed {
-            get {
-                return ResourceManager.GetString("PublishProjectFailed", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Project is not configured for publishing in project properties..
-        /// </summary>
-        public static string PublishProjectNotConfigured {
-            get {
-                return ResourceManager.GetString("PublishProjectNotConfigured", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Publish failed: Unknown publish scheme ({0}).
-        /// </summary>
-        public static string PublishProjectUnknownScheme {
-            get {
-                return ResourceManager.GetString("PublishProjectUnknownScheme", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Publishing folder location ({0}): .
         /// </summary>
         public static string PublishPropertyControl_LocationLabel {
