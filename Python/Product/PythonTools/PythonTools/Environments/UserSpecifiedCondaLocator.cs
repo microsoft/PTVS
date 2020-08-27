@@ -18,6 +18,7 @@ using System;
 using System.ComponentModel.Composition;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Environments {
     /// <summary>
@@ -40,7 +41,9 @@ namespace Microsoft.PythonTools.Environments {
 
         public string CondaExecutablePath {
             get {
-                return _site?.GetPythonToolsService()?.CondaOptions.CustomCondaExecutablePath;
+                return _site.GetUIThread().Invoke(() => 
+                    _site.GetPythonToolsService()?.CondaOptions.CustomCondaExecutablePath
+                );
             }
         }
     }
