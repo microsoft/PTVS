@@ -511,7 +511,14 @@ namespace Microsoft.PythonTools.Project {
 
             var automationObject = (EnvDTE.Project)GetAutomationObject();
 
-            this.BuildProject.SetGlobalProperty(ProjectFileConstants.Platform, automationObject.ConfigurationManager.ActiveConfiguration.PlatformName);
+            try {
+                EnvDTE.Configuration activeConfig = automationObject.ConfigurationManager.ActiveConfiguration;
+                if (activeConfig != null) {
+                    this.BuildProject.SetGlobalProperty(ProjectFileConstants.Platform, activeConfig.PlatformName);
+                }
+            } catch (COMException ex) {
+                Debug.WriteLine("SetCurrentConfiguration(). Failed to get active configuration because of {0}", ex);
+            }
         }
 
         protected override bool SupportsIconMonikers {
