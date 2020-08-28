@@ -690,4 +690,19 @@ You can get more information by running Visual Studio with the /log parameter on
 {1}</value>
     <comment>{1} will be embedded exception text</comment>
   </data>
+  <data name="PublishProjectFailed" xml:space="preserve">
+    <value>Publishing of the project {0} failed</value>
+    <comment>{0} is the project name</comment>
+  </data>
+  <data name="PublishProjectInvalidUrl" xml:space="preserve">
+    <value>Publish failed: Invalid URL '{0}'</value>
+    <comment>{0} is the URL that was configured by the user</comment>
+  </data>
+  <data name="PublishProjectInvalidScheme" xml:space="preserve">
+    <value>Publish failed: Unknown publish scheme ({0})</value>
+    <comment>{0} is the scheme for the URL (file, ftp, etc.)</comment>
+  </data>
+  <data name="PublishProjectNotConfigured" xml:space="preserve">
+    <value>Project is not configured for publishing in project properties.</value>
+  </data>
 </root>

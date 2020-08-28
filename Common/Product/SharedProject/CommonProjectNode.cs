@@ -27,6 +27,7 @@ using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using System.Windows.Threading;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
@@ -349,6 +350,16 @@ namespace Microsoft.VisualStudioTools.Project {
             bool found = false;
             if (!String.IsNullOrWhiteSpace(publishUrl)) {
                 var url = new Url(publishUrl);
+                if (url.Uri == null) {
+                    var statusBar = (IVsStatusbar)Site.GetService(typeof(SVsStatusbar));
+                    statusBar.SetText(SR.GetString(SR.PublishProjectInvalidUrl, publishUrl));
+                    return false;
+                }
+
+                if (!url.Uri.IsAbsoluteUri) {
+                    // If user entered a relative path, make this an absolute file URL
+                    url = new Url(new Url(PathUtils.EnsureEndSeparator(ProjectHome)), publishUrl);
+                }
 
                 var publishers = ((IComponentModel)Site.GetService(typeof(SComponentModel))).GetExtensions<IProjectPublisher>();
                 foreach (var publisher in publishers) {
@@ -372,7 +383,7 @@ namespace Microsoft.VisualStudioTools.Project {
                         if (!async) {
                             Dispatcher.PushFrame(frame);
                             if (failure != null) {
-                                throw new PublishFailedException(String.Format("Publishing of the project {0} failed", Caption), failure);
+                                throw new PublishFailedException(SR.GetString(SR.PublishProjectFailed, Caption), failure);
                             }
                         }
                         break;
@@ -381,11 +392,11 @@ namespace Microsoft.VisualStudioTools.Project {
 
                 if (!found) {
                     var statusBar = (IVsStatusbar)Site.GetService(typeof(SVsStatusbar));
-                    statusBar.SetText(String.Format("Publish failed: Unknown publish scheme ({0})", url.Uri.Scheme));
+                    statusBar.SetText(SR.GetString(SR.PublishProjectInvalidScheme, url.Uri.Scheme));
                 }
             } else {
                 var statusBar = (IVsStatusbar)Site.GetService(typeof(SVsStatusbar));
-                statusBar.SetText(String.Format("Project is not configured for publishing in project properties."));
+                statusBar.SetText(SR.GetString(SR.PublishProjectNotConfigured));
             }
             return found;
         }
