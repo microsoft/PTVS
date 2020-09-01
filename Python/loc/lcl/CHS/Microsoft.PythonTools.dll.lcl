@@ -6217,18 +6217,27 @@
       <Item ItemId=";PublishProjectInvalidScheme" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Publish failed: Unknown publish scheme ({0})]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[发布失败: 未知发布方案({0})]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";PublishProjectInvalidUrl" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Publish failed: Invalid URL '{0}']]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[发布失败: URL“{0}”无效]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";PublishProjectNotConfigured" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Project is not configured for publishing in project properties.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[未将项目配置为在项目属性中发布。]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
