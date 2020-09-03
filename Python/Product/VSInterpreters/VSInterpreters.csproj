@@ -95,6 +95,9 @@
     <Compile Include="Interpreter\InterpreterFactoryCreationOptions.cs" />
     <Compile Include="Interpreter\InterpreterFactoryCreator.cs" />
     <Compile Include="Interpreter\InterpreterRegistryConstants.cs" />
+    <Compile Include="..\..\..\Common\Product\SharedProject\FileWatcher.cs">
+      <Link>Interpreter\FileWatcher.cs</Link>
+    </Compile>
     <Compile Include="Interpreter\InterpreterUIMode.cs" />
     <Compile Include="Interpreter\IPythonInterpreterFactory.cs" />
     <Compile Include="Interpreter\LaunchConfiguration.cs" />

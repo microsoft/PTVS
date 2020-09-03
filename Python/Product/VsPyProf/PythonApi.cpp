@@ -90,7 +90,7 @@ VsPyProf* VsPyProf::Create(HMODULE pythonModule) {
                 }
 
                 if ((major == 2 && (minor >= 4 && minor <= 7)) ||
-                    (major == 3 && (minor >= 0 && minor <= 8))) {
+                    (major == 3 && (minor >= 0 && minor <= 9))) {
                         return new VsPyProf(pythonModule,
                             major,
                             minor,
