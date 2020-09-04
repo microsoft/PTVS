@@ -144,5 +144,8 @@ namespace Microsoft.PythonTools.Logging {
         /// Format document
         /// </summary>
         FormatDocument,
+        /// Publish using the button on Python 'Publish' project property page
+        /// </summary>
+        PythonSpecificPublish,
     }
 }

@@ -48,6 +48,9 @@ namespace Microsoft.PythonTools.Debugger {
         [JsonProperty("showReturnValue")]
         public bool? ShowReturnValue { get; set; }
 
+        [JsonProperty("subProcess")]
+        public bool? SubProcess { get; set; }
+
         [JsonProperty("env")]
         public Dictionary<string, string> Env { get; set; }
 

@@ -50,6 +50,7 @@
     <None Include="SteppingTest4.py" />
     <None Include="SteppingTest5.py" />
     <None Include="SteppingTest6.py" />
+    <None Include="SteppingTest8.py" />
     <None Include="SysExit.py" />
     <None Include="UnicodeException.py" />
     <None Include="BreakpointInfo.py" />

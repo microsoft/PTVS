@@ -109,6 +109,12 @@ namespace DebuggerUITestsRunner {
             _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.Step5), UseVsCodeDebugger, Interpreter);
         }
 
+        [TestMethod, Priority(UITestPriority.P0)]
+        [TestCategory("Installed")]
+        public void StepMultiProc() {
+            _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.StepMultiProc), UseVsCodeDebugger, Interpreter);
+        }
+
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
         public void SetNextLine() {

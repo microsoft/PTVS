@@ -58,6 +58,10 @@ namespace Microsoft.PythonTools.Intellisense {
                 return null;
             }
 
+            if (Services.Python.LanguageServerOptions.ServerDisabled) {
+                return null;
+            }
+
             IntellisenseController controller;
             if (!textView.Properties.TryGetProperty(typeof(IntellisenseController), out controller)) {
                 controller = new IntellisenseController(this, textView);

@@ -31,7 +31,8 @@ enum PythonVersion {
     PythonVersion_35 = 0x0305,
     PythonVersion_36 = 0x0306,
     PythonVersion_37 = 0x0307,
-    PythonVersion_38 = 0x0308
+    PythonVersion_38 = 0x0308,
+    PythonVersion_39 = 0x0309
 };
 
 typedef const char* (GetVersionFunc)();
@@ -59,6 +60,7 @@ static PythonVersion GetPythonVersion(HMODULE hMod) {
                 case '6': return PythonVersion_36;
                 case '7': return PythonVersion_37;
                 case '8': return PythonVersion_38;
+                case '9': return PythonVersion_39;
                 }
             }
         }
@@ -241,7 +243,7 @@ public:
     }
 };
 
-// 3.8
+// 3.8 - 3.9
 class PyCodeObject38 : public PyObject {
 public:
     int co_argcount;            /* #arguments, except *args */
@@ -273,7 +275,7 @@ public:
     }
 };
 
-// 2.5 - 3.8
+// 2.5 - 3.9
 class PyFunctionObject : public PyObject {
 public:
     PyObject *func_code;    /* A code object */
@@ -296,7 +298,7 @@ public:
      */
 };
 
-// 2.4 - 3.8 compatible
+// 2.4 - 3.9 compatible
 typedef struct {
     PyObject_HEAD
     size_t length;      /* Length of raw Unicode data in buffer */
@@ -304,7 +306,7 @@ typedef struct {
     long hash;          /* Hash value; -1 if not set */
 } PyUnicodeObject;
 
-// 2.4 - 3.8 compatible
+// 2.4 - 3.9 compatible
 class PyFrameObject : public PyVarObject {
 public:
     PyFrameObject *f_back;  /* previous frame, or NULL */
@@ -389,7 +391,7 @@ public:
 
 typedef void (*destructor)(PyObject *);
 
-// 2.4 - 3.8
+// 2.4 - 3.9
 class PyMethodDef {
 public:
     char    *ml_name;    /* The name of the built-in function/method */
@@ -397,7 +399,7 @@ public:
 
 
 // 
-// 2.5 - 3.8
+// 2.5 - 3.9
 // While these are compatible there are fields only available on later versions.
 class PyTypeObject : public PyVarObject {
 public:
@@ -482,7 +484,7 @@ public:
     unsigned int tp_version_tag;
 };
 
-// 2.4 - 3.8
+// 2.4 - 3.9
 class PyTupleObject : public PyVarObject {
 public:
     PyObject *ob_item[1];
@@ -493,7 +495,7 @@ public:
      */
 };
 
-// 2.4 - 3.8
+// 2.4 - 3.9
 class PyCFunctionObject : public PyObject {
 public:
     PyMethodDef *m_ml;      /* Description of the C function to call */
