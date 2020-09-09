@@ -19,7 +19,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using Microsoft.IronPythonTools.Interpreter;
 using Microsoft.Python.Parsing;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Infrastructure;
@@ -38,7 +37,6 @@ namespace TestUtilities {
         public static readonly PythonVersion Python36 = GetCPythonVersion(PythonLanguageVersion.V36, InterpreterArchitecture.x86);
         public static readonly PythonVersion Python37 = GetCPythonVersion(PythonLanguageVersion.V37, InterpreterArchitecture.x86);
         public static readonly PythonVersion Python38 = GetCPythonVersion(PythonLanguageVersion.V38, InterpreterArchitecture.x86);
-        public static readonly PythonVersion IronPython27 = GetIronPythonVersion(false);
         public static readonly PythonVersion Python27_x64 = GetCPythonVersion(PythonLanguageVersion.V27, InterpreterArchitecture.x64);
         public static readonly PythonVersion Python35_x64 = GetCPythonVersion(PythonLanguageVersion.V35, InterpreterArchitecture.x64);
         public static readonly PythonVersion Python36_x64 = GetCPythonVersion(PythonLanguageVersion.V36, InterpreterArchitecture.x64);
@@ -50,36 +48,6 @@ namespace TestUtilities {
         public static readonly PythonVersion Anaconda36_x64 = GetAnacondaVersion(PythonLanguageVersion.V36, InterpreterArchitecture.x64);
         public static readonly PythonVersion Anaconda37 = GetAnacondaVersion(PythonLanguageVersion.V37, InterpreterArchitecture.x86);
         public static readonly PythonVersion Anaconda37_x64 = GetAnacondaVersion(PythonLanguageVersion.V37, InterpreterArchitecture.x64);
-        public static readonly PythonVersion IronPython27_x64 = GetIronPythonVersion(true);
-
-        public static readonly PythonVersion Jython27 = GetJythonVersion(PythonLanguageVersion.V27);
-
-        private static PythonVersion GetIronPythonVersion(bool x64) {
-            var exeName = x64 ? "ipy64.exe" : "ipy.exe";
-
-            var installPath = IronPythonResolver.GetPythonInstallDir();
-            if (Directory.Exists(installPath)) {
-                // IronPython changed to Any CPU for ipy.exe and ipy32.exe for 32-bit in 2.7.8
-                if (File.Exists(Path.Combine(installPath, "ipy32.exe"))) {
-                    exeName = x64 ? "ipy.exe" : "ipy32.exe";
-                }
-
-                return new PythonVersion(
-                    new VisualStudioInterpreterConfiguration(
-                        x64 ? "IronPython|2.7-64" : "IronPython|2.7-32",
-                        string.Format("IronPython {0} 2.7", x64 ? "64-bit" : "32-bit"),
-                        installPath,
-                        Path.Combine(installPath, exeName),
-                        architecture: x64 ? InterpreterArchitecture.x64 : InterpreterArchitecture.x86,
-                        version: new Version(2, 7),
-                        pathVar: "IRONPYTHONPATH"
-                    ),
-                    ironPython: true
-                );
-            }
-
-            return null;
-        }
 
         private static PythonVersion GetAnacondaVersion(PythonLanguageVersion version, InterpreterArchitecture arch) {
             var res = _foundInRegistry.FirstOrDefault(ii =>
@@ -133,46 +101,6 @@ namespace TestUtilities {
             return null;
         }
 
-        private static PythonVersion GetJythonVersion(PythonLanguageVersion version) {
-            var candidates = new List<DirectoryInfo>();
-            var ver = version.ToVersion();
-            var path1 = string.Format("jython{0}{1}*", ver.Major, ver.Minor);
-            var path2 = string.Format("jython{0}.{1}*", ver.Major, ver.Minor);
-            foreach (var drive in DriveInfo.GetDrives()) {
-                if (drive.DriveType != DriveType.Fixed) {
-                    continue;
-                }
-
-                try {
-                    candidates.AddRange(drive.RootDirectory.EnumerateDirectories(path1));
-                    candidates.AddRange(drive.RootDirectory.EnumerateDirectories(path2));
-                } catch {
-                }
-            }
-
-            foreach (var dir in candidates) {
-                var interpreter = dir.EnumerateFiles("jython.bat").FirstOrDefault();
-                if (interpreter == null) {
-                    continue;
-                }
-                var libPath = dir.EnumerateDirectories("Lib").FirstOrDefault();
-                if (libPath == null || !libPath.EnumerateFiles("site.py").Any()) {
-                    continue;
-                }
-                return new PythonVersion(new VisualStudioInterpreterConfiguration(
-                    CPythonInterpreterFactoryConstants.GetInterpreterId(
-                        "Jython",
-                        version.ToVersion().ToString()
-                    ),
-                    string.Format("Jython {0}", version.ToVersion()),
-                    dir.FullName,
-                    interpreter.FullName,
-                    version: version.ToVersion()
-                ));
-            }
-            return null;
-        }
-
         public static IEnumerable<PythonVersion> AnacondaVersions {
             get {
                 if (Anaconda37 != null) yield return Anaconda37;
@@ -190,13 +118,10 @@ namespace TestUtilities {
                 if (Python35 != null) yield return Python35;
                 if (Python36 != null) yield return Python36;
                 if (Python37 != null) yield return Python37;
-                if (IronPython27 != null) yield return IronPython27;
                 if (Python27_x64 != null) yield return Python27_x64;
                 if (Python35_x64 != null) yield return Python35_x64;
                 if (Python36_x64 != null) yield return Python36_x64;
                 if (Python37_x64 != null) yield return Python37_x64;
-                if (IronPython27_x64 != null) yield return IronPython27_x64;
-                if (Jython27 != null) yield return Jython27;
             }
         }
 
@@ -218,12 +143,10 @@ namespace TestUtilities {
     public class PythonVersion {
         public readonly Microsoft.PythonTools.Interpreter.InterpreterConfiguration Configuration;
         public readonly bool IsCPython;
-        public readonly bool IsIronPython;
 
-        public PythonVersion(Microsoft.PythonTools.Interpreter.InterpreterConfiguration config, bool ironPython = false, bool cPython = false) {
+        public PythonVersion(Microsoft.PythonTools.Interpreter.InterpreterConfiguration config, bool cPython = false) {
             Configuration = config;
             IsCPython = cPython;
-            IsIronPython = ironPython;
         }
 
         public PythonVersion(string version) {
@@ -245,7 +168,6 @@ namespace TestUtilities {
 
             Configuration = selected.Configuration;
             IsCPython = selected.IsCPython;
-            IsIronPython = selected.IsIronPython;
         }
 
         public override string ToString() => Configuration.Description;

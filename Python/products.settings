@@ -5,10 +5,7 @@
     
     <!-- Optionally exclude HTML editor extensions until we get an API stability guarantee from that team -->
     <IncludeDjangoHtmlExtensions Condition="'$(IncludeDjangoHtmlExtensions)' == ''">true</IncludeDjangoHtmlExtensions>
-    
-    <!-- Include IronPython by default -->
-    <IncludeIronPython Condition="'$(IncludeIronPython)' == ''">true</IncludeIronPython>
-    
+
     <!-- Include Miniconda by default -->
     <IncludeMiniconda Condition="'$(IncludeMiniconda)' == ''">true</IncludeMiniconda>
 

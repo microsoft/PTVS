@@ -526,10 +526,6 @@ namespace Microsoft.PythonTools.Project {
             return new PythonFileNode(this, item);
         }
 
-        public override CommonFileNode CreateNonCodeFileNode(ProjectElement item) {
-            return new PythonNonCodeFileNode(this, item);
-        }
-
         protected override ConfigProvider CreateConfigProvider() {
             return new CommonConfigProvider(this);
         }
@@ -620,30 +616,6 @@ namespace Microsoft.PythonTools.Project {
                 return true;
             }
             return base.FilterItemTypeToBeAddedToHierarchy(itemType);
-        }
-
-        public override int QueryService(ref Guid guidService, out object result) {
-#if DEV15
-            // Sometimes this service is requested from us and it always seems
-            // to lead to infinite recursion. All callers seem to handle the
-            // failure case, so let's just bail immediately.
-            if (guidService == typeof(SVSMDTypeResolutionService).GUID) {
-                result = null;
-                return VSConstants.E_FAIL;
-            }
-#endif
-
-            var designerSupport = Site.GetComponentModel().GetService<IXamlDesignerSupport>();
-
-            if (designerSupport != null && guidService == designerSupport.DesignerContextTypeGuid) {
-                result = DesignerContext;
-                if (result == null) {
-                    result = DesignerContext = designerSupport?.CreateDesignerContext();
-                }
-                return VSConstants.S_OK;
-            }
-
-            return base.QueryService(ref guidService, out result);
         }
 
         public override int GenerateUniqueItemName(uint itemIdLoc, string ext, string suggestedRoot, out string itemName) {

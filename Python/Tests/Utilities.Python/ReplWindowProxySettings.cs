@@ -34,21 +34,6 @@ namespace TestUtilities.UI.Python {
             Version.AssertInstalled();
         }
 
-        public const string IronPython27ExitHelp = @"Help on Quitter in module site object:
-
-class Quitter(__builtin__.object)
- |  Methods defined here:
- |  
- |  __call__(self, code=None)
- |  
- |  __dict__ = <dictproxy object>
- |  __init__(self, name)
- |  
- |  __repr__(self)
- |  
- |  __weakref__ = <attribute '__weakref__' of <class 'site.Quitter'> objects
-";
-
         public const string Python2ExitHelp = @"Help on Quitter in module site object:
 
 class Quitter(__builtin__.object)

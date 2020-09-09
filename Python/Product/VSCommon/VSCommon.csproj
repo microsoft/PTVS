@@ -96,7 +96,6 @@
     <Compile Include="Infrastructure\LiveTextBlock.cs" />
     <Compile Include="Infrastructure\Commands\PackageCommand.cs" />
     <Compile Include="Logging\IPythonToolsLogger.cs" />
-    <Compile Include="Infrastructure\IXamlDesignerSupport.cs" />
     <Compile Include="Infrastructure\OutputWindowRedirector.cs" />
     <Compile Include="Logging\PythonLogEvent.cs" />
     <Compile Include="Infrastructure\SettingsManagerCreator.cs" />
