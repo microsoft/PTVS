@@ -30,7 +30,6 @@ Windows Registry Editor Version 5.00
 [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\StrongName\Verification\Microsoft.PythonTools.EnvironmentsList,B03F5F7F11D50A3A]
 [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\StrongName\Verification\Microsoft.PythonTools.Ipc.Json,B03F5F7F11D50A3A]
 [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\StrongName\Verification\Microsoft.PythonTools.LiveShare,B03F5F7F11D50A3A]
-[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\StrongName\Verification\Microsoft.PythonTools.Miniconda,B03F5F7F11D50A3A]
 [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\StrongName\Verification\Microsoft.PythonTools.Profiling,B03F5F7F11D50A3A]
 [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\StrongName\Verification\Microsoft.PythonTools.ProjectWizards,B03F5F7F11D50A3A]
 [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\StrongName\Verification\Microsoft.PythonTools.RunElevated,B03F5F7F11D50A3A]

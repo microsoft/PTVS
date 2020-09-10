@@ -42,7 +42,6 @@
 
     <ProjectFile Include="VCDebugLauncher\VCDebugLauncher.csproj" Condition="'$(IncludeVCDebugLauncher)' == 'True'"/>
     <ProjectFile Include="Wsl\Wsl.csproj" Condition="'$(IncludeWsl)' == 'True'"/>
-    <ProjectFile Include="Miniconda\Miniconda.csproj" Condition="'$(IncludeMiniconda)' == 'True'"/>
 
     <ProjectFile Include="LiveShare\LiveShare.csproj" Condition="'$(IncludeLiveShare)' == 'True'"/>
 
