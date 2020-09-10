@@ -652,7 +652,6 @@
       <DependentUpon>PythonGeneralPropertyPageControl.cs</DependentUpon>
     </Compile>
     <Compile Include="PythonTools\Project\PythonFolderNode.cs" />
-    <Compile Include="PythonTools\Project\PythonNonCodeFileNode.cs" />
     <Compile Include="PythonTools\PythonCoreConstants.cs" />
     <Compile Include="PythonTools\Repl\ReplIntellisenseMode.cs" />
     <Compile Include="PythonTools\Repl\SwitchModuleCommand.cs" />

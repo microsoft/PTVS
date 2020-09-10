@@ -22,7 +22,6 @@
     <ProjectFile Include="Core\PythonToolsTests.csproj" />
     <ProjectFile Include="Core.UI\PythonToolsUITests.csproj" />
     <ProjectFile Include="PythonToolsUITestsRunner\PythonToolsUITestsRunner.csproj" />
-    <ProjectFile Include="IronPython\IronPythonTests.csproj" Condition="'$(IncludeIronPython)' == 'True'" />
     <ProjectFile Include="ReplWindowUITests\ReplWindowUITests.csproj" />
     <ProjectFile Include="Utilities.Python\TestUtilities.Python.csproj" />
     <ProjectFile Include="PythonToolsMockTests\PythonToolsMockTests.csproj" />

@@ -367,7 +367,6 @@ namespace PythonToolsUITests {
 
                 var expected = new HashSet<string>(
                     PythonPaths.Versions
-                        .Where(v => !v.IsIronPython)
                         .Select(v => v.InterpreterPath),
                     StringComparer.OrdinalIgnoreCase
                 );
@@ -813,22 +812,6 @@ namespace PythonToolsUITests {
 
             condaInterpreter.AssertInstalled();
             FilterCondaInterpreter(condaInterpreter);
-        }
-
-        [TestMethod, Priority(UnitTestPriority.P1)]
-        public void FilterInterpreterIronpython2() {
-            PythonVersion ironpythonInterpreter = PythonPaths.IronPython27_x64 ?? PythonPaths.IronPython27;
-            if (ironpythonInterpreter == null) {
-                Assert.Inconclusive("Iron python 2.7 not found");
-            }
-
-            Assert.IsTrue(InterpreterView.ExcludeInterpreter(ironpythonInterpreter.Configuration, InterpreterView.InterpreterFilter.ExcludeAll));
-            Assert.IsTrue(InterpreterView.ExcludeInterpreter(ironpythonInterpreter.Configuration, InterpreterView.InterpreterFilter.ExcludeIronpython));
-            Assert.IsFalse(InterpreterView.ExcludeInterpreter(ironpythonInterpreter.Configuration, InterpreterView.InterpreterFilter.None));
-            Assert.IsFalse(InterpreterView.ExcludeInterpreter(
-                ironpythonInterpreter.Configuration,
-                InterpreterView.InterpreterFilter.ExcludeVirtualEnv | InterpreterView.InterpreterFilter.ExcludeCondaEnv)
-            );
         }
 
         #region Test Helpers

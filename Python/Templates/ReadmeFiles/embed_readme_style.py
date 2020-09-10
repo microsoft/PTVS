@@ -15,7 +15,6 @@ while not (BUILD_ROOT / 'build.root').is_file():
 
 SOURCE_CSS = BUILD_ROOT / 'Python' / 'Product' / 'PythonTools' / 'ReadmeStyle.css'
 HTML_FILES = [
-    BUILD_ROOT / 'Python' / 'Product' / 'IronPython' / 'NoIronPython.htmlsrc',
     BUILD_ROOT / 'Python' / 'Product' / 'PythonTools' / 'NoInterpreters.htmlsrc',
     BUILD_ROOT / 'Python' / 'Templates' / 'ReadmeFiles' / 'StarterDjangoProject' / 'readme.htmlsrc',
 ]

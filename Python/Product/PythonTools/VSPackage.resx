@@ -172,17 +172,8 @@
   <data name="401" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>_BUILDROOT_\Python\Product\Icons\Dev_VSVERSION_\PythonEmptyApplication.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="402" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>_BUILDROOT_\Python\Product\Icons\dev_VSVERSION_\IronPythonWPFApplication.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="403" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>_BUILDROOT_\Python\Product\Icons\dev_VSVERSION_\PythonWindowsForm.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
   <data name="404" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>_BUILDROOT_\Python\Product\Icons\dev_VSVERSION_\PythonFile.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="405" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>_BUILDROOT_\Python\Product\Icons\dev_VSVERSION_\IronPythonWpfWindow.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="406" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>_BUILDROOT_\Python\Product\Icons\dev_VSVERSION_\PythonWebSite.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>

@@ -94,11 +94,6 @@ namespace ReplWindowUITestsRunner {
     }
 
     [TestClass]
-    public class ReplWindowSmokeUITestsIPy27 : ReplWindowSmokeUITests {
-        protected override string Interpreter => "IronPython27|IronPython27_x64";
-    }
-
-    [TestClass]
     public class ReplWindowSmokeUITests35 : ReplWindowSmokeUITests {
         protected override string Interpreter => "Python35|Python36_x64";
     }

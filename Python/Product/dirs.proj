@@ -14,8 +14,6 @@
     <ProjectFile Include="BuildTasks\BuildTasks.csproj"/>
     <ProjectFile Include="BuildTasks\BuildTasks.Core.csproj"/>
 
-    <ProjectFile Include="XamlDesignerSupport\XamlDesignerSupport.csproj"/>
-
     <ProjectFile Include="PyDebugAttach\PyDebugAttach.vcxproj"/>
     <ProjectFile Include="PyDebugAttach\PyDebugAttachX86.vcxproj"/>
     <ProjectFile Include="Attacher\Attacher.csproj"/>
@@ -31,10 +29,6 @@
     <ProjectFile Include="ProjectWizards\ProjectWizards.csproj"/>
 
     <ProjectFile Include="PythonTools\PythonTools.csproj"/>
-
-    <ProjectFile Include="IronPythonResolver\IronPythonResolver.csproj" Condition="'$(IncludeIronPython)' == 'True'"/>
-    <ProjectFile Include="IronPython\IronPython.Interpreter.csproj" Condition="'$(IncludeIronPython)' == 'True'"/>
-    <ProjectFile Include="IronPython\IronPython.csproj" Condition="'$(IncludeIronPython)' == 'True'"/>
 
     <ProjectFile Include="VsPyProf\VsPyProf.vcxproj"/>
     <ProjectFile Include="VsPyProf\VsPyProfX86.vcxproj"/>

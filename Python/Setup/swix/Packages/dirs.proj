@@ -22,8 +22,6 @@
     <ProjectFile Include="Microsoft.PythonTools.Core.Templates.Vsix.swixproj"/>
     <ProjectFile Include="Microsoft.PythonTools.Django.Vsix.swixproj" Condition="'$(IncludeDjango)' == 'True'"/>
     <ProjectFile Include="Microsoft.PythonTools.Django.Templates.Vsix.swixproj" Condition="'$(IncludeDjango)' == 'True'"/>
-    <ProjectFile Include="Microsoft.PythonTools.IronPython.Vsix.swixproj" Condition="'$(IncludeIronPython)' == 'True'"/>
-    <ProjectFile Include="Microsoft.PythonTools.IronPython.Templates.Vsix.swixproj" Condition="'$(IncludeIronPython)' == 'True'"/>
     <ProjectFile Include="Microsoft.PythonTools.LiveShare.Vsix.swixproj" Condition="'$(IncludeLiveShare)' == 'True'"/>
     <ProjectFile Include="Microsoft.PythonTools.Miniconda.Vsix.swixproj" Condition="'$(IncludeMiniconda)' == 'True'"/>
     <ProjectFile Include="Microsoft.PythonTools.NativeDevelopment.Templates.Vsix.swixproj"/>
@@ -32,7 +30,6 @@
     <LocProjectFile Include="Microsoft.CookiecutterTools.Vsix.Resources.swixproj" Condition="'$(LocType)' != ''"/>
     <LocProjectFile Include="Microsoft.PythonTools.Core.Vsix.Resources.swixproj" Condition="'$(LocType)' != ''"/>
     <LocProjectFile Include="Microsoft.PythonTools.Django.Vsix.Resources.swixproj" Condition="'$(LocType)' != ''"/>
-    <LocProjectFile Include="Microsoft.PythonTools.IronPython.Vsix.Resources.swixproj" Condition="'$(LocType)' != ''"/>
     <LocProjectFile Include="Microsoft.PythonTools.LiveShare.Vsix.Resources.swixproj" Condition="'$(LocType)' != ''"/>
     <LocProjectFile Include="Microsoft.PythonTools.Miniconda.Vsix.Resources.swixproj" Condition="'$(LocType)' != ''"/>
     <LocProjectFile Include="Microsoft.PythonTools.Profiling.Vsix.Resources.swixproj" Condition="'$(LocType)' != ''"/>

@@ -121,10 +121,6 @@
       <Project>{24f9e050-9f7e-4fe8-895d-819e527b8f45}</Project>
       <Name>Microsoft.PythonTools.Workspace</Name>
     </ProjectReference>
-    <ProjectReference Include="..\XamlDesignerSupport\XamlDesignerSupport.csproj">
-      <Project>{0caebf32-5d08-43a9-b7ba-f80bfe372824}</Project>
-      <Name>Microsoft.PythonTools.XamlDesignerSupport</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Attacher\Attacher.csproj">
       <Project>{666A22BB-0CB5-4C08-A20F-E17450DA6573}</Project>
       <Name>Microsoft.PythonTools.Attacher</Name>

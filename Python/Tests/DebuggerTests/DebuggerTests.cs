@@ -67,9 +67,7 @@ namespace DebuggerTests {
             await ChildTestAsync(EnumChildrenTestName, lastLine, "s", GetSetChildren(
                 new ChildInfo("[0]", "next((v for i, v in enumerate(s) if i == 0))", Version.Version.Is3x() ? "frozenset({2, 3, 4})" : "frozenset([2, 3, 4])")));
 
-            if (Version.Version.Is2x() && !(this is DebuggerTestsIpy27)) {
-                // IronPython unicode repr differs
-                // 3.x: http://pytools.codeplex.com/workitem/76
+            if (Version.Version.Is2x()) {
                 await ChildTestAsync(EnumChildrenTestName, lastLine, "cinst",
                     new ChildInfo("abc", null, "42", "0x2a"),
                     new ChildInfo("uc", null, "u\'привет мир\'"));
@@ -98,19 +96,10 @@ namespace DebuggerTests {
         }
 
         private ChildInfo[] GetSetChildren(ChildInfo items) {
-            if (this is DebuggerTestsIpy27) {
-                return new ChildInfo[] { new ChildInfo("Count", null), items };
-            }
             return new[] { items };
         }
 
         private ChildInfo[] GetListChildren(params ChildInfo[] items) {
-            if (this is DebuggerTestsIpy27) {
-                var res = new List<ChildInfo>(items);
-                res.Add(new ChildInfo("Count", null));
-                res.Add(new ChildInfo("Item", null));
-                return res.ToArray();
-            }
             return items;
         }
 
@@ -124,13 +113,6 @@ namespace DebuggerTests {
             }
 
             res.AddRange(items);
-
-            if (this is DebuggerTestsIpy27) {
-                res.Add(new ChildInfo("Count", null));
-                res.Add(new ChildInfo("Item", null));
-                res.Add(new ChildInfo("Keys", null));
-                res.Add(new ChildInfo("Values", null));
-            }
 
             return res.ToArray();
         }
@@ -149,9 +131,7 @@ namespace DebuggerTests {
             await ChildTestAsync("PrevFrame" + EnumChildrenTestName, breakLine, "s", 1, GetSetChildren(
                 new ChildInfo("[0]", "next((v for i, v in enumerate(s) if i == 0))", Version.Version.Is3x() ? "frozenset({2, 3, 4})" : "frozenset([2, 3, 4])")));
 
-            if (GetType() != typeof(DebuggerTestsIpy27) && Version.Version.Is2x()) {
-                // IronPython unicode repr differs
-                // 3.x: http://pytools.codeplex.com/workitem/76
+            if (Version.Version.Is2x()) {
                 await ChildTestAsync("PrevFrame" + EnumChildrenTestName, breakLine, "cinst", 1,
                     new ChildInfo("abc", null, "42", "0x2a"),
                     new ChildInfo("uc", null, "u\'привет мир\'"));
@@ -322,11 +302,6 @@ namespace DebuggerTests {
 
         [TestMethod, Priority(UnitTestPriority.P1)]
         public async Task SetNextLineTest() {
-            if (GetType() == typeof(DebuggerTestsIpy27)) {
-                //http://ironpython.codeplex.com/workitem/30129
-                return;
-            }
-
             var debugger = new PythonDebugger();
             PythonThread thread = null;
             var processRunInfo =
@@ -359,9 +334,7 @@ namespace DebuggerTests {
 
                 var moduleFrame = thread.Frames[0];
                 Assert.AreEqual(1, moduleFrame.StartLine);
-                if (GetType() != typeof(DebuggerTestsIpy27)) {
-                    Assert.AreEqual(13, moduleFrame.EndLine);
-                }
+                Assert.AreEqual(13, moduleFrame.EndLine);
 
                 // skip over def f()
                 var result = await moduleFrame.SetLineNumber(6, TimeoutToken());
@@ -509,10 +482,6 @@ namespace DebuggerTests {
         // https://pytools.codeplex.com/workitem/2772
         [TestMethod, Priority(UnitTestPriority.P1)]
         public async Task EvalPseudoTypeTest() {
-            if (this is DebuggerTestsIpy27) {
-                return;
-            }
-
             await EvalTestAsync("EvalPseudoType.py", 22, "<module>", 0, EvalResult.Value("obj", "PseudoType", "pseudo"));
         }
 
@@ -614,14 +583,10 @@ namespace DebuggerTests {
 
                 var obj = frames[0].Locals.First(x => x.Expression == "x");
                 var children = await obj.GetChildrenAsync(CancellationTokens.After2s);
-                int extraCount = 0;
-                if (this is DebuggerTestsIpy27) {
-                    extraCount += 2;
-                }
-                Assert.AreEqual(extraCount + 3, children.Length);
-                Assert.AreEqual("2", children[0 + extraCount].StringRepr);
-                Assert.AreEqual("3", children[1 + extraCount].StringRepr);
-                Assert.AreEqual("4", children[2 + extraCount].StringRepr);
+                Assert.AreEqual(3, children.Length);
+                Assert.AreEqual("2", children[0].StringRepr);
+                Assert.AreEqual("3", children[1].StringRepr);
+                Assert.AreEqual("4", children[2].StringRepr);
 
                 await process.ResumeAsync(TimeoutToken());
             } finally {
@@ -1234,7 +1199,7 @@ namespace DebuggerTests {
                 BreakFileName = Path.Combine(DebuggerTestPath, "A", "relpath.py"),
                 Breakpoints = { 6 },
                 ExpectedHits = { 0, 0 },
-                InterpreterOptions = Version.IsIronPython ? "-X:Frames" : "",
+                InterpreterOptions = string.Empty,
                 IsBindFailureExpected = true
             }.RunAsync();
         }
@@ -1709,10 +1674,6 @@ namespace DebuggerTests {
                 );
 
                 await TestExceptionAsync(debugger, Path.Combine(DebuggerTestPath, "UnhandledException4.py"), i == 0, ExceptionMode.Unhandled, null,
-                    // On IronPython, an unhandled exception will be repeatedly reported as raised as it bubbles up the stack.
-                    // Everywhere else, it will only be reported once at the point where it is initially raised. 
-                    this is DebuggerTestsIpy27 ?
-                    new[] { new ExceptionInfo("OSError", 17), new ExceptionInfo("OSError", 32), new ExceptionInfo("OSError", 55) } :
                     new[] { new ExceptionInfo("OSError", 17) }
                 );
 
@@ -1830,11 +1791,6 @@ namespace DebuggerTests {
 
             if (Version.Version == PythonLanguageVersion.V30 && raised.Count > exceptions.Length) {
                 // Python 3.0 raises an exception as the process shuts down.
-                raised.RemoveAt(raised.Count - 1);
-            }
-
-            if (GetType() == typeof(DebuggerTestsIpy27) && raised.Count == exceptions.Length + 1) {
-                // IronPython over-reports exceptions
                 raised.RemoveAt(raised.Count - 1);
             }
 
@@ -2305,49 +2261,6 @@ namespace DebuggerTests {
             get {
                 return PythonPaths.Python27_x64;
             }
-        }
-    }
-
-    [TestClass]
-    public class DebuggerTestsIpy27 : DebuggerTests {
-        internal override PythonVersion Version {
-            get {
-                return PythonPaths.IronPython27 ?? PythonPaths.IronPython27_x64;
-            }
-        }
-
-        protected override string UnassignedLocalRepr {
-            get { return "None"; }
-        }
-
-        protected override string UnassignedLocalType {
-            get { return "NoneType"; }
-        }
-
-        // IronPython doesn't expose closure variables in frame.f_locals
-        public override async Task LocalClosureVarsTest() {
-            var test = new LocalsTest(this, "LocalClosureVarsTest.py", 4) {
-                Params = { "z" }
-            };
-            await test.RunAsync();
-
-            test.BreakFileName = "LocalClosureVarsTestImported.py";
-            test.LineNo = 6;
-            await test.RunAsync();
-        }
-
-        // IronPython exposes some builtin elements in co_names not in __builtins__
-        public override async Task LocalBuiltinUsageTest() {
-            var test = new LocalsTest(this, "LocalBuiltinUsageTest.py", 4) {
-                Params = { "start", "end" },
-                Locals = { "i", "foreach_enumerator" }
-            };
-            await test.RunAsync();
-
-            test.BreakFileName = "LocalBuiltinUsageTestImported.py";
-            test.LineNo = 6;
-            test.Params.Add("self");
-            await test.RunAsync();
         }
     }
 }

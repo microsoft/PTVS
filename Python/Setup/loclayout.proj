@@ -33,7 +33,6 @@
         Microsoft.PythonTools.VSInterpreters.dll;
         Microsoft.PythonTools.WebRole.dll;
         Microsoft.PythonTools.Workspace.dll;
-        Microsoft.PythonTools.XamlDesignerSupport.dll;
         Microsoft.CookiecutterTools.dll;
         "/>
     
@@ -43,11 +42,6 @@
     <ManagedFiles Include="
         Microsoft.PythonTools.Django.Analysis.dll;
         " Condition="$(IncludeDjango) and $(IncludeDjangoHtmlExtensions)" />
-    <ManagedFiles Include="
-        Microsoft.IronPythonTools.Resolver.dll;
-        Microsoft.PythonTools.IronPython.dll;
-        Microsoft.PythonTools.IronPython.Interpreter.dll;
-        " Condition="$(IncludeIronPython)" />
     <ManagedFiles Include="
         Microsoft.PythonTools.Miniconda.dll;
         " Condition="$(IncludeMiniconda)" />
