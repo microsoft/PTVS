@@ -36,7 +36,6 @@ ASSEMBLIES = sorted([
     "Microsoft.PythonTools.EnvironmentsList",
     "Microsoft.PythonTools.Ipc.Json",
     "Microsoft.PythonTools.LiveShare",
-    "Microsoft.PythonTools.Miniconda",
     "Microsoft.PythonTools.Profiling",
     "Microsoft.PythonTools.ProjectWizards",
     "Microsoft.PythonTools.RunElevated",

@@ -6,9 +6,6 @@
     <!-- Optionally exclude HTML editor extensions until we get an API stability guarantee from that team -->
     <IncludeDjangoHtmlExtensions Condition="'$(IncludeDjangoHtmlExtensions)' == ''">true</IncludeDjangoHtmlExtensions>
 
-    <!-- Include Miniconda by default -->
-    <IncludeMiniconda Condition="'$(IncludeMiniconda)' == ''">true</IncludeMiniconda>
-
     <!-- Include VCDebugLauncher by default -->
     <IncludeVCDebugLauncher Condition="'$(VCDebugLauncher)' == ''">true</IncludeVCDebugLauncher>
     

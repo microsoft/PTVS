@@ -11,6 +11,3 @@
 
 # Some Windows-specific files should always be CRLF
 *.bat eol=crlf
-
-# Language detection
-Python/Product/Miniconda/Miniconda3-x64/* linguist-vendored
