@@ -93,8 +93,6 @@ namespace Microsoft.PythonTools.Profiling {
                 res.Reports = Reports.Clone();
             }
 
-            res.UseVTune = UseVTune;
-
             return res;
         }
 

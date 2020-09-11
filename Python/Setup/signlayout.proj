@@ -44,10 +44,6 @@
         "/>
 
     <ManagedFiles Include="
-        ExternalProfilerDriver.exe;
-        " Condition="$(IncludeExternalProfilerDriver)" />
-
-    <ManagedFiles Include="
         Microsoft.PythonTools.Django.dll;
         " Condition="$(IncludeDjango)" />
     <ManagedFiles Include="

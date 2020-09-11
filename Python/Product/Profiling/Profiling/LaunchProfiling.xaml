@@ -163,14 +163,6 @@
             </GroupBox>
         </Grid>
 
-        <Grid Grid.Row="1">
-            <CheckBox Grid.Row="1" Margin="12 12 12 4"
-                      Content="{x:Static ui:Strings.LaunchProfiling_MixedModeProfiling}"
-                      Visibility="{Binding IsExternalProfilerEnabled, Converter={StaticResource BoolToVisibleOrCollapsed}}"
-                      IsEnabled="{Binding IsVTuneAvailable}"
-                      IsChecked="{Binding UseVTune}" />
-        </Grid>
-
         <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom">
             <Button IsDefault="True" Click="OkClick" IsEnabled="{Binding IsValid}"
                     MinWidth="86" MinHeight="24"
