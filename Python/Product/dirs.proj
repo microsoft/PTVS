@@ -33,7 +33,6 @@
     <ProjectFile Include="VsPyProf\VsPyProf.vcxproj"/>
     <ProjectFile Include="VsPyProf\VsPyProfX86.vcxproj"/>
     <ProjectFile Include="Profiling\Profiling.csproj"/>
-    <ProjectFile Include="ExternalProfilerDriver\ExternalProfilerDriver.csproj" Condition="'$(IncludeExternalProfilerDriver)' == 'True'"/>
 
     <ProjectFile Include="WebRole\WebRole.csproj"/>
     <ProjectFile Include="Django.Analysis\Django.Analysis.csproj" Condition="'$(IncludeDjango)' == 'True' and '$(IncludeDjangoHtmlExtensions)' == 'True'" />
