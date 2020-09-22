@@ -5640,7 +5640,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to You&apos;re using Python {0}. Some new features might not work as expected until Visual Studio officially supports this version..
+        ///   Looks up a localized string similar to You&apos;re using Python {0}. Some features might not work as expected since Visual Studio no longer supports this version..
         /// </summary>
         public static string PythonVersionNotSupportedInfoBarText {
             get {

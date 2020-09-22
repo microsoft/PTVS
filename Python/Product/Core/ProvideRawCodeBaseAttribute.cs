@@ -111,7 +111,7 @@ namespace Microsoft.PythonTools.Core {
             // Maintain a stable attribute guid in every build, when assembly info is the same.
             // Logic is the same as used in ProvideCodeBaseAttribute class.
             using (var sha2 = SHA256.Create()) {
-                var strongName = string.Format("{0},{1},{2},{3}", AssemblyName, PublicKeyToken, Culture, Version);
+                var strongName = $"{AssemblyName},{PublicKeyToken},{Culture},{Version}";
                 var strongNameBytes = Encoding.UTF8.GetBytes(strongName);
                 var fullHash = sha2.ComputeHash(strongNameBytes);
                 var targetBlockSize = Marshal.SizeOf(typeof(Guid));
@@ -123,11 +123,11 @@ namespace Microsoft.PythonTools.Core {
         }
 
         private static class ValueNames {
-            public static readonly string Name = "name";
-            public static readonly string PublicKeyToken = "publicKeyToken";
-            public static readonly string Culture = "culture";
-            public static readonly string CodeBase = "codeBase";
-            public static readonly string Version = "version";
+            public const string Name = "name";
+            public const string PublicKeyToken = "publicKeyToken";
+            public const string Culture = "culture";
+            public const string CodeBase = "codeBase";
+            public const string Version = "version";
         }
     }
 }

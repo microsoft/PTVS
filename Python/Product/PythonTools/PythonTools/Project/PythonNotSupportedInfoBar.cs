@@ -16,19 +16,19 @@
 
 using System;
 using System.Collections.Generic;
-using Task = System.Threading.Tasks.Task;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Logging;
-using Microsoft.PythonTools.Options;
 using Microsoft.VisualStudio.Imaging;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.Project {
     internal class PythonNotSupportedInfoBar : PythonInfoBar {
-        private const string _moreInformationLink = @"https://go.microsoft.com/fwlink/?LinkId=2108304";
-        private readonly Version _pythonVersionNotSupported = new Version("3.8");
+        // TODO (Dev17) - link to Python 2.7 support deprecation page.
+        // private const string _moreInformationLink = @"https://go.microsoft.com/fwlink/?LinkId=2108304";
+        private readonly Version _pythonMinVersionSupported = new Version("3.0");
         private readonly Func<IPythonInterpreterFactory> _getActiveInterpreterFunc;
         private IPythonInterpreterFactory _interpreterTriggeredInfoBar;
         private readonly string _context;
@@ -38,7 +38,7 @@ namespace Microsoft.PythonTools.Project {
             _context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
-        public async override Task CheckAsync() {
+        public override async Task CheckAsync() {
             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
             var activeInterpreter = _getActiveInterpreterFunc();
 
@@ -46,16 +46,17 @@ namespace Microsoft.PythonTools.Project {
                 !Site.GetPythonToolsService().GeneralOptions.PromptForPythonVersionNotSupported ||
                 _interpreterTriggeredInfoBar != null ||
                 activeInterpreter == null ||
-                activeInterpreter.Configuration.Version < _pythonVersionNotSupported
+                activeInterpreter.Configuration.Version >= _pythonMinVersionSupported
             ) {
                 return;
             }
 
             _interpreterTriggeredInfoBar = activeInterpreter;
             var infoBarTextSpanMessage = new InfoBarTextSpan(Strings.PythonVersionNotSupportedInfoBarText.FormatUI(_interpreterTriggeredInfoBar.Configuration.Version));
-            var infoBarMessage = new List<IVsInfoBarTextSpan>() { infoBarTextSpanMessage };
-            var actionItems = new List<InfoBarActionItem>() {
-                new InfoBarHyperlink(Strings.PythonVersionNotSupportMoreInfo, (Action)MoreInformationAction),
+            var infoBarMessage = new List<IVsInfoBarTextSpan> { infoBarTextSpanMessage };
+            var actionItems = new List<InfoBarActionItem> {
+                // TODO (Dev17) - link to Python 2.7 support deprecation page.
+                new InfoBarHyperlink(Strings.PythonVersionNotSupportMoreInfo /*, (Action)MoreInformationAction*/),
                 new InfoBarHyperlink(Strings.PythonVersionNotSupportedDontShowMessageAgain, (Action)DoNotShowAgainAction)
             };
 
@@ -63,12 +64,11 @@ namespace Microsoft.PythonTools.Project {
             Create(new InfoBarModel(infoBarMessage, actionItems, KnownMonikers.StatusInformation));
         }
 
-        private void MoreInformationAction() {
-            LogEvent(PythonVersionNotSupportedInfoBarAction.MoreInfo);
-            Close();
-
-            VsShellUtilities.OpenBrowser(_moreInformationLink);
-        }
+        //private void MoreInformationAction() {
+        //    LogEvent(PythonVersionNotSupportedInfoBarAction.MoreInfo);
+        //    Close();
+        //    VsShellUtilities.OpenBrowser(_moreInformationLink);
+        //}
 
         private void DoNotShowAgainAction() {
             LogEvent(PythonVersionNotSupportedInfoBarAction.Ignore);
@@ -81,7 +81,7 @@ namespace Microsoft.PythonTools.Project {
         private void LogEvent(string action) {
             Logger?.LogEvent(
                 PythonLogEvent.PythonNotSupportedInfoBar,
-                new PythonVersionNotSupportedInfoBarInfo() {
+                new PythonVersionNotSupportedInfoBarInfo {
                     Action = action,
                     Context = _context,
                     PythonVersion = _interpreterTriggeredInfoBar.Configuration.Version.ToString()
