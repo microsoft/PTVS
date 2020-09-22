@@ -39,8 +39,8 @@ namespace Microsoft.PythonTools.Interpreter {
         // when queried directly (e.g. as HKCU\Software\Python\PythonCore\3.7),
         // but enumerating HKCU\Software\Python\PythonCore key does not
         // find it (because of deliberate limitations in Windows).
-        private static readonly string[] StoreAppTags = new[] { "3.7", "3.8", "3.9" };
-        private static readonly string[] StoreAppCompanies = new[] { PythonCoreCompany };
+        private static readonly string[] StoreAppTags = { "3.7", "3.8", "3.9" };
+        private static readonly string[] StoreAppCompanies = { PythonCoreCompany };
 
         private readonly HashSet<string> _seenIds;
         private readonly List<PythonInterpreterInformation> _info;
@@ -51,20 +51,21 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         public static IEnumerable<PythonInterpreterInformation> PerformDefaultSearch() {
+            const string pythonSubKey = @"Software\\Python";
             var search = new PythonRegistrySearch();
 
-            using (var key = Registry.CurrentUser.OpenSubKey("Software\\Python")) {
+            using (var key = Registry.CurrentUser.OpenSubKey(pythonSubKey)) {
                 search.Search(key, Environment.Is64BitOperatingSystem ? InterpreterArchitecture.Unknown : InterpreterArchitecture.x86);
             }
 
             using (var root = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32))
-            using (var key = root.OpenSubKey("Software\\Python")) {
+            using (var key = root.OpenSubKey(pythonSubKey)) {
                 search.Search(key, InterpreterArchitecture.x86);
             }
 
             if (Environment.Is64BitOperatingSystem) {
                 using (var root = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64))
-                using (var key = root.OpenSubKey("Software\\Python")) {
+                using (var key = root.OpenSubKey(pythonSubKey)) {
                     search.Search(key, InterpreterArchitecture.x64);
                 }
             }
@@ -175,25 +176,25 @@ namespace Microsoft.PythonTools.Interpreter {
                 version = tag.Substring(0, 3);
             }
 
-            Version sysVersion;
             var sysVersionString = tagKey.GetValue("SysVersion") as string;
             if (pythonCoreCompatibility && string.IsNullOrEmpty(sysVersionString) && tag.Length >= 3) {
                 sysVersionString = tag.Substring(0, 3);
             }
-            if (string.IsNullOrEmpty(sysVersionString) || !Version.TryParse(sysVersionString, out sysVersion)) {
+            if (string.IsNullOrEmpty(sysVersionString) || !Version.TryParse(sysVersionString, out var sysVersion)) {
                 sysVersion = new Version(0, 0);
             }
 
-            PythonLanguageVersion langVersion;
+            if (sysVersion < new Version(3, 0)) {
+                return null; // Python 2.x is no longer supported.
+            }
+
             try {
-                langVersion = sysVersion.ToLanguageVersion();
+                sysVersion.ToLanguageVersion();
             } catch (InvalidOperationException) {
-                langVersion = PythonLanguageVersion.None;
                 sysVersion = new Version(0, 0);
             }
 
-            InterpreterArchitecture arch;
-            if (!InterpreterArchitecture.TryParse(tagKey.GetValue("SysArchitecture", null) as string, out arch)) {
+            if (!InterpreterArchitecture.TryParse(tagKey.GetValue("SysArchitecture", null) as string, out var arch)) {
                 arch = assumedArch;
             }
 
@@ -222,11 +223,9 @@ namespace Microsoft.PythonTools.Interpreter {
 
             var description = tagKey.GetValue("DisplayName") as string;
             if (string.IsNullOrEmpty(description)) {
-                if (pythonCoreCompatibility) {
-                    description = "Python {0}{1: ()}".FormatUI(version, arch);
-                } else {
-                    description = "{0} {1}".FormatUI(company, tag);
-                }
+                description = pythonCoreCompatibility 
+                    ? "Python {0}{1: ()}".FormatUI(version, arch) 
+                    : "{0} {1}".FormatUI(company, tag);
             }
 
             return new VisualStudioInterpreterConfiguration(
@@ -241,7 +240,7 @@ namespace Microsoft.PythonTools.Interpreter {
             );
         }
 
-        private static IList<string> GetSubkeys(RegistryKey key) {
+        private static IEnumerable<string> GetSubkeys(RegistryKey key) {
             string[] subKeyNames = null;
             int delay = 10;
             for (int retries = 5; subKeyNames == null && retries > 0; --retries) {
