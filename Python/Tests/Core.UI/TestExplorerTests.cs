@@ -212,7 +212,7 @@ namespace PythonToolsUITests {
 
             Console.WriteLine("Running all tests");
             testExplorer.RunAll(TimeSpan.FromSeconds(10));
-            app.WaitForOutputWindowText("Tests", $"Run finished: {tests.Length} tests run", 10_000);
+            app.WaitForOutputWindowText("Tests", $"run finished: {tests.Length} Tests run", 10_000);
 
             foreach (var test in tests) {
                 var item = testExplorer.WaitForItem(test.Path);
