@@ -13,7 +13,7 @@
 //
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
-
+#if DJANGO_HTML_EDITOR
 using System.IO;
 using Microsoft.WebTools.Languages.Html.Artifacts;
 using Microsoft.WebTools.Languages.Shared.Text;
@@ -77,3 +77,4 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
         }
     }
 }
+#endif

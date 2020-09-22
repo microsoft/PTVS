@@ -13,7 +13,7 @@
 //
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
-
+#if DJANGO_HTML_EDITOR
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -34,7 +34,7 @@ namespace Microsoft.PythonTools.Django.Intellisense {
             _buffer = textBuffer ?? throw new ArgumentNullException(nameof(textBuffer));
         }
 
-        #region ICompletionSource Members
+#region ICompletionSource Members
 
         public abstract void AugmentCompletionSession(ICompletionSession session, IList<CompletionSet> completionSets);
 
@@ -181,14 +181,15 @@ namespace Microsoft.PythonTools.Django.Intellisense {
             }
         }
 
-        #endregion
+#endregion
         
 
-        #region IDisposable Members
+#region IDisposable Members
 
         public void Dispose() {
         }
 
-        #endregion
+#endregion
     }
 }
+#endif

@@ -13,7 +13,7 @@
 //
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
-
+#if DJANGO_HTML_EDITOR
 using System;
 using System.Collections.Generic;
 using Microsoft.VisualStudio.Text;
@@ -29,7 +29,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
             _classifierProvider = provider;
         }
 
-        #region IClassifier Members
+#region IClassifier Members
 
         public abstract event EventHandler<ClassificationChangedEventArgs> ClassificationChanged;
 
@@ -104,6 +104,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
             }
         }
 
-        #endregion
+#endregion
     }
 }
+#endif

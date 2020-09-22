@@ -36,7 +36,6 @@
     <UseVSSDK>true</UseVSSDK>
     <CreateVsixContainer>true</CreateVsixContainer>
     <NoWarn>1762;0436</NoWarn>
-    <DefineConstants Condition="$(IncludeDjangoHtmlExtensions) == 'true'">DJANGO_HTML_EDITOR;$(DefineConstants)</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>

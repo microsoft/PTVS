@@ -87,10 +87,12 @@ namespace Microsoft.PythonTools.Django.Project {
             }
         }
 
+#if DJANGO_HTML_EDITOR
         public IDjangoProjectAnalyzer GetAnalyzer() {
             var project = _innerVsHierarchy.GetProject().GetPythonProject();
             return project != null ? new DjangoProjectAnalyzer(project) : null;
         }
+#endif
 
         #region IVsAggregatableProject
 
@@ -148,7 +150,7 @@ namespace Microsoft.PythonTools.Django.Project {
             }
         }
 
-        #endregion
+#endregion
 
         private void AddCommand(OleMenuCommand menuItem) {
             _menuService.AddCommand(menuItem);
@@ -877,7 +879,7 @@ namespace Microsoft.PythonTools.Django.Project {
             return _innerOleCommandTarget.QueryStatus(ref pguidCmdGroup, cCmds, prgCmds, pCmdText);
         }
 
-        #region IVsProjectFlavorCfgProvider Members
+#region IVsProjectFlavorCfgProvider Members
 
         public int CreateProjectFlavorCfg(IVsCfg pBaseProjectCfg, out IVsProjectFlavorCfg ppFlavorCfg) {
             // We're flavored with a Web Application project and our normal project...  But we don't
@@ -895,9 +897,9 @@ namespace Microsoft.PythonTools.Django.Project {
             return VSConstants.S_OK;
         }
 
-        #endregion
+#endregion
 
-        #region IVsProject Members
+#region IVsProject Members
 
         int IVsProject.AddItem(uint itemidLoc, VSADDITEMOPERATION dwAddItemOperation, string pszItemName, uint cFilesToOpen, string[] rgpszFilesToOpen, IntPtr hwndDlgOwner, VSADDRESULT[] pResult) {
             if (cFilesToOpen == 1 && Path.GetFileName(rgpszFilesToOpen[0]).Equals("DjangoNewAppFiles.vstemplate", StringComparison.OrdinalIgnoreCase)) {
@@ -968,17 +970,17 @@ namespace Microsoft.PythonTools.Django.Project {
             return _innerProject.OpenItem(itemid, rguidLogicalView, punkDocDataExisting, out ppWindowFrame);
         }
 
-        #endregion
+#endregion
 
-        #region IDjangoProject Members
+#region IDjangoProject Members
 
         ProjectSmuggler IDjangoProject.GetDjangoProject() {
             return new ProjectSmuggler(this);
         }
 
-        #endregion
+#endregion
 
-        #region IVsFilterAddProjectItemDlg Members
+#region IVsFilterAddProjectItemDlg Members
 
         int IVsFilterAddProjectItemDlg.FilterListItemByLocalizedName(ref Guid rguidProjectItemTemplates, string pszLocalizedName, out int pfFilter) {
             pfFilter = 0;
@@ -1004,7 +1006,7 @@ namespace Microsoft.PythonTools.Django.Project {
             return VSConstants.S_OK;
         }
 
-        #endregion
+#endregion
     }
 
 }

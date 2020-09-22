@@ -13,7 +13,7 @@
 //
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
-
+#if DJANGO_HTML_EDITOR
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
@@ -58,3 +58,4 @@ namespace Microsoft.PythonTools.Django.Intellisense {
         }
     }
 }
+#endif

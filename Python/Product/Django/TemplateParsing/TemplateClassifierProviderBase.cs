@@ -13,7 +13,7 @@
 //
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
-
+#if DJANGO_HTML_EDITOR
 using System.ComponentModel.Composition;
 using Microsoft.PythonTools.Django.Intellisense;
 using Microsoft.VisualStudio.Language.StandardClassification;
@@ -42,7 +42,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
             _excludedCode = classificationRegistry.GetClassificationType(PredefinedClassificationTypeNames.ExcludedCode);
         }
 
-        #region IClassifierProvider Members
+#region IClassifierProvider Members
 
         public IClassifier GetClassifier(ITextBuffer textBuffer) {
             TemplateClassifier res;
@@ -54,7 +54,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
             return res;
         }
 
-        #endregion
+#endregion
 
         [Export]
         [Name(DjangoPredefinedClassificationTypeNames.TemplateTag)]
@@ -62,3 +62,4 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
         internal static ClassificationTypeDefinition TemplateTag = null; // Set via MEF
     }
 }
+#endif
