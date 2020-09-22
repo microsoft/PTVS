@@ -1,7 +1,7 @@
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
   <Metadata>
-    <Identity Id="96492FC7-7BC6-46F7-8559-66BB4E09FD1E" Version="16.0.0" Language="en-US" Publisher="Microsoft Corporation" />
-    <DisplayName>Python</DisplayName>
+    <Identity Id="92A4E43C-588A-4F21-A388-EC8EC60C02CE" Version="16.0.0" Language="en-US" Publisher="Microsoft Corporation" />
+    <DisplayName>Pylance for VPython</DisplayName>
     <Description xml:space="preserve">Provides support for editing and debugging Python programs.</Description>
     <MoreInfo>http://aka.ms/ptvs</MoreInfo>
     <License>License_en-US.rtf</License>
@@ -38,7 +38,6 @@
     <Asset Type="Microsoft.VisualStudio.MefComponent" Path="|Microsoft.PythonTools.EnvironmentsList;_GetTargetPath|" />
     <Asset Type="Microsoft.VisualStudio.MefComponent" Path="|Microsoft.PythonTools.VSInterpreters;_GetTargetPath|" />
     <Asset Type="Microsoft.VisualStudio.MefComponent" Path="|Microsoft.PythonTools.TestAdapter;_GetTargetPath|" />
-    <Asset Type="Microsoft.VisualStudio.MefComponent" Path="|Microsoft.PythonTools.XamlDesignerSupport;_GetTargetPath|" />
     <Asset Type="Microsoft.VisualStudio.MefComponent" Path="|Microsoft.PythonTools.Workspace;_GetTargetPath|" />
     <Asset Type="UnitTestExtension" Path="|Microsoft.PythonTools.TestAdapter.Executor;_GetTargetPath|" />
     <Asset Type="DebuggerEngineExtension" Path="DkmDebugger.vsdconfig" />

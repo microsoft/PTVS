@@ -1,0 +1,11 @@
+{
+    "Common.Yes": "Да",
+    "Common.No": "Нет",
+    "Common.remindMeLater": "Напомните мне позже",
+    "LanguageServer.installedButInactive": "Вы хотите сделать Pylance языковым сервером для Python?",
+    "LanguageServer.turnItOn": "Да, и перезагрузить окно",
+    "LanguageServer.noThanks": "Нет, спасибо",
+    "LanguageServer.surveyMessage": "Не могли бы вы потратить пару минут и ответить на несколько вопросов о языковом сервере Pylance?",
+    "LanguageServer.settingsMigratedMessage": "Установки Microsoft Language Server были скопированы в установки Pylance. Изменения в файлах settings.json.",
+    "LanguageServer.settingsMigrationError": "Следующие становки Microsoft Language Server не были скопированы из-за ошибок:"
+}

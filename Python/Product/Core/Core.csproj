@@ -1,27 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Choose>
-    <When Condition=" '$(VisualStudioVersion)'=='15.0'  Or '$(TargetVisualStudioVersion)'=='VS150' ">
-      <PropertyGroup>
-        <MinimumVisualStudioVersion>15.0</MinimumVisualStudioVersion>
-        <FileUpgradeFlags>
-        </FileUpgradeFlags>
-        <UpgradeBackupLocation>
-        </UpgradeBackupLocation>
-        <OldToolsVersion>14.0</OldToolsVersion>
-      </PropertyGroup>
-    </When>
-    <When Condition=" '$(VisualStudioVersion)'=='16.0'  Or '$(TargetVisualStudioVersion)'=='VS160' ">
-      <PropertyGroup>
-        <MinimumVisualStudioVersion>16.0</MinimumVisualStudioVersion>
-        <FileUpgradeFlags>
-        </FileUpgradeFlags>
-        <UpgradeBackupLocation>
-        </UpgradeBackupLocation>
-        <OldToolsVersion>16.0</OldToolsVersion>
-      </PropertyGroup>
-    </When>
-  </Choose>
   <Import Project="..\ProjectBefore.settings" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -121,10 +99,6 @@
       <Project>{24f9e050-9f7e-4fe8-895d-819e527b8f45}</Project>
       <Name>Microsoft.PythonTools.Workspace</Name>
     </ProjectReference>
-    <ProjectReference Include="..\XamlDesignerSupport\XamlDesignerSupport.csproj">
-      <Project>{0caebf32-5d08-43a9-b7ba-f80bfe372824}</Project>
-      <Name>Microsoft.PythonTools.XamlDesignerSupport</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Attacher\Attacher.csproj">
       <Project>{666A22BB-0CB5-4C08-A20F-E17450DA6573}</Project>
       <Name>Microsoft.PythonTools.Attacher</Name>
@@ -159,17 +133,4 @@
       <Content Include="..\..\References\Dev$(VSTarget)\Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces.dll;VSCodeInterop.pkgdef" Condition="@(_InteropDll) == ''" />
     </ItemGroup>
   </Target>
-  <!--<Target Name="_IncludeLanguageServer" BeforeTargets="AssignTargetPaths">
-    <ItemGroup>
-      <LanguageServerFiles Include="$(PackagesPath)\LanguageServer\x86\**\*" />
-      <LanguageServerFiles>
-        <IncludeInVSIX>true</IncludeInVSIX>
-        <Link>\%(RecursiveDir)\%(Filename)%(Extension)</Link>
-        <VSIXSubPath>\%(RecursiveDir)</VSIXSubPath>
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </LanguageServerFiles>
-      <Content Include="@(LanguageServerFiles)" />
-      <FileWrites Include="@(LanguageServerFiles)" />
-    </ItemGroup>
-  </Target>-->
 </Project>

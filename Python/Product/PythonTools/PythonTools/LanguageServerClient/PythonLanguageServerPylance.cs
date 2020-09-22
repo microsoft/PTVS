@@ -19,8 +19,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.LanguageServer.Client;
-using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Threading;
 using Task = System.Threading.Tasks.Task;
 
@@ -34,7 +34,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             _nodeEnvironmentProvider = new NodeEnvironmentProvider(site, joinableTaskContext);
         }
 
-        public async override Task<Connection> ActivateAsync() {
+        public override async Task<Connection> ActivateAsync() {
             await _joinableTaskContext.Factory.SwitchToMainThreadAsync();
 
             var nodePath = await _nodeEnvironmentProvider.GetNodeExecutablePath();
@@ -71,11 +71,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 StartInfo = info
             };
 
-            if (process.Start()) {
-                return new Connection(process.StandardOutput.BaseStream, process.StandardInput.BaseStream);
-            }
-
-            return null;
+            return process.Start() ? new Connection(process.StandardOutput.BaseStream, process.StandardInput.BaseStream) : null;
         }
 
         private static string GetDebugServerLocation() {
@@ -87,10 +83,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
 
         private static string GetServerLocation() {
-            // Later, Pylance will be bundled in VS and we'll get its install location.
-            // For now, location is retrieved via environment variable.
-            // For release, use absolute path to: extension\server\server.bundle.js
-            var filePath = Environment.GetEnvironmentVariable("PTVS_PYLANCE_STARTUP_FILE");
+            var filePath = PythonToolsInstallPath.GetFile(@"Pylance\dist\server.bundle.js");
             return File.Exists(filePath) ? filePath : null;
         }
 
@@ -107,11 +100,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
         private static bool IsEnvVarEnabled(string variable) {
             var val = Environment.GetEnvironmentVariable(variable);
-            if (string.IsNullOrEmpty(val)) {
-                return false;
-            }
-
-            return val != "0" && string.Compare(val, "false", StringComparison.OrdinalIgnoreCase) != 0;
+            return !string.IsNullOrEmpty(val) && (val != "0" && string.Compare(val, "false", StringComparison.OrdinalIgnoreCase) != 0);
         }
     }
 }
