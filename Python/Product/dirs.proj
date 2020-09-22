@@ -14,8 +14,6 @@
     <ProjectFile Include="BuildTasks\BuildTasks.csproj"/>
     <ProjectFile Include="BuildTasks\BuildTasks.Core.csproj"/>
 
-    <ProjectFile Include="XamlDesignerSupport\XamlDesignerSupport.csproj"/>
-
     <ProjectFile Include="PyDebugAttach\PyDebugAttach.vcxproj"/>
     <ProjectFile Include="PyDebugAttach\PyDebugAttachX86.vcxproj"/>
     <ProjectFile Include="Attacher\Attacher.csproj"/>
@@ -32,14 +30,9 @@
 
     <ProjectFile Include="PythonTools\PythonTools.csproj"/>
 
-    <ProjectFile Include="IronPythonResolver\IronPythonResolver.csproj" Condition="'$(IncludeIronPython)' == 'True'"/>
-    <ProjectFile Include="IronPython\IronPython.Interpreter.csproj" Condition="'$(IncludeIronPython)' == 'True'"/>
-    <ProjectFile Include="IronPython\IronPython.csproj" Condition="'$(IncludeIronPython)' == 'True'"/>
-
     <ProjectFile Include="VsPyProf\VsPyProf.vcxproj"/>
     <ProjectFile Include="VsPyProf\VsPyProfX86.vcxproj"/>
     <ProjectFile Include="Profiling\Profiling.csproj"/>
-    <ProjectFile Include="ExternalProfilerDriver\ExternalProfilerDriver.csproj" Condition="'$(IncludeExternalProfilerDriver)' == 'True'"/>
 
     <ProjectFile Include="WebRole\WebRole.csproj"/>
     <ProjectFile Include="Django.Analysis\Django.Analysis.csproj" Condition="'$(IncludeDjango)' == 'True' and '$(IncludeDjangoHtmlExtensions)' == 'True'" />
@@ -48,7 +41,6 @@
 
     <ProjectFile Include="VCDebugLauncher\VCDebugLauncher.csproj" Condition="'$(IncludeVCDebugLauncher)' == 'True'"/>
     <ProjectFile Include="Wsl\Wsl.csproj" Condition="'$(IncludeWsl)' == 'True'"/>
-    <ProjectFile Include="Miniconda\Miniconda.csproj" Condition="'$(IncludeMiniconda)' == 'True'"/>
 
     <ProjectFile Include="LiveShare\LiveShare.csproj" Condition="'$(IncludeLiveShare)' == 'True'"/>
 

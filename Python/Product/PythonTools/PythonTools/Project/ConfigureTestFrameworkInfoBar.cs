@@ -26,6 +26,7 @@ using Microsoft.PythonTools.Logging;
 using Microsoft.VisualStudio.Imaging;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudioTools.Project;
 using OutputWindowRedirector = Microsoft.VisualStudioTools.Infrastructure.OutputWindowRedirector;
 using Task = System.Threading.Tasks.Task;
 
@@ -282,7 +283,7 @@ namespace Microsoft.PythonTools.Project {
 
         protected override bool PythonTestFileFound(Predicate<string> fileFilter) {
             return Project.AllVisibleDescendants
-                .Where(x => (x is PythonFileNode || x is PythonNonCodeFileNode))
+                .Where(x => (x is PythonFileNode || x is CommonNonCodeFileNode))
                 .Select(f => f.Url)
                 .Where(File.Exists)
                 .Where(x => fileFilter(x))

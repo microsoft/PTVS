@@ -248,6 +248,16 @@ namespace Microsoft.PythonTools.Intellisense {
         private string DefaultComment => "Global Analysis";
 
         private async Task InitializeAsync(bool outOfProc, string comment, string rootDir, bool analyzeAllFiles) {
+            var lso = _services.Python?.LanguageServerOptions;
+            if (lso?.ServerDisabled == true) {
+                _conn = null;
+                _userCount = 1;
+                _processingTask = null;
+                _analysisOptions = new AP.AnalysisOptions();
+                _analysisProcess = null;
+                return;
+            }
+
             _conn = outOfProc 
                 ? StartSubprocessConnection(comment.IfNullOrEmpty(DefaultComment), out _analysisProcess) 
                 : StartThreadConnection(comment.IfNullOrEmpty(DefaultComment), out _analysisProcess);
@@ -274,7 +284,6 @@ namespace Microsoft.PythonTools.Intellisense {
                 _analysisOptions.traceLevel = LS.MessageType.Log;
             }
 
-            var lso = _services.Python?.LanguageServerOptions;
             if (lso != null) {
                 lso.Changed += OnOptionsChanged;
                 _analysisOptions.typeStubPaths = GetTypeStubPaths(lso);
@@ -549,7 +558,10 @@ namespace Microsoft.PythonTools.Intellisense {
                 _services.CommentTaskProvider?.Clear(path, TaskCommentMoniker);
             }
 
-            Debug.WriteLine(String.Format("Disposing of parser {0}", _analysisProcess));
+            if (_analysisProcess != null) {
+                Debug.WriteLine(String.Format("Disposing of parser {0}", _analysisProcess));
+            }
+
             if (_services.CommentTaskProvider != null) {
                 _services.CommentTaskProvider.TokensChanged -= CommentTaskTokensChanged;
             }
@@ -572,23 +584,25 @@ namespace Microsoft.PythonTools.Intellisense {
                 _logger.LogEvent(PythonLogEvent.AnalysisRequestSummary, info);
             }
 
-            SendRequestAsync(new AP.ExitRequest()).ContinueWith(t => {
-                // give the task a chance to exit cleanly
-                _processingTask?.Wait(1000);
+            if (_analysisProcess != null) {
+                SendRequestAsync(new AP.ExitRequest()).ContinueWith(t => {
+                    // give the task a chance to exit cleanly
+                    _processingTask?.Wait(1000);
 
-                try {
-                    if (!_analysisProcess.WaitForExit(500)) {
-                        _analysisProcess.Kill();
+                    try {
+                        if (!_analysisProcess.WaitForExit(500)) {
+                            _analysisProcess.Kill();
+                        }
+                    } catch (Win32Exception) {
+                        // access denied
+                    } catch (InvalidOperationException) {
+                        // race w/ process exit...
                     }
-                } catch (Win32Exception) {
-                    // access denied
-                } catch (InvalidOperationException) {
-                    // race w/ process exit...
-                }
-                _analysisProcess.Dispose();
-                _conn?.Dispose();
-                _conn = null;
-            });
+                    _analysisProcess.Dispose();
+                    _conn?.Dispose();
+                    _conn = null;
+                });
+            }
 
             try {
                 _processExitedCancelSource.Cancel();
@@ -854,7 +868,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private event EventHandler<AbnormalAnalysisExitEventArgs> _abnormalAnalysisExit;
         internal event EventHandler<AbnormalAnalysisExitEventArgs> AbnormalAnalysisExit {
             add {
-                if (_analysisProcess.HasExited && !_disposing) {
+                if ((_analysisProcess?.HasExited ?? false) && !_disposing) {
                     value?.Invoke(this, new AbnormalAnalysisExitEventArgs(_stdErr.ToString(), _analysisProcess.ExitCode));
                 }
                 _abnormalAnalysisExit += value;

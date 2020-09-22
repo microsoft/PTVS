@@ -180,11 +180,6 @@ namespace TestUtilities.UI.Python {
                     settings.Version.Isx64 ? "Python 64-bit" : "Python 32-bit",
                     settings.Version.Version.ToVersion()
                 );
-            } else if (settings.Version.IsIronPython) {
-                description = string.Format("{0} {1}",
-                    settings.Version.Isx64 ? "IronPython 64-bit" : "IronPython",
-                    settings.Version.Version.ToVersion()
-                );
             }
             Assert.IsNotNull(description, "Unknown interpreter");
 

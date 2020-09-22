@@ -22,17 +22,18 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace TestUtilities.UI.Python {
     static class EditorWindowExtensions {
         public static async Task WaitForLanguageServerInitializedAtCaretAsync(this EditorWindow doc) {
-            for (int i = 0; i < 100; i++) {
-                var buffer = doc.TextView.GetPythonBufferAtCaret();
-                var lsc = PythonLanguageClient.FindLanguageClient(buffer.ContentType.TypeName);
-                if (lsc?.IsInitialized == true) {
-                    return;
-                }
+            Assert.Fail("WaitForLanguageServerInitializedAtCaretAsync to be implemented.");
+            //for (int i = 0; i < 100; i++) {
+            //    var buffer = doc.TextView.GetPythonBufferAtCaret();
+            //    var lsc = PythonLanguageClient.FindLanguageClient(buffer.ContentType.TypeName);
+            //    if (lsc?.IsInitialized == true) {
+            //        return;
+            //    }
 
-                await Task.Delay(100);
-            }
+            //    await Task.Delay(100);
+            //}
 
-            Assert.Fail("Timed out waiting for language server initialization");
+            //Assert.Fail("Timed out waiting for language server initialization");
         }
     }
 }

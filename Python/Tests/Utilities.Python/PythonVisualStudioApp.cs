@@ -365,9 +365,6 @@ namespace TestUtilities.UI.Python {
 
         public DefaultInterpreterSetter SelectDefaultInterpreter(PythonVersion interp, string installPackages) {
             interp.AssertInstalled();
-            if (interp.IsIronPython && !string.IsNullOrEmpty(installPackages)) {
-                Assert.Inconclusive("Package installation not supported on IronPython");
-            }
 
             var interpreterService = InterpreterService;
             var factory = interpreterService.FindInterpreter(interp.Id);

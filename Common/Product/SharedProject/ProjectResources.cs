@@ -134,6 +134,10 @@ namespace Microsoft.VisualStudioTools.Project {
         internal const string ProjectHome = "ProjectHome";
         internal const string ProjectHomeDescription = "ProjectHomeDescription";
         internal const string ProjectProperties = "ProjectProperties";
+        internal const string PublishProjectFailed = "PublishProjectFailed";
+        internal const string PublishProjectInvalidUrl = "PublishProjectInvalidUrl";
+        internal const string PublishProjectInvalidScheme = "PublishProjectInvalidScheme";
+        internal const string PublishProjectNotConfigured = "PublishProjectNotConfigured";
         internal const string Quiet = "Quiet";
         internal const string QueryReloadNestedProject = "QueryReloadNestedProject";
         internal const string ReferenceAlreadyExists = "ReferenceAlreadyExists";

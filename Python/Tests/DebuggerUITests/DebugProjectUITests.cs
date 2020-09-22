@@ -296,6 +296,22 @@ namespace DebuggerUITests {
             }
         }
 
+        public void StepMultiProc(PythonVisualStudioApp app, bool useVsCodeDebugger, string interpreter, DotNotWaitOnNormalExit optionSetter) {
+            var pyService = app.ServiceProvider.GetUIThread().Invoke(() => app.ServiceProvider.GetPythonToolsService());
+            using (SelectDefaultInterpreter(app, interpreter))
+            using (new PythonOptionsSetter(app.Dte, useLegacyDebugger: !useVsCodeDebugger)) {
+                var project = OpenDebuggerProjectAndBreak(app, "SteppingTest8.py", 14);
+                app.Dte.Debugger.StepOver(true);
+                WaitForMode(app, dbgDebugMode.dbgBreakMode);
+
+                Assert.AreEqual((uint)16, ((StackFrame2)app.Dte.Debugger.CurrentStackFrame).LineNumber);
+
+                app.Dte.Debugger.TerminateAll();
+
+                WaitForMode(app, dbgDebugMode.dbgDesignMode);
+            }
+        }
+
         public void SetNextLine(PythonVisualStudioApp app, bool useVsCodeDebugger, string interpreter, DotNotWaitOnNormalExit optionSetter) {
             var pyService = app.ServiceProvider.GetUIThread().Invoke(() => app.ServiceProvider.GetPythonToolsService());
             using (SelectDefaultInterpreter(app, interpreter))

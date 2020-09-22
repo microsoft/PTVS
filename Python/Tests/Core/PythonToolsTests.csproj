@@ -213,7 +213,6 @@
     <None Include="EditorTests.cs" />
     <None Include="CodeFormatterTests.cs" />
     <None Include="CommentBlockTests.cs" />
-    <Compile Include="LiveShareTests.cs" />
     <None Include="LocationTrackerTests.cs" />
     <Compile Include="PathUtilsTests.cs" />
     <Compile Include="CPythonInterpreterTests.cs" />

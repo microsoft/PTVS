@@ -500,7 +500,14 @@ namespace Microsoft.PythonTools.Project {
 
             var automationObject = (EnvDTE.Project)GetAutomationObject();
 
-            this.BuildProject.SetGlobalProperty(ProjectFileConstants.Platform, automationObject.ConfigurationManager.ActiveConfiguration.PlatformName);
+            try {
+                EnvDTE.Configuration activeConfig = automationObject.ConfigurationManager.ActiveConfiguration;
+                if (activeConfig != null) {
+                    this.BuildProject.SetGlobalProperty(ProjectFileConstants.Platform, activeConfig.PlatformName);
+                }
+            } catch (COMException ex) {
+                Debug.WriteLine("SetCurrentConfiguration(). Failed to get active configuration because of {0}", ex);
+            }
         }
 
         protected override bool SupportsIconMonikers {
@@ -517,10 +524,6 @@ namespace Microsoft.PythonTools.Project {
 
         public override CommonFileNode CreateCodeFileNode(ProjectElement item) {
             return new PythonFileNode(this, item);
-        }
-
-        public override CommonFileNode CreateNonCodeFileNode(ProjectElement item) {
-            return new PythonNonCodeFileNode(this, item);
         }
 
         protected override ConfigProvider CreateConfigProvider() {
@@ -613,30 +616,6 @@ namespace Microsoft.PythonTools.Project {
                 return true;
             }
             return base.FilterItemTypeToBeAddedToHierarchy(itemType);
-        }
-
-        public override int QueryService(ref Guid guidService, out object result) {
-#if DEV15
-            // Sometimes this service is requested from us and it always seems
-            // to lead to infinite recursion. All callers seem to handle the
-            // failure case, so let's just bail immediately.
-            if (guidService == typeof(SVSMDTypeResolutionService).GUID) {
-                result = null;
-                return VSConstants.E_FAIL;
-            }
-#endif
-
-            var designerSupport = Site.GetComponentModel().GetService<IXamlDesignerSupport>();
-
-            if (designerSupport != null && guidService == designerSupport.DesignerContextTypeGuid) {
-                result = DesignerContext;
-                if (result == null) {
-                    result = DesignerContext = designerSupport?.CreateDesignerContext();
-                }
-                return VSConstants.S_OK;
-            }
-
-            return base.QueryService(ref guidService, out result);
         }
 
         public override int GenerateUniqueItemName(uint itemIdLoc, string ext, string suggestedRoot, out string itemName) {
@@ -1685,6 +1664,8 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public override bool Publish(PublishProjectOptions publishOptions, bool async) {
+            _logger?.LogEvent(PythonLogEvent.PythonSpecificPublish, null);
+
             var factory = GetInterpreterFactory();
             if (factory.Configuration.IsAvailable() &&
                 Directory.Exists(factory.Configuration.GetPrefixPath()) &&

@@ -22,6 +22,7 @@ using System.Linq;
 using System.Threading;
 using Microsoft.Python.Parsing;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Interpreter {
     /// <summary>
@@ -37,7 +38,7 @@ namespace Microsoft.PythonTools.Interpreter {
         private IPythonWorkspaceContext _workspace;
         private readonly Dictionary<string, PythonInterpreterInformation> _factories = new Dictionary<string, PythonInterpreterInformation>();
         internal const string FactoryProviderName = WorkspaceInterpreterFactoryConstants.FactoryProviderName;
-        private FileSystemWatcher _folderWatcher;
+        private FileWatcher _folderWatcher;
         private Timer _folderWatcherTimer;
         private bool _refreshPythonInterpreters;
         private int _ignoreNotifications;
@@ -128,7 +129,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 if (_workspace != null) {
                     _workspace.InterpreterSettingChanged += OnInterpreterSettingChanged;
                     try {
-                        _folderWatcher = new FileSystemWatcher(_workspace.Location, "*.*");
+                        _folderWatcher = new FileWatcher(_workspace.Location, "*.*");
                         _folderWatcher.Created += OnFileCreatedDeletedRenamed;
                         _folderWatcher.Deleted += OnFileCreatedDeletedRenamed;
                         _folderWatcher.Renamed += OnFileCreatedDeletedRenamed;

@@ -327,11 +327,6 @@ repl is not None");
 
         public void ImportCompletions(PythonVisualStudioApp app, string interpreter) {
             using (var interactive = Prepare(app, interpreter)) {
-                if (((ReplWindowProxySettings)interactive.Settings).Version.IsIronPython) {
-                    interactive.SubmitCode("import clr");
-                    interactive.WaitForText(">import clr", ">");
-                }
-
                 Keyboard.Type("import ");
                 List<string> names;
                 using (var sh = interactive.WaitForSession<ICompletionSession>()) {

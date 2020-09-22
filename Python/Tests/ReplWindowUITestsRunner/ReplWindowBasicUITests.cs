@@ -113,11 +113,6 @@ namespace ReplWindowUITestsRunner {
     }
 
     [TestClass]
-    public class ReplWindowBasicUITestsIPy27 : ReplWindowBasicUITests {
-        protected override string Interpreter => "IronPython27|IronPython27_x64";
-    }
-
-    [TestClass]
     public class ReplWindowBasicUITests36 : ReplWindowBasicUITests {
         protected override string Interpreter => "Python36|Python36_x64";
     }
