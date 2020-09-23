@@ -46,8 +46,6 @@ using Microsoft.VisualStudio.InteractiveWindow.Shell;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.TextManager.Interop;
-using Microsoft.VisualStudio.Threading;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Navigation;
 using Microsoft.VisualStudioTools.Project;
@@ -65,7 +63,7 @@ namespace Microsoft.PythonTools {
     /// register itself and its components with the shell.
     /// </summary>    
     [PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]       // This attribute tells the PkgDef creation utility (CreatePkgDef.exe) that this class is a package.
-    // This attribute is used to register the informations needed to show the this package in the Help/About dialog of Visual Studio.
+    // This attribute is used to register the information needed to show the this package in the Help/About dialog of Visual Studio.
     [InstalledProductRegistration("#110", "#112", AssemblyVersionInfo.Version, IconResourceID = 400)]
 
     // This attribute is needed to let the shell know that this package exposes some menus.
@@ -75,17 +73,11 @@ namespace Microsoft.PythonTools {
     [ProvideAutomationObject("VsPython")]
     //[ProvideLanguageEditorOptionPage(typeof(PythonAdvancedEditorOptionsPage), PythonConstants.LanguageName, "", "Advanced", "#113")]
     [ProvideLanguageEditorOptionPage(typeof(PythonFormattingOptionsPage), PythonConstants.LanguageName, "", "Formatting", "#126")]
-    //[ProvideLanguageEditorOptionPage(typeof(PythonFormattingGeneralOptionsPage), PythonConstants.LanguageName, "Formatting", "General", "#120")]
-    //[ProvideLanguageEditorOptionPage(typeof(PythonFormattingNewLinesOptionsPage), PythonConstants.LanguageName, "Formatting", "New Lines", "#121")]
-    //[ProvideLanguageEditorOptionPage(typeof(PythonFormattingSpacingOptionsPage), PythonConstants.LanguageName, "Formatting", "Spacing", "#122")]
-    //[ProvideLanguageEditorOptionPage(typeof(PythonFormattingStatementsOptionsPage), PythonConstants.LanguageName, "Formatting", "Statements", "#123")]
-    //[ProvideLanguageEditorOptionPage(typeof(PythonFormattingWrappingOptionsPage), PythonConstants.LanguageName, "Formatting", "Wrapping", "#124")]
     [ProvideOptionPage(typeof(PythonInteractiveOptionsPage), "Python Tools", "Interactive Windows", 115, 117, true)]
     [ProvideOptionPage(typeof(PythonGeneralOptionsPage), "Python Tools", "General", 115, 120, true)]
     [ProvideOptionPage(typeof(PythonDiagnosticsOptionsPage), "Python Tools", "Diagnostics", 115, 129, true)]
     [ProvideOptionPage(typeof(PythonDebuggingOptionsPage), "Python Tools", "Debugging", 115, 125, true)]
     [ProvideOptionPage(typeof(PythonCondaOptionsPage), "Python Tools", "Conda", 115, 132, true)]
-    //[ProvideOptionPage(typeof(LanguageServerOptionsPage), "Python Tools", "Language Server", 115, 131, false)]
     [Guid(GuidList.guidPythonToolsPkgString)]              // our packages GUID
     [ProvideLanguageService(typeof(PythonLanguageInfo), PythonConstants.LanguageName, 106, RequestStockColors = true, ShowSmartIndent = true, ShowCompletion = true, DefaultToInsertSpaces = true, HideAdvancedMembersByDefault = true, EnableAdvancedMembersOption = true, ShowDropDownOptions = true)]
     [ProvideLanguageExtension(typeof(PythonLanguageInfo), PythonConstants.FileExtension)]
@@ -179,7 +171,7 @@ namespace Microsoft.PythonTools {
     internal sealed class PythonToolsPackage : CommonPackage, IVsComponentSelectorProvider, IPythonToolsToolWindowService {
         private PythonAutomation _autoObject;
         private PackageContainer _packageContainer;
-        private DisposableBag _disposables;
+        private readonly DisposableBag _disposables;
         internal const string PythonExpressionEvaluatorGuid = "{D67D5DB8-3D44-4105-B4B8-47AB1BA66180}";
 
         /// <summary>
@@ -202,7 +194,7 @@ namespace Microsoft.PythonTools {
                         try {
                             ActivityLog.LogError(
                                 "UnobservedTaskException",
-                                string.Format("An exception in a task was not observed: {0}", e.Exception.ToString())
+                                $"An exception in a task was not observed: {e.Exception}"
                             );
                         } catch (InvalidOperationException) {
                         }
@@ -265,37 +257,29 @@ namespace Microsoft.PythonTools {
 
             return res;
         }
-        internal static void NavigateTo(System.IServiceProvider serviceProvider, string filename, Guid docViewGuidType, int line, int col) {
+        internal static void NavigateTo(IServiceProvider serviceProvider, string filename, Guid docViewGuidType, int line, int col) {
             if (File.Exists(filename)) {
                 VsUtilities.NavigateTo(serviceProvider, filename, docViewGuidType, line, col);
             }
         }
 
         internal static void NavigateTo(System.IServiceProvider serviceProvider, string filename, Guid docViewGuidType, int pos) {
-            IVsTextView viewAdapter;
-            IVsWindowFrame pWindowFrame;
-            VsUtilities.OpenDocument(serviceProvider, filename, out viewAdapter, out pWindowFrame);
+            VsUtilities.OpenDocument(serviceProvider, filename, out var viewAdapter, out var pWindowFrame);
 
             ErrorHandler.ThrowOnFailure(pWindowFrame.Show());
 
             // Set the cursor at the beginning of the declaration.          
-            int line, col;
-            ErrorHandler.ThrowOnFailure(viewAdapter.GetLineAndColumn(pos, out line, out col));
+            ErrorHandler.ThrowOnFailure(viewAdapter.GetLineAndColumn(pos, out var line, out var col));
             ErrorHandler.ThrowOnFailure(viewAdapter.SetCaretPos(line, col));
             // Make sure that the text is visible.
             viewAdapter.CenterLines(line, 1);
         }
 
         internal static ITextBuffer GetBufferForDocument(System.IServiceProvider serviceProvider, string filename) {
-            IVsTextView viewAdapter;
-            IVsWindowFrame frame;
-            VsUtilities.OpenDocument(serviceProvider, filename, out viewAdapter, out frame);
-
-            IVsTextLines lines;
-            ErrorHandler.ThrowOnFailure(viewAdapter.GetBuffer(out lines));
+            VsUtilities.OpenDocument(serviceProvider, filename, out var viewAdapter, out _);
+            ErrorHandler.ThrowOnFailure(viewAdapter.GetBuffer(out var lines));
 
             var adapter = serviceProvider.GetComponentModel().GetService<IVsEditorAdaptersFactoryService>();
-
             return adapter.GetDocumentBuffer(lines);
         }
 
@@ -315,9 +299,7 @@ namespace Microsoft.PythonTools {
 
             // no launcher configured, use the default one.
             Debug.Assert(defaultLaunchProvider != null);
-            return (defaultLaunchProvider != null) ?
-                serviceProvider.GetUIThread().Invoke<IProjectLauncher>(() => defaultLaunchProvider.CreateLauncher(project)) :
-                null;
+            return serviceProvider.GetUIThread().Invoke(() => defaultLaunchProvider.CreateLauncher(project));
         }
 
         internal static bool LaunchFile(IServiceProvider provider, string filename, bool debug, bool saveDirtyFiles) {
@@ -325,7 +307,7 @@ namespace Microsoft.PythonTools {
             var project = (IPythonProject)provider.GetProjectFromOpenFile(filename);
 
             if (project == null) {
-                project = (IPythonProject)provider.GetProjectContainingFile(filename);
+                project = provider.GetProjectContainingFile(filename);
 
                 if (project == null) {
                     project = new DefaultPythonProject(provider, filename);
@@ -424,17 +406,13 @@ namespace Microsoft.PythonTools {
 
         public static string InterpreterHelpUrl {
             get {
-                return string.Format("https://go.microsoft.com/fwlink/?LinkId=299429&clcid=0x{0:X}",
-                    CultureInfo.CurrentCulture.LCID);
+                return $"https://go.microsoft.com/fwlink/?LinkId=299429&clcid=0x{CultureInfo.CurrentCulture.LCID:X}";
             }
         }
 
         protected override object GetAutomationObject(string name) {
             if (name == "VsPython") {
-                if (_autoObject == null) {
-                    _autoObject = new PythonAutomation(this);
-                }
-                return _autoObject;
+                return _autoObject ?? (_autoObject = new PythonAutomation(this));
             }
 
             return base.GetAutomationObject(name);

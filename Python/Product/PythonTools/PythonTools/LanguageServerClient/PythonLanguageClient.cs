@@ -52,8 +52,8 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         [Import]
         public IPythonWorkspaceContextProvider PythonWorkspaceContextProvider;
 
-        //[Import]
-        //public IInterpreterOptionsService OptionsService;
+        [Import]
+        public IInterpreterOptionsService OptionsService;
 
         [Import]
         public JoinableTaskContext JoinableTaskContext;
@@ -116,10 +116,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             if (PythonWorkspaceContextProvider.Workspace != null) {
                 _clientContext = new PythonLanguageClientContextWorkspace(PythonWorkspaceContextProvider.Workspace, PythonCoreConstants.ContentType);
             } else {
-                // TODO
-                _clientContext = null;
-                MessageBox.Show("Pylance only supports workspaces right now.", Strings.ProductTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
+                _clientContext = new PythonLanguageClientContextGlobal(OptionsService, PythonCoreConstants.ContentType);
             }
 
             _server = PythonLanguageServer.Create(Site, JoinableTaskContext);
