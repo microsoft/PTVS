@@ -93,23 +93,10 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 Debug.Fail("Should not have called StartAsync when _server is null.");
                 return null;
             }
-            return await _server.ActivateAsync();
-        }
 
-        public async Task OnLoadedAsync() {
-            await JoinableTaskContext.Factory.SwitchToMainThreadAsync();
-
-            // Force the package to load, since this is a MEF component,
-            // there is no guarantee it has been loaded.
-            Site.GetPythonToolsService();
-
-            if (PythonWorkspaceContextProvider.Workspace != null) {
-                var workspace = PythonWorkspaceContextProvider.Workspace;
-                _clientContext = new PythonLanguageClientContextWorkspace(workspace, PythonCoreConstants.ContentType);
-            } else {
-                _clientContext = new PythonLanguageClientContextGlobal(OptionsService, PythonCoreConstants.ContentType);
-            }
-
+            _clientContext = PythonWorkspaceContextProvider.Workspace != null 
+                ? (IPythonLanguageClientContext)new PythonLanguageClientContextWorkspace(PythonWorkspaceContextProvider.Workspace, PythonCoreConstants.ContentType) 
+                : new PythonLanguageClientContextGlobal(OptionsService, PythonCoreConstants.ContentType);
 
             _clientContext.InterpreterChanged += OnInterpreterChanged;
             _clientContext.SearchPathsChanged += OnSearchPathsChanged;
@@ -118,6 +105,17 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 _clientContext.SearchPathsChanged -= OnSearchPathsChanged;
             });
 
+            return await _server.ActivateAsync();
+        }
+
+        public async Task OnLoadedAsync() {
+            await JoinableTaskContext.Factory.SwitchToMainThreadAsync();
+            // Force the package to load, since this is a MEF component,
+            // there is no guarantee it has been loaded.
+            Site.GetPythonToolsService();
+
+            // Client context cannot be created here since the is no workspace yet
+            // and hence we don't know if this is workspace or a loose files case.
             _server = PythonLanguageServer.Create(Site, JoinableTaskContext);
             if (_server != null) {
                 InitializationOptions = null;
@@ -149,7 +147,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         public Task InvokeTextDocumentDidChangeAsync(LSP.DidChangeTextDocumentParams request) 
             => _rpc == null ? Task.CompletedTask : _rpc.NotifyWithParameterObjectAsync("textDocument/didChange", request);
 
-        public Task InvokeDidChangeConfigurationAsync(LSP.DidChangeConfigurationParams request, CancellationToken cancellationToken = default)
+        public Task InvokeDidChangeConfigurationAsync(LSP.DidChangeConfigurationParams request)
             => _rpc == null ? Task.CompletedTask : _rpc.NotifyWithParameterObjectAsync("workspace/didChangeConfiguration", request);
 
         public Task<LSP.CompletionList> InvokeTextDocumentCompletionAsync(LSP.CompletionParams request, CancellationToken cancellationToken = default)
@@ -158,15 +156,11 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         public Task<TResult> InvokeWithParameterObjectAsync<TResult>(string targetName, object argument = null, CancellationToken cancellationToken = default) 
             => _rpc == null ? Task.FromResult(default(TResult)) : _rpc.InvokeWithParameterObjectAsync<TResult>(targetName, argument, cancellationToken);
 
-        private void OnInterpreterChanged(object sender, EventArgs e) {
-            SendDidChangeConfiguration().DoNotWait();
-        }
-
-        private void OnSearchPathsChanged(object sender, EventArgs e) {
-            SendDidChangeConfiguration().DoNotWait();
-        }
+        private void OnInterpreterChanged(object sender, EventArgs e) => SendDidChangeConfiguration().DoNotWait();
+        private void OnSearchPathsChanged(object sender, EventArgs e) => SendDidChangeConfiguration().DoNotWait();
 
         private async Task SendDidChangeConfiguration() {
+            Debug.Assert(_clientContext != null);
             // TODO: client context needs to also provide the settings that are currently hard coded here
             // so that workspace can get it from PythonSettings.json and projects from their .pyproj, etc.
             var settings = new Settings {
