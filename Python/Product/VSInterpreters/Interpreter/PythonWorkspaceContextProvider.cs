@@ -51,18 +51,14 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         public event EventHandler<PythonWorkspaceContextEventArgs> WorkspaceClosing;
-
         public event EventHandler<PythonWorkspaceContextEventArgs> WorkspaceClosed;
-
         public event EventHandler<PythonWorkspaceContextEventArgs> WorkspaceOpening;
-
         public event EventHandler<PythonWorkspaceContextEventArgs> WorkspaceInitialized;
 
         public IPythonWorkspaceContext Workspace {
             get {
-                EnsureInitialized();
-
                 lock (_currentContextLock) {
+                    EnsureInitialized();
                     return _currentContext;
                 }
             }
@@ -74,12 +70,10 @@ namespace Microsoft.PythonTools.Interpreter {
 
         private void EnsureInitialized() {
             lock (_currentContextLock) {
-                if (_initialized) {
-                    return;
+                if (!_initialized) {
+                    _initialized = true;
+                    InitializeCurrentContext();
                 }
-
-                _initialized = true;
-                InitializeCurrentContext();
             }
         }
 

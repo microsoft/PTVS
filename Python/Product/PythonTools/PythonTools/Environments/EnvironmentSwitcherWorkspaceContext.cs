@@ -21,27 +21,24 @@ using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Environments {
     sealed class EnvironmentSwitcherWorkspaceContext : IEnvironmentSwitcherContext {
-        private readonly IServiceProvider _serviceProvider;
         private readonly IInterpreterRegistryService _registryService;
-        private readonly IPythonWorkspaceContext _pythonWorkspace;
 
         public EnvironmentSwitcherWorkspaceContext(IServiceProvider serviceProvider, IPythonWorkspaceContext pythonWorkspace) {
-            _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-            _pythonWorkspace = pythonWorkspace ?? throw new ArgumentNullException(nameof(pythonWorkspace));
+            Workspace = pythonWorkspace ?? throw new ArgumentNullException(nameof(pythonWorkspace));
             _registryService = serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>();
-            _pythonWorkspace.ActiveInterpreterChanged += OnActiveInterpreterChanged;
+            Workspace.ActiveInterpreterChanged += OnActiveInterpreterChanged;
         }
 
         public IEnumerable<IPythonInterpreterFactory> AllFactories => _registryService.Interpreters;
 
         public IPythonInterpreterFactory CurrentFactory => Workspace.CurrentFactory;
 
-        public IPythonWorkspaceContext Workspace => _pythonWorkspace;
+        public IPythonWorkspaceContext Workspace { get; }
 
         public event EventHandler EnvironmentsChanged;
 
         public async Task ChangeFactoryAsync(IPythonInterpreterFactory factory) {
-            await _pythonWorkspace.SetInterpreterFactoryAsync(factory);
+            await Workspace.SetInterpreterFactoryAsync(factory);
         }
 
         private void OnActiveInterpreterChanged(object sender, EventArgs e) {
@@ -49,7 +46,7 @@ namespace Microsoft.PythonTools.Environments {
         }
 
         public void Dispose() {
-            _pythonWorkspace.ActiveInterpreterChanged -= OnActiveInterpreterChanged;
+            Workspace.ActiveInterpreterChanged -= OnActiveInterpreterChanged;
         }
     }
 }
