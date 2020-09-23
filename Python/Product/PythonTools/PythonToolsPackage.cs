@@ -299,7 +299,7 @@ namespace Microsoft.PythonTools {
 
             // no launcher configured, use the default one.
             Debug.Assert(defaultLaunchProvider != null);
-            return serviceProvider.GetUIThread().Invoke(() => defaultLaunchProvider.CreateLauncher(project));
+            return serviceProvider.GetUIThread().Invoke(() => defaultLaunchProvider?.CreateLauncher(project));
         }
 
         internal static bool LaunchFile(IServiceProvider provider, string filename, bool debug, bool saveDirtyFiles) {
