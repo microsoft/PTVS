@@ -20,22 +20,16 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Repl;
 
 namespace Microsoft.PythonTools.LanguageServerClient {
-    internal class PythonLanguageClientContextRepl : IPythonLanguageClientContext {
+    internal sealed class PythonLanguageClientContextRepl : IPythonLanguageClientContext {
         private readonly PythonCommonInteractiveEvaluator _evaluator;
 
         public event EventHandler InterpreterChanged { add { } remove { } }
         public event EventHandler SearchPathsChanged { add { } remove { } }
         public event EventHandler Closed { add { } remove { } }
 
-        public PythonLanguageClientContextRepl(
-            PythonCommonInteractiveEvaluator evaluator,
-            string contentTypeName
-        ) {
+        public PythonLanguageClientContextRepl(PythonCommonInteractiveEvaluator evaluator) {
             _evaluator = evaluator ?? throw new ArgumentNullException(nameof(evaluator));
-            ContentTypeName = contentTypeName ?? throw new ArgumentNullException(nameof(contentTypeName));
         }
-
-        public string ContentTypeName { get; }
 
         public InterpreterConfiguration InterpreterConfiguration  => _evaluator.Configuration.Interpreter;
 
@@ -43,11 +37,6 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
         public IEnumerable<string> SearchPaths => _evaluator.Configuration.SearchPaths;
 
-        public object Clone() {
-            return new PythonLanguageClientContextRepl(
-                _evaluator,
-                ContentTypeName
-            );
-        }
+        public void Dispose() { }
     }
 }

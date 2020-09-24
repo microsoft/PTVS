@@ -21,7 +21,7 @@ using Microsoft.PythonTools.Common.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.LanguageServerClient {
-    internal class PythonLanguageClientContextGlobal : IPythonLanguageClientContext, IDisposable {
+    internal sealed class PythonLanguageClientContextGlobal : IPythonLanguageClientContext {
         private readonly IInterpreterOptionsService _optionsService;
         private readonly DisposableBag _disposables;
         private IPythonInterpreterFactory _factory;
@@ -32,9 +32,8 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         public event EventHandler Closed;
 #pragma warning restore CS0067
 
-        public PythonLanguageClientContextGlobal(IInterpreterOptionsService optionsService, string contentTypeName) {
+        public PythonLanguageClientContextGlobal(IInterpreterOptionsService optionsService) {
             _optionsService = optionsService ?? throw new ArgumentNullException(nameof(optionsService));
-            ContentTypeName = contentTypeName ?? throw new ArgumentNullException(nameof(contentTypeName));
             _disposables = new DisposableBag(GetType().Name);
 
             _factory = _optionsService.DefaultInterpreter;
@@ -45,12 +44,9 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             });
         }
 
-        public string ContentTypeName { get; }
-
         public InterpreterConfiguration InterpreterConfiguration => _factory?.Configuration;
 
         public string RootPath => null;
-
         public IEnumerable<string> SearchPaths => Enumerable.Empty<string>();
 
         private void OnInterpreterChanged(object sender, EventArgs e) {
@@ -60,15 +56,6 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             }
         }
 
-        public object Clone() {
-            return new PythonLanguageClientContextGlobal(
-                _optionsService,
-                ContentTypeName
-            );
-        }
-
-        public void Dispose() {
-            _disposables.TryDispose();
-        }
+        public void Dispose() => _disposables.TryDispose();
     }
 }

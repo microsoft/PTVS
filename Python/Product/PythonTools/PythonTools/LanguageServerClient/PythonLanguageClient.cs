@@ -95,14 +95,15 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             }
 
             _clientContext = PythonWorkspaceContextProvider.Workspace != null 
-                ? (IPythonLanguageClientContext)new PythonLanguageClientContextWorkspace(PythonWorkspaceContextProvider.Workspace, PythonCoreConstants.ContentType) 
-                : new PythonLanguageClientContextGlobal(OptionsService, PythonCoreConstants.ContentType);
+                ? (IPythonLanguageClientContext)new PythonLanguageClientContextWorkspace(PythonWorkspaceContextProvider.Workspace) 
+                : new PythonLanguageClientContextGlobal(OptionsService);
 
             _clientContext.InterpreterChanged += OnInterpreterChanged;
             _clientContext.SearchPathsChanged += OnSearchPathsChanged;
             _disposables.Add(() => {
                 _clientContext.InterpreterChanged -= OnInterpreterChanged;
                 _clientContext.SearchPathsChanged -= OnSearchPathsChanged;
+                _clientContext.Dispose();
             });
 
             return await _server.ActivateAsync();
