@@ -58,8 +58,8 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         [Import]
         public JoinableTaskContext JoinableTaskContext;
 
-        private IPythonLanguageClientContext _clientContext;
         private readonly DisposableBag _disposables;
+        private IPythonLanguageClientContext _clientContext;
         private PythonLanguageServer _server;
         private JsonRpc _rpc;
 
@@ -69,30 +69,21 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
         public string ContentTypeName => PythonCoreConstants.ContentType;
 
-        public string Name => "Pylance";
+        public string Name => @"Pylance";
 
-        public IEnumerable<string> ConfigurationSections {
-            get {
-                // Called by Microsoft.VisualStudio.LanguageServer.Client.RemoteLanguageServiceBroker.UpdateClientsWithConfigurationSettingsAsync
-                // Used to send LS WorkspaceDidChangeConfiguration notification
-                yield return "python";
-            }
-        }
-
+        // Called by Microsoft.VisualStudio.LanguageServer.Client.RemoteLanguageServiceBroker.UpdateClientsWithConfigurationSettingsAsync
+        // Used to send LS WorkspaceDidChangeConfiguration notification
+        public IEnumerable<string> ConfigurationSections => Enumerable.Repeat("python", 1);
         public object InitializationOptions { get; private set; }
 
         // TODO: investigate how this can be used, VS does not allow currently
         // for the server to dynamically register file watching.
         public IEnumerable<string> FilesToWatch => null;
-
-        public object MiddleLayer { get; private set; }
-
+        public object MiddleLayer => null;
         public object CustomMessageTarget { get; private set; }
-
         public bool IsInitialized { get; private set; }
 
         public event AsyncEventHandler<EventArgs> StartAsync;
-
 #pragma warning disable CS0067
         public event AsyncEventHandler<EventArgs> StopAsync;
 #pragma warning restore CS0067
@@ -103,18 +94,23 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 return null;
             }
 
-            if (PythonWorkspaceContextProvider.Workspace != null) {
-                _clientContext = new PythonLanguageClientContextWorkspace(PythonWorkspaceContextProvider.Workspace, PythonCoreConstants.ContentType);
-            } else {
-                _clientContext = new PythonLanguageClientContextGlobal(OptionsService, PythonCoreConstants.ContentType);
-            }
+            _clientContext = PythonWorkspaceContextProvider.Workspace != null 
+                ? (IPythonLanguageClientContext)new PythonLanguageClientContextWorkspace(PythonWorkspaceContextProvider.Workspace) 
+                : new PythonLanguageClientContextGlobal(OptionsService);
+
+            _clientContext.InterpreterChanged += OnInterpreterChanged;
+            _clientContext.SearchPathsChanged += OnSearchPathsChanged;
+            _disposables.Add(() => {
+                _clientContext.InterpreterChanged -= OnInterpreterChanged;
+                _clientContext.SearchPathsChanged -= OnSearchPathsChanged;
+                _clientContext.Dispose();
+            });
 
             return await _server.ActivateAsync();
         }
 
         public async Task OnLoadedAsync() {
             await JoinableTaskContext.Factory.SwitchToMainThreadAsync();
-
             // Force the package to load, since this is a MEF component,
             // there is no guarantee it has been loaded.
             Site.GetPythonToolsService();
@@ -122,14 +118,11 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             // Client context cannot be created here since the is no workspace yet
             // and hence we don't know if this is workspace or a loose files case.
             _server = PythonLanguageServer.Create(Site, JoinableTaskContext);
-            if (_server == null) {
-                return;
+            if (_server != null) {
+                InitializationOptions = null;
+                CustomMessageTarget = new PythonLanguageClientCustomTarget(Site, JoinableTaskContext);
+                await StartAsync.InvokeAsync(this, EventArgs.Empty);
             }
-
-            InitializationOptions = null;
-            CustomMessageTarget = new PythonLanguageClientCustomTarget(Site, JoinableTaskContext);
-
-            await StartAsync.InvokeAsync(this, EventArgs.Empty);
         }
 
         public async Task OnServerInitializedAsync() {
@@ -147,63 +140,25 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             return Task.CompletedTask;
         }
 
-        public void Dispose() {
-            _disposables.TryDispose();
-        }
+        public void Dispose() => _disposables.TryDispose();
 
-        public Task InvokeTextDocumentDidOpenAsync(LSP.DidOpenTextDocumentParams request) {
-            if (_rpc == null) {
-                return Task.CompletedTask;
-            }
+        public Task InvokeTextDocumentDidOpenAsync(LSP.DidOpenTextDocumentParams request) 
+            => _rpc == null ? Task.CompletedTask : _rpc.NotifyWithParameterObjectAsync("textDocument/didOpen", request);
 
-            return _rpc.NotifyWithParameterObjectAsync("textDocument/didOpen", request);
-        }
+        public Task InvokeTextDocumentDidChangeAsync(LSP.DidChangeTextDocumentParams request) 
+            => _rpc == null ? Task.CompletedTask : _rpc.NotifyWithParameterObjectAsync("textDocument/didChange", request);
 
-        public Task InvokeTextDocumentDidChangeAsync(LSP.DidChangeTextDocumentParams request) {
-            if (_rpc == null) {
-                return Task.CompletedTask;
-            }
+        public Task InvokeDidChangeConfigurationAsync(LSP.DidChangeConfigurationParams request)
+            => _rpc == null ? Task.CompletedTask : _rpc.NotifyWithParameterObjectAsync("workspace/didChangeConfiguration", request);
 
-            return _rpc.NotifyWithParameterObjectAsync("textDocument/didChange", request);
-        }
+        public Task<LSP.CompletionList> InvokeTextDocumentCompletionAsync(LSP.CompletionParams request, CancellationToken cancellationToken = default)
+            => _rpc == null ? Task.FromResult(new LSP.CompletionList()) : _rpc.InvokeWithParameterObjectAsync<LSP.CompletionList>("textDocument/completion", request, cancellationToken);
 
-        public Task InvokeDidChangeConfigurationAsync(
-            LSP.DidChangeConfigurationParams request,
-            CancellationToken cancellationToken = default(CancellationToken)
-        ) {
-            if (_rpc == null) {
-                return Task.CompletedTask;
-            }
+        public Task<TResult> InvokeWithParameterObjectAsync<TResult>(string targetName, object argument = null, CancellationToken cancellationToken = default) 
+            => _rpc == null ? Task.FromResult(default(TResult)) : _rpc.InvokeWithParameterObjectAsync<TResult>(targetName, argument, cancellationToken);
 
-            return _rpc.NotifyWithParameterObjectAsync("workspace/didChangeConfiguration", request);
-        }
-
-        public Task<LSP.CompletionList> InvokeTextDocumentCompletionAsync(
-            LSP.CompletionParams request,
-            CancellationToken cancellationToken = default(CancellationToken)
-        ) {
-            if (_rpc == null) {
-                return Task.FromResult(new LSP.CompletionList());
-            }
-
-            return _rpc.InvokeWithParameterObjectAsync<LSP.CompletionList>("textDocument/completion", request);
-        }
-
-        public Task<TResult> InvokeWithParameterObjectAsync<TResult>(string targetName, object argument = null, CancellationToken cancellationToken = default) {
-            if (_rpc == null) {
-                return Task.FromResult(default(TResult));
-            }
-
-            return _rpc.InvokeWithParameterObjectAsync<TResult>(targetName, argument, cancellationToken);
-        }
-
-        private void OnInterpreterChanged(object sender, EventArgs e) {
-            SendDidChangeConfiguration().DoNotWait();
-        }
-
-        private void OnSearchPathsChanged(object sender, EventArgs e) {
-            SendDidChangeConfiguration().DoNotWait();
-        }
+        private void OnInterpreterChanged(object sender, EventArgs e) => SendDidChangeConfiguration().DoNotWait();
+        private void OnSearchPathsChanged(object sender, EventArgs e) => SendDidChangeConfiguration().DoNotWait();
 
         private async Task SendDidChangeConfiguration() {
             Debug.Assert(_clientContext != null);

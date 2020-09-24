@@ -16,16 +16,10 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.Build.Tasks;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.LanguageServerClient {
-    public interface IPythonLanguageClientContext : ICloneable {
-        string ContentTypeName { get; }
-
+    public interface IPythonLanguageClientContext : IDisposable {
         InterpreterConfiguration InterpreterConfiguration { get; }
 
         string RootPath { get; }

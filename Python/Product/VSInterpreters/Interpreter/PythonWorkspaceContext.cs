@@ -20,9 +20,11 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Python.Core;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.Workspace;
 using Microsoft.VisualStudio.Workspace.Settings;
+using EnumerableExtensions = Microsoft.PythonTools.Infrastructure.EnumerableExtensions;
 
 namespace Microsoft.PythonTools.Interpreter {
     sealed class PythonWorkspaceContext : IPythonWorkspaceContext {
@@ -77,9 +79,7 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         public event EventHandler InterpreterSettingChanged;
-
         public event EventHandler SearchPathsSettingChanged;
-
         public event EventHandler TestSettingChanged;
 
         /// <summary>
@@ -126,8 +126,8 @@ namespace Microsoft.PythonTools.Interpreter {
 
             var actions = _actionsOnClose;
             _actionsOnClose = null;
-            foreach (var keyValue in actions.MaybeEnumerate()) {
-                keyValue.Value?.Invoke(keyValue.Key);
+            foreach (var (key, action) in EnumerableExtensions.MaybeEnumerate(actions)) {
+                action?.Invoke(key);
             }
 
             _workspaceSettingsMgr.OnWorkspaceSettingsChanged -= OnSettingsChanged;
@@ -170,7 +170,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
             var workspaceCacheDirPath = Path.Combine(_workspace.Location, ".vs");
             var workspaceInterpreterConfigs = _registryService.Configurations
-                .Where(x => !String.IsNullOrEmpty(x.InterpreterPath))
+                .Where(x => !string.IsNullOrEmpty(x.InterpreterPath))
                 .Where(x => PathUtils.IsSubpathOf(_workspace.Location, x.InterpreterPath))
                 .ToList();
             foreach (var file in Directory.EnumerateFiles(_workspace.Location).Where(x => predicate(x))) {
@@ -247,12 +247,10 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         private void OnInterpretersChanged(object sender, EventArgs e) {
-            if (_isDisposed) {
-                return;
+            if (!_isDisposed) {
+                // The environment referenced by the interpreter setting may no longer exist.
+                ReloadInterpreterSetting();
             }
-
-            // The environment referenced by the interpreter setting may no longer exist.
-            ReloadInterpreterSetting();
         }
 
         private void OnDefaultInterpreterChanged(object sender, EventArgs e) {
@@ -260,7 +258,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 return;
             }
 
-            bool? isDefault = false;
+            bool? isDefault;
             lock (_cacheLock) {
                 isDefault = _factoryIsDefault;
             }
@@ -298,9 +296,9 @@ namespace Microsoft.PythonTools.Interpreter {
             // changes that don't affect us. We cache the settings that we
             // care about, and check if those have changed, then raise our
             // own changed events as applicable.
-            bool interpreterChanged = false;
-            bool searchPathsChanged = false;
-            bool testSettingsChanged = false;
+            bool interpreterChanged;
+            bool searchPathsChanged;
+            bool testSettingsChanged;
 
             lock (_cacheLock) {
                 var oldInterpreter = _interpreter;
@@ -321,9 +319,9 @@ namespace Microsoft.PythonTools.Interpreter {
                 interpreterChanged = oldInterpreter != _interpreter;
                 searchPathsChanged = !oldSearchPaths.SequenceEqual(_searchPaths);
                 testSettingsChanged =
-                    !String.Equals(oldTestFramework, _testFramework) ||
-                    !String.Equals(oldUnitTestRootDirectory, _unitTestRootDirectory) ||
-                    !String.Equals(oldUnitTestPattern, _unitTestPattern);
+                    !string.Equals(oldTestFramework, _testFramework) ||
+                    !string.Equals(oldUnitTestRootDirectory, _unitTestRootDirectory) ||
+                    !string.Equals(oldUnitTestPattern, _unitTestPattern);
             }
 
             if (interpreterChanged) {
@@ -360,14 +358,10 @@ namespace Microsoft.PythonTools.Interpreter {
         public void AddActionOnClose(object key, Action<object> action) {
             Debug.Assert(key != null);
             Debug.Assert(action != null);
-            if (key == null || action == null) {
-                return;
+            if (key != null && action != null) {
+                _actionsOnClose = _actionsOnClose ?? new Dictionary<object, Action<object>>();
+                _actionsOnClose[key] = action;
             }
-
-            if (_actionsOnClose == null) {
-                _actionsOnClose = new Dictionary<object, Action<object>>();
-            }
-            _actionsOnClose[key] = action;
         }
     }
 }
