@@ -25,9 +25,8 @@ using Microsoft.VisualStudio.Workspace;
 using Microsoft.VisualStudio.Workspace.Settings;
 
 namespace Microsoft.PythonTools.Interpreter {
-    class PythonWorkspaceContext : IPythonWorkspaceContext {
+    sealed class PythonWorkspaceContext : IPythonWorkspaceContext {
         private const string PythonSettingsType = "PythonSettings";
-        private const string InterpreterProperty = "Interpreter";
         private const string SearchPathsProperty = "SearchPaths";
         private const string TestFrameworkProperty = "TestFramework";
         private const string UnitTestRootDirectoryProperty = "UnitTestRootDirectory";
@@ -43,7 +42,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
         // Cached settings values
         // OnSettingsChanged compares with current value to raise more specific events.
-        private object _cacheLock = new object();
+        private readonly object _cacheLock = new object();
         private string[] _searchPaths;
         private string _interpreter;
         private string _testFramework;

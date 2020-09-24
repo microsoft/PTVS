@@ -52,8 +52,8 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         [Import]
         public IPythonWorkspaceContextProvider PythonWorkspaceContextProvider;
 
-        //[Import]
-        //public IInterpreterOptionsService OptionsService;
+        [Import]
+        public IInterpreterOptionsService OptionsService;
 
         [Import]
         public JoinableTaskContext JoinableTaskContext;
@@ -103,6 +103,12 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 return null;
             }
 
+            if (PythonWorkspaceContextProvider.Workspace != null) {
+                _clientContext = new PythonLanguageClientContextWorkspace(PythonWorkspaceContextProvider.Workspace, PythonCoreConstants.ContentType);
+            } else {
+                _clientContext = new PythonLanguageClientContextGlobal(OptionsService, PythonCoreConstants.ContentType);
+            }
+
             return await _server.ActivateAsync();
         }
 
@@ -113,22 +119,14 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             // there is no guarantee it has been loaded.
             Site.GetPythonToolsService();
 
-            if (PythonWorkspaceContextProvider.Workspace != null) {
-                _clientContext = new PythonLanguageClientContextWorkspace(PythonWorkspaceContextProvider.Workspace, PythonCoreConstants.ContentType);
-            } else {
-                // TODO
-                _clientContext = null;
-                MessageBox.Show("Pylance only supports workspaces right now.", Strings.ProductTitle, MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
+            // Client context cannot be created here since the is no workspace yet
+            // and hence we don't know if this is workspace or a loose files case.
             _server = PythonLanguageServer.Create(Site, JoinableTaskContext);
             if (_server == null) {
                 return;
             }
 
             InitializationOptions = null;
-
             CustomMessageTarget = new PythonLanguageClientCustomTarget(Site, JoinableTaskContext);
 
             await StartAsync.InvokeAsync(this, EventArgs.Empty);
@@ -208,6 +206,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
 
         private async Task SendDidChangeConfiguration() {
+            Debug.Assert(_clientContext != null);
             // TODO: client context needs to also provide the settings that are currently hard coded here
             // so that workspace can get it from PythonSettings.json and projects from their .pyproj, etc.
             var settings = new Settings {

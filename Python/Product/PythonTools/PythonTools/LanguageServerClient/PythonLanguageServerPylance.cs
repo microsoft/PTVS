@@ -83,7 +83,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
 
         private static string GetServerLocation() {
-            var filePath = PythonToolsInstallPath.GetFile(@"Pylance\dist\server.bundle.js");
+            var filePath = PythonToolsInstallPath.GetFile(@"Pylance\server.bundle.js");
             return File.Exists(filePath) ? filePath : null;
         }
 
