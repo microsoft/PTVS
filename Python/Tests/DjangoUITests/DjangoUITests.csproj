@@ -80,15 +80,9 @@
     <Reference Include="UIAutomationClient" />
     <Reference Include="UIAutomationTypes" />
     <Reference Include="WindowsBase" />
-    <Reference Include="Microsoft.VisualStudio.Web.HTML" />
     <Reference Include="Microsoft.VisualStudio.Threading">
       <SpecificVersion>False</SpecificVersion>
     </Reference>
-    <Reference Include="Microsoft.WebTools.Languages.Shared.dll" Condition=" '$(VSTarget)' == '16.0' " />
-    <Reference Include="Microsoft.WebTools.Languages.Shared.Editor.dll" Condition=" '$(VSTarget)' == '16.0' " />
-    <Reference Include="Microsoft.WebTools.Languages.Html.dll" Condition=" '$(VSTarget)' == '16.0' " />
-    <Reference Include="Microsoft.WebTools.Languages.Html.Editor.dll" Condition=" '$(VSTarget)' == '16.0' " />
-    <Reference Include="Microsoft.WebTools.Languages.Html.VS.dll" Condition=" '$(VSTarget)' == '16.0' " />
     <Reference Include="Microsoft.Python.Core">
       <Private>True</Private>
     </Reference>
