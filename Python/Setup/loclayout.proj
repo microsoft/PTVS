@@ -42,9 +42,6 @@
     <ManagedFiles Include="
         Microsoft.PythonTools.Debugger.VCLauncher.dll;
         " Condition="$(IncludeVCDebugLauncher)" />
-    <ManagedFiles Include="
-        Microsoft.PythonTools.Wsl.dll;
-        " Condition="$(IncludeWsl)" />
 
     <CodeSnippets Include="
         $(BinariesOutputPath)Snippets\SnippetsIndex.xml;

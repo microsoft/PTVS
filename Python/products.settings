@@ -5,11 +5,5 @@
     
     <!-- Include VCDebugLauncher by default -->
     <IncludeVCDebugLauncher Condition="'$(VCDebugLauncher)' == ''">true</IncludeVCDebugLauncher>
-    
-    <!-- Exclude WSL by default -->
-    <IncludeWsl Condition="'$(IncludeWsl)' == ''">false</IncludeWsl>
-
-    <!-- Include LiveShare by default -->
-    <IncludeLiveShare Condition="'$(IncludeLiveShare)' == ''">true</IncludeLiveShare>
   </PropertyGroup>
 </Project>

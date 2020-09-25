@@ -22,14 +22,12 @@
     <ProjectFile Include="Microsoft.PythonTools.Core.Templates.Vsix.swixproj"/>
     <ProjectFile Include="Microsoft.PythonTools.Django.Vsix.swixproj" Condition="'$(IncludeDjango)' == 'True'"/>
     <ProjectFile Include="Microsoft.PythonTools.Django.Templates.Vsix.swixproj" Condition="'$(IncludeDjango)' == 'True'"/>
-    <ProjectFile Include="Microsoft.PythonTools.LiveShare.Vsix.swixproj" Condition="'$(IncludeLiveShare)' == 'True'"/>
     <ProjectFile Include="Microsoft.PythonTools.NativeDevelopment.Templates.Vsix.swixproj"/>
     <ProjectFile Include="Microsoft.PythonTools.Profiling.Vsix.swixproj"/>
     <ProjectFile Include="Microsoft.PythonTools.Web.Templates.Vsix.swixproj"/>
     <LocProjectFile Include="Microsoft.CookiecutterTools.Vsix.Resources.swixproj" Condition="'$(LocType)' != ''"/>
     <LocProjectFile Include="Microsoft.PythonTools.Core.Vsix.Resources.swixproj" Condition="'$(LocType)' != ''"/>
     <LocProjectFile Include="Microsoft.PythonTools.Django.Vsix.Resources.swixproj" Condition="'$(LocType)' != ''"/>
-    <LocProjectFile Include="Microsoft.PythonTools.LiveShare.Vsix.Resources.swixproj" Condition="'$(LocType)' != ''"/>
     <LocProjectFile Include="Microsoft.PythonTools.Profiling.Vsix.Resources.swixproj" Condition="'$(LocType)' != ''"/>
   </ItemGroup>
 

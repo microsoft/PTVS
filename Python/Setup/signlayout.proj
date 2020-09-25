@@ -49,9 +49,6 @@
     <ManagedFiles Include="
         Microsoft.PythonTools.Debugger.VCLauncher.dll;
         " Condition="$(IncludeVCDebugLauncher)" />
-    <ManagedFiles Include="
-        Microsoft.PythonTools.Wsl.dll;
-        " Condition="$(IncludeWsl)" />
 
     <UnmanagedFiles Include="
         Microsoft.PythonTools.Debugger.Helper.x64.dll;
