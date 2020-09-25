@@ -267,24 +267,6 @@
   <ItemGroup>
     <Folder Include="Resources\" />
   </ItemGroup>
-  <Choose>
-    <When Condition="$(IncludeDjangoHtmlExtensions) == 'true'">
-      <ItemGroup>
-        <Reference Include="Microsoft.VisualStudio.Web.HTML" />
-        <Reference Include="Microsoft.WebTools.Languages.Shared.dll" Condition=" '$(VSTarget)' == '16.0' " />
-        <Reference Include="Microsoft.WebTools.Languages.Shared.Editor.dll" Condition=" '$(VSTarget)' == '16.0' " />
-        <Reference Include="Microsoft.WebTools.Languages.Html.dll" Condition=" '$(VSTarget)' == '16.0' " />
-        <Reference Include="Microsoft.WebTools.Languages.Html.Editor.dll" Condition=" '$(VSTarget)' == '16.0' " />
-        <Reference Include="Microsoft.WebTools.Languages.Html.VS.dll" Condition=" '$(VSTarget)' == '16.0' " />
-      </ItemGroup>
-      <ItemGroup>
-        <Compile Include="DjangoEditorFactory.cs" />
-        <Compile Include="Formatting\TemplateEditorFormatterProvider.cs" />
-        <Compile Include="Intellisense\TextBufferExtensions.cs" />
-        <Compile Include="TemplateContentType.cs" />
-      </ItemGroup>
-    </When>
-  </Choose>
   <PropertyGroup>
     <UseCodebase>true</UseCodebase>
   </PropertyGroup>

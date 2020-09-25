@@ -3,9 +3,6 @@
     <!-- Include Django by default -->
     <IncludeDjango Condition="'$(IncludeDjango)' == ''">true</IncludeDjango>
     
-    <!-- Optionally exclude HTML editor extensions until we get an API stability guarantee from that team -->
-    <IncludeDjangoHtmlExtensions Condition="'$(IncludeDjangoHtmlExtensions)' == ''">false</IncludeDjangoHtmlExtensions>
-
     <!-- Include VCDebugLauncher by default -->
     <IncludeVCDebugLauncher Condition="'$(VCDebugLauncher)' == ''">true</IncludeVCDebugLauncher>
     

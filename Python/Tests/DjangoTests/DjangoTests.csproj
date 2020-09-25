@@ -99,13 +99,5 @@
       <Name>Common</Name>
     </ProjectReference>
   </ItemGroup>
-  <Choose>
-    <When Condition="$(IncludeDjangoHtmlExtensions) == 'true'">
-      <ItemGroup>
-        <Reference Include="Microsoft.WebTools.Languages.Html.VS.dll" Condition=" '$(VSTarget)' == '16.0' " />
-        <Reference Include="Microsoft.VisualStudio.Web.HTML" />
-      </ItemGroup>
-    </When>
-  </Choose>
   <Import Project="..\TestProjectAfter.settings" />
 </Project>
