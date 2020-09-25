@@ -9,8 +9,8 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Microsoft</RootNamespace>
-    <AssemblyName>Microsoft.PythonTools.Core</AssemblyName>
-    <ProjectGuid>{BDCF4A54-00B3-4F20-A76D-DEE4A2D23634}</ProjectGuid>
+    <AssemblyName>Microsoft.PythonTools.Pylance</AssemblyName>
+    <ProjectGuid>{E2AE38B1-6C26-417E-A898-1A971E0E8C7A}</ProjectGuid>
     <UseVSSDK>true</UseVSSDK>
     <CreateVsixContainer>true</CreateVsixContainer>
     <IncludeAssemblyInVSIXContainer>false</IncludeAssemblyInVSIXContainer>
@@ -69,10 +69,6 @@
       <Project>{e1e1613d-0c96-42f9-9f2d-052c72533297}</Project>
       <Name>Ipc.Json</Name>
     </ProjectReference>
-    <ProjectReference Include="..\ProjectWizards\ProjectWizards.csproj">
-      <Project>{3814d9db-10e6-4478-bd98-6c5840612af8}</Project>
-      <Name>Microsoft.PythonTools.ProjectWizards</Name>
-    </ProjectReference>
     <ProjectReference Include="..\PythonTools\PythonTools.csproj">
       <Project>{fa7be5f5-e04f-4613-b7ac-70ce10d1bb68}</Project>
       <Name>Microsoft.PythonTools</Name>
@@ -81,14 +77,6 @@
     <ProjectReference Include="..\RunElevated\RunElevated.csproj">
       <Project>{4e18d41e-5e73-461f-9289-f6709257171a}</Project>
       <Name>Microsoft.PythonTools.RunElevated</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\TestAdapter.Executor\TestAdapter.Executor.csproj">
-      <Project>{44e8bb56-c38e-49a8-8bc1-7af40d0ac725}</Project>
-      <Name>Microsoft.PythonTools.TestAdapter.Executor</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\TestAdapter\TestAdapter.csproj">
-      <Project>{5085df35-3a32-4894-835e-e5a3956d4f57}</Project>
-      <Name>Microsoft.PythonTools.TestAdapter</Name>
     </ProjectReference>
     <ProjectReference Include="..\VSInterpreters\VSInterpreters.csproj">
       <Project>{815db0cd-c0dd-4997-b43c-abee4dbeffe7}</Project>
@@ -122,8 +110,13 @@
     <Content Include="..\..\References\Dev$(VSTarget)\Microsoft.VisualStudio.LanguageServer.Protocol.dll" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\Core\ProvideRawCodeBaseAttribute.cs">
+      <Link>ProvideRawCodeBaseAttribute.cs</Link>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ProvideRawCodeBaseAttribute.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Pylance\" />
   </ItemGroup>
   <Import Project="..\ProjectAfter.settings" />
   <!-- Temporary workaround for the interop DLL not being available in 15.5 -->
@@ -131,6 +124,19 @@
     <ItemGroup>
       <_InteropDll Include="$(DevEnvDir)Extensions\*\Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces.dll" />
       <Content Include="..\..\References\Dev$(VSTarget)\Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces.dll;VSCodeInterop.pkgdef" Condition="@(_InteropDll) == ''" />
+    </ItemGroup>
+  </Target>
+  <Target Name="_IncludeLanguageServer" BeforeTargets="AssignTargetPaths;GetVSIXSourceItems">
+    <ItemGroup>
+      <LanguageServerFiles Include="Pylance\**\*" />
+      <LanguageServerFiles>
+        <IncludeInVSIX>true</IncludeInVSIX>
+        <Link>Pylance\%(RecursiveDir)\%(Filename)%(Extension)</Link>
+        <VSIXSubPath>Pylance\%(RecursiveDir)</VSIXSubPath>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </LanguageServerFiles>
+      <Content Include="@(LanguageServerFiles)" />
+      <FileWrites Include="@(LanguageServerFiles)" />
     </ItemGroup>
   </Target>
 </Project>

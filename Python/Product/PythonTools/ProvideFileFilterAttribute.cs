@@ -15,7 +15,6 @@
 // permissions and limitations under the License.
 
 using System;
-using System.IO;
 using Microsoft.VisualStudio.Shell;
 
 namespace Microsoft.PythonTools {

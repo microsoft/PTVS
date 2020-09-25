@@ -2991,7 +2991,7 @@ Please specify at least one package.</value>
     <value>Don't show this message again</value>
   </data>
   <data name="PythonVersionNotSupportedInfoBarText" xml:space="preserve">
-    <value>You're using Python {0}. Some new features might not work as expected until Visual Studio officially supports this version.</value>
+    <value>You're using Python {0}. Some features might not work as expected since Visual Studio no longer supports this version.</value>
     <comment>{0} is the Python version</comment>
   </data>
   <data name="PythonVersionNotSupportMoreInfo" xml:space="preserve">

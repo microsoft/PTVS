@@ -19,38 +19,25 @@ using System.Collections.Generic;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.LanguageServerClient {
-    internal class PythonLanguageClientContextFixed : IPythonLanguageClientContext {
+    internal sealed class PythonLanguageClientContextFixed : IPythonLanguageClientContext {
         public event EventHandler InterpreterChanged { add { } remove { } }
         public event EventHandler SearchPathsChanged { add { } remove { } }
         public event EventHandler Closed { add { } remove { } }
 
         public PythonLanguageClientContextFixed(
-            string contentTypeName,
             InterpreterConfiguration configuration,
             string rootPath,
             IEnumerable<string> searchPaths
         ) {
-            ContentTypeName = contentTypeName ?? throw new ArgumentNullException(nameof(contentTypeName));
             InterpreterConfiguration = configuration;
             RootPath = rootPath;
             SearchPaths = searchPaths;
         }
 
-        public string ContentTypeName { get; }
-
         public InterpreterConfiguration InterpreterConfiguration { get; }
-
         public string RootPath { get; }
-
         public IEnumerable<string> SearchPaths { get; }
 
-        public object Clone() {
-            return new PythonLanguageClientContextFixed(
-                ContentTypeName,
-                InterpreterConfiguration,
-                RootPath,
-                SearchPaths
-            );
-        }
+        public void Dispose() { }
     }
 }

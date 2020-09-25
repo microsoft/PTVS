@@ -20,7 +20,7 @@ using Microsoft.PythonTools.Common.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.LanguageServerClient {
-    internal class PythonLanguageClientContextWorkspace : IPythonLanguageClientContext, IDisposable {
+    internal sealed class PythonLanguageClientContextWorkspace : IPythonLanguageClientContext {
         private readonly IPythonWorkspaceContext _pythonWorkspace;
         private readonly DisposableBag _disposables;
 
@@ -28,12 +28,8 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         public event EventHandler SearchPathsChanged;
         public event EventHandler Closed;
 
-        public PythonLanguageClientContextWorkspace(
-            IPythonWorkspaceContext pythonWorkspace,
-            string contentTypeName
-        ) {
+        public PythonLanguageClientContextWorkspace(IPythonWorkspaceContext pythonWorkspace) {
             _pythonWorkspace = pythonWorkspace ?? throw new ArgumentNullException(nameof(pythonWorkspace));
-            ContentTypeName = contentTypeName ?? throw new ArgumentNullException(nameof(contentTypeName));
             _disposables = new DisposableBag(GetType().Name);
 
             _pythonWorkspace.ActiveInterpreterChanged += OnInterpreterChanged;
@@ -46,31 +42,14 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             _pythonWorkspace.AddActionOnClose(this, (obj) => Closed?.Invoke(this, EventArgs.Empty));
         }
 
-        public string ContentTypeName { get; }
-
         public InterpreterConfiguration InterpreterConfiguration => _pythonWorkspace.CurrentFactory?.Configuration;
-
+        
         public string RootPath => _pythonWorkspace.Location;
-
         public IEnumerable<string> SearchPaths => _pythonWorkspace.GetAbsoluteSearchPaths();
 
-        private void OnInterpreterChanged(object sender, EventArgs e) {
-            InterpreterChanged?.Invoke(this, EventArgs.Empty);
-        }
+        private void OnInterpreterChanged(object sender, EventArgs e) => InterpreterChanged?.Invoke(this, EventArgs.Empty);
+        private void OnSearchPathsChanged(object sender, EventArgs e) => SearchPathsChanged?.Invoke(this, EventArgs.Empty);
 
-        private void OnSearchPathsChanged(object sender, EventArgs e) {
-            SearchPathsChanged?.Invoke(this, EventArgs.Empty);
-        }
-
-        public object Clone() {
-            return new PythonLanguageClientContextWorkspace(
-                _pythonWorkspace,
-                ContentTypeName
-            );
-        }
-
-        public void Dispose() {
-            _disposables.TryDispose();
-        }
+        public void Dispose() => _disposables.TryDispose();
     }
 }
