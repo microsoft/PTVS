@@ -35,7 +35,6 @@
     <ProjectFile Include="Profiling\Profiling.csproj"/>
 
     <ProjectFile Include="WebRole\WebRole.csproj"/>
-    <ProjectFile Include="Django.Analysis\Django.Analysis.csproj" Condition="'$(IncludeDjango)' == 'True' and '$(IncludeDjangoHtmlExtensions)' == 'True'" />
     <ProjectFile Include="Django\Django.csproj" Condition="'$(IncludeDjango)' == 'True'"/>
     <ProjectFile Include="Cookiecutter\Cookiecutter.csproj"/>
 

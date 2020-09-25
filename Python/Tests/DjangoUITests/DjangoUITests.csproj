@@ -98,7 +98,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DjangoDebugProjectUITests.cs" />
-    <Compile Include="DjangoEditingUITests.cs" />
     <Compile Include="DjangoInterpreterSetter.cs" />
     <Compile Include="DjangoProjectUITests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
