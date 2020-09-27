@@ -104,7 +104,15 @@
     </ProjectReference2>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Templates\NewItem\NewFileItems.vsdir">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <VSIXSubPath>Templates\NewItem</VSIXSubPath>
+    </Content>
     <None Include="source.extension.vsixmanifest" />
+    <Content Include="Templates\NewItem\file.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <VSIXSubPath>Templates\NewItem</VSIXSubPath>
+    </Content>
     <Content Include="License_en-US.rtf" />
     <Content Include="$(PackagesPath)\Newtonsoft.Json\lib\net45\Newtonsoft.Json.dll" />
     <Content Include="..\..\References\Dev$(VSTarget)\Microsoft.VisualStudio.LanguageServer.Protocol.dll" />

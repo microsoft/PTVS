@@ -553,4 +553,7 @@ This file should normally be deployed in your /static folder. See https://aka.ms
   <data name="132" xml:space="preserve">
     <value>Conda</value>
   </data>
+  <data name="3018" xml:space="preserve">
+    <value>file</value>
+  </data>
 </root>
