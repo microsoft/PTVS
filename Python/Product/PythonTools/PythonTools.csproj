@@ -701,10 +701,6 @@
     <Content Include="Theme\Microsoft.PythonTools.theme.v16.0.pkgdef" />
     <Content Include="Theme\Repl\Microsoft.PythonTools.Repl.theme.v15.0.pkgdef" />
     <Content Include="Theme\Repl\Microsoft.PythonTools.Repl.theme.v16.0.pkgdef" />
-    <Content Include="PythonTools\Options\Schema\pylance-config.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
     <None Include="Theme\contrast.vstheme" />
     <None Include="NoInterpreters.htmlsrc" />
     <None Include="Theme\Microsoft.PythonTools.theme.v15.0.pkgdef" />

@@ -104,12 +104,15 @@
     </ProjectReference2>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Templates\NewItem\mspythonconfig.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <Content Include="Templates\NewItem\NewFileItems.vsdir">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <VSIXSubPath>Templates\NewItem</VSIXSubPath>
     </Content>
     <None Include="source.extension.vsixmanifest" />
-    <Content Include="Templates\NewItem\file.py">
+    <Content Include="Templates\NewItem\module.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <VSIXSubPath>Templates\NewItem</VSIXSubPath>
     </Content>
@@ -147,4 +150,9 @@
       <FileWrites Include="@(LanguageServerFiles)" />
     </ItemGroup>
   </Target>
+  <ProjectExtensions>
+    <VisualStudio>
+      <UserProperties templates_4newitem_4mspythonconfig_1json__JsonSchema="https://raw.githubusercontent.com/Cog-Creators/Red-DiscordBot/V3/develop/schema/red_cog.schema.json" />
+    </VisualStudio>
+  </ProjectExtensions>
 </Project>
