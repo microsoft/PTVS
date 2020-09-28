@@ -35,14 +35,10 @@
     <ProjectFile Include="Profiling\Profiling.csproj"/>
 
     <ProjectFile Include="WebRole\WebRole.csproj"/>
-    <ProjectFile Include="Django.Analysis\Django.Analysis.csproj" Condition="'$(IncludeDjango)' == 'True' and '$(IncludeDjangoHtmlExtensions)' == 'True'" />
     <ProjectFile Include="Django\Django.csproj" Condition="'$(IncludeDjango)' == 'True'"/>
     <ProjectFile Include="Cookiecutter\Cookiecutter.csproj"/>
 
     <ProjectFile Include="VCDebugLauncher\VCDebugLauncher.csproj" Condition="'$(IncludeVCDebugLauncher)' == 'True'"/>
-    <ProjectFile Include="Wsl\Wsl.csproj" Condition="'$(IncludeWsl)' == 'True'"/>
-
-    <ProjectFile Include="LiveShare\LiveShare.csproj" Condition="'$(IncludeLiveShare)' == 'True'"/>
 
     <ProjectFile Include="Core\Core.csproj" />
     <ProjectFile Include="..\Templates\Templates.csproj" />

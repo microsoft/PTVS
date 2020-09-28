@@ -243,10 +243,6 @@
       <Project>{DECC7971-FA58-4DB0-9561-BFFADD393BBD}</Project>
       <Name>Debugger</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Product\LiveShare\LiveShare.csproj">
-      <Project>{4065a3c8-0e5e-42ac-9d94-509aa90c90e9}</Project>
-      <Name>LiveShare</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\Product\VSInterpreters\VSInterpreters.csproj">
       <Project>{815db0cd-c0dd-4997-b43c-abee4dbeffe7}</Project>
       <Name>VSInterpreters</Name>

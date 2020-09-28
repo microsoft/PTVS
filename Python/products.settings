@@ -3,16 +3,7 @@
     <!-- Include Django by default -->
     <IncludeDjango Condition="'$(IncludeDjango)' == ''">true</IncludeDjango>
     
-    <!-- Optionally exclude HTML editor extensions until we get an API stability guarantee from that team -->
-    <IncludeDjangoHtmlExtensions Condition="'$(IncludeDjangoHtmlExtensions)' == ''">true</IncludeDjangoHtmlExtensions>
-
     <!-- Include VCDebugLauncher by default -->
     <IncludeVCDebugLauncher Condition="'$(VCDebugLauncher)' == ''">true</IncludeVCDebugLauncher>
-    
-    <!-- Exclude WSL by default -->
-    <IncludeWsl Condition="'$(IncludeWsl)' == ''">false</IncludeWsl>
-
-    <!-- Include LiveShare by default -->
-    <IncludeLiveShare Condition="'$(IncludeLiveShare)' == ''">true</IncludeLiveShare>
   </PropertyGroup>
 </Project>

@@ -36,7 +36,6 @@
     <AssemblyName>DjangoTests</AssemblyName>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <DefineConstants Condition="$(IncludeDjangoHtmlExtensions) == 'true'">DJANGO_HTML_EDITOR;$(DefineConstants)</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -100,13 +99,5 @@
       <Name>Common</Name>
     </ProjectReference>
   </ItemGroup>
-  <Choose>
-    <When Condition="$(IncludeDjangoHtmlExtensions) == 'true'">
-      <ItemGroup>
-        <Reference Include="Microsoft.WebTools.Languages.Html.VS.dll" Condition=" '$(VSTarget)' == '16.0' " />
-        <Reference Include="Microsoft.VisualStudio.Web.HTML" />
-      </ItemGroup>
-    </When>
-  </Choose>
   <Import Project="..\TestProjectAfter.settings" />
 </Project>

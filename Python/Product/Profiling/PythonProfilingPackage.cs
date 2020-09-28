@@ -34,10 +34,6 @@ using Microsoft.VisualStudioTools.Project;
 using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.Profiling {
-
-    using global::DiagnosticsHub.Packaging.Interop;
-    using Microsoft.DiagnosticsHub.Packaging.InteropEx;
-
     /// <summary>
     /// This is the class that implements the package exposed by this assembly.
     ///

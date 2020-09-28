@@ -26,7 +26,6 @@
   <ItemGroup>
     <Compile Include="DjangoProjectUITests.cs" />
     <Compile Include="DjangoDebugProjectUITests.cs" />
-    <Compile Include="DjangoEditingUITests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

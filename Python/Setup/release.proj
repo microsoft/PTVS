@@ -11,9 +11,6 @@
     <ReleaseFile Include="$(SetupOutputPath)swix\*.vsix;$(SetupOutputPath)swix\*.vsman">
       <Name>%(Filename)%(Extension)</Name>
     </ReleaseFile>
-    <ReleaseFile Include="$(SetupOutputPath)Microsoft.PythonTools.Wsl.vsix" Condition="'$(IncludeWsl)' == 'True'">
-      <Name>%(Filename).VS$(VSTargetName)%(Extension)</Name>
-    </ReleaseFile>
     <ReleaseFile Include="swix\InstallIntoDev15.ps1">
       <Name>InstallIntoDev15.ps1</Name>
     </ReleaseFile>

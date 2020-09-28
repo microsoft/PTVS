@@ -105,8 +105,6 @@
       <IDSymbol name="cmdidGotoTemplateSource" value="0x1003"/>
     </GuidSymbol>
 
-    <GuidSymbol name="guidDjangoEditorFactory" value="{96108b8f-2a98-4f6b-a6b6-69e04e7b7d3f}" />
-
   </Symbols>
 
 </CommandTable>
