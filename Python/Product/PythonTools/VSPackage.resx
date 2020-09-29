@@ -553,13 +553,7 @@ This file should normally be deployed in your /static folder. See https://aka.ms
   <data name="132" xml:space="preserve">
     <value>Conda</value>
   </data>
-  <data name="3018" xml:space="preserve">
-    <value>module</value>
-  </data>
   <data name="3019" xml:space="preserve">
     <value>Python type checker configuration file</value>
-  </data>
-  <data name="3020" xml:space="preserve">
-    <value>mspythonconfig</value>
   </data>
 </root>
