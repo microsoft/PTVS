@@ -112,6 +112,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <VSIXSubPath>Templates\NewItem</VSIXSubPath>
     </Content>
+    <None Include="Settings\pyrightconfig-schema.json" />
     <None Include="source.extension.vsixmanifest" />
     <Content Include="Templates\NewItem\module.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
