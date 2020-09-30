@@ -260,7 +260,6 @@
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.LanguageServer.Protocol">
-      <HintPath>..\..\References\Dev$(VSTarget)\Microsoft.VisualStudio.LanguageServer.Protocol.dll</HintPath>
       <Private>True</Private>
       <IncludeInVSIX>True</IncludeInVSIX>
     </Reference>
@@ -424,11 +423,6 @@
     <Compile Include="PythonTools\Editor\TokenCache.cs" />
     <Compile Include="PythonTools\Repl\Completion\ExpressionFinder.cs" />
     <Compile Include="PythonTools\Repl\Completion\FindExpressionOptions.cs" />
-    <Compile Include="PythonTools\Repl\Completion\ReplRemoteCompletionBroker.cs" />
-    <Compile Include="PythonTools\Repl\Completion\ReplAsyncCompletionCommitManagerProvider.cs" />
-    <Compile Include="PythonTools\Repl\Completion\ReplAsyncCompletionSource.cs" />
-    <Compile Include="PythonTools\Repl\Completion\ReplAsyncCompletionCommitManager.cs" />
-    <Compile Include="PythonTools\Repl\Completion\ReplAsyncCompletionSourceProvider.cs" />
     <Compile Include="PythonTools\WorkspaceInfoBarManager.cs" />
     <Compile Include="PythonTools\Wpf\ModernDialog.cs" />
     <Compile Include="PythonTools\Wpf\ModernDialogHeaderControl.xaml.cs">
