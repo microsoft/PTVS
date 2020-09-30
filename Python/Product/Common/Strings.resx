@@ -2984,4 +2984,10 @@ Please specify at least one package.</value>
   <data name="PythonInterpreterPathNullOrEmpty" xml:space="preserve">
     <value>Unable to start debugging because the Python interpreter path is null or empty</value>
   </data>
+  <data name="ErrorUnableToInstallFormatter" xml:space="preserve">
+    <value>Unable to install code formatter. Error {0}.</value>
+  </data>
+  <data name="InstallFormatterPrompt" xml:space="preserve">
+    <value>Install '{0}' in environment '{1}' now?</value>
+  </data>
 </root>

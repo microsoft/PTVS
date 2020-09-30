@@ -21,7 +21,7 @@ using Microsoft.VisualStudio.LanguageServer.Protocol;
 
 namespace Microsoft.PythonTools.Editor.Formatting {
     [Export(typeof(IPythonFormatter))]
-    internal class PythonFormatterYapf : PythonFormatter {
+    internal sealed class PythonFormatterYapf : PythonFormatter {
         public override string Identifier => "yapf";
 
         public override string DisplayName => "yapf";
@@ -29,7 +29,7 @@ namespace Microsoft.PythonTools.Editor.Formatting {
         public override string PackageSpec => "yapf";
 
         protected override string[] GetToolCommandArgs(string documentFilePath, Range range, string[] extraArgs) {
-            var args = new List<string>() { "-m", "yapf", "--diff", documentFilePath };
+            var args = new List<string> { "-m", "yapf", "--diff", documentFilePath };
             if (range != null) {
                 args.Add("--lines");
                 args.Add(

@@ -14,7 +14,6 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
 using System.Runtime.InteropServices;
 
 namespace Microsoft.PythonTools.Options {
@@ -40,19 +39,13 @@ namespace Microsoft.PythonTools.Options {
         public override void LoadSettingsFromStorage() {
             // Load settings from storage.
             PyService.FormattingOptions.Load();
-            
             // Synchronize UI with backing properties.
-            if (_window != null) {
-                _window.SyncControlWithPageSettings(PyService);
-            }
+            _window?.SyncControlWithPageSettings(PyService);
         }
 
         public override void SaveSettingsToStorage() {
             // Synchronize backing properties with UI.
-            if (_window != null) {
-                _window.SyncPageWithControlSettings(PyService);
-            }
-
+            _window?.SyncPageWithControlSettings(PyService);
             // Save settings.
             PyService.FormattingOptions.Save();
         }

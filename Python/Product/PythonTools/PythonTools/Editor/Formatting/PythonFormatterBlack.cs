@@ -14,13 +14,12 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
 using System.ComponentModel.Composition;
 using Microsoft.VisualStudio.LanguageServer.Protocol;
 
 namespace Microsoft.PythonTools.Editor.Formatting {
     [Export(typeof(IPythonFormatter))]
-    internal class PythonFormatterBlack : PythonFormatter {
+    internal sealed class PythonFormatterBlack : PythonFormatter {
         public override string Identifier => "black";
 
         public override string DisplayName => "black";

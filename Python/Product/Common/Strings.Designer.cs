@@ -3474,6 +3474,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unable to install code formatter. Error {0}..
+        /// </summary>
+        public static string ErrorUnableToInstallFormatter {
+            get {
+                return ResourceManager.GetString("ErrorUnableToInstallFormatter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Execute File in P&amp;ython Interactive.
         /// </summary>
         public static string ExecuteInReplCommand_ExecuteFile {
@@ -4361,6 +4370,15 @@ namespace Microsoft.PythonTools {
         public static string InstalledDebugPyOutdatedTitle {
             get {
                 return ResourceManager.GetString("InstalledDebugPyOutdatedTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Install &apos;{0}&apos; in environment &apos;{1}&apos; now?.
+        /// </summary>
+        public static string InstallFormatterPrompt {
+            get {
+                return ResourceManager.GetString("InstallFormatterPrompt", resourceCulture);
             }
         }
         

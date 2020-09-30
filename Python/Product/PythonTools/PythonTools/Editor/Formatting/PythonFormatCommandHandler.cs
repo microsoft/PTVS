@@ -15,10 +15,12 @@
 // permissions and limitations under the License.
 
 using System;
+using System.CodeDom;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -30,6 +32,7 @@ using Microsoft.PythonTools.Logging;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.Commanding;
 using Microsoft.VisualStudio.LanguageServer.Protocol;
+using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Editor.Commanding.Commands;
@@ -94,12 +97,12 @@ namespace Microsoft.PythonTools.Editor {
 
         private bool Execute(ITextView textView, ITextBuffer textBuffer, bool isFormatSelection) {
             if (_textDocumentFactoryService.TryGetTextDocument(textBuffer, out var textDoc) &&
-                GetConfiguration(textDoc, out var formatter, out var factory, out var extraArgs)) {
+                GetConfiguration(out var formatter, out var extraArgs)) {
 
                 var snapshot = textBuffer.CurrentSnapshot;
                 var range = isFormatSelection ? GetRange(textView, textBuffer) : null;
 
-                FormatDocumentAsync(textDoc, snapshot, formatter, factory, range, extraArgs)
+                FormatDocumentAsync(textDoc, snapshot, formatter, range, extraArgs)
                     .HandleAllExceptions(_site, GetType())
                     .DoNotWait();
 
@@ -113,80 +116,59 @@ namespace Microsoft.PythonTools.Editor {
             return false;
         }
 
-        private async Task FormatDocumentAsync(
-            ITextDocument textDoc,
-            ITextSnapshot snapshot,
-            IPythonFormatter formatter,
-            IPythonInterpreterFactory factory,
-            Range range,
-            string[] extraArgs
-        ) {
+        private async Task FormatDocumentAsync(ITextDocument textDoc, ITextSnapshot snapshot, IPythonFormatter formatter, Range range, string[] extraArgs) {
             var stopwatch = new Stopwatch();
             stopwatch.Start();
 
             var documentFilePath = textDoc.FilePath;
             var documentContents = snapshot.GetText();
+            var factory = _optionsService.DefaultInterpreter;
 
             var tempFilePath = textDoc.IsDirty
                 ? CreateTempFileWithContents(documentFilePath, documentContents)
                 : documentFilePath;
 
             try {
-                await FormatDocumentAsync(
-                    textDoc,
-                    snapshot,
-                    formatter,
-                    factory,
-                    tempFilePath,
-                    documentContents,
-                    range,
-                    extraArgs
-                );
+                bool isErrorModuleNotInstalled;
+                bool isErrorInstallingModule;
+                do {
+                    var isErrorRangeNotSupported = false;
+                    isErrorModuleNotInstalled = false;
+                    isErrorInstallingModule = false;
 
-                stopwatch.Stop();
+                    try {
+                        await FormatDocumentAsync(textDoc, snapshot, formatter, tempFilePath, documentContents, range, extraArgs);
+                    } catch (Exception e) when (!e.IsCriticalException()) {
+                        isErrorModuleNotInstalled = e is PythonFormatterModuleNotFoundException;
+                        isErrorRangeNotSupported = e is PythonFormatterRangeNotSupportedException;
 
-                _site.GetPythonToolsService().Logger.LogEvent(
-                    PythonLogEvent.FormatDocument,
-                    new FormatDocumentInfo() {
-                        Version = factory.Configuration.Version.ToString(),
-                        Formatter = formatter.Identifier,
-                        TimeMilliseconds = stopwatch.ElapsedMilliseconds,
-                        IsRange = range != null,
-                    });
-            } catch (Exception e) when (!e.IsCriticalException()) {
-                stopwatch.Stop();
-
-                var isErrorInstalling = false;
-                if (e is PythonFormatterModuleNotFoundException) {
-                    var pm = _optionsService.GetPackageManagers(factory).FirstOrDefault();
-                    if (pm != null) {
-                        isErrorInstalling = (await PromptInstallModuleAsync(formatter, factory, pm)) == false;
-                    } else {
-                        MessageBox.Show(e.Message, Strings.ProductTitle);
+                        if (e is PythonFormatterModuleNotFoundException) {
+                            isErrorInstallingModule = !await InstallFormatterAsync(formatter, factory);
+                        } else {
+                            ShowErrorMessage(e.Message);
+                        }
+                    } finally {
+                        stopwatch.Stop();
+                        _site.GetPythonToolsService().Logger.LogEvent(
+                            PythonLogEvent.FormatDocument,
+                            new FormatDocumentInfo {
+                                Version = factory.Configuration.Version.ToString(),
+                                Formatter = formatter.Identifier,
+                                TimeMilliseconds = stopwatch.ElapsedMilliseconds,
+                                IsRange = range != null,
+                                IsError = true,
+                                IsErrorRangeNotSupported = isErrorRangeNotSupported,
+                                IsErrorModuleNotInstalled = isErrorModuleNotInstalled,
+                                IsErrorInstallingModule = isErrorInstallingModule
+                            }
+                        );
                     }
-                } else {
-                    MessageBox.Show(e.Message, Strings.ProductTitle);
-                }
-
-                _site.GetPythonToolsService().Logger.LogEvent(
-                    PythonLogEvent.FormatDocument,
-                    new FormatDocumentInfo() {
-                        Version = factory.Configuration.Version.ToString(),
-                        Formatter = formatter.Identifier,
-                        TimeMilliseconds = stopwatch.ElapsedMilliseconds,
-                        IsRange = range != null,
-                        IsError = true,
-                        IsErrorRangeNotSupported = e is PythonFormatterRangeNotSupportedException,
-                        IsErrorModuleNotInstalled = e is PythonFormatterModuleNotFoundException,
-                        IsErrorInstallingModule = isErrorInstalling,
-                    }
-                );
+                } while (isErrorModuleNotInstalled && !isErrorInstallingModule);
             } finally {
                 if (documentFilePath != tempFilePath) {
                     try {
                         File.Delete(tempFilePath);
-                    } catch (IOException) {
-                    }
+                    } catch (IOException) { }
                 }
             }
         }
@@ -195,100 +177,47 @@ namespace Microsoft.PythonTools.Editor {
             ITextDocument textDoc,
             ITextSnapshot snapshot,
             IPythonFormatter formatter,
-            IPythonInterpreterFactory factory,
             string filePath,
             string contents,
             Range range,
             string[] extraArgs
         ) {
             await TaskScheduler.Default;
-            var edits = await formatter.FormatDocumentAsync(
-                factory.Configuration.InterpreterPath,
-                filePath,
-                contents,
-                range,
-                extraArgs
-            );
+            var factory = _optionsService.DefaultInterpreter;
+            var interpreter = factory.Configuration.InterpreterPath;
+            var edits = await formatter.FormatDocumentAsync(interpreter, filePath, contents, range, extraArgs);
 
             await _joinableTaskFactory.SwitchToMainThreadAsync();
             LspEditorUtilities.ApplyTextEdits(edits, snapshot, textDoc.TextBuffer);
         }
 
-        private async Task<bool?> PromptInstallModuleAsync(
+        private async Task<bool> PromptInstallModuleAsync(
             IPythonFormatter formatter,
             IPythonInterpreterFactory factory,
             IPackageManager pm
         ) {
             await _joinableTaskFactory.SwitchToMainThreadAsync();
 
-            // TODO: localization
-            var message = "Install '{0}' in environment '{1}' now?".FormatUI(
-                formatter.PackageSpec,
-                factory.Configuration.Description
-            );
-
-            var result = MessageBox.Show(
-                message,
-                Strings.ProductTitle,
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question
-            );
-
-            if (result == MessageBoxResult.Yes) {
+            var message = Strings.InstallFormatterPrompt.FormatUI(formatter.PackageSpec, factory.Configuration.Description);
+            if (ShowYesNoPrompt(message)) {
                 try {
-                    return await pm.InstallAsync(
-                        PackageSpec.FromArguments(formatter.PackageSpec),
-                        new VsPackageManagerUI(_site),
-                        CancellationToken.None
-                    );
+                    return await pm.InstallAsync(PackageSpec.FromArguments(formatter.PackageSpec), new VsPackageManagerUI(_site), CancellationToken.None);
                 } catch (Exception ex) when (!ex.IsCriticalException()) {
-                    return false;
+                    ShowErrorMessage(Strings.ErrorUnableToInstallFormatter.FormatUI(ex.Message));
                 }
             }
-
-            return null;
+            return false;
         }
 
-        private bool GetConfiguration(
-            ITextDocument textDoc,
-            out IPythonFormatter formatter,
-            out IPythonInterpreterFactory factory,
-            out string[] extraArgs
-        ) {
+        private bool GetConfiguration(out IPythonFormatter formatter, out string[] extraArgs) {
             formatter = null;
-            factory = null;
             extraArgs = new string[0];
 
-            const string defaultFormatterId = "black";
-            string formatterId = null;
+            var formatterId = _site.GetPythonToolsService().FormattingOptions.Formatter;
+            formatterId = !string.IsNullOrEmpty(formatterId) ? formatterId : "black";
+            formatter = _formattingProviders.SingleOrDefault(p => string.Compare(p.Value.Identifier, formatterId, StringComparison.OrdinalIgnoreCase) == 0)?.Value;
 
-            if (_workspaceContextProvider.Workspace != null) {
-                // Workspace file
-                formatterId = _workspaceContextProvider.Workspace.GetStringProperty(PythonConstants.FormatterSetting);
-                factory = _workspaceContextProvider.Workspace.CurrentFactory;
-            } else {
-                var project = _site.GetProjectContainingFile(textDoc.FilePath);
-                if (project != null) {
-                    // Project file
-                    formatterId = project.GetProjectProperty(PythonConstants.FormatterSetting);
-                    factory = project.ActiveInterpreter;
-                } else {
-                    // Loose file
-                    formatterId = defaultFormatterId; // TODO: use a global option?
-                    factory = _optionsService.DefaultInterpreter;
-                }
-            }
-
-            // TODO: if not configured, tell the user? for now use default
-            if (string.IsNullOrEmpty(formatterId)) {
-                formatterId = defaultFormatterId;
-            }
-
-            if (!string.IsNullOrEmpty(formatterId)) {
-                formatter = _formattingProviders.SingleOrDefault(p => string.Compare(p.Value.Identifier, formatterId, StringComparison.OrdinalIgnoreCase) == 0)?.Value;
-            }
-
-            return formatter != null && factory != null;
+            return formatter != null;
         }
 
         private static Range GetRange(ITextView textView, ITextBuffer textBuffer) {
@@ -319,6 +248,22 @@ namespace Microsoft.PythonTools.Editor {
             );
             File.WriteAllText(tempFilePath, contents);
             return tempFilePath;
+        }
+
+        private async Task<bool> InstallFormatterAsync(IPythonFormatter formatter, IPythonInterpreterFactory factory) {
+            var pm = _optionsService.GetPackageManagers(factory).FirstOrDefault();
+            return pm != null && await PromptInstallModuleAsync(formatter, factory, pm);
+        }
+
+        private void ShowErrorMessage(string message) {
+            var shell = (IVsUIShell)_site.GetService(typeof(SVsUIShell));
+            shell.ShowMessageBox(0, Guid.Empty, null, message, null, 0, OLEMSGBUTTON.OLEMSGBUTTON_OK, OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST, OLEMSGICON.OLEMSGICON_CRITICAL, 0, out _);
+        }
+
+        private bool ShowYesNoPrompt(string message) {
+            var shell = (IVsUIShell)_site.GetService(typeof(SVsUIShell));
+            shell.ShowMessageBox(0, Guid.Empty, null, message, null, 0, OLEMSGBUTTON.OLEMSGBUTTON_YESNO, OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST, OLEMSGICON.OLEMSGICON_QUERY, 0, out var result);
+            return result == NativeMethods.IDYES;
         }
     }
 }

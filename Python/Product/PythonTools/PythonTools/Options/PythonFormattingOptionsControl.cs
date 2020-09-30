@@ -14,7 +14,10 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System.Diagnostics;
+using System.Linq;
 using System.Windows.Forms;
+using Microsoft.PythonTools.Editor.Formatting;
 
 namespace Microsoft.PythonTools.Options {
     public partial class PythonFormattingOptionsControl : UserControl {
@@ -23,11 +26,38 @@ namespace Microsoft.PythonTools.Options {
         }
 
         internal void SyncControlWithPageSettings(PythonToolsService pyService) {
+            object[] items;
+            string[] itemNames;
+
+            if (_formatterCombo.Items.Count == 0) {
+                var formattingProviders = pyService.ComponentModel.DefaultExportProvider.GetExports<IPythonFormatter>();
+                Debug.Assert(formattingProviders != null);
+
+                itemNames = formattingProviders.Select(p => p.Value.DisplayName).ToArray();
+                Debug.Assert(itemNames.Length > 0);
+
+                items = itemNames.Cast<object>().ToArray();
+                _formatterCombo.Items.AddRange(items);
+            } else {
+                items = _formatterCombo.Items.Cast<object>().ToArray();
+                itemNames = items.Cast<string>().ToArray();
+            }
+
+            var formatter = string.IsNullOrEmpty(pyService.FormattingOptions.Formatter) && itemNames.Contains("black")
+                ? "black"
+                : !string.IsNullOrEmpty(pyService.FormattingOptions.Formatter)
+                    ? pyService.FormattingOptions.Formatter
+                    : (string)items[0];
+            
+            pyService.FormattingOptions.Formatter = formatter;
+
+            _formatterCombo.SelectedItem = formatter;
             _pasteRemovesReplPrompts.Checked = pyService.FormattingOptions.PasteRemovesReplPrompts;
         }
 
         internal void SyncPageWithControlSettings(PythonToolsService pyService) {
             pyService.FormattingOptions.PasteRemovesReplPrompts = _pasteRemovesReplPrompts.Checked;
+            pyService.FormattingOptions.Formatter = (string)_formatterCombo.SelectedItem;
         }
     }
 }
