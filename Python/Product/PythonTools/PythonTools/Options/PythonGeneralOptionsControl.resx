@@ -133,13 +133,13 @@
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="_showOutputWindowForVirtualEnvCreate.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 3</value>
+    <value>11, 6</value>
   </data>
   <data name="_showOutputWindowForVirtualEnvCreate.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>6, 3, 6, 3</value>
+    <value>11, 6, 11, 6</value>
   </data>
   <data name="_showOutputWindowForVirtualEnvCreate.Size" type="System.Drawing.Size, System.Drawing">
-    <value>315, 17</value>
+    <value>564, 29</value>
   </data>
   <data name="_showOutputWindowForVirtualEnvCreate.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -163,13 +163,13 @@
     <value>True</value>
   </data>
   <data name="_showOutputWindowForPackageInstallation.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 26</value>
+    <value>11, 47</value>
   </data>
   <data name="_showOutputWindowForPackageInstallation.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>6, 3, 6, 3</value>
+    <value>11, 6, 11, 6</value>
   </data>
   <data name="_showOutputWindowForPackageInstallation.Size" type="System.Drawing.Size, System.Drawing">
-    <value>328, 17</value>
+    <value>589, 29</value>
   </data>
   <data name="_showOutputWindowForPackageInstallation.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -196,13 +196,13 @@
     <value>NoControl</value>
   </data>
   <data name="_promptForEnvCreate.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 49</value>
+    <value>11, 88</value>
   </data>
   <data name="_promptForEnvCreate.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>6, 3, 6, 3</value>
+    <value>11, 6, 11, 6</value>
   </data>
   <data name="_promptForEnvCreate.Size" type="System.Drawing.Size, System.Drawing">
-    <value>236, 17</value>
+    <value>420, 29</value>
   </data>
   <data name="_promptForEnvCreate.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -229,13 +229,13 @@
     <value>NoControl</value>
   </data>
   <data name="_promptForPackageInstallation.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 72</value>
+    <value>11, 129</value>
   </data>
   <data name="_promptForPackageInstallation.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>6, 3, 6, 3</value>
+    <value>11, 6, 11, 6</value>
   </data>
   <data name="_promptForPackageInstallation.Size" type="System.Drawing.Size, System.Drawing">
-    <value>216, 17</value>
+    <value>383, 29</value>
   </data>
   <data name="_promptForPackageInstallation.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -259,13 +259,13 @@
     <value>True</value>
   </data>
   <data name="_promptForPytestEnableAndInstall.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 95</value>
+    <value>11, 170</value>
   </data>
   <data name="_promptForPytestEnableAndInstall.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>6, 3, 6, 3</value>
+    <value>11, 6, 11, 6</value>
   </data>
   <data name="_promptForPytestEnableAndInstall.Size" type="System.Drawing.Size, System.Drawing">
-    <value>253, 17</value>
+    <value>455, 29</value>
   </data>
   <data name="_promptForPytestEnableAndInstall.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -289,13 +289,13 @@
     <value>True</value>
   </data>
   <data name="_elevatePip.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 118</value>
+    <value>11, 211</value>
   </data>
   <data name="_elevatePip.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>6, 3, 6, 3</value>
+    <value>11, 6, 11, 6</value>
   </data>
   <data name="_elevatePip.Size" type="System.Drawing.Size, System.Drawing">
-    <value>248, 17</value>
+    <value>451, 29</value>
   </data>
   <data name="_elevatePip.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -322,13 +322,13 @@
     <value>True</value>
   </data>
   <data name="_clearGlobalPythonPath.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 141</value>
+    <value>11, 252</value>
   </data>
   <data name="_clearGlobalPythonPath.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>6, 3, 6, 3</value>
+    <value>11, 6, 11, 6</value>
   </data>
   <data name="_clearGlobalPythonPath.Size" type="System.Drawing.Size, System.Drawing">
-    <value>238, 17</value>
+    <value>432, 29</value>
   </data>
   <data name="_clearGlobalPythonPath.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
@@ -348,180 +348,6 @@
   <data name="&gt;&gt;_clearGlobalPythonPath.ZOrder" xml:space="preserve">
     <value>6</value>
   </data>
-  <data name="_updateSearchPathsForLinkedFiles.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Left</value>
-  </data>
-  <data name="_updateSearchPathsForLinkedFiles.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="_updateSearchPathsForLinkedFiles.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 164</value>
-  </data>
-  <data name="_updateSearchPathsForLinkedFiles.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>6, 3, 6, 3</value>
-  </data>
-  <data name="_updateSearchPathsForLinkedFiles.Size" type="System.Drawing.Size, System.Drawing">
-    <value>241, 17</value>
-  </data>
-  <data name="_updateSearchPathsForLinkedFiles.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
-  </data>
-  <data name="_updateSearchPathsForLinkedFiles.Text" xml:space="preserve">
-    <value>&amp;Update search paths when adding linked files</value>
-  </data>
-  <data name="&gt;&gt;_updateSearchPathsForLinkedFiles.Name" xml:space="preserve">
-    <value>_updateSearchPathsForLinkedFiles</value>
-  </data>
-  <data name="&gt;&gt;_updateSearchPathsForLinkedFiles.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;_updateSearchPathsForLinkedFiles.Parent" xml:space="preserve">
-    <value>tableLayoutPanel3</value>
-  </data>
-  <data name="&gt;&gt;_updateSearchPathsForLinkedFiles.ZOrder" xml:space="preserve">
-    <value>7</value>
-  </data>
-  <data name="_unresolvedImportWarning.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Left</value>
-  </data>
-  <data name="_unresolvedImportWarning.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="_unresolvedImportWarning.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 187</value>
-  </data>
-  <data name="_unresolvedImportWarning.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>6, 3, 6, 3</value>
-  </data>
-  <data name="_unresolvedImportWarning.Size" type="System.Drawing.Size, System.Drawing">
-    <value>242, 17</value>
-  </data>
-  <data name="_unresolvedImportWarning.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
-  </data>
-  <data name="_unresolvedImportWarning.Text" xml:space="preserve">
-    <value>&amp;Warn when imported module cannot be found</value>
-  </data>
-  <data name="&gt;&gt;_unresolvedImportWarning.Name" xml:space="preserve">
-    <value>_unresolvedImportWarning</value>
-  </data>
-  <data name="&gt;&gt;_unresolvedImportWarning.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;_unresolvedImportWarning.Parent" xml:space="preserve">
-    <value>tableLayoutPanel3</value>
-  </data>
-  <data name="&gt;&gt;_unresolvedImportWarning.ZOrder" xml:space="preserve">
-    <value>8</value>
-  </data>
-  <data name="_invalidEncodingWarning.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Left</value>
-  </data>
-  <data name="_invalidEncodingWarning.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="_invalidEncodingWarning.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="_invalidEncodingWarning.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 210</value>
-  </data>
-  <data name="_invalidEncodingWarning.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>6, 3, 6, 3</value>
-  </data>
-  <data name="_invalidEncodingWarning.Size" type="System.Drawing.Size, System.Drawing">
-    <value>297, 17</value>
-  </data>
-  <data name="_invalidEncodingWarning.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
-  </data>
-  <data name="_invalidEncodingWarning.Text" xml:space="preserve">
-    <value>Warn when file &amp;encoding does not match magic comment</value>
-  </data>
-  <data name="&gt;&gt;_invalidEncodingWarning.Name" xml:space="preserve">
-    <value>_invalidEncodingWarning</value>
-  </data>
-  <data name="&gt;&gt;_invalidEncodingWarning.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;_invalidEncodingWarning.Parent" xml:space="preserve">
-    <value>tableLayoutPanel3</value>
-  </data>
-  <data name="&gt;&gt;_invalidEncodingWarning.ZOrder" xml:space="preserve">
-    <value>9</value>
-  </data>
-  <data name="_indentationInconsistentLabel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Left</value>
-  </data>
-  <data name="_indentationInconsistentLabel.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="_indentationInconsistentLabel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 237</value>
-  </data>
-  <data name="_indentationInconsistentLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>6, 0, 6, 0</value>
-  </data>
-  <data name="_indentationInconsistentLabel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>167, 13</value>
-  </data>
-  <data name="_indentationInconsistentLabel.TabIndex" type="System.Int32, mscorlib">
-    <value>10</value>
-  </data>
-  <data name="_indentationInconsistentLabel.Text" xml:space="preserve">
-    <value>&amp;Report inconsistent indentation as</value>
-  </data>
-  <data name="_indentationInconsistentLabel.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
-    <value>MiddleLeft</value>
-  </data>
-  <data name="&gt;&gt;_indentationInconsistentLabel.Name" xml:space="preserve">
-    <value>_indentationInconsistentLabel</value>
-  </data>
-  <data name="&gt;&gt;_indentationInconsistentLabel.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;_indentationInconsistentLabel.Parent" xml:space="preserve">
-    <value>tableLayoutPanel3</value>
-  </data>
-  <data name="&gt;&gt;_indentationInconsistentLabel.ZOrder" xml:space="preserve">
-    <value>10</value>
-  </data>
-  <data name="_indentationInconsistentCombo.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Left, Right</value>
-  </data>
-  <data name="_indentationInconsistentCombo.Items" xml:space="preserve">
-    <value>Errors</value>
-  </data>
-  <data name="_indentationInconsistentCombo.Items1" xml:space="preserve">
-    <value>Warnings</value>
-  </data>
-  <data name="_indentationInconsistentCombo.Items2" xml:space="preserve">
-    <value>Don't</value>
-  </data>
-  <data name="_indentationInconsistentCombo.Location" type="System.Drawing.Point, System.Drawing">
-    <value>185, 233</value>
-  </data>
-  <data name="_indentationInconsistentCombo.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>6, 3, 6, 3</value>
-  </data>
-  <data name="_indentationInconsistentCombo.Size" type="System.Drawing.Size, System.Drawing">
-    <value>190, 21</value>
-  </data>
-  <data name="_indentationInconsistentCombo.TabIndex" type="System.Int32, mscorlib">
-    <value>11</value>
-  </data>
-  <data name="&gt;&gt;_indentationInconsistentCombo.Name" xml:space="preserve">
-    <value>_indentationInconsistentCombo</value>
-  </data>
-  <data name="&gt;&gt;_indentationInconsistentCombo.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;_indentationInconsistentCombo.Parent" xml:space="preserve">
-    <value>tableLayoutPanel3</value>
-  </data>
-  <data name="&gt;&gt;_indentationInconsistentCombo.ZOrder" xml:space="preserve">
-    <value>11</value>
-  </data>
   <data name="_resetSuppressDialog.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top</value>
   </data>
@@ -535,10 +361,13 @@
     <value>NoControl</value>
   </data>
   <data name="_resetSuppressDialog.Location" type="System.Drawing.Point, System.Drawing">
-    <value>96, 260</value>
+    <value>180, 293</value>
+  </data>
+  <data name="_resetSuppressDialog.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 6, 6, 6</value>
   </data>
   <data name="_resetSuppressDialog.Size" type="System.Drawing.Size, System.Drawing">
-    <value>189, 23</value>
+    <value>339, 35</value>
   </data>
   <data name="_resetSuppressDialog.TabIndex" type="System.Int32, mscorlib">
     <value>12</value>
@@ -556,7 +385,7 @@
     <value>tableLayoutPanel3</value>
   </data>
   <data name="&gt;&gt;_resetSuppressDialog.ZOrder" xml:space="preserve">
-    <value>12</value>
+    <value>7</value>
   </data>
   <data name="tableLayoutPanel3.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
@@ -565,13 +394,13 @@
     <value>0, 0</value>
   </data>
   <data name="tableLayoutPanel3.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 4, 3, 4</value>
+    <value>6, 7, 6, 7</value>
   </data>
   <data name="tableLayoutPanel3.RowCount" type="System.Int32, mscorlib">
     <value>14</value>
   </data>
   <data name="tableLayoutPanel3.Size" type="System.Drawing.Size, System.Drawing">
-    <value>381, 313</value>
+    <value>699, 602</value>
   </data>
   <data name="tableLayoutPanel3.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -589,19 +418,19 @@
     <value>0</value>
   </data>
   <data name="tableLayoutPanel3.LayoutSettings" type="System.Windows.Forms.TableLayoutSettings, System.Windows.Forms">
-    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="_showOutputWindowForVirtualEnvCreate" Row="0" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_showOutputWindowForPackageInstallation" Row="1" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_promptForEnvCreate" Row="2" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_promptForPackageInstallation" Row="3" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_promptForPytestEnableAndInstall" Row="4" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_elevatePip" Row="5" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_clearGlobalPythonPath" Row="6" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_updateSearchPathsForLinkedFiles" Row="7" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_unresolvedImportWarning" Row="8" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_invalidEncodingWarning" Row="9" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_indentationInconsistentLabel" Row="10" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_indentationInconsistentCombo" Row="10" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="_resetSuppressDialog" Row="11" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;/Controls&gt;&lt;Columns Styles="AutoSize,0,Percent,100" /&gt;&lt;Rows Styles="AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,Absolute,32,Absolute,8,Absolute,20" /&gt;&lt;/TableLayoutSettings&gt;</value>
+    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="_showOutputWindowForVirtualEnvCreate" Row="0" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_showOutputWindowForPackageInstallation" Row="1" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_promptForEnvCreate" Row="2" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_promptForPackageInstallation" Row="3" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_promptForPytestEnableAndInstall" Row="4" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_elevatePip" Row="5" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_clearGlobalPythonPath" Row="6" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_resetSuppressDialog" Row="11" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;/Controls&gt;&lt;Columns Styles="AutoSize,0,Percent,100" /&gt;&lt;Rows Styles="AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,Absolute,59,Absolute,15,Absolute,37" /&gt;&lt;/TableLayoutSettings&gt;</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
-    <value>6, 13</value>
+    <value>11, 24</value>
   </data>
   <data name="$this.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>6, 8, 6, 8</value>
+    <value>11, 15, 11, 15</value>
   </data>
   <data name="$this.Size" type="System.Drawing.Size, System.Drawing">
-    <value>381, 326</value>
+    <value>699, 602</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>PythonGeneralOptionsControl</value>
