@@ -268,6 +268,9 @@
     <Reference Include="System.Net.Http" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Attributes\ProvideNewFileTemplatesAttribute.cs" />
+    <Compile Include="Attributes\RegistrationAttributeBuilder.cs" />
+    <Compile Include="Attributes\RegistrationAttributeBuilder.RegKey.cs" />
     <Compile Include="PythonTools\Editor\BraceCompletion\BraceCompletionContext.cs" />
     <Compile Include="PythonTools\Editor\BraceCompletion\BraceCompletionContextProvider.cs" />
     <Compile Include="PythonTools\Editor\Formatting\PythonFormatterAutopep8.cs" />
@@ -385,8 +388,8 @@
     </Compile>
     <Compile Include="PythonTools\Project\VirtualEnvCreateInfoBar.cs" />
     <Compile Include="PythonTools\Project\CondaEnvCreateInfoBar.cs" />
-    <Compile Include="ProvideFeatureFlagAttribute.cs" />
-    <Compile Include="ProvidePeekSupportedContentTypeAttribute.cs" />
+    <Compile Include="Attributes\ProvideFeatureFlagAttribute.cs" />
+    <Compile Include="Attributes\ProvidePeekSupportedContentTypeAttribute.cs" />
     <Compile Include="PythonTools\CodeCoverage\CoverageExporter.cs" />
     <Compile Include="PythonTools\CodeCoverage\CoverageFileInfo.cs" />
     <Compile Include="PythonTools\CodeCoverage\CoverageHit.cs" />
@@ -471,7 +474,7 @@
     <Compile Include="PythonTools\Options\PythonDebuggingOptions.cs" />
     <Compile Include="PythonTools\Options\PythonFormattingOptions.cs" />
     <Compile Include="Legacy\ObsoleteResources.cs" />
-    <Compile Include="ProvideLanguageTemplatesAttribute.cs" />
+    <Compile Include="Attributes\ProvideLanguageTemplatesAttribute.cs" />
     <Compile Include="PythonToolsService.cs" />
     <Compile Include="PythonTools\AzureToolsContracts.cs" />
     <Compile Include="PythonTools\Logging\InMemoryLogger.cs" />
@@ -489,10 +492,10 @@
     <Compile Include="PythonTools\Options\PythonToolsOptionsService.cs" />
     <Compile Include="PythonTools\Environments\AddVirtualEnvironmentOperation.cs" />
     <Compile Include="PythonTools\Project\Attributes.cs" />
-    <Compile Include="ProvideComponentPickerPropertyPageAttribute.cs" />
-    <Compile Include="ProvideDiffSupportedContentTypeAttribute.cs" />
-    <Compile Include="ProvideEditorExtension2Attribute.cs" />
-    <Compile Include="ProvideFileFilterAttribute.cs" />
+    <Compile Include="Attributes\ProvideComponentPickerPropertyPageAttribute.cs" />
+    <Compile Include="Attributes\ProvideDiffSupportedContentTypeAttribute.cs" />
+    <Compile Include="Attributes\ProvideEditorExtension2Attribute.cs" />
+    <Compile Include="Attributes\ProvideFileFilterAttribute.cs" />
     <Compile Include="PythonTools\Commands\OpenInterpreterListCommand.cs" />
     <Compile Include="PythonTools\InterpreterList\InterpreterListToolWindow.cs" />
     <Compile Include="PythonTools\Environments\InterpreterView.cs" />

@@ -104,7 +104,20 @@
     </ProjectReference2>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Templates\NewItem\mspythonconfig.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <VSIXSubPath>Templates\NewItem</VSIXSubPath>
+    </Content>
+    <Content Include="Templates\NewItem\NewFileItems.vsdir">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <VSIXSubPath>Templates\NewItem</VSIXSubPath>
+    </Content>
+    <None Include="Settings\pyrightconfig-schema.json" />
     <None Include="source.extension.vsixmanifest" />
+    <Content Include="Templates\NewItem\module.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <VSIXSubPath>Templates\NewItem</VSIXSubPath>
+    </Content>
     <Content Include="License_en-US.rtf" />
     <Content Include="$(PackagesPath)\Newtonsoft.Json\lib\net45\Newtonsoft.Json.dll" />
     <Content Include="..\..\References\Dev$(VSTarget)\Microsoft.VisualStudio.LanguageServer.Protocol.dll" />
@@ -139,4 +152,9 @@
       <FileWrites Include="@(LanguageServerFiles)" />
     </ItemGroup>
   </Target>
+  <ProjectExtensions>
+    <VisualStudio>
+      <UserProperties templates_4newitem_4mspythonconfig_1json__JsonSchema="" />
+    </VisualStudio>
+  </ProjectExtensions>
 </Project>

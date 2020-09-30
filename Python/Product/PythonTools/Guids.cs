@@ -28,6 +28,7 @@ namespace Microsoft.PythonTools
         public const string guidPythonLanguageService = "bf96a6ce-574f-3259-98be-503a3ad636dd";
         public const string guidLoadedProjectInterpreterFactoryProviderString = "ADA20FE6-F50C-4ABC-A6F4-ED15EAF5A2FC";
         public const string guidPythonInteractiveWindow = "08A1BF1D-7967-4AFC-8253-1790862AB8C9";
+        public const string guidMiscFilesProjectGuidString = "A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3";
 
         public static readonly Guid guidPythonToolsPackage = new Guid(guidPythonToolsPkgString);
         public static readonly Guid guidPythonToolsCmdSet = new Guid(guidPythonToolsCmdSetString);
@@ -43,7 +44,7 @@ namespace Microsoft.PythonTools
         public static readonly Guid guidWebPackageGuid = new Guid("d9a342d1-a429-4059-808a-e55ee6351f7f");
         public static readonly Guid guidWebAppCmdId = new Guid("CB26E292-901A-419c-B79D-49BD45C43929");
         public static readonly Guid guidEureka = new Guid("30947ebe-9147-45f9-96cf-401bfc671a82");  //  Microsoft.VisualStudio.Web.Eureka.dll package, includes page inspector
-        
+
         public static readonly Guid guidOfficeSharePointCmdSet = new Guid("d26c976c-8ee8-4ec4-8746-f5f7702a17c5");
 
         public static readonly Guid guidCookiecutterCmdSet = new Guid("6C1555D3-B9B7-4D39-B657-1A35A0F3C461");

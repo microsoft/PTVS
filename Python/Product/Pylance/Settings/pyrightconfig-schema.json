@@ -1,0 +1,486 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "title": "Pylance Configuration Schema",
+  "definitions": {
+    "diagnostic": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "string",
+          "enum": [
+            "none",
+            "information",
+            "warning",
+            "error"
+          ]
+        }
+      ]
+    }
+  },
+  "properties": {
+    "include": {
+      "id": "#/properties/include",
+      "type": "array",
+      "description": "Files and directories included in type analysis",
+      "items": {
+        "id": "#/properties/include/items",
+        "type": "string",
+        "description": "File or directory to include in type analysis",
+        "pattern": "^(.*)$"
+      }
+    },
+    "exclude": {
+      "id": "#/properties/exclude",
+      "type": "array",
+      "description": "Files and directories excluded from type analysis",
+      "items": {
+        "id": "#/properties/exclude/items",
+        "type": "string",
+        "description": "File or directory to exclude from type analysis",
+        "pattern": "^(.*)$"
+      }
+    },
+    "ignore": {
+      "id": "#/properties/ignore",
+      "type": "array",
+      "description": "Files and directories whose diagnostics are suppressed",
+      "items": {
+        "id": "#/properties/ignore/items",
+        "type": "string",
+        "description": "File or directory where diagnostics should be suppressed",
+        "pattern": "^(.*)$"
+      }
+    },
+    "strict": {
+      "id": "#/properties/strict",
+      "type": "array",
+      "description": "Files and directories that should use 'strict' type checking rules",
+      "items": {
+        "id": "#/properties/strict/items",
+        "type": "string",
+        "description": "File or directory that should use 'strict' type checking rules",
+        "pattern": "^(.*)$"
+      }
+    },
+    "typeCheckingMode": {
+      "id": "#/properties/typeCheckingMode",
+      "type": "string",
+      "enum": [
+        "off",
+        "basic",
+        "strict"
+      ],
+      "description": "Specifies the default rule set to use for type checking",
+      "default": "basic"
+    },
+    "useLibraryCodeForTypes": {
+      "id": "#/properties/useLibraryCodeForTypes",
+      "type": "boolean",
+      "description": "Use library implementations to extract type information when type stub is not present",
+      "default": false
+    },
+    "typeshedPath": {
+      "id": "#/properties/typeshedPath",
+      "type": "string",
+      "description": "Path to directory containing typeshed type stub files",
+      "default": "",
+      "pattern": "^(.*)$"
+    },
+    "stubPath": {
+      "id": "#/properties/stubPath",
+      "type": "string",
+      "description": "Path to directory containing custom type stub files",
+      "default": "",
+      "examples": [
+        "src/typestubs"
+      ],
+      "pattern": "^(.*)$"
+    },
+    "strictListInference": {
+      "id": "#/properties/strictListInference",
+      "type": "boolean",
+      "description": "Infer strict types for list expressions",
+      "default": false
+    },
+    "strictDictionaryInference": {
+      "id": "#/properties/strictDictionaryInference",
+      "type": "boolean",
+      "description": "Infer strict types for dictionary expressions",
+      "default": false
+    },
+    "strictParameterNoneValue": {
+      "id": "#/properties/strictParameterNoneValue",
+      "type": "boolean",
+      "description": "Allow implicit Optional when default parameter value is None",
+      "default": false
+    },
+    "enableTypeIgnoreComments": {
+      "id": "#/properties/enableTypeIgnoreComments",
+      "type": "boolean",
+      "description": "Allow \"# type: ignore\" comments",
+      "default": true
+    },
+    "reportGeneralTypeIssues": {
+      "id": "#/properties/reportGeneralTypeIssues",
+      "$ref": "#/definitions/diagnostic",
+      "description": "Controls reporting of general type issues",
+      "default": "error"
+    },
+    "reportPropertyTypeMismatch": {
+      "id": "#/properties/reportPropertyTypeMismatch",
+      "$ref": "#/definitions/diagnostic",
+      "description": "Controls reporting of property getter/setter type mismatches",
+      "default": "error"
+    },
+    "reportMissingImports": {
+      "id": "#/properties/reportMissingImports",
+      "$ref": "#/definitions/diagnostic",
+      "description": "Controls reporting of imports that cannot be resolved",
+      "default": "error"
+    },
+    "reportMissingModuleSource": {
+      "id": "#/properties/reportMissingModuleSource",
+      "$ref": "#/definitions/diagnostic",
+      "description": "Controls reporting of imports that cannot be resolved to source files",
+      "default": "warning"
+    },
+    "reportMissingTypeStubs": {
+      "id": "#/properties/reportMissingTypeStubs",
+      "$ref": "#/definitions/diagnostic",
+      "description": "Controls reporting of imports that cannot be resolved to type stub files",
+      "default": "none"
+    },
+    "reportImportCycles": {
+      "id": "#/properties/reportImportCycles",
+      "$ref": "#/definitions/diagnostic",
+      "description": "Controls reporting of module imports that create cycles in import graph",
+      "default": "none"
+    },
+    "reportUnusedImport": {
+      "id": "#/properties/reportUnusedImport",
+      "$ref": "#/definitions/diagnostic",
+      "description": "Controls reporting of imported symbols that are not referenced within the source file",
+      "default": "none"
+    },
+    "reportUnusedClass": {
+      "id": "#/properties/reportUnusedClass",
+      "$ref": "#/definitions/diagnostic",
+      "description": "Controls reporting of private classes that are not accessed",
+      "default": "none"
+    },
+    "reportUnusedFunction": {
+      "id": "#/properties/reportUnusedFunction",
+      "$ref": "#/definitions/diagnostic",
+      "description": "Controls reporting of private functions or methods that are not accessed",
+      "default": "none"
+    },
+    "reportUnusedVariable": {
+      "id": "#/properties/reportUnusedVariable",
+      "$ref": "#/definitions/diagnostic",
+      "description": "Controls reporting of local variables that are not accessed",
+      "default": "none"
+    },
+    "reportDuplicateImport": {
+      "id": "#/properties/reportDuplicateImport",
+      "$ref": "#/definitions/diagnostic",
+      "description": "Controls reporting of symbols or modules that are imported more than once",
+      "default": "none"
+    },
+    "reportWildcardImportFromLibrary": {
+      "id": "#/properties/reportWildcardImportFromLibrary",
+      "$ref": "#/definitions/diagnostic",
+      "description": "Controls reporting of wlidcard import from external library",
+      "default": "none"
+    },
+    "reportOptionalSubscript": {
+      "id": "#/properties/reportOptionalSubscript",
+      "$ref": "#/definitions/diagnostic",
+      "description": "Controls reporting of attempts to subscript (index) a variable with Optional type",
+      "default": "none"
+    },
+    "reportOptionalMemberAccess": {
+      "id": "#/properties/reportOptionalMemberAccess",
+      "$ref": "#/definitions/diagnostic",
+      "description": "Controls reporting of attempts to access a member of a variable with Optional type",
+      "default": "none"
+    },
+    "reportOptionalCall": {
+      "id": "#/properties/reportOptionalCall",
+      "$ref": "#/definitions/diagnostic",
+      "description": "Controls reporting of attempts to call a variable with Optional type",
+      "default": "none"
+    },
+    "reportOptionalIterable": {
+      "id": "#/properties/reportOptionalIterable",
+      "$ref": "#/definitions/diagnostic",
+      "description": "Controls reporting of attempts to use an Optional type as an iterable value",
+      "default": "none"
+    },
+    "reportOptionalContextManager": {
+      "id": "#/properties/reportOptionalContextManager",
+      "$ref": "#/definitions/diagnostic",
+      "description": "Controls reporting of attempts to use an Optional type as a parameter to a with statement",
+      "default": "none"
+    },
+    "reportOptionalOperand": {
+      "id": "#/properties/reportOptionalOperand",
+      "$ref": "#/definitions/diagnostic",
+      "description": "Controls reporting of attempts to use an Optional type as an operand for a binary or unary operator",
+      "default": "none"
+    },
+    "reportUntypedFunctionDecorator": {
+      "id": "#/properties/reportUntypedFunctionDecorator",
+      "$ref": "#/definitions/diagnostic",
+      "description": "Controls reporting of function decorators without type annotations, which obscure function types",
+      "default": "none"
+    },
+    "reportUntypedClassDecorator": {
+      "id": "#/properties/reportUntypedClassDecorator",
+      "$ref": "#/definitions/diagnostic",
+      "description": "Controls reporting of class decorators without type annotations, which obscure class types",
+      "default": "none"
+    },
+    "reportUntypedBaseClass": {
+      "id": "#/properties/reportUntypedBaseClass",
+      "$ref": "#/definitions/diagnostic",
+      "description": "Controls reporting of a base class of an unknown type, which obscures most type checking for the class",
+      "default": "none"
+    },
+    "reportUntypedNamedTuple": {
+      "id": "#/properties/reportUntypedNamedTuple",
+      "$ref": "#/definitions/diagnostic",
+      "description": "Controls reporting of a named tuple definition that does not contain type information",
+      "default": "none"
+    },
+    "reportPrivateUsage": {
+      "id": "#/properties/reportPrivateUsage",
+      "$ref": "#/definitions/diagnostic",
+      "description": "Controls reporting of private variables and functions used outside of the owning class or module and usage of protected members outside of subclasses",
+      "default": "none"
+    },
+    "reportConstantRedefinition": {
+      "id": "#/properties/reportConstantRedefinition",
+      "$ref": "#/definitions/diagnostic",
+      "description": "Controls reporting of attempts to redefine variables that are in all-caps",
+      "default": "none"
+    },
+    "reportIncompatibleMethodOverride": {
+      "id": "#/properties/reportIncompatibleMethodOverride",
+      "$ref": "#/definitions/diagnostic",
+      "description": "Controls reporting of method overrides in subclasses that redefine the method in an incompatible way",
+      "default": "none"
+    },
+    "reportIncompatibleVariableOverride": {
+      "id": "#/properties/reportIncompatibleVariableOverride",
+      "$ref": "#/definitions/diagnostic",
+      "description": "Controls reporting of overrides in subclasses that redefine a variable in an incompatible way",
+      "default": "none"
+    },
+    "reportInvalidStringEscapeSequence": {
+      "id": "#/properties/reportInvalidStringEscapeSequence",
+      "$ref": "#/definitions/diagnostic",
+      "description": "Controls reporting of invalid escape sequences used within string literals",
+      "default": "warning"
+    },
+    "reportUnknownParameterType": {
+      "id": "#/properties/reportUnknownParameterType",
+      "$ref": "#/definitions/diagnostic",
+      "description": "Controls reporting input and return parameters whose types are unknown",
+      "default": "none"
+    },
+    "reportUnknownArgumentType": {
+      "id": "#/properties/reportUnknownArgumentType",
+      "$ref": "#/definitions/diagnostic",
+      "description": "Controls reporting argument expressions whose types are unknown",
+      "default": "none"
+    },
+    "reportUnknownLambdaType": {
+      "id": "#/properties/reportUnknownLambdaType",
+      "$ref": "#/definitions/diagnostic",
+      "description": "Controls reporting input and return parameters for lambdas whose types are unknown",
+      "default": "none"
+    },
+    "reportUnknownVariableType": {
+      "id": "#/properties/reportUnknownVariableType",
+      "$ref": "#/definitions/diagnostic",
+      "description": "Controls reporting local variables whose types are unknown",
+      "default": "none"
+    },
+    "reportUnknownMemberType": {
+      "id": "#/properties/reportUnknownMemberType",
+      "$ref": "#/definitions/diagnostic",
+      "description": "Controls reporting class and instance variables whose types are unknown",
+      "default": "none"
+    },
+    "reportMissingTypeArgument": {
+      "id": "#/properties/reportMissingTypeArgument",
+      "$ref": "#/definitions/diagnostic",
+      "description": "Controls reporting generic class reference with missing type arguments",
+      "default": "none"
+    },
+    "reportCallInDefaultInitializer": {
+      "id": "#/properties/reportCallInDefaultInitializer",
+      "$ref": "#/definitions/diagnostic",
+      "description": "Controls reporting usage of function calls within a default value initializer expression",
+      "default": "none"
+    },
+    "reportUnnecessaryIsInstance": {
+      "id": "#/properties/reportUnnecessaryIsInstance",
+      "$ref": "#/definitions/diagnostic",
+      "description": "Controls reporting calls to 'isinstance' or 'issubclass' where the result is statically determined to be always true or false",
+      "default": "none"
+    },
+    "reportUnnecessaryCast": {
+      "id": "#/properties/reportUnnecessaryCast",
+      "$ref": "#/definitions/diagnostic",
+      "description": "Controls reporting calls to 'cast' that are unnecessary",
+      "default": "none"
+    },
+    "reportAssertAlwaysTrue": {
+      "id": "#/properties/reportAssertAlwaysTrue",
+      "$ref": "#/definitions/diagnostic",
+      "description": "Controls reporting assert expressions that will always evaluate to true",
+      "default": "warning"
+    },
+    "reportSelfClsParameterName": {
+      "id": "#/properties/reportSelfClsParameterName",
+      "$ref": "#/definitions/diagnostic",
+      "description": "Controls reporting assert expressions that will always evaluate to true",
+      "default": "warning"
+    },
+    "reportImplicitStringConcatenation": {
+      "id": "#/properties/reportImplicitStringConcatenation",
+      "$ref": "#/definitions/diagnostic",
+      "description": "Controls reporting usage of implicit concatenation of string literals",
+      "default": "warning"
+    },
+    "reportUnboundVariable": {
+      "id": "#/properties/reportUnboundVariable",
+      "$ref": "#/definitions/diagnostic",
+      "description": "Controls reporting of attempts to use an unbound or possibly unbound variable",
+      "default": "error"
+    },
+    "reportUndefinedVariable": {
+      "id": "#/properties/reportUndefinedVariable",
+      "$ref": "#/definitions/diagnostic",
+      "description": "Controls reporting of attempts to use an undefined variable",
+      "default": "error"
+    },
+    "reportInvalidStubStatement": {
+      "id": "#/properties/reportInvalidStubStatement",
+      "$ref": "#/definitions/diagnostic",
+      "description": "Controls reporting of type stub statements that do not conform to PEP 484",
+      "default": "none"
+    },
+    "pythonVersion": {
+      "id": "#/properties/pythonVersion",
+      "type": "string",
+      "description": "Python version to assume during type analysis",
+      "default": "",
+      "examples": [
+        "3.7"
+      ],
+      "pattern": "^3\\.[0-9]+$"
+    },
+    "pythonPlatform": {
+      "id": "#/properties/pythonPlatform",
+      "type": "string",
+      "description": "Python platform to assume during type analysis",
+      "default": "",
+      "examples": [
+        "Linux"
+      ],
+      "pattern": "^(Linux|Windows|Darwin)$"
+    },
+    "venvPath": {
+      "id": "#/properties/venvPath",
+      "type": "string",
+      "description": "Path to directory containing a folder of virtual environments",
+      "default": "",
+      "pattern": "^(.*)$"
+    },
+    "venv": {
+      "id": "#/properties/venv",
+      "type": "string",
+      "description": "Name of virtual environment subdirectory within venvPath",
+      "default": "",
+      "examples": [
+        "python37"
+      ],
+      "pattern": "^(.*)$"
+    },
+    "verboseOutput": {
+      "id": "#/properties/verboseOutput",
+      "type": "boolean",
+      "description": "Output verbose logging",
+      "default": false
+    },
+    "executionEnvironments": {
+      "id": "#/properties/executionEnvironments",
+      "type": "array",
+      "description": "Analysis settings to use for specified subdirectories of code",
+      "items": {
+        "id": "#/properties/executionEnvironments/items",
+        "type": "object",
+        "description": "Analysis settings to use for specified subdirectories of code",
+        "required": [
+          "root"
+        ],
+        "properties": {
+          "root": {
+            "id": "#/properties/executionEnvironments/items/properties/root",
+            "type": "string",
+            "description": "Path to code subdirectory to which these settings apply",
+            "default": "",
+            "pattern": "^(.*)$"
+          },
+          "extraPaths": {
+            "id": "#/properties/executionEnvironments/items/properties/extraPaths",
+            "type": "array",
+            "description": "Additional import search resolution paths",
+            "items": {
+              "id": "#/properties/executionEnvironments/items/properties/extraPaths/items",
+              "type": "string",
+              "description": "Additional import search resolution path",
+              "default": "",
+              "pattern": "^(.*)$"
+            }
+          },
+          "pythonVersion": {
+            "id": "#/properties/pythonVersion",
+            "type": "string",
+            "description": "Python version to assume during type analysis",
+            "default": "",
+            "examples": [
+              "3.7"
+            ],
+            "pattern": "^3\\.[0-9]+$"
+          },
+          "pythonPlatform": {
+            "id": "#/properties/pythonPlatform",
+            "type": "string",
+            "description": "Python platform to assume during type analysis",
+            "default": "",
+            "examples": [
+              "Linux"
+            ],
+            "pattern": "^(Linux|Windows|Darwin)$"
+          },
+          "venv": {
+            "id": "#/properties/venv",
+            "type": "string",
+            "description": "Name of virtual environment subdirectory within venvPath",
+            "default": "",
+            "examples": [
+              "python37"
+            ],
+            "pattern": "^(.*)$"
+          }
+        }
+      }
+    }
+  }
+}

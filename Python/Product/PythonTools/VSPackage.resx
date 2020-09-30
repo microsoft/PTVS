@@ -260,7 +260,7 @@
     <value>Python</value>
   </data>
   <data name="3017" xml:space="preserve">
-    <value>Python File</value>
+    <value>Empty Python Module</value>
   </data>
   <data name="5000" xml:space="preserve">
     <value>Python Package</value>
@@ -552,5 +552,8 @@ This file should normally be deployed in your /static folder. See https://aka.ms
   </data>
   <data name="132" xml:space="preserve">
     <value>Conda</value>
+  </data>
+  <data name="3019" xml:space="preserve">
+    <value>Python type checker configuration file</value>
   </data>
 </root>
