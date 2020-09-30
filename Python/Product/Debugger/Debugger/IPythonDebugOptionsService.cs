@@ -60,10 +60,6 @@ namespace Microsoft.PythonTools.Debugger {
         /// Default is true.
         /// </summary>
         bool ShowFunctionReturnValue { get; }
-        
-        /// <summary>
-        /// True to use the legacy debugger. Default is false.
-        /// </summary>
-        bool UseLegacyDebugger { get; }
+       
     }
 }

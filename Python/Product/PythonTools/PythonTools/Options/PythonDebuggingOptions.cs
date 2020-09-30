@@ -46,7 +46,6 @@ namespace Microsoft.PythonTools.Options {
             BreakOnSystemExitZero = _service.LoadBool(BreakOnSystemExitZeroSetting, Category) ?? false;
             DebugStdLib = _service.LoadBool(DebugStdLibSetting, Category) ?? false;
             ShowFunctionReturnValue = _service.LoadBool(ShowFunctionReturnValueSetting, Category) ?? true;
-            UseLegacyDebugger = _service.LoadBool(UseLegacyDebuggerSetting, Category) ?? false;
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
@@ -58,7 +57,6 @@ namespace Microsoft.PythonTools.Options {
             _service.SaveBool(BreakOnSystemExitZeroSetting, Category, BreakOnSystemExitZero);
             _service.SaveBool(DebugStdLibSetting, Category, DebugStdLib);
             _service.SaveBool(ShowFunctionReturnValueSetting, Category, ShowFunctionReturnValue);
-            _service.SaveBool(UseLegacyDebuggerSetting, Category, UseLegacyDebugger);
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
@@ -70,7 +68,6 @@ namespace Microsoft.PythonTools.Options {
             BreakOnSystemExitZero = false;
             DebugStdLib = false;
             ShowFunctionReturnValue = true;
-            UseLegacyDebugger = false;
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
@@ -136,14 +133,6 @@ namespace Microsoft.PythonTools.Options {
         /// Default is true
         /// </summary>
         public bool ShowFunctionReturnValue {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// True to use the legacy debugger. Default is false.
-        /// </summary>
-        public bool UseLegacyDebugger {
             get;
             set;
         }

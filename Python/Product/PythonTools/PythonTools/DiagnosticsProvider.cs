@@ -200,7 +200,6 @@ namespace Microsoft.PythonTools {
             writer.WriteLine("    PromptBeforeRunningWithBuildError: {0}", pyService.DebuggerOptions.PromptBeforeRunningWithBuildError);
             writer.WriteLine("    ShowFunctionReturnValue: {0}", pyService.DebuggerOptions.ShowFunctionReturnValue);
             writer.WriteLine("    TeeStandardOutput: {0}", pyService.DebuggerOptions.TeeStandardOutput);
-            writer.WriteLine("    UseLegacyDebugger: {0}", pyService.DebuggerOptions.UseLegacyDebugger);
             writer.WriteLine("    WaitOnAbnormalExit: {0}", pyService.DebuggerOptions.WaitOnAbnormalExit);
             writer.WriteLine("    WaitOnNormalExit: {0}", pyService.DebuggerOptions.WaitOnNormalExit);
             writer.WriteLine();

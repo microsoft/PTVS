@@ -2679,32 +2679,8 @@ Please specify at least one package.</value>
   <data name="WarningEncodingDifferentFromDefault" xml:space="preserve">
     <value>File is saved in encoding '{0}' which does not match default UTF-8 encoding</value>
   </data>
-  <data name="ImportPtvsdModuleNotFoundMessage" xml:space="preserve">
-    <value>There was an error loading ptvsd from the current environment. Please upgrade or uninstall ptvsd.</value>
-  </data>
-  <data name="ImportPtvsdModuleNotFoundTitle" xml:space="preserve">
-    <value>Debugger package could not be loaded</value>
-  </data>
-  <data name="PtvsdDisableCaption" xml:space="preserve">
-    <value>Use the legacy debugger</value>
-  </data>
-  <data name="PtvsdDisableSubtext" xml:space="preserve">
-    <value>Future debugging sessions will use the legacy debugger. You can also change this setting in Tools, Options, Python, Debugging page by changing the 'Use legacy debugger' option.</value>
-  </data>
-  <data name="PtvsdLearnMoreCaption" xml:space="preserve">
-    <value>Learn more</value>
-  </data>
-  <data name="PtvsdLearnMoreSubtext" xml:space="preserve">
-    <value>View documentation on supported Python environments and how to upgrade or uninstall the ptvsd debugger package.</value>
-  </data>
-  <data name="PtvsdIncompatibleEnvTitle" xml:space="preserve">
-    <value>Debugger does not support this Python environment</value>
-  </data>
-  <data name="PtvsdIncompatibleEnvMessage" xml:space="preserve">
-    <value>To debug this Python environment, please use the legacy debugger. Older versions of Python are not supported. See our &lt;a href="https://aka.ms/upgradeptvsd"&gt;documentation&lt;/a&gt; for a list of supported Python versions and environment types.</value>
-  </data>
-  <data name="DebugReplFeatureNotSupportedWithExperimentalDebugger" xml:space="preserve">
-    <value>This debug REPL feature is only supported with the legacy debugger.</value>
+  <data name="DebugReplFeatureNotSupported" xml:space="preserve">
+    <value>Debugging REPL feature is not yet supported.</value>
   </data>
   <data name="RunMypyLabel" xml:space="preserve">
     <value>Run Mypy</value>

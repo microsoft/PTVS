@@ -606,7 +606,7 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         private void NotSupported() {
-            CurrentWindow.WriteError(Strings.DebugReplFeatureNotSupportedWithExperimentalDebugger);
+            CurrentWindow.WriteError(Strings.DebugReplFeatureNotSupported);
         }
 
         private void NoExecutionIfNotStoppedInDebuggerError() {
@@ -614,7 +614,7 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public Task<ExecutionResult> InitializeAsync() {
-            _commands = PythonInteractiveEvaluator.GetInteractiveCommands(_serviceProvider, CurrentWindow, this);
+            _commands = PythonCommonInteractiveEvaluator.GetInteractiveCommands(_serviceProvider, CurrentWindow, this);
 
             CurrentWindow.TextView.Options.SetOptionValue(InteractiveWindowOptions.SmartUpDown, CurrentOptions.UseSmartHistory);
             CurrentWindow.WriteLine(Strings.DebugReplHelpMessage);

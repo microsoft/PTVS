@@ -132,10 +132,6 @@ namespace Microsoft.PythonTools {
                         { "IronPython", installedIronPython },
                     });
                 }
-
-                Logger.LogEvent(PythonLogEvent.Experiments, new Dictionary<string, object> {
-                    { "UseVsCodeDebugger", !DebuggerOptions.UseLegacyDebugger }
-                });
             } catch (Exception ex) {
                 Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
             }
