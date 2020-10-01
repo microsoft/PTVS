@@ -56,7 +56,6 @@ namespace Microsoft.PythonTools.Debugger {
                     ShowDebuggingErrorMessage(
                         Strings.InstalledDebugPyOutdatedTitle,
                         Strings.InstalledDebugPyOutdatedMessage.FormatUI(response.Debugger.Version, DebugPyVersion.Version),
-                        allowDisable: false,
                         isError: false
                     );
                 }
@@ -67,39 +66,11 @@ namespace Microsoft.PythonTools.Debugger {
             ShowDebuggingErrorMessage(
                 Strings.InstalledDebugPyOutdatedTitle,
                 Strings.InstalledDebugPyOutdatedMessage.FormatUI("unknown", DebugPyVersion.Version),
-                allowDisable: false,
                 isError: false
             );
         }
 
-        public static void ShowLegacyPtvsdVersionError() {
-            ShowDebuggingErrorMessage(
-                Strings.InstalledDebugPyOutdatedTitle,
-                Strings.InstalledDebugPyOutdatedMessage.FormatUI("3.*", DebugPyVersion.Version),
-                allowDisable: false,
-                isError: false
-            );
-        }
-
-        public static void ShowDebugPyIncompatibleEnvError() {
-            ShowDebuggingErrorMessage(
-                Strings.PtvsdIncompatibleEnvTitle,
-                Strings.PtvsdIncompatibleEnvMessage,
-                allowDisable: true,
-                isError: true
-            );
-        }
-
-        public static void ShowDebugPyModuleNotFoundError() {
-            ShowDebuggingErrorMessage(
-                Strings.ImportPtvsdModuleNotFoundTitle,
-                Strings.ImportPtvsdModuleNotFoundMessage,
-                allowDisable: false,
-                isError: true
-            );
-        }
-
-        private static void ShowDebuggingErrorMessage(string main, string content, bool allowDisable, bool isError) {
+        private static void ShowDebuggingErrorMessage(string main, string content, bool isError) {
             var serviceProvider = VisualStudio.Shell.ServiceProvider.GlobalProvider;
             try {
                 serviceProvider.GetUIThread().Invoke(() => {
@@ -112,23 +83,8 @@ namespace Microsoft.PythonTools.Debugger {
                         EnableHyperlinks = true,
                     };
 
-                    var disable = new TaskDialogButton(Strings.PtvsdDisableCaption, Strings.PtvsdDisableSubtext);
-                    var learnMore = new TaskDialogButton(Strings.PtvsdLearnMoreCaption, Strings.PtvsdLearnMoreSubtext);
-
                     dlg.Buttons.Add(TaskDialogButton.OK);
-                    dlg.Buttons.Insert(0, learnMore);
-                    if (allowDisable) {
-                        dlg.Buttons.Insert(0, disable);
-                    }
-
-                    var selection = dlg.ShowModal();
-                    if (selection == learnMore) {
-                        Process.Start("https://aka.ms/upgradeptvsd")?.Dispose();
-                    } else if (selection == disable) {
-                        var debuggerOptions = ((PythonToolsService)Package.GetGlobalService(typeof(PythonToolsService))).DebuggerOptions;
-                        debuggerOptions.UseLegacyDebugger = true;
-                        debuggerOptions.Save();
-                    }
+                    dlg.ShowModal();
                 });
             } catch (Exception ex) when (!ex.IsCriticalException()) {
                 ex.ReportUnhandledException(serviceProvider, typeof(DebugPyVersionHelper));

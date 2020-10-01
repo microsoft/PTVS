@@ -2563,11 +2563,11 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to This debug REPL feature is only supported with the legacy debugger..
+        ///   Looks up a localized string similar to Debugging REPL feature is not yet supported..
         /// </summary>
-        public static string DebugReplFeatureNotSupportedWithExperimentalDebugger {
+        public static string DebugReplFeatureNotSupported {
             get {
-                return ResourceManager.GetString("DebugReplFeatureNotSupportedWithExperimentalDebugger", resourceCulture);
+                return ResourceManager.GetString("DebugReplFeatureNotSupported", resourceCulture);
             }
         }
         
@@ -4030,24 +4030,6 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to There was an error loading ptvsd from the current environment. Please upgrade or uninstall ptvsd..
-        /// </summary>
-        public static string ImportPtvsdModuleNotFoundMessage {
-            get {
-                return ResourceManager.GetString("ImportPtvsdModuleNotFoundMessage", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Debugger package could not be loaded.
-        /// </summary>
-        public static string ImportPtvsdModuleNotFoundTitle {
-            get {
-                return ResourceManager.GetString("ImportPtvsdModuleNotFoundTitle", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to _Back.
         /// </summary>
         public static string ImportWizard_BackButton {
@@ -5083,60 +5065,6 @@ namespace Microsoft.PythonTools {
         public static string ProjectText {
             get {
                 return ResourceManager.GetString("ProjectText", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Use the legacy debugger.
-        /// </summary>
-        public static string PtvsdDisableCaption {
-            get {
-                return ResourceManager.GetString("PtvsdDisableCaption", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Future debugging sessions will use the legacy debugger. You can also change this setting in Tools, Options, Python, Debugging page by changing the &apos;Use legacy debugger&apos; option..
-        /// </summary>
-        public static string PtvsdDisableSubtext {
-            get {
-                return ResourceManager.GetString("PtvsdDisableSubtext", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to To debug this Python environment, please use the legacy debugger. Older versions of Python are not supported. See our &lt;a href=&quot;https://aka.ms/upgradeptvsd&quot;&gt;documentation&lt;/a&gt; for a list of supported Python versions and environment types..
-        /// </summary>
-        public static string PtvsdIncompatibleEnvMessage {
-            get {
-                return ResourceManager.GetString("PtvsdIncompatibleEnvMessage", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Debugger does not support this Python environment.
-        /// </summary>
-        public static string PtvsdIncompatibleEnvTitle {
-            get {
-                return ResourceManager.GetString("PtvsdIncompatibleEnvTitle", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Learn more.
-        /// </summary>
-        public static string PtvsdLearnMoreCaption {
-            get {
-                return ResourceManager.GetString("PtvsdLearnMoreCaption", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to View documentation on supported Python environments and how to upgrade or uninstall the ptvsd debugger package..
-        /// </summary>
-        public static string PtvsdLearnMoreSubtext {
-            get {
-                return ResourceManager.GetString("PtvsdLearnMoreSubtext", resourceCulture);
             }
         }
         

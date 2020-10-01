@@ -104,11 +104,9 @@ namespace Microsoft.PythonTools {
 
         public bool UseLegacyDebugger {
             get {
-                return _pyService.DebuggerOptions.UseLegacyDebugger;
+                return false;
             }
             set {
-                _pyService.DebuggerOptions.UseLegacyDebugger = value;
-                _pyService.DebuggerOptions.Save();
             }
         }
 

@@ -33,6 +33,5 @@ namespace Microsoft.PythonTools.Options {
         public bool BreakOnSystemExitZero => debugOptions.BreakOnSystemExitZero;
         public bool DebugStdLib => debugOptions.DebugStdLib;
         public bool ShowFunctionReturnValue => debugOptions.ShowFunctionReturnValue;
-        public bool UseLegacyDebugger => debugOptions.UseLegacyDebugger;
     }
 }
