@@ -432,6 +432,7 @@
     <Compile Include="PythonTools\Repl\Completion\ReplAsyncCompletionSource.cs" />
     <Compile Include="PythonTools\Repl\Completion\ReplAsyncCompletionCommitManager.cs" />
     <Compile Include="PythonTools\Repl\Completion\ReplAsyncCompletionSourceProvider.cs" />
+    <Compile Include="PythonTools\Utility\Settings.cs" />
     <Compile Include="PythonTools\WorkspaceInfoBarManager.cs" />
     <Compile Include="PythonTools\Wpf\ModernDialog.cs" />
     <Compile Include="PythonTools\Wpf\ModernDialogHeaderControl.xaml.cs">

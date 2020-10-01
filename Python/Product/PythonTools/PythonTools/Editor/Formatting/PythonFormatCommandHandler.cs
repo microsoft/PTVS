@@ -27,6 +27,7 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.LanguageServerClient;
 using Microsoft.PythonTools.Logging;
 using Microsoft.PythonTools.Project;
+using Microsoft.PythonTools.Utility;
 using Microsoft.VisualStudio.Commanding;
 using Microsoft.VisualStudio.LanguageServer.Protocol;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -97,12 +98,12 @@ namespace Microsoft.PythonTools.Editor {
 
         private bool Execute(ITextView textView, ITextBuffer textBuffer, bool isFormatSelection) {
             if (_textDocumentFactoryService.TryGetTextDocument(textBuffer, out var textDoc) &&
-                GetConfiguration(out var formatter, out var extraArgs)) {
+                GetConfiguration(textDoc, out var formatter, out var factory, out var extraArgs)) {
 
                 var snapshot = textBuffer.CurrentSnapshot;
                 var range = isFormatSelection ? GetRange(textView, textBuffer) : null;
 
-                FormatDocumentAsync(textDoc, snapshot, formatter, range, extraArgs)
+                FormatDocumentAsync(textDoc, snapshot, formatter, factory, range, extraArgs)
                     .HandleAllExceptions(_site, GetType())
                     .DoNotWait();
 
@@ -116,13 +117,12 @@ namespace Microsoft.PythonTools.Editor {
             return false;
         }
 
-        private async Task FormatDocumentAsync(ITextDocument textDoc, ITextSnapshot snapshot, IPythonFormatter formatter, Range range, string[] extraArgs) {
+        private async Task FormatDocumentAsync(ITextDocument textDoc, ITextSnapshot snapshot, IPythonFormatter formatter, IPythonInterpreterFactory factory, Range range, string[] extraArgs) {
             var stopwatch = new Stopwatch();
             stopwatch.Start();
 
             var documentFilePath = textDoc.FilePath;
             var documentContents = snapshot.GetText();
-            var factory = _optionsService.DefaultInterpreter;
 
             var tempFilePath = textDoc.IsDirty
                 ? CreateTempFileWithContents(documentFilePath, documentContents)
@@ -209,15 +209,38 @@ namespace Microsoft.PythonTools.Editor {
             return false;
         }
 
-        private bool GetConfiguration(out IPythonFormatter formatter, out string[] extraArgs) {
+        private bool GetConfiguration(
+            ITextDocument textDoc,
+            out IPythonFormatter formatter,
+            out IPythonInterpreterFactory factory,
+            out string[] extraArgs
+        ) {
             formatter = null;
+            factory = null;
             extraArgs = new string[0];
 
-            var formatterId = _site.GetPythonToolsService().FormattingOptions.Formatter;
-            formatterId = !string.IsNullOrEmpty(formatterId) ? formatterId : "black";
-            formatter = _formattingProviders.SingleOrDefault(p => string.Compare(p.Value.Identifier, formatterId, StringComparison.OrdinalIgnoreCase) == 0)?.Value;
+            const string defaultFormatterId = "black";
+            var workspace = _workspaceContextProvider.Workspace;
+            string formatterId = UserSettings.GetStringSetting(PythonConstants.FormatterSetting, textDoc.FilePath, _site, workspace, out var source);
+            switch (source) {
+                case UserSettings.ValueSource.Project:
+                    factory = _site.GetProjectContainingFile(textDoc.FilePath)?.ActiveInterpreter;
+                    break;
+                case UserSettings.ValueSource.Workspace:
+                    factory = workspace.CurrentFactory;
+                    break;
+            }
 
-            return formatter != null;
+            // If all fails, use global setting
+            if (string.IsNullOrEmpty(formatterId)) {
+                formatterId = _site.GetPythonToolsService().FormattingOptions.Formatter;
+                formatterId = !string.IsNullOrEmpty(formatterId) ? formatterId : defaultFormatterId;
+            }
+
+            formatter = _formattingProviders.SingleOrDefault(p => string.Compare(p.Value.Identifier, formatterId, StringComparison.OrdinalIgnoreCase) == 0)?.Value;
+            factory = factory ?? _optionsService.DefaultInterpreter;
+
+            return formatter != null && factory != null;
         }
 
         private static Range GetRange(ITextView textView, ITextBuffer textBuffer) {

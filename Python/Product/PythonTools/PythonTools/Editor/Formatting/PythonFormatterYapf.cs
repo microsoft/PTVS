@@ -21,7 +21,7 @@ using Microsoft.VisualStudio.LanguageServer.Protocol;
 
 namespace Microsoft.PythonTools.Editor.Formatting {
     [Export(typeof(IPythonFormatter))]
-    internal class PythonFormatterYapf : PythonFormatter {
+    internal sealed class PythonFormatterYapf : PythonFormatter {
         public PythonFormatterYapf() : base("yapf", true) { }
 
         protected override string[] GetToolCommandArgs(string documentFilePath, Range range, string[] extraArgs) {

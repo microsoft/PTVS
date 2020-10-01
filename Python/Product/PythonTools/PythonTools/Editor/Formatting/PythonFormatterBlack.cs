@@ -19,7 +19,7 @@ using Microsoft.VisualStudio.LanguageServer.Protocol;
 
 namespace Microsoft.PythonTools.Editor.Formatting {
     [Export(typeof(IPythonFormatter))]
-    internal class PythonFormatterBlack : PythonFormatter {
+    internal sealed class PythonFormatterBlack : PythonFormatter {
         public PythonFormatterBlack() : base("black", false) { }
 
         protected override string[] GetToolCommandArgs(string documentFilePath, Range range, string[] extraArgs) {

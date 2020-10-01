@@ -20,8 +20,8 @@ using Microsoft.VisualStudio.LanguageServer.Protocol;
 
 namespace Microsoft.PythonTools.Editor.Formatting {
     [Export(typeof(IPythonFormatter))]
-    internal class PythonFormatterAutopep8 : PythonFormatter {
-        PythonFormatterAutopep8() : base("autopep8", true) { }
+    internal sealed class PythonFormatterAutopep8 : PythonFormatter {
+        public PythonFormatterAutopep8() : base("autopep8", true) { }
 
         protected override string[] GetToolCommandArgs(string documentFilePath, Range range, string[] extraArgs) {
             var args = new List<string> { "-m", Package, "--diff", documentFilePath };
