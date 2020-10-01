@@ -69,11 +69,6 @@
       <Project>{e1e1613d-0c96-42f9-9f2d-052c72533297}</Project>
       <Name>Ipc.Json</Name>
     </ProjectReference>
-    <ProjectReference Include="..\PythonTools\PythonTools.csproj">
-      <Project>{fa7be5f5-e04f-4613-b7ac-70ce10d1bb68}</Project>
-      <Name>Microsoft.PythonTools</Name>
-      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
-    </ProjectReference>
     <ProjectReference Include="..\RunElevated\RunElevated.csproj">
       <Project>{4e18d41e-5e73-461f-9289-f6709257171a}</Project>
       <Name>Microsoft.PythonTools.RunElevated</Name>
@@ -120,7 +115,7 @@
     </Content>
     <Content Include="License_en-US.rtf" />
     <Content Include="$(PackagesPath)\Newtonsoft.Json\lib\net45\Newtonsoft.Json.dll" />
-    <Content Include="..\..\References\Dev$(VSTarget)\Microsoft.VisualStudio.LanguageServer.Protocol.dll" />
+    <Content Include="$(PackagesPath)\Microsoft.VisualStudio.LanguageServer.Protocol\lib\netstandard2.0\Microsoft.VisualStudio.LanguageServer.Protocol.dll" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Core\ProvideRawCodeBaseAttribute.cs">

@@ -156,11 +156,6 @@
       <Name>VSInterpreters</Name>
       <Aliases>global,vsinterpreters</Aliases>
     </ProjectReference>
-    <ProjectReference Include="..\..\Product\PythonTools\PythonTools.csproj">
-      <Project>{FA7BE5F5-E04F-4613-B7AC-70CE10D1BB68}</Project>
-      <Name>PythonTools</Name>
-      <Aliases>global,pythontools</Aliases>
-    </ProjectReference>
     <ProjectReference Include="..\..\..\Common\Tests\Utilities.UI\TestUtilities.UI.csproj">
       <Project>{E8150EBC-6B62-40BF-BF91-1DC60149B530}</Project>
       <Name>TestUtilities.UI</Name>

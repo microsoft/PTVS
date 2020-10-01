@@ -218,10 +218,6 @@
       <Project>{decc7971-fa58-4db0-9561-bffadd393bbd}</Project>
       <Name>Debugger</Name>
     </ProjectReference>
-    <ProjectReference Include="..\PythonTools\PythonTools.csproj">
-      <Project>{fa7be5f5-e04f-4613-b7ac-70ce10d1bb68}</Project>
-      <Name>PythonTools</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <XamlPropertyRule Include="VCTargets\Win32\ImportAfter\Microsoft.PythonTools.Debugger.VCDebugLauncher.xaml">

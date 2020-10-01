@@ -110,10 +110,6 @@
       <Project>{815db0cd-c0dd-4997-b43c-abee4dbeffe7}</Project>
       <Name>VSInterpreters</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Product\PythonTools\PythonTools.csproj">
-      <Project>{FA7BE5F5-E04F-4613-B7AC-70CE10D1BB68}</Project>
-      <Name>PythonTools</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\..\Common\Tests\Utilities.UI\TestUtilities.UI.csproj">
       <Project>{E8150EBC-6B62-40BF-BF91-1DC60149B530}</Project>
       <Name>TestUtilities.UI</Name>

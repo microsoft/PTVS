@@ -240,11 +240,6 @@
       <Project>{DECC7971-FA58-4DB0-9561-BFFADD393BBD}</Project>
       <Name>Microsoft.PythonTools.Debugger</Name>
     </ProjectReference>
-    <ProjectReference Include="..\PythonTools\PythonTools.csproj">
-      <Project>{FA7BE5F5-E04F-4613-B7AC-70CE10D1BB68}</Project>
-      <Name>Microsoft.PythonTools</Name>
-      <EmbedInteropTypes>False</EmbedInteropTypes>
-    </ProjectReference>
     <ProjectReference Include="..\Common\Common.csproj">
       <Project>{b3db0521-d9e3-4f48-9e2e-e5ecae886049}</Project>
       <Name>Microsoft.PythonTools.Common</Name>
