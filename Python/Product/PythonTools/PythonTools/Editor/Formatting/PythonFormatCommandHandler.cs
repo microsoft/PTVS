@@ -15,15 +15,12 @@
 // permissions and limitations under the License.
 
 using System;
-using System.CodeDom;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows;
 using Microsoft.PythonTools.Editor.Formatting;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
@@ -84,8 +81,11 @@ namespace Microsoft.PythonTools.Editor {
         public CommandState GetCommandState(FormatDocumentCommandArgs args)
             => CommandState.Available;
 
-        public CommandState GetCommandState(FormatSelectionCommandArgs args)
-            => CommandState.Available;
+        public CommandState GetCommandState(FormatSelectionCommandArgs args) {
+            var formatterId = _site.GetPythonToolsService().FormattingOptions.Formatter;
+            var formatter = _formattingProviders.FirstOrDefault(x => x.Value.Identifier == formatterId);
+            return formatter?.Value.CanFormatSelection == true ? CommandState.Available : new CommandState(true, false, false, true);
+        }
 
         public bool ExecuteCommand(FormatDocumentCommandArgs args, CommandExecutionContext context) {
             return Execute(args.TextView, args.SubjectBuffer, isFormatSelection: false);
@@ -198,10 +198,10 @@ namespace Microsoft.PythonTools.Editor {
         ) {
             await _joinableTaskFactory.SwitchToMainThreadAsync();
 
-            var message = Strings.InstallFormatterPrompt.FormatUI(formatter.PackageSpec, factory.Configuration.Description);
+            var message = Strings.InstallFormatterPrompt.FormatUI(formatter.Package, factory.Configuration.Description);
             if (ShowYesNoPrompt(message)) {
                 try {
-                    return await pm.InstallAsync(PackageSpec.FromArguments(formatter.PackageSpec), new VsPackageManagerUI(_site), CancellationToken.None);
+                    return await pm.InstallAsync(PackageSpec.FromArguments(formatter.Package), new VsPackageManagerUI(_site), CancellationToken.None);
                 } catch (Exception ex) when (!ex.IsCriticalException()) {
                     ShowErrorMessage(Strings.ErrorUnableToInstallFormatter.FormatUI(ex.Message));
                 }
