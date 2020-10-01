@@ -20,15 +20,11 @@ using Microsoft.VisualStudio.LanguageServer.Protocol;
 
 namespace Microsoft.PythonTools.Editor.Formatting {
     [Export(typeof(IPythonFormatter))]
-    internal sealed class PythonFormatterAutopep8 : PythonFormatter {
-        public override string Identifier => "autopep8";
-
-        public override string DisplayName => "autopep8";
-
-        public override string PackageSpec => "autopep8";
+    internal class PythonFormatterAutopep8 : PythonFormatter {
+        PythonFormatterAutopep8() : base("autopep8", true) { }
 
         protected override string[] GetToolCommandArgs(string documentFilePath, Range range, string[] extraArgs) {
-            var args = new List<string> { "-m", "autopep8", "--diff", documentFilePath };
+            var args = new List<string> { "-m", Package, "--diff", documentFilePath };
             if (range != null) {
                 args.Add("--line-range");
                 args.Add((range.Start.Line + 1).ToString());

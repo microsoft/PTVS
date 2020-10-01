@@ -19,20 +19,15 @@ using Microsoft.VisualStudio.LanguageServer.Protocol;
 
 namespace Microsoft.PythonTools.Editor.Formatting {
     [Export(typeof(IPythonFormatter))]
-    internal sealed class PythonFormatterBlack : PythonFormatter {
-        public override string Identifier => "black";
-
-        public override string DisplayName => "black";
-
-        public override string PackageSpec => "black";
+    internal class PythonFormatterBlack : PythonFormatter {
+        public PythonFormatterBlack() : base("black", false) { }
 
         protected override string[] GetToolCommandArgs(string documentFilePath, Range range, string[] extraArgs) {
             if (range != null) {
-                // TODO: localization
                 throw new PythonFormatterRangeNotSupportedException("Black does not support the Format Selection command.");
             }
 
-            return new[] { "-m", "black", "--diff", documentFilePath };
+            return new[] { "-m", Package, "--diff", documentFilePath };
         }
     }
 }
