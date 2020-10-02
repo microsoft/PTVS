@@ -25,6 +25,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             return new PythonLanguageServerPylance(site, joinableTaskContext);
         }
 
+        public abstract string CancellationFolderName { get; }
         public abstract Task<Connection> ActivateAsync();
     }
 }
