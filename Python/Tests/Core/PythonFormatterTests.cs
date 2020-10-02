@@ -126,7 +126,7 @@ b =100 *2
             python.AssertInstalled();
 
             var envPath = TestData.GetTempPath();
-            python.CreateVirtualEnv(envPath, new[] { formatter.PackageSpec });
+            python.CreateVirtualEnv(envPath, new[] { formatter.Package });
 
             return Path.Combine(envPath, "scripts", "python.exe");
         }

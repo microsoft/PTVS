@@ -21,7 +21,8 @@ namespace Microsoft.PythonTools.Editor.Formatting {
     internal interface IPythonFormatter {
         string Identifier { get; }
         string DisplayName { get; }
-        string PackageSpec { get; }
+        string Package { get; }
+        bool CanFormatSelection { get; }
         Task<TextEdit[]> FormatDocumentAsync(string interpreterExePath, string documentFilePath, string documentContents, Range range, string[] extraArgs);
     }
 }

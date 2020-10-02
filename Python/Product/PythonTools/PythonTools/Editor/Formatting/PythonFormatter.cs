@@ -21,12 +21,16 @@ using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.LanguageServer.Protocol;
 
 namespace Microsoft.PythonTools.Editor.Formatting {
-    internal abstract class PythonFormatter : IPythonFormatter {
-        public abstract string Identifier { get; }
+    internal abstract class PythonFormatter: IPythonFormatter {
+        public string Identifier { get; }
+        public string DisplayName { get; }
+        public string Package { get; }
+        public bool CanFormatSelection { get; }
 
-        public abstract string DisplayName { get; }
-
-        public abstract string PackageSpec { get; }
+        protected PythonFormatter(string name, bool canFormatSelection) {
+            DisplayName = Package = Identifier = name;
+            CanFormatSelection = canFormatSelection;
+        }
 
         public virtual async Task<TextEdit[]> FormatDocumentAsync(
             string interpreterExePath,

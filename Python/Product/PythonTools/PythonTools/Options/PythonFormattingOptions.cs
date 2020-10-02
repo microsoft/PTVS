@@ -18,11 +18,11 @@ using System;
 
 namespace Microsoft.PythonTools.Options {
     public sealed class PythonFormattingOptions {
-        private readonly PythonToolsService _service;
-
         private const string Category = "Advanced";
-
         private const string PasteRemovesReplPromptsSetting = "PasteRemovesReplPrompts";
+        private const string FormatterSetting = "Formatter";
+
+        private readonly PythonToolsService _service;
 
         internal PythonFormattingOptions(PythonToolsService service) {
             _service = service;
@@ -30,22 +30,30 @@ namespace Microsoft.PythonTools.Options {
 
         public void Load() {
             PasteRemovesReplPrompts = _service.LoadBool(PasteRemovesReplPromptsSetting, Category) ?? true;
+            Formatter = _service.LoadString(FormatterSetting, Category);
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
         public void Save() {
             _service.SaveBool(PasteRemovesReplPromptsSetting, Category, PasteRemovesReplPrompts);
+            _service.SaveString(FormatterSetting, Category, Formatter);
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
         public void Reset() {
             PasteRemovesReplPrompts = true;
+            Formatter = null;
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
         public event EventHandler Changed;
 
         public bool PasteRemovesReplPrompts {
+            get;
+            set;
+        }
+
+        public string Formatter {
             get;
             set;
         }
