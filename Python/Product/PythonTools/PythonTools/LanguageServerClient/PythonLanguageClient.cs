@@ -139,6 +139,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         public Task AttachForCustomMessageAsync(JsonRpc rpc) {
             _rpc = rpc;
 
+            // This is a workaround until we have proper API from ILanguageClient for now.
             _rpc.AllowModificationWhileListening = true;
             _rpc.CancellationStrategy = new CustomCancellationStrategy(this._server.CancellationFolderName, _rpc);
             _rpc.AllowModificationWhileListening = false;
