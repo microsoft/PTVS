@@ -198,7 +198,6 @@
       <Private>True</Private>
       <IncludeInVSIX>True</IncludeInVSIX>
     </Reference>
-    <Reference Include="StreamJsonRpc" />
     <Reference Include="System" />
     <Reference Include="System.Collections.Immutable" />
     <Reference Include="System.ComponentModel.Composition" />
@@ -264,6 +263,7 @@
       <Private>True</Private>
       <IncludeInVSIX>True</IncludeInVSIX>
     </Reference>
+    <Reference Include="StreamJsonRpc" />
     <Reference Include="System.Net.Http" />
   </ItemGroup>
   <ItemGroup>
