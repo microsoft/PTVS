@@ -235,7 +235,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
                 try {
                     Directory.CreateDirectory(this._cancellationFolderPath);
-                } catch { 
+                } catch (Exception e) when (!e.IsCriticalException()){ 
                     // not much we can do about it.
                 }
             }
@@ -246,7 +246,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             public void CancelOutboundRequest(RequestId requestId) {
                 try {
                     using (File.OpenWrite(getCancellationFilePath(requestId))) { }
-                } catch {
+                } catch (Exception e) when (!e.IsCriticalException()) {
                     // simply ignore. not that big deal.
                 }
             }
@@ -254,7 +254,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             public void OutboundRequestEnded(RequestId requestId) {
                 try {
                     File.Delete(getCancellationFilePath(requestId));
-                } catch {
+                } catch (Exception e) when (!e.IsCriticalException()) {
                     // simply ignore. not that big deal.
                 }
             }
@@ -264,11 +264,11 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 return Path.Combine(this._cancellationFolderPath, $"cancellation-{id}.tmp");
             }
 
-            private void OnDisconnected(object sender, JsonRpcDisconnectedEventArgs e) {
+            private void OnDisconnected(object sender, JsonRpcDisconnectedEventArgs _) {
                 // clean up cancellation folder
                 try {
                     Directory.Delete(this._cancellationFolderPath, recursive: true);
-                } catch {
+                } catch (Exception e) when (!e.IsCriticalException()) {
                     // not much we can do. ignore it.
                 }
             }

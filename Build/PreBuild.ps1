@@ -11,8 +11,7 @@ $need_symlink = @(
     "Microsoft.VisualStudio.LanguageServer.Protocol",
     "Microsoft.VSSDK.BuildTools",
     "Microsoft.VSSDK.Debugger.VSDConfigTool",
-    "Newtonsoft.Json",
-    "StreamJsonRpc"
+    "Newtonsoft.Json"
 )
 
 if (-not $vstarget) {
