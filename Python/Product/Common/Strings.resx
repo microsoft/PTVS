@@ -2990,4 +2990,28 @@ Please specify at least one package.</value>
   <data name="InstallFormatterPrompt" xml:space="preserve">
     <value>Install '{0}' in environment '{1}' now?</value>
   </data>
+  <data name="DiagnosticModeOpenFiles" xml:space="preserve">
+    <value>Open files only</value>
+  </data>
+  <data name="DiagnosticModeWorkspace" xml:space="preserve">
+    <value>Workspace</value>
+  </data>
+  <data name="LogLevelError" xml:space="preserve">
+    <value>Error</value>
+  </data>
+  <data name="LogLevelInformation" xml:space="preserve">
+    <value>Information</value>
+  </data>
+  <data name="LogLevelTrace" xml:space="preserve">
+    <value>Trace</value>
+  </data>
+  <data name="LogLevelWarning" xml:space="preserve">
+    <value>Warning</value>
+  </data>
+  <data name="TypeCheckingModeBasic" xml:space="preserve">
+    <value>Basic</value>
+  </data>
+  <data name="TypeCheckingModeStrict" xml:space="preserve">
+    <value>Strict</value>
+  </data>
 </root>

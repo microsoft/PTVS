@@ -405,14 +405,14 @@
     <Compile Include="PythonTools\Editor\Paste\ReplPromptHelpers.cs" />
     <Compile Include="PythonTools\Intellisense\CompletionResult.cs" />
     <Compile Include="PythonTools\Logging\ActivityLogLogger.cs" />
-    <Compile Include="PythonTools\Options\PythonDiagnosticsOptions.cs" />
-    <Compile Include="PythonTools\Options\PythonDiagnosticsOptionsControl.cs">
+    <Compile Include="PythonTools\Options\PythonAnalysisOptions.cs" />
+    <Compile Include="PythonTools\Options\PythonAnalysisOptionsControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="PythonTools\Options\PythonDiagnosticsOptionsControl.Designer.cs">
-      <DependentUpon>PythonDiagnosticsOptionsControl.cs</DependentUpon>
+    <Compile Include="PythonTools\Options\PythonAnalysisOptionsControl.Designer.cs">
+      <DependentUpon>PythonAnalysisOptionsControl.cs</DependentUpon>
     </Compile>
-    <Compile Include="PythonTools\Options\PythonDiagnosticsOptionsPage.cs">
+    <Compile Include="PythonTools\Options\PythonAnalysisOptionsPage.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="PythonTools\Environments\AddEnvironmentDialog.xaml.cs">
@@ -967,8 +967,8 @@
     <EmbeddedResource Include="PythonTools\Options\PythonCondaOptionsControl.resx">
       <DependentUpon>PythonCondaOptionsControl.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="PythonTools\Options\PythonDiagnosticsOptionsControl.resx">
-      <DependentUpon>PythonDiagnosticsOptionsControl.cs</DependentUpon>
+    <EmbeddedResource Include="PythonTools\Options\PythonAnalysisOptionsControl.resx">
+      <DependentUpon>PythonAnalysisOptionsControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="PythonTools\Options\PythonGeneralOptionsControl.resx">
       <DependentUpon>PythonGeneralOptionsControl.cs</DependentUpon>

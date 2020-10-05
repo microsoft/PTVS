@@ -25,6 +25,7 @@ using System.Windows;
 using Microsoft.Python.Core.Disposables;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Options;
 using Microsoft.VisualStudio.LanguageServer.Client;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Threading;
@@ -60,6 +61,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
         private readonly DisposableBag _disposables;
         private IPythonLanguageClientContext _clientContext;
+        private PythonAnalysisOptions _analysisOptions;
         private PythonLanguageServer _server;
         private JsonRpc _rpc;
 
@@ -93,16 +95,19 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 Debug.Fail("Should not have called StartAsync when _server is null.");
                 return null;
             }
+            await JoinableTaskContext.Factory.SwitchToMainThreadAsync();
 
             _clientContext = PythonWorkspaceContextProvider.Workspace != null 
                 ? (IPythonLanguageClientContext)new PythonLanguageClientContextWorkspace(PythonWorkspaceContextProvider.Workspace) 
                 : new PythonLanguageClientContextGlobal(OptionsService);
+            _analysisOptions = Site.GetPythonToolsService().AnalysisOptions;
 
             _clientContext.InterpreterChanged += OnInterpreterChanged;
-            _clientContext.SearchPathsChanged += OnSearchPathsChanged;
+            _analysisOptions.Changed += OnAnalysisOptionsChanged;
+            
             _disposables.Add(() => {
                 _clientContext.InterpreterChanged -= OnInterpreterChanged;
-                _clientContext.SearchPathsChanged -= OnSearchPathsChanged;
+                _analysisOptions.Changed -= OnAnalysisOptionsChanged;
                 _clientContext.Dispose();
             });
 
@@ -158,24 +163,22 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             => _rpc == null ? Task.FromResult(default(TResult)) : _rpc.InvokeWithParameterObjectAsync<TResult>(targetName, argument, cancellationToken);
 
         private void OnInterpreterChanged(object sender, EventArgs e) => SendDidChangeConfiguration().DoNotWait();
-        private void OnSearchPathsChanged(object sender, EventArgs e) => SendDidChangeConfiguration().DoNotWait();
+        private void OnAnalysisOptionsChanged(object sender, EventArgs e) => SendDidChangeConfiguration().DoNotWait();
 
         private async Task SendDidChangeConfiguration() {
             Debug.Assert(_clientContext != null);
-            // TODO: client context needs to also provide the settings that are currently hard coded here
-            // so that workspace can get it from PythonSettings.json and projects from their .pyproj, etc.
+            Debug.Assert(_analysisOptions != null);
+
             var settings = new Settings {
                 python = new Settings.PythonSettings {
                     pythonPath = _clientContext.InterpreterConfiguration.InterpreterPath,
                     venvPath = string.Empty,
                     analysis = new Settings.PythonSettings.PythonAnalysisSettings {
-                        logLevel = "log",
-                        autoSearchPaths = false,
-                        diagnosticMode = "openFilesOnly",
-                        diagnosticSeverityOverrides = new Dictionary<string, string>(),
-                        extraPaths = _clientContext.SearchPaths.ToArray(),
-                        stubPath = string.Empty,
-                        typeCheckingMode = "basic",
+                        logLevel = _analysisOptions.LogLevel,
+                        autoSearchPaths = _analysisOptions.AutoSearchPaths,
+                        diagnosticMode = _analysisOptions.DiagnosticMode,
+                        stubPath = _analysisOptions.StubPath,
+                        typeCheckingMode = _analysisOptions.TypeCheckingMode,
                         useLibraryCodeForTypes = true
                     }
                 }
@@ -187,26 +190,93 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             await InvokeDidChangeConfigurationAsync(config);
         }
 
+        public static class DiagnosticMode {
+            public const string OpenFilesOnly = "openFilesOnly";
+            public const string Workspace = "workspace";
+        }
+
+        public static class LogLevel {
+            public const string Error = "Error";
+            public const string Warning = "Warning";
+            public const string Information = "Information";
+            public const string Trace = "Trace";
+        }
+
+        public static class TypeCheckingMode {
+            public const string Basic = "basic";
+            public const string Strict = "strict";
+        }
+
         [Serializable]
         public sealed class Settings {
             [Serializable]
             public class PythonSettings {
+                /// <summary>
+                /// Python settings. Match [python] section in Pylance.
+                /// </summary>
                 [Serializable]
                 public class PythonAnalysisSettings {
+                    /// <summary>
+                    /// Paths to look for typeshed modules.
+                    /// </summary>
                     public string[] typeshedPaths;
+
+                    /// <summary>
+                    /// Path to directory containing custom type stub files.
+                    /// </summary>
                     public string stubPath;
+
+                    /// <summary>
+                    /// Allows a user to override the severity levels for individual diagnostics.
+                    /// Typically specified in mspythonconfig.json.
+                    /// </summary>
                     public Dictionary<string, string> diagnosticSeverityOverrides;
-                    public string diagnosticMode; // TODO: make this an enum
-                    public string logLevel; // TODO: make this an enum
+
+                    /// <summary>
+                    /// Analyzes and reports errors on only open files or the entire workspace.
+                    /// "enum": ["openFilesOnly", "workspace"]
+                    /// </summary>
+                    public string diagnosticMode;
+                    
+                    /// <summary>
+                    /// Specifies the level of logging for the Output panel.
+                    /// "enum": ["Error", "Warning", "Information", "Trace"]
+                    /// </summary>
+                    public string logLevel;
+                    
+                    /// <summary>
+                    /// Automatically add common search paths like 'src'.
+                    /// </summary>
                     public bool? autoSearchPaths;
-                    public string[] extraPaths;
-                    public string typeCheckingMode; // TODO: make this an enum
+                    
+                    /// <summary>
+                    /// Defines the default rule set for type checking.
+                    /// </summary>
+                    public string typeCheckingMode;
+                    
+                    /// <summary>
+                    /// Use library implementations to extract type information when type stub is not present.
+                    /// </summary>
                     public bool? useLibraryCodeForTypes;
                 }
+                /// <summary>
+                /// Analysis settings.
+                /// </summary>
                 public PythonAnalysisSettings analysis;
+                
+                /// <summary>
+                /// Path to Python, you can use a custom version of Python.
+                /// </summary>
                 public string pythonPath;
+                
+                /// <summary>
+                /// Path to folder with a list of Virtual Environments.
+                /// </summary>
                 public string venvPath;
             }
+            /// <summary>
+            /// Python section.
+            /// </summary>
             public PythonSettings python;
         }
     }

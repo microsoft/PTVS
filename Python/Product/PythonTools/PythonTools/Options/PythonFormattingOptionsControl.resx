@@ -139,7 +139,7 @@
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="_pasteRemovesReplPrompts.Location" type="System.Drawing.Point, System.Drawing">
-    <value>11, 45</value>
+    <value>11, 44</value>
   </data>
   <data name="_pasteRemovesReplPrompts.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>11, 6, 11, 6</value>
@@ -186,43 +186,43 @@
   <data name="&gt;&gt;_formatterCombo.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
-  <metadata name="formatterLaber.GenerateMember" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+  <metadata name="formatterLabel.GenerateMember" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>False</value>
   </metadata>
-  <data name="formatterLaber.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+  <data name="formatterLabel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Left</value>
   </data>
-  <data name="formatterLaber.AutoSize" type="System.Boolean, mscorlib">
+  <data name="formatterLabel.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="formatterLaber.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 7</value>
+  <data name="formatterLabel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 6</value>
   </data>
-  <data name="formatterLaber.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+  <data name="formatterLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>6, 0, 6, 0</value>
   </data>
-  <data name="formatterLaber.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="formatterLabel.Size" type="System.Drawing.Size, System.Drawing">
     <value>101, 25</value>
   </data>
-  <data name="formatterLaber.TabIndex" type="System.Int32, mscorlib">
+  <data name="formatterLabel.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
   </data>
-  <data name="formatterLaber.Text" xml:space="preserve">
+  <data name="formatterLabel.Text" xml:space="preserve">
     <value>&amp;Formatter:</value>
   </data>
-  <data name="formatterLaber.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+  <data name="formatterLabel.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
     <value>MiddleLeft</value>
   </data>
-  <data name="&gt;&gt;formatterLaber.Name" xml:space="preserve">
-    <value>formatterLaber</value>
+  <data name="&gt;&gt;formatterLabel.Name" xml:space="preserve">
+    <value>formatterLabel</value>
   </data>
-  <data name="&gt;&gt;formatterLaber.Type" xml:space="preserve">
+  <data name="&gt;&gt;formatterLabel.Type" xml:space="preserve">
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;formatterLaber.Parent" xml:space="preserve">
+  <data name="&gt;&gt;formatterLabel.Parent" xml:space="preserve">
     <value>tableLayoutPanel1</value>
   </data>
-  <data name="&gt;&gt;formatterLaber.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;formatterLabel.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
   <data name="tableLayoutPanel1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
@@ -256,7 +256,7 @@
     <value>0</value>
   </data>
   <data name="tableLayoutPanel1.LayoutSettings" type="System.Windows.Forms.TableLayoutSettings, System.Windows.Forms">
-    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="_pasteRemovesReplPrompts" Row="1" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_formatterCombo" Row="0" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="formatterLaber" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="Percent,100,Absolute,545" /&gt;&lt;Rows Styles="AutoSize,0,AutoSize,0,Absolute,20" /&gt;&lt;/TableLayoutSettings&gt;</value>
+    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="_pasteRemovesReplPrompts" Row="1" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_formatterCombo" Row="0" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="formatterLabel" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="Percent,100,Absolute,545" /&gt;&lt;Rows Styles="AutoSize,0,AutoSize,0,Absolute,20" /&gt;&lt;/TableLayoutSettings&gt;</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>

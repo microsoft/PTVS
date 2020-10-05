@@ -25,11 +25,11 @@ namespace Microsoft.PythonTools.Options {
         private void InitializeComponent() {
             System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(PythonFormattingOptionsControl));
-            System.Windows.Forms.Label formatterLaber;
+            System.Windows.Forms.Label formatterLabel;
             this._pasteRemovesReplPrompts = new System.Windows.Forms.CheckBox();
             this._formatterCombo = new System.Windows.Forms.ComboBox();
             tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
-            formatterLaber = new System.Windows.Forms.Label();
+            formatterLabel = new System.Windows.Forms.Label();
             tableLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -38,7 +38,7 @@ namespace Microsoft.PythonTools.Options {
             resources.ApplyResources(tableLayoutPanel1, "tableLayoutPanel1");
             tableLayoutPanel1.Controls.Add(this._pasteRemovesReplPrompts, 0, 1);
             tableLayoutPanel1.Controls.Add(this._formatterCombo, 1, 0);
-            tableLayoutPanel1.Controls.Add(formatterLaber, 0, 0);
+            tableLayoutPanel1.Controls.Add(formatterLabel, 0, 0);
             tableLayoutPanel1.Name = "tableLayoutPanel1";
             // 
             // _pasteRemovesReplPrompts
@@ -55,10 +55,10 @@ namespace Microsoft.PythonTools.Options {
             resources.ApplyResources(this._formatterCombo, "_formatterCombo");
             this._formatterCombo.Name = "_formatterCombo";
             // 
-            // formatterLaber
+            // formatterLabel
             // 
-            resources.ApplyResources(formatterLaber, "formatterLaber");
-            formatterLaber.Name = "formatterLaber";
+            resources.ApplyResources(formatterLabel, "formatterLabel");
+            formatterLabel.Name = "formatterLabel";
             // 
             // PythonFormattingOptionsControl
             // 

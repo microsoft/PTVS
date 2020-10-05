@@ -28,7 +28,7 @@ namespace Microsoft.PythonTools.Commands {
         }
 
         public override void DoCommand(object sender, EventArgs args) {
-            _provider.ShowOptionsPage(typeof(PythonDiagnosticsOptionsPage));
+            _provider.ShowOptionsPage(typeof(PythonAnalysisOptionsPage));
         }
 
         public override EventHandler BeforeQueryStatus {

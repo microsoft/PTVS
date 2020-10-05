@@ -47,7 +47,7 @@ namespace Microsoft.PythonTools {
         private readonly Lazy<PythonFormattingOptions> _formattingOptions;
         private readonly Lazy<PythonDebuggingOptions> _debuggerOptions;
         private readonly Lazy<PythonCondaOptions> _condaOptions;
-        private readonly Lazy<PythonDiagnosticsOptions> _diagnosticsOptions;
+        private readonly Lazy<PythonAnalysisOptions> _analysisOptions;
         private readonly Lazy<PythonGeneralOptions> _generalOptions;
         private readonly Lazy<PythonInteractiveOptions> _debugInteractiveOptions;
         private readonly Lazy<PythonInteractiveOptions> _interactiveOptions;
@@ -81,7 +81,7 @@ namespace Microsoft.PythonTools {
             _formattingOptions = new Lazy<PythonFormattingOptions>(CreateFormattingOptions);
             _debuggerOptions = new Lazy<PythonDebuggingOptions>(CreateDebuggerOptions);
             _condaOptions = new Lazy<PythonCondaOptions>(CreateCondaOptions);
-            _diagnosticsOptions = new Lazy<PythonDiagnosticsOptions>(CreateDiagnosticsOptions);
+            _analysisOptions = new Lazy<PythonAnalysisOptions>(CreateAnalysisOptions);
             _generalOptions = new Lazy<PythonGeneralOptions>(CreateGeneralOptions);
             _suppressDialogOptions = new Lazy<SuppressDialogOptions>(() => new SuppressDialogOptions(this));
             _interactiveOptions = new Lazy<PythonInteractiveOptions>(() => CreateInteractiveOptions("Interactive"));
@@ -123,13 +123,11 @@ namespace Microsoft.PythonTools {
                     var installed = registry.Configurations.Count();
                     var installedV2 = registry.Configurations.Count(c => c.Version.Major == 2);
                     var installedV3 = registry.Configurations.Count(c => c.Version.Major == 3);
-                    var installedIronPython = registry.Configurations.Where(c => c.IsIronPython()).Count();
 
                     Logger.LogEvent(PythonLogEvent.InstalledInterpreters, new Dictionary<string, object> {
                         { "Total", installed },
                         { "3x", installedV3 },
                         { "2x", installedV2 },
-                        { "IronPython", installedIronPython },
                     });
                 }
             } catch (Exception ex) {
@@ -155,7 +153,7 @@ namespace Microsoft.PythonTools {
         public PythonFormattingOptions FormattingOptions => _formattingOptions.Value;
         public PythonDebuggingOptions DebuggerOptions => _debuggerOptions.Value;
         public PythonCondaOptions CondaOptions => _condaOptions.Value;
-        public PythonDiagnosticsOptions DiagnosticsOptions => _diagnosticsOptions.Value;
+        public PythonAnalysisOptions AnalysisOptions => _analysisOptions.Value;
         public PythonGeneralOptions GeneralOptions => _generalOptions.Value;
         internal PythonInteractiveOptions DebugInteractiveOptions => _debugInteractiveOptions.Value;
 
@@ -177,8 +175,8 @@ namespace Microsoft.PythonTools {
             return opts;
         }
 
-        private PythonDiagnosticsOptions CreateDiagnosticsOptions() {
-            var opts = new PythonDiagnosticsOptions(this);
+        private PythonAnalysisOptions CreateAnalysisOptions() {
+            var opts = new PythonAnalysisOptions(this);
             opts.Load();
             return opts;
         }

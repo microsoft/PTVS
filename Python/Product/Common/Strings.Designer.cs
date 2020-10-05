@@ -3060,6 +3060,24 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Open files only.
+        /// </summary>
+        public static string DiagnosticModeOpenFiles {
+            get {
+                return ResourceManager.GetString("DiagnosticModeOpenFiles", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Workspace.
+        /// </summary>
+        public static string DiagnosticModeWorkspace {
+            get {
+                return ResourceManager.GetString("DiagnosticModeWorkspace", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Diagnostics log was copied to the clipboard..
         /// </summary>
         public static string DiagnosticsLogCopiedToClipboard {
@@ -4686,6 +4704,42 @@ namespace Microsoft.PythonTools {
         public static string LinesBetweenMethodsInClassShort {
             get {
                 return ResourceManager.GetString("LinesBetweenMethodsInClassShort", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error.
+        /// </summary>
+        public static string LogLevelError {
+            get {
+                return ResourceManager.GetString("LogLevelError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Information.
+        /// </summary>
+        public static string LogLevelInformation {
+            get {
+                return ResourceManager.GetString("LogLevelInformation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Trace.
+        /// </summary>
+        public static string LogLevelTrace {
+            get {
+                return ResourceManager.GetString("LogLevelTrace", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Warning.
+        /// </summary>
+        public static string LogLevelWarning {
+            get {
+                return ResourceManager.GetString("LogLevelWarning", resourceCulture);
             }
         }
         
@@ -7270,6 +7324,24 @@ namespace Microsoft.PythonTools {
         public static string TestDiscoveryFailedMissingLaunchConfiguration {
             get {
                 return ResourceManager.GetString("TestDiscoveryFailedMissingLaunchConfiguration", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Basic.
+        /// </summary>
+        public static string TypeCheckingModeBasic {
+            get {
+                return ResourceManager.GetString("TypeCheckingModeBasic", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Strict.
+        /// </summary>
+        public static string TypeCheckingModeStrict {
+            get {
+                return ResourceManager.GetString("TypeCheckingModeStrict", resourceCulture);
             }
         }
         
