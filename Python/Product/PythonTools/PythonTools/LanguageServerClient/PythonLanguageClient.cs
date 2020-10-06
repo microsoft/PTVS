@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -94,8 +95,8 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 return null;
             }
 
-            _clientContext = PythonWorkspaceContextProvider.Workspace != null 
-                ? (IPythonLanguageClientContext)new PythonLanguageClientContextWorkspace(PythonWorkspaceContextProvider.Workspace) 
+            _clientContext = PythonWorkspaceContextProvider.Workspace != null
+                ? (IPythonLanguageClientContext)new PythonLanguageClientContextWorkspace(PythonWorkspaceContextProvider.Workspace)
                 : new PythonLanguageClientContextGlobal(OptionsService);
 
             _clientContext.InterpreterChanged += OnInterpreterChanged;
@@ -137,15 +138,21 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
         public Task AttachForCustomMessageAsync(JsonRpc rpc) {
             _rpc = rpc;
+
+            // This is a workaround until we have proper API from ILanguageClient for now.
+            _rpc.AllowModificationWhileListening = true;
+            _rpc.CancellationStrategy = new CustomCancellationStrategy(this._server.CancellationFolderName, _rpc);
+            _rpc.AllowModificationWhileListening = false;
+
             return Task.CompletedTask;
         }
 
         public void Dispose() => _disposables.TryDispose();
 
-        public Task InvokeTextDocumentDidOpenAsync(LSP.DidOpenTextDocumentParams request) 
+        public Task InvokeTextDocumentDidOpenAsync(LSP.DidOpenTextDocumentParams request)
             => _rpc == null ? Task.CompletedTask : _rpc.NotifyWithParameterObjectAsync("textDocument/didOpen", request);
 
-        public Task InvokeTextDocumentDidChangeAsync(LSP.DidChangeTextDocumentParams request) 
+        public Task InvokeTextDocumentDidChangeAsync(LSP.DidChangeTextDocumentParams request)
             => _rpc == null ? Task.CompletedTask : _rpc.NotifyWithParameterObjectAsync("textDocument/didChange", request);
 
         public Task InvokeDidChangeConfigurationAsync(LSP.DidChangeConfigurationParams request)
@@ -154,7 +161,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         public Task<LSP.CompletionList> InvokeTextDocumentCompletionAsync(LSP.CompletionParams request, CancellationToken cancellationToken = default)
             => _rpc == null ? Task.FromResult(new LSP.CompletionList()) : _rpc.InvokeWithParameterObjectAsync<LSP.CompletionList>("textDocument/completion", request, cancellationToken);
 
-        public Task<TResult> InvokeWithParameterObjectAsync<TResult>(string targetName, object argument = null, CancellationToken cancellationToken = default) 
+        public Task<TResult> InvokeWithParameterObjectAsync<TResult>(string targetName, object argument = null, CancellationToken cancellationToken = default)
             => _rpc == null ? Task.FromResult(default(TResult)) : _rpc.InvokeWithParameterObjectAsync<TResult>(targetName, argument, cancellationToken);
 
         private void OnInterpreterChanged(object sender, EventArgs e) => SendDidChangeConfiguration().DoNotWait();
@@ -208,6 +215,63 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 public string venvPath;
             }
             public PythonSettings python;
+        }
+
+        private sealed class CustomCancellationStrategy : ICancellationStrategy {
+            private readonly string _folderName;
+            private readonly JsonRpc _jsonRpc;
+            private readonly ICancellationStrategy _cancellationStrategy;
+
+            private readonly string _cancellationFolderPath;
+
+            public CustomCancellationStrategy(string folderName, JsonRpc jsonRpc) {
+                this._folderName = folderName ?? throw new ArgumentNullException(nameof(folderName));
+                this._jsonRpc = jsonRpc ?? throw new ArgumentNullException(nameof(jsonRpc));
+
+                this._cancellationFolderPath = Path.Combine(Path.GetTempPath(), "python-languageserver-cancellation", this._folderName);
+
+                this._cancellationStrategy = this._jsonRpc.CancellationStrategy;
+                this._jsonRpc.Disconnected += OnDisconnected;
+
+                try {
+                    Directory.CreateDirectory(this._cancellationFolderPath);
+                } catch (Exception e) when (!e.IsCriticalException()){ 
+                    // not much we can do about it.
+                }
+            }
+
+            public void IncomingRequestStarted(RequestId requestId, CancellationTokenSource cancellationTokenSource) => this._cancellationStrategy.IncomingRequestStarted(requestId, cancellationTokenSource);
+            public void IncomingRequestEnded(RequestId requestId) => this._cancellationStrategy.IncomingRequestEnded(requestId);
+
+            public void CancelOutboundRequest(RequestId requestId) {
+                try {
+                    using (File.OpenWrite(getCancellationFilePath(requestId))) { }
+                } catch (Exception e) when (!e.IsCriticalException()) {
+                    // simply ignore. not that big deal.
+                }
+            }
+
+            public void OutboundRequestEnded(RequestId requestId) {
+                try {
+                    File.Delete(getCancellationFilePath(requestId));
+                } catch (Exception e) when (!e.IsCriticalException()) {
+                    // simply ignore. not that big deal.
+                }
+            }
+
+            private string getCancellationFilePath(RequestId requestId) {
+                var id = requestId.Number?.ToString() ?? requestId.String ?? "noid";
+                return Path.Combine(this._cancellationFolderPath, $"cancellation-{id}.tmp");
+            }
+
+            private void OnDisconnected(object sender, JsonRpcDisconnectedEventArgs _) {
+                // clean up cancellation folder
+                try {
+                    Directory.Delete(this._cancellationFolderPath, recursive: true);
+                } catch (Exception e) when (!e.IsCriticalException()) {
+                    // not much we can do. ignore it.
+                }
+            }
         }
     }
 }

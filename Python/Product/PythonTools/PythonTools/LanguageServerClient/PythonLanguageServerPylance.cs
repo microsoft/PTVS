@@ -28,11 +28,15 @@ namespace Microsoft.PythonTools.LanguageServerClient {
     internal class PythonLanguageServerPylance : PythonLanguageServer {
         private readonly JoinableTaskContext _joinableTaskContext;
         private readonly NodeEnvironmentProvider _nodeEnvironmentProvider;
+        private readonly string _cancellationFolderName;
 
         public PythonLanguageServerPylance(IServiceProvider site, JoinableTaskContext joinableTaskContext) {
             _joinableTaskContext = joinableTaskContext ?? throw new ArgumentNullException(nameof(joinableTaskContext));
             _nodeEnvironmentProvider = new NodeEnvironmentProvider(site, joinableTaskContext);
+            _cancellationFolderName = Guid.NewGuid().ToString().Replace("-", "");
         }
+
+        public override string CancellationFolderName => this._cancellationFolderName;
 
         public override async Task<Connection> ActivateAsync() {
             await _joinableTaskContext.Factory.SwitchToMainThreadAsync();
@@ -44,7 +48,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             }
 
             var isDebugging = IsDebugging();
-            var debugArgs = isDebugging ? GetDebugArguments(): string.Empty;
+            var debugArgs = isDebugging ? GetDebugArguments() : string.Empty;
             var serverFilePath = isDebugging ? GetDebugServerLocation() : GetServerLocation();
 
             if (!File.Exists(serverFilePath)) {
@@ -56,7 +60,6 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
             await Task.Yield();
 
-            var cancelFile = Guid.NewGuid().ToString().Replace("-", "");
             var info = new ProcessStartInfo {
                 FileName = nodePath,
                 WorkingDirectory = serverFolderPath,
@@ -64,7 +67,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 RedirectStandardOutput = true,
                 UseShellExecute = false,
                 CreateNoWindow = true,
-                Arguments = $"{debugArgs} \"{serverFilePath}\" -- --stdio --cancellationReceive=file:{cancelFile}",
+                Arguments = $"{debugArgs} \"{serverFilePath}\" -- --stdio --cancellationReceive=file:{this.CancellationFolderName}",
             };
 
             var process = new Process {
