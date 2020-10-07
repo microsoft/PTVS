@@ -23,7 +23,6 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         InterpreterConfiguration InterpreterConfiguration { get; }
 
         string RootPath { get; }
-
         IEnumerable<string> SearchPaths { get; }
 
         event EventHandler InterpreterChanged;

@@ -536,7 +536,7 @@ This file should normally be deployed in your /static folder. See https://aka.ms
     <value>Python Files;*.py,*.pyw,*.pyi</value>
   </data>
   <data name="129" xml:space="preserve">
-    <value>Diagnostics</value>
+    <value>Analysis</value>
   </data>
   <data name="130" xml:space="preserve">
     <value>Experimental</value>

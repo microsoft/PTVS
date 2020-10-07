@@ -43,11 +43,13 @@ namespace Microsoft.PythonTools.Utility {
                 }
             } else {
                 // Try project
-                var project = site.GetProjectContainingFile(filePath);
-                if (project != null) {
-                    value = project.GetProjectProperty(settingName);
-                    if (value != null) {
-                        source = ValueSource.Project;
+                if (filePath != null) {
+                    var project = site.GetProjectContainingFile(filePath);
+                    if (project != null) {
+                        value = project.GetProjectProperty(settingName);
+                        if (value != null) {
+                            source = ValueSource.Project;
+                        }
                     }
                 }
             }

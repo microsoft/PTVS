@@ -1,5 +1,5 @@
 namespace Microsoft.PythonTools.Options {
-    partial class PythonFormattingOptionsControl {
+    partial class PythonAdvancedEditorOptionsControl {
         /// <summary> 
         /// Required designer variable.
         /// </summary>
@@ -24,48 +24,41 @@ namespace Microsoft.PythonTools.Options {
         /// </summary>
         private void InitializeComponent() {
             System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(PythonFormattingOptionsControl));
-            System.Windows.Forms.Label formatterLabel;
-            this._pasteRemovesReplPrompts = new System.Windows.Forms.CheckBox();
-            this._formatterCombo = new System.Windows.Forms.ComboBox();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(PythonAdvancedEditorOptionsControl));
+            this._completeFunctionParens = new System.Windows.Forms.CheckBox();
+            this._autoImportCompletions = new System.Windows.Forms.CheckBox();
             tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
-            formatterLabel = new System.Windows.Forms.Label();
             tableLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
             // tableLayoutPanel1
             // 
             resources.ApplyResources(tableLayoutPanel1, "tableLayoutPanel1");
-            tableLayoutPanel1.Controls.Add(this._pasteRemovesReplPrompts, 0, 1);
-            tableLayoutPanel1.Controls.Add(this._formatterCombo, 1, 0);
-            tableLayoutPanel1.Controls.Add(formatterLabel, 0, 0);
+            tableLayoutPanel1.Controls.Add(this._completeFunctionParens, 0, 1);
+            tableLayoutPanel1.Controls.Add(this._autoImportCompletions, 0, 0);
             tableLayoutPanel1.Name = "tableLayoutPanel1";
             // 
-            // _pasteRemovesReplPrompts
+            // _completeFunctionParens
             // 
-            resources.ApplyResources(this._pasteRemovesReplPrompts, "_pasteRemovesReplPrompts");
-            this._pasteRemovesReplPrompts.AutoEllipsis = true;
-            tableLayoutPanel1.SetColumnSpan(this._pasteRemovesReplPrompts, 2);
-            this._pasteRemovesReplPrompts.Name = "_pasteRemovesReplPrompts";
-            this._pasteRemovesReplPrompts.UseVisualStyleBackColor = true;
+            resources.ApplyResources(this._completeFunctionParens, "_completeFunctionParens");
+            tableLayoutPanel1.SetColumnSpan(this._completeFunctionParens, 2);
+            this._completeFunctionParens.Name = "_completeFunctionParens";
+            this._completeFunctionParens.UseVisualStyleBackColor = true;
             // 
-            // _formatterCombo
+            // _autoImportCompletions
             // 
-            this._formatterCombo.FormattingEnabled = true;
-            resources.ApplyResources(this._formatterCombo, "_formatterCombo");
-            this._formatterCombo.Name = "_formatterCombo";
+            resources.ApplyResources(this._autoImportCompletions, "_autoImportCompletions");
+            this._autoImportCompletions.AutoEllipsis = true;
+            tableLayoutPanel1.SetColumnSpan(this._autoImportCompletions, 2);
+            this._autoImportCompletions.Name = "_autoImportCompletions";
+            this._autoImportCompletions.UseVisualStyleBackColor = true;
             // 
-            // formatterLabel
-            // 
-            resources.ApplyResources(formatterLabel, "formatterLabel");
-            formatterLabel.Name = "formatterLabel";
-            // 
-            // PythonFormattingOptionsControl
+            // PythonAdvancedEditorOptionsControl
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(tableLayoutPanel1);
-            this.Name = "PythonFormattingOptionsControl";
+            this.Name = "PythonAdvancedEditorOptionsControl";
             tableLayoutPanel1.ResumeLayout(false);
             tableLayoutPanel1.PerformLayout();
             this.ResumeLayout(false);
@@ -74,7 +67,7 @@ namespace Microsoft.PythonTools.Options {
         }
 
         #endregion
-        private System.Windows.Forms.CheckBox _pasteRemovesReplPrompts;
-        private System.Windows.Forms.ComboBox _formatterCombo;
+        private System.Windows.Forms.CheckBox _autoImportCompletions;
+        private System.Windows.Forms.CheckBox _completeFunctionParens;
     }
 }

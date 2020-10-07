@@ -45,9 +45,10 @@ namespace Microsoft.PythonTools {
         private Lazy<IInterpreterOptionsService> _interpreterOptionsService;
         private Lazy<IInterpreterRegistryService> _interpreterRegistryService;
         private readonly Lazy<PythonFormattingOptions> _formattingOptions;
+        private readonly Lazy<PythonAdvancedEditorOptions> _advancedEditorOptions;
         private readonly Lazy<PythonDebuggingOptions> _debuggerOptions;
         private readonly Lazy<PythonCondaOptions> _condaOptions;
-        private readonly Lazy<PythonDiagnosticsOptions> _diagnosticsOptions;
+        private readonly Lazy<PythonAnalysisOptions> _analysisOptions;
         private readonly Lazy<PythonGeneralOptions> _generalOptions;
         private readonly Lazy<PythonInteractiveOptions> _debugInteractiveOptions;
         private readonly Lazy<PythonInteractiveOptions> _interactiveOptions;
@@ -79,9 +80,10 @@ namespace Microsoft.PythonTools {
 
             _idleManager = new IdleManager(container);
             _formattingOptions = new Lazy<PythonFormattingOptions>(CreateFormattingOptions);
+            _advancedEditorOptions = new Lazy<PythonAdvancedEditorOptions>(CreateAdvancedEditorOptions);
             _debuggerOptions = new Lazy<PythonDebuggingOptions>(CreateDebuggerOptions);
             _condaOptions = new Lazy<PythonCondaOptions>(CreateCondaOptions);
-            _diagnosticsOptions = new Lazy<PythonDiagnosticsOptions>(CreateDiagnosticsOptions);
+            _analysisOptions = new Lazy<PythonAnalysisOptions>(CreateAnalysisOptions);
             _generalOptions = new Lazy<PythonGeneralOptions>(CreateGeneralOptions);
             _suppressDialogOptions = new Lazy<SuppressDialogOptions>(() => new SuppressDialogOptions(this));
             _interactiveOptions = new Lazy<PythonInteractiveOptions>(() => CreateInteractiveOptions("Interactive"));
@@ -123,13 +125,11 @@ namespace Microsoft.PythonTools {
                     var installed = registry.Configurations.Count();
                     var installedV2 = registry.Configurations.Count(c => c.Version.Major == 2);
                     var installedV3 = registry.Configurations.Count(c => c.Version.Major == 3);
-                    var installedIronPython = registry.Configurations.Where(c => c.IsIronPython()).Count();
 
                     Logger.LogEvent(PythonLogEvent.InstalledInterpreters, new Dictionary<string, object> {
                         { "Total", installed },
                         { "3x", installedV3 },
                         { "2x", installedV2 },
-                        { "IronPython", installedIronPython },
                     });
                 }
             } catch (Exception ex) {
@@ -153,14 +153,21 @@ namespace Microsoft.PythonTools {
         #region Public API
 
         public PythonFormattingOptions FormattingOptions => _formattingOptions.Value;
+        public PythonAdvancedEditorOptions AdvancedEditorOptions => _advancedEditorOptions.Value;
         public PythonDebuggingOptions DebuggerOptions => _debuggerOptions.Value;
         public PythonCondaOptions CondaOptions => _condaOptions.Value;
-        public PythonDiagnosticsOptions DiagnosticsOptions => _diagnosticsOptions.Value;
+        public PythonAnalysisOptions AnalysisOptions => _analysisOptions.Value;
         public PythonGeneralOptions GeneralOptions => _generalOptions.Value;
         internal PythonInteractiveOptions DebugInteractiveOptions => _debugInteractiveOptions.Value;
 
         private PythonFormattingOptions CreateFormattingOptions() {
             var opts = new PythonFormattingOptions(this);
+            opts.Load();
+            return opts;
+        }
+
+        private PythonAdvancedEditorOptions CreateAdvancedEditorOptions() {
+            var opts = new PythonAdvancedEditorOptions(this);
             opts.Load();
             return opts;
         }
@@ -177,8 +184,8 @@ namespace Microsoft.PythonTools {
             return opts;
         }
 
-        private PythonDiagnosticsOptions CreateDiagnosticsOptions() {
-            var opts = new PythonDiagnosticsOptions(this);
+        private PythonAnalysisOptions CreateAnalysisOptions() {
+            var opts = new PythonAnalysisOptions(this);
             opts.Load();
             return opts;
         }
@@ -241,84 +248,79 @@ namespace Microsoft.PythonTools {
 
         #region Registry Persistance
 
-        internal void DeleteCategory(string category) {
-            _optionsService.DeleteCategory(category);
+        internal void DeleteCategory(string category)
+            => _optionsService.DeleteCategory(category);
+
+        internal bool SaveBool(string name, string category, bool value)
+            => SaveString(name, category, value.ToString());
+
+        internal bool SaveInt(string name, string category, int value)
+            => SaveString(name, category, value.ToString());
+
+        internal bool SaveString(string name, string category, string value) {
+            if (LoadString(name, category) != value) {
+                _optionsService.SaveString(name, category, value);
+                return true;
+            }
+            return false;
         }
 
-        internal void SaveBool(string name, string category, bool value) {
-            SaveString(name, category, value.ToString());
+        internal bool SaveMultilineString(string name, string category, string[] values) {
+            values = values ?? Array.Empty<string>();
+            if (!Enumerable.SequenceEqual(LoadMultilineString(name, category), values)) {
+                _optionsService.SaveString(name, category, string.Join("\n", values));
+                return true;
+            }
+            return false;
         }
 
-        internal void SaveInt(string name, string category, int value) {
-            SaveString(name, category, value.ToString());
+
+        internal string LoadString(string name, string category) => _optionsService.LoadString(name, category);
+
+        internal string[] LoadMultilineString(string name, string category) {
+            return _optionsService.LoadString(name, category)?
+                .Split(new[] { ';', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string>();
         }
 
-        internal void SaveString(string name, string category, string value) {
-            _optionsService.SaveString(name, category, value);
-        }
+        internal void SaveEnum<T>(string name, string category, T value) where T : struct
+            => SaveString(name, category, value.ToString());
 
-        internal string LoadString(string name, string category) {
-            return _optionsService.LoadString(name, category);
-        }
-
-        internal void SaveEnum<T>(string name, string category, T value) where T : struct {
-            SaveString(name, category, value.ToString());
-        }
-
-        internal void SaveDateTime(string name, string category, DateTime value) {
-            SaveString(name, category, value.ToString(CultureInfo.InvariantCulture));
-        }
+        internal void SaveDateTime(string name, string category, DateTime value)
+            => SaveString(name, category, value.ToString(CultureInfo.InvariantCulture));
 
         internal int? LoadInt(string name, string category) {
-            string res = LoadString(name, category);
+            var res = LoadString(name, category);
             if (res == null) {
                 return null;
             }
-
-            int val;
-            if (int.TryParse(res, out val)) {
-                return val;
-            }
-            return null;
+            return int.TryParse(res, out var val) ? val : (int?)null;
         }
 
         internal bool? LoadBool(string name, string category) {
-            string res = LoadString(name, category);
+            var res = LoadString(name, category);
             if (res == null) {
                 return null;
             }
 
-            bool val;
-            if (bool.TryParse(res, out val)) {
-                return val;
-            }
-            return null;
+            return bool.TryParse(res, out var val) ? val : (bool?)null;
         }
 
         internal T? LoadEnum<T>(string name, string category) where T : struct {
-            string res = LoadString(name, category);
+            var res = LoadString(name, category);
             if (res == null) {
                 return null;
             }
 
-            T enumRes;
-            if (Enum.TryParse<T>(res, out enumRes)) {
-                return enumRes;
-            }
-            return null;
+            return Enum.TryParse<T>(res, out var enumRes) ? (T?)enumRes : null;
         }
 
         internal DateTime? LoadDateTime(string name, string category) {
-            string res = LoadString(name, category);
+            var res = LoadString(name, category);
             if (res == null) {
                 return null;
             }
 
-            DateTime dateRes;
-            if (DateTime.TryParse(res, CultureInfo.InvariantCulture, DateTimeStyles.None, out dateRes)) {
-                return dateRes;
-            }
-            return null;
+            return DateTime.TryParse(res, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dateRes) ? (DateTime?)dateRes : null;
         }
 
         #endregion
@@ -356,9 +358,8 @@ namespace Microsoft.PythonTools {
 
         #endregion
 
-        internal Dictionary<string, string> GetFullEnvironment(LaunchConfiguration config) {
-           return LaunchConfigurationUtils.GetFullEnvironment(config, _container);
-        }
+        internal Dictionary<string, string> GetFullEnvironment(LaunchConfiguration config)
+            => LaunchConfigurationUtils.GetFullEnvironment(config, _container);
 
         internal IEnumerable<string> GetGlobalPythonSearchPaths(InterpreterConfiguration interpreter) {
             if (!GeneralOptions.ClearGlobalPythonPath) {

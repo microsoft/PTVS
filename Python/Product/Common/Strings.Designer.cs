@@ -3060,6 +3060,33 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Open files only.
+        /// </summary>
+        public static string DiagnosticModeOpenFiles {
+            get {
+                return ResourceManager.GetString("DiagnosticModeOpenFiles", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Analyzes and reports errors on only open files or the entire workspace..
+        /// </summary>
+        public static string DiagnosticModeToolTip {
+            get {
+                return ResourceManager.GetString("DiagnosticModeToolTip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Workspace.
+        /// </summary>
+        public static string DiagnosticModeWorkspace {
+            get {
+                return ResourceManager.GetString("DiagnosticModeWorkspace", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Diagnostics log was copied to the clipboard..
         /// </summary>
         public static string DiagnosticsLogCopiedToClipboard {
@@ -4686,6 +4713,51 @@ namespace Microsoft.PythonTools {
         public static string LinesBetweenMethodsInClassShort {
             get {
                 return ResourceManager.GetString("LinesBetweenMethodsInClassShort", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error.
+        /// </summary>
+        public static string LogLevelError {
+            get {
+                return ResourceManager.GetString("LogLevelError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Information.
+        /// </summary>
+        public static string LogLevelInformation {
+            get {
+                return ResourceManager.GetString("LogLevelInformation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Specifies the level of logging for the Output panel..
+        /// </summary>
+        public static string LogLevelToolTip {
+            get {
+                return ResourceManager.GetString("LogLevelToolTip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Trace.
+        /// </summary>
+        public static string LogLevelTrace {
+            get {
+                return ResourceManager.GetString("LogLevelTrace", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Warning.
+        /// </summary>
+        public static string LogLevelWarning {
+            get {
+                return ResourceManager.GetString("LogLevelWarning", resourceCulture);
             }
         }
         
@@ -6656,6 +6728,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Additional import search resolution paths. You can use line breaks or semicolons to separate multiple paths..
+        /// </summary>
+        public static string SearchPathsToolTip {
+            get {
+                return ResourceManager.GetString("SearchPathsToolTip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to An unexpected error occurred.
         ///
         ///You can get more information by running Visual Studio with the /log parameter on the command line, and then examining the file &apos;{0}&apos;, or by checking Event Viewer..
@@ -7157,6 +7238,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Path to directory containing custom type stub files..
+        /// </summary>
+        public static string StubPathToolTip {
+            get {
+                return ResourceManager.GetString("StubPathToolTip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Surround With.
         /// </summary>
         public static string SurroundWith {
@@ -7270,6 +7360,42 @@ namespace Microsoft.PythonTools {
         public static string TestDiscoveryFailedMissingLaunchConfiguration {
             get {
                 return ResourceManager.GetString("TestDiscoveryFailedMissingLaunchConfiguration", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Basic.
+        /// </summary>
+        public static string TypeCheckingModeBasic {
+            get {
+                return ResourceManager.GetString("TypeCheckingModeBasic", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Strict.
+        /// </summary>
+        public static string TypeCheckingModeStrict {
+            get {
+                return ResourceManager.GetString("TypeCheckingModeStrict", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Defines the default rule set for type checking..
+        /// </summary>
+        public static string TypeCheckingModeToolTip {
+            get {
+                return ResourceManager.GetString("TypeCheckingModeToolTip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Paths to look for typeshed modules. You can use line breaks or semicolons to separate multiple paths..
+        /// </summary>
+        public static string TypeshedPathsToolTip {
+            get {
+                return ResourceManager.GetString("TypeshedPathsToolTip", resourceCulture);
             }
         }
         
