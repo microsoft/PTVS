@@ -25,26 +25,26 @@
         private void InitializeComponent() {
             System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(PythonAnalysisOptionsControl));
+            System.Windows.Forms.Label typeShedPathsLabel;
+            System.Windows.Forms.Label searchPathsLabel;
             System.Windows.Forms.Label typeCheckingModeLabel;
             System.Windows.Forms.Label stubsPathsLabel;
             System.Windows.Forms.Label logLevelLabel;
             System.Windows.Forms.Label diagnosticModeLabel;
-            System.Windows.Forms.Label searchPathsLabel;
-            System.Windows.Forms.Label typeShedPathsLabel;
             this._typeCheckingModeCombo = new System.Windows.Forms.ComboBox();
-            this._autoSearchPathCheckbox = new System.Windows.Forms.CheckBox();
             this._logLevelCombo = new System.Windows.Forms.ComboBox();
             this._diagnosticsModeCombo = new System.Windows.Forms.ComboBox();
             this._stubsPath = new System.Windows.Forms.TextBox();
+            this._autoSearchPathCheckbox = new System.Windows.Forms.CheckBox();
             this._searchPathsTextBox = new System.Windows.Forms.TextBox();
             this._typeshedPathsTextBox = new System.Windows.Forms.TextBox();
             tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
+            typeShedPathsLabel = new System.Windows.Forms.Label();
+            searchPathsLabel = new System.Windows.Forms.Label();
             typeCheckingModeLabel = new System.Windows.Forms.Label();
             stubsPathsLabel = new System.Windows.Forms.Label();
             logLevelLabel = new System.Windows.Forms.Label();
             diagnosticModeLabel = new System.Windows.Forms.Label();
-            searchPathsLabel = new System.Windows.Forms.Label();
-            typeShedPathsLabel = new System.Windows.Forms.Label();
             tableLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -66,6 +66,16 @@
             tableLayoutPanel1.Controls.Add(this._typeshedPathsTextBox, 1, 5);
             tableLayoutPanel1.Name = "tableLayoutPanel1";
             // 
+            // typeShedPathsLabel
+            // 
+            resources.ApplyResources(typeShedPathsLabel, "typeShedPathsLabel");
+            typeShedPathsLabel.Name = "typeShedPathsLabel";
+            // 
+            // searchPathsLabel
+            // 
+            resources.ApplyResources(searchPathsLabel, "searchPathsLabel");
+            searchPathsLabel.Name = "searchPathsLabel";
+            // 
             // _typeCheckingModeCombo
             // 
             this._typeCheckingModeCombo.FormattingEnabled = true;
@@ -76,13 +86,6 @@
             // 
             resources.ApplyResources(typeCheckingModeLabel, "typeCheckingModeLabel");
             typeCheckingModeLabel.Name = "typeCheckingModeLabel";
-            // 
-            // _autoSearchPathCheckbox
-            // 
-            resources.ApplyResources(this._autoSearchPathCheckbox, "_autoSearchPathCheckbox");
-            tableLayoutPanel1.SetColumnSpan(this._autoSearchPathCheckbox, 2);
-            this._autoSearchPathCheckbox.Name = "_autoSearchPathCheckbox";
-            this._autoSearchPathCheckbox.UseVisualStyleBackColor = true;
             // 
             // stubsPathsLabel
             // 
@@ -116,20 +119,17 @@
             resources.ApplyResources(this._stubsPath, "_stubsPath");
             this._stubsPath.Name = "_stubsPath";
             // 
-            // searchPathsLabel
+            // _autoSearchPathCheckbox
             // 
-            resources.ApplyResources(searchPathsLabel, "searchPathsLabel");
-            searchPathsLabel.Name = "searchPathsLabel";
+            resources.ApplyResources(this._autoSearchPathCheckbox, "_autoSearchPathCheckbox");
+            tableLayoutPanel1.SetColumnSpan(this._autoSearchPathCheckbox, 2);
+            this._autoSearchPathCheckbox.Name = "_autoSearchPathCheckbox";
+            this._autoSearchPathCheckbox.UseVisualStyleBackColor = true;
             // 
             // _searchPathsTextBox
             // 
             resources.ApplyResources(this._searchPathsTextBox, "_searchPathsTextBox");
             this._searchPathsTextBox.Name = "_searchPathsTextBox";
-            // 
-            // typeShedPathsLabel
-            // 
-            resources.ApplyResources(typeShedPathsLabel, "typeShedPathsLabel");
-            typeShedPathsLabel.Name = "typeShedPathsLabel";
             // 
             // _typeshedPathsTextBox
             // 

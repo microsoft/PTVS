@@ -154,7 +154,7 @@
     <value>2</value>
   </data>
   <data name="_completeFunctionParens.Text" xml:space="preserve">
-    <value>Automatically add &amp;brackets for functions</value>
+    <value>&amp;Automatically add brackets for functions</value>
   </data>
   <data name="&gt;&gt;_completeFunctionParens.Name" xml:space="preserve">
     <value>_completeFunctionParens</value>
@@ -187,7 +187,7 @@
     <value>1</value>
   </data>
   <data name="_autoImportCompletions.Text" xml:space="preserve">
-    <value>Offer &amp;auto-import completions</value>
+    <value>&amp;Offer auto-import completions</value>
   </data>
   <data name="&gt;&gt;_autoImportCompletions.Name" xml:space="preserve">
     <value>_autoImportCompletions</value>
