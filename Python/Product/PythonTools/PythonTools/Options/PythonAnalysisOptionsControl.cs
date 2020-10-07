@@ -25,21 +25,32 @@ namespace Microsoft.PythonTools.Options {
 
             _diagnosticsModeCombo.Items.Add(Strings.DiagnosticModeOpenFiles);
             _diagnosticsModeCombo.Items.Add(Strings.DiagnosticModeWorkspace);
+            _diagnosticModeToolTip.SetToolTip(_diagnosticsModeCombo, Strings.DiagnosticModeToolTip);
 
             _typeCheckingModeCombo.Items.Add(Strings.TypeCheckingModeBasic);
             _typeCheckingModeCombo.Items.Add(Strings.TypeCheckingModeStrict);
+            _typeCheckingToolTip.SetToolTip(_typeCheckingModeCombo, Strings.TypeCheckingModeToolTip);
 
             _logLevelCombo.Items.Add(Strings.LogLevelError);
             _logLevelCombo.Items.Add(Strings.LogLevelWarning);
             _logLevelCombo.Items.Add(Strings.LogLevelInformation);
             _logLevelCombo.Items.Add(Strings.LogLevelTrace);
+            _logLevelToolTip.SetToolTip(_logLevelCombo, Strings.LogLevelToolTip);
+
+            _stubsPathToolTip.SetToolTip(_stubsPath, Strings.StubPathToolTip);
+            
+            _searchPathsToolTip.SetToolTip(_searchPaths, Strings.SearchPathsToolTip);
+            _searchPathsLabelToolTip.SetToolTip(_searchPathsLabel, Strings.SearchPathsToolTip);
+
+            _typeshedPathsToolTip.SetToolTip(_typeshedPaths, Strings.TypeshedPathsToolTip);
+            _typeshedPathsLabelToolTip.SetToolTip(_typeShedPathsLabel, Strings.TypeshedPathsToolTip);
         }
 
         internal void SyncControlWithPageSettings(PythonToolsService pyService) {
             _stubsPath.Text = pyService.AnalysisOptions.StubPath;
 
-            _searchPathsTextBox.Text = pyService.AnalysisOptions.ExtraPaths != null ? string.Join(";", pyService.AnalysisOptions.ExtraPaths) : null;
-            _typeshedPathsTextBox.Text = pyService.AnalysisOptions.TypeshedPaths != null ? string.Join(";", pyService.AnalysisOptions.TypeshedPaths) : null;
+            _searchPaths.Lines = pyService.AnalysisOptions.ExtraPaths ?? Array.Empty<string>();
+            _typeshedPaths.Lines = pyService.AnalysisOptions.TypeshedPaths ?? Array.Empty<string>();
 
             _autoSearchPathCheckbox.Checked = pyService.AnalysisOptions.AutoSearchPaths;
             _diagnosticsModeCombo.SelectedIndex =
@@ -62,10 +73,13 @@ namespace Microsoft.PythonTools.Options {
 
         internal void SyncPageWithControlSettings(PythonToolsService pyService) {
             pyService.AnalysisOptions.StubPath = _stubsPath.Text;
-            
-            pyService.AnalysisOptions.ExtraPaths = _searchPathsTextBox.Text?.Split(';') ?? Array.Empty<string>();
-            pyService.AnalysisOptions.TypeshedPaths = _typeshedPathsTextBox.Text?.Split(';') ?? Array.Empty<string>();
-            
+
+            var pathsSeparators = new[] { ';', '\n', '\r' };
+            pyService.AnalysisOptions.ExtraPaths = _searchPaths.Text?
+                .Split(pathsSeparators, StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string>();
+            pyService.AnalysisOptions.TypeshedPaths = _typeshedPaths.Text?
+                .Split(pathsSeparators, StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string>();
+
             pyService.AnalysisOptions.AutoSearchPaths = _autoSearchPathCheckbox.Checked;
             pyService.AnalysisOptions.DiagnosticMode = _diagnosticsModeCombo.SelectedIndex == 0 ?
                 PythonLanguageClient.DiagnosticMode.OpenFilesOnly : PythonLanguageClient.DiagnosticMode.Workspace;
@@ -86,6 +100,6 @@ namespace Microsoft.PythonTools.Options {
                     pyService.AnalysisOptions.LogLevel = PythonLanguageClient.LogLevel.Trace;
                     break;
             }
-       }
+        }
     }
 }

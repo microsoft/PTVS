@@ -70,13 +70,13 @@ namespace Microsoft.PythonTools.Options {
                 changed = true;
             }
 
-            var typeshedPaths = _service.LoadString(nameof(TypeshedPaths), Category)?.Split(';');
+            var typeshedPaths = _service.LoadMultilineString(nameof(TypeshedPaths), Category);
             if (!Enumerable.SequenceEqual(TypeshedPaths.MaybeEnumerate(), typeshedPaths.MaybeEnumerate())) {
                 TypeshedPaths = typeshedPaths;
                 changed = true;
             }
 
-            var extraPaths = _service.LoadString(nameof(ExtraPaths), Category)?.Split(';');
+            var extraPaths = _service.LoadMultilineString(nameof(ExtraPaths), Category);
             if (!Enumerable.SequenceEqual(ExtraPaths.MaybeEnumerate(), extraPaths.MaybeEnumerate())) {
                 ExtraPaths = extraPaths;
                 changed = true;
@@ -99,8 +99,8 @@ namespace Microsoft.PythonTools.Options {
             changed |= _service.SaveString(nameof(LogLevel), Category, LogLevel);
             changed |= _service.SaveString(nameof(StubPath), Category, StubPath);
             changed |= _service.SaveString(nameof(TypeCheckingMode), Category, TypeCheckingMode);
-            changed |= _service.SaveString(nameof(TypeshedPaths), Category, TypeshedPaths != null ? string.Join(";", TypeshedPaths) : null);
-            changed |= _service.SaveString(nameof(ExtraPaths), Category, ExtraPaths != null ? string.Join(";", ExtraPaths) : null);
+            changed |= _service.SaveMultilineString(nameof(TypeshedPaths), Category, TypeshedPaths);
+            changed |= _service.SaveMultilineString(nameof(ExtraPaths), Category, ExtraPaths);
             changed |= _service.SaveBool(nameof(UseLibraryCodeForTypes), Category, UseLibraryCodeForTypes);
             if (changed) {
                 Changed?.Invoke(this, EventArgs.Empty);

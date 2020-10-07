@@ -23,24 +23,32 @@
         /// the contents of this method with the code editor.
         /// </summary>
         private void InitializeComponent() {
+            this.components = new System.ComponentModel.Container();
             System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(PythonAnalysisOptionsControl));
-            System.Windows.Forms.Label typeShedPathsLabel;
-            System.Windows.Forms.Label searchPathsLabel;
             System.Windows.Forms.Label typeCheckingModeLabel;
             System.Windows.Forms.Label stubsPathsLabel;
             System.Windows.Forms.Label logLevelLabel;
             System.Windows.Forms.Label diagnosticModeLabel;
+            this._typeShedPathsLabel = new System.Windows.Forms.Label();
+            this._searchPathsLabel = new System.Windows.Forms.Label();
             this._typeCheckingModeCombo = new System.Windows.Forms.ComboBox();
             this._logLevelCombo = new System.Windows.Forms.ComboBox();
             this._diagnosticsModeCombo = new System.Windows.Forms.ComboBox();
             this._stubsPath = new System.Windows.Forms.TextBox();
+            this._searchPaths = new System.Windows.Forms.TextBox();
+            this._typeshedPaths = new System.Windows.Forms.TextBox();
+            this._diagnosticModeToolTip = new System.Windows.Forms.ToolTip(this.components);
+            this._logLevelToolTip = new System.Windows.Forms.ToolTip(this.components);
+            this._typeCheckingToolTip = new System.Windows.Forms.ToolTip(this.components);
+            this._stubsPathToolTip = new System.Windows.Forms.ToolTip(this.components);
+            this._searchPathsToolTip = new System.Windows.Forms.ToolTip(this.components);
+            this._typeshedPathsToolTip = new System.Windows.Forms.ToolTip(this.components);
+            this._commonSearchPathsToolTip = new System.Windows.Forms.ToolTip(this.components);
             this._autoSearchPathCheckbox = new System.Windows.Forms.CheckBox();
-            this._searchPathsTextBox = new System.Windows.Forms.TextBox();
-            this._typeshedPathsTextBox = new System.Windows.Forms.TextBox();
+            this._searchPathsLabelToolTip = new System.Windows.Forms.ToolTip(this.components);
+            this._typeshedPathsLabelToolTip = new System.Windows.Forms.ToolTip(this.components);
             tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
-            typeShedPathsLabel = new System.Windows.Forms.Label();
-            searchPathsLabel = new System.Windows.Forms.Label();
             typeCheckingModeLabel = new System.Windows.Forms.Label();
             stubsPathsLabel = new System.Windows.Forms.Label();
             logLevelLabel = new System.Windows.Forms.Label();
@@ -51,8 +59,8 @@
             // tableLayoutPanel1
             // 
             resources.ApplyResources(tableLayoutPanel1, "tableLayoutPanel1");
-            tableLayoutPanel1.Controls.Add(typeShedPathsLabel, 0, 5);
-            tableLayoutPanel1.Controls.Add(searchPathsLabel, 0, 4);
+            tableLayoutPanel1.Controls.Add(this._typeShedPathsLabel, 0, 5);
+            tableLayoutPanel1.Controls.Add(this._searchPathsLabel, 0, 4);
             tableLayoutPanel1.Controls.Add(this._typeCheckingModeCombo, 1, 2);
             tableLayoutPanel1.Controls.Add(typeCheckingModeLabel, 0, 2);
             tableLayoutPanel1.Controls.Add(stubsPathsLabel, 0, 3);
@@ -61,20 +69,20 @@
             tableLayoutPanel1.Controls.Add(this._diagnosticsModeCombo, 1, 0);
             tableLayoutPanel1.Controls.Add(diagnosticModeLabel, 0, 0);
             tableLayoutPanel1.Controls.Add(this._stubsPath, 1, 3);
-            tableLayoutPanel1.Controls.Add(this._autoSearchPathCheckbox, 0, 6);
-            tableLayoutPanel1.Controls.Add(this._searchPathsTextBox, 1, 4);
-            tableLayoutPanel1.Controls.Add(this._typeshedPathsTextBox, 1, 5);
+            tableLayoutPanel1.Controls.Add(this._autoSearchPathCheckbox, 0, 7);
+            tableLayoutPanel1.Controls.Add(this._searchPaths, 1, 4);
+            tableLayoutPanel1.Controls.Add(this._typeshedPaths, 1, 5);
             tableLayoutPanel1.Name = "tableLayoutPanel1";
             // 
-            // typeShedPathsLabel
+            // _typeShedPathsLabel
             // 
-            resources.ApplyResources(typeShedPathsLabel, "typeShedPathsLabel");
-            typeShedPathsLabel.Name = "typeShedPathsLabel";
+            resources.ApplyResources(this._typeShedPathsLabel, "_typeShedPathsLabel");
+            this._typeShedPathsLabel.Name = "_typeShedPathsLabel";
             // 
-            // searchPathsLabel
+            // _searchPathsLabel
             // 
-            resources.ApplyResources(searchPathsLabel, "searchPathsLabel");
-            searchPathsLabel.Name = "searchPathsLabel";
+            resources.ApplyResources(this._searchPathsLabel, "_searchPathsLabel");
+            this._searchPathsLabel.Name = "_searchPathsLabel";
             // 
             // _typeCheckingModeCombo
             // 
@@ -119,22 +127,24 @@
             resources.ApplyResources(this._stubsPath, "_stubsPath");
             this._stubsPath.Name = "_stubsPath";
             // 
+            // _searchPaths
+            // 
+            this._searchPaths.AcceptsReturn = true;
+            resources.ApplyResources(this._searchPaths, "_searchPaths");
+            this._searchPaths.Name = "_searchPaths";
+            // 
+            // _typeshedPaths
+            // 
+            this._typeshedPaths.AcceptsReturn = true;
+            resources.ApplyResources(this._typeshedPaths, "_typeshedPaths");
+            this._typeshedPaths.Name = "_typeshedPaths";
+            // 
             // _autoSearchPathCheckbox
             // 
             resources.ApplyResources(this._autoSearchPathCheckbox, "_autoSearchPathCheckbox");
             tableLayoutPanel1.SetColumnSpan(this._autoSearchPathCheckbox, 2);
             this._autoSearchPathCheckbox.Name = "_autoSearchPathCheckbox";
             this._autoSearchPathCheckbox.UseVisualStyleBackColor = true;
-            // 
-            // _searchPathsTextBox
-            // 
-            resources.ApplyResources(this._searchPathsTextBox, "_searchPathsTextBox");
-            this._searchPathsTextBox.Name = "_searchPathsTextBox";
-            // 
-            // _typeshedPathsTextBox
-            // 
-            resources.ApplyResources(this._typeshedPathsTextBox, "_typeshedPathsTextBox");
-            this._typeshedPathsTextBox.Name = "_typeshedPathsTextBox";
             // 
             // PythonAnalysisOptionsControl
             // 
@@ -152,10 +162,21 @@
         #endregion
         private System.Windows.Forms.ComboBox _diagnosticsModeCombo;
         private System.Windows.Forms.ComboBox _logLevelCombo;
-        private System.Windows.Forms.CheckBox _autoSearchPathCheckbox;
         private System.Windows.Forms.TextBox _stubsPath;
         private System.Windows.Forms.ComboBox _typeCheckingModeCombo;
-        private System.Windows.Forms.TextBox _searchPathsTextBox;
-        private System.Windows.Forms.TextBox _typeshedPathsTextBox;
+        private System.Windows.Forms.TextBox _searchPaths;
+        private System.Windows.Forms.TextBox _typeshedPaths;
+        private System.Windows.Forms.ToolTip _diagnosticModeToolTip;
+        private System.Windows.Forms.ToolTip _logLevelToolTip;
+        private System.Windows.Forms.ToolTip _typeCheckingToolTip;
+        private System.Windows.Forms.ToolTip _stubsPathToolTip;
+        private System.Windows.Forms.ToolTip _searchPathsToolTip;
+        private System.Windows.Forms.ToolTip _typeshedPathsToolTip;
+        private System.Windows.Forms.ToolTip _commonSearchPathsToolTip;
+        private System.Windows.Forms.CheckBox _autoSearchPathCheckbox;
+        private System.Windows.Forms.ToolTip _searchPathsLabelToolTip;
+        private System.Windows.Forms.ToolTip _typeshedPathsLabelToolTip;
+        private System.Windows.Forms.Label _typeShedPathsLabel;
+        private System.Windows.Forms.Label _searchPathsLabel;
     }
 }

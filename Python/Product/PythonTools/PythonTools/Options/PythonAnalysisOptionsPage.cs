@@ -38,9 +38,7 @@ namespace Microsoft.PythonTools.Options {
         /// a call to <see cref="SaveSettingsToStorage"/> to commit the new
         /// values.
         /// </summary>
-        public override void ResetSettings() {
-            PyService.AnalysisOptions.Reset();
-        }
+        public override void ResetSettings() => PyService.AnalysisOptions.Reset();
 
         public override void LoadSettingsFromStorage() {
             PyService.AnalysisOptions.Load();

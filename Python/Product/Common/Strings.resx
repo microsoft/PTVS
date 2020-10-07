@@ -3014,4 +3014,22 @@ Please specify at least one package.</value>
   <data name="TypeCheckingModeStrict" xml:space="preserve">
     <value>Strict</value>
   </data>
+  <data name="DiagnosticModeToolTip" xml:space="preserve">
+    <value>Analyzes and reports errors on only open files or the entire workspace.</value>
+  </data>
+  <data name="LogLevelToolTip" xml:space="preserve">
+    <value>Specifies the level of logging for the Output panel.</value>
+  </data>
+  <data name="SearchPathsToolTip" xml:space="preserve">
+    <value>Additional import search resolution paths. You can use line breaks or semicolons to separate multiple paths.</value>
+  </data>
+  <data name="StubPathToolTip" xml:space="preserve">
+    <value>Path to directory containing custom type stub files.</value>
+  </data>
+  <data name="TypeCheckingModeToolTip" xml:space="preserve">
+    <value>Defines the default rule set for type checking.</value>
+  </data>
+  <data name="TypeshedPathsToolTip" xml:space="preserve">
+    <value>Paths to look for typeshed modules. You can use line breaks or semicolons to separate multiple paths.</value>
+  </data>
 </root>

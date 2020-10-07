@@ -248,9 +248,8 @@ namespace Microsoft.PythonTools {
 
         #region Registry Persistance
 
-        internal void DeleteCategory(string category) {
-            _optionsService.DeleteCategory(category);
-        }
+        internal void DeleteCategory(string category)
+            => _optionsService.DeleteCategory(category);
 
         internal bool SaveBool(string name, string category, bool value)
             => SaveString(name, category, value.ToString());
@@ -266,68 +265,62 @@ namespace Microsoft.PythonTools {
             return false;
         }
 
-        internal string LoadString(string name, string category) {
-            return _optionsService.LoadString(name, category);
+        internal bool SaveMultilineString(string name, string category, string[] values) {
+            values = values ?? Array.Empty<string>();
+            if (!Enumerable.SequenceEqual(LoadMultilineString(name, category), values)) {
+                _optionsService.SaveString(name, category, string.Join("\n", values));
+                return true;
+            }
+            return false;
         }
 
-        internal void SaveEnum<T>(string name, string category, T value) where T : struct {
-            SaveString(name, category, value.ToString());
+
+        internal string LoadString(string name, string category) => _optionsService.LoadString(name, category);
+
+        internal string[] LoadMultilineString(string name, string category) {
+            return _optionsService.LoadString(name, category)?
+                .Split(new[] { ';', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string>();
         }
 
-        internal void SaveDateTime(string name, string category, DateTime value) {
-            SaveString(name, category, value.ToString(CultureInfo.InvariantCulture));
-        }
+        internal void SaveEnum<T>(string name, string category, T value) where T : struct
+            => SaveString(name, category, value.ToString());
+
+        internal void SaveDateTime(string name, string category, DateTime value)
+            => SaveString(name, category, value.ToString(CultureInfo.InvariantCulture));
 
         internal int? LoadInt(string name, string category) {
-            string res = LoadString(name, category);
+            var res = LoadString(name, category);
             if (res == null) {
                 return null;
             }
-
-            int val;
-            if (int.TryParse(res, out val)) {
-                return val;
-            }
-            return null;
+            return int.TryParse(res, out var val) ? val : (int?)null;
         }
 
         internal bool? LoadBool(string name, string category) {
-            string res = LoadString(name, category);
+            var res = LoadString(name, category);
             if (res == null) {
                 return null;
             }
 
-            bool val;
-            if (bool.TryParse(res, out val)) {
-                return val;
-            }
-            return null;
+            return bool.TryParse(res, out var val) ? val : (bool?)null;
         }
 
         internal T? LoadEnum<T>(string name, string category) where T : struct {
-            string res = LoadString(name, category);
+            var res = LoadString(name, category);
             if (res == null) {
                 return null;
             }
 
-            T enumRes;
-            if (Enum.TryParse<T>(res, out enumRes)) {
-                return enumRes;
-            }
-            return null;
+            return Enum.TryParse<T>(res, out var enumRes) ? (T?)enumRes : null;
         }
 
         internal DateTime? LoadDateTime(string name, string category) {
-            string res = LoadString(name, category);
+            var res = LoadString(name, category);
             if (res == null) {
                 return null;
             }
 
-            DateTime dateRes;
-            if (DateTime.TryParse(res, CultureInfo.InvariantCulture, DateTimeStyles.None, out dateRes)) {
-                return dateRes;
-            }
-            return null;
+            return DateTime.TryParse(res, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dateRes) ? (DateTime?)dateRes : null;
         }
 
         #endregion
@@ -365,9 +358,8 @@ namespace Microsoft.PythonTools {
 
         #endregion
 
-        internal Dictionary<string, string> GetFullEnvironment(LaunchConfiguration config) {
-            return LaunchConfigurationUtils.GetFullEnvironment(config, _container);
-        }
+        internal Dictionary<string, string> GetFullEnvironment(LaunchConfiguration config)
+            => LaunchConfigurationUtils.GetFullEnvironment(config, _container);
 
         internal IEnumerable<string> GetGlobalPythonSearchPaths(InterpreterConfiguration interpreter) {
             if (!GeneralOptions.ClearGlobalPythonPath) {
