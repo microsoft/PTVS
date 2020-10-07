@@ -347,6 +347,16 @@
     <Compile Include="PythonTools\LanguageServerClient\PythonLanguageServer.cs" />
     <Compile Include="PythonTools\LanguageServerClient\PythonLanguageServerPylance.cs" />
     <Compile Include="PythonTools\LanguageServerClient\ReplDocument.cs" />
+    <Compile Include="PythonTools\Options\PythonAdvancedEditorOptionsControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="PythonTools\Options\PythonAdvancedEditorOptionsControl.Designer.cs">
+      <DependentUpon>PythonAdvancedEditorOptionsControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PythonTools\Options\PythonAdvancedEditorOptionsPage.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="PythonTools\Options\PythonAdvancedEditorOptions.cs" />
     <Compile Include="PythonTools\PythonLanguageInfo.cs" />
     <Compile Include="PythonTools\Options\PythonCondaOptions.cs" />
     <Compile Include="PythonTools\Options\PythonCondaOptionsControl.cs">
@@ -969,6 +979,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="PythonTools\Options\PythonAnalysisOptionsControl.resx">
       <DependentUpon>PythonAnalysisOptionsControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PythonTools\Options\PythonAdvancedEditorOptionsControl.resx">
+      <DependentUpon>PythonAdvancedEditorOptionsControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="PythonTools\Options\PythonGeneralOptionsControl.resx">
       <DependentUpon>PythonGeneralOptionsControl.cs</DependentUpon>

@@ -25,9 +25,6 @@ namespace Microsoft.PythonTools.Options {
         private const string AdvancedCategory = "Advanced";
         private const string GeneralCategory = "Advanced";
 
-        private const string IndentationInconsistencySeveritySetting = "IndentationInconsistencySeverity";
-        private const string UpdateSearchPathsWhenAddingLinkedFilesSetting = "UpdateSearchPathsWhenAddingLinkedFiles";
-
         private const string ShowOutputWindowForVirtualEnvCreateSetting = "ShowOutputWindowForVirtualEnvCreate";
         private const string ShowOutputWindowForPackageInstallationSetting = "ShowOutputWindowForPackageInstallation";
         private const string PromptForEnvCreateSetting = "PromptForEnvCreate";
@@ -35,9 +32,6 @@ namespace Microsoft.PythonTools.Options {
         private const string PromptForTestFrameWorkInfoBarSetting = "PromptForTestFrameWorkInfoBar";
         private const string PromptForPythonVersionNotSupportedInfoBarSetting = "PromptForPythonVersionNotSupportedInfoBarSetting";
         private const string ElevatePipSetting = "ElevatePip";
-        private const string UnresolvedImportWarningSetting = "UnresolvedImportWarning";
-        private const string InvalidEncodingWarningSetting = "InvalidEncodingWarningWarning";
-        private const string ClearGlobalPythonPathSetting = "ClearGlobalPythonPath";
 
         internal PythonGeneralOptions(PythonToolsService service) {
             _pyService = service;
@@ -52,12 +46,6 @@ namespace Microsoft.PythonTools.Options {
             PromptForPythonVersionNotSupported = _pyService.LoadBool(PromptForPythonVersionNotSupportedInfoBarSetting, GeneralCategory) ?? true;
 
             ElevatePip = _pyService.LoadBool(ElevatePipSetting, GeneralCategory) ?? false;
-            UnresolvedImportWarning = _pyService.LoadBool(UnresolvedImportWarningSetting, GeneralCategory) ?? true;
-            InvalidEncodingWarning = _pyService.LoadBool(InvalidEncodingWarningSetting, GeneralCategory) ?? true;
-            ClearGlobalPythonPath = _pyService.LoadBool(ClearGlobalPythonPathSetting, GeneralCategory) ?? true;
-
-            IndentationInconsistencySeverity = _pyService.LoadEnum<Severity>(IndentationInconsistencySeveritySetting, AdvancedCategory) ?? Severity.Warning;
-            UpdateSearchPathsWhenAddingLinkedFiles = _pyService.LoadBool(UpdateSearchPathsWhenAddingLinkedFilesSetting, AdvancedCategory) ?? true;
 
             Changed?.Invoke(this, EventArgs.Empty);
         }
@@ -70,10 +58,6 @@ namespace Microsoft.PythonTools.Options {
             _pyService.SaveBool(PromptForTestFrameWorkInfoBarSetting, GeneralCategory, PromptForTestFrameWorkInfoBar);
             _pyService.SaveBool(PromptForPythonVersionNotSupportedInfoBarSetting, GeneralCategory, PromptForPythonVersionNotSupported);
             _pyService.SaveBool(ElevatePipSetting, GeneralCategory, ElevatePip);
-            _pyService.SaveBool(UnresolvedImportWarningSetting, GeneralCategory, UnresolvedImportWarning);
-            _pyService.SaveBool(ClearGlobalPythonPathSetting, GeneralCategory, ClearGlobalPythonPath);
-            _pyService.SaveBool(UpdateSearchPathsWhenAddingLinkedFilesSetting, AdvancedCategory, UpdateSearchPathsWhenAddingLinkedFiles);
-            _pyService.SaveEnum(IndentationInconsistencySeveritySetting, AdvancedCategory, _indentationInconsistencySeverity);
             Changed?.Invoke(this, EventArgs.Empty);
         }
 

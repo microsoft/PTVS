@@ -130,6 +130,9 @@ namespace Microsoft.PythonTools {
         public const string StartupFileSetting = "StartupFile";
         public const string IsWindowsApplicationSetting = "IsWindowsApplication";
         public const string FormatterSetting = "Formatter";
+        public const string ExtraPathsSetting = "ExtraPaths";
+        public const string StubPathSetting = "StubPath";
+        public const string TypeCheckingModeSetting = "TypeCheckingMode";
         public const string EnvironmentSetting = "Environment";
         public const string TestFrameworkSetting = "TestFramework";
         public const string UnitTestRootDirectorySetting = "UnitTestRootDirectory";

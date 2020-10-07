@@ -14,6 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using System.Windows.Forms;
 using Microsoft.PythonTools.LanguageServerClient;
 
@@ -36,6 +37,10 @@ namespace Microsoft.PythonTools.Options {
 
         internal void SyncControlWithPageSettings(PythonToolsService pyService) {
             _stubsPath.Text = pyService.AnalysisOptions.StubPath;
+
+            _searchPathsTextBox.Text = pyService.AnalysisOptions.ExtraPaths != null ? string.Join(";", pyService.AnalysisOptions.ExtraPaths) : null;
+            _typeshedPathsTextBox.Text = pyService.AnalysisOptions.TypeshedPaths != null ? string.Join(";", pyService.AnalysisOptions.TypeshedPaths) : null;
+
             _autoSearchPathCheckbox.Checked = pyService.AnalysisOptions.AutoSearchPaths;
             _diagnosticsModeCombo.SelectedIndex =
                 pyService.AnalysisOptions.DiagnosticMode == PythonLanguageClient.DiagnosticMode.OpenFilesOnly ? 0 : 1;
@@ -57,6 +62,10 @@ namespace Microsoft.PythonTools.Options {
 
         internal void SyncPageWithControlSettings(PythonToolsService pyService) {
             pyService.AnalysisOptions.StubPath = _stubsPath.Text;
+            
+            pyService.AnalysisOptions.ExtraPaths = _searchPathsTextBox.Text?.Split(';') ?? Array.Empty<string>();
+            pyService.AnalysisOptions.TypeshedPaths = _typeshedPathsTextBox.Text?.Split(';') ?? Array.Empty<string>();
+            
             pyService.AnalysisOptions.AutoSearchPaths = _autoSearchPathCheckbox.Checked;
             pyService.AnalysisOptions.DiagnosticMode = _diagnosticsModeCombo.SelectedIndex == 0 ?
                 PythonLanguageClient.DiagnosticMode.OpenFilesOnly : PythonLanguageClient.DiagnosticMode.Workspace;

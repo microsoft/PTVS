@@ -15,6 +15,8 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Linq;
+using Microsoft.Python.Core;
 using Microsoft.PythonTools.LanguageServerClient;
 
 namespace Microsoft.PythonTools.Options {
@@ -29,6 +31,7 @@ namespace Microsoft.PythonTools.Options {
         public string TypeCheckingMode { get; set; }
         public string[] TypeshedPaths { get; set; }
         public bool UseLibraryCodeForTypes { get; set; }
+        public string[] ExtraPaths { get; set; }
 
         internal PythonAnalysisOptions(PythonToolsService service) {
             _service = service;
@@ -36,25 +39,72 @@ namespace Microsoft.PythonTools.Options {
         }
 
         public void Load() {
-            AutoSearchPaths = _service.LoadBool(nameof(AutoSearchPaths), Category) ?? true;
-            DiagnosticMode = _service.LoadString(nameof(DiagnosticMode), Category) ?? PythonLanguageClient.DiagnosticMode.OpenFilesOnly;
-            LogLevel = _service.LoadString(nameof(LogLevel), Category) ?? PythonLanguageClient.LogLevel.Information;
-            StubPath = _service.LoadString(nameof(StubPath), Category);
-            TypeCheckingMode = _service.LoadString(nameof(TypeCheckingMode), Category) ?? PythonLanguageClient.TypeCheckingMode.Basic;
-            TypeshedPaths = _service.LoadString(nameof(TypeshedPaths), Category)?.Split(';');
-            UseLibraryCodeForTypes = _service.LoadBool(nameof(UseLibraryCodeForTypes), Category) ?? true;
-            Changed?.Invoke(this, EventArgs.Empty);
+            var changed = false;
+            var autoSearchPaths = _service.LoadBool(nameof(AutoSearchPaths), Category) ?? true;
+            if(AutoSearchPaths != autoSearchPaths) {
+                AutoSearchPaths = autoSearchPaths;
+                changed = true;
+            }
+
+            var diagnosticMode = _service.LoadString(nameof(DiagnosticMode), Category) ?? PythonLanguageClient.DiagnosticMode.OpenFilesOnly;
+            if(DiagnosticMode != diagnosticMode) {
+                DiagnosticMode = diagnosticMode;
+                changed = true;
+            }
+
+            var logLevel = _service.LoadString(nameof(LogLevel), Category) ?? PythonLanguageClient.LogLevel.Information;
+            if (LogLevel != logLevel) {
+                LogLevel = logLevel;
+                changed = true;
+            }
+
+            var stubPath = _service.LoadString(nameof(StubPath), Category);
+            if (StubPath != stubPath) {
+                StubPath = stubPath;
+                changed = true;
+            }
+
+            var typeCheckingMode = _service.LoadString(nameof(TypeCheckingMode), Category) ?? PythonLanguageClient.TypeCheckingMode.Basic;
+            if (TypeCheckingMode != typeCheckingMode) {
+                TypeCheckingMode = typeCheckingMode;
+                changed = true;
+            }
+
+            var typeshedPaths = _service.LoadString(nameof(TypeshedPaths), Category)?.Split(';');
+            if (!Enumerable.SequenceEqual(TypeshedPaths.MaybeEnumerate(), typeshedPaths.MaybeEnumerate())) {
+                TypeshedPaths = typeshedPaths;
+                changed = true;
+            }
+
+            var extraPaths = _service.LoadString(nameof(ExtraPaths), Category)?.Split(';');
+            if (!Enumerable.SequenceEqual(ExtraPaths.MaybeEnumerate(), extraPaths.MaybeEnumerate())) {
+                ExtraPaths = extraPaths;
+                changed = true;
+            }
+
+            var useLibraryCodeForTypes = _service.LoadBool(nameof(UseLibraryCodeForTypes), Category) ?? true;
+            if (UseLibraryCodeForTypes != useLibraryCodeForTypes) {
+                UseLibraryCodeForTypes = useLibraryCodeForTypes;
+                changed = true;
+            }
+
+            if (changed) {
+                Changed?.Invoke(this, EventArgs.Empty);
+            }
         }
 
         public void Save() {
-            _service.SaveBool(nameof(AutoSearchPaths), Category, AutoSearchPaths);
-            _service.SaveString(nameof(DiagnosticMode), Category, DiagnosticMode);
-            _service.SaveString(nameof(LogLevel), Category, LogLevel);
-            _service.SaveString(nameof(StubPath), Category, StubPath);
-            _service.SaveString(nameof(TypeCheckingMode), Category, TypeCheckingMode);
-            _service.SaveString(nameof(TypeshedPaths), Category, TypeshedPaths != null ? string.Join(";", TypeshedPaths) : null);
-            _service.SaveBool(nameof(UseLibraryCodeForTypes), Category, UseLibraryCodeForTypes);
-            Changed?.Invoke(this, EventArgs.Empty);
+            var changed = _service.SaveBool(nameof(AutoSearchPaths), Category, AutoSearchPaths);
+            changed |= _service.SaveString(nameof(DiagnosticMode), Category, DiagnosticMode);
+            changed |= _service.SaveString(nameof(LogLevel), Category, LogLevel);
+            changed |= _service.SaveString(nameof(StubPath), Category, StubPath);
+            changed |= _service.SaveString(nameof(TypeCheckingMode), Category, TypeCheckingMode);
+            changed |= _service.SaveString(nameof(TypeshedPaths), Category, TypeshedPaths != null ? string.Join(";", TypeshedPaths) : null);
+            changed |= _service.SaveString(nameof(ExtraPaths), Category, ExtraPaths != null ? string.Join(";", ExtraPaths) : null);
+            changed |= _service.SaveBool(nameof(UseLibraryCodeForTypes), Category, UseLibraryCodeForTypes);
+            if (changed) {
+                Changed?.Invoke(this, EventArgs.Empty);
+            }
         }
 
         public void Reset() {

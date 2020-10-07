@@ -18,7 +18,7 @@ using System;
 
 namespace Microsoft.PythonTools.Options {
     public sealed class PythonFormattingOptions {
-        private const string Category = "Advanced";
+        private const string Category = "Formatting";
         private const string PasteRemovesReplPromptsSetting = "PasteRemovesReplPrompts";
         private const string FormatterSetting = "Formatter";
 

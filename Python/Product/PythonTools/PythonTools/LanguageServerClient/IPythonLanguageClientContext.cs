@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.LanguageServerClient {
@@ -22,8 +23,10 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         InterpreterConfiguration InterpreterConfiguration { get; }
 
         string RootPath { get; }
+        IEnumerable<string> SearchPaths { get; }
 
         event EventHandler InterpreterChanged;
+        event EventHandler SearchPathsChanged;
         event EventHandler Closed;
     }
 }

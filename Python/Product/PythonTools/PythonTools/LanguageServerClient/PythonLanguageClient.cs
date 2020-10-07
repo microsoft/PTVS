@@ -26,6 +26,7 @@ using Microsoft.Python.Core.Disposables;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Options;
+using Microsoft.PythonTools.Utility;
 using Microsoft.VisualStudio.LanguageServer.Client;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Threading;
@@ -62,6 +63,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         private readonly DisposableBag _disposables;
         private IPythonLanguageClientContext _clientContext;
         private PythonAnalysisOptions _analysisOptions;
+        private PythonAdvancedEditorOptions _advancedEditorOptions;
         private PythonLanguageServer _server;
         private JsonRpc _rpc;
 
@@ -101,13 +103,16 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 ? (IPythonLanguageClientContext)new PythonLanguageClientContextWorkspace(PythonWorkspaceContextProvider.Workspace) 
                 : new PythonLanguageClientContextGlobal(OptionsService);
             _analysisOptions = Site.GetPythonToolsService().AnalysisOptions;
+            _advancedEditorOptions = Site.GetPythonToolsService().AdvancedEditorOptions;
 
-            _clientContext.InterpreterChanged += OnInterpreterChanged;
-            _analysisOptions.Changed += OnAnalysisOptionsChanged;
-            
+            _clientContext.InterpreterChanged += OnSettingsChanged;
+            _analysisOptions.Changed += OnSettingsChanged;
+            _advancedEditorOptions.Changed += OnSettingsChanged;
+
             _disposables.Add(() => {
-                _clientContext.InterpreterChanged -= OnInterpreterChanged;
-                _analysisOptions.Changed -= OnAnalysisOptionsChanged;
+                _clientContext.InterpreterChanged -= OnSettingsChanged;
+                _analysisOptions.Changed -= OnSettingsChanged;
+                _advancedEditorOptions.Changed -= OnSettingsChanged;
                 _clientContext.Dispose();
             });
 
@@ -162,12 +167,23 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         public Task<TResult> InvokeWithParameterObjectAsync<TResult>(string targetName, object argument = null, CancellationToken cancellationToken = default) 
             => _rpc == null ? Task.FromResult(default(TResult)) : _rpc.InvokeWithParameterObjectAsync<TResult>(targetName, argument, cancellationToken);
 
-        private void OnInterpreterChanged(object sender, EventArgs e) => SendDidChangeConfiguration().DoNotWait();
-        private void OnAnalysisOptionsChanged(object sender, EventArgs e) => SendDidChangeConfiguration().DoNotWait();
+        private void OnSettingsChanged(object sender, EventArgs e) => SendDidChangeConfiguration().DoNotWait();
 
         private async Task SendDidChangeConfiguration() {
             Debug.Assert(_clientContext != null);
             Debug.Assert(_analysisOptions != null);
+
+            var extraPaths = UserSettings.GetStringSetting(
+                PythonConstants.ExtraPathsSetting, null, Site, PythonWorkspaceContextProvider.Workspace, out _)?.Split(';')
+                ?? _analysisOptions.ExtraPaths;
+
+            var stubPath = UserSettings.GetStringSetting(
+                PythonConstants.StubPathSetting, null, Site, PythonWorkspaceContextProvider.Workspace, out _)
+                ?? _analysisOptions.StubPath;
+
+            var typeCheckingMode = UserSettings.GetStringSetting(
+                PythonConstants.TypeCheckingModeSetting, null, Site, PythonWorkspaceContextProvider.Workspace, out _)
+                ?? _analysisOptions.TypeCheckingMode;
 
             var settings = new Settings {
                 python = new Settings.PythonSettings {
@@ -177,9 +193,13 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                         logLevel = _analysisOptions.LogLevel,
                         autoSearchPaths = _analysisOptions.AutoSearchPaths,
                         diagnosticMode = _analysisOptions.DiagnosticMode,
-                        stubPath = _analysisOptions.StubPath,
-                        typeCheckingMode = _analysisOptions.TypeCheckingMode,
-                        useLibraryCodeForTypes = true
+                        extraPaths = extraPaths,
+                        stubPath = stubPath,
+                        typeshedPaths = _analysisOptions.TypeshedPaths,
+                        typeCheckingMode = typeCheckingMode,
+                        useLibraryCodeForTypes = true,
+                        completeFunctionParens = _advancedEditorOptions.CompleteFunctionParens,
+                        autoImportCompletions = _advancedEditorOptions.AutoImportCompletions
                     }
                 }
             };
@@ -258,6 +278,21 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                     /// Use library implementations to extract type information when type stub is not present.
                     /// </summary>
                     public bool? useLibraryCodeForTypes;
+
+                    /// <summary>
+                    /// Additional import search resolution paths.
+                    /// </summary>
+                    public string[] extraPaths;
+
+                    /// <summary>
+                    /// Automatically add brackets for functions.
+                    /// </summary>
+                    public bool completeFunctionParens;
+
+                    /// <summary>
+                    /// Offer auto-import completions.
+                    /// </summary>
+                    public bool autoImportCompletions;
                 }
                 /// <summary>
                 /// Analysis settings.

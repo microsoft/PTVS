@@ -45,6 +45,7 @@ namespace Microsoft.PythonTools {
         private Lazy<IInterpreterOptionsService> _interpreterOptionsService;
         private Lazy<IInterpreterRegistryService> _interpreterRegistryService;
         private readonly Lazy<PythonFormattingOptions> _formattingOptions;
+        private readonly Lazy<PythonAdvancedEditorOptions> _advancedEditorOptions;
         private readonly Lazy<PythonDebuggingOptions> _debuggerOptions;
         private readonly Lazy<PythonCondaOptions> _condaOptions;
         private readonly Lazy<PythonAnalysisOptions> _analysisOptions;
@@ -79,6 +80,7 @@ namespace Microsoft.PythonTools {
 
             _idleManager = new IdleManager(container);
             _formattingOptions = new Lazy<PythonFormattingOptions>(CreateFormattingOptions);
+            _advancedEditorOptions = new Lazy<PythonAdvancedEditorOptions>(CreateAdvancedEditorOptions);
             _debuggerOptions = new Lazy<PythonDebuggingOptions>(CreateDebuggerOptions);
             _condaOptions = new Lazy<PythonCondaOptions>(CreateCondaOptions);
             _analysisOptions = new Lazy<PythonAnalysisOptions>(CreateAnalysisOptions);
@@ -151,6 +153,7 @@ namespace Microsoft.PythonTools {
         #region Public API
 
         public PythonFormattingOptions FormattingOptions => _formattingOptions.Value;
+        public PythonAdvancedEditorOptions AdvancedEditorOptions => _advancedEditorOptions.Value;
         public PythonDebuggingOptions DebuggerOptions => _debuggerOptions.Value;
         public PythonCondaOptions CondaOptions => _condaOptions.Value;
         public PythonAnalysisOptions AnalysisOptions => _analysisOptions.Value;
@@ -159,6 +162,12 @@ namespace Microsoft.PythonTools {
 
         private PythonFormattingOptions CreateFormattingOptions() {
             var opts = new PythonFormattingOptions(this);
+            opts.Load();
+            return opts;
+        }
+
+        private PythonAdvancedEditorOptions CreateAdvancedEditorOptions() {
+            var opts = new PythonAdvancedEditorOptions(this);
             opts.Load();
             return opts;
         }
@@ -243,16 +252,18 @@ namespace Microsoft.PythonTools {
             _optionsService.DeleteCategory(category);
         }
 
-        internal void SaveBool(string name, string category, bool value) {
-            SaveString(name, category, value.ToString());
-        }
+        internal bool SaveBool(string name, string category, bool value)
+            => SaveString(name, category, value.ToString());
 
-        internal void SaveInt(string name, string category, int value) {
-            SaveString(name, category, value.ToString());
-        }
+        internal bool SaveInt(string name, string category, int value)
+            => SaveString(name, category, value.ToString());
 
-        internal void SaveString(string name, string category, string value) {
-            _optionsService.SaveString(name, category, value);
+        internal bool SaveString(string name, string category, string value) {
+            if (LoadString(name, category) != value) {
+                _optionsService.SaveString(name, category, value);
+                return true;
+            }
+            return false;
         }
 
         internal string LoadString(string name, string category) {
@@ -355,7 +366,7 @@ namespace Microsoft.PythonTools {
         #endregion
 
         internal Dictionary<string, string> GetFullEnvironment(LaunchConfiguration config) {
-           return LaunchConfigurationUtils.GetFullEnvironment(config, _container);
+            return LaunchConfigurationUtils.GetFullEnvironment(config, _container);
         }
 
         internal IEnumerable<string> GetGlobalPythonSearchPaths(InterpreterConfiguration interpreter) {

@@ -131,7 +131,85 @@
   <data name="tableLayoutPanel1.ColumnCount" type="System.Int32, mscorlib">
     <value>2</value>
   </data>
+  <metadata name="typeShedPathsLabel.GenerateMember" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>False</value>
+  </metadata>
+  <data name="typeShedPathsLabel.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="typeShedPathsLabel.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="typeShedPathsLabel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 299</value>
+  </data>
+  <data name="typeShedPathsLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 6, 6, 0</value>
+  </data>
+  <data name="typeShedPathsLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>159, 25</value>
+  </data>
+  <data name="typeShedPathsLabel.TabIndex" type="System.Int32, mscorlib">
+    <value>11</value>
+  </data>
+  <data name="typeShedPathsLabel.Text" xml:space="preserve">
+    <value>Types&amp;hed paths:</value>
+  </data>
+  <data name="typeShedPathsLabel.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>MiddleLeft</value>
+  </data>
+  <data name="&gt;&gt;typeShedPathsLabel.Name" xml:space="preserve">
+    <value>typeShedPathsLabel</value>
+  </data>
+  <data name="&gt;&gt;typeShedPathsLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;typeShedPathsLabel.Parent" xml:space="preserve">
+    <value>tableLayoutPanel1</value>
+  </data>
+  <data name="&gt;&gt;typeShedPathsLabel.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <metadata name="searchPathsLabel.GenerateMember" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>False</value>
+  </metadata>
+  <data name="searchPathsLabel.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="searchPathsLabel.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="searchPathsLabel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 155</value>
+  </data>
+  <data name="searchPathsLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 6, 6, 0</value>
+  </data>
+  <data name="searchPathsLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>134, 25</value>
+  </data>
+  <data name="searchPathsLabel.TabIndex" type="System.Int32, mscorlib">
+    <value>9</value>
+  </data>
+  <data name="searchPathsLabel.Text" xml:space="preserve">
+    <value>S&amp;earch paths:</value>
+  </data>
+  <data name="searchPathsLabel.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>MiddleLeft</value>
+  </data>
+  <data name="&gt;&gt;searchPathsLabel.Name" xml:space="preserve">
+    <value>searchPathsLabel</value>
+  </data>
+  <data name="&gt;&gt;searchPathsLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;searchPathsLabel.Parent" xml:space="preserve">
+    <value>tableLayoutPanel1</value>
+  </data>
+  <data name="&gt;&gt;searchPathsLabel.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
   <data name="_typeCheckingModeCombo.Location" type="System.Drawing.Point, System.Drawing">
     <value>214, 79</value>
   </data>
@@ -151,7 +229,7 @@
     <value>tableLayoutPanel1</value>
   </data>
   <data name="&gt;&gt;_typeCheckingModeCombo.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>2</value>
   </data>
   <metadata name="typeCheckingModeLabel.GenerateMember" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>False</value>
@@ -193,43 +271,7 @@
     <value>tableLayoutPanel1</value>
   </data>
   <data name="&gt;&gt;typeCheckingModeLabel.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="_autoSearchPathCheckbox.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Left</value>
-  </data>
-  <data name="_autoSearchPathCheckbox.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="_autoSearchPathCheckbox.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="_autoSearchPathCheckbox.Location" type="System.Drawing.Point, System.Drawing">
-    <value>11, 155</value>
-  </data>
-  <data name="_autoSearchPathCheckbox.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>11, 6, 11, 6</value>
-  </data>
-  <data name="_autoSearchPathCheckbox.Size" type="System.Drawing.Size, System.Drawing">
-    <value>462, 29</value>
-  </data>
-  <data name="_autoSearchPathCheckbox.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
-  </data>
-  <data name="_autoSearchPathCheckbox.Text" xml:space="preserve">
-    <value>&amp;Automatically add common search paths like 'src'</value>
-  </data>
-  <data name="&gt;&gt;_autoSearchPathCheckbox.Name" xml:space="preserve">
-    <value>_autoSearchPathCheckbox</value>
-  </data>
-  <data name="&gt;&gt;_autoSearchPathCheckbox.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;_autoSearchPathCheckbox.Parent" xml:space="preserve">
-    <value>tableLayoutPanel1</value>
-  </data>
-  <data name="&gt;&gt;_autoSearchPathCheckbox.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <metadata name="stubsPathsLabel.GenerateMember" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>False</value>
@@ -271,7 +313,7 @@
     <value>tableLayoutPanel1</value>
   </data>
   <data name="&gt;&gt;stubsPathsLabel.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>4</value>
   </data>
   <data name="_logLevelCombo.Location" type="System.Drawing.Point, System.Drawing">
     <value>214, 41</value>
@@ -292,7 +334,7 @@
     <value>tableLayoutPanel1</value>
   </data>
   <data name="&gt;&gt;_logLevelCombo.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>5</value>
   </data>
   <metadata name="logLevelLabel.GenerateMember" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>False</value>
@@ -334,7 +376,7 @@
     <value>tableLayoutPanel1</value>
   </data>
   <data name="&gt;&gt;logLevelLabel.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>6</value>
   </data>
   <data name="_diagnosticsModeCombo.Location" type="System.Drawing.Point, System.Drawing">
     <value>214, 3</value>
@@ -355,7 +397,7 @@
     <value>tableLayoutPanel1</value>
   </data>
   <data name="&gt;&gt;_diagnosticsModeCombo.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>7</value>
   </data>
   <metadata name="diagnosticModeLabel.GenerateMember" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>False</value>
@@ -397,7 +439,7 @@
     <value>tableLayoutPanel1</value>
   </data>
   <data name="&gt;&gt;diagnosticModeLabel.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>8</value>
   </data>
   <data name="_stubsPath.Location" type="System.Drawing.Point, System.Drawing">
     <value>214, 117</value>
@@ -418,7 +460,91 @@
     <value>tableLayoutPanel1</value>
   </data>
   <data name="&gt;&gt;_stubsPath.ZOrder" xml:space="preserve">
-    <value>8</value>
+    <value>9</value>
+  </data>
+  <data name="_autoSearchPathCheckbox.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Left</value>
+  </data>
+  <data name="_autoSearchPathCheckbox.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="_autoSearchPathCheckbox.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="_autoSearchPathCheckbox.Location" type="System.Drawing.Point, System.Drawing">
+    <value>11, 444</value>
+  </data>
+  <data name="_autoSearchPathCheckbox.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>11, 6, 11, 6</value>
+  </data>
+  <data name="_autoSearchPathCheckbox.Size" type="System.Drawing.Size, System.Drawing">
+    <value>462, 29</value>
+  </data>
+  <data name="_autoSearchPathCheckbox.TabIndex" type="System.Int32, mscorlib">
+    <value>13</value>
+  </data>
+  <data name="_autoSearchPathCheckbox.Text" xml:space="preserve">
+    <value>&amp;Automatically add common search paths like 'src'</value>
+  </data>
+  <data name="&gt;&gt;_autoSearchPathCheckbox.Name" xml:space="preserve">
+    <value>_autoSearchPathCheckbox</value>
+  </data>
+  <data name="&gt;&gt;_autoSearchPathCheckbox.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_autoSearchPathCheckbox.Parent" xml:space="preserve">
+    <value>tableLayoutPanel1</value>
+  </data>
+  <data name="&gt;&gt;_autoSearchPathCheckbox.ZOrder" xml:space="preserve">
+    <value>10</value>
+  </data>
+  <data name="_searchPathsTextBox.Location" type="System.Drawing.Point, System.Drawing">
+    <value>214, 152</value>
+  </data>
+  <data name="_searchPathsTextBox.Multiline" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="_searchPathsTextBox.Size" type="System.Drawing.Size, System.Drawing">
+    <value>460, 138</value>
+  </data>
+  <data name="_searchPathsTextBox.TabIndex" type="System.Int32, mscorlib">
+    <value>10</value>
+  </data>
+  <data name="&gt;&gt;_searchPathsTextBox.Name" xml:space="preserve">
+    <value>_searchPathsTextBox</value>
+  </data>
+  <data name="&gt;&gt;_searchPathsTextBox.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_searchPathsTextBox.Parent" xml:space="preserve">
+    <value>tableLayoutPanel1</value>
+  </data>
+  <data name="&gt;&gt;_searchPathsTextBox.ZOrder" xml:space="preserve">
+    <value>11</value>
+  </data>
+  <data name="_typeshedPathsTextBox.Location" type="System.Drawing.Point, System.Drawing">
+    <value>214, 296</value>
+  </data>
+  <data name="_typeshedPathsTextBox.Multiline" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="_typeshedPathsTextBox.Size" type="System.Drawing.Size, System.Drawing">
+    <value>460, 139</value>
+  </data>
+  <data name="_typeshedPathsTextBox.TabIndex" type="System.Int32, mscorlib">
+    <value>12</value>
+  </data>
+  <data name="&gt;&gt;_typeshedPathsTextBox.Name" xml:space="preserve">
+    <value>_typeshedPathsTextBox</value>
+  </data>
+  <data name="&gt;&gt;_typeshedPathsTextBox.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_typeshedPathsTextBox.Parent" xml:space="preserve">
+    <value>tableLayoutPanel1</value>
+  </data>
+  <data name="&gt;&gt;_typeshedPathsTextBox.ZOrder" xml:space="preserve">
+    <value>12</value>
   </data>
   <data name="tableLayoutPanel1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
@@ -430,7 +556,7 @@
     <value>6, 6, 6, 6</value>
   </data>
   <data name="tableLayoutPanel1.RowCount" type="System.Int32, mscorlib">
-    <value>6</value>
+    <value>8</value>
   </data>
   <data name="tableLayoutPanel1.Size" type="System.Drawing.Size, System.Drawing">
     <value>699, 535</value>
@@ -451,7 +577,7 @@
     <value>0</value>
   </data>
   <data name="tableLayoutPanel1.LayoutSettings" type="System.Windows.Forms.TableLayoutSettings, System.Windows.Forms">
-    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="_typeCheckingModeCombo" Row="2" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="typeCheckingModeLabel" Row="2" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_autoSearchPathCheckbox" Row="4" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="stubsPathsLabel" Row="3" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_logLevelCombo" Row="1" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="logLevelLabel" Row="1" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_diagnosticsModeCombo" Row="0" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="diagnosticModeLabel" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_stubsPath" Row="3" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="Percent,100,Absolute,488" /&gt;&lt;Rows Styles="AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,Absolute,20" /&gt;&lt;/TableLayoutSettings&gt;</value>
+    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="typeShedPathsLabel" Row="5" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="searchPathsLabel" Row="4" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_typeCheckingModeCombo" Row="2" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="typeCheckingModeLabel" Row="2" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="stubsPathsLabel" Row="3" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_logLevelCombo" Row="1" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="logLevelLabel" Row="1" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_diagnosticsModeCombo" Row="0" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="diagnosticModeLabel" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_stubsPath" Row="3" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="_autoSearchPathCheckbox" Row="6" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_searchPathsTextBox" Row="4" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="_typeshedPathsTextBox" Row="5" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="Percent,100,Absolute,488" /&gt;&lt;Rows Styles="AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,Absolute,20" /&gt;&lt;/TableLayoutSettings&gt;</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
