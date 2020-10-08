@@ -34,8 +34,8 @@ namespace Microsoft.PythonTools.Options {
             // tableLayoutPanel1
             // 
             resources.ApplyResources(tableLayoutPanel1, "tableLayoutPanel1");
-            tableLayoutPanel1.Controls.Add(this._completeFunctionParens, 0, 1);
             tableLayoutPanel1.Controls.Add(this._autoImportCompletions, 0, 0);
+            tableLayoutPanel1.Controls.Add(this._completeFunctionParens, 0, 1);
             tableLayoutPanel1.Name = "tableLayoutPanel1";
             // 
             // _completeFunctionParens

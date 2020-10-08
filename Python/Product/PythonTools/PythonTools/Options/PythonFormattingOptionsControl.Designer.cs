@@ -36,9 +36,9 @@ namespace Microsoft.PythonTools.Options {
             // tableLayoutPanel1
             // 
             resources.ApplyResources(tableLayoutPanel1, "tableLayoutPanel1");
-            tableLayoutPanel1.Controls.Add(this._pasteRemovesReplPrompts, 0, 1);
-            tableLayoutPanel1.Controls.Add(this._formatterCombo, 1, 0);
             tableLayoutPanel1.Controls.Add(formatterLabel, 0, 0);
+            tableLayoutPanel1.Controls.Add(this._formatterCombo, 1, 0);
+            tableLayoutPanel1.Controls.Add(this._pasteRemovesReplPrompts, 0, 1);
             tableLayoutPanel1.Name = "tableLayoutPanel1";
             // 
             // _pasteRemovesReplPrompts
