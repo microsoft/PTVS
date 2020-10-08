@@ -27,9 +27,9 @@ namespace Microsoft.PythonTools.Options {
             _diagnosticsModeCombo.Items.Add(Strings.DiagnosticModeWorkspace);
             _diagnosticModeToolTip.SetToolTip(_diagnosticsModeCombo, Strings.DiagnosticModeToolTip);
 
-            _typeCheckingModeCombo.Items.Add(Strings.TypeCheckingModeBasic);
-            _typeCheckingModeCombo.Items.Add(Strings.TypeCheckingModeStrict);
-            _typeCheckingToolTip.SetToolTip(_typeCheckingModeCombo, Strings.TypeCheckingModeToolTip);
+            _typeCheckingMode.Items.Add(Strings.TypeCheckingModeBasic);
+            _typeCheckingMode.Items.Add(Strings.TypeCheckingModeStrict);
+            _typeCheckingToolTip.SetToolTip(_typeCheckingMode, Strings.TypeCheckingModeToolTip);
 
             _logLevelCombo.Items.Add(Strings.LogLevelError);
             _logLevelCombo.Items.Add(Strings.LogLevelWarning);
@@ -52,10 +52,10 @@ namespace Microsoft.PythonTools.Options {
             _searchPaths.Lines = pyService.AnalysisOptions.ExtraPaths ?? Array.Empty<string>();
             _typeshedPaths.Lines = pyService.AnalysisOptions.TypeshedPaths ?? Array.Empty<string>();
 
-            _autoSearchPathCheckbox.Checked = pyService.AnalysisOptions.AutoSearchPaths;
+            _autoSearchPath.Checked = pyService.AnalysisOptions.AutoSearchPaths;
             _diagnosticsModeCombo.SelectedIndex =
                 pyService.AnalysisOptions.DiagnosticMode == PythonLanguageClient.DiagnosticMode.OpenFilesOnly ? 0 : 1;
-            _typeCheckingModeCombo.SelectedIndex =
+            _typeCheckingMode.SelectedIndex =
                 pyService.AnalysisOptions.TypeCheckingMode == PythonLanguageClient.TypeCheckingMode.Basic ? 0 : 1;
 
             if (pyService.AnalysisOptions.LogLevel == PythonLanguageClient.LogLevel.Error) {
@@ -80,7 +80,7 @@ namespace Microsoft.PythonTools.Options {
             pyService.AnalysisOptions.TypeshedPaths = _typeshedPaths.Text?
                 .Split(pathsSeparators, StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string>();
 
-            pyService.AnalysisOptions.AutoSearchPaths = _autoSearchPathCheckbox.Checked;
+            pyService.AnalysisOptions.AutoSearchPaths = _autoSearchPath.Checked;
             pyService.AnalysisOptions.DiagnosticMode = _diagnosticsModeCombo.SelectedIndex == 0 ?
                 PythonLanguageClient.DiagnosticMode.OpenFilesOnly : PythonLanguageClient.DiagnosticMode.Workspace;
             pyService.AnalysisOptions.DiagnosticMode = _diagnosticsModeCombo.SelectedIndex == 0 ?
