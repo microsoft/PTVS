@@ -26,8 +26,8 @@ namespace Microsoft.PythonTools.Options {
             System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(PythonFormattingOptionsControl));
             System.Windows.Forms.Label formatterLabel;
-            this._pasteRemovesReplPrompts = new System.Windows.Forms.CheckBox();
             this._formatterCombo = new System.Windows.Forms.ComboBox();
+            this._pasteRemovesReplPrompts = new System.Windows.Forms.CheckBox();
             tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             formatterLabel = new System.Windows.Forms.Label();
             tableLayoutPanel1.SuspendLayout();
@@ -41,6 +41,18 @@ namespace Microsoft.PythonTools.Options {
             tableLayoutPanel1.Controls.Add(this._pasteRemovesReplPrompts, 0, 1);
             tableLayoutPanel1.Name = "tableLayoutPanel1";
             // 
+            // formatterLabel
+            // 
+            resources.ApplyResources(formatterLabel, "formatterLabel");
+            formatterLabel.Name = "formatterLabel";
+            // 
+            // _formatterCombo
+            // 
+            this._formatterCombo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this._formatterCombo.FormattingEnabled = true;
+            resources.ApplyResources(this._formatterCombo, "_formatterCombo");
+            this._formatterCombo.Name = "_formatterCombo";
+            // 
             // _pasteRemovesReplPrompts
             // 
             resources.ApplyResources(this._pasteRemovesReplPrompts, "_pasteRemovesReplPrompts");
@@ -48,17 +60,6 @@ namespace Microsoft.PythonTools.Options {
             tableLayoutPanel1.SetColumnSpan(this._pasteRemovesReplPrompts, 2);
             this._pasteRemovesReplPrompts.Name = "_pasteRemovesReplPrompts";
             this._pasteRemovesReplPrompts.UseVisualStyleBackColor = true;
-            // 
-            // _formatterCombo
-            // 
-            this._formatterCombo.FormattingEnabled = true;
-            resources.ApplyResources(this._formatterCombo, "_formatterCombo");
-            this._formatterCombo.Name = "_formatterCombo";
-            // 
-            // formatterLabel
-            // 
-            resources.ApplyResources(formatterLabel, "formatterLabel");
-            formatterLabel.Name = "formatterLabel";
             // 
             // PythonFormattingOptionsControl
             // 
