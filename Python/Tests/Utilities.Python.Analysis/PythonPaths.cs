@@ -37,11 +37,13 @@ namespace TestUtilities {
         public static readonly PythonVersion Python36 = GetCPythonVersion(PythonLanguageVersion.V36, InterpreterArchitecture.x86);
         public static readonly PythonVersion Python37 = GetCPythonVersion(PythonLanguageVersion.V37, InterpreterArchitecture.x86);
         public static readonly PythonVersion Python38 = GetCPythonVersion(PythonLanguageVersion.V38, InterpreterArchitecture.x86);
+        public static readonly PythonVersion Python39 = GetCPythonVersion(PythonLanguageVersion.V39, InterpreterArchitecture.x86);
         public static readonly PythonVersion Python27_x64 = GetCPythonVersion(PythonLanguageVersion.V27, InterpreterArchitecture.x64);
         public static readonly PythonVersion Python35_x64 = GetCPythonVersion(PythonLanguageVersion.V35, InterpreterArchitecture.x64);
         public static readonly PythonVersion Python36_x64 = GetCPythonVersion(PythonLanguageVersion.V36, InterpreterArchitecture.x64);
         public static readonly PythonVersion Python37_x64 = GetCPythonVersion(PythonLanguageVersion.V37, InterpreterArchitecture.x64);
         public static readonly PythonVersion Python38_x64 = GetCPythonVersion(PythonLanguageVersion.V38, InterpreterArchitecture.x64);
+        public static readonly PythonVersion Python39_x64 = GetCPythonVersion(PythonLanguageVersion.V39, InterpreterArchitecture.x64);
         public static readonly PythonVersion Anaconda27 = GetAnacondaVersion(PythonLanguageVersion.V27, InterpreterArchitecture.x86);
         public static readonly PythonVersion Anaconda27_x64 = GetAnacondaVersion(PythonLanguageVersion.V27, InterpreterArchitecture.x64);
         public static readonly PythonVersion Anaconda36 = GetAnacondaVersion(PythonLanguageVersion.V36, InterpreterArchitecture.x86);
@@ -118,10 +120,14 @@ namespace TestUtilities {
                 if (Python35 != null) yield return Python35;
                 if (Python36 != null) yield return Python36;
                 if (Python37 != null) yield return Python37;
+                if (Python38 != null) yield return Python37;
+                if (Python39 != null) yield return Python37;
                 if (Python27_x64 != null) yield return Python27_x64;
                 if (Python35_x64 != null) yield return Python35_x64;
                 if (Python36_x64 != null) yield return Python36_x64;
                 if (Python37_x64 != null) yield return Python37_x64;
+                if (Python38_x64 != null) yield return Python36_x64;
+                if (Python39_x64 != null) yield return Python37_x64;
             }
         }
 
