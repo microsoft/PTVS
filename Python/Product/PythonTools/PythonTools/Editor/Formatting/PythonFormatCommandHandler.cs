@@ -145,7 +145,7 @@ namespace Microsoft.PythonTools.Editor {
                         if (e is PythonFormatterModuleNotFoundException) {
                             isErrorInstallingModule = !await InstallFormatterAsync(formatter, factory);
                         } else {
-                            ShowErrorMessage(e.Message);
+                            MessageBox.ShowErrorMessage(_site, e.Message);
                         }
                     } finally {
                         stopwatch.Stop();
@@ -199,11 +199,11 @@ namespace Microsoft.PythonTools.Editor {
             await _joinableTaskFactory.SwitchToMainThreadAsync();
 
             var message = Strings.InstallFormatterPrompt.FormatUI(formatter.Package, factory.Configuration.Description);
-            if (ShowYesNoPrompt(message)) {
+            if (MessageBox.ShowYesNoPrompt(_site, message)) {
                 try {
                     return await pm.InstallAsync(PackageSpec.FromArguments(formatter.Package), new VsPackageManagerUI(_site), CancellationToken.None);
                 } catch (Exception ex) when (!ex.IsCriticalException()) {
-                    ShowErrorMessage(Strings.ErrorUnableToInstallFormatter.FormatUI(ex.Message));
+                    MessageBox.ShowErrorMessage(_site, Strings.ErrorUnableToInstallFormatter.FormatUI(ex.Message));
                 }
             }
             return false;
@@ -276,17 +276,6 @@ namespace Microsoft.PythonTools.Editor {
         private async Task<bool> InstallFormatterAsync(IPythonFormatter formatter, IPythonInterpreterFactory factory) {
             var pm = _optionsService.GetPackageManagers(factory).FirstOrDefault();
             return pm != null && await PromptInstallModuleAsync(formatter, factory, pm);
-        }
-
-        private void ShowErrorMessage(string message) {
-            var shell = (IVsUIShell)_site.GetService(typeof(SVsUIShell));
-            shell.ShowMessageBox(0, Guid.Empty, null, message, null, 0, OLEMSGBUTTON.OLEMSGBUTTON_OK, OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST, OLEMSGICON.OLEMSGICON_CRITICAL, 0, out _);
-        }
-
-        private bool ShowYesNoPrompt(string message) {
-            var shell = (IVsUIShell)_site.GetService(typeof(SVsUIShell));
-            shell.ShowMessageBox(0, Guid.Empty, null, message, null, 0, OLEMSGBUTTON.OLEMSGBUTTON_YESNO, OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST, OLEMSGICON.OLEMSGICON_QUERY, 0, out var result);
-            return result == NativeMethods.IDYES;
         }
     }
 }

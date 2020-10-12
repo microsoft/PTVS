@@ -1,27 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Choose>
-    <When Condition=" '$(VisualStudioVersion)'=='15.0'  Or '$(TargetVisualStudioVersion)'=='VS150' ">
-      <PropertyGroup>
-        <MinimumVisualStudioVersion>15.0</MinimumVisualStudioVersion>
-        <FileUpgradeFlags>
-        </FileUpgradeFlags>
-        <UpgradeBackupLocation>
-        </UpgradeBackupLocation>
-        <OldToolsVersion>14.0</OldToolsVersion>
-      </PropertyGroup>
-    </When>
-    <When Condition=" '$(VisualStudioVersion)'=='16.0'  Or '$(TargetVisualStudioVersion)'=='VS160' ">
-      <PropertyGroup>
-        <MinimumVisualStudioVersion>16.0</MinimumVisualStudioVersion>
-        <FileUpgradeFlags>
-        </FileUpgradeFlags>
-        <UpgradeBackupLocation>
-        </UpgradeBackupLocation>
-        <OldToolsVersion>16.0</OldToolsVersion>
-      </PropertyGroup>
-    </When>
-  </Choose>
   <Import Project="..\ProjectBefore.settings" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -278,6 +256,7 @@
     <Compile Include="PythonTools\Editor\Formatting\PythonFormatterYapf.cs" />
     <Compile Include="PythonTools\Editor\Formatting\PythonFormatter.cs" />
     <Compile Include="PythonTools\Editor\Formatting\LspDiffTextEditFactory.cs" />
+    <Compile Include="PythonTools\LanguageServerClient\CustomCancellationStrategy.cs" />
     <Compile Include="PythonTools\LanguageServerClient\LiveShareExtensions.cs" />
     <Compile Include="PythonTools\LanguageServerClient\LspEditorUtilities.cs" />
     <Compile Include="PythonTools\Editor\Formatting\PythonFormatterBlack.cs" />
@@ -339,6 +318,7 @@
     <Compile Include="PythonTools\Intellisense\PythonMemberType.cs" />
     <Compile Include="PythonTools\LanguageServerClient\IPythonLanguageClientContext.cs" />
     <Compile Include="PythonTools\LanguageServerClient\NodeEnvironmentProvider.cs" />
+    <Compile Include="PythonTools\LanguageServerClient\PylanceSettings.cs" />
     <Compile Include="PythonTools\LanguageServerClient\PythonLanguageClientContextFixed.cs" />
     <Compile Include="PythonTools\LanguageServerClient\PythonLanguageClientContextGlobal.cs" />
     <Compile Include="PythonTools\LanguageServerClient\PythonLanguageClientContextRepl.cs" />
@@ -436,6 +416,7 @@
     <Compile Include="PythonTools\Editor\TokenCache.cs" />
     <Compile Include="PythonTools\Repl\Completion\ExpressionFinder.cs" />
     <Compile Include="PythonTools\Repl\Completion\FindExpressionOptions.cs" />
+    <Compile Include="PythonTools\Utility\MessageBox.cs" />
     <Compile Include="PythonTools\Utility\Settings.cs" />
     <Compile Include="PythonTools\WorkspaceInfoBarManager.cs" />
     <Compile Include="PythonTools\Wpf\ModernDialog.cs" />

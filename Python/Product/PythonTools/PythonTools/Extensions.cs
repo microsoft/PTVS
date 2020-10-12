@@ -26,15 +26,14 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using Microsoft.PythonTools.Debugger.DebugEngine;
-using Microsoft.PythonTools.Editor;
-using Microsoft.PythonTools.Editor.Core;
-using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Intellisense;
-using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.InterpreterList;
 using Microsoft.Python.Parsing;
 using Microsoft.Python.Parsing.Ast;
+using Microsoft.PythonTools.Common;
+using Microsoft.PythonTools.Debugger.DebugEngine;
+using Microsoft.PythonTools.Editor.Core;
+using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.InterpreterList;
 using Microsoft.PythonTools.Project;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
@@ -42,7 +41,6 @@ using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Debugger.Interop;
 using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.InteractiveWindow;
-using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -54,7 +52,6 @@ using Microsoft.VisualStudio.Utilities;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 using Task = System.Threading.Tasks.Task;
-using Microsoft.PythonTools.LanguageServerClient;
 
 namespace Microsoft.PythonTools {
     static class Extensions {
@@ -527,7 +524,7 @@ namespace Microsoft.PythonTools {
             if (pyService == null) {
                 var shell = (IVsShell)serviceProvider.GetService(typeof(SVsShell));
 
-                var pkgGuid = GuidList.guidPythonToolsPackage;
+                var pkgGuid = CommonGuidList.guidPythonToolsPackage;
                 IVsPackage pkg;
                 if (!ErrorHandler.Succeeded(shell.IsPackageLoaded(ref pkgGuid, out pkg)) && pkg != null) {
                     Debug.Fail("Python Tools Package was loaded but could not get service");

@@ -47,6 +47,7 @@
     <Reference Include="System.Windows.Forms" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="PythonGuidList.cs" />
     <Compile Include="Infrastructure\BindableBase.cs" />
     <Compile Include="Infrastructure\CancellationTokens.cs" />
     <Compile Include="Infrastructure\COMEnumerator.cs" />

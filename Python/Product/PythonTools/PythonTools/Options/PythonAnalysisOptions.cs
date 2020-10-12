@@ -46,13 +46,13 @@ namespace Microsoft.PythonTools.Options {
                 changed = true;
             }
 
-            var diagnosticMode = _service.LoadString(nameof(DiagnosticMode), Category) ?? PythonLanguageClient.DiagnosticMode.OpenFilesOnly;
+            var diagnosticMode = _service.LoadString(nameof(DiagnosticMode), Category) ?? PylanceSettings.DiagnosticMode.OpenFilesOnly;
             if(DiagnosticMode != diagnosticMode) {
                 DiagnosticMode = diagnosticMode;
                 changed = true;
             }
 
-            var logLevel = _service.LoadString(nameof(LogLevel), Category) ?? PythonLanguageClient.LogLevel.Information;
+            var logLevel = _service.LoadString(nameof(LogLevel), Category) ?? PylanceSettings.LogLevel.Information;
             if (LogLevel != logLevel) {
                 LogLevel = logLevel;
                 changed = true;
@@ -64,7 +64,7 @@ namespace Microsoft.PythonTools.Options {
                 changed = true;
             }
 
-            var typeCheckingMode = _service.LoadString(nameof(TypeCheckingMode), Category) ?? PythonLanguageClient.TypeCheckingMode.Basic;
+            var typeCheckingMode = _service.LoadString(nameof(TypeCheckingMode), Category) ?? PylanceSettings.TypeCheckingMode.Basic;
             if (TypeCheckingMode != typeCheckingMode) {
                 TypeCheckingMode = typeCheckingMode;
                 changed = true;
@@ -109,10 +109,10 @@ namespace Microsoft.PythonTools.Options {
 
         public void Reset() {
             AutoSearchPaths = true;
-            DiagnosticMode = PythonLanguageClient.DiagnosticMode.OpenFilesOnly;
-            LogLevel = PythonLanguageClient.LogLevel.Information;
+            DiagnosticMode = PylanceSettings.DiagnosticMode.OpenFilesOnly;
+            LogLevel = PylanceSettings.LogLevel.Information;
             StubPath = null;
-            TypeCheckingMode = PythonLanguageClient.TypeCheckingMode.Basic;
+            TypeCheckingMode = PylanceSettings.TypeCheckingMode.Basic;
             TypeshedPaths = null;
             UseLibraryCodeForTypes = true;
             Changed?.Invoke(this, EventArgs.Empty);

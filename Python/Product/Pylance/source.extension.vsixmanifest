@@ -1,7 +1,7 @@
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
   <Metadata>
-    <Identity Id="610F3441-9B1F-4632-9C68-D07C09D1B09B" Version="16.0.0" Language="en-US" Publisher="Microsoft Corporation" />
-    <DisplayName>Pylance</DisplayName>
+    <Identity Id="610F3441-9B1F-4632-9C68-D07C09D1B09B" Version="16.8.0" Language="en-US" Publisher="Microsoft" />
+    <DisplayName>Python with Pylance</DisplayName>
     <Description xml:space="preserve">Provides support for editing and debugging Python programs with Pylance language server.</Description>
     <MoreInfo>https://github.com/microsoft/pylance-release#pylance</MoreInfo>
     <License>License_en-US.rtf</License>
@@ -9,8 +9,8 @@
     <Icon>PythonProject.ico</Icon>
     <PreviewImage>PythonProjectBig.ico</PreviewImage>
   </Metadata>
-  <Installation SystemComponent="true" AllUsers="true" InstalledByMsi="true">
-    <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[16.0,17.0)" />
+  <Installation>
+    <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[16.8,17.0)" />
   </Installation>
   <Dependencies>
     <Dependency Id="Microsoft.Framework.NDP" DisplayName="Microsoft .NET Framework" Version="4.6" />
@@ -37,6 +37,8 @@
     <Asset Type="Microsoft.VisualStudio.MefComponent" Path="|Microsoft.PythonTools.EnvironmentsList;_GetTargetPath|" />
     <Asset Type="Microsoft.VisualStudio.MefComponent" Path="|Microsoft.PythonTools.VSInterpreters;_GetTargetPath|" />
     <Asset Type="Microsoft.VisualStudio.MefComponent" Path="|Microsoft.PythonTools.Workspace;_GetTargetPath|" />
+    <Asset Type="Microsoft.VisualStudio.Package" d:Source="File" Path="Microsoft.CookiecutterTools.dll" />
+	<Asset Type="Microsoft.VisualStudio.MefComponent" d:Source="File" Path="Microsoft.CookiecutterTools.dll" />
     <Asset Type="DebuggerEngineExtension" Path="DkmDebugger.vsdconfig" />
     <Asset Type="NativeVisualizer" Path="Visualizers\PythonDkm.natvis" />
     <Asset Type="Microsoft.VisualStudio.Assembly" d:Source="File" Path="Newtonsoft.Json.dll" />
@@ -44,5 +46,7 @@
     <Asset Type="Microsoft.VisualStudio.Assembly" d:Source="File" Path="Microsoft.Python.Parsing.dll" />
     <Asset Type="Microsoft.VisualStudio.Assembly" d:Source="File" Path="Microsoft.PythonTools.Ipc.Json.dll" />
     <Asset Type="Microsoft.VisualStudio.Assembly" d:Source="File" Path="Microsoft.PythonTools.Attacher.exe" />
+	<Asset Type="Microsoft.VisualStudio.Package" d:Source="File" Path="Microsoft.PythonTools.Profiling.dll" />
+	<Asset Type="Microsoft.VisualStudio.Assembly" d:Source="File" Path="Microsoft.PythonTools.Profiling.dll" />
   </Assets>
 </PackageManifest>

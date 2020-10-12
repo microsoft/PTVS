@@ -14,7 +14,6 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-
 // This assembly is no longer being used for new wizards and is maintained for
 // backwards compatibility until we can merge ImportWizard into the main DLL.
 //
@@ -26,6 +25,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Windows.Forms;
+using Microsoft.PythonTools.Common;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
@@ -93,7 +93,7 @@ namespace Microsoft.PythonTools.ProjectWizards {
                 var templateUri = Resolve(new Uri(wizardData));
 
                 object inObj = projName + "|" + directory + "|" + templateUri.ToString();
-                var guid = GuidList.guidCookiecutterCmdSet;
+                var guid = PythonGuidList.guidCookiecutterCmdSet;
                 uiShell.PostExecCommand(ref guid, cmdidNewProjectFromTemplate, 0, ref inObj);
             }
             throw new WizardCancelledException();
@@ -104,11 +104,11 @@ namespace Microsoft.PythonTools.ProjectWizards {
         }
 
         private static int EnsurePythonPackageLoaded(IServiceProvider serviceProvider) {
-            return EnsurePackageLoaded(serviceProvider, GuidList.guidPythonToolsPackage);
+            return EnsurePackageLoaded(serviceProvider, PythonGuidList.guidPythonToolsPackage);
         }
 
         private static int EnsureCookiecutterPackageLoaded(IServiceProvider serviceProvider) {
-            return EnsurePackageLoaded(serviceProvider, GuidList.guidCookiecutterPackage);
+            return EnsurePackageLoaded(serviceProvider, PythonGuidList.guidCookiecutterPackage);
         }
 
         private static int EnsurePackageLoaded(IServiceProvider serviceProvider, Guid packageGuid) {

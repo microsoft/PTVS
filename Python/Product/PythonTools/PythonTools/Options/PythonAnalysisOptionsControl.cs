@@ -54,17 +54,17 @@ namespace Microsoft.PythonTools.Options {
 
             _autoSearchPath.Checked = pyService.AnalysisOptions.AutoSearchPaths;
             _diagnosticsModeCombo.SelectedIndex =
-                pyService.AnalysisOptions.DiagnosticMode == PythonLanguageClient.DiagnosticMode.OpenFilesOnly ? 0 : 1;
+                pyService.AnalysisOptions.DiagnosticMode == PylanceSettings.DiagnosticMode.OpenFilesOnly ? 0 : 1;
             _typeCheckingMode.SelectedIndex =
-                pyService.AnalysisOptions.TypeCheckingMode == PythonLanguageClient.TypeCheckingMode.Basic ? 0 : 1;
+                pyService.AnalysisOptions.TypeCheckingMode == PylanceSettings.TypeCheckingMode.Basic ? 0 : 1;
 
-            if (pyService.AnalysisOptions.LogLevel == PythonLanguageClient.LogLevel.Error) {
+            if (pyService.AnalysisOptions.LogLevel == PylanceSettings.LogLevel.Error) {
                 _logLevelCombo.SelectedIndex = 0;
-            } else if (pyService.AnalysisOptions.LogLevel == PythonLanguageClient.LogLevel.Warning) {
+            } else if (pyService.AnalysisOptions.LogLevel == PylanceSettings.LogLevel.Warning) {
                 _logLevelCombo.SelectedIndex = 1;
-            } else if (pyService.AnalysisOptions.LogLevel == PythonLanguageClient.LogLevel.Information) {
+            } else if (pyService.AnalysisOptions.LogLevel == PylanceSettings.LogLevel.Information) {
                 _logLevelCombo.SelectedIndex = 2;
-            } else if (pyService.AnalysisOptions.LogLevel == PythonLanguageClient.LogLevel.Trace) {
+            } else if (pyService.AnalysisOptions.LogLevel == PylanceSettings.LogLevel.Trace) {
                 _logLevelCombo.SelectedIndex = 3;
             } else {
                 _logLevelCombo.SelectedIndex = 2;
@@ -82,22 +82,22 @@ namespace Microsoft.PythonTools.Options {
 
             pyService.AnalysisOptions.AutoSearchPaths = _autoSearchPath.Checked;
             pyService.AnalysisOptions.DiagnosticMode = _diagnosticsModeCombo.SelectedIndex == 0 ?
-                PythonLanguageClient.DiagnosticMode.OpenFilesOnly : PythonLanguageClient.DiagnosticMode.Workspace;
+                PylanceSettings.DiagnosticMode.OpenFilesOnly : PylanceSettings.DiagnosticMode.Workspace;
             pyService.AnalysisOptions.DiagnosticMode = _diagnosticsModeCombo.SelectedIndex == 0 ?
-                PythonLanguageClient.TypeCheckingMode.Basic : PythonLanguageClient.TypeCheckingMode.Strict;
+                PylanceSettings.TypeCheckingMode.Basic : PylanceSettings.TypeCheckingMode.Strict;
 
             switch (_logLevelCombo.SelectedIndex) {
                 case 0:
-                    pyService.AnalysisOptions.LogLevel = PythonLanguageClient.LogLevel.Error;
+                    pyService.AnalysisOptions.LogLevel = PylanceSettings.LogLevel.Error;
                     break;
                 case 1:
-                    pyService.AnalysisOptions.LogLevel = PythonLanguageClient.LogLevel.Warning;
+                    pyService.AnalysisOptions.LogLevel = PylanceSettings.LogLevel.Warning;
                     break;
                 case 2:
-                    pyService.AnalysisOptions.LogLevel = PythonLanguageClient.LogLevel.Information;
+                    pyService.AnalysisOptions.LogLevel = PylanceSettings.LogLevel.Information;
                     break;
                 case 3:
-                    pyService.AnalysisOptions.LogLevel = PythonLanguageClient.LogLevel.Trace;
+                    pyService.AnalysisOptions.LogLevel = PylanceSettings.LogLevel.Trace;
                     break;
             }
         }

@@ -26,6 +26,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Forms.Design;
 using Microsoft.PythonTools.Commands;
+using Microsoft.PythonTools.Common;
 using Microsoft.PythonTools.Common.Infrastructure;
 using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.Debugger.DebugEngine;
@@ -77,7 +78,7 @@ namespace Microsoft.PythonTools {
     [ProvideOptionPage(typeof(PythonAnalysisOptionsPage), "Python Tools", "Analysis", 115, 129, true)]
     [ProvideOptionPage(typeof(PythonDebuggingOptionsPage), "Python Tools", "Debugging", 115, 125, true)]
     [ProvideOptionPage(typeof(PythonCondaOptionsPage), "Python Tools", "Conda", 115, 132, true)]
-    [Guid(GuidList.guidPythonToolsPkgString)]              // our packages GUID
+    [Guid(CommonGuidList.guidPythonToolsPkgString)]              // our packages GUID
     [ProvideLanguageService(typeof(PythonLanguageInfo), PythonConstants.LanguageName, 106, RequestStockColors = true, ShowSmartIndent = true, ShowCompletion = true, DefaultToInsertSpaces = true, HideAdvancedMembersByDefault = true, EnableAdvancedMembersOption = true, ShowDropDownOptions = true)]
     [ProvideLanguageExtension(typeof(PythonLanguageInfo), PythonConstants.FileExtension)]
     [ProvideLanguageExtension(typeof(PythonLanguageInfo), PythonConstants.WindowsFileExtension)]
@@ -85,7 +86,7 @@ namespace Microsoft.PythonTools {
     [ProvideDebugEngine(AD7Engine.DebugEngineName, typeof(AD7ProgramProvider), typeof(AD7Engine), AD7Engine.DebugEngineId, hitCountBp: true)]
     [ProvideDebugAdapter("VSCode Python Debugger", DebugAdapterLauncher.VSCodeDebugEngineId, DebugAdapterLauncher.DebugAdapterLauncherCLSID, CustomDebugAdapterProtocolExtension.CustomProtocolExtensionCLSID, "Python", "{DA3C7D59-F9E4-4697-BEE7-3A0703AF6BFF}", typeof(DebugAdapterLauncher), typeof(CustomDebugAdapterProtocolExtension))]
     [ProvideDebugLanguage("Python", "{DA3C7D59-F9E4-4697-BEE7-3A0703AF6BFF}", PythonExpressionEvaluatorGuid, AD7Engine.DebugEngineId)]
-    [ProvideDebugPortSupplier("Python remote (ptvsd)", typeof(PythonRemoteDebugPortSupplier), PythonRemoteDebugPortSupplier.PortSupplierId, typeof(PythonRemoteDebugPortPicker))]
+    // [ProvideDebugPortSupplier("Python remote (ptvsd)", typeof(PythonRemoteDebugPortSupplier), PythonRemoteDebugPortSupplier.PortSupplierId, typeof(PythonRemoteDebugPortPicker))]
     [ProvideDebugPortPicker(typeof(PythonRemoteDebugPortPicker))]
     #region Exception List
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions")]
@@ -165,7 +166,7 @@ namespace Microsoft.PythonTools {
     [ProvideCodeExpansionPath("Python", "Test", @"Snippets\%LCID%\Test\")]
     [ProvideInteractiveWindow(GuidList.guidPythonInteractiveWindow, Style = VsDockStyle.Linked, Orientation = ToolWindowOrientation.none, Window = ToolWindowGuids80.Outputwindow)]
     [ProvideBraceCompletion(PythonCoreConstants.ContentType)]
-    [ProvideNewFileTemplates(GuidList.guidMiscFilesProjectGuidString, GuidList.guidPythonToolsPkgString, "Python", @"Templates\NewItem\")]
+    [ProvideNewFileTemplates(CommonGuidList.guidMiscFilesProjectGuidString, CommonGuidList.guidPythonToolsPkgString, "Python", @"Templates\NewItem\")]
     internal sealed class PythonToolsPackage : CommonPackage, IVsComponentSelectorProvider, IPythonToolsToolWindowService {
         private PythonAutomation _autoObject;
         private PackageContainer _packageContainer;
@@ -417,12 +418,6 @@ namespace Microsoft.PythonTools {
 
             await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
             await base.InitializeAsync(cancellationToken, progress);
-
-            var shell = GetService(typeof(SVsShell)) as IVsShell;
-            if(shell.IsPackageInstalled(new Guid(GuidList.guidPythonToolsVS2019), out var installed) == VSConstants.S_OK && installed != 0) {
-                var uiShell = GetService(typeof(SVsUIShell)) as IVsUIShell;
-                uiShell.ShowMessageBox(0, Guid.Empty, null, "Python Tools are installed in Visual Studio. Please remove Python support or Data Science Workload before trying Pylance extension.", null, 0, OLEMSGBUTTON.OLEMSGBUTTON_OK, 0, OLEMSGICON.OLEMSGICON_CRITICAL, 0, out _);
-            }
 
             AddService<IClipboardService>(new ClipboardService(), true);
             AddService<IPythonToolsToolWindowService>(this, true);

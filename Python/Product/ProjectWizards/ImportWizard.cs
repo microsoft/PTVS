@@ -24,11 +24,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Windows.Forms;
+using Microsoft.PythonTools.Common;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TemplateWizard;
-using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.ProjectWizards {
     public sealed class ImportWizard : IWizard {
@@ -99,7 +99,7 @@ namespace Microsoft.PythonTools.ProjectWizards {
         private static int EnsurePackageLoaded(IServiceProvider serviceProvider) {
             var shell = (IVsShell)serviceProvider.GetService(typeof(SVsShell));
 
-            var pkgGuid = GuidList.guidPythonToolsPackage;
+            var pkgGuid = CommonGuidList.guidPythonToolsPackage;
             IVsPackage pkg;
             if (ErrorHandler.Failed(shell.IsPackageLoaded(ref pkgGuid, out pkg)) || pkg == null) {
                 return shell.LoadPackage(ref pkgGuid, out pkg);
