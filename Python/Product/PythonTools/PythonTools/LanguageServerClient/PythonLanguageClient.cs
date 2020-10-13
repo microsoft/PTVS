@@ -18,11 +18,9 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows;
 using Microsoft.Python.Core.Disposables;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
@@ -142,7 +140,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
 
         public Task OnServerInitializeFailedAsync(Exception e) {
-            MessageBox.Show(Strings.LanguageClientInitializeFailed.FormatUI(e), Strings.ProductTitle);
+            MessageBox.ShowErrorMessage(Site, Strings.LanguageClientInitializeFailed.FormatUI(e));
             return Task.CompletedTask;
         }
 
@@ -151,7 +149,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
             // This is a workaround until we have proper API from ILanguageClient for now.
             _rpc.AllowModificationWhileListening = true;
-            _rpc.CancellationStrategy = new CustomCancellationStrategy(this._server.CancellationFolderName, _rpc);
+            _rpc.CancellationStrategy = new CustomCancellationStrategy(_server.CancellationFolderName, _rpc);
             _rpc.AllowModificationWhileListening = false;
 
             return Task.CompletedTask;
@@ -192,11 +190,11 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 PythonConstants.TypeCheckingModeSetting, null, Site, PythonWorkspaceContextProvider.Workspace, out _)
                 ?? _analysisOptions.TypeCheckingMode;
 
-            var settings = new Settings {
-                python = new Settings.PythonSettings {
+            var settings = new PylanceSettings {
+                python = new PylanceSettings.PythonSettings {
                     pythonPath = _clientContext.InterpreterConfiguration.InterpreterPath,
                     venvPath = string.Empty,
-                    analysis = new Settings.PythonSettings.PythonAnalysisSettings {
+                    analysis = new PylanceSettings.PythonSettings.PythonAnalysisSettings {
                         logLevel = _analysisOptions.LogLevel,
                         autoSearchPaths = _analysisOptions.AutoSearchPaths,
                         diagnosticMode = _analysisOptions.DiagnosticMode,
@@ -217,166 +215,5 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             await InvokeDidChangeConfigurationAsync(config);
         }
 
-        public static class DiagnosticMode {
-            public const string OpenFilesOnly = "openFilesOnly";
-            public const string Workspace = "workspace";
-        }
-
-        public static class LogLevel {
-            public const string Error = "Error";
-            public const string Warning = "Warning";
-            public const string Information = "Information";
-            public const string Trace = "Trace";
-        }
-
-        public static class TypeCheckingMode {
-            public const string Basic = "basic";
-            public const string Strict = "strict";
-        }
-
-        [Serializable]
-        public sealed class Settings {
-            [Serializable]
-            public class PythonSettings {
-                /// <summary>
-                /// Python settings. Match [python] section in Pylance.
-                /// </summary>
-                [Serializable]
-                public class PythonAnalysisSettings {
-                    /// <summary>
-                    /// Paths to look for typeshed modules.
-                    /// </summary>
-                    public string[] typeshedPaths;
-
-                    /// <summary>
-                    /// Path to directory containing custom type stub files.
-                    /// </summary>
-                    public string stubPath;
-
-                    /// <summary>
-                    /// Allows a user to override the severity levels for individual diagnostics.
-                    /// Typically specified in mspythonconfig.json.
-                    /// </summary>
-                    public Dictionary<string, string> diagnosticSeverityOverrides;
-
-                    /// <summary>
-                    /// Analyzes and reports errors on only open files or the entire workspace.
-                    /// "enum": ["openFilesOnly", "workspace"]
-                    /// </summary>
-                    public string diagnosticMode;
-                    
-                    /// <summary>
-                    /// Specifies the level of logging for the Output panel.
-                    /// "enum": ["Error", "Warning", "Information", "Trace"]
-                    /// </summary>
-                    public string logLevel;
-                    
-                    /// <summary>
-                    /// Automatically add common search paths like 'src'.
-                    /// </summary>
-                    public bool? autoSearchPaths;
-                    
-                    /// <summary>
-                    /// Defines the default rule set for type checking.
-                    /// </summary>
-                    public string typeCheckingMode;
-                    
-                    /// <summary>
-                    /// Use library implementations to extract type information when type stub is not present.
-                    /// </summary>
-                    public bool? useLibraryCodeForTypes;
-
-                    /// <summary>
-                    /// Additional import search resolution paths.
-                    /// </summary>
-                    public string[] extraPaths;
-
-                    /// <summary>
-                    /// Automatically add brackets for functions.
-                    /// </summary>
-                    public bool completeFunctionParens;
-
-                    /// <summary>
-                    /// Offer auto-import completions.
-                    /// </summary>
-                    public bool autoImportCompletions;
-                }
-                /// <summary>
-                /// Analysis settings.
-                /// </summary>
-                public PythonAnalysisSettings analysis;
-                
-                /// <summary>
-                /// Path to Python, you can use a custom version of Python.
-                /// </summary>
-                public string pythonPath;
-                
-                /// <summary>
-                /// Path to folder with a list of Virtual Environments.
-                /// </summary>
-                public string venvPath;
-            }
-            /// <summary>
-            /// Python section.
-            /// </summary>
-            public PythonSettings python;
-        }
-
-        private sealed class CustomCancellationStrategy : ICancellationStrategy {
-            private readonly string _folderName;
-            private readonly JsonRpc _jsonRpc;
-            private readonly ICancellationStrategy _cancellationStrategy;
-
-            private readonly string _cancellationFolderPath;
-
-            public CustomCancellationStrategy(string folderName, JsonRpc jsonRpc) {
-                this._folderName = folderName ?? throw new ArgumentNullException(nameof(folderName));
-                this._jsonRpc = jsonRpc ?? throw new ArgumentNullException(nameof(jsonRpc));
-
-                this._cancellationFolderPath = Path.Combine(Path.GetTempPath(), "python-languageserver-cancellation", this._folderName);
-
-                this._cancellationStrategy = this._jsonRpc.CancellationStrategy;
-                this._jsonRpc.Disconnected += OnDisconnected;
-
-                try {
-                    Directory.CreateDirectory(this._cancellationFolderPath);
-                } catch (Exception e) when (!e.IsCriticalException()){ 
-                    // not much we can do about it.
-                }
-            }
-
-            public void IncomingRequestStarted(RequestId requestId, CancellationTokenSource cancellationTokenSource) => this._cancellationStrategy.IncomingRequestStarted(requestId, cancellationTokenSource);
-            public void IncomingRequestEnded(RequestId requestId) => this._cancellationStrategy.IncomingRequestEnded(requestId);
-
-            public void CancelOutboundRequest(RequestId requestId) {
-                try {
-                    using (File.OpenWrite(getCancellationFilePath(requestId))) { }
-                } catch (Exception e) when (!e.IsCriticalException()) {
-                    // simply ignore. not that big deal.
-                }
-            }
-
-            public void OutboundRequestEnded(RequestId requestId) {
-                try {
-                    File.Delete(getCancellationFilePath(requestId));
-                } catch (Exception e) when (!e.IsCriticalException()) {
-                    // simply ignore. not that big deal.
-                }
-            }
-
-            private string getCancellationFilePath(RequestId requestId) {
-                var id = requestId.Number?.ToString() ?? requestId.String ?? "noid";
-                return Path.Combine(this._cancellationFolderPath, $"cancellation-{id}.tmp");
-            }
-
-            private void OnDisconnected(object sender, JsonRpcDisconnectedEventArgs _) {
-                // clean up cancellation folder
-                try {
-                    Directory.Delete(this._cancellationFolderPath, recursive: true);
-                } catch (Exception e) when (!e.IsCriticalException()) {
-                    // not much we can do. ignore it.
-                }
-            }
-        }
     }
 }

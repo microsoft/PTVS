@@ -9,7 +9,7 @@
     <Icon>Resources\Cookiecutter_32x.png</Icon>
     <PreviewImage>Resources\CookiecutterTemplate_200x.png</PreviewImage>
   </Metadata>
-  <Installation SystemComponent="true" AllUsers="true" InstalledByMsi="true">
+  <Installation SystemComponent="false" AllUsers="true" InstalledByMsi="false">
     <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[16.0,17.0)" />
   </Installation>
   <Dependencies>

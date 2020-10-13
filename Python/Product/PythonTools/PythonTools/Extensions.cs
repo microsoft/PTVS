@@ -55,6 +55,7 @@ using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 using Task = System.Threading.Tasks.Task;
 using Microsoft.PythonTools.LanguageServerClient;
+using Microsoft.PythonTools.Common;
 
 namespace Microsoft.PythonTools {
     static class Extensions {
@@ -527,7 +528,7 @@ namespace Microsoft.PythonTools {
             if (pyService == null) {
                 var shell = (IVsShell)serviceProvider.GetService(typeof(SVsShell));
 
-                var pkgGuid = GuidList.guidPythonToolsPackage;
+                var pkgGuid = CommonGuidList.guidPythonToolsPackage;
                 IVsPackage pkg;
                 if (!ErrorHandler.Succeeded(shell.IsPackageLoaded(ref pkgGuid, out pkg)) && pkg != null) {
                     Debug.Fail("Python Tools Package was loaded but could not get service");

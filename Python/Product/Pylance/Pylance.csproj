@@ -53,6 +53,10 @@
       <Project>{89d51398-a003-44ba-b1b2-cfc6f8396d7e}</Project>
       <Name>Microsoft.PythonTools.BuildTasks</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Cookiecutter\Cookiecutter.csproj">
+      <Project>{376840cf-9f60-4225-8b08-e1d168b6717a}</Project>
+      <Name>Cookiecutter</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Debugger\Debugger.csproj">
       <Project>{DECC7971-FA58-4DB0-9561-BFFADD393BBD}</Project>
       <Name>Microsoft.PythonTools.Debugger</Name>
@@ -68,6 +72,10 @@
     <ProjectReference Include="..\Ipc.Json\Ipc.Json.csproj">
       <Project>{e1e1613d-0c96-42f9-9f2d-052c72533297}</Project>
       <Name>Ipc.Json</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Profiling\Profiling.csproj">
+      <Project>{c42b194e-3333-45e8-bb26-d69d1a51ef0b}</Project>
+      <Name>Profiling</Name>
     </ProjectReference>
     <ProjectReference Include="..\PythonTools\PythonTools.csproj">
       <Project>{fa7be5f5-e04f-4613-b7ac-70ce10d1bb68}</Project>
@@ -120,7 +128,7 @@
     </Content>
     <Content Include="License_en-US.rtf" />
     <Content Include="$(PackagesPath)\Newtonsoft.Json\lib\net45\Newtonsoft.Json.dll" />
-    <Content Include="$(PackagesPath)\Microsoft.VisualStudio.LanguageServer.Protocol\lib\netstandard2.0\Microsoft.VisualStudio.LanguageServer.Protocol.dll" /> 
+    <Content Include="$(PackagesPath)\Microsoft.VisualStudio.LanguageServer.Protocol\lib\netstandard2.0\Microsoft.VisualStudio.LanguageServer.Protocol.dll" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Core\ProvideRawCodeBaseAttribute.cs">

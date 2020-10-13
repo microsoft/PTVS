@@ -86,6 +86,7 @@
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
+    <Compile Include="CommonGuidList.cs" />
     <Compile Include="Infrastructure\Commands\AsyncCommandRangeToOleMenuCommandShim.cs" />
     <Compile Include="Infrastructure\Commands\CommandAsyncToOleMenuCommandShim.cs" />
     <Compile Include="Infrastructure\Commands\CommandAsyncToOleMenuCommandShimFactory.cs" />

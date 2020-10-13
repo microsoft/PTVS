@@ -23,6 +23,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using Microsoft.PythonTools.Common;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Project;
@@ -112,7 +113,7 @@ namespace Microsoft.PythonTools.Profiling {
 
             // Ensure Python Tools package is loaded
             var shell = (IVsShell7)GetService(typeof(SVsShell));
-            var ptvsPackage = GuidList.guidPythonToolsPackage;
+            var ptvsPackage = CommonGuidList.guidPythonToolsPackage;
             await shell.LoadPackageAsync(ref ptvsPackage);
 
             // Add our command handlers for menu (commands must exist in the .vsct file)

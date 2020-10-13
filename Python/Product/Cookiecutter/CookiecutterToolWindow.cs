@@ -35,7 +35,7 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.CookiecutterTools {
-    [Guid("AC207EBF-16F8-4AA4-A0A8-70AF37308FCD")]
+    [Guid("F3EEF0F5-402A-4FA3-A5FD-19036F1431CA")]
     sealed class CookiecutterToolWindow : ToolWindowPane, IVsInfoBarUIEvents {
         private IVsUIShell _uiShell;
         private EnvDTE.DTE _dte;

@@ -9,7 +9,7 @@
     <Icon>PythonProject.ico</Icon>
     <PreviewImage>PythonProjectBig.ico</PreviewImage>
   </Metadata>
-  <Installation SystemComponent="true" AllUsers="true" InstalledByMsi="true">
+  <Installation SystemComponent="false" AllUsers="true" InstalledByMsi="false">
     <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[16.0,17.0)" />
   </Installation>
   <Dependencies>
