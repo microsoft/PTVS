@@ -42,27 +42,17 @@ namespace Microsoft.PythonTools.Common.Telemetry {
         /// <summary>
         /// True of user opted in and telemetry is being collected
         /// </summary>
-        public bool IsEnabled {
-            get {
-                return TelemetryRecorder?.IsEnabled == true;
-            }
-        }
+        public bool IsEnabled => TelemetryRecorder?.IsEnabled == true;
 
-        public bool CanCollectPrivateInformation {
-            get {
-                return (TelemetryRecorder?.IsEnabled == true && TelemetryRecorder?.CanCollectPrivateInformation == true);
-            }
-        }
+        public bool CanCollectPrivateInformation
+            => (TelemetryRecorder?.IsEnabled == true && TelemetryRecorder?.CanCollectPrivateInformation == true);
 
         /// <summary>
         /// Records event with parameters
         /// </summary>
         /// <param name="area">Telemetry area name such as 'Toolbox'.</param>
         /// <param name="eventName">Event name.</param>
-        /// <param name="parameters">
-        /// Either string/object dictionary or anonymous
-        /// collection of string/object pairs.
-        /// </param>
+        /// <param name="parameters">String/string dictionary.</param>
         public void ReportEvent(string area, string eventName, IReadOnlyDictionary<string, string> parameters = null) {
             if (string.IsNullOrEmpty(area)) {
                 throw new ArgumentException(nameof(area));
@@ -74,16 +64,15 @@ namespace Microsoft.PythonTools.Common.Telemetry {
             TelemetryRecorder.RecordEvent(MakeEventName(area, eventName), parameters);
         }
 
-        public void ReportFault(Exception ex, string description, bool dumpProcess) {
-            var completeEventName = EventNamePrefix + "UnhandledException";
-            TelemetryRecorder.RecordFault(completeEventName, ex, description, dumpProcess);
-        }
+        /// <summary>
+        /// Records fault event. Telemetry session should remove private information.
+        /// </summary>
+        public void ReportFault(Exception ex, string description, bool dumpProcess)
+            => TelemetryRecorder.RecordFault($"{EventNamePrefix}UnhandledException", ex, description, dumpProcess);
 
         #endregion
 
-        private string MakeEventName(string area, string eventName) {
-            return EventNamePrefix + area + "/" + eventName;
-        }
+        private string MakeEventName(string area, string eventName) => $"{EventNamePrefix}{area}/{eventName}";
 
         protected virtual void Dispose(bool disposing) { }
 

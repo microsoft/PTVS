@@ -30,11 +30,28 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         private readonly JoinableTaskContext _joinableTaskContext;
 
         [Serializable]
+        private sealed class PylanceError {
+            public string stack { get; set; }
+        }
+
+        [Serializable]
         private sealed class PylanceTelemetryEvent {
             public string EventName { get; set; }
             public Dictionary<string, string> Properties { get; set; }
             public Dictionary<string, string> Measurements { get; set; }
+            public PylanceError Exception { get; set; }
         }
+
+        private sealed class PylanceException : Exception {
+            private readonly string _stackTrace;
+
+            public PylanceException(string message, string stackTrace) : base(message) {
+                _stackTrace = stackTrace;
+            }
+
+            public override string StackTrace => _stackTrace;
+        }
+
 
         public PythonLanguageClientCustomTarget(IServiceProvider site, JoinableTaskContext joinableTaskContext) {
             _site = site ?? throw new ArgumentNullException(nameof(site));
@@ -43,12 +60,20 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
         [JsonRpcMethod("telemetry/event")]
         public void OnTelemetryEvent(JToken arg) {
-            if (arg is JObject telemetry) {
-                Trace.WriteLine(telemetry.ToString());
-                var te = telemetry.ToObject<PylanceTelemetryEvent>();
-                if (te != null) {
-                    VsTelemetryService.Current.ReportEvent(PythonToolsTelemetry.TelemetryArea.Pylance, te.EventName, te.Properties);
-                }
+            if (!(arg is JObject telemetry)) {
+                return;
+            }
+            
+            Trace.WriteLine(telemetry.ToString());
+            var te = telemetry.ToObject<PylanceTelemetryEvent>();
+            if (te == null) {
+                return;
+            }
+
+            if (te.Exception != null) {
+                VsTelemetryService.Current.ReportFault(new PylanceException(te.EventName, te.Exception.stack), "Pylance exception", false);
+            } else {
+                VsTelemetryService.Current.ReportEvent(PythonToolsTelemetry.TelemetryArea.Pylance, te.EventName, te.Properties);
             }
         }
 

@@ -32,13 +32,13 @@ namespace CookiecutterTests {
         #region ITelemetryTestSupport
         public string SessionLog {
             get {
-                ITelemetryTestSupport testSupport = this.TelemetryRecorder as ITelemetryTestSupport;
+                ITelemetryTestSupport testSupport = TelemetryRecorder as ITelemetryTestSupport;
                 return testSupport.SessionLog;
             }
         }
 
         public void Reset() {
-            ITelemetryTestSupport testSupport = this.TelemetryRecorder as ITelemetryTestSupport;
+            ITelemetryTestSupport testSupport = TelemetryRecorder as ITelemetryTestSupport;
             testSupport.Reset();
         }
         #endregion

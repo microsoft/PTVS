@@ -29,7 +29,6 @@ namespace Microsoft.PythonTools.Common.Telemetry {
 
         #region ITelemetryRecorder
         public bool IsEnabled => true;
-
         public bool CanCollectPrivateInformation => true;
 
         public void RecordEvent(string eventName, IReadOnlyDictionary<string, string> parameters = null) {
@@ -39,9 +38,8 @@ namespace Microsoft.PythonTools.Common.Telemetry {
             }
         }
 
-        public void RecordFault(string eventName, Exception ex, string description, bool dumpProcess) {
-        }
-
+        public void RecordFault(string eventName, Exception ex, string description, bool dumpProcess)
+            => throw new NotImplementedException();
         #endregion
 
         #region ITelemetryLog

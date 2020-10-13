@@ -41,7 +41,7 @@ namespace Microsoft.PythonTools.Common.Telemetry {
         public bool CanCollectPrivateInformation => _session.CanCollectPrivateInformation;
 
         /// <summary>
-        /// Records event with parameters
+        /// Records event with parameters.
         /// </summary>
         public void RecordEvent(string eventName, IReadOnlyDictionary<string, string> parameters = null) {
             if (IsEnabled) {
@@ -55,11 +55,14 @@ namespace Microsoft.PythonTools.Common.Telemetry {
             }
         }
 
+        /// <summary>
+        /// Records fault event.
+        /// </summary>
         public void RecordFault(string eventName, Exception ex, string description, bool dumpProcess) {
             if (IsEnabled) {
                 var fault = new FaultEvent(
                     eventName,
-                    !string.IsNullOrEmpty(description) ? description : "Unhandled exception in Cookiecutter extension.",
+                    !string.IsNullOrEmpty(description) ? description : "Unhandled exception in Python Tools.",
                     ex
                 );
 

@@ -35,13 +35,12 @@ namespace Microsoft.PythonTools.Common.Telemetry {
         bool CanCollectPrivateInformation { get; }
 
         /// <summary>
-        /// Records event with parameters. Parameters are
-        /// a collection of string/object pairs.
+        /// Records event with parameters. Parameters are a collection of string/string pairs.
         /// </summary>
         void RecordEvent(string eventName, IReadOnlyDictionary<string, string> parameters = null);
 
         /// <summary>
-        /// Records a fault event.
+        /// Records fault event. Telemetry session should remove private information.
         /// </summary>
         void RecordFault(string eventName, Exception ex, string description, bool dumpProcess);
     }

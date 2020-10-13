@@ -32,12 +32,12 @@ namespace Microsoft.PythonTools.Common.Telemetry {
         /// </summary>
         /// <param name="area">Telemetry area name such as 'Project'.</param>
         /// <param name="eventName">Event name.</param>
-        /// <param name="parameters">
-        /// Either string/object dictionary or anonymous
-        /// collection of string/object pairs.
-        /// </param>
+        /// <param name="parameters">String/string dictionary.</param>
         void ReportEvent(string area, string eventName, IReadOnlyDictionary<string, string> parameters = null);
 
+        /// <summary>
+        /// Records fault event. Telemetry session should remove private information.
+        /// </summary>
         void ReportFault(Exception ex, string description, bool dumpProcess);
     }
 }
