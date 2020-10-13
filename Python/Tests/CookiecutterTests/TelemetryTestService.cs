@@ -14,7 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.CookiecutterTools.Telemetry;
+using Microsoft.PythonTools.Common.Telemetry;
 
 namespace CookiecutterTests {
     internal sealed class TelemetryTestService : TelemetryServiceBase, ITelemetryTestSupport {

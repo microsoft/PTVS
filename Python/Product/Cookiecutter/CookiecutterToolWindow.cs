@@ -319,7 +319,10 @@ namespace Microsoft.CookiecutterTools {
 
         private static void ReportPrereqsEvent(bool found) {
             try {
-                CookiecutterTelemetry.Current.TelemetryService.ReportEvent(CookiecutterTelemetry.TelemetryArea.Prereqs, CookiecutterTelemetry.PrereqsEvents.Python, found.ToString());
+                var ts = CookiecutterTelemetry.Current.TelemetryService;
+                var eventName = CookiecutterTelemetry.PrereqsEvents.Python;
+                var area = CookiecutterTelemetry.TelemetryArea.Prereqs;
+                ts.ReportEvent(area, eventName, new Dictionary<string, string> { { eventName, found.ToString() } });
             } catch (Exception ex) {
                 Debug.Fail($"Error reporting event.\n{ex.Message}");
             }

@@ -17,11 +17,11 @@
 using System;
 using System.Collections.Generic;
 
-namespace Microsoft.CookiecutterTools.Telemetry {
+namespace Microsoft.PythonTools.Common.Telemetry {
     /// <summary>
     /// Base telemetry service implementation, common to production code and test cases.
     /// </summary>
-    internal abstract class TelemetryServiceBase : ITelemetryService, IDisposable {
+    public abstract class TelemetryServiceBase : ITelemetryService, IDisposable {
         public string EventNamePrefix { get; private set; }
         public string PropertyNamePrefix { get; private set; }
 
@@ -33,9 +33,9 @@ namespace Microsoft.CookiecutterTools.Telemetry {
         public ITelemetryRecorder TelemetryRecorder { get; internal set; }
 
         protected TelemetryServiceBase(string eventNamePrefix, string propertyNamePrefix, ITelemetryRecorder telemetryRecorder) {
-            this.TelemetryRecorder = telemetryRecorder;
-            this.EventNamePrefix = eventNamePrefix;
-            this.PropertyNamePrefix = propertyNamePrefix;
+            TelemetryRecorder = telemetryRecorder;
+            EventNamePrefix = eventNamePrefix;
+            PropertyNamePrefix = propertyNamePrefix;
         }
 
         #region ITelemetryService
@@ -44,13 +44,13 @@ namespace Microsoft.CookiecutterTools.Telemetry {
         /// </summary>
         public bool IsEnabled {
             get {
-                return this.TelemetryRecorder?.IsEnabled == true;
+                return TelemetryRecorder?.IsEnabled == true;
             }
         }
 
         public bool CanCollectPrivateInformation {
             get {
-                return (this.TelemetryRecorder?.IsEnabled == true && this.TelemetryRecorder?.CanCollectPrivateInformation == true);
+                return (TelemetryRecorder?.IsEnabled == true && TelemetryRecorder?.CanCollectPrivateInformation == true);
             }
         }
 
@@ -63,44 +63,26 @@ namespace Microsoft.CookiecutterTools.Telemetry {
         /// Either string/object dictionary or anonymous
         /// collection of string/object pairs.
         /// </param>
-        public void ReportEvent(string area, string eventName, object parameters = null) {
+        public void ReportEvent(string area, string eventName, IReadOnlyDictionary<string, string> parameters = null) {
             if (string.IsNullOrEmpty(area)) {
                 throw new ArgumentException(nameof(area));
             }
-
             if (string.IsNullOrEmpty(eventName)) {
                 throw new ArgumentException(nameof(eventName));
             }
 
-            string completeEventName = MakeEventName(area, eventName);
-            if (parameters == null) {
-                this.TelemetryRecorder.RecordEvent(completeEventName);
-            } else if (parameters is string) {
-                this.TelemetryRecorder.RecordEvent(completeEventName, parameters as string);
-            } else {
-                IDictionary<string, object> dict = DictionaryExtension.FromAnonymousObject(parameters);
-                IDictionary<string, object> dictWithPrefix = new Dictionary<string, object>();
-
-                foreach (KeyValuePair<string, object> kvp in dict) {
-                    if (string.IsNullOrEmpty(kvp.Key)) {
-                        throw new ArgumentException("parameterName");
-                    }
-
-                    dictWithPrefix[this.PropertyNamePrefix + area.ToString() + "." + kvp.Key] = kvp.Value ?? string.Empty;
-                }
-                this.TelemetryRecorder.RecordEvent(completeEventName, dictWithPrefix);
-            }
+            TelemetryRecorder.RecordEvent(MakeEventName(area, eventName), parameters);
         }
 
         public void ReportFault(Exception ex, string description, bool dumpProcess) {
-            var completeEventName = this.EventNamePrefix + "UnhandledException";
-            this.TelemetryRecorder.RecordFault(completeEventName, ex, description, dumpProcess);
+            var completeEventName = EventNamePrefix + "UnhandledException";
+            TelemetryRecorder.RecordFault(completeEventName, ex, description, dumpProcess);
         }
 
         #endregion
 
         private string MakeEventName(string area, string eventName) {
-            return this.EventNamePrefix + area + "/" + eventName;
+            return EventNamePrefix + area + "/" + eventName;
         }
 
         protected virtual void Dispose(bool disposing) { }

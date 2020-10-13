@@ -17,7 +17,7 @@
 using System.Collections.Generic;
 using System.Reflection;
 
-namespace Microsoft.CookiecutterTools.Telemetry {
+namespace Microsoft.PythonTools.Common.Telemetry {
     internal static class DictionaryExtension {
         public static IDictionary<string, object> FromAnonymousObject(object data) {
             IDictionary<string, object> dict;

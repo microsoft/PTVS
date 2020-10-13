@@ -87,6 +87,10 @@
       <Project>{D092D54E-FF29-4D32-9AEE-4EF704C92F67}</Project>
       <Name>TestUtilities</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\Product\Common\Common.csproj">
+      <Project>{b3db0521-d9e3-4f48-9e2e-e5ecae886049}</Project>
+      <Name>Common</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Product\Cookiecutter\Cookiecutter.csproj">
       <Project>{376840cf-9f60-4225-8b08-e1d168b6717a}</Project>
       <Name>Cookiecutter</Name>

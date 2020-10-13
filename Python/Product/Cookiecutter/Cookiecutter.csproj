@@ -165,10 +165,6 @@
       <DependentUpon>LoadingPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="Resources\ImageMonikers.cs" />
-    <Compile Include="Telemetry\DictionaryExtension.cs" />
-    <Compile Include="Telemetry\ITelemetryRecorder.cs" />
-    <Compile Include="Telemetry\ITelemetryService.cs" />
-    <Compile Include="Telemetry\TelemetryServiceBase.cs" />
     <Compile Include="Cookiecutter.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -191,10 +187,7 @@
     <Compile Include="Model\TemplateEnumerationResult.cs" />
     <Compile Include="Shared\Infrastructure\ShellUtils.cs" />
     <Compile Include="Telemetry\ICookiecutterTelemetry.cs" />
-    <Compile Include="Telemetry\ITelemetryLog.cs" />
     <Compile Include="Telemetry\CookiecutterTelemetry.cs" />
-    <Compile Include="Telemetry\StringTelemetryRecorder.cs" />
-    <Compile Include="Telemetry\VsTelemetryRecorder.cs" />
     <Compile Include="Telemetry\VsTelemetryService.cs" />
     <Compile Include="UrlConstants.cs" />
     <Compile Include="ViewModel\ContinuationViewModel.cs" />
@@ -411,6 +404,12 @@
   <PropertyGroup>
     <UseCodebase>true</UseCodebase>
   </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Common\Common.csproj">
+      <Project>{b3db0521-d9e3-4f48-9e2e-e5ecae886049}</Project>
+      <Name>Common</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="..\ProjectAfter.settings" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using Microsoft.PythonTools.Common.Telemetry;
 
 namespace Microsoft.CookiecutterTools.Telemetry {
     /// <summary>

@@ -16,13 +16,13 @@
 
 using System;
 
-namespace Microsoft.CookiecutterTools.Telemetry {
+namespace Microsoft.PythonTools.Common.Telemetry {
     /// <summary>
     /// Represents object that records telemetry events and is called by
     /// the telemetry service. In Visual Studio environment maps to IVsTelemetryService
     /// whereas in tests can be replaced by an object that writes events to a string.
     /// </summary>
-    internal interface ITelemetryRecorder : IDisposable {
+    public interface ITelemetryRecorder : IDisposable {
         /// <summary>
         /// True if telemetry is actually being recorded
         /// </summary>

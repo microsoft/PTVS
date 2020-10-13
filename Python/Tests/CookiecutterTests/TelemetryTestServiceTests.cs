@@ -14,6 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace CookiecutterTests {
@@ -53,7 +54,7 @@ namespace CookiecutterTests {
             var eventName = "event";
 
             var telemetryService = new TelemetryTestService();
-            telemetryService.ReportEvent(area, eventName, new { parameter = "value" });
+            telemetryService.ReportEvent(area, eventName, new Dictionary<string, string> { { eventName, "value" } });
             string log = telemetryService.SessionLog;
             Assert.AreEqual(TelemetryTestService.EventNamePrefixString + area.ToString() + "/" + eventName +
                             "\r\n\t" + TelemetryTestService.PropertyNamePrefixString + area.ToString() + ".parameter : value\r\n", log);

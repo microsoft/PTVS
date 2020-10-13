@@ -15,28 +15,28 @@
 // permissions and limitations under the License.
 
 using System;
+using Microsoft.PythonTools.Common.Telemetry;
 
-namespace Microsoft.CookiecutterTools.Telemetry {
+namespace Microsoft.PythonTools.Telemetry {
     /// <summary>
-    /// Application telemetry service. In Visual Studio maps to IVsTelemetrySession.
+    /// Represents telemetry operations in cookiecutter.
     /// </summary>
-    internal interface ITelemetryService {
+    internal sealed class PythonToolsTelemetry {
         /// <summary>
-        /// True of user opted in and telemetry is being collected
+        /// Area names show up as part of telemetry event names like:
+        ///   VS/Python/[area]/[event]
         /// </summary>
-        bool IsEnabled { get; }
+        internal static class TelemetryArea {
+            public const string Pylance = "Pylance";
+        }
 
-        /// <summary>
-        /// Records event with parameters
-        /// </summary>
-        /// <param name="area">Telemetry area name such as 'Project'.</param>
-        /// <param name="eventName">Event name.</param>
-        /// <param name="parameters">
-        /// Either string/object dictionary or anonymous
-        /// collection of string/object pairs.
-        /// </param>
-        void ReportEvent(string area, string eventName, object parameters = null);
-
-        void ReportFault(Exception ex, string description, bool dumpProcess);
+        internal class TemplateEvents {
+            public const string Clone = "Clone";
+            public const string Load = "Load";
+            public const string Run = "Run";
+            public const string Delete = "Delete";
+            public const string Update = "Update";
+            public const string AddToProject = "AddToProject";
+        }
     }
 }

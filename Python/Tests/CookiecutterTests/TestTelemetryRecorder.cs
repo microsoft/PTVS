@@ -18,7 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.ExceptionServices;
 using System.Text;
-using Microsoft.CookiecutterTools.Telemetry;
+using Microsoft.PythonTools.Common.Telemetry;
 
 namespace CookiecutterTests {
     internal sealed class TestTelemetryRecorder : ITelemetryRecorder, ITelemetryTestSupport {

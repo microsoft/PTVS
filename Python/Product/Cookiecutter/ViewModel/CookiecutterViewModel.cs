@@ -1386,21 +1386,22 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                 var repoName = selection.RepositoryName?.ToLowerInvariant() ?? string.Empty;
                 var projKind = TargetProjectLocation?.ProjectKind ?? string.Empty;
 
-                var obj = new {
-                    Success = error == null,
-                    RepoUrl = new TelemetryPiiProperty(repoUrl),
-                    RepoFullName = new TelemetryPiiProperty(repoFullName),
-                    RepoOwner = new TelemetryPiiProperty(repoOwner),
-                    RepoName = new TelemetryPiiProperty(repoName),
-                    ProjectKind = projKind,
-                };
+                var obj = new Dictionary<string, string>();
+                obj["RepoUrl"] = new TelemetryPiiProperty(repoUrl).StringValue;
+                obj["RepoFullName"] = new TelemetryPiiProperty(repoFullName).StringValue;
+                obj["RepoOwner"] = new TelemetryPiiProperty(repoOwner).StringValue;
+                obj["RepoName"] = new TelemetryPiiProperty(repoName).StringValue;
+                obj["ProjectKind"] = projKind.ToString();
                 ReportEvent(area, eventName, obj);
             } catch (Exception ex) {
                 Debug.Fail($"Error reporting event.\n{ex.Message}");
             }
         }
 
-        private void ReportEvent(string area, string eventName, object parameters = null) {
+        private void ReportEvent(string area, string eventName, string value)
+            => _telemetry.TelemetryService.ReportEvent(area, eventName, new Dictionary<string, string> { { eventName, value } });
+
+        private void ReportEvent(string area, string eventName, IReadOnlyDictionary<string, string> parameters = null) {
             try {
                 _telemetry.TelemetryService.ReportEvent(area, eventName, parameters);
             } catch (Exception ex) {

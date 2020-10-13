@@ -677,6 +677,8 @@
     <Compile Include="PythonTools\WebProject\PythonWebPropertyPage.cs" />
     <Compile Include="PythonTools\Wpf\ModernStyles.cs" />
     <Compile Include="PythonTools\Wpf\VisualTreeExtensions.cs" />
+    <Compile Include="Telemetry\PythonToolsTelemetry.cs" />
+    <Compile Include="Telemetry\VsTelemetryService.cs" />
     <Compile Include="VsCredentials.cs" />
     <Compile Include="PythonTools\Commands\UsePythonStepping.cs" />
     <Compile Include="PythonTools\Commands\ShowNativePythonFrames.cs" />

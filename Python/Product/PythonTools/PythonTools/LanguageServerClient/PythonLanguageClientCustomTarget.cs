@@ -15,7 +15,9 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using Microsoft.PythonTools.Telemetry;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Threading;
 using Newtonsoft.Json.Linq;
@@ -27,6 +29,13 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         private readonly IServiceProvider _site;
         private readonly JoinableTaskContext _joinableTaskContext;
 
+        [Serializable]
+        private sealed class PylanceTelemetryEvent {
+            public string EventName { get; set; }
+            public Dictionary<string, string> Properties { get; set; }
+            public Dictionary<string, string> Measurements { get; set; }
+        }
+
         public PythonLanguageClientCustomTarget(IServiceProvider site, JoinableTaskContext joinableTaskContext) {
             _site = site ?? throw new ArgumentNullException(nameof(site));
             _joinableTaskContext = joinableTaskContext;
@@ -35,8 +44,11 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         [JsonRpcMethod("telemetry/event")]
         public void OnTelemetryEvent(JToken arg) {
             if (arg is JObject telemetry) {
-                // TODO: forward this to VS telemetry
                 Trace.WriteLine(telemetry.ToString());
+                var te = telemetry.ToObject<PylanceTelemetryEvent>();
+                if (te != null) {
+                    VsTelemetryService.Current.ReportEvent(PythonToolsTelemetry.TelemetryArea.Pylance, te.EventName, te.Properties);
+                }
             }
         }
 

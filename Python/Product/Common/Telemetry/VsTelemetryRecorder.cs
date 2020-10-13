@@ -19,11 +19,11 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using Microsoft.VisualStudio.Telemetry;
 
-namespace Microsoft.CookiecutterTools.Telemetry {
+namespace Microsoft.PythonTools.Common.Telemetry {
     /// <summary>
     /// Implements telemetry recording in Visual Studio environment
     /// </summary>
-    internal sealed class VsTelemetryRecorder : ITelemetryRecorder {
+    public sealed class VsTelemetryRecorder : ITelemetryRecorder {
         private readonly TelemetrySession _session;
         private static readonly Lazy<VsTelemetryRecorder> _instance = new Lazy<VsTelemetryRecorder>(() => new VsTelemetryRecorder());
 

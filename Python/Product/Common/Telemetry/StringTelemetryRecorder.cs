@@ -18,14 +18,14 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Microsoft.CookiecutterTools.Telemetry {
+namespace Microsoft.PythonTools.Common.Telemetry {
 
     /// <summary>
     /// Records telemetry events into a string. The resulting log can be used
     /// for testing or for submitting telemetry as a file rather than via
     /// VS telemetry Web service.
     /// </summary>
-    internal sealed class StringTelemetryRecorder : ITelemetryRecorder, ITelemetryLog, IDisposable {
+    public sealed class StringTelemetryRecorder : ITelemetryRecorder, ITelemetryLog, IDisposable {
         private readonly StringBuilder _stringBuilder = new StringBuilder();
 
         #region ITelemetryRecorder

@@ -17,11 +17,11 @@
 using System;
 using Microsoft.PythonTools.Common.Telemetry;
 
-namespace Microsoft.CookiecutterTools.Telemetry {
+namespace Microsoft.PythonTools.Telemetry {
 
     internal sealed class VsTelemetryService : TelemetryServiceBase, ITelemetryLog {
-        public static readonly string EventNamePrefixString = "VS/Cookiecutter/";
-        public static readonly string PropertyNamePrefixString = "VS.Cookiecutter.";
+        public static readonly string EventNamePrefixString = "VS/Python/";
+        public static readonly string PropertyNamePrefixString = "VS.Python.";
 
         private static readonly Lazy<VsTelemetryService> _instance = new Lazy<VsTelemetryService>(() => new VsTelemetryService());
 
