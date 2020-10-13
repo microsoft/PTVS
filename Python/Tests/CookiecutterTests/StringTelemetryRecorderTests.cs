@@ -40,7 +40,7 @@ namespace CookiecutterTests {
             var value2 = "value2";
 
             var telemetryRecorder = new TestTelemetryRecorder();
-            telemetryRecorder.RecordEvent(eventName, new Dictionary<string, object>() { { parameter1, value1 }, { parameter2, value2 } });
+            telemetryRecorder.RecordEvent(eventName, new Dictionary<string, string>() { { "parameter1", value1 }, { "parameter2", value2 } });
 
             string log = telemetryRecorder.SessionLog;
             Assert.AreEqual(eventName + "\r\n\t" + parameter1 + " : " + value1 + "\r\n\t" + parameter2 + " : " + value2 + "\r\n", log);
@@ -51,7 +51,8 @@ namespace CookiecutterTests {
             var eventName = "event";
 
             var telemetryRecorder = new TestTelemetryRecorder();
-            telemetryRecorder.RecordEvent(eventName, new { parameter1 = "value1", parameter2 = "value2" });
+            telemetryRecorder.RecordEvent(eventName,
+                new Dictionary<string, string> { { "parameter1", "value1" }, { "parameter2", "value2" } });
 
             string log = telemetryRecorder.SessionLog;
             Assert.AreEqual(eventName + "\r\n\tparameter1 : value1\r\n\tparameter2 : value2\r\n", log);

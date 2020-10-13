@@ -56,7 +56,6 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Strings.resx</DependentUpon>
     </Compile>
-    <Compile Include="Telemetry\DictionaryExtension.cs" />
     <Compile Include="Telemetry\ITelemetryLog.cs" />
     <Compile Include="Telemetry\ITelemetryRecorder.cs" />
     <Compile Include="Telemetry\ITelemetryService.cs" />

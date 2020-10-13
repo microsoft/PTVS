@@ -25,50 +25,35 @@ namespace CookiecutterTests {
         private StringBuilder _stringBuilder = new StringBuilder();
 
         #region ITelemetryRecorder
-        public bool IsEnabled {
-            get { return true; }
-        }
+        public bool IsEnabled => true;
+        public bool CanCollectPrivateInformation => true;
 
-        public bool CanCollectPrivateInformation {
-            get { return true; }
-        }
-
-        public void RecordEvent(string eventName, object parameters = null) {
+        public void RecordEvent(string eventName, IReadOnlyDictionary<string, string> parameters = null) {
             _stringBuilder.AppendLine(eventName);
             if (parameters != null) {
-                if (parameters is string) {
-                    WriteProperty("Value", parameters as string);
-                } else {
-                    WriteDictionary(DictionaryExtension.FromAnonymousObject(parameters));
-                }
+                WriteDictionary(parameters);
             }
         }
 
-        public void RecordFault(string eventName, Exception ex, string description, bool dumpProcess) {
-            ExceptionDispatchInfo.Capture(ex).Throw();
-        }
+        public void RecordFault(string eventName, Exception ex, string description, bool dumpProcess)
+            => ExceptionDispatchInfo.Capture(ex).Throw();
 
         #endregion
 
         #region ITelemetryTestSupport
-        public void Reset() {
-            _stringBuilder.Clear();
-        }
-
-        public string SessionLog {
-            get { return _stringBuilder.ToString(); }
-        }
+        public void Reset() => _stringBuilder.Clear();
+        public string SessionLog => _stringBuilder.ToString();
         #endregion
 
         public void Dispose() { }
 
-        private void WriteDictionary(IDictionary<string, object> dict) {
-            foreach (KeyValuePair<string, object> kvp in dict) {
+        private void WriteDictionary(IReadOnlyDictionary<string, string> dict) {
+            foreach (var kvp in dict) {
                 WriteProperty(kvp.Key, kvp.Value);
             }
         }
 
-        private void WriteProperty(string name, object value) {
+        private void WriteProperty(string name, string value) {
             _stringBuilder.Append('\t');
             _stringBuilder.Append(name);
             _stringBuilder.Append(" : ");

@@ -43,18 +43,12 @@ namespace Microsoft.PythonTools.Common.Telemetry {
         /// <summary>
         /// Records event with parameters
         /// </summary>
-        public void RecordEvent(string eventName, object parameters = null) {
-            if (this.IsEnabled) {
+        public void RecordEvent(string eventName, IReadOnlyDictionary<string, string> parameters = null) {
+            if (IsEnabled) {
                 TelemetryEvent telemetryEvent = new TelemetryEvent(eventName);
                 if (parameters != null) {
-                    var stringParameter = parameters as string;
-                    if (stringParameter != null) {
-                        telemetryEvent.Properties["Value"] = stringParameter;
-                    } else {
-                        IDictionary<string, object> dict = DictionaryExtension.FromAnonymousObject(parameters);
-                        foreach (KeyValuePair<string, object> kvp in dict) {
-                            telemetryEvent.Properties[kvp.Key] = kvp.Value;
-                        }
+                    foreach (var kvp in parameters) {
+                        telemetryEvent.Properties[kvp.Key] = kvp.Value;
                     }
                 }
                 _session.PostEvent(telemetryEvent);
@@ -62,7 +56,7 @@ namespace Microsoft.PythonTools.Common.Telemetry {
         }
 
         public void RecordFault(string eventName, Exception ex, string description, bool dumpProcess) {
-            if (this.IsEnabled) {
+            if (IsEnabled) {
                 var fault = new FaultEvent(
                     eventName,
                     !string.IsNullOrEmpty(description) ? description : "Unhandled exception in Cookiecutter extension.",

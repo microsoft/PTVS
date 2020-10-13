@@ -19,7 +19,6 @@ using System.Collections.Generic;
 using System.Text;
 
 namespace Microsoft.PythonTools.Common.Telemetry {
-
     /// <summary>
     /// Records telemetry events into a string. The resulting log can be used
     /// for testing or for submitting telemetry as a file rather than via
@@ -29,22 +28,14 @@ namespace Microsoft.PythonTools.Common.Telemetry {
         private readonly StringBuilder _stringBuilder = new StringBuilder();
 
         #region ITelemetryRecorder
-        public bool IsEnabled {
-            get { return true; }
-        }
+        public bool IsEnabled => true;
 
-        public bool CanCollectPrivateInformation {
-            get { return true; }
-        }
+        public bool CanCollectPrivateInformation => true;
 
-        public void RecordEvent(string eventName, object parameters = null) {
+        public void RecordEvent(string eventName, IReadOnlyDictionary<string, string> parameters = null) {
             _stringBuilder.AppendLine(eventName);
             if (parameters != null) {
-                if (parameters is string) {
-                    WriteProperty("Value", parameters.ToString());
-                } else {
-                    WriteDictionary(DictionaryExtension.FromAnonymousObject(parameters));
-                }
+                WriteDictionary(parameters);
             }
         }
 
@@ -54,20 +45,15 @@ namespace Microsoft.PythonTools.Common.Telemetry {
         #endregion
 
         #region ITelemetryLog
-        public void Reset() {
-            _stringBuilder.Clear();
-        }
-
-        public string SessionLog {
-            get { return _stringBuilder.ToString(); }
-        }
+        public void Reset() => _stringBuilder.Clear();
+        public string SessionLog => _stringBuilder.ToString();
         #endregion
 
         public void Dispose() {
         }
 
-        private void WriteDictionary(IDictionary<string, object> dict) {
-            foreach (KeyValuePair<string, object> kvp in dict) {
+        private void WriteDictionary(IReadOnlyDictionary<string, string> dict) {
+            foreach (var kvp in dict) {
                 WriteProperty(kvp.Key, kvp.Value);
             }
         }

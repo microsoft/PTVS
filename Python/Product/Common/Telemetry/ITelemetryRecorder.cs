@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Collections.Generic;
 
 namespace Microsoft.PythonTools.Common.Telemetry {
     /// <summary>
@@ -37,7 +38,7 @@ namespace Microsoft.PythonTools.Common.Telemetry {
         /// Records event with parameters. Parameters are
         /// a collection of string/object pairs.
         /// </summary>
-        void RecordEvent(string eventName, object parameters = null);
+        void RecordEvent(string eventName, IReadOnlyDictionary<string, string> parameters = null);
 
         /// <summary>
         /// Records a fault event.
