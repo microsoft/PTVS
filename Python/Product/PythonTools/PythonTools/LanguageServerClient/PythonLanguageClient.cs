@@ -230,6 +230,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
 
         public static class TypeCheckingMode {
+            public const string Off = "off";
             public const string Basic = "basic";
             public const string Strict = "strict";
         }
