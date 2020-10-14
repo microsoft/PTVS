@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using Microsoft.Python.Core;
 using Microsoft.PythonTools.Logging;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Threading;
@@ -72,6 +73,10 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             }
 
             if (te.Exception == null) {
+                te.Properties["eventName"] = te.EventName;
+                foreach (var kvp in te.Measurements.MaybeEnumerate()) {
+                    te.Properties[$"measurement-{kvp.Key}"] = kvp.Value;
+                }
                 _logger.LogEvent(PythonLogEvent.LanguageServer, te.Properties);
             } else {
                 _logger.LogFault(new PylanceException(te.EventName, te.Exception.stack), te.EventName, false);
