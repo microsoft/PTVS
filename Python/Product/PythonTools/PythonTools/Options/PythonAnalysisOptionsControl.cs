@@ -27,6 +27,7 @@ namespace Microsoft.PythonTools.Options {
             _diagnosticsModeCombo.Items.Add(Strings.DiagnosticModeWorkspace);
             _diagnosticModeToolTip.SetToolTip(_diagnosticsModeCombo, Strings.DiagnosticModeToolTip);
 
+            _typeCheckingMode.Items.Add(Strings.TypeCheckingModeOff);
             _typeCheckingMode.Items.Add(Strings.TypeCheckingModeBasic);
             _typeCheckingMode.Items.Add(Strings.TypeCheckingModeStrict);
             _typeCheckingToolTip.SetToolTip(_typeCheckingMode, Strings.TypeCheckingModeToolTip);
@@ -38,7 +39,7 @@ namespace Microsoft.PythonTools.Options {
             _logLevelToolTip.SetToolTip(_logLevelCombo, Strings.LogLevelToolTip);
 
             _stubsPathToolTip.SetToolTip(_stubsPath, Strings.StubPathToolTip);
-            
+
             _searchPathsToolTip.SetToolTip(_searchPaths, Strings.SearchPathsToolTip);
             _searchPathsLabelToolTip.SetToolTip(_searchPathsLabel, Strings.SearchPathsToolTip);
 
@@ -55,8 +56,16 @@ namespace Microsoft.PythonTools.Options {
             _autoSearchPath.Checked = pyService.AnalysisOptions.AutoSearchPaths;
             _diagnosticsModeCombo.SelectedIndex =
                 pyService.AnalysisOptions.DiagnosticMode == PythonLanguageClient.DiagnosticMode.OpenFilesOnly ? 0 : 1;
-            _typeCheckingMode.SelectedIndex =
-                pyService.AnalysisOptions.TypeCheckingMode == PythonLanguageClient.TypeCheckingMode.Basic ? 0 : 1;
+
+            if (pyService.AnalysisOptions.TypeCheckingMode == PythonLanguageClient.TypeCheckingMode.Off) {
+                _typeCheckingMode.SelectedIndex = 0;
+            } else if (pyService.AnalysisOptions.TypeCheckingMode == PythonLanguageClient.TypeCheckingMode.Basic) {
+                _typeCheckingMode.SelectedIndex = 1;
+            } else if (pyService.AnalysisOptions.TypeCheckingMode == PythonLanguageClient.TypeCheckingMode.Strict) {
+                _typeCheckingMode.SelectedIndex = 2;
+            } else {
+                _typeCheckingMode.SelectedIndex = 1; // Default is basic
+            }
 
             if (pyService.AnalysisOptions.LogLevel == PythonLanguageClient.LogLevel.Error) {
                 _logLevelCombo.SelectedIndex = 0;
@@ -83,8 +92,18 @@ namespace Microsoft.PythonTools.Options {
             pyService.AnalysisOptions.AutoSearchPaths = _autoSearchPath.Checked;
             pyService.AnalysisOptions.DiagnosticMode = _diagnosticsModeCombo.SelectedIndex == 0 ?
                 PythonLanguageClient.DiagnosticMode.OpenFilesOnly : PythonLanguageClient.DiagnosticMode.Workspace;
-            pyService.AnalysisOptions.DiagnosticMode = _diagnosticsModeCombo.SelectedIndex == 0 ?
-                PythonLanguageClient.TypeCheckingMode.Basic : PythonLanguageClient.TypeCheckingMode.Strict;
+
+            switch (_typeCheckingMode.SelectedIndex) {
+                case 0:
+                    pyService.AnalysisOptions.TypeCheckingMode = PythonLanguageClient.TypeCheckingMode.Off;
+                    break;
+                case 1:
+                    pyService.AnalysisOptions.TypeCheckingMode = PythonLanguageClient.TypeCheckingMode.Basic;
+                    break;
+                case 2:
+                    pyService.AnalysisOptions.TypeCheckingMode = PythonLanguageClient.TypeCheckingMode.Strict;
+                    break;
+            }
 
             switch (_logLevelCombo.SelectedIndex) {
                 case 0:
