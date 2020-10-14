@@ -47,11 +47,6 @@ namespace Microsoft.PythonTools.Logging {
 
             // Certain events are not collected
             switch (logEvent) {
-                case PythonLogEvent.AnalysisWarning:
-                case PythonLogEvent.AnalysisOperationFailed:
-                case PythonLogEvent.AnalysisOperationCancelled:
-                case PythonLogEvent.AnalysisExitedAbnormally:
-                    return;
                 case PythonLogEvent.PythonPackage:
                     lock (_seenPackages) {
                         var name = (argument as PackageInfo)?.Name;
