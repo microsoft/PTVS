@@ -39,8 +39,8 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         [Serializable]
         private sealed class PylanceTelemetryEvent {
             public string EventName { get; set; }
-            public Dictionary<string, string> Properties { get; set; }
-            public Dictionary<string, string> Measurements { get; set; }
+            public Dictionary<string, object> Properties { get; set; }
+            public Dictionary<string, double> Measurements { get; set; }
             public PylanceError Exception { get; set; }
         }
 
@@ -73,11 +73,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             }
 
             if (te.Exception == null) {
-                te.Properties["eventName"] = te.EventName;
-                foreach (var kvp in te.Measurements.MaybeEnumerate()) {
-                    te.Properties[$"measurement-{kvp.Key}"] = kvp.Value;
-                }
-                _logger.LogEvent(PythonLogEvent.LanguageServer, te.Properties);
+                _logger.LogEvent(te.EventName, te.Properties, te.Measurements);
             } else {
                 _logger.LogFault(new PylanceException(te.EventName, te.Exception.stack), te.EventName, false);
             }

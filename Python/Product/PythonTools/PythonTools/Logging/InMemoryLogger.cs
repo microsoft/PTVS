@@ -71,9 +71,8 @@ namespace Microsoft.PythonTools.Logging {
             }
         }
 
-        public void LogFault(Exception ex, string description, bool dumpProcess) {
-        }
-
+        public void LogEvent(string eventName, IReadOnlyDictionary<string, object> properties, IReadOnlyDictionary<string, double> measurements) { }
+        public void LogFault(Exception ex, string description, bool dumpProcess) { }
         #endregion
 
         public override string ToString() {

@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.Design;
 using System.Linq;
 
@@ -33,6 +34,12 @@ namespace Microsoft.PythonTools.Logging {
         public void LogEvent(PythonLogEvent logEvent, object data = null) {
             foreach (var logger in _loggers) {
                 logger.LogEvent(logEvent, data);
+            }
+        }
+
+        public void LogEvent(string eventName, IReadOnlyDictionary<string, object> properties, IReadOnlyDictionary<string, double> measurements) {
+            foreach (var logger in _loggers) {
+                logger.LogEvent(eventName, properties, measurements);
             }
         }
 
