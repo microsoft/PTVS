@@ -21,7 +21,7 @@ using System.Diagnostics;
 using System.Linq;
 using Microsoft.Python.Parsing;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.LanguageServerClient;
+using Microsoft.PythonTools.Utility;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Utilities;
@@ -72,10 +72,7 @@ namespace Microsoft.PythonTools.Editor {
                 .Where(b => b != null);
         }
 
-        private readonly object _lock = new object();
-
         private readonly ConcurrentDictionary<object, IPythonTextBufferInfoEventSink> _eventSinks;
-
         private readonly TokenCache _tokenCache;
 
         private readonly bool _hasChangedOnBackground;
@@ -133,14 +130,8 @@ namespace Microsoft.PythonTools.Editor {
 
         public IServiceProvider Site { get; }
 
-        public PythonLanguageVersion LanguageVersion {
-            get {
-                // TODO: Pylance
-                return PythonLanguageVersion.V37;
-                //var client = PythonLanguageClient.FindLanguageClient(Buffer);
-                //return client?.Configuration.Version.ToLanguageVersion() ?? _defaultLanguageVersion;
-            }
-        }
+        public PythonLanguageVersion LanguageVersion
+            => Buffer.GetInterpreterConfiguration(Site).Version.ToLanguageVersion();
 
         #region Events
 

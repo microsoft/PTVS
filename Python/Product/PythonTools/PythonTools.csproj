@@ -435,6 +435,7 @@
     <Compile Include="PythonTools\Editor\TokenCache.cs" />
     <Compile Include="PythonTools\Repl\Completion\ExpressionFinder.cs" />
     <Compile Include="PythonTools\Repl\Completion\FindExpressionOptions.cs" />
+    <Compile Include="PythonTools\Utility\Interpreters.cs" />
     <Compile Include="PythonTools\Utility\Settings.cs" />
     <Compile Include="PythonTools\WorkspaceInfoBarManager.cs" />
     <Compile Include="PythonTools\Wpf\ModernDialog.cs" />
