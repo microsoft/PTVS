@@ -31,6 +31,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
     }
 
     internal static class PylanceTypeCheckingMode {
+        public const string Off = "off";
         public const string Basic = "basic";
         public const string Strict = "strict";
     }
