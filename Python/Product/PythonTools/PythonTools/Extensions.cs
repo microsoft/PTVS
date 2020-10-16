@@ -55,6 +55,7 @@ using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 using Task = System.Threading.Tasks.Task;
 using Microsoft.PythonTools.LanguageServerClient;
+using Microsoft.PythonTools.Utility;
 using Microsoft.PythonTools.Common;
 
 namespace Microsoft.PythonTools {
@@ -252,26 +253,9 @@ namespace Microsoft.PythonTools {
         }
 
         internal static async Task<PythonLanguageVersion> GetLanguageVersionAsync(this ITextView textView, IServiceProvider serviceProvider) {
-            var evaluator = textView.TextBuffer.GetInteractiveWindow().GetPythonEvaluator();
-            if (evaluator != null) {
-                return evaluator.LanguageVersion;
-            }
-
-            // TODO: Pylance
-            //var client = PythonLanguageClient.FindLanguageClient(textView.TextBuffer);
-            //if (client?.Configuration != null) {
-            //    return client.Configuration.Version.ToLanguageVersion();
-            //}
-
-            var defaultInterp = serviceProvider.GetPythonToolsService().InterpreterOptionsService.DefaultInterpreter;
-            if (defaultInterp?.Configuration != null) {
-                try {
-                    return defaultInterp.Configuration.Version.ToLanguageVersion();
-                } catch (InvalidOperationException) {
-                }
-            }
-
-            return PythonLanguageVersion.None;
+            var tb = textView.TextBuffer;
+            return tb.GetInteractiveWindow().GetPythonEvaluator()?.LanguageVersion ??
+                   tb.GetInterpreterConfiguration(serviceProvider).Version.ToLanguageVersion();
         }
 
         internal static InterpreterConfiguration GetInterpreterConfigurationAtCaret(this ITextView textView, IServiceProvider serviceProvider) {
