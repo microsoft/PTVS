@@ -60,7 +60,6 @@
 
             <ComboBox
                 x:Name="ProjectComboBox"
-                Style="{DynamicResource {x:Static ptwpf:ModernStyles.ThemedDialogComboBoxStyleKey}}"
                 Margin="0 0 0 17"
                 MinHeight="29"
                 Width="249"
@@ -80,7 +79,6 @@
 
             <ComboBox
                 x:Name="InterpretersComboBox"
-                Style="{DynamicResource {x:Static ptwpf:ModernStyles.ThemedDialogComboBoxStyleKey}}"
                 Margin="0 0 0 17"
                 MinHeight="29"
                 Width="249"
@@ -124,8 +122,7 @@
                         IsEnabled="{Binding Path=IsRegisterCustomEnvEnabled}"
                         IsChecked="{Binding Path=RegisterCustomEnv}"
                         Content="{x:Static common:Strings.AddExistingEnvironmentRegisterGloballyCheckBox}"
-                        AutomationProperties.AutomationId="RegisterGlobally"
-                        Style="{DynamicResource {x:Static ptwpf:ModernStyles.ThemedDialogCheckBoxStyleKey}}"/>
+                        AutomationProperties.AutomationId="RegisterGlobally"/>
 
                     <Grid>
                         <Grid.ColumnDefinitions>

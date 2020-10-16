@@ -153,8 +153,7 @@
                         ItemTemplate="{StaticResource ProjectTemplate}"
                         AutomationProperties.LabeledBy="{Binding ElementName=ProjectLabel}"
                         AutomationProperties.IsRequiredForForm="{Binding Path=Projects, Converter={x:Static wpf:Converters.NullOrEmptyIsFalse}}"
-                        AutomationProperties.AutomationId="Project"
-                        Style="{DynamicResource {x:Static ptwpf:ModernStyles.ThemedDialogComboBoxStyleKey}}"/>
+                        AutomationProperties.AutomationId="Project"/>
 
                     <Label
                         x:Name="EnvNameLabel"
@@ -198,8 +197,7 @@
                         Content="{x:Static common:Strings.AddCondaEnvironmentFileRadioButton}"
                         IsChecked="{Binding Path=IsEnvFile}"
                         GroupName="SourceType"
-                        AutomationProperties.AutomationId="EnvFileMode"
-                        Style="{DynamicResource {x:Static ptwpf:ModernStyles.ThemedDialogRadioButtonStyleKey}}"/>
+                        AutomationProperties.AutomationId="EnvFileMode"/>
 
                     <wpf:ConfigurationTextBoxWithHelp
                         Margin="36 0 0 9"
@@ -220,8 +218,7 @@
                         Content="{x:Static common:Strings.AddCondaPackagesRadioButton}"
                         IsChecked="{Binding Path=IsPackages}"
                         GroupName="SourceType"
-                        AutomationProperties.AutomationId="PackagesMode"
-                        Style="{DynamicResource {x:Static ptwpf:ModernStyles.ThemedDialogRadioButtonStyleKey}}"/>
+                        AutomationProperties.AutomationId="PackagesMode"/>
 
                     <wpf:ConfigurationTextBoxWithHelp
                         Margin="36 0 0 19"
@@ -243,24 +240,21 @@
                         IsEnabled="{Binding Path=SelectedProject, Converter={x:Static wpf:Converters.NullIsFalse}}"
                         Content="{x:Static common:Strings.AddEnvironmentSetAsCurrentLabel}"
                         AutomationProperties.AutomationId="SetAsCurrent"
-                        AutomationProperties.Name="{x:Static common:Strings.AddEnvironmentSetAsCurrentLabel}"
-                        Style="{DynamicResource {x:Static ptwpf:ModernStyles.ThemedDialogCheckBoxStyleKey}}"/>
+                        AutomationProperties.Name="{x:Static common:Strings.AddEnvironmentSetAsCurrentLabel}"/>
 
                     <CheckBox
                         Margin="0 0 0 10"
                         IsChecked="{Binding Path=SetAsDefault}"
                         Content="{x:Static common:Strings.AddEnvironmentSetAsDefaultLabel}"
                         AutomationProperties.AutomationId="SetAsDefault"
-                        AutomationProperties.Name="{x:Static common:Strings.AddEnvironmentSetAsDefaultLabel}"
-                        Style="{DynamicResource {x:Static ptwpf:ModernStyles.ThemedDialogCheckBoxStyleKey}}"/>
+                        AutomationProperties.Name="{x:Static common:Strings.AddEnvironmentSetAsDefaultLabel}"/>
 
                     <CheckBox
                         Margin="0 0 0 10"
                         IsChecked="{Binding Path=ViewInEnvironmentWindow}"
                         Content="{x:Static common:Strings.AddEnvironmentViewInEnvWindowLabel}"
                         AutomationProperties.AutomationId="ViewInEnvironmentWindow"
-                        AutomationProperties.Name="{x:Static common:Strings.AddEnvironmentViewInEnvWindowLabel}"
-                        Style="{DynamicResource {x:Static ptwpf:ModernStyles.ThemedDialogCheckBoxStyleKey}}"/>
+                        AutomationProperties.Name="{x:Static common:Strings.AddEnvironmentViewInEnvWindowLabel}"/>
                 </StackPanel>
             </ScrollViewer>
 
