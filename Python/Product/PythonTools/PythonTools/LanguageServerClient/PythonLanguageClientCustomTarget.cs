@@ -15,7 +15,10 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using Microsoft.Python.Core;
+using Microsoft.PythonTools.Logging;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Threading;
 using Newtonsoft.Json.Linq;
@@ -25,18 +28,54 @@ using Task = System.Threading.Tasks.Task;
 namespace Microsoft.PythonTools.LanguageServerClient {
     internal class PythonLanguageClientCustomTarget {
         private readonly IServiceProvider _site;
+        private readonly IPythonToolsLogger _logger;
         private readonly JoinableTaskContext _joinableTaskContext;
+
+        [Serializable]
+        private sealed class PylanceError {
+            public string stack { get; set; }
+        }
+
+        [Serializable]
+        private sealed class PylanceTelemetryEvent {
+            public string EventName { get; set; }
+            public Dictionary<string, object> Properties { get; set; }
+            public Dictionary<string, double> Measurements { get; set; }
+            public PylanceError Exception { get; set; }
+        }
+
+        private sealed class PylanceException : Exception {
+            private readonly string _stackTrace;
+
+            public PylanceException(string message, string stackTrace) : base(message) {
+                _stackTrace = stackTrace;
+            }
+
+            public override string StackTrace => _stackTrace;
+        }
 
         public PythonLanguageClientCustomTarget(IServiceProvider site, JoinableTaskContext joinableTaskContext) {
             _site = site ?? throw new ArgumentNullException(nameof(site));
             _joinableTaskContext = joinableTaskContext;
+            _logger = _site.GetService(typeof(IPythonToolsLogger)) as IPythonToolsLogger;
         }
 
         [JsonRpcMethod("telemetry/event")]
         public void OnTelemetryEvent(JToken arg) {
-            if (arg is JObject telemetry) {
-                // TODO: forward this to VS telemetry
-                Trace.WriteLine(telemetry.ToString());
+            if (!(arg is JObject telemetry)) {
+                return;
+            }
+
+            Trace.WriteLine(telemetry.ToString());
+            var te = telemetry.ToObject<PylanceTelemetryEvent>();
+            if (te == null) {
+                return;
+            }
+
+            if (te.Exception == null) {
+                _logger.LogEvent(te.EventName, te.Properties, te.Measurements);
+            } else {
+                _logger.LogFault(new PylanceException(te.EventName, te.Exception.stack), te.EventName, false);
             }
         }
 

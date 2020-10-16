@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
+using Microsoft.Python.Core;
 using Microsoft.VisualStudio.Telemetry;
 
 namespace Microsoft.PythonTools.Logging {
@@ -27,31 +28,20 @@ namespace Microsoft.PythonTools.Logging {
     [Export(typeof(IPythonToolsLogger))]
     internal sealed class VsTelemetryLogger : IPythonToolsLogger {
         private readonly Lazy<TelemetrySession> _session = new Lazy<TelemetrySession>(() => TelemetryService.DefaultSession);
-
         private readonly HashSet<string> _seenPackages = new HashSet<string>();
 
         private const string EventPrefix = "vs/python/";
         private const string PropertyPrefix = "VS.Python.";
 
         public void LogEvent(PythonLogEvent logEvent, object argument) {
-            var session = _session.Value;
-            // No session is not a fatal error
-            if (session == null) {
-                return;
-            }
-
+            // No session is not a fatal error.
             // Never send events when users have not opted in.
-            if (!session.IsOptedIn) {
+            if (_session.Value == null || !_session.Value.IsOptedIn) {
                 return;
             }
 
             // Certain events are not collected
             switch (logEvent) {
-                case PythonLogEvent.AnalysisWarning:
-                case PythonLogEvent.AnalysisOperationFailed:
-                case PythonLogEvent.AnalysisOperationCancelled:
-                case PythonLogEvent.AnalysisExitedAbnormally:
-                    return;
                 case PythonLogEvent.PythonPackage:
                     lock (_seenPackages) {
                         var name = (argument as PackageInfo)?.Name;
@@ -73,18 +63,30 @@ namespace Microsoft.PythonTools.Logging {
                 evt.Properties[PropertyPrefix + "Value"] = argument;
             }
 
-            session.PostEvent(evt);
+            _session.Value.PostEvent(evt);
         }
 
-        public void LogFault(Exception ex, string description, bool dumpProcess) {
-            var session = _session.Value;
-            // No session is not a fatal error
-            if (session == null) {
+        public void LogEvent(string eventName, IReadOnlyDictionary<string, object> properties, IReadOnlyDictionary<string, double> measurements) {
+            // No session is not a fatal error.
+            // Never send events when users have not opted in.
+            if (_session.Value == null || !_session.Value.IsOptedIn) {
                 return;
             }
 
+            var evt = new TelemetryEvent($"{EventPrefix}{eventName}");
+            foreach (var p in properties.MaybeEnumerate()) {
+                evt.Properties[p.Key] = p.Value;
+            }
+            foreach (var p in measurements.MaybeEnumerate()) {
+                evt.Properties[p.Key] = new TelemetryMetricProperty(p.Value);
+            }
+            _session.Value.PostEvent(evt);
+        }
+
+        public void LogFault(Exception ex, string description, bool dumpProcess) {
+            // No session is not a fatal error.
             // Never send events when users have not opted in.
-            if (!session.IsOptedIn) {
+            if (_session.Value == null || !_session.Value.IsOptedIn) {
                 return;
             }
 
@@ -101,7 +103,7 @@ namespace Microsoft.PythonTools.Logging {
                 fault.IsIncludedInWatsonSample = false;
             }
 
-            session.PostEvent(fault);
+            _session.Value.PostEvent(fault);
         }
     }
 }
