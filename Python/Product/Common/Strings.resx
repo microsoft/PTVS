@@ -3032,4 +3032,7 @@ Please specify at least one package.</value>
   <data name="TypeshedPathsToolTip" xml:space="preserve">
     <value>Paths to look for typeshed modules. You can use line breaks or semicolons to separate multiple paths.</value>
   </data>
+  <data name="TypeCheckingModeOff" xml:space="preserve">
+    <value>Off</value>
+  </data>
 </root>

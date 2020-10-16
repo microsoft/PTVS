@@ -28,13 +28,11 @@ namespace Microsoft.PythonTools.Logging {
     /// </summary>
     abstract class PythonToolsLoggerData {
         public static IDictionary<string, object> AsDictionary(object obj) {
-            IDictionary<string, object> res;
-
             if (obj == null) {
                 return null;
             }
 
-            if ((res = obj as IDictionary<string, object>) != null) {
+            if (obj is IDictionary<string, object> res) {
                 return res;
             }
 

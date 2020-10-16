@@ -26,56 +26,23 @@ namespace Microsoft.PythonTools.Logging {
         Launch,
         /// <summary>
         /// Logs the number of available interpreters.
-        /// 
         /// Data is an int indicating the number of interpreters.
         /// </summary>
         InstalledInterpreters,
         /// <summary>
         /// Logs the number of virtual environments in a project.
-        /// 
         /// Data is an int indicating the number of virtual environments.
         /// </summary>
         VirtualEnvironments,
         /// <summary>
         /// Logs the frequency at which users check for new Survey\News
-        /// 
         /// Data is an int enum mapping to SurveyNews* setting
         /// </summary>
         SurveyNewsFrequency,
-
         /// <summary>
         /// Logs installed package
         /// </summary>
         PythonPackage,
-        /// <summary>
-        /// The analyzer is initializing for project, REPL, etc.
-        /// </summary>
-        AnalysisInitializing,
-        /// <summary>
-        /// The number of seconds that it took to analyze a DB
-        /// </summary>
-        AnalysisCompleted,
-        /// <summary>
-        /// The analysis process exited abnormally for some reason...
-        /// </summary>
-        AnalysisExitedAbnormally,
-        /// <summary>
-        /// Communication with the analysis process was cancelled.  This coudl be user
-        /// invoked but is more likely due to the analysis process having exited abnormally.
-        /// </summary>
-        AnalysisOperationCancelled,
-        /// <summary>
-        /// A call to the analysis process failed and raised an exception.
-        /// </summary>
-        AnalysisOperationFailed,
-        /// <summary>
-        /// The analysis process raised a warning
-        /// </summary>
-        AnalysisWarning,
-        /// <summary>
-        /// Information about how long requests to the out-of-proc analyzer take
-        /// </summary>
-        AnalysisRequestTiming,
         /// <summary>
         /// Information about a debug REPL connection event
         /// </summary>
@@ -84,14 +51,6 @@ namespace Microsoft.PythonTools.Logging {
         /// Information about enabled experimental features
         /// </summary>
         Experiments,
-        /// <summary>
-        /// Summary info about requests processed by an analyzer
-        /// </summary>
-        AnalysisRequestSummary,
-        /// <summary>
-        /// Info about slow GetExpressionAtPoint events
-        /// </summary>
-        GetExpressionAtPoint,
         /// <summary>
         /// Info about debugger launch or attach timeouts on slower machines
         /// </summary>
@@ -147,5 +106,9 @@ namespace Microsoft.PythonTools.Logging {
         /// Publish using the button on Python 'Publish' project property page
         /// </summary>
         PythonSpecificPublish,
+        /// <summary>
+        /// Events from language server
+        /// </summary>
+        LanguageServer
     }
 }

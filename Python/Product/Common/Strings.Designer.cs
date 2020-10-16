@@ -7373,6 +7373,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Off.
+        /// </summary>
+        public static string TypeCheckingModeOff {
+            get {
+                return ResourceManager.GetString("TypeCheckingModeOff", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Strict.
         /// </summary>
         public static string TypeCheckingModeStrict {

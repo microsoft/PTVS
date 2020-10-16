@@ -15,7 +15,6 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Linq;
@@ -62,53 +61,6 @@ namespace Microsoft.PythonTools.Logging {
                         _seenPackages.Add(argument as PackageInfo);
                     }
                     break;
-                case PythonLogEvent.AnalysisCompleted:
-                    lock (_analysisInfo) {
-                        _analysisInfo.Add(argument as AnalysisInfo);
-                    }
-                    break;
-                case PythonLogEvent.AnalysisExitedAbnormally:
-                case PythonLogEvent.AnalysisOperationCancelled:
-                case PythonLogEvent.AnalysisOperationFailed:
-                case PythonLogEvent.AnalysisWarning:
-                    lock (_analysisAbnormalities) {
-                        _analysisAbnormalities.Add("[{0}] {1}: {2}".FormatInvariant(DateTime.Now, logEvent, argument as string ?? ""));
-                    }
-                    break;
-                case PythonLogEvent.AnalysisRequestTiming:
-                    lock (_analysisTiming) {
-                        var a = (AnalysisTimingInfo)argument;
-                        if (_analysisTiming.ContainsKey(a.RequestName)) {
-                            var t = _analysisTiming[a.RequestName];
-                            _analysisTiming[a.RequestName] = Tuple.Create(t.Item1 + 1, Math.Max(t.Item2, a.Milliseconds), t.Item3 + a.Milliseconds, t.Item4 + (a.Timeout ? 1 : 0));
-                        } else {
-                            _analysisTiming[a.RequestName] = Tuple.Create(1, a.Milliseconds, (long)a.Milliseconds, a.Timeout ? 1 : 0);
-                        }
-                    }
-                    break;
-                case PythonLogEvent.AnalysisRequestSummary:
-                    lock (_analysisCount) {
-                        var a = (Dictionary<string, object>)argument;
-                        foreach (var kv in a) {
-                            if (kv.Value is long l) {
-                                long existing;
-                                _analysisCount.TryGetValue(kv.Key, out existing);
-                                _analysisCount[kv.Key] = existing + l;
-                            }
-                        }
-                    }
-                    break;
-                case PythonLogEvent.GetExpressionAtPoint:
-                    lock (_analysisTiming) {
-                        var a = (GetExpressionAtPointInfo)argument;
-                        if (_analysisTiming.ContainsKey("GetExpressionAtPoint")) {
-                            var t = _analysisTiming["GetExpressionAtPoint"];
-                            _analysisTiming["GetExpressionAtPoint"] = Tuple.Create(t.Item1 + 1, Math.Max(t.Item2, a.Milliseconds), t.Item3 + a.Milliseconds, t.Item4 + (a.Success ? 0 : 1));
-                        } else {
-                            _analysisTiming["GetExpressionAtPoint"] = Tuple.Create(1, a.Milliseconds, (long)a.Milliseconds, a.Success ? 0 : 1);
-                        }
-                    }
-                    break;
                 case PythonLogEvent.DebugAdapterConnectionTimeout:
                     if ((string)argument == "Launch") {
                         _debugAdapterLaunchTimeoutCount++;
@@ -119,9 +71,8 @@ namespace Microsoft.PythonTools.Logging {
             }
         }
 
-        public void LogFault(Exception ex, string description, bool dumpProcess) {
-        }
-
+        public void LogEvent(string eventName, IReadOnlyDictionary<string, object> properties, IReadOnlyDictionary<string, double> measurements) { }
+        public void LogFault(Exception ex, string description, bool dumpProcess) { }
         #endregion
 
         public override string ToString() {
