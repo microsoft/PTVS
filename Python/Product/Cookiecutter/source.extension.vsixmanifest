@@ -1,6 +1,6 @@
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
   <Metadata>
-    <Identity Id="7B469DDE-BFCC-4975-9C6E-154583ED3672" Version="16.0.0" Language="en-US" Publisher="Microsoft Corporation" />
+    <Identity Id="F7081DF5-823E-49A2-B4CC-489FAFC960BE" Version="16.0.0" Language="en-US" Publisher="Microsoft Corporation" />
     <DisplayName>Cookiecutter</DisplayName>
     <Description xml:space="preserve">Provides tools for finding, instantiating and customizing templates in cookiecutter format.</Description>
     <MoreInfo>http://aka.ms/ptvs</MoreInfo>
@@ -9,7 +9,7 @@
     <Icon>Resources\Cookiecutter_32x.png</Icon>
     <PreviewImage>Resources\CookiecutterTemplate_200x.png</PreviewImage>
   </Metadata>
-  <Installation SystemComponent="true" AllUsers="true" InstalledByMsi="true">
+  <Installation SystemComponent="false" AllUsers="false" InstalledByMsi="false">
     <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[16.0,17.0)" />
   </Installation>
   <Dependencies>

@@ -35,7 +35,7 @@ namespace Microsoft.PythonTools.Utility {
             var doc = buffer as ITextDocument;
             if (!string.IsNullOrEmpty(doc?.FilePath)) {
                 var project = sp.GetProjectFromOpenFile(doc.FilePath) ?? sp.GetProjectContainingFile(doc.FilePath);
-                configuration = project.ActiveInterpreter?.Configuration;
+                configuration = project?.ActiveInterpreter?.Configuration;
             }
 
             return configuration ?? cm.GetService<IInterpreterOptionsService>().DefaultInterpreter.Configuration;

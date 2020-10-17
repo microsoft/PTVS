@@ -278,6 +278,7 @@
     <Compile Include="PythonTools\Editor\Formatting\PythonFormatterYapf.cs" />
     <Compile Include="PythonTools\Editor\Formatting\PythonFormatter.cs" />
     <Compile Include="PythonTools\Editor\Formatting\LspDiffTextEditFactory.cs" />
+    <Compile Include="PythonTools\LanguageServerClient\CustomCancellationStrategy.cs" />
     <Compile Include="PythonTools\LanguageServerClient\LiveShareExtensions.cs" />
     <Compile Include="PythonTools\LanguageServerClient\LspEditorUtilities.cs" />
     <Compile Include="PythonTools\Editor\Formatting\PythonFormatterBlack.cs" />
@@ -339,6 +340,7 @@
     <Compile Include="PythonTools\Intellisense\PythonMemberType.cs" />
     <Compile Include="PythonTools\LanguageServerClient\IPythonLanguageClientContext.cs" />
     <Compile Include="PythonTools\LanguageServerClient\NodeEnvironmentProvider.cs" />
+    <Compile Include="PythonTools\LanguageServerClient\PylanceSettings.cs" />
     <Compile Include="PythonTools\LanguageServerClient\PythonLanguageClientContextFixed.cs" />
     <Compile Include="PythonTools\LanguageServerClient\PythonLanguageClientContextGlobal.cs" />
     <Compile Include="PythonTools\LanguageServerClient\PythonLanguageClientContextRepl.cs" />
@@ -435,6 +437,7 @@
     <Compile Include="PythonTools\Editor\TokenCache.cs" />
     <Compile Include="PythonTools\Repl\Completion\ExpressionFinder.cs" />
     <Compile Include="PythonTools\Repl\Completion\FindExpressionOptions.cs" />
+    <Compile Include="PythonTools\Utility\MessageBox.cs" />
     <Compile Include="PythonTools\Utility\Interpreters.cs" />
     <Compile Include="PythonTools\Utility\Settings.cs" />
     <Compile Include="PythonTools\WorkspaceInfoBarManager.cs" />

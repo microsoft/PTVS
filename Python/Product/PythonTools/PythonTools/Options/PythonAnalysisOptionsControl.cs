@@ -55,25 +55,25 @@ namespace Microsoft.PythonTools.Options {
 
             _autoSearchPath.Checked = pyService.AnalysisOptions.AutoSearchPaths;
             _diagnosticsModeCombo.SelectedIndex =
-                pyService.AnalysisOptions.DiagnosticMode == PythonLanguageClient.DiagnosticMode.OpenFilesOnly ? 0 : 1;
+                pyService.AnalysisOptions.DiagnosticMode == PylanceDiagnosticMode.OpenFilesOnly ? 0 : 1;
 
-            if (pyService.AnalysisOptions.TypeCheckingMode == PythonLanguageClient.TypeCheckingMode.Off) {
+            if (pyService.AnalysisOptions.TypeCheckingMode == PylanceTypeCheckingMode.Off) {
                 _typeCheckingMode.SelectedIndex = 0;
-            } else if (pyService.AnalysisOptions.TypeCheckingMode == PythonLanguageClient.TypeCheckingMode.Basic) {
+            } else if (pyService.AnalysisOptions.TypeCheckingMode == PylanceTypeCheckingMode.Basic) {
                 _typeCheckingMode.SelectedIndex = 1;
-            } else if (pyService.AnalysisOptions.TypeCheckingMode == PythonLanguageClient.TypeCheckingMode.Strict) {
+            } else if (pyService.AnalysisOptions.TypeCheckingMode == PylanceTypeCheckingMode.Strict) {
                 _typeCheckingMode.SelectedIndex = 2;
             } else {
                 _typeCheckingMode.SelectedIndex = 1; // Default is basic
             }
 
-            if (pyService.AnalysisOptions.LogLevel == PythonLanguageClient.LogLevel.Error) {
+            if (pyService.AnalysisOptions.LogLevel == PylanceLogLevel.Error) {
                 _logLevelCombo.SelectedIndex = 0;
-            } else if (pyService.AnalysisOptions.LogLevel == PythonLanguageClient.LogLevel.Warning) {
+            } else if (pyService.AnalysisOptions.LogLevel == PylanceLogLevel.Warning) {
                 _logLevelCombo.SelectedIndex = 1;
-            } else if (pyService.AnalysisOptions.LogLevel == PythonLanguageClient.LogLevel.Information) {
+            } else if (pyService.AnalysisOptions.LogLevel == PylanceLogLevel.Information) {
                 _logLevelCombo.SelectedIndex = 2;
-            } else if (pyService.AnalysisOptions.LogLevel == PythonLanguageClient.LogLevel.Trace) {
+            } else if (pyService.AnalysisOptions.LogLevel == PylanceLogLevel.Trace) {
                 _logLevelCombo.SelectedIndex = 3;
             } else {
                 _logLevelCombo.SelectedIndex = 2;
@@ -91,32 +91,32 @@ namespace Microsoft.PythonTools.Options {
 
             pyService.AnalysisOptions.AutoSearchPaths = _autoSearchPath.Checked;
             pyService.AnalysisOptions.DiagnosticMode = _diagnosticsModeCombo.SelectedIndex == 0 ?
-                PythonLanguageClient.DiagnosticMode.OpenFilesOnly : PythonLanguageClient.DiagnosticMode.Workspace;
+                PylanceDiagnosticMode.OpenFilesOnly : PylanceDiagnosticMode.Workspace;
 
             switch (_typeCheckingMode.SelectedIndex) {
                 case 0:
-                    pyService.AnalysisOptions.TypeCheckingMode = PythonLanguageClient.TypeCheckingMode.Off;
+                    pyService.AnalysisOptions.TypeCheckingMode = PylanceTypeCheckingMode.Off;
                     break;
                 case 1:
-                    pyService.AnalysisOptions.TypeCheckingMode = PythonLanguageClient.TypeCheckingMode.Basic;
+                    pyService.AnalysisOptions.TypeCheckingMode = PylanceTypeCheckingMode.Basic;
                     break;
                 case 2:
-                    pyService.AnalysisOptions.TypeCheckingMode = PythonLanguageClient.TypeCheckingMode.Strict;
+                    pyService.AnalysisOptions.TypeCheckingMode = PylanceTypeCheckingMode.Strict;
                     break;
             }
 
             switch (_logLevelCombo.SelectedIndex) {
                 case 0:
-                    pyService.AnalysisOptions.LogLevel = PythonLanguageClient.LogLevel.Error;
+                    pyService.AnalysisOptions.LogLevel = PylanceLogLevel.Error;
                     break;
                 case 1:
-                    pyService.AnalysisOptions.LogLevel = PythonLanguageClient.LogLevel.Warning;
+                    pyService.AnalysisOptions.LogLevel = PylanceLogLevel.Warning;
                     break;
                 case 2:
-                    pyService.AnalysisOptions.LogLevel = PythonLanguageClient.LogLevel.Information;
+                    pyService.AnalysisOptions.LogLevel = PylanceLogLevel.Information;
                     break;
                 case 3:
-                    pyService.AnalysisOptions.LogLevel = PythonLanguageClient.LogLevel.Trace;
+                    pyService.AnalysisOptions.LogLevel = PylanceLogLevel.Trace;
                     break;
             }
         }

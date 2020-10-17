@@ -46,13 +46,13 @@ namespace Microsoft.PythonTools.Options {
                 changed = true;
             }
 
-            var diagnosticMode = _service.LoadString(nameof(DiagnosticMode), Category) ?? PythonLanguageClient.DiagnosticMode.OpenFilesOnly;
+            var diagnosticMode = _service.LoadString(nameof(DiagnosticMode), Category) ?? PylanceDiagnosticMode.OpenFilesOnly;
             if(DiagnosticMode != diagnosticMode) {
                 DiagnosticMode = diagnosticMode;
                 changed = true;
             }
 
-            var logLevel = _service.LoadString(nameof(LogLevel), Category) ?? PythonLanguageClient.LogLevel.Information;
+            var logLevel = _service.LoadString(nameof(LogLevel), Category) ?? PylanceLogLevel.Information;
             if (LogLevel != logLevel) {
                 LogLevel = logLevel;
                 changed = true;
@@ -64,7 +64,7 @@ namespace Microsoft.PythonTools.Options {
                 changed = true;
             }
 
-            var typeCheckingMode = _service.LoadString(nameof(TypeCheckingMode), Category) ?? PythonLanguageClient.TypeCheckingMode.Basic;
+            var typeCheckingMode = _service.LoadString(nameof(TypeCheckingMode), Category) ?? PylanceTypeCheckingMode.Basic;
             if (TypeCheckingMode != typeCheckingMode) {
                 TypeCheckingMode = typeCheckingMode;
                 changed = true;
@@ -109,10 +109,10 @@ namespace Microsoft.PythonTools.Options {
 
         public void Reset() {
             AutoSearchPaths = true;
-            DiagnosticMode = PythonLanguageClient.DiagnosticMode.OpenFilesOnly;
-            LogLevel = PythonLanguageClient.LogLevel.Information;
+            DiagnosticMode = PylanceDiagnosticMode.OpenFilesOnly;
+            LogLevel = PylanceLogLevel.Information;
             StubPath = null;
-            TypeCheckingMode = PythonLanguageClient.TypeCheckingMode.Basic;
+            TypeCheckingMode = PylanceTypeCheckingMode.Basic;
             TypeshedPaths = null;
             UseLibraryCodeForTypes = true;
             Changed?.Invoke(this, EventArgs.Empty);

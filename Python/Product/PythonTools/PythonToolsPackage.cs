@@ -17,7 +17,6 @@
 using System;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
@@ -27,6 +26,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Forms.Design;
 using Microsoft.PythonTools.Commands;
+using Microsoft.PythonTools.Common;
 using Microsoft.PythonTools.Common.Infrastructure;
 using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.Debugger.DebugEngine;
@@ -78,7 +78,7 @@ namespace Microsoft.PythonTools {
     [ProvideOptionPage(typeof(PythonAnalysisOptionsPage), "Python Tools", "Analysis", 115, 129, true)]
     [ProvideOptionPage(typeof(PythonDebuggingOptionsPage), "Python Tools", "Debugging", 115, 125, true)]
     [ProvideOptionPage(typeof(PythonCondaOptionsPage), "Python Tools", "Conda", 115, 132, true)]
-    [Guid(GuidList.guidPythonToolsPkgString)]              // our packages GUID
+    [Guid(CommonGuidList.guidPythonToolsPkgString)]              // our packages GUID
     [ProvideLanguageService(typeof(PythonLanguageInfo), PythonConstants.LanguageName, 106, RequestStockColors = true, ShowSmartIndent = true, ShowCompletion = true, DefaultToInsertSpaces = true, HideAdvancedMembersByDefault = true, EnableAdvancedMembersOption = true, ShowDropDownOptions = true)]
     [ProvideLanguageExtension(typeof(PythonLanguageInfo), PythonConstants.FileExtension)]
     [ProvideLanguageExtension(typeof(PythonLanguageInfo), PythonConstants.WindowsFileExtension)]
@@ -166,9 +166,7 @@ namespace Microsoft.PythonTools {
     [ProvideCodeExpansionPath("Python", "Test", @"Snippets\%LCID%\Test\")]
     [ProvideInteractiveWindow(GuidList.guidPythonInteractiveWindow, Style = VsDockStyle.Linked, Orientation = ToolWindowOrientation.none, Window = ToolWindowGuids80.Outputwindow)]
     [ProvideBraceCompletion(PythonCoreConstants.ContentType)]
-    [ProvideNewFileTemplates(GuidList.guidMiscFilesProjectGuidString, GuidList.guidPythonToolsPkgString, "Python", @"Templates\NewItem\")]
-    [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable",
-        Justification = "Object is owned by VS and cannot be disposed")]
+    [ProvideNewFileTemplates(CommonGuidList.guidMiscFilesProjectGuidString, CommonGuidList.guidPythonToolsPkgString, "Python", @"Templates\NewItem\")]
     internal sealed class PythonToolsPackage : CommonPackage, IVsComponentSelectorProvider, IPythonToolsToolWindowService {
         private PythonAutomation _autoObject;
         private PackageContainer _packageContainer;
@@ -276,7 +274,7 @@ namespace Microsoft.PythonTools {
             viewAdapter.CenterLines(line, 1);
         }
 
-        internal static ITextBuffer GetBufferForDocument(System.IServiceProvider serviceProvider, string filename) {
+        internal static ITextBuffer GetBufferForDocument(IServiceProvider serviceProvider, string filename) {
             VsUtilities.OpenDocument(serviceProvider, filename, out var viewAdapter, out _);
             ErrorHandler.ThrowOnFailure(viewAdapter.GetBuffer(out var lines));
 
@@ -285,12 +283,12 @@ namespace Microsoft.PythonTools {
         }
 
         internal static IProjectLauncher GetLauncher(IServiceProvider serviceProvider, IPythonProject project) {
-            var launchProvider = serviceProvider.GetUIThread().Invoke<string>(() => project.GetProperty(PythonConstants.LaunchProvider));
+            var launchProvider = serviceProvider.GetUIThread().Invoke(() => project.GetProperty(PythonConstants.LaunchProvider));
 
             IPythonLauncherProvider defaultLaunchProvider = null;
             foreach (var launcher in serviceProvider.GetComponentModel().GetExtensions<IPythonLauncherProvider>()) {
                 if (launcher.Name == launchProvider) {
-                    return serviceProvider.GetUIThread().Invoke<IProjectLauncher>(() => launcher.CreateLauncher(project));
+                    return serviceProvider.GetUIThread().Invoke(() => launcher.CreateLauncher(project));
                 }
 
                 if (launcher.Name == DefaultLauncherProvider.DefaultLauncherName) {
@@ -361,10 +359,8 @@ namespace Microsoft.PythonTools {
         }
 
         private static bool SaveDirtyFiles(IServiceProvider provider, bool isLaunchFileOpen, ref string fileName) {
-            var rdt = provider.GetService(typeof(SVsRunningDocumentTable)) as IVsRunningDocumentTable;
-            var rdt4 = provider.GetService(typeof(SVsRunningDocumentTable)) as IVsRunningDocumentTable4;
-
-            if (rdt != null && rdt4 != null) {
+            if (provider.GetService(typeof(SVsRunningDocumentTable)) is IVsRunningDocumentTable rdt &&
+                provider.GetService(typeof(SVsRunningDocumentTable)) is IVsRunningDocumentTable4 rdt4) {
                 // The save operation may move the file, so adjust filename 
                 // to the new location if necessary. 
                 var launchFileCookie = isLaunchFileOpen ? rdt4.GetDocumentCookie(fileName) : VSConstants.VSCOOKIE_NIL;
@@ -401,30 +397,17 @@ namespace Microsoft.PythonTools {
             }
         }
 
-        internal static void OpenNoInterpretersHelpPage(IServiceProvider serviceProvider, string page = null) {
-            OpenVsWebBrowser(serviceProvider, page ?? PythonToolsInstallPath.GetFile("NoInterpreters.html"));
-        }
+        internal static void OpenNoInterpretersHelpPage(IServiceProvider serviceProvider, string page = null)
+            => OpenVsWebBrowser(serviceProvider, page ?? PythonToolsInstallPath.GetFile("NoInterpreters.html"));
 
-        public static string InterpreterHelpUrl {
-            get {
-                return $"https://go.microsoft.com/fwlink/?LinkId=299429&clcid=0x{CultureInfo.CurrentCulture.LCID:X}";
-            }
-        }
+        public static string InterpreterHelpUrl
+            => $"https://go.microsoft.com/fwlink/?LinkId=299429&clcid=0x{CultureInfo.CurrentCulture.LCID:X}";
 
-        protected override object GetAutomationObject(string name) {
-            if (name == "VsPython") {
-                return _autoObject ?? (_autoObject = new PythonAutomation(this));
-            }
+        protected override object GetAutomationObject(string name)
+            => name == "VsPython" ? _autoObject ?? (_autoObject = new PythonAutomation(this)) : base.GetAutomationObject(name);
 
-            return base.GetAutomationObject(name);
-        }
-
-        public override bool IsRecognizedFile(string filename) {
-            return ModulePath.IsPythonSourceFile(filename);
-        }
-
+        public override bool IsRecognizedFile(string filename) => ModulePath.IsPythonSourceFile(filename);
         public override Type GetLibraryManagerType() => null;
-
         internal override LibraryManager CreateLibraryManager() => null;
 
         /////////////////////////////////////////////////////////////////////////////
@@ -435,6 +418,12 @@ namespace Microsoft.PythonTools {
 
             await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
             await base.InitializeAsync(cancellationToken, progress);
+
+            var shell = GetService(typeof(SVsShell)) as IVsShell;
+            if(shell.IsPackageInstalled(new Guid(CommonGuidList.guidPythonToolsVS2019), out var installed) == VSConstants.S_OK && installed != 0) {
+                var uiShell = GetService(typeof(SVsUIShell)) as IVsUIShell;
+                uiShell.ShowMessageBox(0, Guid.Empty, null, "Python Tools are installed in Visual Studio. Please remove Python support or Data Science Workload before trying Pylance extension.", null, 0, OLEMSGBUTTON.OLEMSGBUTTON_OK, 0, OLEMSGICON.OLEMSGICON_CRITICAL, 0, out _);
+            }
 
             AddService<IClipboardService>(new ClipboardService(), true);
             AddService<IPythonToolsToolWindowService>(this, true);
@@ -448,7 +437,7 @@ namespace Microsoft.PythonTools {
             var solutionEventListener = new SolutionEventsListener(this);
             solutionEventListener.StartListeningForChanges();
             AddService<SolutionEventsListener>(solutionEventListener, true);
-            
+
             // Enable the mixed-mode debugger UI context
             UIContext.FromUIContextGuid(DkmEngineId.NativeEng).IsActive = true;
 
@@ -493,14 +482,9 @@ namespace Microsoft.PythonTools {
             Trace.WriteLine("Leaving Initialize() of: {0}".FormatUI(this));
         }
 
-        public EnvDTE.DTE DTE {
-            get {
-                return (EnvDTE.DTE)GetService(typeof(EnvDTE.DTE));
-            }
-        }
+        public EnvDTE.DTE DT => (EnvDTE.DTE)GetService(typeof(EnvDTE.DTE));
 
         #region IVsComponentSelectorProvider Members
-
         public int GetComponentSelectorPage(ref Guid rguidPage, VSPROPSHEETPAGE[] ppage) {
             if (rguidPage == typeof(WebPiComponentPickerControl).GUID) {
                 var page = new VSPROPSHEETPAGE();
@@ -523,10 +507,9 @@ namespace Microsoft.PythonTools {
         ///     connection to the package.
         /// </devdoc>
         private sealed class PackageContainer : Container {
+            private readonly IServiceProvider _provider;
             private IUIService _uis;
             private AmbientProperties _ambientProperties;
-
-            private System.IServiceProvider _provider;
 
             /// <devdoc>
             ///     Creates a new container using the given service provider.
