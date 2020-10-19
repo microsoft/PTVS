@@ -120,6 +120,11 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <VSIXSubPath>Templates\NewItem</VSIXSubPath>
     </Content>
+    <Content Include="Microsoft.PythonTools.targets">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <InstallRoot>MSBuild</InstallRoot>
+      <VSIXSubPath>Microsoft\VisualStudio\v16.0\Python Tools</VSIXSubPath>
+    </Content>
     <None Include="Settings\pyrightconfig-schema.json" />
     <None Include="source.extension.vsixmanifest" />
     <Content Include="Templates\NewItem\module.py">

@@ -3035,4 +3035,7 @@ Please specify at least one package.</value>
   <data name="TypeCheckingModeOff" xml:space="preserve">
     <value>Off</value>
   </data>
+  <data name="WarningPython2NotSupported" xml:space="preserve">
+    <value>This project contains configurations with Python 2.x. Python 2.x is not supported by the Pylance language server. Available Python 3.x will be used instead.</value>
+  </data>
 </root>

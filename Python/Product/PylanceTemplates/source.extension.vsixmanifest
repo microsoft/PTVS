@@ -1,25 +1,13 @@
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
   <Metadata>
     <Identity Id="610F3441-9B1F-4632-9C68-D07C09D1B09B" Version="16.8.0" Language="en-US" Publisher="Microsoft" />
-    <DisplayName>Pylance</DisplayName>
-    <Description xml:space="preserve">Provides support for editing and debugging Python programs with Pylance language server.</Description>
-    <MoreInfo>https://github.com/microsoft/pylance-release#pylance</MoreInfo>
+    <DisplayName>Pylance Templates</DisplayName>
+    <Description xml:space="preserve">Provides project Templates for Python programs with Pylance language server.</Description>
     <License>License_en-US.rtf</License>
-    <GettingStartedGuide>http://aka.ms/ptvstutorial</GettingStartedGuide>
-    <Icon>PythonProject.ico</Icon>
-    <PreviewImage>PythonProjectBig.ico</PreviewImage>
   </Metadata>
   <Installation SystemComponent="false" AllUsers="true" InstalledByMsi="false">
     <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[16.8,17.0)" />
   </Installation>
-  <Dependencies>
-    <Dependency Id="Microsoft.Framework.NDP" DisplayName="Microsoft .NET Framework" Version="4.6" />
-    <Dependency IsRequired="false" Version="[16.0,17.0)" d:Source="Installed" Id="TestWindow.Microsoft.0771d463-d74d-4e95-aac2-39d3c7ec1f97" DisplayName="Test Explorer" />
-    <Dependency d:Source="Installed" Id="1F42C6D0-F876-4AF0-8185-1BEB0A325BB2" DisplayName="VisualStudio Interactive Components" />
-  </Dependencies>
-  <Prerequisites>
-    <Prerequisite Id="Microsoft.VisualStudio.Component.CoreEditor" Version="[16.0,17.0)" DisplayName="Visual Studio core editor" />
-  </Prerequisites>
   <Assets>
     <Asset Type="Microsoft.VisualStudio.Package" Path="|%CurrentProject%;PkgdefProjectOutputGroup|" />
     <Asset Type="Microsoft.VisualStudio.Package" Path="|Microsoft.PythonTools;PkgdefProjectOutputGroup|" />
@@ -46,6 +34,5 @@
     <Asset Type="Microsoft.VisualStudio.Assembly" d:Source="File" Path="Microsoft.PythonTools.Attacher.exe" />
 	<Asset Type="Microsoft.VisualStudio.Package" d:Source="Project" d:ProjectName="Cookiecutter" />
 	<Asset Type="Microsoft.VisualStudio.Package" d:Source="Project" d:ProjectName="Profiling" />
-	<Asset Type="Microsoft.VisualStudio.Package" d:Source="Project" d:ProjectName="PylanceTemplates" />
   </Assets>
 </PackageManifest>

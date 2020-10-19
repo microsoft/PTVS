@@ -49,19 +49,19 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public void InterpreterLoaded(object context, InterpreterConfiguration configuration) {
-            lock(_createdFactories) {
+            lock (_createdFactories) {
                 _createdFactories[configuration.Id] = context;
             }
         }
 
         public void InterpreterUnloaded(object context, InterpreterConfiguration configuration) {
-            lock(_createdFactories) {
+            lock (_createdFactories) {
                 _createdFactories.Remove(configuration.Id);
             }
         }
 
         public bool IsProjectSpecific(InterpreterConfiguration configuration) {
-            lock(_createdFactories) {
+            lock (_createdFactories) {
                 return _createdFactories.ContainsKey(configuration.Id);
             }
         }
@@ -81,9 +81,21 @@ namespace Microsoft.PythonTools.Project {
 
         public IEnumerable<object> Projects {
             get {
-                lock(_projects) {
+                lock (_projects) {
                     return _projects.Values.ToArray();
                 }
+            }
+        }
+        public IEnumerable<PythonProjectNode> ProjectNodes {
+            get {
+                lock (_projects) {
+                    return _projects.Keys.ToArray();
+                }
+            }
+        }
+        public object GetProject(PythonProjectNode node) {
+            lock (_projects) {
+                return _projects.TryGetValue(node, out var project) ? project : null;
             }
         }
     }

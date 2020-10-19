@@ -7895,6 +7895,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to This project contains configurations with Python 2.x. Python 2.x is not supported by the Pylance language server. Available Python 3.x will be used instead..
+        /// </summary>
+        public static string WarningPython2NotSupported {
+            get {
+                return ResourceManager.GetString("WarningPython2NotSupported", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The type of this expression is unknown..
         /// </summary>
         public static string WarningUnknownType {

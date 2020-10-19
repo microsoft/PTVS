@@ -17,9 +17,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
 using System.Reflection;
 using System.Runtime.InteropServices;
 
@@ -29,52 +26,44 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
     /// </summary>
     [ComVisible(true)]
     public class OAProperties : EnvDTE.Properties {
-        private NodeProperties target;
-        private Dictionary<string, EnvDTE.Property> properties = new Dictionary<string, EnvDTE.Property>();
+        private readonly NodeProperties _target;
+        private readonly Dictionary<string, EnvDTE.Property> _properties = new Dictionary<string, EnvDTE.Property>();
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
         public OAProperties(NodeProperties target) {
             Utilities.ArgumentNotNull("target", target);
 
-            this.target = target;
-            this.AddPropertiesFromType(target.GetType());
+            _target = target;
+            AddPropertiesFromType(target.GetType());
         }
 
         /// <summary>
         /// Defines the NodeProperties object that contains the defines the properties.
         /// </summary>
-        public NodeProperties Target {
-            get {
-                return this.target;
-            }
-        }
+        public NodeProperties Target => _target;
 
         #region EnvDTE.Properties
 
         /// <summary>
         /// Microsoft Internal Use Only.
         /// </summary>
-        public virtual object Application {
-            get { return null; }
-        }
+        public virtual object Application => null;
 
         /// <summary>
         /// Gets a value indicating the number of objects in the collection.
         /// </summary>
-        public int Count {
-            get { return properties.Count; }
-        }
+        public int Count => _properties.Count;
 
         /// <summary>
         /// Gets the top-level extensibility object.
         /// </summary>
         public virtual EnvDTE.DTE DTE {
             get {
-                if (this.target.HierarchyNode == null || this.target.HierarchyNode.ProjectMgr == null || this.target.HierarchyNode.ProjectMgr.IsClosed ||
-                    this.target.HierarchyNode.ProjectMgr.Site == null) {
+                if (_target.HierarchyNode == null || _target.HierarchyNode.ProjectMgr == null || _target.HierarchyNode.ProjectMgr.IsClosed ||
+                    _target.HierarchyNode.ProjectMgr.Site == null) {
                     throw new InvalidOperationException();
                 }
-                return this.target.HierarchyNode.ProjectMgr.Site.GetService(typeof(EnvDTE.DTE)) as EnvDTE.DTE;
+                return _target.HierarchyNode.ProjectMgr.Site.GetService(typeof(EnvDTE.DTE)) as EnvDTE.DTE;
             }
         }
 
@@ -83,11 +72,11 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
         /// </summary>
         /// <returns>An enumerator. </returns>
         public IEnumerator GetEnumerator() {
-            if (this.properties.Count == 0) {
+            if (_properties.Count == 0) {
                 yield return new OANullProperty(this);
             }
 
-            IEnumerator enumerator = this.properties.Values.GetEnumerator();
+            IEnumerator enumerator = _properties.Values.GetEnumerator();
 
             while (enumerator.MoveNext()) {
                 yield return enumerator.Current;
@@ -100,15 +89,15 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
         /// <param name="index">The index at which to return a member.</param>
         /// <returns>A Property object.</returns>
         public virtual EnvDTE.Property Item(object index) {
-            if (index is string) {
-                string indexAsString = (string)index;
-                if (this.properties.ContainsKey(indexAsString)) {
-                    return this.properties[indexAsString];
+            if (index is string indexAsString) {
+                if (_properties.ContainsKey(indexAsString)) {
+                    return _properties[indexAsString];
                 }
-            } else if (index is int) {
-                int realIndex = (int)index - 1;
-                if (realIndex >= 0 && realIndex < this.properties.Count) {
-                    IEnumerator enumerator = this.properties.Values.GetEnumerator();
+                return null;
+            } else if (index is int @int) {
+                int realIndex = @int - 1;
+                if (realIndex >= 0 && realIndex < _properties.Count) {
+                    IEnumerator enumerator = _properties.Values.GetEnumerator();
 
                     int i = 0;
                     while (enumerator.MoveNext()) {
@@ -124,9 +113,7 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
         /// <summary>
         /// Gets the immediate parent object of a Properties collection.
         /// </summary>
-        public virtual object Parent {
-            get { return null; }
-        }
+        public virtual object Parent => null;
         #endregion
 
         #region methods
@@ -163,15 +150,13 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
             if (attrs.Length > 0) {
                 name = ((PropertyNameAttribute)attrs[0]).Name;
             }
-            this.properties.Add(name, new OAProperty(this, propertyInfo));
+            _properties.Add(name, new OAProperty(this, propertyInfo));
         }
         #endregion
 
         #region helper methods
 
-        private bool IsInMap(PropertyInfo propertyInfo) {
-            return this.properties.ContainsKey(propertyInfo.Name);
-        }
+        private bool IsInMap(PropertyInfo propertyInfo) => _properties.ContainsKey(propertyInfo.Name);
 
         private static bool IsAutomationVisible(PropertyInfo propertyInfo) {
             object[] customAttributesOnProperty = propertyInfo.GetCustomAttributes(typeof(AutomationBrowsableAttribute), true);

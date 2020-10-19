@@ -20,13 +20,13 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
-using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Security.Permissions;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
+using System.Xml;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
@@ -50,14 +50,12 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <param name="serviceProvider">The service provider.</param>
         /// <returns>true if visual studio is in design mode</returns>
         public static bool IsVisualStudioInDesignMode(IServiceProvider site) {
-            Utilities.ArgumentNotNull("site", site);
+            ArgumentNotNull("site", site);
 
             IVsMonitorSelection selectionMonitor = site.GetService(typeof(IVsMonitorSelection)) as IVsMonitorSelection;
-            uint cookie = 0;
-            int active = 0;
             Guid designContext = VSConstants.UICONTEXT_DesignMode;
-            ErrorHandler.ThrowOnFailure(selectionMonitor.GetCmdUIContextCookie(ref designContext, out cookie));
-            ErrorHandler.ThrowOnFailure(selectionMonitor.IsCmdUIContextActive(cookie, out active));
+            ErrorHandler.ThrowOnFailure(selectionMonitor.GetCmdUIContextCookie(ref designContext, out uint cookie));
+            ErrorHandler.ThrowOnFailure(selectionMonitor.IsCmdUIContextActive(cookie, out int active));
             return active != 0;
         }
 
@@ -68,15 +66,12 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <param name="serviceProvider">The service provider.</param>
         /// <returns>true if the extensiblity object is executing an automation function.</returns>
         public static bool IsInAutomationFunction(IServiceProvider serviceProvider) {
-            Utilities.ArgumentNotNull("serviceProvider", serviceProvider);
+            ArgumentNotNull("serviceProvider", serviceProvider);
 
-            IVsExtensibility3 extensibility = serviceProvider.GetService(typeof(EnvDTE.IVsExtensibility)) as IVsExtensibility3;
-
-            if (extensibility == null) {
+            if (!(serviceProvider.GetService(typeof(EnvDTE.IVsExtensibility)) is IVsExtensibility3 extensibility)) {
                 throw new InvalidOperationException();
             }
-            int inAutomation = 0;
-            ErrorHandler.ThrowOnFailure(extensibility.IsInAutomationFunction(out inAutomation));
+            ErrorHandler.ThrowOnFailure(extensibility.IsInAutomationFunction(out int inAutomation));
             return inAutomation != 0;
         }
 
@@ -91,7 +86,7 @@ namespace Microsoft.VisualStudioTools.Project {
                 throw new InvalidOperationException();
             }
 
-            Guid emptyGuid = Guid.Empty;
+            var emptyGuid = Guid.Empty;
             int result = 0;
 
             serviceProvider.GetUIThread().Invoke(() => {
@@ -145,25 +140,21 @@ namespace Microsoft.VisualStudioTools.Project {
                 return null;
             }
 
-            List<Guid> guids = new List<Guid>();
-            string[] guidsStrings = guidList.Split(';');
+            var guids = new List<Guid>();
+            var guidsStrings = guidList.Split(';');
             foreach (string guid in guidsStrings) {
-                if (!String.IsNullOrEmpty(guid))
+                if (!string.IsNullOrEmpty(guid))
                     guids.Add(new Guid(guid.Trim(curlyBraces)));
             }
 
             return guids.ToArray();
         }
 
-        internal static bool GuidEquals(string x, string y) {
-            Guid gx, gy;
-            return Guid.TryParse(x, out gx) && Guid.TryParse(y, out gy) && gx == gy;
-        }
+        internal static bool GuidEquals(string x, string y)
+            => Guid.TryParse(x, out Guid gx) && Guid.TryParse(y, out Guid gy) && gx == gy;
 
-        internal static bool GuidEquals(Guid x, string y) {
-            Guid gy;
-            return Guid.TryParse(y, out gy) && x == gy;
-        }
+        internal static bool GuidEquals(Guid x, string y)
+            => Guid.TryParse(y, out Guid gy) && x == gy;
 
         internal static void CheckNotNull(object value, string message = null) {
             if (value == null) {
@@ -177,7 +168,7 @@ namespace Microsoft.VisualStudioTools.Project {
             }
         }
         internal static void ArgumentNotNullOrEmpty(string name, string value) {
-            if (String.IsNullOrEmpty(value)) {
+            if (string.IsNullOrEmpty(value)) {
                 throw new ArgumentNullException(name);
             }
         }
@@ -190,7 +181,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <exception cref="InvalidOperationException">In case of failure an InvalidOperationException is thrown.</exception>
         public static void ValidateFileName(IServiceProvider serviceProvider, string filePath) {
             string errorMessage = String.Empty;
-            if (String.IsNullOrEmpty(filePath)) {
+            if (string.IsNullOrEmpty(filePath)) {
                 errorMessage = SR.GetString(SR.ErrorInvalidFileName, filePath);
             } else if (filePath.Length > NativeMethods.MAX_PATH) {
                 errorMessage = SR.GetString(SR.PathTooLong, filePath);
@@ -200,19 +191,18 @@ namespace Microsoft.VisualStudioTools.Project {
 
             if (errorMessage.Length == 0) {
                 string fileName = Path.GetFileName(filePath);
-                if (String.IsNullOrEmpty(fileName) || IsFileNameInvalid(fileName)) {
+                if (string.IsNullOrEmpty(fileName) || IsFileNameInvalid(fileName)) {
                     errorMessage = SR.GetString(SR.ErrorInvalidFileName, filePath);
                 }
             }
 
             if (errorMessage.Length > 0) {
                 // If it is not called from an automation method show a dialog box.
-                if (!Utilities.IsInAutomationFunction(serviceProvider)) {
-                    string title = null;
-                    OLEMSGICON icon = OLEMSGICON.OLEMSGICON_CRITICAL;
-                    OLEMSGBUTTON buttons = OLEMSGBUTTON.OLEMSGBUTTON_OK;
-                    OLEMSGDEFBUTTON defaultButton = OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST;
-                    VsShellUtilities.ShowMessageBox(serviceProvider, title, errorMessage, icon, buttons, defaultButton);
+                if (!IsInAutomationFunction(serviceProvider)) {
+                    var icon = OLEMSGICON.OLEMSGICON_CRITICAL;
+                    var buttons = OLEMSGBUTTON.OLEMSGBUTTON_OK;
+                    var defaultButton = OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST;
+                    VsShellUtilities.ShowMessageBox(serviceProvider, null, errorMessage, icon, buttons, defaultButton);
                 } else {
                     throw new InvalidOperationException(errorMessage);
                 }
@@ -234,12 +224,10 @@ namespace Microsoft.VisualStudioTools.Project {
                 new SecurityPermission(SecurityPermissionFlag.UnmanagedCode).Demand();
 
                 calpolStr.cElems = (uint)strings.Count;
-
-                int size = Marshal.SizeOf(typeof(IntPtr));
+                var size = Marshal.SizeOf(typeof(IntPtr));
 
                 calpolStr.pElems = Marshal.AllocCoTaskMem(strings.Count * size);
-
-                IntPtr ptr = calpolStr.pElems;
+                var ptr = calpolStr.pElems;
 
                 foreach (string aString in strings) {
                     IntPtr tempPtr = Marshal.StringToCoTaskMemUni(aString);
@@ -286,7 +274,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </summary>
         /// <param name="imageStream">A Stream representing a Bitmap</param>
         /// <returns>An ImageList object representing the images from the given stream</returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Reliability", "CA2000:Dispose objects before losing scope")]
+        [SuppressMessage("Microsoft.Reliability", "CA2000:Dispose objects before losing scope")]
         public static ImageList GetImageList(Stream imageStream) {
             ImageList ilist = new ImageList();
 
@@ -308,7 +296,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <param name="automationObject">The automation object.</param>
         /// <returns>The name of the active configuartion.</returns>
         internal static string GetActiveConfigurationName(EnvDTE.Project automationObject) {
-            Utilities.ArgumentNotNull("automationObject", automationObject);
+            ArgumentNotNull("automationObject", automationObject);
 
             string currentConfigName = string.Empty;
             if (automationObject.ConfigurationManager != null) {
@@ -344,7 +332,7 @@ namespace Microsoft.VisualStudioTools.Project {
                     unknown1 = QueryInterfaceIUnknown(obj1);
                     unknown2 = QueryInterfaceIUnknown(obj2);
 
-                    isSame = IntPtr.Equals(unknown1, unknown2);
+                    isSame = Equals(unknown1, unknown2);
                 }
             } finally {
                 if (unknown1 != IntPtr.Zero) {
@@ -397,10 +385,8 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </summary>
         /// <param name="name">File name</param>
         /// <returns>true if file name is invalid</returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "0",
-            Justification = "The name is validated.")]
         public static bool ContainsInvalidFileNameChars(string name) {
-            if (String.IsNullOrEmpty(name)) {
+            if (string.IsNullOrEmpty(name)) {
                 return true;
             }
 
@@ -410,12 +396,12 @@ namespace Microsoft.VisualStudioTools.Project {
                     name = name.Substring(root.Length);
                 }
             }
-                // The Path methods used by ContainsInvalidFileNameChars return argument exception if the filePath contains invalid characters.
+            // The Path methods used by ContainsInvalidFileNameChars return argument exception if the filePath contains invalid characters.
             catch (ArgumentException) {
                 return true;
             }
 
-            Microsoft.VisualStudio.Shell.Url uri = new Microsoft.VisualStudio.Shell.Url(name);
+            Url uri = new Url(name);
 
             // This might be confusing bur Url.IsFile means that the uri represented by the name is either absolut or relative.
             if (uri.IsFile) {
@@ -474,20 +460,16 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <param name="fullProjectPath">The full path of the project.</param>
         /// <returns>A loaded msbuild project.</returns>
         internal static MSBuild.Project InitializeMsBuildProject(MSBuild.ProjectCollection buildEngine, string fullProjectPath) {
-            Utilities.ArgumentNotNullOrEmpty("fullProjectPath", fullProjectPath);
+            ArgumentNotNullOrEmpty("fullProjectPath", fullProjectPath);
 
             // Call GetFullPath to expand any relative path passed into this method.
             fullProjectPath = CommonUtils.NormalizePath(fullProjectPath);
 
-
             // Check if the project already has been loaded with the fullProjectPath. If yes return the build project associated to it.
-            List<MSBuild.Project> loadedProject = new List<MSBuild.Project>(buildEngine.GetLoadedProjects(fullProjectPath));
-            MSBuild.Project buildProject = loadedProject != null && loadedProject.Count > 0 && loadedProject[0] != null ? loadedProject[0] : null;
+            var loadedProject = new List<MSBuild.Project>(buildEngine.GetLoadedProjects(fullProjectPath));
+            var buildProject = loadedProject != null && loadedProject.Count > 0 && loadedProject[0] != null ? loadedProject[0] : null;
 
-            if (buildProject == null) {
-                buildProject = buildEngine.LoadProject(fullProjectPath);
-            }
-
+            buildProject = buildProject ?? buildEngine.LoadProject(fullProjectPath);
             return buildProject;
         }
 
@@ -505,12 +487,12 @@ namespace Microsoft.VisualStudioTools.Project {
                     buildEngine.UnloadProject(exitingBuildProject);
                 }
             }
-                // We  catch Invalid operation exception because if the project was unloaded while we touch the ParentEngine the msbuild API throws. 
-                // Is there a way to figure out that a project was unloaded?
+            // We  catch Invalid operation exception because if the project was unloaded while we touch the ParentEngine the msbuild API throws. 
+            // Is there a way to figure out that a project was unloaded?
             catch (InvalidOperationException) {
             }
 
-            return Utilities.InitializeMsBuildProject(buildEngine, fullProjectPath);
+            return InitializeMsBuildProject(buildEngine, fullProjectPath);
         }
 
         /// <summary>>
@@ -518,7 +500,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </summary>
         private static bool IsFileNameAllGivenCharacter(char c, string fileName) {
             // A valid file name cannot be all "c" .
-            int charFound = 0;
+            int charFound;
             for (charFound = 0; charFound < fileName.Length && fileName[charFound] == c; ++charFound)
                 ;
             if (charFound >= fileName.Length) {
@@ -553,12 +535,12 @@ namespace Microsoft.VisualStudioTools.Project {
             try {
                 extension = Path.GetExtension(filePart);
             }
-                // We catch the ArgumentException because we want this method to return true if the filename is not valid. FilePart could be for example #¤&%"¤&"% and that would throw ArgumentException on GetExtension
+            // We catch the ArgumentException because we want this method to return true if the filename is not valid. FilePart could be for example #¤&%"¤&"% and that would throw ArgumentException on GetExtension
             catch (ArgumentException) {
                 return true;
             }
 
-            if (!String.IsNullOrEmpty(extension)) {
+            if (!string.IsNullOrEmpty(extension)) {
                 // Check the extension first
                 bool isMatch = _unsafeCharactersRegex.IsMatch(extension);
                 if (isMatch) {
@@ -577,7 +559,7 @@ namespace Microsoft.VisualStudioTools.Project {
             }
 
             // We verify CLOCK$ outside the regex since for some reason the regex is not matching the clock\\$ added.
-            if (String.Equals(fileNameToVerify, "CLOCK$", StringComparison.OrdinalIgnoreCase)) {
+            if (string.Equals(fileNameToVerify, "CLOCK$", StringComparison.OrdinalIgnoreCase)) {
                 return true;
             }
 
