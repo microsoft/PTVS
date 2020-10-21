@@ -1,8 +1,8 @@
 <VSTemplate Version="2.0.0" Type="Project" xmlns="http://schemas.microsoft.com/developer/vstemplate/2005">
   <TemplateData>
-    <Name Package="{6dbd7c1e-1f1b-496d-ac7c-c55dae66c783}" ID="5010" />
-    <Description Package="{6dbd7c1e-1f1b-496d-ac7c-c55dae66c783}" ID="5011" />
-    <Icon Package="{6dbd7c1e-1f1b-496d-ac7c-c55dae66c783}" ID="401" />
+    <Name Package="{FC6A1BC9-C491-41DB-8D23-D33ABCCF84AE}" ID="5010" />
+    <Description Package="{FC6A1BC9-C491-41DB-8D23-D33ABCCF84AE}" ID="5011" />
+    <Icon Package="{FC6A1BC9-C491-41DB-8D23-D33ABCCF84AE}" ID="401" />
     <ProjectType>Python</ProjectType>
     <TemplateID>Microsoft.Python.Core.Application</TemplateID>
     <SortOrder>20</SortOrder>

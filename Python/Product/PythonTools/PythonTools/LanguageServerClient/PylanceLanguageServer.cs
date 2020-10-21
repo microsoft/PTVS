@@ -18,32 +18,33 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
-using System.Windows;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Utility;
 using Microsoft.VisualStudio.LanguageServer.Client;
 using Microsoft.VisualStudio.Threading;
 using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.LanguageServerClient {
-    internal class PythonLanguageServerPylance : PythonLanguageServer {
+    internal sealed class PylanceLanguageServer {
         private readonly JoinableTaskContext _joinableTaskContext;
         private readonly NodeEnvironmentProvider _nodeEnvironmentProvider;
-        private readonly string _cancellationFolderName;
+        private readonly IServiceProvider _site;
 
-        public PythonLanguageServerPylance(IServiceProvider site, JoinableTaskContext joinableTaskContext) {
+        public PylanceLanguageServer(IServiceProvider site, JoinableTaskContext joinableTaskContext) {
+            _site = site ?? throw new ArgumentNullException(nameof(site));
             _joinableTaskContext = joinableTaskContext ?? throw new ArgumentNullException(nameof(joinableTaskContext));
             _nodeEnvironmentProvider = new NodeEnvironmentProvider(site, joinableTaskContext);
-            _cancellationFolderName = Guid.NewGuid().ToString().Replace("-", "");
+            CancellationFolderName = Guid.NewGuid().ToString().Replace("-", "");
         }
 
-        public override string CancellationFolderName => this._cancellationFolderName;
+        public string CancellationFolderName { get; }
 
-        public override async Task<Connection> ActivateAsync() {
+        public async Task<Connection> ActivateAsync() {
             await _joinableTaskContext.Factory.SwitchToMainThreadAsync();
 
             var nodePath = await _nodeEnvironmentProvider.GetNodeExecutablePath();
             if (!File.Exists(nodePath)) {
-                MessageBox.Show(Strings.LanguageClientNodejsNotFound, Strings.ProductTitle);
+                MessageBox.ShowErrorMessage(_site, Strings.LanguageClientNodejsNotFound);
                 return null;
             }
 
@@ -52,7 +53,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             var serverFilePath = isDebugging ? GetDebugServerLocation() : GetServerLocation();
 
             if (!File.Exists(serverFilePath)) {
-                MessageBox.Show(Strings.LanguageClientPylanceNotFound, Strings.ProductTitle);
+                MessageBox.ShowErrorMessage(_site, Strings.LanguageClientPylanceNotFound);
                 return null;
             }
 

@@ -45,7 +45,7 @@ namespace Microsoft.PythonTools.Project {
 
             // Always raise the event, this also occurs when we're adding projects
             // to the MSBuild.Project.
-            ProjectsChanaged?.Invoke(this, EventArgs.Empty);
+            ProjectsChanged?.Invoke(this, EventArgs.Empty);
         }
 
         public void InterpreterLoaded(object context, InterpreterConfiguration configuration) {
@@ -72,7 +72,7 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        public event EventHandler ProjectsChanaged;
+        public event EventHandler ProjectsChanged;
         public event EventHandler<ProjectChangedEventArgs> ProjectChanged;
 
         public void OnProjectChanged(object project) {

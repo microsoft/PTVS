@@ -34,7 +34,6 @@ using Microsoft.VisualStudio.Utilities;
 using StreamJsonRpc;
 using LSP = Microsoft.VisualStudio.LanguageServer.Protocol;
 using Task = System.Threading.Tasks.Task;
-using MSBuild = Microsoft.Build.Evaluation;
 
 namespace Microsoft.PythonTools.LanguageServerClient {
     /// <summary>
@@ -68,7 +67,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         private IPythonLanguageClientContext _clientContext;
         private PythonAnalysisOptions _analysisOptions;
         private PythonAdvancedEditorOptions _advancedEditorOptions;
-        private PythonLanguageServer _server;
+        private PylanceLanguageServer _server;
         private JsonRpc _rpc;
 
         public PythonLanguageClient() {
@@ -130,12 +129,10 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
             // Client context cannot be created here since the is no workspace yet
             // and hence we don't know if this is workspace or a loose files case.
-            _server = PythonLanguageServer.Create(Site, JoinableTaskContext);
-            if (_server != null) {
-                InitializationOptions = null;
-                CustomMessageTarget = new PythonLanguageClientCustomTarget(Site, JoinableTaskContext);
-                await StartAsync.InvokeAsync(this, EventArgs.Empty);
-            }
+            _server = new PylanceLanguageServer(Site, JoinableTaskContext);
+            InitializationOptions = null;
+            CustomMessageTarget = new PythonLanguageClientCustomTarget(Site, JoinableTaskContext);
+            await StartAsync.InvokeAsync(this, EventArgs.Empty);
         }
 
         public async Task OnServerInitializedAsync() {

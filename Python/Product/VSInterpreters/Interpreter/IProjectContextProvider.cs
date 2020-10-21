@@ -19,7 +19,7 @@ namespace Microsoft.PythonTools.Interpreter {
         /// <summary>
         /// Raised when the list of projects has changed.
         /// </summary>
-        event EventHandler ProjectsChanaged;
+        event EventHandler ProjectsChanged;
         /// <summary>
         /// Raised when one of the individual projects may have had interpreters added or removed.
         /// </summary>
