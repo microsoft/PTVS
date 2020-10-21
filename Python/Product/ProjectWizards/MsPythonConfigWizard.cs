@@ -53,7 +53,7 @@ namespace Microsoft.PythonTools.ProjectWizards {
             } else {
                 File.WriteAllText(fileName,
 @"{
-    ""$schema"": ""https://pvsc.blob.core.windows.net/mspythonconfig-schema/pyrightconfig-schema.json""
+
 }
 ");
             }

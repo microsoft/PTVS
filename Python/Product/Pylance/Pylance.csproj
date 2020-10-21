@@ -27,10 +27,21 @@
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
+    <NoWarn>436;1998;2008;67</NoWarn>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
+    <NoWarn>436;1998;2008;67</NoWarn>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.VisualStudio.Shell.15.0" />
     <Reference Include="Microsoft.VisualStudio.Shell.Framework" />
+    <Reference Include="Microsoft.WebTools.Languages.Json, Version=16.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\References\Dev16.0\Microsoft.WebTools.Languages.Json.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
+    <Reference Include="System.ComponentModel.Composition" />
   </ItemGroup>
   <ItemDefinitionGroup>
     <ProjectReference>
@@ -208,7 +219,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <VSIXSubPath>ProjectTemplates\Python\ConsoleAppProject\</VSIXSubPath>
     </Content>
-    <None Include="Settings\pyrightconfig-schema.json" />
+    <Content Include="Settings\pyrightconfig-schema.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="source.extension.vsixmanifest" />
     <Content Include="Templates\NewItem\module.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -221,12 +234,14 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <VSIXSubPath>ItemTemplates\Python\MsPythonConfig</VSIXSubPath>
     </Content>
+    <None Include="Templates\Core\ProjectTemplates\Python\ConsoleAppProject\mspythonconfig.json" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Core\ProvideRawCodeBaseAttribute.cs">
       <Link>ProvideRawCodeBaseAttribute.cs</Link>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Settings\SchemaSelector.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Pylance\" />
@@ -252,9 +267,5 @@
       <FileWrites Include="@(LanguageServerFiles)" />
     </ItemGroup>
   </Target>
-  <ProjectExtensions>
-    <VisualStudio>
-      <UserProperties templates_4newitem_4mspythonconfig_1json__JsonSchema="" />
-    </VisualStudio>
-  </ProjectExtensions>
+  <ProjectExtensions />
 </Project>
