@@ -6172,17 +6172,17 @@ If the files in the existing folder have the same names as files in the folder y
                 int result;
                 if ((element & UIHierarchyElement.Icon) != 0) {
                     result = sink.OnPropertyChanged(node.ID, (int)__VSHPROPID.VSHPROPID_IconIndex, 0);
-                    Debug.Assert(ErrorHandler.Succeeded(result), "Redraw failed for node " + this.GetMkDocument());
+                    Debug.Assert(ErrorHandler.Succeeded(result) || result == VSConstants.E_NOTIMPL, "Redraw failed for node " + this.GetMkDocument());
                 }
 
                 if ((element & UIHierarchyElement.Caption) != 0) {
                     result = sink.OnPropertyChanged(node.ID, (int)__VSHPROPID.VSHPROPID_Caption, 0);
-                    Debug.Assert(ErrorHandler.Succeeded(result), "Redraw failed for node " + this.GetMkDocument());
+                    Debug.Assert(ErrorHandler.Succeeded(result) || result == VSConstants.E_NOTIMPL, "Redraw failed for node " + this.GetMkDocument());
                 }
 
                 if ((element & UIHierarchyElement.SccState) != 0) {
                     result = sink.OnPropertyChanged(node.ID, (int)__VSHPROPID.VSHPROPID_StateIconIndex, 0);
-                    Debug.Assert(ErrorHandler.Succeeded(result), "Redraw failed for node " + this.GetMkDocument());
+                    Debug.Assert(ErrorHandler.Succeeded(result) || result == VSConstants.E_NOTIMPL, "Redraw failed for node " + this.GetMkDocument());
                 }
             }
         }
