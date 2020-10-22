@@ -366,22 +366,7 @@
         </Style.Triggers>
     </Style>
 
-    <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource ControlNoHover}">
-        <Setter Property="CaretBrush" Value="{DynamicResource {x:Static l:ModernStyles.ForegroundKey}}" />
-        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="{x:Type TextBoxBase}">
-                    <Border Name="Border"
-                            Padding="2"
-                            Background="{TemplateBinding Background}"
-                            BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="{TemplateBinding BorderThickness}">
-                        <ScrollViewer Margin="0" x:Name="PART_ContentHost" Background="{x:Null}" />
-                    </Border>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
+    <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource {x:Static l:ModernStyles.ThemedDialogTextBoxStyleKey}}">
         <Style.Triggers>
             <Trigger Property="AcceptsReturn" Value="False">
                 <Setter Property="VerticalContentAlignment" Value="Center" />
