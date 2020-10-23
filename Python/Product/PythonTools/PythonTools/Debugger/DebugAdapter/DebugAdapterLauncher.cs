@@ -43,11 +43,6 @@ namespace Microsoft.PythonTools.Debugger {
         public void Initialize(IDebugAdapterHostContext context) => _adapterHostContext = context ?? throw new ArgumentNullException(nameof(context));
 
         public ITargetHostProcess LaunchAdapter(IAdapterLaunchInfo launchInfo, ITargetHostInterop targetInterop) {
-            //if(!CheckPythonVersion(launchInfo.LaunchJson)) {
-            //    MessageBox.Show(Strings.WarningPython2NotSupported, Strings.ProductTitle, MessageBoxButtons.OK, MessageBoxIcon.Error);
-            //    return null;
-            //}
-
             if (launchInfo.LaunchType == LaunchType.Attach) {
                 var debugAttachInfo = (DebugAttachInfo)_debugInfo;
                 return DebugAdapterRemoteProcess.Attach(debugAttachInfo);
@@ -240,17 +235,6 @@ namespace Microsoft.PythonTools.Debugger {
             } finally {
                 Marshal.FreeHGlobal(argPointer);
             }
-        }
-
-        private static bool CheckPythonVersion(string adapterLaunchJson) {
-            var adapterLaunchInfoJson = JObject.Parse(adapterLaunchJson);
-            var env = adapterLaunchInfoJson.Value<JArray>("env");
-            var vs = env.FirstOrDefault(x => x.Value<string>("VERSION") != null);
-            try {
-                var v = new Version(vs.Value<string>("VERSION"));
-                return v >= new Version(3, 0);
-            } catch { }
-            return false;
         }
     }
 }

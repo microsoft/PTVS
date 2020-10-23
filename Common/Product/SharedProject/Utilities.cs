@@ -332,7 +332,7 @@ namespace Microsoft.VisualStudioTools.Project {
                     unknown1 = QueryInterfaceIUnknown(obj1);
                     unknown2 = QueryInterfaceIUnknown(obj2);
 
-                    isSame = Equals(unknown1, unknown2);
+                    isSame = IntPtr.Equals(unknown1, unknown2);
                 }
             } finally {
                 if (unknown1 != IntPtr.Zero) {
