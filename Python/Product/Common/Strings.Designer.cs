@@ -1587,6 +1587,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Type checker configuration file already exists in this folder..
+        /// </summary>
+        public static string ConfigFileAlreadyExists {
+            get {
+                return ResourceManager.GetString("ConfigFileAlreadyExists", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to _Apply.
         /// </summary>
         public static string ConfigurationExtensionApplyLabel {
@@ -4654,7 +4663,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Node.js was not found. It is required to run the language server..
+        ///   Looks up a localized string similar to Node.js was not found. It is required to run Pylance language server..
         /// </summary>
         public static string LanguageClientNodejsNotFound {
             get {
@@ -4663,7 +4672,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Pylance was not found. Ensure that environment variable PTVS_PYLANCE_STARTUP_FILE is pointing to server.js or server.bundle.js.
+        ///   Looks up a localized string similar to Pylance language server was not found. Please reinstall Python Tools..
         /// </summary>
         public static string LanguageClientPylanceNotFound {
             get {
@@ -5033,7 +5042,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unnstalling &apos;{0}&apos;.
+        ///   Looks up a localized string similar to Uninstalling &apos;{0}&apos;.
         /// </summary>
         public static string PackageUninstalling {
             get {
@@ -5042,7 +5051,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unnstalling &apos;{0}&apos;. See the Output Window for more information..
+        ///   Looks up a localized string similar to Uninstalling &apos;{0}&apos;. See the Output Window for more information..
         /// </summary>
         public static string PackageUninstallingSeeOutputWindow {
             get {
@@ -7891,6 +7900,15 @@ namespace Microsoft.PythonTools {
         public static string WarningInvalidEncoding {
             get {
                 return ResourceManager.GetString("WarningInvalidEncoding", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Pylance language server does not support Python 2.x. Type checking will be performed as in Python 3.x..
+        /// </summary>
+        public static string WarningPython2NotSupported {
+            get {
+                return ResourceManager.GetString("WarningPython2NotSupported", resourceCulture);
             }
         }
         

@@ -79,7 +79,7 @@ namespace Microsoft.PythonTools.Interpreter {
                         Log("Failed to get IProjectContextProvider {0}", ce);
                         continue;
                     }
-                    providerValue.ProjectsChanaged += Provider_ProjectContextsChanged;
+                    providerValue.ProjectsChanged += Provider_ProjectContextsChanged;
                     providerValue.ProjectChanged += Provider_ProjectChanged;
                     Provider_ProjectContextsChanged(providerValue, EventArgs.Empty);
                 }

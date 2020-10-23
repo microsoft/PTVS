@@ -1,0 +1,13 @@
+<VSTemplate Version="2.0.0" Type="Item" xmlns="http://schemas.microsoft.com/developer/vstemplate/2005">
+  <TemplateData>
+    <Name Package="{FC6A1BC9-C491-41DB-8D23-D33ABCCF84AE}" ID="3019" />
+    <Description Package="{FC6A1BC9-C491-41DB-8D23-D33ABCCF84AE}" ID="3019" />
+    <Icon Package="{FC6A1BC9-C491-41DB-8D23-D33ABCCF84AE}" ID="404" />
+    <ProjectType>Python</ProjectType>
+    <DefaultName>mspythonconfig.json</DefaultName>
+    <SortOrder>30</SortOrder>
+  </TemplateData>
+  <TemplateContent>
+    <ProjectItem TargetFileName="mspythonconfig.json" ItemType="Content">mspythonconfig.json</ProjectItem>
+  </TemplateContent>
+</VSTemplate>

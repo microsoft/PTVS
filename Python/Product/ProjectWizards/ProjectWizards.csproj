@@ -87,6 +87,7 @@
     <Compile Include="AzureDebugWebConfigWizard.cs" />
     <Compile Include="CookiecutterWizard.cs" />
     <Compile Include="ImportWizard.cs" />
+    <Compile Include="MsPythonConfigWizard.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="WindowsSDKWizard.cs" />
     <Compile Include="WizardHelpers.cs" />

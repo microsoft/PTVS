@@ -346,8 +346,7 @@
     <Compile Include="PythonTools\LanguageServerClient\PythonLanguageClientContextRepl.cs" />
     <Compile Include="PythonTools\LanguageServerClient\PythonLanguageClientContextWorkspace.cs" />
     <Compile Include="PythonTools\LanguageServerClient\PythonLanguageClientContextProject.cs" />
-    <Compile Include="PythonTools\LanguageServerClient\PythonLanguageServer.cs" />
-    <Compile Include="PythonTools\LanguageServerClient\PythonLanguageServerPylance.cs" />
+    <Compile Include="PythonTools\LanguageServerClient\PylanceLanguageServer.cs" />
     <Compile Include="PythonTools\LanguageServerClient\ReplDocument.cs" />
     <Compile Include="PythonTools\Options\PythonAdvancedEditorOptionsControl.cs">
       <SubType>UserControl</SubType>

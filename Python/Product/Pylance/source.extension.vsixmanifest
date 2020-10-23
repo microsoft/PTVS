@@ -9,7 +9,7 @@
     <Icon>PythonProject.ico</Icon>
     <PreviewImage>PythonProjectBig.ico</PreviewImage>
   </Metadata>
-  <Installation SystemComponent="false" AllUsers="false" InstalledByMsi="false">
+  <Installation SystemComponent="false" AllUsers="true" InstalledByMsi="false">
     <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[16.8,17.0)" />
   </Installation>
   <Dependencies>
@@ -21,7 +21,6 @@
     <Prerequisite Id="Microsoft.VisualStudio.Component.CoreEditor" Version="[16.0,17.0)" DisplayName="Visual Studio core editor" />
   </Prerequisites>
   <Assets>
-    <Asset Type="Microsoft.VisualStudio.Package" Path="|%CurrentProject%;PkgdefProjectOutputGroup|" />
     <Asset Type="Microsoft.VisualStudio.Package" Path="|Microsoft.PythonTools;PkgdefProjectOutputGroup|" />
     <Asset Type="Microsoft.VisualStudio.Assembly" Path="|Microsoft.PythonTools;_GetTargetPath|" AssemblyName="|Microsoft.PythonTools;_GetAssemblyName|" />
     <Asset Type="Microsoft.VisualStudio.Assembly" Path="|Microsoft.PythonTools.BuildTasks;_GetTargetPath|" AssemblyName="|Microsoft.PythonTools.BuildTasks;_GetAssemblyName|" />
@@ -32,6 +31,7 @@
     <Asset Type="Microsoft.VisualStudio.Assembly" Path="|Microsoft.PythonTools.VSCommon;_GetTargetPath|" AssemblyName="|Microsoft.PythonTools.VSCommon;_GetAssemblyName|" />
     <Asset Type="Microsoft.VisualStudio.Assembly" Path="|Microsoft.PythonTools.VSInterpreters;_GetTargetPath|" AssemblyName="|Microsoft.PythonTools.VSInterpreters;_GetAssemblyName|" />
     <Asset Type="Microsoft.VisualStudio.Assembly" Path="|Microsoft.PythonTools.Workspace;_GetTargetPath|" AssemblyName="|Microsoft.PythonTools.Workspace;_GetAssemblyName|" />
+    <Asset Type="Microsoft.VisualStudio.MefComponent" d:Source="File" Path="Microsoft.PythonTools.Pylance.dll" />
     <Asset Type="Microsoft.VisualStudio.MefComponent" Path="|Microsoft.PythonTools;_GetTargetPath|" />
     <Asset Type="Microsoft.VisualStudio.MefComponent" Path="|Microsoft.PythonTools.Debugger;_GetTargetPath|" />
     <Asset Type="Microsoft.VisualStudio.MefComponent" Path="|Microsoft.PythonTools.EnvironmentsList;_GetTargetPath|" />
@@ -44,7 +44,10 @@
     <Asset Type="Microsoft.VisualStudio.Assembly" d:Source="File" Path="Microsoft.Python.Parsing.dll" />
     <Asset Type="Microsoft.VisualStudio.Assembly" d:Source="File" Path="Microsoft.PythonTools.Ipc.Json.dll" />
     <Asset Type="Microsoft.VisualStudio.Assembly" d:Source="File" Path="Microsoft.PythonTools.Attacher.exe" />
-	<Asset Type="Microsoft.VisualStudio.Package" d:Source="Project" d:ProjectName="Cookiecutter" />
-	<Asset Type="Microsoft.VisualStudio.Package" d:Source="Project" d:ProjectName="Profiling" />
+    <Asset Type="Microsoft.VisualStudio.Assembly" d:Source="File" Path="Microsoft.PythonTools.ProjectWizards.dll" />
+    <Asset Type="Microsoft.VisualStudio.Package" d:Source="Project" d:ProjectName="Cookiecutter" />
+    <Asset Type="Microsoft.VisualStudio.Package" d:Source="Project" d:ProjectName="Profiling" />
+    <Asset Type="Microsoft.VisualStudio.ProjectTemplate" Path="ProjectTemplates" />
+    <Asset Type="Microsoft.VisualStudio.ItemTemplate" Path="ItemTemplates" />
   </Assets>
 </PackageManifest>

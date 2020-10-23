@@ -27,10 +27,21 @@
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
+    <NoWarn>436;1998;2008;67</NoWarn>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
+    <NoWarn>436;1998;2008;67</NoWarn>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.VisualStudio.Shell.15.0" />
     <Reference Include="Microsoft.VisualStudio.Shell.Framework" />
+    <Reference Include="Microsoft.WebTools.Languages.Json, Version=16.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\References\Dev16.0\Microsoft.WebTools.Languages.Json.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
+    <Reference Include="System.ComponentModel.Composition" />
   </ItemGroup>
   <ItemDefinitionGroup>
     <ProjectReference>
@@ -77,6 +88,10 @@
       <Project>{c42b194e-3333-45e8-bb26-d69d1a51ef0b}</Project>
       <Name>Profiling</Name>
     </ProjectReference>
+    <ProjectReference Include="..\ProjectWizards\ProjectWizards.csproj">
+      <Project>{3814d9db-10e6-4478-bd98-6c5840612af8}</Project>
+      <Name>ProjectWizards</Name>
+    </ProjectReference>
     <ProjectReference Include="..\PythonTools\PythonTools.csproj">
       <Project>{fa7be5f5-e04f-4613-b7ac-70ce10d1bb68}</Project>
       <Name>Microsoft.PythonTools</Name>
@@ -112,7 +127,76 @@
     </ProjectReference2>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Templates\NewItem\mspythonconfig.json">
+    <Content Include="..\..\Templates\Core\ItemTemplates\Python\EmptyPackage\package.vstemplate">
+      <Link>Templates\Core\ItemTemplates\Python\EmptyPackage\package.vstemplate</Link>
+      <VSIXSubPath>ItemTemplates\Python\EmptyPackage</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\Templates\Core\ItemTemplates\Python\EmptyPackage\__init__.py">
+      <Link>Templates\Core\ItemTemplates\Python\EmptyPackage\__init__.py</Link>
+      <VSIXSubPath>ItemTemplates\Python\EmptyPackage</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\Templates\Core\ItemTemplates\Python\EmptyPyFile\empty.py">
+      <Link>Templates\Core\ItemTemplates\Python\EmptyPyFile\empty.py</Link>
+      <VSIXSubPath>ItemTemplates\Python\EmptyPyFile\</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\Templates\Core\ItemTemplates\Python\EmptyPyFile\empty.vstemplate">
+      <Link>Templates\Core\ItemTemplates\Python\EmptyPyFile\empty.vstemplate</Link>
+      <VSIXSubPath>ItemTemplates\Python\EmptyPyFile\</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\Templates\Core\ItemTemplates\Python\MyPyIni\mypyini.vstemplate">
+      <Link>Templates\Core\ItemTemplates\Python\MyPyIni\mypyini.vstemplate</Link>
+      <VSIXSubPath>ItemTemplates\Python\MyPyIni\</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\Templates\Core\ItemTemplates\Python\PyClass\class.py">
+      <Link>Templates\Core\ItemTemplates\Python\PyClass\class.py</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <VSIXSubPath>ItemTemplates\Python\PyClass\</VSIXSubPath>
+    </Content>
+    <Content Include="..\..\Templates\Core\ItemTemplates\Python\PyClass\class.vstemplate">
+      <Link>Templates\Core\ItemTemplates\Python\PyClass\class.vstemplate</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <VSIXSubPath>ItemTemplates\Python\PyClass\</VSIXSubPath>
+    </Content>
+    <Content Include="..\..\Templates\Core\ItemTemplates\Python\TextFile\textfile.txt">
+      <Link>Templates\Core\ItemTemplates\Python\TextFile\textfile.txt</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <VSIXSubPath>ItemTemplates\Python\TextFile\</VSIXSubPath>
+    </Content>
+    <Content Include="..\..\Templates\Core\ItemTemplates\Python\TextFile\textfile.vstemplate">
+      <Link>Templates\Core\ItemTemplates\Python\TextFile\textfile.vstemplate</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <VSIXSubPath>ItemTemplates\Python\TextFile\</VSIXSubPath>
+    </Content>
+    <Content Include="..\..\Templates\Core\ItemTemplates\Python\UnitTestFile\test.py">
+      <Link>Templates\Core\ItemTemplates\Python\UnitTestFile\test.py</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <VSIXSubPath>ItemTemplates\Python\UnitTestFile\</VSIXSubPath>
+    </Content>
+    <Content Include="..\..\Templates\Core\ItemTemplates\Python\UnitTestFile\test.vstemplate">
+      <Link>Templates\Core\ItemTemplates\Python\UnitTestFile\test.vstemplate</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <VSIXSubPath>ItemTemplates\Python\UnitTestFile\</VSIXSubPath>
+    </Content>
+    <Content Include="..\..\Templates\Core\ProjectTemplates\Python\ConsoleAppProject\Program.py">
+      <Link>Templates\Core\ProjectTemplates\Python\ConsoleAppProject\Program.py</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <VSIXSubPath>ProjectTemplates\Python\ConsoleAppProject\</VSIXSubPath>
+    </Content>
+    <Content Include="..\..\Templates\Core\ProjectTemplates\Python\ConsoleAppProject\PythonConsoleApp.vstemplate">
+      <Link>Templates\Core\ProjectTemplates\Python\ConsoleAppProject\PythonConsoleApp.vstemplate</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <VSIXSubPath>ProjectTemplates\Python\ConsoleAppProject\</VSIXSubPath>
+    </Content>
+    <Content Include="Templates\Core\ItemTemplates\Python\MsPythonConfig\mspythonconfig.vstemplate">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <VSIXSubPath>ItemTemplates\Python\MsPythonConfig</VSIXSubPath>
+    </Content>
+    <Content Include="Templates\NewItem\mspythonconfig.vstemplate">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <VSIXSubPath>Templates\NewItem</VSIXSubPath>
     </Content>
@@ -120,7 +204,24 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <VSIXSubPath>Templates\NewItem</VSIXSubPath>
     </Content>
-    <None Include="Settings\pyrightconfig-schema.json" />
+    <Content Include="Microsoft.PythonTools.targets">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <InstallRoot>MSBuild</InstallRoot>
+      <VSIXSubPath>Microsoft\VisualStudio\v16.0\Python Tools</VSIXSubPath>
+    </Content>
+    <Content Include="..\..\Templates\Core\ItemTemplates\Python\MyPyIni\mypy.ini">
+      <Link>Templates\Core\ItemTemplates\Python\MyPyIni\mypy.ini</Link>
+      <VSIXSubPath>ItemTemplates\Python\MyPyIni\</VSIXSubPath>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\Templates\Core\ProjectTemplates\Python\ConsoleAppProject\PythonApp.pyproj">
+      <Link>Templates\Core\ProjectTemplates\Python\ConsoleAppProject\PythonApp.pyproj</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <VSIXSubPath>ProjectTemplates\Python\ConsoleAppProject\</VSIXSubPath>
+    </Content>
+    <Content Include="Settings\pyrightconfig-schema.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="source.extension.vsixmanifest" />
     <Content Include="Templates\NewItem\module.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -129,12 +230,18 @@
     <Content Include="License_en-US.rtf" />
     <Content Include="$(PackagesPath)\Newtonsoft.Json\lib\net45\Newtonsoft.Json.dll" />
     <Content Include="$(PackagesPath)\Microsoft.VisualStudio.LanguageServer.Protocol\lib\netstandard2.0\Microsoft.VisualStudio.LanguageServer.Protocol.dll" />
+    <Content Include="Templates\Core\ItemTemplates\Python\MsPythonConfig\mspythonconfig.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <VSIXSubPath>ItemTemplates\Python\MsPythonConfig</VSIXSubPath>
+    </Content>
+    <None Include="Templates\Core\ProjectTemplates\Python\ConsoleAppProject\mspythonconfig.json" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Core\ProvideRawCodeBaseAttribute.cs">
       <Link>ProvideRawCodeBaseAttribute.cs</Link>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Settings\SchemaSelector.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Pylance\" />
@@ -160,9 +267,5 @@
       <FileWrites Include="@(LanguageServerFiles)" />
     </ItemGroup>
   </Target>
-  <ProjectExtensions>
-    <VisualStudio>
-      <UserProperties templates_4newitem_4mspythonconfig_1json__JsonSchema="" />
-    </VisualStudio>
-  </ProjectExtensions>
+  <ProjectExtensions />
 </Project>

@@ -25,6 +25,7 @@ using Microsoft.Python.Core.Disposables;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Options;
+using Microsoft.PythonTools.Project;
 using Microsoft.PythonTools.Utility;
 using Microsoft.VisualStudio.LanguageServer.Client;
 using Microsoft.VisualStudio.Shell;
@@ -43,7 +44,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
     /// </remarks>
     [Export(typeof(ILanguageClient))]
     [ContentType(PythonCoreConstants.ContentType)]
-    public class PythonLanguageClient : ILanguageClient, ILanguageClientCustomMessage2, IDisposable {
+    internal sealed class PythonLanguageClient : ILanguageClient, ILanguageClientCustomMessage2, IDisposable {
         [Import(typeof(SVsServiceProvider))]
         public IServiceProvider Site;
 
@@ -52,6 +53,9 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
         [Import]
         public IPythonWorkspaceContextProvider PythonWorkspaceContextProvider;
+
+        [Import]
+        public VsProjectContextProvider ProjectContextProvider;
 
         [Import]
         public IInterpreterOptionsService OptionsService;
@@ -63,7 +67,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         private IPythonLanguageClientContext _clientContext;
         private PythonAnalysisOptions _analysisOptions;
         private PythonAdvancedEditorOptions _advancedEditorOptions;
-        private PythonLanguageServer _server;
+        private PylanceLanguageServer _server;
         private JsonRpc _rpc;
 
         public PythonLanguageClient() {
@@ -98,9 +102,8 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             }
             await JoinableTaskContext.Factory.SwitchToMainThreadAsync();
 
-            _clientContext = PythonWorkspaceContextProvider.Workspace != null
-                ? (IPythonLanguageClientContext)new PythonLanguageClientContextWorkspace(PythonWorkspaceContextProvider.Workspace)
-                : new PythonLanguageClientContextGlobal(OptionsService);
+            _clientContext = CreateClientContext();
+
             _analysisOptions = Site.GetPythonToolsService().AnalysisOptions;
             _advancedEditorOptions = Site.GetPythonToolsService().AdvancedEditorOptions;
 
@@ -126,12 +129,10 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
             // Client context cannot be created here since the is no workspace yet
             // and hence we don't know if this is workspace or a loose files case.
-            _server = PythonLanguageServer.Create(Site, JoinableTaskContext);
-            if (_server != null) {
-                InitializationOptions = null;
-                CustomMessageTarget = new PythonLanguageClientCustomTarget(Site, JoinableTaskContext);
-                await StartAsync.InvokeAsync(this, EventArgs.Empty);
-            }
+            _server = new PylanceLanguageServer(Site, JoinableTaskContext);
+            InitializationOptions = null;
+            CustomMessageTarget = new PythonLanguageClientCustomTarget(Site, JoinableTaskContext);
+            await StartAsync.InvokeAsync(this, EventArgs.Empty);
         }
 
         public async Task OnServerInitializedAsync() {
@@ -175,6 +176,11 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         private void OnSettingsChanged(object sender, EventArgs e) => SendDidChangeConfiguration().DoNotWait();
 
         private async Task SendDidChangeConfiguration() {
+            if (_clientContext is PythonLanguageClientContextProject) {
+                // Project interactions are main thread only.
+                await JoinableTaskContext.Factory.SwitchToMainThreadAsync();
+            }
+
             Debug.Assert(_clientContext != null);
             Debug.Assert(_analysisOptions != null);
 
@@ -189,6 +195,11 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             var typeCheckingMode = UserSettings.GetStringSetting(
                 PythonConstants.TypeCheckingModeSetting, null, Site, PythonWorkspaceContextProvider.Workspace, out _)
                 ?? _analysisOptions.TypeCheckingMode;
+
+            var ver3 = new Version(3, 0);
+            if (_clientContext.InterpreterConfiguration.Version < ver3) {
+                MessageBox.ShowWarningMessage(Site, Strings.WarningPython2NotSupported);
+            }
 
             var settings = new PylanceSettings {
                 python = new PylanceSettings.PythonSettings {
@@ -215,5 +226,20 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             await InvokeDidChangeConfigurationAsync(config);
         }
 
+        private IPythonLanguageClientContext CreateClientContext() {
+            if (PythonWorkspaceContextProvider.Workspace != null) {
+                return new PythonLanguageClientContextWorkspace(PythonWorkspaceContextProvider.Workspace);
+            }
+
+            if (ProjectContextProvider.ProjectNodes.MaybeEnumerate().Any()) {
+                // TODO: support multiple projects in solution.
+                var node = ProjectContextProvider.ProjectNodes.First();
+                if (node != null) {
+                    return new PythonLanguageClientContextProject(node);
+                }
+            }
+
+            return new PythonLanguageClientContextGlobal(OptionsService);
+        }
     }
 }

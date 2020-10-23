@@ -25,6 +25,11 @@ namespace Microsoft.PythonTools.Utility {
             shell.ShowMessageBox(0, Guid.Empty, null, message, null, 0, OLEMSGBUTTON.OLEMSGBUTTON_OK, OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST, OLEMSGICON.OLEMSGICON_CRITICAL, 0, out _);
         }
 
+        public static void ShowWarningMessage(IServiceProvider sp, string message) {
+            var shell = (IVsUIShell)sp.GetService(typeof(SVsUIShell));
+            shell.ShowMessageBox(0, Guid.Empty, null, message, null, 0, OLEMSGBUTTON.OLEMSGBUTTON_OK, OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST, OLEMSGICON.OLEMSGICON_WARNING, 0, out _);
+        }
+
         public static bool ShowYesNoPrompt(IServiceProvider sp, string message) {
             var shell = (IVsUIShell)sp.GetService(typeof(SVsUIShell));
             shell.ShowMessageBox(0, Guid.Empty, null, message, null, 0, OLEMSGBUTTON.OLEMSGBUTTON_YESNO, OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST, OLEMSGICON.OLEMSGICON_QUERY, 0, out var result);

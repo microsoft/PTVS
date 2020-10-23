@@ -45,23 +45,23 @@ namespace Microsoft.PythonTools.Project {
 
             // Always raise the event, this also occurs when we're adding projects
             // to the MSBuild.Project.
-            ProjectsChanaged?.Invoke(this, EventArgs.Empty);
+            ProjectsChanged?.Invoke(this, EventArgs.Empty);
         }
 
         public void InterpreterLoaded(object context, InterpreterConfiguration configuration) {
-            lock(_createdFactories) {
+            lock (_createdFactories) {
                 _createdFactories[configuration.Id] = context;
             }
         }
 
         public void InterpreterUnloaded(object context, InterpreterConfiguration configuration) {
-            lock(_createdFactories) {
+            lock (_createdFactories) {
                 _createdFactories.Remove(configuration.Id);
             }
         }
 
         public bool IsProjectSpecific(InterpreterConfiguration configuration) {
-            lock(_createdFactories) {
+            lock (_createdFactories) {
                 return _createdFactories.ContainsKey(configuration.Id);
             }
         }
@@ -72,7 +72,7 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        public event EventHandler ProjectsChanaged;
+        public event EventHandler ProjectsChanged;
         public event EventHandler<ProjectChangedEventArgs> ProjectChanged;
 
         public void OnProjectChanged(object project) {
@@ -81,9 +81,21 @@ namespace Microsoft.PythonTools.Project {
 
         public IEnumerable<object> Projects {
             get {
-                lock(_projects) {
+                lock (_projects) {
                     return _projects.Values.ToArray();
                 }
+            }
+        }
+        public IEnumerable<PythonProjectNode> ProjectNodes {
+            get {
+                lock (_projects) {
+                    return _projects.Keys.ToArray();
+                }
+            }
+        }
+        public object GetProject(PythonProjectNode node) {
+            lock (_projects) {
+                return _projects.TryGetValue(node, out var project) ? project : null;
             }
         }
     }

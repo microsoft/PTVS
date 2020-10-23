@@ -183,10 +183,10 @@ No files will be deleted from disk.</value>
     <value>'{0}' failed to uninstall. Exit code: {1}</value>
   </data>
   <data name="PackageUninstalling" xml:space="preserve">
-    <value>Unnstalling '{0}'</value>
+    <value>Uninstalling '{0}'</value>
   </data>
   <data name="PackageUninstallingSeeOutputWindow" xml:space="preserve">
-    <value>Unnstalling '{0}'. See the Output Window for more information.</value>
+    <value>Uninstalling '{0}'. See the Output Window for more information.</value>
   </data>
   <data name="PackageUninstallSucceeded" xml:space="preserve">
     <value>'{0}' was uninstalled successfully.</value>
@@ -2954,10 +2954,10 @@ Please specify at least one package.</value>
     <comment>{0} is the expected file path</comment>
   </data>
   <data name="LanguageClientNodejsNotFound" xml:space="preserve">
-    <value>Node.js was not found. It is required to run the language server.</value>
+    <value>Node.js was not found. It is required to run Pylance language server.</value>
   </data>
   <data name="LanguageClientPylanceNotFound" xml:space="preserve">
-    <value>Pylance was not found. Ensure that environment variable PTVS_PYLANCE_STARTUP_FILE is pointing to server.js or server.bundle.js</value>
+    <value>Pylance language server was not found. Please reinstall Python Tools.</value>
   </data>
   <data name="LanguageClientInitializeFailed" xml:space="preserve">
     <value>Language server initialization failed.\n\n{0}</value>
@@ -3034,5 +3034,11 @@ Please specify at least one package.</value>
   </data>
   <data name="TypeCheckingModeOff" xml:space="preserve">
     <value>Off</value>
+  </data>
+  <data name="WarningPython2NotSupported" xml:space="preserve">
+    <value>Pylance language server does not support Python 2.x. Type checking will be performed as in Python 3.x.</value>
+  </data>
+  <data name="ConfigFileAlreadyExists" xml:space="preserve">
+    <value>Type checker configuration file already exists in this folder.</value>
   </data>
 </root>

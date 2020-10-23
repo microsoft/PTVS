@@ -84,7 +84,9 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public void OnActionItemClicked(IVsInfoBarUIElement infoBarUIElement, IVsInfoBarActionItem actionItem) {
-            ((Action)actionItem.ActionContext)();
+            if (actionItem.ActionContext != null) {
+                ((Action)actionItem.ActionContext)();
+            }
         }
 
         public void OnClosed(IVsInfoBarUIElement infoBarUIElement) {
