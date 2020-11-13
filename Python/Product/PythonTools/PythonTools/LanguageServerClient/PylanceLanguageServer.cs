@@ -79,15 +79,13 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
 
         private static string GetDebugServerLocation() {
-            // Later, Pylance will be bundled in VS and we'll get its install location.
-            // For now, location is retrieved via environment variable.
-            // For debugging, use absolute path to: client\server\server.js
+            // Use a debug build of Pylance at a specified location.
             var filePath = Environment.GetEnvironmentVariable("PTVS_PYLANCE_DEBUG_STARTUP_FILE");
             return File.Exists(filePath) ? filePath : null;
         }
 
         private static string GetServerLocation() {
-            var filePath = PythonToolsInstallPath.GetFile(@"Pylance\server.bundle.js");
+            var filePath = PythonToolsInstallPath.GetFile(@"Pylance\pylance-langserver.bundle.js");
             return File.Exists(filePath) ? filePath : null;
         }
 
@@ -97,8 +95,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
 
         private static bool IsDebugging() {
-            // If enabled, use PTVS_PYLANCE_DEBUG_STARTUP_FILE and PTVS_PYLANCE_DEBUG_ARGS
-            // If disabled, use PTVS_PYLANCE_STARTUP_FILE
+            // If enabled, we'll use PTVS_PYLANCE_DEBUG_STARTUP_FILE and PTVS_PYLANCE_DEBUG_ARGS
             return IsEnvVarEnabled("PTVS_PYLANCE_DEBUG_ENABLED");
         }
 
