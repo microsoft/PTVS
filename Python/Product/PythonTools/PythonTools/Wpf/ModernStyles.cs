@@ -57,16 +57,16 @@ namespace Microsoft.PythonTools.Wpf {
 
         public static readonly object ControlBackgroundKey = VsBrushes.ComboBoxBackgroundKey;
         public static readonly object ControlForegroundKey = VsBrushes.WindowTextKey;
-        public static readonly object ControlBorderKey = VsBrushes.ComboBoxBorderKey;
+        public static readonly object ControlBorderKey = CommonControlsColors.TextBoxBorderBrushKey;
         public static readonly object ControlBackgroundHoverKey = VsBrushes.ComboBoxMouseOverBackgroundGradientKey;
-        public static readonly object ControlBorderHoverKey = VsBrushes.ComboBoxMouseOverBorderKey;
+        public static readonly object ControlBorderHoverKey = CommonControlsColors.TextBoxBorderFocusedBrushKey;
         public static readonly object ControlForegroundHoverKey = VsBrushes.CommandBarTextHoverKey;
         public static readonly object ControlBackgroundPressedKey = VsBrushes.ComboBoxMouseDownBackgroundKey;
         public static readonly object ControlForegroundPressedKey = VsBrushes.ComboBoxGlyphKey;
         public static readonly object ControlBorderPressedKey = VsBrushes.ComboBoxMouseDownBorderKey;
         public static readonly object ControlBackgroundSelectedKey = VsBrushes.ComboBoxMouseDownBackgroundKey;
         public static readonly object ControlForegroundSelectedKey = VsBrushes.ComboBoxGlyphKey;
-        public static readonly object ControlBorderSelectedKey = VsBrushes.ComboBoxMouseOverBorderKey;
+        public static readonly object ControlBorderSelectedKey = CommonControlsColors.TextBoxBorderFocusedBrushKey;
         public static readonly object ControlBackgroundDisabledKey = VsBrushes.ComboBoxDisabledBackgroundKey;
         public static readonly object ControlForegroundDisabledKey = VsBrushes.ComboBoxDisabledGlyphKey;
         public static readonly object ControlBorderDisabledKey = VsBrushes.ComboBoxDisabledBorderKey;
@@ -89,17 +89,6 @@ namespace Microsoft.PythonTools.Wpf {
         public static readonly object ComboBoxPopupBackgroundKey = VsBrushes.ComboBoxPopupBackgroundGradientKey;
         public static readonly object ComboBoxPopupBorderKey = VsBrushes.ComboBoxPopupBorderKey;
         public static readonly object ComboBoxPopupForegroundKey = VsBrushes.WindowTextKey;
-
-        public static readonly object ButtonForegroundPressedKey = VsBrushes.ToolWindowButtonDownActiveGlyphKey;
-        public static readonly object ButtonBackgroundPressedKey = VsBrushes.ToolWindowButtonDownKey;
-        public static readonly object ButtonForegroundHoverKey = VsBrushes.ToolWindowButtonHoverActiveGlyphKey;
-        public static readonly object ButtonBackgroundHoverKey = VsBrushes.ToolWindowButtonHoverActiveKey;
-        public static readonly object ButtonBorderHoverKey = VsBrushes.ToolWindowButtonHoverActiveBorderKey;
-        public static readonly object ButtonForegroundPressedColorKey = VsColors.ToolWindowButtonDownActiveGlyphKey;
-        public static readonly object ButtonBackgroundPressedColorKey = VsColors.ToolWindowButtonDownKey;
-        public static readonly object ButtonForegroundHoverColorKey = VsColors.ComboBoxMouseOverGlyphKey;
-        public static readonly object ButtonBackgroundHoverColorKey = VsColors.ComboBoxMouseOverBackgroundBeginKey;
-        public static readonly object ButtonBorderHoverColorKey = VsColors.ToolWindowButtonHoverActiveBorderKey;
 
         public static readonly object ScrollBarBackgroundKey = VsBrushes.ScrollBarBackgroundKey;
         public static readonly object ScrollBarThumbBackgroundKey = VsBrushes.ScrollBarThumbBackgroundKey;

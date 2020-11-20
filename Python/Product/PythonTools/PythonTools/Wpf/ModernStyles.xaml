@@ -279,62 +279,13 @@
         </Style.Triggers>
     </Style>
 
-    <Style TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Type Control}}">
+    <Style TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Static l:ModernStyles.ThemedDialogButtonStyleKey}}">
         <Setter Property="Margin" Value="6" />
         <Setter Property="Padding" Value="6 3" />
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="{x:Type Button}">
-                    <Border BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="{TemplateBinding BorderThickness}"
-                            Background="{TemplateBinding Background}">
-                        <ContentPresenter ContentTemplate="{TemplateBinding ContentTemplate}"
-                                          Content="{TemplateBinding Content}"
-                                          ContentStringFormat="{TemplateBinding ContentStringFormat}"
-                                          HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                          Margin="{TemplateBinding Padding}"
-                                          Focusable="False"
-                                          RecognizesAccessKey="True"
-                                          VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
-                    </Border>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
         <Style.Triggers>
             <Trigger Property="Command" Value="ApplicationCommands.Close">
                 <Setter Property="IsCancel" Value="True" />
             </Trigger>
-            <Trigger Property="IsKeyboardFocused" Value="True">
-                <Setter Property="BorderBrush" Value="{DynamicResource {x:Static l:ModernStyles.ControlBorderKey}}" />
-            </Trigger>
-            <Trigger Property="IsMouseOver" Value="True" >
-                <Setter Property="BorderBrush" Value="{DynamicResource {x:Static l:ModernStyles.ButtonBorderHoverKey}}" />
-                <Setter Property="Background" Value="{DynamicResource {x:Static l:ModernStyles.ButtonBackgroundHoverKey}}" />
-                <Setter Property="Foreground" Value="{DynamicResource {x:Static l:ModernStyles.ButtonForegroundHoverKey}}" />
-                <Setter Property="img:ImageThemingUtilities.ImageBackgroundColor" Value="{DynamicResource {x:Static l:ModernStyles.ButtonBackgroundHoverColorKey}}" />
-            </Trigger>
-            <Trigger Property="IsPressed" Value="True" >
-                <Setter Property="Background" Value="{DynamicResource {x:Static l:ModernStyles.ButtonBackgroundPressedKey}}" />
-                <Setter Property="Foreground" Value="{DynamicResource {x:Static l:ModernStyles.ButtonForegroundPressedKey}}" />
-                <Setter Property="img:ImageThemingUtilities.ImageBackgroundColor" Value="{DynamicResource {x:Static l:ModernStyles.ControlBackgroundPressedColorKey}}" />
-            </Trigger>
-            <MultiTrigger>
-                <MultiTrigger.Conditions>
-                    <Condition Property="IsDefault" Value="True" />
-                    <Condition Property="IsEnabled" Value="True" />
-                    <Condition Property="IsMouseOver" Value="False" />
-                    <Condition Property="IsKeyboardFocused" Value="False" />
-                </MultiTrigger.Conditions>
-                <Setter Property="BorderBrush" Value="{DynamicResource {x:Static l:ModernStyles.ControlBorderSelectedKey}}" />
-            </MultiTrigger>
-            <MultiTrigger>
-                <MultiTrigger.Conditions>
-                    <Condition Property="IsDefault" Value="True" />
-                    <Condition Property="IsEnabled" Value="True" />
-                    <Condition Property="IsMouseOver" Value="True" />
-                </MultiTrigger.Conditions>
-                <Setter Property="BorderBrush" Value="{DynamicResource {x:Static l:ModernStyles.ControlBorderHoverKey}}" />
-            </MultiTrigger>
         </Style.Triggers>
     </Style>
 
@@ -415,22 +366,7 @@
         </Style.Triggers>
     </Style>
 
-    <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource ControlNoHover}">
-        <Setter Property="CaretBrush" Value="{DynamicResource {x:Static l:ModernStyles.ForegroundKey}}" />
-        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="{x:Type TextBoxBase}">
-                    <Border Name="Border"
-                            Padding="2"
-                            Background="{TemplateBinding Background}"
-                            BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="{TemplateBinding BorderThickness}">
-                        <ScrollViewer Margin="0" x:Name="PART_ContentHost" Background="{x:Null}" />
-                    </Border>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
+    <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource {x:Static l:ModernStyles.ThemedDialogTextBoxStyleKey}}">
         <Style.Triggers>
             <Trigger Property="AcceptsReturn" Value="False">
                 <Setter Property="VerticalContentAlignment" Value="Center" />
@@ -656,183 +592,10 @@
         </Setter>
     </Style>
 
-    <Style TargetType="{x:Type CheckBox}" BasedOn="{StaticResource {x:Type Control}}">
-        <Setter Property="VerticalContentAlignment" Value="Center" />
-        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="{x:Type CheckBox}">
-                    <Grid Background="Transparent">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <Border x:Name="checkBoxBorder"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                Background="{TemplateBinding Background}"
-                                HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                Margin="1"
-                                VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
-                                MinWidth="{Binding ActualHeight,RelativeSource={RelativeSource Self}}"
-                                MinHeight="{Binding ActualWidth,RelativeSource={RelativeSource Self}}">
-                            <Grid x:Name="markGrid">
-                                <Path x:Name="optionMark"
-                                      Style="{StaticResource IconPath}"
-                                      Data="F1M34.296875,9.67062377929688L39.21875,13.3424987792969 23.390625,36.9674987792969 22.859375,36.9674987792969 9.296875,25.2487487792969 13.125,20.2331237792969 22.0625,27.9362487792969 34.296875,9.67062377929688z"
-                                      HorizontalAlignment="Center"
-                                      VerticalAlignment="Center"
-                                      Opacity="0" />
-                                <Rectangle x:Name="indeterminateMark"
-                                           Fill="{TemplateBinding Foreground}"
-                                           Margin="2"
-                                           Opacity="0" />
-                            </Grid>
-                        </Border>
-                        <Grid Grid.Column="1" Margin="4 0 0 0">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="auto" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-                            <Rectangle x:Name="focusRect"
-                                       Grid.Column="0"
-                                       RenderOptions.EdgeMode="Aliased"
-                                       Stroke="{DynamicResource {x:Static l:ModernStyles.ForegroundKey}}"
-                                       StrokeThickness="1"
-                                       StrokeDashArray="1 1"
-                                       Visibility="Hidden" />
-                            <ContentPresenter x:Name="contentPresenter"
-                                              Grid.Column="0"
-                                              ContentTemplate="{TemplateBinding ContentTemplate}"
-                                              Content="{TemplateBinding Content}"
-                                              ContentStringFormat="{TemplateBinding ContentStringFormat}"
-                                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                              Margin="{TemplateBinding Padding}"
-                                              RecognizesAccessKey="True"
-                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
-                        </Grid>
-                    </Grid>
-                    <ControlTemplate.Triggers>
-                        <Trigger Property="IsFocused" Value="True">
-                            <Setter Property="Visibility" TargetName="focusRect" Value="Visible" />
-                        </Trigger>
-                        <Trigger Property="IsChecked" Value="True">
-                            <Setter Property="Opacity" TargetName="optionMark" Value="1" />
-                            <Setter Property="Opacity" TargetName="indeterminateMark" Value="0" />
-                        </Trigger>
-                        <Trigger Property="IsChecked" Value="{x:Null}">
-                            <Setter Property="Opacity" TargetName="optionMark" Value="0" />
-                            <Setter Property="Opacity" TargetName="indeterminateMark" Value="1" />
-                        </Trigger>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="optionMark" Property="Fill" Value="{DynamicResource {x:Static l:ModernStyles.ControlForegroundHoverKey}}" />
-                            <Setter TargetName="indeterminateMark" Property="Fill" Value="{DynamicResource {x:Static l:ModernStyles.ControlForegroundHoverKey}}" />
-                        </Trigger>
-                        <Trigger Property="IsPressed" Value="True">
-                            <Setter TargetName="optionMark" Property="Fill" Value="{DynamicResource {x:Static l:ModernStyles.ControlForegroundPressedKey}}" />
-                            <Setter TargetName="indeterminateMark" Property="Fill" Value="{DynamicResource {x:Static l:ModernStyles.ControlForegroundPressedKey}}" />
-                        </Trigger>
-                    </ControlTemplate.Triggers>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
-        <Style.Triggers>
-            <Trigger Property="IsMouseOver" Value="True">
-                <Setter Property="Background" Value="{DynamicResource {x:Static l:ModernStyles.ControlBackgroundHoverKey}}" />
-                <Setter Property="BorderBrush" Value="{DynamicResource {x:Static l:ModernStyles.ControlBorderHoverKey}}" />
-            </Trigger>
-            <Trigger Property="IsPressed" Value="True">
-                <Setter Property="Background" Value="{DynamicResource {x:Static l:ModernStyles.ControlBackgroundPressedKey}}" />
-                <Setter Property="BorderBrush" Value="{DynamicResource {x:Static l:ModernStyles.ControlBorderPressedKey}}" />
-                <Setter Property="Foreground" Value="{DynamicResource {x:Static l:ModernStyles.ControlForegroundPressedKey}}" />
-            </Trigger>
-            <Trigger Property="IsEnabled" Value="False">
-                <Setter Property="Background" Value="{DynamicResource {x:Static l:ModernStyles.ControlBackgroundDisabledKey}}" />
-                <Setter Property="BorderBrush" Value="{DynamicResource {x:Static l:ModernStyles.ControlBorderDisabledKey}}" />
-                <Setter Property="Foreground" Value="{DynamicResource {x:Static l:ModernStyles.ControlForegroundDisabledKey}}" />
-            </Trigger>
-        </Style.Triggers>
+    <Style TargetType="{x:Type CheckBox}" BasedOn="{StaticResource {x:Static l:ModernStyles.ThemedDialogCheckBoxStyleKey}}"/>
 
-    </Style>
+    <Style TargetType="{x:Type RadioButton}" BasedOn="{StaticResource {x:Static l:ModernStyles.ThemedDialogRadioButtonStyleKey}}"/>
 
-    <Style TargetType="{x:Type RadioButton}" BasedOn="{StaticResource {x:Type Control}}">
-        <Setter Property="VerticalContentAlignment" Value="Center" />
-        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="{x:Type RadioButton}">
-                    <Grid Background="Transparent">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <Ellipse Stroke="{TemplateBinding BorderBrush}"
-                                 StrokeThickness="{TemplateBinding BorderThickness}"
-                                 Fill="{TemplateBinding Background}"
-                                 MinWidth="{Binding ActualHeight,RelativeSource={RelativeSource Self}}"
-                                 MinHeight="{Binding ActualWidth,RelativeSource={RelativeSource Self}}"/>
-                        <Ellipse x:Name="optionMark"
-                                 Fill="{TemplateBinding Foreground}"
-                                 Margin="5"
-                                 Opacity="0" />
-                        <Grid Grid.Column="1" Margin="4 0 0 0">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="auto" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-                            <Rectangle x:Name="focusRect"
-                                       Grid.Column="0"
-                                       RenderOptions.EdgeMode="Aliased"
-                                       Stroke="{DynamicResource {x:Static l:ModernStyles.ForegroundKey}}"
-                                       StrokeThickness="1"
-                                       StrokeDashArray="1 1"
-                                       Visibility="Hidden" />
-                            <ContentPresenter x:Name="contentPresenter"
-                                              Grid.Column="0"
-                                              ContentTemplate="{TemplateBinding ContentTemplate}"
-                                              Content="{TemplateBinding Content}"
-                                              ContentStringFormat="{TemplateBinding ContentStringFormat}"
-                                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                              Margin="{TemplateBinding Padding}"
-                                              RecognizesAccessKey="True"
-                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
-                        </Grid>
-                    </Grid>
-                    <ControlTemplate.Triggers>
-                        <Trigger Property="IsFocused" Value="True">
-                            <Setter Property="Visibility" TargetName="focusRect" Value="Visible" />
-                        </Trigger>
-                        <Trigger Property="IsChecked" Value="True">
-                            <Setter Property="Opacity" TargetName="optionMark" Value="1" />
-                        </Trigger>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="optionMark" Property="Fill" Value="{DynamicResource {x:Static l:ModernStyles.ControlForegroundHoverKey}}" />
-                        </Trigger>
-                        <Trigger Property="IsPressed" Value="True">
-                            <Setter TargetName="optionMark" Property="Fill" Value="{DynamicResource {x:Static l:ModernStyles.ControlForegroundPressedKey}}" />
-                        </Trigger>
-                    </ControlTemplate.Triggers>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
-        <Style.Triggers>
-            <Trigger Property="IsMouseOver" Value="True">
-                <Setter Property="Background" Value="{DynamicResource {x:Static l:ModernStyles.ControlBackgroundHoverKey}}" />
-                <Setter Property="BorderBrush" Value="{DynamicResource {x:Static l:ModernStyles.ControlBorderHoverKey}}" />
-            </Trigger>
-            <Trigger Property="IsPressed" Value="True">
-                <Setter Property="Background" Value="{DynamicResource {x:Static l:ModernStyles.ControlBackgroundPressedKey}}" />
-                <Setter Property="BorderBrush" Value="{DynamicResource {x:Static l:ModernStyles.ControlBorderPressedKey}}" />
-                <Setter Property="Foreground" Value="{DynamicResource {x:Static l:ModernStyles.ControlForegroundPressedKey}}" />
-            </Trigger>
-            <Trigger Property="IsEnabled" Value="False">
-                <Setter Property="Background" Value="{DynamicResource {x:Static l:ModernStyles.ControlBackgroundDisabledKey}}" />
-                <Setter Property="BorderBrush" Value="{DynamicResource {x:Static l:ModernStyles.ControlBorderDisabledKey}}" />
-                <Setter Property="Foreground" Value="{DynamicResource {x:Static l:ModernStyles.ControlForegroundDisabledKey}}" />
-            </Trigger>
-        </Style.Triggers>
-
-    </Style>
     <Style TargetType="{x:Type RepeatButton}">
         <Setter Property="Background" Value="{DynamicResource {x:Static l:ModernStyles.ScrollBarArrowBackgroundKey}}" />
         <Setter Property="Foreground" Value="{DynamicResource {x:Static l:ModernStyles.ScrollBarArrowKey}}" />
