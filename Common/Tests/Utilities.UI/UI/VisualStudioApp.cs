@@ -493,7 +493,7 @@ namespace TestUtilities.UI {
         }
 
         public ExceptionHelperAdornment WaitForExceptionAdornment() {
-            var control = FindByName("Exception Thrown Notification");
+            var control = FindByName("Exception Thrown");
             if (control != null) {
                 var parent = TreeWalker.RawViewWalker.GetParent(control);
                 Assert.IsNotNull(parent);
