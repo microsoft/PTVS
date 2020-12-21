@@ -36,6 +36,9 @@
     <AssemblyName>Microsoft.PythonTools.TestAdapter.Executor</AssemblyName>
     <FileAlignment>512</FileAlignment>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Ngen>true</Ngen>
+    <NgenArchitecture>All</NgenArchitecture>
+    <InstallRoot>MSBuild</InstallRoot>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -92,12 +95,14 @@
     <Compile Include="Common\Config\PythonProjectSettings.cs" />
     <Compile Include="Common\Config\RunSettingsUtil.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Pytest\PytestExtensions.cs" />
+    <Compile Include="Pytest\PytestExtensions.cs">
+      <InstallRoot>Schemas</InstallRoot>
+    </Compile>
     <Compile Include="Pytest\PytestTestDiscoverer.cs" />
     <Compile Include="Pytest\PytestTestExecutor.cs" />
     <Compile Include="Common\Services\ExecutorService.cs" />
     <Compile Include="Pytest\JunitXmlTestResultParser.cs" />
-    <Compile Include="Common\Services\CodeCoverage.cs" />   
+    <Compile Include="Common\Services\CodeCoverage.cs" />
     <Compile Include="Common\Services\ProcessExecute.cs" />
     <Compile Include="Common\Services\PythonDebugMode.cs" />
     <Compile Include="Common\TestCollection.cs" />
