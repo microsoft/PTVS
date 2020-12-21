@@ -19,7 +19,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.CookiecutterTools.Infrastructure {
     internal static class CancellationTokenUtilities {
-        public static void UnregisterOnCompletion(this CancellationTokenRegistration registration, Task task) 
+        public static void UnregisterOnCompletion(this CancellationTokenRegistration registration, Task task)
             => task.ContinueWith(UnregisterCancellationToken, registration, default(CancellationToken), TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
 
         private static void UnregisterCancellationToken(Task task, object state) => ((CancellationTokenRegistration)state).Dispose();

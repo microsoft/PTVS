@@ -17,38 +17,49 @@
 using System;
 using System.Windows.Automation;
 
-namespace TestUtilities.UI {
-    class CredentialsDialog : AutomationDialog {
+namespace TestUtilities.UI
+{
+    class CredentialsDialog : AutomationDialog
+    {
         public CredentialsDialog(VisualStudioApp app, AutomationElement element)
-            : base(app, element) {
+            : base(app, element)
+        {
         }
 
-        public static CredentialsDialog PublishSelection(VisualStudioApp app) {
+        public static CredentialsDialog PublishSelection(VisualStudioApp app)
+        {
             return new CredentialsDialog(
                 app,
                 AutomationElement.FromHandle(app.OpenDialogWithDteExecuteCommand("Build.PublishSelection"))
             );
         }
 
-        public string UserName {
-            get {
+        public string UserName
+        {
+            get
+            {
                 return GetUsernameEditBox().GetValuePattern().Current.Value;
             }
-            set {
+            set
+            {
                 GetUsernameEditBox().GetValuePattern().SetValue(value);
             }
         }
 
-        public string Password {
-            get {
+        public string Password
+        {
+            get
+            {
                 return GetPasswordEditBox().GetValuePattern().Current.Value;
             }
-            set {
+            set
+            {
                 GetPasswordEditBox().GetValuePattern().SetValue(value);
             }
         }
 
-        private AutomationElement GetUsernameEditBox() {
+        private AutomationElement GetUsernameEditBox()
+        {
             return Element.FindFirst(TreeScope.Descendants,
                 new AndCondition(
                     new PropertyCondition(AutomationElement.NameProperty, "User name:"),
@@ -57,7 +68,8 @@ namespace TestUtilities.UI {
             );
         }
 
-        private AutomationElement GetPasswordEditBox() {
+        private AutomationElement GetPasswordEditBox()
+        {
             return Element.FindFirst(TreeScope.Descendants,
                 new AndCondition(
                     new PropertyCondition(AutomationElement.NameProperty, "Password:"),

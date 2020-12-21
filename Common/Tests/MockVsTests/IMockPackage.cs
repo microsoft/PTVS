@@ -16,7 +16,8 @@
 
 
 using System;
-namespace Microsoft.VisualStudioTools.MockVsTests {
+namespace Microsoft.VisualStudioTools.MockVsTests
+{
     /// <summary>
     /// Performs initialization of a mock VS package.
     /// 
@@ -30,7 +31,8 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
     /// independent service and have their package publish (and promote) their service.  Mock
     /// packages can then do the same thing.
     /// </summary>
-    public interface IMockPackage : IDisposable {
+    public interface IMockPackage : IDisposable
+    {
         void Initialize();
     }
 }

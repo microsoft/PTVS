@@ -14,19 +14,23 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Windows.Automation;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Windows.Automation;
 
-namespace TestUtilities.UI {
-    public class RadioButton : AutomationWrapper {
+namespace TestUtilities.UI
+{
+    public class RadioButton : AutomationWrapper
+    {
         public string Name { get; set; }
 
         public RadioButton(AutomationElement element)
-            : base(element) {
+            : base(element)
+        {
             Name = (string)Element.GetCurrentPropertyValue(AutomationElement.NameProperty);
         }
 
-        public void SetSelected() {
+        public void SetSelected()
+        {
             Assert.IsTrue((bool)Element.GetCurrentPropertyValue(AutomationElement.IsSelectionItemPatternAvailableProperty), "Element is not a radio button");
             var pattern = (SelectionItemPattern)Element.GetCurrentPattern(SelectionItemPattern.Pattern);
             pattern.Select();
@@ -34,8 +38,10 @@ namespace TestUtilities.UI {
             Assert.IsTrue(pattern.Current.IsSelected);
         }
 
-        public bool IsSelected {
-            get {
+        public bool IsSelected
+        {
+            get
+            {
                 Assert.IsTrue((bool)Element.GetCurrentPropertyValue(AutomationElement.IsSelectionItemPatternAvailableProperty), "Element is not a radio button");
                 var pattern = (SelectionItemPattern)Element.GetCurrentPattern(SelectionItemPattern.Pattern);
                 return pattern.Current.IsSelected;

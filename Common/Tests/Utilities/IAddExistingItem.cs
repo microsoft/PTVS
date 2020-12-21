@@ -16,12 +16,15 @@
 
 using System;
 
-namespace TestUtilities {
-    public interface IAddExistingItem : IDisposable {
+namespace TestUtilities
+{
+    public interface IAddExistingItem : IDisposable
+    {
         void OK();
         void Add();
         void AddLink();
-        string FileName {
+        string FileName
+        {
             get;
             set;
         }

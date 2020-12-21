@@ -219,7 +219,7 @@ async def f():
 ";
 
             using (var helper = new ClassifierHelper(code, PythonLanguageVersion.V36)) {
-                helper.CheckAstClassifierSpans("ii i+i iki:k ikiki:k iki(): ii iki:k ikiki:k ki: " + 
+                helper.CheckAstClassifierSpans("ii i+i iki:k ikiki:k iki(): ii iki:k ikiki:k ki: " +
                     "iki(i): (iikiki) @iiki():k");
                 // "await f" does not highlight "f", but "await + f" does
                 // also note that only async and await are keywords here - not 'for'

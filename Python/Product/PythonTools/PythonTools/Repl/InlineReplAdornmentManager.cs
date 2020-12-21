@@ -52,7 +52,7 @@ namespace Microsoft.PythonTools.Repl {
                         _tags[i].Item2
                     );
                 }
-                
+
                 var span = new SnapshotSpan(_textView.TextSnapshot, _tags[i].Item1, 0);
                 bool intersects = false;
                 foreach (var applicableSpan in spans) {

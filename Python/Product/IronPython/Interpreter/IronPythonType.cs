@@ -81,7 +81,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
                     _name = ri != null ? ri.GetPythonTypeName(Value) : string.Empty;
                 }
 
-                return _name; 
+                return _name;
             }
         }
 

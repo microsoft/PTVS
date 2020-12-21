@@ -47,7 +47,7 @@ namespace PythonToolsTests {
 
             Assert.IsTrue(thread.ThreadState == ThreadState.Stopped);
             Assert.IsTrue(exceptions.Count == 2, $"{nameof(exceptions)} should contain exactly two exceptions");
-            CollectionAssert.AreEquivalent(exceptions, new [] {expected1, expected2});
+            CollectionAssert.AreEquivalent(exceptions, new[] { expected1, expected2 });
 
             void ConsumerThread() {
                 SynchronizationContext.SetSynchronizationContext(new BlockingCollectionSynchronizationContext(actions));
@@ -107,7 +107,7 @@ namespace PythonToolsTests {
             throw exception;
         }
 
-        private class CustomOperationCanceledException : OperationCanceledException {}
+        private class CustomOperationCanceledException : OperationCanceledException { }
 
         private class BlockingCollectionSynchronizationContext : SynchronizationContext {
             private readonly BlockingCollection<Action> _queue;
@@ -131,7 +131,7 @@ namespace PythonToolsTests {
             public bool IsCompleted => TaskScheduler.Current == TaskScheduler.Default && Thread.CurrentThread.IsThreadPoolThread;
             public void OnCompleted(Action continuation) => ThreadPool.QueueUserWorkItem(WaitCallback, continuation);
             public void UnsafeOnCompleted(Action continuation) => ThreadPool.UnsafeQueueUserWorkItem(WaitCallback, continuation);
-            public void GetResult() {}
+            public void GetResult() { }
         }
     }
 }

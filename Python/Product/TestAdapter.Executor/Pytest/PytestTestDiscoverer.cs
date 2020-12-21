@@ -40,7 +40,7 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
         private static readonly string DiscoveryAdapterPath = PythonToolsInstallPath.GetFile("PythonFiles\\testing_tools\\run_adapter.py");
 
         public PytestTestDiscoverer() : base(TestFrameworkType.Pytest) {
-            
+
         }
 
         public override void DiscoverTests(

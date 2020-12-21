@@ -51,7 +51,7 @@ namespace Microsoft.PythonTools.Infrastructure {
             } else {
                 message += Environment.NewLine + Environment.NewLine + suffix;
             }
-            
+
             var td = new TaskDialog(provider) {
                 MainInstruction = Strings.UnexpectedError_Title,
                 Content = message,
@@ -554,10 +554,10 @@ namespace Microsoft.PythonTools.Infrastructure {
             };
 
             internal enum TASKDIALOG_ICON : ushort {
-              TD_WARNING_ICON = unchecked((ushort)-1),
-              TD_ERROR_ICON = unchecked((ushort)-2),
-              TD_INFORMATION_ICON = unchecked((ushort)-3),
-              TD_SHIELD_ICON = unchecked((ushort)-4)
+                TD_WARNING_ICON = unchecked((ushort)-1),
+                TD_ERROR_ICON = unchecked((ushort)-2),
+                TD_INFORMATION_ICON = unchecked((ushort)-3),
+                TD_SHIELD_ICON = unchecked((ushort)-4)
             }
 
             const int WM_USER = 0x0400;

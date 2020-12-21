@@ -23,17 +23,17 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using pythontools::Microsoft.PythonTools;
-using pythontools::Microsoft.PythonTools.Editor;
-using Microsoft.PythonTools.Infrastructure;
-using pythontools::Microsoft.PythonTools.Intellisense;
 using analysis::Microsoft.PythonTools.Interpreter;
-using pythontools::Microsoft.PythonTools.Options;
 using analysis::Microsoft.PythonTools.Parsing;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudioTools.MockVsTests;
+using pythontools::Microsoft.PythonTools;
+using pythontools::Microsoft.PythonTools.Editor;
+using pythontools::Microsoft.PythonTools.Intellisense;
+using pythontools::Microsoft.PythonTools.Options;
 using TestUtilities;
 
 namespace PythonToolsMockTests {

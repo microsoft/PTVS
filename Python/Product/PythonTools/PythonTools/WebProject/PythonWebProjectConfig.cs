@@ -24,7 +24,7 @@ namespace Microsoft.PythonTools.Project.Web {
     /// Merges the PTVS IVsCfg object with the Venus IVsCfg implementation redirecting
     /// things appropriately to either one.
     /// </summary>
-    class PythonWebProjectConfig : 
+    class PythonWebProjectConfig :
         IVsCfg,
         IVsProjectCfg,
         IVsProjectCfg2,
@@ -32,8 +32,7 @@ namespace Microsoft.PythonTools.Project.Web {
         IVsDebuggableProjectCfg,
         ISpecifyPropertyPages,
         IVsSpecifyProjectDesignerPages,
-        IVsCfgBrowseObject
-    {
+        IVsCfgBrowseObject {
         private readonly IVsCfg _pythonCfg;
         private readonly IVsProjectFlavorCfg _webCfg;
 
@@ -181,8 +180,7 @@ namespace Microsoft.PythonTools.Project.Web {
         }
 
         public int get_CfgType(ref Guid iidCfg, out IntPtr ppCfg) {
-            if (iidCfg == typeof(IVsDebuggableProjectCfg).GUID)
-            {
+            if (iidCfg == typeof(IVsDebuggableProjectCfg).GUID) {
                 var pyCfg = _pythonCfg as IVsProjectFlavorCfg;
                 if (pyCfg != null) {
                     return pyCfg.get_CfgType(ref iidCfg, out ppCfg);

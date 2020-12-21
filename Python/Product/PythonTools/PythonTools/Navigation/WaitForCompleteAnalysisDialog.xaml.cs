@@ -56,7 +56,7 @@ namespace Microsoft.PythonTools.Navigation {
                 }
                 return false;
             }
-            
+
             bool? dialogResult = null;
             try {
                 Dispatcher.Invoke((Action)(() => {

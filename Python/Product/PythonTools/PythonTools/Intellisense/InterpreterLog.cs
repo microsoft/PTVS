@@ -26,7 +26,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly IVsActivityLog _activityLog;
 
         [ImportingConstructor]
-        public InterpreterLog([Import(typeof(SVsServiceProvider))]IServiceProvider provider) {
+        public InterpreterLog([Import(typeof(SVsServiceProvider))] IServiceProvider provider) {
             _activityLog = (IVsActivityLog)provider.GetService(typeof(SVsActivityLog));
         }
 

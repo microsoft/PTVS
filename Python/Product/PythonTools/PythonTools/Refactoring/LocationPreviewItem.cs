@@ -184,7 +184,7 @@ namespace Microsoft.PythonTools.Refactoring {
         public _VSTREESTATECHANGEREFRESH ToggleState() {
             var oldParentState = _parent.CheckState;
             _checked = !_checked;
-            
+
             _parent.UpdateTempFile();
 
             var newParentState = _parent.CheckState;

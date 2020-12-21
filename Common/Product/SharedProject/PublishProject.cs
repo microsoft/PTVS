@@ -14,21 +14,24 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using Microsoft.VisualStudio.Shell.Interop;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
-using Microsoft.VisualStudio.Shell.Interop;
 
-namespace Microsoft.VisualStudioTools.Project {
-    class PublishProject : IPublishProject {
+namespace Microsoft.VisualStudioTools.Project
+{
+    class PublishProject : IPublishProject
+    {
         private readonly CommonProjectNode _node;
         private ReadOnlyCollection<IPublishFile> _files;
         private readonly IVsStatusbar _statusBar;
         private readonly PublishProjectOptions _options;
         private int _progress;
 
-        public PublishProject(CommonProjectNode node, PublishProjectOptions options) {
+        public PublishProject(CommonProjectNode node, PublishProjectOptions options)
+        {
             _statusBar = (IVsStatusbar)node.Site.GetService(typeof(SVsStatusbar));
             _statusBar.SetText("Starting publish...");
             _node = node;
@@ -37,24 +40,32 @@ namespace Microsoft.VisualStudioTools.Project {
 
         #region IPublishProject Members
 
-        public IList<IPublishFile> Files {
-            get {
-                if (_files == null) {
+        public IList<IPublishFile> Files
+        {
+            get
+            {
+                if (_files == null)
+                {
                     List<IPublishFile> files = new List<IPublishFile>();
-                    foreach (var item in _node.CurrentConfig.Items) {
+                    foreach (var item in _node.CurrentConfig.Items)
+                    {
                         bool? publish = GetPublishSetting(item);
 
                         // publish if we're a Compile node and we haven't been disabled or if 
                         // we've been specifically enabled.
                         if ((item.ItemType == "Compile" && (publish == null || publish.Value)) ||
-                            (publish != null && publish.Value)) {
+                            (publish != null && publish.Value))
+                        {
 
                             string file = item.GetMetadataValue("FullPath");
 
                             string destFile = Path.GetFileName(file);
-                            if (CommonUtils.IsSubpathOf(_node.ProjectHome, file)) {
+                            if (CommonUtils.IsSubpathOf(_node.ProjectHome, file))
+                            {
                                 destFile = CommonUtils.GetRelativeFilePath(_node.ProjectHome, file);
-                            } else {
+                            }
+                            else
+                            {
                                 destFile = Path.GetFileName(file);
                             }
 
@@ -62,7 +73,8 @@ namespace Microsoft.VisualStudioTools.Project {
                         }
                     }
 
-                    foreach (var file in _options.AdditionalFiles) {
+                    foreach (var file in _options.AdditionalFiles)
+                    {
                         files.Add(file);
                     }
 
@@ -73,27 +85,34 @@ namespace Microsoft.VisualStudioTools.Project {
             }
         }
 
-        private static bool? GetPublishSetting(Build.Execution.ProjectItemInstance item) {
+        private static bool? GetPublishSetting(Build.Execution.ProjectItemInstance item)
+        {
             bool? publish = null;
             string pubValue = item.GetMetadataValue("Publish");
             bool pubSetting;
-            if (!String.IsNullOrWhiteSpace(pubValue) && Boolean.TryParse(pubValue, out pubSetting)) {
+            if (!String.IsNullOrWhiteSpace(pubValue) && Boolean.TryParse(pubValue, out pubSetting))
+            {
                 publish = pubSetting;
             }
             return publish;
         }
 
-        public string ProjectDir {
-            get {
+        public string ProjectDir
+        {
+            get
+            {
                 return _node.ProjectHome;
             }
         }
 
-        public int Progress {
-            get {
+        public int Progress
+        {
+            get
+            {
                 return _progress;
             }
-            set {
+            set
+            {
                 _progress = value;
                 _statusBar.SetText(String.Format("Publish {0}% done...", _progress));
             }
@@ -101,11 +120,13 @@ namespace Microsoft.VisualStudioTools.Project {
 
         #endregion
 
-        internal void Done() {
+        internal void Done()
+        {
             _statusBar.SetText("Publish succeeded");
         }
 
-        internal void Failed(string msg) {
+        internal void Failed(string msg)
+        {
             _statusBar.SetText("Publish failed: " + msg);
         }
     }

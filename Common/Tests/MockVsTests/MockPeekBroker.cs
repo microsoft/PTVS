@@ -14,68 +14,84 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.ComponentModel.Composition;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
+using System;
+using System.ComponentModel.Composition;
 
-namespace Microsoft.VisualStudioTools.MockVsTests {
+namespace Microsoft.VisualStudioTools.MockVsTests
+{
     [Export(typeof(IPeekBroker))]
-    class MockPeekBroker : IPeekBroker {
-        public bool CanTriggerPeekSession(ITextView textView, string relationshipName, Predicate<string> isStandaloneFilePredicate) {
+    class MockPeekBroker : IPeekBroker
+    {
+        public bool CanTriggerPeekSession(ITextView textView, string relationshipName, Predicate<string> isStandaloneFilePredicate)
+        {
             throw new NotImplementedException();
         }
 
-        public bool CanTriggerPeekSession(ITextView textView, ITrackingPoint triggerPoint, string relationshipName, Predicate<string> isStandaloneFilePredicate) {
+        public bool CanTriggerPeekSession(ITextView textView, ITrackingPoint triggerPoint, string relationshipName, Predicate<string> isStandaloneFilePredicate)
+        {
             throw new NotImplementedException();
         }
 
-        public bool CanTriggerPeekSession(PeekSessionCreationOptions options, Predicate<string> isStandaloneFilePredicate) {
+        public bool CanTriggerPeekSession(PeekSessionCreationOptions options, Predicate<string> isStandaloneFilePredicate)
+        {
             throw new NotImplementedException();
         }
 
-        public IPeekSession CreatePeekSession(ITextView textView, ITrackingPoint triggerPoint, string relationshipName) {
+        public IPeekSession CreatePeekSession(ITextView textView, ITrackingPoint triggerPoint, string relationshipName)
+        {
             throw new NotImplementedException();
         }
 
-        public IPeekSession CreatePeekSession(PeekSessionCreationOptions options) {
+        public IPeekSession CreatePeekSession(PeekSessionCreationOptions options)
+        {
             throw new NotImplementedException();
         }
 
-        public void DismissPeekSession(ITextView textView) {
+        public void DismissPeekSession(ITextView textView)
+        {
             throw new NotImplementedException();
         }
 
-        public IPeekSession GetPeekSession(ITextView textView) {
+        public IPeekSession GetPeekSession(ITextView textView)
+        {
             throw new NotImplementedException();
         }
 
-        public bool IsPeekSessionActive(ITextView textView) {
+        public bool IsPeekSessionActive(ITextView textView)
+        {
             throw new NotImplementedException();
         }
 
-        public void TriggerNestedPeekSession(ITextView textView, string relationshipName, IPeekSession containingSession) {
+        public void TriggerNestedPeekSession(ITextView textView, string relationshipName, IPeekSession containingSession)
+        {
             throw new NotImplementedException();
         }
 
-        public void TriggerNestedPeekSession(ITextView textView, ITrackingPoint triggerPoint, string relationshipName, IPeekSession containingSession) {
+        public void TriggerNestedPeekSession(ITextView textView, ITrackingPoint triggerPoint, string relationshipName, IPeekSession containingSession)
+        {
             throw new NotImplementedException();
         }
 
-        public void TriggerNestedPeekSession(PeekSessionCreationOptions options, IPeekSession containingSession) {
+        public void TriggerNestedPeekSession(PeekSessionCreationOptions options, IPeekSession containingSession)
+        {
             throw new NotImplementedException();
         }
 
-        public IPeekSession TriggerPeekSession(ITextView textView, string relationshipName) {
+        public IPeekSession TriggerPeekSession(ITextView textView, string relationshipName)
+        {
             throw new NotImplementedException();
         }
 
-        public IPeekSession TriggerPeekSession(ITextView textView, ITrackingPoint triggerPoint, string relationshipName) {
+        public IPeekSession TriggerPeekSession(ITextView textView, ITrackingPoint triggerPoint, string relationshipName)
+        {
             throw new NotImplementedException();
         }
 
-        public IPeekSession TriggerPeekSession(PeekSessionCreationOptions options) {
+        public IPeekSession TriggerPeekSession(PeekSessionCreationOptions options)
+        {
             throw new NotImplementedException();
         }
     }

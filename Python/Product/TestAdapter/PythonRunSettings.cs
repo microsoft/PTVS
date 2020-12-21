@@ -47,7 +47,7 @@ namespace Microsoft.PythonTools.TestAdapter {
         internal const int cmdidImportCoverage = 0x10f;
 
         [ImportingConstructor]
-        public PythonRunSettings([Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider) {
+        public PythonRunSettings([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider) {
             _compModel = (IComponentModel)serviceProvider.GetService(typeof(SComponentModel));
             var opState = _compModel.GetService<IOperationState>();
             opState.StateChanged += StateChange;
@@ -215,7 +215,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             if (container == null) {
                 return false;
             }
-        
+
             string nativeCode = "", djangoSettings = "", projectName = "", testFramework = "", unitTestPattern = "", unitTestRootDir = "";
             bool isWorkspace = false;
             ProjectInfo projInfo = null;

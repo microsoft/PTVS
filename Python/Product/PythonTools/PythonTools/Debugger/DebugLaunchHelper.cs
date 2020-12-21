@@ -213,7 +213,7 @@ namespace Microsoft.PythonTools.Debugger {
                         dti.Info.bstrOptions = GetLaunchJsonForVsCodeDebugAdapter(provider, config, fullEnvironment);
                     }
                 }
-                
+
                 // Null out dti so that it is not disposed before we return.
                 var result = dti;
                 dti = null;

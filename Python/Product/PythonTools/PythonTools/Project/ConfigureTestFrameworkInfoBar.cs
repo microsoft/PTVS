@@ -55,7 +55,7 @@ namespace Microsoft.PythonTools.Project {
             ) {
                 return;
             }
-            
+
             bool isPytestEnabled = _infoBarData.TestFramework == TestFrameworkType.Pytest;
             bool isValidPytestConfigFile = File.Exists(frameworkInfoBarData.PyTestConfigFilePath);
 

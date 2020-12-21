@@ -14,20 +14,24 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using Microsoft.VisualStudio.Shell;
 using System;
 using System.IO;
-using Microsoft.VisualStudio.Shell;
 
-namespace Microsoft.VisualStudioTools {
+namespace Microsoft.VisualStudioTools
+{
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
-    internal class ProvideDebugPortPickerAttribute : RegistrationAttribute {
+    internal class ProvideDebugPortPickerAttribute : RegistrationAttribute
+    {
         private readonly Type _portPicker;
 
-        public ProvideDebugPortPickerAttribute(Type portPicker) {
+        public ProvideDebugPortPickerAttribute(Type portPicker)
+        {
             _portPicker = portPicker;
         }
 
-        public override void Register(RegistrationContext context) {
+        public override void Register(RegistrationContext context)
+        {
             var clsidKey = context.CreateKey("CLSID");
             var clsidGuidKey = clsidKey.CreateSubkey(_portPicker.GUID.ToString("B"));
             clsidGuidKey.SetValue("Assembly", _portPicker.Assembly.FullName);
@@ -37,7 +41,8 @@ namespace Microsoft.VisualStudioTools {
             clsidGuidKey.SetValue("ThreadingModel", "Free");
         }
 
-        public override void Unregister(RegistrationContext context) {
+        public override void Unregister(RegistrationContext context)
+        {
         }
     }
 }

@@ -42,7 +42,7 @@ namespace Microsoft.PythonTools.Profiling {
 
         public StandaloneTargetView(IServiceProvider serviceProvider) {
             var componentService = serviceProvider.GetComponentModel();
-            
+
             var interpreterProviders = componentService.DefaultExportProvider.GetExports<IPythonInterpreterFactoryProvider, Dictionary<string, object>>();
             var interpreterOptions = componentService.GetService<IInterpreterOptionsService>();
             var registry = componentService.GetService<IInterpreterRegistryService>();
@@ -50,8 +50,8 @@ namespace Microsoft.PythonTools.Profiling {
 
             var availableInterpreters = registry.Configurations.Select(
                 config => new PythonInterpreterView(
-                    config.Description, 
-                    config.Id, 
+                    config.Description,
+                    config.Id,
                     config.InterpreterPath
                 )
             ).ToList();
@@ -272,4 +272,4 @@ namespace Microsoft.PythonTools.Profiling {
         public event PropertyChangedEventHandler PropertyChanged;
     }
 }
- 
+

@@ -15,16 +15,18 @@
 // permissions and limitations under the License.
 
 
+using Microsoft.Build.Evaluation;
+using Microsoft.VisualStudio;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using Microsoft.Build.Evaluation;
-using Microsoft.VisualStudio;
 using MSBuild = Microsoft.Build.Evaluation;
 
-namespace Microsoft.VisualStudioTools.Project {
-    internal class MsBuildProjectElement : ProjectElement {
+namespace Microsoft.VisualStudioTools.Project
+{
+    internal class MsBuildProjectElement : ProjectElement
+    {
         private MSBuild.ProjectItem _item;
         private string _url; // cached Url
 
@@ -34,7 +36,8 @@ namespace Microsoft.VisualStudioTools.Project {
         /// such object is the project itself (see Project.CreateFileNode()).
         /// </summary>
         internal MsBuildProjectElement(ProjectNode project, string itemPath, string itemType)
-            : base(project) {
+            : base(project)
+        {
             Utilities.ArgumentNotNullOrEmpty("itemPath", itemPath);
             Utilities.ArgumentNotNullOrEmpty("itemType", itemType);
 
@@ -53,7 +56,8 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <param name="existingItem">an MSBuild.ProjectItem; can be null if virtualFolder is true</param>
         /// <param name="virtualFolder">Is this item virtual (such as reference folder)</param>
         internal MsBuildProjectElement(ProjectNode project, MSBuild.ProjectItem existingItem)
-            : base(project) {
+            : base(project)
+        {
             Utilities.ArgumentNotNull("existingItem", existingItem);
 
             // Keep a reference to project and item
@@ -61,11 +65,14 @@ namespace Microsoft.VisualStudioTools.Project {
             _url = base.Url;
         }
 
-        protected override string ItemType {
-            get {
+        protected override string ItemType
+        {
+            get
+            {
                 return _item.ItemType;
             }
-            set {
+            set
+            {
                 _item.ItemType = value;
                 OnItemTypeChanged();
             }
@@ -76,23 +83,29 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </summary>
         /// <param name="attributeName">Name of the attribute to set</param>
         /// <param name="attributeValue">Value to give to the attribute</param>
-        public override void SetMetadata(string attributeName, string attributeValue) {
+        public override void SetMetadata(string attributeName, string attributeValue)
+        {
             Debug.Assert(String.Compare(attributeName, ProjectFileConstants.Include, StringComparison.OrdinalIgnoreCase) != 0, "Use rename as this won't work");
 
             // Build Action is the type, not a property, so intercept
-            if (String.Compare(attributeName, ProjectFileConstants.BuildAction, StringComparison.OrdinalIgnoreCase) == 0) {
+            if (String.Compare(attributeName, ProjectFileConstants.BuildAction, StringComparison.OrdinalIgnoreCase) == 0)
+            {
                 _item.ItemType = attributeValue;
                 return;
             }
 
             // Check out the project file.
-            if (!ItemProject.QueryEditProjectFile(false)) {
+            if (!ItemProject.QueryEditProjectFile(false))
+            {
                 throw Marshal.GetExceptionForHR(VSConstants.OLE_E_PROMPTSAVECANCELLED);
             }
 
-            if (attributeValue == null) {
+            if (attributeValue == null)
+            {
                 _item.RemoveMetadata(attributeName);
-            } else {
+            }
+            else
+            {
                 _item.SetMetadataValue(attributeName, attributeValue);
             }
         }
@@ -102,35 +115,42 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </summary>
         /// <param name="attributeName">Name of the attribute to get the value for</param>
         /// <returns>Value of the attribute</returns>
-        public override string GetMetadata(string attributeName) {
+        public override string GetMetadata(string attributeName)
+        {
             // cannot ask MSBuild for Include, so intercept it and return the corresponding property
-            if (String.Compare(attributeName, ProjectFileConstants.Include, StringComparison.OrdinalIgnoreCase) == 0) {
+            if (String.Compare(attributeName, ProjectFileConstants.Include, StringComparison.OrdinalIgnoreCase) == 0)
+            {
                 return _item.EvaluatedInclude;
             }
 
             // Build Action is the type, not a property, so intercept this one as well
-            if (String.Compare(attributeName, ProjectFileConstants.BuildAction, StringComparison.OrdinalIgnoreCase) == 0) {
+            if (String.Compare(attributeName, ProjectFileConstants.BuildAction, StringComparison.OrdinalIgnoreCase) == 0)
+            {
                 return _item.ItemType;
             }
 
             return _item.GetMetadataValue(attributeName);
         }
 
-        public override void Rename(string newPath) {
+        public override void Rename(string newPath)
+        {
             string escapedPath = Microsoft.Build.Evaluation.ProjectCollection.Escape(newPath);
 
             _item.Rename(escapedPath);
             this.RefreshProperties();
         }
 
-        public override void RefreshProperties() {
+        public override void RefreshProperties()
+        {
             ItemProject.BuildProject.ReevaluateIfNecessary();
 
             _url = base.Url;
 
             IEnumerable<ProjectItem> items = ItemProject.BuildProject.GetItems(_item.ItemType);
-            foreach (ProjectItem projectItem in items) {
-                if (projectItem != null && projectItem.UnevaluatedInclude.Equals(_item.UnevaluatedInclude)) {
+            foreach (ProjectItem projectItem in items)
+            {
+                if (projectItem != null && projectItem.UnevaluatedInclude.Equals(_item.UnevaluatedInclude))
+                {
                     _item = projectItem;
                     return;
                 }
@@ -142,34 +162,43 @@ namespace Microsoft.VisualStudioTools.Project {
         /// Once the item is delete, you should not longer be using it.
         /// Note that the item should be removed from the hierarchy prior to this call.
         /// </summary>
-        public override void RemoveFromProjectFile() {
-            if (!Deleted) {
+        public override void RemoveFromProjectFile()
+        {
+            if (!Deleted)
+            {
                 ItemProject.BuildProject.RemoveItem(_item);
             }
 
             base.RemoveFromProjectFile();
         }
 
-        internal MSBuild.ProjectItem Item {
-            get {
+        internal MSBuild.ProjectItem Item
+        {
+            get
+            {
                 return _item;
             }
         }
 
-        public override string Url {
-            get {
+        public override string Url
+        {
+            get
+            {
                 return _url;
             }
         }
 
-        public override bool Equals(object obj) {
+        public override bool Equals(object obj)
+        {
             // Do they reference the same element?
-            if (Object.ReferenceEquals(this, obj)) {
+            if (Object.ReferenceEquals(this, obj))
+            {
                 return true;
             }
 
             MsBuildProjectElement msBuildProjElem = obj as MsBuildProjectElement;
-            if (Object.ReferenceEquals(msBuildProjElem, null)) {
+            if (Object.ReferenceEquals(msBuildProjElem, null))
+            {
                 return false;
             }
 
@@ -183,14 +212,16 @@ namespace Microsoft.VisualStudioTools.Project {
 
             // Unfortunately the checking for nulls have to be done again, since neither String.Equals nor String.Compare can handle nulls.
             // Virtual folders should not be handled here.
-            if (include1 == null || include2 == null) {
+            if (include1 == null || include2 == null)
+            {
                 return false;
             }
 
             return String.Equals(include1, include2, StringComparison.OrdinalIgnoreCase);
         }
 
-        public override int GetHashCode() {
+        public override int GetHashCode()
+        {
             return StringComparer.OrdinalIgnoreCase.GetHashCode(GetMetadata(ProjectFileConstants.Include));
         }
     }

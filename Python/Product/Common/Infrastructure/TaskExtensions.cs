@@ -39,7 +39,7 @@ namespace Microsoft.PythonTools.Infrastructure {
             }
 
             var synchronizationContext = SynchronizationContext.Current;
-            if (synchronizationContext != null && synchronizationContext.GetType() != typeof (SynchronizationContext)) {
+            if (synchronizationContext != null && synchronizationContext.GetType() != typeof(SynchronizationContext)) {
                 task.ContinueWith(DoNotWaitSynchronizationContextContinuation, synchronizationContext, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
             } else {
                 task.ContinueWith(DoNotWaitThreadContinuation, TaskContinuationOptions.ExecuteSynchronously);
@@ -62,7 +62,7 @@ namespace Microsoft.PythonTools.Infrastructure {
         }
 
         private static void DoNotWaitSynchronizationContextContinuation(Task task, object state) {
-            var context = (SynchronizationContext) state;
+            var context = (SynchronizationContext)state;
             context.Post(ReThrowTaskException, task);
         }
 

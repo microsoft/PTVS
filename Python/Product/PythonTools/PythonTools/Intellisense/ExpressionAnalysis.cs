@@ -43,12 +43,12 @@ namespace Microsoft.PythonTools.Intellisense {
         /// is the complete expression that the point mapped to.
         /// </summary>
         public string Expression => _expr;
-        
+
         /// <summary>
         /// Gets the span associated with the expression.
         /// </summary>
         public ITrackingSpan Span => _span;
-        
+
         /// <summary>
         /// Gets the list of variables which the expression refers to.  This can include
         /// references and definitions for variables, fields, etc... as well as actual

@@ -74,7 +74,7 @@ print 'goodbye'
             });
 
             Assert.AreEqual(@"print 'hello'
-#print 'goodbye'", 
+#print 'goodbye'",
                  view.GetText());
 
             editorTestToolset.UIThread.Invoke(() => {

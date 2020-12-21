@@ -53,7 +53,7 @@ namespace Microsoft.PythonTools.Debugger.Transports {
             { "ws", () => new WebSocketTransport() },
             { "wss", () => new WebSocketTransport() },
         };
-                                                                                            
+
 
         /// <returns>
         /// An <see cref="IDebuggerTransport"/> that can validate and connect to <paramref name="uri"/>, or <c>null</c> if there is no such transport.

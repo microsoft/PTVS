@@ -45,8 +45,8 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
 
             public DummyHolder(DkmProcess process) {
                 var pyrtInfo = process.GetPythonRuntimeInfo();
-                Dummy = 
-                    pyrtInfo.LanguageVersion >= PythonLanguageVersion.V34 ? 
+                Dummy =
+                    pyrtInfo.LanguageVersion >= PythonLanguageVersion.V34 ?
                     pyrtInfo.DLLs.Python.GetStaticVariable<PointerProxy<PyObject>>("_PySet_Dummy") :
                     pyrtInfo.DLLs.Python.GetStaticVariable<PointerProxy<PyObject>>("dummy", "setobject.obj");
             }

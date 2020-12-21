@@ -22,7 +22,8 @@ namespace TestUtilities.UI
     class Menu : AutomationWrapper
     {
         public Menu(AutomationElement element)
-            : base(element) {
+            : base(element)
+        {
         }
 
         public List<MenuItem> Items

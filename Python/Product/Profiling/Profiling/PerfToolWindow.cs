@@ -31,7 +31,7 @@ namespace Microsoft.PythonTools.Profiling {
             ToolClsid = GuidList.VsUIHierarchyWindow_guid;
             Caption = Strings.PerformanceToolWindowTitle;
         }
-        
+
         public override void OnToolWindowCreated() {
             base.OnToolWindowCreated();
 

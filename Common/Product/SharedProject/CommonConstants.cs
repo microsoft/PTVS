@@ -14,14 +14,16 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
+using System;
 using OleConstants = Microsoft.VisualStudio.OLE.Interop.Constants;
 using VsCommands2K = Microsoft.VisualStudio.VSConstants.VSStd2KCmdID;
 
-namespace Microsoft.VisualStudioTools {
-    internal static class CommonConstants {
+namespace Microsoft.VisualStudioTools
+{
+    internal static class CommonConstants
+    {
         /// <summary>
         /// <see cref="VsConstants.UICONTEXT_NoSolution"/>.
         /// </summary>

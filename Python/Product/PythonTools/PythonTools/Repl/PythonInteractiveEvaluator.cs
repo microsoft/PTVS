@@ -38,8 +38,7 @@ namespace Microsoft.PythonTools.Repl {
     [ContentType(PythonCoreConstants.ContentType)]
     [ContentType(PredefinedInteractiveCommandsContentTypes.InteractiveCommandContentTypeName)]
     partial class PythonInteractiveEvaluator :
-        PythonCommonInteractiveEvaluator
-    {
+        PythonCommonInteractiveEvaluator {
         protected CommandProcessorThread _thread;
         private bool _isDisposed;
 
@@ -244,7 +243,7 @@ namespace Microsoft.PythonTools.Repl {
                 } catch (Exception ex) when (!ex.IsCriticalException()) {
                     Debug.Fail(ex.ToString());
                 }
-                
+
                 return result;
             }
 

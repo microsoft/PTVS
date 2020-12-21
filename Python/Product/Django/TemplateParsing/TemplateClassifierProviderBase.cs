@@ -25,8 +25,8 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
     internal abstract class TemplateClassifierProviderBase : IClassifierProvider {
         private readonly IContentType _contentType;
 
-        internal readonly IClassificationType _classType, _templateClassType, _commentClassType, 
-                                              _identifierType, _literalType, _numberType, _dot, 
+        internal readonly IClassificationType _classType, _templateClassType, _commentClassType,
+                                              _identifierType, _literalType, _numberType, _dot,
                                               _keywordType, _excludedCode;
 
         protected TemplateClassifierProviderBase(string contentTypeName, IContentTypeRegistryService contentTypeRegistryService, IClassificationTypeRegistryService classificationRegistry) {

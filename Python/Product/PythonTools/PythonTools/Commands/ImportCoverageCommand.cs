@@ -37,7 +37,7 @@ namespace Microsoft.PythonTools.Commands {
 
         public ImportCoverageCommand(IServiceProvider serviceProvider) {
             _serviceProvider = serviceProvider;
-            
+
         }
 
         public override async void DoCommand(object sender, EventArgs args) {
@@ -107,7 +107,7 @@ namespace Microsoft.PythonTools.Commands {
             }
         }
 
-        internal static Dictionary<CoverageFileInfo, CoverageMapper>  Import(CoverageFileInfo[] fileInfo, PythonLanguageVersion version = PythonLanguageVersion.V27) {
+        internal static Dictionary<CoverageFileInfo, CoverageMapper> Import(CoverageFileInfo[] fileInfo, PythonLanguageVersion version = PythonLanguageVersion.V27) {
             Dictionary<CoverageFileInfo, CoverageMapper> files = new Dictionary<CoverageFileInfo, CoverageMapper>();
             foreach (var file in fileInfo) {
                 using (var stream = new FileStream(file.Filename, FileMode.Open)) {

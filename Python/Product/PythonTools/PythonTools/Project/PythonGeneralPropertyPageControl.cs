@@ -61,7 +61,7 @@ namespace Microsoft.PythonTools.Project {
 
         private void InitializeInterpreters() {
             _defaultInterpreter.BeginUpdate();
-            
+
             try {
                 var selection = _defaultInterpreter.SelectedItem;
                 _defaultInterpreter.Items.Clear();
@@ -94,7 +94,7 @@ namespace Microsoft.PythonTools.Project {
                     SetDefaultInterpreter(null);
                 } else if (selection != null) {
                     SetDefaultInterpreter((IPythonInterpreterFactory)selection);
-                } else { 
+                } else {
                     SetDefaultInterpreter(_propPage.PythonProject.ActiveInterpreter);
                 }
             } finally {
@@ -104,7 +104,7 @@ namespace Microsoft.PythonTools.Project {
 
         internal void OnInterpretersChanged() {
             _defaultInterpreter.SelectedIndexChanged -= Changed;
-            
+
             InitializeInterpreters();
 
             _defaultInterpreter.SelectedIndexChanged += Changed;

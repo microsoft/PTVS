@@ -40,7 +40,7 @@ namespace TestAdapterTests {
                 }
             }
         }
-        
+
         public static TestEnvironment GetOrCreate(PythonVersion pythonVersion, string testFramework, bool installFramework = true, bool installCoverage = false) {
             var testEnvironmentId = $"{pythonVersion.ToString().ToLower()}:{testFramework.ToLower()}:{installFramework.ToString()}:{installCoverage.ToString()}";
             if (_environmentsMap.TryGetValue(testEnvironmentId, out TestEnvironment foundEnv)) {
@@ -55,18 +55,18 @@ namespace TestAdapterTests {
 
             switch (testFramework) {
                 case "Pytest": {
-                        var envDir = TestData.GetTempPath();
-                        var packages = new List<string>();
-                        if (installFramework) {
-                            packages.Add("pytest");
-                        }
-                        if (installCoverage) {
-                            packages.Add("coverage");
-                        }
-                        pythonVersion.CreateVirtualEnv(envDir, packages);
-                        env.InterpreterPath = Path.Combine(envDir, "scripts", "python.exe");
+                    var envDir = TestData.GetTempPath();
+                    var packages = new List<string>();
+                    if (installFramework) {
+                        packages.Add("pytest");
                     }
-                    break;
+                    if (installCoverage) {
+                        packages.Add("coverage");
+                    }
+                    pythonVersion.CreateVirtualEnv(envDir, packages);
+                    env.InterpreterPath = Path.Combine(envDir, "scripts", "python.exe");
+                }
+                break;
                 default:
                     if (HasPackage(pythonVersion.PrefixPath, "pytest") || installCoverage) {
                         // Create an empty virtual env to ensure we don't accidentally rely on pytest

@@ -14,16 +14,18 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TextManager.Interop;
+using System;
 
-namespace Microsoft.VisualStudioTools.Navigation {
+namespace Microsoft.VisualStudioTools.Navigation
+{
     /// <summary>
     /// This interface defines the service that finds current language files inside a hierarchy
     /// and builds information to expose to the class view or object browser.
     /// </summary>    
-    internal interface ILibraryManager {
+    internal interface ILibraryManager
+    {
         void RegisterHierarchy(IVsHierarchy hierarchy);
         void UnregisterHierarchy(IVsHierarchy hierarchy);
         void RegisterLineChangeHandler(uint document, TextLineChangeEvent lineChanged, Action<IVsTextLines> onIdle);

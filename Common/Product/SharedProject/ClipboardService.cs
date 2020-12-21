@@ -14,39 +14,47 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudioTools.Project;
+using System;
 
-namespace Microsoft.VisualStudioTools {
+namespace Microsoft.VisualStudioTools
+{
 
-    class ClipboardService : IClipboardService {
-        public void SetClipboard(IDataObject dataObject) {
+    class ClipboardService : IClipboardService
+    {
+        public void SetClipboard(IDataObject dataObject)
+        {
             ErrorHandler.ThrowOnFailure(UnsafeNativeMethods.OleSetClipboard(dataObject));
         }
 
-        public IDataObject GetClipboard() {
+        public IDataObject GetClipboard()
+        {
             IDataObject res;
             ErrorHandler.ThrowOnFailure(UnsafeNativeMethods.OleGetClipboard(out res));
             return res;
         }
 
-        public void FlushClipboard() {
+        public void FlushClipboard()
+        {
             ErrorHandler.ThrowOnFailure(UnsafeNativeMethods.OleFlushClipboard());
         }
 
-        public bool OpenClipboard() {
+        public bool OpenClipboard()
+        {
             int res = UnsafeNativeMethods.OpenClipboard(IntPtr.Zero);
             ErrorHandler.ThrowOnFailure(res);
             return res == 1;
         }
 
-        public void EmptyClipboard() {
+        public void EmptyClipboard()
+        {
             ErrorHandler.ThrowOnFailure(UnsafeNativeMethods.EmptyClipboard());
         }
 
-        public void CloseClipboard() {
+        public void CloseClipboard()
+        {
             ErrorHandler.ThrowOnFailure(UnsafeNativeMethods.CloseClipboard());
         }
     }

@@ -14,29 +14,35 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudioTools;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.VisualStudioTools;
 
-namespace TestUtilities {
-    public static class TestData {
-        private static string GetRootDir() {
+namespace TestUtilities
+{
+    public static class TestData
+    {
+        private static string GetRootDir()
+        {
             var dir = CommonUtils.GetParent((typeof(TestData)).Assembly.Location);
             while (!string.IsNullOrEmpty(dir) &&
                 Directory.Exists(dir) &&
-                !File.Exists(CommonUtils.GetAbsoluteFilePath(dir, "build.root"))) {
+                !File.Exists(CommonUtils.GetAbsoluteFilePath(dir, "build.root")))
+            {
                 dir = CommonUtils.GetParent(dir);
             }
             return dir ?? "";
         }
 
-        public static void ProvideContext(TestContext context) {
-            if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("_TESTDATA_TEMP_PATH"))) {
+        public static void ProvideContext(TestContext context)
+        {
+            if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("_TESTDATA_TEMP_PATH")))
+            {
                 Environment.SetEnvironmentVariable("_TESTDATA_TEMP_PATH", context.DeploymentDirectory);
             }
         }
@@ -44,20 +50,25 @@ namespace TestUtilities {
         /// <summary>
         /// Returns the full path to the test data root.
         /// </summary>
-        private static string CalculateTestDataRoot() {
+        private static string CalculateTestDataRoot()
+        {
             var path = Environment.GetEnvironmentVariable("_TESTDATA_ROOT_PATH");
-            if (Directory.Exists(path)) {
+            if (Directory.Exists(path))
+            {
                 return path;
             }
 
             path = GetRootDir();
-            if (Directory.Exists(path)) {
+            if (Directory.Exists(path))
+            {
                 foreach (var landmark in new[] {
                     "TestData",
                     @"Python\Tests\TestData"
-                }) {
+                })
+                {
                     var candidate = CommonUtils.GetAbsoluteDirectoryPath(path, landmark);
-                    if (Directory.Exists(candidate)) {
+                    if (Directory.Exists(candidate))
+                    {
                         return CommonUtils.GetParent(candidate);
                     }
                 }
@@ -72,26 +83,32 @@ namespace TestUtilities {
         /// <summary>
         /// Returns the full path to the deployed file.
         /// </summary>
-        public static string GetPath(params string[] paths) {
+        public static string GetPath(params string[] paths)
+        {
             var res = Root;
-            foreach (var p in paths) {
+            foreach (var p in paths)
+            {
                 res = CommonUtils.GetAbsoluteFilePath(res, p);
             }
             return res;
         }
 
-        private static string CalculateTempRoot() {
+        private static string CalculateTempRoot()
+        {
             var path = Environment.GetEnvironmentVariable("_TESTDATA_TEMP_PATH");
-            
-            if (string.IsNullOrEmpty(path)) {
+
+            if (string.IsNullOrEmpty(path))
+            {
                 path = Path.GetTempPath();
                 var subpath = Path.Combine(path, Path.GetRandomFileName());
-                while (Directory.Exists(subpath) || File.Exists(subpath)) {
+                while (Directory.Exists(subpath) || File.Exists(subpath))
+                {
                     subpath = Path.Combine(path, Path.GetRandomFileName());
                 }
                 path = subpath;
             }
-            if (!Directory.Exists(path)) {
+            if (!Directory.Exists(path))
+            {
                 Directory.CreateDirectory(path);
             }
             return path;
@@ -107,16 +124,20 @@ namespace TestUtilities {
         /// Name of the subdirectory within the temporary directory. If omitted,
         /// a randomly generated name will be used.
         /// </param>
-        public static string GetTempPath(string subPath = null) {
+        public static string GetTempPath(string subPath = null)
+        {
             var path = _tempRoot.Value;
-            if (string.IsNullOrEmpty(subPath)) {
+            if (string.IsNullOrEmpty(subPath))
+            {
                 subPath = Path.GetRandomFileName();
-                while (Directory.Exists(Path.Combine(path, subPath))) {
+                while (Directory.Exists(Path.Combine(path, subPath)))
+                {
                     subPath = Path.GetRandomFileName();
                 }
             }
             path = CommonUtils.GetAbsoluteDirectoryPath(path, subPath);
-            if (!Directory.Exists(path)) {
+            if (!Directory.Exists(path))
+            {
                 Directory.CreateDirectory(path);
             }
             Console.WriteLine($"Creating temp directory for test at {path}");

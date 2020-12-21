@@ -62,7 +62,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                         }
                     }
                 }
-            } else if ((Flags & enum_PROVIDER_FLAGS.PFLAG_GET_PROGRAM_NODES) != 0 ) {
+            } else if ((Flags & enum_PROVIDER_FLAGS.PFLAG_GET_PROGRAM_NODES) != 0) {
                 // The debugger is asking the engine to return the program nodes it can debug. We check
                 // each process if it has a python##.dll or python##_d.dll loaded and if it does
                 // then we report the program as being a Python process.

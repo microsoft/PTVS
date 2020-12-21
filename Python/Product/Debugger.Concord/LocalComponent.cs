@@ -260,7 +260,7 @@ namespace Microsoft.PythonTools.Debugger.Concord {
                     }
                 }
             }
-            
+
             if (process.GetPythonRuntimeInstance() != null) {
                 return;
             }
@@ -371,7 +371,7 @@ namespace Microsoft.PythonTools.Debugger.Concord {
                 throw new InvalidOperationException();
             }
 
-            ee.GetFrameLocals(inspectionContext, workList, stackFrame, completionRoutine);            
+            ee.GetFrameLocals(inspectionContext, workList, stackFrame, completionRoutine);
         }
 
         void IDkmLanguageExpressionEvaluator.GetChildren(DkmEvaluationResult result, DkmWorkList workList, int initialRequestSize, DkmInspectionContext inspectionContext, DkmCompletionRoutine<DkmGetChildrenAsyncResult> completionRoutine) {
@@ -575,7 +575,7 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             var process = moduleInstance.Process;
             var runtimeBreakpoints = process.GetOrCreateDataItem(() => new RuntimeDllBreakpoints());
 
-            using (var moduleSym = moduleInstance.GetSymbols()) 
+            using (var moduleSym = moduleInstance.GetSymbols())
             using (var funcSym = moduleSym.Object.GetSymbol(SymTagEnum.SymTagFunction, funcName)) {
                 var funcEnds = funcSym.Object.GetSymbols(SymTagEnum.SymTagFuncDebugStart, null);
                 try {

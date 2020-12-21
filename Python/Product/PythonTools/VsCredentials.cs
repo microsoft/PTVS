@@ -268,5 +268,5 @@ namespace Microsoft.PythonTools {
         }
     }
 }
-    
-    
+
+

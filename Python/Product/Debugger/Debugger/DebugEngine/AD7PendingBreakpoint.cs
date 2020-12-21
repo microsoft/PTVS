@@ -41,8 +41,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             _bpRequest = pBPRequest;
             BP_REQUEST_INFO[] requestInfo = new BP_REQUEST_INFO[1];
             EngineUtils.CheckOk(_bpRequest.GetRequestInfo(enum_BPREQI_FIELDS.BPREQI_BPLOCATION | enum_BPREQI_FIELDS.BPREQI_CONDITION | enum_BPREQI_FIELDS.BPREQI_ALLFIELDS, requestInfo));
-            _bpRequestInfo = requestInfo[0];            
-            
+            _bpRequestInfo = requestInfo[0];
+
             _engine = engine;
             _bpManager = bpManager;
             _boundBreakpoints = new System.Collections.Generic.List<AD7BoundBreakpoint>();
@@ -99,17 +99,17 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         int IDebugPendingBreakpoint2.Bind() {
             if (CanBind()) {
                 IDebugDocumentPosition2 docPosition = (IDebugDocumentPosition2)(Marshal.GetObjectForIUnknown(_bpRequestInfo.bpLocation.unionmember2));
-                
+
                 // Get the name of the document that the breakpoint was put in
                 string documentName;
                 EngineUtils.CheckOk(docPosition.GetFileName(out documentName));
-                
-                
+
+
                 // Get the location in the document that the breakpoint is in.
                 TEXT_POSITION[] startPosition = new TEXT_POSITION[1];
                 TEXT_POSITION[] endPosition = new TEXT_POSITION[1];
                 EngineUtils.CheckOk(docPosition.GetRange(startPosition, endPosition));
-                
+
                 lock (_boundBreakpoints) {
                     if (_bpRequestInfo.guidLanguage == DebuggerConstants.guidLanguagePython) {
                         var bp = _engine.Process.AddBreakpoint(
@@ -131,7 +131,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
                         return VSConstants.S_OK;
                     } else if (_bpRequestInfo.guidLanguage == DebuggerConstants.guidLanguageDjangoTemplate) {
-                        
+
                         // bind a Django template 
                         var bp = _engine.Process.AddDjangoBreakpoint(
                             documentName,
@@ -157,7 +157,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             // TODO: send an instance of IDebugBreakpointErrorEvent2 to the UI and return a valid instance of IDebugErrorBreakpoint2 from
             // IDebugPendingBreakpoint2::EnumErrorBreakpoints. The debugger will then display information about why the breakpoint did not
             // bind to the user.
-            return VSConstants.S_FALSE;            
+            return VSConstants.S_FALSE;
         }
 
         // Determines whether this pending breakpoint can bind to a code location.

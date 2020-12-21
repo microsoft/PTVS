@@ -17,10 +17,10 @@
 using System;
 using System.IO;
 using EnvDTE;
-using Microsoft.VisualStudio.Shell;
-using Microsoft.Win32;
 using Microsoft.VisualStudio.Settings;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Settings;
+using Microsoft.Win32;
 
 namespace Microsoft.PythonTools.Infrastructure {
     internal static class SettingsManagerCreator {
@@ -57,7 +57,7 @@ namespace Microsoft.PythonTools.Infrastructure {
                         }
                     }
                     if (Directory.Exists(devenvRoot)) {
-                        foreach(var subPath in new[] {
+                        foreach (var subPath in new[] {
                             "Common7\\IDE\\devenv.exe",
                             "Common7\\IDE\\vwdexpress.exe",
                             "Common7\\IDE\\wdexpress.exe"

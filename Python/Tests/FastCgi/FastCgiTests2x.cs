@@ -255,7 +255,7 @@ namespace FastCgiTests {
                 }
             }
 
-            using(var p = ProcessOutput.RunHiddenAndCapture(
+            using (var p = ProcessOutput.RunHiddenAndCapture(
                 appCmd, "add", "site", "/name:TestSite",
                 "/bindings:http://localhost:8181",
                 "/physicalPath:" + Path.GetDirectoryName(appHostConfig),
@@ -265,7 +265,7 @@ namespace FastCgiTests {
                 DumpOutput(p);
                 Assert.AreEqual(0, p.ExitCode);
             }
-       }
+        }
 
         private static void DumpOutput(ProcessOutput process) {
             Console.WriteLine(process.Arguments);
@@ -600,7 +600,7 @@ namespace FastCgiTests {
         public void TestFileSystemChangesPackage() {
             var location = TestData.GetTempPath();
             FileUtils.CopyDirectory(TestData.GetPath(@"TestData\WFastCgi\FileSystemChangesPackage"), location);
-            
+
             IisExpressTest(
                 location,
                 new GetAndValidateUrl(
@@ -646,7 +646,7 @@ namespace FastCgiTests {
         public void TestFileSystemChangesDisabled() {
             var location = TestData.GetTempPath();
             FileUtils.CopyDirectory(TestData.GetPath(@"TestData\WFastCgi\FileSystemChangesDisabled"), location);
-            
+
             IisExpressTest(
                 location,
                 new GetAndValidateUrl(
@@ -880,7 +880,7 @@ namespace FastCgiTests {
                 )
             );
         }
-        
+
         [TestMethod, Priority(UnitTestPriority.P1)]
         public void TestBadHeaders4() {
             IisExpressTest(

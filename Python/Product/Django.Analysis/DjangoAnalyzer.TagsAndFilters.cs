@@ -275,7 +275,7 @@ they will be silently ignored.
         }
 
         private static Dictionary<string, string> MakeKnownTagsTable() {
-            return new Dictionary<string, string>() { 
+            return new Dictionary<string, string>() {
                 {"elif", "adds an additional condition to an if block"},
                 {"endfor", "ends a for block"},
                 {"endifequal", "ends an ifequal block"},
@@ -300,8 +300,8 @@ the included template::
 
     {% include ""fob/some_include"" only %}
     {% include ""fob/some_include"" with oar=""1"" only %}
-"}, 
-                {"block", @"Define a block that can be overridden by child templates."}, 
+"},
+                {"block", @"Define a block that can be overridden by child templates."},
                 {"extends", @"Signal that this template extends a parent template.
 
 This tag may be used in two ways: ``{% extends ""base"" %}`` (with quotes)
@@ -309,7 +309,7 @@ uses the literal value ""base"" as the name of the parent template to extend,
 or ``{% extends variable %}`` uses the value of ``variable`` as either the
 name of the parent template to extend (if it evaluates to a string) or as
 the parent tempate itelf (if it evaluates to a Template object).
-"}, 
+"},
                 {"cycle", @"Cycles among the given strings each time this tag is encountered.
 
 Within a loop, cycles among the given strings each time through
@@ -340,10 +340,10 @@ from returning any value::
         <tr class=""{% cycle rowcolors %}"">{# first value will be ""row1"" #}
             ...
         </tr>
-    {% endfor %}"}, 
-                {"comment", @"Ignores everything between ``{% comment %}`` and ``{% endcomment %}``."}, 
-                {"autoescape", @"Force autoescape behavior for this block."}, 
-                {"csrf_token", @""}, 
+    {% endfor %}"},
+                {"comment", @"Ignores everything between ``{% comment %}`` and ``{% endcomment %}``."},
+                {"autoescape", @"Force autoescape behavior for this block."},
+                {"csrf_token", @""},
                 {"debug", @"Outputs a whole load of debugging information, including the current
 context and imported modules.
 
@@ -351,7 +351,7 @@ Sample usage::
 
     <pre>
         {% debug %}
-    </pre>"}, 
+    </pre>"},
                 {"filter", @"Filters the contents of the block through variable filters.
 
 Filters can also be piped through each other, and they can have
@@ -366,7 +366,7 @@ Sample usage::
 Note that the ``escape`` and ``safe`` filters are not acceptable arguments.
 Instead, use the ``autoescape`` tag to manage autoescaping for blocks of
 template code.
-"}, 
+"},
                 {"firstof", @"Outputs the first variable passed that is not False, without escaping.
 
 Outputs nothing if all the passed variables are False.
@@ -396,7 +396,7 @@ If you want to escape the output, use a filter tag::
 
     {% filter force_escape %}
         {% firstof var1 var2 var3 ""fallback value"" %}
-    {% endfilter %}"}, 
+    {% endfilter %}"},
                 {"for", @"Loops over each item in an array.
 
 For example, to display a list of athletes given ``athlete_list``::
@@ -455,7 +455,7 @@ The for loop sets a number of variables available within the loop:
     ``forloop.last``            True if this is the last time through the loop
     ``forloop.parentloop``      For nested loops, this is the loop ""above"" the
                                 current one
-    ==========================  ================================================"}, 
+    ==========================  ================================================"},
                 {"ifequal", @"Outputs the contents of the block if the two arguments equal each other.
 
 Examples::
@@ -468,9 +468,9 @@ Examples::
         ...
     {% else %}
         ...
-    {% endifnotequal %}"}, 
+    {% endifnotequal %}"},
                 {"ifnotequal", @"Outputs the contents of the block if the two arguments are not equal.
-    See ifequal."}, 
+    See ifequal."},
                 {"if", @"The ``{% if %}`` tag evaluates a variable, and if that variable is ""true""
 (i.e., exists, is not empty, and is not a false boolean value), the
 contents of the block are output:
@@ -526,7 +526,7 @@ Arguments and operators _must_ have a space between them, so
 All supported operators are: ``or``, ``and``, ``in``, ``not in``
 ``==`` (or ``=``), ``!=``, ``>``, ``>=``, ``<`` and ``<=``.
 
-Operator precedence follows Python."}, 
+Operator precedence follows Python."},
                 {"ifchanged", @"Checks if a value has changed from the last iteration of a loop.
 
 The ``{% ifchanged %}`` block tag is used within a loop. It has two
@@ -552,7 +552,7 @@ possible uses.
             {% ifchanged date.hour date.date %}
                 {{ date.hour }}
             {% endifchanged %}
-        {% endfor %}"}, 
+        {% endfor %}"},
                 {"ssi", @"Outputs the contents of a given file into the page.
 
 Like a simple ""include"" tag, the ``ssi`` tag includes the contents
@@ -564,7 +564,7 @@ in the current page::
 If the optional ""parsed"" parameter is given, the contents of the included
 file are evaluated as template code, with the current context::
 
-    {% ssi /home/html/ljworld.com/includes/right_generic.html parsed %}"}, 
+    {% ssi /home/html/ljworld.com/includes/right_generic.html parsed %}"},
                 {"load", @"Loads a custom template tag set.
 
 For example, to load the template tags in
@@ -576,7 +576,7 @@ Can also be used to load an individual tag/filter from
 a library::
 
     {% load byline from news %}
-"}, 
+"},
                 {"now", @"Displays the date, formatted according to the given string.
 
 Uses the same format as PHP's ``date()`` function; see http://php.net/date
@@ -584,7 +584,7 @@ for all the possible values.
 
 Sample usage::
 
-    It is {% now ""jS F Y H:i"" %}"}, 
+    It is {% now ""jS F Y H:i"" %}"},
                 {"regroup", @"Regroups a list of alike objects by a common attribute.
 
 This complex tag is best illustrated by use of an example:  say that
@@ -626,7 +626,7 @@ sorted by the key you are grouping by!  This means that if your list of
 people was not sorted by gender, you'd need to make sure it is sorted
 before using it, i.e.::
 
-    {% regroup people|dictsort:""gender"" by gender as grouped %}"}, 
+    {% regroup people|dictsort:""gender"" by gender as grouped %}"},
                 {"spaceless", @"Removes whitespace between HTML tags, including tab and newline characters.
 
     Example usage::
@@ -648,7 +648,7 @@ before using it, i.e.::
             <strong>
                 Hello
             </strong>
-        {% endspaceless %}"}, 
+        {% endspaceless %}"},
                 {"templatetag", @"Outputs one of the bits used to compose template tags.
 
 Since the template system has no concept of ""escaping"", to display one of
@@ -667,7 +667,7 @@ The argument tells which template bit to output:
     ``closebrace``      ``}``
     ``opencomment``     ``{#``
     ``closecomment``    ``#}``
-    ==================  ======="}, 
+    ==================  ======="},
                 {"url", @"Returns an absolute URL matching given view with its parameters.
 
 This is a way to define links that aren't tied to a particular URL
@@ -699,7 +699,7 @@ then in a template you can create a link for a certain client like this::
 
     {% url app_name.client client.id %}
 
-The URL will look like ``/clients/client/123/``."}, 
+The URL will look like ``/clients/client/123/``."},
                 {"widthratio", @"For creating oar charts and such, this tag calculates the ratio of a given
 value to a maximum value, and then applies that ratio to a constant.
 
@@ -709,7 +709,7 @@ For example::
 
 Above, if ``this_value`` is 175 and ``max_value`` is 200, the image in
 the above example will be 88 pixels wide (because 175/200 = .875;
-.875 * 100 = 87.5 which is rounded up to 88)."}, 
+.875 * 100 = 87.5 which is rounded up to 88)."},
                 {"with", @"Adds one or more values to the context (inside of this block) for caching
 and easy access.
 
@@ -726,7 +726,7 @@ Multiple values can be added to the context::
     {% endwith %}
 
 The legacy format of ``{% with person.some_sql_method as total %}`` is
-still accepted."}, 
+still accepted."},
                 {"cache", @"This will cache the contents of a template fragment for a given amount
 of time.
 
@@ -744,7 +744,7 @@ This tag also supports varying by a list of arguments::
         .. some expensive processing ..
     {% endcache %}
 
-Each unique set of arguments will result in a unique cache entry."}, 
+Each unique set of arguments will result in a unique cache entry."},
                 {"localize", @"Forces or prevents localization of values, regardless of the value of
 `settings.USE_L10N`.
 
@@ -752,13 +752,13 @@ Sample usage::
 
     {% localize off %}
         var pi = {{ 3.1415 }};
-    {% endlocalize %}"}, 
+    {% endlocalize %}"},
                 {"localtime", @"Forces or prevents conversion of datetime objects to local time,
 regardless of the value of ``settings.USE_TZ``.
 
 Sample usage::
 
-    {% localtime off %}{{ value_in_utc }}{% endlocaltime %}"}, 
+    {% localtime off %}{{ value_in_utc }}{% endlocaltime %}"},
                 {"timezone", @"Enables a given time zone just for this block.
 
 The ``timezone`` argument must be an instance of a ``tzinfo`` subclass, a
@@ -769,7 +769,7 @@ Sample usage::
 
     {% timezone ""Europe/Paris"" %}
         It is {{ now }} in Paris.
-    {% endtimezone %}"}, 
+    {% endtimezone %}"},
                 {"get_current_timezone", @"Stores the name of the current time zone in the context.
 
 Usage::
@@ -777,7 +777,7 @@ Usage::
     {% get_current_timezone as TIME_ZONE %}
 
 This will fetch the currently active time zone and put its name
-into the ``TIME_ZONE`` context variable."}, 
+into the ``TIME_ZONE`` context variable."},
                 {"get_available_languages", @"This will store a list of available languages
 in the context.
 
@@ -790,7 +790,7 @@ Usage::
 
 This will just pull the LANGUAGES setting from
 your setting file (or the default settings) and
-put it into the named variable."}, 
+put it into the named variable."},
                 {"get_language_info", @"This will store the language information dictionary for the given language
 code in a context variable.
 
@@ -800,7 +800,7 @@ Usage::
     {{ l.code }}
     {{ l.name }}
     {{ l.name_local }}
-    {{ l.bidi|yesno:""bi-directional,uni-directional"" }}"}, 
+    {{ l.bidi|yesno:""bi-directional,uni-directional"" }}"},
                 {"get_language_info_list", @"This will store a list of language information dictionaries for the given
 language codes in a context variable. The language codes can be specified
 either as a list of strings or a settings.LANGUAGES style tuple (or any
@@ -814,7 +814,7 @@ Usage::
         {{ l.name }}
         {{ l.name_local }}
         {{ l.bidi|yesno:""bi-directional,uni-directional"" }}
-    {% endfor %}"}, 
+    {% endfor %}"},
                 {"get_current_language", @"This will store the current language in the context.
 
 Usage::
@@ -823,7 +823,7 @@ Usage::
 
 This will fetch the currently active language and
 put it's value into the ``language`` context
-variable."}, 
+variable."},
                 {"get_current_language_bidi", @"This will store the current language layout in the context.
 
 Usage::
@@ -832,7 +832,7 @@ Usage::
 
 This will fetch the currently active language's layout and
 put it's value into the ``bidi`` context variable.
-True indicates right-to-left layout, otherwise left-to-right"}, 
+True indicates right-to-left layout, otherwise left-to-right"},
                 {"blocktrans", @"This will translate a block of text with parameters.
 
 Usage::
@@ -863,7 +863,7 @@ Contextual translations are supported::
     {% endblocktrans %}
 
 This is equivalent to calling pgettext/npgettext instead of
-(u)gettext/(u)ngettext."}, 
+(u)gettext/(u)ngettext."},
                 {"trans", @"This will mark a string for translation and will
 translate the string for the current language.
 
@@ -901,14 +901,14 @@ Contextual translations are also supported::
 
     {% trans ""this is a test"" context ""greeting"" %}
 
-This is equivalent to calling pgettext instead of (u)gettext."}, 
+This is equivalent to calling pgettext instead of (u)gettext."},
                 {"language", @"This will enable the given language just for this block.
 
 Usage::
 
     {% language ""de"" %}
         This is {{ oar }} and {{ boo }}.
-    {% endlanguage %}"}, 
+    {% endlanguage %}"},
                 {"get_admin_log", @"Populates a template variable with the admin log for the given criteria.
 
 Usage::
@@ -923,7 +923,7 @@ Examples::
 
 Note that ``context_var_containing_user_obj`` can be a hard-coded integer
 (user ID) or the name of a template context variable containing the user
-object whose ID you want."}, 
+object whose ID you want."},
                 {"get_comment_count", @"Gets the comment count for the given params and populates the template
 context with a variable containing that value, whose name is defined by the
 'as' clause.
@@ -937,7 +937,7 @@ Example usage::
 
     {% get_comment_count for event as comment_count %}
     {% get_comment_count for calendar.event event.id as comment_count %}
-    {% get_comment_count for calendar.event 17 as comment_count %}"}, 
+    {% get_comment_count for calendar.event 17 as comment_count %}"},
                 {"get_comment_list", @"Gets the list of comments for the given params and populates the template
 context with a variable containing that value, whose name is defined by the
 'as' clause.
@@ -952,7 +952,7 @@ Example usage::
     {% get_comment_list for event as comment_list %}
     {% for comment in comment_list %}
         ...
-    {% endfor %}"}, 
+    {% endfor %}"},
                 {"render_comment_list", @"Render the comment list (as returned by ``{% get_comment_list %}``)
     through the ``comments/list.html`` template
 
@@ -963,20 +963,20 @@ Example usage::
 
     Example usage::
 
-        {% render_comment_list for event %}"}, 
+        {% render_comment_list for event %}"},
                 {"get_comment_form", @"Get a (new) form object to post a new comment.
 
     Syntax::
 
         {% get_comment_form for [object] as [varname] %}
-        {% get_comment_form for [app].[model] [object_id] as [varname] %}"}, 
+        {% get_comment_form for [app].[model] [object_id] as [varname] %}"},
                 {"render_comment_form", @"Render the comment form (as returned by ``{% render_comment_form %}``) through
     the ``comments/form.html`` template.
 
     Syntax::
 
         {% render_comment_form for [object] %}
-        {% render_comment_form for [app].[model] [object_id] %}"}, 
+        {% render_comment_form for [app].[model] [object_id] %}"},
                 {"get_flatpages", @"Retrieves all flatpage objects available for the current site and
 visible to the specific user (or visible to all users if no user is
 specified). Populates the template context with them in a variable
@@ -1000,7 +1000,7 @@ Example usage::
     {% get_flatpages for someuser as flatpages %}
     {% get_flatpages '/about/' as about_pages %}
     {% get_flatpages prefix as about_pages %}
-    {% get_flatpages '/about/' for someuser as about_pages %}"}, 
+    {% get_flatpages '/about/' for someuser as about_pages %}"},
                 {"lorem", @"Creates random Latin text useful for providing test data in templates.
 
 Usage format::
@@ -1020,7 +1020,7 @@ Examples:
     * ``{% lorem %}`` will output the common ""lorem ipsum"" paragraph
     * ``{% lorem 3 p %}`` will output the common ""lorem ipsum"" paragraph
         and two random paragraphs each wrapped in HTML ``<p>`` tags
-    * ``{% lorem 2 w random %}`` will output two random latin words"}, 
+    * ``{% lorem 2 w random %}`` will output two random latin words"},
                 {"get_static_prefix", @"Populates a template variable with the static prefix,
 ``settings.STATIC_URL``.
 
@@ -1031,7 +1031,7 @@ Usage::
 Examples::
 
     {% get_static_prefix %}
-    {% get_static_prefix as static_prefix %}"}, 
+    {% get_static_prefix as static_prefix %}"},
                 {"get_media_prefix", @"Populates a template variable with the media prefix,
     ``settings.MEDIA_URL``.
 

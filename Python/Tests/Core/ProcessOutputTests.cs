@@ -116,7 +116,7 @@ namespace PythonToolsTests {
         [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
         public void RunInterpreterError() {
-            foreach(var fact in Factories) {
+            foreach (var fact in Factories) {
                 using (var output = ProcessOutput.RunHiddenAndCapture(fact.Configuration.InterpreterPath, "-c", "assert False")) {
                     Console.WriteLine(output.Arguments);
                     Assert.IsTrue(output.Wait(TimeSpan.FromSeconds(30)), "Running " + fact.Configuration.Description + " exceeded timeout");

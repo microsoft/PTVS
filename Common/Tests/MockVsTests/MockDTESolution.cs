@@ -14,166 +14,214 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections;
 using EnvDTE;
 using Microsoft.VisualStudio;
+using System;
+using System.Collections;
 
-namespace Microsoft.VisualStudioTools.MockVsTests {
-    internal class MockDTESolution : Solution {
+namespace Microsoft.VisualStudioTools.MockVsTests
+{
+    internal class MockDTESolution : Solution
+    {
         private readonly MockDTE _dte;
 
-        public MockDTESolution(MockDTE dte) {
+        public MockDTESolution(MockDTE dte)
+        {
             _dte = dte;
         }
 
-        public AddIns AddIns {
-            get {
+        public AddIns AddIns
+        {
+            get
+            {
                 throw new NotImplementedException();
             }
         }
 
-        public int Count {
-            get {
+        public int Count
+        {
+            get
+            {
                 throw new NotImplementedException();
             }
         }
 
-        public DTE DTE {
-            get {
+        public DTE DTE
+        {
+            get
+            {
                 return _dte;
             }
         }
 
-        public string ExtenderCATID {
-            get {
+        public string ExtenderCATID
+        {
+            get
+            {
                 throw new NotImplementedException();
             }
         }
 
-        public object ExtenderNames {
-            get {
+        public object ExtenderNames
+        {
+            get
+            {
                 throw new NotImplementedException();
             }
         }
 
-        public string FileName {
-            get {
+        public string FileName
+        {
+            get
+            {
                 throw new NotImplementedException();
             }
         }
 
-        public string FullName {
-            get {
+        public string FullName
+        {
+            get
+            {
                 throw new NotImplementedException();
             }
         }
 
-        public Globals Globals {
-            get {
+        public Globals Globals
+        {
+            get
+            {
                 throw new NotImplementedException();
             }
         }
 
-        public bool IsDirty {
-            get {
+        public bool IsDirty
+        {
+            get
+            {
                 throw new NotImplementedException();
             }
 
-            set {
-                throw new NotImplementedException();
-            }
-        }
-
-        public bool IsOpen {
-            get {
+            set
+            {
                 throw new NotImplementedException();
             }
         }
 
-        public DTE Parent {
-            get {
+        public bool IsOpen
+        {
+            get
+            {
                 throw new NotImplementedException();
             }
         }
 
-        public Projects Projects {
-            get {
+        public DTE Parent
+        {
+            get
+            {
                 throw new NotImplementedException();
             }
         }
 
-        public Properties Properties {
-            get {
+        public Projects Projects
+        {
+            get
+            {
                 throw new NotImplementedException();
             }
         }
 
-        public bool Saved {
-            get {
-                throw new NotImplementedException();
-            }
-
-            set {
-                throw new NotImplementedException();
-            }
-        }
-
-        public SolutionBuild SolutionBuild {
-            get {
+        public Properties Properties
+        {
+            get
+            {
                 throw new NotImplementedException();
             }
         }
 
-        public Project AddFromFile(string FileName, bool Exclusive = false) {
+        public bool Saved
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+
+            set
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public SolutionBuild SolutionBuild
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public Project AddFromFile(string FileName, bool Exclusive = false)
+        {
             throw new NotImplementedException();
         }
 
-        public Project AddFromTemplate(string FileName, string Destination, string ProjectName, bool Exclusive = false) {
+        public Project AddFromTemplate(string FileName, string Destination, string ProjectName, bool Exclusive = false)
+        {
             throw new NotImplementedException();
         }
 
-        public void Close(bool SaveFirst = false) {
+        public void Close(bool SaveFirst = false)
+        {
             ErrorHandler.ThrowOnFailure(_dte._vs.Solution.Close());
         }
 
-        public void Create(string Destination, string Name) {
+        public void Create(string Destination, string Name)
+        {
             throw new NotImplementedException();
         }
 
-        public ProjectItem FindProjectItem(string FileName) {
+        public ProjectItem FindProjectItem(string FileName)
+        {
             throw new NotImplementedException();
         }
 
-        public IEnumerator GetEnumerator() {
+        public IEnumerator GetEnumerator()
+        {
             throw new NotImplementedException();
         }
 
-        public object get_Extender(string ExtenderName) {
+        public object get_Extender(string ExtenderName)
+        {
             throw new NotImplementedException();
         }
 
-        public string get_TemplatePath(string ProjectType) {
+        public string get_TemplatePath(string ProjectType)
+        {
             throw new NotImplementedException();
         }
 
-        public Project Item(object index) {
+        public Project Item(object index)
+        {
             throw new NotImplementedException();
         }
 
-        public void Open(string FileName) {
+        public void Open(string FileName)
+        {
             throw new NotImplementedException();
         }
 
-        public string ProjectItemsTemplatePath(string ProjectKind) {
+        public string ProjectItemsTemplatePath(string ProjectKind)
+        {
             throw new NotImplementedException();
         }
 
-        public void Remove(Project proj) {
+        public void Remove(Project proj)
+        {
             throw new NotImplementedException();
         }
 
-        public void SaveAs(string FileName) {
+        public void SaveAs(string FileName)
+        {
             throw new NotImplementedException();
         }
     }

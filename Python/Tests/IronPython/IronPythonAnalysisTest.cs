@@ -6694,7 +6694,7 @@ def f(s = 123) -> s:
             entry.AssertIsInstance("s", text.IndexOf("s:"), BuiltinTypeId.NoneType);
             entry.AssertIsInstance("s", text.IndexOf("return"), BuiltinTypeId.Int);
         }
-        
+
         [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void FunctoolsWraps() {
             var text = @"

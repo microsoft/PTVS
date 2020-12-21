@@ -16,13 +16,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
-using System.Text;
-using Microsoft.IronPythonTools.Interpreter;
 using System.Reflection;
 using System.Runtime.Remoting;
+using System.Text;
+using Microsoft.IronPythonTools.Interpreter;
 using Microsoft.PythonTools.Interpreter;
-using System.Diagnostics;
 
 namespace Microsoft.IronPythonTools.Interpreter {
     class RemoteInterpreterProxy : MarshalByRefObject {

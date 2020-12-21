@@ -111,7 +111,7 @@ namespace Microsoft.PythonTools.Project {
 
     sealed class CondaEnvCreateProjectInfoBar : CondaEnvCreateInfoBar {
         public CondaEnvCreateProjectInfoBar(IServiceProvider site, PythonProjectNode projectNode)
-            :base (site) {
+            : base(site) {
             Project = projectNode ?? throw new ArgumentNullException(nameof(projectNode));
         }
 

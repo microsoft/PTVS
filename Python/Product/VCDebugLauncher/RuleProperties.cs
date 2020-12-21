@@ -18,7 +18,7 @@ using System.ComponentModel.Composition;
 using Microsoft.VisualStudio.ProjectSystem;
 using Microsoft.VisualStudio.ProjectSystem.Properties;
 
-namespace Microsoft.PythonTools.Debugger.VCLauncher.Rules  {
+namespace Microsoft.PythonTools.Debugger.VCLauncher.Rules {
 
     [Export]
     [AppliesTo(ProjectCapabilities.VisualC)]

@@ -18,13 +18,15 @@ using System.Collections.Generic;
 using System.IO;
 using MSBuild = Microsoft.Build.Evaluation;
 
-namespace TestUtilities.SharedProject {
+namespace TestUtilities.SharedProject
+{
     /// <summary>
     /// Generates a custom msbuild item .
     /// 
     /// The item is added to the project if not excluded.
     /// </summary>
-    public sealed class CustomItem : ProjectContentGenerator {
+    public sealed class CustomItem : ProjectContentGenerator
+    {
         public readonly string Name, Content, ItemType;
         public readonly bool IsExcluded;
         public readonly bool IsMissing;
@@ -33,7 +35,8 @@ namespace TestUtilities.SharedProject {
         /// <summary>
         /// Creates a new custom item with the specifed type, name, content, and metadata.
         /// </summary>
-        public CustomItem(string itemType, string name, string content = null, bool isExcluded = false, bool isMissing = false, IEnumerable<KeyValuePair<string, string>> metadata = null) {
+        public CustomItem(string itemType, string name, string content = null, bool isExcluded = false, bool isMissing = false, IEnumerable<KeyValuePair<string, string>> metadata = null)
+        {
             ItemType = itemType;
             Name = name;
             IsExcluded = isExcluded;
@@ -42,13 +45,16 @@ namespace TestUtilities.SharedProject {
             Metadata = metadata;
         }
 
-        public override void Generate(ProjectType projectType, MSBuild.Project project) {
+        public override void Generate(ProjectType projectType, MSBuild.Project project)
+        {
             var filename = Path.Combine(project.DirectoryPath, Name);
-            if (!IsMissing) {
+            if (!IsMissing)
+            {
                 File.WriteAllText(filename, Content);
             }
 
-            if (!IsExcluded) {
+            if (!IsExcluded)
+            {
                 project.AddItem(
                     ItemType,
                     Name,

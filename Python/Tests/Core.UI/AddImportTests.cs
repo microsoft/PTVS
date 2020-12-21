@@ -193,40 +193,40 @@ sub_package";
         public void Parameters(VisualStudioApp app) {
             var getreclimit = new[] { "from sys import getrecursionlimit" };
 
-                var project = app.OpenProject(@"TestData\AddImport.sln");
-                var item = project.ProjectItems.Item("Parameters.py");
-                var window = item.Open();
-                window.Activate();
+            var project = app.OpenProject(@"TestData\AddImport.sln");
+            var item = project.ProjectItems.Item("Parameters.py");
+            var window = item.Open();
+            window.Activate();
 
-                var doc = app.GetDocument(item.Document.FullName);
+            var doc = app.GetDocument(item.Document.FullName);
 
-                AddLightBulbTest(doc, 1, 19, _NoLightBulbs);
-                AddLightBulbTest(doc, 1, 30, getreclimit);
+            AddLightBulbTest(doc, 1, 19, _NoLightBulbs);
+            AddLightBulbTest(doc, 1, 30, getreclimit);
 
-                AddLightBulbTest(doc, 4, 18, _NoLightBulbs);
-                AddLightBulbTest(doc, 7, 18, _NoLightBulbs);
-                AddLightBulbTest(doc, 10, 20, _NoLightBulbs);
-                AddLightBulbTest(doc, 13, 22, _NoLightBulbs);
-                AddLightBulbTest(doc, 16, 22, _NoLightBulbs);
-                AddLightBulbTest(doc, 19, 22, _NoLightBulbs);
+            AddLightBulbTest(doc, 4, 18, _NoLightBulbs);
+            AddLightBulbTest(doc, 7, 18, _NoLightBulbs);
+            AddLightBulbTest(doc, 10, 20, _NoLightBulbs);
+            AddLightBulbTest(doc, 13, 22, _NoLightBulbs);
+            AddLightBulbTest(doc, 16, 22, _NoLightBulbs);
+            AddLightBulbTest(doc, 19, 22, _NoLightBulbs);
 
-                AddLightBulbTest(doc, 19, 35, getreclimit);
+            AddLightBulbTest(doc, 19, 35, getreclimit);
 
-                AddLightBulbTest(doc, 22, 25, _NoLightBulbs);
-                AddLightBulbTest(doc, 22, 56, getreclimit);
+            AddLightBulbTest(doc, 22, 25, _NoLightBulbs);
+            AddLightBulbTest(doc, 22, 56, getreclimit);
 
-                AddLightBulbTest(doc, 25, 38, _NoLightBulbs);
-                AddLightBulbTest(doc, 25, 38, _NoLightBulbs);
-                AddLightBulbTest(doc, 25, 48, getreclimit);
+            AddLightBulbTest(doc, 25, 38, _NoLightBulbs);
+            AddLightBulbTest(doc, 25, 38, _NoLightBulbs);
+            AddLightBulbTest(doc, 25, 48, getreclimit);
 
-                AddLightBulbTest(doc, 29, 12, _NoLightBulbs);
-                AddLightBulbTest(doc, 29, 42, getreclimit);
+            AddLightBulbTest(doc, 29, 12, _NoLightBulbs);
+            AddLightBulbTest(doc, 29, 42, getreclimit);
 
-                AddLightBulbTest(doc, 34, 26, _NoLightBulbs);
-                AddLightBulbTest(doc, 34, 31, getreclimit);
+            AddLightBulbTest(doc, 34, 26, _NoLightBulbs);
+            AddLightBulbTest(doc, 34, 31, getreclimit);
 
-                AddLightBulbTest(doc, 42, 16, _NoLightBulbs);
-                AddLightBulbTest(doc, 51, 16, _NoLightBulbs);
+            AddLightBulbTest(doc, 42, 16, _NoLightBulbs);
+            AddLightBulbTest(doc, 51, 16, _NoLightBulbs);
         }
 
         /// <summary>

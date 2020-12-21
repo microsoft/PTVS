@@ -14,27 +14,34 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using Microsoft.VisualStudio.Language.Intellisense;
 using System;
 using System.Collections.ObjectModel;
-using Microsoft.VisualStudio.Language.Intellisense;
 
-namespace PythonToolsMockTests {
-    class MockIntellisenseSessionStack : IIntellisenseSessionStack {
+namespace PythonToolsMockTests
+{
+    class MockIntellisenseSessionStack : IIntellisenseSessionStack
+    {
         private readonly ObservableCollection<IIntellisenseSession> _stack = new ObservableCollection<IIntellisenseSession>();
 
-        public void CollapseAllSessions() {
+        public void CollapseAllSessions()
+        {
             _stack.Clear();
         }
 
-        public void MoveSessionToTop(IIntellisenseSession session) {
-            if (!_stack.Remove(session)) {
+        public void MoveSessionToTop(IIntellisenseSession session)
+        {
+            if (!_stack.Remove(session))
+            {
                 throw new InvalidOperationException();
             }
             PushSession(session);
         }
 
-        public IIntellisenseSession PopSession() {
-            if (_stack.Count == 0) {
+        public IIntellisenseSession PopSession()
+        {
+            if (_stack.Count == 0)
+            {
                 throw new InvalidOperationException();
             }
             var last = _stack[_stack.Count - 1];
@@ -42,30 +49,40 @@ namespace PythonToolsMockTests {
             return last;
         }
 
-        public void PushSession(IIntellisenseSession session) {
+        public void PushSession(IIntellisenseSession session)
+        {
             session.Dismissed += session_Dismissed;
             _stack.Add(session);
         }
 
-        void session_Dismissed(object sender, EventArgs e) {
+        void session_Dismissed(object sender, EventArgs e)
+        {
             var session = (IIntellisenseSession)sender;
-            if (session == TopSession) {
+            if (session == TopSession)
+            {
                 session.Dismissed -= session_Dismissed;
                 PopSession();
-            } else {
+            }
+            else
+            {
                 throw new NotImplementedException();
             }
         }
 
-        public ReadOnlyObservableCollection<IIntellisenseSession> Sessions {
-            get {
+        public ReadOnlyObservableCollection<IIntellisenseSession> Sessions
+        {
+            get
+            {
                 return new ReadOnlyObservableCollection<IIntellisenseSession>(_stack);
             }
         }
 
-        public IIntellisenseSession TopSession {
-            get {
-                if (_stack.Count == 0) {
+        public IIntellisenseSession TopSession
+        {
+            get
+            {
+                if (_stack.Count == 0)
+                {
                     return null;
                 }
                 return _stack[_stack.Count - 1];

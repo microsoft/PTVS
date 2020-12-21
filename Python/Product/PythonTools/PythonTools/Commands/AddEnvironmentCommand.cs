@@ -17,9 +17,9 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.PythonTools.Infrastructure.Commands;
 using Microsoft.PythonTools.Environments;
+using Microsoft.PythonTools.Infrastructure.Commands;
+using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.PythonTools.Commands {
     class AddEnvironmentCommand : IAsyncCommand {

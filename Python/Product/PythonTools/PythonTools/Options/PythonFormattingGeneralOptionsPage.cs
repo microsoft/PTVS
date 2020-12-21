@@ -40,7 +40,7 @@ namespace Microsoft.PythonTools.Options {
         public override void LoadSettingsFromStorage() {
             // Load settings from storage.
             PyService.AdvancedOptions.Load();
-            
+
             // Synchronize UI with backing properties.
             if (_window != null) {
                 _window.SyncControlWithPageSettings(PyService);

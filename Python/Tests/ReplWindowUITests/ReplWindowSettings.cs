@@ -63,7 +63,7 @@ namespace ReplWindowUITests {
                     SourceFileName = "string",
                     ExitHelp = ReplWindowProxySettings.IronPython27ExitHelp,
                 }
-            },            
+            },
             {
                 "Python35",
                 new ReplWindowProxySettings {

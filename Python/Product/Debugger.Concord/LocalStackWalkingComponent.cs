@@ -35,8 +35,7 @@ namespace Microsoft.PythonTools.Debugger.Concord {
     public class LocalStackWalkingComponent :
         ComponentBase,
         IDkmModuleInstanceLoadNotification,
-        IDkmRuntimeInstanceLoadNotification
-    {
+        IDkmRuntimeInstanceLoadNotification {
 
         public LocalStackWalkingComponent()
             : base(Guids.LocalStackWalkingComponentGuid) {

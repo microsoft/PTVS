@@ -37,7 +37,7 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
         public string ResultsXmlPath { get; }
 
         public IList<string> GetExecutionArguments(IEnumerable<TestCase> tests, PythonProjectSettings settings) {
-            
+
             if (tests is null) {
                 throw new ArgumentNullException(nameof(tests));
             }

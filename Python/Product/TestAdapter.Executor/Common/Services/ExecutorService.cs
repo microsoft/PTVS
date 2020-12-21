@@ -73,9 +73,9 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
         }
 
         internal ExecutorService(
-            ITestConfiguration config, 
-            PythonProjectSettings projectSettings, 
-            IFrameworkHandle frameworkHandle, 
+            ITestConfiguration config,
+            PythonProjectSettings projectSettings,
+            IFrameworkHandle frameworkHandle,
             IRunContext runContext
         ) {
             _testConfig = config ?? throw new ArgumentNullException(nameof(config));

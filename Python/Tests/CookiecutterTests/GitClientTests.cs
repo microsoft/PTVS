@@ -25,7 +25,7 @@ namespace CookiecutterTests {
     public class GitClientTests {
         private const string GitHubWindowsIncompatibleRepoUrl = "https://github.com/huguesv/cookiecutter-pyvanguard";
 
-       [TestMethod]
+        [TestMethod]
         public async Task CloneWindowsIncompatibleRepo() {
             var client = GitClientProvider.Create(null, null);
 

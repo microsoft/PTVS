@@ -14,11 +14,11 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.Win32.SafeHandles;
 using System;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
+using Microsoft.Win32.SafeHandles;
 using TestUtilities;
 
 namespace DebuggerTests {
@@ -30,7 +30,7 @@ namespace DebuggerTests {
         // they're not enabled by default, but can be switched on for debugging.
         private const MINIDUMP_TYPE minidumpType =
             MINIDUMP_TYPE.MiniDumpNormal;
-            //MINIDUMP_TYPE.MiniDumpWithFullMemory;
+        //MINIDUMP_TYPE.MiniDumpWithFullMemory;
 
         private Process _process;
 

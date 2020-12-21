@@ -31,7 +31,7 @@ namespace Microsoft.PythonTools {
         private readonly IServiceProvider _serviceProvider;
 
         [ImportingConstructor]
-        public PythonFeedbackDiagnosticFileProvider([Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider) {
+        public PythonFeedbackDiagnosticFileProvider([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider) {
             _serviceProvider = serviceProvider;
         }
 

@@ -295,7 +295,7 @@ namespace Microsoft.PythonTools.Language {
                     }
                 }
             }
-           
+
             public override uint CategoryField(LIB_CATEGORY lIB_CATEGORY) {
                 return (uint)(_LIB_LISTTYPE.LLT_HIERARCHY | _LIB_LISTTYPE.LLT_MEMBERS | _LIB_LISTTYPE.LLT_PACKAGE);
             }
@@ -466,7 +466,7 @@ namespace Microsoft.PythonTools.Language {
             }
 
             public string GetTextRepresentation(VSTREETEXTOPTIONS options) {
-                switch(options) {
+                switch (options) {
                     case VSTREETEXTOPTIONS.TTO_DISPLAYTEXT:
                         return _name;
                 }
@@ -486,7 +486,7 @@ namespace Microsoft.PythonTools.Language {
             }
 
             public VSTREEDISPLAYDATA DisplayData {
-                get { 
+                get {
                     var res = new VSTREEDISPLAYDATA();
                     res.Image = res.SelectedImage = (ushort)_glyphGroup;
                     return res;
@@ -694,7 +694,7 @@ namespace Microsoft.PythonTools.Language {
                                     );
                                     edit.Apply();
                                 }
-                                
+
                                 return VSConstants.S_OK;
                             }
                         }
@@ -968,7 +968,7 @@ namespace Microsoft.PythonTools.Language {
             }
         }
 
-#endregion
+        #endregion
 
         internal void DoIdle(IOleComponentManager compMgr) {
         }

@@ -20,7 +20,7 @@ using Microsoft.VisualStudio.Text;
 namespace Microsoft.PythonTools.Intellisense {
     class SnapshotCookie : IIntellisenseCookie {
         private readonly WeakReference<ITextSnapshot> _snapshot;
-        
+
         public SnapshotCookie(ITextSnapshot snapshot) {
             _snapshot = new WeakReference<ITextSnapshot>(snapshot);
         }

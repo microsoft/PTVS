@@ -14,6 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -22,10 +23,11 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace TestUtilities {
-    public static class FileUtils {
+namespace TestUtilities
+{
+    public static class FileUtils
+    {
         /// <summary>
         /// Safely enumerates all subdirectories under a given root. If a
         /// subdirectory is inaccessible, it will not be returned (compare and
@@ -47,34 +49,47 @@ namespace TestUtilities {
             string root,
             bool recurse = true,
             bool fullPaths = true
-        ) {
+        )
+        {
             var queue = new Queue<string>();
-            if (!root.EndsWith("\\", StringComparison.Ordinal)) {
+            if (!root.EndsWith("\\", StringComparison.Ordinal))
+            {
                 root += "\\";
             }
             queue.Enqueue(root);
 
-            while (queue.Any()) {
+            while (queue.Any())
+            {
                 var path = queue.Dequeue();
-                if (!path.EndsWith("\\", StringComparison.Ordinal)) {
+                if (!path.EndsWith("\\", StringComparison.Ordinal))
+                {
                     path += "\\";
                 }
 
                 IEnumerable<string> dirs = null;
-                try {
+                try
+                {
                     dirs = Directory.GetDirectories(path);
-                } catch (UnauthorizedAccessException) {
-                } catch (IOException) {
                 }
-                if (dirs == null) {
+                catch (UnauthorizedAccessException)
+                {
+                }
+                catch (IOException)
+                {
+                }
+                if (dirs == null)
+                {
                     continue;
                 }
 
-                foreach (var d in dirs) {
-                    if (!fullPaths && !d.StartsWith(root, StringComparison.OrdinalIgnoreCase)) {
+                foreach (var d in dirs)
+                {
+                    if (!fullPaths && !d.StartsWith(root, StringComparison.OrdinalIgnoreCase))
+                    {
                         continue;
                     }
-                    if (recurse) {
+                    if (recurse)
+                    {
                         queue.Enqueue(d);
                     }
                     yield return fullPaths ? d : d.Substring(root.Length);
@@ -106,36 +121,51 @@ namespace TestUtilities {
             string pattern = "*",
             bool recurse = true,
             bool fullPaths = true
-        ) {
-            if (!root.EndsWith("\\", StringComparison.Ordinal)) {
+        )
+        {
+            if (!root.EndsWith("\\", StringComparison.Ordinal))
+            {
                 root += "\\";
             }
 
             var dirs = Enumerable.Repeat(root, 1);
-            if (recurse) {
+            if (recurse)
+            {
                 dirs = dirs.Concat(EnumerateDirectories(root, true, false));
             }
 
-            foreach (var dir in dirs) {
+            foreach (var dir in dirs)
+            {
                 var fullDir = Path.IsPathRooted(dir) ? dir : (root + dir);
                 var dirPrefix = Path.IsPathRooted(dir) ? "" : (dir.EndsWith("\\", StringComparison.Ordinal) ? dir : (dir + "\\"));
 
                 IEnumerable<string> files = null;
-                try {
+                try
+                {
                     files = Directory.GetFiles(fullDir, pattern);
-                } catch (UnauthorizedAccessException) {
-                } catch (IOException) {
                 }
-                if (files == null) {
+                catch (UnauthorizedAccessException)
+                {
+                }
+                catch (IOException)
+                {
+                }
+                if (files == null)
+                {
                     continue;
                 }
 
-                foreach (var f in files) {
-                    if (fullPaths) {
+                foreach (var f in files)
+                {
+                    if (fullPaths)
+                    {
                         yield return f;
-                    } else {
+                    }
+                    else
+                    {
                         var relPath = dirPrefix + Path.GetFileName(f);
-                        if (File.Exists(root + relPath)) {
+                        if (File.Exists(root + relPath))
+                        {
                             yield return relPath;
                         }
                     }
@@ -145,21 +175,29 @@ namespace TestUtilities {
 
         public static void CopyDirectory(string sourceDir, string destDir) => CopyDirectory(sourceDir, destDir, false);
 
-        public static void CopyDirectory(string sourceDir, string destDir, bool tryHardLinkFirst) {
+        public static void CopyDirectory(string sourceDir, string destDir, bool tryHardLinkFirst)
+        {
             sourceDir = sourceDir.TrimEnd('\\');
             destDir = destDir.TrimEnd('\\');
-            try {
+            try
+            {
                 Directory.CreateDirectory(destDir);
-            } catch (IOException) {
+            }
+            catch (IOException)
+            {
             }
 
             var newDirectories = new HashSet<string>(EnumerateDirectories(sourceDir, fullPaths: false), StringComparer.OrdinalIgnoreCase);
             newDirectories.ExceptWith(EnumerateDirectories(destDir, fullPaths: false));
 
-            foreach (var newDir in newDirectories.OrderBy(i => i.Length).Select(i => Path.Combine(destDir, i))) {
-                try {
+            foreach (var newDir in newDirectories.OrderBy(i => i.Length).Select(i => Path.Combine(destDir, i)))
+            {
+                try
+                {
                     Directory.CreateDirectory(newDir);
-                } catch {
+                }
+                catch
+                {
                     Debug.WriteLine("Failed to create directory " + newDir);
                 }
             }
@@ -167,87 +205,124 @@ namespace TestUtilities {
             var newFiles = new HashSet<string>(EnumerateFiles(sourceDir, fullPaths: false), StringComparer.OrdinalIgnoreCase);
             newFiles.ExceptWith(EnumerateFiles(destDir, fullPaths: false));
 
-            foreach (var newFile in newFiles) {
+            foreach (var newFile in newFiles)
+            {
                 var copyFrom = Path.Combine(sourceDir, newFile);
                 var copyTo = Path.Combine(destDir, newFile);
 
-                if (tryHardLinkFirst) {
-                    if (NativeMethods.CreateHardLink(copyTo, copyFrom, IntPtr.Zero)) {
+                if (tryHardLinkFirst)
+                {
+                    if (NativeMethods.CreateHardLink(copyTo, copyFrom, IntPtr.Zero))
+                    {
                         continue;
                     }
                     Debug.WriteLine("Failed to hard link " + copyFrom + " to " + copyTo + ". Trying copy");
                 }
 
-                try {
+                try
+                {
                     File.Copy(copyFrom, copyTo);
                     File.SetAttributes(copyTo, FileAttributes.Normal);
-                } catch {
+                }
+                catch
+                {
                     Debug.WriteLine("Failed to copy " + copyFrom + " to " + copyTo);
                 }
             }
         }
 
-        public static void DeleteDirectory(string path) {
+        public static void DeleteDirectory(string path)
+        {
             Trace.TraceInformation("Removing directory: {0}", path);
             NativeMethods.RecursivelyDeleteDirectory(path, silent: true);
         }
 
-        public static void Delete(string path) {
-            for (int retries = 10; retries > 0 && File.Exists(path); --retries) {
-                try {
+        public static void Delete(string path)
+        {
+            for (int retries = 10; retries > 0 && File.Exists(path); --retries)
+            {
+                try
+                {
                     File.SetAttributes(path, FileAttributes.Normal);
                     File.Delete(path);
                     return;
-                } catch (IOException) {
-                } catch (UnauthorizedAccessException) {
+                }
+                catch (IOException)
+                {
+                }
+                catch (UnauthorizedAccessException)
+                {
                 }
                 Thread.Sleep(100);
             }
         }
 
-        public static IDisposable Backup(string path) {
+        public static IDisposable Backup(string path)
+        {
             var backup = Path.GetTempFileName();
             File.Delete(backup);
             File.Copy(path, backup);
             return new FileRestorer(path, backup);
         }
 
-        public static IDisposable TemporaryTextFile(out string path, string content) {
+        public static IDisposable TemporaryTextFile(out string path, string content)
+        {
             var tempPath = TestData.GetTempPath();
-            for (int retries = 100; retries > 0; --retries) {
+            for (int retries = 100; retries > 0; --retries)
+            {
                 path = Path.Combine(tempPath, Path.GetRandomFileName());
-                try {
+                try
+                {
                     using (var stream = new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.None))
-                    using (var writer = new StreamWriter(stream, Encoding.Default, 128, true)) {
+                    using (var writer = new StreamWriter(stream, Encoding.Default, 128, true))
+                    {
                         writer.Write(content);
                         return new FileDeleter(path);
                     }
-                } catch (IOException) {
-                } catch (UnauthorizedAccessException) {
+                }
+                catch (IOException)
+                {
+                }
+                catch (UnauthorizedAccessException)
+                {
                 }
             }
             Assert.Fail("Failed to create temporary file.");
             throw new InvalidOperationException();
         }
 
-        private sealed class FileDeleter : IDisposable {
+        private sealed class FileDeleter : IDisposable
+        {
             private readonly string _path;
 
-            public FileDeleter(string path) {
+            public FileDeleter(string path)
+            {
                 _path = path;
             }
-            
-            public void Dispose() {
-                for (int retries = 10; retries > 0; --retries) {
-                    try {
+
+            public void Dispose()
+            {
+                for (int retries = 10; retries > 0; --retries)
+                {
+                    try
+                    {
                         File.Delete(_path);
                         return;
-                    } catch (IOException) {
-                    } catch (UnauthorizedAccessException) {
-                        try {
+                    }
+                    catch (IOException)
+                    {
+                    }
+                    catch (UnauthorizedAccessException)
+                    {
+                        try
+                        {
                             File.SetAttributes(_path, FileAttributes.Normal);
-                        } catch (IOException) {
-                        } catch (UnauthorizedAccessException) {
+                        }
+                        catch (IOException)
+                        {
+                        }
+                        catch (UnauthorizedAccessException)
+                        {
                         }
                     }
                     Thread.Sleep(100);
@@ -256,26 +331,40 @@ namespace TestUtilities {
         }
 
 
-        private sealed class FileRestorer : IDisposable {
+        private sealed class FileRestorer : IDisposable
+        {
             private readonly string _original, _backup;
 
-            public FileRestorer(string original, string backup) {
+            public FileRestorer(string original, string backup)
+            {
                 _original = original;
                 _backup = backup;
             }
 
-            public void Dispose() {
-                for (int retries = 10; retries > 0; --retries) {
-                    try {
+            public void Dispose()
+            {
+                for (int retries = 10; retries > 0; --retries)
+                {
+                    try
+                    {
                         File.Delete(_original);
                         File.Move(_backup, _original);
                         return;
-                    } catch (IOException) {
-                    } catch (UnauthorizedAccessException) {
-                        try {
+                    }
+                    catch (IOException)
+                    {
+                    }
+                    catch (UnauthorizedAccessException)
+                    {
+                        try
+                        {
                             File.SetAttributes(_original, FileAttributes.Normal);
-                        } catch (IOException) {
-                        } catch (UnauthorizedAccessException) {
+                        }
+                        catch (IOException)
+                        {
+                        }
+                        catch (UnauthorizedAccessException)
+                        {
                         }
                     }
                     Thread.Sleep(100);

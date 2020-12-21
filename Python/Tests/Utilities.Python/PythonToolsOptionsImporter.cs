@@ -37,7 +37,7 @@ namespace TestUtilities.Python {
             SaveStringMethodInfo = typeof(IPythonToolsOptionsService).GetMethod(nameof(IPythonToolsOptionsService.SaveString));
         }
 
-        private static readonly Lazy<Action<IPythonToolsOptionsService, CodeFormattingOptions>[]> ImportFromCodeFormattingOptionsLazy 
+        private static readonly Lazy<Action<IPythonToolsOptionsService, CodeFormattingOptions>[]> ImportFromCodeFormattingOptionsLazy
             = new Lazy<Action<IPythonToolsOptionsService, CodeFormattingOptions>[]>(CreateCodeFormattingOptionsImporters);
 
         public static void ImportFrom(this IPythonToolsOptionsService service, CodeFormattingOptions options) {
@@ -45,7 +45,7 @@ namespace TestUtilities.Python {
                 importer(service, options);
             }
         }
-        
+
         private static Action<IPythonToolsOptionsService, CodeFormattingOptions>[] CreateCodeFormattingOptionsImporters() => typeof(CodeFormattingOptions)
             .GetProperties()
             .Where(HasCategory)

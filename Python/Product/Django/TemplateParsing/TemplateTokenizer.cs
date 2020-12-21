@@ -67,14 +67,14 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                         if (res != null) {
                             _readToken = res;
                             return new TemplateToken(TemplateTokenKind.Text, start, end);
-                        }                        
+                        }
                         break;
                     case -1:
                         // EOF
                         return new TemplateToken(TemplateTokenKind.Text, start, _position - 1);
                 }
             }
-            
+
         }
 
         private TemplateToken? TryReadTemplateTag(int start) {
@@ -91,8 +91,8 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
         }
 
         public TemplateToken? ReadToClose(int start, TemplateTokenKind kind, char closeType) {
-            var prevChar = ReadChar();            
-            for (; ; ) {               
+            var prevChar = ReadChar();
+            for (; ; ) {
                 if (prevChar == -1) {
                     return new TemplateToken(kind, start, _position - 1, isClosed: false);
                 } else if (prevChar == closeType) {
@@ -103,7 +103,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                 } else {
                     prevChar = ReadChar();
                 }
-            }            
+            }
         }
 
         private int ReadChar() {

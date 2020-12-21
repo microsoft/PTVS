@@ -33,7 +33,7 @@ namespace Microsoft.PythonTools.Interpreter {
         /// The UI behavior of the interpreter.
         /// </summary>
         public InterpreterUIMode UIMode { get; }
-        
+
         /// <summary>
         /// Reconstructs an interpreter configuration from a dictionary.
         /// </summary>

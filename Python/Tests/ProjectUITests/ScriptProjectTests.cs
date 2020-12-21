@@ -45,7 +45,7 @@ namespace ProjectUITests {
         public void RenameStartupFileFolder(VisualStudioApp app, ProjectGenerator pg) {
             foreach (var projectType in pg.ProjectTypes) {
                 var testDef = new ProjectDefinition(
-                    "RenameStartupFileFolder", 
+                    "RenameStartupFileFolder",
                     projectType,
                     ProjectGenerator.Folder("Folder"),
                     ProjectGenerator.Compile("Folder\\server"),

@@ -194,6 +194,6 @@ namespace Microsoft.PythonTools.TestAdapter {
                 return strRet;
             }
         }
-        
+
     }
 }

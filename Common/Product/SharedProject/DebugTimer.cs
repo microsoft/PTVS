@@ -17,8 +17,10 @@
 using System;
 using System.Diagnostics;
 
-namespace Microsoft.VisualStudioTools {
-    struct DebugTimer : IDisposable {
+namespace Microsoft.VisualStudioTools
+{
+    struct DebugTimer : IDisposable
+    {
 #if DEBUG
         internal static Stopwatch _timer = MakeStopwatch();
         private readonly long _start, _minReportTime;
@@ -37,7 +39,8 @@ namespace Microsoft.VisualStudioTools {
         /// </summary>
         /// <param name="description">The message which is logged in addition to the timing information</param>
         /// <param name="minReportTime">The minimum amount of time (in milliseconds) which needs to elapse for a message to be logged</param>
-        public DebugTimer(string description, long minReportTime = 0) {
+        public DebugTimer(string description, long minReportTime = 0)
+        {
 #if DEBUG
             _start = _timer.ElapsedMilliseconds;
             _description = description;
@@ -48,7 +51,8 @@ namespace Microsoft.VisualStudioTools {
 
         #region IDisposable Members
 
-        public void Dispose() {
+        public void Dispose()
+        {
 #if DEBUG
             var elapsed = _timer.ElapsedMilliseconds - _start;
             if (elapsed >= _minReportTime) {

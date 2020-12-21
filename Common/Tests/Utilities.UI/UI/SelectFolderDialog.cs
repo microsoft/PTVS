@@ -14,52 +14,65 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Windows.Automation;
 using System.Windows.Input;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace TestUtilities.UI {
-    public class SelectFolderDialog : AutomationDialog {
+namespace TestUtilities.UI
+{
+    public class SelectFolderDialog : AutomationDialog
+    {
         public SelectFolderDialog(VisualStudioApp app, AutomationElement element)
-            : base(app, element) {
+            : base(app, element)
+        {
         }
 
-        public static SelectFolderDialog AddExistingFolder(VisualStudioApp app) {
+        public static SelectFolderDialog AddExistingFolder(VisualStudioApp app)
+        {
             return new SelectFolderDialog(
                 app,
                 AutomationElement.FromHandle(app.OpenDialogWithDteExecuteCommand("Project.AddExistingFolder"))
             );
         }
 
-        public static SelectFolderDialog AddFolderToSearchPath(VisualStudioApp app) {
+        public static SelectFolderDialog AddFolderToSearchPath(VisualStudioApp app)
+        {
             return new SelectFolderDialog(
                 app,
                 AutomationElement.FromHandle(app.OpenDialogWithDteExecuteCommand("Project.AddSearchPathFolder"))
             );
         }
 
-        public void SelectFolder() {
+        public void SelectFolder()
+        {
             ClickButtonByName("Select Folder");
         }
 
-        public string FolderName { 
-            get {
+        public string FolderName
+        {
+            get
+            {
                 return GetFilenameEditBox().GetValuePattern().Current.Value;
             }
-            set {
+            set
+            {
                 GetFilenameEditBox().GetValuePattern().SetValue(value);
             }
         }
 
-        public string Address {
-            get {
+        public string Address
+        {
+            get
+            {
                 foreach (AutomationElement e in Element.FindAll(
                     TreeScope.Descendants,
                     new PropertyCondition(AutomationElement.ClassNameProperty, "ToolbarWindow32"))
-                ) {
+                )
+                {
                     var name = e.Current.Name;
-                    if (name.StartsWith("Address: ", StringComparison.CurrentCulture)) {
+                    if (name.StartsWith("Address: ", StringComparison.CurrentCulture))
+                    {
                         return name.Substring("Address: ".Length);
                     }
                 }
@@ -69,7 +82,8 @@ namespace TestUtilities.UI {
             }
         }
 
-        private AutomationElement GetFilenameEditBox() {
+        private AutomationElement GetFilenameEditBox()
+        {
             return Element.FindFirst(TreeScope.Descendants,
                 new AndCondition(
                     new PropertyCondition(AutomationElement.ClassNameProperty, "Edit"),

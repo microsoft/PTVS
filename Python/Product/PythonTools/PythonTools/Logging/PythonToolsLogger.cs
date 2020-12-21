@@ -29,7 +29,7 @@ namespace Microsoft.PythonTools.Logging {
         public PythonToolsLogger(IPythonToolsLogger[] loggers) {
             _loggers = loggers;
         }
-        
+
         public void LogEvent(PythonLogEvent logEvent, object data = null) {
             foreach (var logger in _loggers) {
                 logger.LogEvent(logEvent, data);

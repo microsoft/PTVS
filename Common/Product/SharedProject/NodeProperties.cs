@@ -14,6 +14,10 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.OLE.Interop;
+using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -24,27 +28,28 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.OLE.Interop;
-using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
 using VSLangProj;
 using IOleServiceProvider = Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
 
-namespace Microsoft.VisualStudioTools.Project {
+namespace Microsoft.VisualStudioTools.Project
+{
 
     /// <summary>
     /// All public properties on Nodeproperties or derived classes are assumed to be used by Automation by default.
     /// Set this attribute to false on Properties that should not be visible for Automation.
     /// </summary>
     [AttributeUsage(AttributeTargets.Property, AllowMultiple = false, Inherited = true)]
-    public sealed class AutomationBrowsableAttribute : System.Attribute {
-        public AutomationBrowsableAttribute(bool browsable) {
+    public sealed class AutomationBrowsableAttribute : System.Attribute
+    {
+        public AutomationBrowsableAttribute(bool browsable)
+        {
             this.browsable = browsable;
         }
 
-        public bool Browsable {
-            get {
+        public bool Browsable
+        {
+            get
+            {
                 return this.browsable;
             }
         }
@@ -57,7 +62,8 @@ namespace Microsoft.VisualStudioTools.Project {
     /// result in them not being serialized and not being bold in the properties pane.
     /// </summary>
     [AttributeUsage(AttributeTargets.Property)]
-    internal sealed class AlwaysSerializedAttribute : Attribute {
+    internal sealed class AlwaysSerializedAttribute : Attribute
+    {
         public AlwaysSerializedAttribute() { }
     }
 
@@ -70,7 +76,8 @@ namespace Microsoft.VisualStudioTools.Project {
         ISpecifyPropertyPages,
         IVsGetCfgProvider,
         IVsSpecifyProjectDesignerPages,
-        IVsBrowseObject {
+        IVsBrowseObject
+    {
         #region fields
         private HierarchyNode node;
         #endregion
@@ -78,11 +85,13 @@ namespace Microsoft.VisualStudioTools.Project {
         #region properties
         [Browsable(false)]
         [AutomationBrowsable(true)]
-        public object Node {
+        public object Node
+        {
             get { return this.node; }
         }
 
-        internal HierarchyNode HierarchyNode {
+        internal HierarchyNode HierarchyNode
+        {
             get { return this.node; }
         }
 
@@ -92,21 +101,24 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </summary>
         [Browsable(false)]
         [AutomationBrowsable(false)]
-        public virtual string Name {
+        public virtual string Name
+        {
             get { return this.node.Caption; }
         }
 
         #endregion
 
         #region ctors
-        internal NodeProperties(HierarchyNode node) {
+        internal NodeProperties(HierarchyNode node)
+        {
             Utilities.ArgumentNotNull("node", node);
             this.node = node;
         }
         #endregion
 
         #region ISpecifyPropertyPages methods
-        public virtual void GetPages(CAUUID[] pages) {
+        public virtual void GetPages(CAUUID[] pages)
+        {
             this.GetCommonPropertyPages(pages);
         }
         #endregion
@@ -117,14 +129,16 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </summary>
         /// <param name="pages">The pages to return.</param>
         /// <returns></returns>
-        public virtual int GetProjectDesignerPages(CAUUID[] pages) {
+        public virtual int GetProjectDesignerPages(CAUUID[] pages)
+        {
             this.GetCommonPropertyPages(pages);
             return VSConstants.S_OK;
         }
         #endregion
 
         #region IVsGetCfgProvider methods
-        public virtual int GetCfgProvider(out IVsCfgProvider p) {
+        public virtual int GetCfgProvider(out IVsCfgProvider p)
+        {
             p = null;
             return VSConstants.E_NOTIMPL;
         }
@@ -137,7 +151,8 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <param name="hier">Reference to the hierarchy object.</param>
         /// <param name="itemid">Reference to the project item.</param>
         /// <returns>If the method succeeds, it returns S_OK. If it fails, it returns an error code. </returns>
-        public virtual int GetProjectItem(out IVsHierarchy hier, out uint itemid) {
+        public virtual int GetProjectItem(out IVsHierarchy hier, out uint itemid)
+        {
             Utilities.CheckNotNull(node);
 
             hier = node.ProjectMgr.GetOuterInterface<IVsHierarchy>();
@@ -151,23 +166,29 @@ namespace Microsoft.VisualStudioTools.Project {
         /// Get the Caption of the Hierarchy Node instance. If Caption is null or empty we delegate to base
         /// </summary>
         /// <returns>Caption of Hierarchy node instance</returns>
-        public override string GetComponentName() {
+        public override string GetComponentName()
+        {
             string caption = this.HierarchyNode.Caption;
-            if (string.IsNullOrEmpty(caption)) {
+            if (string.IsNullOrEmpty(caption))
+            {
                 return base.GetComponentName();
-            } else {
+            }
+            else
+            {
                 return caption;
             }
         }
         #endregion
 
         #region helper methods
-        protected string GetProperty(string name, string def) {
+        protected string GetProperty(string name, string def)
+        {
             string a = this.HierarchyNode.ItemNode.GetMetadata(name);
             return (a == null) ? def : a;
         }
 
-        protected void SetProperty(string name, string value) {
+        protected void SetProperty(string name, string value)
+        {
             this.HierarchyNode.ItemNode.SetMetadata(name, value);
         }
 
@@ -176,17 +197,20 @@ namespace Microsoft.VisualStudioTools.Project {
         /// configuration independent properties.
         /// </summary>
         /// <param name="pages">The pages to return.</param>
-        private void GetCommonPropertyPages(CAUUID[] pages) {
+        private void GetCommonPropertyPages(CAUUID[] pages)
+        {
             // We do not check whether the supportsProjectDesigner is set to false on the ProjectNode.
             // We rely that the caller knows what to call on us.
             Utilities.ArgumentNotNull("pages", pages);
 
-            if (pages.Length == 0) {
+            if (pages.Length == 0)
+            {
                 throw new ArgumentException(SR.GetString(SR.InvalidParameter), "pages");
             }
 
             // Only the project should show the property page the rest should show the project properties.
-            if (this.node != null && (this.node is ProjectNode)) {
+            if (this.node != null && (this.node is ProjectNode))
+            {
                 // Retrieve the list of guids from hierarchy properties.
                 // Because a flavor could modify that list we must make sure we are calling the outer most implementation of IVsHierarchy
                 string guidsList = String.Empty;
@@ -196,13 +220,18 @@ namespace Microsoft.VisualStudioTools.Project {
                 guidsList = (string)variant;
 
                 Guid[] guids = Utilities.GuidsArrayFromSemicolonDelimitedStringOfGuids(guidsList);
-                if (guids == null || guids.Length == 0) {
+                if (guids == null || guids.Length == 0)
+                {
                     pages[0] = new CAUUID();
                     pages[0].cElems = 0;
-                } else {
+                }
+                else
+                {
                     pages[0] = PackageUtilities.CreateCAUUIDFromGuidArray(guids);
                 }
-            } else {
+            }
+            else
+            {
                 pages[0] = new CAUUID();
                 pages[0].cElems = 0;
             }
@@ -211,10 +240,13 @@ namespace Microsoft.VisualStudioTools.Project {
 
         #region ExtenderSupport
         [Browsable(false)]
-        public virtual string ExtenderCATID {
-            get {
+        public virtual string ExtenderCATID
+        {
+            get
+            {
                 Guid catid = this.HierarchyNode.ProjectMgr.GetCATIDForType(this.GetType());
-                if (Guid.Empty.CompareTo(catid) == 0) {
+                if (Guid.Empty.CompareTo(catid) == 0)
+                {
                     return null;
                 }
                 return catid.ToString("B");
@@ -222,14 +254,16 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
         [Browsable(false)]
-        public object ExtenderNames() {
+        public object ExtenderNames()
+        {
             EnvDTE.ObjectExtenders extenderService = (EnvDTE.ObjectExtenders)this.HierarchyNode.GetService(typeof(EnvDTE.ObjectExtenders));
             Utilities.CheckNotNull(extenderService, "Could not get the ObjectExtenders object from the services exposed by this property object");
 
             return extenderService.GetExtenderNames(this.ExtenderCATID, this);
         }
 
-        public object Extender(string extenderName) {
+        public object Extender(string extenderName)
+        {
             EnvDTE.ObjectExtenders extenderService = (EnvDTE.ObjectExtenders)this.HierarchyNode.GetService(typeof(EnvDTE.ObjectExtenders));
             Utilities.CheckNotNull(extenderService, "Could not get the ObjectExtenders object from the services exposed by this property object");
             return extenderService.GetExtender(this.ExtenderCATID, extenderName, this);
@@ -239,18 +273,22 @@ namespace Microsoft.VisualStudioTools.Project {
     }
 
     [ComVisible(true)]
-    public class FileNodeProperties : NodeProperties {
+    public class FileNodeProperties : NodeProperties
+    {
         #region properties
 
         [SRCategoryAttribute(SR.Misc)]
         [SRDisplayName(SR.FileName)]
         [SRDescriptionAttribute(SR.FileNameDescription)]
         [AlwaysSerialized]
-        public virtual string FileName {
-            get {
+        public virtual string FileName
+        {
+            get
+            {
                 return this.HierarchyNode.Caption;
             }
-            set {
+            set
+            {
                 this.HierarchyNode.SetEditLabel(value);
             }
         }
@@ -258,8 +296,10 @@ namespace Microsoft.VisualStudioTools.Project {
         [SRCategoryAttribute(SR.Misc)]
         [SRDisplayName(SR.FullPath)]
         [SRDescriptionAttribute(SR.FullPathDescription)]
-        public string FullPath {
-            get {
+        public string FullPath
+        {
+            get
+            {
                 return this.HierarchyNode.Url;
             }
         }
@@ -267,22 +307,28 @@ namespace Microsoft.VisualStudioTools.Project {
         #region non-browsable properties - used for automation only
 
         [Browsable(false)]
-        public string URL {
-            get {
+        public string URL
+        {
+            get
+            {
                 return this.HierarchyNode.Url;
             }
         }
 
         [Browsable(false)]
-        public string Extension {
-            get {
+        public string Extension
+        {
+            get
+            {
                 return Path.GetExtension(this.HierarchyNode.Caption);
             }
         }
 
         [Browsable(false)]
-        public bool IsLinkFile {
-            get {
+        public bool IsLinkFile
+        {
+            get
+            {
                 return HierarchyNode.IsLinkFile;
             }
         }
@@ -293,36 +339,44 @@ namespace Microsoft.VisualStudioTools.Project {
 
         #region ctors
         internal FileNodeProperties(HierarchyNode node)
-            : base(node) {
+            : base(node)
+        {
         }
         #endregion
 
-        public override string GetClassName() {
+        public override string GetClassName()
+        {
             return SR.GetString(SR.FileProperties);
         }
     }
 
     [ComVisible(true)]
-    public class ExcludedFileNodeProperties : FileNodeProperties {
+    public class ExcludedFileNodeProperties : FileNodeProperties
+    {
         internal ExcludedFileNodeProperties(HierarchyNode node)
-            : base(node) {
+            : base(node)
+        {
         }
 
         [SRCategoryAttribute(SR.Advanced)]
         [SRDisplayName(SR.BuildAction)]
         [SRDescriptionAttribute(SR.BuildActionDescription)]
         [TypeConverter(typeof(BuildActionTypeConverter))]
-        public prjBuildAction BuildAction {
-            get {
+        public prjBuildAction BuildAction
+        {
+            get
+            {
                 return prjBuildAction.prjBuildActionNone;
             }
         }
     }
 
     [ComVisible(true)]
-    public class IncludedFileNodeProperties : FileNodeProperties {
+    public class IncludedFileNodeProperties : FileNodeProperties
+    {
         internal IncludedFileNodeProperties(HierarchyNode node)
-            : base(node) {
+            : base(node)
+        {
         }
 
         /// <summary>
@@ -333,11 +387,14 @@ namespace Microsoft.VisualStudioTools.Project {
         [SRDescriptionAttribute(SR.BuildActionDescription)]
         [AlwaysSerialized]
         [TypeConverter(typeof(BuildActionStringConverter))]
-        public string ItemType {
-            get {
+        public string ItemType
+        {
+            get
+            {
                 return HierarchyNode.ItemNode.ItemTypeName;
             }
-            set {
+            set
+            {
                 HierarchyNode.ItemNode.ItemTypeName = value;
             }
         }
@@ -347,15 +404,19 @@ namespace Microsoft.VisualStudioTools.Project {
         /// expected enum value.
         /// </summary>
         [Browsable(false)]
-        public prjBuildAction BuildAction {
-            get {
+        public prjBuildAction BuildAction
+        {
+            get
+            {
                 var res = BuildActionTypeConverter.Instance.ConvertFromString(HierarchyNode.ItemNode.ItemTypeName);
-                if (res is prjBuildAction) {
+                if (res is prjBuildAction)
+                {
                     return (prjBuildAction)res;
                 }
                 return prjBuildAction.prjBuildActionContent;
             }
-            set {
+            set
+            {
                 this.HierarchyNode.ItemNode.ItemTypeName = BuildActionTypeConverter.Instance.ConvertToString(value);
             }
         }
@@ -363,63 +424,79 @@ namespace Microsoft.VisualStudioTools.Project {
         [SRCategoryAttribute(SR.Advanced)]
         [SRDisplayName(SR.Publish)]
         [SRDescriptionAttribute(SR.PublishDescription)]
-        public bool Publish {
-            get {
+        public bool Publish
+        {
+            get
+            {
                 var publish = this.HierarchyNode.ItemNode.GetMetadata("Publish");
-                if (String.IsNullOrEmpty(publish)) {
-                    if (this.HierarchyNode.ItemNode.ItemTypeName == ProjectFileConstants.Compile) {
+                if (String.IsNullOrEmpty(publish))
+                {
+                    if (this.HierarchyNode.ItemNode.ItemTypeName == ProjectFileConstants.Compile)
+                    {
                         return true;
                     }
                     return false;
                 }
                 return Convert.ToBoolean(publish);
             }
-            set {
+            set
+            {
                 this.HierarchyNode.ItemNode.SetMetadata("Publish", value.ToString());
             }
         }
 
         [Browsable(false)]
-        public bool ShouldSerializePublish() {
+        public bool ShouldSerializePublish()
+        {
             // If compile, default should be true, else the default is false.
-            if (HierarchyNode.ItemNode.ItemTypeName == ProjectFileConstants.Compile) {
+            if (HierarchyNode.ItemNode.ItemTypeName == ProjectFileConstants.Compile)
+            {
                 return !Publish;
             }
             return Publish;
         }
 
         [Browsable(false)]
-        public void ResetPublish() {
+        public void ResetPublish()
+        {
             // If compile, default should be true, else the default is false.
-            if (HierarchyNode.ItemNode.ItemTypeName == ProjectFileConstants.Compile) {
+            if (HierarchyNode.ItemNode.ItemTypeName == ProjectFileConstants.Compile)
+            {
                 Publish = true;
             }
             Publish = false;
         }
 
         [Browsable(false)]
-        public string SourceControlStatus {
-            get {
+        public string SourceControlStatus
+        {
+            get
+            {
                 // remove STATEICON_ and return rest of enum
                 return HierarchyNode.StateIconIndex.ToString().Substring(10);
             }
         }
 
         [Browsable(false)]
-        public string SubType {
-            get {
+        public string SubType
+        {
+            get
+            {
                 return this.HierarchyNode.ItemNode.GetMetadata("SubType");
             }
-            set {
+            set
+            {
                 this.HierarchyNode.ItemNode.SetMetadata("SubType", value.ToString());
             }
         }
     }
 
     [ComVisible(true)]
-    public class LinkFileNodeProperties : FileNodeProperties {
+    public class LinkFileNodeProperties : FileNodeProperties
+    {
         internal LinkFileNodeProperties(HierarchyNode node)
-            : base(node) {
+            : base(node)
+        {
 
         }
 
@@ -431,11 +508,14 @@ namespace Microsoft.VisualStudioTools.Project {
         [SRDescriptionAttribute(SR.BuildActionDescription)]
         [AlwaysSerialized]
         [TypeConverter(typeof(BuildActionStringConverter))]
-        public string ItemType {
-            get {
+        public string ItemType
+        {
+            get
+            {
                 return HierarchyNode.ItemNode.ItemTypeName;
             }
-            set {
+            set
+            {
                 HierarchyNode.ItemNode.ItemTypeName = value;
             }
         }
@@ -444,25 +524,31 @@ namespace Microsoft.VisualStudioTools.Project {
         [SRDisplayName(SR.FileName)]
         [SRDescriptionAttribute(SR.FileNameDescription)]
         [ReadOnly(true)]
-        public override string FileName {
-            get {
+        public override string FileName
+        {
+            get
+            {
                 return this.HierarchyNode.Caption;
             }
-            set {
+            set
+            {
                 throw new InvalidOperationException();
             }
         }
     }
 
     [ComVisible(true)]
-    public class DependentFileNodeProperties : NodeProperties {
+    public class DependentFileNodeProperties : NodeProperties
+    {
         #region properties
 
         [SRCategoryAttribute(SR.Misc)]
         [SRDisplayName(SR.FileName)]
         [SRDescriptionAttribute(SR.FileNameDescription)]
-        public virtual string FileName {
-            get {
+        public virtual string FileName
+        {
+            get
+            {
                 return this.HierarchyNode.Caption;
             }
         }
@@ -470,8 +556,10 @@ namespace Microsoft.VisualStudioTools.Project {
         [SRCategoryAttribute(SR.Misc)]
         [SRDisplayName(SR.FullPath)]
         [SRDescriptionAttribute(SR.FullPathDescription)]
-        public string FullPath {
-            get {
+        public string FullPath
+        {
+            get
+            {
                 return this.HierarchyNode.Url;
             }
         }
@@ -479,40 +567,51 @@ namespace Microsoft.VisualStudioTools.Project {
 
         #region ctors
         internal DependentFileNodeProperties(HierarchyNode node)
-            : base(node) {
+            : base(node)
+        {
         }
 
         #endregion
 
-        public override string GetClassName() {
+        public override string GetClassName()
+        {
             return SR.GetString(SR.FileProperties);
         }
     }
 
-    class BuildActionTypeConverter : StringConverter {
+    class BuildActionTypeConverter : StringConverter
+    {
         internal static readonly BuildActionTypeConverter Instance = new BuildActionTypeConverter();
 
-        public BuildActionTypeConverter() {
+        public BuildActionTypeConverter()
+        {
         }
 
-        public override bool GetStandardValuesSupported(ITypeDescriptorContext context) {
+        public override bool GetStandardValuesSupported(ITypeDescriptorContext context)
+        {
             return true;
         }
 
-        public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType) {
-            if (sourceType == typeof(string)) {
+        public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
+        {
+            if (sourceType == typeof(string))
+            {
                 return true;
             }
             return base.CanConvertFrom(context, sourceType);
         }
 
-        public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType) {
+        public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType)
+        {
             return base.CanConvertTo(context, destinationType);
         }
 
-        public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType) {
-            if (destinationType == typeof(string)) {
-                switch ((prjBuildAction)value) {
+        public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
+        {
+            if (destinationType == typeof(string))
+            {
+                switch ((prjBuildAction)value)
+                {
                     case prjBuildAction.prjBuildActionCompile:
                         return ProjectFileConstants.Compile;
                     case prjBuildAction.prjBuildActionContent:
@@ -524,21 +623,29 @@ namespace Microsoft.VisualStudioTools.Project {
             return base.ConvertTo(context, culture, value, destinationType);
         }
 
-        public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value) {
-            if (value is string) {
+        public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
+        {
+            if (value is string)
+            {
                 string strVal = (string)value;
-                if (strVal.Equals(ProjectFileConstants.Compile, StringComparison.OrdinalIgnoreCase)) {
+                if (strVal.Equals(ProjectFileConstants.Compile, StringComparison.OrdinalIgnoreCase))
+                {
                     return prjBuildAction.prjBuildActionCompile;
-                } else if (strVal.Equals(ProjectFileConstants.Content, StringComparison.OrdinalIgnoreCase)) {
+                }
+                else if (strVal.Equals(ProjectFileConstants.Content, StringComparison.OrdinalIgnoreCase))
+                {
                     return prjBuildAction.prjBuildActionContent;
-                } else if (strVal.Equals(ProjectFileConstants.None, StringComparison.OrdinalIgnoreCase)) {
+                }
+                else if (strVal.Equals(ProjectFileConstants.None, StringComparison.OrdinalIgnoreCase))
+                {
                     return prjBuildAction.prjBuildActionNone;
                 }
             }
             return base.ConvertFrom(context, culture, value);
         }
 
-        public override StandardValuesCollection GetStandardValues(ITypeDescriptorContext context) {
+        public override StandardValuesCollection GetStandardValues(ITypeDescriptorContext context)
+        {
             return new StandardValuesCollection(new[] { prjBuildAction.prjBuildActionNone, prjBuildAction.prjBuildActionCompile, prjBuildAction.prjBuildActionContent });
         }
     }
@@ -547,41 +654,53 @@ namespace Microsoft.VisualStudioTools.Project {
     /// This type converter doesn't really do any conversions, but allows us to provide
     /// a list of standard values for the build action.
     /// </summary>
-    class BuildActionStringConverter : StringConverter {
+    class BuildActionStringConverter : StringConverter
+    {
         internal static readonly BuildActionStringConverter Instance = new BuildActionStringConverter();
 
-        public BuildActionStringConverter() {
+        public BuildActionStringConverter()
+        {
         }
 
-        public override bool GetStandardValuesSupported(ITypeDescriptorContext context) {
+        public override bool GetStandardValuesSupported(ITypeDescriptorContext context)
+        {
             return true;
         }
 
-        public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType) {
-            if (sourceType == typeof(string)) {
+        public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
+        {
+            if (sourceType == typeof(string))
+            {
                 return true;
             }
             return base.CanConvertFrom(context, sourceType);
         }
 
-        public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType) {
+        public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType)
+        {
             return base.CanConvertTo(context, destinationType);
         }
 
-        public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType) {
+        public override object ConvertTo(ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
+        {
             return value;
         }
 
-        public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value) {
+        public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
+        {
             return value;
         }
 
-        public override StandardValuesCollection GetStandardValues(ITypeDescriptorContext context) {
+        public override StandardValuesCollection GetStandardValues(ITypeDescriptorContext context)
+        {
             FileNodeProperties nodeProps = context.Instance as FileNodeProperties;
             IEnumerable<string> itemNames;
-            if (nodeProps != null) {
+            if (nodeProps != null)
+            {
                 itemNames = nodeProps.HierarchyNode.ProjectMgr.GetAvailableItemNames();
-            } else {
+            }
+            else
+            {
                 itemNames = new[] { ProjectFileConstants.None, ProjectFileConstants.Compile, ProjectFileConstants.Content };
             }
             return new StandardValuesCollection(itemNames.ToArray());
@@ -589,14 +708,17 @@ namespace Microsoft.VisualStudioTools.Project {
     }
 
     [ComVisible(true)]
-    public class ProjectNodeProperties : NodeProperties, EnvDTE80.IInternalExtenderProvider {
+    public class ProjectNodeProperties : NodeProperties, EnvDTE80.IInternalExtenderProvider
+    {
         #region properties
         [SRCategoryAttribute(SR.Misc)]
         [SRDisplayName(SR.ProjectFolder)]
         [SRDescriptionAttribute(SR.ProjectFolderDescription)]
         [AutomationBrowsable(false)]
-        public string ProjectFolder {
-            get {
+        public string ProjectFolder
+        {
+            get
+            {
                 return this.Node.ProjectMgr.ProjectFolder;
             }
         }
@@ -605,37 +727,47 @@ namespace Microsoft.VisualStudioTools.Project {
         [SRDisplayName(SR.ProjectFile)]
         [SRDescriptionAttribute(SR.ProjectFileDescription)]
         [AutomationBrowsable(false)]
-        public string ProjectFile {
-            get {
+        public string ProjectFile
+        {
+            get
+            {
                 return this.Node.ProjectMgr.ProjectFile;
             }
-            set {
+            set
+            {
                 this.Node.ProjectMgr.ProjectFile = value;
             }
         }
 
         #region non-browsable properties - used for automation only
         [Browsable(false)]
-        public string Guid {
-            get {
+        public string Guid
+        {
+            get
+            {
                 return this.Node.ProjectMgr.ProjectIDGuid.ToString();
             }
         }
 
         [Browsable(false)]
-        public string FileName {
-            get {
+        public string FileName
+        {
+            get
+            {
                 return this.Node.ProjectMgr.ProjectFile;
             }
-            set {
+            set
+            {
                 this.Node.ProjectMgr.ProjectFile = value;
             }
         }
 
 
         [Browsable(false)]
-        public string FullPath {
-            get {
+        public string FullPath
+        {
+            get
+            {
                 return CommonUtils.NormalizeDirectoryPath(this.Node.ProjectMgr.ProjectFolder);
             }
         }
@@ -645,11 +777,14 @@ namespace Microsoft.VisualStudioTools.Project {
 
         #region ctors
         internal ProjectNodeProperties(ProjectNode node)
-            : base(node) {
+            : base(node)
+        {
         }
 
-        internal new ProjectNode Node {
-            get {
+        internal new ProjectNode Node
+        {
+            get
+            {
                 return (ProjectNode)base.Node;
             }
         }
@@ -668,10 +803,12 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <returns>Editor</returns>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Reliability", "CA2000:Dispose objects before losing scope",
             Justification = "The service provider is used by the PropertiesEditorLauncher")]
-        public override object GetEditor(Type editorBaseType) {
+        public override object GetEditor(Type editorBaseType)
+        {
             // Override the scenario where we are asked for a ComponentEditor
             // as this is how the Properties Browser calls us
-            if (editorBaseType == typeof(ComponentEditor)) {
+            if (editorBaseType == typeof(ComponentEditor))
+            {
                 IOleServiceProvider sp;
                 ErrorHandler.ThrowOnFailure(Node.ProjectMgr.GetSite(out sp));
                 return new PropertiesEditorLauncher(new ServiceProvider(sp));
@@ -680,15 +817,18 @@ namespace Microsoft.VisualStudioTools.Project {
             return base.GetEditor(editorBaseType);
         }
 
-        public override int GetCfgProvider(out IVsCfgProvider p) {
-            if (this.Node != null && this.Node.ProjectMgr != null) {
+        public override int GetCfgProvider(out IVsCfgProvider p)
+        {
+            if (this.Node != null && this.Node.ProjectMgr != null)
+            {
                 return this.Node.ProjectMgr.GetCfgProvider(out p);
             }
 
             return base.GetCfgProvider(out p);
         }
 
-        public override string GetClassName() {
+        public override string GetClassName()
+        {
             return SR.GetString(SR.ProjectProperties);
         }
 
@@ -696,26 +836,31 @@ namespace Microsoft.VisualStudioTools.Project {
 
         #region IInternalExtenderProvider Members
 
-        bool EnvDTE80.IInternalExtenderProvider.CanExtend(string extenderCATID, string extenderName, object extendeeObject) {
+        bool EnvDTE80.IInternalExtenderProvider.CanExtend(string extenderCATID, string extenderName, object extendeeObject)
+        {
             EnvDTE80.IInternalExtenderProvider outerHierarchy = Node.GetOuterInterface<EnvDTE80.IInternalExtenderProvider>();
 
-            if (outerHierarchy != null) {
+            if (outerHierarchy != null)
+            {
                 return outerHierarchy.CanExtend(extenderCATID, extenderName, extendeeObject);
             }
             return false;
         }
 
-        object EnvDTE80.IInternalExtenderProvider.GetExtender(string extenderCATID, string extenderName, object extendeeObject, EnvDTE.IExtenderSite extenderSite, int cookie) {
+        object EnvDTE80.IInternalExtenderProvider.GetExtender(string extenderCATID, string extenderName, object extendeeObject, EnvDTE.IExtenderSite extenderSite, int cookie)
+        {
             EnvDTE80.IInternalExtenderProvider outerHierarchy = Node.GetOuterInterface<EnvDTE80.IInternalExtenderProvider>();
 
-            if (outerHierarchy != null) {
+            if (outerHierarchy != null)
+            {
                 return outerHierarchy.GetExtender(extenderCATID, extenderName, extendeeObject, extenderSite, cookie);
             }
 
             return null;
         }
 
-        object EnvDTE80.IInternalExtenderProvider.GetExtenderNames(string extenderCATID, object extendeeObject) {
+        object EnvDTE80.IInternalExtenderProvider.GetExtenderNames(string extenderCATID, object extendeeObject)
+        {
             return null;
         }
 
@@ -723,17 +868,22 @@ namespace Microsoft.VisualStudioTools.Project {
     }
 
     [ComVisible(true)]
-    public class FolderNodeProperties : NodeProperties {
+    public class FolderNodeProperties : NodeProperties
+    {
         #region properties
         [SRCategoryAttribute(SR.Misc)]
         [SRDisplayName(SR.FolderName)]
         [SRDescriptionAttribute(SR.FolderNameDescription)]
-        public string FolderName {
-            get {
+        public string FolderName
+        {
+            get
+            {
                 return this.HierarchyNode.Caption;
             }
-            set {
-                HierarchyNode.ProjectMgr.Site.GetUIThread().Invoke(() => {
+            set
+            {
+                HierarchyNode.ProjectMgr.Site.GetUIThread().Invoke(() =>
+                {
                     this.HierarchyNode.SetEditLabel(value);
                     this.HierarchyNode.ProjectMgr.ReDrawNode(HierarchyNode, UIHierarchyElement.Caption);
                 });
@@ -743,12 +893,16 @@ namespace Microsoft.VisualStudioTools.Project {
         #region properties - used for automation only
         [Browsable(false)]
         [AutomationBrowsable(true)]
-        public string FileName {
-            get {
+        public string FileName
+        {
+            get
+            {
                 return this.HierarchyNode.Caption;
             }
-            set {
-                HierarchyNode.ProjectMgr.Site.GetUIThread().Invoke(() => {
+            set
+            {
+                HierarchyNode.ProjectMgr.Site.GetUIThread().Invoke(() =>
+                {
                     this.HierarchyNode.SetEditLabel(value);
                     this.HierarchyNode.ProjectMgr.ReDrawNode(HierarchyNode, UIHierarchyElement.Caption);
                 });
@@ -760,8 +914,10 @@ namespace Microsoft.VisualStudioTools.Project {
         [SRCategoryAttribute(SR.Misc)]
         [SRDisplayName(SR.FullPath)]
         [SRDescriptionAttribute(SR.FullPathDescription)]
-        public string FullPath {
-            get {
+        public string FullPath
+        {
+            get
+            {
                 return CommonUtils.NormalizeDirectoryPath(this.HierarchyNode.GetMkDocument());
             }
         }
@@ -771,25 +927,30 @@ namespace Microsoft.VisualStudioTools.Project {
 
         #region ctors
         internal FolderNodeProperties(HierarchyNode node)
-            : base(node) {
+            : base(node)
+        {
         }
         #endregion
 
-        public override string GetClassName() {
+        public override string GetClassName()
+        {
             return SR.GetString(SR.FolderProperties);
         }
     }
 
     [CLSCompliant(false), ComVisible(true)]
-    public class ReferenceNodeProperties : NodeProperties {
+    public class ReferenceNodeProperties : NodeProperties
+    {
         #region properties
         [SRCategoryAttribute(SR.Misc)]
         [SRDisplayName(SR.RefName)]
         [SRDescriptionAttribute(SR.RefNameDescription)]
         [Browsable(true)]
         [AutomationBrowsable(true)]
-        public override string Name {
-            get {
+        public override string Name
+        {
+            get
+            {
                 return this.HierarchyNode.Caption;
             }
         }
@@ -797,14 +958,17 @@ namespace Microsoft.VisualStudioTools.Project {
         [SRCategoryAttribute(SR.Misc)]
         [SRDisplayName(SR.CopyToLocal)]
         [SRDescriptionAttribute(SR.CopyToLocalDescription)]
-        public bool CopyToLocal {
-            get {
+        public bool CopyToLocal
+        {
+            get
+            {
                 string copyLocal = this.GetProperty(ProjectFileConstants.Private, "False");
                 if (copyLocal == null || copyLocal.Length == 0)
                     return true;
                 return bool.Parse(copyLocal);
             }
-            set {
+            set
+            {
                 this.SetProperty(ProjectFileConstants.Private, value.ToString());
             }
         }
@@ -812,8 +976,10 @@ namespace Microsoft.VisualStudioTools.Project {
         [SRCategoryAttribute(SR.Misc)]
         [SRDisplayName(SR.FullPath)]
         [SRDescriptionAttribute(SR.FullPathDescription)]
-        public virtual string FullPath {
-            get {
+        public virtual string FullPath
+        {
+            get
+            {
                 return this.HierarchyNode.Url;
             }
         }
@@ -821,22 +987,26 @@ namespace Microsoft.VisualStudioTools.Project {
 
         #region ctors
         internal ReferenceNodeProperties(HierarchyNode node)
-            : base(node) {
+            : base(node)
+        {
         }
         #endregion
 
         #region overridden methods
-        public override string GetClassName() {
+        public override string GetClassName()
+        {
             return SR.GetString(SR.ReferenceProperties);
         }
         #endregion
     }
 
     [ComVisible(true)]
-    public class ProjectReferencesProperties : ReferenceNodeProperties {
+    public class ProjectReferencesProperties : ReferenceNodeProperties
+    {
         #region ctors
         internal ProjectReferencesProperties(ProjectReferenceNode node)
-            : base(node) {
+            : base(node)
+        {
         }
         #endregion
     }

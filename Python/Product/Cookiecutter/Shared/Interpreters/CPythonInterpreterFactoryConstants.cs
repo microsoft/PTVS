@@ -39,7 +39,7 @@ namespace Microsoft.CookiecutterTools.Interpreters {
 
         public static string GetInterpreterId(string company, string tag) {
             return String.Join(
-                "|", 
+                "|",
                 CPythonInterpreterFactoryProvider.FactoryProviderName,
                 company,
                 tag

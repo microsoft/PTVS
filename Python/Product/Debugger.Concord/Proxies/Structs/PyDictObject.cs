@@ -16,9 +16,9 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Debugger;
 using Microsoft.VisualStudio.Debugger.Evaluation;
-using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
     internal abstract class PyDictObject : PyObject {

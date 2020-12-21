@@ -21,7 +21,7 @@ namespace Microsoft {
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = true)]
     class ProvidePeekSupportedContentTypeAttribute : RegistrationAttribute {
         private readonly string _contentType, _mappedType;
-        
+
         /// <summary>
         /// contentType            mappedType
         /// ".aspx;.settings"   -> ".txt;"      .aspx & .settings files will use the .txt editor factory but set their content types normally.

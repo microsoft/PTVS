@@ -18,10 +18,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using Microsoft.PythonTools.Parsing.Ast;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.PythonTools.CodeCoverage;
 using Microsoft.PythonTools.Commands;
+using Microsoft.PythonTools.Parsing.Ast;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.Python;
 
@@ -315,7 +315,7 @@ namespace PythonToolsTests {
             );
         }
 
-        
+
         private static string GetPath(string name) {
             return TestData.GetPath(Path.Combine("TestData", "Coverage", name, "coverage.xml"));
         }
@@ -351,7 +351,7 @@ namespace PythonToolsTests {
                     var exported = new StreamReader(outputStream).ReadToEnd();
 
                     Assert.AreEqual(
-                        expectedExport.Replace("||basedir||", TestData.GetPath("")), 
+                        expectedExport.Replace("||basedir||", TestData.GetPath("")),
                         exported
                     );
                 }
@@ -552,7 +552,7 @@ namespace PythonToolsTests {
                     if (keyValue.Value.ModuleName == _name) {
                         foreach (var expected in _expected) {
                             expected.Validate(
-                                keyValue.Value, 
+                                keyValue.Value,
                                 keyValue.Value.GlobalScope
                             );
                         }
@@ -612,7 +612,7 @@ namespace PythonToolsTests {
 
             internal override void Validate(CoverageMapper mapper, CoverageScope parentScope) {
                 Assert.IsTrue(
-                    FindFunction(mapper, parentScope), 
+                    FindFunction(mapper, parentScope),
                     "Failed to find function: " + _name
                 );
             }

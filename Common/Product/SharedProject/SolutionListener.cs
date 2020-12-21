@@ -14,17 +14,19 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Diagnostics;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
+using System;
+using System.Diagnostics;
 using IServiceProvider = System.IServiceProvider;
 using ShellConstants = Microsoft.VisualStudio.Shell.Interop.Constants;
 
-namespace Microsoft.VisualStudioTools.Project {
+namespace Microsoft.VisualStudioTools.Project
+{
 
 
-    internal abstract class SolutionListener : IVsSolutionEvents3, IVsSolutionEvents4, IDisposable {
+    internal abstract class SolutionListener : IVsSolutionEvents3, IVsSolutionEvents4, IDisposable
+    {
 
         #region fields
         private uint eventsCookie;
@@ -38,119 +40,147 @@ namespace Microsoft.VisualStudioTools.Project {
         #endregion
 
         #region ctors
-        protected SolutionListener(IServiceProvider serviceProviderParameter) {
-            if (serviceProviderParameter == null) {
+        protected SolutionListener(IServiceProvider serviceProviderParameter)
+        {
+            if (serviceProviderParameter == null)
+            {
                 throw new ArgumentNullException("serviceProviderParameter");
             }
 
             this.serviceProvider = serviceProviderParameter;
             this.solution = this.serviceProvider.GetService(typeof(SVsSolution)) as IVsSolution;
 
-            if (this.solution == null) {
+            if (this.solution == null)
+            {
                 throw new InvalidOperationException("Could not get the IVsSolution object from the services exposed by this project");
             }
         }
         #endregion
 
         #region properties
-        protected uint EventsCookie {
-            get {
+        protected uint EventsCookie
+        {
+            get
+            {
                 return this.eventsCookie;
             }
         }
 
-        protected IVsSolution Solution {
-            get {
+        protected IVsSolution Solution
+        {
+            get
+            {
                 return this.solution;
             }
         }
 
-        protected IServiceProvider ServiceProvider {
-            get {
+        protected IServiceProvider ServiceProvider
+        {
+            get
+            {
                 return this.serviceProvider;
             }
         }
         #endregion
 
         #region IVsSolutionEvents3, IVsSolutionEvents2, IVsSolutionEvents methods
-        public virtual int OnAfterCloseSolution(object reserved) {
+        public virtual int OnAfterCloseSolution(object reserved)
+        {
             return VSConstants.E_NOTIMPL;
         }
 
-        public virtual int OnAfterClosingChildren(IVsHierarchy hierarchy) {
+        public virtual int OnAfterClosingChildren(IVsHierarchy hierarchy)
+        {
             return VSConstants.E_NOTIMPL;
         }
 
-        public virtual int OnAfterLoadProject(IVsHierarchy stubHierarchy, IVsHierarchy realHierarchy) {
+        public virtual int OnAfterLoadProject(IVsHierarchy stubHierarchy, IVsHierarchy realHierarchy)
+        {
             return VSConstants.E_NOTIMPL;
         }
 
-        public virtual int OnAfterMergeSolution(object pUnkReserved) {
+        public virtual int OnAfterMergeSolution(object pUnkReserved)
+        {
             return VSConstants.E_NOTIMPL;
         }
 
-        public virtual int OnAfterOpenProject(IVsHierarchy hierarchy, int added) {
+        public virtual int OnAfterOpenProject(IVsHierarchy hierarchy, int added)
+        {
             return VSConstants.E_NOTIMPL;
         }
 
-        public virtual int OnAfterOpenSolution(object pUnkReserved, int fNewSolution) {
+        public virtual int OnAfterOpenSolution(object pUnkReserved, int fNewSolution)
+        {
             return VSConstants.E_NOTIMPL;
         }
 
-        public virtual int OnAfterOpeningChildren(IVsHierarchy hierarchy) {
+        public virtual int OnAfterOpeningChildren(IVsHierarchy hierarchy)
+        {
             return VSConstants.E_NOTIMPL;
         }
 
-        public virtual int OnBeforeCloseProject(IVsHierarchy hierarchy, int removed) {
+        public virtual int OnBeforeCloseProject(IVsHierarchy hierarchy, int removed)
+        {
             return VSConstants.E_NOTIMPL;
         }
 
-        public virtual int OnBeforeCloseSolution(object pUnkReserved) {
+        public virtual int OnBeforeCloseSolution(object pUnkReserved)
+        {
             return VSConstants.E_NOTIMPL;
         }
 
-        public virtual int OnBeforeClosingChildren(IVsHierarchy hierarchy) {
+        public virtual int OnBeforeClosingChildren(IVsHierarchy hierarchy)
+        {
             return VSConstants.E_NOTIMPL;
         }
 
-        public virtual int OnBeforeOpeningChildren(IVsHierarchy hierarchy) {
+        public virtual int OnBeforeOpeningChildren(IVsHierarchy hierarchy)
+        {
             return VSConstants.E_NOTIMPL;
         }
 
-        public virtual int OnBeforeUnloadProject(IVsHierarchy realHierarchy, IVsHierarchy rtubHierarchy) {
+        public virtual int OnBeforeUnloadProject(IVsHierarchy realHierarchy, IVsHierarchy rtubHierarchy)
+        {
             return VSConstants.E_NOTIMPL;
         }
 
-        public virtual int OnQueryCloseProject(IVsHierarchy hierarchy, int removing, ref int cancel) {
+        public virtual int OnQueryCloseProject(IVsHierarchy hierarchy, int removing, ref int cancel)
+        {
             return VSConstants.E_NOTIMPL;
         }
 
-        public virtual int OnQueryCloseSolution(object pUnkReserved, ref int cancel) {
+        public virtual int OnQueryCloseSolution(object pUnkReserved, ref int cancel)
+        {
             return VSConstants.E_NOTIMPL;
         }
 
-        public virtual int OnQueryUnloadProject(IVsHierarchy pRealHierarchy, ref int cancel) {
+        public virtual int OnQueryUnloadProject(IVsHierarchy pRealHierarchy, ref int cancel)
+        {
             return VSConstants.E_NOTIMPL;
         }
         #endregion
 
         #region IVsSolutionEvents4 methods
-        public virtual int OnAfterAsynchOpenProject(IVsHierarchy hierarchy, int added) {
+        public virtual int OnAfterAsynchOpenProject(IVsHierarchy hierarchy, int added)
+        {
             return VSConstants.E_NOTIMPL;
         }
 
-        public virtual int OnAfterChangeProjectParent(IVsHierarchy hierarchy) {
+        public virtual int OnAfterChangeProjectParent(IVsHierarchy hierarchy)
+        {
             return VSConstants.E_NOTIMPL;
         }
 
-        public virtual int OnAfterRenameProject(IVsHierarchy hierarchy) {
+        public virtual int OnAfterRenameProject(IVsHierarchy hierarchy)
+        {
             return VSConstants.E_NOTIMPL;
         }
 
         /// <summary>
         /// Fired before a project is moved from one parent to another in the solution explorer
         /// </summary>
-        public virtual int OnQueryChangeProjectParent(IVsHierarchy hierarchy, IVsHierarchy newParentHier, ref int cancel) {
+        public virtual int OnQueryChangeProjectParent(IVsHierarchy hierarchy, IVsHierarchy newParentHier, ref int cancel)
+        {
             return VSConstants.E_NOTIMPL;
         }
         #endregion
@@ -160,7 +190,8 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <summary>
         /// The IDispose interface Dispose method for disposing the object determinastically.
         /// </summary>
-        public void Dispose() {
+        public void Dispose()
+        {
             this.Dispose(true);
             GC.SuppressFinalize(this);
         }
@@ -168,8 +199,10 @@ namespace Microsoft.VisualStudioTools.Project {
         #endregion
 
         #region methods
-        public void Init() {
-            if (this.solution != null) {
+        public void Init()
+        {
+            if (this.solution != null)
+            {
                 ErrorHandler.ThrowOnFailure(this.solution.AdviseSolutionEvents(this, out this.eventsCookie));
             }
         }
@@ -178,12 +211,16 @@ namespace Microsoft.VisualStudioTools.Project {
         /// The method that does the cleanup.
         /// </summary>
         /// <param name="disposing"></param>
-        protected virtual void Dispose(bool disposing) {
+        protected virtual void Dispose(bool disposing)
+        {
             // Everybody can go here.
-            if (!this.isDisposed) {
+            if (!this.isDisposed)
+            {
                 // Synchronize calls to the Dispose simulteniously.
-                lock (Mutex) {
-                    if (disposing && this.eventsCookie != (uint)ShellConstants.VSCOOKIE_NIL && this.solution != null) {
+                lock (Mutex)
+                {
+                    if (disposing && this.eventsCookie != (uint)ShellConstants.VSCOOKIE_NIL && this.solution != null)
+                    {
                         this.solution.UnadviseSolutionEvents((uint)this.eventsCookie);
                         this.eventsCookie = (uint)ShellConstants.VSCOOKIE_NIL;
                     }

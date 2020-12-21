@@ -25,7 +25,7 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
     class UIThread : UIThreadBase {
         private readonly JoinableTaskFactory _joinableTaskFactory;
         private readonly JoinableTaskContext _joinableTaskContext;
-        
+
         public UIThread(JoinableTaskFactory joinableTaskFactory) {
             _joinableTaskFactory = joinableTaskFactory;
             _joinableTaskContext = joinableTaskFactory.Context;
@@ -166,7 +166,7 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
 
             return RunAsyncOnMainThread(_joinableTaskFactory, func, cancellationToken);
         }
-        
+
         /// <summary>
         /// Awaits the provided task on the UI thread. The function will be
         /// invoked on the UI thread to ensure the correct context is captured

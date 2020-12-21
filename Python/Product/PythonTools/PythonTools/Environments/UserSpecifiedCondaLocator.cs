@@ -41,7 +41,7 @@ namespace Microsoft.PythonTools.Environments {
 
         public string CondaExecutablePath {
             get {
-                return _site?.GetUIThread().Invoke(() => 
+                return _site?.GetUIThread().Invoke(() =>
                     _site?.GetPythonToolsService()?.CondaOptions.CustomCondaExecutablePath
                 );
             }

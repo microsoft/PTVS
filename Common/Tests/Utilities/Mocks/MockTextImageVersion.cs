@@ -14,14 +14,17 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
 using Microsoft.VisualStudio.Text;
+using System;
 
-namespace TestUtilities.Mocks {
-    public class MockTextImageVersion : ITextImageVersion {
+namespace TestUtilities.Mocks
+{
+    public class MockTextImageVersion : ITextImageVersion
+    {
         private readonly ITextVersion _source;
 
-        public MockTextImageVersion(ITextVersion source) {
+        public MockTextImageVersion(ITextVersion source)
+        {
             _source = source;
         }
 
@@ -35,11 +38,13 @@ namespace TestUtilities.Mocks {
 
         public object Identifier => _source.TextBuffer;
 
-        public int TrackTo(VersionedPosition other, PointTrackingMode mode) {
+        public int TrackTo(VersionedPosition other, PointTrackingMode mode)
+        {
             throw new NotSupportedException();
         }
 
-        public Span TrackTo(VersionedSpan span, SpanTrackingMode mode) {
+        public Span TrackTo(VersionedSpan span, SpanTrackingMode mode)
+        {
             throw new NotSupportedException();
         }
     }

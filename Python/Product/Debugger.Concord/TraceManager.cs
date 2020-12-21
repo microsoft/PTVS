@@ -292,7 +292,7 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             } else if (stepper != _stepper) {
                 Debug.Fail("Trying to cancel a step while no step or another step is in progress.");
                 throw new InvalidOperationException();
-            } 
+            }
 
             StepDone(stepper.Thread);
         }

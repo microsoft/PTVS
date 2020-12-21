@@ -23,7 +23,8 @@ using System.Linq;
 using System.Reflection;
 using MSBuild = Microsoft.Build.Evaluation;
 
-namespace TestUtilities.SharedProject {
+namespace TestUtilities.SharedProject
+{
     /// <summary>
     /// Represents a project type.  ProjectType's can be created and exported to MEF by
     /// defining a ProjectTypeDefinition export.
@@ -32,7 +33,8 @@ namespace TestUtilities.SharedProject {
     /// language.  This includes the project extension, project type guid, code file 
     /// extension, etc...
     /// </summary>
-    public sealed class ProjectType {
+    public sealed class ProjectType
+    {
         public readonly string CodeExtension, ProjectExtension, SampleCode;
         public readonly Guid ProjectTypeGuid;
         public readonly IProjectProcessor[] Processors;
@@ -49,7 +51,8 @@ namespace TestUtilities.SharedProject {
         /// </summary>
         public static readonly ProjectType Generic = new ProjectType(".txt", ".proj", Guid.Empty, "");
 
-        public ProjectType(string codeExtension, string projectExtension, Guid projectTypeGuid, string sampleCode = "", IProjectProcessor[] postProcess = null) {
+        public ProjectType(string codeExtension, string projectExtension, Guid projectTypeGuid, string sampleCode = "", IProjectProcessor[] postProcess = null)
+        {
             Debug.Assert(!String.IsNullOrWhiteSpace(codeExtension));
 
             CodeExtension = codeExtension;
@@ -59,10 +62,13 @@ namespace TestUtilities.SharedProject {
             Processors = postProcess ?? new IProjectProcessor[0];
         }
 
-        public static IEnumerable<ProjectType> FromType(Type definition, IEnumerable<IProjectProcessor> processors) {
-            foreach (var member in definition.GetMembers(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static)) {
+        public static IEnumerable<ProjectType> FromType(Type definition, IEnumerable<IProjectProcessor> processors)
+        {
+            foreach (var member in definition.GetMembers(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static))
+            {
                 var mtype = (member as FieldInfo)?.FieldType ?? (member as PropertyInfo)?.PropertyType;
-                if (mtype == null || !mtype.IsAssignableFrom(typeof(ProjectTypeDefinition)) || member.GetCustomAttribute<ExportAttribute>() == null) {
+                if (mtype == null || !mtype.IsAssignableFrom(typeof(ProjectTypeDefinition)) || member.GetCustomAttribute<ExportAttribute>() == null)
+                {
                     continue;
                 }
 
@@ -76,11 +82,13 @@ namespace TestUtilities.SharedProject {
             }
         }
 
-    /// <summary>
-    /// Appends the code extension to a filename
-    /// </summary>
-    public string Code(string filename) {
-            if (String.IsNullOrWhiteSpace(filename)) {
+        /// <summary>
+        /// Appends the code extension to a filename
+        /// </summary>
+        public string Code(string filename)
+        {
+            if (String.IsNullOrWhiteSpace(filename))
+            {
                 throw new ArgumentException("no filename suppied", "filename");
             }
             return filename + CodeExtension;

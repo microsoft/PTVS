@@ -123,7 +123,7 @@ namespace Microsoft.PythonTools.Debugger {
                 }
             }
 
-            foreach(var line in lines) {
+            foreach (var line in lines) {
                 var filename = line.ElementAtOrDefault(0);
                 var lineNumber = line.ElementAtOrDefault(1);
                 var functionName = line.ElementAtOrDefault(2);

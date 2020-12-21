@@ -14,82 +14,106 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
 using EnvDTE;
+using System;
 
-namespace Microsoft.VisualStudioTools.MockVsTests {
-    internal class MockDTEProperty : Property {
+namespace Microsoft.VisualStudioTools.MockVsTests
+{
+    internal class MockDTEProperty : Property
+    {
         private object _value;
 
-        public MockDTEProperty(object value) {
+        public MockDTEProperty(object value)
+        {
             _value = value;
         }
 
-        public object Application {
-            get {
+        public object Application
+        {
+            get
+            {
                 throw new NotImplementedException();
             }
         }
 
-        public Properties Collection {
-            get {
+        public Properties Collection
+        {
+            get
+            {
                 throw new NotImplementedException();
             }
         }
 
-        public DTE DTE {
-            get {
+        public DTE DTE
+        {
+            get
+            {
                 throw new NotImplementedException();
             }
         }
 
-        public string Name {
-            get {
+        public string Name
+        {
+            get
+            {
                 throw new NotImplementedException();
             }
         }
 
-        public short NumIndices {
-            get {
+        public short NumIndices
+        {
+            get
+            {
                 throw new NotImplementedException();
             }
         }
 
-        public object Object {
-            get {
+        public object Object
+        {
+            get
+            {
                 throw new NotImplementedException();
             }
 
-            set {
-                throw new NotImplementedException();
-            }
-        }
-
-        public Properties Parent {
-            get {
+            set
+            {
                 throw new NotImplementedException();
             }
         }
 
-        public object Value {
-            get {
+        public Properties Parent
+        {
+            get
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public object Value
+        {
+            get
+            {
                 return _value;
             }
 
-            set {
+            set
+            {
                 _value = value;
             }
         }
 
-        public object get_IndexedValue(object Index1, object Index2, object Index3, object Index4) {
+        public object get_IndexedValue(object Index1, object Index2, object Index3, object Index4)
+        {
             throw new NotImplementedException();
         }
 
-        public void let_Value(object lppvReturn) {
+        public void let_Value(object lppvReturn)
+        {
             throw new NotImplementedException();
         }
 
-        public void set_IndexedValue(object Index1, object Index2, object Index3, object Index4, object Val) {
+        public void set_IndexedValue(object Index1, object Index2, object Index3, object Index4, object Val)
+        {
             throw new NotImplementedException();
         }
     }

@@ -83,7 +83,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
 
             if (frame.InstructionAddress == null) {
                 return null;
-            } 
+            }
             if (frame.RuntimeInstance.Id.RuntimeType != Guids.PythonRuntimeTypeGuid && !IsInEvalFrame(frame)) {
                 return null;
             }

@@ -451,11 +451,11 @@ def f():
             public TestAssignmentWalker() {
                 _walker = new NameWalker(this);
             }
-            
+
             public override AssignedNameWalker Define {
                 get { return _walker; }
             }
-            
+
             class NameWalker : AssignedNameWalker {
                 private readonly TestAssignmentWalker _outer;
                 public NameWalker(TestAssignmentWalker outer) {
@@ -566,7 +566,7 @@ def f():
         /// Test cases that verify we correctly identify when not all paths contain return statements.
         /// </summary>
         [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public async Task TestNotAllCodePathsReturn() {            
+        public async Task TestNotAllCodePathsReturn() {
             await TestMissingReturn("for i .. 23", @"def f(x):
     for i in xrange(100):
         break
@@ -575,7 +575,7 @@ def f():
         return 23
 ");
 
-            
+
             await TestMissingReturn("if x .. Exception()", @"def f(x):
     if x:
         return 42
@@ -1138,7 +1138,7 @@ class C:
         print(self.abc)
 
     def f(self):
-        self.g()", scopeName:"C");
+        self.g()", scopeName: "C");
 
             await SuccessTest("print(self.abc, aaa)",
 @"class C:
@@ -1214,7 +1214,7 @@ class C:
             print('hello')
 
         def f(self):
-            self.g()", scopeName: "D");    
+            self.g()", scopeName: "D");
 
         }
 
@@ -1316,11 +1316,11 @@ while True:
     x = g(x)", parameters: new[] { "x" });
 
 
-            await SuccessTest("x = 2 .. x)", 
+            await SuccessTest("x = 2 .. x)",
 @"def f():
     x = 1
     x = 2
-    print(x)", 
+    print(x)",
 @"def g():
     x = 2
     print(x)
@@ -1551,7 +1551,7 @@ def g(x):
 while True:
     g(x)
     x = 100",
-            parameters: new[] { "x"});
+            parameters: new[] { "x" });
 
             await SuccessTest("x()",
 @"x = 42

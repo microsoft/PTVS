@@ -45,7 +45,7 @@ namespace Microsoft.PythonTools.Environments {
         public static readonly InterpreterView CustomInterpreter =
             new InterpreterView(string.Empty, Strings.AddExistingEnvironmentCustomName, Strings.AddExistingEnvironmentCustomPath, string.Empty, string.Empty, null);
 
-        public static IList<string> ArchitectureNames { get; }  = new[] {
+        public static IList<string> ArchitectureNames { get; } = new[] {
             InterpreterArchitecture.x86.ToString(),
             InterpreterArchitecture.x64.ToString()
         };

@@ -292,7 +292,7 @@ namespace Microsoft.PythonTools.Profiling {
                 RunVTune(session, config, openReport);
             } else {
 #endif
-                RunProfiler(session, config, openReport);
+            RunProfiler(session, config, openReport);
 #if EXTERNAL_PROFILER_DRIVER
             }
 #endif
@@ -321,7 +321,7 @@ namespace Microsoft.PythonTools.Profiling {
                 RunVTune(session, config, openReport);
             } else {
 #endif
-                RunProfiler(session, config, openReport);
+            RunProfiler(session, config, openReport);
 #if EXTERNAL_PROFILER_DRIVER
             }
 #endif

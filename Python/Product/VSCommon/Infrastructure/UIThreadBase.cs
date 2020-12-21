@@ -190,7 +190,7 @@ namespace Microsoft.VisualStudioTools {
             if (self is MockUIThreadBase || self.InvokeRequired) {
                 return;
             }
-            
+
             Debug.Fail(
                 message ?? string.Format("Invalid cross-thread call from thread {0}", Thread.CurrentThread.ManagedThreadId),
                 new StackTrace().ToString()

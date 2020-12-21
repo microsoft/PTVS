@@ -24,7 +24,7 @@ namespace Microsoft.PythonTools.TestAdapter {
         #region IRunFromContextFileExtensions Members
 
         public IEnumerable<string> FileTypes {
-            get { 
+            get {
                 return new[] { PythonConstants.FileExtension, PythonConstants.WindowsFileExtension };
             }
         }

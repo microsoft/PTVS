@@ -22,7 +22,7 @@ using System.Runtime.InteropServices;
 
 [assembly: AssemblyTitle("Visual Studio - Python Django support")]
 [assembly: AssemblyDescription("Provides templates and integration for the Django web framework.")]
-[assembly: ComVisible(false)]     
+[assembly: ComVisible(false)]
 [assembly: CLSCompliant(false)]
 [assembly: NeutralResourcesLanguage("en-US")]
 

@@ -21,7 +21,7 @@ namespace PythonToolsTests {
     [TestClass]
     public sealed class AssemblySetup {
         [AssemblyInitialize]
-        public static void Initialize(TestContext testContext) 
+        public static void Initialize(TestContext testContext)
             => MSTestEnvironment.Initialize().AddVsResolvePaths();
     }
 }

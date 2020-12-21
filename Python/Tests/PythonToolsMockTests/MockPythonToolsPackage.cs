@@ -41,7 +41,7 @@ namespace PythonToolsMockTests {
         private readonly List<Action> _onDispose = new List<Action>();
 
         [ImportingConstructor]
-        public MockPythonToolsPackage([Import(typeof(SVsServiceProvider))]IServiceContainer serviceProvider) {
+        public MockPythonToolsPackage([Import(typeof(SVsServiceProvider))] IServiceContainer serviceProvider) {
             _serviceContainer = serviceProvider;
         }
 
@@ -49,7 +49,7 @@ namespace PythonToolsMockTests {
             var settings = (IVsSettingsManager)_serviceContainer.GetService(typeof(SVsSettingsManager));
             IVsWritableSettingsStore store;
             ErrorHandler.ThrowOnFailure(settings.GetWritableSettingsStore((uint)SettingsScope.Configuration, out store));
-            
+
             _serviceContainer.AddService(typeof(IPythonToolsOptionsService), (sp, t) => new MockPythonToolsOptionsService());
             _serviceContainer.AddService(typeof(IClipboardService), (sp, t) => new MockClipboardService());
             _serviceContainer.AddService(typeof(MockErrorProviderFactory), (sp, t) => new MockErrorProviderFactory(), true);

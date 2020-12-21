@@ -16,8 +16,8 @@
 
 using System;
 using System.ComponentModel.Composition;
-using Microsoft.VisualStudioTools.Project;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project {
     [Export(typeof(IPythonLauncherProvider))]
@@ -27,7 +27,7 @@ namespace Microsoft.PythonTools.Project {
         internal const string DefaultLauncherName = "Standard Python launcher";
 
         [ImportingConstructor]
-        public DefaultLauncherProvider([Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider) {
+        public DefaultLauncherProvider([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider) {
             _serviceProvider = serviceProvider;
             _pyService = serviceProvider.GetPythonToolsService();
         }

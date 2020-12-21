@@ -70,38 +70,38 @@ namespace Microsoft.PythonTools.Debugger {
                     return RunCheck();
 
                 case "ATTACH_AD7": {
-                        int pid, portNum;
-                        Guid debugId;
-                        if (args.Length != 6 ||
-                            !Int32.TryParse(args[1], out pid) ||
-                            !Int32.TryParse(args[2], out portNum) ||
-                            !Guid.TryParse(args[3], out debugId)
-                        ) {
-                            return Help();
-                        }
+                    int pid, portNum;
+                    Guid debugId;
+                    if (args.Length != 6 ||
+                        !Int32.TryParse(args[1], out pid) ||
+                        !Int32.TryParse(args[2], out portNum) ||
+                        !Guid.TryParse(args[3], out debugId)
+                    ) {
+                        return Help();
+                    }
 
-                        string debugOptions = args[4];
+                    string debugOptions = args[4];
 
-                        EventWaitHandle doneEvent;
-                        try {
-                            doneEvent = AutoResetEvent.OpenExisting(args[5]);
-                        } catch {
-                            Console.Error.WriteLine("Could not open event " + args[5]);
-                            return Help(-2);
-                        }
+                    EventWaitHandle doneEvent;
+                    try {
+                        doneEvent = AutoResetEvent.OpenExisting(args[5]);
+                    } catch {
+                        Console.Error.WriteLine("Could not open event " + args[5]);
+                        return Help(-2);
+                    }
 
-                        var res = AttachAD7Worker(pid, portNum, debugId, debugOptions, doneEvent);
-                        return ((int)res._error) | (res._langVersion << 16);
-                    };
+                    var res = AttachAD7Worker(pid, portNum, debugId, debugOptions, doneEvent);
+                    return ((int)res._error) | (res._langVersion << 16);
+                };
 
                 case "ATTACH_DKM": {
-                        int pid;
-                        if (args.Length != 2 || !Int32.TryParse(args[1], out pid)) {
-                            return Help();
-                        }
+                    int pid;
+                    if (args.Length != 2 || !Int32.TryParse(args[1], out pid)) {
+                        return Help();
+                    }
 
-                        return (int)AttachDkmWorker(pid);
-                    };
+                    return (int)AttachDkmWorker(pid);
+                };
 
                 default:
                     return Help();
@@ -311,7 +311,7 @@ namespace Microsoft.PythonTools.Debugger {
                 }
 
                 // load our code into the process...
-                
+
                 // http://msdn.microsoft.com/en-us/library/windows/desktop/ms682631(v=vs.85).aspx
                 // If the module list in the target process is corrupted or not yet initialized, 
                 // or if the module list changes during the function call as a result of DLLs 

@@ -136,7 +136,7 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             /// <summary>
             /// Whether this object needs to be decref'd once the evaluation result goes away. 
             /// </summary>
-            public bool IsOwned { get; private set; } 
+            public bool IsOwned { get; private set; }
 
             protected override void OnClose() {
                 base.OnClose();
@@ -729,7 +729,7 @@ namespace Microsoft.PythonTools.Debugger.Concord {
 
             if (obj != null) {
                 var cppEval = new CppExpressionEvaluator(inspectionContext, stackFrame);
-                var pyEvalResult =  new PythonEvaluationResult(obj, expression.Text) { Flags = DkmEvaluationResultFlags.SideEffect };
+                var pyEvalResult = new PythonEvaluationResult(obj, expression.Text) { Flags = DkmEvaluationResultFlags.SideEffect };
                 var evalResult = CreatePyObjectEvaluationResult(inspectionContext, stackFrame, null, pyEvalResult, cppEval, null, hasCppView: true, isOwned: true);
                 _evalLoopResult.Write(0); // don't let the eval loop decref the object - we will do it ourselves later, when eval result is closed
                 completionRoutine(new DkmEvaluateExpressionAsyncResult(evalResult));

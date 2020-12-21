@@ -14,23 +14,27 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using Microsoft.VisualStudio.Text;
 using System;
 using System.Collections.Generic;
-using Microsoft.VisualStudio.Text;
 
-namespace TestUtilities.Mocks {
-    public class MockTrackingSpan : ITrackingSpan {
+namespace TestUtilities.Mocks
+{
+    public class MockTrackingSpan : ITrackingSpan
+    {
         private readonly int _start, _length;
         private readonly MockTextSnapshot _snapshot;
         private readonly SpanTrackingMode _trackingMode;
         private readonly ITrackingPoint _startPoint, _endPoint;
 
-        public MockTrackingSpan(MockTextSnapshot snapshot, int start, int length, SpanTrackingMode trackingMode = SpanTrackingMode.EdgeExclusive) {
+        public MockTrackingSpan(MockTextSnapshot snapshot, int start, int length, SpanTrackingMode trackingMode = SpanTrackingMode.EdgeExclusive)
+        {
             _start = start;
             _length = length;
             _snapshot = snapshot;
             _trackingMode = trackingMode;
-            switch(_trackingMode) {
+            switch (_trackingMode)
+            {
                 case SpanTrackingMode.EdgeExclusive:
                     _startPoint = new MockTrackingPoint(snapshot, start, PointTrackingMode.Positive);
                     _endPoint = new MockTrackingPoint(snapshot, start + length, PointTrackingMode.Negative);
@@ -50,40 +54,48 @@ namespace TestUtilities.Mocks {
             }
         }
 
-        public SnapshotPoint GetEndPoint(ITextSnapshot snapshot) {
+        public SnapshotPoint GetEndPoint(ITextSnapshot snapshot)
+        {
             return new SnapshotPoint(_snapshot, _start + _length);
         }
 
-        public Span GetSpan(ITextVersion version) {
+        public Span GetSpan(ITextVersion version)
+        {
             return Span.FromBounds(
                 _startPoint.GetPosition(version),
                 _endPoint.GetPosition(version)
             );
         }
 
-        public SnapshotSpan GetSpan(ITextSnapshot snapshot) {
+        public SnapshotSpan GetSpan(ITextSnapshot snapshot)
+        {
             return new SnapshotSpan(snapshot, GetSpan(snapshot.Version));
         }
 
-        public SnapshotPoint GetStartPoint(ITextSnapshot snapshot) {
+        public SnapshotPoint GetStartPoint(ITextSnapshot snapshot)
+        {
             var span = GetSpan(snapshot.Version);
             return new SnapshotPoint(snapshot, span.Start);
         }
 
-        public string GetText(ITextSnapshot snapshot) {
+        public string GetText(ITextSnapshot snapshot)
+        {
             var span = GetSpan(snapshot.Version);
             return snapshot.GetText(span);
         }
 
-        public ITextBuffer TextBuffer {
+        public ITextBuffer TextBuffer
+        {
             get { return _snapshot.TextBuffer; }
         }
 
-        public TrackingFidelityMode TrackingFidelity {
+        public TrackingFidelityMode TrackingFidelity
+        {
             get { throw new NotImplementedException(); }
         }
 
-        public SpanTrackingMode TrackingMode {
+        public SpanTrackingMode TrackingMode
+        {
             get { return _trackingMode; }
         }
     }

@@ -50,7 +50,7 @@ namespace CookiecutterTests {
             string continuation = null;
             var templates = new List<Template>();
             do {
-               var result = await source.GetTemplatesAsync("", continuation, CancellationToken.None);
+                var result = await source.GetTemplatesAsync("", continuation, CancellationToken.None);
                 continuation = result.ContinuationToken;
                 foreach (var template in result.Templates) {
                     Console.WriteLine(template.RemoteUrl);

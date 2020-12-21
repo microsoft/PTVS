@@ -17,24 +17,30 @@
 using System;
 using System.Windows.Automation;
 
-namespace TestUtilities.UI {
+namespace TestUtilities.UI
+{
     /// <summary>
     /// Wrapps VS's Add Reference Dialog
     /// </summary>
-    class AddReferenceDialog  : AutomationWrapper {
+    class AddReferenceDialog : AutomationWrapper
+    {
         public AddReferenceDialog(AutomationElement element)
-            : base(element) {
+            : base(element)
+        {
         }
 
         /// <summary>
         /// Clicks the OK button on the dialog.
         /// </summary>
-        public void ClickOK() {
+        public void ClickOK()
+        {
             ClickButtonByName("OK");
         }
 
-        public void ActivateBrowseTab() {
-            for (int i = 0; i < 20; i++) {
+        public void ActivateBrowseTab()
+        {
+            for (int i = 0; i < 20; i++)
+            {
                 var tabItem = Element.FindFirst(
                     TreeScope.Descendants,
                     new AndCondition(
@@ -48,7 +54,8 @@ namespace TestUtilities.UI {
                         )
                     )
                 );
-                if (tabItem == null) {
+                if (tabItem == null)
+                {
                     System.Threading.Thread.Sleep(500);
                     continue;
                 }
@@ -58,16 +65,20 @@ namespace TestUtilities.UI {
             }
         }
 
-        public string BrowseFilename {
-            get {
+        public string BrowseFilename
+        {
+            get
+            {
                 return GetFilenameValuePattern().Current.Value;
             }
-            set {
+            set
+            {
                 GetFilenameValuePattern().SetValue(value);
             }
         }
 
-        private ValuePattern GetFilenameValuePattern() {
+        private ValuePattern GetFilenameValuePattern()
+        {
             var filename = Element.FindFirst(
                 TreeScope.Descendants,
                 new AndCondition(

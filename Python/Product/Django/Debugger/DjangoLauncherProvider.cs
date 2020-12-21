@@ -28,7 +28,7 @@ namespace Microsoft.PythonTools.Django.Debugger {
         internal readonly IEnumerable<Lazy<IPythonLauncherProvider>> _providers;
 
         [ImportingConstructor]
-        public DjangoLauncherProvider([ImportMany]IEnumerable<Lazy<IPythonLauncherProvider>> allProviders) {
+        public DjangoLauncherProvider([ImportMany] IEnumerable<Lazy<IPythonLauncherProvider>> allProviders) {
             _providers = allProviders;
         }
 

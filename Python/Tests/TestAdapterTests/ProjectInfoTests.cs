@@ -53,7 +53,7 @@ namespace TestAdapterTests {
                         foreach (int j in Enumerable.Range(1, 1000)) {
                             projectMap[projectName].AddTestContainer(dummyDiscoverer, j.ToString() + ".py");
                         }
-                        
+
                         await Task.Delay(100);
                     }
                 )

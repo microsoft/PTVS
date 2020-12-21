@@ -28,7 +28,7 @@ namespace Microsoft.PythonTools.Django.Intellisense {
         internal readonly IServiceProvider _serviceProvider;
 
         [ImportingConstructor]
-        public DjangoCompletionSourceProvider([Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider, IGlyphService glyphService) {
+        public DjangoCompletionSourceProvider([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider, IGlyphService glyphService) {
             _serviceProvider = serviceProvider;
             _glyphService = glyphService;
         }

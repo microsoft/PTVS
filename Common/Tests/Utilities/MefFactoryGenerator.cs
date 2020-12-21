@@ -19,8 +19,10 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 
-namespace TestUtilities {
-    internal static class MefFactoryGenerator {
+namespace TestUtilities
+{
+    internal static class MefFactoryGenerator
+    {
         private static int _typesCount = 0;
         private static readonly ConstructorInfo _objectCtor;
         private static readonly ConstructorInfo _importingConstructorCtor;
@@ -29,7 +31,8 @@ namespace TestUtilities {
         private static readonly AssemblyBuilder _exportsAssembly;
         private static readonly ModuleBuilder _exportsModule;
 
-        static MefFactoryGenerator() {
+        static MefFactoryGenerator()
+        {
             _objectCtor = typeof(object).GetConstructor(Type.EmptyTypes);
             _exportAttributeCtor = typeof(System.ComponentModel.Composition.ExportAttribute).GetConstructor(Type.EmptyTypes);
             _importAttributeCtor = typeof(System.ComponentModel.Composition.ImportAttribute).GetConstructor(Type.EmptyTypes);
@@ -43,12 +46,14 @@ namespace TestUtilities {
         public static Type GetExportType<T, TResult>(Func<T, TResult> factory) => CreateType<TResult, Func<T, TResult>>().SetFactory(factory);
         public static Type GetExportType<T1, T2, TResult>(Func<T1, T2, TResult> factory) => CreateType<TResult, Func<T1, T2, TResult>>().SetFactory(factory);
 
-        private static Type SetFactory<TFactory>(this Type type, TFactory factory) {
+        private static Type SetFactory<TFactory>(this Type type, TFactory factory)
+        {
             type.GetField("Factory").SetValue(null, factory);
             return type;
         }
 
-        private static Type CreateType<T, TFactory>() {
+        private static Type CreateType<T, TFactory>()
+        {
             var typeBuilder = _exportsModule.DefineType($"<>{typeof(T).Name}_{_typesCount++}",
                 TypeAttributes.NotPublic | TypeAttributes.BeforeFieldInit | TypeAttributes.AutoClass | TypeAttributes.AnsiClass,
                 typeof(object));
@@ -61,7 +66,8 @@ namespace TestUtilities {
             return typeBuilder.CreateType();
         }
 
-        private static void DefineImportingConstructor<TFactory>(this TypeBuilder typeBuilder, FieldInfo factoryField, FieldInfo exportField) {
+        private static void DefineImportingConstructor<TFactory>(this TypeBuilder typeBuilder, FieldInfo factoryField, FieldInfo exportField)
+        {
             var factoryMethodInfo = typeof(TFactory).GetMethod("Invoke");
             var parameters = factoryMethodInfo.GetParameters();
             var parameterTypes = parameters.Select(p => p.ParameterType).ToArray();
@@ -71,12 +77,13 @@ namespace TestUtilities {
             var importingConstructorAttribute = new CustomAttributeBuilder(_importingConstructorCtor, new object[0]);
             constructor.SetCustomAttribute(importingConstructorAttribute);
 
-            
-            for (var i = 0; i < parameters.Length; ++i) {
+
+            for (var i = 0; i < parameters.Length; ++i)
+            {
                 var parameter = parameters[i];
                 var parameterBuilder = constructor.DefineParameter(i + 1, parameter.Attributes, parameter.Name);
                 var importAttribute = new CustomAttributeBuilder(_importAttributeCtor, new object[0]);
-                parameterBuilder.SetCustomAttribute(importAttribute);  
+                parameterBuilder.SetCustomAttribute(importAttribute);
             }
 
             var ilGenerator = constructor.GetILGenerator();
@@ -85,7 +92,8 @@ namespace TestUtilities {
 
             ilGenerator.Emit(OpCodes.Ldarg_0);
             ilGenerator.Emit(OpCodes.Ldsfld, factoryField);
-            for (int i = 1; i <= parameters.Length; i++) {
+            for (int i = 1; i <= parameters.Length; i++)
+            {
                 ilGenerator.Emit(OpCodes.Ldarg, i);
             }
             ilGenerator.EmitCall(OpCodes.Callvirt, factoryMethodInfo, null);
@@ -93,7 +101,8 @@ namespace TestUtilities {
             ilGenerator.Emit(OpCodes.Ret);
         }
 
-        private static void DefineExportProperty<T>(this TypeBuilder typeBuilder, FieldInfo exportField) {
+        private static void DefineExportProperty<T>(this TypeBuilder typeBuilder, FieldInfo exportField)
+        {
             var getter = typeBuilder.DefineMethod("get_Export",
                 MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.HideBySig,
                 typeof(T),

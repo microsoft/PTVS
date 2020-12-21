@@ -25,15 +25,18 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
 
-namespace TestUtilities {
+namespace TestUtilities
+{
     [ExcludeFromCodeCoverage]
-    internal sealed class TestMainThreadService {
+    internal sealed class TestMainThreadService
+    {
         [DllImport("ole32.dll", ExactSpelling = true, SetLastError = true)]
         private static extern int OleInitialize(IntPtr value);
 
         private static readonly Lazy<TestMainThreadService> LazyInstance = new Lazy<TestMainThreadService>(Create, LazyThreadSafetyMode.ExecutionAndPublication);
 
-        private static TestMainThreadService Create() {
+        private static TestMainThreadService Create()
+        {
             var mainThreadService = new TestMainThreadService();
             var initialized = new ManualResetEventSlim();
 
@@ -48,7 +51,8 @@ namespace TestUtilities {
             thread.Start(initialized);
 
             initialized.Wait();
-            Dispatcher.FromThread(thread).Invoke(() => {
+            Dispatcher.FromThread(thread).Invoke(() =>
+            {
                 mainThreadService.Thread = thread;
                 mainThreadService.SyncContext = SynchronizationContext.Current;
             });
@@ -61,15 +65,18 @@ namespace TestUtilities {
         private DispatcherFrame _frame;
         private Application _application;
 
-        private TestMainThreadService() {
+        private TestMainThreadService()
+        {
             _testMainThread = new AsyncLocal<TestMainThread>();
         }
 
         public Thread Thread { get; private set; }
         public SynchronizationContext SyncContext { get; private set; }
 
-        internal TestMainThread CreateTestMainThread() {
-            if (_testMainThread.Value != null) {
+        internal TestMainThread CreateTestMainThread()
+        {
+            if (_testMainThread.Value != null)
+            {
                 throw new InvalidOperationException("AsyncLocal<TestMainThread> reentrancy");
             }
 
@@ -80,7 +87,8 @@ namespace TestUtilities {
 
         private void RemoveTestMainThread() => _testMainThread.Value = null;
 
-        public void Invoke(Action action) {
+        public void Invoke(Action action)
+        {
             ExceptionDispatchInfo exception = Thread == Thread.CurrentThread
                ? CallSafe(action)
                : _application.Dispatcher.Invoke(() => CallSafe(action));
@@ -88,17 +96,22 @@ namespace TestUtilities {
             exception?.Throw();
         }
 
-        public async Task InvokeAsync(Action action) {
+        public async Task InvokeAsync(Action action)
+        {
             ExceptionDispatchInfo exception;
-            if (Thread == Thread.CurrentThread) {
+            if (Thread == Thread.CurrentThread)
+            {
                 exception = CallSafe(action);
-            } else {
+            }
+            else
+            {
                 exception = await _application.Dispatcher.InvokeAsync(() => CallSafe(action), DispatcherPriority.Normal);
             }
             exception?.Throw();
         }
 
-        public T Invoke<T>(Func<T> action) {
+        public T Invoke<T>(Func<T> action)
+        {
             var result = Thread == Thread.CurrentThread
                ? CallSafe(action)
                : _application.Dispatcher.Invoke(() => CallSafe(action));
@@ -107,11 +120,15 @@ namespace TestUtilities {
             return result.Value;
         }
 
-        public async Task<T> InvokeAsync<T>(Func<T> action) {
+        public async Task<T> InvokeAsync<T>(Func<T> action)
+        {
             CallSafeResult<T> result;
-            if (Thread == Thread.CurrentThread) {
+            if (Thread == Thread.CurrentThread)
+            {
                 result = CallSafe(action);
-            } else {
+            }
+            else
+            {
                 result = await _application.Dispatcher.InvokeAsync(() => CallSafe(action));
             }
 
@@ -119,12 +136,15 @@ namespace TestUtilities {
             return result.Value;
         }
 
-        private void RunMainThread(object obj) {
-            if (Application.Current != null) {
+        private void RunMainThread(object obj)
+        {
+            if (Application.Current != null)
+            {
                 // Need to be on our own sta thread
                 Application.Current.Dispatcher.Invoke(Application.Current.Shutdown);
 
-                if (Application.Current != null) {
+                if (Application.Current != null)
+                {
                     throw new InvalidOperationException("Unable to shut down existing application.");
                 }
             }
@@ -132,7 +152,8 @@ namespace TestUtilities {
             // Kick OLE so we can use the clipboard if necessary
             OleInitialize(IntPtr.Zero);
 
-            _application = new Application {
+            _application = new Application
+            {
                 // Application should survive window closing events to be reusable
                 ShutdownMode = ShutdownMode.OnExplicitShutdown
             };
@@ -144,24 +165,29 @@ namespace TestUtilities {
             // Initialization completed
             ((ManualResetEventSlim)obj).Set();
 
-            while (_frame.Continue) {
+            while (_frame.Continue)
+            {
                 var exception = CallSafe(() => Dispatcher.PushFrame(_frame));
-                if (exception != null) {
+                if (exception != null)
+                {
                     exceptionInfos.Add(exception);
                 }
             }
 
             var dispatcher = Dispatcher.FromThread(Thread.CurrentThread);
-            if (dispatcher != null && !dispatcher.HasShutdownStarted) {
+            if (dispatcher != null && !dispatcher.HasShutdownStarted)
+            {
                 dispatcher.InvokeShutdown();
             }
 
-            if (exceptionInfos.Any()) {
+            if (exceptionInfos.Any())
+            {
                 throw new AggregateException(exceptionInfos.Select(ce => ce.SourceException).ToArray());
             }
         }
 
-        private void Destroy(object sender, EventArgs e) {
+        private void Destroy(object sender, EventArgs e)
+        {
             AppDomain.CurrentDomain.DomainUnload -= Destroy;
             AppDomain.CurrentDomain.ProcessExit -= Destroy;
 
@@ -175,24 +201,32 @@ namespace TestUtilities {
         }
 
         private static ExceptionDispatchInfo CallSafe(Action action)
-            => CallSafe<object>(() => {
+            => CallSafe<object>(() =>
+            {
                 action();
                 return null;
             }).Exception;
 
-        private static CallSafeResult<T> CallSafe<T>(Func<T> func) {
-            try {
+        private static CallSafeResult<T> CallSafe<T>(Func<T> func)
+        {
+            try
+            {
                 return new CallSafeResult<T> { Value = func() };
-            } catch (ThreadAbortException tae) {
+            }
+            catch (ThreadAbortException tae)
+            {
                 // Thread should be terminated anyway
                 Thread.ResetAbort();
                 return new CallSafeResult<T> { Exception = ExceptionDispatchInfo.Capture(tae) };
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 return new CallSafeResult<T> { Exception = ExceptionDispatchInfo.Capture(e) };
             }
         }
 
-        private class CallSafeResult<T> {
+        private class CallSafeResult<T>
+        {
             public T Value { get; set; }
             public ExceptionDispatchInfo Exception { get; set; }
         }

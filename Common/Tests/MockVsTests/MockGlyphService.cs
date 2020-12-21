@@ -14,15 +14,18 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using Microsoft.VisualStudio.Language.Intellisense;
 using System;
 using System.ComponentModel.Composition;
 using System.Windows.Media;
-using Microsoft.VisualStudio.Language.Intellisense;
 
-namespace Microsoft.VisualStudioTools.MockVsTests {
+namespace Microsoft.VisualStudioTools.MockVsTests
+{
     [Export(typeof(IGlyphService))]
-    class MockGlyphService : IGlyphService {
-        public ImageSource GetGlyph(StandardGlyphGroup group, StandardGlyphItem item) {
+    class MockGlyphService : IGlyphService
+    {
+        public ImageSource GetGlyph(StandardGlyphGroup group, StandardGlyphItem item)
+        {
             return null;
         }
     }

@@ -43,7 +43,7 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
             null
         );
 
-        private static readonly IList<ProjectCustomization> _projectCustomizations = new [] {
+        private static readonly IList<ProjectCustomization> _projectCustomizations = new[] {
             BottleProjectCustomization.Instance,
             DjangoProjectCustomization.Instance,
             FlaskProjectCustomization.Instance,
@@ -390,7 +390,7 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
                     fileType = "Compile";
                 }
                 folders.Add(Path.GetDirectoryName(file));
-                
+
                 project.AddItem(fileType, file);
             }
 
@@ -494,7 +494,7 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
                 if (UnwindDirectory(dir).Any(skipDirectories.Contains)) {
                     continue;
                 }
-                
+
                 try {
                     if (virtualEnvPaths != null) {
                         var origPrefix = VirtualEnv.GetOrigPrefixPath(dir);

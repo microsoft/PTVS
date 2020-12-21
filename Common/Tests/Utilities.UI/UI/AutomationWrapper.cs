@@ -14,19 +14,22 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
 using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Windows.Automation;
-using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
 
-namespace TestUtilities.UI {
-    public class AutomationWrapper {
+namespace TestUtilities.UI
+{
+    public class AutomationWrapper
+    {
         private readonly AutomationElement _element;
-        
-        public AutomationWrapper(AutomationElement element) {
+
+        public AutomationWrapper(AutomationElement element)
+        {
             Debug.Assert(element != null);
             _element = element;
         }
@@ -34,8 +37,10 @@ namespace TestUtilities.UI {
         /// <summary>
         /// Provides access to the underlying AutomationElement used for accessing the visual studio app.
         /// </summary>
-        public AutomationElement Element {
-            get {
+        public AutomationElement Element
+        {
+            get
+            {
                 return _element;
             }
         }
@@ -44,7 +49,8 @@ namespace TestUtilities.UI {
         /// Clicks the child button with the specified automation ID.
         /// </summary>
         /// <param name="automationId"></param>
-        public void ClickButtonByAutomationId(string automationId) {
+        public void ClickButtonByAutomationId(string automationId)
+        {
             Invoke(FindFirstWithRetry(
                 TreeScope.Descendants,
                 new AndCondition(
@@ -54,12 +60,13 @@ namespace TestUtilities.UI {
             ));
         }
 
-        
+
         /// <summary>
         /// Clicks the child button with the specified name.
         /// </summary>
         /// <param name="name"></param>
-        public void ClickButtonByName(string name) {
+        public void ClickButtonByName(string name)
+        {
             Invoke(FindFirstWithRetry(
                 TreeScope.Descendants,
                 new AndCondition(
@@ -73,7 +80,8 @@ namespace TestUtilities.UI {
         /// Clicks the child hyperlink with the specified name.
         /// </summary>
         /// <param name="name"></param>
-        public void ClickHyperlinkByName(string name) {
+        public void ClickHyperlinkByName(string name)
+        {
             Invoke(FindFirstWithRetry(
                 TreeScope.Descendants,
                 new AndCondition(
@@ -83,37 +91,46 @@ namespace TestUtilities.UI {
             ));
         }
 
-        public AutomationElement FindByName(string name) {
+        public AutomationElement FindByName(string name)
+        {
             return FindFirstWithRetry(
                 TreeScope.Descendants,
                 new PropertyCondition(AutomationElement.NameProperty, name)
             );
         }
 
-        private static string AsString(Condition condition) {
+        private static string AsString(Condition condition)
+        {
             var andCond = condition as AndCondition;
-            if (andCond != null) {
+            if (andCond != null)
+            {
                 return string.Join(" and ", andCond.GetConditions().Select(c => string.Format("({0})", AsString(c))));
             }
             var orCond = condition as AndCondition;
-            if (orCond != null) {
+            if (orCond != null)
+            {
                 return string.Join(" or ", orCond.GetConditions().Select(c => string.Format("({0})", AsString(c))));
             }
             var propCond = condition as PropertyCondition;
-            if (propCond != null) {
+            if (propCond != null)
+            {
                 return string.Format("{0}={1}", propCond.Property.ProgrammaticName, propCond.Value);
             }
 
             return condition.GetType().Name;
         }
 
-        private AutomationElement FindFirstWithRetry(TreeScope scope, Condition condition) {
+        private AutomationElement FindFirstWithRetry(TreeScope scope, Condition condition)
+        {
             AutomationElement res = null;
-            for (int i = 0; i < 20 && res == null; i++) {
+            for (int i = 0; i < 20 && res == null; i++)
+            {
                 res = Element.FindFirst(scope, condition);
-                if (res == null) {
+                if (res == null)
+                {
                     Console.WriteLine("Failed to find element {0} on try {1}", AsString(condition), i);
-                    if (i == 0) {
+                    if (i == 0)
+                    {
                         Console.WriteLine(new StackTrace(true).ToString());
                     }
                     System.Threading.Thread.Sleep(500);
@@ -125,7 +142,8 @@ namespace TestUtilities.UI {
         /// <summary>
         /// Finds the first descendent with the given automation ID.
         /// </summary>
-        public AutomationElement FindByAutomationId(string automationId) {
+        public AutomationElement FindByAutomationId(string automationId)
+        {
             return FindFirstWithRetry(
                 TreeScope.Descendants,
                 new PropertyCondition(
@@ -140,7 +158,8 @@ namespace TestUtilities.UI {
         /// </summary>
         /// <param name="text"></param>
         /// <returns></returns>
-        public AutomationElement FindButton(string text) {
+        public AutomationElement FindButton(string text)
+        {
             return FindFirstWithRetry(
                 TreeScope.Descendants,
                 new AndCondition(
@@ -161,13 +180,14 @@ namespace TestUtilities.UI {
                 )
             );
         }
-        
+
         /// <summary>
         /// Finds the first child element of a given control type.
         /// </summary>
         /// <param name="ctlType">The ControlType you wish to find</param>
         /// <returns></returns>
-        public AutomationElement FindFirstByControlType(ControlType ctlType) {
+        public AutomationElement FindFirstByControlType(ControlType ctlType)
+        {
             return FindFirstWithRetry(
                 TreeScope.Descendants,
                 new PropertyCondition(
@@ -182,7 +202,8 @@ namespace TestUtilities.UI {
         /// </summary>
         /// <param name="ctlType">The ControlType you wish to find</param>
         /// <returns></returns>
-        public AutomationElement FindFirstByNameAndAutomationId(string name, string automationId) {
+        public AutomationElement FindFirstByNameAndAutomationId(string name, string automationId)
+        {
             return FindFirstWithRetry(
                 TreeScope.Descendants,
                 new AndCondition(
@@ -203,7 +224,8 @@ namespace TestUtilities.UI {
         /// </summary>
         /// <param name="ctlType">The ControlType you wish to find</param>
         /// <returns></returns>
-        public AutomationElement FindFirstByControlType(string name, ControlType ctlType) {
+        public AutomationElement FindFirstByControlType(string name, ControlType ctlType)
+        {
             return FindFirstWithRetry(
                 TreeScope.Descendants,
                 new AndCondition(
@@ -224,7 +246,8 @@ namespace TestUtilities.UI {
         /// </summary>
         /// <param name="ctlType">The ControlType you wish to find</param>
         /// <returns></returns>
-        public AutomationElementCollection FindAllByControlType(ControlType ctlType) {
+        public AutomationElementCollection FindAllByControlType(ControlType ctlType)
+        {
             return Element.FindAll(
                 TreeScope.Descendants,
                 new PropertyCondition(
@@ -236,16 +259,20 @@ namespace TestUtilities.UI {
 
         #region Pattern Helpers
 
-        private static void CheckNullElement(ITreeNode element) {
-            if (element == null) {
+        private static void CheckNullElement(ITreeNode element)
+        {
+            if (element == null)
+            {
                 Console.WriteLine("Attempting to invoke pattern on null node");
                 AutomationWrapper.DumpVS();
                 throw new InvalidOperationException();
             }
         }
 
-        internal static void CheckNullElement(AutomationElement element) {
-            if (element == null) {
+        internal static void CheckNullElement(AutomationElement element)
+        {
+            if (element == null)
+            {
                 Console.WriteLine("Attempting to invoke pattern on null element");
                 AutomationWrapper.DumpVS();
                 throw new InvalidOperationException();
@@ -255,7 +282,8 @@ namespace TestUtilities.UI {
         /// <summary>
         /// Invokes the specified invokable item.  The item must support the invoke pattern.
         /// </summary>
-        public static void Invoke(AutomationElement button) {
+        public static void Invoke(AutomationElement button)
+        {
             CheckNullElement(button);
             button.GetInvokePattern().Invoke();
         }
@@ -264,17 +292,20 @@ namespace TestUtilities.UI {
         /// Selects the selectable item.  The item must support the Selection item pattern.
         /// </summary>
         /// <param name="selectionItem"></param>
-        public static void Select(AutomationElement selectionItem) {
+        public static void Select(AutomationElement selectionItem)
+        {
             CheckNullElement(selectionItem);
             selectionItem.GetSelectionItemPattern().Select();
         }
 
-        public static void Select(ITreeNode selectionItem) {
+        public static void Select(ITreeNode selectionItem)
+        {
             CheckNullElement(selectionItem);
             selectionItem.Select();
         }
 
-        public static void DoDefaultAction(AutomationElement element) {
+        public static void DoDefaultAction(AutomationElement element)
+        {
             CheckNullElement(element);
             var accessible = NativeMethods.GetAccessibleObject(element);
             Console.WriteLine("Found {0} ({1})", accessible.accName, accessible.accDefaultAction);
@@ -285,20 +316,23 @@ namespace TestUtilities.UI {
         /// Selects the selectable item.  The item must support the Selection item pattern.
         /// </summary>
         /// <param name="selectionItem"></param>
-        public static void AddToSelection(AutomationElement selectionItem) {
+        public static void AddToSelection(AutomationElement selectionItem)
+        {
             CheckNullElement(selectionItem);
             var selectPattern = (SelectionItemPattern)selectionItem.GetCurrentPattern(SelectionItemPattern.Pattern);
             selectPattern.AddToSelection();
         }
 
-        public static void AddToSelection(ITreeNode selectionItem) {
+        public static void AddToSelection(ITreeNode selectionItem)
+        {
             selectionItem.AddToSelection();
         }
 
         /// <summary>
         /// Selects the selectable item.  The item must support the Selection item pattern.
         /// </summary>
-        public void Select() {
+        public void Select()
+        {
             Select(Element);
         }
 
@@ -306,10 +340,12 @@ namespace TestUtilities.UI {
         /// Expands the selected item.  The item must support the expand/collapse pattern.
         /// </summary>
         /// <param name="node"></param>
-        public static void EnsureExpanded(AutomationElement node) {
+        public static void EnsureExpanded(AutomationElement node)
+        {
             CheckNullElement(node);
             ExpandCollapsePattern pat = (ExpandCollapsePattern)node.GetCurrentPattern(ExpandCollapsePattern.Pattern);
-            if (pat.Current.ExpandCollapseState == ExpandCollapseState.Collapsed) {
+            if (pat.Current.ExpandCollapseState == ExpandCollapseState.Collapsed)
+            {
                 pat.Expand();
             }
         }
@@ -318,10 +354,12 @@ namespace TestUtilities.UI {
         /// Collapses the selected item.  The item must support the expand/collapse pattern.
         /// </summary>
         /// <param name="node"></param>
-        public static void Collapse(AutomationElement node) {
+        public static void Collapse(AutomationElement node)
+        {
             CheckNullElement(node);
             ExpandCollapsePattern pat = (ExpandCollapsePattern)node.GetCurrentPattern(ExpandCollapsePattern.Pattern);
-            if (pat.Current.ExpandCollapseState != ExpandCollapseState.Collapsed) {
+            if (pat.Current.ExpandCollapseState != ExpandCollapseState.Collapsed)
+            {
                 pat.Collapse();
             }
         }
@@ -330,7 +368,8 @@ namespace TestUtilities.UI {
         /// Gets the specified value from this element.  The element must support the value pattern.
         /// </summary>
         /// <returns></returns>
-        public string GetValue() {
+        public string GetValue()
+        {
             return ((ValuePattern)Element.GetCurrentPattern(ValuePattern.Pattern)).Current.Value;
         }
 
@@ -338,7 +377,8 @@ namespace TestUtilities.UI {
         /// Sets the specified value from this element.  The element must support the value pattern.
         /// </summary>
         /// <returns></returns>
-        public void SetValue(string value) {
+        public void SetValue(string value)
+        {
             ((ValuePattern)Element.GetCurrentPattern(ValuePattern.Pattern)).SetValue(value);
         }
 
@@ -347,9 +387,11 @@ namespace TestUtilities.UI {
         /// <summary>
         /// Dumps the current top-level window in VS
         /// </summary>
-        public static void DumpVS() {
+        public static void DumpVS()
+        {
             var sp = ServiceProvider.GlobalProvider;
-            if (sp == null) {
+            if (sp == null)
+            {
                 return;
             }
 
@@ -360,43 +402,51 @@ namespace TestUtilities.UI {
 
             // if we have a dialog open dump the main VS window too
             var mainHwnd = new IntPtr(((EnvDTE.DTE)sp.GetService(typeof(EnvDTE.DTE))).MainWindow.HWnd);
-            if (mainHwnd != hwnd) {
+            if (mainHwnd != hwnd)
+            {
                 Console.WriteLine("VS: ");
                 AutomationWrapper.DumpElement(AutomationElement.FromHandle(mainHwnd));
             }
         }
 
-        public static void DumpElement(AutomationElement element) {
+        public static void DumpElement(AutomationElement element)
+        {
             Console.WriteLine("Name    ClassName      ControlType    AutomationID");
             DumpElement(element, 0);
         }
 
-        private static void DumpElement(AutomationElement element, int depth) {
+        private static void DumpElement(AutomationElement element, int depth)
+        {
             Console.WriteLine(String.Format(
-                "{0} {1}\t{2}\t{3}\t{4}", 
-                new string(' ', depth * 4), 
-                element.Current.Name, 
+                "{0} {1}\t{2}\t{3}\t{4}",
+                new string(' ', depth * 4),
+                element.Current.Name,
                 element.Current.ClassName,
-                element.Current.ControlType.ProgrammaticName, 
+                element.Current.ControlType.ProgrammaticName,
                 element.Current.AutomationId
             ));
 
             var children = element.FindAll(TreeScope.Children, Condition.TrueCondition);
-            foreach (AutomationElement child in children) {
+            foreach (AutomationElement child in children)
+            {
                 DumpElement(child, depth + 1);
             }
         }
 
-        public void SetFocus() {
+        public void SetFocus()
+        {
             Element.SetFocus();
         }
 
-        public void Invoke() {
+        public void Invoke()
+        {
             Invoke(Element);
         }
 
-        public static void WaitFor<T>(T obj, Predicate<T> condition, int timeout = 100000) where T : AutomationWrapper {
-            for (int i = 0; i < timeout; i += 100) {
+        public static void WaitFor<T>(T obj, Predicate<T> condition, int timeout = 100000) where T : AutomationWrapper
+        {
+            for (int i = 0; i < timeout; i += 100)
+            {
                 if (condition(obj))
                     return;
 
@@ -406,40 +456,52 @@ namespace TestUtilities.UI {
             throw new TimeoutException(string.Format("Timeout waiting for element '{0}'", obj.Element.Current.Name));
         }
 
-        public void WaitForInputIdle() {
+        public void WaitForInputIdle()
+        {
             object pattern;
-            if (Element.TryGetCurrentPattern(WindowPattern.Pattern, out pattern)) {
-                if (!((WindowPattern)pattern).WaitForInputIdle(5000)) {
+            if (Element.TryGetCurrentPattern(WindowPattern.Pattern, out pattern))
+            {
+                if (!((WindowPattern)pattern).WaitForInputIdle(5000))
+                {
                     throw new TimeoutException();
                 }
             }
         }
 
-        public void CloseWindow() {
+        public void CloseWindow()
+        {
             object pattern;
-            if (Element.TryGetCurrentPattern(WindowPattern.Pattern, out pattern)) {
+            if (Element.TryGetCurrentPattern(WindowPattern.Pattern, out pattern))
+            {
                 ((WindowPattern)pattern).Close();
             }
         }
 
-        public bool WaitForClosed(TimeSpan timeout, Action closeCommand = null) {
-            using (var closed = new AutoResetEvent(false)) {
-                AutomationEventHandler handler = (s, e) => {
+        public bool WaitForClosed(TimeSpan timeout, Action closeCommand = null)
+        {
+            using (var closed = new AutoResetEvent(false))
+            {
+                AutomationEventHandler handler = (s, e) =>
+                {
                     closed.Set();
                 };
-                try {
+                try
+                {
                     Automation.AddAutomationEventHandler(
                         WindowPattern.WindowClosedEvent,
                         Element,
                         TreeScope.Element,
                         handler
                     );
-                } catch (ElementNotAvailableException) {
+                }
+                catch (ElementNotAvailableException)
+                {
                     // Already closed
                     return true;
                 }
 
-                if (closeCommand != null) {
+                if (closeCommand != null)
+                {
                     closeCommand();
                 }
 
@@ -456,31 +518,41 @@ namespace TestUtilities.UI {
         }
     }
 
-    public static class AutomationElementExtensions {
-        public static AutomationWrapper AsWrapper(this AutomationElement element) {
-            if (element == null) {
+    public static class AutomationElementExtensions
+    {
+        public static AutomationWrapper AsWrapper(this AutomationElement element)
+        {
+            if (element == null)
+            {
                 return null;
             }
             return new AutomationWrapper(element);
         }
 
-        public static void Select(this AutomationElement element) {
+        public static void Select(this AutomationElement element)
+        {
             AutomationWrapper.Select(element);
         }
 
-        public static void EnsureExpanded(this AutomationElement node) {
+        public static void EnsureExpanded(this AutomationElement node)
+        {
             AutomationWrapper.EnsureExpanded(node);
         }
 
-        public static void Collapse(this AutomationElement node) {
+        public static void Collapse(this AutomationElement node)
+        {
             AutomationWrapper.Collapse(node);
         }
 
         [DebuggerStepThrough]
-        private static T Pattern<T>(this AutomationElement node, AutomationPattern pattern) where T : BasePattern {
-            try {
+        private static T Pattern<T>(this AutomationElement node, AutomationPattern pattern) where T : BasePattern
+        {
+            try
+            {
                 return (T)node.GetCurrentPattern(pattern);
-            } catch (InvalidOperationException) {
+            }
+            catch (InvalidOperationException)
+            {
                 Console.WriteLine("{0} pattern is not supported by {1}.", pattern.ProgrammaticName, node.Current.Name);
                 AutomationWrapper.DumpElement(node);
                 throw;
@@ -488,53 +560,63 @@ namespace TestUtilities.UI {
         }
 
         [DebuggerStepThrough]
-        public static InvokePattern GetInvokePattern(this AutomationElement node) {
+        public static InvokePattern GetInvokePattern(this AutomationElement node)
+        {
             return node.Pattern<InvokePattern>(InvokePattern.Pattern);
         }
 
         [DebuggerStepThrough]
-        public static TogglePattern GetTogglePattern(this AutomationElement node) {
+        public static TogglePattern GetTogglePattern(this AutomationElement node)
+        {
             return node.Pattern<TogglePattern>(TogglePattern.Pattern);
         }
 
         [DebuggerStepThrough]
-        public static ValuePattern GetValuePattern(this AutomationElement node) {
+        public static ValuePattern GetValuePattern(this AutomationElement node)
+        {
             return node.Pattern<ValuePattern>(ValuePattern.Pattern);
         }
 
         [DebuggerStepThrough]
-        public static TextPattern GetTextPattern(this AutomationElement node) {
+        public static TextPattern GetTextPattern(this AutomationElement node)
+        {
             return node.Pattern<TextPattern>(TextPattern.Pattern);
         }
 
         [DebuggerStepThrough]
-        public static ScrollPattern GetScrollPattern(this AutomationElement node) {
+        public static ScrollPattern GetScrollPattern(this AutomationElement node)
+        {
             return node.Pattern<ScrollPattern>(ScrollPattern.Pattern);
         }
 
         [DebuggerStepThrough]
-        public static ScrollItemPattern GetScrollItemPattern(this AutomationElement node) {
+        public static ScrollItemPattern GetScrollItemPattern(this AutomationElement node)
+        {
             return node.Pattern<ScrollItemPattern>(ScrollItemPattern.Pattern);
         }
 
         [DebuggerStepThrough]
-        public static SelectionPattern GetSelectionPattern(this AutomationElement node) {
+        public static SelectionPattern GetSelectionPattern(this AutomationElement node)
+        {
             return node.Pattern<SelectionPattern>(SelectionPattern.Pattern);
         }
 
         [DebuggerStepThrough]
-        public static SelectionItemPattern GetSelectionItemPattern(this AutomationElement node) {
+        public static SelectionItemPattern GetSelectionItemPattern(this AutomationElement node)
+        {
             return node.Pattern<SelectionItemPattern>(SelectionItemPattern.Pattern);
         }
 
         [DebuggerStepThrough]
-        public static ExpandCollapsePattern GetExpandCollapsePattern(this AutomationElement node) {
+        public static ExpandCollapsePattern GetExpandCollapsePattern(this AutomationElement node)
+        {
             return node.Pattern<ExpandCollapsePattern>(ExpandCollapsePattern.Pattern);
         }
 
         [DebuggerStepThrough]
-        public static WindowPattern GetWindowPattern(this AutomationElement node) {
+        public static WindowPattern GetWindowPattern(this AutomationElement node)
+        {
             return node.Pattern<WindowPattern>(WindowPattern.Pattern);
         }
     }
-} 
+}

@@ -50,9 +50,9 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                     break;
                 case TemplateTokenKind.Variable:
                     var filterInfo = DjangoVariable.Parse(region.Text);
-                    
+
                     if (filterInfo != null) {
-                        foreach(var curSpan in filterInfo.GetSpans()) {
+                        foreach (var curSpan in filterInfo.GetSpans()) {
                             spans.Add(ToClassificationSpan(curSpan, snapshot, region.Start));
                         }
                     }
@@ -93,13 +93,13 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
 
         protected IClassificationType GetClassification(Classification classification) {
             switch (classification) {
-                case Classification.None:           return _classifierProvider._classType;                    
-                case Classification.Keyword:        return _classifierProvider._keywordType;
-                case Classification.ExcludedCode:   return _classifierProvider._excludedCode;
-                case Classification.Identifier:     return _classifierProvider._identifierType;
-                case Classification.Dot:            return _classifierProvider._dot;
-                case Classification.Literal:        return _classifierProvider._literalType;
-                case Classification.Number:         return _classifierProvider._numberType;
+                case Classification.None: return _classifierProvider._classType;
+                case Classification.Keyword: return _classifierProvider._keywordType;
+                case Classification.ExcludedCode: return _classifierProvider._excludedCode;
+                case Classification.Identifier: return _classifierProvider._identifierType;
+                case Classification.Dot: return _classifierProvider._dot;
+                case Classification.Literal: return _classifierProvider._literalType;
+                case Classification.Number: return _classifierProvider._numberType;
                 default: throw new InvalidOperationException();
             }
         }

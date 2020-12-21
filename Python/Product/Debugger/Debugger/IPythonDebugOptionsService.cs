@@ -21,25 +21,25 @@ namespace Microsoft.PythonTools.Debugger {
         /// Default is false.
         /// </summary>
         bool PromptBeforeRunningWithBuildError { get; }
-        
+
         /// <summary>
         /// True to copy standard output from a Python process into the Output
         /// window. Default is true.
         /// </summary>
         bool TeeStandardOutput { get; }
-        
+
         /// <summary>
         /// True to pause at the end of execution when an error occurs. Default.
         /// is true.
         /// </summary>
         bool WaitOnAbnormalExit { get; }
-        
+
         /// <summary>
         /// True to pause at the end of execution when completing successfully.
         /// Default is true.
         /// </summary>
         bool WaitOnNormalExit { get; }
-        
+
         /// <summary>
         /// True to break on a SystemExit exception even when its exit code is
         /// zero. This applies only when the debugger would normally break on
@@ -47,20 +47,20 @@ namespace Microsoft.PythonTools.Debugger {
         /// </summary>
         /// <remarks>New in 1.1</remarks>
         bool BreakOnSystemExitZero { get; }
-        
+
         /// <summary>
         /// True if the standard launcher should allow debugging of the standard
         /// library. Default is false.
         /// </summary>
         /// <remarks>New in 1.1</remarks>
         bool DebugStdLib { get; }
-        
+
         /// <summary>
         /// Show the function return value in locals window.
         /// Default is true.
         /// </summary>
         bool ShowFunctionReturnValue { get; }
-        
+
         /// <summary>
         /// True to use the legacy debugger. Default is false.
         /// </summary>

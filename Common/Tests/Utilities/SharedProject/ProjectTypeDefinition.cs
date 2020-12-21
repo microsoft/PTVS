@@ -15,7 +15,8 @@
 // permissions and limitations under the License.
 
 
-namespace TestUtilities.SharedProject {
+namespace TestUtilities.SharedProject
+{
     /// <summary>
     /// Defines a project type definition, an instance of this gets exported:
     /// 
@@ -26,6 +27,7 @@ namespace TestUtilities.SharedProject {
     /// [SampleCode("console.log('hi');")]                        // optional
     /// internal static ProjectTypeDefinition ProjectTypeDefinition = new ProjectTypeDefinition();
     /// </summary>
-    public sealed class ProjectTypeDefinition {
+    public sealed class ProjectTypeDefinition
+    {
     }
 }

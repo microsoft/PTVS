@@ -1141,7 +1141,7 @@ namespace DebuggerTests {
         [TestMethod, Priority(UnitTestPriority.P0)]
         public async Task BreakStepStep() {
             // http://pytools.codeplex.com/workitem/815
-            
+
             var debugger = new PythonDebugger();
             string fn = Path.Combine(DebuggerTestPath, "StepBreakBreak.py");
             var processRunInfo = CreateProcess(debugger, fn, async (newproc, newthread) => {
@@ -1247,10 +1247,10 @@ namespace DebuggerTests {
             string filename = Path.Combine(DebuggerTestPath, "ThreadJoin.py");
             PythonThread mainThread = null;
             var processRunInfo = CreateProcess(debugger, filename, async (newproc, newthread) => {
-                    mainThread = newthread;
-                    var bp = newproc.AddBreakpoint(filename, 5);
-                    await bp.AddAsync(TimeoutToken());
-                },
+                mainThread = newthread;
+                var bp = newproc.AddBreakpoint(filename, 5);
+                await bp.AddAsync(TimeoutToken());
+            },
                 debugOptions: PythonDebugOptions.WaitOnAbnormalExit | PythonDebugOptions.WaitOnNormalExit
             );
 
@@ -1347,12 +1347,11 @@ namespace DebuggerTests {
             var debugger = new PythonDebugger();
             PythonThread thread = null;
             PythonBreakpoint bp = null;
-            var processRunInfo = CreateProcess(debugger, filename, async (newproc, newthread) =>
-                {
-                    thread = newthread;
-                    bp = newproc.AddBreakpoint(filename, line);
-                    await bp.AddAsync(TimeoutToken());
-                },
+            var processRunInfo = CreateProcess(debugger, filename, async (newproc, newthread) => {
+                thread = newthread;
+                bp = newproc.AddBreakpoint(filename, line);
+                await bp.AddAsync(TimeoutToken());
+            },
                 debugOptions: PythonDebugOptions.RedirectOutput
             );
 
@@ -1364,8 +1363,7 @@ namespace DebuggerTests {
 
                 var backgroundException = new TaskCompletionSource<bool>();
 
-                process.BreakpointHit += async (sender, args) =>
-                {
+                process.BreakpointHit += async (sender, args) => {
                     try {
                         hitCount++;
                         if (!updated) {

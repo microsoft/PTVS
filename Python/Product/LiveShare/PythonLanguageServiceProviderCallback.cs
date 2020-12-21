@@ -25,10 +25,10 @@ using Microsoft.VisualStudio.LanguageServer.Protocol;
 using Microsoft.VisualStudio.LiveShare.LanguageServices;
 using Microsoft.VisualStudio.Threading;
 using Microsoft.VisualStudioTools;
-using LSP = Microsoft.VisualStudio.LanguageServer.Protocol;
-using LS = Microsoft.VisualStudio.LiveShare.LanguageServices;
-using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using LS = Microsoft.VisualStudio.LiveShare.LanguageServices;
+using LSP = Microsoft.VisualStudio.LanguageServer.Protocol;
 
 namespace Microsoft.PythonTools.LiveShare {
     internal class PythonLanguageServiceProviderCallback : ILanguageServiceProviderCallback {

@@ -14,43 +14,55 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Projection;
+using System;
 
-namespace TestUtilities.Mocks {
-    public class MockMappingPoint : IMappingPoint {
+namespace TestUtilities.Mocks
+{
+    public class MockMappingPoint : IMappingPoint
+    {
         private readonly ITrackingPoint _trackingPoint;
 
-        public MockMappingPoint(ITrackingPoint trackingPoint) {
+        public MockMappingPoint(ITrackingPoint trackingPoint)
+        {
             _trackingPoint = trackingPoint;
         }
 
-        public ITextBuffer AnchorBuffer {
+        public ITextBuffer AnchorBuffer
+        {
             get { throw new NotImplementedException(); }
         }
 
-        public IBufferGraph BufferGraph {
+        public IBufferGraph BufferGraph
+        {
             get { throw new NotImplementedException(); }
         }
 
-        public SnapshotPoint? GetInsertionPoint(Predicate<ITextBuffer> match) {
+        public SnapshotPoint? GetInsertionPoint(Predicate<ITextBuffer> match)
+        {
             throw new NotImplementedException();
         }
 
-        public SnapshotPoint? GetPoint(Predicate<ITextBuffer> match, PositionAffinity affinity) {
+        public SnapshotPoint? GetPoint(Predicate<ITextBuffer> match, PositionAffinity affinity)
+        {
             throw new NotImplementedException();
         }
 
-        public SnapshotPoint? GetPoint(ITextSnapshot targetSnapshot, PositionAffinity affinity) {
-            try {
+        public SnapshotPoint? GetPoint(ITextSnapshot targetSnapshot, PositionAffinity affinity)
+        {
+            try
+            {
                 return _trackingPoint.GetPoint(targetSnapshot);
-            } catch (ArgumentException) {
+            }
+            catch (ArgumentException)
+            {
                 return null;
             }
         }
 
-        public SnapshotPoint? GetPoint(ITextBuffer targetBuffer, PositionAffinity affinity) {
+        public SnapshotPoint? GetPoint(ITextBuffer targetBuffer, PositionAffinity affinity)
+        {
             return GetPoint(targetBuffer.CurrentSnapshot, affinity);
         }
     }

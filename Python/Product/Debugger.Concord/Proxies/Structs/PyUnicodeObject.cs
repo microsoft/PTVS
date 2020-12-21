@@ -206,7 +206,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
 
             return result;
         }
-        
+
 
         public override string ToString() {
             byte[] buf;

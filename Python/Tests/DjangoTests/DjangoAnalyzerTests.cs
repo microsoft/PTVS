@@ -40,7 +40,7 @@ namespace DjangoTests {
             AssertListener.Initialize();
         }
 
-        private void TestSingleRenderVariable(string template, string value="data") {
+        private void TestSingleRenderVariable(string template, string value = "data") {
             var proj = AnalyzerTest(TestData.GetPath("TestData\\DjangoAnalysisTestApp"), out _);
 
             var vars = proj.GetVariablesForTemplateFile(TestData.GetPath("TestData\\DjangoAnalysisTestApp\\test_render\\templates\\" + template));

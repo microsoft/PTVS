@@ -103,7 +103,7 @@ namespace Microsoft.PythonTools.Django {
             ErrorHandler.ThrowOnFailure(
                 vsItemSelection.pHier.GetProperty(
                     vsItemSelection.itemid,
-                    (int)__VSHPROPID.VSHPROPID_Parent, 
+                    (int)__VSHPROPID.VSHPROPID_Parent,
                     out parent
                 )
             );
@@ -116,7 +116,7 @@ namespace Microsoft.PythonTools.Django {
                 var ip = parent as IntPtr?;
                 res.itemid = (uint)ip.GetValueOrDefault().ToInt32();
             }
-            
+
             res.pHier = vsItemSelection.pHier;
             return res;
         }

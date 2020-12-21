@@ -16,11 +16,14 @@
 
 using System;
 
-namespace TestUtilities.Mocks {
-    internal sealed class KeyWeakReference : WeakReference {
+namespace TestUtilities.Mocks
+{
+    internal sealed class KeyWeakReference : WeakReference
+    {
         public int HashCode { get; }
 
-        public KeyWeakReference(object target) : base(target) {
+        public KeyWeakReference(object target) : base(target)
+        {
             HashCode = target.GetHashCode();
         }
 
@@ -28,16 +31,20 @@ namespace TestUtilities.Mocks {
 
         public override bool Equals(object obj) => Equals(obj as KeyWeakReference);
 
-        public bool Equals(KeyWeakReference other) {
-            if (other == null) {
+        public bool Equals(KeyWeakReference other)
+        {
+            if (other == null)
+            {
                 return false;
             }
 
-            if (ReferenceEquals(this, other)) {
+            if (ReferenceEquals(this, other))
+            {
                 return true;
             }
 
-            if (IsAlive && other.IsAlive) {
+            if (IsAlive && other.IsAlive)
+            {
                 return Equals(Target, other.Target);
             }
 

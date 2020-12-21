@@ -475,7 +475,7 @@ namespace Microsoft.PythonTools {
             var solutionEventListener = new SolutionEventsListener(this);
             solutionEventListener.StartListeningForChanges();
             AddService<SolutionEventsListener>(solutionEventListener, true);
-            
+
             // Enable the mixed-mode debugger UI context
             UIContext.FromUIContextGuid(DkmEngineId.NativeEng).IsActive = true;
 

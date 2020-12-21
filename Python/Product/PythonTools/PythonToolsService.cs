@@ -661,7 +661,7 @@ namespace Microsoft.PythonTools {
         #endregion
 
         internal Dictionary<string, string> GetFullEnvironment(LaunchConfiguration config) {
-           return LaunchConfigurationUtils.GetFullEnvironment(config, _container);
+            return LaunchConfigurationUtils.GetFullEnvironment(config, _container);
         }
 
         internal IEnumerable<string> GetGlobalPythonSearchPaths(InterpreterConfiguration interpreter) {

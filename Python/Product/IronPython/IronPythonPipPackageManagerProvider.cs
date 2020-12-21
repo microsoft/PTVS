@@ -48,7 +48,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
                 } catch (NotSupportedException) {
                 }
             }
-            
+
             if (pm != null) {
                 yield return pm;
             }

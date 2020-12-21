@@ -62,8 +62,8 @@ namespace TestUtilities.Python {
                 evt(this, EventArgs.Empty);
             }
         }
-        
-        
+
+
         public IEnumerable<IPythonInterpreterFactory> Interpreters {
             get { return _providers.Where(p => p != null).SelectMany(p => p.GetInterpreterFactories()); }
         }

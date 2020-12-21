@@ -63,7 +63,7 @@ namespace Microsoft.PythonTools.Commands {
             // don't clone Caret, need point that works at buffer level not view.
             var bufpt = caret.Position.BufferPosition;  //txtbuf.GetTextPoint(caret.CurrentPosition);
             var fillPrefix = GetFillPrefix(view, bufpt);
-            
+
             // TODO: Fix doc string parsing
             if (fillPrefix.Prefix == null || fillPrefix.Prefix.Length == 0 || fillPrefix.IsDocString) {
                 System.Windows.MessageBox.Show(Strings.FillCommentSelectionError, Strings.ProductTitle);
@@ -88,11 +88,11 @@ namespace Microsoft.PythonTools.Commands {
                 while (curLine < lines.Length) {
                     string curLineText = lines[curLine];
                     int lastSpace = curLineText.Length;
-                    
+
                     // skip leading white space
                     while (curOffset < curLineText.Length && Char.IsWhiteSpace(curLineText[curOffset])) {
                         curOffset++;
-                    }                    
+                    }
 
                     // find next word
                     for (int i = curOffset; i < curLineText.Length; i++) {
@@ -111,7 +111,7 @@ namespace Microsoft.PythonTools.Commands {
                         }
 
                         newText.Append(curLineText, curOffset, lastSpace - curOffset);
-                        
+
                         // append appropriate spacing
                         if (_sentenceTerminators.IndexOf(curLineText[lastSpace - 1]) != -1 ||   // we end in punctuation
                             ((lastSpace - curOffset) > 1 &&                                     // we close a paren that ends in punctuation
@@ -119,7 +119,7 @@ namespace Microsoft.PythonTools.Commands {
                             _sentenceTerminators.IndexOf(curLineText[lastSpace - 2]) != -1)) {
 
                             newText.Append("  ");
-                            columnCutoff -= lastSpace - curOffset + 2;                        
+                            columnCutoff -= lastSpace - curOffset + 2;
                         } else {
                             newText.Append(' ');
                             columnCutoff -= lastSpace - curOffset + 1;
@@ -133,7 +133,7 @@ namespace Microsoft.PythonTools.Commands {
                         newText.Append(newLine);
                         columnCutoff = defaultColumnCutoff;
                     }
-                    
+
                     if (curOffset >= lines[curLine].Length) {
                         // we're not reading from the next line
                         curLine++;

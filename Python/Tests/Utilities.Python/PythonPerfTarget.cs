@@ -100,8 +100,7 @@ namespace TestUtilities.UI.Python {
             }
         }
 
-        public string WorkingDir
-        {
+        public string WorkingDir {
             get {
                 return WorkingDirectoryTextBox.GetValue();
             }

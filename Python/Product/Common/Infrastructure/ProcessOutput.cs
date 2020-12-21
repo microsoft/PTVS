@@ -367,8 +367,8 @@ namespace Microsoft.PythonTools.Infrastructure {
                         using (var reader = new StreamReader(client.GetStream(), utf8, false, 4096, true)) {
                             try {
                                 string line;
-                                while ((line = reader.ReadLine()) != null) { 
-                                
+                                while ((line = reader.ReadLine()) != null) {
+
                                     if (line.StartsWithOrdinal("OUT:")) {
                                         redirector.WriteLine(line.Substring(4));
                                     } else if (line.StartsWithOrdinal("ERR:")) {

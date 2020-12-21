@@ -14,43 +14,52 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Utilities;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
 
-namespace TestUtilities.UI {
-    public class LightBulbSessionWrapper : IIntellisenseSession {
+namespace TestUtilities.UI
+{
+    public class LightBulbSessionWrapper : IIntellisenseSession
+    {
         private readonly SessionHolder<ILightBulbSession> _sessionHolder;
         private readonly ILightBulbSession _session;
 
-        public LightBulbSessionWrapper(SessionHolder<ILightBulbSession> sessionHolder) {
+        public LightBulbSessionWrapper(SessionHolder<ILightBulbSession> sessionHolder)
+        {
             _sessionHolder = sessionHolder;
             _session = _sessionHolder.Session;
         }
 
-        public class LightBulbActionWrapper {
+        public class LightBulbActionWrapper
+        {
             private readonly ISuggestedAction _action;
 
-            public LightBulbActionWrapper(ISuggestedAction action) {
+            public LightBulbActionWrapper(ISuggestedAction action)
+            {
                 _action = action;
             }
 
-            public string DisplayText {
+            public string DisplayText
+            {
                 get { return _action.DisplayText; }
             }
 
-            public void Invoke() {
+            public void Invoke()
+            {
                 _action.Invoke(CancellationToken.None);
             }
         }
 
-        public IEnumerable<LightBulbActionWrapper> Actions {
-            get {
+        public IEnumerable<LightBulbActionWrapper> Actions
+        {
+            get
+            {
                 IEnumerable<SuggestedActionSet> sets;
                 return _session.TryGetSuggestedActionSets(out sets) == QuerySuggestedActionCompletionStatus.Completed ?
                     sets.SelectMany(s => s.Actions).Select(a => new LightBulbActionWrapper(a)) :
@@ -58,75 +67,93 @@ namespace TestUtilities.UI {
             }
         }
 
-#region IIntellisenseSession Forwarders
+        #region IIntellisenseSession Forwarders
 
-        public bool IsDismissed {
-            get {
+        public bool IsDismissed
+        {
+            get
+            {
                 return _session.IsDismissed;
             }
         }
 
-        public IIntellisensePresenter Presenter {
-            get {
+        public IIntellisensePresenter Presenter
+        {
+            get
+            {
                 return _session.Presenter;
             }
         }
 
-        public PropertyCollection Properties {
-            get {
+        public PropertyCollection Properties
+        {
+            get
+            {
                 return _session.Properties;
             }
         }
 
-        public ITextView TextView {
-            get {
+        public ITextView TextView
+        {
+            get
+            {
                 return _session.TextView;
             }
         }
 
-        public event EventHandler Dismissed {
+        public event EventHandler Dismissed
+        {
             add { _session.Dismissed += value; }
             remove { _session.Dismissed -= value; }
         }
 
-        public event EventHandler PresenterChanged {
+        public event EventHandler PresenterChanged
+        {
             add { _session.PresenterChanged += value; }
             remove { _session.PresenterChanged -= value; }
         }
 
-        public event EventHandler Recalculated {
+        public event EventHandler Recalculated
+        {
             add { _session.Recalculated += value; }
             remove { _session.Recalculated -= value; }
         }
 
-        public void Collapse() {
+        public void Collapse()
+        {
             _session.Collapse();
         }
 
-        public void Dismiss() {
+        public void Dismiss()
+        {
             _session.Dismiss();
         }
 
-        public SnapshotPoint? GetTriggerPoint(ITextSnapshot textSnapshot) {
+        public SnapshotPoint? GetTriggerPoint(ITextSnapshot textSnapshot)
+        {
             return _session.GetTriggerPoint(textSnapshot);
         }
 
-        public ITrackingPoint GetTriggerPoint(ITextBuffer textBuffer) {
+        public ITrackingPoint GetTriggerPoint(ITextBuffer textBuffer)
+        {
             return _session.GetTriggerPoint(textBuffer);
         }
 
-        public bool Match() {
+        public bool Match()
+        {
             return _session.Match();
         }
 
-        public void Recalculate() {
+        public void Recalculate()
+        {
             _session.Recalculate();
         }
 
-        public void Start() {
+        public void Start()
+        {
             _session.Start();
         }
 
-#endregion
+        #endregion
     }
 }

@@ -99,7 +99,7 @@ namespace Microsoft.PythonTools.Project {
         protected static async Task<bool> DetectMissingPackagesAsync(IPackageManager packageManager, string reqTxtPath) {
             try {
                 return await PipRequirementsUtils.DetectMissingPackagesAsync(
-                    packageManager.Factory.Configuration.InterpreterPath, 
+                    packageManager.Factory.Configuration.InterpreterPath,
                     reqTxtPath
                 );
             } catch (IOException) {

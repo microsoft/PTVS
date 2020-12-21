@@ -14,21 +14,23 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Shell.Interop;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Shell.Interop;
 using MSBuildExecution = Microsoft.Build.Execution;
 
-namespace Microsoft.VisualStudioTools.Project {
+namespace Microsoft.VisualStudioTools.Project
+{
     /// <summary>
     /// Allows projects to group outputs according to usage.
     /// </summary>
     [ComVisible(true)]
-    internal class OutputGroup : IVsOutputGroup2 {
+    internal class OutputGroup : IVsOutputGroup2
+    {
         private readonly ProjectConfig _projectCfg;
         private readonly ProjectNode _project;
         private readonly List<Output> _outputs = new List<Output>();
@@ -44,7 +46,8 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <param name="msBuildTargetName">MSBuild target name</param>
         /// <param name="projectManager">Project that produce this output</param>
         /// <param name="configuration">Configuration that produce this output</param>
-        public OutputGroup(string outputName, string msBuildTargetName, ProjectNode projectManager, ProjectConfig configuration) {
+        public OutputGroup(string outputName, string msBuildTargetName, ProjectNode projectManager, ProjectConfig configuration)
+        {
             Utilities.ArgumentNotNull("outputName", outputName);
             Utilities.ArgumentNotNull("msBuildTargetName", msBuildTargetName);
             Utilities.ArgumentNotNull("projectManager", projectManager);
@@ -59,14 +62,16 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <summary>
         /// Get the project configuration object associated with this output group
         /// </summary>
-        protected ProjectConfig ProjectCfg {
+        protected ProjectConfig ProjectCfg
+        {
             get { return _projectCfg; }
         }
 
         /// <summary>
         /// Get the project object that produces this output group.
         /// </summary>
-        internal ProjectNode Project {
+        internal ProjectNode Project
+        {
             get { return _project; }
         }
 
@@ -74,15 +79,18 @@ namespace Microsoft.VisualStudioTools.Project {
         /// Gets the msbuild target name which is assciated to the outputgroup.
         /// ProjectNode defines a static collection of output group names and their associated MsBuild target
         /// </summary>
-        protected string TargetName {
+        protected string TargetName
+        {
             get { return _targetName; }
         }
 
         /// <summary>
         /// Easy access to the canonical name of the group.
         /// </summary>
-        internal string Name {
-            get {
+        internal string Name
+        {
+            get
+            {
                 string canonicalName;
                 ErrorHandler.ThrowOnFailure(get_CanonicalName(out canonicalName));
                 return canonicalName;
@@ -91,15 +99,18 @@ namespace Microsoft.VisualStudioTools.Project {
 
         #region virtual methods
 
-        protected virtual void Refresh() {
+        protected virtual void Refresh()
+        {
             // Let MSBuild know which configuration we are working with
             _project.SetConfiguration(_projectCfg.ConfigName);
 
             // Generate dependencies if such a task exist
-            if (_project.BuildProject.Targets.ContainsKey(_targetName)) {
+            if (_project.BuildProject.Targets.ContainsKey(_targetName))
+            {
                 bool succeeded = false;
                 _project.BuildTarget(_targetName, out succeeded);
-                if (!succeeded) {
+                if (!succeeded)
+                {
                     Debug.WriteLine("Failed to build target {0}", _targetName);
                     this._outputs.Clear();
                     return;
@@ -110,14 +121,17 @@ namespace Microsoft.VisualStudioTools.Project {
             string outputType = _targetName + "Output";
             this._outputs.Clear();
 
-            if (_project.CurrentConfig != null) {
-                foreach (MSBuildExecution.ProjectItemInstance assembly in _project.CurrentConfig.GetItems(outputType)) {
+            if (_project.CurrentConfig != null)
+            {
+                foreach (MSBuildExecution.ProjectItemInstance assembly in _project.CurrentConfig.GetItems(outputType))
+                {
                     Output output = new Output(_project, assembly);
                     _outputs.Add(output);
 
                     // See if it is our key output
                     if (_keyOutput == null ||
-                        String.Compare(assembly.GetMetadataValue("IsKeyOutput"), true.ToString(), StringComparison.OrdinalIgnoreCase) == 0) {
+                        String.Compare(assembly.GetMetadataValue("IsKeyOutput"), true.ToString(), StringComparison.OrdinalIgnoreCase) == 0)
+                    {
                         _keyOutput = output;
                     }
                 }
@@ -130,15 +144,18 @@ namespace Microsoft.VisualStudioTools.Project {
             _project.OnProjectPropertyChanged += new EventHandler<ProjectPropertyChangedArgs>(OnProjectPropertyChanged);
         }
 
-        public virtual IList<Output> EnumerateOutputs() {
+        public virtual IList<Output> EnumerateOutputs()
+        {
             _project.Site.GetUIThread().Invoke(Refresh);
             return _outputs;
         }
 
-        public virtual void InvalidateGroup() {
+        public virtual void InvalidateGroup()
+        {
             // Set keyOutput to null so that a refresh will be performed the next time
             // a property getter is called.
-            if (null != _keyOutput) {
+            if (null != _keyOutput)
+            {
                 // Once the group is invalidated there is no more reason to listen for events.
                 _project.OnProjectPropertyChanged -= new EventHandler<ProjectPropertyChangedArgs>(OnProjectPropertyChanged);
             }
@@ -147,7 +164,8 @@ namespace Microsoft.VisualStudioTools.Project {
         #endregion
 
         #region event handlers
-        private void OnProjectPropertyChanged(object sender, ProjectPropertyChangedArgs args) {
+        private void OnProjectPropertyChanged(object sender, ProjectPropertyChangedArgs args)
+        {
             // In theory here we should decide if we have to invalidate the group according with the kind of property
             // that is changed.
             InvalidateGroup();
@@ -156,16 +174,19 @@ namespace Microsoft.VisualStudioTools.Project {
 
         #region IVsOutputGroup2 Members
 
-        public virtual int get_CanonicalName(out string pbstrCanonicalName) {
+        public virtual int get_CanonicalName(out string pbstrCanonicalName)
+        {
             pbstrCanonicalName = this._name;
             return VSConstants.S_OK;
         }
 
-        public virtual int get_DeployDependencies(uint celt, IVsDeployDependency[] rgpdpd, uint[] pcActual) {
+        public virtual int get_DeployDependencies(uint celt, IVsDeployDependency[] rgpdpd, uint[] pcActual)
+        {
             return VSConstants.E_NOTIMPL;
         }
 
-        public virtual int get_Description(out string pbstrDescription) {
+        public virtual int get_Description(out string pbstrDescription)
+        {
             pbstrDescription = null;
 
             string description;
@@ -175,7 +196,8 @@ namespace Microsoft.VisualStudioTools.Project {
             return hr;
         }
 
-        public virtual int get_DisplayName(out string pbstrDisplayName) {
+        public virtual int get_DisplayName(out string pbstrDisplayName)
+        {
             pbstrDisplayName = null;
 
             string displayName;
@@ -185,21 +207,26 @@ namespace Microsoft.VisualStudioTools.Project {
             return hr;
         }
 
-        public virtual int get_KeyOutput(out string pbstrCanonicalName) {
+        public virtual int get_KeyOutput(out string pbstrCanonicalName)
+        {
             pbstrCanonicalName = null;
             if (_keyOutput == null)
                 Refresh();
-            if (_keyOutput == null) {
+            if (_keyOutput == null)
+            {
                 pbstrCanonicalName = String.Empty;
                 return VSConstants.S_FALSE;
             }
             return _keyOutput.get_CanonicalName(out pbstrCanonicalName);
         }
 
-        public virtual int get_KeyOutputObject(out IVsOutput2 ppKeyOutput) {
-            if (_keyOutput == null) {
+        public virtual int get_KeyOutputObject(out IVsOutput2 ppKeyOutput)
+        {
+            if (_keyOutput == null)
+            {
                 Refresh();
-                if (_keyOutput == null) {
+                if (_keyOutput == null)
+                {
                     // horrible hack: we don't really have outputs but the Cider designer insists 
                     // that we have an output so it can figure out our output assembly name.  So we
                     // lie here, and then lie again to give a path in Output.get_Property
@@ -212,7 +239,8 @@ namespace Microsoft.VisualStudioTools.Project {
             return VSConstants.S_OK;
         }
 
-        public virtual int get_Outputs(uint celt, IVsOutput2[] rgpcfg, uint[] pcActual) {
+        public virtual int get_Outputs(uint celt, IVsOutput2[] rgpcfg, uint[] pcActual)
+        {
             // Ensure that we are refreshed.  This is somewhat of a hack that enables project to
             // project reference scenarios to work.  Normally, output groups are populated as part
             // of build.  However, in the project to project reference case, what ends up happening
@@ -227,7 +255,8 @@ namespace Microsoft.VisualStudioTools.Project {
             Refresh();
 
             // See if only the caller only wants to know the count
-            if (celt == 0 || rgpcfg == null) {
+            if (celt == 0 || rgpcfg == null)
+            {
                 if (pcActual != null && pcActual.Length > 0)
                     pcActual[0] = (uint)_outputs.Count;
                 return VSConstants.S_OK;
@@ -235,8 +264,10 @@ namespace Microsoft.VisualStudioTools.Project {
 
             // Fill the array with our outputs
             uint count = 0;
-            foreach (Output output in _outputs) {
-                if (rgpcfg.Length > count && celt > count && output != null) {
+            foreach (Output output in _outputs)
+            {
+                if (rgpcfg.Length > count && celt > count && output != null)
+                {
                     rgpcfg[count] = output;
                     ++count;
                 }
@@ -249,12 +280,14 @@ namespace Microsoft.VisualStudioTools.Project {
             return (count == celt) ? VSConstants.S_OK : VSConstants.S_FALSE;
         }
 
-        public virtual int get_ProjectCfg(out IVsProjectCfg2 ppIVsProjectCfg2) {
+        public virtual int get_ProjectCfg(out IVsProjectCfg2 ppIVsProjectCfg2)
+        {
             ppIVsProjectCfg2 = (IVsProjectCfg2)this._projectCfg;
             return VSConstants.S_OK;
         }
 
-        public virtual int get_Property(string pszProperty, out object pvar) {
+        public virtual int get_Property(string pszProperty, out object pvar)
+        {
             pvar = _project.GetProjectProperty(pszProperty);
             return VSConstants.S_OK;
         }

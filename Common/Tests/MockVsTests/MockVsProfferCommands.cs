@@ -14,40 +14,50 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
 using EnvDTE;
+using System;
 
-namespace Microsoft.VisualStudioTools.MockVsTests {
-    class MockVsProfferCommands : IVsProfferCommands {
-        public void AddCommandBar(string pszCmdBarName, vsCommandBarType dwType, object pCmdBarParent, uint dwIndex, out object ppCmdBar) {
+namespace Microsoft.VisualStudioTools.MockVsTests
+{
+    class MockVsProfferCommands : IVsProfferCommands
+    {
+        public void AddCommandBar(string pszCmdBarName, vsCommandBarType dwType, object pCmdBarParent, uint dwIndex, out object ppCmdBar)
+        {
             ppCmdBar = null;
         }
 
-        public void AddCommandBarControl(string pszCmdNameCanonical, object pCmdBarParent, uint dwIndex, uint dwCmdType, out object ppCmdBarCtrl) {
+        public void AddCommandBarControl(string pszCmdNameCanonical, object pCmdBarParent, uint dwIndex, uint dwCmdType, out object ppCmdBarCtrl)
+        {
             ppCmdBarCtrl = null;
         }
 
-        public void AddNamedCommand(ref Guid pguidPackage, ref Guid pguidCmdGroup, string pszCmdNameCanonical, out uint pdwCmdId, string pszCmdNameLocalized, string pszBtnText, string pszCmdTooltip, string pszSatelliteDLL, uint dwBitmapResourceId, uint dwBitmapImageIndex, uint dwCmdFlagsDefault, uint cUIContexts, ref Guid rgguidUIContexts) {
+        public void AddNamedCommand(ref Guid pguidPackage, ref Guid pguidCmdGroup, string pszCmdNameCanonical, out uint pdwCmdId, string pszCmdNameLocalized, string pszBtnText, string pszCmdTooltip, string pszSatelliteDLL, uint dwBitmapResourceId, uint dwBitmapImageIndex, uint dwCmdFlagsDefault, uint cUIContexts, ref Guid rgguidUIContexts)
+        {
             pdwCmdId = 0;
         }
 
-        public object FindCommandBar(IntPtr pToolbarSet, ref Guid pguidCmdGroup, uint dwMenuId) {
+        public object FindCommandBar(IntPtr pToolbarSet, ref Guid pguidCmdGroup, uint dwMenuId)
+        {
             throw new NotImplementedException();
         }
 
-        public void RemoveCommandBar(object pCmdBar) {
+        public void RemoveCommandBar(object pCmdBar)
+        {
             throw new NotImplementedException();
         }
 
-        public void RemoveCommandBarControl(object pCmdBarCtrl) {
+        public void RemoveCommandBarControl(object pCmdBarCtrl)
+        {
             throw new NotImplementedException();
         }
 
-        public void RemoveNamedCommand(string pszCmdNameCanonical) {
+        public void RemoveNamedCommand(string pszCmdNameCanonical)
+        {
             throw new NotImplementedException();
         }
 
-        public void RenameNamedCommand(string pszCmdNameCanonical, string pszCmdNameCanonicalNew, string pszCmdNameLocalizedNew) {
+        public void RenameNamedCommand(string pszCmdNameCanonical, string pszCmdNameCanonicalNew, string pszCmdNameLocalizedNew)
+        {
             throw new NotImplementedException();
         }
     }

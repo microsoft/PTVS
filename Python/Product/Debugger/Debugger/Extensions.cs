@@ -50,7 +50,7 @@ namespace Microsoft.PythonTools.Debugger {
                     Debug.Assert(false, "Socket.ReadString failed to parse unknown string type " + (char)type);
                     throw new IOException();
             }
-                
+
             int len = stream.ReadInt32();
             byte[] buffer = new byte[len];
             stream.ReadToFill(buffer);
@@ -201,7 +201,7 @@ namespace Microsoft.PythonTools.Debugger {
             }
             return true;
         }
-        
+
         private static int HexValue(char ch) {
             int value;
             if (!HexValue(ch, out value)) {

@@ -24,8 +24,8 @@ using EnvDTE;
 using EnvDTE90;
 using EnvDTE90a;
 using Microsoft.PythonTools;
-using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudioTools;
 using TestUtilities;
 using TestUtilities.Python;
@@ -935,7 +935,7 @@ namespace DebuggerUITests {
             Assert.IsTrue(exists, "Python script was expected to create file '{0}'.", createdFilePath);
         }
 
-        private static void ExceptionTest(PythonVisualStudioApp app, string filename, string expectedDescription, string exceptionType, int expectedLine, bool isUnhandled=false) {
+        private static void ExceptionTest(PythonVisualStudioApp app, string filename, string expectedDescription, string exceptionType, int expectedLine, bool isUnhandled = false) {
             var debug3 = (Debugger3)app.Dte.Debugger;
             using (new DebuggingGeneralOptionsSetter(app.Dte, enableJustMyCode: true)) {
                 OpenDebuggerProject(app, filename);

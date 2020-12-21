@@ -59,7 +59,7 @@ namespace Microsoft.IronPythonTools.Debugger {
             } catch (NoInterpretersException) {
                 throw new NoInterpretersException(null, NoIronPythonHelpPage.Value);
             }
-            
+
             return Launch(config, debug);
         }
 

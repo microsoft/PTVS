@@ -14,8 +14,8 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.VisualStudio.Shell;
 using System;
+using Microsoft.VisualStudio.Shell;
 
 namespace Microsoft.PythonTools {
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]

@@ -88,7 +88,7 @@ namespace Microsoft.PythonTools.Options {
             return null;
         }
 
-        public static OptionInfo[] GetOptions(CodeFormattingCategory category) 
+        public static OptionInfo[] GetOptions(CodeFormattingCategory category)
             => _cachedOptions.TryGetValue(category, out var options) ? options.ToArray() : new OptionInfo[0];
     }
 }

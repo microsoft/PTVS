@@ -759,7 +759,7 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
                     uint pathLen = NativeMethods.MAX_PATH + 1;
                     uint res;
                     StringBuilder filePathBuilder;
-                    for (;;) {
+                    for (; ; ) {
                         filePathBuilder = new StringBuilder(checked((int)pathLen));
                         res = NativeMethods.GetFinalPathNameByHandle(
                             dirHandle,

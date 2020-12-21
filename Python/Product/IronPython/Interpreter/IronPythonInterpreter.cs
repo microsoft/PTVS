@@ -111,7 +111,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
             var domain = AppDomain.CreateDomain("IronPythonAnalysisDomain", null, setup);
             using (new RemoteAssemblyResolver(domain, ironPythonAssemblyPath)) {
-                remoteInterpreter = (RemoteInterpreterProxy) domain.CreateInstanceAndUnwrap(
+                remoteInterpreter = (RemoteInterpreterProxy)domain.CreateInstanceAndUnwrap(
                     typeof(RemoteInterpreterProxy).Assembly.FullName,
                     typeof(RemoteInterpreterProxy).FullName);
             }

@@ -36,7 +36,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
         public static string GetInterpreterId(string company, string tag) {
             return String.Join(
-                "|", 
+                "|",
                 CondaEnvironmentFactoryProvider.FactoryProviderName,
                 company,
                 tag

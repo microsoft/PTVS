@@ -17,8 +17,10 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace Microsoft.VisualStudioTools.Project {
-    internal static class UnsafeNativeMethods {
+namespace Microsoft.VisualStudioTools.Project
+{
+    internal static class UnsafeNativeMethods
+    {
         [DllImport(ExternDll.Kernel32, EntryPoint = "GlobalLock", SetLastError = true, CharSet = CharSet.Unicode, ExactSpelling = true, CallingConvention = CallingConvention.StdCall)]
         internal static extern IntPtr GlobalLock(IntPtr h);
 

@@ -837,7 +837,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
         }
 
         internal ObjectIdentityHandle GetConstructorFunctionDeclaringType(ObjectIdentityHandle function) {
-            return CallAndHandle(() => 
+            return CallAndHandle(() =>
                 MakeHandle(
                     GetTypeFromType(
                         ((ConstructorFunction)Unwrap(function)).Overloads.Targets

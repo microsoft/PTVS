@@ -16,7 +16,8 @@
 
 using System.ComponentModel.Composition;
 
-namespace Microsoft.VisualStudioTools.MockVsTests {
+namespace Microsoft.VisualStudioTools.MockVsTests
+{
     /// <summary>
     /// An empty exported class to allow product code to determine
     /// whether it is running in mock tests or not.

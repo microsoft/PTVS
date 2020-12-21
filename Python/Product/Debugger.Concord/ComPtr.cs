@@ -49,7 +49,7 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             return result;
         }
 
-        public static implicit operator T (ComPtr<T> ptr) {
+        public static implicit operator T(ComPtr<T> ptr) {
             return ptr._obj;
         }
     }

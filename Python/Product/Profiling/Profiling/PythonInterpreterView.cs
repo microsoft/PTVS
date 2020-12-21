@@ -22,7 +22,7 @@ namespace Microsoft.PythonTools.Profiling {
         readonly string _name;
         readonly string _id;
         readonly string _path;
-        
+
         /// <summary>
         /// Create a PythonInterpreterView with values from parameters.
         /// </summary>
@@ -54,7 +54,7 @@ namespace Microsoft.PythonTools.Profiling {
         /// <summary>
         /// The Guid identifying the interpreter.
         /// </summary>
-        public string Id { 
+        public string Id {
             get {
                 return _id;
             }
@@ -63,7 +63,7 @@ namespace Microsoft.PythonTools.Profiling {
         /// <summary>
         /// The path to the interpreter, if available.
         /// </summary>
-        public string Path { 
+        public string Path {
             get {
                 return _path;
             }
@@ -87,4 +87,4 @@ namespace Microsoft.PythonTools.Profiling {
         }
     }
 }
- 
+

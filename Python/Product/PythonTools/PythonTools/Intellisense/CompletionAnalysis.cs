@@ -175,9 +175,9 @@ namespace Microsoft.PythonTools.Intellisense {
                 insert = insert.Replace("\t", new string(' ', _view.Options.GetIndentSize()));
             }
 
-            return new DynamicallyVisibleCompletion(memberResult.Name, 
+            return new DynamicallyVisibleCompletion(memberResult.Name,
                 insert,
-                () => memberResult.Documentation, 
+                () => memberResult.Documentation,
                 () => service.GetGlyph(memberResult.MemberType.ToGlyphGroup(), StandardGlyphItem.GlyphItemPublic),
                 Enum.GetName(typeof(PythonMemberType), memberResult.MemberType)
             );
@@ -186,9 +186,9 @@ namespace Microsoft.PythonTools.Intellisense {
         internal static DynamicallyVisibleCompletion PythonCompletion(IGlyphService service, string name, string tooltip, StandardGlyphGroup group) {
             var icon = new IconDescription(group, StandardGlyphItem.GlyphItemPublic);
 
-            var result = new DynamicallyVisibleCompletion(name, 
-                name, 
-                tooltip, 
+            var result = new DynamicallyVisibleCompletion(name,
+                name,
+                tooltip,
                 service.GetGlyph(group, StandardGlyphItem.GlyphItemPublic),
                 Enum.GetName(typeof(StandardGlyphGroup), group));
             result.Properties.AddProperty(typeof(IconDescription), icon);
@@ -198,9 +198,9 @@ namespace Microsoft.PythonTools.Intellisense {
         internal static DynamicallyVisibleCompletion PythonCompletion(IGlyphService service, string name, string completion, string tooltip, StandardGlyphGroup group) {
             var icon = new IconDescription(group, StandardGlyphItem.GlyphItemPublic);
 
-            var result = new DynamicallyVisibleCompletion(name, 
-                completion, 
-                tooltip, 
+            var result = new DynamicallyVisibleCompletion(name,
+                completion,
+                tooltip,
                 service.GetGlyph(group, StandardGlyphItem.GlyphItemPublic),
                 Enum.GetName(typeof(StandardGlyphGroup), group));
             result.Properties.AddProperty(typeof(IconDescription), icon);

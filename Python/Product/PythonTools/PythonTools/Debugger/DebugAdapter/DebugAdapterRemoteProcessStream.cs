@@ -75,7 +75,7 @@ namespace Microsoft.PythonTools.Debugger {
             base.Dispose(disposing);
         }
 
-        private static bool IsExpectedError(SocketException ex) 
+        private static bool IsExpectedError(SocketException ex)
             => ex?.SocketErrorCode == SocketError.ConnectionReset || ex?.SocketErrorCode == SocketError.ConnectionAborted;
 
         private void CheckForResponse(byte[] buffer, int count) {

@@ -17,7 +17,8 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyVersion(AssemblyVersionInfo.StableVersion)]
 [assembly: AssemblyFileVersion(AssemblyVersionInfo.Version)]
 
-class AssemblyVersionInfo {
+class AssemblyVersionInfo
+{
     // This version string (and the comments for StableVersion and Version)
     // should be updated manually between major releases.
     // Servicing branches should retain the value

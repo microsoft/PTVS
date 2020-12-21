@@ -28,7 +28,7 @@ namespace Microsoft.PythonTools.Profiling {
     /// </summary>
     sealed class ProfilingTargetView : INotifyPropertyChanged {
         private readonly ReadOnlyCollection<ProjectTargetView> _availableProjects;
-        
+
         private ProjectTargetView _project;
         private bool _isProjectSelected, _isStandaloneSelected;
         private bool _useVTune;
@@ -38,13 +38,13 @@ namespace Microsoft.PythonTools.Profiling {
         private readonly string _startText;
 
         private bool _isValid;
-        
+
         /// <summary>
         /// Create a ProfilingTargetView with default values.
         /// </summary>
         public ProfilingTargetView(IServiceProvider serviceProvider) {
             var solution = serviceProvider.GetService(typeof(SVsSolution)) as IVsSolution;
-            
+
             var availableProjects = new List<ProjectTargetView>();
             foreach (var project in solution.EnumerateLoadedProjects()) {
                 availableProjects.Add(new ProjectTargetView((IVsHierarchy)project));
@@ -278,4 +278,4 @@ namespace Microsoft.PythonTools.Profiling {
         public event PropertyChangedEventHandler PropertyChanged;
     }
 }
- 
+

@@ -92,8 +92,7 @@ namespace Microsoft.PythonTools.Editor.Core {
         /// <summary>
         /// Maps down to the buffer using positive point tracking and successor position affinity
         /// </summary>
-        public static SnapshotPoint? MapDownToBuffer(this ITextView textView, int position, ITextBuffer buffer)
-        {
+        public static SnapshotPoint? MapDownToBuffer(this ITextView textView, int position, ITextBuffer buffer) {
             if (textView.BufferGraph == null) {
                 // Unit test case
                 if (position <= buffer.CurrentSnapshot.Length) {
@@ -185,7 +184,7 @@ namespace Microsoft.PythonTools.Editor.Core {
         private static void UpdateSelection(ITextView view, SnapshotPoint start, SnapshotPoint end) {
             view.Selection.Select(
                 new SnapshotSpan(
-                // translate to the new snapshot version:
+                    // translate to the new snapshot version:
                     start.GetContainingLine().Start.TranslateTo(view.TextBuffer.CurrentSnapshot, PointTrackingMode.Negative),
                     end.GetContainingLine().End.TranslateTo(view.TextBuffer.CurrentSnapshot, PointTrackingMode.Positive)
                 ),

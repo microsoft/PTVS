@@ -14,6 +14,9 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using Microsoft.VisualStudio.ComponentModelHost;
+using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Threading;
 using System;
 using System.ComponentModel.Design;
 using System.Diagnostics;
@@ -21,23 +24,26 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using Microsoft.VisualStudio.ComponentModelHost;
-using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Threading;
 using Task = System.Threading.Tasks.Task;
 
-namespace Microsoft.VisualStudioTools {
-    class UIThread : UIThreadBase, IDisposable {
+namespace Microsoft.VisualStudioTools
+{
+    class UIThread : UIThreadBase, IDisposable
+    {
         private readonly JoinableTaskContext _context;
         private readonly JoinableTaskFactory _factory;
         private readonly bool _needDispose;
 
-        public UIThread(JoinableTaskFactory joinableTaskFactory) {
-            if (joinableTaskFactory != null) {
+        public UIThread(JoinableTaskFactory joinableTaskFactory)
+        {
+            if (joinableTaskFactory != null)
+            {
                 _factory = joinableTaskFactory;
                 _context = joinableTaskFactory.Context;
                 Trace.TraceInformation("Using TID {0}:{1} as UI thread", _context.MainThread.ManagedThreadId, _context.MainThread.Name ?? "(null)");
-            } else {
+            }
+            else
+            {
                 _needDispose = true;
                 _context = new JoinableTaskContext();
                 Trace.TraceInformation("Setting TID {0}:{1} as UI thread", _context.MainThread.ManagedThreadId, _context.MainThread.Name ?? "(null)");
@@ -46,31 +52,40 @@ namespace Microsoft.VisualStudioTools {
             _factory = _context.Factory;
         }
 
-        public void Dispose() {
+        public void Dispose()
+        {
             Dispose(true);
             GC.SuppressFinalize(this);
         }
 
-        ~UIThread() {
+        ~UIThread()
+        {
             Dispose(false);
         }
 
-        protected virtual void Dispose(bool disposing) {
-            if (disposing) {
-                if (_needDispose) {
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                if (_needDispose)
+                {
                     _context.Dispose();
                 }
             }
         }
 
-        public override bool InvokeRequired {
-            get {
+        public override bool InvokeRequired
+        {
+            get
+            {
                 return !_context.IsOnMainThread;
             }
         }
 
-        public override void MustBeCalledFromUIThreadOrThrow() {
-            if (InvokeRequired) {
+        public override void MustBeCalledFromUIThreadOrThrow()
+        {
+            if (InvokeRequired)
+            {
                 const int RPC_E_WRONG_THREAD = unchecked((int)0x8001010E);
                 throw new COMException("Invalid cross-thread call", RPC_E_WRONG_THREAD);
             }
@@ -83,8 +98,10 @@ namespace Microsoft.VisualStudioTools {
         /// <remarks>
         /// If called from the UI thread, the action is executed synchronously.
         /// </remarks>
-        public override void Invoke(Action action) {
-            _factory.Run(async () => {
+        public override void Invoke(Action action)
+        {
+            _factory.Run(async () =>
+            {
                 await _factory.SwitchToMainThreadAsync();
                 action();
             });
@@ -98,8 +115,10 @@ namespace Microsoft.VisualStudioTools {
         /// If called from the UI thread, the function is evaluated 
         /// synchronously.
         /// </remarks>
-        public override T Invoke<T>(Func<T> func) {
-            return _factory.Run(async () => {
+        public override T Invoke<T>(Func<T> func)
+        {
+            return _factory.Run(async () =>
+            {
                 await _factory.SwitchToMainThreadAsync();
                 return func();
             });
@@ -112,8 +131,10 @@ namespace Microsoft.VisualStudioTools {
         /// <remarks>
         /// If called from the UI thread, the action is executed synchronously.
         /// </remarks>
-        public override Task InvokeAsync(Action action) {
-            return _factory.RunAsync(async () => {
+        public override Task InvokeAsync(Action action)
+        {
+            return _factory.RunAsync(async () =>
+            {
                 await _factory.SwitchToMainThreadAsync();
                 action();
             }).Task;
@@ -127,8 +148,10 @@ namespace Microsoft.VisualStudioTools {
         /// If called from the UI thread, the function is evaluated 
         /// synchronously.
         /// </remarks>
-        public override Task<T> InvokeAsync<T>(Func<T> func) {
-            return _factory.RunAsync(async () => {
+        public override Task<T> InvokeAsync<T>(Func<T> func)
+        {
+            return _factory.RunAsync(async () =>
+            {
                 await _factory.SwitchToMainThreadAsync();
                 return func();
             }).Task;
@@ -141,8 +164,10 @@ namespace Microsoft.VisualStudioTools {
         /// <remarks>
         /// If called from the UI thread, the action is executed synchronously.
         /// </remarks>
-        public override Task InvokeAsync(Action action, CancellationToken cancellationToken) {
-            return _factory.RunAsync(async () => {
+        public override Task InvokeAsync(Action action, CancellationToken cancellationToken)
+        {
+            return _factory.RunAsync(async () =>
+            {
                 await _factory.SwitchToMainThreadAsync();
                 action();
             }).JoinAsync(cancellationToken);
@@ -156,13 +181,15 @@ namespace Microsoft.VisualStudioTools {
         /// If called from the UI thread, the function is evaluated 
         /// synchronously.
         /// </remarks>
-        public override Task<T> InvokeAsync<T>(Func<T> func, CancellationToken cancellationToken) {
-            return _factory.RunAsync(async () => {
+        public override Task<T> InvokeAsync<T>(Func<T> func, CancellationToken cancellationToken)
+        {
+            return _factory.RunAsync(async () =>
+            {
                 await _factory.SwitchToMainThreadAsync();
                 return func();
             }).JoinAsync(cancellationToken);
         }
-        
+
         /// <summary>
         /// Awaits the provided task on the UI thread. The function will be
         /// invoked on the UI thread to ensure the correct context is captured
@@ -172,8 +199,10 @@ namespace Microsoft.VisualStudioTools {
         /// If called from the UI thread, the function is evaluated 
         /// synchronously.
         /// </remarks>
-        public override Task InvokeTask(Func<Task> func) {
-            return _factory.RunAsync(async () => {
+        public override Task InvokeTask(Func<Task> func)
+        {
+            return _factory.RunAsync(async () =>
+            {
                 await _factory.SwitchToMainThreadAsync();
                 await func();
             }).Task;
@@ -188,8 +217,10 @@ namespace Microsoft.VisualStudioTools {
         /// If called from the UI thread, the function is evaluated 
         /// synchronously.
         /// </remarks>
-        public override Task<T> InvokeTask<T>(Func<Task<T>> func) {
-            return _factory.RunAsync(async () => {
+        public override Task<T> InvokeTask<T>(Func<Task<T>> func)
+        {
+            return _factory.RunAsync(async () =>
+            {
                 await _factory.SwitchToMainThreadAsync();
                 return await func();
             }).Task;
@@ -204,11 +235,14 @@ namespace Microsoft.VisualStudioTools {
         /// If called from the UI thread, the function is evaluated 
         /// synchronously.
         /// </remarks>
-        public override void InvokeTaskSync(Func<Task> func, CancellationToken cancellationToken) {
-            _factory.RunAsync(async () => {
+        public override void InvokeTaskSync(Func<Task> func, CancellationToken cancellationToken)
+        {
+            _factory.RunAsync(async () =>
+            {
                 // Convert assertions to exceptions while joining on a task
                 // or the message box will deadlock.
-                using (NoDeadlockAssertListener.Push()) {
+                using (NoDeadlockAssertListener.Push())
+                {
                     await _factory.SwitchToMainThreadAsync(cancellationToken);
                     await func();
                 }
@@ -224,11 +258,14 @@ namespace Microsoft.VisualStudioTools {
         /// If called from the UI thread, the function is evaluated 
         /// synchronously.
         /// </remarks>
-        public override T InvokeTaskSync<T>(Func<Task<T>> func, CancellationToken cancellationToken) {
-            return _factory.RunAsync(async () => {
+        public override T InvokeTaskSync<T>(Func<Task<T>> func, CancellationToken cancellationToken)
+        {
+            return _factory.RunAsync(async () =>
+            {
                 // Convert assertions to exceptions while joining on a task
                 // or the message box will deadlock.
-                using (NoDeadlockAssertListener.Push()) {
+                using (NoDeadlockAssertListener.Push())
+                {
                     await _factory.SwitchToMainThreadAsync(cancellationToken);
                     return await func();
                 }
@@ -296,7 +333,8 @@ namespace Microsoft.VisualStudioTools {
             }
         }
 #else
-        class NoDeadlockAssertListener {
+        class NoDeadlockAssertListener
+        {
             public static IDisposable Push() => null;
         }
 #endif

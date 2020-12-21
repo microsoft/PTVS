@@ -43,7 +43,7 @@ namespace Microsoft.PythonTools.Django.Analysis {
         private PythonAnalyzer _analyzer;
         internal static readonly Dictionary<string, string> _knownTags = MakeKnownTagsTable();
         internal static readonly Dictionary<string, string> _knownFilters = MakeKnownFiltersTable();
-        
+
         public DjangoAnalyzer() {
             foreach (var tagName in _nestedEndTags) {
                 _tags[tagName] = new TagInfo("", null);

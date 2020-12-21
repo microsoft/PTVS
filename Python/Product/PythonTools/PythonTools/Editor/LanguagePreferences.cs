@@ -105,7 +105,7 @@ namespace Microsoft.PythonTools.Editor {
                 _preferences.fAutoListParams = langPrefs[0].fAutoListParams;
                 _preferences.fHideAdvancedAutoListMembers = langPrefs[0].fHideAdvancedAutoListMembers;
                 if (_preferences.fDropdownBar != (_preferences.fDropdownBar = langPrefs[0].fDropdownBar)) {
-                    foreach(var window in _service.CodeWindowManagers) {
+                    foreach (var window in _service.CodeWindowManagers) {
                         hr = window.ToggleNavigationBar(_preferences.fDropdownBar != 0);
                         if (ErrorHandler.Failed(hr)) {
                             break;
@@ -150,7 +150,7 @@ namespace Microsoft.PythonTools.Editor {
                 return _preferences.fAutoListParams != 0;
             }
         }
-        
+
 
         #endregion
     }

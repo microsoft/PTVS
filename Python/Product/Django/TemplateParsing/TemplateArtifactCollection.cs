@@ -50,15 +50,15 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
         public override bool IsDestructiveChange(int start, int oldLength, int newLength, ITextProvider oldText, ITextProvider newText) {
             // Get list of items overlapping the change. Note that items haven't been
             // shifted yet and hence their positions match the old text snapshot.
-           var itemsInRange = ItemsInRange(new TextRange(start, oldLength));
+            var itemsInRange = ItemsInRange(new TextRange(start, oldLength));
 
             // Is crosses item boundaries, it is destructive
-           if (itemsInRange.Count > 1 || (itemsInRange.Count == 1 && (!itemsInRange[0].Contains(start) || !itemsInRange[0].Contains(start + oldLength)))) {
-               return true;
-           }
+            if (itemsInRange.Count > 1 || (itemsInRange.Count == 1 && (!itemsInRange[0].Contains(start) || !itemsInRange[0].Contains(start + oldLength)))) {
+                return true;
+            }
 
-           foreach (var separatorInfo in _separatorInfos) {
-               if (IsADestructiveChangeForSeparator(separatorInfo, itemsInRange, start, oldLength, newLength, oldText, newText)) {
+            foreach (var separatorInfo in _separatorInfos) {
+                if (IsADestructiveChangeForSeparator(separatorInfo, itemsInRange, start, oldLength, newLength, oldText, newText)) {
                     return true;
                 }
             }

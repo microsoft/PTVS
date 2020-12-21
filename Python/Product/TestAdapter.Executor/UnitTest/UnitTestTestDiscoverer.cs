@@ -55,7 +55,7 @@ namespace Microsoft.PythonTools.TestAdapter.UnitTest {
                 throw new ArgumentNullException(nameof(discoverySink));
             }
 
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger)); 
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
             var workspaceText = settings.IsWorkspace ? Strings.WorkspaceText : Strings.ProjectText;
             LogInfo(Strings.PythonTestDiscovererStartedMessage.FormatUI(PythonConstants.UnitTestText, settings.ProjectName, workspaceText, settings.DiscoveryWaitTimeInSeconds));

@@ -230,7 +230,7 @@ namespace TestUtilities.UI.Python {
                     }
                     Assert.IsNotNull(element, "Missing Text Explorer window");
                     var testExplorer = new AutomationWrapper(element);
-              
+
                     var searchBox = testExplorer.FindByName("Search Test Explorer");
                     Assert.IsNotNull(searchBox, "Missing Search Bar Textbox");
 

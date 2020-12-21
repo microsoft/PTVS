@@ -19,21 +19,26 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 
-namespace Microsoft.VisualStudioTools.Project.Automation {
+namespace Microsoft.VisualStudioTools.Project.Automation
+{
     /// <summary>
     /// Contains OAReferenceItem objects 
     /// </summary>
     [ComVisible(true), CLSCompliant(false)]
-    public class OAReferenceFolderItem : OAProjectItem {
+    public class OAReferenceFolderItem : OAProjectItem
+    {
         #region ctors
         internal OAReferenceFolderItem(OAProject project, ReferenceContainerNode node)
-            : base(project, node) {
+            : base(project, node)
+        {
         }
 
         #endregion
 
-        private new ReferenceContainerNode Node {
-            get {
+        private new ReferenceContainerNode Node
+        {
+            get
+            {
                 return (ReferenceContainerNode)base.Node;
             }
         }
@@ -42,8 +47,10 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
         /// <summary>
         /// Returns the project items collection of all the references defined for this project.
         /// </summary>
-        public override EnvDTE.ProjectItems ProjectItems {
-            get {
+        public override EnvDTE.ProjectItems ProjectItems
+        {
+            get
+            {
                 return new OANavigableProjectItems(this.Project, this.Node);
             }
         }

@@ -14,18 +14,20 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Diagnostics;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
+using System;
+using System.Diagnostics;
 using IServiceProvider = System.IServiceProvider;
 using ShellConstants = Microsoft.VisualStudio.Shell.Interop.Constants;
 
-namespace Microsoft.VisualStudioTools.Project {
+namespace Microsoft.VisualStudioTools.Project
+{
     /// <summary>
     /// Defines an abstract class implementing IVsUpdateSolutionEvents interfaces.
     /// </summary>
-    class UpdateSolutionEventsListener : IVsUpdateSolutionEvents3, IVsUpdateSolutionEvents2, IDisposable {
+    class UpdateSolutionEventsListener : IVsUpdateSolutionEvents3, IVsUpdateSolutionEvents2, IDisposable
+    {
         #region fields
         /// <summary>
         /// The cookie associated to the the events based IVsUpdateSolutionEvents2.
@@ -64,8 +66,10 @@ namespace Microsoft.VisualStudioTools.Project {
         /// Overloaded constructor.
         /// </summary>
         /// <param name="serviceProvider">A service provider.</param>
-        public UpdateSolutionEventsListener(IServiceProvider serviceProvider) {
-            if (serviceProvider == null) {
+        public UpdateSolutionEventsListener(IServiceProvider serviceProvider)
+        {
+            if (serviceProvider == null)
+            {
                 throw new ArgumentNullException("serviceProvider");
             }
 
@@ -73,7 +77,8 @@ namespace Microsoft.VisualStudioTools.Project {
 
             this.solutionBuildManager = this.serviceProvider.GetService(typeof(SVsSolutionBuildManager)) as IVsSolutionBuildManager2;
 
-            if (this.solutionBuildManager == null) {
+            if (this.solutionBuildManager == null)
+            {
                 throw new InvalidOperationException();
             }
 
@@ -89,8 +94,10 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <summary>
         /// The associated service provider.
         /// </summary>
-        protected IServiceProvider ServiceProvider {
-            get {
+        protected IServiceProvider ServiceProvider
+        {
+            get
+            {
                 return this.serviceProvider;
             }
         }
@@ -98,8 +105,10 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <summary>
         /// The solution build manager object controlling the solution events.
         /// </summary>
-        protected IVsSolutionBuildManager2 SolutionBuildManager2 {
-            get {
+        protected IVsSolutionBuildManager2 SolutionBuildManager2
+        {
+            get
+            {
                 return this.solutionBuildManager;
             }
         }
@@ -107,8 +116,10 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <summary>
         /// The solution build manager object controlling the solution events.
         /// </summary>
-        protected IVsSolutionBuildManager3 SolutionBuildManager3 {
-            get {
+        protected IVsSolutionBuildManager3 SolutionBuildManager3
+        {
+            get
+            {
                 return (IVsSolutionBuildManager3)this.solutionBuildManager;
             }
 
@@ -123,9 +134,11 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <param name="oldActiveSlnCfg">Old configuration.</param>
         /// <param name="newActiveSlnCfg">New configuration.</param>
         /// <returns>If the method succeeds, it returns S_OK. If it fails, it returns an error code.</returns>
-        public virtual int OnAfterActiveSolutionCfgChange(IVsCfg oldActiveSlnCfg, IVsCfg newActiveSlnCfg) {
+        public virtual int OnAfterActiveSolutionCfgChange(IVsCfg oldActiveSlnCfg, IVsCfg newActiveSlnCfg)
+        {
             var handlers = AfterActiveSolutionConfigurationChange;
-            if (handlers != null) {
+            if (handlers != null)
+            {
                 handlers(this, EventArgs.Empty);
             }
             return VSConstants.S_OK;
@@ -139,7 +152,8 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <param name="oldActiveSlnCfg">Old configuration.</param>
         /// <param name="newActiveSlnCfg">New configuration.</param>
         /// <returns>If the method succeeds, it returns S_OK. If it fails, it returns an error code.</returns>
-        public virtual int OnBeforeActiveSolutionCfgChange(IVsCfg oldActiveSlnCfg, IVsCfg newActiveSlnCfg) {
+        public virtual int OnBeforeActiveSolutionCfgChange(IVsCfg oldActiveSlnCfg, IVsCfg newActiveSlnCfg)
+        {
             return VSConstants.E_NOTIMPL;
         }
 
@@ -152,7 +166,8 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </summary>
         /// <param name="hierarchy">The project whose configuration has changed.</param>
         /// <returns>If the method succeeds, it returns S_OK. If it fails, it returns an error code.</returns>
-        public virtual int OnActiveProjectCfgChange(IVsHierarchy hierarchy) {
+        public virtual int OnActiveProjectCfgChange(IVsHierarchy hierarchy)
+        {
             return VSConstants.E_NOTIMPL;
         }
 
@@ -166,7 +181,8 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <param name="cancel">A flag indicating cancel.</param>
         /// <returns>If the method succeeds, it returns S_OK. If it fails, it returns an error code.</returns>
         /// <remarks>The values for the action are defined in the enum _SLNUPDACTION env\msenv\core\slnupd2.h</remarks>
-        public int UpdateProjectCfg_Begin(IVsHierarchy hierarchy, IVsCfg configProject, IVsCfg configSolution, uint action, ref int cancel) {
+        public int UpdateProjectCfg_Begin(IVsHierarchy hierarchy, IVsCfg configProject, IVsCfg configSolution, uint action, ref int cancel)
+        {
             return VSConstants.E_NOTIMPL;
         }
 
@@ -181,7 +197,8 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <param name="cancel">Flag indicating cancel.</param>
         /// <returns>If the method succeeds, it returns S_OK. If it fails, it returns an error code.</returns>
         /// <remarks>The values for the action are defined in the enum _SLNUPDACTION env\msenv\core\slnupd2.h</remarks>
-        public virtual int UpdateProjectCfg_Done(IVsHierarchy hierarchy, IVsCfg configProject, IVsCfg configSolution, uint action, int success, int cancel) {
+        public virtual int UpdateProjectCfg_Done(IVsHierarchy hierarchy, IVsCfg configProject, IVsCfg configSolution, uint action, int success, int cancel)
+        {
             return VSConstants.E_NOTIMPL;
         }
 
@@ -190,7 +207,8 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </summary>
         /// <param name="cancelUpdate">Flag indicating cancel update.</param>
         /// <returns>If the method succeeds, it returns S_OK. If it fails, it returns an error code.</returns>
-        public virtual int UpdateSolution_Begin(ref int cancelUpdate) {
+        public virtual int UpdateSolution_Begin(ref int cancelUpdate)
+        {
             return VSConstants.E_NOTIMPL;
         }
 
@@ -198,7 +216,8 @@ namespace Microsoft.VisualStudioTools.Project {
         /// Called when a build is being cancelled. 
         /// </summary>
         /// <returns>If the method succeeds, it returns S_OK. If it fails, it returns an error code.</returns>
-        public virtual int UpdateSolution_Cancel() {
+        public virtual int UpdateSolution_Cancel()
+        {
             return VSConstants.E_NOTIMPL;
         }
 
@@ -209,7 +228,8 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <param name="modified">true if any update action succeeded.</param>
         /// <param name="cancelCommand">true if update actions were canceled.</param>
         /// <returns>If the method succeeds, it returns S_OK. If it fails, it returns an error code.</returns>
-        public virtual int UpdateSolution_Done(int fSucceeded, int fModified, int fCancelCommand) {
+        public virtual int UpdateSolution_Done(int fSucceeded, int fModified, int fCancelCommand)
+        {
             return VSConstants.E_NOTIMPL;
         }
 
@@ -218,7 +238,8 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </summary>
         /// <param name="cancelUpdate">A flag indicating cancel update.</param>
         /// <returns>If the method succeeds, it returns S_OK. If it fails, it returns an error code.</returns>
-        public virtual int UpdateSolution_StartUpdate(ref int cancelUpdate) {
+        public virtual int UpdateSolution_StartUpdate(ref int cancelUpdate)
+        {
             return VSConstants.E_NOTIMPL;
         }
 
@@ -230,7 +251,8 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <summary>
         /// The IDispose interface Dispose method for disposing the object determinastically.
         /// </summary>
-        public void Dispose() {
+        public void Dispose()
+        {
             this.Dispose(true);
             GC.SuppressFinalize(this);
         }
@@ -242,17 +264,22 @@ namespace Microsoft.VisualStudioTools.Project {
         /// The method that does the cleanup.
         /// </summary>
         /// <param name="disposing">true if called from IDispose.Dispose; false if called from Finalizer.</param>
-        protected virtual void Dispose(bool disposing) {
+        protected virtual void Dispose(bool disposing)
+        {
             // Everybody can go here.
-            if (!this.isDisposed) {
+            if (!this.isDisposed)
+            {
                 // Synchronize calls to the Dispose simultaniously.
-                lock (Mutex) {
-                    if (this.solutionEvents2Cookie != (uint)ShellConstants.VSCOOKIE_NIL) {
+                lock (Mutex)
+                {
+                    if (this.solutionEvents2Cookie != (uint)ShellConstants.VSCOOKIE_NIL)
+                    {
                         ErrorHandler.ThrowOnFailure(this.solutionBuildManager.UnadviseUpdateSolutionEvents(this.solutionEvents2Cookie));
                         this.solutionEvents2Cookie = (uint)ShellConstants.VSCOOKIE_NIL;
                     }
 
-                    if (this.solutionEvents3Cookie != (uint)ShellConstants.VSCOOKIE_NIL) {
+                    if (this.solutionEvents3Cookie != (uint)ShellConstants.VSCOOKIE_NIL)
+                    {
                         ErrorHandler.ThrowOnFailure(this.SolutionBuildManager3.UnadviseUpdateSolutionEvents3(this.solutionEvents3Cookie));
                         this.solutionEvents3Cookie = (uint)ShellConstants.VSCOOKIE_NIL;
                     }

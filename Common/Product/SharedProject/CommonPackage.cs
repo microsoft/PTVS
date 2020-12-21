@@ -14,13 +14,6 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.Design;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
@@ -32,10 +25,19 @@ using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudioTools.Navigation;
 using Microsoft.VisualStudioTools.Project;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.Design;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
+using System.Threading;
+using System.Threading.Tasks;
 using Task = System.Threading.Tasks.Task;
 
-namespace Microsoft.VisualStudioTools {
-    public abstract class CommonPackage : AsyncPackage, IOleComponent {
+namespace Microsoft.VisualStudioTools
+{
+    public abstract class CommonPackage : AsyncPackage, IOleComponent
+    {
         private uint _componentID;
         private LibraryManager _libraryManager;
         private IOleComponentManager _compMgr;
@@ -54,7 +56,8 @@ namespace Microsoft.VisualStudioTools {
 
         #endregion
 
-        internal CommonPackage() {
+        internal CommonPackage()
+        {
 #if DEBUG
             AppDomain.CurrentDomain.UnhandledException += (sender, e) => {
                 if (e.IsTerminating) {
@@ -83,40 +86,53 @@ namespace Microsoft.VisualStudioTools {
         internal static Dictionary<Command, MenuCommand> Commands => _commands;
         internal static object CommandsLock => _commandsLock;
 
-        protected override void Dispose(bool disposing) {
+        protected override void Dispose(bool disposing)
+        {
             _uiThread.MustBeCalledFromUIThreadOrThrow();
-            try {
-                if (_componentID != 0) {
+            try
+            {
+                if (_componentID != 0)
+                {
                     _compMgr.FRevokeComponent(_componentID);
                     _componentID = 0;
                 }
 
-                if (_libraryManager != null) {
+                if (_libraryManager != null)
+                {
                     _libraryManager.Dispose();
                     _libraryManager = null;
                 }
-            } finally {
+            }
+            finally
+            {
                 base.Dispose(disposing);
             }
         }
 
-        private object CreateLibraryManager(IServiceContainer container, Type serviceType) {
-            if (GetLibraryManagerType() != serviceType) {
+        private object CreateLibraryManager(IServiceContainer container, Type serviceType)
+        {
+            if (GetLibraryManagerType() != serviceType)
+            {
                 return null;
             }
 
             return _libraryManager = CreateLibraryManager();
         }
 
-        internal void RegisterCommands(Guid cmdSet, params Command[] commands) {
+        internal void RegisterCommands(Guid cmdSet, params Command[] commands)
+        {
             _uiThread.MustBeCalledFromUIThreadOrThrow();
-            if (GetService(typeof(IMenuCommandService)) is OleMenuCommandService mcs) {
-                lock (_commandsLock) {
-                    foreach (var command in commands) {
+            if (GetService(typeof(IMenuCommandService)) is OleMenuCommandService mcs)
+            {
+                lock (_commandsLock)
+                {
+                    foreach (var command in commands)
+                    {
                         var beforeQueryStatus = command.BeforeQueryStatus;
                         CommandID toolwndCommandID = new CommandID(cmdSet, command.CommandId);
                         OleMenuCommand menuToolWin = new OleMenuCommand(command.DoCommand, toolwndCommandID);
-                        if (beforeQueryStatus != null) {
+                        if (beforeQueryStatus != null)
+                        {
                             menuToolWin.BeforeQueryStatus += beforeQueryStatus;
                         }
                         mcs.AddCommand(menuToolWin);
@@ -126,10 +142,13 @@ namespace Microsoft.VisualStudioTools {
             }
         }
 
-        internal void RegisterCommands(params MenuCommand[] commands) {
+        internal void RegisterCommands(params MenuCommand[] commands)
+        {
             _uiThread.MustBeCalledFromUIThreadOrThrow();
-            if (GetService(typeof(IMenuCommandService)) is OleMenuCommandService mcs) {
-                foreach (var command in commands) {
+            if (GetService(typeof(IMenuCommandService)) is OleMenuCommandService mcs)
+            {
+                foreach (var command in commands)
+                {
                     mcs.AddCommand(command);
                 }
             }
@@ -139,29 +158,36 @@ namespace Microsoft.VisualStudioTools {
         /// Gets the current IWpfTextView that is the active document.
         /// </summary>
         /// <returns></returns>
-        public static IWpfTextView GetActiveTextView(System.IServiceProvider serviceProvider) {
+        public static IWpfTextView GetActiveTextView(System.IServiceProvider serviceProvider)
+        {
             var monitorSelection = (IVsMonitorSelection)serviceProvider.GetService(typeof(SVsShellMonitorSelection));
-            if (monitorSelection == null) {
+            if (monitorSelection == null)
+            {
                 return null;
             }
 
-            if (ErrorHandler.Failed(monitorSelection.GetCurrentElementValue((uint)VSConstants.VSSELELEMID.SEID_DocumentFrame, out var curDocument))) {
+            if (ErrorHandler.Failed(monitorSelection.GetCurrentElementValue((uint)VSConstants.VSSELELEMID.SEID_DocumentFrame, out var curDocument)))
+            {
                 // TODO: Report error
                 return null;
             }
 
-            if (!(curDocument is IVsWindowFrame frame)) {
+            if (!(curDocument is IVsWindowFrame frame))
+            {
                 // TODO: Report error
                 return null;
             }
 
-            if (ErrorHandler.Failed(frame.GetProperty((int)__VSFPROPID.VSFPROPID_DocView, out var docView))) {
+            if (ErrorHandler.Failed(frame.GetProperty((int)__VSFPROPID.VSFPROPID_DocView, out var docView)))
+            {
                 // TODO: Report error
                 return null;
             }
 #if DEV11_OR_LATER
-            if (docView is IVsDifferenceCodeWindow diffWindow && diffWindow.DifferenceViewer != null) {
-                switch (diffWindow.DifferenceViewer.ActiveViewType) {
+            if (docView is IVsDifferenceCodeWindow diffWindow && diffWindow.DifferenceViewer != null)
+            {
+                switch (diffWindow.DifferenceViewer.ActiveViewType)
+                {
                     case VisualStudio.Text.Differencing.DifferenceViewType.InlineView:
                         return diffWindow.DifferenceViewer.InlineView;
                     case VisualStudio.Text.Differencing.DifferenceViewType.LeftView:
@@ -173,8 +199,10 @@ namespace Microsoft.VisualStudioTools {
                 }
             }
 #endif
-            if (docView is IVsCodeWindow window) {
-                if (ErrorHandler.Failed(window.GetPrimaryView(out var textView))) {
+            if (docView is IVsCodeWindow window)
+            {
+                if (ErrorHandler.Failed(window.GetPrimaryView(out var textView)))
+                {
                     // TODO: Report error
                     return null;
                 }
@@ -187,26 +215,31 @@ namespace Microsoft.VisualStudioTools {
             return null;
         }
 
-        internal static CommonProjectNode GetStartupProject(System.IServiceProvider serviceProvider) {
+        internal static CommonProjectNode GetStartupProject(System.IServiceProvider serviceProvider)
+        {
             var buildMgr = (IVsSolutionBuildManager)serviceProvider.GetService(typeof(IVsSolutionBuildManager));
-            if (buildMgr != null && ErrorHandler.Succeeded(buildMgr.get_StartupProject(out var hierarchy)) && hierarchy != null) {
+            if (buildMgr != null && ErrorHandler.Succeeded(buildMgr.get_StartupProject(out var hierarchy)) && hierarchy != null)
+            {
                 return hierarchy.GetProject()?.GetCommonProject();
             }
             return null;
         }
 
-        protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress) {
+        protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
+        {
             await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
 
             _uiThread = (UIThreadBase)GetService(typeof(UIThreadBase));
-            if (_uiThread == null) {
+            if (_uiThread == null)
+            {
                 _uiThread = new UIThread(JoinableTaskFactory);
                 AddService<UIThreadBase>(_uiThread, true);
             }
 
             AddService(GetLibraryManagerType(), CreateLibraryManager, true);
 
-            var crinfo = new OLECRINFO {
+            var crinfo = new OLECRINFO
+            {
                 cbSize = (uint)Marshal.SizeOf(typeof(OLECRINFO)),
                 grfcrf = (uint)_OLECRF.olecrfNeedIdleTime,
                 grfcadvf = (uint)_OLECADVF.olecadvfModal | (uint)_OLECADVF.olecadvfRedrawOff | (uint)_OLECADVF.olecadvfWarningsOff,
@@ -231,15 +264,20 @@ namespace Microsoft.VisualStudioTools {
         protected void AddService(Type serviceType, ServiceCreatorCallback callback, bool promote)
             => ((IServiceContainer)this).AddService(serviceType, callback, promote);
 
-        internal static void OpenWebBrowser(System.IServiceProvider serviceProvider, string url) {
+        internal static void OpenWebBrowser(System.IServiceProvider serviceProvider, string url)
+        {
             // TODO: In a future VS 2017 release, SVsWebBrowsingService will have the ability
             // to open in an external browser, and we may want to switch to using that, as it
             // may be safer/better than Process.Start.
-            serviceProvider.GetUIThread().Invoke(() => {
-                try {
+            serviceProvider.GetUIThread().Invoke(() =>
+            {
+                try
+                {
                     var uri = new Uri(url);
                     Process.Start(new ProcessStartInfo(uri.AbsoluteUri));
-                } catch (Exception ex) when (!ex.IsCriticalException()) {
+                }
+                catch (Exception ex) when (!ex.IsCriticalException())
+                {
                     Utilities.ShowMessageBox(
                        serviceProvider,
                        SR.GetString(SR.WebBrowseNavigateError, url, ex.Message),
@@ -252,19 +290,25 @@ namespace Microsoft.VisualStudioTools {
             });
         }
 
-        internal static void OpenVsWebBrowser(System.IServiceProvider serviceProvider, string url) {
-            serviceProvider.GetUIThread().Invoke(() => {
+        internal static void OpenVsWebBrowser(System.IServiceProvider serviceProvider, string url)
+        {
+            serviceProvider.GetUIThread().Invoke(() =>
+            {
                 var web = serviceProvider.GetService(typeof(SVsWebBrowsingService)) as IVsWebBrowsingService;
-                if (web == null) {
+                if (web == null)
+                {
                     OpenWebBrowser(serviceProvider, url);
                     return;
                 }
 
-                try {
+                try
+                {
                     IVsWindowFrame frame;
                     ErrorHandler.ThrowOnFailure(web.Navigate(url, (uint)__VSWBNAVIGATEFLAGS.VSNWB_ForceNew, out frame));
                     frame.Show();
-                } catch (Exception ex) when (!ex.IsCriticalException()) {
+                }
+                catch (Exception ex) when (!ex.IsCriticalException())
+                {
                     Utilities.ShowMessageBox(
                        serviceProvider,
                        SR.GetString(SR.WebBrowseNavigateError, url, ex.Message),
@@ -281,9 +325,11 @@ namespace Microsoft.VisualStudioTools {
 
         public int FContinueMessageLoop(uint uReason, IntPtr pvLoopData, MSG[] pMsgPeeked) => 1;
 
-        public int FDoIdle(uint grfidlef) {
+        public int FDoIdle(uint grfidlef)
+        {
             var componentManager = _compMgr;
-            if (componentManager == null) {
+            if (componentManager == null)
+            {
                 return 0;
             }
 
@@ -315,8 +361,10 @@ namespace Microsoft.VisualStudioTools {
         #endregion
     }
 
-    internal sealed class ComponentManagerEventArgs : EventArgs {
-        public ComponentManagerEventArgs(IOleComponentManager compMgr) {
+    internal sealed class ComponentManagerEventArgs : EventArgs
+    {
+        public ComponentManagerEventArgs(IOleComponentManager compMgr)
+        {
             ComponentManager = compMgr;
         }
 

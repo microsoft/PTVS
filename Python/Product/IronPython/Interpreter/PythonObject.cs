@@ -106,7 +106,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
                     switch (member.ClrOnly) {
                         case IsClrOnly.NotChecked:
                             CreateNonClrAttrs();
-                            if (_attrs.ContainsKey(name) && 
+                            if (_attrs.ContainsKey(name) &&
                                 _attrs[name].ClrOnly == IsClrOnly.Yes) {
                                 return null;
                             }

@@ -16,7 +16,6 @@
 
 using System;
 using System.Collections.Generic;
-using Task = System.Threading.Tasks.Task;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Logging;
@@ -24,6 +23,7 @@ using Microsoft.PythonTools.Options;
 using Microsoft.VisualStudio.Imaging;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.Project {
     internal class PythonNotSupportedInfoBar : PythonInfoBar {

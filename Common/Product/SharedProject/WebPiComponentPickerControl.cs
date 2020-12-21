@@ -14,6 +14,10 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudioTools.Infrastructure;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -22,20 +26,19 @@ using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using System.Xml;
 using System.Xml.XPath;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudioTools.Infrastructure;
 using Task = System.Threading.Tasks.Task;
 
-namespace Microsoft.VisualStudioTools.Project {
+namespace Microsoft.VisualStudioTools.Project
+{
     [Guid("B7773A32-2EE5-4844-9630-F14768A5D03C")]
-    partial class WebPiComponentPickerControl : UserControl {
+    partial class WebPiComponentPickerControl : UserControl
+    {
         private readonly List<PackageInfo> _packages = new List<PackageInfo>();
         private const string _defaultFeeds = "https://www.microsoft.com/web/webpi/5.0/webproductlist.xml";
         private ListViewSorter _sorter = new ListViewSorter();
 
-        public WebPiComponentPickerControl() {
+        public WebPiComponentPickerControl()
+        {
             InitializeComponent();
 
             AutoSize = true;
@@ -46,21 +49,29 @@ namespace Microsoft.VisualStudioTools.Project {
             _productsList.ColumnClick += new ColumnClickEventHandler(ProductsListColumnClick);
         }
 
-        private void ProductsListColumnClick(object sender, ColumnClickEventArgs e) {
-            if (e.Column == _sorter.Column) {
-                if (_sorter.Order == SortOrder.Ascending) {
+        private void ProductsListColumnClick(object sender, ColumnClickEventArgs e)
+        {
+            if (e.Column == _sorter.Column)
+            {
+                if (_sorter.Order == SortOrder.Ascending)
+                {
                     _sorter.Order = SortOrder.Descending;
-                } else {
+                }
+                else
+                {
                     _sorter.Order = SortOrder.Ascending;
                 }
-            } else {
+            }
+            else
+            {
                 _sorter.Column = e.Column;
                 _sorter.Order = SortOrder.Ascending;
             }
             _productsList.Sort();
         }
 
-        private void ProductsListDoubleClick(object sender, EventArgs e) {
+        private void ProductsListDoubleClick(object sender, EventArgs e)
+        {
             NativeMethods.SendMessage(
                 NativeMethods.GetParent(NativeMethods.GetParent(NativeMethods.GetParent(Handle))),
                 (uint)VSConstants.CPDN_SELDBLCLICK,
@@ -69,7 +80,8 @@ namespace Microsoft.VisualStudioTools.Project {
             );
         }
 
-        private void ProductsListItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e) {
+        private void ProductsListItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
+        {
             NativeMethods.SendMessage(
                 NativeMethods.GetParent(NativeMethods.GetParent(NativeMethods.GetParent(Handle))),
                 (uint)VSConstants.CPDN_SELCHANGED,
@@ -78,11 +90,16 @@ namespace Microsoft.VisualStudioTools.Project {
             );
         }
 
-        private async Task RequestFeeds(string feedSource) {
-            try {
+        private async Task RequestFeeds(string feedSource)
+        {
+            try
+            {
                 await Task.Run(() => GetFeeds(feedSource));
-            } catch (Exception ex) {
-                if (ex.IsCriticalException()) {
+            }
+            catch (Exception ex)
+            {
+                if (ex.IsCriticalException())
+                {
                     throw;
                 }
 
@@ -90,14 +107,18 @@ namespace Microsoft.VisualStudioTools.Project {
 
                 var fullMessage = SR.GetString(SR.WebPiFeedError, feedSource, ex);
                 Trace.WriteLine(fullMessage);
-                try {
+                try
+                {
                     ActivityLog.LogError("WebPiComponentPickerControl", fullMessage);
-                } catch (InvalidOperationException) {
+                }
+                catch (InvalidOperationException)
+                {
                 }
             }
         }
 
-        private void GetFeeds(string feed) {
+        private void GetFeeds(string feed)
+        {
             XPathDocument doc;
             var settings = new XmlReaderSettings();
             settings.XmlResolver = null;
@@ -110,29 +131,34 @@ namespace Microsoft.VisualStudioTools.Project {
             var nav = doc.CreateNavigator();
 
             var nodes = nav.Select("/x:feed/x:entry", mngr);
-            foreach (XPathNavigator node in nodes) {
+            foreach (XPathNavigator node in nodes)
+            {
                 var title = node.Select("x:title", mngr);
                 var updated = node.Select("x:updated", mngr);
                 var productId = node.Select("x:productId", mngr);
 
                 string titleVal = null;
-                foreach (XPathNavigator titleNode in title) {
+                foreach (XPathNavigator titleNode in title)
+                {
                     titleVal = titleNode.Value;
                     break;
                 }
 
                 string updatedVal = null;
-                foreach (XPathNavigator updatedNode in updated) {
+                foreach (XPathNavigator updatedNode in updated)
+                {
                     updatedVal = updatedNode.Value;
                 }
 
 
                 string productIdVal = null;
-                foreach (XPathNavigator productIdNode in productId) {
+                foreach (XPathNavigator productIdNode in productId)
+                {
                     productIdVal = productIdNode.Value;
                 }
 
-                if (titleVal != null && updatedVal != null && productIdVal != null) {
+                if (titleVal != null && updatedVal != null && productIdVal != null)
+                {
                     var newPackage = new PackageInfo(
                         titleVal,
                         updatedVal,
@@ -142,19 +168,23 @@ namespace Microsoft.VisualStudioTools.Project {
 
                     _packages.Add(newPackage);
 
-                    try {
+                    try
+                    {
                         BeginInvoke(new Action<object>(AddPackage), newPackage);
-                    } catch (InvalidOperationException) {
+                    }
+                    catch (InvalidOperationException)
+                    {
                         break;
                     }
                 }
             }
         }
 
-        private void AddPackage(object package) {
+        private void AddPackage(object package)
+        {
             var pkgInfo = (PackageInfo)package;
             var item = new ListViewItem(
-                new[] { 
+                new[] {
                     pkgInfo.Title,
                     pkgInfo.Updated,
                     pkgInfo.ProductId,
@@ -166,13 +196,15 @@ namespace Microsoft.VisualStudioTools.Project {
             _productsList.Items.Add(item);
         }
 
-        class PackageInfo {
+        class PackageInfo
+        {
             public readonly string Title;
             public readonly string Updated;
             public readonly string ProductId;
             public readonly string Feed;
 
-            public PackageInfo(string title, string updated, string productId, string feed) {
+            public PackageInfo(string title, string updated, string productId, string feed)
+            {
                 Title = title;
                 Updated = updated;
                 ProductId = productId;
@@ -180,26 +212,31 @@ namespace Microsoft.VisualStudioTools.Project {
             }
         }
 
-        class ListViewSorter : IComparer {
+        class ListViewSorter : IComparer
+        {
             public SortOrder Order;
             public int Column;
 
             #region IComparer Members
 
-            public int Compare(object x, object y) {
+            public int Compare(object x, object y)
+            {
                 ListViewItem itemX = (ListViewItem)x;
                 ListViewItem itemY = (ListViewItem)y;
 
                 int? res = null;
-                if (Column == 1) {
+                if (Column == 1)
+                {
                     DateTime dtX, dtY;
                     if (DateTime.TryParse(itemX.SubItems[1].Text, out dtX) &&
-                        DateTime.TryParse(itemY.SubItems[1].Text, out dtY)) {
+                        DateTime.TryParse(itemY.SubItems[1].Text, out dtY))
+                    {
                         res = dtX.CompareTo(dtY);
                     }
                 }
 
-                if (res == null) {
+                if (res == null)
+                {
                     res = String.Compare(
                        itemX.SubItems[0].Text,
                        itemY.SubItems[0].Text,
@@ -207,7 +244,8 @@ namespace Microsoft.VisualStudioTools.Project {
                    );
                 }
 
-                if (Order == SortOrder.Descending) {
+                if (Order == SortOrder.Descending)
+                {
                     return -res.Value;
                 }
                 return res.Value;
@@ -215,12 +253,15 @@ namespace Microsoft.VisualStudioTools.Project {
 
             #endregion
         }
-        private async void AddNewFeedClick(object sender, EventArgs e) {
+        private async void AddNewFeedClick(object sender, EventArgs e)
+        {
             await RequestFeeds(_newFeedUrl.Text);
         }
 
-        protected override void DefWndProc(ref Message m) {
-            switch (m.Msg) {
+        protected override void DefWndProc(ref Message m)
+        {
+            switch (m.Msg)
+            {
                 case NativeMethods.WM_INITDIALOG:
                     SetWindowStyleOnStaticHostControl();
                     goto default;
@@ -241,21 +282,25 @@ namespace Microsoft.VisualStudioTools.Project {
                     break;
                 case VSConstants.CPPM_GETSELECTION:
                     var items = new PackageInfo[this._productsList.SelectedItems.Count];
-                    for (int i = 0; i < items.Length; i++) {
+                    for (int i = 0; i < items.Length; i++)
+                    {
                         items[i] = (PackageInfo)_productsList.SelectedItems[0].Tag;
                     }
                     int count = items != null ? items.Length : 0;
                     Marshal.WriteByte(m.WParam, Convert.ToByte(count));
-                    if (count > 0) {
+                    if (count > 0)
+                    {
                         IntPtr ppItems = Marshal.AllocCoTaskMem(
                           count * Marshal.SizeOf(typeof(IntPtr)));
-                        for (int i = 0; i < count; i++) {
+                        for (int i = 0; i < count; i++)
+                        {
                             IntPtr pItem = Marshal.AllocCoTaskMem(
                                     Marshal.SizeOf(typeof(VSCOMPONENTSELECTORDATA)));
                             Marshal.WriteIntPtr(
                                 ppItems + i * Marshal.SizeOf(typeof(IntPtr)),
                                 pItem);
-                            VSCOMPONENTSELECTORDATA data = new VSCOMPONENTSELECTORDATA() {
+                            VSCOMPONENTSELECTORDATA data = new VSCOMPONENTSELECTORDATA()
+                            {
                                 dwSize = (uint)Marshal.SizeOf(typeof(VSCOMPONENTSELECTORDATA)),
                                 bstrFile = items[i].Feed,
                                 bstrTitle = items[i].ProductId,
@@ -270,18 +315,21 @@ namespace Microsoft.VisualStudioTools.Project {
                 case NativeMethods.WM_SIZE:
                     IntPtr parentHwnd = NativeMethods.GetParent(Handle);
 
-                    if (parentHwnd != IntPtr.Zero) {
+                    if (parentHwnd != IntPtr.Zero)
+                    {
                         IntPtr grandParentHwnd = NativeMethods.GetParent(parentHwnd);
 
                         User32RECT parentClientRect, grandParentClientRect;
                         if (grandParentHwnd != IntPtr.Zero &&
                             NativeMethods.GetClientRect(parentHwnd, out parentClientRect) &&
-                                NativeMethods.GetClientRect(grandParentHwnd, out grandParentClientRect)) {
+                                NativeMethods.GetClientRect(grandParentHwnd, out grandParentClientRect))
+                        {
 
                             int width = grandParentClientRect.Width;
                             int height = grandParentClientRect.Height;
 
-                            if ((parentClientRect.Width != width) || (parentClientRect.Height != height)) {
+                            if ((parentClientRect.Width != width) || (parentClientRect.Height != height))
+                            {
                                 NativeMethods.MoveWindow(parentHwnd, 0, 0, width, height, true);
                                 this.Width = width;
                                 this.Height = height;
@@ -296,11 +344,15 @@ namespace Microsoft.VisualStudioTools.Project {
             }
         }
 
-        private void NewFeedUrlTextChanged(object sender, EventArgs e) {
-            try {
+        private void NewFeedUrlTextChanged(object sender, EventArgs e)
+        {
+            try
+            {
                 new Uri(_newFeedUrl.Text);
                 _addNewFeed.Enabled = true;
-            } catch (UriFormatException) {
+            }
+            catch (UriFormatException)
+            {
                 _addNewFeed.Enabled = false;
             }
         }
@@ -316,7 +368,8 @@ namespace Microsoft.VisualStudioTools.Project {
         /// So we go in and muck about with the This is a static! control's window style so that
         /// VS doesn't stop responding if the user alt-tabs away.
         /// </summary>
-        private void SetWindowStyleOnStaticHostControl() {
+        private void SetWindowStyleOnStaticHostControl()
+        {
             var target = (NativeMethods.GetParent(Handle));
             NativeMethods.SetWindowLong(
                 target,

@@ -27,9 +27,9 @@ namespace PythonToolsUITests {
         public const string AutomationObject = "Microsoft.PythonTools.Tests.PythonToolsUITests";
 
         private readonly Lazy<IVsHostedPythonToolsTest> _testRunner = new Lazy<IVsHostedPythonToolsTest>(() => {
-                MSTestEnvironment.Initialize();
-                return new HostedPythonToolsTestRunner(typeof(VSPackage).Assembly);
-            });
+            MSTestEnvironment.Initialize();
+            return new HostedPythonToolsTestRunner(typeof(VSPackage).Assembly);
+        });
 
         protected override object GetAutomationObject(string name) {
             if (name == AutomationObject) {

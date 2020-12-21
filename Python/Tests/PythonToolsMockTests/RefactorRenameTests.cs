@@ -16,6 +16,10 @@
 
 extern alias analysis;
 extern alias pythontools;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using analysis::Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -26,10 +30,6 @@ using Microsoft.VisualStudioTools.MockVsTests;
 using pythontools::Microsoft.PythonTools.Editor;
 using pythontools::Microsoft.PythonTools.Intellisense;
 using pythontools::Microsoft.PythonTools.Refactoring;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using TestUtilities;
 
 namespace PythonToolsMockTests {
@@ -2449,7 +2449,7 @@ def g(a, b, c):
                 Console.WriteLine("Test code {0} {1}:\r\n{2}\r\n", i, inputs[i].Filename, inputs[i].Input);
             }
 
-            foreach(bool preview in new[] { true, false } ) {
+            foreach (bool preview in new[] { true, false }) {
                 OneRefactorTest(newName, caretText, inputs, version, preview, null, items, expectedSelectedText);
 
                 if (mutateTest) {

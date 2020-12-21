@@ -90,19 +90,19 @@ namespace Microsoft.CookiecutterTools {
             await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
 
             if (GetService(typeof(UIThreadBase)) == null) {
-                ((IServiceContainer) this).AddService(typeof(UIThreadBase), new UIThread(JoinableTaskFactory), true);
+                ((IServiceContainer)this).AddService(typeof(UIThreadBase), new UIThread(JoinableTaskFactory), true);
             }
 
             CookiecutterTelemetry.Initialize();
-            
+
             _projectSystem = new ProjectSystemClient(DTE);
             Trace.WriteLine("Leaving {0}.InitializeAsync()".FormatInvariant(this));
         }
 
-        public override IVsAsyncToolWindowFactory GetAsyncToolWindowFactory(Guid toolWindowType) 
+        public override IVsAsyncToolWindowFactory GetAsyncToolWindowFactory(Guid toolWindowType)
             => toolWindowType == typeof(CookiecutterToolWindow).GUID ? this : base.GetAsyncToolWindowFactory(toolWindowType);
 
-        protected override Task<object> InitializeToolWindowAsync(Type toolWindowType, int id, CancellationToken cancellationToken) 
+        protected override Task<object> InitializeToolWindowAsync(Type toolWindowType, int id, CancellationToken cancellationToken)
             => toolWindowType == typeof(CookiecutterToolWindow) ? Task.FromResult<object>(this) : base.InitializeToolWindowAsync(toolWindowType, id, cancellationToken);
 
         protected override void Dispose(bool disposing) {

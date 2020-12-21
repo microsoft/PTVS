@@ -60,12 +60,12 @@ namespace Microsoft.VisualStudioTools.Wpf {
 
         public static LambdaConverter Create<T1>(Func<T1, object> lambda) {
             return new LambdaConverter(arg => {
-                    if (arg == DependencyProperty.UnsetValue) {
-                        return DependencyProperty.UnsetValue;
-                    }
+                if (arg == DependencyProperty.UnsetValue) {
+                    return DependencyProperty.UnsetValue;
+                }
 
-                    return lambda((T1)arg);
-                });
+                return lambda((T1)arg);
+            });
         }
 
         public static LambdaConverter Create(Func<dynamic, dynamic, object> lambda) {

@@ -14,76 +14,93 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.IO;
 using System.Linq;
 using System.Windows.Automation;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace TestUtilities.UI {
-    public class SolutionExplorerTree : TreeView {
+namespace TestUtilities.UI
+{
+    public class SolutionExplorerTree : TreeView
+    {
         public SolutionExplorerTree(AutomationElement element)
-            : base(element) {
+            : base(element)
+        {
         }
 
-        public void AssertFileExists(string projectLocation, params string[] path) {
+        public void AssertFileExists(string projectLocation, params string[] path)
+        {
             AssertItemExistsInTree(path);
 
             var basePath = projectLocation;
-            for (int i = 1; i < path.Length; i++) {
+            for (int i = 1; i < path.Length; i++)
+            {
                 basePath = Path.Combine(basePath, path[i]);
             }
             Assert.IsTrue(File.Exists(basePath), "File doesn't exist: " + basePath);
         }
 
-        public void AssertFileExistsWithContent(string projectLocation, string content, params string[] path) {
+        public void AssertFileExistsWithContent(string projectLocation, string content, params string[] path)
+        {
             AssertItemExistsInTree(path);
 
             var basePath = projectLocation;
-            for (int i = 1; i < path.Length; i++) {
+            for (int i = 1; i < path.Length; i++)
+            {
                 basePath = Path.Combine(basePath, path[i]);
             }
             Assert.IsTrue(File.Exists(basePath), "File doesn't exist: " + basePath);
             Assert.AreEqual(File.ReadAllText(basePath), content);
         }
 
-        public void AssertFileDoesntExist(string projectLocation, params string[] path) {
+        public void AssertFileDoesntExist(string projectLocation, params string[] path)
+        {
             Assert.IsNull(FindItem(path), "Item exists in solution explorer: " + String.Join("\\", path));
 
             var basePath = projectLocation;
-            for (int i = 1; i < path.Length; i++) {
+            for (int i = 1; i < path.Length; i++)
+            {
                 basePath = Path.Combine(basePath, path[i]);
             }
             Assert.IsFalse(File.Exists(basePath), "File exists: " + basePath);
         }
 
-        public void AssertFolderExists(string projectLocation, params string[] path) {
+        public void AssertFolderExists(string projectLocation, params string[] path)
+        {
             AssertItemExistsInTree(path);
 
             var basePath = projectLocation;
-            for (int i = 1; i < path.Length; i++) {
+            for (int i = 1; i < path.Length; i++)
+            {
                 basePath = Path.Combine(basePath, path[i]);
             }
             Assert.IsTrue(Directory.Exists(basePath), "Folder doesn't exist: " + basePath);
         }
 
-        public void AssertFolderDoesntExist(string projectLocation, params string[] path) {
+        public void AssertFolderDoesntExist(string projectLocation, params string[] path)
+        {
             Assert.IsNull(WaitForItemRemoved(path), "Item exists in solution explorer: " + String.Join("\\", path));
 
             var basePath = projectLocation;
-            for (int i = 1; i < path.Length; i++) {
+            for (int i = 1; i < path.Length; i++)
+            {
                 basePath = Path.Combine(basePath, path[i]);
             }
             Assert.IsFalse(Directory.Exists(basePath), "Folder exists: " + basePath);
         }
 
-        private void AssertItemExistsInTree(string[] path) {
+        private void AssertItemExistsInTree(string[] path)
+        {
             var item = WaitForItem(path);
-            if (item == null) {
+            if (item == null)
+            {
                 string msg = "Item not found in solution explorer " + String.Join("\\", path);
-                for (int i = 1; i < path.Length; i++) {
+                for (int i = 1; i < path.Length; i++)
+                {
                     item = FindItem(path.Take(i).ToArray());
-                    if (item == null) {
+                    if (item == null)
+                    {
                         msg += Environment.NewLine + "Item missing at: " + String.Join("\\", path.Take(i));
                         break;
                     }
@@ -92,7 +109,8 @@ namespace TestUtilities.UI {
             }
         }
 
-        public void SelectProject(EnvDTE.Project project) {
+        public void SelectProject(EnvDTE.Project project)
+        {
             var slnName = string.Format("Solution '{0}' ({1} of {1} project{2})",
                 Path.GetFileNameWithoutExtension(project.DTE.Solution.FullName),
                 project.DTE.Solution.Projects.Count,
@@ -103,46 +121,56 @@ namespace TestUtilities.UI {
             item.Select();
         }
 
-        public TreeNode WaitForChildOfProject(EnvDTE.Project project, params string[] path) {
+        public TreeNode WaitForChildOfProject(EnvDTE.Project project, params string[] path)
+        {
             return WaitForChildOfProject(project, TimeSpan.FromSeconds(10), path);
         }
 
-        public TreeNode WaitForChildOfProject(EnvDTE.Project project, TimeSpan timeout, params string[] path) {
+        public TreeNode WaitForChildOfProject(EnvDTE.Project project, TimeSpan timeout, params string[] path)
+        {
             var item = WaitForItemHelper(p => FindChildOfProjectHelper(project, p, false), path, timeout);
             // Check one more time, but now let the assertions be raised.
             return new TreeNode(FindChildOfProjectHelper(project, path, true));
         }
 
-        public AutomationElement WaitForChildOfProjectRemoved(EnvDTE.Project project, params string[] path) {
+        public AutomationElement WaitForChildOfProjectRemoved(EnvDTE.Project project, params string[] path)
+        {
             return WaitForItemRemovedHelper(p => FindChildOfProjectHelper(project, p, false), path);
         }
 
-        public TreeNode FindChildOfProject(EnvDTE.Project project, params string[] path) {
+        public TreeNode FindChildOfProject(EnvDTE.Project project, params string[] path)
+        {
             return new TreeNode(FindChildOfProjectHelper(project, path, true));
         }
 
-        public TreeNode TryFindChildOfProject(EnvDTE.Project project, params string[] path) {
+        public TreeNode TryFindChildOfProject(EnvDTE.Project project, params string[] path)
+        {
             return new TreeNode(FindChildOfProjectHelper(project, path, false));
         }
 
-        public TreeNode WaitForChildOfWorkspace(params string[] path) {
+        public TreeNode WaitForChildOfWorkspace(params string[] path)
+        {
             return WaitForChildOfWorkspace(TimeSpan.FromSeconds(10), path);
         }
 
-        public TreeNode WaitForChildOfWorkspace(TimeSpan timeout, params string[] path) {
+        public TreeNode WaitForChildOfWorkspace(TimeSpan timeout, params string[] path)
+        {
             var item = WaitForItemHelper(p => FindChildOfWorkspaceHelper(p, false), path, timeout);
             // Check one more time, but now let the assertions be raised.
             return new TreeNode(FindChildOfWorkspaceHelper(path, true));
         }
 
-        private AutomationElement FindChildOfWorkspaceHelper(string[] path, bool assertOnFailure) {
+        private AutomationElement FindChildOfWorkspaceHelper(string[] path, bool assertOnFailure)
+        {
             var projElement = Nodes.FirstOrDefault()?.Element;
-            if (assertOnFailure) {
+            if (assertOnFailure)
+            {
                 AutomationWrapper.DumpElement(Element);
                 Assert.IsNotNull(projElement, "Did not find solution explorer workspace root element");
             }
 
-            if (projElement == null) {
+            if (projElement == null)
+            {
                 return null;
             }
 
@@ -152,19 +180,25 @@ namespace TestUtilities.UI {
                 0
             ) : projElement;
 
-            if (assertOnFailure) {
+            if (assertOnFailure)
+            {
                 AutomationWrapper.DumpElement(Element);
                 Assert.IsNotNull(itemElement, string.Format("Did not find element <{0}>", string.Join("\\", path)));
             }
             return itemElement;
         }
 
-        private AutomationElement FindChildOfProjectHelper(EnvDTE.Project project, string[] path, bool assertOnFailure) {
+        private AutomationElement FindChildOfProjectHelper(EnvDTE.Project project, string[] path, bool assertOnFailure)
+        {
             var sln = project.DTE.Solution;
-            int count = sln.Projects.OfType<EnvDTE.Project>().Count(p => {
-                try {
+            int count = sln.Projects.OfType<EnvDTE.Project>().Count(p =>
+            {
+                try
+                {
                     return !string.IsNullOrEmpty(p.FullName);
-                } catch (Exception) {
+                }
+                catch (Exception)
+                {
                     return false;
                 }
             });
@@ -179,9 +213,12 @@ namespace TestUtilities.UI {
                 AutomationElement.NameProperty, slnLabel
             ));
             int slnCount = slnElements.OfType<AutomationElement>().Count();
-            if (assertOnFailure) {
+            if (assertOnFailure)
+            {
                 Assert.AreEqual(1, slnCount, string.Format("Did not find single node <{0}>", slnLabel));
-            } else if (slnCount != 1) {
+            }
+            else if (slnCount != 1)
+            {
                 return null;
             }
             var slnElement = slnElements.Cast<AutomationElement>().Single();
@@ -191,9 +228,12 @@ namespace TestUtilities.UI {
                 AutomationElement.NameProperty, projLabel
             ));
             int projCount = projElements.OfType<AutomationElement>().Count();
-            if (assertOnFailure) {
+            if (assertOnFailure)
+            {
                 Assert.AreEqual(1, projCount, string.Format("Did not find single node <{0}>", projLabel));
-            } else if (projCount != 1) {
+            }
+            else if (projCount != 1)
+            {
                 return null;
             }
             var projElement = projElements.Cast<AutomationElement>().Single();
@@ -204,7 +244,8 @@ namespace TestUtilities.UI {
                 0
             ) : projElement;
 
-            if (assertOnFailure) {
+            if (assertOnFailure)
+            {
                 AutomationWrapper.DumpElement(Element);
                 Assert.IsNotNull(itemElement, string.Format("Did not find element <{0}\\{1}\\{2}>", slnLabel, projLabel, string.Join("\\", path)));
             }

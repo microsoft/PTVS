@@ -14,29 +14,36 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using System;
 using System.Globalization;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
-namespace Microsoft.VisualStudioTools.TestAdapter {
-    internal static class ServiceProviderExtensions {
+namespace Microsoft.VisualStudioTools.TestAdapter
+{
+    internal static class ServiceProviderExtensions
+    {
         public static T GetService<T>(this IServiceProvider serviceProvider)
-            where T : class {
+            where T : class
+        {
             return serviceProvider.GetService<T>(typeof(T));
         }
 
         public static T GetService<T>(this IServiceProvider serviceProvider, Type serviceType)
-            where T : class {
-            if (serviceProvider == null) {
+            where T : class
+        {
+            if (serviceProvider == null)
+            {
                 throw new ArgumentNullException(nameof(serviceProvider));
             }
 
-            if (serviceType == null) {
+            if (serviceType == null)
+            {
                 throw new ArgumentNullException(nameof(serviceType));
             }
 
             var serviceInstance = serviceProvider.GetService(serviceType) as T;
-            if (serviceInstance == null) {
+            if (serviceInstance == null)
+            {
                 throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture, serviceType.Name));
             }
 

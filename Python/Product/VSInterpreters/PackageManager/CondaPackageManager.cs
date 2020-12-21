@@ -199,7 +199,7 @@ namespace Microsoft.PythonTools.Interpreter {
         public event EventHandler IsReadyChanged;
 
         private async Task UpdateIsReadyAsync(bool alreadyHasLock, CancellationToken cancellationToken) {
-            var args = new [] { "-h" };
+            var args = new[] { "-h" };
             var workingLock = alreadyHasLock ? null : await _working.LockAsync(cancellationToken);
             try {
                 using (var proc = ProcessOutput.Run(
@@ -578,7 +578,7 @@ namespace Microsoft.PythonTools.Interpreter {
             // TODO: the last package may not be compatible?
             var last = pkgs.LastOrDefault();
             return last != null ? new PackageSpec(last.Name, last.VersionText) : new PackageSpec();
-         }
+        }
 
         public async Task<IList<PackageSpec>> GetInstalledPackagesAsync(CancellationToken cancellationToken) {
             using (await _working.LockAsync(cancellationToken)) {

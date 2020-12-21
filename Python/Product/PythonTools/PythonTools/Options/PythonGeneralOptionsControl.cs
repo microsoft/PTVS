@@ -31,11 +31,11 @@ namespace Microsoft.PythonTools.Options {
         internal Severity IndentationInconsistencySeverity {
             get {
                 switch (_indentationInconsistentCombo.SelectedIndex) {
-                    case ErrorIndex: 
+                    case ErrorIndex:
                         return Severity.Error;
-                    case WarningIndex: 
+                    case WarningIndex:
                         return Severity.Warning;
-                    case DontIndex: 
+                    case DontIndex:
                         return Severity.Ignore;
                     default:
                         return Severity.Ignore;
@@ -43,14 +43,14 @@ namespace Microsoft.PythonTools.Options {
             }
             set {
                 switch (value) {
-                    case Severity.Error: 
-                        _indentationInconsistentCombo.SelectedIndex = ErrorIndex; 
+                    case Severity.Error:
+                        _indentationInconsistentCombo.SelectedIndex = ErrorIndex;
                         break;
-                    case Severity.Warning: 
-                        _indentationInconsistentCombo.SelectedIndex = WarningIndex; 
+                    case Severity.Warning:
+                        _indentationInconsistentCombo.SelectedIndex = WarningIndex;
                         break;
-                    default: 
-                        _indentationInconsistentCombo.SelectedIndex = DontIndex; 
+                    default:
+                        _indentationInconsistentCombo.SelectedIndex = DontIndex;
                         break;
                 }
             }

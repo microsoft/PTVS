@@ -143,7 +143,7 @@ namespace Microsoft.PythonTools.Navigation {
             return VSConstants.E_FAIL;
         }
 
-        public int ValidateBreakpointLocation(IVsTextBuffer pBuffer, int iLine, int iCol, TextSpan[] pCodeSpan) {            
+        public int ValidateBreakpointLocation(IVsTextBuffer pBuffer, int iLine, int iCol, TextSpan[] pCodeSpan) {
             int len;
             if (!ErrorHandler.Succeeded(pBuffer.GetLengthOfLine(iLine, out len))) {
                 len = iCol;

@@ -19,6 +19,6 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 namespace Microsoft.PythonTools.TestAdapter.Pytest {
     internal static class Constants {
-        internal static readonly TestProperty PytestIdProperty = TestProperty.Register("PytestId", "PytestId", typeof(string), TestPropertyAttributes.Hidden, typeof(TestCase)); 
+        internal static readonly TestProperty PytestIdProperty = TestProperty.Register("PytestId", "PytestId", typeof(string), TestPropertyAttributes.Hidden, typeof(TestCase));
     }
 }

@@ -14,47 +14,59 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Collections.Generic;
 using Microsoft.VisualStudio.Utilities;
+using System.Collections.Generic;
 
-namespace TestUtilities.Mocks {
-    public class MockContentType : IContentType {
+namespace TestUtilities.Mocks
+{
+    public class MockContentType : IContentType
+    {
         private readonly string _name;
         private readonly List<IContentType> _bases;
 
-        public MockContentType(string name, IContentType[] bases) {
+        public MockContentType(string name, IContentType[] bases)
+        {
             _name = name;
             _bases = new List<IContentType>(bases);
         }
 
-        IEnumerable<IContentType> IContentType.BaseTypes {
+        IEnumerable<IContentType> IContentType.BaseTypes
+        {
             get { return _bases; }
         }
 
-        public List<IContentType> BaseTypes {
-            get {
+        public List<IContentType> BaseTypes
+        {
+            get
+            {
                 return _bases;
             }
         }
 
-        public bool IsOfType(string type) {
-            if (type == _name) {
+        public bool IsOfType(string type)
+        {
+            if (type == _name)
+            {
                 return true;
             }
 
-            foreach (var baseType in BaseTypes) {
-                if (baseType.IsOfType(type)) {
+            foreach (var baseType in BaseTypes)
+            {
+                if (baseType.IsOfType(type))
+                {
                     return true;
                 }
             }
             return false;
         }
 
-        public string DisplayName {
+        public string DisplayName
+        {
             get { return _name; }
         }
 
-        public string TypeName {
+        public string TypeName
+        {
             get { return _name; }
         }
     }

@@ -367,7 +367,7 @@ namespace PythonToolsUITests {
         }
 
         public void ProjectAddExistingVEnvLocal(PythonVisualStudioApp app) {
-            var python =    PythonPaths.Python37_x64 ??
+            var python = PythonPaths.Python37_x64 ??
                             PythonPaths.Python37 ??
                             PythonPaths.Python36_x64 ??
                             PythonPaths.Python36 ??
@@ -394,7 +394,7 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
         }
 
         public void ProjectAddCustomEnvLocal(PythonVisualStudioApp app) {
-            var python =    PythonPaths.Python37_x64 ??
+            var python = PythonPaths.Python37_x64 ??
                             PythonPaths.Python37 ??
                             PythonPaths.Python36_x64 ??
                             PythonPaths.Python36 ??
@@ -416,7 +416,7 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
         }
 
         public void ProjectAddExistingEnv(PythonVisualStudioApp app) {
-            var python =    PythonPaths.Python37_x64 ??
+            var python = PythonPaths.Python37_x64 ??
                             PythonPaths.Python37 ??
                             PythonPaths.Python36_x64 ??
                             PythonPaths.Python36 ??

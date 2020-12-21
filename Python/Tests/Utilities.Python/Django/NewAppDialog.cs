@@ -39,7 +39,7 @@ namespace TestUtilities.UI.Python.Django {
         public override void Cancel() {
             ClickButtonAndClose("_cancel", nameIsAutomationId: true);
         }
-        
+
         public string AppName {
             get {
                 return GetAppNameEditBox().GetValuePattern().Current.Value;

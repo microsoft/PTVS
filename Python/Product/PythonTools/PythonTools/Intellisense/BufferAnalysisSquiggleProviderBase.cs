@@ -37,8 +37,8 @@ namespace Microsoft.PythonTools.Intellisense {
         protected bool Enabled { get; set; }
 
         public BufferAnalysisSquiggleProviderBase(
-            IServiceProvider serviceProvider, 
-            TaskProvider taskProvider, 
+            IServiceProvider serviceProvider,
+            TaskProvider taskProvider,
             Func<GeneralOptions, bool> getSetting,
             PythonTextBufferInfoEvents[] triggerEvents) {
 

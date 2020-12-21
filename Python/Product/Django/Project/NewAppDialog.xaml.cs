@@ -38,7 +38,7 @@ namespace Microsoft.PythonTools.Django.Project {
 
         public static readonly object BackgroundKey = VsBrushes.WindowKey;
         public static readonly object ForegroundKey = VsBrushes.WindowTextKey;
-        
+
         public NewAppDialog() {
             InitializeComponent();
 

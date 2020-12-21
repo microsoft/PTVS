@@ -16,8 +16,10 @@
 
 using System.Collections.Generic;
 
-namespace Microsoft.VisualStudioTools.MockVsTests {
-    public interface IContentTypeDefinitionMetadata {
+namespace Microsoft.VisualStudioTools.MockVsTests
+{
+    public interface IContentTypeDefinitionMetadata
+    {
         string Name { get; }
 
         [System.ComponentModel.DefaultValue(null)]

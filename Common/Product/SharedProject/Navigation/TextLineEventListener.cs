@@ -14,12 +14,14 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.TextManager.Interop;
+using System;
 
-namespace Microsoft.VisualStudioTools.Navigation {
-    internal class TextLineEventListener : IVsTextLinesEvents, IDisposable {
+namespace Microsoft.VisualStudioTools.Navigation
+{
+    internal class TextLineEventListener : IVsTextLinesEvents, IDisposable
+    {
         private const int _defaultDelay = 2000;
         private string _fileName;
         private ModuleId _fileId;
@@ -28,12 +30,14 @@ namespace Microsoft.VisualStudioTools.Navigation {
         private IConnectionPoint _connectionPoint;
         private uint _connectionCookie;
 
-        public TextLineEventListener(IVsTextLines buffer, string fileName, ModuleId id) {
+        public TextLineEventListener(IVsTextLines buffer, string fileName, ModuleId id)
+        {
             _buffer = buffer;
             _fileId = id;
             _fileName = fileName;
             IConnectionPointContainer container = buffer as IConnectionPointContainer;
-            if (null != container) {
+            if (null != container)
+            {
                 Guid eventsGuid = typeof(IVsTextLinesEvents).GUID;
                 container.FindConnectionPoint(ref eventsGuid, out _connectionPoint);
                 _connectionPoint.Advise(this as IVsTextLinesEvents, out _connectionCookie);
@@ -41,10 +45,12 @@ namespace Microsoft.VisualStudioTools.Navigation {
         }
 
         #region Properties
-        public ModuleId FileID {
+        public ModuleId FileID
+        {
             get { return _fileId; }
         }
-        public string FileName {
+        public string FileName
+        {
             get { return _fileName; }
             set { _fileName = value; }
         }
@@ -58,13 +64,16 @@ namespace Microsoft.VisualStudioTools.Navigation {
         #endregion
 
         #region IVsTextLinesEvents Members
-        void IVsTextLinesEvents.OnChangeLineAttributes(int iFirstLine, int iLastLine) {
+        void IVsTextLinesEvents.OnChangeLineAttributes(int iFirstLine, int iLastLine)
+        {
             // Do Nothing
         }
 
-        void IVsTextLinesEvents.OnChangeLineText(TextLineChange[] pTextLineChange, int fLast) {
+        void IVsTextLinesEvents.OnChangeLineText(TextLineChange[] pTextLineChange, int fLast)
+        {
             TextLineChangeEvent eh = OnFileChangedImmediate;
-            if (null != eh) {
+            if (null != eh)
+            {
                 eh(this, pTextLineChange, fLast);
             }
 
@@ -73,8 +82,10 @@ namespace Microsoft.VisualStudioTools.Navigation {
         #endregion
 
         #region IDisposable Members
-        public void Dispose() {
-            if ((null != _connectionPoint) && (0 != _connectionCookie)) {
+        public void Dispose()
+        {
+            if ((null != _connectionPoint) && (0 != _connectionCookie))
+            {
                 _connectionPoint.Unadvise(_connectionCookie);
             }
             _connectionCookie = 0;
@@ -86,12 +97,15 @@ namespace Microsoft.VisualStudioTools.Navigation {
         #endregion
 
         #region Idle time processing
-        public void OnIdle() {
-            if (!_isDirty) {
+        public void OnIdle()
+        {
+            if (!_isDirty)
+            {
                 return;
             }
             var onFileChanged = OnFileChanged;
-            if (null != onFileChanged) {
+            if (null != onFileChanged)
+            {
                 HierarchyEventArgs args = new HierarchyEventArgs(_fileId.ItemID, _fileName);
                 args.TextBuffer = _buffer;
                 onFileChanged(_fileId.Hierarchy, args);

@@ -394,7 +394,7 @@ namespace Microsoft.PythonTools.Profiling {
                         }
                     }
                 } else if (pguidCmdGroup == VSConstants.GUID_VSStandardCommandSet97) {
-                    switch((VSConstants.VSStd97CmdID)nCmdID) {
+                    switch ((VSConstants.VSStd97CmdID)nCmdID) {
                         case VSConstants.VSStd97CmdID.PropSheetOrProperties:
                             _node.OpenTargetProperties();
                             return VSConstants.S_OK;
@@ -419,7 +419,7 @@ namespace Microsoft.PythonTools.Profiling {
         public override int QueryStatusCommand(uint itemid, ref Guid pguidCmdGroup, uint cCmds, VisualStudio.OLE.Interop.OLECMD[] prgCmds, IntPtr pCmdText) {
             return base.QueryStatusCommand(itemid, ref pguidCmdGroup, cCmds, prgCmds, pCmdText);
         }
-        
+
         private bool IsReportItem(uint itemid) {
             return itemid >= StartingReportId && Reports.ContainsKey(itemid);
         }
@@ -469,7 +469,7 @@ namespace Microsoft.PythonTools.Profiling {
                 case VSSAVEFLAGS.VSSAVE_SaveAs:
                 case VSSAVEFLAGS.VSSAVE_SaveCopyAs:
                     SaveFileDialog saveDialog = new SaveFileDialog();
-                    saveDialog.FileName = _filename;                    
+                    saveDialog.FileName = _filename;
                     if (saveDialog.ShowDialog() == true) {
                         Save(saveDialog.FileName);
                         _neverSaved = false;
@@ -492,7 +492,7 @@ namespace Microsoft.PythonTools.Profiling {
 
             var report = GetReport(itemid);
             Reports.Remove(itemid);
-            
+
             OnItemDeleted(itemid);
             OnInvalidateItems(ReportsItemId);
 

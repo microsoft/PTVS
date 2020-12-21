@@ -28,7 +28,7 @@ namespace Microsoft.PythonTools.Django.Project {
             _package = package;
         }
 
-        protected override object PreCreateForOuter(IntPtr outerProjectIUnknown) 
+        protected override object PreCreateForOuter(IntPtr outerProjectIUnknown)
             => new DjangoProject(_package);
     }
 }

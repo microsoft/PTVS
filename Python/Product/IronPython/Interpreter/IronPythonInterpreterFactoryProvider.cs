@@ -244,7 +244,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
         }
 
         internal static InterpreterFactoryCreationOptions GetCreationOptions(IServiceProvider site, InterpreterConfiguration config) {
-            return new InterpreterFactoryCreationOptions {};
+            return new InterpreterFactoryCreationOptions { };
         }
     }
 }

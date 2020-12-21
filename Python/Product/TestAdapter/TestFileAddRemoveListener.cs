@@ -57,7 +57,7 @@ namespace Microsoft.VisualStudioTools.TestAdapter {
         public event EventHandler<TestFileChangedEventArgs> TestFileChanged;
 
         public TestFileAddRemoveListener(IServiceProvider serviceProvider, Guid projectGuid) {
-          //  ValidateArg.NotNull(serviceProvider, "serviceProvider");
+            //  ValidateArg.NotNull(serviceProvider, "serviceProvider");
 
             _testProjectGuid = projectGuid;
 
@@ -86,7 +86,7 @@ namespace Microsoft.VisualStudioTools.TestAdapter {
                 var projectIndex = rgFirstIndices[index];
                 var project = changedProjects[projectIndex];
 
-                if (project != null ) { //&& project.IsTestProject(_testProjectGuid)) {
+                if (project != null) { //&& project.IsTestProject(_testProjectGuid)) {
                     var evt = TestFileChanged;
                     if (evt != null) {
                         evt(this, new TestFileChangedEventArgs(project, projectItem, reason));

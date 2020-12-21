@@ -14,12 +14,12 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using Microsoft.VisualStudio.Shell.Interop;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
-using Microsoft.VisualStudio.Shell.Interop;
 using VSLangProj;
 using ErrorHandler = Microsoft.VisualStudio.ErrorHandler;
 
@@ -49,7 +49,8 @@ namespace Microsoft.VisualStudioTools.Project.Automation
             _project = project;
 
             AddEventSource<_dispReferencesEvents>(this as IEventSource<_dispReferencesEvents>);
-            if (_container != null) {
+            if (_container != null)
+            {
                 _container.OnChildAdded += new EventHandler<HierarchyNodeEventArgs>(OnReferenceAdded);
                 _container.OnChildRemoved += new EventHandler<HierarchyNodeEventArgs>(OnReferenceRemoved);
             }
@@ -58,7 +59,8 @@ namespace Microsoft.VisualStudioTools.Project.Automation
         #region Private Members
         private Reference AddFromSelectorData(VSCOMPONENTSELECTORDATA selector)
         {
-            if (_container == null) {
+            if (_container == null)
+            {
                 return null;
             }
             ReferenceNode refNode = _container.AddReferenceFromSelectorData(selector);
@@ -153,7 +155,7 @@ namespace Microsoft.VisualStudioTools.Project.Automation
         {
             get
             {
-                if (_container == null) 
+                if (_container == null)
                 {
                     return 0;
                 }
@@ -190,7 +192,8 @@ namespace Microsoft.VisualStudioTools.Project.Automation
 
         public IEnumerator GetEnumerator()
         {
-            if (_container == null) {
+            if (_container == null)
+            {
                 return new List<Reference>().GetEnumerator();
             }
 
@@ -218,7 +221,7 @@ namespace Microsoft.VisualStudioTools.Project.Automation
 
         public Reference Item(object index)
         {
-            if (_container == null) 
+            if (_container == null)
             {
                 throw new ArgumentOutOfRangeException("index");
             }
@@ -247,7 +250,7 @@ namespace Microsoft.VisualStudioTools.Project.Automation
         {
             get
             {
-                if (_container == null) 
+                if (_container == null)
                 {
                     return _project.Object;
                 }
@@ -259,7 +262,8 @@ namespace Microsoft.VisualStudioTools.Project.Automation
 
         #region _dispReferencesEvents_Event Members
         public event _dispReferencesEvents_ReferenceAddedEventHandler ReferenceAdded;
-        public event _dispReferencesEvents_ReferenceChangedEventHandler ReferenceChanged {
+        public event _dispReferencesEvents_ReferenceChangedEventHandler ReferenceChanged
+        {
             add { }
             remove { }
         }
@@ -289,7 +293,7 @@ namespace Microsoft.VisualStudioTools.Project.Automation
                 ReferenceAdded(reference);
             }
         }
-        
+
         private void OnReferenceRemoved(object sender, HierarchyNodeEventArgs args)
         {
             // Validate the parameters.

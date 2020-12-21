@@ -183,8 +183,8 @@ namespace Microsoft.PythonTools.Navigation {
                     foreach (var reference in value.locations.MaybeEnumerate()) {
                         var entry = analyzer.GetAnalysisEntryFromPath(reference.file);
                         var analysis = analyzer.WaitForRequest(analyzer.AnalyzeExpressionAsync(
-                            entry, 
-                            Name, 
+                            entry,
+                            Name,
                             new SourceLocation(reference.startLine, reference.startColumn)
                         ), "PythonLibraryNode.AnalyzeExpression");
                         vars.AddRange(analysis.Variables);

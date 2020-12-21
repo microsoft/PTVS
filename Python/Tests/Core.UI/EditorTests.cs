@@ -242,7 +242,7 @@ namespace PythonToolsUITests {
                 ((UIElement)doc.TextView).Focus();
             }));
             doc.WaitForAnalysisAtCaretAsync().WaitAndUnwrapExceptions();
-            
+
             Keyboard.Type("f");
             System.Threading.Thread.Sleep(500);
             Keyboard.Type("(");

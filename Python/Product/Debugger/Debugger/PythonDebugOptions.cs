@@ -63,7 +63,7 @@ namespace Microsoft.PythonTools.Debugger {
         RedirectInput = 0x80,
 
         AttachRunning = 0x100,
-        
+
         /// <summary>
         /// Indicates that the application is a windowed application rather than a console one.
         /// </summary>

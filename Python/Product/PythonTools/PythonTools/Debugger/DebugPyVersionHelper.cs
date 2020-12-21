@@ -44,7 +44,7 @@ namespace Microsoft.PythonTools.Debugger {
     }
 
     internal class DebugPyVersionRequest : DebugRequestWithResponse<DebugPyVersionArguments, DebugPyVersionResponse> {
-        public DebugPyVersionRequest(): base("debugpySystemInfo") {
+        public DebugPyVersionRequest() : base("debugpySystemInfo") {
         }
     }
 

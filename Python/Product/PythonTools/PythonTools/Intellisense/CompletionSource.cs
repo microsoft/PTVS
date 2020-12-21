@@ -40,13 +40,13 @@ namespace Microsoft.PythonTools.Intellisense {
             return options;
         }
 
-        public static void SetCompleteWordMode(this IIntellisenseSession session) 
+        public static void SetCompleteWordMode(this IIntellisenseSession session)
             => session.Properties[CompleteWord] = true;
 
         public static void ClearCompleteWordMode(this IIntellisenseSession session)
             => session.Properties.RemoveProperty(CompleteWord);
 
-        public static bool IsCompleteWordMode(this IIntellisenseSession session) 
+        public static bool IsCompleteWordMode(this IIntellisenseSession session)
             => session.Properties.TryGetProperty(CompleteWord, out bool prop) && prop;
 
         public static void SetTriggerCharacter(this IIntellisenseSession session, char triggerChar)
@@ -76,7 +76,7 @@ namespace Microsoft.PythonTools.Intellisense {
             );
 
             var completions = provider.GetCompletions(_provider._glyphService);
-           
+
             if (completions != null && completions.Completions.Count > 0) {
                 completionSets.Add(completions);
             }

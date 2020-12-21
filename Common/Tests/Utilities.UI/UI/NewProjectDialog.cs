@@ -17,32 +17,40 @@
 using System;
 using System.Windows.Automation;
 
-namespace TestUtilities.UI {
+namespace TestUtilities.UI
+{
     /// <summary>
     /// Wrapps VS's File->New Project dialog.
     /// </summary>
-    public class NewProjectDialog  : AutomationDialog {
+    public class NewProjectDialog : AutomationDialog
+    {
         private TreeView _installedTemplates;
         private ListView _projectTypesTable;
 
         public NewProjectDialog(VisualStudioApp app, AutomationElement element)
-            : base(app, element) {
+            : base(app, element)
+        {
         }
 
-        public static NewProjectDialog FromDte(VisualStudioApp app) {
+        public static NewProjectDialog FromDte(VisualStudioApp app)
+        {
             return app.FileNewProject();
         }
 
-        public override void OK() {
+        public override void OK()
+        {
             ClickButtonAndClose("btn_OK", nameIsAutomationId: true);
         }
 
         /// <summary>
         /// Gets the installed templates tree view which enables access to all of the project types.
         /// </summary>
-        public TreeView InstalledTemplates {
-            get {
-                if (_installedTemplates == null) {
+        public TreeView InstalledTemplates
+        {
+            get
+            {
+                if (_installedTemplates == null)
+                {
                     var templates = Element.FindAll(
                         TreeScope.Descendants,
                         new PropertyCondition(
@@ -54,18 +62,20 @@ namespace TestUtilities.UI {
 #endif
                         )
                     );
-                    
+
 
                     // all the templates have the same name (Installed, Recent, etc...)
                     // so we need to find the one that actually has our templates.
-                    foreach (AutomationElement template in templates) {
+                    foreach (AutomationElement template in templates)
+                    {
                         var temp = new TreeView(template);
 #if DEV11_OR_LATER
                         var item = temp.FindItem("Templates");
 #else
                         var item = temp.FindItem("Visual C#");
 #endif
-                        if (item != null) {
+                        if (item != null)
+                        {
                             _installedTemplates = temp;
                             break;
                         }
@@ -78,9 +88,12 @@ namespace TestUtilities.UI {
         /// <summary>
         /// Gets the project types table which enables selecting an individual project type.
         /// </summary>
-        public ListView ProjectTypes {
-            get {
-                if (_projectTypesTable == null) {
+        public ListView ProjectTypes
+        {
+            get
+            {
+                if (_projectTypesTable == null)
+                {
                     var extensions = Element.FindAll(
                         TreeScope.Descendants,
                         new PropertyCondition(
@@ -89,7 +102,8 @@ namespace TestUtilities.UI {
                         )
                     );
 
-                    if (extensions.Count != 1) {
+                    if (extensions.Count != 1)
+                    {
                         throw new Exception("multiple controls match");
                     }
                     _projectTypesTable = new ListView(extensions[0]);
@@ -99,32 +113,41 @@ namespace TestUtilities.UI {
             }
         }
 
-        public string ProjectName {
-            get {
+        public string ProjectName
+        {
+            get
+            {
                 return ProjectNameBox.GetValuePattern().Current.Value;
             }
-            set {
+            set
+            {
                 ProjectNameBox.GetValuePattern().SetValue(value);
             }
         }
 
-        public string Location {
-            get {
+        public string Location
+        {
+            get
+            {
                 return LocationBox.GetValuePattern().Current.Value;
             }
-            set {
+            set
+            {
                 LocationBox.GetValuePattern().SetValue(value);
             }
         }
 
-        public void FocusLanguageNode(string name = "Python") {
-            if (InstalledTemplates == null) {
+        public void FocusLanguageNode(string name = "Python")
+        {
+            if (InstalledTemplates == null)
+            {
                 Console.WriteLine("Failed to find InstalledTemplates:");
                 AutomationWrapper.DumpElement(Element);
             }
 #if DEV11_OR_LATER
             var item = InstalledTemplates.FindItem("Templates", name);
-            if (item == null) {
+            if (item == null)
+            {
                 item = InstalledTemplates.FindItem("Templates", "Other Languages", name);
             }
 #else
@@ -134,15 +157,18 @@ namespace TestUtilities.UI {
                 item = InstalledTemplates.FindItem(name);
             }
 #endif
-            if (item == null) {
+            if (item == null)
+            {
                 Console.WriteLine("Failed to find templates for " + name);
                 AutomationWrapper.DumpElement(InstalledTemplates.Element);
             }
             item.SetFocus();
         }
 
-        private AutomationElement ProjectNameBox {
-            get {
+        private AutomationElement ProjectNameBox
+        {
+            get
+            {
                 return Element.FindFirst(TreeScope.Descendants,
                     new AndCondition(
                         new PropertyCondition(AutomationElement.AutomationIdProperty, "txt_Name"),
@@ -152,8 +178,10 @@ namespace TestUtilities.UI {
             }
         }
 
-        private AutomationElement LocationBox {
-            get {
+        private AutomationElement LocationBox
+        {
+            get
+            {
                 return Element.FindFirst(TreeScope.Descendants,
                     new AndCondition(
                         new PropertyCondition(AutomationElement.AutomationIdProperty, "PART_EditableTextBox"),

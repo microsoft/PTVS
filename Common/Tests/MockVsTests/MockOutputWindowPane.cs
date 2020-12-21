@@ -14,65 +14,80 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Text;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
+using System;
+using System.Text;
 
-namespace Microsoft.VisualStudioTools.MockVsTests {
-    class MockOutputWindowPane : IVsOutputWindowPane {
+namespace Microsoft.VisualStudioTools.MockVsTests
+{
+    class MockOutputWindowPane : IVsOutputWindowPane
+    {
         private string _name;
         private readonly StringBuilder _content = new StringBuilder();
 
-        public MockOutputWindowPane(string pszPaneName) {
+        public MockOutputWindowPane(string pszPaneName)
+        {
             _name = pszPaneName;
         }
 
-        public int Activate() {
+        public int Activate()
+        {
             return VSConstants.S_OK;
         }
 
-        public int Clear() {
+        public int Clear()
+        {
             _content.Clear();
             return VSConstants.S_OK;
         }
 
-        public int FlushToTaskList() {
+        public int FlushToTaskList()
+        {
             throw new NotImplementedException();
         }
 
-        public int GetName(ref string pbstrPaneName) {
+        public int GetName(ref string pbstrPaneName)
+        {
             pbstrPaneName = _name;
             return VSConstants.S_OK;
         }
 
-        public int Hide() {
+        public int Hide()
+        {
             return VSConstants.S_OK;
         }
 
-        public int OutputString(string pszOutputString) {
-            lock (this) {
+        public int OutputString(string pszOutputString)
+        {
+            lock (this)
+            {
                 _content.Append(pszOutputString);
             }
             return VSConstants.S_OK;
         }
 
-        public int OutputStringThreadSafe(string pszOutputString) {
-            lock (this) {
+        public int OutputStringThreadSafe(string pszOutputString)
+        {
+            lock (this)
+            {
                 _content.Append(pszOutputString);
             }
             return VSConstants.S_OK;
         }
 
-        public int OutputTaskItemString(string pszOutputString, VSTASKPRIORITY nPriority, VSTASKCATEGORY nCategory, string pszSubcategory, int nBitmap, string pszFilename, uint nLineNum, string pszTaskItemText) {
+        public int OutputTaskItemString(string pszOutputString, VSTASKPRIORITY nPriority, VSTASKCATEGORY nCategory, string pszSubcategory, int nBitmap, string pszFilename, uint nLineNum, string pszTaskItemText)
+        {
             throw new NotImplementedException();
         }
 
-        public int OutputTaskItemStringEx(string pszOutputString, VSTASKPRIORITY nPriority, VSTASKCATEGORY nCategory, string pszSubcategory, int nBitmap, string pszFilename, uint nLineNum, string pszTaskItemText, string pszLookupKwd) {
+        public int OutputTaskItemStringEx(string pszOutputString, VSTASKPRIORITY nPriority, VSTASKCATEGORY nCategory, string pszSubcategory, int nBitmap, string pszFilename, uint nLineNum, string pszTaskItemText, string pszLookupKwd)
+        {
             throw new NotImplementedException();
         }
 
-        public int SetName(string pszPaneName) {
+        public int SetName(string pszPaneName)
+        {
             _name = pszPaneName;
             return VSConstants.S_OK;
         }

@@ -14,18 +14,21 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using Microsoft.VisualStudio.Shell;
 using System;
 using System.IO;
-using Microsoft.VisualStudio.Shell;
 
-namespace Microsoft.VisualStudioTools {
+namespace Microsoft.VisualStudioTools
+{
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
-    class ProvideDebugEngineAttribute : RegistrationAttribute {
+    class ProvideDebugEngineAttribute : RegistrationAttribute
+    {
         private readonly string _id, _name;
         private readonly bool _setNextStatement, _hitCountBp, _justMyCodeStepping;
         private readonly Type _programProvider, _debugEngine;
 
-        public ProvideDebugEngineAttribute(string name, Type programProvider, Type debugEngine, string id, bool setNextStatement = true, bool hitCountBp = false, bool justMyCodeStepping = true) {
+        public ProvideDebugEngineAttribute(string name, Type programProvider, Type debugEngine, string id, bool setNextStatement = true, bool hitCountBp = false, bool justMyCodeStepping = true)
+        {
             _name = name;
             _programProvider = programProvider;
             _debugEngine = debugEngine;
@@ -35,7 +38,8 @@ namespace Microsoft.VisualStudioTools {
             _justMyCodeStepping = justMyCodeStepping;
         }
 
-        public override void Register(RegistrationContext context) {
+        public override void Register(RegistrationContext context)
+        {
             var engineKey = context.CreateKey("AD7Metrics\\Engine\\" + _id);
             engineKey.SetValue("Name", _name);
 
@@ -65,7 +69,8 @@ namespace Microsoft.VisualStudioTools {
             engineKey.SetValue("AlwaysLoadProgramProviderLocal", 1);
             engineKey.SetValue("LoadUnderWOW64", 1);
 
-            using (var incompatKey = engineKey.CreateSubkey("IncompatibleList")) {
+            using (var incompatKey = engineKey.CreateSubkey("IncompatibleList"))
+            {
                 // In VS 2013, mixed-mode debugging is supported with any engine that does not exclude us specifically
                 // (everyone should be using the new debugging APIs that permit arbitrary mixing), except for the legacy
                 // .NET 2.0/3.0/3.5 engine.
@@ -88,7 +93,8 @@ namespace Microsoft.VisualStudioTools {
 #endif
             }
 
-            using (var autoSelectIncompatKey = engineKey.CreateSubkey("AutoSelectIncompatibleList")) {
+            using (var autoSelectIncompatKey = engineKey.CreateSubkey("AutoSelectIncompatibleList"))
+            {
                 autoSelectIncompatKey.SetValue("guidNativeOnlyEng", "{3B476D35-A401-11D2-AAD4-00C04F990171}");
             }
 
@@ -107,12 +113,14 @@ namespace Microsoft.VisualStudioTools {
             clsidGuidKey.SetValue("CodeBase", Path.Combine(context.ComponentPath, _debugEngine.Module.Name));
             clsidGuidKey.SetValue("ThreadingModel", "Free");
 
-            using (var exceptionAssistantKey = context.CreateKey("ExceptionAssistant\\KnownEngines\\" + _id)) {
+            using (var exceptionAssistantKey = context.CreateKey("ExceptionAssistant\\KnownEngines\\" + _id))
+            {
                 exceptionAssistantKey.SetValue("", _name);
             }
         }
 
-        public override void Unregister(RegistrationContext context) {
+        public override void Unregister(RegistrationContext context)
+        {
         }
     }
 }

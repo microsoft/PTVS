@@ -168,7 +168,7 @@ namespace Microsoft.PythonTools.Repl {
 
         private int ExecWorker(ref Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
             var eval = _interactive.Evaluator;
-            
+
             // preprocessing
             if (pguidCmdGroup == VSConstants.GUID_VSStandardCommandSet97) {
                 switch ((VSConstants.VSStd97CmdID)nCmdID) {
@@ -187,10 +187,10 @@ namespace Microsoft.PythonTools.Repl {
                         if (pasting != null) {
                             PasteReplCode(
                                 _interactive,
-                                pasting, 
+                                pasting,
                                 (eval as PythonInteractiveEvaluator)?.LanguageVersion ?? PythonLanguageVersion.None
                             ).DoNotWait();
-                        
+
                             return VSConstants.S_OK;
                         }
                         break;
@@ -329,7 +329,7 @@ namespace Microsoft.PythonTools.Repl {
             if (_selectEval == null) {
                 return;
             }
-            
+
             // getting the current value
             if (outCurrentValue != IntPtr.Zero) {
                 Marshal.GetNativeVariantForObject(
@@ -358,7 +358,7 @@ namespace Microsoft.PythonTools.Repl {
                         var wnd = provider.Create(id);
                         wnd.Show(true);
                     }
-                } catch(KeyNotFoundException ex) {
+                } catch (KeyNotFoundException ex) {
                     // Should never be missing an item, but if we are, report it
                     // now for maximum context.
                     ex.ReportUnhandledException(_serviceProvider, GetType());

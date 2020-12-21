@@ -390,7 +390,7 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             var frameFormatOptions = new DkmFrameFormatOptions(DkmVariableInfoFlags.None, DkmFrameNameFormatOptions.None, DkmEvaluationFlags.None, 10000, 10);
             var stackContext = DkmStackContext.Create(inspectionSession, thread, DkmCallStackFilterOptions.None, frameFormatOptions, null, null);
             DkmStackFrame frame = null;
-            for (int pyFrameCount = 0; pyFrameCount != 2; ) {
+            for (int pyFrameCount = 0; pyFrameCount != 2;) {
                 DkmStackFrame[] frames = null;
                 var workList = DkmWorkList.Create(null);
                 stackContext.GetNextFrames(workList, 1, (result) => { frames = result.Frames; });

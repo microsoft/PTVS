@@ -56,8 +56,7 @@ namespace Microsoft.PythonTools.Django.Intellisense {
             return res;
         }
 
-        public static DjangoUrl[] GetUrls(this VsProjectAnalyzer analyzer)
-        {
+        public static DjangoUrl[] GetUrls(this VsProjectAnalyzer analyzer) {
             var urls = analyzer.WaitForRequest(analyzer.SendExtensionCommandAsync(
                 DjangoAnalyzer.Name,
                 DjangoAnalyzer.Commands.GetUrls,

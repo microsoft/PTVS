@@ -15,8 +15,8 @@
 // permissions and limitations under the License.
 
 using System;
-using Microsoft.VisualStudio.InteractiveWindow.Shell;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.InteractiveWindow.Shell;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 

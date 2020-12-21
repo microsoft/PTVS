@@ -152,7 +152,7 @@ namespace Microsoft.PythonTools.Project {
                     if (logger != null) {
                         foreach (var p in packages) {
                             logger.LogEvent(PythonLogEvent.PythonPackage,
-                                new PackageInfo {Name = p.Value.Name.ToLowerInvariant()});
+                                new PackageInfo { Name = p.Value.Name.ToLowerInvariant() });
                         }
                     }
                 } catch (Exception ex) {

@@ -37,7 +37,7 @@ namespace Microsoft.PythonTools.Django.Intellisense {
         private readonly IAsyncQuickInfoBroker _quickInfoBroker;
 
         [ImportingConstructor]
-        public TemplateCompletionControllerProvider([Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider, ICompletionBroker completionBroker, IAsyncQuickInfoBroker quickInfoBroker, ISignatureHelpBroker signatureHelpBroker) {
+        public TemplateCompletionControllerProvider([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider, ICompletionBroker completionBroker, IAsyncQuickInfoBroker quickInfoBroker, ISignatureHelpBroker signatureHelpBroker) {
             _completionBroker = completionBroker;
             _quickInfoBroker = quickInfoBroker;
             _signatureHelpBroker = signatureHelpBroker;

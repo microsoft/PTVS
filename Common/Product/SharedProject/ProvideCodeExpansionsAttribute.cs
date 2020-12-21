@@ -14,11 +14,12 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using Microsoft.VisualStudio.Shell;
 using System;
 using System.Globalization;
-using Microsoft.VisualStudio.Shell;
 
-namespace Microsoft.VisualStudioTools {
+namespace Microsoft.VisualStudioTools
+{
 
     /// <summary>
     /// This attribute registers code snippets for a package.  The attributes on a 
@@ -28,7 +29,8 @@ namespace Microsoft.VisualStudioTools {
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = true)]
     // Disable the "IdentifiersShouldNotHaveIncorrectSuffix" warning.
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1711")]
-    sealed class ProvideCodeExpansionsAttribute : RegistrationAttribute {
+    sealed class ProvideCodeExpansionsAttribute : RegistrationAttribute
+    {
         private readonly Guid _languageGuid;
         private readonly bool _showRoots;
         private readonly short _displayName;
@@ -41,7 +43,8 @@ namespace Microsoft.VisualStudioTools {
         /// </summary>
         public ProvideCodeExpansionsAttribute(string languageGuid, bool showRoots, short displayName,
                                           string languageStringId, string indexPath,
-                                          string paths) {
+                                          string paths)
+        {
             _languageGuid = new Guid(languageGuid);
             _showRoots = showRoots;
             _displayName = displayName;
@@ -53,49 +56,56 @@ namespace Microsoft.VisualStudioTools {
         /// <summary>
         /// Returns the language guid.
         /// </summary>
-        public string LanguageGuid {
+        public string LanguageGuid
+        {
             get { return _languageGuid.ToString("B"); }
         }
 
         /// <summary>
         /// Returns true if roots are shown.
         /// </summary>
-        public bool ShowRoots {
+        public bool ShowRoots
+        {
             get { return _showRoots; }
         }
 
         /// <summary>
         /// Returns string ID corresponding to the language name.
         /// </summary>
-        public short DisplayName {
+        public short DisplayName
+        {
             get { return _displayName; }
         }
 
         /// <summary>
         /// Returns the string to use for the language name.
         /// </summary>
-        public string LanguageStringId {
+        public string LanguageStringId
+        {
             get { return _languageStringId; }
         }
 
         /// <summary>
         /// Returns the relative path to the snippet index file.
         /// </summary>
-        public string IndexPath {
+        public string IndexPath
+        {
             get { return _indexPath; }
         }
 
         /// <summary>
         /// Returns the paths to look for snippets.
         /// </summary>
-        public string Paths {
+        public string Paths
+        {
             get { return _paths; }
         }
 
         /// <summary>
         /// The reg key name of the project.
         /// </summary>
-        private string LanguageName() {
+        private string LanguageName()
+        {
             return string.Format(CultureInfo.InvariantCulture, "Languages\\CodeExpansions\\{0}", LanguageStringId);
         }
 
@@ -106,11 +116,14 @@ namespace Microsoft.VisualStudioTools {
         /// Contains the location where the registration information should be placed.
         /// It also contains other informations as the type being registered and path information.
         /// </param>
-        public override void Register(RegistrationContext context) {
-            if (context == null) {
+        public override void Register(RegistrationContext context)
+        {
+            if (context == null)
+            {
                 return;
             }
-            using (Key childKey = context.CreateKey(LanguageName())) {
+            using (Key childKey = context.CreateKey(LanguageName()))
+            {
                 childKey.SetValue("", LanguageGuid);
 
                 string snippetIndexPath = context.ComponentPath;
@@ -129,11 +142,13 @@ namespace Microsoft.VisualStudioTools {
 
                 //The following enables VS to look into a user directory for more user-created snippets
                 string myDocumentsPath = @";%MyDocs%\Code Snippets\" + _languageStringId + @"\My Code Snippets\";
-                using (Key forceSubKey = childKey.CreateSubkey("ForceCreateDirs")) {
+                using (Key forceSubKey = childKey.CreateSubkey("ForceCreateDirs"))
+                {
                     forceSubKey.SetValue(LanguageStringId, snippetPaths + myDocumentsPath);
                 }
 
-                using (Key pathsSubKey = childKey.CreateSubkey("Paths")) {
+                using (Key pathsSubKey = childKey.CreateSubkey("Paths"))
+                {
                     pathsSubKey.SetValue(LanguageStringId, snippetPaths + myDocumentsPath);
                 }
             }
@@ -146,8 +161,10 @@ namespace Microsoft.VisualStudioTools {
         /// Contains the location where the registration information should be placed.
         /// It also contains other informations as the type being registered and path information.
         /// </param>
-        public override void Unregister(RegistrationContext context) {
-            if (context != null) {
+        public override void Unregister(RegistrationContext context)
+        {
+            if (context != null)
+            {
                 context.RemoveKey(LanguageName());
             }
         }

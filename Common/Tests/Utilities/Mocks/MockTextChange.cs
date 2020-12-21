@@ -14,74 +14,92 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
 using Microsoft.VisualStudio.Text;
+using System;
 
-namespace TestUtilities.Mocks {
-    class MockTextChange : ITextChange {
+namespace TestUtilities.Mocks
+{
+    class MockTextChange : ITextChange
+    {
         private readonly SnapshotSpan _removed;
         private readonly string _inserted;
         private readonly int _newStart;
-        private static readonly string[] NewLines = new[] { "\r\n", "\r", "\n"};
+        private static readonly string[] NewLines = new[] { "\r\n", "\r", "\n" };
 
-        public MockTextChange(SnapshotSpan removedSpan, int newStart, string insertedText) {
+        public MockTextChange(SnapshotSpan removedSpan, int newStart, string insertedText)
+        {
             _removed = removedSpan;
             _inserted = insertedText;
             _newStart = newStart;
         }
 
-        public int Delta {
+        public int Delta
+        {
             get { return _inserted.Length - _removed.Length; }
         }
 
-        public int LineCountDelta {
-            get {
+        public int LineCountDelta
+        {
+            get
+            {
                 return _inserted.Split(NewLines, StringSplitOptions.None).Length -
                     _removed.GetText().Split(NewLines, StringSplitOptions.None).Length;
             }
         }
 
-        public int NewEnd {
-            get {
+        public int NewEnd
+        {
+            get
+            {
                 return NewPosition + _inserted.Length;
             }
         }
 
-        public int NewLength {
+        public int NewLength
+        {
             get { return _inserted.Length; }
         }
 
-        public int NewPosition {
+        public int NewPosition
+        {
             get { return _newStart; }
         }
 
-        public Span NewSpan {
-            get {
+        public Span NewSpan
+        {
+            get
+            {
                 return new Span(NewPosition, NewLength);
             }
         }
 
-        public string NewText {
+        public string NewText
+        {
             get { return _inserted; }
         }
 
-        public int OldEnd {
+        public int OldEnd
+        {
             get { return _removed.End; }
         }
 
-        public int OldLength {
+        public int OldLength
+        {
             get { return _removed.Length; }
         }
 
-        public int OldPosition {
+        public int OldPosition
+        {
             get { return _removed.Start; }
         }
 
-        public Span OldSpan {
+        public Span OldSpan
+        {
             get { return _removed.Span; }
         }
 
-        public string OldText {
+        public string OldText
+        {
             get { return _removed.GetText(); }
         }
     }

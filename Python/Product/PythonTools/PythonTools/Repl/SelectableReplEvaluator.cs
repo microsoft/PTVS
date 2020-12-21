@@ -35,13 +35,12 @@ namespace Microsoft.PythonTools.Repl {
     [InteractiveWindowRole("Reset")]
     [ContentType(PythonCoreConstants.ContentType)]
     [ContentType(PredefinedInteractiveCommandsContentTypes.InteractiveCommandContentTypeName)]
-    sealed class SelectableReplEvaluator : 
+    sealed class SelectableReplEvaluator :
         IInteractiveEvaluator,
         IPythonInteractiveEvaluator,
         IMultipleScopeEvaluator,
         IPythonInteractiveIntellisense,
-        IDisposable
-    {
+        IDisposable {
         private readonly IServiceProvider _serviceProvider;
         private readonly IReadOnlyList<IInteractiveEvaluatorProvider> _providers;
 
@@ -224,7 +223,7 @@ namespace Microsoft.PythonTools.Repl {
                 }
             }
         }
-        
+
         private void UpdateCaption() {
             var window = CurrentWindow;
             if (window == null) {
@@ -242,7 +241,7 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             var display = DisplayName;
-            
+
             if (!string.IsNullOrEmpty(display)) {
                 var id = InteractiveWindowProvider.GetVsInteractiveWindowId(window);
                 twp.Caption = Strings.ReplCaption.FormatUI(display, id);

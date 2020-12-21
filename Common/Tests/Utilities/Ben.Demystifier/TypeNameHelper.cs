@@ -24,9 +24,11 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace TestUtilities.Ben.Demystifier {
+namespace TestUtilities.Ben.Demystifier
+{
     // Adapted from https://github.com/aspnet/Common/blob/dev/shared/Microsoft.Extensions.TypeNameHelper.Sources/TypeNameHelper.cs
-    internal sealed class TypeNameHelper {
+    internal sealed class TypeNameHelper
+    {
         private static readonly Dictionary<Type, string> _builtInTypeNames = new Dictionary<Type, string> {
             { typeof(void), "void" },
             { typeof(bool), "bool" },
@@ -53,41 +55,57 @@ namespace TestUtilities.Ben.Demystifier {
         /// <param name="fullName"><c>true</c> to print a fully qualified name.</param>
         /// <param name="includeGenericParameterNames"><c>true</c> to include generic parameter names.</param>
         /// <returns>The pretty printed type name.</returns>
-        public static string GetTypeDisplayName(Type type, bool fullName = true, bool includeGenericParameterNames = false) {
+        public static string GetTypeDisplayName(Type type, bool fullName = true, bool includeGenericParameterNames = false)
+        {
             var builder = new StringBuilder();
             ProcessType(builder, type, new DisplayNameOptions(fullName, includeGenericParameterNames));
             return builder.ToString();
         }
 
-        private static void ProcessType(StringBuilder builder, Type type, DisplayNameOptions options) {
-            if (type.IsGenericType) {
+        private static void ProcessType(StringBuilder builder, Type type, DisplayNameOptions options)
+        {
+            if (type.IsGenericType)
+            {
                 var genericArguments = type.GetGenericArguments();
                 ProcessGenericType(builder, type, genericArguments, genericArguments.Length, options);
-            } else if (type.IsArray) {
+            }
+            else if (type.IsArray)
+            {
                 ProcessArrayType(builder, type, options);
-            } else if (_builtInTypeNames.TryGetValue(type, out var builtInName)) {
+            }
+            else if (_builtInTypeNames.TryGetValue(type, out var builtInName))
+            {
                 builder.Append(builtInName);
-            } else if (type.Namespace == nameof(System)) {
+            }
+            else if (type.Namespace == nameof(System))
+            {
                 builder.Append(type.Name);
-            } else if (type.IsGenericParameter) {
-                if (options.IncludeGenericParameterNames) {
+            }
+            else if (type.IsGenericParameter)
+            {
+                if (options.IncludeGenericParameterNames)
+                {
                     builder.Append(type.Name);
                 }
             }
-            else {
+            else
+            {
                 builder.Append(options.FullName ? type.FullName ?? type.Name : type.Name);
             }
         }
 
-        private static void ProcessArrayType(StringBuilder builder, Type type, DisplayNameOptions options) {
+        private static void ProcessArrayType(StringBuilder builder, Type type, DisplayNameOptions options)
+        {
             var innerType = type;
-            while (innerType != null && innerType.IsArray){
+            while (innerType != null && innerType.IsArray)
+            {
                 innerType = innerType.GetElementType();
             }
 
             ProcessType(builder, innerType, options);
 
-            while (type != null && type.IsArray) {
+            while (type != null && type.IsArray)
+            {
                 builder.Append('[');
                 builder.Append(',', type.GetArrayRank() - 1);
                 builder.Append(']');
@@ -95,24 +113,31 @@ namespace TestUtilities.Ben.Demystifier {
             }
         }
 
-        private static void ProcessGenericType(StringBuilder builder, Type type, Type[] genericArguments, int length, DisplayNameOptions options) {
+        private static void ProcessGenericType(StringBuilder builder, Type type, Type[] genericArguments, int length, DisplayNameOptions options)
+        {
             var offset = 0;
-            if (type.IsNested && type.DeclaringType != null) {
+            if (type.IsNested && type.DeclaringType != null)
+            {
                 offset = type.DeclaringType.GetGenericArguments().Length;
             }
 
-            if (options.FullName) {
-                if (type.IsNested) {
+            if (options.FullName)
+            {
+                if (type.IsNested)
+                {
                     ProcessGenericType(builder, type.DeclaringType, genericArguments, offset, options);
                     builder.Append('+');
-                } else if (!string.IsNullOrEmpty(type.Namespace)) {
+                }
+                else if (!string.IsNullOrEmpty(type.Namespace))
+                {
                     builder.Append(type.Namespace);
                     builder.Append('.');
                 }
             }
 
             var genericPartIndex = type.Name.IndexOf('`');
-            if (genericPartIndex <= 0) {
+            if (genericPartIndex <= 0)
+            {
                 builder.Append(type.Name);
                 return;
             }
@@ -120,22 +145,27 @@ namespace TestUtilities.Ben.Demystifier {
             builder.Append(type.Name, 0, genericPartIndex);
 
             builder.Append('<');
-            for (var i = offset; i < length; i++) {
+            for (var i = offset; i < length; i++)
+            {
                 ProcessType(builder, genericArguments[i], options);
-                if (i + 1 == length) {
+                if (i + 1 == length)
+                {
                     continue;
                 }
 
                 builder.Append(',');
-                if (options.IncludeGenericParameterNames || !genericArguments[i + 1].IsGenericParameter) {
+                if (options.IncludeGenericParameterNames || !genericArguments[i + 1].IsGenericParameter)
+                {
                     builder.Append(' ');
                 }
             }
             builder.Append('>');
         }
 
-        private struct DisplayNameOptions {
-            public DisplayNameOptions(bool fullName, bool includeGenericParameterNames) {
+        private struct DisplayNameOptions
+        {
+            public DisplayNameOptions(bool fullName, bool includeGenericParameterNames)
+            {
                 FullName = fullName;
                 IncludeGenericParameterNames = includeGenericParameterNames;
             }

@@ -14,19 +14,23 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Windows.Automation;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Windows.Automation;
 
-namespace TestUtilities.UI {
-    public class CheckBox : AutomationWrapper {
+namespace TestUtilities.UI
+{
+    public class CheckBox : AutomationWrapper
+    {
         public string Name { get; set; }
 
         public CheckBox(AutomationElement element)
-            : base(element) {
+            : base(element)
+        {
             Name = (string)Element.GetCurrentPropertyValue(AutomationElement.NameProperty);
         }
 
-        public void SetSelected() {
+        public void SetSelected()
+        {
             Assert.IsTrue((bool)Element.GetCurrentPropertyValue(AutomationElement.IsTogglePatternAvailableProperty), "Element is not a check box");
             TogglePattern pattern = (TogglePattern)Element.GetCurrentPattern(TogglePattern.Pattern);
 
@@ -36,7 +40,8 @@ namespace TestUtilities.UI {
             Assert.AreEqual(pattern.Current.ToggleState, ToggleState.On, "Could not toggle " + Name + " to On.");
         }
 
-        public void SetUnselected() {
+        public void SetUnselected()
+        {
             Assert.IsTrue((bool)Element.GetCurrentPropertyValue(AutomationElement.IsTogglePatternAvailableProperty), "Element is not a check box");
             TogglePattern pattern = (TogglePattern)Element.GetCurrentPattern(TogglePattern.Pattern);
 
@@ -45,16 +50,22 @@ namespace TestUtilities.UI {
             Assert.AreEqual(pattern.Current.ToggleState, ToggleState.Off, "Could not toggle " + Name + " to Off.");
         }
 
-        public ToggleState ToggleState {
-            get {
+        public ToggleState ToggleState
+        {
+            get
+            {
                 TogglePattern pattern = (TogglePattern)Element.GetCurrentPattern(TogglePattern.Pattern);
                 return pattern.Current.ToggleState;
             }
 
-            set {
-                if (value == ToggleState.On) {
+            set
+            {
+                if (value == ToggleState.On)
+                {
                     SetSelected();
-                } else if (value == ToggleState.Off) {
+                }
+                else if (value == ToggleState.Off)
+                {
                     SetUnselected();
                 }
             }

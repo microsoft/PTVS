@@ -128,7 +128,7 @@ namespace Microsoft.PythonTools.Debugger {
 
     [JsonConverter(typeof(StringEnumConverter))]
     public enum PresentationMode {
-        [EnumMember(Value="group")]
+        [EnumMember(Value = "group")]
         Group,
 
         [EnumMember(Value = "inline")]

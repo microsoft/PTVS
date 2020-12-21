@@ -34,7 +34,7 @@ namespace Microsoft.PythonTools.Project {
         private readonly IServiceProvider _serviceProvider;
 
         [ImportingConstructor]
-        public FilePublisher([Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider) {
+        public FilePublisher([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider) {
             _serviceProvider = serviceProvider;
         }
 

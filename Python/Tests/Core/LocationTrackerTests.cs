@@ -18,14 +18,14 @@ extern alias pythontools;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.PythonTools;
 using Microsoft.PythonTools.Parsing;
-using pythontools::Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
-using TestUtilities.Mocks;
-using Microsoft.PythonTools;
 using pythontools::Microsoft.PythonTools.Editor;
+using pythontools::Microsoft.PythonTools.Intellisense;
 using TestUtilities;
+using TestUtilities.Mocks;
 
 namespace PythonToolsTests {
     [TestClass]
@@ -101,7 +101,7 @@ namespace PythonToolsTests {
                     p += lengths[i];
                 }
 
-                Console.WriteLine($"Line {i + 1}: Expected {(i < lengths.Length ? p.ToString() : "(null)")}. " + 
+                Console.WriteLine($"Line {i + 1}: Expected {(i < lengths.Length ? p.ToString() : "(null)")}. " +
                     $"Actual {(i < lines.Length ? lines[i].EndIndex.ToString() : "(null)")}");
             }
             Console.WriteLine();
@@ -120,7 +120,7 @@ namespace PythonToolsTests {
 
             var lines = t.GetLineLocations(0);
             AssertLines(lines, 0);
-            
+
             lines = t.GetLineLocations(1);
             AssertLines(lines, 10, 0);
 

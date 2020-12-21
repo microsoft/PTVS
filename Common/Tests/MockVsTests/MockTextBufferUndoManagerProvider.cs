@@ -14,19 +14,23 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.ComponentModel.Composition;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Operations;
+using System.ComponentModel.Composition;
 
-namespace Microsoft.VisualStudioTools.MockVsTests {
+namespace Microsoft.VisualStudioTools.MockVsTests
+{
     [Export(typeof(ITextBufferUndoManagerProvider))]
-    public class MockTextBufferUndoManagerProvider : ITextBufferUndoManagerProvider {
-        public ITextBufferUndoManager GetTextBufferUndoManager(ITextBuffer textBuffer) {
+    public class MockTextBufferUndoManagerProvider : ITextBufferUndoManagerProvider
+    {
+        public ITextBufferUndoManager GetTextBufferUndoManager(ITextBuffer textBuffer)
+        {
             return textBuffer.Properties
                 .GetOrCreateSingletonProperty(() => new MockTextBufferUndoManager(textBuffer));
         }
 
-        public void RemoveTextBufferUndoManager(ITextBuffer textBuffer) {
+        public void RemoveTextBufferUndoManager(ITextBuffer textBuffer)
+        {
             textBuffer.Properties.RemoveProperty(typeof(MockTextBufferUndoManager));
         }
     }

@@ -36,7 +36,7 @@ namespace Microsoft.PythonTools.Debugger.Concord {
         public bool HexadecimalDisplay { get; set; }
 
         public int MaxLength {
-            get { return _maxLength;  }
+            get { return _maxLength; }
             set {
                 if (value < 3) {
                     throw new ArgumentException(Strings.DebugReprMaxLengthAtLeast3);
@@ -74,7 +74,7 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             Options = options;
             _visitedObjs = new HashSet<ulong>();
         }
-        
+
         private ReprBuilder(ReprBuilder parent) {
             Options = parent.Options;
             _visitedObjs = parent._visitedObjs;

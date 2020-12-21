@@ -14,12 +14,14 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using Microsoft.VisualStudio.Text.Editor;
 using System;
 using System.Collections.Generic;
-using Microsoft.VisualStudio.Text.Editor;
 
-namespace TestUtilities.Mocks {
-    public class MockTextOptions : IEditorOptions {
+namespace TestUtilities.Mocks
+{
+    public class MockTextOptions : IEditorOptions
+    {
         private readonly Dictionary<string, object> _options = new Dictionary<string, object> {
             { DefaultOptions.ConvertTabsToSpacesOptionName, true },
             { DefaultOptions.IndentSizeOptionName, 4 },
@@ -27,47 +29,59 @@ namespace TestUtilities.Mocks {
             { DefaultOptions.TabSizeOptionName, 4 }
         };
 
-        public bool ClearOptionValue<T>(EditorOptionKey<T> key) {
+        public bool ClearOptionValue<T>(EditorOptionKey<T> key)
+        {
             return _options.Remove(key.Name);
         }
 
-        public bool ClearOptionValue(string optionId) {
+        public bool ClearOptionValue(string optionId)
+        {
             return _options.Remove(optionId);
         }
 
-        public object GetOptionValue(string optionId) {
+        public object GetOptionValue(string optionId)
+        {
             object value;
-            if (_options.TryGetValue(optionId, out value)) {
+            if (_options.TryGetValue(optionId, out value))
+            {
                 return value;
             }
 
             throw new InvalidOperationException();
         }
 
-        public T GetOptionValue<T>(EditorOptionKey<T> key) {
+        public T GetOptionValue<T>(EditorOptionKey<T> key)
+        {
             return (T)GetOptionValue(key.Name);
         }
 
-        public T GetOptionValue<T>(string optionId) {
+        public T GetOptionValue<T>(string optionId)
+        {
             return (T)GetOptionValue(optionId);
         }
 
-        public IEditorOptions GlobalOptions {
-            get {
+        public IEditorOptions GlobalOptions
+        {
+            get
+            {
                 IEditorOptions opt = this;
-                while (opt.Parent != null) {
+                while (opt.Parent != null)
+                {
                     opt = opt.Parent;
                 }
                 return opt;
             }
         }
 
-        public bool IsOptionDefined<T>(EditorOptionKey<T> key, bool localScopeOnly) {
+        public bool IsOptionDefined<T>(EditorOptionKey<T> key, bool localScopeOnly)
+        {
             return IsOptionDefined(key.Name, localScopeOnly);
         }
 
-        public bool IsOptionDefined(string optionId, bool localScopeOnly) {
-            if (localScopeOnly || Parent == null) {
+        public bool IsOptionDefined(string optionId, bool localScopeOnly)
+        {
+            if (localScopeOnly || Parent == null)
+            {
                 return _options.ContainsKey(optionId);
             }
 
@@ -78,19 +92,23 @@ namespace TestUtilities.Mocks {
 
         public IEditorOptions Parent { get; set; }
 
-        public void SetOptionValue<T>(EditorOptionKey<T> key, T value) {
+        public void SetOptionValue<T>(EditorOptionKey<T> key, T value)
+        {
             SetOptionValue(key.Name, value);
         }
 
-        public void SetOptionValue(string optionId, object value) {
+        public void SetOptionValue(string optionId, object value)
+        {
             _options[optionId] = value;
             var evt = OptionChanged;
-            if (evt != null) {
+            if (evt != null)
+            {
                 evt(this, new EditorOptionChangedEventArgs(optionId));
             }
         }
 
-        public IEnumerable<EditorOptionDefinition> SupportedOptions {
+        public IEnumerable<EditorOptionDefinition> SupportedOptions
+        {
             get { throw new NotImplementedException(); }
         }
     }

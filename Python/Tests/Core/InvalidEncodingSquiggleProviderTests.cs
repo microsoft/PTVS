@@ -31,7 +31,7 @@ namespace PythonToolsTests {
         public void EncodingValidation() {
             // https://www.python.org/dev/peps/pep-0263/
             RunTest(string.Empty, Encoding.UTF8, null, 0);
-            RunTest(string.Empty, Encoding.ASCII, null, 0, 
+            RunTest(string.Empty, Encoding.ASCII, null, 0,
                 "UTF-8", "does not match", Encoding.ASCII.EncodingName);
 
             RunTest("# -*- coding: utf-8 -*-", Encoding.UTF8, "utf-8", 14);

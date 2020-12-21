@@ -343,7 +343,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             DetachKeyboardFilter();
         }
-        
+
         private string GetTextBeforeCaret(int includeCharsAfter = 0) {
             var maybePt = _textView.Caret.Position.Point.GetPoint(_textView.TextBuffer, PositionAffinity.Predecessor);
             if (!maybePt.HasValue) {

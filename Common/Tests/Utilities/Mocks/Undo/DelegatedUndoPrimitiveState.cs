@@ -14,12 +14,14 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace TestUtilities.Mocks {
+namespace TestUtilities.Mocks
+{
     /// <summary>
     /// These are the three states for the DelegatedUndoPrimitives. If Redoing or Undoing, a Redo or undo is in progress. In the 
     /// inactive case, it is illegal to send new operations to the primitive.
     /// </summary>
-    internal enum DelegatedUndoPrimitiveState {
+    internal enum DelegatedUndoPrimitiveState
+    {
         /// <summary>
         /// No redo or undo is in progress, and it is illegal to send new operations to the primitive.
         /// </summary>

@@ -474,7 +474,7 @@ namespace Microsoft.PythonTools.Options {
         }
 
         internal override void DrawNode(DrawTreeNodeEventArgs e) {
-            var optNode = (OptionNode)e.Node;            
+            var optNode = (OptionNode)e.Node;
             CheckBoxRenderer.DrawCheckBox(
                 e.Graphics,
                 optNode.IconBounds.Location,

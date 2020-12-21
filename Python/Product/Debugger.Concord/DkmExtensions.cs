@@ -155,7 +155,7 @@ namespace Microsoft.PythonTools.Debugger.Concord {
 
         public static ulong GetExportedStaticVariableAddress(this DkmNativeModuleInstance moduleInstance, string name) {
             var addr = moduleInstance.FindExportName(name, false);
-            if (addr == null) { 
+            if (addr == null) {
                 Debug.Fail("Couldn't find dllexport variable " + name + " in module " + moduleInstance.Name);
                 throw new ArgumentException();
             }

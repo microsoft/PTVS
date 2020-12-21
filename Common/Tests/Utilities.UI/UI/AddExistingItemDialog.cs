@@ -19,28 +19,35 @@ using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Input;
 
-namespace TestUtilities.UI {
-    public class AddExistingItemDialog : AutomationDialog, IAddExistingItem {
+namespace TestUtilities.UI
+{
+    public class AddExistingItemDialog : AutomationDialog, IAddExistingItem
+    {
         public AddExistingItemDialog(VisualStudioApp app, AutomationElement element)
-            : base(app, element) {
+            : base(app, element)
+        {
         }
 
-        public static AddExistingItemDialog FromDte(VisualStudioApp app) {
+        public static AddExistingItemDialog FromDte(VisualStudioApp app)
+        {
             return new AddExistingItemDialog(
                 app,
                 AutomationElement.FromHandle(app.OpenDialogWithDteExecuteCommand("Project.AddExistingItem"))
             );
         }
 
-        public override void OK() {
+        public override void OK()
+        {
             Add();
         }
 
-        public void Add() {
+        public void Add()
+        {
             WaitForClosed(DefaultTimeout, () => Keyboard.PressAndRelease(Key.A, Key.LeftAlt));
         }
 
-        public void AddLink() {
+        public void AddLink()
+        {
             var addButton = Element.FindFirst(TreeScope.Children,
                 new AndCondition(
                     new PropertyCondition(AutomationElement.NameProperty, "Add"),
@@ -60,19 +67,24 @@ namespace TestUtilities.UI {
             WaitForClosed(DefaultTimeout);
         }
 
-        public string FileName { 
-            get {
+        public string FileName
+        {
+            get
+            {
                 return GetFilenameEditBox().GetValuePattern().Current.Value;
             }
-            set {
-                for (int retries = 10; retries > 0 && FileName != value; --retries) {
+            set
+            {
+                for (int retries = 10; retries > 0 && FileName != value; --retries)
+                {
                     GetFilenameEditBox().GetValuePattern().SetValue(value);
                     Thread.Sleep(100);
                 }
             }
         }
 
-        private AutomationElement GetFilenameEditBox() {
+        private AutomationElement GetFilenameEditBox()
+        {
             return Element.FindFirst(TreeScope.Descendants,
                 new AndCondition(
                     new PropertyCondition(AutomationElement.ClassNameProperty, "Edit"),

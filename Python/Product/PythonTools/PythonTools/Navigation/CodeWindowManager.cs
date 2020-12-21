@@ -45,7 +45,7 @@ namespace Microsoft.PythonTools.Navigation {
             _window = codeWindow;
             _pyService = _serviceProvider.GetPythonToolsService();
         }
-        
+
         #region IVsCodeWindowManager Members
 
         public int AddAdornments() {
@@ -108,7 +108,7 @@ namespace Microsoft.PythonTools.Navigation {
 
             _client = new DropDownBarClient(_serviceProvider, view);
             var result = _client.Register((IVsDropdownBarManager)_window);
- 
+
             if (refresh) {
                 var entry = view.TryGetAnalysisEntry(_serviceProvider);
                 if (entry != null && entry.IsAnalyzed) {
@@ -227,7 +227,7 @@ namespace Microsoft.PythonTools.Navigation {
         #endregion
 
         private void OnIdle(object sender, ComponentManagerEventArgs eventArgs) {
-            if (_curView!= null) {
+            if (_curView != null) {
                 EditFilter editFilter;
                 if (_curView.Properties.TryGetProperty(typeof(EditFilter), out editFilter) && editFilter != null) {
                     editFilter.DoIdle((IOleComponentManager)_serviceProvider.GetService(typeof(SOleComponentManager)));

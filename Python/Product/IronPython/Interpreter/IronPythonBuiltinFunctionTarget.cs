@@ -52,7 +52,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
         // FIXME
         public string ReturnDocumentation {
-            get { return "";  }
+            get { return ""; }
         }
 
         public IParameterInfo[] GetParameters() {

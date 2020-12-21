@@ -14,57 +14,67 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using System;
 
-namespace Microsoft.VisualStudioTools.Project {
-    public class BuildDependency : IVsBuildDependency {
+namespace Microsoft.VisualStudioTools.Project
+{
+    public class BuildDependency : IVsBuildDependency
+    {
         Guid referencedProjectGuid = Guid.Empty;
         ProjectNode projectMgr = null;
 
-        internal BuildDependency(ProjectNode projectMgr, Guid projectReference) {
+        internal BuildDependency(ProjectNode projectMgr, Guid projectReference)
+        {
             this.referencedProjectGuid = projectReference;
             this.projectMgr = projectMgr;
         }
 
         #region IVsBuildDependency methods
-        public int get_CanonicalName(out string canonicalName) {
+        public int get_CanonicalName(out string canonicalName)
+        {
             canonicalName = null;
             return VSConstants.S_OK;
         }
 
-        public int get_Type(out System.Guid guidType) {
+        public int get_Type(out System.Guid guidType)
+        {
             // All our dependencies are build projects
             guidType = VSConstants.GUID_VS_DEPTYPE_BUILD_PROJECT;
             return VSConstants.S_OK;
         }
 
-        public int get_Description(out string description) {
+        public int get_Description(out string description)
+        {
             description = null;
             return VSConstants.S_OK;
         }
 
         [CLSCompliant(false)]
-        public int get_HelpContext(out uint helpContext) {
+        public int get_HelpContext(out uint helpContext)
+        {
             helpContext = 0;
             return VSConstants.E_NOTIMPL;
         }
 
-        public int get_HelpFile(out string helpFile) {
+        public int get_HelpFile(out string helpFile)
+        {
             helpFile = null;
             return VSConstants.E_NOTIMPL;
         }
 
-        public int get_MustUpdateBefore(out int mustUpdateBefore) {
+        public int get_MustUpdateBefore(out int mustUpdateBefore)
+        {
             // Must always update dependencies
             mustUpdateBefore = 1;
 
             return VSConstants.S_OK;
         }
 
-        public int get_ReferredProject(out object unknownProject) {
+        public int get_ReferredProject(out object unknownProject)
+        {
             unknownProject = null;
 
             unknownProject = this.GetReferencedHierarchy();
@@ -76,10 +86,12 @@ namespace Microsoft.VisualStudioTools.Project {
         #endregion
 
         #region helper methods
-        private IVsHierarchy GetReferencedHierarchy() {
+        private IVsHierarchy GetReferencedHierarchy()
+        {
             IVsHierarchy hierarchy = null;
 
-            if (this.referencedProjectGuid == Guid.Empty || this.projectMgr == null || this.projectMgr.IsClosed) {
+            if (this.referencedProjectGuid == Guid.Empty || this.projectMgr == null || this.projectMgr.IsClosed)
+            {
                 return hierarchy;
             }
 

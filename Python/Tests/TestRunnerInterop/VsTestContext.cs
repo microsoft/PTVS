@@ -46,7 +46,7 @@ namespace TestRunnerInterop {
             if (_vs == null) {
                 throw new InvalidOperationException("TestInitialize was not called");
             }
-            for (int retries = 3;  retries >= 0; --retries) {
+            for (int retries = 3; retries >= 0; --retries) {
                 if (!_vs.IsRunning) {
                     Console.WriteLine("Restarting VS because it is not running!");
                     _vs.Restart();
@@ -172,7 +172,7 @@ namespace TestRunnerInterop {
             var queue = new Queue<string>();
             queue.Enqueue(path);
 
-            foreach(var d in FileUtils.EnumerateDirectories(path)) {
+            foreach (var d in FileUtils.EnumerateDirectories(path)) {
                 if (Path.GetFileName(d) != ".vs") {
                     queue.Enqueue(d);
                     result[d] = DateTime.MinValue;

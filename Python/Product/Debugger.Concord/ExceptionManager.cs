@@ -110,7 +110,7 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             }
         }
 
-        public bool MonitorExceptions { 
+        public bool MonitorExceptions {
             get {
                 return _monitorExceptions;
             }
@@ -183,8 +183,7 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             } catch {
             }
 
-            new RemoteComponent.RaiseExceptionRequest
-            {
+            new RemoteComponent.RaiseExceptionRequest {
                 ThreadId = thread.UniqueId,
                 Name = typeName,
                 AdditionalInformation = Encoding.Unicode.GetBytes(additionalInfo)

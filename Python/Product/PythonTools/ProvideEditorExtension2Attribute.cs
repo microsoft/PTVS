@@ -17,10 +17,10 @@
 using System;
 using System.Globalization;
 using System.IO;
-using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudioTools;
-using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools {
 

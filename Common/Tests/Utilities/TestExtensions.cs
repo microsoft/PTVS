@@ -14,28 +14,34 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using EnvDTE;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Xml.Linq;
-using EnvDTE;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace TestUtilities {
-    public static class TestExtensions {
-        public static void SetStartupFile(this Project project, string name) {
+namespace TestUtilities
+{
+    public static class TestExtensions
+    {
+        public static void SetStartupFile(this Project project, string name)
+        {
             Assert.IsNotNull(project, "null project");
             Assert.IsNotNull(project.Properties, "null project properties " + project.Name + " " + project.GetType().FullName + " " + project.Kind);
             Assert.IsNotNull(project.Properties.Item("StartupFile"), "null startup file property" + project.Name + " " + project.GetType().FullName);
             project.Properties.Item("StartupFile").Value = name;
         }
 
-        public static IEnumerable<int> FindIndexesOf(this string s, string substring) {
+        public static IEnumerable<int> FindIndexesOf(this string s, string substring)
+        {
             int pos = 0;
-            while (true) {
+            while (true)
+            {
                 pos = s.IndexOf(substring, pos);
-                if (pos < 0) {
+                if (pos < 0)
+                {
                     break;
                 }
                 yield return pos;
@@ -43,62 +49,83 @@ namespace TestUtilities {
             }
         }
 
-        public static int IndexOfEnd(this string s, string substring) {
+        public static int IndexOfEnd(this string s, string substring)
+        {
             int i = s.IndexOf(substring);
-            if (i < 0) {
+            if (i < 0)
+            {
                 return i;
             }
             return i + substring.Length;
         }
 
-        public static HashSet<T> ToSet<T>(this IEnumerable<T> enumeration) {
+        public static HashSet<T> ToSet<T>(this IEnumerable<T> enumeration)
+        {
             return new HashSet<T>(enumeration);
         }
 
-        public static HashSet<T> ToSet<T>(this IEnumerable<T> enumeration, IEqualityComparer<T> comparer) {
+        public static HashSet<T> ToSet<T>(this IEnumerable<T> enumeration, IEqualityComparer<T> comparer)
+        {
             return new HashSet<T>(enumeration, comparer);
         }
 
-        public static bool ContainsExactly<T>(this HashSet<T> set, IEnumerable<T> values) {
-            if (set.Count != values.Count()) {
+        public static bool ContainsExactly<T>(this HashSet<T> set, IEnumerable<T> values)
+        {
+            if (set.Count != values.Count())
+            {
                 return false;
             }
-            foreach (var value in values) {
-                if (!set.Contains(value)) {
+            foreach (var value in values)
+            {
+                if (!set.Contains(value))
+                {
                     return false;
                 }
             }
-            foreach (var value in set) {
-                if (!values.Contains(value, set.Comparer)) {
+            foreach (var value in set)
+            {
+                if (!values.Contains(value, set.Comparer))
+                {
                     return false;
                 }
             }
             return true;
         }
 
-        public static XName GetName(this XDocument doc, string localName) {
+        public static XName GetName(this XDocument doc, string localName)
+        {
             return doc.Root.Name.Namespace.GetName(localName);
         }
 
-        public static XElement Descendant(this XDocument doc, string localName) {
+        public static XElement Descendant(this XDocument doc, string localName)
+        {
             return doc.Descendants(doc.Root.Name.Namespace.GetName(localName)).Single();
         }
 
-        public static XElement Descendant(this XElement node, string localName) {
+        public static XElement Descendant(this XElement node, string localName)
+        {
             return node.Descendants(node.Document.Root.Name.Namespace.GetName(localName)).Single();
         }
 
-        public static void SetIfNotDisposed(this EventWaitHandle eventHandle) {
-            try {
+        public static void SetIfNotDisposed(this EventWaitHandle eventHandle)
+        {
+            try
+            {
                 eventHandle.Set();
-            } catch (ObjectDisposedException) {
+            }
+            catch (ObjectDisposedException)
+            {
             }
         }
 
-        public static void SetIfNotDisposed(this ManualResetEventSlim eventHandle) {
-            try {
+        public static void SetIfNotDisposed(this ManualResetEventSlim eventHandle)
+        {
+            try
+            {
                 eventHandle.Set();
-            } catch (ObjectDisposedException) {
+            }
+            catch (ObjectDisposedException)
+            {
             }
         }
     }

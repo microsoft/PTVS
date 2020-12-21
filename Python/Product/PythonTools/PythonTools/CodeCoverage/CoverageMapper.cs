@@ -411,9 +411,9 @@ namespace Microsoft.PythonTools.CodeCoverage {
                 // name expression...
                 var nameSpan = node.GetNameSpan(_ast);
                 MarkCoverage(
-                    true, 
-                    nameSpan.Start, 
-                    nameSpan.End, 
+                    true,
+                    nameSpan.Start,
+                    nameSpan.End,
                     IsCovered(node.GetStart(_ast).Line)
                 );
                 return true;

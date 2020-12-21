@@ -413,7 +413,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         public EnvironmentViewEventArgs(EnvironmentView view) {
             View = view;
         }
-        
+
         public EnvironmentView View { get; private set; }
     }
 }

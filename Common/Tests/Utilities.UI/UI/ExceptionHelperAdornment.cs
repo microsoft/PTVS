@@ -16,14 +16,19 @@
 
 using System.Windows.Automation;
 
-namespace TestUtilities.UI {
-    public class ExceptionHelperAdornment : AutomationWrapper {
+namespace TestUtilities.UI
+{
+    public class ExceptionHelperAdornment : AutomationWrapper
+    {
         public ExceptionHelperAdornment(AutomationElement element)
-            : base(element) {
+            : base(element)
+        {
         }
 
-        public string Description {
-            get {
+        public string Description
+        {
+            get
+            {
                 var desc = FindByAutomationId("ExceptionDescription");
                 return (((TextPattern)desc.GetCurrentPattern(TextPattern.Pattern)).DocumentRange.GetText(-1).ToString());
             }

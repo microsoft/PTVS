@@ -14,405 +14,505 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using Microsoft.VisualStudio.Text.Operations;
 using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
+using Microsoft.VisualStudio.Text.Operations;
+using System;
 using TestUtilities.Mocks;
 
-namespace Microsoft.VisualStudioTools.MockVsTests {
-    class MockEditorOperations : IEditorOperations {
+namespace Microsoft.VisualStudioTools.MockVsTests
+{
+    class MockEditorOperations : IEditorOperations
+    {
         private readonly MockTextView _view;
-        
-        public MockEditorOperations(MockTextView textView) {
+
+        public MockEditorOperations(MockTextView textView)
+        {
             _view = textView;
         }
 
-        public void AddAfterTextBufferChangePrimitive() {
+        public void AddAfterTextBufferChangePrimitive()
+        {
             throw new NotImplementedException();
         }
 
-        public void AddBeforeTextBufferChangePrimitive() {
+        public void AddBeforeTextBufferChangePrimitive()
+        {
             throw new NotImplementedException();
         }
 
-        public bool Backspace() {
+        public bool Backspace()
+        {
             throw new NotImplementedException();
         }
 
-        public bool CanCut {
+        public bool CanCut
+        {
             get { throw new NotImplementedException(); }
         }
 
-        public bool CanDelete {
+        public bool CanDelete
+        {
             get { throw new NotImplementedException(); }
         }
 
-        public bool CanPaste {
+        public bool CanPaste
+        {
             get { throw new NotImplementedException(); }
         }
 
-        public bool Capitalize() {
+        public bool Capitalize()
+        {
             throw new NotImplementedException();
         }
 
-        public bool ConvertSpacesToTabs() {
+        public bool ConvertSpacesToTabs()
+        {
             throw new NotImplementedException();
         }
 
-        public bool ConvertTabsToSpaces() {
+        public bool ConvertTabsToSpaces()
+        {
             throw new NotImplementedException();
         }
 
-        public bool CopySelection() {
+        public bool CopySelection()
+        {
             throw new NotImplementedException();
         }
 
-        public bool CutFullLine() {
+        public bool CutFullLine()
+        {
             throw new NotImplementedException();
         }
 
-        public bool CutSelection() {
+        public bool CutSelection()
+        {
             throw new NotImplementedException();
         }
 
-        public bool DecreaseLineIndent() {
+        public bool DecreaseLineIndent()
+        {
             throw new NotImplementedException();
         }
 
-        public bool Delete() {
+        public bool Delete()
+        {
             throw new NotImplementedException();
         }
 
-        public bool DeleteBlankLines() {
+        public bool DeleteBlankLines()
+        {
             throw new NotImplementedException();
         }
 
-        public bool DeleteFullLine() {
+        public bool DeleteFullLine()
+        {
             throw new NotImplementedException();
         }
 
-        public bool DeleteHorizontalWhiteSpace() {
+        public bool DeleteHorizontalWhiteSpace()
+        {
             throw new NotImplementedException();
         }
 
-        public bool DeleteToBeginningOfLine() {
+        public bool DeleteToBeginningOfLine()
+        {
             throw new NotImplementedException();
         }
 
-        public bool DeleteToEndOfLine() {
+        public bool DeleteToEndOfLine()
+        {
             throw new NotImplementedException();
         }
 
-        public bool DeleteWordToLeft() {
+        public bool DeleteWordToLeft()
+        {
             throw new NotImplementedException();
         }
 
-        public bool DeleteWordToRight() {
+        public bool DeleteWordToRight()
+        {
             throw new NotImplementedException();
         }
 
-        public void ExtendSelection(int newEnd) {
+        public void ExtendSelection(int newEnd)
+        {
             throw new NotImplementedException();
         }
 
-        public string GetWhitespaceForVirtualSpace(VisualStudio.Text.VirtualSnapshotPoint point) {
+        public string GetWhitespaceForVirtualSpace(VisualStudio.Text.VirtualSnapshotPoint point)
+        {
             throw new NotImplementedException();
         }
 
-        public void GotoLine(int lineNumber) {
+        public void GotoLine(int lineNumber)
+        {
             throw new NotImplementedException();
         }
 
-        public bool IncreaseLineIndent() {
+        public bool IncreaseLineIndent()
+        {
             throw new NotImplementedException();
         }
 
-        public bool Indent() {
+        public bool Indent()
+        {
             throw new NotImplementedException();
         }
 
-        public bool InsertFile(string filePath) {
+        public bool InsertFile(string filePath)
+        {
             throw new NotImplementedException();
         }
 
-        public bool InsertNewLine() {
+        public bool InsertNewLine()
+        {
             return InsertText(_view.Options.GetNewLineCharacter());
         }
 
-        public bool InsertProvisionalText(string text) {
+        public bool InsertProvisionalText(string text)
+        {
             throw new NotImplementedException();
         }
 
-        public bool InsertText(string text) {
+        public bool InsertText(string text)
+        {
             _view.TextBuffer.Insert(_view.Caret.Position.BufferPosition.Position, text);
             return true;
         }
 
-        public bool InsertTextAsBox(string text, out VisualStudio.Text.VirtualSnapshotPoint boxStart, out VisualStudio.Text.VirtualSnapshotPoint boxEnd) {
+        public bool InsertTextAsBox(string text, out VisualStudio.Text.VirtualSnapshotPoint boxStart, out VisualStudio.Text.VirtualSnapshotPoint boxEnd)
+        {
             throw new NotImplementedException();
         }
 
-        public bool MakeLowercase() {
+        public bool MakeLowercase()
+        {
             throw new NotImplementedException();
         }
 
-        public bool MakeUppercase() {
+        public bool MakeUppercase()
+        {
             throw new NotImplementedException();
         }
 
-        public void MoveCaret(VisualStudio.Text.Formatting.ITextViewLine textLine, double horizontalOffset, bool extendSelection) {
+        public void MoveCaret(VisualStudio.Text.Formatting.ITextViewLine textLine, double horizontalOffset, bool extendSelection)
+        {
             throw new NotImplementedException();
         }
 
-        public void MoveCurrentLineToBottom() {
+        public void MoveCurrentLineToBottom()
+        {
             throw new NotImplementedException();
         }
 
-        public void MoveCurrentLineToTop() {
+        public void MoveCurrentLineToTop()
+        {
             throw new NotImplementedException();
         }
 
-        public void MoveLineDown(bool extendSelection) {
+        public void MoveLineDown(bool extendSelection)
+        {
             throw new NotImplementedException();
         }
 
-        public void MoveLineUp(bool extendSelection) {
+        public void MoveLineUp(bool extendSelection)
+        {
             throw new NotImplementedException();
         }
 
-        public void MoveToBottomOfView(bool extendSelection) {
+        public void MoveToBottomOfView(bool extendSelection)
+        {
             throw new NotImplementedException();
         }
 
-        public void MoveToEndOfDocument(bool extendSelection) {
+        public void MoveToEndOfDocument(bool extendSelection)
+        {
             throw new NotImplementedException();
         }
 
-        public void MoveToEndOfLine(bool extendSelection) {
+        public void MoveToEndOfLine(bool extendSelection)
+        {
             throw new NotImplementedException();
         }
 
-        public void MoveToHome(bool extendSelection) {
+        public void MoveToHome(bool extendSelection)
+        {
             throw new NotImplementedException();
         }
 
-        public void MoveToLastNonWhiteSpaceCharacter(bool extendSelection) {
+        public void MoveToLastNonWhiteSpaceCharacter(bool extendSelection)
+        {
             throw new NotImplementedException();
         }
 
-        public void MoveToNextCharacter(bool extendSelection) {
+        public void MoveToNextCharacter(bool extendSelection)
+        {
             throw new NotImplementedException();
         }
 
-        public void MoveToNextWord(bool extendSelection) {
+        public void MoveToNextWord(bool extendSelection)
+        {
             throw new NotImplementedException();
         }
 
-        public void MoveToPreviousCharacter(bool extendSelection) {
+        public void MoveToPreviousCharacter(bool extendSelection)
+        {
             throw new NotImplementedException();
         }
 
-        public void MoveToPreviousWord(bool extendSelection) {
+        public void MoveToPreviousWord(bool extendSelection)
+        {
             throw new NotImplementedException();
         }
 
-        public void MoveToStartOfDocument(bool extendSelection) {
+        public void MoveToStartOfDocument(bool extendSelection)
+        {
             throw new NotImplementedException();
         }
 
-        public void MoveToStartOfLine(bool extendSelection) {
+        public void MoveToStartOfLine(bool extendSelection)
+        {
             throw new NotImplementedException();
         }
 
-        public void MoveToStartOfLineAfterWhiteSpace(bool extendSelection) {
+        public void MoveToStartOfLineAfterWhiteSpace(bool extendSelection)
+        {
             throw new NotImplementedException();
         }
 
-        public void MoveToStartOfNextLineAfterWhiteSpace(bool extendSelection) {
+        public void MoveToStartOfNextLineAfterWhiteSpace(bool extendSelection)
+        {
             throw new NotImplementedException();
         }
 
-        public void MoveToStartOfPreviousLineAfterWhiteSpace(bool extendSelection) {
+        public void MoveToStartOfPreviousLineAfterWhiteSpace(bool extendSelection)
+        {
             throw new NotImplementedException();
         }
 
-        public void MoveToTopOfView(bool extendSelection) {
+        public void MoveToTopOfView(bool extendSelection)
+        {
             throw new NotImplementedException();
         }
 
-        public bool NormalizeLineEndings(string replacement) {
+        public bool NormalizeLineEndings(string replacement)
+        {
             throw new NotImplementedException();
         }
 
-        public bool OpenLineAbove() {
+        public bool OpenLineAbove()
+        {
             throw new NotImplementedException();
         }
 
-        public bool OpenLineBelow() {
+        public bool OpenLineBelow()
+        {
             throw new NotImplementedException();
         }
 
-        public VisualStudio.Text.Editor.IEditorOptions Options {
+        public VisualStudio.Text.Editor.IEditorOptions Options
+        {
             get { throw new NotImplementedException(); }
         }
 
-        public void PageDown(bool extendSelection) {
+        public void PageDown(bool extendSelection)
+        {
             throw new NotImplementedException();
         }
 
-        public void PageUp(bool extendSelection) {
+        public void PageUp(bool extendSelection)
+        {
             throw new NotImplementedException();
         }
 
-        public bool Paste() {
+        public bool Paste()
+        {
             throw new NotImplementedException();
         }
 
-        public VisualStudio.Text.ITrackingSpan ProvisionalCompositionSpan {
+        public VisualStudio.Text.ITrackingSpan ProvisionalCompositionSpan
+        {
             get { throw new NotImplementedException(); }
         }
 
-        public int ReplaceAllMatches(string searchText, string replaceText, bool matchCase, bool matchWholeWord, bool useRegularExpressions) {
+        public int ReplaceAllMatches(string searchText, string replaceText, bool matchCase, bool matchWholeWord, bool useRegularExpressions)
+        {
             throw new NotImplementedException();
         }
 
-        public bool ReplaceSelection(string text) {
+        public bool ReplaceSelection(string text)
+        {
             throw new NotImplementedException();
         }
 
-        public bool ReplaceText(VisualStudio.Text.Span replaceSpan, string text) {
+        public bool ReplaceText(VisualStudio.Text.Span replaceSpan, string text)
+        {
             throw new NotImplementedException();
         }
 
-        public void ResetSelection() {
+        public void ResetSelection()
+        {
             throw new NotImplementedException();
         }
 
-        public void ScrollColumnLeft() {
+        public void ScrollColumnLeft()
+        {
             throw new NotImplementedException();
         }
 
-        public void ScrollColumnRight() {
+        public void ScrollColumnRight()
+        {
             throw new NotImplementedException();
         }
 
-        public void ScrollDownAndMoveCaretIfNecessary() {
+        public void ScrollDownAndMoveCaretIfNecessary()
+        {
             throw new NotImplementedException();
         }
 
-        public void ScrollLineBottom() {
+        public void ScrollLineBottom()
+        {
             throw new NotImplementedException();
         }
 
-        public void ScrollLineCenter() {
+        public void ScrollLineCenter()
+        {
             throw new NotImplementedException();
         }
 
-        public void ScrollLineTop() {
+        public void ScrollLineTop()
+        {
             throw new NotImplementedException();
         }
 
-        public void ScrollPageDown() {
+        public void ScrollPageDown()
+        {
             throw new NotImplementedException();
         }
 
-        public void ScrollPageUp() {
+        public void ScrollPageUp()
+        {
             throw new NotImplementedException();
         }
 
-        public void ScrollUpAndMoveCaretIfNecessary() {
+        public void ScrollUpAndMoveCaretIfNecessary()
+        {
             throw new NotImplementedException();
         }
 
-        public void SelectAll() {
+        public void SelectAll()
+        {
             throw new NotImplementedException();
         }
 
-        public void SelectAndMoveCaret(VisualStudio.Text.VirtualSnapshotPoint anchorPoint, VisualStudio.Text.VirtualSnapshotPoint activePoint, VisualStudio.Text.Editor.TextSelectionMode selectionMode, VisualStudio.Text.Editor.EnsureSpanVisibleOptions? scrollOptions) {
+        public void SelectAndMoveCaret(VisualStudio.Text.VirtualSnapshotPoint anchorPoint, VisualStudio.Text.VirtualSnapshotPoint activePoint, VisualStudio.Text.Editor.TextSelectionMode selectionMode, VisualStudio.Text.Editor.EnsureSpanVisibleOptions? scrollOptions)
+        {
             throw new NotImplementedException();
         }
 
-        public void SelectAndMoveCaret(VisualStudio.Text.VirtualSnapshotPoint anchorPoint, VisualStudio.Text.VirtualSnapshotPoint activePoint, VisualStudio.Text.Editor.TextSelectionMode selectionMode) {
+        public void SelectAndMoveCaret(VisualStudio.Text.VirtualSnapshotPoint anchorPoint, VisualStudio.Text.VirtualSnapshotPoint activePoint, VisualStudio.Text.Editor.TextSelectionMode selectionMode)
+        {
             throw new NotImplementedException();
         }
 
-        public void SelectAndMoveCaret(VisualStudio.Text.VirtualSnapshotPoint anchorPoint, VisualStudio.Text.VirtualSnapshotPoint activePoint) {
+        public void SelectAndMoveCaret(VisualStudio.Text.VirtualSnapshotPoint anchorPoint, VisualStudio.Text.VirtualSnapshotPoint activePoint)
+        {
             throw new NotImplementedException();
         }
 
-        public void SelectCurrentWord() {
+        public void SelectCurrentWord()
+        {
             throw new NotImplementedException();
         }
 
-        public void SelectEnclosing() {
+        public void SelectEnclosing()
+        {
             throw new NotImplementedException();
         }
 
-        public void SelectFirstChild() {
+        public void SelectFirstChild()
+        {
             throw new NotImplementedException();
         }
 
-        public void SelectLine(VisualStudio.Text.Formatting.ITextViewLine viewLine, bool extendSelection) {
+        public void SelectLine(VisualStudio.Text.Formatting.ITextViewLine viewLine, bool extendSelection)
+        {
             throw new NotImplementedException();
         }
 
-        public void SelectNextSibling(bool extendSelection) {
+        public void SelectNextSibling(bool extendSelection)
+        {
             throw new NotImplementedException();
         }
 
-        public void SelectPreviousSibling(bool extendSelection) {
+        public void SelectPreviousSibling(bool extendSelection)
+        {
             throw new NotImplementedException();
         }
 
-        public string SelectedText {
+        public string SelectedText
+        {
             get { throw new NotImplementedException(); }
         }
 
-        public void SwapCaretAndAnchor() {
+        public void SwapCaretAndAnchor()
+        {
             throw new NotImplementedException();
         }
 
-        public bool Tabify() {
+        public bool Tabify()
+        {
             throw new NotImplementedException();
         }
 
-        public VisualStudio.Text.Editor.ITextView TextView {
+        public VisualStudio.Text.Editor.ITextView TextView
+        {
             get { throw new NotImplementedException(); }
         }
 
-        public bool ToggleCase() {
+        public bool ToggleCase()
+        {
             throw new NotImplementedException();
         }
 
-        public bool TransposeCharacter() {
+        public bool TransposeCharacter()
+        {
             throw new NotImplementedException();
         }
 
-        public bool TransposeLine() {
+        public bool TransposeLine()
+        {
             throw new NotImplementedException();
         }
 
-        public bool TransposeWord() {
+        public bool TransposeWord()
+        {
             throw new NotImplementedException();
         }
 
-        public bool Unindent() {
+        public bool Unindent()
+        {
             throw new NotImplementedException();
         }
 
-        public bool Untabify() {
+        public bool Untabify()
+        {
             throw new NotImplementedException();
         }
 
-        public void ZoomIn() {
+        public void ZoomIn()
+        {
             throw new NotImplementedException();
         }
 
-        public void ZoomOut() {
+        public void ZoomOut()
+        {
             throw new NotImplementedException();
         }
 
-        public void ZoomTo(double zoomLevel) {
+        public void ZoomTo(double zoomLevel)
+        {
             throw new NotImplementedException();
         }
     }

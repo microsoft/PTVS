@@ -60,7 +60,7 @@ namespace Microsoft.PythonTools.Language {
         public int QueryStatus(ref Guid pguidCmdGroup, uint cCmds, OLECMD[] prgCmds, IntPtr pCmdText) {
             if (pguidCmdGroup == VSConstants.GUID_VSStandardCommandSet97) {
                 for (int i = 0; i < cCmds; i++) {
-                    switch((VSConstants.VSStd97CmdID)prgCmds[i].cmdID) {
+                    switch ((VSConstants.VSStd97CmdID)prgCmds[i].cmdID) {
                         case VSConstants.VSStd97CmdID.MarkerCmd0:
                         case VSConstants.VSStd97CmdID.MarkerCmd1:
                         case VSConstants.VSStd97CmdID.MarkerCmd2:

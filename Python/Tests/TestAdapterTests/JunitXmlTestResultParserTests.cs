@@ -212,11 +212,11 @@ namespace TestAdapterTests {
         public void PytestHandlesCultureDurationWithPeriod() {
             var test = @"<testcase classname=""test_failures"" file=""test_failures.py"" line=""8"" name=""test_ok"" time=""1.000""></testcase>";
             var xmlResults = string.Format(_junitXmlResultsFormat, test);
-            
+
             var currentCulture = Thread.CurrentThread.CurrentCulture;
             Thread.CurrentThread.CurrentCulture = new CultureInfo("de-DE");
             TestResult result = ParseXmlTestUtil(xmlResults);
-            
+
             Assert.AreEqual(TimeSpan.FromSeconds(1), result.Duration);
 
             Thread.CurrentThread.CurrentCulture = currentCulture;
@@ -240,7 +240,7 @@ namespace TestAdapterTests {
         public void PytestBadDurationShouldNotThrow() {
             var test = @"<testcase classname=""test_failures"" file=""test_failures.py"" line=""8"" name=""test_ok"" time=""baddata""></testcase>";
             var xmlResults = string.Format(_junitXmlResultsFormat, test);
-           
+
             TestResult result = ParseXmlTestUtil(xmlResults);
 
             Assert.AreEqual(TimeSpan.FromSeconds(0), result.Duration);

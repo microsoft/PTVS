@@ -112,7 +112,7 @@ namespace Microsoft.PythonTools.Repl {
             EnsureInterpretersAvailable();
 
             lock (_windows) {
-                foreach(var window in _lruWindows.AsEnumerable().Reverse().Concat(_windows.Values)) {
+                foreach (var window in _lruWindows.AsEnumerable().Reverse().Concat(_windows.Values)) {
                     var eval = window.InteractiveWindow?.Evaluator as SelectableReplEvaluator;
                     if (eval?.CurrentEvaluator == replId && predicate?.Invoke(eval) != false) {
                         OnWindowUsed(window);
@@ -132,7 +132,7 @@ namespace Microsoft.PythonTools.Repl {
 
             IVsInteractiveWindow wnd;
             lock (_windows) {
-                foreach(var window in _lruWindows.AsEnumerable().Reverse().Concat(_windows.Values)) {
+                foreach (var window in _lruWindows.AsEnumerable().Reverse().Concat(_windows.Values)) {
                     var eval = window.InteractiveWindow?.Evaluator as SelectableReplEvaluator;
                     if (eval?.CurrentEvaluator == replId && predicate?.Invoke(eval) != false) {
                         OnWindowUsed(window);

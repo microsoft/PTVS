@@ -71,7 +71,7 @@ namespace PythonToolsTests {
             var loc = PathUtils.EnsureEndSeparator(TestData.GetTempPath());
             proj.Save(Path.Combine(loc, string.Format("test.proj")));
 
-            foreach(var test in new [] {
+            foreach (var test in new[] {
                 new { ProjectHome="", Expected=loc },
                 new { ProjectHome=".", Expected=loc },
                 new { ProjectHome="..", Expected=PathUtils.EnsureEndSeparator(Path.GetDirectoryName(Path.GetDirectoryName(loc))) },

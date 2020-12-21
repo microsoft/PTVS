@@ -14,15 +14,17 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.IO;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestWindow.Extensibility;
 using Microsoft.VisualStudio.TestWindow.Extensibility.Model;
+using System;
+using System.Collections.Generic;
+using System.IO;
 
-namespace Microsoft.VisualStudioTools.TestAdapter {
-    internal class TestContainer : ITestContainer {
+namespace Microsoft.VisualStudioTools.TestAdapter
+{
+    internal class TestContainer : ITestContainer
+    {
         private readonly DateTime _lastWriteTime;
         private readonly DateTime _cachedTime;
         private readonly bool _isWorkspace;
@@ -34,7 +36,8 @@ namespace Microsoft.VisualStudioTools.TestAdapter {
             string projectName,
             Architecture architecture,
             bool isWorkspace
-        ) {
+        )
+        {
             Discoverer = discoverer;
             Source = source; // Make sure source matches discovery new TestCase source.
             Project = projectHome;
@@ -49,18 +52,19 @@ namespace Microsoft.VisualStudioTools.TestAdapter {
         /// Copy constructor
         /// </summary>
         /// <param name="copy"></param>
-        private TestContainer(TestContainer copy): this(
+        private TestContainer(TestContainer copy) : this(
                    copy.Discoverer,
                    copy.Source,
                    copy.Project,
                    copy.ProjectName,
                    copy.TargetPlatform,
                    copy._isWorkspace
-        ) {
+        )
+        {
             _lastWriteTime = copy._lastWriteTime;
             _cachedTime = copy._cachedTime;
         }
-      
+
         /// <summary>
         /// Project path
         /// </summary>
@@ -68,33 +72,40 @@ namespace Microsoft.VisualStudioTools.TestAdapter {
 
         public string ProjectName { get; private set; }
 
-        public int CompareTo(ITestContainer other) {
+        public int CompareTo(ITestContainer other)
+        {
             var container = other as TestContainer;
-            if (container == null) {
+            if (container == null)
+            {
                 return -1;
             }
 
-            if (_isWorkspace != container._isWorkspace) {
+            if (_isWorkspace != container._isWorkspace)
+            {
                 return -1;
             }
 
             var result = String.Compare(Source, container.Source, StringComparison.OrdinalIgnoreCase);
-            if (result != 0) {
+            if (result != 0)
+            {
                 return result;
             }
 
             result = String.Compare(this.Project, container.Project, StringComparison.Ordinal);
-            if (result != 0) {
+            if (result != 0)
+            {
                 return result;
             }
 
             result = String.Compare(this.ProjectName, container.ProjectName, StringComparison.Ordinal);
-            if (result != 0) {
+            if (result != 0)
+            {
                 return result;
             }
 
             result = _cachedTime.CompareTo(container._cachedTime);
-            if (result != 0) {
+            if (result != 0)
+            {
                 return result;
             }
 
@@ -102,8 +113,10 @@ namespace Microsoft.VisualStudioTools.TestAdapter {
             return result;
         }
 
-        public IEnumerable<Guid> DebugEngines {
-            get {
+        public IEnumerable<Guid> DebugEngines
+        {
+            get
+            {
                 // TODO: Create a debug engine that can be used to attach to the (managed) test executor
                 // Mixed mode debugging is not strictly necessary, provided that
                 // the first engine returned from this method can attach to a
@@ -114,17 +127,20 @@ namespace Microsoft.VisualStudioTools.TestAdapter {
             }
         }
 
-        public IDeploymentData DeployAppContainer() {
+        public IDeploymentData DeployAppContainer()
+        {
             return null;
         }
 
         public ITestContainerDiscoverer Discoverer { get; private set; }
 
-        public bool IsAppContainerTestContainer {
+        public bool IsAppContainerTestContainer
+        {
             get { return false; }
         }
 
-        public ITestContainer Snapshot() {
+        public ITestContainer Snapshot()
+        {
             return new TestContainer(this);
         }
 
@@ -134,14 +150,19 @@ namespace Microsoft.VisualStudioTools.TestAdapter {
 
         public Architecture TargetPlatform { get; private set; }
 
-        public override string ToString() {
+        public override string ToString()
+        {
             return Source + ":" + Discoverer.ExecutorUri.ToString();
         }
 
-        private DateTime GetLastWriteTimeStamp() {
-            if (!String.IsNullOrEmpty(this.Source) && File.Exists(this.Source)) {
+        private DateTime GetLastWriteTimeStamp()
+        {
+            if (!String.IsNullOrEmpty(this.Source) && File.Exists(this.Source))
+            {
                 return File.GetLastWriteTime(this.Source);
-            } else {
+            }
+            else
+            {
                 return DateTime.MinValue;
             }
         }

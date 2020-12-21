@@ -18,8 +18,8 @@ extern alias pythontools;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using pythontools::Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pythontools::Microsoft.PythonTools.Intellisense;
 using TestUtilities;
 
 namespace PythonToolsTests {

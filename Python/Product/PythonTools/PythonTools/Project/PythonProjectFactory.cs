@@ -57,7 +57,7 @@ namespace Microsoft.PythonTools.Project {
         // be upgraded automatically.
         private const string Ptvs21BetaBottleTargets = @"$(VSToolsPath)\Python Tools\Microsoft.PythonTools.Bottle.targets";
         private const string Ptvs21BetaFlaskTargets = @"$(VSToolsPath)\Python Tools\Microsoft.PythonTools.Flask.targets";
-        
+
         // These targets files existed in early PTVS versions but are no longer
         // suitable and need to be replaced with our own targets file.
         internal const string CommonTargets = @"$(MSBuildToolsPath)\Microsoft.Common.targets";

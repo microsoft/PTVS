@@ -41,7 +41,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
                     var ri = RemoteInterpreter;
                     _name = ri != null ? ri.GetModuleName(Value) : string.Empty;
                 }
-                return _name; 
+                return _name;
             }
         }
 

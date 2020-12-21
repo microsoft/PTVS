@@ -108,7 +108,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             return PyInterpreterState.GetInterpreterStates(process).SelectMany(interp => interp.GetThreadStates());
         }
 
-        
+
     }
 
     [StructProxy(MinVersion = PythonLanguageVersion.V37, StructName = "_PyErr_StackItem")]

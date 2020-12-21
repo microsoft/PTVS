@@ -14,23 +14,27 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using Microsoft.VisualStudio.Text.Operations;
 using System;
 using System.Collections.Generic;
-using Microsoft.VisualStudio.Text.Operations;
 
-namespace TestUtilities.Mocks {
-    internal class MockTextUndoPrimitive : ITextUndoPrimitive {
+namespace TestUtilities.Mocks
+{
+    internal class MockTextUndoPrimitive : ITextUndoPrimitive
+    {
         private readonly Stack<Action> _undoOperations;
         private MockTextUndoTransaction _parent;
         private readonly MockTextUndoHistory _history;
         private DelegatedUndoPrimitiveState _state;
 
-        public DelegatedUndoPrimitiveState State {
+        public DelegatedUndoPrimitiveState State
+        {
             get => _state;
             set => _state = value;
         }
 
-        public MockTextUndoPrimitive(MockTextUndoHistory history, MockTextUndoTransaction parent, Action operationCurried) {
+        public MockTextUndoPrimitive(MockTextUndoHistory history, MockTextUndoTransaction parent, Action operationCurried)
+        {
             RedoOperations = new Stack<Action>();
             _undoOperations = new Stack<Action>();
 
@@ -49,9 +53,12 @@ namespace TestUtilities.Mocks {
         /// Here, we undo everything in the list of undo operations, and then clear the list. While this is happening, the
         /// History will collect new operations for the redo list and pass them on to us.
         /// </summary>
-        public void Undo() {
-            using (new CatchOperationsFromHistoryForDelegatedPrimitive(_history, this, DelegatedUndoPrimitiveState.Undoing)) {
-                while (_undoOperations.Count > 0) {
+        public void Undo()
+        {
+            using (new CatchOperationsFromHistoryForDelegatedPrimitive(_history, this, DelegatedUndoPrimitiveState.Undoing))
+            {
+                while (_undoOperations.Count > 0)
+                {
                     _undoOperations.Pop()();
                 }
             }
@@ -62,15 +69,19 @@ namespace TestUtilities.Mocks {
         /// redo operations, and then clear the list. While this is happening, the History will collect new operations
         /// for the undo list and pass them on to us.
         /// </summary>
-        public void Do() {
-            using (new CatchOperationsFromHistoryForDelegatedPrimitive(_history, this, DelegatedUndoPrimitiveState.Redoing)) {
-                while (RedoOperations.Count > 0) {
+        public void Do()
+        {
+            using (new CatchOperationsFromHistoryForDelegatedPrimitive(_history, this, DelegatedUndoPrimitiveState.Redoing))
+            {
+                while (RedoOperations.Count > 0)
+                {
                     RedoOperations.Pop()();
                 }
             }
         }
 
-        public ITextUndoTransaction Parent {
+        public ITextUndoTransaction Parent
+        {
             get => _parent;
             set => _parent = value as MockTextUndoTransaction;
         }
@@ -81,12 +92,18 @@ namespace TestUtilities.Mocks {
         /// to the inverse list.
         /// </summary>
         /// <param name="operation"></param>
-        public void AddOperation(Action operation) {
-            if (_state == DelegatedUndoPrimitiveState.Redoing) {
+        public void AddOperation(Action operation)
+        {
+            if (_state == DelegatedUndoPrimitiveState.Redoing)
+            {
                 _undoOperations.Push(operation);
-            } else if (_state == DelegatedUndoPrimitiveState.Undoing) {
+            }
+            else if (_state == DelegatedUndoPrimitiveState.Undoing)
+            {
                 RedoOperations.Push(operation);
-            } else {
+            }
+            else
+            {
                 throw new InvalidOperationException("Strings.DelegatedUndoPrimitiveStateDoesNotAllowAdd");
             }
         }
@@ -95,11 +112,13 @@ namespace TestUtilities.Mocks {
 
         internal Stack<Action> RedoOperations { get; }
 
-        public bool CanMerge(ITextUndoPrimitive primitive) {
+        public bool CanMerge(ITextUndoPrimitive primitive)
+        {
             return false;
         }
 
-        public ITextUndoPrimitive Merge(ITextUndoPrimitive primitive) {
+        public ITextUndoPrimitive Merge(ITextUndoPrimitive primitive)
+        {
             throw new InvalidOperationException("Strings.DelegatedUndoPrimitiveCannotMerge");
         }
     }

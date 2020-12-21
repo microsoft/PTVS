@@ -39,7 +39,7 @@ namespace Microsoft.PythonTools.Interpreter {
         private const string InterpreterFactoryIdMetadata = "InterpreterFactoryId";
 
         [ImportingConstructor]
-        public InterpreterRegistryService([ImportMany]Lazy<IPythonInterpreterFactoryProvider, IDictionary<string, object>>[] providers, [ImportMany]Lazy<IInterpreterLog>[] loggers) {
+        public InterpreterRegistryService([ImportMany] Lazy<IPythonInterpreterFactoryProvider, IDictionary<string, object>>[] providers, [ImportMany] Lazy<IInterpreterLog>[] loggers) {
             _providers = providers;
             _loggers = loggers;
         }
