@@ -156,13 +156,16 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
         internal static string GetAbsoluteTestExecutionPath(string absoluteFilePath, string pytestId) {
             var filename = Path.GetFileName(absoluteFilePath);
             var executionTestPath = "";
-            var index = pytestId.LastIndexOf(filename);
-            if (index != -1) {
-                //join full codefilepath and pytestId but remove overlapping directories or filename
-                var functionName = pytestId.Substring(index + filename.Length);
-                executionTestPath = absoluteFilePath + functionName;
-            } else {
-                executionTestPath = Path.Combine(Path.GetDirectoryName(absoluteFilePath), pytestId.TrimStart('.'));
+            switch (pytestId.LastIndexOf(filename)) {
+                case -1:
+                    executionTestPath = Path.Combine(Path.GetDirectoryName(absoluteFilePath), pytestId.TrimStart('.'));
+                    break;
+                default: {
+                    //join full codefilepath and pytestId but remove overlapping directories or filename
+                    var functionName = pytestId.Substring(pytestId.LastIndexOf(filename) + filename.Length);
+                    executionTestPath = absoluteFilePath + functionName;
+                    break;
+                }
             }
             return executionTestPath;
         }
