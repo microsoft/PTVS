@@ -113,23 +113,35 @@ namespace Microsoft.PythonTools.Debugger {
     }
 
     public class VariablePresentation {
-        [JsonProperty("special")]
-        public PresentationMode Special { get; set; }
-
-        [JsonProperty("function")]
-        public PresentationMode Function { get; set; }
 
         [JsonProperty("class_")]
         public PresentationMode Class { get; set; }
 
+        [JsonProperty("function")]
+        public PresentationMode Function { get; set; }
+
         [JsonProperty("protected")]
         public PresentationMode Protected { get; set; }
+
+        [JsonProperty("special")]
+        public PresentationMode Special { get; set; }
+
+        public VariablePresentation() {
+
+            Class = PresentationMode.Inline;
+            Function = PresentationMode.Inline;
+            Protected = PresentationMode.Inline;
+            Special = PresentationMode.Inline;
+        }
     }
 
     [JsonConverter(typeof(StringEnumConverter))]
     public enum PresentationMode {
-        [EnumMember(Value="group")]
+        [EnumMember(Value = "group")]
         Group,
+
+        [EnumMember(Value = "hide")]
+        Hide,
 
         [EnumMember(Value = "inline")]
         Inline,

@@ -396,6 +396,234 @@
   <data name="tableLayoutPanel2.ColumnCount" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
+  <data name="_varPresSpecialComboBox.Location" type="System.Drawing.Point, System.Drawing">
+    <value>244, 49</value>
+  </data>
+  <data name="_varPresSpecialComboBox.Size" type="System.Drawing.Size, System.Drawing">
+    <value>95, 21</value>
+  </data>
+  <data name="_varPresSpecialComboBox.TabIndex" type="System.Int32, mscorlib">
+    <value>9</value>
+  </data>
+  <data name="&gt;&gt;_varPresSpecialComboBox.Name" xml:space="preserve">
+    <value>_varPresSpecialComboBox</value>
+  </data>
+  <data name="&gt;&gt;_varPresSpecialComboBox.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_varPresSpecialComboBox.Parent" xml:space="preserve">
+    <value>groupBox1</value>
+  </data>
+  <data name="&gt;&gt;_varPresSpecialComboBox.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="_varPresSpecialLabel.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="_varPresSpecialLabel.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="_varPresSpecialLabel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>196, 52</value>
+  </data>
+  <data name="_varPresSpecialLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>42, 13</value>
+  </data>
+  <data name="_varPresSpecialLabel.TabIndex" type="System.Int32, mscorlib">
+    <value>8</value>
+  </data>
+  <data name="_varPresSpecialLabel.Text" xml:space="preserve">
+    <value>Special</value>
+  </data>
+  <data name="&gt;&gt;_varPresSpecialLabel.Name" xml:space="preserve">
+    <value>_varPresSpecialLabel</value>
+  </data>
+  <data name="&gt;&gt;_varPresSpecialLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_varPresSpecialLabel.Parent" xml:space="preserve">
+    <value>groupBox1</value>
+  </data>
+  <data name="&gt;&gt;_varPresSpecialLabel.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="_varPresProtectedComboBox.Location" type="System.Drawing.Point, System.Drawing">
+    <value>244, 22</value>
+  </data>
+  <data name="_varPresProtectedComboBox.Size" type="System.Drawing.Size, System.Drawing">
+    <value>95, 21</value>
+  </data>
+  <data name="_varPresProtectedComboBox.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
+  <data name="&gt;&gt;_varPresProtectedComboBox.Name" xml:space="preserve">
+    <value>_varPresProtectedComboBox</value>
+  </data>
+  <data name="&gt;&gt;_varPresProtectedComboBox.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_varPresProtectedComboBox.Parent" xml:space="preserve">
+    <value>groupBox1</value>
+  </data>
+  <data name="&gt;&gt;_varPresProtectedComboBox.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="_varPresProtectedLabel.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="_varPresProtectedLabel.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="_varPresProtectedLabel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>185, 25</value>
+  </data>
+  <data name="_varPresProtectedLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>53, 13</value>
+  </data>
+  <data name="_varPresProtectedLabel.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="_varPresProtectedLabel.Text" xml:space="preserve">
+    <value>Protected</value>
+  </data>
+  <data name="&gt;&gt;_varPresProtectedLabel.Name" xml:space="preserve">
+    <value>_varPresProtectedLabel</value>
+  </data>
+  <data name="&gt;&gt;_varPresProtectedLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_varPresProtectedLabel.Parent" xml:space="preserve">
+    <value>groupBox1</value>
+  </data>
+  <data name="&gt;&gt;_varPresProtectedLabel.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="_varPresFunctionComboBox.Location" type="System.Drawing.Point, System.Drawing">
+    <value>65, 49</value>
+  </data>
+  <data name="_varPresFunctionComboBox.Size" type="System.Drawing.Size, System.Drawing">
+    <value>95, 21</value>
+  </data>
+  <data name="_varPresFunctionComboBox.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="&gt;&gt;_varPresFunctionComboBox.Name" xml:space="preserve">
+    <value>_varPresFunctionComboBox</value>
+  </data>
+  <data name="&gt;&gt;_varPresFunctionComboBox.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_varPresFunctionComboBox.Parent" xml:space="preserve">
+    <value>groupBox1</value>
+  </data>
+  <data name="&gt;&gt;_varPresFunctionComboBox.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="_varPresFunctionLabel.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="_varPresFunctionLabel.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="_varPresFunctionLabel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>11, 52</value>
+  </data>
+  <data name="_varPresFunctionLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>48, 13</value>
+  </data>
+  <data name="_varPresFunctionLabel.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="_varPresFunctionLabel.Text" xml:space="preserve">
+    <value>Function</value>
+  </data>
+  <data name="&gt;&gt;_varPresFunctionLabel.Name" xml:space="preserve">
+    <value>_varPresFunctionLabel</value>
+  </data>
+  <data name="&gt;&gt;_varPresFunctionLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_varPresFunctionLabel.Parent" xml:space="preserve">
+    <value>groupBox1</value>
+  </data>
+  <data name="&gt;&gt;_varPresFunctionLabel.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="_varPresClassComboBox.Location" type="System.Drawing.Point, System.Drawing">
+    <value>65, 22</value>
+  </data>
+  <data name="_varPresClassComboBox.Size" type="System.Drawing.Size, System.Drawing">
+    <value>95, 21</value>
+  </data>
+  <data name="_varPresClassComboBox.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="&gt;&gt;_varPresClassComboBox.Name" xml:space="preserve">
+    <value>_varPresClassComboBox</value>
+  </data>
+  <data name="&gt;&gt;_varPresClassComboBox.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_varPresClassComboBox.Parent" xml:space="preserve">
+    <value>groupBox1</value>
+  </data>
+  <data name="&gt;&gt;_varPresClassComboBox.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
+  <data name="_varPresClassLabel.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="_varPresClassLabel.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="_varPresClassLabel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>27, 25</value>
+  </data>
+  <data name="_varPresClassLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>32, 13</value>
+  </data>
+  <data name="_varPresClassLabel.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="_varPresClassLabel.Text" xml:space="preserve">
+    <value>Class</value>
+  </data>
+  <data name="&gt;&gt;_varPresClassLabel.Name" xml:space="preserve">
+    <value>_varPresClassLabel</value>
+  </data>
+  <data name="&gt;&gt;_varPresClassLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_varPresClassLabel.Parent" xml:space="preserve">
+    <value>groupBox1</value>
+  </data>
+  <data name="&gt;&gt;_varPresClassLabel.ZOrder" xml:space="preserve">
+    <value>7</value>
+  </data>
+  <data name="groupBox1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 187</value>
+  </data>
+  <data name="groupBox1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>372, 83</value>
+  </data>
+  <data name="groupBox1.TabIndex" type="System.Int32, mscorlib">
+    <value>8</value>
+  </data>
+  <data name="groupBox1.Text" xml:space="preserve">
+    <value>&amp;Variable Presentation</value>
+  </data>
+  <data name="&gt;&gt;groupBox1.Name" xml:space="preserve">
+    <value>groupBox1</value>
+  </data>
+  <data name="&gt;&gt;groupBox1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;groupBox1.Parent" xml:space="preserve">
+    <value>tableLayoutPanel2</value>
+  </data>
+  <data name="&gt;&gt;groupBox1.ZOrder" xml:space="preserve">
+    <value>8</value>
+  </data>
   <data name="tableLayoutPanel2.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
   </data>
@@ -403,10 +631,10 @@
     <value>0, 0</value>
   </data>
   <data name="tableLayoutPanel2.RowCount" type="System.Int32, mscorlib">
-    <value>9</value>
+    <value>10</value>
   </data>
   <data name="tableLayoutPanel2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>381, 290</value>
+    <value>381, 333</value>
   </data>
   <data name="tableLayoutPanel2.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -424,7 +652,7 @@
     <value>0</value>
   </data>
   <data name="tableLayoutPanel2.LayoutSettings" type="System.Windows.Forms.TableLayoutSettings, System.Windows.Forms">
-    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="_promptOnBuildError" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_waitOnAbnormalExit" Row="1" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_waitOnNormalExit" Row="2" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_teeStdOut" Row="3" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_breakOnSystemExitZero" Row="4" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_debugStdLib" Row="5" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_showFunctionReturnValue" Row="6" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_useLegacyDebugger" Row="7" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="Percent,100" /&gt;&lt;Rows Styles="AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,Percent,100" /&gt;&lt;/TableLayoutSettings&gt;</value>
+    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="_promptOnBuildError" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_waitOnAbnormalExit" Row="1" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_waitOnNormalExit" Row="2" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_teeStdOut" Row="3" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_breakOnSystemExitZero" Row="4" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_debugStdLib" Row="5" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_showFunctionReturnValue" Row="6" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_useLegacyDebugger" Row="7" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="groupBox1" Row="9" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="Percent,100" /&gt;&lt;Rows Styles="AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,Percent,100" /&gt;&lt;/TableLayoutSettings&gt;</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -436,7 +664,7 @@
     <value>6, 8, 6, 8</value>
   </data>
   <data name="$this.Size" type="System.Drawing.Size, System.Drawing">
-    <value>381, 290</value>
+    <value>381, 333</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>PythonDebuggingOptionsControl</value>

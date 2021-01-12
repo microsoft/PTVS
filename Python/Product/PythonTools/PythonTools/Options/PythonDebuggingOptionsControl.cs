@@ -13,13 +13,24 @@
 //
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
-
+using Microsoft.PythonTools.Debugger;
+using System;
+using System.Collections.Generic;
 using System.Windows.Forms;
 
 namespace Microsoft.PythonTools.Options {
     public partial class PythonDebuggingOptionsControl : UserControl {
         public PythonDebuggingOptionsControl() {
             InitializeComponent();
+
+            // set allowed values for the variable presentation options
+            var varPresComboBoxes = new List<ComboBox> { _varPresClassComboBox, _varPresFunctionComboBox, _varPresProtectedComboBox, _varPresSpecialComboBox };
+            foreach (var varPresComboBox in varPresComboBoxes) {
+                varPresComboBox.Items.Clear();
+                foreach (var item in Enum.GetValues(typeof(PresentationMode))) {
+                    varPresComboBox.Items.Add(item);
+                }
+            }
         }
 
         internal void SyncControlWithPageSettings(PythonToolsService pyService) {
@@ -31,6 +42,12 @@ namespace Microsoft.PythonTools.Options {
             _debugStdLib.Checked = pyService.DebuggerOptions.DebugStdLib;
             _showFunctionReturnValue.Checked = pyService.DebuggerOptions.ShowFunctionReturnValue;
             _useLegacyDebugger.Checked = pyService.DebuggerOptions.UseLegacyDebugger;
+
+            // variable presentation
+            _varPresClassComboBox.SelectedItem = pyService.DebuggerOptions.VariablePresentationForClasses;
+            _varPresFunctionComboBox.SelectedItem = pyService.DebuggerOptions.VariablePresentationForFunctions;
+            _varPresProtectedComboBox.SelectedItem = pyService.DebuggerOptions.VariablePresentationForProtected;
+            _varPresSpecialComboBox.SelectedItem = pyService.DebuggerOptions.VariablePresentationForSpecial;
         }
 
         internal void SyncPageWithControlSettings(PythonToolsService pyService) {
@@ -42,6 +59,12 @@ namespace Microsoft.PythonTools.Options {
             pyService.DebuggerOptions.DebugStdLib = _debugStdLib.Checked;
             pyService.DebuggerOptions.ShowFunctionReturnValue = _showFunctionReturnValue.Checked;
             pyService.DebuggerOptions.UseLegacyDebugger = _useLegacyDebugger.Checked;
+
+            // variable presentation
+            pyService.DebuggerOptions.VariablePresentationForClasses = (PresentationMode)_varPresClassComboBox.SelectedItem;
+            pyService.DebuggerOptions.VariablePresentationForFunctions = (PresentationMode)_varPresFunctionComboBox.SelectedItem;
+            pyService.DebuggerOptions.VariablePresentationForProtected = (PresentationMode)_varPresProtectedComboBox.SelectedItem;
+            pyService.DebuggerOptions.VariablePresentationForSpecial = (PresentationMode)_varPresSpecialComboBox.SelectedItem;
         }
     }
 }

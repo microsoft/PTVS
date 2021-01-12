@@ -184,6 +184,7 @@ namespace Microsoft.PythonTools.Debugger {
 
         private static void AddDebuggerOptions(IAdapterLaunchInfo adapterLaunchInfo, DebugInfo launchJson) {
             var debugService = (IPythonDebugOptionsService)Package.GetGlobalService(typeof(IPythonDebugOptionsService));
+            var adapterLaunchInfoJson = JObject.Parse(adapterLaunchInfo.LaunchJson);
 
             // Stop on entry should always be true for VS Debug Adapter Host.
             // If stop on entry is disabled then VS will automatically issue
@@ -201,13 +202,7 @@ namespace Microsoft.PythonTools.Debugger {
             launchJson.DebugStdLib = debugService.DebugStdLib;
             launchJson.ShowReturnValue = debugService.ShowFunctionReturnValue;
 
-            // Disable grouping functionality for now, later we'll add an option to control this
-            launchJson.VariablePresentation = new VariablePresentation {
-                Special = PresentationMode.Inline,
-                Function = PresentationMode.Inline,
-                Class = PresentationMode.Inline,
-                Protected = PresentationMode.Inline
-            };
+            AddVariablePresentationOptions(adapterLaunchInfoJson, launchJson);
 
             var excludePTVSInstallDirectory = new PathRule() {
                 Path = PathUtils.GetParent(typeof(DebugAdapterLauncher).Assembly.Location),
@@ -239,6 +234,53 @@ namespace Microsoft.PythonTools.Debugger {
 
             } finally {
                 Marshal.FreeHGlobal(argPointer);
+            }
+        }
+
+        /// <summary>
+        /// Adds variable presentation options to the json that will be passed to the debugger when launched.
+        /// </summary>
+        /// <param name="adapterLaunchInfoJson">Launch info json that comes from the interpreter and/or the user</param>
+        /// <param name="launchJson">The json that will be passed to the debugger</param>
+        private static void AddVariablePresentationOptions(JObject adapterLaunchInfoJson, DebugInfo launchJson) {
+
+            // create a default variable presentation and add it to the launchJson
+            var variablePresentation = new VariablePresentation();
+            launchJson.VariablePresentation = variablePresentation;
+
+            // if no variable presentation is provided, we're done
+            var varPresJson = adapterLaunchInfoJson.Value<JObject>("variablePresentation");
+            if (varPresJson == null) {
+                return;
+            }
+
+            // otherwise, update the launchJson with the provided presentation values
+            var classModeStr = varPresJson.Value<string>("class");
+            if (classModeStr != null) {
+                if (Enum.TryParse(classModeStr, ignoreCase: true, out PresentationMode classMode)) {
+                    variablePresentation.Class = classMode;
+                }
+            }
+
+            var functionModeStr = varPresJson.Value<string>("function");
+            if (functionModeStr != null) {
+                if (Enum.TryParse(functionModeStr, ignoreCase: true, out PresentationMode functionMode)) {
+                    variablePresentation.Function = functionMode;
+                }
+            }
+
+            var protectedModeStr = varPresJson.Value<string>("protected");
+            if (protectedModeStr != null) {
+                if (Enum.TryParse(protectedModeStr, ignoreCase: true, out PresentationMode protectedMode)) {
+                    variablePresentation.Protected = protectedMode;
+                }
+            }
+
+            var specialModeStr = varPresJson.Value<string>("special");
+            if (specialModeStr != null) {
+                if (Enum.TryParse(specialModeStr, ignoreCase: true, out PresentationMode specialMode)) {
+                    variablePresentation.Special = specialMode;
+                }
             }
         }
     }
