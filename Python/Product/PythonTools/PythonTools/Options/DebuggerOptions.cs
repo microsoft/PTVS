@@ -56,10 +56,10 @@ namespace Microsoft.PythonTools.Options {
             UseLegacyDebugger = _service.LoadBool(UseLegacyDebuggerSetting, Category) ?? false;
 
             // variable presentation
-            VariablePresentationForClasses = _service.LoadEnum<PresentationMode>(VariablePresentationForClassesSetting, Category) ?? PresentationMode.Inline;
-            VariablePresentationForFunctions = _service.LoadEnum<PresentationMode>(VariablePresentationForFunctionsSetting, Category) ?? PresentationMode.Inline;
-            VariablePresentationForProtected = _service.LoadEnum<PresentationMode>(VariablePresentationForProtectedSetting, Category) ?? PresentationMode.Inline;
-            VariablePresentationForSpecial = _service.LoadEnum<PresentationMode>(VariablePresentationForSpecialSetting, Category) ?? PresentationMode.Inline;
+            VariablePresentationForClasses = _service.LoadEnum<PresentationMode>(VariablePresentationForClassesSetting, Category) ?? VariablePresentation.DefaultPresentationMode;
+            VariablePresentationForFunctions = _service.LoadEnum<PresentationMode>(VariablePresentationForFunctionsSetting, Category) ?? VariablePresentation.DefaultPresentationMode;
+            VariablePresentationForProtected = _service.LoadEnum<PresentationMode>(VariablePresentationForProtectedSetting, Category) ?? VariablePresentation.DefaultPresentationMode;
+            VariablePresentationForSpecial = _service.LoadEnum<PresentationMode>(VariablePresentationForSpecialSetting, Category) ?? VariablePresentation.DefaultPresentationMode;
 
             Changed?.Invoke(this, EventArgs.Empty);
         }
@@ -94,10 +94,10 @@ namespace Microsoft.PythonTools.Options {
             UseLegacyDebugger = false;
 
             // variable presentation
-            VariablePresentationForClasses = PresentationMode.Inline;
-            VariablePresentationForFunctions = PresentationMode.Inline;
-            VariablePresentationForProtected = PresentationMode.Inline;
-            VariablePresentationForSpecial = PresentationMode.Inline;
+            VariablePresentationForClasses = VariablePresentation.DefaultPresentationMode;
+            VariablePresentationForFunctions = VariablePresentation.DefaultPresentationMode;
+            VariablePresentationForProtected = VariablePresentation.DefaultPresentationMode;
+            VariablePresentationForSpecial = VariablePresentation.DefaultPresentationMode;
 
             Changed?.Invoke(this, EventArgs.Empty);
         }

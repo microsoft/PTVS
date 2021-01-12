@@ -114,6 +114,9 @@ namespace Microsoft.PythonTools.Debugger {
 
     public class VariablePresentation {
 
+        // default to group, which is the current vscode behavior
+        public static PresentationMode DefaultPresentationMode = PresentationMode.Group;
+
         [JsonProperty("class_")]
         public PresentationMode Class { get; set; }
 
@@ -128,10 +131,10 @@ namespace Microsoft.PythonTools.Debugger {
 
         public VariablePresentation() {
 
-            Class = PresentationMode.Inline;
-            Function = PresentationMode.Inline;
-            Protected = PresentationMode.Inline;
-            Special = PresentationMode.Inline;
+            Class = DefaultPresentationMode;
+            Function = DefaultPresentationMode;
+            Protected = DefaultPresentationMode;
+            Special = DefaultPresentationMode;
         }
     }
 
