@@ -26,10 +26,7 @@ namespace Microsoft.PythonTools.Options {
             // set allowed values for the variable presentation options
             var varPresComboBoxes = new List<ComboBox> { _varPresClassComboBox, _varPresFunctionComboBox, _varPresProtectedComboBox, _varPresSpecialComboBox };
             foreach (var varPresComboBox in varPresComboBoxes) {
-                varPresComboBox.Items.Clear();
-                foreach (var item in Enum.GetValues(typeof(PresentationMode))) {
-                    varPresComboBox.Items.Add(item);
-                }
+                varPresComboBox.DataSource = Enum.GetValues(typeof(PresentationMode));
             }
         }
 

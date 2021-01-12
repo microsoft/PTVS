@@ -206,8 +206,7 @@ namespace Microsoft.PythonTools.Debugger {
             try {
                 var adapterLaunchInfoJson = JObject.Parse(adapterLaunchInfo.LaunchJson);
                 AddVariablePresentationOptions(adapterLaunchInfoJson, launchJson);
-            }
-            catch (JsonReaderException) {
+            } catch (JsonReaderException) {
                 // this should never happen
                 Debug.Fail("adapterLaunchInfo is not valid json");
             }
