@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -25,6 +26,7 @@ using System.Windows.Forms;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces;
 using Microsoft.VisualStudio.Shell;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace Microsoft.PythonTools.Debugger {
@@ -184,7 +186,6 @@ namespace Microsoft.PythonTools.Debugger {
 
         private static void AddDebuggerOptions(IAdapterLaunchInfo adapterLaunchInfo, DebugInfo launchJson) {
             var debugService = (IPythonDebugOptionsService)Package.GetGlobalService(typeof(IPythonDebugOptionsService));
-            var adapterLaunchInfoJson = JObject.Parse(adapterLaunchInfo.LaunchJson);
 
             // Stop on entry should always be true for VS Debug Adapter Host.
             // If stop on entry is disabled then VS will automatically issue
@@ -202,7 +203,14 @@ namespace Microsoft.PythonTools.Debugger {
             launchJson.DebugStdLib = debugService.DebugStdLib;
             launchJson.ShowReturnValue = debugService.ShowFunctionReturnValue;
 
-            AddVariablePresentationOptions(adapterLaunchInfoJson, launchJson);
+            try {
+                var adapterLaunchInfoJson = JObject.Parse(adapterLaunchInfo.LaunchJson);
+                AddVariablePresentationOptions(adapterLaunchInfoJson, launchJson);
+            }
+            catch (JsonReaderException) {
+                // this should never happen
+                Debug.Fail("adapterLaunchInfo is not valid json");
+            }
 
             var excludePTVSInstallDirectory = new PathRule() {
                 Path = PathUtils.GetParent(typeof(DebugAdapterLauncher).Assembly.Location),
@@ -243,6 +251,9 @@ namespace Microsoft.PythonTools.Debugger {
         /// <param name="adapterLaunchInfoJson">Launch info json that comes from the interpreter and/or the user</param>
         /// <param name="launchJson">The json that will be passed to the debugger</param>
         private static void AddVariablePresentationOptions(JObject adapterLaunchInfoJson, DebugInfo launchJson) {
+
+            if (adapterLaunchInfoJson == null) throw new ArgumentNullException(nameof(adapterLaunchInfoJson));
+            if (launchJson == null) throw new ArgumentNullException(nameof(launchJson));
 
             // create a default variable presentation and add it to the launchJson
             var variablePresentation = new VariablePresentation();
