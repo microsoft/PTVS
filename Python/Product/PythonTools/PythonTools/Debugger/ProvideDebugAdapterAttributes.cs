@@ -142,6 +142,9 @@ namespace Microsoft.VisualStudioTools {
             engineKey.SetValue("Language", _languageName);
             engineKey.SetValue("LanguageId", _languageId);
 
+            // support search navigation for symbols while debugging
+            engineKey.SetValue("SupportsEESearch", 1);
+
             /* 
              * Adapter launcher registration 
              */
