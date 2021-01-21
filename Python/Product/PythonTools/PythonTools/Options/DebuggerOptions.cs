@@ -14,6 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using Microsoft.PythonTools.Debugger;
 using System;
 
 namespace Microsoft.PythonTools.Options {
@@ -33,6 +34,12 @@ namespace Microsoft.PythonTools.Options {
         private const string ShowFunctionReturnValueSetting = "ShowReturnValue";
         private const string UseLegacyDebuggerSetting = "UseLegacyDebugger";
 
+        // variable presentation
+        private const string VariablePresentationForClassesSetting = "VariablePresentationForClasses";
+        private const string VariablePresentationForFunctionsSetting = "VariablePresentationForFunctions";
+        private const string VariablePresentationForProtectedSetting = "VariablePresentationForProtected";
+        private const string VariablePresentationForSpecialSetting = "VariablePresentationForSpecial";
+
         internal DebuggerOptions(PythonToolsService service) {
             _service = service;
             Load();
@@ -47,6 +54,13 @@ namespace Microsoft.PythonTools.Options {
             DebugStdLib = _service.LoadBool(DebugStdLibSetting, Category) ?? false;
             ShowFunctionReturnValue = _service.LoadBool(ShowFunctionReturnValueSetting, Category) ?? true;
             UseLegacyDebugger = _service.LoadBool(UseLegacyDebuggerSetting, Category) ?? false;
+
+            // variable presentation
+            VariablePresentationForClasses = _service.LoadEnum<PresentationMode>(VariablePresentationForClassesSetting, Category) ?? VariablePresentation.DefaultPresentationMode;
+            VariablePresentationForFunctions = _service.LoadEnum<PresentationMode>(VariablePresentationForFunctionsSetting, Category) ?? VariablePresentation.DefaultPresentationMode;
+            VariablePresentationForProtected = _service.LoadEnum<PresentationMode>(VariablePresentationForProtectedSetting, Category) ?? VariablePresentation.DefaultPresentationMode;
+            VariablePresentationForSpecial = _service.LoadEnum<PresentationMode>(VariablePresentationForSpecialSetting, Category) ?? VariablePresentation.DefaultPresentationMode;
+
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
@@ -59,6 +73,13 @@ namespace Microsoft.PythonTools.Options {
             _service.SaveBool(DebugStdLibSetting, Category, DebugStdLib);
             _service.SaveBool(ShowFunctionReturnValueSetting, Category, ShowFunctionReturnValue);
             _service.SaveBool(UseLegacyDebuggerSetting, Category, UseLegacyDebugger);
+
+            // variable presentation
+            _service.SaveEnum<PresentationMode>(VariablePresentationForClassesSetting, Category, VariablePresentationForClasses);
+            _service.SaveEnum<PresentationMode>(VariablePresentationForFunctionsSetting, Category, VariablePresentationForFunctions);
+            _service.SaveEnum<PresentationMode>(VariablePresentationForProtectedSetting, Category, VariablePresentationForProtected);
+            _service.SaveEnum<PresentationMode>(VariablePresentationForSpecialSetting, Category, VariablePresentationForSpecial);
+
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
@@ -71,6 +92,13 @@ namespace Microsoft.PythonTools.Options {
             DebugStdLib = false;
             ShowFunctionReturnValue = true;
             UseLegacyDebugger = false;
+
+            // variable presentation
+            VariablePresentationForClasses = VariablePresentation.DefaultPresentationMode;
+            VariablePresentationForFunctions = VariablePresentation.DefaultPresentationMode;
+            VariablePresentationForProtected = VariablePresentation.DefaultPresentationMode;
+            VariablePresentationForSpecial = VariablePresentation.DefaultPresentationMode;
+
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
@@ -146,6 +174,26 @@ namespace Microsoft.PythonTools.Options {
         public bool UseLegacyDebugger {
             get;
             set;
+        }
+        
+        public PresentationMode VariablePresentationForClasses { 
+            get; 
+            set; 
+        }
+
+        public PresentationMode VariablePresentationForFunctions { 
+            get; 
+            set; 
+        }
+
+        public PresentationMode VariablePresentationForProtected { 
+            get; 
+            set; 
+        }
+        
+        public PresentationMode VariablePresentationForSpecial { 
+            get; 
+            set; 
         }
     }
 }

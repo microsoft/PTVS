@@ -113,23 +113,38 @@ namespace Microsoft.PythonTools.Debugger {
     }
 
     public class VariablePresentation {
-        [JsonProperty("special")]
-        public PresentationMode Special { get; set; }
 
-        [JsonProperty("function")]
-        public PresentationMode Function { get; set; }
+        // default to group, which is the current vscode behavior
+        public static PresentationMode DefaultPresentationMode = PresentationMode.Group;
 
         [JsonProperty("class_")]
         public PresentationMode Class { get; set; }
 
+        [JsonProperty("function")]
+        public PresentationMode Function { get; set; }
+
         [JsonProperty("protected")]
         public PresentationMode Protected { get; set; }
+
+        [JsonProperty("special")]
+        public PresentationMode Special { get; set; }
+
+        public VariablePresentation() {
+
+            Class = DefaultPresentationMode;
+            Function = DefaultPresentationMode;
+            Protected = DefaultPresentationMode;
+            Special = DefaultPresentationMode;
+        }
     }
 
     [JsonConverter(typeof(StringEnumConverter))]
     public enum PresentationMode {
-        [EnumMember(Value="group")]
+        [EnumMember(Value = "group")]
         Group,
+
+        [EnumMember(Value = "hide")]
+        Hide,
 
         [EnumMember(Value = "inline")]
         Inline,
