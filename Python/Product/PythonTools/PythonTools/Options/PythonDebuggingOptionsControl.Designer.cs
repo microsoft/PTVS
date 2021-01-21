@@ -33,17 +33,19 @@ namespace Microsoft.PythonTools.Options {
             this._showFunctionReturnValue = new System.Windows.Forms.CheckBox();
             this._useLegacyDebugger = new System.Windows.Forms.CheckBox();
             this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
-            this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this._varPresSpecialComboBox = new System.Windows.Forms.ComboBox();
-            this._varPresSpecialLabel = new System.Windows.Forms.Label();
-            this._varPresProtectedComboBox = new System.Windows.Forms.ComboBox();
-            this._varPresProtectedLabel = new System.Windows.Forms.Label();
-            this._varPresFunctionComboBox = new System.Windows.Forms.ComboBox();
-            this._varPresFunctionLabel = new System.Windows.Forms.Label();
-            this._varPresClassComboBox = new System.Windows.Forms.ComboBox();
-            this._varPresClassLabel = new System.Windows.Forms.Label();
+            this._showVariablesPanel = new System.Windows.Forms.Panel();
+            this._showVariablesLabel = new System.Windows.Forms.Label();
+            this._showVariablesDivider = new System.Windows.Forms.Label();
+            this._showVariablesClassLabel = new System.Windows.Forms.Label();
+            this._showVariablesClassComboBox = new System.Windows.Forms.ComboBox();
+            this._showVariablesFunctionLabel = new System.Windows.Forms.Label();
+            this._showVariablesFunctionComboBox = new System.Windows.Forms.ComboBox();
+            this._showVariablesProtectedLabel = new System.Windows.Forms.Label();
+            this._showVariablesProtectedComboBox = new System.Windows.Forms.ComboBox();
+            this._showVariablesSpecialLabel = new System.Windows.Forms.Label();
+            this._showVariablesSpecialComboBox = new System.Windows.Forms.ComboBox();
             this.tableLayoutPanel2.SuspendLayout();
-            this.groupBox1.SuspendLayout();
+            this._showVariablesPanel.SuspendLayout();
             this.SuspendLayout();
             // 
             // _promptOnBuildError
@@ -112,70 +114,82 @@ namespace Microsoft.PythonTools.Options {
             this.tableLayoutPanel2.Controls.Add(this._debugStdLib, 0, 5);
             this.tableLayoutPanel2.Controls.Add(this._showFunctionReturnValue, 0, 6);
             this.tableLayoutPanel2.Controls.Add(this._useLegacyDebugger, 0, 7);
-            this.tableLayoutPanel2.Controls.Add(this.groupBox1, 0, 9);
+            this.tableLayoutPanel2.Controls.Add(this._showVariablesPanel, 0, 9);
             this.tableLayoutPanel2.Name = "tableLayoutPanel2";
             // 
-            // groupBox1
+            // _showVariablesPanel
             // 
-            this.groupBox1.Controls.Add(this._varPresSpecialComboBox);
-            this.groupBox1.Controls.Add(this._varPresSpecialLabel);
-            this.groupBox1.Controls.Add(this._varPresProtectedComboBox);
-            this.groupBox1.Controls.Add(this._varPresProtectedLabel);
-            this.groupBox1.Controls.Add(this._varPresFunctionComboBox);
-            this.groupBox1.Controls.Add(this._varPresFunctionLabel);
-            this.groupBox1.Controls.Add(this._varPresClassComboBox);
-            this.groupBox1.Controls.Add(this._varPresClassLabel);
-            resources.ApplyResources(this.groupBox1, "groupBox1");
-            this.groupBox1.Name = "groupBox1";
-            this.groupBox1.TabStop = false;
+            resources.ApplyResources(this._showVariablesPanel, "_showVariablesPanel");
+            this._showVariablesPanel.Controls.Add(this._showVariablesLabel);
+            this._showVariablesPanel.Controls.Add(this._showVariablesDivider);
+            this._showVariablesPanel.Controls.Add(this._showVariablesClassLabel);
+            this._showVariablesPanel.Controls.Add(this._showVariablesClassComboBox);
+            this._showVariablesPanel.Controls.Add(this._showVariablesFunctionLabel);
+            this._showVariablesPanel.Controls.Add(this._showVariablesFunctionComboBox);
+            this._showVariablesPanel.Controls.Add(this._showVariablesProtectedLabel);
+            this._showVariablesPanel.Controls.Add(this._showVariablesProtectedComboBox);
+            this._showVariablesPanel.Controls.Add(this._showVariablesSpecialLabel);
+            this._showVariablesPanel.Controls.Add(this._showVariablesSpecialComboBox);
+            this._showVariablesPanel.Name = "_showVariablesPanel";
             // 
-            // _varPresSpecialComboBox
+            // _showVariablesLabel
             // 
-            this._varPresSpecialComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this._varPresSpecialComboBox.FormattingEnabled = true;
-            resources.ApplyResources(this._varPresSpecialComboBox, "_varPresSpecialComboBox");
-            this._varPresSpecialComboBox.Name = "_varPresSpecialComboBox";
+            resources.ApplyResources(this._showVariablesLabel, "_showVariablesLabel");
+            this._showVariablesLabel.Name = "_showVariablesLabel";
             // 
-            // _varPresSpecialLabel
+            // _showVariablesDivider
             // 
-            resources.ApplyResources(this._varPresSpecialLabel, "_varPresSpecialLabel");
-            this._varPresSpecialLabel.Name = "_varPresSpecialLabel";
+            this._showVariablesDivider.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+            resources.ApplyResources(this._showVariablesDivider, "_showVariablesDivider");
+            this._showVariablesDivider.Name = "_showVariablesDivider";
             // 
-            // _varPresProtectedComboBox
+            // _showVariablesClassLabel
             // 
-            this._varPresProtectedComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this._varPresProtectedComboBox.FormattingEnabled = true;
-            resources.ApplyResources(this._varPresProtectedComboBox, "_varPresProtectedComboBox");
-            this._varPresProtectedComboBox.Name = "_varPresProtectedComboBox";
+            resources.ApplyResources(this._showVariablesClassLabel, "_showVariablesClassLabel");
+            this._showVariablesClassLabel.Name = "_showVariablesClassLabel";
             // 
-            // _varPresProtectedLabel
+            // _showVariablesClassComboBox
             // 
-            resources.ApplyResources(this._varPresProtectedLabel, "_varPresProtectedLabel");
-            this._varPresProtectedLabel.Name = "_varPresProtectedLabel";
+            resources.ApplyResources(this._showVariablesClassComboBox, "_showVariablesClassComboBox");
+            this._showVariablesClassComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this._showVariablesClassComboBox.FormattingEnabled = true;
+            this._showVariablesClassComboBox.Name = "_showVariablesClassComboBox";
             // 
-            // _varPresFunctionComboBox
+            // _showVariablesFunctionLabel
             // 
-            this._varPresFunctionComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this._varPresFunctionComboBox.FormattingEnabled = true;
-            resources.ApplyResources(this._varPresFunctionComboBox, "_varPresFunctionComboBox");
-            this._varPresFunctionComboBox.Name = "_varPresFunctionComboBox";
+            resources.ApplyResources(this._showVariablesFunctionLabel, "_showVariablesFunctionLabel");
+            this._showVariablesFunctionLabel.Name = "_showVariablesFunctionLabel";
             // 
-            // _varPresFunctionLabel
+            // _showVariablesFunctionComboBox
             // 
-            resources.ApplyResources(this._varPresFunctionLabel, "_varPresFunctionLabel");
-            this._varPresFunctionLabel.Name = "_varPresFunctionLabel";
+            resources.ApplyResources(this._showVariablesFunctionComboBox, "_showVariablesFunctionComboBox");
+            this._showVariablesFunctionComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this._showVariablesFunctionComboBox.FormattingEnabled = true;
+            this._showVariablesFunctionComboBox.Name = "_showVariablesFunctionComboBox";
             // 
-            // _varPresClassComboBox
+            // _showVariablesProtectedLabel
             // 
-            this._varPresClassComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this._varPresClassComboBox.FormattingEnabled = true;
-            resources.ApplyResources(this._varPresClassComboBox, "_varPresClassComboBox");
-            this._varPresClassComboBox.Name = "_varPresClassComboBox";
+            resources.ApplyResources(this._showVariablesProtectedLabel, "_showVariablesProtectedLabel");
+            this._showVariablesProtectedLabel.Name = "_showVariablesProtectedLabel";
             // 
-            // _varPresClassLabel
+            // _showVariablesProtectedComboBox
             // 
-            resources.ApplyResources(this._varPresClassLabel, "_varPresClassLabel");
-            this._varPresClassLabel.Name = "_varPresClassLabel";
+            resources.ApplyResources(this._showVariablesProtectedComboBox, "_showVariablesProtectedComboBox");
+            this._showVariablesProtectedComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this._showVariablesProtectedComboBox.FormattingEnabled = true;
+            this._showVariablesProtectedComboBox.Name = "_showVariablesProtectedComboBox";
+            // 
+            // _showVariablesSpecialLabel
+            // 
+            resources.ApplyResources(this._showVariablesSpecialLabel, "_showVariablesSpecialLabel");
+            this._showVariablesSpecialLabel.Name = "_showVariablesSpecialLabel";
+            // 
+            // _showVariablesSpecialComboBox
+            // 
+            resources.ApplyResources(this._showVariablesSpecialComboBox, "_showVariablesSpecialComboBox");
+            this._showVariablesSpecialComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this._showVariablesSpecialComboBox.FormattingEnabled = true;
+            this._showVariablesSpecialComboBox.Name = "_showVariablesSpecialComboBox";
             // 
             // PythonDebuggingOptionsControl
             // 
@@ -185,8 +199,8 @@ namespace Microsoft.PythonTools.Options {
             this.Name = "PythonDebuggingOptionsControl";
             this.tableLayoutPanel2.ResumeLayout(false);
             this.tableLayoutPanel2.PerformLayout();
-            this.groupBox1.ResumeLayout(false);
-            this.groupBox1.PerformLayout();
+            this._showVariablesPanel.ResumeLayout(false);
+            this._showVariablesPanel.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -203,14 +217,20 @@ namespace Microsoft.PythonTools.Options {
         private System.Windows.Forms.CheckBox _showFunctionReturnValue;
         private System.Windows.Forms.CheckBox _useLegacyDebugger;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel2;
-        private System.Windows.Forms.GroupBox groupBox1;
-        private System.Windows.Forms.ComboBox _varPresSpecialComboBox;
-        private System.Windows.Forms.Label _varPresSpecialLabel;
-        private System.Windows.Forms.ComboBox _varPresProtectedComboBox;
-        private System.Windows.Forms.Label _varPresProtectedLabel;
-        private System.Windows.Forms.ComboBox _varPresFunctionComboBox;
-        private System.Windows.Forms.Label _varPresFunctionLabel;
-        private System.Windows.Forms.ComboBox _varPresClassComboBox;
-        private System.Windows.Forms.Label _varPresClassLabel;
+        private System.Windows.Forms.Panel _showVariablesPanel;
+        private System.Windows.Forms.Label _showVariablesDivider;
+        private System.Windows.Forms.Label _showVariablesLabel;
+        private System.Windows.Forms.Label _showVariablesClassLabel;
+        private System.Windows.Forms.ComboBox _showVariablesClassComboBox;
+        private System.Windows.Forms.Label _showVariablesFunctionLabel;
+        private System.Windows.Forms.ComboBox _showVariablesFunctionComboBox;
+        private System.Windows.Forms.Label _showVariablesProtectedLabel;
+        private System.Windows.Forms.ComboBox _showVariablesProtectedComboBox;
+        private System.Windows.Forms.Label _showVariablesSpecialLabel;
+        private System.Windows.Forms.ComboBox _showVariablesSpecialComboBox;
+
+
+
+
     }
 }

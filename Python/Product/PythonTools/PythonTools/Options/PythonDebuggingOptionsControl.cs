@@ -24,7 +24,7 @@ namespace Microsoft.PythonTools.Options {
             InitializeComponent();
 
             // set allowed values for the variable presentation options
-            var varPresComboBoxes = new List<ComboBox> { _varPresClassComboBox, _varPresFunctionComboBox, _varPresProtectedComboBox, _varPresSpecialComboBox };
+            var varPresComboBoxes = new List<ComboBox> { _showVariablesClassComboBox, _showVariablesFunctionComboBox, _showVariablesProtectedComboBox, _showVariablesSpecialComboBox };
             foreach (var varPresComboBox in varPresComboBoxes) {
                 varPresComboBox.DataSource = Enum.GetValues(typeof(PresentationMode));
             }
@@ -41,10 +41,10 @@ namespace Microsoft.PythonTools.Options {
             _useLegacyDebugger.Checked = pyService.DebuggerOptions.UseLegacyDebugger;
 
             // variable presentation
-            _varPresClassComboBox.SelectedItem = pyService.DebuggerOptions.VariablePresentationForClasses;
-            _varPresFunctionComboBox.SelectedItem = pyService.DebuggerOptions.VariablePresentationForFunctions;
-            _varPresProtectedComboBox.SelectedItem = pyService.DebuggerOptions.VariablePresentationForProtected;
-            _varPresSpecialComboBox.SelectedItem = pyService.DebuggerOptions.VariablePresentationForSpecial;
+            _showVariablesClassComboBox.SelectedItem = pyService.DebuggerOptions.VariablePresentationForClasses;
+            _showVariablesFunctionComboBox.SelectedItem = pyService.DebuggerOptions.VariablePresentationForFunctions;
+            _showVariablesProtectedComboBox.SelectedItem = pyService.DebuggerOptions.VariablePresentationForProtected;
+            _showVariablesSpecialComboBox.SelectedItem = pyService.DebuggerOptions.VariablePresentationForSpecial;
         }
 
         internal void SyncPageWithControlSettings(PythonToolsService pyService) {
@@ -58,10 +58,10 @@ namespace Microsoft.PythonTools.Options {
             pyService.DebuggerOptions.UseLegacyDebugger = _useLegacyDebugger.Checked;
 
             // variable presentation
-            pyService.DebuggerOptions.VariablePresentationForClasses = (PresentationMode)_varPresClassComboBox.SelectedItem;
-            pyService.DebuggerOptions.VariablePresentationForFunctions = (PresentationMode)_varPresFunctionComboBox.SelectedItem;
-            pyService.DebuggerOptions.VariablePresentationForProtected = (PresentationMode)_varPresProtectedComboBox.SelectedItem;
-            pyService.DebuggerOptions.VariablePresentationForSpecial = (PresentationMode)_varPresSpecialComboBox.SelectedItem;
+            pyService.DebuggerOptions.VariablePresentationForClasses = (PresentationMode)_showVariablesClassComboBox.SelectedItem;
+            pyService.DebuggerOptions.VariablePresentationForFunctions = (PresentationMode)_showVariablesFunctionComboBox.SelectedItem;
+            pyService.DebuggerOptions.VariablePresentationForProtected = (PresentationMode)_showVariablesProtectedComboBox.SelectedItem;
+            pyService.DebuggerOptions.VariablePresentationForSpecial = (PresentationMode)_showVariablesSpecialComboBox.SelectedItem;
         }
     }
 }
