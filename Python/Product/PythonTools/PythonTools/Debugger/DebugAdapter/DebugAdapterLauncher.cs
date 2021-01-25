@@ -203,12 +203,16 @@ namespace Microsoft.PythonTools.Debugger {
             launchJson.DebugStdLib = debugService.DebugStdLib;
             launchJson.ShowReturnValue = debugService.ShowFunctionReturnValue;
 
-            try {
-                var adapterLaunchInfoJson = JObject.Parse(adapterLaunchInfo.LaunchJson);
-                AddVariablePresentationOptions(adapterLaunchInfoJson, launchJson);
-            } catch (JsonReaderException) {
-                // this should never happen
-                Debug.Fail("adapterLaunchInfo is not valid json");
+            // adapterLaunchInfo.LaunchJson can be null when attaching to a remote process
+            if (adapterLaunchInfo.LaunchJson != null) {
+
+                try {
+                    var adapterLaunchInfoJson = JObject.Parse(adapterLaunchInfo.LaunchJson);
+                    AddVariablePresentationOptions(adapterLaunchInfoJson, launchJson);
+                } catch (JsonReaderException) {
+                    // this should never happen
+                    Debug.Fail("adapterLaunchInfo is not valid json");
+                }
             }
 
             var excludePTVSInstallDirectory = new PathRule() {
