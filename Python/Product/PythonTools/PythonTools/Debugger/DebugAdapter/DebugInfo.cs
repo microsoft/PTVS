@@ -16,9 +16,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Runtime.Serialization;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 
 namespace Microsoft.PythonTools.Debugger {
 
@@ -136,17 +134,5 @@ namespace Microsoft.PythonTools.Debugger {
             Protected = DefaultPresentationMode;
             Special = DefaultPresentationMode;
         }
-    }
-
-    [JsonConverter(typeof(StringEnumConverter))]
-    public enum PresentationMode {
-        [EnumMember(Value = "group")]
-        Group,
-
-        [EnumMember(Value = "hide")]
-        Hide,
-
-        [EnumMember(Value = "inline")]
-        Inline,
     }
 }
