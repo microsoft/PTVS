@@ -34,5 +34,10 @@ namespace Microsoft.PythonTools.Options {
         public bool DebugStdLib => debugOptions.DebugStdLib;
         public bool ShowFunctionReturnValue => debugOptions.ShowFunctionReturnValue;
         public bool UseLegacyDebugger => debugOptions.UseLegacyDebugger;
+
+        public PresentationMode VariablePresentationForClasses => debugOptions.VariablePresentationForClasses;
+        public PresentationMode VariablePresentationForFunctions => debugOptions.VariablePresentationForFunctions;
+        public PresentationMode VariablePresentationForProtected => debugOptions.VariablePresentationForProtected;
+        public PresentationMode VariablePresentationForSpecial => debugOptions.VariablePresentationForSpecial;
     }
 }
