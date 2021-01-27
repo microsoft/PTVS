@@ -10,7 +10,8 @@
   <PropertyGroup>
     <OutputPath>$(BinariesOutputPath)</OutputPath>
     <OutDir>$(BinariesOutputPath)</OutDir>
-    <LocDir>$(BuildRoot)Python\loc\</LocDir>
+    <!-- Should be relative to BuildRoot -->
+    <LocDir>Python\loc\</LocDir>
   </PropertyGroup>
   
   <ItemGroup>
@@ -65,29 +66,34 @@
     <VCPropertyPages Include="
         $(BinariesOutputPath)VCTargets\**\*.xaml" />
 
-    <FilesToLocalize Include="@(ManagedFiles->'$(BinariesOutputPath)%(Identity)')">
+    <FullPathFilesToLocalize Include="@(ManagedFiles->'$(BinariesOutputPath)%(Identity)')">
+      <RelativePath>$([msbuild]::MakeRelative(`$(BuildOutputRoot)`, `%(FullPath)`))</RelativePath>
       <TranslationFile>$(LocDir)lcl\{Lang}\%(Filename)%(Extension).lcl</TranslationFile>
-      <LciCommentFile Condition="Exists('$(LocDir)lci\%(Filename)%(Extension).lci')">$(LocDir)lci\%(Filename)%(Extension).lci</LciCommentFile>
-      <SettingsFile>$(LSBuildRoot)\MCP_excludeBaml.lss</SettingsFile>
+      <LciCommentFile Condition="Exists('$(BuildRoot)$(LocDir)lci\%(Filename)%(Extension).lci')">$(LocDir)lci\%(Filename)%(Extension).lci</LciCommentFile>
+      <SettingsFile>$([msbuild]::EnsureTrailingSlash($(LSBuildRoot)))MCP_excludeBaml.lss</SettingsFile>
       <HasLceComments>false</HasLceComments>
-    </FilesToLocalize>
-    <FilesToLocalize Include="@(CodeSnippets)">
+    </FullPathFilesToLocalize>
+    <FullPathFilesToLocalize Include="@(CodeSnippets)">
+      <RelativePath>$([msbuild]::MakeRelative(`$(BuildOutputRoot)`, `%(FullPath)`))</RelativePath>
       <TranslationFile>$(LocDir)lcl\{Lang}\Snippets\%(RecursiveDir)%(Filename)%(Extension).lcl</TranslationFile>
-      <LciCommentFile Condition="Exists('$(LocDir)lci\Snippets\%(RecursiveDir)%(Filename)%(Extension).lci')">$(LocDir)lci\Snippets\%(RecursiveDir)%(Filename)%(Extension).lci</LciCommentFile>
-      <SettingsFile>$(LSBuildRoot)\locxml_snippets.lss</SettingsFile>
+      <LciCommentFile Condition="Exists('$(BuildRoot)$(LocDir)lci\Snippets\%(RecursiveDir)%(Filename)%(Extension).lci')">$(LocDir)lci\Snippets\%(RecursiveDir)%(Filename)%(Extension).lci</LciCommentFile>
+      <SettingsFile>$([msbuild]::EnsureTrailingSlash($(LSBuildRoot)))locxml_snippets.lss</SettingsFile>
       <HasLceComments>false</HasLceComments>
-    </FilesToLocalize>
-    <FilesToLocalize Include="@(VCPropertyPages)">
+    </FullPathFilesToLocalize>
+    <FullPathFilesToLocalize Include="@(VCPropertyPages)">
+      <RelativePath>$([msbuild]::MakeRelative(`$(BuildOutputRoot)`, `%(FullPath)`))</RelativePath>
       <TranslationFile>$(LocDir)lcl\{Lang}\VCTargets\%(RecursiveDir)%(Filename)%(Extension).lcl</TranslationFile>
-      <LciCommentFile Condition="Exists('$(LocDir)lci\VCTargets\%(RecursiveDir)%(Filename)%(Extension).lci')">$(LocDir)lci\VCTargets\%(RecursiveDir)%(Filename)%(Extension).lci</LciCommentFile>
-      <SettingsFile>$(LSBuildRoot)\locxml_strpLocTg_vc.lss</SettingsFile>
+      <LciCommentFile Condition="Exists('$(BuildRoot)$(LocDir)lci\VCTargets\%(RecursiveDir)%(Filename)%(Extension).lci')">$(LocDir)lci\VCTargets\%(RecursiveDir)%(Filename)%(Extension).lci</LciCommentFile>
+      <SettingsFile>$([msbuild]::EnsureTrailingSlash($(LSBuildRoot)))locxml_strpLocTg_vc.lss</SettingsFile>
       <HasLceComments>false</HasLceComments>
-    </FilesToLocalize>
+    </FullPathFilesToLocalize>
+    <!-- Output files need to be relative to BuildOutputRoot -->
+    <FilesToLocalize Include="@(FullPathFilesToLocalize->'%(RelativePath)')" />
   </ItemGroup>
   
   <Target Name="ListFiles">
     <Message Text="OutputPath: $(OutputPath)" Importance="high" />
-    <Message Text="@(FilesToLocalize->'%(Identity) (%(TranslationFile), %(LciCommentFile))', '
+    <Message Text="@(FilesToLocalize->'%(Identity) (%(TranslationFile), %(LciCommentFile), %(SettingsFile))', '
 ')" Importance="high" />
   </Target>
 
