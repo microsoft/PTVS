@@ -1,0 +1,146 @@
+pool:
+  name: VSEng-MicroBuildVS2019
+  demands: msbuild
+
+#Your build pipeline references the ‘SignType’ variable, which you’ve selected to be settable at queue time. Create or edit the build pipeline for this YAML file, define the variable on the Variables tab, and then select the option to make it settable at queue time. See https://go.microsoft.com/fwlink/?linkid=865971
+#Your build pipeline references the ‘LocType’ variable, which you’ve selected to be settable at queue time. Create or edit the build pipeline for this YAML file, define the variable on the Variables tab, and then select the option to make it settable at queue time. See https://go.microsoft.com/fwlink/?linkid=865971
+#Your build pipeline references the ‘VSTarget’ variable, which you’ve selected to be settable at queue time. Create or edit the build pipeline for this YAML file, define the variable on the Variables tab, and then select the option to make it settable at queue time. See https://go.microsoft.com/fwlink/?linkid=865971
+variables:
+  BuildConfiguration: 'Release'
+
+steps:
+- powershell: 'Write-Host "##vso[build.addbuildtag]$env:VSTarget"'
+  displayName: 'Add VSTarget Tag'
+
+- task: ms-vseng.MicroBuildTasks.32f78468-e895-4f47-962c-58a699361df8.MicroBuildSwixPlugin@1
+  displayName: 'Install Swix Plugin'
+  inputs:
+    feedSource: 'https://mseng.pkgs.visualstudio.com/DefaultCollection/_packaging/MicroBuildToolset/nuget/v3/index.json'
+
+- task: ms-vseng.MicroBuildTasks.30666190-6959-11e5-9f96-f56098202fef.MicroBuildSigningPlugin@1
+  displayName: 'Install Signing Plugin'
+  inputs:
+    signType: '$(SignType)'
+
+- task: ms-vseng.MicroBuildTasks.a0262b21-fb8f-46f8-bb9a-60ed560d4a87.MicroBuildLocalizationPlugin@1
+  displayName: 'Install Localization Plugin'
+  inputs:
+    type: '$(LocType)'
+    feedSource: 'https://mseng.pkgs.visualstudio.com/DefaultCollection/_packaging/MicroBuildToolset/nuget/v3/index.json'
+
+- task: PowerShell@1
+  displayName: 'Powershell Script'
+  inputs:
+    scriptName: Build/PreBuild.ps1
+    arguments: '-vstarget $(VSTarget)'
+
+- task: DeleteFiles@1
+  displayName: 'Clean old SWIX outputs'
+  inputs:
+    SourceFolder: '$(Build.BinariesDirectory)\raw\setup\swix'
+    Contents: '**'
+  continueOnError: true
+
+- task: MSBuild@1
+  displayName: 'Build solution Python/Product/dirs.proj'
+  inputs:
+    solution: Python/Product/dirs.proj
+    msbuildVersion: 16.0
+    platform: 'any cpu'
+    configuration: '$(BuildConfiguration)'
+
+- task: MSBuild@1
+  displayName: 'Build solution Python/Setup/dirs.proj'
+  inputs:
+    solution: Python/Setup/dirs.proj
+    msbuildVersion: 16.0
+    platform: 'any cpu'
+    configuration: '$(BuildConfiguration)'
+    msbuildArguments: '/p:SkipProduct=true'
+
+- task: PublishBuildArtifacts@1
+  displayName: '[If Build Failed] Publish Artifact: raw'
+  inputs:
+    PathtoPublish: '$(Build.BinariesDirectory)\raw'
+    ArtifactName: raw
+  condition: failed()
+
+- task: ms-vseng.MicroBuildTasks.4305a8de-ba66-4d8b-b2d1-0dc4ecbbf5e8.MicroBuildUploadVstsDropFolder@1
+  displayName: 'Upload VSTS Drop'
+  inputs:
+    DropFolder: '$(Build.StagingDirectory)\release'
+    DropServiceUri: 'https://devdiv.artifacts.visualstudio.com/DefaultCollection'
+  continueOnError: true
+
+- task: CopyFiles@2
+  displayName: 'Copy Source Files to: $(Build.ArtifactStagingDirectory)/src'
+  inputs:
+    SourceFolder: '$(Build.SourcesDirectory)'
+    TargetFolder: '$(Build.ArtifactStagingDirectory)/src'
+    CleanTargetFolder: true
+
+- task: CopyFiles@2
+  displayName: 'Copy Layout $(Build.BinariesDirectory)/layout to: $(Build.ArtifactStagingDirectory)/layout'
+  inputs:
+    SourceFolder: '$(Build.BinariesDirectory)/layout'
+    TargetFolder: '$(Build.ArtifactStagingDirectory)/layout'
+    CleanTargetFolder: true
+
+- task: CopyFiles@2
+  displayName: 'Copy Binaries $(Build.BinariesDirectory)/raw/binaries to: $(Build.ArtifactStagingDirectory)/binaries'
+  inputs:
+    SourceFolder: '$(Build.BinariesDirectory)/raw/binaries'
+    TargetFolder: '$(Build.ArtifactStagingDirectory)/binaries'
+    CleanTargetFolder: true
+
+- task: CopyFiles@2
+  displayName: 'Copy Files $(Build.ArtifactStagingDirectory)/binaries to: $(Build.ArtifactStagingDirectory)/symbols_and_binaries'
+  inputs:
+    SourceFolder: '$(Build.ArtifactStagingDirectory)/binaries'
+    Contents: |
+     Microsoft.PythonTools*.pdb
+     Microsoft.PythonTools*.dll
+     Microsoft.PythonTools*.exe
+     Microsoft.CookiecutterTools.pdb
+     Microsoft.CookiecutterTools.dll
+     Microsoft.IronPythonTools.Resolver.pdb
+     Microsoft.IronPythonTools.Resolver.dll
+     Microsoft.Python.Analysis.Engine.dll
+     Microsoft.Python.Analysis.Engine.pdb
+     Microsoft.Python.LanguageServer.Core.dll
+     Microsoft.Python.LanguageServer.Core.pdb
+     PyDebugAttach*.pdb
+     PyDebugAttach*.dll
+     VsPyProf*.pdb
+     VsPyProf*.dll
+    TargetFolder: '$(Build.ArtifactStagingDirectory)/symbols_and_binaries'
+
+- task: ms-vscs-artifact.build-tasks.artifactSymbolTask-1.artifactSymbolTask@0
+  displayName: 'Publish to Symbols and Binaries to Artifact Services'
+  inputs:
+    symbolServiceURI: 'https://microsoft.artifacts.visualstudio.com/DefaultCollection'
+    sourcePath: '$(Build.ArtifactStagingDirectory)/symbols_and_binaries'
+    usePat: false
+
+- task: ms-vseng.MicroBuildTasks.521a94ea-9e68-468a-8167-6dcf361ea776.MicroBuildCleanup@1
+  displayName: 'Execute cleanup tasks'
+  condition: succeededOrFailed()
+
+- task: ArchiveFiles@2
+  displayName: 'Compress $(Build.ArtifactStagingDirectory)'
+  inputs:
+    rootFolderOrFile: '$(Build.ArtifactStagingDirectory)'
+    includeRootFolder: false
+    archiveFile: '$(Build.ArtifactStagingDirectory)/PTVSBuildArchive.zip'
+
+- task: PublishBuildArtifacts@1
+  displayName: 'Upload Binaries Directory'
+  inputs:
+    PathtoPublish: '$(Build.BinariesDirectory)/raw/binaries'
+    ArtifactName: Binaries
+
+- task: PublishBuildArtifacts@1
+  displayName: 'Upload Staging Directory copy'
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)/PTVSBuildArchive.zip'
+    ArtifactName: 'PTVS Staging Output'
