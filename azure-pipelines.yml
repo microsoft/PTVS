@@ -33,20 +33,24 @@ steps:
 - powershell: 'Write-Host "##vso[build.addbuildtag]$env:VSTarget"'
   displayName: 'Add VSTarget Tag'
 
-- task: ms-vseng.MicroBuildTasks.32f78468-e895-4f47-962c-58a699361df8.MicroBuildSwixPlugin@1
+- task: MicroBuildSwixPlugin@3
   displayName: 'Install Swix Plugin'
   inputs:
+    dropName: 'Products/$(System.TeamProject)/$(Build.Repository.Name)/$(Build.SourceBranchName)/$(Build.BuildNumber)'
+    dropServiceUri: 'https://vsdrop.corp.microsoft.com/file/v1'
     feedSource: 'https://mseng.pkgs.visualstudio.com/DefaultCollection/_packaging/MicroBuildToolset/nuget/v3/index.json'
 
-- task: ms-vseng.MicroBuildTasks.30666190-6959-11e5-9f96-f56098202fef.MicroBuildSigningPlugin@1
+- task: MicroBuildSigningPlugin@3
   displayName: 'Install Signing Plugin'
   inputs:
-    signType: '$(SignType)'
+    signType: $(SignType)
+    feedSource: 'https://devdiv.pkgs.visualstudio.com/DefaultCollection/_packaging/MicroBuildToolset/nuget/v3/index.json'
 
-- task: ms-vseng.MicroBuildTasks.a0262b21-fb8f-46f8-bb9a-60ed560d4a87.MicroBuildLocalizationPlugin@1
+- task: MicroBuildLocalizationPlugin@3
   displayName: 'Install Localization Plugin'
   inputs:
-    type: '$(LocType)'
+    type: $(LocType)
+    languages: 'VS'
     feedSource: 'https://mseng.pkgs.visualstudio.com/DefaultCollection/_packaging/MicroBuildToolset/nuget/v3/index.json'
 
 - task: PowerShell@1
@@ -86,11 +90,12 @@ steps:
     ArtifactName: raw
   condition: failed()
 
-- task: ms-vseng.MicroBuildTasks.4305a8de-ba66-4d8b-b2d1-0dc4ecbbf5e8.MicroBuildUploadVstsDropFolder@1
+- task: MicroBuildUploadVstsDropFolder@1
   displayName: 'Upload VSTS Drop'
   inputs:
     DropFolder: '$(Build.StagingDirectory)\release'
     DropServiceUri: 'https://devdiv.artifacts.visualstudio.com/DefaultCollection'
+    VSDropServiceUri: 'https://vsdrop.corp.microsoft.com/file/v1'
   continueOnError: true
 
 - task: CopyFiles@2
