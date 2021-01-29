@@ -87,7 +87,7 @@ steps:
   inputs:
     solution: Python/Product/dirs.proj
     msbuildVersion: 16.0
-    platform: 'any cpu'
+    platform: 'AnyCPU'
     configuration: '$(BuildConfiguration)'
 
 # Build the installer
@@ -96,7 +96,7 @@ steps:
   inputs:
     solution: Python/Setup/dirs.proj
     msbuildVersion: 16.0
-    platform: 'any cpu'
+    platform: 'AnyCPU'
     configuration: '$(BuildConfiguration)'
     msbuildArguments: '/p:SkipProduct=true'
 
