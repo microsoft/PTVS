@@ -97,7 +97,7 @@ steps:
     configuration: '$(BuildConfiguration)'
     msbuildArguments: '/p:SkipProduct=true'
 
-# Publish build artifacts if something failed
+# Publish buld artifact: raw
 - task: PublishBuildArtifacts@1
   displayName: '[If Build Failed] Publish Artifact: raw'
   inputs:
@@ -105,7 +105,7 @@ steps:
     ArtifactName: raw
   condition: failed()
 
-# Upload vs drop
+# Upload vsts drop
 - task: MicroBuildUploadVstsDropFolder@1
   displayName: 'Upload VSTS Drop'
   inputs:
@@ -114,6 +114,7 @@ steps:
     VSDropServiceUri: 'https://vsdrop.corp.microsoft.com/file/v1'
   continueOnError: true
 
+# copy some files around to prepare for publishing build artifacts
 - task: CopyFiles@2
   displayName: 'Copy Source Files to: $(Build.ArtifactStagingDirectory)/src'
   inputs:
@@ -157,32 +158,40 @@ steps:
      VsPyProf*.dll
     TargetFolder: '$(Build.ArtifactStagingDirectory)/symbols_and_binaries'
 
+# Publish symbols
 - task: artifactSymbolTask@0
+  diaplayName: 'Publish to Symbols and Binaries to Artifact Services'
   inputs:
     symbolServiceURI: 'https://microsoft.artifacts.visualstudio.com/DefaultCollection'
     requestName: '$(System.TeamProject)/$(Build.BuildNumber)/$(Build.BuildId)'
     sourcePath: '$(Build.ArtifactStagingDirectory)/symbols_and_binaries'
     usePat: false
 
+# MicroBuild cleanup
 - task: MicroBuildCleanup@1
   displayName: 'Execute cleanup tasks'
   condition: succeededOrFailed()
 
+# Compress staging output
 - task: ArchiveFiles@2
   displayName: 'Compress $(Build.ArtifactStagingDirectory)'
   inputs:
     rootFolderOrFile: '$(Build.ArtifactStagingDirectory)'
     includeRootFolder: false
+    archiveType: 'zip'
     archiveFile: '$(Build.ArtifactStagingDirectory)/PTVSBuildArchive.zip'
+    replaceExistingArchive: true
 
+# Publish build artifact: binaries
 - task: PublishBuildArtifacts@1
   displayName: 'Upload Binaries Directory'
   inputs:
     PathtoPublish: '$(Build.BinariesDirectory)/raw/binaries'
     ArtifactName: Binaries
 
+# Publish build artifact: staging output
 - task: PublishBuildArtifacts@1
-  displayName: 'Upload Staging Directory copy'
+  displayName: 'Upload Staging Directory zip'
   inputs:
     PathtoPublish: '$(Build.ArtifactStagingDirectory)/PTVSBuildArchive.zip'
     ArtifactName: 'PTVS Staging Output'
