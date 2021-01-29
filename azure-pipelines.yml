@@ -160,7 +160,7 @@ steps:
 
 # Publish symbols
 - task: artifactSymbolTask@0
-  diaplayName: 'Publish to Symbols and Binaries to Artifact Services'
+  displayName: 'Publish to Symbols and Binaries to Artifact Services'
   inputs:
     symbolServiceURI: 'https://microsoft.artifacts.visualstudio.com/DefaultCollection'
     requestName: '$(System.TeamProject)/$(Build.BuildNumber)/$(Build.BuildId)'
