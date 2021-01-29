@@ -1,3 +1,14 @@
+# trigger ci builds for commits into master and any release branches
+trigger:
+- master
+- release/*
+
+# trigger pr builds for commits into master and any release branches
+pr:
+- master
+- release/*
+
+# the agent pool the build will run on
 pool:
   name: VSEng-MicroBuildVS2019
   demands: msbuild
