@@ -1,18 +1,21 @@
-# trigger ci builds for commits into master and any release branches
+# Trigger ci builds for commits into master and any release branches
 trigger:
 - master
 - release/*
 
-# trigger pr builds for commits into master and any release branches
+# Trigger pr builds for commits into master and any release branches
 pr:
 - master
 - release/*
 
-# the agent pool the build will run on
+# The agent pool the build will run on
 pool:
   name: VSEng-MicroBuildVS2019
   demands: msbuild
 
+# Build variables
+# None of these are settable at build queue time. To do that, remove the variable from this list,
+# browse to the pipeline editor in AzDO, add the variable there, and make it settable at queue time.
 variables:
   BuildConfiguration: Release
   DropRoot: \\cpvsbuild\Drops\DSTools\PTVS\$(Build.SourceBranchName)\$(Build.BuildNumber)\
@@ -29,10 +32,16 @@ variables:
   VisualStudioVersion: 16.0
   VSTarget: 16.0
 
+# TODO:
+# For PR builds, don't real sign. Test sign instead.
+
 steps:
+
+# add build tag
 - powershell: 'Write-Host "##vso[build.addbuildtag]$env:VSTarget"'
   displayName: 'Add VSTarget Tag'
 
+# install plugins needed for swixproj/vsmanproj, signing, and localization
 - task: MicroBuildSwixPlugin@3
   displayName: 'Install Swix Plugin'
   inputs:
@@ -53,12 +62,15 @@ steps:
     languages: 'VS'
     feedSource: 'https://mseng.pkgs.visualstudio.com/DefaultCollection/_packaging/MicroBuildToolset/nuget/v3/index.json'
 
+# Run a powershell script that does a package restore, some symlinking, and installs debugpy
 - task: PowerShell@1
-  displayName: 'Powershell Script'
+  displayName: 'Restore packages'
   inputs:
     scriptName: Build/PreBuild.ps1
     arguments: '-vstarget $(VSTarget)'
 
+# Clean the old swix outputs
+# (This shouldn't be required since the build performs a clean when getting sources)
 - task: DeleteFiles@1
   displayName: 'Clean old SWIX outputs'
   inputs:
@@ -66,16 +78,18 @@ steps:
     Contents: '**'
   continueOnError: true
 
+# Build the product
 - task: MSBuild@1
-  displayName: 'Build solution Python/Product/dirs.proj'
+  displayName: 'Build product'
   inputs:
     solution: Python/Product/dirs.proj
     msbuildVersion: 16.0
     platform: 'any cpu'
     configuration: '$(BuildConfiguration)'
 
+# Build the installer
 - task: MSBuild@1
-  displayName: 'Build solution Python/Setup/dirs.proj'
+  displayName: 'Build installer'
   inputs:
     solution: Python/Setup/dirs.proj
     msbuildVersion: 16.0
@@ -83,6 +97,7 @@ steps:
     configuration: '$(BuildConfiguration)'
     msbuildArguments: '/p:SkipProduct=true'
 
+# Publish build artifacts if something failed
 - task: PublishBuildArtifacts@1
   displayName: '[If Build Failed] Publish Artifact: raw'
   inputs:
@@ -90,6 +105,7 @@ steps:
     ArtifactName: raw
   condition: failed()
 
+# Upload vs drop
 - task: MicroBuildUploadVstsDropFolder@1
   displayName: 'Upload VSTS Drop'
   inputs:
