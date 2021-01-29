@@ -54,6 +54,9 @@ steps:
   inputs:
     signType: $(SignType)
     feedSource: 'https://devdiv.pkgs.visualstudio.com/DefaultCollection/_packaging/MicroBuildToolset/nuget/v3/index.json'
+  enabled: false # Disable signing since it only works in approved project ids.
+  # TODO: remove the line above once the rest of the build is working, will need to get approval
+  # once the new build pipeline is created before this step will work.
 
 - task: MicroBuildLocalizationPlugin@3
   displayName: 'Install Localization Plugin'
