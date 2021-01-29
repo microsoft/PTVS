@@ -2,11 +2,21 @@ pool:
   name: VSEng-MicroBuildVS2019
   demands: msbuild
 
-#Your build pipeline references the ‘SignType’ variable, which you’ve selected to be settable at queue time. Create or edit the build pipeline for this YAML file, define the variable on the Variables tab, and then select the option to make it settable at queue time. See https://go.microsoft.com/fwlink/?linkid=865971
-#Your build pipeline references the ‘LocType’ variable, which you’ve selected to be settable at queue time. Create or edit the build pipeline for this YAML file, define the variable on the Variables tab, and then select the option to make it settable at queue time. See https://go.microsoft.com/fwlink/?linkid=865971
-#Your build pipeline references the ‘VSTarget’ variable, which you’ve selected to be settable at queue time. Create or edit the build pipeline for this YAML file, define the variable on the Variables tab, and then select the option to make it settable at queue time. See https://go.microsoft.com/fwlink/?linkid=865971
 variables:
-  BuildConfiguration: 'Release'
+  BuildConfiguration: Release
+  DropRoot: \\cpvsbuild\Drops\DSTools\PTVS\$(Build.SourceBranchName)\$(Build.BuildNumber)\
+  FileVersionPrefix: 16.9
+  IncludeDjangoHtmlExtensions: true
+  IncludeLiveShare: true
+  IncludeMiniconda: true
+  IncludeMSI: false
+  IncludeUWP: false
+  LocType: Full
+  SignType: Real
+  TeamName: DSTools
+  TrackFileAccess: false
+  VisualStudioVersion: 16.0
+  VSTarget: 16.0
 
 steps:
 - powershell: 'Write-Host "##vso[build.addbuildtag]$env:VSTarget"'
