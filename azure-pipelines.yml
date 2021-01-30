@@ -109,7 +109,7 @@ steps:
 
 # Publish buld artifact: raw
 - task: PublishBuildArtifacts@1
-  displayName: 'Publish raw build artifact (if build failed)
+  displayName: '[If build failed] Publish raw build artifact'
   inputs:
     PathtoPublish: '$(Build.BinariesDirectory)\raw'
     ArtifactName: raw
