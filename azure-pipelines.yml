@@ -37,6 +37,10 @@ variables:
 
 steps:
 
+# check out code clean from source control
+- checkout: self
+  clean: true
+
 # add build tag
 - powershell: 'Write-Host "##vso[build.addbuildtag]$env:VSTarget"'
   displayName: 'Add VSTarget Tag'
