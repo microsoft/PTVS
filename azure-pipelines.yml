@@ -46,18 +46,18 @@ steps:
 
 # add build tag
 - powershell: 'Write-Host "##vso[build.addbuildtag]$env:VSTarget"'
-  displayName: 'Add VSTarget Tag'
+  displayName: 'Add vstarget build tag'
 
 # install plugins needed for swixproj/vsmanproj, signing, and localization
 - task: MicroBuildSwixPlugin@3
-  displayName: 'Install Swix Plugin'
+  displayName: 'Install swix plugin'
   inputs:
     dropName: 'Products/$(System.TeamProject)/$(Build.Repository.Name)/$(Build.SourceBranchName)/$(Build.BuildNumber)'
     dropServiceUri: 'https://vsdrop.corp.microsoft.com/file/v1'
     feedSource: 'https://mseng.pkgs.visualstudio.com/DefaultCollection/_packaging/MicroBuildToolset/nuget/v3/index.json'
 
 - task: MicroBuildSigningPlugin@3
-  displayName: 'Install Signing Plugin'
+  displayName: 'Install signing plugin'
   inputs:
     signType: $(SignType)
     feedSource: 'https://devdiv.pkgs.visualstudio.com/DefaultCollection/_packaging/MicroBuildToolset/nuget/v3/index.json'
@@ -66,7 +66,7 @@ steps:
   # once the new build pipeline is created before this step will work.
 
 - task: MicroBuildLocalizationPlugin@3
-  displayName: 'Install Localization Plugin'
+  displayName: 'Install localization plugin'
   inputs:
     type: $(LocType)
     languages: 'VS'
@@ -82,7 +82,7 @@ steps:
 # Clean the old swix outputs
 # (This shouldn't be required since the build performs a clean when getting sources)
 - task: DeleteFiles@1
-  displayName: 'Clean old SWIX outputs'
+  displayName: 'Clean old swix outputs'
   inputs:
     SourceFolder: '$(Build.BinariesDirectory)\raw\setup\swix'
     Contents: '**'
@@ -109,7 +109,7 @@ steps:
 
 # Publish buld artifact: raw
 - task: PublishBuildArtifacts@1
-  displayName: '[If Build Failed] Publish Artifact: raw'
+  displayName: 'Publish raw build artifact (if build failed)
   inputs:
     PathtoPublish: '$(Build.BinariesDirectory)\raw'
     ArtifactName: raw
@@ -117,7 +117,7 @@ steps:
 
 # Upload vsts drop
 - task: MicroBuildUploadVstsDropFolder@1
-  displayName: 'Upload VSTS Drop'
+  displayName: 'Upload vsts drop'
   inputs:
     DropFolder: '$(Build.StagingDirectory)\release'
     DropServiceUri: 'https://devdiv.artifacts.visualstudio.com/DefaultCollection'
@@ -126,28 +126,28 @@ steps:
 
 # copy some files around to prepare for publishing build artifacts
 - task: CopyFiles@2
-  displayName: 'Copy Source Files to: $(Build.ArtifactStagingDirectory)/src'
+  displayName: 'Copy source to staging/src'
   inputs:
     SourceFolder: '$(Build.SourcesDirectory)'
     TargetFolder: '$(Build.ArtifactStagingDirectory)/src'
     CleanTargetFolder: true
 
 - task: CopyFiles@2
-  displayName: 'Copy Layout $(Build.BinariesDirectory)/layout to: $(Build.ArtifactStagingDirectory)/layout'
+  displayName: 'Copy layout to staging'
   inputs:
     SourceFolder: '$(Build.BinariesDirectory)/layout'
     TargetFolder: '$(Build.ArtifactStagingDirectory)/layout'
     CleanTargetFolder: true
 
 - task: CopyFiles@2
-  displayName: 'Copy Binaries $(Build.BinariesDirectory)/raw/binaries to: $(Build.ArtifactStagingDirectory)/binaries'
+  displayName: 'Copy binaries to staging'
   inputs:
     SourceFolder: '$(Build.BinariesDirectory)/raw/binaries'
     TargetFolder: '$(Build.ArtifactStagingDirectory)/binaries'
     CleanTargetFolder: true
 
 - task: CopyFiles@2
-  displayName: 'Copy Files $(Build.ArtifactStagingDirectory)/binaries to: $(Build.ArtifactStagingDirectory)/symbols_and_binaries'
+  displayName: 'Prepare for symbol publishing'
   inputs:
     SourceFolder: '$(Build.ArtifactStagingDirectory)/binaries'
     Contents: |
@@ -170,7 +170,7 @@ steps:
 
 # Publish symbols
 - task: artifactSymbolTask@0
-  displayName: 'Publish to Symbols and Binaries to Artifact Services'
+  displayName: 'Publish symbols'
   inputs:
     symbolServiceURI: 'https://microsoft.artifacts.visualstudio.com/DefaultCollection'
     requestName: '$(System.TeamProject)/$(Build.BuildNumber)/$(Build.BuildId)'
@@ -184,7 +184,7 @@ steps:
 
 # Compress staging output
 - task: ArchiveFiles@2
-  displayName: 'Compress $(Build.ArtifactStagingDirectory)'
+  displayName: 'Compress staging dir'
   inputs:
     rootFolderOrFile: '$(Build.ArtifactStagingDirectory)'
     includeRootFolder: false
@@ -194,14 +194,14 @@ steps:
 
 # Publish build artifact: binaries
 - task: PublishBuildArtifacts@1
-  displayName: 'Upload Binaries Directory'
+  displayName: 'Upload binaries to build artifacts'
   inputs:
     PathtoPublish: '$(Build.BinariesDirectory)/raw/binaries'
     ArtifactName: Binaries
 
 # Publish build artifact: staging output
 - task: PublishBuildArtifacts@1
-  displayName: 'Upload Staging Directory zip'
+  displayName: 'Upload staging zip to build artifacts'
   inputs:
     PathtoPublish: '$(Build.ArtifactStagingDirectory)/PTVSBuildArchive.zip'
     ArtifactName: 'PTVS Staging Output'
