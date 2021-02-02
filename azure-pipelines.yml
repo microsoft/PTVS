@@ -4,6 +4,7 @@ name: $(date:yy)$(DayOfYear)$(rev:.r)
 # Trigger ci builds for commits into master and any release branches
 trigger:
 - master
+- yaml
 - release/*
 
 # Trigger pr builds for commits into master and any release branches
