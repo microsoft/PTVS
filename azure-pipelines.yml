@@ -21,20 +21,35 @@ pool:
 # None of these are settable at build queue time. To do that, remove the variable from this list,
 # browse to the pipeline editor in AzDO, add the variable there, and make it settable at queue time.
 variables:
-  BuildConfiguration: Release
-  DropRoot: \\cpvsbuild\Drops\DSTools\PTVS\$(Build.SourceBranchName)\$(Build.BuildNumber)\
-  FileVersionPrefix: 16.9
-  IncludeDjangoHtmlExtensions: true
-  IncludeLiveShare: true
-  IncludeMiniconda: true
-  IncludeMSI: false
-  IncludeUWP: false
-  LocType: Full
-  SignType: Real
-  TeamName: DSTools
-  TrackFileAccess: false
-  VisualStudioVersion: 16.0
-  VSTarget: 16.0
+  - name: BuildConfiguration
+    value: Release
+  - name: DropRoot
+    value: \\cpvsbuild\Drops\DSTools\PTVS\$(Build.SourceBranchName)\$(Build.BuildNumber)\
+  - name: FileVersionPrefix
+    value: 16.9
+  - name: IncludeDjangoHtmlExtensions
+    value: true
+  - name: IncludeLiveShare
+    value: true
+  - name: IncludeMiniconda
+    value: true
+  - name: IncludeMSI
+    value: false
+  - name: IncludeUWP
+    value: false
+  - name: LocType
+    value: Full
+  - name: SignType
+    value: Real
+  - name: TeamName
+    value: DSTools
+  - name: TrackFileAccess
+    value: false
+  - name: VisualStudioVersion
+    value: 16.0
+  - name: VSTarget
+    value: 16.0
+  - group: PTVS # ptvs variable group, for secrets
 
 # TODO:
 # For PR builds, don't real sign. Test sign instead.
@@ -60,7 +75,7 @@ steps:
 - task: MicroBuildSigningPlugin@3
   displayName: 'Install signing plugin'
   inputs:
-    signType: $(SignType)
+    signType: 'Test' # TODO: Change this to $(SignType) once Real signing is approved for this AzDO project ID
     feedSource: 'https://devdiv.pkgs.visualstudio.com/DefaultCollection/_packaging/MicroBuildToolset/nuget/v3/index.json'
   enabled: false # Disable signing since it only works in approved project ids.
   # TODO: remove the line above once the rest of the build is working, will need to get approval
