@@ -168,14 +168,12 @@ steps:
      VsPyProf*.dll
     TargetFolder: '$(Build.ArtifactStagingDirectory)/symbols_and_binaries'
 
-# Publish symbols
-- task: artifactSymbolTask@0
+# Index sources and publish symbols
+- task: PublishSymbols@2
   displayName: 'Publish symbols'
   inputs:
-    symbolServiceURI: 'https://microsoft.artifacts.visualstudio.com/DefaultCollection'
-    requestName: '$(System.TeamProject)/$(Build.BuildNumber)/$(Build.BuildId)'
-    sourcePath: '$(Build.ArtifactStagingDirectory)/symbols_and_binaries'
-    usePat: false
+    symbolsFolder: '$(Build.ArtifactStagingDirectory)/symbols_and_binaries'
+    symbolServerType: TeamServices
 
 # MicroBuild cleanup
 - task: MicroBuildCleanup@1
