@@ -173,6 +173,7 @@ steps:
   displayName: 'Publish symbols'
   inputs:
     symbolsFolder: '$(Build.ArtifactStagingDirectory)/symbols_and_binaries'
+    searchPattern: '*.pdb'
     symbolServerType: TeamServices
 
 # MicroBuild cleanup
