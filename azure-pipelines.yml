@@ -49,7 +49,12 @@ variables:
     value: 16.0
   - name: VSTarget
     value: 16.0
-  - group: PTVS # ptvs variable group, for secrets
+  
+  # PTVS variable group, for secrets
+  # This group contains an AzDO Personal Access Token (ArtifactServices.Symbol.PAT) that expires on 4/15/2021 which is used to publish symbols to symweb.
+  # If Visual Studio insertion PRs start failing the Symbol Check step, this token is most likely expired.
+  # See https://www.1eswiki.com/wiki/Using_Azure_DevOps_Symbols for more information about how to create a new PAT and how to update the variable group.
+  - group: PTVS
 
 # TODO:
 # For PR builds, don't real sign. Test sign instead.
