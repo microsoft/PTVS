@@ -49,6 +49,13 @@ variables:
     value: 16.0
   - name: VSTarget
     value: 16.0
+
+  # This is used to suppress warnings from the auto-injected Nuget Security Analysis step.
+  # The internal packages we use that are not available externally all start with "Microsoft",
+  # which mitigates the package injection vulnerability, since nobody outside the company can publish them to nuget.org.
+  # See https://docs.opensource.microsoft.com/tools/nuget_security_analysis.html for more info.
+  - name: NugetSecurityAnalysisWarningLevel
+    value: none
   
   # PTVS variable group, for secrets
   # This group contains an AzDO Personal Access Token (ArtifactServices.Symbol.PAT) that expires on 4/15/2021 which is used to publish symbols to symweb.
