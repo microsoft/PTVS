@@ -74,7 +74,7 @@ steps:
   clean: true
 
 # skip some steps if this is a PR build
-${{ if notin(variables['Build.Reason'], 'PullRequest') }}:
+- ${{ if notin(variables['Build.Reason'], 'PullRequest') }}:
 
   # add build tag
   - powershell: 'Write-Host "##vso[build.addbuildtag]$env:VSTarget"'
@@ -144,7 +144,7 @@ ${{ if notin(variables['Build.Reason'], 'PullRequest') }}:
   condition: failed()
 
 # skip some steps if this is a PR build
-${{ if notin(variables['Build.Reason'], 'PullRequest') }}:
+- ${{ if notin(variables['Build.Reason'], 'PullRequest') }}:
 
   # Upload vsts drop
   - task: MicroBuildUploadVstsDropFolder@1
