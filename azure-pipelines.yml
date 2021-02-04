@@ -73,30 +73,33 @@ steps:
 - checkout: self
   clean: true
 
-# add build tag
-- powershell: 'Write-Host "##vso[build.addbuildtag]$env:VSTarget"'
-  displayName: 'Add vstarget build tag'
+# skip some steps if this is a PR build
+${{ if notin(variables['Build.Reason'], 'PullRequest') }}:
 
-# install plugins needed for swixproj/vsmanproj, signing, and localization
-- task: MicroBuildSwixPlugin@3
-  displayName: 'Install swix plugin'
-  inputs:
-    dropName: 'Products/$(System.TeamProject)/$(Build.Repository.Name)/$(Build.SourceBranchName)/$(Build.BuildNumber)'
-    dropServiceUri: 'https://vsdrop.corp.microsoft.com/file/v1'
-    feedSource: 'https://mseng.pkgs.visualstudio.com/DefaultCollection/_packaging/MicroBuildToolset/nuget/v3/index.json'
+  # add build tag
+  - powershell: 'Write-Host "##vso[build.addbuildtag]$env:VSTarget"'
+    displayName: 'Add vstarget build tag'
 
-- task: MicroBuildSigningPlugin@3
-  displayName: 'Install signing plugin'
-  inputs:
-    signType: 'Test' # TODO: Change this to $(SignType) once Real signing is approved for this AzDO project ID
-    feedSource: 'https://devdiv.pkgs.visualstudio.com/DefaultCollection/_packaging/MicroBuildToolset/nuget/v3/index.json'
+  # install plugins needed for swixproj/vsmanproj, signing, and localization
+  - task: MicroBuildSwixPlugin@3
+    displayName: 'Install swix plugin'
+    inputs:
+      dropName: 'Products/$(System.TeamProject)/$(Build.Repository.Name)/$(Build.SourceBranchName)/$(Build.BuildNumber)'
+      dropServiceUri: 'https://vsdrop.corp.microsoft.com/file/v1'
+      feedSource: 'https://mseng.pkgs.visualstudio.com/DefaultCollection/_packaging/MicroBuildToolset/nuget/v3/index.json'
 
-- task: MicroBuildLocalizationPlugin@3
-  displayName: 'Install localization plugin'
-  inputs:
-    type: $(LocType)
-    languages: 'VS'
-    feedSource: 'https://mseng.pkgs.visualstudio.com/DefaultCollection/_packaging/MicroBuildToolset/nuget/v3/index.json'
+  - task: MicroBuildSigningPlugin@3
+    displayName: 'Install signing plugin'
+    inputs:
+      signType: 'Test' # TODO: Change this to $(SignType) once Real signing is approved for this AzDO project ID
+      feedSource: 'https://devdiv.pkgs.visualstudio.com/DefaultCollection/_packaging/MicroBuildToolset/nuget/v3/index.json'
+
+  - task: MicroBuildLocalizationPlugin@3
+    displayName: 'Install localization plugin'
+    inputs:
+      type: $(LocType)
+      languages: 'VS'
+      feedSource: 'https://mseng.pkgs.visualstudio.com/DefaultCollection/_packaging/MicroBuildToolset/nuget/v3/index.json'
 
 # Run a powershell script that does a package restore, some symlinking, and installs debugpy
 - task: PowerShell@1
@@ -106,7 +109,6 @@ steps:
     arguments: '-vstarget $(VSTarget)'
 
 # Clean the old swix outputs
-# (This shouldn't be required since the build performs a clean when getting sources)
 - task: DeleteFiles@1
   displayName: 'Clean old swix outputs'
   inputs:
@@ -141,92 +143,95 @@ steps:
     ArtifactName: raw
   condition: failed()
 
-# Upload vsts drop
-- task: MicroBuildUploadVstsDropFolder@1
-  displayName: 'Upload vsts drop'
-  inputs:
-    DropFolder: '$(Build.StagingDirectory)\release'
-    DropServiceUri: 'https://devdiv.artifacts.visualstudio.com/DefaultCollection'
-    VSDropServiceUri: 'https://vsdrop.corp.microsoft.com/file/v1'
-  continueOnError: true
+# skip some steps if this is a PR build
+${{ if notin(variables['Build.Reason'], 'PullRequest') }}:
 
-# copy some files around to prepare for publishing build artifacts
-- task: CopyFiles@2
-  displayName: 'Copy source to staging/src'
-  inputs:
-    SourceFolder: '$(Build.SourcesDirectory)'
-    TargetFolder: '$(Build.ArtifactStagingDirectory)/src'
-    CleanTargetFolder: true
+  # Upload vsts drop
+  - task: MicroBuildUploadVstsDropFolder@1
+    displayName: 'Upload vsts drop'
+    inputs:
+      DropFolder: '$(Build.StagingDirectory)\release'
+      DropServiceUri: 'https://devdiv.artifacts.visualstudio.com/DefaultCollection'
+      VSDropServiceUri: 'https://vsdrop.corp.microsoft.com/file/v1'
+    continueOnError: true
 
-- task: CopyFiles@2
-  displayName: 'Copy layout to staging'
-  inputs:
-    SourceFolder: '$(Build.BinariesDirectory)/layout'
-    TargetFolder: '$(Build.ArtifactStagingDirectory)/layout'
-    CleanTargetFolder: true
+  # copy some files around to prepare for publishing build artifacts
+  - task: CopyFiles@2
+    displayName: 'Copy source to staging/src'
+    inputs:
+      SourceFolder: '$(Build.SourcesDirectory)'
+      TargetFolder: '$(Build.ArtifactStagingDirectory)/src'
+      CleanTargetFolder: true
 
-- task: CopyFiles@2
-  displayName: 'Copy binaries to staging'
-  inputs:
-    SourceFolder: '$(Build.BinariesDirectory)/raw/binaries'
-    TargetFolder: '$(Build.ArtifactStagingDirectory)/binaries'
-    CleanTargetFolder: true
+  - task: CopyFiles@2
+    displayName: 'Copy layout to staging'
+    inputs:
+      SourceFolder: '$(Build.BinariesDirectory)/layout'
+      TargetFolder: '$(Build.ArtifactStagingDirectory)/layout'
+      CleanTargetFolder: true
 
-- task: CopyFiles@2
-  displayName: 'Prepare for symbol publishing'
-  inputs:
-    SourceFolder: '$(Build.ArtifactStagingDirectory)/binaries'
-    Contents: |
-     Microsoft.PythonTools*.pdb
-     Microsoft.PythonTools*.dll
-     Microsoft.PythonTools*.exe
-     Microsoft.CookiecutterTools.pdb
-     Microsoft.CookiecutterTools.dll
-     Microsoft.IronPythonTools.Resolver.pdb
-     Microsoft.IronPythonTools.Resolver.dll
-     Microsoft.Python.Analysis.Engine.dll
-     Microsoft.Python.Analysis.Engine.pdb
-     Microsoft.Python.LanguageServer.Core.dll
-     Microsoft.Python.LanguageServer.Core.pdb
-     PyDebugAttach*.pdb
-     PyDebugAttach*.dll
-     VsPyProf*.pdb
-     VsPyProf*.dll
-    TargetFolder: '$(Build.ArtifactStagingDirectory)/symbols_and_binaries'
+  - task: CopyFiles@2
+    displayName: 'Copy binaries to staging'
+    inputs:
+      SourceFolder: '$(Build.BinariesDirectory)/raw/binaries'
+      TargetFolder: '$(Build.ArtifactStagingDirectory)/binaries'
+      CleanTargetFolder: true
 
-# Index sources and publish symbols
-- task: PublishSymbols@2
-  displayName: 'Publish symbols'
-  inputs:
-    symbolsFolder: '$(Build.ArtifactStagingDirectory)/symbols_and_binaries'
-    searchPattern: '*.pdb'
-    symbolServerType: TeamServices
+  - task: CopyFiles@2
+    displayName: 'Prepare for symbol publishing'
+    inputs:
+      SourceFolder: '$(Build.ArtifactStagingDirectory)/binaries'
+      Contents: |
+      Microsoft.PythonTools*.pdb
+      Microsoft.PythonTools*.dll
+      Microsoft.PythonTools*.exe
+      Microsoft.CookiecutterTools.pdb
+      Microsoft.CookiecutterTools.dll
+      Microsoft.IronPythonTools.Resolver.pdb
+      Microsoft.IronPythonTools.Resolver.dll
+      Microsoft.Python.Analysis.Engine.dll
+      Microsoft.Python.Analysis.Engine.pdb
+      Microsoft.Python.LanguageServer.Core.dll
+      Microsoft.Python.LanguageServer.Core.pdb
+      PyDebugAttach*.pdb
+      PyDebugAttach*.dll
+      VsPyProf*.pdb
+      VsPyProf*.dll
+      TargetFolder: '$(Build.ArtifactStagingDirectory)/symbols_and_binaries'
 
-# MicroBuild cleanup
-- task: MicroBuildCleanup@1
-  displayName: 'Execute cleanup tasks'
-  condition: succeededOrFailed()
+  # Index sources and publish symbols
+  - task: PublishSymbols@2
+    displayName: 'Publish symbols'
+    inputs:
+      symbolsFolder: '$(Build.ArtifactStagingDirectory)/symbols_and_binaries'
+      searchPattern: '*.pdb'
+      symbolServerType: TeamServices
 
-# Compress staging output
-- task: ArchiveFiles@2
-  displayName: 'Compress staging dir'
-  inputs:
-    rootFolderOrFile: '$(Build.ArtifactStagingDirectory)'
-    includeRootFolder: false
-    archiveType: 'zip'
-    archiveFile: '$(Build.ArtifactStagingDirectory)/PTVSBuildArchive.zip'
-    replaceExistingArchive: true
+  # MicroBuild cleanup
+  - task: MicroBuildCleanup@1
+    displayName: 'Execute cleanup tasks'
+    condition: succeededOrFailed()
 
-# Publish build artifact: binaries
-- task: PublishBuildArtifacts@1
-  displayName: 'Upload binaries to build artifacts'
-  inputs:
-    PathtoPublish: '$(Build.BinariesDirectory)/raw/binaries'
-    ArtifactName: Binaries
+  # Compress staging output
+  - task: ArchiveFiles@2
+    displayName: 'Compress staging dir'
+    inputs:
+      rootFolderOrFile: '$(Build.ArtifactStagingDirectory)'
+      includeRootFolder: false
+      archiveType: 'zip'
+      archiveFile: '$(Build.ArtifactStagingDirectory)/PTVSBuildArchive.zip'
+      replaceExistingArchive: true
 
-# Publish build artifact: staging output
-- task: PublishBuildArtifacts@1
-  displayName: 'Upload staging zip to build artifacts'
-  inputs:
-    PathtoPublish: '$(Build.ArtifactStagingDirectory)/PTVSBuildArchive.zip'
-    ArtifactName: 'PTVS Staging Output'
+  # Publish build artifact: binaries
+  - task: PublishBuildArtifacts@1
+    displayName: 'Upload binaries to build artifacts'
+    inputs:
+      PathtoPublish: '$(Build.BinariesDirectory)/raw/binaries'
+      ArtifactName: Binaries
+
+  # Publish build artifact: staging output
+  - task: PublishBuildArtifacts@1
+    displayName: 'Upload staging zip to build artifacts'
+    inputs:
+      PathtoPublish: '$(Build.ArtifactStagingDirectory)/PTVSBuildArchive.zip'
+      ArtifactName: 'PTVS Staging Output'
