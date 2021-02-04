@@ -5,13 +5,11 @@ name: $(date:yy)$(DayOfYear)$(rev:.r)
 trigger:
 - master
 - release/*
-- yaml # TODO: remove this branch
 
 # Trigger pr builds for commits into master and any release branches
 pr:
 - master
 - release/*
-- yaml # TODO: remove this branch
 
 # The agent pool the build will run on
 pool:
