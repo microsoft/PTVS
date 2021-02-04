@@ -4,13 +4,14 @@ name: $(date:yy)$(DayOfYear)$(rev:.r)
 # Trigger ci builds for commits into master and any release branches
 trigger:
 - master
-- yaml
 - release/*
+- yaml # TODO: remove this branch
 
 # Trigger pr builds for commits into master and any release branches
 pr:
 - master
 - release/*
+- yaml # TODO: remove this branch
 
 # The agent pool the build will run on
 pool:
@@ -89,9 +90,6 @@ steps:
   inputs:
     signType: 'Test' # TODO: Change this to $(SignType) once Real signing is approved for this AzDO project ID
     feedSource: 'https://devdiv.pkgs.visualstudio.com/DefaultCollection/_packaging/MicroBuildToolset/nuget/v3/index.json'
-  enabled: true # Disable signing since it only works in approved project ids.
-  # TODO: remove the line above once the rest of the build is working, will need to get approval
-  # once the new build pipeline is created before this step will work.
 
 - task: MicroBuildLocalizationPlugin@3
   displayName: 'Install localization plugin'
