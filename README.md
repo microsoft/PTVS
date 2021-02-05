@@ -8,6 +8,7 @@ Feel free to file issues or ask questions on our [issue tracker](http://github.c
 
 We welcome code contributions - see [Contributing](https://github.com/Microsoft/PTVS/wiki/Contributing-to-PTVS) for information. Documentation contributions may be made at the [visualstudio-docs](https://github.com/Microsoft/visualstudio-docs/tree/master/docs/python) repository.
 
+[![Build Status](https://devdiv.visualstudio.com/DevDiv/_apis/build/status/Python/PTVS-Build-Dev16?branchName=master)](https://devdiv.visualstudio.com/DevDiv/_build/latest?definitionId=14121&branchName=master)
 [![Join the chat at https://gitter.im/Microsoft/PTVS](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/Microsoft/PTVS?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 ## Visual Studio 2017 and Visual Studio 2019 installation
