@@ -1,0 +1,236 @@
+# build number format
+name: $(date:yy)$(DayOfYear)$(rev:.r)
+
+# Trigger ci builds for commits into master and any release branches
+trigger:
+- master
+- release/*
+
+# Trigger pr builds for commits into master and any release branches
+pr:
+- master
+- release/*
+
+# The agent pool the build will run on
+pool:
+  name: VSEng-MicroBuildVS2019
+  demands: msbuild
+
+# Build variables
+# None of these are settable at build queue time. To do that, remove the variable from this list,
+# browse to the pipeline editor in AzDO, add the variable there, and make it settable at queue time.
+variables:
+  - name: BuildConfiguration
+    value: Release
+  - name: DropRoot
+    value: \\cpvsbuild\Drops\DSTools\PTVS\$(Build.SourceBranchName)\$(Build.BuildNumber)\
+  - name: FileVersionPrefix
+    value: 16.9
+  - name: IncludeDjangoHtmlExtensions
+    value: true
+  - name: IncludeLiveShare
+    value: true
+  - name: IncludeMiniconda
+    value: true
+  - name: IncludeMSI
+    value: false
+  - name: IncludeUWP
+    value: false
+  - name: TeamName
+    value: DSTools
+  - name: TrackFileAccess
+    value: false
+  - name: VisualStudioVersion
+    value: 16.0
+  - name: VSTarget
+    value: 16.0
+  - name: MsBuildVersion
+    value: 16.0
+  - name: Platform
+    value: 'AnyCPU'
+
+  # This is used to suppress warnings from the auto-injected Nuget Security Analysis step.
+  # The internal packages we use that are not available externally all start with "Microsoft",
+  # which mitigates the package injection vulnerability, since nobody outside the company can publish them to nuget.org.
+  # See https://docs.opensource.microsoft.com/tools/nuget_security_analysis.html for more info.
+  - name: NugetSecurityAnalysisWarningLevel
+    value: none
+  
+  # PTVS variable group, for secrets
+  # This group contains an AzDO Personal Access Token (ArtifactServices.Symbol.PAT) that expires on 4/15/2021 which is used to publish symbols to symweb.
+  # If Visual Studio insertion PRs start failing the Symbol Check step, this token is most likely expired.
+  # See https://www.1eswiki.com/wiki/Using_Azure_DevOps_Symbols for more information about how to create a new PAT and how to update the variable group.
+  - group: PTVS
+
+# TODO:
+# For PR builds, don't real sign. Test sign instead.
+
+steps:
+
+# check out code clean from source control
+- checkout: self
+  clean: true
+
+# skip some steps if this is a PR build
+- ${{ if notin(variables['Build.Reason'], 'PullRequest') }}:
+
+  # add build tag
+  - powershell: 'Write-Host "##vso[build.addbuildtag]$env:VSTarget"'
+    displayName: 'Add vstarget build tag'
+
+  # install plugins needed for swixproj/vsmanproj, signing, and localization
+  - task: MicroBuildSwixPlugin@3
+    displayName: 'Install microbuild swix plugin'
+    inputs:
+      dropName: 'Products/$(System.TeamProject)/$(Build.Repository.Name)/$(Build.SourceBranchName)/$(Build.BuildNumber)'
+      #dropServiceUri: 'https://vsdrop.corp.microsoft.com/file/v1'
+      #feedSource: 'https://mseng.pkgs.visualstudio.com/DefaultCollection/_packaging/MicroBuildToolset/nuget/v3/index.json'
+
+  - task: MicroBuildSigningPlugin@3
+    displayName: 'Install microbuild signing plugin'
+    inputs:
+      signType: 'Test' # TODO: Change this to 'Real' once Real signing is approved for this AzDO project ID
+      zipSources: false
+      #feedSource: 'https://devdiv.pkgs.visualstudio.com/DefaultCollection/_packaging/MicroBuildToolset/nuget/v3/index.json'
+
+  - task: MicroBuildLocalizationPlugin@3
+    displayName: 'Install localization plugin'
+    inputs:
+      #type: 'Full'
+      languages: 'VS'
+      #feedSource: 'https://mseng.pkgs.visualstudio.com/DefaultCollection/_packaging/MicroBuildToolset/nuget/v3/index.json'
+
+# Run a powershell script that does a package restore, some symlinking, and installs debugpy
+- task: PowerShell@1
+  displayName: 'Restore packages'
+  inputs:
+    scriptName: Build/PreBuild.ps1
+    arguments: '-vstarget $(VSTarget)'
+
+# Clean the old swix outputs
+- task: DeleteFiles@1
+  displayName: 'Clean old swix outputs'
+  inputs:
+    SourceFolder: '$(Build.BinariesDirectory)\raw\setup\swix'
+    Contents: '**'
+  continueOnError: true
+
+# Build the product
+- task: MSBuild@1
+  displayName: 'Build product'
+  inputs:
+    solution: Python/Product/dirs.proj
+    msbuildVersion: $(MsBuildVersion)
+    platform: '$(Platform)'
+    configuration: '$(BuildConfiguration)'
+
+# Build the installer
+- task: MSBuild@1
+  displayName: 'Build installer'
+  inputs:
+    solution: Python/Setup/dirs.proj
+    msbuildVersion: $(MsBuildVersion)
+    platform: '$(Platform)'
+    configuration: '$(BuildConfiguration)'
+    msbuildArguments: '/p:SkipProduct=true'
+
+# Publish buld artifact: raw
+- task: PublishBuildArtifacts@1
+  displayName: '[If build failed] Publish raw build artifact'
+  inputs:
+    PathtoPublish: '$(Build.BinariesDirectory)\raw'
+    ArtifactName: raw
+  condition: failed()
+
+# skip some steps if this is a PR build
+- ${{ if notin(variables['Build.Reason'], 'PullRequest') }}:
+
+  # Upload vsts drop
+  - task: MicroBuildUploadVstsDropFolder@1
+    displayName: 'Upload vsts drop'
+    inputs:
+      DropFolder: '$(Build.StagingDirectory)\release'
+      DropServiceUri: 'https://devdiv.artifacts.visualstudio.com/DefaultCollection'
+      VSDropServiceUri: 'https://vsdrop.corp.microsoft.com/file/v1'
+    continueOnError: true
+
+  # copy some files around to prepare for publishing build artifacts
+  - task: CopyFiles@2
+    displayName: 'Copy source to staging/src'
+    inputs:
+      SourceFolder: '$(Build.SourcesDirectory)'
+      TargetFolder: '$(Build.ArtifactStagingDirectory)/src'
+      CleanTargetFolder: true
+
+  - task: CopyFiles@2
+    displayName: 'Copy layout to staging'
+    inputs:
+      SourceFolder: '$(Build.BinariesDirectory)/layout'
+      TargetFolder: '$(Build.ArtifactStagingDirectory)/layout'
+      CleanTargetFolder: true
+
+  - task: CopyFiles@2
+    displayName: 'Copy binaries to staging'
+    inputs:
+      SourceFolder: '$(Build.BinariesDirectory)/raw/binaries'
+      TargetFolder: '$(Build.ArtifactStagingDirectory)/binaries'
+      CleanTargetFolder: true
+
+  - task: CopyFiles@2
+    displayName: 'Prepare for symbol publishing'
+    inputs:
+      SourceFolder: '$(Build.ArtifactStagingDirectory)/binaries'
+      Contents: |
+        Microsoft.PythonTools*.pdb
+        Microsoft.PythonTools*.dll
+        Microsoft.PythonTools*.exe
+        Microsoft.CookiecutterTools.pdb
+        Microsoft.CookiecutterTools.dll
+        Microsoft.IronPythonTools.Resolver.pdb
+        Microsoft.IronPythonTools.Resolver.dll
+        Microsoft.Python.Analysis.Engine.dll
+        Microsoft.Python.Analysis.Engine.pdb
+        Microsoft.Python.LanguageServer.Core.dll
+        Microsoft.Python.LanguageServer.Core.pdb
+        PyDebugAttach*.pdb
+        PyDebugAttach*.dll
+        VsPyProf*.pdb
+        VsPyProf*.dll
+      TargetFolder: '$(Build.ArtifactStagingDirectory)/symbols_and_binaries'
+
+  # Index sources and publish symbols
+  - task: PublishSymbols@2
+    displayName: 'Publish symbols'
+    inputs:
+      symbolsFolder: '$(Build.ArtifactStagingDirectory)/symbols_and_binaries'
+      searchPattern: '*.pdb'
+      symbolServerType: TeamServices
+
+  # MicroBuild cleanup
+  - task: MicroBuildCleanup@1
+    displayName: 'Execute cleanup tasks'
+    condition: succeededOrFailed()
+
+  # Compress staging output
+  - task: ArchiveFiles@2
+    displayName: 'Compress staging dir'
+    inputs:
+      rootFolderOrFile: '$(Build.ArtifactStagingDirectory)'
+      includeRootFolder: false
+      archiveType: 'zip'
+      archiveFile: '$(Build.ArtifactStagingDirectory)/PTVSBuildArchive.zip'
+      replaceExistingArchive: true
+
+  # Publish build artifact: binaries
+  - task: PublishBuildArtifacts@1
+    displayName: 'Upload binaries to build artifacts'
+    inputs:
+      PathtoPublish: '$(Build.BinariesDirectory)/raw/binaries'
+      ArtifactName: Binaries
+
+  # Publish build artifact: staging output
+  - task: PublishBuildArtifacts@1
+    displayName: 'Upload staging zip to build artifacts'
+    inputs:
+      PathtoPublish: '$(Build.ArtifactStagingDirectory)/PTVSBuildArchive.zip'
+      ArtifactName: 'PTVS Staging Output'
