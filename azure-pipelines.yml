@@ -48,6 +48,10 @@ variables:
     value: 16.0
   - name: VSTarget
     value: 16.0
+  - name: MsBuildVersion
+    value: 16.0
+  - name: Platform
+    value: 'AnyCPU'
 
   # This is used to suppress warnings from the auto-injected Nuget Security Analysis step.
   # The internal packages we use that are not available externally all start with "Microsoft",
@@ -119,8 +123,8 @@ steps:
   displayName: 'Build product'
   inputs:
     solution: Python/Product/dirs.proj
-    msbuildVersion: 16.0
-    platform: 'AnyCPU'
+    msbuildVersion: $(MsBuildVersion)
+    platform: '$(Platform)'
     configuration: '$(BuildConfiguration)'
 
 # Build the installer
@@ -128,8 +132,8 @@ steps:
   displayName: 'Build installer'
   inputs:
     solution: Python/Setup/dirs.proj
-    msbuildVersion: 16.0
-    platform: 'AnyCPU'
+    msbuildVersion: $(MsBuildVersion)
+    platform: '$(Platform)'
     configuration: '$(BuildConfiguration)'
     msbuildArguments: '/p:SkipProduct=true'
 
