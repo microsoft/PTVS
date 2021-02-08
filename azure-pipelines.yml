@@ -89,7 +89,7 @@ steps:
   - task: MicroBuildSigningPlugin@3
     displayName: 'Install microbuild signing plugin'
     inputs:
-      signType: 'Real'
+      signType: 'Test' # TODO: change to 'Real' once real signing has been approved for this project
       zipSources: false
       #feedSource: 'https://devdiv.pkgs.visualstudio.com/DefaultCollection/_packaging/MicroBuildToolset/nuget/v3/index.json'
 
