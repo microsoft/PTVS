@@ -145,19 +145,19 @@ steps:
 # skip some steps if this is a PR build
 - ${{ if notin(variables['Build.Reason'], 'PullRequest') }}:
 
-# compliance tasks
-- task: CredScan@2
-  displayName: Credscan
-  inputs:
-    toolMajorVersion: 'V2'
+  # compliance tasks
+  - task: CredScan@2
+    displayName: Credscan
+    inputs:
+      toolMajorVersion: 'V2'
 
-- task: PoliCheck@1
-  displayName: Policheck
-  inputs:
-    inputType: 'Basic'
-    targetType: 'F'
-    targetArgument: '$(Build.SourcesDirectory)'
-    result: 'PoliCheck.xml'
+  - task: PoliCheck@1
+    displayName: Policheck
+    inputs:
+      inputType: 'Basic'
+      targetType: 'F'
+      targetArgument: '$(Build.SourcesDirectory)'
+      result: 'PoliCheck.xml'
 
   # Upload vsts drop
   - task: MicroBuildUploadVstsDropFolder@1
