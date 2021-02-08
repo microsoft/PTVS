@@ -159,8 +159,8 @@ steps:
       targetArgument: '$(Build.SourcesDirectory)'
       result: 'PoliCheck.xml'
       SOMEnabled: true
-      uploadToSOM: true
-      workspaceId: '460c65e7-22a6-4d4c-8e9f-41fc5d3bb4b5'
+      uploadToSOM: true # if the upload fails with "access denied", see https://www.1eswiki.com/wiki/PoliCheck_Build_Task#Uploading_Results_to_SOM
+      workspaceId: '460c65e7-22a6-4d4c-8e9f-41fc5d3bb4b5' # this corresponds to the 'PTVS' workspace
       uploadErrorLevel: 'Error'
 
   # Upload vsts drop
