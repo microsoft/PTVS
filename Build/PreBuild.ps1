@@ -1,5 +1,7 @@
 param ($vstarget, $source, $outdir)
 
+$ErrorActionPreference = "Stop"
+
 "Restoring Packages"
 
 # These packages require a versionless symlink pointing to the versioned install.
