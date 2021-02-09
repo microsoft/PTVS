@@ -145,24 +145,6 @@ steps:
 # skip some steps if this is a PR build
 - ${{ if notin(variables['Build.Reason'], 'PullRequest') }}:
 
-  # compliance tasks
-  - task: CredScan@2
-    displayName: Credscan
-    inputs:
-      toolMajorVersion: 'V2'
-
-  - task: PoliCheck@1
-    displayName: Policheck
-    inputs:
-      inputType: 'Basic'
-      targetType: 'F'
-      targetArgument: '$(Build.SourcesDirectory)'
-      result: 'PoliCheck.xml'
-      SOMEnabled: true
-      uploadToSOM: true # if the upload fails with "access denied", see https://www.1eswiki.com/wiki/PoliCheck_Build_Task#Uploading_Results_to_SOM
-      workspaceId: '460c65e7-22a6-4d4c-8e9f-41fc5d3bb4b5' # this corresponds to the 'PTVS' workspace
-      uploadErrorLevel: 'Error'
-
   # Upload vsts drop
   - task: MicroBuildUploadVstsDropFolder@1
     displayName: 'Upload vsts drop'
@@ -252,3 +234,52 @@ steps:
     inputs:
       PathtoPublish: '$(Build.ArtifactStagingDirectory)/PTVSBuildArchive.zip'
       ArtifactName: 'PTVS Staging Output'
+
+  # Scan codebase for credentials.
+  # For more info, see https://www.1eswiki.com/wiki/CredScan_overview
+  - task: CredScan@2
+    displayName: Credscan
+    inputs:
+      outputFormat: pre
+
+  # Scan codebase for inappropriate language.
+  # For more info, see https://www.1eswiki.com/wiki/PoliCheck_Build_Task
+  # - task: PoliCheck@1
+  #   displayName: Policheck
+  #   inputs:
+  #     inputType: 'Basic'
+  #     targetType: 'F'
+  #     targetArgument: '$(Build.SourcesDirectory)'
+  #     result: 'PoliCheck.xml'
+  #     SOMEnabled: true
+  #     uploadToSOM: true # if the upload fails with "access denied", see https://www.1eswiki.com/wiki/PoliCheck_Build_Task#Uploading_Results_to_SOM
+  #     workspaceId: '460c65e7-22a6-4d4c-8e9f-41fc5d3bb4b5' # this corresponds to the 'PTVS' workspace
+  #     uploadErrorLevel: 'Error'
+
+  # Upload guardian results to TSA.
+  # For more info, see https://www.1eswiki.com/wiki/TSAUpload_Build_Task
+  - task: TSAUpload@1
+    displayName: Upload guardian results to TSA
+    inputs:
+      tsaVersion: 'TsaV1'
+      codebase: 'NewOrUpdate'
+      tsaStamp: 'DevDiv'
+      codeBaseName: 'PTVS'
+      notificationAlias: 'pyvs@microsoft.com'
+      notifyAlwaysV1: false
+      codeBaseAdmins: 'redmond\advolker;redmond\judej'
+      instanceUrlDevDiv: 'DEVDIV'
+      projectNameDEVDIV: 'DevDiv'
+      areaPath: 'DevDiv\Python and AI Tools\Python\VS IDE'
+      iterationPath: 'DevDiv'
+      uploadAPIScan: false
+      uploadBinSkim: false
+      uploadCredScan: true
+      uploadFortifySCA: false
+      uploadFxCop: false
+      uploadModernCop: false
+      uploadPoliCheck: true
+      uploadPREfast: false
+      uploadRoslyn: false
+      uploadTSLint: false
+      uploadAsync: true
