@@ -1,15 +1,13 @@
 # Python tools for Visual Studio
 
-Python support for Visual Studio is developed and managed here.
-
-Visit our [product overview and downloads page](https://aka.ms/PTVS), read our [documentation](https://aka.ms/PTVSDocs) and watch our (old) [YouTube tutorials](http://aka.ms/PTVSTutorial).
-
-Feel free to file issues or ask questions on our [issue tracker](http://github.com/Microsoft/PTVS/issues), or use the Send Feedback functionality in Visual Studio to report a problem or suggest a feature.
-
-We welcome code contributions - see [Contributing](https://github.com/Microsoft/PTVS/wiki/Contributing-to-PTVS) for information. Documentation contributions may be made at the [visualstudio-docs](https://github.com/Microsoft/visualstudio-docs/tree/master/docs/python) repository.
-
 [![Build Status](https://devdiv.visualstudio.com/DevDiv/_apis/build/status/Python/PTVS-Build-Dev16?branchName=master)](https://devdiv.visualstudio.com/DevDiv/_build/latest?definitionId=14121&branchName=master)
 [![Join the chat at https://gitter.im/Microsoft/PTVS](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/Microsoft/PTVS?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
+Python support for Visual Studio is developed and managed here.
+* Visit our [product overview and downloads page](https://aka.ms/PTVS), read our [documentation](https://aka.ms/PTVSDocs) and watch our (old) [YouTube tutorials](http://aka.ms/PTVSTutorial).
+* Feel free to file issues or ask questions on our [issue tracker](http://github.com/Microsoft/PTVS/issues), or use the Send Feedback functionality in Visual Studio to report a problem or suggest a feature.
+* We welcome code contributions - see [Contributing](https://github.com/Microsoft/PTVS/wiki/Contributing-to-PTVS) for information. Documentation contributions may be made at the [visualstudio-docs](https://github.com/Microsoft/visualstudio-docs/tree/master/docs/python) repository.
+* For all other documentation, please see the [Wiki](https://github.com/Microsoft/PTVS/wiki)
 
 ## Visual Studio 2017 and Visual Studio 2019 installation
 
