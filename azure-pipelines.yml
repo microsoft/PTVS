@@ -25,7 +25,7 @@ variables:
   - name: DropRoot
     value: \\cpvsbuild\Drops\DSTools\PTVS\$(Build.SourceBranchName)\$(Build.BuildNumber)\
   - name: FileVersionPrefix
-    value: 16.9
+    value: 16.10
   - name: IncludeDjangoHtmlExtensions
     value: true
   - name: IncludeLiveShare
