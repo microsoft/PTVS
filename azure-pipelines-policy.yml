@@ -145,6 +145,7 @@ steps:
 # Analyze managed and unmanaged binaries (exe, dll) for security vulnerabilities
 # See https://www.1eswiki.com/wiki/BinSkim_Build_Task for more info
 - task: BinSkim@3
+  displayName: Run BinSkim
   inputs:
     toolVersion: Latest
     InputType: Basic
@@ -171,7 +172,7 @@ steps:
 # Run component governance detection
 # See http://aka.ms/cgdocs for more info
 - task: ComponentGovernanceComponentDetection@0
-  displayName: Component Detection
+  displayName: Run Component Detection
   inputs:
     scanType: 'Register'
     verbosity: 'Verbose'
@@ -236,7 +237,7 @@ steps:
   continueOnError: True
 
 - task: MicroBuildCleanup@1
-  displayName: Send Telemetry
+  displayName: MicroBuild cleanup
   continueOnError: True
 
 # TODO: remove this. Antimalware is now being called twice, once for the sources dir
