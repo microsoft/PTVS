@@ -1,3 +1,6 @@
+# This pipeline is used to build the PTVS product and installer.
+# A seperate release pipeline is used to create insertion PR's into Visual Studio.
+
 # build number format
 name: $(date:yy)$(DayOfYear)$(rev:.r)
 
@@ -14,14 +17,14 @@ pr:
 # The agent pool the build will run on
 pool:
   name: VSEng-MicroBuildVS2019
-  demands: msbuild
+  demands: 
+  - msbuild
+  - VisualStudio_16.0
 
 # Build variables
 # None of these are settable at build queue time. To do that, remove the variable from this list,
 # browse to the pipeline editor in AzDO, add the variable there, and make it settable at queue time.
 variables:
-  - name: BuildConfiguration
-    value: Release
   - name: DropRoot
     value: \\cpvsbuild\Drops\DSTools\PTVS\$(Build.SourceBranchName)\$(Build.BuildNumber)\
   - name: FileVersionPrefix
@@ -36,30 +39,18 @@ variables:
     value: false
   - name: IncludeUWP
     value: false
-  - name: TeamName
-    value: DSTools
   - name: TrackFileAccess
     value: false
-  - name: VisualStudioVersion
-    value: 16.0
-  - name: VSTarget
-    value: 16.0
-  - name: MsBuildVersion
-    value: 16.0
-  - name: Platform
-    value: 'AnyCPU'
-
-  # This is used to suppress warnings from the auto-injected Nuget Security Analysis step.
-  # The internal packages we use that are not available externally all start with "Microsoft",
-  # which mitigates the package injection vulnerability, since nobody outside the company can publish them to nuget.org.
-  # See https://docs.opensource.microsoft.com/tools/nuget_security_analysis.html for more info.
-  - name: NugetSecurityAnalysisWarningLevel
-    value: none
   
-  # PTVS variable group, for secrets
-  # This group contains an AzDO Personal Access Token (ArtifactServices.Symbol.PAT) that expires on 4/15/2021 which is used to publish symbols to symweb.
+  # PTVS variable group
+  # This contains variables shared between the PTVS "product" pipeline and the PTVS "policy" pipeline.
+  
+  # It also contains an AzDO Personal Access Token (ArtifactServices.Symbol.PAT) that expires on 4/15/2021 
+  # which is used to publish symbols to symweb.
+  
   # If Visual Studio insertion PRs start failing the Symbol Check step, this token is most likely expired.
-  # See https://www.1eswiki.com/wiki/Using_Azure_DevOps_Symbols for more information about how to create a new PAT and how to update the variable group.
+  # See https://www.1eswiki.com/wiki/Using_Azure_DevOps_Symbols for more information about how to create a new 
+  # PAT and how to update the variable group.
   - group: PTVS
 
 steps:
@@ -80,13 +71,11 @@ steps:
     displayName: 'Install microbuild swix plugin'
     inputs:
       dropName: 'Products/$(System.TeamProject)/$(Build.Repository.Name)/$(Build.SourceBranchName)/$(Build.BuildNumber)'
-
   - task: MicroBuildSigningPlugin@3
     displayName: 'Install microbuild signing plugin'
     inputs:
       signType: 'Real'
       zipSources: false
-
   - task: MicroBuildLocalizationPlugin@3
     displayName: 'Install localization plugin'
     inputs:
@@ -114,8 +103,8 @@ steps:
   inputs:
     solution: Python/Product/dirs.proj
     msbuildVersion: $(MsBuildVersion)
-    platform: '$(Platform)'
-    configuration: '$(BuildConfiguration)'
+    platform: $(Platform)
+    configuration: $(BuildConfiguration)
 
 # Build the installer
 - task: MSBuild@1
@@ -123,8 +112,8 @@ steps:
   inputs:
     solution: Python/Setup/dirs.proj
     msbuildVersion: $(MsBuildVersion)
-    platform: '$(Platform)'
-    configuration: '$(BuildConfiguration)'
+    platform: $(Platform)
+    configuration: $(BuildConfiguration)
     msbuildArguments: '/p:SkipProduct=true'
 
 # Publish buld artifact: raw
