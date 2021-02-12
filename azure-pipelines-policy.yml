@@ -69,10 +69,8 @@ steps:
   continueOnError: true
 
 # Clean the Guardian temp files
-- pwsh: |
-      # Guardian files in TEMP add up and can cause the AntiMalware task to timeout.
-      Get-ChildItem -Path $env:TEMP -Filter 'MpCmdRun.*' -Recurse -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force
-  displayName: Clean up guardian temp files
+- powershell: Get-ChildItem -Path $env:TEMP -Filter 'MpCmdRun.*' -Recurse -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force
+  displayName: Clean guardian temp files
   continueOnError: true
 
 # Build the product
