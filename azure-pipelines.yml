@@ -5,14 +5,28 @@
 name: $(date:yy)$(DayOfYear)$(rev:.r)
 
 # Trigger ci builds for commits into master and any release branches
+# Ignore the policy.yml file, since that's a different pipeline
 trigger:
-- master
-- release/*
+  branches:
+    include:
+      - master
+      - release/*
+  paths:
+    exclude:
+      - 'azure-pipelines-policy.yml'
 
 # Trigger pr builds for commits into master and any release branches
+# Ignore the policy.yml file, since that's a different pipeline
+# Also ignore draft PR's
 pr:
-- master
-- release/*
+  branches:
+    include:
+      - master
+      - release/*
+  paths:
+    exclude:
+      - 'azure-pipelines-policy.yml'
+  drafts: false
 
 # The agent pool the build will run on
 pool:
