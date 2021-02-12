@@ -170,8 +170,12 @@ steps:
 
 # Run component governance detection
 # See http://aka.ms/cgdocs for more info
-- task: ComponentGovernanceComponentDetectionPpe@0
+- task: ComponentGovernanceComponentDetection@0
   displayName: Component Detection
+  inputs:
+    scanType: 'Register'
+    verbosity: 'Verbose'
+    alertWarningLevel: 'High'
   condition: succeededOrFailed()
   continueOnError: True
 
