@@ -9,14 +9,15 @@ name: $(date:yy)$(DayOfYear)$(rev:.r)
 trigger: none
 pr: none
 
+# TODO: Schedule is disabled for now, re-enable once everything is working.
 # Trigger builds on a nightly schedule.
 # All times are in UTC, so 8AM = Midnight PST
-schedules:
-- cron: "0 8 * * *"
-  displayName: Nightly build
-  branches:
-    include:
-    - master
+#schedules:
+#- cron: "0 8 * * *"
+#  displayName: Nightly build
+#  branches:
+#    include:
+#    - master
 
 # The agent pool the build will run on
 pool:
