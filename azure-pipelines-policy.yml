@@ -10,6 +10,7 @@ trigger: none
 pr: none
 
 # TODO: Schedule is disabled for now, re-enable once everything is working.
+# TODO: EXCLUDE the azure-pipelines-policy.yml from the schedule!!!
 # Trigger builds on a nightly schedule.
 # All times are in UTC, so 8AM = Midnight PST
 #schedules:
@@ -137,6 +138,7 @@ steps:
     softwareVersionNum: 16.0
     isLargeApp: false
     toolVersion: LatestPreRelease
+  timeoutInMinutes: 120 # This task can take a while to run 
   condition: succeededOrFailed()
   continueOnError: True
 
@@ -293,4 +295,3 @@ steps:
     areaPath: DevDiv\Python and AI Tools\Python\VS IDE
     iterationPath: DevDiv
 
-    
