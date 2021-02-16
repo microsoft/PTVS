@@ -46,7 +46,7 @@ jobs:
   timeoutInMinutes: 300 # Long timeout is needed because API scan takes longer than the default job timeout (60 minutes)
   cancelTimeoutInMinutes: 1
 
-steps:
+  steps:
 
   # Check out code clean from source control
   - checkout: self
