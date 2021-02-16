@@ -156,7 +156,7 @@ jobs:
       toolVersion: Latest
       InputType: Basic
       Function: analyze
-      AnalyzeTarget: $(Build.BinariesDirectory)\*.dll;$(Build.BinariesDirectory)\*.exe
+      #AnalyzeTarget: $(Build.BinariesDirectory)\*.dll;$(Build.BinariesDirectory)\*.exe
       AnalyzeConfigPath: default
       AnalyzeRecurse: true
       AnalyzeVerbose: false
