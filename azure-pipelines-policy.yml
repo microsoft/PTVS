@@ -18,9 +18,6 @@ schedules:
   branches:
     include:
     - master
-  paths:
-    exclude:
-      - 'azure-pipelines.yml'
 
 # The agent pool the build will run on
 pool:
