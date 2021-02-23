@@ -9,17 +9,18 @@ name: $(date:yy)$(DayOfYear)$(rev:.r)
 trigger: none
 pr: none
 
-# TODO: Schedule is disabled for now, re-enable once everything is working.
-# TODO: EXCLUDE the azure-pipelines-policy.yml from the schedule!!!
-
-# Trigger builds on a nightly schedule.
+# Trigger builds on a nightly schedule, as long as there are changes
+# Ignore the azure-pipelines.yml, since that's a different pipeline
 # All times are in UTC, so 8AM = Midnight PST
-#schedules:
-#- cron: "0 8 * * *"
-#  displayName: Nightly build
-#  branches:
-#    include:
-#    - master
+schedules:
+- cron: "0 8 * * *"
+  displayName: Nightly build
+  branches:
+    include:
+    - master
+  paths:
+    exclude:
+      - 'azure-pipelines.yml'
 
 # The agent pool the build will run on
 pool:
@@ -36,10 +37,6 @@ variables:
   # This contains variables shared between the PTVS "product" pipeline and the PTVS "policy" pipeline.
   - group: PTVS
 
-  # TODO: is this still needed?
-  #- name: BuildParameters.platform
-  #  value: any cpu
-
 jobs:
 - job: Phase_1
   displayName: Phase 1
@@ -55,11 +52,6 @@ jobs:
   # Install plugins needed for swixproj/vsmanproj and signing
   - task: MicroBuildSwixPlugin@3
     displayName: 'Install microbuild swix plugin'
-
-  # TODO: remove this, we don't need to sign the policy build
-  #- task: MicroBuildSigningPlugin@3
-  #  displayName: 'Install microbuild signing plugin'
-  #  continueOnError: true
 
   # Run a powershell script that does a package restore, some symlinking, and installs debugpy
   - task: PowerShell@1
@@ -148,33 +140,6 @@ jobs:
     condition: succeededOrFailed()
     continueOnError: True
 
-  # Analyze managed and unmanaged binaries (exe, dll) for security vulnerabilities
-  # See https://www.1eswiki.com/wiki/BinSkim_Build_Task for more info
-  - task: BinSkim@3
-    displayName: Run BinSkim
-    inputs:
-      toolVersion: Latest
-      InputType: Basic
-      Function: analyze
-      #AnalyzeTarget: $(Build.BinariesDirectory)\*.dll;$(Build.BinariesDirectory)\*.exe
-      AnalyzeConfigPath: default
-      AnalyzeRecurse: true
-      AnalyzeVerbose: false
-      AnalyzeHashes: false
-      AnalyzeStatistics: false
-      AnalyzeEnvironment: false
-    condition: succeededOrFailed()
-    continueOnError: True
-
-  # TODO: Remove this. VS PR insertions do this already.
-  # Validate code signing
-  # See https://www.1eswiki.com/wiki/Code_Signing_Validation_Build_Task for more info
-  #- task: securedevelopmentteam.vss-secure-development-tools.build-task-codesignvalidation.CodeSign@1
-  #  inputs:
-  #    path: $(Build.BinariesDirectory)
-  #  condition: succeededOrFailed()
-  #  continueOnError: True
-
   # Run component governance detection
   # See http://aka.ms/cgdocs for more info
   - task: ComponentGovernanceComponentDetection@0
@@ -195,13 +160,6 @@ jobs:
       suppressionsFile: $(Build.SourcesDirectory)\Build\CredScanSuppressions.json
       debugMode: true
       folderSuppression: true
-    condition: succeededOrFailed()
-    continueOnError: True
-
-  # Analyze C/C++ for security vulnerabilities
-  # See https://www.1eswiki.com/wiki/FlawFinder_Build_Task for more info
-  - task: Flawfinder@2
-    displayName: Run Flawfinder
     condition: succeededOrFailed()
     continueOnError: True
 
@@ -245,15 +203,6 @@ jobs:
   - task: MicroBuildCleanup@1
     displayName: MicroBuild cleanup
     continueOnError: True
-
-  # TODO: remove this. Antimalware is now being called twice, once for the sources dir
-  # and once for the binaries dir
-  #- task: CopyFiles@2
-  #  displayName: 'Copy Files to: $(Build.SourcesDirectory) [So antivirus can scan the binaries]'
-  #  continueOnError: True
-  #  inputs:
-  #    SourceFolder: $(Build.BinariesDirectory)
-  #    TargetFolder: $(Build.SourcesDirectory)
 
   # Generate security analysis report
   # See https://www.1eswiki.com/wiki/Security_Analysis_Report_Build_Task for more info
