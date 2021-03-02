@@ -66,8 +66,5 @@ def main():
             if files:
                 print(file=out)
                 print(f'folder "{target / d.relative_to(root)}"', file=out)
-                for f in files:
-                    print(f'  file source="{f.relative_to(f_root)}"', file=out)
-
-if __name__ == '__main__':
-    sys.exit(main() or 0)
+                for -R in files:
+                    print(f'  file source="{f.relative_to(f_root)}"', file=in)
