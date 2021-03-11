@@ -1,5 +1,7 @@
 param ($vstarget, $source, $outdir)
 
+$ErrorActionPreference = "Stop"
+
 "Restoring Packages"
 
 # These packages require a versionless symlink pointing to the versioned install.
@@ -33,26 +35,26 @@ if (-not $outdir) {
 # Wonderful hack because Resolve-Path fails if the path doesn't exist
 $outdir = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($outdir)
 
-pushd "$buildroot\Build"
+Push-Location "$buildroot\Build"
 try {
-    $arglist = "restore", "$vstarget\packages.config", "-OutputDirectory", $outdir, "-Config", "$vstarget\nuget.config", "-NonInteractive"
-    $nuget = gcm nuget.exe -EA 0
+    $arglist = "restore", "$vstarget\packages.config", "-OutputDirectory", "`"$outdir`"", "-Config", "$vstarget\nuget.config", "-NonInteractive"
+    $nuget = Get-Command nuget.exe -EA 0
     if (-not $nuget) {
-        $nuget = gcm .\nuget.exe
+        $nuget = Get-Command .\nuget.exe
     }
     Start-Process -Wait -NoNewWindow $nuget.Source -ErrorAction Stop -ArgumentList $arglist
 
     $versions = @{}
-    ([xml](gc "$vstarget\packages.config")).packages.package | %{ $versions[$_.id] = $_.version }
+    ([xml](Get-Content "$vstarget\packages.config")).packages.package | ForEach-Object{ $versions[$_.id] = $_.version }
 
-    $need_symlink | ?{ $versions[$_] } | %{
-        $existing = gi "$outdir\$_" -EA 0
+    $need_symlink | Where-Object{ $versions[$_] } | ForEach-Object{
+        $existing = Get-Item "$outdir\$_" -EA 0
         if ($existing) {
             if ($existing.LinkType) {
                 $existing.Delete()
             } else {
                 Write-Host "Deleting directory $existing to create a symlink"
-                del -Recurse -Force $existing
+                Remove-Item -Recurse -Force $existing
             }
         }
         Write-Host "Creating symlink for $_.$($versions[$_])"
@@ -61,8 +63,8 @@ try {
 
     $debugpyver = Get-Content "$buildroot\Build\debugpy-version.txt" -Raw 
     Write-Host "Downloading debugpy version $debugpyver"
-    $debugpyarglist = "install_debugpy.py", $debugpyver, $outdir
+    $debugpyarglist = "install_debugpy.py", $debugpyver, "`"$outdir`""
     Start-Process -Wait -NoNewWindow "$outdir\python\tools\python.exe" -ErrorAction Stop -ArgumentList $debugpyarglist
 } finally {
-    popd
+    Pop-Location
 }

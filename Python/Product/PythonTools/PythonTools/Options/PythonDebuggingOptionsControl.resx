@@ -360,6 +360,297 @@
   <data name="tableLayoutPanel2.ColumnCount" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
+  <data name="_showVariablesPanel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
+  <data name="_showVariablesLabel.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="_showVariablesLabel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 4</value>
+  </data>
+  <data name="_showVariablesLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>79, 13</value>
+  </data>
+  <data name="_showVariablesLabel.TabIndex" type="System.Int32, mscorlib">
+    <value>10</value>
+  </data>
+  <data name="_showVariablesLabel.Text" xml:space="preserve">
+    <value>Show variables</value>
+  </data>
+  <data name="&gt;&gt;_showVariablesLabel.Name" xml:space="preserve">
+    <value>_showVariablesLabel</value>
+  </data>
+  <data name="&gt;&gt;_showVariablesLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_showVariablesLabel.Parent" xml:space="preserve">
+    <value>_showVariablesPanel</value>
+  </data>
+  <data name="&gt;&gt;_showVariablesLabel.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="_showVariablesDivider.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="_showVariablesDivider.Location" type="System.Drawing.Point, System.Drawing">
+    <value>89, 11</value>
+  </data>
+  <data name="_showVariablesDivider.Size" type="System.Drawing.Size, System.Drawing">
+    <value>252, 2</value>
+  </data>
+  <data name="_showVariablesDivider.TabIndex" type="System.Int32, mscorlib">
+    <value>11</value>
+  </data>
+  <data name="&gt;&gt;_showVariablesDivider.Name" xml:space="preserve">
+    <value>_showVariablesDivider</value>
+  </data>
+  <data name="&gt;&gt;_showVariablesDivider.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_showVariablesDivider.Parent" xml:space="preserve">
+    <value>_showVariablesPanel</value>
+  </data>
+  <data name="&gt;&gt;_showVariablesDivider.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="_showVariablesClassLabel.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="_showVariablesClassLabel.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="_showVariablesClassLabel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>7, 32</value>
+  </data>
+  <data name="_showVariablesClassLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>35, 13</value>
+  </data>
+  <data name="_showVariablesClassLabel.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="_showVariablesClassLabel.Text" xml:space="preserve">
+    <value>&amp;Class:</value>
+  </data>
+  <data name="&gt;&gt;_showVariablesClassLabel.Name" xml:space="preserve">
+    <value>_showVariablesClassLabel</value>
+  </data>
+  <data name="&gt;&gt;_showVariablesClassLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_showVariablesClassLabel.Parent" xml:space="preserve">
+    <value>_showVariablesPanel</value>
+  </data>
+  <data name="&gt;&gt;_showVariablesClassLabel.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="_showVariablesClassComboBox.AccessibleName" xml:space="preserve">
+    <value>Show class variables ComboBox</value>
+  </data>
+  <data name="_showVariablesClassComboBox.Location" type="System.Drawing.Point, System.Drawing">
+    <value>69, 29</value>
+  </data>
+  <data name="_showVariablesClassComboBox.Size" type="System.Drawing.Size, System.Drawing">
+    <value>95, 21</value>
+  </data>
+  <data name="_showVariablesClassComboBox.TabIndex" type="System.Int32, mscorlib">
+    <value>8</value>
+  </data>
+  <data name="&gt;&gt;_showVariablesClassComboBox.Name" xml:space="preserve">
+    <value>_showVariablesClassComboBox</value>
+  </data>
+  <data name="&gt;&gt;_showVariablesClassComboBox.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_showVariablesClassComboBox.Parent" xml:space="preserve">
+    <value>_showVariablesPanel</value>
+  </data>
+  <data name="&gt;&gt;_showVariablesClassComboBox.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="_showVariablesFunctionLabel.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="_showVariablesFunctionLabel.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="_showVariablesFunctionLabel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>189, 32</value>
+  </data>
+  <data name="_showVariablesFunctionLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>51, 13</value>
+  </data>
+  <data name="_showVariablesFunctionLabel.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="_showVariablesFunctionLabel.Text" xml:space="preserve">
+    <value>F&amp;unction:</value>
+  </data>
+  <data name="&gt;&gt;_showVariablesFunctionLabel.Name" xml:space="preserve">
+    <value>_showVariablesFunctionLabel</value>
+  </data>
+  <data name="&gt;&gt;_showVariablesFunctionLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_showVariablesFunctionLabel.Parent" xml:space="preserve">
+    <value>_showVariablesPanel</value>
+  </data>
+  <data name="&gt;&gt;_showVariablesFunctionLabel.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="_showVariablesFunctionComboBox.AccessibleName" xml:space="preserve">
+    <value>Show function variables ComboBox</value>
+  </data>
+  <data name="_showVariablesFunctionComboBox.Location" type="System.Drawing.Point, System.Drawing">
+    <value>246, 29</value>
+  </data>
+  <data name="_showVariablesFunctionComboBox.Size" type="System.Drawing.Size, System.Drawing">
+    <value>95, 21</value>
+  </data>
+  <data name="_showVariablesFunctionComboBox.TabIndex" type="System.Int32, mscorlib">
+    <value>9</value>
+  </data>
+  <data name="&gt;&gt;_showVariablesFunctionComboBox.Name" xml:space="preserve">
+    <value>_showVariablesFunctionComboBox</value>
+  </data>
+  <data name="&gt;&gt;_showVariablesFunctionComboBox.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_showVariablesFunctionComboBox.Parent" xml:space="preserve">
+    <value>_showVariablesPanel</value>
+  </data>
+  <data name="&gt;&gt;_showVariablesFunctionComboBox.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="_showVariablesProtectedLabel.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="_showVariablesProtectedLabel.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="_showVariablesProtectedLabel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>7, 59</value>
+  </data>
+  <data name="_showVariablesProtectedLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>56, 13</value>
+  </data>
+  <data name="_showVariablesProtectedLabel.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="_showVariablesProtectedLabel.Text" xml:space="preserve">
+    <value>P&amp;rotected:</value>
+  </data>
+  <data name="&gt;&gt;_showVariablesProtectedLabel.Name" xml:space="preserve">
+    <value>_showVariablesProtectedLabel</value>
+  </data>
+  <data name="&gt;&gt;_showVariablesProtectedLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_showVariablesProtectedLabel.Parent" xml:space="preserve">
+    <value>_showVariablesPanel</value>
+  </data>
+  <data name="&gt;&gt;_showVariablesProtectedLabel.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
+  <data name="_showVariablesProtectedComboBox.AccessibleName" xml:space="preserve">
+    <value>Show protected variables ComboBox</value>
+  </data>
+  <data name="_showVariablesProtectedComboBox.Location" type="System.Drawing.Point, System.Drawing">
+    <value>69, 56</value>
+  </data>
+  <data name="_showVariablesProtectedComboBox.Size" type="System.Drawing.Size, System.Drawing">
+    <value>95, 21</value>
+  </data>
+  <data name="_showVariablesProtectedComboBox.TabIndex" type="System.Int32, mscorlib">
+    <value>10</value>
+  </data>
+  <data name="&gt;&gt;_showVariablesProtectedComboBox.Name" xml:space="preserve">
+    <value>_showVariablesProtectedComboBox</value>
+  </data>
+  <data name="&gt;&gt;_showVariablesProtectedComboBox.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_showVariablesProtectedComboBox.Parent" xml:space="preserve">
+    <value>_showVariablesPanel</value>
+  </data>
+  <data name="&gt;&gt;_showVariablesProtectedComboBox.ZOrder" xml:space="preserve">
+    <value>7</value>
+  </data>
+  <data name="_showVariablesSpecialLabel.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="_showVariablesSpecialLabel.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="_showVariablesSpecialLabel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>189, 59</value>
+  </data>
+  <data name="_showVariablesSpecialLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>45, 13</value>
+  </data>
+  <data name="_showVariablesSpecialLabel.TabIndex" type="System.Int32, mscorlib">
+    <value>8</value>
+  </data>
+  <data name="_showVariablesSpecialLabel.Text" xml:space="preserve">
+    <value>&amp;Special:</value>
+  </data>
+  <data name="&gt;&gt;_showVariablesSpecialLabel.Name" xml:space="preserve">
+    <value>_showVariablesSpecialLabel</value>
+  </data>
+  <data name="&gt;&gt;_showVariablesSpecialLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_showVariablesSpecialLabel.Parent" xml:space="preserve">
+    <value>_showVariablesPanel</value>
+  </data>
+  <data name="&gt;&gt;_showVariablesSpecialLabel.ZOrder" xml:space="preserve">
+    <value>8</value>
+  </data>
+  <data name="_showVariablesSpecialComboBox.AccessibleName" xml:space="preserve">
+    <value>Show special variables ComboBox</value>
+  </data>
+  <data name="_showVariablesSpecialComboBox.Location" type="System.Drawing.Point, System.Drawing">
+    <value>246, 56</value>
+  </data>
+  <data name="_showVariablesSpecialComboBox.Size" type="System.Drawing.Size, System.Drawing">
+    <value>95, 21</value>
+  </data>
+  <data name="_showVariablesSpecialComboBox.TabIndex" type="System.Int32, mscorlib">
+    <value>11</value>
+  </data>
+  <data name="&gt;&gt;_showVariablesSpecialComboBox.Name" xml:space="preserve">
+    <value>_showVariablesSpecialComboBox</value>
+  </data>
+  <data name="&gt;&gt;_showVariablesSpecialComboBox.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_showVariablesSpecialComboBox.Parent" xml:space="preserve">
+    <value>_showVariablesPanel</value>
+  </data>
+  <data name="&gt;&gt;_showVariablesSpecialComboBox.ZOrder" xml:space="preserve">
+    <value>9</value>
+  </data>
+  <data name="_showVariablesPanel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 187</value>
+  </data>
+  <data name="_showVariablesPanel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>351, 88</value>
+  </data>
+  <data name="_showVariablesPanel.TabIndex" type="System.Int32, mscorlib">
+    <value>9</value>
+  </data>
+  <data name="&gt;&gt;_showVariablesPanel.Name" xml:space="preserve">
+    <value>_showVariablesPanel</value>
+  </data>
+  <data name="&gt;&gt;_showVariablesPanel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_showVariablesPanel.Parent" xml:space="preserve">
+    <value>tableLayoutPanel2</value>
+  </data>
+  <data name="&gt;&gt;_showVariablesPanel.ZOrder" xml:space="preserve">
+    <value>8</value>
+  </data>
   <data name="tableLayoutPanel2.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
   </data>
@@ -370,10 +661,10 @@
     <value>6, 6, 6, 6</value>
   </data>
   <data name="tableLayoutPanel2.RowCount" type="System.Int32, mscorlib">
-    <value>9</value>
+    <value>10</value>
   </data>
   <data name="tableLayoutPanel2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>699, 535</value>
+    <value>357, 585</value>
   </data>
   <data name="tableLayoutPanel2.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -391,7 +682,7 @@
     <value>0</value>
   </data>
   <data name="tableLayoutPanel2.LayoutSettings" type="System.Windows.Forms.TableLayoutSettings, System.Windows.Forms">
-    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="_promptOnBuildError" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_waitOnAbnormalExit" Row="1" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_waitOnNormalExit" Row="2" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_teeStdOut" Row="3" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_breakOnSystemExitZero" Row="4" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_debugStdLib" Row="5" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_showFunctionReturnValue" Row="6" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="Percent,100" /&gt;&lt;Rows Styles="AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,Percent,100" /&gt;&lt;/TableLayoutSettings&gt;</value>
+    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="_promptOnBuildError" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_waitOnAbnormalExit" Row="1" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_waitOnNormalExit" Row="2" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_teeStdOut" Row="3" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_breakOnSystemExitZero" Row="4" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_debugStdLib" Row="5" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_showFunctionReturnValue" Row="6" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_useLegacyDebugger" Row="7" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_showVariablesPanel" Row="9" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="Percent,100" /&gt;&lt;Rows Styles="AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,Percent,100,Absolute,20" /&gt;&lt;/TableLayoutSettings&gt;</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -403,7 +694,7 @@
     <value>11, 15, 11, 15</value>
   </data>
   <data name="$this.Size" type="System.Drawing.Size, System.Drawing">
-    <value>699, 535</value>
+    <value>357, 585</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>PythonDebuggingOptionsControl</value>

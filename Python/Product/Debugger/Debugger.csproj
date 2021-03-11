@@ -80,6 +80,7 @@
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="Debugger\DebugConnection.cs" />
     <Compile Include="Debugger\IPythonDebugOptionsService.cs" />
+    <Compile Include="Debugger\PresentationMode.cs" />
     <Compile Include="Debugger\PythonDebugOptionsServiceHelper.cs" />
     <Compile Include="Debugger\LegacyDebuggerProtocol.cs" />
     <Compile Include="Debugger\BreakpointHitEventArgs.cs" />

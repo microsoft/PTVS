@@ -240,7 +240,9 @@ namespace DebuggerUITests {
                     Assert.AreEqual(dbgHitCountType.dbgHitCountTypeNone, bp.HitCountType);
                 }
 
-                // https://github.com/Microsoft/PTVS/pull/630
+                // Resetting BreakWhenHit without a message set throws a ComException, see
+                // https://stackoverflow.com/questions/27753513/visual-studio-sdk-breakpoint2-breakwhenhit-true-throws-exception-0x8971101a
+                pendingBp.Message = "foo";
                 pendingBp.BreakWhenHit = false; // causes rebind
                 Assert.AreEqual(1, pendingBp.Children.Count);
                 bp = (Breakpoint3)pendingBp.Children.Item(1);

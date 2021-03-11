@@ -60,6 +60,10 @@ namespace Microsoft.PythonTools.Debugger {
         /// Default is true.
         /// </summary>
         bool ShowFunctionReturnValue { get; }
-       
+        
+        PresentationMode VariablePresentationForClasses { get; }
+        PresentationMode VariablePresentationForFunctions { get; }
+        PresentationMode VariablePresentationForProtected { get; }
+        PresentationMode VariablePresentationForSpecial { get; }
     }
 }

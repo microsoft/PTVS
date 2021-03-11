@@ -13,13 +13,21 @@
 //
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
-
+using Microsoft.PythonTools.Debugger;
+using System;
+using System.Collections.Generic;
 using System.Windows.Forms;
 
 namespace Microsoft.PythonTools.Options {
     public partial class PythonDebuggingOptionsControl : UserControl {
         public PythonDebuggingOptionsControl() {
             InitializeComponent();
+
+            // set allowed values for the variable presentation options
+            var varPresComboBoxes = new List<ComboBox> { _showVariablesClassComboBox, _showVariablesFunctionComboBox, _showVariablesProtectedComboBox, _showVariablesSpecialComboBox };
+            foreach (var varPresComboBox in varPresComboBoxes) {
+                varPresComboBox.DataSource = Enum.GetValues(typeof(PresentationMode));
+            }
         }
 
         internal void SyncControlWithPageSettings(PythonToolsService pyService) {
@@ -30,6 +38,12 @@ namespace Microsoft.PythonTools.Options {
             _breakOnSystemExitZero.Checked = pyService.DebuggerOptions.BreakOnSystemExitZero;
             _debugStdLib.Checked = pyService.DebuggerOptions.DebugStdLib;
             _showFunctionReturnValue.Checked = pyService.DebuggerOptions.ShowFunctionReturnValue;
+
+            // variable presentation
+            _showVariablesClassComboBox.SelectedItem = pyService.DebuggerOptions.VariablePresentationForClasses;
+            _showVariablesFunctionComboBox.SelectedItem = pyService.DebuggerOptions.VariablePresentationForFunctions;
+            _showVariablesProtectedComboBox.SelectedItem = pyService.DebuggerOptions.VariablePresentationForProtected;
+            _showVariablesSpecialComboBox.SelectedItem = pyService.DebuggerOptions.VariablePresentationForSpecial;
         }
 
         internal void SyncPageWithControlSettings(PythonToolsService pyService) {
@@ -40,6 +54,12 @@ namespace Microsoft.PythonTools.Options {
             pyService.DebuggerOptions.BreakOnSystemExitZero = _breakOnSystemExitZero.Checked;
             pyService.DebuggerOptions.DebugStdLib = _debugStdLib.Checked;
             pyService.DebuggerOptions.ShowFunctionReturnValue = _showFunctionReturnValue.Checked;
+
+            // variable presentation
+            pyService.DebuggerOptions.VariablePresentationForClasses = (PresentationMode)_showVariablesClassComboBox.SelectedItem;
+            pyService.DebuggerOptions.VariablePresentationForFunctions = (PresentationMode)_showVariablesFunctionComboBox.SelectedItem;
+            pyService.DebuggerOptions.VariablePresentationForProtected = (PresentationMode)_showVariablesProtectedComboBox.SelectedItem;
+            pyService.DebuggerOptions.VariablePresentationForSpecial = (PresentationMode)_showVariablesSpecialComboBox.SelectedItem;
         }
     }
 }
