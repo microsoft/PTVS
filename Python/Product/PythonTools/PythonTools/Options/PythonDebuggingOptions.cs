@@ -34,17 +34,13 @@ namespace Microsoft.PythonTools.Options {
         private const string ShowFunctionReturnValueSetting = "ShowReturnValue";
         private const string UseLegacyDebuggerSetting = "UseLegacyDebugger";
 
-<<<<<<< HEAD:Python/Product/PythonTools/PythonTools/Options/PythonDebuggingOptions.cs
-        internal PythonDebuggingOptions(PythonToolsService service) {
-=======
         // variable presentation
         private const string VariablePresentationForClassesSetting = "VariablePresentationForClasses";
         private const string VariablePresentationForFunctionsSetting = "VariablePresentationForFunctions";
         private const string VariablePresentationForProtectedSetting = "VariablePresentationForProtected";
         private const string VariablePresentationForSpecialSetting = "VariablePresentationForSpecial";
 
-        internal DebuggerOptions(PythonToolsService service) {
->>>>>>> origin/master:Python/Product/PythonTools/PythonTools/Options/DebuggerOptions.cs
+        internal PythonDebuggingOptions(PythonToolsService service) {
             _service = service;
             Load();
         }
@@ -57,9 +53,6 @@ namespace Microsoft.PythonTools.Options {
             BreakOnSystemExitZero = _service.LoadBool(BreakOnSystemExitZeroSetting, Category) ?? false;
             DebugStdLib = _service.LoadBool(DebugStdLibSetting, Category) ?? false;
             ShowFunctionReturnValue = _service.LoadBool(ShowFunctionReturnValueSetting, Category) ?? true;
-<<<<<<< HEAD:Python/Product/PythonTools/PythonTools/Options/PythonDebuggingOptions.cs
-=======
-            UseLegacyDebugger = _service.LoadBool(UseLegacyDebuggerSetting, Category) ?? false;
 
             // variable presentation
             VariablePresentationForClasses = _service.LoadEnum<PresentationMode>(VariablePresentationForClassesSetting, Category) ?? VariablePresentation.DefaultPresentationMode;
@@ -67,7 +60,6 @@ namespace Microsoft.PythonTools.Options {
             VariablePresentationForProtected = _service.LoadEnum<PresentationMode>(VariablePresentationForProtectedSetting, Category) ?? VariablePresentation.DefaultPresentationMode;
             VariablePresentationForSpecial = _service.LoadEnum<PresentationMode>(VariablePresentationForSpecialSetting, Category) ?? VariablePresentation.DefaultPresentationMode;
 
->>>>>>> origin/master:Python/Product/PythonTools/PythonTools/Options/DebuggerOptions.cs
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
@@ -79,9 +71,6 @@ namespace Microsoft.PythonTools.Options {
             _service.SaveBool(BreakOnSystemExitZeroSetting, Category, BreakOnSystemExitZero);
             _service.SaveBool(DebugStdLibSetting, Category, DebugStdLib);
             _service.SaveBool(ShowFunctionReturnValueSetting, Category, ShowFunctionReturnValue);
-<<<<<<< HEAD:Python/Product/PythonTools/PythonTools/Options/PythonDebuggingOptions.cs
-=======
-            _service.SaveBool(UseLegacyDebuggerSetting, Category, UseLegacyDebugger);
 
             // variable presentation
             _service.SaveEnum<PresentationMode>(VariablePresentationForClassesSetting, Category, VariablePresentationForClasses);
@@ -89,7 +78,6 @@ namespace Microsoft.PythonTools.Options {
             _service.SaveEnum<PresentationMode>(VariablePresentationForProtectedSetting, Category, VariablePresentationForProtected);
             _service.SaveEnum<PresentationMode>(VariablePresentationForSpecialSetting, Category, VariablePresentationForSpecial);
 
->>>>>>> origin/master:Python/Product/PythonTools/PythonTools/Options/DebuggerOptions.cs
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
@@ -101,9 +89,6 @@ namespace Microsoft.PythonTools.Options {
             BreakOnSystemExitZero = false;
             DebugStdLib = false;
             ShowFunctionReturnValue = true;
-<<<<<<< HEAD:Python/Product/PythonTools/PythonTools/Options/PythonDebuggingOptions.cs
-=======
-            UseLegacyDebugger = false;
 
             // variable presentation
             VariablePresentationForClasses = VariablePresentation.DefaultPresentationMode;
@@ -111,7 +96,6 @@ namespace Microsoft.PythonTools.Options {
             VariablePresentationForProtected = VariablePresentation.DefaultPresentationMode;
             VariablePresentationForSpecial = VariablePresentation.DefaultPresentationMode;
 
->>>>>>> origin/master:Python/Product/PythonTools/PythonTools/Options/DebuggerOptions.cs
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
