@@ -84,7 +84,6 @@ namespace DebuggerUITestsRunner {
             _vs.RunTest(nameof(DebuggerUITests.DebugProjectUITests.PendingBreakPointLocation), UseVsCodeDebugger, Interpreter);
         }
 
-        [Ignore] // https://github.com/microsoft/PTVS/issues/6059
         [TestMethod, Priority(UITestPriority.P2_FAILING_UI_TEST)]
         [TestCategory("Installed")]
         public void BoundBreakpoint() {

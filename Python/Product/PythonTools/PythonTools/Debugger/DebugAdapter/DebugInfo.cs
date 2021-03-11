@@ -16,9 +16,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Runtime.Serialization;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 
 namespace Microsoft.PythonTools.Debugger {
 
@@ -113,25 +111,28 @@ namespace Microsoft.PythonTools.Debugger {
     }
 
     public class VariablePresentation {
-        [JsonProperty("special")]
-        public PresentationMode Special { get; set; }
 
-        [JsonProperty("function")]
-        public PresentationMode Function { get; set; }
+        // default to group, which is the current vscode behavior
+        public static PresentationMode DefaultPresentationMode = PresentationMode.Group;
 
         [JsonProperty("class_")]
         public PresentationMode Class { get; set; }
 
+        [JsonProperty("function")]
+        public PresentationMode Function { get; set; }
+
         [JsonProperty("protected")]
         public PresentationMode Protected { get; set; }
-    }
 
-    [JsonConverter(typeof(StringEnumConverter))]
-    public enum PresentationMode {
-        [EnumMember(Value="group")]
-        Group,
+        [JsonProperty("special")]
+        public PresentationMode Special { get; set; }
 
-        [EnumMember(Value = "inline")]
-        Inline,
+        public VariablePresentation() {
+
+            Class = DefaultPresentationMode;
+            Function = DefaultPresentationMode;
+            Protected = DefaultPresentationMode;
+            Special = DefaultPresentationMode;
+        }
     }
 }

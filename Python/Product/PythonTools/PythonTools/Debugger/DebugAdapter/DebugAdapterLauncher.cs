@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -24,6 +25,7 @@ using System.Windows.Forms;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces;
 using Microsoft.VisualStudio.Shell;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace Microsoft.PythonTools.Debugger {
@@ -196,13 +198,12 @@ namespace Microsoft.PythonTools.Debugger {
             launchJson.DebugStdLib = debugService.DebugStdLib;
             launchJson.ShowReturnValue = debugService.ShowFunctionReturnValue;
 
-            // Disable grouping functionality for now, later we'll add an option to control this
-            launchJson.VariablePresentation = new VariablePresentation {
-                Special = PresentationMode.Inline,
-                Function = PresentationMode.Inline,
-                Class = PresentationMode.Inline,
-                Protected = PresentationMode.Inline
-            };
+            var variablePresentation = new VariablePresentation();
+            variablePresentation.Class = debugService.VariablePresentationForClasses;
+            variablePresentation.Function = debugService.VariablePresentationForFunctions;
+            variablePresentation.Protected = debugService.VariablePresentationForProtected;
+            variablePresentation.Special = debugService.VariablePresentationForSpecial;
+            launchJson.VariablePresentation = variablePresentation;
 
             var excludePTVSInstallDirectory = new PathRule() {
                 Path = PathUtils.GetParent(typeof(DebugAdapterLauncher).Assembly.Location),

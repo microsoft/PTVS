@@ -124,6 +124,15 @@ namespace Microsoft.PythonTools.Debugger {
                 envArray.Add(pair);
             }
 
+            // get the variable presentation options from Tools -> Options -> Python -> Debugging
+            var pyService = provider.GetPythonToolsService();
+            JObject variablePresentationObj = new JObject {
+                ["class"] = pyService.DebuggerOptions.VariablePresentationForClasses.ToString().ToLower(),
+                ["function"] = pyService.DebuggerOptions.VariablePresentationForFunctions.ToString().ToLower(),
+                ["protected"] = pyService.DebuggerOptions.VariablePresentationForProtected.ToString().ToLower(),
+                ["special"] = pyService.DebuggerOptions.VariablePresentationForSpecial.ToString().ToLower(),
+            };
+
             JObject jsonObj = new JObject {
                 ["exe"] = config.GetInterpreterPath(),
                 ["cwd"] = string.IsNullOrEmpty(config.WorkingDirectory) ? PathUtils.GetParent(config.ScriptName) : config.WorkingDirectory,
@@ -132,6 +141,7 @@ namespace Microsoft.PythonTools.Debugger {
                 ["options"] = GetOptions(provider, config),
                 ["env"] = envArray,
                 ["interpreterArgs"] = config.InterpreterArguments,
+                ["variablePresentation"] = variablePresentationObj,
             };
 
             if (config.Environment == null) {
