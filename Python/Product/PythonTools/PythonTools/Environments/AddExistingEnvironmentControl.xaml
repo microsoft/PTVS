@@ -40,7 +40,6 @@
                             <TextBlock
                                 Margin="0 0 0 6"
                                 Text="{Binding InterpreterPath}"
-                                Foreground="{DynamicResource {x:Static ptwpf:ModernStyles.GrayTextKey}}"
                                 Style="{DynamicResource {x:Static ptwpf:ModernStyles.TextBlockEnvironment90PercentFontSizeStyleKey}}" />
                         </StackPanel>
                     </DataTemplate>
