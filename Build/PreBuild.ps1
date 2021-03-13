@@ -1,4 +1,4 @@
-param ($vstarget, $source, $outdir)
+param ($pylanceTgz, $vstarget, $source, $outdir)
 
 $ErrorActionPreference = "Stop"
 
@@ -65,6 +65,11 @@ try {
     Write-Host "Downloading debugpy version $debugpyver"
     $debugpyarglist = "install_debugpy.py", $debugpyver, "`"$outdir`""
     Start-Process -Wait -NoNewWindow "$outdir\python\tools\python.exe" -ErrorAction Stop -ArgumentList $debugpyarglist
+    if ($pylanceTgz) 
+    {
+        $argList = "install_pylance.py", "--pylanceTgz", "`"$pylanceTgz`""
+        Start-Process -Wait -NoNewWindow "$outdir\python\tools\python.exe" -ErrorAction Stop -ArgumentList $argList
+    }
 } finally {
     Pop-Location
 }
