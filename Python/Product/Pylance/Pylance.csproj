@@ -192,6 +192,14 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <VSIXSubPath>ProjectTemplates\Python\ConsoleAppProject\</VSIXSubPath>
     </Content>
+    <Content 
+       Include="$(MSBuildThisFileDirectory)..\..\..\Pylance\**\*.*"
+       Exclude="*.map"
+       CopyToOutputDirectory="PreserveNewest">    
+       <TargetPath>Pylance\%(RecursiveDir)\%(Filename)%(Extension)</TargetPath>
+       <Link>Pylance\%(RecursiveDir)%(Filename)%(Extension)</Link>       
+       <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
     <Content Include="Templates\Core\ItemTemplates\Python\MsPythonConfig\mspythonconfig.vstemplate">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <VSIXSubPath>ItemTemplates\Python\MsPythonConfig</VSIXSubPath>
