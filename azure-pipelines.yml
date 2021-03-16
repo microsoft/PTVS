@@ -24,6 +24,7 @@ pr:
     include:
       - master
       - release/*
+      - feature/pylance
   paths:
     exclude:
       - 'azure-pipelines-policy.yml'
