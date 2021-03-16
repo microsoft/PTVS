@@ -22,6 +22,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.PythonTools.Common;
 using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Environments;
 using Microsoft.PythonTools.Infrastructure;
@@ -346,7 +347,7 @@ namespace Microsoft.PythonTools {
 
         internal LANGPREFERENCES2 GetLanguagePreferences() {
             var txtMgr = (IVsTextManager2)_container.GetService(typeof(SVsTextManager));
-            var langPrefs = new[] { new LANGPREFERENCES2 { guidLang = GuidList.guidPythonLanguageServiceGuid } };
+            var langPrefs = new[] { new LANGPREFERENCES2 { guidLang = CommonGuidList.guidPythonLanguageServiceGuid } };
             ErrorHandler.ThrowOnFailure(txtMgr.GetUserPreferences2(null, null, langPrefs, null));
             return langPrefs[0];
         }

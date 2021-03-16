@@ -21,6 +21,7 @@ using System.Text.RegularExpressions;
 using System.Windows;
 using EnvDTE;
 using Microsoft.PythonTools;
+using Microsoft.PythonTools.Common;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.TextManager.Interop;
@@ -293,7 +294,7 @@ namespace PythonToolsUITests {
                 var mgr = app.GetService<IVsTextManager4>(typeof(SVsTextManager));
                 LANGPREFERENCES3[] langPrefs = { new LANGPREFERENCES3() };
 
-                langPrefs[0].guidLang = GuidList.guidPythonLanguageServiceGuid;
+                langPrefs[0].guidLang = CommonGuidList.guidPythonLanguageServiceGuid;
                 ErrorHandler.ThrowOnFailure(mgr.GetUserPreferences4(null, langPrefs, null));
                 var old = langPrefs[0].IndentStyle;
                 langPrefs[0].IndentStyle = style;

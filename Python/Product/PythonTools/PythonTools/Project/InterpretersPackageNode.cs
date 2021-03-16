@@ -21,6 +21,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading;
+using Microsoft.PythonTools.Common;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio;
@@ -70,7 +71,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public override Guid MenuGroupId {
-            get { return GuidList.guidPythonToolsCmdSet; }
+            get { return CommonGuidList.guidPythonToolsCmdSet; }
         }
 
         public override string Url {

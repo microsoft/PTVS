@@ -20,6 +20,7 @@ using System.ComponentModel.Composition;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.PythonTools.Common;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Editor;
@@ -80,7 +81,7 @@ namespace Microsoft.PythonTools.Editor {
             var hr = _vsExpansionMgr.InvokeInsertionUI(
                 _editorAdaptersFactoryService.GetViewAdapter(textView),
                 client,
-                GuidList.guidPythonLanguageServiceGuid,
+                CommonGuidList.guidPythonLanguageServiceGuid,
                 snippetTypes,
                 snippetTypes.Length,
                 0,
@@ -164,7 +165,7 @@ namespace Microsoft.PythonTools.Editor {
             var client = GetOrCreateExpansionClient(textView);
             int hr = _vsExpansionMgr.GetExpansionByShortcut(
                 client,
-                GuidList.guidPythonLanguageServiceGuid,
+                CommonGuidList.guidPythonLanguageServiceGuid,
                 text,
                 _editorAdaptersFactoryService.GetViewAdapter(textView),
                 textSpan,
@@ -192,7 +193,7 @@ namespace Microsoft.PythonTools.Editor {
             }
 
             try {
-                var enumerator = await _expansionMgr.EnumerateExpansionsAsync(GuidList.guidPythonLanguageServiceGuid, 1, null, 0, 0, 0);
+                var enumerator = await _expansionMgr.EnumerateExpansionsAsync(CommonGuidList.guidPythonLanguageServiceGuid, 1, null, 0, 0, 0);
                 if (enumerator == null) {
                     return null;
                 }

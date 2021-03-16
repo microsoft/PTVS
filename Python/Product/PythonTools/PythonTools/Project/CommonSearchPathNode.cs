@@ -16,6 +16,7 @@
 
 using System;
 using System.Runtime.InteropServices;
+using Microsoft.PythonTools.Common;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools.Project;
 
@@ -42,7 +43,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public override Guid MenuGroupId {
-            get { return GuidList.guidPythonToolsCmdSet; }
+            get { return CommonGuidList.guidPythonToolsCmdSet; }
         }
 
         public int Index {

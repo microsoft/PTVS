@@ -18,6 +18,7 @@ using System;
 using System.ComponentModel.Design;
 using System.Linq;
 using System.Runtime.InteropServices;
+using Microsoft.PythonTools.Common;
 using Microsoft.PythonTools.Environments;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
@@ -35,7 +36,7 @@ namespace Microsoft.PythonTools.Commands {
         private readonly IPythonToolsLogger _logger;
 
         public CurrentEnvironmentCommand(IServiceProvider serviceProvider)
-            : base(null, null, QueryStatus, new CommandID(GuidList.guidPythonToolsCmdSet, (int)PkgCmdIDList.comboIdCurrentEnvironment)) {
+            : base(null, null, QueryStatus, new CommandID(CommonGuidList.guidPythonToolsCmdSet, (int)PkgCmdIDList.comboIdCurrentEnvironment)) {
             _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
             _envSwitchMgr = serviceProvider.GetPythonToolsService().EnvironmentSwitcherManager;
             _logger = serviceProvider.GetService(typeof(IPythonToolsLogger)) as IPythonToolsLogger;

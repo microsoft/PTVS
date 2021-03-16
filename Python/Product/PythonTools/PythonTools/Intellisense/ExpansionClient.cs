@@ -347,7 +347,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 pszPath,
                 textSpan,
                 this,
-                GuidList.guidPythonLanguageServiceGuid,
+                CommonGuidList.guidPythonLanguageServiceGuid,
                 0,
                 out _session
             );

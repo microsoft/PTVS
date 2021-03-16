@@ -116,9 +116,6 @@
     <Compile Include="..\PythonTools\PythonConstants.cs">
       <Link>PythonConstants.cs</Link>
     </Compile>
-    <Compile Include="..\PythonTools\Guids.cs">
-      <Link>Guids.cs</Link>
-    </Compile>
     <Compile Include="ProjectInfo.cs" />
     <Compile Include="PackageManagerEventSink.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -16,6 +16,7 @@
 
 using System;
 using System.Runtime.InteropServices;
+using Microsoft.PythonTools.Common;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Imaging;
@@ -60,7 +61,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public override Guid MenuGroupId {
-            get { return GuidList.guidPythonToolsCmdSet; }
+            get { return CommonGuidList.guidPythonToolsCmdSet; }
         }
 
         /// <summary>
@@ -126,7 +127,7 @@ namespace Microsoft.PythonTools.Project {
                         result |= QueryStatusResult.SUPPORTED | QueryStatusResult.INVISIBLE;
                         return VSConstants.S_OK;
                 }
-            } else if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
+            } else if (cmdGroup == CommonGuidList.guidPythonToolsCmdSet) {
                 switch (cmd) {
                     case PythonConstants.AddEnvironment:
                     case PythonConstants.ViewAllEnvironments:

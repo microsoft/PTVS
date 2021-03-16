@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using Microsoft.PythonTools.Common;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Editor;
@@ -323,7 +324,7 @@ namespace Microsoft.PythonTools.Editor {
                 pszPath,
                 textSpan,
                 this,
-                GuidList.guidPythonLanguageServiceGuid,
+                CommonGuidList.guidPythonLanguageServiceGuid,
                 0,
                 out _session
             );
