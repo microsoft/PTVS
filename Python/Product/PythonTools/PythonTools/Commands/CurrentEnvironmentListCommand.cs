@@ -18,6 +18,7 @@ using System;
 using System.ComponentModel.Design;
 using System.Linq;
 using System.Runtime.InteropServices;
+using Microsoft.PythonTools.Common;
 using Microsoft.PythonTools.Environments;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
@@ -29,7 +30,7 @@ namespace Microsoft.PythonTools.Commands {
         private readonly EnvironmentSwitcherManager _envSwitchMgr;
 
         public CurrentEnvironmentListCommand(IServiceProvider serviceProvider)
-            : base(null, new CommandID(GuidList.guidPythonToolsCmdSet, (int)PkgCmdIDList.comboIdCurrentEnvironmentList)) {
+            : base(null, new CommandID(CommonGuidList.guidPythonToolsCmdSet, (int)PkgCmdIDList.comboIdCurrentEnvironmentList)) {
             _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
             _envSwitchMgr = serviceProvider.GetPythonToolsService().EnvironmentSwitcherManager;
         }

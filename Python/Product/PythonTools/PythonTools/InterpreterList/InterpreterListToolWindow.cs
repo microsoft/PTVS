@@ -27,6 +27,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
 using Microsoft.PythonTools.Commands;
+using Microsoft.PythonTools.Common;
 using Microsoft.PythonTools.Environments;
 using Microsoft.PythonTools.EnvironmentsList;
 using Microsoft.PythonTools.Infrastructure;
@@ -56,7 +57,7 @@ namespace Microsoft.PythonTools.InterpreterList {
         private readonly Dictionary<EnvironmentView, string> _cachedScriptPaths;
 
         public InterpreterListToolWindow(IServiceProvider services) : base(services) {
-            ToolBar = new CommandID(GuidList.guidPythonToolsCmdSet, PkgCmdIDList.EnvWindowToolbar);
+            ToolBar = new CommandID(CommonGuidList.guidPythonToolsCmdSet, PkgCmdIDList.EnvWindowToolbar);
 
             _site = services;
             _cachedScriptPaths = new Dictionary<EnvironmentView, string>();
@@ -140,7 +141,7 @@ namespace Microsoft.PythonTools.InterpreterList {
             ));
 
             RegisterCommands(
-                CommandAsyncToOleMenuCommandShimFactory.CreateCommand(GuidList.guidPythonToolsCmdSet, (int)PkgCmdIDList.cmdidAddEnvironment, new AddEnvironmentCommand(this))
+                CommandAsyncToOleMenuCommandShimFactory.CreateCommand(CommonGuidList.guidPythonToolsCmdSet, (int)PkgCmdIDList.cmdidAddEnvironment, new AddEnvironmentCommand(this))
             );
 
             Content = list;

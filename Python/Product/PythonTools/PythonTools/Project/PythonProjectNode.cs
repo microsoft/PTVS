@@ -28,6 +28,7 @@ using System.Xml;
 using System.Xml.XPath;
 using Microsoft.Build.Execution;
 using Microsoft.PythonTools.Commands;
+using Microsoft.PythonTools.Common;
 using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Environments;
 using Microsoft.PythonTools.Infrastructure;
@@ -1292,7 +1293,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         internal override int QueryStatusOnNode(Guid cmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result) {
-            if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
+            if (cmdGroup == CommonGuidList.guidPythonToolsCmdSet) {
                 IPythonInterpreterFactory factory;
                 switch ((int)cmd) {
                     case PythonConstants.OpenInteractiveForEnvironment:
@@ -1347,7 +1348,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         protected override QueryStatusResult QueryStatusSelectionOnNodes(IList<HierarchyNode> selectedNodes, Guid cmdGroup, uint cmd, IntPtr pCmdText) {
-            if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
+            if (cmdGroup == CommonGuidList.guidPythonToolsCmdSet) {
                 var command = GetCustomCommand(cmd);
                 if (command != null) {
                     // Update display text for the menu commands.
@@ -1409,7 +1410,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         protected override int ExecCommandIndependentOfSelection(Guid cmdGroup, uint cmdId, uint cmdExecOpt, IntPtr vaIn, IntPtr vaOut, CommandOrigin commandOrigin, out bool handled) {
-            if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
+            if (cmdGroup == CommonGuidList.guidPythonToolsCmdSet) {
                 var command = GetCustomCommand(cmdId);
                 handled = true;
 
@@ -1522,7 +1523,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         protected internal override string QueryCommandArguments(Guid cmdGroup, uint cmdId, CommandOrigin commandOrigin) {
-            if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
+            if (cmdGroup == CommonGuidList.guidPythonToolsCmdSet) {
                 switch ((int)cmdId) {
                     case PythonConstants.ActivateEnvironment:
                         return "e,env,environment:";
@@ -1540,7 +1541,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         protected override int ExecCommandThatDependsOnSelectedNodes(Guid cmdGroup, uint cmdId, uint cmdExecOpt, IntPtr vaIn, IntPtr vaOut, CommandOrigin commandOrigin, IList<HierarchyNode> selectedNodes, out bool handled) {
-            if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
+            if (cmdGroup == CommonGuidList.guidPythonToolsCmdSet) {
                 handled = true;
                 switch ((int)cmdId) {
                     case PythonConstants.ActivateEnvironment:
@@ -1563,7 +1564,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         protected override bool DisableCmdInCurrentMode(Guid cmdGroup, uint cmd) {
-            if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
+            if (cmdGroup == CommonGuidList.guidPythonToolsCmdSet) {
                 if (IsCurrentStateASuppressCommandsMode()) {
                     switch ((int)cmd) {
                         case CommonConstants.StartDebuggingCmdId:
@@ -2271,7 +2272,7 @@ namespace Microsoft.PythonTools.Project {
 
         public override Guid SharedCommandGuid {
             get {
-                return GuidList.guidPythonToolsCmdSet;
+                return CommonGuidList.guidPythonToolsCmdSet;
             }
         }
 

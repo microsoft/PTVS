@@ -20,6 +20,7 @@ using System.ComponentModel.Composition;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
+using Microsoft.PythonTools.Common;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.LanguageServerClient;
@@ -166,7 +167,7 @@ namespace Microsoft.PythonTools.Repl {
                 true,
                 curId,
                 Strings.ReplCaptionNoEvaluator,
-                GuidList.guidPythonLanguageServiceGuid,
+                CommonGuidList.guidPythonLanguageServiceGuid,
                 "PythonInteractive"
             );
 
@@ -225,7 +226,7 @@ namespace Microsoft.PythonTools.Repl {
                 false,
                 curId,
                 title,
-                GuidList.guidPythonLanguageServiceGuid,
+                CommonGuidList.guidPythonLanguageServiceGuid,
                 replId
             );
 
@@ -267,19 +268,19 @@ namespace Microsoft.PythonTools.Repl {
 #if DEV15_OR_LATER
             var windowFactory2 = _windowFactory as IVsInteractiveWindowFactory2;
             var replWindow = windowFactory2.Create(
-                GuidList.guidPythonInteractiveWindowGuid,
+                CommonGuidList.guidPythonInteractiveWindowGuid,
                 id,
                 title,
                 evaluator,
                 creationFlags,
-                GuidList.guidPythonToolsCmdSet,
+                CommonGuidList.guidPythonToolsCmdSet,
                 PythonConstants.ReplWindowToolbar,
                 null
             );
 
 #else
             var replWindow = _windowFactory.Create(
-                GuidList.guidPythonInteractiveWindowGuid,
+                CommonGuidList.guidPythonInteractiveWindowGuid,
                 id,
                 title,
                 evaluator,
@@ -296,7 +297,7 @@ namespace Microsoft.PythonTools.Repl {
             // Initializes the command filters with the base Python content type
             // so that our MEF exports, such as ReplWindowCreationListener, are activated.
             var pythonContentType = _contentTypeService.GetContentType(PythonCoreConstants.ContentType);
-            replWindow.SetLanguage(GuidList.guidPythonLanguageServiceGuid, pythonContentType);
+            replWindow.SetLanguage(CommonGuidList.guidPythonLanguageServiceGuid, pythonContentType);
 
             var selectEval = evaluator as SelectableReplEvaluator;
             if (selectEval != null) {

@@ -20,6 +20,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Security;
 using System.Text;
+using Microsoft.PythonTools.Common;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Imaging;
@@ -78,7 +79,7 @@ namespace Microsoft.PythonTools.Project {
             Debug.Assert(this.ProjectMgr != null, "The Dynamic FileNode has no project manager");
             Utilities.CheckNotNull(this.ProjectMgr);
 
-            if (guidCmdGroup == GuidList.guidPythonToolsCmdSet) {
+            if (guidCmdGroup == CommonGuidList.guidPythonToolsCmdSet) {
                 switch (cmd) {
                     case CommonConstants.SetAsStartupFileCmdId:
                         // Set the StartupFile project property to the Url of this node
@@ -98,7 +99,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         internal override int QueryStatusOnNode(Guid guidCmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result) {
-            if (guidCmdGroup == GuidList.guidPythonToolsCmdSet) {
+            if (guidCmdGroup == CommonGuidList.guidPythonToolsCmdSet) {
                 if (this.ProjectMgr.IsCodeFile(this.Url)) {
                     switch (cmd) {
                         case CommonConstants.SetAsStartupFileCmdId:

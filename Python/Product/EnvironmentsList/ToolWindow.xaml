@@ -107,7 +107,7 @@
             </Style>
 
             <Style TargetType="{x:Type ListBoxItem}" BasedOn="{StaticResource {x:Type ListBoxItem}}" x:Key="WithLocalizedName">
-                <Setter Property="AutomationProperties.Name" Value="{Binding LocalizedDisplayName,Mode=OneWay}" />
+                <Setter Property="AutomationProperties.Name" Value="{Binding LocalizedAutomationName,Mode=OneWay}" />
                 <Setter Property="AutomationProperties.HelpText" Value="{Binding LocalizedHelpText,Mode=OneWay}" />
             </Style>
             <Style TargetType="{x:Type ComboBoxItem}" x:Key="Combo_WithLocalizedName">

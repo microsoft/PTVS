@@ -1237,7 +1237,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 _expansionMgr.InvokeInsertionUI(
                     GetViewAdapter(),
                     _expansionClient,
-                    GuidList.guidPythonLanguageServiceGuid,
+                    CommonGuidList.guidPythonLanguageServiceGuid,
                     snippetTypes,
                     snippetTypes.Length,
                     0,
@@ -1268,7 +1268,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     string expansionPath, title;
                     int hr = _expansionMgr.GetExpansionByShortcut(
                         _expansionClient,
-                        GuidList.guidPythonLanguageServiceGuid,
+                        CommonGuidList.guidPythonLanguageServiceGuid,
                         text,
                         GetViewAdapter(),
                         textSpan,

@@ -30,6 +30,7 @@ using Microsoft.Build.Execution;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Logging;
 using Microsoft.PythonTools.BuildTasks;
+using Microsoft.PythonTools.Common;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Repl;
@@ -115,7 +116,7 @@ namespace Microsoft.PythonTools.Project {
             }
 
             var package = typeof(PythonToolsPackage).GUID;
-            var cmdSet = GuidList.guidPythonToolsCmdSet;
+            var cmdSet = CommonGuidList.guidPythonToolsCmdSet;
             uint cmdId;
 
             ErrorHandler.ThrowOnFailure(commands.AddNamedCommand(

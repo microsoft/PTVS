@@ -17,6 +17,7 @@
 using System;
 using System.Linq;
 using System.Runtime.InteropServices;
+using Microsoft.PythonTools.Common;
 using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.TextManager.Interop;
@@ -26,7 +27,7 @@ namespace Microsoft.PythonTools {
     /// <summary>
     /// Needed for the legacy debugger and for the text editor/python options pages.
     /// </summary>
-    [Guid(GuidList.guidPythonLanguageService)]
+    [Guid(CommonGuidList.guidPythonLanguageService)]
     internal sealed class PythonLanguageInfo : IVsLanguageInfo, IVsLanguageDebugInfo, IVsLanguageDebugInfo2 {
         private readonly IServiceProvider _serviceProvider;
 

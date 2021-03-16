@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
+using Microsoft.PythonTools.Common;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Project;
@@ -149,7 +150,7 @@ namespace Microsoft.PythonTools.Environments {
             CurrentFactory = Context?.CurrentFactory;
             EnvironmentsChanged?.Invoke(this, EventArgs.Empty);
 
-            UIContext.FromUIContextGuid(GuidList.guidPythonToolbarUIContext).IsActive = Context != null;
+            UIContext.FromUIContextGuid(CommonGuidList.guidPythonToolbarUIContext).IsActive = Context != null;
         }
 
         private void Reset() {

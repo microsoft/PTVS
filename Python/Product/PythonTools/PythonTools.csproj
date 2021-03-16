@@ -672,7 +672,6 @@
     <Compile Include="PythonTools\Project\PythonProjectFactory.cs" />
     <Compile Include="PythonTools\Project\PythonProjectNode.cs" />
     <Compile Include="PythonTools\Project\PythonProjectPackage.cs" />
-    <Compile Include="Guids.cs" />
     <Compile Include="PythonToolsPackage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PkgCmdID.cs" />

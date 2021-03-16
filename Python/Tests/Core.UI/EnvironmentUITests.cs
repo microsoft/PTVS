@@ -22,6 +22,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using Microsoft.Python.Parsing;
 using Microsoft.PythonTools;
+using Microsoft.PythonTools.Common;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.Shell;
@@ -755,7 +756,7 @@ dependencies:
 
             var switchMgr = app.PythonToolsService.EnvironmentSwitcherManager;
             for (int i = 10; i >= 0; i--) {
-                var actualVisible = UIContext.FromUIContextGuid(GuidList.guidPythonToolbarUIContext).IsActive;
+                var actualVisible = UIContext.FromUIContextGuid(CommonGuidList.guidPythonToolbarUIContext).IsActive;
                 var actualDescription = switchMgr.CurrentFactory?.Configuration.Description;
 
                 if (actualVisible == expectedVisible && actualDescription == expectedDescription) {

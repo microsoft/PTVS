@@ -75,9 +75,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\PythonTools\Guids.cs">
-      <Link>Guids.cs</Link>
-    </Compile>
     <Compile Include="..\PythonTools\PkgCmdID.cs">
       <Link>PkgCmdID.cs</Link>
     </Compile>

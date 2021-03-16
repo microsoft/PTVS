@@ -83,7 +83,7 @@ namespace Microsoft.PythonTools.ProjectWizards {
                 }
 
                 object inObj = projName + "|" + directory + "|" + (!exclusive).ToString();
-                var guid = GuidList.guidPythonToolsCmdSet;
+                var guid = CommonGuidList.guidPythonToolsCmdSet;
                 hr = uiShell.PostExecCommand(ref guid, PkgCmdIDList.cmdidImportWizard, 0, ref inObj);
                 if (ErrorHandler.Failed(hr)) {
                     MessageBox.Show(string.Format("Unable to start wizard: Unexpected error 0x{0:X08}", hr), "Visual Studio");

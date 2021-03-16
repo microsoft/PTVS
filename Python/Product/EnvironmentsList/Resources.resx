@@ -482,4 +482,8 @@ If you are having trouble, you can click the link below and restart Visual Studi
   <data name="NoDBExtensionReactivate" xml:space="preserve">
     <value>Reactivate IntelliSense databases in my next session</value>
   </data>
+  <data name="BrokenEnvironmentAutomationNameFormat" xml:space="preserve">
+    <value>{0} - broken</value>
+    <comment>Used for accessibility to indicate an environment is not usable</comment>
+  </data>
 </root>

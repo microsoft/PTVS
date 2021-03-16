@@ -22,6 +22,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.Python.Parsing;
+using Microsoft.PythonTools.Common;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
@@ -193,7 +194,7 @@ namespace Microsoft.PythonTools.Repl {
                         }
                         break;
                 }
-            } else if (pguidCmdGroup == GuidList.guidPythonToolsCmdSet) {
+            } else if (pguidCmdGroup == CommonGuidList.guidPythonToolsCmdSet) {
                 switch (nCmdID) {
                     case PkgCmdIDList.comboIdReplScopes:
                         ScopeComboBoxHandler(pvaIn, pvaOut);
@@ -234,7 +235,7 @@ namespace Microsoft.PythonTools.Repl {
             if (pguidCmdGroup == VSConstants.GUID_VSStandardCommandSet97) {
                 //switch ((VSConstants.VSStd97CmdID)cmdID) {
                 //}
-            } else if (pguidCmdGroup == GuidList.guidPythonToolsCmdSet) {
+            } else if (pguidCmdGroup == CommonGuidList.guidPythonToolsCmdSet) {
                 switch (cmdID) {
                     case PkgCmdIDList.comboIdReplScopes:
                         return _scopeListVisible ? CommandEnabled : CommandDisabledAndHidden;

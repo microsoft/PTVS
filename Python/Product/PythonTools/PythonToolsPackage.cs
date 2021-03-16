@@ -162,9 +162,9 @@ namespace Microsoft.PythonTools {
     // TODO: Pylance
     //[ProvideDiffSupportedContentType(PythonConstants.SourceFileExtensions, "")]
     //[ProvidePeekSupportedContentType(PythonConstants.SourceFileExtensions, "")]
-    [ProvideCodeExpansions(GuidList.guidPythonLanguageService, false, 106, "Python", @"Snippets\%LCID%\SnippetsIndex.xml", @"Snippets\%LCID%\Python\")]
+    [ProvideCodeExpansions(CommonGuidList.guidPythonLanguageService, false, 106, "Python", @"Snippets\%LCID%\SnippetsIndex.xml", @"Snippets\%LCID%\Python\")]
     [ProvideCodeExpansionPath("Python", "Test", @"Snippets\%LCID%\Test\")]
-    [ProvideInteractiveWindow(GuidList.guidPythonInteractiveWindow, Style = VsDockStyle.Linked, Orientation = ToolWindowOrientation.none, Window = ToolWindowGuids80.Outputwindow)]
+    [ProvideInteractiveWindow(CommonGuidList.guidPythonInteractiveWindow, Style = VsDockStyle.Linked, Orientation = ToolWindowOrientation.none, Window = ToolWindowGuids80.Outputwindow)]
     [ProvideBraceCompletion(PythonCoreConstants.ContentType)]
     [ProvideNewFileTemplates(CommonGuidList.guidMiscFilesProjectGuidString, CommonGuidList.guidPythonToolsPkgString, "Python", @"Templates\NewItem\")]
     internal sealed class PythonToolsPackage : CommonPackage, IVsComponentSelectorProvider, IPythonToolsToolWindowService {
@@ -223,7 +223,7 @@ namespace Microsoft.PythonTools {
             // We can't move initialization of PythonInteractiveWindow into AsyncToolWindowFactory 
             // because Package.ShowToolWindow doesn't call IVsAsyncToolWindowFactory.CreateToolWindow
             // which makes it impossible to fully override tool window creation
-            if (toolWindowType == GuidList.guidPythonInteractiveWindowGuid) {
+            if (toolWindowType == CommonGuidList.guidPythonInteractiveWindowGuid) {
                 var pyService = this.GetPythonToolsService();
                 var category = SelectableReplEvaluator.GetSettingsCategory(id.ToString());
                 string replId;
@@ -420,10 +420,6 @@ namespace Microsoft.PythonTools {
             await base.InitializeAsync(cancellationToken, progress);
 
             var shell = GetService(typeof(SVsShell)) as IVsShell;
-            if(shell.IsPackageInstalled(new Guid(CommonGuidList.guidPythonToolsVS2019), out var installed) == VSConstants.S_OK && installed != 0) {
-                var uiShell = GetService(typeof(SVsUIShell)) as IVsUIShell;
-                uiShell.ShowMessageBox(0, Guid.Empty, null, "Python Tools are installed in Visual Studio. Please remove Python support or Data Science Workload before trying Pylance extension.", null, 0, OLEMSGBUTTON.OLEMSGBUTTON_OK, 0, OLEMSGICON.OLEMSGICON_CRITICAL, 0, out _);
-            }
 
             AddService<IClipboardService>(new ClipboardService(), true);
             AddService<IPythonToolsToolWindowService>(this, true);
@@ -442,7 +438,7 @@ namespace Microsoft.PythonTools {
             UIContext.FromUIContextGuid(DkmEngineId.NativeEng).IsActive = true;
 
             // Add our command handlers for menu (commands must exist in the .vsct file)
-            RegisterCommands(GuidList.guidPythonToolsCmdSet,
+            RegisterCommands(CommonGuidList.guidPythonToolsCmdSet,
                 new OpenReplCommand(this, (int)PkgCmdIDList.cmdidReplWindow),
                 new OpenReplCommand(this, PythonConstants.OpenInteractiveForEnvironment),
                 new OpenDebugReplCommand(this),
@@ -463,11 +459,11 @@ namespace Microsoft.PythonTools {
                 new OpenWebUrlCommand(this, "https://go.microsoft.com/fwlink/?linkid=832517", PkgCmdIDList.cmdidWebDGProducts));
 
             RegisterCommands(
-                CommandAsyncToOleMenuCommandShimFactory.CreateCommand(GuidList.guidPythonToolsCmdSet, (int)PkgCmdIDList.cmdidAddEnvironment, new AddEnvironmentCommand(this)),
-                CommandAsyncToOleMenuCommandShimFactory.CreateCommand(GuidList.guidPythonToolsCmdSet, (int)PkgCmdIDList.cmdidAddVirtualEnv, new AddEnvironmentCommand(this, Environments.AddEnvironmentDialog.PageKind.VirtualEnvironment)),
-                CommandAsyncToOleMenuCommandShimFactory.CreateCommand(GuidList.guidPythonToolsCmdSet, (int)PkgCmdIDList.cmdidAddExistingEnv, new AddEnvironmentCommand(this, Environments.AddEnvironmentDialog.PageKind.ExistingEnvironment)),
-                CommandAsyncToOleMenuCommandShimFactory.CreateCommand(GuidList.guidPythonToolsCmdSet, (int)PkgCmdIDList.cmdidAddCondaEnv, new AddEnvironmentCommand(this, Environments.AddEnvironmentDialog.PageKind.CondaEnvironment)),
-                CommandAsyncToOleMenuCommandShimFactory.CreateCommand(GuidList.guidPythonToolsCmdSet, PythonConstants.InstallPythonPackage, new ManagePackagesCommand(this)),
+                CommandAsyncToOleMenuCommandShimFactory.CreateCommand(CommonGuidList.guidPythonToolsCmdSet, (int)PkgCmdIDList.cmdidAddEnvironment, new AddEnvironmentCommand(this)),
+                CommandAsyncToOleMenuCommandShimFactory.CreateCommand(CommonGuidList.guidPythonToolsCmdSet, (int)PkgCmdIDList.cmdidAddVirtualEnv, new AddEnvironmentCommand(this, Environments.AddEnvironmentDialog.PageKind.VirtualEnvironment)),
+                CommandAsyncToOleMenuCommandShimFactory.CreateCommand(CommonGuidList.guidPythonToolsCmdSet, (int)PkgCmdIDList.cmdidAddExistingEnv, new AddEnvironmentCommand(this, Environments.AddEnvironmentDialog.PageKind.ExistingEnvironment)),
+                CommandAsyncToOleMenuCommandShimFactory.CreateCommand(CommonGuidList.guidPythonToolsCmdSet, (int)PkgCmdIDList.cmdidAddCondaEnv, new AddEnvironmentCommand(this, Environments.AddEnvironmentDialog.PageKind.CondaEnvironment)),
+                CommandAsyncToOleMenuCommandShimFactory.CreateCommand(CommonGuidList.guidPythonToolsCmdSet, PythonConstants.InstallPythonPackage, new ManagePackagesCommand(this)),
                 new CurrentEnvironmentCommand(this),
                 new CurrentEnvironmentListCommand(this)
             );
