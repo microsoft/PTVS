@@ -54,9 +54,10 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         public string BrokenEnvironmentHelpUrl { get; }
         public bool ExtensionsCreated { get; set; }
 
-        private EnvironmentView(string id, string localizedName, string localizedHelpText) {
+        private EnvironmentView(string id, string localizedName, string localizedAutomationName, string localizedHelpText) {
             Configuration = new VisualStudioInterpreterConfiguration(id, id);
             Description = LocalizedDisplayName = localizedName;
+            LocalizedAutomationName = localizedAutomationName;
             LocalizedHelpText = localizedHelpText ?? "";
             Extensions = new ObservableCollection<object>();
         }
@@ -86,6 +87,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             Configuration = Factory.Configuration;
             LocalizedDisplayName = Configuration.Description;
             IsBroken = !Configuration.IsRunnable();
+            LocalizedAutomationName = !IsBroken ? LocalizedDisplayName : String.Format(Resources.BrokenEnvironmentAutomationNameFormat, LocalizedDisplayName);
             BrokenEnvironmentHelpUrl = "https://go.microsoft.com/fwlink/?linkid=863373";
 
             if (_service.IsConfigurable(Factory.Configuration.Id)) {
@@ -115,7 +117,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         }
 
         public static EnvironmentView CreateMissingEnvironmentView(string id, string description) {
-            return new EnvironmentView(id, description + Strings.MissingSuffix, null);
+            return new EnvironmentView(id, description + Strings.MissingSuffix, description + Strings.MissingSuffix, null);
         }
 
         public ObservableCollection<object> Extensions { get; private set; }
@@ -164,12 +166,14 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         #region Configuration Dependency Properties
 
         private static readonly DependencyPropertyKey DescriptionPropertyKey = DependencyProperty.RegisterReadOnly("Description", typeof(string), typeof(EnvironmentView), new PropertyMetadata(""));
+        private static readonly DependencyPropertyKey LocalizedAutomationNamePropertyKey = DependencyProperty.RegisterReadOnly("LocalizedAutomationName", typeof(string), typeof(EnvironmentView), new PropertyMetadata(""));
         private static readonly DependencyPropertyKey PrefixPathPropertyKey = DependencyProperty.RegisterReadOnly("PrefixPath", typeof(string), typeof(EnvironmentView), new PropertyMetadata());
         private static readonly DependencyPropertyKey InterpreterPathPropertyKey = DependencyProperty.RegisterReadOnly("InterpreterPath", typeof(string), typeof(EnvironmentView), new PropertyMetadata());
         private static readonly DependencyPropertyKey WindowsInterpreterPathPropertyKey = DependencyProperty.RegisterReadOnly("WindowsInterpreterPath", typeof(string), typeof(EnvironmentView), new PropertyMetadata());
         private static readonly DependencyPropertyKey PathEnvironmentVariablePropertyKey = DependencyProperty.RegisterReadOnly("PathEnvironmentVariable", typeof(string), typeof(EnvironmentView), new PropertyMetadata());
 
         public static readonly DependencyProperty DescriptionProperty = DescriptionPropertyKey.DependencyProperty;
+        public static readonly DependencyProperty LocalizedAutomationNameProperty = LocalizedAutomationNamePropertyKey.DependencyProperty;
         public static readonly DependencyProperty PrefixPathProperty = PrefixPathPropertyKey.DependencyProperty;
         public static readonly DependencyProperty InterpreterPathProperty = InterpreterPathPropertyKey.DependencyProperty;
         public static readonly DependencyProperty WindowsInterpreterPathProperty = WindowsInterpreterPathPropertyKey.DependencyProperty;
@@ -178,6 +182,10 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         public string Description {
             get { return (string)GetValue(DescriptionProperty) ?? ""; }
             set { SetValue(DescriptionPropertyKey, value ?? ""); }
+        }
+        public string LocalizedAutomationName {
+            get { return (string)GetValue(LocalizedAutomationNameProperty) ?? ""; }
+            set { SetValue(LocalizedAutomationNamePropertyKey, value ?? ""); }
         }
 
         public string PrefixPath {
