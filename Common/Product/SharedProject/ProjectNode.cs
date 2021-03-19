@@ -2018,26 +2018,29 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <param name="propertyValue">Value of property</param>
         public virtual void SetProjectProperty(string propertyName, string propertyValue) {
             Utilities.ArgumentNotNull("propertyName", propertyName);
-            Site.GetUIThread().MustBeCalledFromUIThread();
+            Site.GetUIThread().InvokeAsync(() =>
+                {
+                    var oldValue = GetUnevaluatedProperty(propertyName) ?? string.Empty;
+                    propertyValue = propertyValue ?? string.Empty;
 
-            var oldValue = GetUnevaluatedProperty(propertyName) ?? string.Empty;
-            propertyValue = propertyValue ?? string.Empty;
+                    if (oldValue.Equals(propertyValue, StringComparison.Ordinal))
+                    {
+                        // Property is unchanged or unspecified, so don't set it.
+                        return;
+                    }
 
-            if (oldValue.Equals(propertyValue, StringComparison.Ordinal)) {
-                // Property is unchanged or unspecified, so don't set it.
-                return;
-            }
+                    // Check out the project file.
+                    if (!this.QueryEditProjectFile(false))
+                    {
+                        throw Marshal.GetExceptionForHR(VSConstants.OLE_E_PROMPTSAVECANCELLED);
+                    }
 
-            // Check out the project file.
-            if (!this.QueryEditProjectFile(false)) {
-                throw Marshal.GetExceptionForHR(VSConstants.OLE_E_PROMPTSAVECANCELLED);
-            }
+                    var newProp = this.buildProject.SetProperty(propertyName, propertyValue);
+                    RaiseProjectPropertyChanged(propertyName, oldValue, propertyValue);
 
-            var newProp = this.buildProject.SetProperty(propertyName, propertyValue);
-            RaiseProjectPropertyChanged(propertyName, oldValue, propertyValue);
-
-            // property cache will need to be updated
-            this.currentConfig = null;
+                    // property cache will need to be updated
+                    this.currentConfig = null;
+                });
         }
 
         public virtual void SetOrAddPropertyAfter(string propertyName, string propertyValue, string afterProperty) {

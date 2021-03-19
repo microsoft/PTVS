@@ -117,6 +117,10 @@
       <Project>{4e18d41e-5e73-461f-9289-f6709257171a}</Project>
       <Name>Microsoft.PythonTools.RunElevated</Name>
     </ProjectReference>
+    <ProjectReference Include="..\TestAdapter.Executor\TestAdapter.Executor.csproj">
+      <Project>{44E8BB56-C38E-49A8-8BC1-7AF40D0AC725}</Project>
+      <Name>TestAdapter.Executor</Name>
+    </ProjectReference>
     <ProjectReference Include="..\TestAdapter\TestAdapter.csproj">
       <Project>{5085df35-3a32-4894-835e-e5a3956d4f57}</Project>
       <Name>TestAdapter</Name>

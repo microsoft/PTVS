@@ -38,6 +38,7 @@
     <Asset Type="Microsoft.VisualStudio.MefComponent" Path="|Microsoft.PythonTools.EnvironmentsList;_GetTargetPath|" />
     <Asset Type="Microsoft.VisualStudio.MefComponent" Path="|Microsoft.PythonTools.VSInterpreters;_GetTargetPath|" />
     <Asset Type="Microsoft.VisualStudio.MefComponent" Path="|TestAdapter;_GetTargetPath|" />
+    <Asset Type="UnitTestExtension" Path="|TestAdapter.Executor;_GetTargetPath|" />
     <Asset Type="Microsoft.VisualStudio.MefComponent" Path="|Microsoft.PythonTools.Workspace;_GetTargetPath|" />
     <Asset Type="DebuggerEngineExtension" Path="DkmDebugger.vsdconfig" />
     <Asset Type="NativeVisualizer" Path="Visualizers\PythonDkm.natvis" />
