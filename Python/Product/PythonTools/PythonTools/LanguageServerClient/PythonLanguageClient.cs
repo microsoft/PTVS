@@ -14,6 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using EnvDTE;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
@@ -110,12 +111,18 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             _clientContext.InterpreterChanged += OnSettingsChanged;
             _analysisOptions.Changed += OnSettingsChanged;
             _advancedEditorOptions.Changed += OnSettingsChanged;
+            var dte = (EnvDTE80.DTE2)Site.GetService(typeof(EnvDTE.DTE));
+            var solutionEvents = dte.Events.SolutionEvents;
+            solutionEvents.ProjectAdded += OnProjectAddedOrRemoved;
+            solutionEvents.ProjectRemoved += OnProjectAddedOrRemoved;
 
             _disposables.Add(() => {
                 _clientContext.InterpreterChanged -= OnSettingsChanged;
                 _analysisOptions.Changed -= OnSettingsChanged;
                 _advancedEditorOptions.Changed -= OnSettingsChanged;
                 _clientContext.Dispose();
+                solutionEvents.ProjectAdded -= OnProjectAddedOrRemoved;
+                solutionEvents.ProjectRemoved -= OnProjectAddedOrRemoved;
             });
 
             return await _server.ActivateAsync();
@@ -174,6 +181,8 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             => _rpc == null ? Task.FromResult(default(TResult)) : _rpc.InvokeWithParameterObjectAsync<TResult>(targetName, argument, cancellationToken);
 
         private void OnSettingsChanged(object sender, EventArgs e) => SendDidChangeConfiguration().DoNotWait();
+
+        private void OnProjectAddedOrRemoved(EnvDTE.Project Project) => SendDidChangeConfiguration().DoNotWait();
 
         private async Task SendDidChangeConfiguration() {
             if (_clientContext is PythonLanguageClientContextProject) {
