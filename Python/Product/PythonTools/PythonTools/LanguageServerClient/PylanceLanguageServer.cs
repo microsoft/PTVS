@@ -51,6 +51,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             var isDebugging = IsDebugging();
             var debugArgs = isDebugging ? GetDebugArguments() : string.Empty;
             var serverFilePath = isDebugging ? GetDebugServerLocation() : GetServerLocation();
+            var debuggerExtra = isDebugging ? "--verbose" : string.Empty;
 
             if (!File.Exists(serverFilePath)) {
                 MessageBox.ShowErrorMessage(_site, Strings.LanguageClientPylanceNotFound);
@@ -69,7 +70,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 RedirectStandardOutput = true,
                 UseShellExecute = false,
                 CreateNoWindow = true,
-                Arguments = $"{debugArgs} \"{serverFilePath}\" -- --stdio --cancellationReceive=file:{this.CancellationFolderName} --verbose",
+                Arguments = $"{debugArgs} \"{serverFilePath}\" -- --stdio --cancellationReceive=file:{this.CancellationFolderName} {debuggerExtra}",
             };
 
             var process = new Process {
@@ -77,7 +78,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             };
 
             if (process.Start()) {
-                if (PylanceLanguageServer.IsDebugging()) {
+                if (isDebugging) {
                     // During debugging give us time to attach
                     await Task.Delay(5000);
                 }
