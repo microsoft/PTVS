@@ -65,17 +65,33 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 FileName = nodePath,
                 WorkingDirectory = serverFolderPath,
                 RedirectStandardInput = true,
+                RedirectStandardError = true,
                 RedirectStandardOutput = true,
                 UseShellExecute = false,
                 CreateNoWindow = true,
-                Arguments = $"{debugArgs} \"{serverFilePath}\" -- --stdio --cancellationReceive=file:{this.CancellationFolderName}",
+                Arguments = $"{debugArgs} \"{serverFilePath}\" -- --stdio --cancellationReceive=file:{this.CancellationFolderName} --verbose",
             };
 
             var process = new Process {
                 StartInfo = info
             };
 
-            return process.Start() ? new Connection(process.StandardOutput.BaseStream, process.StandardInput.BaseStream) : null;
+            if (process.Start()) {
+                if (PylanceLanguageServer.IsDebugging()) {
+                    // During debugging give us time to attach
+                    await Task.Delay(5000);
+                }
+
+                // Write to output if we can't launch for some reason
+                if (process.HasExited) {
+                    string output = process.StandardError.ReadToEnd();
+                    var outputWindow = OutputWindowRedirector.GetGeneral(_site);
+                    outputWindow.WriteLine(output);
+                } else {
+                    return new Connection(process.StandardOutput.BaseStream, process.StandardInput.BaseStream);
+                }
+            }
+            return null;
         }
 
         private static string GetDebugServerLocation() {

@@ -188,6 +188,13 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 PythonConstants.ExtraPathsSetting, null, Site, PythonWorkspaceContextProvider.Workspace, out _)?.Split(';')
                 ?? _analysisOptions.ExtraPaths;
 
+            // Extra paths should include the project paths as well.
+            if (this.ProjectContextProvider != null) {
+                var directories = from n in this.ProjectContextProvider.ProjectNodes
+                                  select n.BaseURI.Directory;
+                extraPaths = extraPaths != null ? extraPaths.Concat(directories).ToArray() : directories.ToArray();
+            }
+
             var stubPath = UserSettings.GetStringSetting(
                 PythonConstants.StubPathSetting, null, Site, PythonWorkspaceContextProvider.Workspace, out _)
                 ?? _analysisOptions.StubPath;
