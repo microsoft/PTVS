@@ -19,6 +19,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.LanguageServerClient.StreamHacking;
 using Microsoft.PythonTools.Utility;
 using Microsoft.VisualStudio.LanguageServer.Client;
 using Microsoft.VisualStudio.Threading;
@@ -29,12 +30,20 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         private readonly JoinableTaskContext _joinableTaskContext;
         private readonly NodeEnvironmentProvider _nodeEnvironmentProvider;
         private readonly IServiceProvider _site;
+        private readonly Func<StreamData, StreamData> _onServerSendHandler;
+        private readonly Action<StreamData> _onServerReceiveHandler;
 
-        public PylanceLanguageServer(IServiceProvider site, JoinableTaskContext joinableTaskContext) {
+        public PylanceLanguageServer(
+            IServiceProvider site, 
+            JoinableTaskContext joinableTaskContext, 
+            Func<StreamData, StreamData> serverSendHandler,
+            Action<StreamData> serverReceiveHandler) {
             _site = site ?? throw new ArgumentNullException(nameof(site));
             _joinableTaskContext = joinableTaskContext ?? throw new ArgumentNullException(nameof(joinableTaskContext));
             _nodeEnvironmentProvider = new NodeEnvironmentProvider(site, joinableTaskContext);
             CancellationFolderName = Guid.NewGuid().ToString().Replace("-", "");
+            _onServerSendHandler = serverSendHandler;
+            _onServerReceiveHandler = serverReceiveHandler;
         }
 
         public string CancellationFolderName { get; }
@@ -89,7 +98,10 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                     var outputWindow = OutputWindowRedirector.GetGeneral(_site);
                     outputWindow.WriteLine(output);
                 } else {
-                    return new Connection(process.StandardOutput.BaseStream, process.StandardInput.BaseStream);
+                    // Otherwise create a connection where we wrap the stdin/stdout stream so that we can intercept all messages
+                    return new Connection(
+                        new StreamWrapper(process.StandardOutput.BaseStream, (a) => { return a; }, _onServerReceiveHandler),
+                        new StreamWrapper(process.StandardInput.BaseStream, _onServerSendHandler, (a) => { }));
                 }
             }
             return null;

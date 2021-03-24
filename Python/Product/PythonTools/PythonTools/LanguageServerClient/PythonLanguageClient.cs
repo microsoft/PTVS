@@ -14,7 +14,6 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using EnvDTE;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
@@ -25,6 +24,8 @@ using System.Threading.Tasks;
 using Microsoft.Python.Core.Disposables;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.LanguageServerClient.StreamHacking;
+using Microsoft.PythonTools.LanguageServerClient.WorkspaceFolderChanged;
 using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Project;
 using Microsoft.PythonTools.Utility;
@@ -32,6 +33,7 @@ using Microsoft.VisualStudio.LanguageServer.Client;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Threading;
 using Microsoft.VisualStudio.Utilities;
+using Newtonsoft.Json.Linq;
 using StreamJsonRpc;
 using LSP = Microsoft.VisualStudio.LanguageServer.Protocol;
 using Task = System.Threading.Tasks.Task;
@@ -70,6 +72,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         private PythonAdvancedEditorOptions _advancedEditorOptions;
         private PylanceLanguageServer _server;
         private JsonRpc _rpc;
+        private bool _workspaceFoldersSupported;
 
         public PythonLanguageClient() {
             _disposables = new DisposableBag(GetType().Name);
@@ -113,6 +116,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             _advancedEditorOptions.Changed += OnSettingsChanged;
             var dte = (EnvDTE80.DTE2)Site.GetService(typeof(EnvDTE.DTE));
             var solutionEvents = dte.Events.SolutionEvents;
+            solutionEvents.Opened += OnSolutionOpened;
             solutionEvents.ProjectAdded += OnProjectAddedOrRemoved;
             solutionEvents.ProjectRemoved += OnProjectAddedOrRemoved;
 
@@ -136,7 +140,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
             // Client context cannot be created here since the is no workspace yet
             // and hence we don't know if this is workspace or a loose files case.
-            _server = new PylanceLanguageServer(Site, JoinableTaskContext);
+            _server = new PylanceLanguageServer(Site, JoinableTaskContext, this.OnSendToServer, this.OnReceiveFromServer);
             InitializationOptions = null;
             CustomMessageTarget = new PythonLanguageClientCustomTarget(Site, JoinableTaskContext);
             await StartAsync.InvokeAsync(this, EventArgs.Empty);
@@ -174,6 +178,10 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         public Task InvokeDidChangeConfigurationAsync(LSP.DidChangeConfigurationParams request)
             => _rpc == null ? Task.CompletedTask : _rpc.NotifyWithParameterObjectAsync("workspace/didChangeConfiguration", request);
 
+        public Task InvokeDidChangeWorkspaceFoldersAsync(DidChangeWorkspaceFoldersParams request)
+            => _rpc == null ? Task.CompletedTask : _rpc.NotifyWithParameterObjectAsync("workspace/didChangeWorkspaceFolders", request);
+
+
         public Task<LSP.CompletionList> InvokeTextDocumentCompletionAsync(LSP.CompletionParams request, CancellationToken cancellationToken = default)
             => _rpc == null ? Task.FromResult(new LSP.CompletionList()) : _rpc.InvokeWithParameterObjectAsync<LSP.CompletionList>("textDocument/completion", request, cancellationToken);
 
@@ -196,13 +204,6 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             var extraPaths = UserSettings.GetStringSetting(
                 PythonConstants.ExtraPathsSetting, null, Site, PythonWorkspaceContextProvider.Workspace, out _)?.Split(';')
                 ?? _analysisOptions.ExtraPaths;
-
-            // Extra paths should include the project paths as well.
-            if (this.ProjectContextProvider != null) {
-                var directories = from n in this.ProjectContextProvider.ProjectNodes
-                                  select n.BaseURI.Directory;
-                extraPaths = extraPaths != null ? extraPaths.Concat(directories).ToArray() : directories.ToArray();
-            }
 
             var stubPath = UserSettings.GetStringSetting(
                 PythonConstants.StubPathSetting, null, Site, PythonWorkspaceContextProvider.Workspace, out _)
@@ -257,5 +258,59 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
             return new PythonLanguageClientContextGlobal(OptionsService);
         }
+
+        // This is all a hack until VSSDK LanguageServer can handle workspace folders
+        private StreamData OnSendToServer(StreamData data) {
+            System.Diagnostics.Debug.WriteLine($"Sending:\r\n{System.Text.Encoding.UTF8.GetString(data.bytes, data.offset, data.count)}\r\n");
+            var message = MessageParser.Deserialize(data);
+            if (message != null) {
+                try {
+                    // If this is the initialize method, add the workspace folders capability
+                    if (message.Value<string>("method") == "initialize") {
+                        if (message.TryGetValue("params", out JToken messageParams)) {
+                            var capabilities = messageParams["capabilities"];
+                            if (capabilities != null) {
+                                if (capabilities["workspace"] == null) {
+                                    capabilities["workspace"] = JToken.FromObject(new { });
+                                }
+                                capabilities["workspace"]["workspaceFolders"] = true;
+
+                                // Need to rewrite the message now
+                                return MessageParser.Serialize(message);
+                            }
+                        }
+                    }
+                } catch {
+                    // Don't care if this happens. Just skip the message
+                }
+            }
+            return data;
+        }
+
+        private void OnReceiveFromServer(StreamData data) {
+            System.Diagnostics.Debug.WriteLine($"Receiving:\r\n{System.Text.Encoding.UTF8.GetString(data.bytes, data.offset, data.count)}\r\n");
+
+            // Some messages are being swallowed by the VSSDK RemoteLanguageClientInstance. Handle them ourselves here
+            var message = MessageParser.Deserialize(data);
+            if (message != null && message["method"].ToString() == "client/registerCapability") {
+                // See if workspace folders are supported
+                _workspaceFoldersSupported = message["params"]["registrations"].Values().Any((t) => t["method"].ToString() == "workspace/didChangeWorkspaceFolders");
+
+                // If supported, act like a solution just opened
+                if (_workspaceFoldersSupported) {
+                    OnSolutionOpened();
+                }
+            }
+        }
+
+        private void OnSolutionOpened() {
+            // If workspace folders are supported, then send our workspace folders
+            var folders = from n in this.ProjectContextProvider.ProjectNodes
+                          select new WorkspaceFolder { uri = new System.Uri(n.BaseURI.Directory) };
+            if (folders.Any()) {
+                InvokeDidChangeWorkspaceFoldersAsync(new DidChangeWorkspaceFoldersParams { changeEvent = new WorkspaceFoldersChangeEvent { added = folders.ToArray(), removed = [] } });
+            }
+        }
+
     }
 }

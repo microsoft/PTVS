@@ -103,5 +103,15 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             var statusBar = _site.GetService(typeof(SVsStatusbar)) as IVsStatusbar;
             statusBar?.SetText("Python analysis done");
         }
+
+        [JsonRpcMethod("client/registerCapability")]
+        public async Task OnRegisterCapability(JToken arg) {
+            System.Diagnostics.Debug.WriteLine("Handling register");
+        }
+
+        [JsonRpcMethod("workspace/workspaceFolders")]
+        public async Task OnWorkspaceFolders(JToken arg) {
+            Console.WriteLine(arg);
+        }
     }
 }
