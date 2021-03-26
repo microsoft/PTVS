@@ -107,6 +107,11 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             return null;
         }
 
+        public static bool IsDebugging() {
+            // If enabled, we'll use PTVS_PYLANCE_DEBUG_STARTUP_FILE and PTVS_PYLANCE_DEBUG_ARGS
+            return IsEnvVarEnabled("PTVS_PYLANCE_DEBUG_ENABLED");
+        }
+
         private static string GetDebugServerLocation() {
             // Use a debug build of Pylance at a specified location.
             var filePath = Environment.GetEnvironmentVariable("PTVS_PYLANCE_DEBUG_STARTUP_FILE");
@@ -123,10 +128,6 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             return Environment.GetEnvironmentVariable("PTVS_PYLANCE_DEBUG_ARGS") ?? string.Empty;
         }
 
-        private static bool IsDebugging() {
-            // If enabled, we'll use PTVS_PYLANCE_DEBUG_STARTUP_FILE and PTVS_PYLANCE_DEBUG_ARGS
-            return IsEnvVarEnabled("PTVS_PYLANCE_DEBUG_ENABLED");
-        }
 
         private static bool IsEnvVarEnabled(string variable) {
             var val = Environment.GetEnvironmentVariable(variable);

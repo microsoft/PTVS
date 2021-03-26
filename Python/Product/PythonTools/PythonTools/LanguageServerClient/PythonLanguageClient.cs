@@ -73,6 +73,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         private PylanceLanguageServer _server;
         private JsonRpc _rpc;
         private bool _workspaceFoldersSupported;
+        private bool _isDebugging = PylanceLanguageServer.IsDebugging();
 
         public PythonLanguageClient() {
             _disposables = new DisposableBag(GetType().Name);
@@ -90,7 +91,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         // TODO: investigate how this can be used, VS does not allow currently
         // for the server to dynamically register file watching.
         public IEnumerable<string> FilesToWatch => null;
-        public object MiddleLayer => null;
+        public object MiddleLayer => new MiddleLayer();
         public object CustomMessageTarget { get; private set; }
         public bool IsInitialized { get; private set; }
 
@@ -117,16 +118,17 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             var dte = (EnvDTE80.DTE2)Site.GetService(typeof(EnvDTE.DTE));
             var solutionEvents = dte.Events.SolutionEvents;
             solutionEvents.Opened += OnSolutionOpened;
-            solutionEvents.ProjectAdded += OnProjectAddedOrRemoved;
-            solutionEvents.ProjectRemoved += OnProjectAddedOrRemoved;
+            solutionEvents.ProjectAdded += OnProjectAdded;
+            solutionEvents.ProjectRemoved += OnProjectRemoved;
 
             _disposables.Add(() => {
                 _clientContext.InterpreterChanged -= OnSettingsChanged;
                 _analysisOptions.Changed -= OnSettingsChanged;
                 _advancedEditorOptions.Changed -= OnSettingsChanged;
                 _clientContext.Dispose();
-                solutionEvents.ProjectAdded -= OnProjectAddedOrRemoved;
-                solutionEvents.ProjectRemoved -= OnProjectAddedOrRemoved;
+                solutionEvents.Opened -= OnSolutionOpened;
+                solutionEvents.ProjectAdded -= OnProjectAdded;
+                solutionEvents.ProjectRemoved -= OnProjectRemoved;
             });
 
             return await _server.ActivateAsync();
@@ -164,6 +166,31 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             _rpc.CancellationStrategy = new CustomCancellationStrategy(_server.CancellationFolderName, _rpc);
             _rpc.AllowModificationWhileListening = false;
 
+            // Also need another workaround. We can't register for client capabilities until ILanguageClient stops
+            // registering (or provides some other way to do so). Remove the original registration for
+            // a specific method
+            try {
+                var fi = rpc.GetType().GetField("rpcTargetInfo", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                if (fi != null) {
+                    var rpcTargetInfo = fi.GetValue(rpc);
+                    if (rpcTargetInfo != null) {
+                        fi = rpcTargetInfo.GetType().GetField("targetRequestMethodToClrMethodMap", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                        if (fi != null) {
+                            // Have to use reflection all the way down as the type of the entry is private
+                            var dictionary = fi.GetValue(rpcTargetInfo);
+                            var method = dictionary?.GetType().GetMethod("get_Item");
+                            var methodParms = new object[] { "client/registerCapability" };
+                            var list = method?.Invoke(dictionary, methodParms);
+                            method = list?.GetType().GetMethod("RemoveAt");
+                            methodParms = new object[] { 0 };
+                            method?.Invoke(list, methodParms);
+                        }
+                    }
+                }
+            } catch {
+                // Any exceptions, just skip this part
+            }
+
             return Task.CompletedTask;
         }
 
@@ -178,8 +205,9 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         public Task InvokeDidChangeConfigurationAsync(LSP.DidChangeConfigurationParams request)
             => _rpc == null ? Task.CompletedTask : _rpc.NotifyWithParameterObjectAsync("workspace/didChangeConfiguration", request);
 
-        public Task InvokeDidChangeWorkspaceFoldersAsync(DidChangeWorkspaceFoldersParams request)
-            => _rpc == null ? Task.CompletedTask : _rpc.NotifyWithParameterObjectAsync("workspace/didChangeWorkspaceFolders", request);
+        public Task InvokeDidChangeWorkspaceFoldersAsync(WorkspaceFolder[] added, WorkspaceFolder[] removed)
+            => _rpc == null ? Task.CompletedTask : _rpc.NotifyWithParameterObjectAsync("workspace/didChangeWorkspaceFolders", 
+                    new DidChangeWorkspaceFoldersParams { changeEvent = new WorkspaceFoldersChangeEvent { added = added, removed = removed } });
 
 
         public Task<LSP.CompletionList> InvokeTextDocumentCompletionAsync(LSP.CompletionParams request, CancellationToken cancellationToken = default)
@@ -189,8 +217,6 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             => _rpc == null ? Task.FromResult(default(TResult)) : _rpc.InvokeWithParameterObjectAsync<TResult>(targetName, argument, cancellationToken);
 
         private void OnSettingsChanged(object sender, EventArgs e) => SendDidChangeConfiguration().DoNotWait();
-
-        private void OnProjectAddedOrRemoved(EnvDTE.Project Project) => SendDidChangeConfiguration().DoNotWait();
 
         private async Task SendDidChangeConfiguration() {
             if (_clientContext is PythonLanguageClientContextProject) {
@@ -261,7 +287,10 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
         // This is all a hack until VSSDK LanguageServer can handle workspace folders
         private StreamData OnSendToServer(StreamData data) {
-            System.Diagnostics.Debug.WriteLine($"Sending:\r\n{System.Text.Encoding.UTF8.GetString(data.bytes, data.offset, data.count)}\r\n");
+            if (_isDebugging) {
+                System.Diagnostics.Debug.WriteLine($"Sending:\r\n{System.Text.Encoding.UTF8.GetString(data.bytes, data.offset, data.count)}\r\n");
+            }
+
             var message = MessageParser.Deserialize(data);
             if (message != null) {
                 try {
@@ -288,11 +317,13 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
 
         private void OnReceiveFromServer(StreamData data) {
-            System.Diagnostics.Debug.WriteLine($"Receiving:\r\n{System.Text.Encoding.UTF8.GetString(data.bytes, data.offset, data.count)}\r\n");
+            if (_isDebugging) {
+                System.Diagnostics.Debug.WriteLine($"Receiving:\r\n{System.Text.Encoding.UTF8.GetString(data.bytes, data.offset, data.count)}\r\n");
+            }
 
             // Some messages are being swallowed by the VSSDK RemoteLanguageClientInstance. Handle them ourselves here
             var message = MessageParser.Deserialize(data);
-            if (message != null && message["method"].ToString() == "client/registerCapability") {
+            if (message != null && message["method"] != null && message["method"].ToString() == "client/registerCapability") {
                 // See if workspace folders are supported
                 _workspaceFoldersSupported = message["params"]["registrations"].Values().Any((t) => t["method"].ToString() == "workspace/didChangeWorkspaceFolders");
 
@@ -304,13 +335,36 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
 
         private void OnSolutionOpened() {
-            // If workspace folders are supported, then send our workspace folders
-            var folders = from n in this.ProjectContextProvider.ProjectNodes
-                          select new WorkspaceFolder { uri = new System.Uri(n.BaseURI.Directory) };
-            if (folders.Any()) {
-                InvokeDidChangeWorkspaceFoldersAsync(new DidChangeWorkspaceFoldersParams { changeEvent = new WorkspaceFoldersChangeEvent { added = folders.ToArray(), removed = [] } });
+            if (_workspaceFoldersSupported) {
+                // If workspace folders are supported, then send our workspace folders
+                var folders = from n in this.ProjectContextProvider.ProjectNodes
+                              select new WorkspaceFolder { uri = new System.Uri(n.BaseURI.Directory) };
+                if (folders.Any()) {
+                    InvokeDidChangeWorkspaceFoldersAsync(folders.ToArray(), new WorkspaceFolder[0]);
+                }
             }
         }
+
+        private void OnProjectAdded(EnvDTE.Project project) {
+            if (_workspaceFoldersSupported) {
+                var pythonProject = project as PythonProjectNode;
+                if (pythonProject != null) {
+                    var folder = new WorkspaceFolder { uri = new System.Uri(pythonProject.BaseURI.Directory) };
+                    InvokeDidChangeWorkspaceFoldersAsync(new WorkspaceFolder[] { folder }, new WorkspaceFolder[0]);
+                }
+            }
+        }
+
+        private void OnProjectRemoved(EnvDTE.Project project) {
+            if (_workspaceFoldersSupported) {
+                var pythonProject = project as PythonProjectNode;
+                if (pythonProject != null) {
+                    var folder = new WorkspaceFolder { uri = new System.Uri(pythonProject.BaseURI.Directory) };
+                    InvokeDidChangeWorkspaceFoldersAsync(new WorkspaceFolder[0], new WorkspaceFolder[] { folder });
+                }
+            }
+        }
+
 
     }
 }

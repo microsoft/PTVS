@@ -30,7 +30,7 @@ namespace Microsoft.PythonTools.LanguageServerClient.StreamHacking {
         public override void Flush() => baseStream.Flush();
         public override int Read(byte[] buffer, int offset, int count) {
             var result = baseStream.Read(buffer, offset, count);
-            var args = new StreamData { bytes = buffer, offset = offset, count = count };
+            var args = new StreamData { bytes = buffer, offset = offset, count = result };
             readHandler.Invoke(args);
             return result;
         }
