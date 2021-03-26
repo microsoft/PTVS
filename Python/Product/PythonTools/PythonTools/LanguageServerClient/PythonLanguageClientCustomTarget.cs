@@ -16,6 +16,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Diagnostics;
 using System.Linq;
 using Microsoft.Python.Core;
@@ -31,6 +33,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         private readonly IServiceProvider _site;
         private readonly IPythonToolsLogger _logger;
         private readonly JoinableTaskContext _joinableTaskContext;
+        private readonly Action _registeredForWorkspaceEvents;
 
         [Serializable]
         private sealed class PylanceError {
@@ -55,13 +58,12 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             public override string StackTrace => _stackTrace;
         }
 
-        public PythonLanguageClientCustomTarget(IServiceProvider site, JoinableTaskContext joinableTaskContext) {
+        public PythonLanguageClientCustomTarget(IServiceProvider site, JoinableTaskContext joinableTaskContext, Action registeredForWorkspaceEvents) {
             _site = site ?? throw new ArgumentNullException(nameof(site));
             _joinableTaskContext = joinableTaskContext;
             _logger = _site.GetService(typeof(IPythonToolsLogger)) as IPythonToolsLogger;
+            _registeredForWorkspaceEvents = registeredForWorkspaceEvents;
         }
-
-        public event EventHandler WorkspaceFolderWatched;
 
         [JsonRpcMethod("telemetry/event")]
         public void OnTelemetryEvent(JToken arg) {
@@ -83,7 +85,9 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
 
         [JsonRpcMethod("python/beginProgress")]
-        public void OnBeginProgress() {
+#pragma warning disable IDE0060 // Remove unused parameter
+        public void OnBeginProgressAsync(JToken arg) {
+#pragma warning restore IDE0060 // Remove unused parameter
         }
 
         [JsonRpcMethod("python/reportProgress")]
@@ -99,7 +103,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
 
         [JsonRpcMethod("python/endProgress")]
-        public async Task OnEndProgressAsync() {
+        public async Task OnEndProgressAsync(JToken arg) {
             await _joinableTaskContext.Factory.SwitchToMainThreadAsync();
 
             // TODO: localize text
@@ -111,7 +115,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         public async Task OnRegisterCapability(JToken arg) {
             var regParams = arg.ToObject<VisualStudio.LanguageServer.Protocol.RegistrationParams>();
             if (regParams.Registrations.Any(p => p.Method == "workspace/didChangeWorkspaceFolders")) {
-                WorkspaceFolderWatched.Raise(this, EventArgs.Empty);
+                await _joinableTaskContext.Factory.RunAsync(async () => _registeredForWorkspaceEvents());
             }
         }
 

@@ -13,6 +13,7 @@ namespace Microsoft.PythonTools.LanguageServerClient.WorkspaceFolderChanged {
          * The associated URI for this workspace folder.
          */
         [DataMember]
+        [Newtonsoft.Json.JsonConverter(typeof(DocumentUriConverter))]
         public Uri uri;
 
         /**
