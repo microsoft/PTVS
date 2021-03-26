@@ -148,8 +148,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             // and hence we don't know if this is workspace or a loose files case.
             _server = new PylanceLanguageServer(Site, JoinableTaskContext, this.OnSendToServer);
             InitializationOptions = null;
-            var customTarget = new PythonLanguageClientCustomTarget(Site, JoinableTaskContext, OnWorkspaceFolderWatched);
-            CustomMessageTarget = customTarget;
+            CustomMessageTarget = new PythonLanguageClientCustomTarget(Site, JoinableTaskContext, OnWorkspaceFolderWatched);
             await StartAsync.InvokeAsync(this, EventArgs.Empty);
         }
 
