@@ -6,12 +6,12 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace Microsoft.PythonTools.LanguageServerClient.StreamHacking {
-    class StreamWrapper : Stream {
+    class StreamIntercepter : Stream {
         private Stream baseStream;
         private Func<StreamData, StreamData> writeHandler;
         private Action<StreamData> readHandler;
 
-        public StreamWrapper(Stream stream, Func<StreamData, StreamData> writeHandler, Action<StreamData> readHandler) {
+        public StreamIntercepter(Stream stream, Func<StreamData, StreamData> writeHandler, Action<StreamData> readHandler) {
             this.baseStream = stream;
             this.readHandler = readHandler;
             this.writeHandler = writeHandler;

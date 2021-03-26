@@ -72,8 +72,9 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         private PythonAdvancedEditorOptions _advancedEditorOptions;
         private PylanceLanguageServer _server;
         private JsonRpc _rpc;
-        private bool _workspaceFoldersSupported;
+        private bool _workspaceFoldersSupported = false;
         private bool _isDebugging = PylanceLanguageServer.IsDebugging();
+        private JsonRpcWrapper _rpcWrapper;
 
         public PythonLanguageClient() {
             _disposables = new DisposableBag(GetType().Name);
@@ -142,9 +143,8 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
             // Client context cannot be created here since the is no workspace yet
             // and hence we don't know if this is workspace or a loose files case.
-            _server = new PylanceLanguageServer(Site, JoinableTaskContext, this.OnSendToServer, this.OnReceiveFromServer);
+            _server = new PylanceLanguageServer(Site, JoinableTaskContext, this.createProxy);
             InitializationOptions = null;
-            CustomMessageTarget = new PythonLanguageClientCustomTarget(Site, JoinableTaskContext);
             await StartAsync.InvokeAsync(this, EventArgs.Empty);
         }
 
@@ -166,30 +166,8 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             _rpc.CancellationStrategy = new CustomCancellationStrategy(_server.CancellationFolderName, _rpc);
             _rpc.AllowModificationWhileListening = false;
 
-            // Also need another workaround. We can't register for client capabilities until ILanguageClient stops
-            // registering (or provides some other way to do so). Remove the original registration for
-            // a specific method
-            try {
-                var fi = rpc.GetType().GetField("rpcTargetInfo", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                if (fi != null) {
-                    var rpcTargetInfo = fi.GetValue(rpc);
-                    if (rpcTargetInfo != null) {
-                        fi = rpcTargetInfo.GetType().GetField("targetRequestMethodToClrMethodMap", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                        if (fi != null) {
-                            // Have to use reflection all the way down as the type of the entry is private
-                            var dictionary = fi.GetValue(rpcTargetInfo);
-                            var method = dictionary?.GetType().GetMethod("get_Item");
-                            var methodParms = new object[] { "client/registerCapability" };
-                            var list = method?.Invoke(dictionary, methodParms);
-                            method = list?.GetType().GetMethod("RemoveAt");
-                            methodParms = new object[] { 0 };
-                            method?.Invoke(list, methodParms);
-                        }
-                    }
-                }
-            } catch {
-                // Any exceptions, just skip this part
-            }
+            // Wrap the original rpc object so it handles any requests we don't know about
+            _rpcWrapper.StartListening(_rpc);
 
             return Task.CompletedTask;
         }
@@ -303,6 +281,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                                     capabilities["workspace"] = JToken.FromObject(new { });
                                 }
                                 capabilities["workspace"]["workspaceFolders"] = true;
+                                _workspaceFoldersSupported = true;
 
                                 // Need to rewrite the message now
                                 return MessageParser.Serialize(message);
@@ -316,23 +295,12 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             return data;
         }
 
-        private void OnReceiveFromServer(StreamData data) {
-            if (_isDebugging) {
-                System.Diagnostics.Debug.WriteLine($"Receiving:\r\n{System.Text.Encoding.UTF8.GetString(data.bytes, data.offset, data.count)}\r\n");
-            }
-
-            // Some messages are being swallowed by the VSSDK RemoteLanguageClientInstance. Handle them ourselves here
-            var message = MessageParser.Deserialize(data);
-            if (message != null && message["method"] != null && message["method"].ToString() == "client/registerCapability") {
-                // See if workspace folders are supported
-                _workspaceFoldersSupported = message["params"]["registrations"].Values().Any((t) => t["method"].ToString() == "workspace/didChangeWorkspaceFolders");
-
-                // If supported, act like a solution just opened
-                if (_workspaceFoldersSupported) {
-                    OnSolutionOpened();
-                }
-            }
+        private JsonRpcWrapper createProxy(System.IO.Stream reader, System.IO.Stream writer) {
+            CustomMessageTarget = new PythonLanguageClientCustomTarget(Site, JoinableTaskContext);
+            _rpcWrapper = new JsonRpcWrapper(reader, writer, CustomMessageTarget, this.OnSendToServer);
+            return _rpcWrapper;
         }
+
 
         private void OnSolutionOpened() {
             if (_workspaceFoldersSupported) {

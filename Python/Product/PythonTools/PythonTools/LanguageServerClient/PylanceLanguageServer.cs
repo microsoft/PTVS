@@ -30,20 +30,17 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         private readonly JoinableTaskContext _joinableTaskContext;
         private readonly NodeEnvironmentProvider _nodeEnvironmentProvider;
         private readonly IServiceProvider _site;
-        private readonly Func<StreamData, StreamData> _onServerSendHandler;
-        private readonly Action<StreamData> _onServerReceiveHandler;
+        private readonly Func<System.IO.Stream, System.IO.Stream, JsonRpcWrapper> _createStreamWrapper;
 
         public PylanceLanguageServer(
             IServiceProvider site, 
             JoinableTaskContext joinableTaskContext, 
-            Func<StreamData, StreamData> serverSendHandler,
-            Action<StreamData> serverReceiveHandler) {
+            Func<System.IO.Stream, System.IO.Stream, JsonRpcWrapper> createStreamWrapper) {
             _site = site ?? throw new ArgumentNullException(nameof(site));
             _joinableTaskContext = joinableTaskContext ?? throw new ArgumentNullException(nameof(joinableTaskContext));
             _nodeEnvironmentProvider = new NodeEnvironmentProvider(site, joinableTaskContext);
             CancellationFolderName = Guid.NewGuid().ToString().Replace("-", "");
-            _onServerSendHandler = serverSendHandler;
-            _onServerReceiveHandler = serverReceiveHandler;
+            _createStreamWrapper = createStreamWrapper;
         }
 
         public string CancellationFolderName { get; }
@@ -99,9 +96,8 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                     outputWindow.WriteLine(output);
                 } else {
                     // Otherwise create a connection where we wrap the stdin/stdout stream so that we can intercept all messages
-                    return new Connection(
-                        new StreamWrapper(process.StandardOutput.BaseStream, (a) => { return a; }, _onServerReceiveHandler),
-                        new StreamWrapper(process.StandardInput.BaseStream, _onServerSendHandler, (a) => { }));
+                    var wrapper = _createStreamWrapper(process.StandardOutput.BaseStream, process.StandardInput.BaseStream);
+                    return new Connection(wrapper.InputStream, wrapper.OutputStream);
                 }
             }
             return null;

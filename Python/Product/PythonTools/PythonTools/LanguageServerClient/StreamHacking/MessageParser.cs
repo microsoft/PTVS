@@ -13,7 +13,7 @@ namespace Microsoft.PythonTools.LanguageServerClient.StreamHacking {
             // Go through the byte stream until we get past the http header
             var contentLength = data.count;
             var httpHeaderOffset = -1;
-            for (int i = data.offset + 4; i < data.count; i++) {
+            for (int i = data.offset + 4; i < data.offset+data.count && i < data.bytes.Length; i++) {
                 if (data.bytes[i - 3] == '\r' && data.bytes[i - 2] == '\n' && data.bytes[i - 1] == '\r' && data.bytes[i] == '\n') {
                     // Two line feeds in a row. Means an empty line. There should be a number before this which is the content length
                     httpHeaderOffset = i + 1;

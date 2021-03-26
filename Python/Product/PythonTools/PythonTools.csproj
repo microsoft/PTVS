@@ -283,7 +283,6 @@
     <Compile Include="PythonTools\Editor\Formatting\PythonFormatter.cs" />
     <Compile Include="PythonTools\Editor\Formatting\LspDiffTextEditFactory.cs" />
     <Compile Include="PythonTools\LanguageServerClient\CustomCancellationStrategy.cs" />
-    <Compile Include="PythonTools\LanguageServerClient\LanguageServerProxy.cs" />
     <Compile Include="PythonTools\LanguageServerClient\LiveShareExtensions.cs" />
     <Compile Include="PythonTools\LanguageServerClient\LspEditorUtilities.cs" />
     <Compile Include="PythonTools\Editor\Formatting\PythonFormatterBlack.cs" />
@@ -354,9 +353,11 @@
     <Compile Include="PythonTools\LanguageServerClient\PythonLanguageClientContextProject.cs" />
     <Compile Include="PythonTools\LanguageServerClient\PylanceLanguageServer.cs" />
     <Compile Include="PythonTools\LanguageServerClient\ReplDocument.cs" />
+    <Compile Include="PythonTools\LanguageServerClient\StreamHacking\BlockingReadStream.cs" />
+    <Compile Include="PythonTools\LanguageServerClient\StreamHacking\JsonRpcWrapper.cs" />
     <Compile Include="PythonTools\LanguageServerClient\StreamHacking\MessageParser.cs" />
     <Compile Include="PythonTools\LanguageServerClient\StreamHacking\StreamData.cs" />
-    <Compile Include="PythonTools\LanguageServerClient\StreamHacking\StreamWrapper.cs" />
+    <Compile Include="PythonTools\LanguageServerClient\StreamHacking\StreamIntercepter.cs" />
     <Compile Include="PythonTools\LanguageServerClient\WorkspaceFolderChanged\DidChangeWorkspaceFoldersParams.cs" />
     <Compile Include="PythonTools\LanguageServerClient\WorkspaceFolderChanged\WorkspaceFolder.cs" />
     <Compile Include="PythonTools\LanguageServerClient\WorkspaceFolderChanged\WorkspaceFoldersChangeEvent.cs" />
