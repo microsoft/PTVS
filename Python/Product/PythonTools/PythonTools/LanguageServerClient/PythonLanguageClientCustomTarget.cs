@@ -118,10 +118,5 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 await _joinableTaskContext.Factory.RunAsync(async () => _registeredForWorkspaceEvents());
             }
         }
-
-        [JsonRpcMethod("workspace/workspaceFolders")]
-        public async Task OnWorkspaceFolders(JToken arg) {
-            Console.WriteLine(arg);
-        }
     }
 }
