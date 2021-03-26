@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Python.Core.Disposables;
@@ -74,7 +75,6 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         private JsonRpc _rpc;
         private bool _workspaceFoldersSupported = false;
         private bool _isDebugging = PylanceLanguageServer.IsDebugging();
-        private JsonRpcWrapper _rpcWrapper;
 
         public PythonLanguageClient() {
             _disposables = new DisposableBag(GetType().Name);
@@ -92,7 +92,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         // TODO: investigate how this can be used, VS does not allow currently
         // for the server to dynamically register file watching.
         public IEnumerable<string> FilesToWatch => null;
-        public object MiddleLayer => new MiddleLayer();
+        public object MiddleLayer => null;
         public object CustomMessageTarget { get; private set; }
         public bool IsInitialized { get; private set; }
 
@@ -143,9 +143,19 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
             // Client context cannot be created here since the is no workspace yet
             // and hence we don't know if this is workspace or a loose files case.
-            _server = new PylanceLanguageServer(Site, JoinableTaskContext, this.createProxy);
+            _server = new PylanceLanguageServer(Site, JoinableTaskContext, this.OnSendToServer);
             InitializationOptions = null;
+            var customTarget = new PythonLanguageClientCustomTarget(Site, JoinableTaskContext);
+            customTarget.WorkspaceFolderWatched += CustomTarget_WorkspaceFolderWatched;
+            CustomMessageTarget = customTarget;
             await StartAsync.InvokeAsync(this, EventArgs.Empty);
+        }
+
+        private void CustomTarget_WorkspaceFolderWatched(object sender, EventArgs e) {
+            _workspaceFoldersSupported = true;
+
+            // Act as if a solution opened. Same thing when workspace folders are suddenly supported.
+            OnSolutionOpened();
         }
 
         public async Task OnServerInitializedAsync() {
@@ -166,8 +176,37 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             _rpc.CancellationStrategy = new CustomCancellationStrategy(_server.CancellationFolderName, _rpc);
             _rpc.AllowModificationWhileListening = false;
 
-            // Wrap the original rpc object so it handles any requests we don't know about
-            _rpcWrapper.StartListening(_rpc);
+            // We also need to switch the order on handlers for all of the rpc targets. Until
+            // the VSSDK gives us a way to do this, use reflection.
+            try {
+                var fi = rpc.GetType().GetField("rpcTargetInfo", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                if (fi != null) {
+                    var rpcTargetInfo = fi.GetValue(rpc);
+                    if (rpcTargetInfo != null) {
+                        fi = rpcTargetInfo.GetType().GetField("targetRequestMethodToClrMethodMap", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                        if (fi != null) {
+                            // Have to use reflection all the way down as the type of the entry is private
+                            var dictionary = fi.GetValue(rpcTargetInfo);
+                            var method = dictionary?.GetType().GetMethod("get_Keys");
+                            var keys = method?.Invoke(dictionary, new object[0]) as IEnumerable<string>;
+                            foreach (var key in keys) {
+                                method = dictionary?.GetType().GetMethod("get_Item");
+                                var list = method?.Invoke(dictionary, new object[1] { key });
+                                var reverse = list?.GetType().GetMethod(
+                                    "Reverse",
+                                    BindingFlags.Public | BindingFlags.Instance,
+                                    null,
+                                    CallingConventions.Any,
+                                    new Type[] { },
+                                    null);
+                                reverse?.Invoke(list, new object[0]);
+                            }
+                        }
+                    }
+                }
+            } catch {
+                // Any exceptions, just skip this part
+            }
 
             return Task.CompletedTask;
         }
@@ -184,7 +223,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             => _rpc == null ? Task.CompletedTask : _rpc.NotifyWithParameterObjectAsync("workspace/didChangeConfiguration", request);
 
         public Task InvokeDidChangeWorkspaceFoldersAsync(WorkspaceFolder[] added, WorkspaceFolder[] removed)
-            => _rpc == null ? Task.CompletedTask : _rpc.NotifyWithParameterObjectAsync("workspace/didChangeWorkspaceFolders", 
+            => _rpc == null ? Task.CompletedTask : _rpc.NotifyWithParameterObjectAsync("workspace/didChangeWorkspaceFolders",
                     new DidChangeWorkspaceFoldersParams { changeEvent = new WorkspaceFoldersChangeEvent { added = added, removed = removed } });
 
 
@@ -281,7 +320,6 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                                     capabilities["workspace"] = JToken.FromObject(new { });
                                 }
                                 capabilities["workspace"]["workspaceFolders"] = true;
-                                _workspaceFoldersSupported = true;
 
                                 // Need to rewrite the message now
                                 return MessageParser.Serialize(message);
@@ -295,18 +333,11 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             return data;
         }
 
-        private JsonRpcWrapper createProxy(System.IO.Stream reader, System.IO.Stream writer) {
-            CustomMessageTarget = new PythonLanguageClientCustomTarget(Site, JoinableTaskContext);
-            _rpcWrapper = new JsonRpcWrapper(reader, writer, CustomMessageTarget, this.OnSendToServer);
-            return _rpcWrapper;
-        }
-
-
         private void OnSolutionOpened() {
             if (_workspaceFoldersSupported) {
                 // If workspace folders are supported, then send our workspace folders
                 var folders = from n in this.ProjectContextProvider.ProjectNodes
-                              select new WorkspaceFolder { uri = new System.Uri(n.BaseURI.Directory) };
+                              select new WorkspaceFolder { uri = new System.Uri(n.BaseURI.Directory), name = n.Name };
                 if (folders.Any()) {
                     InvokeDidChangeWorkspaceFoldersAsync(folders.ToArray(), new WorkspaceFolder[0]);
                 }
@@ -317,7 +348,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             if (_workspaceFoldersSupported) {
                 var pythonProject = project as PythonProjectNode;
                 if (pythonProject != null) {
-                    var folder = new WorkspaceFolder { uri = new System.Uri(pythonProject.BaseURI.Directory) };
+                    var folder = new WorkspaceFolder { uri = new System.Uri(pythonProject.BaseURI.Directory), name = project.Name };
                     InvokeDidChangeWorkspaceFoldersAsync(new WorkspaceFolder[] { folder }, new WorkspaceFolder[0]);
                 }
             }

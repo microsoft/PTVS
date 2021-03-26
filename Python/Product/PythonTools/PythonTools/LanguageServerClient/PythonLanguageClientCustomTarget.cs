@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using Microsoft.Python.Core;
 using Microsoft.PythonTools.Logging;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -59,6 +60,8 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             _joinableTaskContext = joinableTaskContext;
             _logger = _site.GetService(typeof(IPythonToolsLogger)) as IPythonToolsLogger;
         }
+
+        public event EventHandler WorkspaceFolderWatched;
 
         [JsonRpcMethod("telemetry/event")]
         public void OnTelemetryEvent(JToken arg) {
@@ -106,7 +109,10 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
         [JsonRpcMethod("client/registerCapability")]
         public async Task OnRegisterCapability(JToken arg) {
-            System.Diagnostics.Debug.WriteLine("Handling register");
+            var regParams = arg.ToObject<VisualStudio.LanguageServer.Protocol.RegistrationParams>();
+            if (regParams.Registrations.Any(p => p.Method == "workspace/didChangeWorkspaceFolders")) {
+                WorkspaceFolderWatched.Raise(this, EventArgs.Empty);
+            }
         }
 
         [JsonRpcMethod("workspace/workspaceFolders")]

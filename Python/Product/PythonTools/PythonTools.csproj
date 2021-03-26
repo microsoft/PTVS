@@ -343,7 +343,6 @@
     <Compile Include="PythonTools\Intellisense\ParameterResult.cs" />
     <Compile Include="PythonTools\Intellisense\PythonMemberType.cs" />
     <Compile Include="PythonTools\LanguageServerClient\IPythonLanguageClientContext.cs" />
-    <Compile Include="PythonTools\LanguageServerClient\MiddleLayer.cs" />
     <Compile Include="PythonTools\LanguageServerClient\NodeEnvironmentProvider.cs" />
     <Compile Include="PythonTools\LanguageServerClient\PylanceSettings.cs" />
     <Compile Include="PythonTools\LanguageServerClient\PythonLanguageClientContextFixed.cs" />
@@ -353,8 +352,6 @@
     <Compile Include="PythonTools\LanguageServerClient\PythonLanguageClientContextProject.cs" />
     <Compile Include="PythonTools\LanguageServerClient\PylanceLanguageServer.cs" />
     <Compile Include="PythonTools\LanguageServerClient\ReplDocument.cs" />
-    <Compile Include="PythonTools\LanguageServerClient\StreamHacking\BlockingReadStream.cs" />
-    <Compile Include="PythonTools\LanguageServerClient\StreamHacking\JsonRpcWrapper.cs" />
     <Compile Include="PythonTools\LanguageServerClient\StreamHacking\MessageParser.cs" />
     <Compile Include="PythonTools\LanguageServerClient\StreamHacking\StreamData.cs" />
     <Compile Include="PythonTools\LanguageServerClient\StreamHacking\StreamIntercepter.cs" />
