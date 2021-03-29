@@ -100,6 +100,7 @@
     <Reference Include="Microsoft.VisualStudio.Shell.Interop.15.0.DesignTime, Version=15.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
+    <Reference Include="Microsoft.VisualStudio.Validation, Version=16.9.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.VsInteractiveWindow" />
     <Reference Include="Microsoft.VisualStudio.Telemetry" />
   </ItemGroup>
@@ -181,10 +182,10 @@
     </Reference>
     <Reference Include="Microsoft.VisualStudio.Workspace" />
     <Reference Include="Microsoft.VisualStudio.Workspace.VSIntegration.Contracts" />
-    <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed">
-      <HintPath>$(PackagesPath)\Newtonsoft.Json\lib\net45\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Newtonsoft.Json, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed">
+      <HintPath>$(PackagesPath)\Microsoft.VSSDK.BuildTools\tools\vssdk\bin\lib\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
-      <IncludeInVSIX>True</IncludeInVSIX>
+      <IncludeInVSIX>False</IncludeInVSIX>
     </Reference>
     <Reference Include="Microsoft.Python.Core">
       <Private>True</Private>
@@ -211,6 +212,7 @@
     <Reference Include="System.Net" />
     <Reference Include="System.Numerics" />
     <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Threading.Tasks.Extensions" />
     <Reference Include="System.Web" />
     <Reference Include="System.Web.ApplicationServices" />
     <Reference Include="System.Web.Extensions" />
@@ -348,6 +350,12 @@
     <Compile Include="PythonTools\LanguageServerClient\PythonLanguageClientContextProject.cs" />
     <Compile Include="PythonTools\LanguageServerClient\PylanceLanguageServer.cs" />
     <Compile Include="PythonTools\LanguageServerClient\ReplDocument.cs" />
+    <Compile Include="PythonTools\LanguageServerClient\StreamHacking\MessageParser.cs" />
+    <Compile Include="PythonTools\LanguageServerClient\StreamHacking\StreamData.cs" />
+    <Compile Include="PythonTools\LanguageServerClient\StreamHacking\StreamIntercepter.cs" />
+    <Compile Include="PythonTools\LanguageServerClient\WorkspaceFolderChanged\DidChangeWorkspaceFoldersParams.cs" />
+    <Compile Include="PythonTools\LanguageServerClient\WorkspaceFolderChanged\WorkspaceFolder.cs" />
+    <Compile Include="PythonTools\LanguageServerClient\WorkspaceFolderChanged\WorkspaceFoldersChangeEvent.cs" />
     <Compile Include="PythonTools\Options\PythonAdvancedEditorOptionsControl.cs">
       <SubType>UserControl</SubType>
     </Compile>

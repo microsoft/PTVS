@@ -19,6 +19,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.LanguageServerClient.StreamHacking;
 using Microsoft.PythonTools.Utility;
 using Microsoft.VisualStudio.LanguageServer.Client;
 using Microsoft.VisualStudio.Threading;
@@ -29,12 +30,17 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         private readonly JoinableTaskContext _joinableTaskContext;
         private readonly NodeEnvironmentProvider _nodeEnvironmentProvider;
         private readonly IServiceProvider _site;
+        private readonly Func<StreamData, StreamData> _serverSendHandler;
 
-        public PylanceLanguageServer(IServiceProvider site, JoinableTaskContext joinableTaskContext) {
+        public PylanceLanguageServer(
+            IServiceProvider site, 
+            JoinableTaskContext joinableTaskContext,
+            Func<StreamData, StreamData> serverSendHandler) {
             _site = site ?? throw new ArgumentNullException(nameof(site));
             _joinableTaskContext = joinableTaskContext ?? throw new ArgumentNullException(nameof(joinableTaskContext));
             _nodeEnvironmentProvider = new NodeEnvironmentProvider(site, joinableTaskContext);
             CancellationFolderName = Guid.NewGuid().ToString().Replace("-", "");
+            _serverSendHandler = serverSendHandler;
         }
 
         public string CancellationFolderName { get; }
@@ -51,6 +57,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             var isDebugging = IsDebugging();
             var debugArgs = isDebugging ? GetDebugArguments() : string.Empty;
             var serverFilePath = isDebugging ? GetDebugServerLocation() : GetServerLocation();
+            var debuggerExtra = isDebugging ? "--verbose" : string.Empty;
 
             if (!File.Exists(serverFilePath)) {
                 MessageBox.ShowErrorMessage(_site, Strings.LanguageClientPylanceNotFound);
@@ -65,17 +72,41 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 FileName = nodePath,
                 WorkingDirectory = serverFolderPath,
                 RedirectStandardInput = true,
+                RedirectStandardError = true,
                 RedirectStandardOutput = true,
                 UseShellExecute = false,
                 CreateNoWindow = true,
-                Arguments = $"{debugArgs} \"{serverFilePath}\" -- --stdio --cancellationReceive=file:{this.CancellationFolderName}",
+                Arguments = $"{debugArgs} \"{serverFilePath}\" -- --stdio --cancellationReceive=file:{this.CancellationFolderName} {debuggerExtra}",
             };
 
             var process = new Process {
                 StartInfo = info
             };
 
-            return process.Start() ? new Connection(process.StandardOutput.BaseStream, process.StandardInput.BaseStream) : null;
+            if (process.Start()) {
+                if (isDebugging) {
+                    // During debugging give us time to attach
+                    await Task.Delay(5000);
+                }
+
+                // Write to output if we can't launch for some reason
+                if (process.HasExited) {
+                    string output = process.StandardError.ReadToEnd();
+                    var outputWindow = OutputWindowRedirector.GetGeneral(_site);
+                    outputWindow.WriteLine(output);
+                } else {
+                    // Otherwise create a connection where we wrap the stdin stream so that we can intercept all messages
+                    return new Connection(
+                        process.StandardOutput.BaseStream, 
+                        new StreamIntercepter(process.StandardInput.BaseStream, _serverSendHandler, (a) => { }));
+                }
+            }
+            return null;
+        }
+
+        public static bool IsDebugging() {
+            // If enabled, we'll use PTVS_PYLANCE_DEBUG_STARTUP_FILE and PTVS_PYLANCE_DEBUG_ARGS
+            return IsEnvVarEnabled("PTVS_PYLANCE_DEBUG_ENABLED");
         }
 
         private static string GetDebugServerLocation() {
@@ -94,10 +125,6 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             return Environment.GetEnvironmentVariable("PTVS_PYLANCE_DEBUG_ARGS") ?? string.Empty;
         }
 
-        private static bool IsDebugging() {
-            // If enabled, we'll use PTVS_PYLANCE_DEBUG_STARTUP_FILE and PTVS_PYLANCE_DEBUG_ARGS
-            return IsEnvVarEnabled("PTVS_PYLANCE_DEBUG_ENABLED");
-        }
 
         private static bool IsEnvVarEnabled(string variable) {
             var val = Environment.GetEnvironmentVariable(variable);

@@ -19,11 +19,14 @@ using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Python.Core.Disposables;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.LanguageServerClient.StreamHacking;
+using Microsoft.PythonTools.LanguageServerClient.WorkspaceFolderChanged;
 using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Project;
 using Microsoft.PythonTools.Utility;
@@ -31,6 +34,7 @@ using Microsoft.VisualStudio.LanguageServer.Client;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Threading;
 using Microsoft.VisualStudio.Utilities;
+using Newtonsoft.Json.Linq;
 using StreamJsonRpc;
 using LSP = Microsoft.VisualStudio.LanguageServer.Protocol;
 using Task = System.Threading.Tasks.Task;
@@ -64,11 +68,14 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         public JoinableTaskContext JoinableTaskContext;
 
         private readonly DisposableBag _disposables;
-        private IPythonLanguageClientContext _clientContext;
+        private IPythonLanguageClientContext[] _clientContexts;
         private PythonAnalysisOptions _analysisOptions;
         private PythonAdvancedEditorOptions _advancedEditorOptions;
         private PylanceLanguageServer _server;
         private JsonRpc _rpc;
+        private bool _workspaceFoldersSupported = false;
+        private bool _isDebugging = PylanceLanguageServer.IsDebugging();
+        private bool _sentInitialWorkspaceFolders = false;
 
         public PythonLanguageClient() {
             _disposables = new DisposableBag(GetType().Name);
@@ -102,20 +109,30 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             }
             await JoinableTaskContext.Factory.SwitchToMainThreadAsync();
 
-            _clientContext = CreateClientContext();
+            _clientContexts = CreateClientContexts();
 
             _analysisOptions = Site.GetPythonToolsService().AnalysisOptions;
             _advancedEditorOptions = Site.GetPythonToolsService().AdvancedEditorOptions;
 
-            _clientContext.InterpreterChanged += OnSettingsChanged;
+            Array.ForEach(_clientContexts, c => c.InterpreterChanged += OnSettingsChanged);
             _analysisOptions.Changed += OnSettingsChanged;
             _advancedEditorOptions.Changed += OnSettingsChanged;
+            var dte = (EnvDTE80.DTE2)Site.GetService(typeof(EnvDTE.DTE));
+            var solutionEvents = dte.Events.SolutionEvents;
+            solutionEvents.Opened += OnSolutionOpened;
+            solutionEvents.BeforeClosing += OnSolutionClosing;
+            solutionEvents.ProjectAdded += OnProjectAdded;
+            solutionEvents.ProjectRemoved += OnProjectRemoved;
 
             _disposables.Add(() => {
-                _clientContext.InterpreterChanged -= OnSettingsChanged;
+                Array.ForEach(_clientContexts, c => c.InterpreterChanged -= OnSettingsChanged);
                 _analysisOptions.Changed -= OnSettingsChanged;
                 _advancedEditorOptions.Changed -= OnSettingsChanged;
-                _clientContext.Dispose();
+                Array.ForEach(_clientContexts, c => c.Dispose());
+                solutionEvents.Opened -= OnSolutionOpened;
+                solutionEvents.ProjectAdded -= OnProjectAdded;
+                solutionEvents.ProjectRemoved -= OnProjectRemoved;
+                solutionEvents.BeforeClosing -= OnSolutionClosing;
             });
 
             return await _server.ActivateAsync();
@@ -129,15 +146,15 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
             // Client context cannot be created here since the is no workspace yet
             // and hence we don't know if this is workspace or a loose files case.
-            _server = new PylanceLanguageServer(Site, JoinableTaskContext);
+            _server = new PylanceLanguageServer(Site, JoinableTaskContext, this.OnSendToServer);
             InitializationOptions = null;
-            CustomMessageTarget = new PythonLanguageClientCustomTarget(Site, JoinableTaskContext);
+            CustomMessageTarget = new PythonLanguageClientCustomTarget(Site, JoinableTaskContext, OnWorkspaceFolderWatched);
             await StartAsync.InvokeAsync(this, EventArgs.Empty);
         }
 
         public async Task OnServerInitializedAsync() {
-            await SendDidChangeConfiguration();
             IsInitialized = true;
+            OnSolutionOpened();
         }
 
         public Task OnServerInitializeFailedAsync(Exception e) {
@@ -153,6 +170,38 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             _rpc.CancellationStrategy = new CustomCancellationStrategy(_server.CancellationFolderName, _rpc);
             _rpc.AllowModificationWhileListening = false;
 
+            // We also need to switch the order on handlers for all of the rpc targets. Until
+            // the VSSDK gives us a way to do this, use reflection.
+            try {
+                var fi = rpc.GetType().GetField("rpcTargetInfo", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                if (fi != null) {
+                    var rpcTargetInfo = fi.GetValue(rpc);
+                    if (rpcTargetInfo != null) {
+                        fi = rpcTargetInfo.GetType().GetField("targetRequestMethodToClrMethodMap", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                        if (fi != null) {
+                            // Have to use reflection all the way down as the type of the entry is private
+                            var dictionary = fi.GetValue(rpcTargetInfo);
+                            var method = dictionary?.GetType().GetMethod("get_Keys");
+                            var keys = method?.Invoke(dictionary, new object[0]) as IEnumerable<string>;
+                            foreach (var key in keys) {
+                                method = dictionary?.GetType().GetMethod("get_Item");
+                                var list = method?.Invoke(dictionary, new object[1] { key });
+                                var reverse = list?.GetType().GetMethod(
+                                    "Reverse",
+                                    BindingFlags.Public | BindingFlags.Instance,
+                                    null,
+                                    CallingConventions.Any,
+                                    new Type[] { },
+                                    null);
+                                reverse?.Invoke(list, new object[0]);
+                            }
+                        }
+                    }
+                }
+            } catch {
+                // Any exceptions, just skip this part
+            }
+
             return Task.CompletedTask;
         }
 
@@ -167,21 +216,29 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         public Task InvokeDidChangeConfigurationAsync(LSP.DidChangeConfigurationParams request)
             => _rpc == null ? Task.CompletedTask : _rpc.NotifyWithParameterObjectAsync("workspace/didChangeConfiguration", request);
 
+        public Task InvokeDidChangeWorkspaceFoldersAsync(WorkspaceFolder[] added, WorkspaceFolder[] removed) => 
+            _rpc == null ? Task.CompletedTask : _rpc.NotifyWithParameterObjectAsync("workspace/didChangeWorkspaceFolders",
+                    new DidChangeWorkspaceFoldersParams { changeEvent = new WorkspaceFoldersChangeEvent { added = added, removed = removed } });
+
         public Task<LSP.CompletionList> InvokeTextDocumentCompletionAsync(LSP.CompletionParams request, CancellationToken cancellationToken = default)
             => _rpc == null ? Task.FromResult(new LSP.CompletionList()) : _rpc.InvokeWithParameterObjectAsync<LSP.CompletionList>("textDocument/completion", request, cancellationToken);
 
         public Task<TResult> InvokeWithParameterObjectAsync<TResult>(string targetName, object argument = null, CancellationToken cancellationToken = default)
             => _rpc == null ? Task.FromResult(default(TResult)) : _rpc.InvokeWithParameterObjectAsync<TResult>(targetName, argument, cancellationToken);
 
-        private void OnSettingsChanged(object sender, EventArgs e) => SendDidChangeConfiguration().DoNotWait();
+        private void OnSettingsChanged(object sender, EventArgs e) => SendDidChangeConfigurations().DoNotWait();
 
-        private async Task SendDidChangeConfiguration() {
-            if (_clientContext is PythonLanguageClientContextProject) {
+        private Task SendDidChangeConfigurations() {
+            return Task.WhenAll(_clientContexts.Select(c => SendDidChangeConfiguration(c)));
+        }
+
+        private async Task SendDidChangeConfiguration(IPythonLanguageClientContext context) {
+            if (context is PythonLanguageClientContextProject) {
                 // Project interactions are main thread only.
                 await JoinableTaskContext.Factory.SwitchToMainThreadAsync();
             }
 
-            Debug.Assert(_clientContext != null);
+            Debug.Assert(context != null);
             Debug.Assert(_analysisOptions != null);
 
             var extraPaths = UserSettings.GetStringSetting(
@@ -197,13 +254,13 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 ?? _analysisOptions.TypeCheckingMode;
 
             var ver3 = new Version(3, 0);
-            if (_clientContext.InterpreterConfiguration.Version < ver3) {
+            if (context.InterpreterConfiguration.Version < ver3) {
                 MessageBox.ShowWarningMessage(Site, Strings.WarningPython2NotSupported);
             }
 
             var settings = new PylanceSettings {
                 python = new PylanceSettings.PythonSettings {
-                    pythonPath = _clientContext.InterpreterConfiguration.InterpreterPath,
+                    pythonPath = context.InterpreterConfiguration.InterpreterPath,
                     venvPath = string.Empty,
                     analysis = new PylanceSettings.PythonSettings.PythonAnalysisSettings {
                         logLevel = _analysisOptions.LogLevel,
@@ -226,20 +283,104 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             await InvokeDidChangeConfigurationAsync(config);
         }
 
-        private IPythonLanguageClientContext CreateClientContext() {
+        private void OnWorkspaceFolderWatched() {
+            _workspaceFoldersSupported = true;
+            OnSolutionOpened();
+        }
+
+        private IPythonLanguageClientContext[] CreateClientContexts() {
             if (PythonWorkspaceContextProvider.Workspace != null) {
-                return new PythonLanguageClientContextWorkspace(PythonWorkspaceContextProvider.Workspace);
+                return new IPythonLanguageClientContext[] { new PythonLanguageClientContextWorkspace(PythonWorkspaceContextProvider.Workspace) };
             }
 
             if (ProjectContextProvider.ProjectNodes.MaybeEnumerate().Any()) {
-                // TODO: support multiple projects in solution.
-                var node = ProjectContextProvider.ProjectNodes.First();
-                if (node != null) {
-                    return new PythonLanguageClientContextProject(node);
-                }
+                var nodes = from n in ProjectContextProvider.ProjectNodes
+                            select new PythonLanguageClientContextProject(n);
+                return nodes.ToArray();
             }
 
-            return new PythonLanguageClientContextGlobal(OptionsService);
+            return new IPythonLanguageClientContext[] { new PythonLanguageClientContextGlobal(OptionsService) };
+        }
+
+        // This is all a hack until VSSDK LanguageServer can handle workspace folders
+        private StreamData OnSendToServer(StreamData data) {
+            var message = MessageParser.Deserialize(data);
+            if (message != null) {
+                try {
+                    // If this is the initialize method, add the workspace folders capability
+                    if (message.Value<string>("method") == "initialize") {
+                        if (message.TryGetValue("params", out JToken messageParams)) {
+                            var capabilities = messageParams["capabilities"];
+                            if (capabilities != null) {
+                                if (capabilities["workspace"] == null) {
+                                    capabilities["workspace"] = JToken.FromObject(new { });
+                                }
+                                capabilities["workspace"]["workspaceFolders"] = true;
+
+                                // Need to rewrite the message now
+                                return MessageParser.Serialize(message);
+                            }
+                        }
+                    }
+                } catch {
+                    // Don't care if this happens. Just skip the message
+                }
+            }
+            return data;
+        }
+
+        private void OnSolutionClosing() {
+            if (_workspaceFoldersSupported && IsInitialized && _sentInitialWorkspaceFolders) {
+                JoinableTaskContext.Factory.RunAsync(async () => {
+                    // If workspace folders are supported, then send our workspace folders
+                    var folders = from n in this.ProjectContextProvider.ProjectNodes
+                                  select new WorkspaceFolder { uri = new System.Uri(n.BaseURI.Directory), name = n.Name };
+                    if (folders.Any()) {
+                        await InvokeDidChangeWorkspaceFoldersAsync(new WorkspaceFolder[0], folders.ToArray());
+                    }
+                });
+                _workspaceFoldersSupported = false;
+                IsInitialized = false;
+                _sentInitialWorkspaceFolders = false;
+            }
+        }
+
+        private void OnSolutionOpened() {
+            if (_workspaceFoldersSupported && IsInitialized && !_sentInitialWorkspaceFolders) {
+                _sentInitialWorkspaceFolders = true;
+                JoinableTaskContext.Factory.RunAsync(async () => {
+                    // If workspace folders are supported, then send our workspace folders
+                    var folders = from n in this.ProjectContextProvider.ProjectNodes
+                                  select new WorkspaceFolder { uri = new System.Uri(n.BaseURI.Directory), name = n.Name };
+                    if (folders.Any()) {
+                        await InvokeDidChangeWorkspaceFoldersAsync(folders.ToArray(), new WorkspaceFolder[0]);
+                    }
+                });
+            }
+        }
+
+        private void OnProjectAdded(EnvDTE.Project project) {
+            if (_workspaceFoldersSupported) {
+                JoinableTaskContext.Factory.RunAsync(async () => {
+                    var pythonProject = project as PythonProjectNode;
+                    if (pythonProject != null) {
+                        var folder = new WorkspaceFolder { uri = new System.Uri(pythonProject.BaseURI.Directory), name = project.Name };
+                        await InvokeDidChangeWorkspaceFoldersAsync(new WorkspaceFolder[] { folder }, new WorkspaceFolder[0]);
+                    }
+                });
+            }
+        }
+
+        private void OnProjectRemoved(EnvDTE.Project project) {
+            if (_workspaceFoldersSupported) {
+                JoinableTaskContext.Factory.RunAsync(async () => {
+                    var pythonProject = project as PythonProjectNode;
+                    if (pythonProject != null) {
+                        var folder = new WorkspaceFolder { uri = new System.Uri(pythonProject.BaseURI.Directory), name = project.Name };
+                        await InvokeDidChangeWorkspaceFoldersAsync(new WorkspaceFolder[0], new WorkspaceFolder[] { folder });
+                    }
+                });
+            }
         }
     }
 }
