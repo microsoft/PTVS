@@ -100,7 +100,7 @@ steps:
 # AZURE_DEVOPS_TOKEN is the base64 encoded access token. See here to create it:
 # https://devdiv.visualstudio.com/DevDiv/_packaging?_a=connect&feed=Pylance
 # https://devdiv.visualstudio.com/_details/security/tokens
-- PowerShell@2:
+- task: PowerShell@2
   env:
      AZURE_DEVOPS_TOKEN: $(AZURE_DEVOPS_TOKEN)
   displayName: 'Update .npmrc to find pylance feed'
