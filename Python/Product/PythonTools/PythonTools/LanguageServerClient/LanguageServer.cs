@@ -25,12 +25,12 @@ using Microsoft.VisualStudio.Threading;
 using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.LanguageServerClient {
-    internal sealed class PylanceLanguageServer {
+    internal sealed class LanguageServer {
         private readonly JoinableTaskContext _joinableTaskContext;
         private readonly NodeEnvironmentProvider _nodeEnvironmentProvider;
         private readonly IServiceProvider _site;
 
-        public PylanceLanguageServer(IServiceProvider site, JoinableTaskContext joinableTaskContext) {
+        public LanguageServer(IServiceProvider site, JoinableTaskContext joinableTaskContext) {
             _site = site ?? throw new ArgumentNullException(nameof(site));
             _joinableTaskContext = joinableTaskContext ?? throw new ArgumentNullException(nameof(joinableTaskContext));
             _nodeEnvironmentProvider = new NodeEnvironmentProvider(site, joinableTaskContext);

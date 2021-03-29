@@ -83,20 +83,24 @@ namespace Microsoft.VisualStudioTools {
         internal static object CommandsLock => _commandsLock;
 
         protected override void Dispose(bool disposing) {
-            _uiThread.MustBeCalledFromUIThreadOrThrow();
-            try {
-                if (_componentID != 0) {
-                    _compMgr.FRevokeComponent(_componentID);
-                    _componentID = 0;
-                }
+            if (_uiThread != null)
+            {
+                _uiThread.InvokeAsync(() =>
+                {
+                    if (_componentID != 0)
+                    {
+                        _compMgr.FRevokeComponent(_componentID);
+                        _componentID = 0;
+                    }
 
-                if (_libraryManager != null) {
-                    _libraryManager.Dispose();
-                    _libraryManager = null;
-                }
-            } finally {
-                base.Dispose(disposing);
+                    if (_libraryManager != null)
+                    {
+                        _libraryManager.Dispose();
+                        _libraryManager = null;
+                    }
+                });
             }
+            base.Dispose(disposing);
         }
 
         private object CreateLibraryManager(IServiceContainer container, Type serviceType) {

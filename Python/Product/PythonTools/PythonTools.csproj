@@ -340,13 +340,13 @@
     <Compile Include="PythonTools\Intellisense\PythonMemberType.cs" />
     <Compile Include="PythonTools\LanguageServerClient\IPythonLanguageClientContext.cs" />
     <Compile Include="PythonTools\LanguageServerClient\NodeEnvironmentProvider.cs" />
-    <Compile Include="PythonTools\LanguageServerClient\PylanceSettings.cs" />
+    <Compile Include="PythonTools\LanguageServerClient\LanguageServerSettings.cs" />
     <Compile Include="PythonTools\LanguageServerClient\PythonLanguageClientContextFixed.cs" />
     <Compile Include="PythonTools\LanguageServerClient\PythonLanguageClientContextGlobal.cs" />
     <Compile Include="PythonTools\LanguageServerClient\PythonLanguageClientContextRepl.cs" />
     <Compile Include="PythonTools\LanguageServerClient\PythonLanguageClientContextWorkspace.cs" />
     <Compile Include="PythonTools\LanguageServerClient\PythonLanguageClientContextProject.cs" />
-    <Compile Include="PythonTools\LanguageServerClient\PylanceLanguageServer.cs" />
+    <Compile Include="PythonTools\LanguageServerClient\LanguageServer.cs" />
     <Compile Include="PythonTools\LanguageServerClient\ReplDocument.cs" />
     <Compile Include="PythonTools\Options\PythonAdvancedEditorOptionsControl.cs">
       <SubType>UserControl</SubType>

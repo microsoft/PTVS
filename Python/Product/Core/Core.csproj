@@ -116,6 +116,11 @@
     </ProjectReference2>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="$(MSBuildThisFileDirectory)..\..\..\Pylance\**\*.*" Exclude="*.map" CopyToOutputDirectory="PreserveNewest">
+      <TargetPath>Pylance\%(RecursiveDir)\%(Filename)%(Extension)</TargetPath>
+      <Link>Pylance\%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
     <None Include="source.extension.vsixmanifest" />
     <Content Include="License_en-US.rtf" />
     <Content Include="$(PackagesPath)\Newtonsoft.Json\lib\net45\Newtonsoft.Json.dll" />

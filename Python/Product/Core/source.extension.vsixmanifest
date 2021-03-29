@@ -47,5 +47,6 @@
         <Asset Type="Microsoft.VisualStudio.Assembly" d:Source="File" Path="Microsoft.Python.Parsing.dll" />
         <Asset Type="Microsoft.VisualStudio.Assembly" d:Source="File" Path="Microsoft.PythonTools.Ipc.Json.dll" />
         <Asset Type="Microsoft.VisualStudio.Assembly" d:Source="File" Path="Microsoft.PythonTools.Attacher.exe" />
+        <Asset Type="Microsoft.VisualStudio.Assembly" d:Source="File" Path="Microsoft.PythonTools.ProjectWizards.dll" />
     </Assets>
 </PackageManifest>

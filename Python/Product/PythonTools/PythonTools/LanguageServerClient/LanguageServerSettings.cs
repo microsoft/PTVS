@@ -37,7 +37,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
     }
 
     [Serializable]
-    internal sealed class PylanceSettings {
+    internal sealed class LanguageServerSettings {
         [Serializable]
         public class PythonSettings {
             /// <summary>

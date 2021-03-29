@@ -67,7 +67,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         private IPythonLanguageClientContext _clientContext;
         private PythonAnalysisOptions _analysisOptions;
         private PythonAdvancedEditorOptions _advancedEditorOptions;
-        private PylanceLanguageServer _server;
+        private LanguageServer _server;
         private JsonRpc _rpc;
 
         public PythonLanguageClient() {
@@ -129,7 +129,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
             // Client context cannot be created here since the is no workspace yet
             // and hence we don't know if this is workspace or a loose files case.
-            _server = new PylanceLanguageServer(Site, JoinableTaskContext);
+            _server = new LanguageServer(Site, JoinableTaskContext);
             InitializationOptions = null;
             CustomMessageTarget = new PythonLanguageClientCustomTarget(Site, JoinableTaskContext);
             await StartAsync.InvokeAsync(this, EventArgs.Empty);
@@ -201,11 +201,11 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 MessageBox.ShowWarningMessage(Site, Strings.WarningPython2NotSupported);
             }
 
-            var settings = new PylanceSettings {
-                python = new PylanceSettings.PythonSettings {
+            var settings = new LanguageServerSettings {
+                python = new LanguageServerSettings.PythonSettings {
                     pythonPath = _clientContext.InterpreterConfiguration.InterpreterPath,
                     venvPath = string.Empty,
-                    analysis = new PylanceSettings.PythonSettings.PythonAnalysisSettings {
+                    analysis = new LanguageServerSettings.PythonSettings.PythonAnalysisSettings {
                         logLevel = _analysisOptions.LogLevel,
                         autoSearchPaths = _analysisOptions.AutoSearchPaths,
                         diagnosticMode = _analysisOptions.DiagnosticMode,

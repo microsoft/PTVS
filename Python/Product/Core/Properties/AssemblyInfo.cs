@@ -38,11 +38,8 @@ using Microsoft.VisualStudio.Shell;
      Version = ParserNuGetPackageInfo.Version, Culture = ParserNuGetPackageInfo.Culture, PublicKeyToken = ParserNuGetPackageInfo.PublicKeyToken
  )]
 
-// TODO: Pylance
-// Can't use these attributes on build machine for unknown reason (it fails to load the assembly when registering)
-// We'll move these projects into this repo at some point and we can use these ProvideCodeBase at that point and eliminate the ones above
-//[assembly: ProvideCodeBase(AssemblyName = "Microsoft.Python.Core", CodeBase = @"$PackageFolder$\Microsoft.Python.Core.dll")]
-//[assembly: ProvideCodeBase(AssemblyName = "Microsoft.Python.Parsing", CodeBase = @"$PackageFolder$\Microsoft.Python.Parsing.dll")]
+[assembly: ProvideCodeBase(AssemblyName = "Microsoft.Python.Core", CodeBase = @"$PackageFolder$\Microsoft.Python.Core.dll")]
+[assembly: ProvideCodeBase(AssemblyName = "Microsoft.Python.Parsing", CodeBase = @"$PackageFolder$\Microsoft.Python.Parsing.dll")]
 
 [assembly: ProvideRawCodeBase(AssemblyName = "Microsoft.VisualStudio.LanguageServer.Protocol", CodeBase = @"$PackageFolder$\Microsoft.VisualStudio.LanguageServer.Protocol.dll", Version = "16.9.5.24609", Culture = "neutral", PublicKeyToken = "b03f5f7f11d50a3a")]
 
@@ -61,7 +58,7 @@ using Microsoft.VisualStudio.Shell;
 
 internal static class ParserNuGetPackageInfo {
     // important: keep in sync with Build\16.0\package.config
-    public const string Version = "0.4.127.0";
+    public const string Version = "0.5.59.0";
     public const string Culture = "neutral";
     public const string PublicKeyToken = "b03f5f7f11d50a3a";
 }
