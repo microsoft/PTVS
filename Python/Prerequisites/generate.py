@@ -35,7 +35,6 @@ ASSEMBLIES = sorted([
     "Microsoft.PythonTools.Django.Analysis",
     "Microsoft.PythonTools.EnvironmentsList",
     "Microsoft.PythonTools.Ipc.Json",
-    "Microsoft.PythonTools.LiveShare",
     "Microsoft.PythonTools.Profiling",
     "Microsoft.PythonTools.ProjectWizards",
     "Microsoft.PythonTools.RunElevated",

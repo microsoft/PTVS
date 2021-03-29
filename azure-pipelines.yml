@@ -47,8 +47,6 @@ variables:
     value: 16.10
   - name: IncludeDjangoHtmlExtensions
     value: true
-  - name: IncludeLiveShare
-    value: true
   - name: IncludeMiniconda
     value: true
   - name: IncludeMSI
