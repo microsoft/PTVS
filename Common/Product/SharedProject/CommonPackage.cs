@@ -84,18 +84,22 @@ namespace Microsoft.VisualStudioTools {
 
         protected override void Dispose(bool disposing) {
             _uiThread?.MustBeCalledFromUIThreadOrThrow();
-            if (_componentID != 0)
-            {
-                _compMgr.FRevokeComponent(_componentID);
-                _componentID = 0;
-            }
+            try {
+                if (_componentID != 0)
+                {
+                    _compMgr.FRevokeComponent(_componentID);
+                    _componentID = 0;
+                }
 
-            if (_libraryManager != null)
-            {
-                _libraryManager.Dispose();
-                _libraryManager = null;
+                if (_libraryManager != null)
+                {
+                    _libraryManager.Dispose();
+                    _libraryManager = null;
+                }
+            } finally {
+                base.Dispose(disposing);
+
             }
-            base.Dispose(disposing);
         }
 
         private object CreateLibraryManager(IServiceContainer container, Type serviceType) {
