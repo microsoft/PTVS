@@ -98,6 +98,34 @@ steps:
       type: 'Full'
       languages: 'VS'
 
+# Update our .npmrc file to point to the feed for pylance
+# AZURE_DEVOPS_TOKEN is the base64 encoded access token. See here to create it:
+# https://devdiv.visualstudio.com/DevDiv/_packaging?_a=connect&feed=Pylance
+# https://devdiv.visualstudio.com/_details/security/tokens
+- task: Bash@3
+  displayName: 'Update .npmrc to find pylance feed'
+  inputs: 
+    targetType: 'inline'
+    script: |
+        cat << EOF > .npmrc
+        registry=https://devdiv.pkgs.visualstudio.com/_packaging/Pylance/npm/registry/ 
+        always-auth=true
+        ; begin auth token
+        //devdiv.pkgs.visualstudio.com/_packaging/Pylance/npm/registry/:username=devdiv
+        //devdiv.pkgs.visualstudio.com/_packaging/Pylance/npm/registry/:_password=$(AZURE_DEVOPS_TOKEN)
+        //devdiv.pkgs.visualstudio.com/_packaging/Pylance/npm/registry/:email=npm requires email to be set but doesn't use the value
+        //devdiv.pkgs.visualstudio.com/_packaging/Pylance/npm/:username=devdiv
+        //devdiv.pkgs.visualstudio.com/_packaging/Pylance/npm/:_password=$(AZURE_DEVOPS_TOKEN)
+        //devdiv.pkgs.visualstudio.com/_packaging/Pylance/npm/:email=npm requires email to be set but doesn't use the value
+        ; end auth token
+        EOF
+
+# Run npm ci to install pylance
+- task: Npm@1
+  displayName: 'Install Pylance on build machine'
+  inputs:
+    command: 'ci'
+
 # Run a powershell script that does a package restore, some symlinking, and installs debugpy
 - task: PowerShell@1
   displayName: 'Restore packages'

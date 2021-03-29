@@ -116,9 +116,9 @@
     </ProjectReference2>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="$(MSBuildThisFileDirectory)..\..\..\Pylance\**\*.*" Exclude="*.map" CopyToOutputDirectory="PreserveNewest">
-      <TargetPath>Pylance\%(RecursiveDir)\%(Filename)%(Extension)</TargetPath>
-      <Link>Pylance\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    <Content Include="$(MSBuildThisFileDirectory)..\..\..\node_modules\@pylance\**\*.*" Exclude="*.map" CopyToOutputDirectory="PreserveNewest">
+      <TargetPath>%(RecursiveDir)\%(Filename)%(Extension)</TargetPath>
+      <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <None Include="source.extension.vsixmanifest" />
