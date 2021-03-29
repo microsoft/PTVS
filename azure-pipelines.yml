@@ -100,23 +100,24 @@ steps:
 # AZURE_DEVOPS_TOKEN is the base64 encoded access token. See here to create it:
 # https://devdiv.visualstudio.com/DevDiv/_packaging?_a=connect&feed=Pylance
 # https://devdiv.visualstudio.com/_details/security/tokens
-- task: Bash@3
+- task: PowerShell@1
+  env:
+     AZURE_DEVOPS_TOKEN: $(AZURE_DEVOPS_TOKEN)
   displayName: 'Update .npmrc to find pylance feed'
   inputs: 
     targetType: 'inline'
     script: |
-        cat << EOF > .npmrc
-        registry=https://devdiv.pkgs.visualstudio.com/_packaging/Pylance/npm/registry/ 
-        always-auth=true
-        ; begin auth token
-        //devdiv.pkgs.visualstudio.com/_packaging/Pylance/npm/registry/:username=devdiv
-        //devdiv.pkgs.visualstudio.com/_packaging/Pylance/npm/registry/:_password=$(AZURE_DEVOPS_TOKEN)
-        //devdiv.pkgs.visualstudio.com/_packaging/Pylance/npm/registry/:email=npm requires email to be set but doesn't use the value
-        //devdiv.pkgs.visualstudio.com/_packaging/Pylance/npm/:username=devdiv
-        //devdiv.pkgs.visualstudio.com/_packaging/Pylance/npm/:_password=$(AZURE_DEVOPS_TOKEN)
-        //devdiv.pkgs.visualstudio.com/_packaging/Pylance/npm/:email=npm requires email to be set but doesn't use the value
-        ; end auth token
-        EOF
+        Set-Content -Path .npmrc -Value registry=https://devdiv.pkgs.visualstudio.com/_packaging/Pylance/npm/registry/
+        Add-Content -Path .npmrc -Value registry=https://devdiv.pkgs.visualstudio.com/_packaging/Pylance/npm/registry/ 
+        Add-Content -Path .npmrc -Value always-auth=true
+        Add-Content -Path .npmrc -Value ; begin auth token
+        Add-Content -Path .npmrc -Value //devdiv.pkgs.visualstudio.com/_packaging/Pylance/npm/registry/:username=devdiv
+        Add-Content -Path .npmrc -Value //devdiv.pkgs.visualstudio.com/_packaging/Pylance/npm/registry/:_password=$Env:AZURE_DEVOPS_TOKEN
+        Add-Content -Path .npmrc -Value //devdiv.pkgs.visualstudio.com/_packaging/Pylance/npm/registry/:email=npm requires email to be set but doesn't use the value
+        Add-Content -Path .npmrc -Value //devdiv.pkgs.visualstudio.com/_packaging/Pylance/npm/:username=devdiv
+        Add-Content -Path .npmrc -Value //devdiv.pkgs.visualstudio.com/_packaging/Pylance/npm/:_password=$Env:AZURE_DEVOPS_TOKEN
+        Add-Content -Path .npmrc -Value //devdiv.pkgs.visualstudio.com/_packaging/Pylance/npm/:email=npm requires email to be set but doesn't use the value
+        Add-Content -Path .npmrc -Value ; end auth token
 
 # Run npm ci to install pylance
 - task: Npm@1
