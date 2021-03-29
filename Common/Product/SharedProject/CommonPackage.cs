@@ -83,22 +83,17 @@ namespace Microsoft.VisualStudioTools {
         internal static object CommandsLock => _commandsLock;
 
         protected override void Dispose(bool disposing) {
-            if (_uiThread != null)
+            _uiThread?.MustBeCalledFromUIThreadOrThrow();
+            if (_componentID != 0)
             {
-                _uiThread.InvokeAsync(() =>
-                {
-                    if (_componentID != 0)
-                    {
-                        _compMgr.FRevokeComponent(_componentID);
-                        _componentID = 0;
-                    }
+                _compMgr.FRevokeComponent(_componentID);
+                _componentID = 0;
+            }
 
-                    if (_libraryManager != null)
-                    {
-                        _libraryManager.Dispose();
-                        _libraryManager = null;
-                    }
-                });
+            if (_libraryManager != null)
+            {
+                _libraryManager.Dispose();
+                _libraryManager = null;
             }
             base.Dispose(disposing);
         }
