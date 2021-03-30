@@ -1,7 +1,9 @@
 # DEVOPS_TOKEN is not secret so that it works on other branches. Since Devops pipeline is only accessible from 
 # Microsoft, doesn't need to be secret in pipeline
+# See here on how to generate a new token:
+# https://devdiv.visualstudio.com/DevDiv/_packaging?_a=connect&feed=Pylance%40Local
 $str = "
-registry=http://devdiv.pkgs.visualstudio.com/_packaging/Pylance/npm/registry/
+registry=https://devdiv.pkgs.visualstudio.com/_packaging/Pylance/npm/registry/
 always-auth=true
 ; begin auth token
 //devdiv.pkgs.visualstudio.com/_packaging/Pylance%40Local/npm/registry/:username=devdiv
