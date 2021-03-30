@@ -111,6 +111,12 @@ steps:
 #  inputs:
 #    scriptName: Build/UpdateNpmrc.ps1
 
+
+- task: npmAuthenticate@0
+  displayName: 'Authenticate npm'
+  inputs:
+    workingFile: '.npmrc'
+
 # Run npm ci to install pylance
 - task: Npm@1
   inputs:
