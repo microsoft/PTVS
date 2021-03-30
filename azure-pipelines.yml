@@ -116,10 +116,8 @@ steps:
   displayName: 'Dump npmrc'
 
 # Run npm ci to install pylance
-- task: Npm@1
-  inputs:
-    command: 'install'
-    verbose: true
+- powershell: 'npm install --verbose'
+  displayName: 'Install pylance with npm'
 
 # Run a powershell script that does a package restore, some symlinking, and installs debugpy
 - task: PowerShell@1
