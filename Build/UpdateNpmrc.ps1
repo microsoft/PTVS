@@ -2,8 +2,8 @@
 # Microsoft, doesn't need to be secret in pipeline
 # See here on how to generate a new token:
 # https://devdiv.visualstudio.com/DevDiv/_packaging?_a=connect&feed=Pylance%40Local
-$str = "
-registry=https://devdiv.pkgs.visualstudio.com/_packaging/Pylance/npm/registry/
+$str = "registry=https://devdiv.pkgs.visualstudio.com/_packaging/Pylance%40Local/npm/registry/ 
+                        
 always-auth=true
 ; begin auth token
 //devdiv.pkgs.visualstudio.com/_packaging/Pylance%40Local/npm/registry/:username=devdiv
@@ -17,3 +17,4 @@ always-auth=true
 
 Write-Host "Writing .npmrc with token $Env:MAPPED_AZURE_DEVOPS_TOKEN from environment"
 Set-Content -Path ".npmrc" -Value $str
+Get-Content -Path ".npmrc"
