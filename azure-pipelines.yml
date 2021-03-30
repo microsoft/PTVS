@@ -115,7 +115,7 @@ steps:
 - task: NpmTfsAuth@0
   displayName: 'Authenticate feed'
   inputs:
-    feedUrl: 'https://devdiv.pkgs.visualstudio.com/_packaging/Pylance%40Local/npm/registry/'
+    feedUrl: 'https://devdiv.pkgs.visualstudio.com/_packaging/Pylance%40Local/npm/registry'
 
 # Print out npmrc
 - powershell: 'Get-Content ".npmrc"'
