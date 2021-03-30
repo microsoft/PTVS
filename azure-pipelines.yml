@@ -55,7 +55,7 @@ variables:
     value: false
   - name: TrackFileAccess
     value: false
-  - name: AZURE_DEVOPS_TOKEN
+  - name: GLOBAL_AZURE_DEVOPS_TOKEN
     value: $(AZURE_DEVOPS_TOKEN)
   
   # PTVS variable group
@@ -98,8 +98,14 @@ steps:
       type: 'Full'
       languages: 'VS'
 
-- powershell: 'Write-Host "Token is $(AZURE_DEVOPS_TOKEN)"'
-  displayName: 'Test token output'
+- powershell: |
+    Write-Host "Using an input-macro works: $(AZURE_DEVOPS_TOKEN)"
+    Write-Host "Using the env var directly does not work: $env:MYSECRET"
+    Write-Host "Using a global secret var mapped in the pipeline does not work either: $env:GLOBAL_MYSECRET"
+    Write-Host "Using the mapped env var for this task works and is recommended: $env:MY_MAPPED_ENV_VAR"
+  displayName: 'Test vars'
+  env:
+    MY_MAPPED_ENV_VAR: $(AZURE_DEVOPS_TOKEN) # the recommended way to map to an env variable
 
 # Update our .npmrc file to point to the feed for pylance
 # AZURE_DEVOPS_TOKEN is the base64 encoded access token. See here to create it:
