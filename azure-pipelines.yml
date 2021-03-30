@@ -98,7 +98,7 @@ steps:
       type: 'Full'
       languages: 'VS'
 
-- powershell: 'Write-Host "Token is $env:AZURE_DEVOPS_TOKEN"'
+- powershell: 'Write-Host "Token is $(AZURE_DEVOPS_TOKEN)"'
   displayName: 'Test token output'
 
 # Update our .npmrc file to point to the feed for pylance
@@ -107,7 +107,7 @@ steps:
 # https://devdiv.visualstudio.com/_details/security/tokens
 - task: PowerShell@1
   env:
-     AZURE_DEVOPS_TOKEN: $(AZURE_DEVOPS_TOKEN)
+     MAPPED_AZURE_DEVOPS_TOKEN: $(AZURE_DEVOPS_TOKEN)
   displayName: 'Update .npmrc to find pylance feed'
   inputs:
     scriptName: Build/UpdateNpmrc.ps1
