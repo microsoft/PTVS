@@ -80,10 +80,6 @@ steps:
   - powershell: 'Write-Host "##vso[build.addbuildtag]$env:VSTarget"'
     displayName: 'Add vstarget build tag'
 
-  # Print out queued
-  - powershell: 'Write-Host "Queued by: $(Build.QueuedBy)"'
-    displayName: 'Print out queued by list'
-
   # install plugins needed for swixproj/vsmanproj, signing, and localization
   - task: MicroBuildSwixPlugin@3
     displayName: 'Install microbuild swix plugin'
@@ -99,6 +95,10 @@ steps:
     inputs:
       type: 'Full'
       languages: 'VS'
+
+# Print out queued
+- powershell: 'Write-Host "Queued by: $(Build.QueuedBy)"'
+  displayName: 'Print out queued by list'
 
 # Update our .npmrc file to point to the feed for pylance
 # AZURE_DEVOPS_TOKEN is the base64 encoded access token. See here to create it:
