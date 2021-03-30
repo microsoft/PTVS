@@ -104,19 +104,20 @@ steps:
 # AZURE_DEVOPS_TOKEN is the base64 encoded access token. See here to create it:
 # https://devdiv.visualstudio.com/DevDiv/_packaging?_a=connect&feed=Pylance
 # https://devdiv.visualstudio.com/_details/security/tokens
-- task: PowerShell@1
-  env:
-     MAPPED_AZURE_DEVOPS_TOKEN: $(AZURE_DEVOPS_TOKEN)
-  displayName: 'Update .npmrc to find pylance feed'
-  inputs:
-    scriptName: Build/UpdateNpmrc.ps1
+#- task: PowerShell@1
+#  env:
+#     MAPPED_AZURE_DEVOPS_TOKEN: $(AZURE_DEVOPS_TOKEN)
+#  displayName: 'Update .npmrc to find pylance feed'
+#  inputs:
+#    scriptName: Build/UpdateNpmrc.ps1
 
 # Run npm ci to install pylance
 - task: Npm@1
-  displayName: 'Install Pylance on build machine'
   inputs:
     command: 'install'
     verbose: true
+    customRegistry: 'useFeed'
+    customFeed: '9466b217-a8e6-455c-b7b3-a1afbabc4cbc'
 
 # Run a powershell script that does a package restore, some symlinking, and installs debugpy
 - task: PowerShell@1
