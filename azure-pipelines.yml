@@ -112,10 +112,12 @@ steps:
 #    scriptName: Build/UpdateNpmrc.ps1
 
 
-- task: NpmTfsAuth@0
-  displayName: 'Authenticate feed'
+- task: npmAuthenticate@0
+  displayName: 'Authenticate npm'
   inputs:
-    feedUrl: 'https://devdiv.pkgs.visualstudio.com/_packaging/Pylance%40Local/npm/registry'
+    verbose: true
+    workingFile: '.npmrc'
+    feed: '9466b217-a8e6-455c-b7b3-a1afbabc4cbc'
 
 # Print out npmrc
 - powershell: 'Get-Content ".npmrc"'
