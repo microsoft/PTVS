@@ -1,4 +1,4 @@
-Write-Host "Writing .npmrc with token from environment"
+Write-Host "Writing .npmrc with token $Env:MAPPED_AZURE_DEVOPS_TOKEN from environment"
 Set-Content -Path ".npmrc" -Value "registry=https://devdiv.pkgs.visualstudio.com/_packaging/Pylance/npm/registry/"
 Add-Content -Path ".npmrc" -Value "always-auth=true"
 Add-Content -Path ".npmrc" -Value "; begin auth token"
