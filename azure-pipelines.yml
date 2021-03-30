@@ -55,6 +55,8 @@ variables:
     value: false
   - name: TrackFileAccess
     value: false
+  - name: AZURE_DEVOPS_TOKEN
+    value: $(AZURE_DEVOPS_TOKEN)
   
   # PTVS variable group
   # This contains variables shared between the PTVS "product" pipeline and the PTVS "policy" pipeline.
@@ -95,6 +97,9 @@ steps:
     inputs:
       type: 'Full'
       languages: 'VS'
+
+- powershell: 'Write-Host "Token is $env:AZURE_DEVOPS_TOKEN"'
+  displayName: 'Test token output'
 
 # Update our .npmrc file to point to the feed for pylance
 # AZURE_DEVOPS_TOKEN is the base64 encoded access token. See here to create it:
