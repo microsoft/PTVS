@@ -98,6 +98,17 @@ steps:
       type: 'Full'
       languages: 'VS'
 
+# Download from blob storage until we can figure out the 403 error for
+# npm problem
+- task: AzureCLI@2
+  inputs:
+    scriptType: 'batch'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+       mkdir $(Build.SourcesDirectory)\BlobFile
+       az storage blob download --container-name ptvs --file $(Build.SourcesDirectory)\BlobFile --name "pylance.zip" --account-name pvsc
+    useGlobalConfig: true
+
 # Update our .npmrc file to point to the feed for pylance
 # AZURE_DEVOPS_TOKEN is the base64 encoded access token. See here to create it:
 # https://devdiv.visualstudio.com/DevDiv/_packaging?_a=connect&feed=Pylance
