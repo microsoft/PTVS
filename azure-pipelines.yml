@@ -126,8 +126,6 @@ steps:
   inputs:
     command: 'install'
     verbose: true
-    customRegistry: 'useFeed'
-    customFeed: '9466b217-a8e6-455c-b7b3-a1afbabc4cbc'
 
 # Run a powershell script that does a package restore, some symlinking, and installs debugpy
 - task: PowerShell@1
