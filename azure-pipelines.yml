@@ -47,8 +47,6 @@ variables:
     value: 16.10
   - name: IncludeDjangoHtmlExtensions
     value: true
-  - name: IncludeLiveShare
-    value: true
   - name: IncludeMiniconda
     value: true
   - name: IncludeMSI
@@ -57,6 +55,8 @@ variables:
     value: false
   - name: TrackFileAccess
     value: false
+  - name: GLOBAL_AZURE_DEVOPS_TOKEN
+    value: $(AZURE_DEVOPS_TOKEN)
   
   # PTVS variable group
   # This contains variables shared between the PTVS "product" pipeline and the PTVS "policy" pipeline.
@@ -97,6 +97,23 @@ steps:
     inputs:
       type: 'Full'
       languages: 'VS'
+
+# Update our .npmrc file to point to the feed for pylance
+# AZURE_DEVOPS_TOKEN is the base64 encoded access token. See here to create it:
+# https://devdiv.visualstudio.com/DevDiv/_packaging?_a=connect&feed=Pylance
+# https://devdiv.visualstudio.com/_details/security/tokens
+- task: PowerShell@1
+  env:
+     MAPPED_AZURE_DEVOPS_TOKEN: $(AZURE_DEVOPS_TOKEN)
+  displayName: 'Update .npmrc to find pylance feed'
+  inputs:
+    scriptName: Build/UpdateNpmrc.ps1
+
+# Run npm ci to install pylance
+- task: Npm@1
+  displayName: 'Install Pylance on build machine'
+  inputs:
+    command: 'ci'
 
 # Run a powershell script that does a package restore, some symlinking, and installs debugpy
 - task: PowerShell@1

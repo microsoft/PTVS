@@ -1,6 +1,0 @@
-[$RootKey$\RuntimeConfiguration\dependentAssembly\codeBase\{F69BC369-921E-35F7-D82B-2A8E4C174BF4}]
-"name"="Microsoft.VisualStudio.Debugger.Interop.VSCodeDebuggerHost"
-"publicKeyToken"="b03f5f7f11d50a3a"
-"culture"="neutral"
-"version"="1.0.0.0"
-"codeBase"="$PackageFolder$\Microsoft.VisualStudio.Debugger.Interop.VSCodeDebuggerHost.dll"

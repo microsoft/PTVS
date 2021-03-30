@@ -27,4 +27,5 @@ Python/Product/Pylance/Pylance/**/*
 __pycache__/
 /Python/*.VC.opendb
 /Python/*.VC.db
-/Pylance/*
+/node_modules/*
+/.npmrc

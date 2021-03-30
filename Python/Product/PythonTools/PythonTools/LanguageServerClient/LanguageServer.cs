@@ -26,13 +26,13 @@ using Microsoft.VisualStudio.Threading;
 using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.LanguageServerClient {
-    internal sealed class PylanceLanguageServer {
+    internal sealed class LanguageServer {
         private readonly JoinableTaskContext _joinableTaskContext;
         private readonly NodeEnvironmentProvider _nodeEnvironmentProvider;
         private readonly IServiceProvider _site;
         private readonly Func<StreamData, StreamData> _serverSendHandler;
 
-        public PylanceLanguageServer(
+        public LanguageServer(
             IServiceProvider site, 
             JoinableTaskContext joinableTaskContext,
             Func<StreamData, StreamData> serverSendHandler) {
@@ -116,7 +116,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
 
         private static string GetServerLocation() {
-            var filePath = PythonToolsInstallPath.GetFile(@"Pylance\package\dist\pylance-langserver.bundle.js");
+            var filePath = PythonToolsInstallPath.GetFile(@"pylance\dist\pylance-langserver.bundle.js");
             return File.Exists(filePath) ? filePath : null;
         }
 
