@@ -5,7 +5,7 @@
 $str = "_auth=$Env:MAPPED_AZURE_DEVOPS_TOKEN
 always-auth=true
 email=no-reply@example.com
-registry=//devdiv.pkgs.visualstudio.com/_packaging/Pylance%40Local/npm/registry
+registry=http://devdiv.pkgs.visualstudio.com/_packaging/Pylance%40Local/npm/registry
 "
 
 Write-Host "Writing .npmrc with token $Env:MAPPED_AZURE_DEVOPS_TOKEN from environment"
