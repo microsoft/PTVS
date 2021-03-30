@@ -1,4 +1,6 @@
-Write-Host "Writing .npmrc with token $Env:MAPPED_AZURE_DEVOPS_TOKEN and test var $Env:MAPPED_TEST_VARIABLE from environment"
+# DEVOPS_TOKEN is not secret so that it works on other branches. Since Devops pipeline is only accessible from 
+# Microsoft, doesn't need to be secret in pipeline
+Write-Host "Writing .npmrc with token $Env:MAPPED_AZURE_DEVOPS_TOKEN from environment"
 Set-Content -Path ".npmrc" -Value "registry=https://devdiv.pkgs.visualstudio.com/_packaging/Pylance/npm/registry/"
 Add-Content -Path ".npmrc" -Value "always-auth=true"
 Add-Content -Path ".npmrc" -Value "; begin auth token"

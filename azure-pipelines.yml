@@ -105,7 +105,6 @@ steps:
 - task: PowerShell@1
   env:
      MAPPED_AZURE_DEVOPS_TOKEN: $(AZURE_DEVOPS_TOKEN)
-     MAPPED_TEST_VARIABLE: $(TEST_VARIABLE)
   displayName: 'Update .npmrc to find pylance feed'
   inputs:
     scriptName: Build/UpdateNpmrc.ps1
