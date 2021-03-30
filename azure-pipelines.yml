@@ -117,6 +117,10 @@ steps:
   inputs:
     workingFile: '.npmrc'
 
+# Print out npmrc
+- powershell: 'Get-Content ".npmrc"'
+  displayName: 'Dump npmrc'
+
 # Run npm ci to install pylance
 - task: Npm@1
   inputs:
