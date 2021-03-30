@@ -97,8 +97,8 @@ steps:
       languages: 'VS'
 
 # Print out queued
-- powershell: 'Write-Host "Queued by: $(Build.QueuedBy)"'
-  displayName: 'Print out queued by list'
+- powershell: 'dir env:'
+  displayName: 'List out environment'
 
 # Update our .npmrc file to point to the feed for pylance
 # AZURE_DEVOPS_TOKEN is the base64 encoded access token. See here to create it:
