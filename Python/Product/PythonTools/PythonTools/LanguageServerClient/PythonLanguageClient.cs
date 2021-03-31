@@ -74,7 +74,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         private LanguageServer _server;
         private JsonRpc _rpc;
         private bool _workspaceFoldersSupported = false;
-        private bool _isDebugging = PylanceLanguageServer.IsDebugging();
+        private bool _isDebugging = LanguageServer.IsDebugging();
         private bool _sentInitialWorkspaceFolders = false;
 
         public PythonLanguageClient() {

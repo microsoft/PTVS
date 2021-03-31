@@ -55,8 +55,6 @@ variables:
     value: false
   - name: TrackFileAccess
     value: false
-  - name: GLOBAL_AZURE_DEVOPS_TOKEN
-    value: $(AZURE_DEVOPS_TOKEN)
   
   # PTVS variable group
   # This contains variables shared between the PTVS "product" pipeline and the PTVS "policy" pipeline.
@@ -98,6 +96,10 @@ steps:
       type: 'Full'
       languages: 'VS'
 
+# Print out queued
+- powershell: 'dir env:'
+  displayName: 'List out environment'
+
 # Update our .npmrc file to point to the feed for pylance
 # AZURE_DEVOPS_TOKEN is the base64 encoded access token. See here to create it:
 # https://devdiv.visualstudio.com/DevDiv/_packaging?_a=connect&feed=Pylance
@@ -109,11 +111,13 @@ steps:
   inputs:
     scriptName: Build/UpdateNpmrc.ps1
 
+# Print out npmrc
+- powershell: 'Get-Content ".npmrc"'
+  displayName: 'Dump npmrc'
+
 # Run npm ci to install pylance
-- task: Npm@1
-  displayName: 'Install Pylance on build machine'
-  inputs:
-    command: 'ci'
+- powershell: 'npm install --verbose'
+  displayName: 'Install pylance with npm'
 
 # Run a powershell script that does a package restore, some symlinking, and installs debugpy
 - task: PowerShell@1
