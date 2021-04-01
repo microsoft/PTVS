@@ -23,6 +23,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Python.Core.Disposables;
+using Microsoft.PythonTools.Editor.Core;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.LanguageServerClient.StreamHacking;
@@ -30,8 +31,12 @@ using Microsoft.PythonTools.LanguageServerClient.WorkspaceFolderChanged;
 using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Project;
 using Microsoft.PythonTools.Utility;
+using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.LanguageServer.Client;
+using Microsoft.VisualStudio.LanguageServer.Protocol;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudio.Threading;
 using Microsoft.VisualStudio.Utilities;
 using Microsoft.VisualStudio.Workspace.VSIntegration.Contracts;
@@ -70,6 +75,9 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
         [Import]
         public IVsFolderWorkspaceService WorkspaceService;
+
+        [Import]
+        public ITextDocumentFactoryService TextDocumentFactoryService;
 
         private readonly DisposableBag _disposables;
         private IPythonLanguageClientContext[] _clientContexts;
@@ -226,9 +234,15 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         public Task InvokeDidChangeConfigurationAsync(LSP.DidChangeConfigurationParams request)
             => _rpc == null ? Task.CompletedTask : _rpc.NotifyWithParameterObjectAsync("workspace/didChangeConfiguration", request);
 
-        public Task InvokeDidChangeWorkspaceFoldersAsync(WorkspaceFolder[] added, WorkspaceFolder[] removed) => 
-            _rpc == null ? Task.CompletedTask : _rpc.NotifyWithParameterObjectAsync("workspace/didChangeWorkspaceFolders",
+        public async Task InvokeDidChangeWorkspaceFoldersAsync(WorkspaceFolder[] added, WorkspaceFolder[] removed) {
+            var task = _rpc == null ? Task.CompletedTask : _rpc.NotifyWithParameterObjectAsync("workspace/didChangeWorkspaceFolders",
                     new DidChangeWorkspaceFoldersParams { changeEvent = new WorkspaceFoldersChangeEvent { added = added, removed = removed } });
+
+            await task;
+
+            // If we send workspace folder updates, we have to resend document opens
+            await SendDocumentOpensAsync();
+        }
 
         public Task<LSP.CompletionList> InvokeTextDocumentCompletionAsync(LSP.CompletionParams request, CancellationToken cancellationToken = default)
             => _rpc == null ? Task.FromResult(new LSP.CompletionList()) : _rpc.InvokeWithParameterObjectAsync<LSP.CompletionList>("textDocument/completion", request, cancellationToken);
@@ -240,6 +254,66 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
         private Task SendDidChangeConfigurations() {
             return Task.WhenAll(_clientContexts.Select(c => SendDidChangeConfiguration(c)));
+        }
+
+        private async Task SendDocumentOpensAsync() {
+            // This should be handled by the VSSDK if they ever support workspace folder change notifications
+            // Meaning we shouldn't need to do this if they do it for us.
+            await JoinableTaskContext.Factory.SwitchToMainThreadAsync();
+            IComponentModel componentModel = Site.GetService(typeof(SComponentModel)) as IComponentModel;
+            Assumes.Present(componentModel);
+
+            SVsServiceProvider syncServiceProvider = componentModel.GetService<SVsServiceProvider>();
+            RunningDocumentTable rdt = new RunningDocumentTable(syncServiceProvider);
+
+            foreach (RunningDocumentInfo info in rdt) {
+                if (this.TryGetOpenedDocumentData(info, out ITextBuffer textBuffer, out string filePath)
+                    && textBuffer != null
+                    && textBuffer.IsPythonContent()) {
+
+                    var textDocumentItem = new TextDocumentItem {
+                        Uri = new Uri(filePath),
+                        Version = textBuffer.CurrentSnapshot.Version.VersionNumber,
+                        LanguageId = textBuffer.ContentType.DisplayName,
+                    };
+
+                    var param = new DidOpenTextDocumentParams {
+                        TextDocument = textDocumentItem,
+                    };
+                    param.TextDocument.Text = textBuffer.CurrentSnapshot.GetText();
+
+                    await InvokeTextDocumentDidOpenAsync(param).ConfigureAwait(false);
+                }
+            }
+        }
+
+        private bool TryGetOpenedDocumentData(RunningDocumentInfo info, out ITextBuffer textBuffer, out string filePath) {
+            textBuffer = null;
+            filePath = string.Empty;
+
+            if (!info.IsDocumentInitialized) {
+                return false;
+            }
+
+            IVsUserData vsUserData = info.DocData as IVsUserData;
+            if (vsUserData == null) {
+                return false;
+            }
+
+            // Acquire the text buffer and snapshot from the document
+            vsUserData.GetData(Microsoft.VisualStudio.Editor.DefGuidList.guidDocumentTextSnapshot, out object snapshot);
+            textBuffer = (snapshot as ITextSnapshot)?.TextBuffer;
+            if (textBuffer == null) {
+                return false;
+            }
+
+            if (!TextDocumentFactoryService.TryGetTextDocument(textBuffer, out ITextDocument textDocument)) {
+                return false;
+            }
+
+            filePath = textDocument.FilePath;
+
+            return true;
         }
 
         private async Task SendDidChangeConfiguration(IPythonLanguageClientContext context) {
