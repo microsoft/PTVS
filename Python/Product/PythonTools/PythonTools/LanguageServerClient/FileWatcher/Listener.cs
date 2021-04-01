@@ -25,6 +25,10 @@ namespace Microsoft.PythonTools.LanguageServerClient.FileWatcher {
             // Ignore some common directories
             _matcher.AddExclude("**/.vs/**/*.*");
 
+            // Ignore files that end with ~ or TMP
+            _matcher.AddExclude("**/*~");
+            _matcher.AddExclude("**/*TMP");
+
             // Depending upon if this is a workspace or a solution, listen to different change events.
             if (workspaceService != null && workspaceService.CurrentWorkspace != null) {
                 workspaceService.CurrentWorkspace.GetService<IFileWatcherService>().OnFileSystemChanged += OnFileChanged;
@@ -35,7 +39,9 @@ namespace Microsoft.PythonTools.LanguageServerClient.FileWatcher {
                     _solutionWatcher = new System.IO.FileSystemWatcher();
                     _solutionWatcher.Path = Path.GetDirectoryName(dte.Solution.FileName);
                     _solutionWatcher.IncludeSubdirectories = true;
-                    _solutionWatcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.CreationTime | NotifyFilters.DirectoryName | NotifyFilters.FileName;
+                    _solutionWatcher.NotifyFilter = 
+                        NotifyFilters.LastWrite | NotifyFilters.CreationTime | 
+                        NotifyFilters.DirectoryName | NotifyFilters.FileName | NotifyFilters.Size;
                     _solutionWatcher.Changed += OnFileChanged_Sync;
                     _solutionWatcher.Created += OnFileChanged_Sync;
                     _solutionWatcher.Deleted += OnFileChanged_Sync;
@@ -81,7 +87,10 @@ namespace Microsoft.PythonTools.LanguageServerClient.FileWatcher {
                     // Send out the event to the language server
                     var renamedArgs = e as System.IO.RenamedEventArgs;
                     var didChangeParams = new DidChangeWatchedFilesParams();
-                    if (renamedArgs == null) {
+
+                    // Visual Studio actually does a rename when saving. The rename is from a file ending with '~'
+                    if (renamedArgs == null || renamedArgs.OldFullPath.EndsWith("~")) {
+                        renamedArgs = null;
                         didChangeParams.Changes = new FileEvent[] { new FileEvent() };
                         didChangeParams.Changes[0].Uri = new Uri(e.FullPath);
 
@@ -95,6 +104,10 @@ namespace Microsoft.PythonTools.LanguageServerClient.FileWatcher {
                             case WatcherChangeTypes.Changed:
                                 didChangeParams.Changes[0].FileChangeType = FileChangeType.Changed;
                                 break;
+                            case WatcherChangeTypes.Renamed:
+                                didChangeParams.Changes[0].FileChangeType = FileChangeType.Changed;
+                                break;
+
                             default:
                                 didChangeParams.Changes = Array.Empty<FileEvent>();
                                 break;

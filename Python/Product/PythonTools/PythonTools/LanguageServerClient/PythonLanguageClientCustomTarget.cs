@@ -83,15 +83,19 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             }
 
             Trace.WriteLine(telemetry.ToString());
-            var te = telemetry.ToObject<PylanceTelemetryEvent>();
-            if (te == null) {
-                return;
-            }
+            try {
+                var te = telemetry.ToObject<PylanceTelemetryEvent>();
+                if (te == null) {
+                    return;
+                }
 
-            if (te.Exception == null) {
-                _logger.LogEvent(te.EventName, te.Properties, te.Measurements);
-            } else {
-                _logger.LogFault(new PylanceException(te.EventName, te.Exception.stack), te.EventName, false);
+                if (te.Exception == null) {
+                    _logger.LogEvent(te.EventName, te.Properties, te.Measurements);
+                } else {
+                    _logger.LogFault(new PylanceException(te.EventName, te.Exception.stack), te.EventName, false);
+                }
+            } catch {
+
             }
         }
 
