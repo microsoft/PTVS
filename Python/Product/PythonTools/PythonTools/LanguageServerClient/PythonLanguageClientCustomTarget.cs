@@ -27,13 +27,13 @@ using Microsoft.VisualStudio.Threading;
 using Newtonsoft.Json.Linq;
 using StreamJsonRpc;
 using Task = System.Threading.Tasks.Task;
+using Microsoft.VisualStudio.LanguageServer.Protocol;
 
 namespace Microsoft.PythonTools.LanguageServerClient {
     internal class PythonLanguageClientCustomTarget {
         private readonly IServiceProvider _site;
         private readonly IPythonToolsLogger _logger;
         private readonly JoinableTaskContext _joinableTaskContext;
-        private readonly Action _registeredForWorkspaceEvents;
 
         [Serializable]
         private sealed class PylanceError {
@@ -58,12 +58,23 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             public override string StackTrace => _stackTrace;
         }
 
-        public PythonLanguageClientCustomTarget(IServiceProvider site, JoinableTaskContext joinableTaskContext, Action registeredForWorkspaceEvents) {
+        public PythonLanguageClientCustomTarget(IServiceProvider site, JoinableTaskContext joinableTaskContext) {
             _site = site ?? throw new ArgumentNullException(nameof(site));
             _joinableTaskContext = joinableTaskContext;
             _logger = _site.GetService(typeof(IPythonToolsLogger)) as IPythonToolsLogger;
-            _registeredForWorkspaceEvents = registeredForWorkspaceEvents;
         }
+
+        /// <summary>
+        /// Event fired when client/registerCapability didChangeWorkspaceFolders is called
+        /// Has to be internal so JsonRpc doesn't register this as a method.
+        /// </summary>
+        internal event EventHandler WorkspaceFolderChangeRegistered;
+
+        /// <summary>
+        /// Event fired when client/registerCapability didChangeWatchedFiles is called.
+        /// Has to be internal so JsonRpc doesn't register this as a method.
+        /// </summary>
+        internal event EventHandler<DidChangeWatchedFilesRegistrationOptions> WatchedFilesRegistered;
 
         [JsonRpcMethod("telemetry/event")]
         public void OnTelemetryEvent(JToken arg) {
@@ -115,7 +126,15 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         public async Task OnRegisterCapability(JToken arg) {
             var regParams = arg.ToObject<VisualStudio.LanguageServer.Protocol.RegistrationParams>();
             if (regParams.Registrations.Any(p => p.Method == "workspace/didChangeWorkspaceFolders")) {
-                await _joinableTaskContext.Factory.RunAsync(async () => _registeredForWorkspaceEvents());
+                await _joinableTaskContext.Factory.RunAsync(async () => this.WorkspaceFolderChangeRegistered.Invoke(this, EventArgs.Empty));
+            }
+            var watchedFilesReg = regParams.Registrations.First(p => p.Method == "workspace/didChangeWatchedFiles");
+            if (watchedFilesReg != null) { 
+                var optionsObj = watchedFilesReg.RegisterOptions as JObject;
+                var options = optionsObj.ToObject<DidChangeWatchedFilesRegistrationOptions>();
+                if (options != null) {
+                    await _joinableTaskContext.Factory.RunAsync(async () => this.WatchedFilesRegistered.Invoke(this, options));
+                }
             }
         }
     }

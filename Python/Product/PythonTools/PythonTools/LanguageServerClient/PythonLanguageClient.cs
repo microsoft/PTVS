@@ -34,6 +34,7 @@ using Microsoft.VisualStudio.LanguageServer.Client;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Threading;
 using Microsoft.VisualStudio.Utilities;
+using Microsoft.VisualStudio.Workspace.VSIntegration.Contracts;
 using Newtonsoft.Json.Linq;
 using StreamJsonRpc;
 using LSP = Microsoft.VisualStudio.LanguageServer.Protocol;
@@ -67,6 +68,9 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         [Import]
         public JoinableTaskContext JoinableTaskContext;
 
+        [Import]
+        public IVsFolderWorkspaceService WorkspaceService;
+
         private readonly DisposableBag _disposables;
         private IPythonLanguageClientContext[] _clientContexts;
         private PythonAnalysisOptions _analysisOptions;
@@ -76,6 +80,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         private bool _workspaceFoldersSupported = false;
         private bool _isDebugging = LanguageServer.IsDebugging();
         private bool _sentInitialWorkspaceFolders = false;
+        private FileWatcher.Listener _fileListener;
 
         public PythonLanguageClient() {
             _disposables = new DisposableBag(GetType().Name);
@@ -90,8 +95,6 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         public IEnumerable<string> ConfigurationSections => Enumerable.Repeat("python", 1);
         public object InitializationOptions { get; private set; }
 
-        // TODO: investigate how this can be used, VS does not allow currently
-        // for the server to dynamically register file watching.
         public IEnumerable<string> FilesToWatch => null;
         public object MiddleLayer => null;
         public object CustomMessageTarget { get; private set; }
@@ -148,7 +151,10 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             // and hence we don't know if this is workspace or a loose files case.
             _server = new LanguageServer(Site, JoinableTaskContext, this.OnSendToServer);
             InitializationOptions = null;
-            CustomMessageTarget = new PythonLanguageClientCustomTarget(Site, JoinableTaskContext, OnWorkspaceFolderWatched);
+            var customTarget = new PythonLanguageClientCustomTarget(Site, JoinableTaskContext);
+            CustomMessageTarget = customTarget;
+            customTarget.WatchedFilesRegistered += WatchedFilesRegistered;
+            customTarget.WorkspaceFolderChangeRegistered += OnWorkspaceFolderWatched;
             await StartAsync.InvokeAsync(this, EventArgs.Empty);
         }
 
@@ -169,6 +175,10 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             _rpc.AllowModificationWhileListening = true;
             _rpc.CancellationStrategy = new CustomCancellationStrategy(_server.CancellationFolderName, _rpc);
             _rpc.AllowModificationWhileListening = false;
+
+            // Create our listener for file events
+            _fileListener = new FileWatcher.Listener(_rpc, WorkspaceService, Site);
+            _disposables.Add(_fileListener);
 
             // We also need to switch the order on handlers for all of the rpc targets. Until
             // the VSSDK gives us a way to do this, use reflection.
@@ -283,9 +293,14 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             await InvokeDidChangeConfigurationAsync(config);
         }
 
-        private void OnWorkspaceFolderWatched() {
+        private void OnWorkspaceFolderWatched(object sender, EventArgs e) {
             _workspaceFoldersSupported = true;
             OnSolutionOpened();
+        }
+
+        private void WatchedFilesRegistered(object sender, LSP.DidChangeWatchedFilesRegistrationOptions e) {
+            // Add the file globs to our listener. It will listen to the globs
+            _fileListener?.AddPatterns(e.Watchers);
         }
 
         private IPythonLanguageClientContext[] CreateClientContexts() {
@@ -302,7 +317,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             return new IPythonLanguageClientContext[] { new PythonLanguageClientContextGlobal(OptionsService) };
         }
 
-        // This is all a hack until VSSDK LanguageServer can handle workspace folders
+        // This is all a hack until VSSDK LanguageServer can handle workspace folders and dynamic registration
         private StreamData OnSendToServer(StreamData data) {
             var message = MessageParser.Deserialize(data);
             if (message != null) {
@@ -316,6 +331,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                                     capabilities["workspace"] = JToken.FromObject(new { });
                                 }
                                 capabilities["workspace"]["workspaceFolders"] = true;
+                                capabilities["workspace"]["didChangeWatchedFiles"]["dynamicRegistration"] = true;
 
                                 // Need to rewrite the message now
                                 return MessageParser.Serialize(message);

@@ -85,6 +85,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
             if (process.Start()) {
                 if (isDebugging) {
+                    System.Diagnostics.Debug.WriteLine($"Attach to {process.Id} for pylance debugging");
                     // During debugging give us time to attach
                     await Task.Delay(5000);
                 }

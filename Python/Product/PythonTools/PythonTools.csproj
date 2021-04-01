@@ -281,6 +281,7 @@
     <Compile Include="PythonTools\Editor\Formatting\PythonFormatter.cs" />
     <Compile Include="PythonTools\Editor\Formatting\LspDiffTextEditFactory.cs" />
     <Compile Include="PythonTools\LanguageServerClient\CustomCancellationStrategy.cs" />
+    <Compile Include="PythonTools\LanguageServerClient\FileWatcher\Listener.cs" />
     <Compile Include="PythonTools\LanguageServerClient\LiveShareExtensions.cs" />
     <Compile Include="PythonTools\LanguageServerClient\LspEditorUtilities.cs" />
     <Compile Include="PythonTools\Editor\Formatting\PythonFormatterBlack.cs" />

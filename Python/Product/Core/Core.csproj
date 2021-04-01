@@ -28,6 +28,10 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Microsoft.Extensions.FileSystemGlobbing, Version=3.1.8.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <Private>True</Private>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Reference>
     <Reference Include="Microsoft.VisualStudio.Shell.15.0" />
     <Reference Include="Microsoft.VisualStudio.Shell.Framework" />
     <Reference Include="System" />
