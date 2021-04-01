@@ -17,13 +17,18 @@ namespace Microsoft.PythonTools.LanguageServerClient.FileWatcher {
         private System.IO.FileSystemWatcher _solutionWatcher;
         private Microsoft.Extensions.FileSystemGlobbing.Matcher _matcher = new Microsoft.Extensions.FileSystemGlobbing.Matcher(StringComparison.InvariantCultureIgnoreCase);
         private bool disposedValue;
+        private string _root;
 
         public Listener(StreamJsonRpc.JsonRpc rpc, IVsFolderWorkspaceService workspaceService, IServiceProvider site) {
             this._rpc = rpc;
 
+            // Ignore some common directories
+            _matcher.AddExclude("**/.vs/**/*.*");
+
             // Depending upon if this is a workspace or a solution, listen to different change events.
             if (workspaceService != null && workspaceService.CurrentWorkspace != null) {
                 workspaceService.CurrentWorkspace.GetService<IFileWatcherService>().OnFileSystemChanged += OnFileChanged;
+                _root = workspaceService.CurrentWorkspace.Location;
             } else {
                 var dte = (EnvDTE80.DTE2)site.GetService(typeof(EnvDTE.DTE));
                 if (dte != null && dte.Solution != null && dte.Solution.FileName != null) {
@@ -36,6 +41,7 @@ namespace Microsoft.PythonTools.LanguageServerClient.FileWatcher {
                     _solutionWatcher.Deleted += OnFileChanged_Sync;
                     _solutionWatcher.Renamed += OnFileChanged_Sync;
                     _solutionWatcher.EnableRaisingEvents = true;
+                    _root = _solutionWatcher.Path;
                 }
             }
         }
@@ -68,7 +74,7 @@ namespace Microsoft.PythonTools.LanguageServerClient.FileWatcher {
             // Skip directory change events
             if (!e.IsDirectoryChanged()) {
                 // Create something to match with
-                var item = new InMemoryDirectoryInfo(Path.GetDirectoryName(e.FullPath), new string[] { e.Name });
+                var item = new InMemoryDirectoryInfo(_root, new string[] { e.FullPath });
 
                 // See if this matches one of our patterns.
                 if (_matcher.Execute(item).HasMatches) {

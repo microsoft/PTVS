@@ -123,17 +123,17 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
 
         [JsonRpcMethod("client/registerCapability")]
-        public async Task OnRegisterCapability(JToken arg) {
+        public void OnRegisterCapability(JToken arg) {
             var regParams = arg.ToObject<VisualStudio.LanguageServer.Protocol.RegistrationParams>();
             if (regParams.Registrations.Any(p => p.Method == "workspace/didChangeWorkspaceFolders")) {
-                await _joinableTaskContext.Factory.RunAsync(async () => this.WorkspaceFolderChangeRegistered.Invoke(this, EventArgs.Empty));
+                _joinableTaskContext.Factory.RunAsync(async () => this.WorkspaceFolderChangeRegistered.Invoke(this, EventArgs.Empty));
             }
-            var watchedFilesReg = regParams.Registrations.First(p => p.Method == "workspace/didChangeWatchedFiles");
+            var watchedFilesReg = regParams.Registrations.FirstOrDefault(p => p.Method == "workspace/didChangeWatchedFiles");
             if (watchedFilesReg != null) { 
                 var optionsObj = watchedFilesReg.RegisterOptions as JObject;
                 var options = optionsObj.ToObject<DidChangeWatchedFilesRegistrationOptions>();
                 if (options != null) {
-                    await _joinableTaskContext.Factory.RunAsync(async () => this.WatchedFilesRegistered.Invoke(this, options));
+                    _joinableTaskContext.Factory.RunAsync(async () => this.WatchedFilesRegistered.Invoke(this, options));
                 }
             }
         }

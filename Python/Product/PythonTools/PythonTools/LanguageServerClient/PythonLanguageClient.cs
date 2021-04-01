@@ -321,6 +321,9 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         private StreamData OnSendToServer(StreamData data) {
             var message = MessageParser.Deserialize(data);
             if (message != null) {
+                if (_isDebugging) {
+                    System.Diagnostics.Debug.WriteLine($"*** Sending pylance: {message.ToString()}");
+                }
                 try {
                     // If this is the initialize method, add the workspace folders capability
                     if (message.Value<string>("method") == "initialize") {
