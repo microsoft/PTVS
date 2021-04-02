@@ -79,6 +79,11 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         [Import]
         public ITextDocumentFactoryService TextDocumentFactoryService;
 
+        /// <summary>
+        /// Used for testing. Waits for the language client to be up and connected
+        /// </summary>
+        public static Task ConnectedTask => _connectedTcs.Task;
+
         private readonly DisposableBag _disposables;
         private IPythonLanguageClientContext[] _clientContexts;
         private PythonAnalysisOptions _analysisOptions;
@@ -89,6 +94,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         private bool _isDebugging = LanguageServer.IsDebugging();
         private bool _sentInitialWorkspaceFolders = false;
         private FileWatcher.Listener _fileListener;
+        private static TaskCompletionSource<int> _connectedTcs = new System.Threading.Tasks.TaskCompletionSource<int>();
 
         public PythonLanguageClient() {
             _disposables = new DisposableBag(GetType().Name);
@@ -285,6 +291,9 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                     await InvokeTextDocumentDidOpenAsync(param).ConfigureAwait(false);
                 }
             }
+
+            // Indicate to test code that we are up and running.
+            _connectedTcs.TrySetResult(0);
         }
 
         private bool TryGetOpenedDocumentData(RunningDocumentInfo info, out ITextBuffer textBuffer, out string filePath) {

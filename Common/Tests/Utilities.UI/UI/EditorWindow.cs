@@ -24,6 +24,7 @@ using System.Windows.Automation;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Language.Intellisense;
+using Microsoft.VisualStudio.Language.Intellisense.AsyncCompletion;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -233,6 +234,15 @@ namespace TestUtilities.UI {
                 var stackMapService = compModel.GetService<IIntellisenseSessionStackMapService>();
 
                 return stackMapService.GetStackForTextView(TextView);
+            }
+        }
+
+        public IAsyncCompletionBroker2 AsyncCompletionBroker
+        {
+            get
+            {
+                var compModel = (IComponentModel)VisualStudioApp.ServiceProvider.GetService(typeof(SComponentModel));
+                return compModel.GetService<IAsyncCompletionBroker>() as IAsyncCompletionBroker2;
             }
         }
 
