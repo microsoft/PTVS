@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.VisualStudio.Language.Intellisense.AsyncCompletion;
 using Microsoft.VisualStudio.Language.Intellisense.AsyncCompletion.Data;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
@@ -17,15 +18,16 @@ namespace PythonToolsUITests {
 
 
         public void AutoComplete(PythonVisualStudioApp app) {
-            try {
-                var languageName = PythonVisualStudioApp.TemplateLanguageName;
-                var slnPath = PrepareProject(app, Version);
+            EventHandler<CompletionTriggeredEventArgs> handler = null;
+            var languageName = PythonVisualStudioApp.TemplateLanguageName;
+            var slnPath = PrepareProject(app);
 
-                var project = app.OpenProject(slnPath);
-                var item = project.ProjectItems.Item("document.py");
-                var window = item.Open();
-                window.Activate();
-                var doc = app.GetDocument(item.Document.FullName);
+            var project = app.OpenProject(slnPath);
+            var item = project.ProjectItems.Item("document.py");
+            var window = item.Open();
+            window.Activate();
+            var doc = app.GetDocument(item.Document.FullName);
+            try { 
                 doc.Invoke(() => {
                     using (var e = doc.TextView.TextBuffer.CreateEdit()) {
                         e.Insert(e.Snapshot.Length, "import sys\r\nsys.");
@@ -41,20 +43,30 @@ namespace PythonToolsUITests {
 
                 // Bring up auto complete
                 Assert.IsTrue(doc.AsyncCompletionBroker.IsCompletionSupported(doc.TextView.TextBuffer.ContentType));
-                var completion = doc.Invoke(() => {
+                var completionTask = new TaskCompletionSource<IAsyncCompletionSession>();
+                handler = (s, e) => {
+                    completionTask.TrySetResult(e.CompletionSession);
+                };
+                doc.AsyncCompletionBroker.CompletionTriggered += handler;
+                doc.Invoke(() => {
                     return doc.AsyncCompletionBroker.TriggerCompletion(
                         doc.TextView,
                         new CompletionTrigger(CompletionTriggerReason.Invoke, doc.TextView.TextSnapshot),
                         new Microsoft.VisualStudio.Text.SnapshotPoint(doc.TextView.TextSnapshot, doc.TextView.TextSnapshot.Length),
                         CancellationToken.None);
                 });
-                Task.Delay(60000).Wait(); // Debug
-                Assert.IsNotNull(completion, "Completion not triggerable");
-                var items = completion.GetComputedItems(CancellationToken.None);
+
+                // Wait for it to show
+                Assert.IsTrue(completionTask.Task.Wait(60000), "Completion session did not show");
+                Assert.IsNotNull(completionTask.Task.Result, "Completion not triggerable");
+                var items = completionTask.Task.Result.GetComputedItems(CancellationToken.None);
                 Assert.IsTrue(items.Items.Any(i => i.InsertText == "executable"), "Executable member of sys not found");
 
             } finally {
                 app.Dte.Solution.Close(false);
+                if (handler != null && doc != null && doc.AsyncCompletionBroker != null) {
+                    doc.AsyncCompletionBroker.CompletionTriggered -= handler;
+                }
             }
         }
 
