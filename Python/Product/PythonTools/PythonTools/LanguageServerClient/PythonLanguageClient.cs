@@ -430,6 +430,13 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                                 capabilities["workspace"]["workspaceFolders"] = true;
                                 capabilities["workspace"]["didChangeWatchedFiles"]["dynamicRegistration"] = true;
 
+                                // Root path and root URI should not be sent. They're deprecated and will
+                                // just confuse pylance with respect to what is the root folder. 
+                                // https://microsoft.github.io/language-server-protocol/specifications/specification-current/#initialize
+                                // Setting them to empty will make pylance think they're gone.
+                                messageParams["rootPath"] = "";
+                                messageParams["rootUri"] = "";
+
                                 // Need to rewrite the message now
                                 return MessageParser.Serialize(message);
                             }
@@ -444,6 +451,8 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
         private async Task OnWorkspaceOpening(object sende, EventArgs e) {
             if (_workspaceFoldersSupported && IsInitialized && _sentInitialWorkspaceFolders && WorkspaceService.CurrentWorkspace != null) {
+                // Send just this workspace folder. Assumption here is that the language client will be destroyed/recreated on
+                // each workspace open
                 var folder = new WorkspaceFolder { uri = new System.Uri(WorkspaceService.CurrentWorkspace.Location), name = WorkspaceService.CurrentWorkspace.GetName() };
                 await InvokeDidChangeWorkspaceFoldersAsync(new WorkspaceFolder[] { folder }, new WorkspaceFolder[0]);
             }
