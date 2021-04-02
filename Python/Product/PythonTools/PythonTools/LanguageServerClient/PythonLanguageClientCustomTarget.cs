@@ -76,6 +76,12 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         /// </summary>
         internal event EventHandler<DidChangeWatchedFilesRegistrationOptions> WatchedFilesRegistered;
 
+        /// <summary>
+        /// Event fired when client/registerCapability didChangeWatchedFiles is called.
+        /// Has to be internal so JsonRpc doesn't register this as a method.
+        /// </summary>
+        internal event EventHandler AnalysisComplete;
+
         [JsonRpcMethod("telemetry/event")]
         public void OnTelemetryEvent(JToken arg) {
             if (!(arg is JObject telemetry)) {
@@ -93,6 +99,12 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                     _logger.LogEvent(te.EventName, te.Properties, te.Measurements);
                 } else {
                     _logger.LogFault(new PylanceException(te.EventName, te.Exception.stack), te.EventName, false);
+                }
+
+                // Special case language_server/analysis_complete. We need this for testing so we 
+                // know when it's okay to try to bring up intellisense
+                if (te.EventName == "language_server/analysis_complete") {
+                    AnalysisComplete.Raise(this, EventArgs.Empty);
                 }
             } catch {
 

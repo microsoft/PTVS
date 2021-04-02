@@ -82,7 +82,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         /// <summary>
         /// Used for testing. Waits for the language client to be up and connected
         /// </summary>
-        public static Task ConnectedTask => _connectedTcs.Task;
+        public static Task ReadyTask => _readyTcs.Task;
 
         private readonly DisposableBag _disposables;
         private IPythonLanguageClientContext[] _clientContexts;
@@ -94,7 +94,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         private bool _isDebugging = LanguageServer.IsDebugging();
         private bool _sentInitialWorkspaceFolders = false;
         private FileWatcher.Listener _fileListener;
-        private static TaskCompletionSource<int> _connectedTcs = new System.Threading.Tasks.TaskCompletionSource<int>();
+        private static TaskCompletionSource<int> _readyTcs = new System.Threading.Tasks.TaskCompletionSource<int>();
 
         public PythonLanguageClient() {
             _disposables = new DisposableBag(GetType().Name);
@@ -140,6 +140,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             solutionEvents.BeforeClosing += OnSolutionClosing;
             solutionEvents.ProjectAdded += OnProjectAdded;
             solutionEvents.ProjectRemoved += OnProjectRemoved;
+            WorkspaceService.OnActiveWorkspaceChanged += OnWorkspaceOpening;
 
             _disposables.Add(() => {
                 Array.ForEach(_clientContexts, c => c.InterpreterChanged -= OnSettingsChanged);
@@ -150,6 +151,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 solutionEvents.ProjectAdded -= OnProjectAdded;
                 solutionEvents.ProjectRemoved -= OnProjectRemoved;
                 solutionEvents.BeforeClosing -= OnSolutionClosing;
+                WorkspaceService.OnActiveWorkspaceChanged -= OnWorkspaceOpening;
             });
 
             return await _server.ActivateAsync();
@@ -169,12 +171,19 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             CustomMessageTarget = customTarget;
             customTarget.WatchedFilesRegistered += WatchedFilesRegistered;
             customTarget.WorkspaceFolderChangeRegistered += OnWorkspaceFolderWatched;
+            customTarget.AnalysisComplete += OnAnalysisComplete;
             await StartAsync.InvokeAsync(this, EventArgs.Empty);
         }
 
         public async Task OnServerInitializedAsync() {
             IsInitialized = true;
-            OnSolutionOpened();
+
+            // Send to either workspace open or solution open
+            if (WorkspaceService.CurrentWorkspace != null) {
+                OnWorkspaceOpening(this, EventArgs.Empty).DoNotWait();
+            } else {
+                OnSolutionOpened();
+            }
         }
 
         public Task OnServerInitializeFailedAsync(Exception e) {
@@ -258,6 +267,11 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
         private void OnSettingsChanged(object sender, EventArgs e) => SendDidChangeConfigurations().DoNotWait();
 
+        private void OnAnalysisComplete(object sender, EventArgs e) {
+            // Used by test code to know when it's okay to try and use intellisense
+            _readyTcs.TrySetResult(0);
+        }
+
         private Task SendDidChangeConfigurations() {
             return Task.WhenAll(_clientContexts.Select(c => SendDidChangeConfiguration(c)));
         }
@@ -291,9 +305,6 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                     await InvokeTextDocumentDidOpenAsync(param).ConfigureAwait(false);
                 }
             }
-
-            // Indicate to test code that we are up and running.
-            _connectedTcs.TrySetResult(0);
         }
 
         private bool TryGetOpenedDocumentData(RunningDocumentInfo info, out ITextBuffer textBuffer, out string filePath) {
@@ -429,6 +440,13 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 }
             }
             return data;
+        }
+
+        private async Task OnWorkspaceOpening(object sende, EventArgs e) {
+            if (_workspaceFoldersSupported && IsInitialized && _sentInitialWorkspaceFolders && WorkspaceService.CurrentWorkspace != null) {
+                var folder = new WorkspaceFolder { uri = new System.Uri(WorkspaceService.CurrentWorkspace.Location), name = WorkspaceService.CurrentWorkspace.GetName() };
+                await InvokeDidChangeWorkspaceFoldersAsync(new WorkspaceFolder[] { folder }, new WorkspaceFolder[0]);
+            }
         }
 
         private void OnSolutionClosing() {

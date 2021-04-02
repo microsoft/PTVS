@@ -33,11 +33,11 @@ namespace PythonToolsUITests {
                     }
 
                     // Move cursor
-                    doc.Select(doc.TextView.TextViewLines.Count - 1, 4, 0);
+                    doc.TextView.Caret.MoveTo(new Microsoft.VisualStudio.Text.SnapshotPoint(doc.TextView.TextSnapshot, doc.TextView.TextSnapshot.Length));
                 });
 
                 // Wait until pylance is ready
-                Assert.IsTrue(Microsoft.PythonTools.LanguageServerClient.PythonLanguageClient.ConnectedTask.Wait(10000), "Pylance did not start");
+                Assert.IsTrue(Microsoft.PythonTools.LanguageServerClient.PythonLanguageClient.ReadyTask.Wait(60000), "Pylance did not start");
 
                 // Bring up auto complete
                 Assert.IsTrue(doc.AsyncCompletionBroker.IsCompletionSupported(doc.TextView.TextBuffer.ContentType));
@@ -48,7 +48,7 @@ namespace PythonToolsUITests {
                         new Microsoft.VisualStudio.Text.SnapshotPoint(doc.TextView.TextSnapshot, doc.TextView.TextSnapshot.Length),
                         CancellationToken.None);
                 });
-                Task.Delay(5000).Wait(); // Debug
+                Task.Delay(60000).Wait(); // Debug
                 Assert.IsNotNull(completion, "Completion not triggerable");
                 var items = completion.GetComputedItems(CancellationToken.None);
                 Assert.IsTrue(items.Items.Any(i => i.InsertText == "executable"), "Executable member of sys not found");
@@ -58,7 +58,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        private static string PrepareProject(PythonVisualStudioApp app, PythonVersion python) {
+        private static string PrepareProject(PythonVisualStudioApp app) {
             // Use the formatting tests project.
             var slnPath = app.CopyProjectForTest(@"TestData\FormattingTests\FormattingTests.sln");
             var projFolder = Path.GetDirectoryName(slnPath);
@@ -68,10 +68,6 @@ namespace PythonToolsUITests {
             var projContents = File.ReadAllText(projPath);
             projContents = projContents.Replace("$$FORMATTER$$", "black");
             File.WriteAllText(projPath, projContents);
-
-            // The project references a virtual env in 'env' subfolder,
-            // which we need to create before opening the project.
-            python.CreateVirtualEnv(Path.Combine(projFolder, "env"), new[] { "black" });
 
             return slnPath;
         }
