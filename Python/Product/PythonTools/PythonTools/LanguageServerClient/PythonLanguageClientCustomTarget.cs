@@ -77,7 +77,8 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         internal event EventHandler<DidChangeWatchedFilesRegistrationOptions> WatchedFilesRegistered;
 
         /// <summary>
-        /// Event fired when client/registerCapability didChangeWatchedFiles is called.
+        /// Event fired when telemetry for analysis complete is sent.
+        /// This is used by test code to verify pylance is ready to go.
         /// Has to be internal so JsonRpc doesn't register this as a method.
         /// </summary>
         internal event EventHandler AnalysisComplete;
