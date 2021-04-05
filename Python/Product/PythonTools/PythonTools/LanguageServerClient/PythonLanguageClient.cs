@@ -179,11 +179,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             IsInitialized = true;
 
             // Send to either workspace open or solution open
-            if (WorkspaceService.CurrentWorkspace != null) {
-                OnWorkspaceOpening(this, EventArgs.Empty).DoNotWait();
-            } else {
-                OnSolutionOpened();
-            }
+            OnWorkspaceOrSolutionOpened();
         }
 
         public Task OnServerInitializeFailedAsync(Exception e) {
@@ -387,9 +383,17 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             await InvokeDidChangeConfigurationAsync(config);
         }
 
+        private void OnWorkspaceOrSolutionOpened() {
+            if (WorkspaceService.CurrentWorkspace != null) {
+                OnWorkspaceOpening(this, EventArgs.Empty).DoNotWait();
+            } else {
+                OnSolutionOpened();
+            }
+        }
+
         private void OnWorkspaceFolderWatched(object sender, EventArgs e) {
             _workspaceFoldersSupported = true;
-            OnSolutionOpened();
+            OnWorkspaceOrSolutionOpened();
         }
 
         private void WatchedFilesRegistered(object sender, LSP.DidChangeWatchedFilesRegistrationOptions e) {
@@ -450,7 +454,8 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
 
         private async Task OnWorkspaceOpening(object sende, EventArgs e) {
-            if (_workspaceFoldersSupported && IsInitialized && _sentInitialWorkspaceFolders && WorkspaceService.CurrentWorkspace != null) {
+            if (_workspaceFoldersSupported && IsInitialized && !_sentInitialWorkspaceFolders && WorkspaceService.CurrentWorkspace != null) {
+                _sentInitialWorkspaceFolders = true;
                 // Send just this workspace folder. Assumption here is that the language client will be destroyed/recreated on
                 // each workspace open
                 var folder = new WorkspaceFolder { uri = new System.Uri(WorkspaceService.CurrentWorkspace.Location), name = WorkspaceService.CurrentWorkspace.GetName() };
