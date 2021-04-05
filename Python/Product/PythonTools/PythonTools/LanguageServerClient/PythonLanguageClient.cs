@@ -281,6 +281,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
             SVsServiceProvider syncServiceProvider = componentModel.GetService<SVsServiceProvider>();
             RunningDocumentTable rdt = new RunningDocumentTable(syncServiceProvider);
+            var tasks = new List<Task>();
 
             foreach (RunningDocumentInfo info in rdt) {
                 if (this.TryGetOpenedDocumentData(info, out ITextBuffer textBuffer, out string filePath)
@@ -298,9 +299,12 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                     };
                     param.TextDocument.Text = textBuffer.CurrentSnapshot.GetText();
 
-                    await InvokeTextDocumentDidOpenAsync(param).ConfigureAwait(false);
+                    tasks.Add(InvokeTextDocumentDidOpenAsync(param));
                 }
             }
+
+            // Let all the tasks execute in parallel
+            await Task.WhenAll(tasks);
         }
 
         private bool TryGetOpenedDocumentData(RunningDocumentInfo info, out ITextBuffer textBuffer, out string filePath) {
