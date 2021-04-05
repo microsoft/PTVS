@@ -28,6 +28,7 @@
     <Compile Include="BasicProjectTests.cs" />
     <Compile Include="BuildTasksUITests.cs" />
     <Compile Include="BraceCompletionUITests.cs" />
+    <Compile Include="IntellisenseTests.cs" />
     <Compile Include="SmartIndentUITests.cs" />
     <Compile Include="EditorTests.cs" />
     <Compile Include="InfoBarUITests.cs" />

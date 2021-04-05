@@ -28,9 +28,11 @@ namespace Microsoft.VisualStudioTools.Project {
     [ClassInterface(ClassInterfaceType.AutoDual)]
     public class CommonProjectNodeProperties : ProjectNodeProperties, IVsCfgBrowseObject, VSLangProj.ProjectProperties {
         private OAProjectConfigurationProperties _activeCfgSettings;
+        private string __idStr;
 
         internal CommonProjectNodeProperties(ProjectNode node)
             : base(node) {
+            __idStr = node.ID.ToString();
         }
 
         #region properties
@@ -427,7 +429,7 @@ namespace Microsoft.VisualStudioTools.Project {
 
         [Browsable(false)]
         public string __id {
-            get { throw new NotImplementedException(); }
+            get => __idStr;
         }
 
         [Browsable(false)]

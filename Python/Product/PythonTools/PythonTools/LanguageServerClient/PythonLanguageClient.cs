@@ -23,6 +23,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Python.Core.Disposables;
+using Microsoft.PythonTools.Editor.Core;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.LanguageServerClient.StreamHacking;
@@ -30,10 +31,15 @@ using Microsoft.PythonTools.LanguageServerClient.WorkspaceFolderChanged;
 using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Project;
 using Microsoft.PythonTools.Utility;
+using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.LanguageServer.Client;
+using Microsoft.VisualStudio.LanguageServer.Protocol;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudio.Threading;
 using Microsoft.VisualStudio.Utilities;
+using Microsoft.VisualStudio.Workspace.VSIntegration.Contracts;
 using Newtonsoft.Json.Linq;
 using StreamJsonRpc;
 using LSP = Microsoft.VisualStudio.LanguageServer.Protocol;
@@ -67,6 +73,17 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         [Import]
         public JoinableTaskContext JoinableTaskContext;
 
+        [Import]
+        public IVsFolderWorkspaceService WorkspaceService;
+
+        [Import]
+        public ITextDocumentFactoryService TextDocumentFactoryService;
+
+        /// <summary>
+        /// Used for testing. Waits for the language client to be up and connected
+        /// </summary>
+        public static Task ReadyTask => _readyTcs.Task;
+
         private readonly DisposableBag _disposables;
         private IPythonLanguageClientContext[] _clientContexts;
         private PythonAnalysisOptions _analysisOptions;
@@ -76,6 +93,8 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         private bool _workspaceFoldersSupported = false;
         private bool _isDebugging = LanguageServer.IsDebugging();
         private bool _sentInitialWorkspaceFolders = false;
+        private FileWatcher.Listener _fileListener;
+        private static TaskCompletionSource<int> _readyTcs = new System.Threading.Tasks.TaskCompletionSource<int>();
 
         public PythonLanguageClient() {
             _disposables = new DisposableBag(GetType().Name);
@@ -90,8 +109,6 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         public IEnumerable<string> ConfigurationSections => Enumerable.Repeat("python", 1);
         public object InitializationOptions { get; private set; }
 
-        // TODO: investigate how this can be used, VS does not allow currently
-        // for the server to dynamically register file watching.
         public IEnumerable<string> FilesToWatch => null;
         public object MiddleLayer => null;
         public object CustomMessageTarget { get; private set; }
@@ -123,6 +140,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             solutionEvents.BeforeClosing += OnSolutionClosing;
             solutionEvents.ProjectAdded += OnProjectAdded;
             solutionEvents.ProjectRemoved += OnProjectRemoved;
+            WorkspaceService.OnActiveWorkspaceChanged += OnWorkspaceOpening;
 
             _disposables.Add(() => {
                 Array.ForEach(_clientContexts, c => c.InterpreterChanged -= OnSettingsChanged);
@@ -133,6 +151,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 solutionEvents.ProjectAdded -= OnProjectAdded;
                 solutionEvents.ProjectRemoved -= OnProjectRemoved;
                 solutionEvents.BeforeClosing -= OnSolutionClosing;
+                WorkspaceService.OnActiveWorkspaceChanged -= OnWorkspaceOpening;
             });
 
             return await _server.ActivateAsync();
@@ -148,13 +167,19 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             // and hence we don't know if this is workspace or a loose files case.
             _server = new LanguageServer(Site, JoinableTaskContext, this.OnSendToServer);
             InitializationOptions = null;
-            CustomMessageTarget = new PythonLanguageClientCustomTarget(Site, JoinableTaskContext, OnWorkspaceFolderWatched);
+            var customTarget = new PythonLanguageClientCustomTarget(Site, JoinableTaskContext);
+            CustomMessageTarget = customTarget;
+            customTarget.WatchedFilesRegistered += WatchedFilesRegistered;
+            customTarget.WorkspaceFolderChangeRegistered += OnWorkspaceFolderWatched;
+            customTarget.AnalysisComplete += OnAnalysisComplete;
             await StartAsync.InvokeAsync(this, EventArgs.Empty);
         }
 
         public async Task OnServerInitializedAsync() {
             IsInitialized = true;
-            OnSolutionOpened();
+
+            // Send to either workspace open or solution open
+            OnWorkspaceOrSolutionOpened();
         }
 
         public Task OnServerInitializeFailedAsync(Exception e) {
@@ -169,6 +194,10 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             _rpc.AllowModificationWhileListening = true;
             _rpc.CancellationStrategy = new CustomCancellationStrategy(_server.CancellationFolderName, _rpc);
             _rpc.AllowModificationWhileListening = false;
+
+            // Create our listener for file events
+            _fileListener = new FileWatcher.Listener(_rpc, WorkspaceService, Site);
+            _disposables.Add(_fileListener);
 
             // We also need to switch the order on handlers for all of the rpc targets. Until
             // the VSSDK gives us a way to do this, use reflection.
@@ -216,9 +245,15 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         public Task InvokeDidChangeConfigurationAsync(LSP.DidChangeConfigurationParams request)
             => _rpc == null ? Task.CompletedTask : _rpc.NotifyWithParameterObjectAsync("workspace/didChangeConfiguration", request);
 
-        public Task InvokeDidChangeWorkspaceFoldersAsync(WorkspaceFolder[] added, WorkspaceFolder[] removed) => 
-            _rpc == null ? Task.CompletedTask : _rpc.NotifyWithParameterObjectAsync("workspace/didChangeWorkspaceFolders",
+        public async Task InvokeDidChangeWorkspaceFoldersAsync(WorkspaceFolder[] added, WorkspaceFolder[] removed) {
+            var task = _rpc == null ? Task.CompletedTask : _rpc.NotifyWithParameterObjectAsync("workspace/didChangeWorkspaceFolders",
                     new DidChangeWorkspaceFoldersParams { changeEvent = new WorkspaceFoldersChangeEvent { added = added, removed = removed } });
+
+            await task;
+
+            // If we send workspace folder updates, we have to resend document opens
+            await SendDocumentOpensAsync();
+        }
 
         public Task<LSP.CompletionList> InvokeTextDocumentCompletionAsync(LSP.CompletionParams request, CancellationToken cancellationToken = default)
             => _rpc == null ? Task.FromResult(new LSP.CompletionList()) : _rpc.InvokeWithParameterObjectAsync<LSP.CompletionList>("textDocument/completion", request, cancellationToken);
@@ -228,8 +263,77 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
         private void OnSettingsChanged(object sender, EventArgs e) => SendDidChangeConfigurations().DoNotWait();
 
+        private void OnAnalysisComplete(object sender, EventArgs e) {
+            // Used by test code to know when it's okay to try and use intellisense
+            _readyTcs.TrySetResult(0);
+        }
+
         private Task SendDidChangeConfigurations() {
             return Task.WhenAll(_clientContexts.Select(c => SendDidChangeConfiguration(c)));
+        }
+
+        private async Task SendDocumentOpensAsync() {
+            // This should be handled by the VSSDK if they ever support workspace folder change notifications
+            // Meaning we shouldn't need to do this if they do it for us.
+            await JoinableTaskContext.Factory.SwitchToMainThreadAsync();
+            IComponentModel componentModel = Site.GetService(typeof(SComponentModel)) as IComponentModel;
+            Assumes.Present(componentModel);
+
+            SVsServiceProvider syncServiceProvider = componentModel.GetService<SVsServiceProvider>();
+            RunningDocumentTable rdt = new RunningDocumentTable(syncServiceProvider);
+            var tasks = new List<Task>();
+
+            foreach (RunningDocumentInfo info in rdt) {
+                if (this.TryGetOpenedDocumentData(info, out ITextBuffer textBuffer, out string filePath)
+                    && textBuffer != null
+                    && textBuffer.IsPythonContent()) {
+
+                    var textDocumentItem = new TextDocumentItem {
+                        Uri = new Uri(filePath),
+                        Version = textBuffer.CurrentSnapshot.Version.VersionNumber,
+                        LanguageId = textBuffer.ContentType.DisplayName,
+                    };
+
+                    var param = new DidOpenTextDocumentParams {
+                        TextDocument = textDocumentItem,
+                    };
+                    param.TextDocument.Text = textBuffer.CurrentSnapshot.GetText();
+
+                    tasks.Add(InvokeTextDocumentDidOpenAsync(param));
+                }
+            }
+
+            // Let all the tasks execute in parallel
+            await Task.WhenAll(tasks);
+        }
+
+        private bool TryGetOpenedDocumentData(RunningDocumentInfo info, out ITextBuffer textBuffer, out string filePath) {
+            textBuffer = null;
+            filePath = string.Empty;
+
+            if (!info.IsDocumentInitialized) {
+                return false;
+            }
+
+            IVsUserData vsUserData = info.DocData as IVsUserData;
+            if (vsUserData == null) {
+                return false;
+            }
+
+            // Acquire the text buffer and snapshot from the document
+            vsUserData.GetData(Microsoft.VisualStudio.Editor.DefGuidList.guidDocumentTextSnapshot, out object snapshot);
+            textBuffer = (snapshot as ITextSnapshot)?.TextBuffer;
+            if (textBuffer == null) {
+                return false;
+            }
+
+            if (!TextDocumentFactoryService.TryGetTextDocument(textBuffer, out ITextDocument textDocument)) {
+                return false;
+            }
+
+            filePath = textDocument.FilePath;
+
+            return true;
         }
 
         private async Task SendDidChangeConfiguration(IPythonLanguageClientContext context) {
@@ -283,9 +387,22 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             await InvokeDidChangeConfigurationAsync(config);
         }
 
-        private void OnWorkspaceFolderWatched() {
+        private void OnWorkspaceOrSolutionOpened() {
+            if (WorkspaceService.CurrentWorkspace != null) {
+                OnWorkspaceOpening(this, EventArgs.Empty).DoNotWait();
+            } else {
+                OnSolutionOpened();
+            }
+        }
+
+        private void OnWorkspaceFolderWatched(object sender, EventArgs e) {
             _workspaceFoldersSupported = true;
-            OnSolutionOpened();
+            OnWorkspaceOrSolutionOpened();
+        }
+
+        private void WatchedFilesRegistered(object sender, LSP.DidChangeWatchedFilesRegistrationOptions e) {
+            // Add the file globs to our listener. It will listen to the globs
+            _fileListener?.AddPatterns(e.Watchers);
         }
 
         private IPythonLanguageClientContext[] CreateClientContexts() {
@@ -302,10 +419,13 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             return new IPythonLanguageClientContext[] { new PythonLanguageClientContextGlobal(OptionsService) };
         }
 
-        // This is all a hack until VSSDK LanguageServer can handle workspace folders
+        // This is all a hack until VSSDK LanguageServer can handle workspace folders and dynamic registration
         private StreamData OnSendToServer(StreamData data) {
             var message = MessageParser.Deserialize(data);
             if (message != null) {
+                if (_isDebugging) {
+                    System.Diagnostics.Debug.WriteLine($"*** Sending pylance: {message.ToString()}");
+                }
                 try {
                     // If this is the initialize method, add the workspace folders capability
                     if (message.Value<string>("method") == "initialize") {
@@ -316,6 +436,14 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                                     capabilities["workspace"] = JToken.FromObject(new { });
                                 }
                                 capabilities["workspace"]["workspaceFolders"] = true;
+                                capabilities["workspace"]["didChangeWatchedFiles"]["dynamicRegistration"] = true;
+
+                                // Root path and root URI should not be sent. They're deprecated and will
+                                // just confuse pylance with respect to what is the root folder. 
+                                // https://microsoft.github.io/language-server-protocol/specifications/specification-current/#initialize
+                                // Setting them to empty will make pylance think they're gone.
+                                messageParams["rootPath"] = "";
+                                messageParams["rootUri"] = "";
 
                                 // Need to rewrite the message now
                                 return MessageParser.Serialize(message);
@@ -327,6 +455,16 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 }
             }
             return data;
+        }
+
+        private async Task OnWorkspaceOpening(object sende, EventArgs e) {
+            if (_workspaceFoldersSupported && IsInitialized && !_sentInitialWorkspaceFolders && WorkspaceService.CurrentWorkspace != null) {
+                _sentInitialWorkspaceFolders = true;
+                // Send just this workspace folder. Assumption here is that the language client will be destroyed/recreated on
+                // each workspace open
+                var folder = new WorkspaceFolder { uri = new System.Uri(WorkspaceService.CurrentWorkspace.Location), name = WorkspaceService.CurrentWorkspace.GetName() };
+                await InvokeDidChangeWorkspaceFoldersAsync(new WorkspaceFolder[] { folder }, new WorkspaceFolder[0]);
+            }
         }
 
         private void OnSolutionClosing() {
