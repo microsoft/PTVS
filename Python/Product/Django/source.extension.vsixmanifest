@@ -10,13 +10,13 @@
     <PreviewImage>PythonProjectBig.ico</PreviewImage>
   </Metadata>
   <Installation SystemComponent="true" AllUsers="true" InstalledByMsi="true">
-    <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[16.0,17.0)" />
+    <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[17.0,18.0)" />
   </Installation>
   <Dependencies>
-    <Dependency Id="96492FC7-7BC6-46F7-8559-66BB4E09FD1E" DisplayName="Python" Version="[16.0,17.0)" />
+    <Dependency Id="96492FC7-7BC6-46F7-8559-66BB4E09FD1E" DisplayName="Python" Version="[17.0,18.0)" />
   </Dependencies>
   <Prerequisites>
-    <Prerequisite Id="Microsoft.VisualStudio.Component.CoreEditor" Version="[16.0,17.0)" DisplayName="Visual Studio core editor" />
+    <Prerequisite Id="Microsoft.VisualStudio.Component.CoreEditor" Version="[17.0,18.0)" DisplayName="Visual Studio core editor" />
   </Prerequisites>
   <Assets>
     <Asset Type="Microsoft.VisualStudio.Package" Path="|%CurrentProject%;PkgdefProjectOutputGroup|" />

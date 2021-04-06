@@ -12,7 +12,7 @@
         <PackageId>Microsoft.PythonTools.Debugger.VCLauncher.Vsix</PackageId>
     </Metadata>
     <Installation AllUsers="true">
-        <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[16.0,17.0)" />
+        <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[17.0,18.0)" />
     </Installation>
     <Dependencies>
         <Dependency Id="Microsoft.Framework.NDP" DisplayName="Microsoft .NET Framework" d:Source="Manual" Version="[4.6,)" />
@@ -21,7 +21,7 @@
         <Asset Type="Microsoft.VisualStudio.MefComponent" d:Source="Project" d:ProjectName="%CurrentProject%" Path="|%CurrentProject%|" />
     </Assets>
     <Prerequisites>
-        <Prerequisite Id="Microsoft.Component.PythonTools" Version="[16.0,17.0)" DisplayName="Python development workload" />
-        <Prerequisite Id="Microsoft.VisualStudio.Component.VC.CoreIde" Version="[16.0,17.0)" DisplayName="Visual Studio C++ core features" />
+        <Prerequisite Id="Microsoft.Component.PythonTools" Version="[17.0,18.0)" DisplayName="Python development workload" />
+        <Prerequisite Id="Microsoft.VisualStudio.Component.VC.CoreIde" Version="[17.0,18.0)" DisplayName="Visual Studio C++ core features" />
     </Prerequisites>
 </PackageManifest>
