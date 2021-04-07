@@ -14,6 +14,8 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+extern alias OLEInterop;
+
 using System;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio;
@@ -30,7 +32,7 @@ namespace Microsoft.PythonTools.Debugger.Remote {
             return VSConstants.E_NOTIMPL;
         }
 
-        public int SetSite(Microsoft.VisualStudio.OLE.Interop.IServiceProvider pSP) {
+        public int SetSite(OLEInterop::Microsoft.VisualStudio.OLE.Interop.IServiceProvider pSP) {
             return VSConstants.E_NOTIMPL;
         }
     }

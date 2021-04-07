@@ -1,0 +1,1013 @@
+{
+  "version": 3,
+  "targets": {
+    ".NETFramework,Version=v4.7.2": {
+      "Microsoft.CSharp/1.0.0": {
+        "type": "package"
+      },
+      "Microsoft.Extensions.FileSystemGlobbing/2.2.0": {
+        "type": "package",
+        "compile": {
+          "lib/netstandard2.0/Microsoft.Extensions.FileSystemGlobbing.dll": {}
+        },
+        "runtime": {
+          "lib/netstandard2.0/Microsoft.Extensions.FileSystemGlobbing.dll": {}
+        }
+      },
+      "Microsoft.Python.Parsing/0.4.116": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.Extensions.FileSystemGlobbing": "2.2.0"
+        },
+        "compile": {
+          "lib/netstandard2.0/Microsoft.Python.Core.dll": {},
+          "lib/netstandard2.0/Microsoft.Python.Parsing.dll": {}
+        },
+        "runtime": {
+          "lib/netstandard2.0/Microsoft.Python.Core.dll": {},
+          "lib/netstandard2.0/Microsoft.Python.Parsing.dll": {}
+        }
+      },
+      "Microsoft.VisualStudio.ComponentModelHost/14.0.25424": {
+        "type": "package",
+        "compile": {
+          "lib/net45/Microsoft.VisualStudio.ComponentModelHost.dll": {}
+        },
+        "runtime": {
+          "lib/net45/Microsoft.VisualStudio.ComponentModelHost.dll": {}
+        }
+      },
+      "Microsoft.VisualStudio.CoreUtility/15.0.26201": {
+        "type": "package",
+        "compile": {
+          "lib/net45/Microsoft.VisualStudio.CoreUtility.dll": {}
+        },
+        "runtime": {
+          "lib/net45/Microsoft.VisualStudio.CoreUtility.dll": {}
+        }
+      },
+      "Microsoft.VisualStudio.Debugger.Interop.10.0/10.0.30319": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.VisualStudio.Debugger.InteropA": "9.0.21022"
+        },
+        "compile": {
+          "lib/Microsoft.VisualStudio.Debugger.Interop.10.0.dll": {}
+        },
+        "runtime": {
+          "lib/Microsoft.VisualStudio.Debugger.Interop.10.0.dll": {}
+        }
+      },
+      "Microsoft.VisualStudio.Debugger.Interop.11.0/11.0.50727": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.VisualStudio.Debugger.InteropA": "9.0.21022"
+        },
+        "compile": {
+          "lib/Microsoft.VisualStudio.Debugger.Interop.11.0.dll": {}
+        },
+        "runtime": {
+          "lib/Microsoft.VisualStudio.Debugger.Interop.11.0.dll": {}
+        }
+      },
+      "Microsoft.VisualStudio.Debugger.Interop.15.0/15.0.26201": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.VisualStudio.Debugger.InteropA": "9.0.21022"
+        },
+        "compile": {
+          "lib/Microsoft.VisualStudio.Debugger.Interop.15.0.dll": {}
+        },
+        "runtime": {
+          "lib/Microsoft.VisualStudio.Debugger.Interop.15.0.dll": {}
+        }
+      },
+      "Microsoft.VisualStudio.Debugger.InteropA/9.0.21022": {
+        "type": "package",
+        "compile": {
+          "lib/Microsoft.VisualStudio.Debugger.InteropA.dll": {}
+        },
+        "runtime": {
+          "lib/Microsoft.VisualStudio.Debugger.InteropA.dll": {}
+        }
+      },
+      "Microsoft.VisualStudio.Imaging/15.0.26201": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.VisualStudio.Utilities": "15.0.26201"
+        },
+        "compile": {
+          "lib/net45/Microsoft.VisualStudio.Imaging.dll": {}
+        },
+        "runtime": {
+          "lib/net45/Microsoft.VisualStudio.Imaging.dll": {}
+        }
+      },
+      "Microsoft.VisualStudio.OLE.Interop/7.10.6070": {
+        "type": "package",
+        "compile": {
+          "lib/_._": {}
+        },
+        "runtime": {
+          "lib/Microsoft.VisualStudio.OLE.Interop.dll": {}
+        }
+      },
+      "Microsoft.VisualStudio.Shell.15.0/15.0.26201": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.VisualStudio.Imaging": "15.0.26201",
+          "Microsoft.VisualStudio.OLE.Interop": "7.10.6070",
+          "Microsoft.VisualStudio.Shell.Framework": "15.0.26201",
+          "Microsoft.VisualStudio.Shell.Interop": "7.10.6071",
+          "Microsoft.VisualStudio.Shell.Interop.8.0": "8.0.50727",
+          "Microsoft.VisualStudio.Shell.Interop.9.0": "9.0.30729",
+          "Microsoft.VisualStudio.TextManager.Interop": "7.10.6070",
+          "Microsoft.VisualStudio.Threading": "15.0.240",
+          "Microsoft.VisualStudio.Utilities": "15.0.26201"
+        },
+        "compile": {
+          "lib/Microsoft.VisualStudio.Shell.15.0.dll": {}
+        },
+        "runtime": {
+          "lib/Microsoft.VisualStudio.Shell.15.0.dll": {}
+        }
+      },
+      "Microsoft.VisualStudio.Shell.Framework/15.0.26201": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.VisualStudio.CoreUtility": "15.0.26201",
+          "Microsoft.VisualStudio.OLE.Interop": "7.10.6070",
+          "Microsoft.VisualStudio.Utilities": "15.0.26201"
+        },
+        "compile": {
+          "lib/net45/Microsoft.VisualStudio.Shell.Framework.dll": {}
+        },
+        "runtime": {
+          "lib/net45/Microsoft.VisualStudio.Shell.Framework.dll": {}
+        }
+      },
+      "Microsoft.VisualStudio.Shell.Interop/7.10.6071": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.VisualStudio.OLE.Interop": "7.10.6070",
+          "Microsoft.VisualStudio.TextManager.Interop": "7.10.6070"
+        },
+        "compile": {
+          "lib/Microsoft.VisualStudio.Shell.Interop.dll": {}
+        },
+        "runtime": {
+          "lib/Microsoft.VisualStudio.Shell.Interop.dll": {}
+        }
+      },
+      "Microsoft.VisualStudio.Shell.Interop.8.0/8.0.50727": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.VisualStudio.OLE.Interop": "7.10.6070",
+          "Microsoft.VisualStudio.Shell.Interop": "7.10.6071",
+          "Microsoft.VisualStudio.TextManager.Interop": "7.10.6070",
+          "Microsoft.VisualStudio.TextManager.Interop.8.0": "8.0.50727"
+        },
+        "compile": {
+          "lib/Microsoft.VisualStudio.Shell.Interop.8.0.dll": {}
+        },
+        "runtime": {
+          "lib/Microsoft.VisualStudio.Shell.Interop.8.0.dll": {}
+        }
+      },
+      "Microsoft.VisualStudio.Shell.Interop.9.0/9.0.30729": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.VisualStudio.OLE.Interop": "7.10.6070",
+          "Microsoft.VisualStudio.Shell.Interop": "7.10.6071",
+          "Microsoft.VisualStudio.Shell.Interop.8.0": "8.0.50727",
+          "Microsoft.VisualStudio.TextManager.Interop": "7.10.6070"
+        },
+        "compile": {
+          "lib/Microsoft.VisualStudio.Shell.Interop.9.0.dll": {}
+        },
+        "runtime": {
+          "lib/Microsoft.VisualStudio.Shell.Interop.9.0.dll": {}
+        }
+      },
+      "Microsoft.VisualStudio.TextManager.Interop/7.10.6070": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.VisualStudio.OLE.Interop": "7.10.6070"
+        },
+        "compile": {
+          "lib/Microsoft.VisualStudio.TextManager.Interop.dll": {}
+        },
+        "runtime": {
+          "lib/Microsoft.VisualStudio.TextManager.Interop.dll": {}
+        }
+      },
+      "Microsoft.VisualStudio.TextManager.Interop.8.0/8.0.50727": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.VisualStudio.OLE.Interop": "7.10.6070",
+          "Microsoft.VisualStudio.Shell.Interop": "7.10.6071",
+          "Microsoft.VisualStudio.TextManager.Interop": "7.10.6070"
+        },
+        "compile": {
+          "lib/Microsoft.VisualStudio.TextManager.Interop.8.0.dll": {}
+        },
+        "runtime": {
+          "lib/Microsoft.VisualStudio.TextManager.Interop.8.0.dll": {}
+        }
+      },
+      "Microsoft.VisualStudio.Threading/12.0.0": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.VisualStudio.Validation": "12.0.0"
+        },
+        "compile": {
+          "lib/net45/Microsoft.VisualStudio.Threading.dll": {}
+        },
+        "runtime": {
+          "lib/net45/Microsoft.VisualStudio.Threading.dll": {}
+        }
+      },
+      "Microsoft.VisualStudio.Utilities/15.0.26201": {
+        "type": "package",
+        "compile": {
+          "lib/net45/Microsoft.VisualStudio.Utilities.dll": {}
+        },
+        "runtime": {
+          "lib/net45/Microsoft.VisualStudio.Utilities.dll": {}
+        }
+      },
+      "Microsoft.VisualStudio.Validation/12.0.0": {
+        "type": "package",
+        "compile": {
+          "lib/net45/Microsoft.VisualStudio.Validation.dll": {}
+        },
+        "runtime": {
+          "lib/net45/Microsoft.VisualStudio.Validation.dll": {}
+        }
+      },
+      "Attacher/1.0.0": {
+        "type": "project",
+        "dependencies": {
+          "Common": "1.0.0"
+        },
+        "compile": {
+          "bin/placeholder/Attacher.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/Attacher.dll": {}
+        }
+      },
+      "Common/1.0.0": {
+        "type": "project",
+        "compile": {
+          "bin/placeholder/Common.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/Common.dll": {}
+        }
+      },
+      "Ipc.Json/1.0.0": {
+        "type": "project",
+        "compile": {
+          "bin/placeholder/Ipc.Json.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/Ipc.Json.dll": {}
+        }
+      },
+      "VSCommon/1.0.0": {
+        "type": "project",
+        "dependencies": {
+          "Common": "1.0.0"
+        },
+        "compile": {
+          "bin/placeholder/VSCommon.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/VSCommon.dll": {}
+        }
+      },
+      "VSInterpreters/1.0.0": {
+        "type": "project",
+        "dependencies": {
+          "Common": "1.0.0"
+        },
+        "compile": {
+          "bin/placeholder/VSInterpreters.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/VSInterpreters.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "Microsoft.CSharp/1.0.0": {
+      "sha512": "mSI7myFSA+U2D6ZupA8VRovFYgj8QRaRysT9VHBpUERFnR5qTsYXBvjqDHi6LTD2Ou4m2/ZovL4pqHQVyDHOyw==",
+      "type": "package",
+      "path": "microsoft.csharp/1.0.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Microsoft.CSharp.dll",
+        "Microsoft.CSharp.xml",
+        "NuGet.exe",
+        "microsoft.csharp.1.0.0.nupkg.sha512",
+        "microsoft.csharp.nuspec"
+      ]
+    },
+    "Microsoft.Extensions.FileSystemGlobbing/2.2.0": {
+      "sha512": "ZSsHZp3PyW6vk37tDEdypjgGlNtpJ0EixBMOfUod2Thx7GtwfFSAQXUQx8a8BN8vfWKGGMbp7jPWdoHx/At4wQ==",
+      "type": "package",
+      "path": "microsoft.extensions.filesystemglobbing/2.2.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/netstandard2.0/Microsoft.Extensions.FileSystemGlobbing.dll",
+        "lib/netstandard2.0/Microsoft.Extensions.FileSystemGlobbing.xml",
+        "microsoft.extensions.filesystemglobbing.2.2.0.nupkg.sha512",
+        "microsoft.extensions.filesystemglobbing.nuspec"
+      ]
+    },
+    "Microsoft.Python.Parsing/0.4.116": {
+      "sha512": "3fYR3AhiVIy3g8tzs7mjKdvTjyU1R2k5uOw5Mq0Z5YlQwqXJZhNcoVe3qyig2gDVZL1wc5tlhQSLNUfYRm2z/Q==",
+      "type": "package",
+      "path": "microsoft.python.parsing/0.4.116",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/netstandard2.0/Microsoft.Python.Core.dll",
+        "lib/netstandard2.0/Microsoft.Python.Parsing.dll",
+        "microsoft.python.parsing.0.4.116.nupkg.sha512",
+        "microsoft.python.parsing.nuspec"
+      ]
+    },
+    "Microsoft.VisualStudio.ComponentModelHost/14.0.25424": {
+      "sha512": "K41O7CeI21A6IGfWWhDhQvhx4+dx2gOCMgaYp71zw+liacctqqlwlRVFAnCgHsftfSSXYKBaA0M9nxGgLKviMg==",
+      "type": "package",
+      "path": "microsoft.visualstudio.componentmodelhost/14.0.25424",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/net45/Microsoft.VisualStudio.ComponentModelHost.dll",
+        "microsoft.visualstudio.componentmodelhost.14.0.25424.nupkg.sha512",
+        "microsoft.visualstudio.componentmodelhost.nuspec"
+      ]
+    },
+    "Microsoft.VisualStudio.CoreUtility/15.0.26201": {
+      "sha512": "Fqo/QUJZC86gzYevfo+D1UPeoB77SCsK/8fDM4RLWq5M3CYveq0xwMZKvEEbbRq+e1fKlh0faA7yFitmp8RMdA==",
+      "type": "package",
+      "path": "microsoft.visualstudio.coreutility/15.0.26201",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/net45/Microsoft.VisualStudio.CoreUtility.dll",
+        "lib/net45/microsoft.visualstudio.coreutility.xml",
+        "microsoft.visualstudio.coreutility.15.0.26201.nupkg.sha512",
+        "microsoft.visualstudio.coreutility.nuspec"
+      ]
+    },
+    "Microsoft.VisualStudio.Debugger.Interop.10.0/10.0.30319": {
+      "sha512": "f04bUo8qYLwpB2SlQPpZ7s30er/siRUmgWMwlAYfY/jFsNs8fi33uj3BPUH6SF9ZE4pkvEMT0gOxpxz6QOG5Bw==",
+      "type": "package",
+      "path": "microsoft.visualstudio.debugger.interop.10.0/10.0.30319",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/Microsoft.VisualStudio.Debugger.Interop.10.0.dll",
+        "microsoft.visualstudio.debugger.interop.10.0.10.0.30319.nupkg.sha512",
+        "microsoft.visualstudio.debugger.interop.10.0.nuspec"
+      ]
+    },
+    "Microsoft.VisualStudio.Debugger.Interop.11.0/11.0.50727": {
+      "sha512": "u8Oqs+Jx+zdXjy5gyMM+K9M3si1j49xV+lZCSfPurbEEGBj2D8t62+urSalj37fMX1akDXKZdqBJDEu4o9WOLg==",
+      "type": "package",
+      "path": "microsoft.visualstudio.debugger.interop.11.0/11.0.50727",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/Microsoft.VisualStudio.Debugger.Interop.11.0.dll",
+        "microsoft.visualstudio.debugger.interop.11.0.11.0.50727.nupkg.sha512",
+        "microsoft.visualstudio.debugger.interop.11.0.nuspec"
+      ]
+    },
+    "Microsoft.VisualStudio.Debugger.Interop.15.0/15.0.26201": {
+      "sha512": "V064RQCBikebm3jmfnS7uZGrvbR7dmNoXq+P4wZmqg6OWJe+x9ib3U4GJ58KnNvRB0FL39MZqiBNha1iLbqywg==",
+      "type": "package",
+      "path": "microsoft.visualstudio.debugger.interop.15.0/15.0.26201",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/Microsoft.VisualStudio.Debugger.Interop.15.0.dll",
+        "microsoft.visualstudio.debugger.interop.15.0.15.0.26201.nupkg.sha512",
+        "microsoft.visualstudio.debugger.interop.15.0.nuspec"
+      ]
+    },
+    "Microsoft.VisualStudio.Debugger.InteropA/9.0.21022": {
+      "sha512": "zNznVyIfj3rR/0llzzCmVdMeSPmBvX/nWZYBqiMoWOSvhhDxmWwwIB3OHJW8T/5RWLnF9K06I+QGX9ig2WvXTA==",
+      "type": "package",
+      "path": "microsoft.visualstudio.debugger.interopa/9.0.21022",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/Microsoft.VisualStudio.Debugger.InteropA.dll",
+        "microsoft.visualstudio.debugger.interopa.9.0.21022.nupkg.sha512",
+        "microsoft.visualstudio.debugger.interopa.nuspec"
+      ]
+    },
+    "Microsoft.VisualStudio.Imaging/15.0.26201": {
+      "sha512": "+zfcm4ytyHza2hbbZ7ew3/lLSd3rBGykK7VqOFy0C7yPf17IJ2bUVG5BXhB/3pwTsFVrXXU00w4G1arBQ+oLoA==",
+      "type": "package",
+      "path": "microsoft.visualstudio.imaging/15.0.26201",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/net45/Microsoft.VisualStudio.Imaging.dll",
+        "lib/net45/microsoft.visualstudio.imaging.xml",
+        "microsoft.visualstudio.imaging.15.0.26201.nupkg.sha512",
+        "microsoft.visualstudio.imaging.nuspec"
+      ]
+    },
+    "Microsoft.VisualStudio.OLE.Interop/7.10.6070": {
+      "sha512": "p7xNzxIoZWDqSGlCi84u1CsNSL9YL7HWBdurfBUW8TZOsfW/0DS8/2MQcicQZav2Csq1f7Pep+VRdZJZkmQKJA==",
+      "type": "package",
+      "path": "microsoft.visualstudio.ole.interop/7.10.6070",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/Microsoft.VisualStudio.OLE.Interop.dll",
+        "lib/Microsoft.VisualStudio.OLE.Interop.xml",
+        "microsoft.visualstudio.ole.interop.7.10.6070.nupkg.sha512",
+        "microsoft.visualstudio.ole.interop.nuspec"
+      ]
+    },
+    "Microsoft.VisualStudio.Shell.15.0/15.0.26201": {
+      "sha512": "2lKlpJFXy3VXVM6vCDV+abH/BhC/aAD60fJGf8WYm3Cak98GiV3euW+vDRdH+Txj6BElDr2lMNubGdFoG0RxNQ==",
+      "type": "package",
+      "path": "microsoft.visualstudio.shell.15.0/15.0.26201",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/Microsoft.VisualStudio.Shell.15.0.dll",
+        "microsoft.visualstudio.shell.15.0.15.0.26201.nupkg.sha512",
+        "microsoft.visualstudio.shell.15.0.nuspec"
+      ]
+    },
+    "Microsoft.VisualStudio.Shell.Framework/15.0.26201": {
+      "sha512": "g9yJ+5m0oasafO/VhRFF860lO51qjQp/E5R+oZC747eGhRTzB2iGtdhb521U99KYPB4C3UF/WpnatwGRHnfmzg==",
+      "type": "package",
+      "path": "microsoft.visualstudio.shell.framework/15.0.26201",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/net45/Microsoft.VisualStudio.Shell.Framework.dll",
+        "microsoft.visualstudio.shell.framework.15.0.26201.nupkg.sha512",
+        "microsoft.visualstudio.shell.framework.nuspec"
+      ]
+    },
+    "Microsoft.VisualStudio.Shell.Interop/7.10.6071": {
+      "sha512": "4mE6I0FhI9I12Ezs04D9W/o9tTSFY3Q/bhvfXrUR4cf5OV8CEKfmZokH6UydOaOnqDjr+pOa3j+v+Rudm24osg==",
+      "type": "package",
+      "path": "microsoft.visualstudio.shell.interop/7.10.6071",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/Microsoft.VisualStudio.Shell.Interop.dll",
+        "lib/Microsoft.VisualStudio.Shell.Interop.xml",
+        "microsoft.visualstudio.shell.interop.7.10.6071.nupkg.sha512",
+        "microsoft.visualstudio.shell.interop.nuspec"
+      ]
+    },
+    "Microsoft.VisualStudio.Shell.Interop.8.0/8.0.50727": {
+      "sha512": "8OzpFWEdSGrtx4GLBxJtiyqOBG8wQxh3lI6wN5AgFH6TtT7pND7EILjrbOgNfMsVbk3qI8DX4uvoHPdcg+cdMg==",
+      "type": "package",
+      "path": "microsoft.visualstudio.shell.interop.8.0/8.0.50727",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/Microsoft.VisualStudio.Shell.Interop.8.0.dll",
+        "lib/Microsoft.VisualStudio.Shell.Interop.8.0.xml",
+        "microsoft.visualstudio.shell.interop.8.0.8.0.50727.nupkg.sha512",
+        "microsoft.visualstudio.shell.interop.8.0.nuspec"
+      ]
+    },
+    "Microsoft.VisualStudio.Shell.Interop.9.0/9.0.30729": {
+      "sha512": "Qolo2V47CYOwS44mlfCpC7ie+juK44MLBNtBxDSeImolTjvLdY8INv8PtQM1WX51XRcgQBV+g3QiSdScJTtOSQ==",
+      "type": "package",
+      "path": "microsoft.visualstudio.shell.interop.9.0/9.0.30729",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/Microsoft.VisualStudio.Shell.Interop.9.0.dll",
+        "lib/Microsoft.VisualStudio.Shell.Interop.9.0.xml",
+        "microsoft.visualstudio.shell.interop.9.0.9.0.30729.nupkg.sha512",
+        "microsoft.visualstudio.shell.interop.9.0.nuspec"
+      ]
+    },
+    "Microsoft.VisualStudio.TextManager.Interop/7.10.6070": {
+      "sha512": "T2i4GSGg5F+yb5oFShihsCHx7X19PHmHSrdGdfxtKlIYZCzlQIxr0Z9gwbOeL8TdyMSLaaG/LV1A1BUun5L7EA==",
+      "type": "package",
+      "path": "microsoft.visualstudio.textmanager.interop/7.10.6070",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/Microsoft.VisualStudio.TextManager.Interop.dll",
+        "lib/Microsoft.VisualStudio.TextManager.Interop.xml",
+        "microsoft.visualstudio.textmanager.interop.7.10.6070.nupkg.sha512",
+        "microsoft.visualstudio.textmanager.interop.nuspec"
+      ]
+    },
+    "Microsoft.VisualStudio.TextManager.Interop.8.0/8.0.50727": {
+      "sha512": "SEuUVH8jYiZjeXnCQEkJWDdxSitTChjnwJGk6BVMKCjdsva+rDflNLf4icrsczbiuWZIgDr7esZ4wf4zWceE+g==",
+      "type": "package",
+      "path": "microsoft.visualstudio.textmanager.interop.8.0/8.0.50727",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/Microsoft.VisualStudio.TextManager.Interop.8.0.dll",
+        "lib/Microsoft.VisualStudio.TextManager.Interop.8.0.xml",
+        "microsoft.visualstudio.textmanager.interop.8.0.8.0.50727.nupkg.sha512",
+        "microsoft.visualstudio.textmanager.interop.8.0.nuspec"
+      ]
+    },
+    "Microsoft.VisualStudio.Threading/12.0.0": {
+      "sha512": "nd0okNHvHr1qFqPyvyGEfS/K/pFDWG7lZIAGJ8dCH9M8Lry6fnCzLS1bzi5HVVIPo5gaEnWmO0uwqX364Hqkdg==",
+      "type": "package",
+      "path": "microsoft.visualstudio.threading/12.0.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/net45/Microsoft.VisualStudio.Threading.dll",
+        "lib/net45/Microsoft.VisualStudio.Threading.xml",
+        "microsoft.visualstudio.threading.12.0.0.nupkg.sha512",
+        "microsoft.visualstudio.threading.nuspec"
+      ]
+    },
+    "Microsoft.VisualStudio.Utilities/15.0.26201": {
+      "sha512": "Df6Pbn1wIXnZXF9cCzeLt8gbLURR8OTWnrIJ+hV+b3Gyi8ztaXdVun+Pdoqt84Ynjanntps5jj9lvgSFjozk0g==",
+      "type": "package",
+      "path": "microsoft.visualstudio.utilities/15.0.26201",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/net45/Microsoft.VisualStudio.Utilities.dll",
+        "lib/net45/microsoft.visualstudio.utilities.xml",
+        "microsoft.visualstudio.utilities.15.0.26201.nupkg.sha512",
+        "microsoft.visualstudio.utilities.nuspec"
+      ]
+    },
+    "Microsoft.VisualStudio.Validation/12.0.0": {
+      "sha512": "Ygl7wh0qqTYSK+nMENzI81dz+IIKES9Lj0ZWC816NdtINCQJAgoQC/pTFcdKWPfxX37ptvyoYe2r/LTkueMOXg==",
+      "type": "package",
+      "path": "microsoft.visualstudio.validation/12.0.0",
+      "hasTools": true,
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.txt",
+        "lib/net45/Microsoft.VisualStudio.Validation.dll",
+        "lib/net45/Microsoft.VisualStudio.Validation.xml",
+        "microsoft.visualstudio.validation.12.0.0.nupkg.sha512",
+        "microsoft.visualstudio.validation.nuspec",
+        "tools/2013/RequiresNotNull.snippet",
+        "tools/2013/RequiresNotNullOrEmpty.snippet",
+        "tools/2015/RequiresNotNull.snippet",
+        "tools/2015/RequiresNotNullOrEmpty.snippet",
+        "tools/install-snippets.cmd",
+        "tools/uninstall-snippets.cmd"
+      ]
+    },
+    "Attacher/1.0.0": {
+      "type": "project",
+      "path": "../Attacher/Attacher.csproj",
+      "msbuildProject": "../Attacher/Attacher.csproj"
+    },
+    "Common/1.0.0": {
+      "type": "project",
+      "path": "../Common/Common.csproj",
+      "msbuildProject": "../Common/Common.csproj"
+    },
+    "Ipc.Json/1.0.0": {
+      "type": "project",
+      "path": "../Ipc.Json/Ipc.Json.csproj",
+      "msbuildProject": "../Ipc.Json/Ipc.Json.csproj"
+    },
+    "VSCommon/1.0.0": {
+      "type": "project",
+      "path": "../VSCommon/VSCommon.csproj",
+      "msbuildProject": "../VSCommon/VSCommon.csproj"
+    },
+    "VSInterpreters/1.0.0": {
+      "type": "project",
+      "path": "../VSInterpreters/VSInterpreters.csproj",
+      "msbuildProject": "../VSInterpreters/VSInterpreters.csproj"
+    }
+  },
+  "projectFileDependencyGroups": {
+    ".NETFramework,Version=v4.7.2": [
+      "Attacher >= 1.0.0",
+      "Common >= 1.0.0",
+      "Ipc.Json >= 1.0.0",
+      "Microsoft.CSharp",
+      "Microsoft.Python.Core",
+      "Microsoft.Python.Parsing",
+      "Microsoft.VisualStudio.ComponentModelHost",
+      "Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces, Version=1.5.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL",
+      "Microsoft.VisualStudio.Debugger.Interop.10.0",
+      "Microsoft.VisualStudio.Debugger.Interop.11.0",
+      "Microsoft.VisualStudio.Debugger.Interop.15.0",
+      "Microsoft.VisualStudio.Debugger.InteropA",
+      "Microsoft.VisualStudio.Interop",
+      "Microsoft.VisualStudio.OLE.Interop",
+      "Microsoft.VisualStudio.Shared.VSCodeDebugProtocol, Version=16.7.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL",
+      "Microsoft.VisualStudio.Shell.15.0",
+      "Microsoft.VisualStudio.Shell.Framework",
+      "Microsoft.VisualStudio.Shell.Interop.11.0, Version=11.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL",
+      "Microsoft.VisualStudio.Shell.Interop.8.0, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a",
+      "Microsoft.VisualStudio.Shell.Interop.9.0, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a",
+      "Microsoft.VisualStudio.Threading",
+      "Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed",
+      "VSCommon >= 1.0.0",
+      "VSInterpreters >= 1.0.0"
+    ]
+  },
+  "packageFolders": {
+    "C:\\Users\\rchiodo\\.nuget\\packages\\": {}
+  },
+  "project": {
+    "version": "1.0.0",
+    "restore": {
+      "projectUniqueName": "C:\\Users\\rchiodo\\Source\\repos\\PTVS\\Python\\Product\\Debugger\\Debugger.csproj",
+      "projectName": "Debugger",
+      "projectPath": "C:\\Users\\rchiodo\\Source\\repos\\PTVS\\Python\\Product\\Debugger\\Debugger.csproj",
+      "packagesPath": "C:\\Users\\rchiodo\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\rchiodo\\Source\\repos\\PTVS\\Python\\Product\\Debugger\\obj\\",
+      "projectStyle": "PackageReference",
+      "skipContentFileWrite": true,
+      "configFilePaths": [
+        "C:\\Users\\rchiodo\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+      ],
+      "originalTargetFrameworks": [
+        "net472"
+      ],
+      "sources": {
+        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+        "https://api.nuget.org/v3/index.json": {}
+      },
+      "frameworks": {
+        "net472": {
+          "projectReferences": {
+            "C:\\Users\\rchiodo\\Source\\repos\\PTVS\\Python\\Product\\Attacher\\Attacher.csproj": {
+              "projectPath": "C:\\Users\\rchiodo\\Source\\repos\\PTVS\\Python\\Product\\Attacher\\Attacher.csproj"
+            },
+            "C:\\Users\\rchiodo\\Source\\repos\\PTVS\\Python\\Product\\Common\\Common.csproj": {
+              "projectPath": "C:\\Users\\rchiodo\\Source\\repos\\PTVS\\Python\\Product\\Common\\Common.csproj"
+            },
+            "C:\\Users\\rchiodo\\Source\\repos\\PTVS\\Python\\Product\\Ipc.Json\\Ipc.Json.csproj": {
+              "projectPath": "C:\\Users\\rchiodo\\Source\\repos\\PTVS\\Python\\Product\\Ipc.Json\\Ipc.Json.csproj"
+            },
+            "C:\\Users\\rchiodo\\Source\\repos\\PTVS\\Python\\Product\\VSCommon\\VSCommon.csproj": {
+              "projectPath": "C:\\Users\\rchiodo\\Source\\repos\\PTVS\\Python\\Product\\VSCommon\\VSCommon.csproj"
+            },
+            "C:\\Users\\rchiodo\\Source\\repos\\PTVS\\Python\\Product\\VSInterpreters\\VSInterpreters.csproj": {
+              "projectPath": "C:\\Users\\rchiodo\\Source\\repos\\PTVS\\Python\\Product\\VSInterpreters\\VSInterpreters.csproj"
+            }
+          }
+        }
+      },
+      "warningProperties": {
+        "allWarningsAsErrors": true
+      }
+    },
+    "frameworks": {
+      "net472": {
+        "dependencies": {
+          "Microsoft.CSharp": {
+            "target": "Package",
+            "version": "(, )"
+          },
+          "Microsoft.Python.Core": {
+            "target": "Package",
+            "version": "(, )"
+          },
+          "Microsoft.Python.Parsing": {
+            "target": "Package",
+            "version": "(, )"
+          },
+          "Microsoft.VisualStudio.ComponentModelHost": {
+            "target": "Package",
+            "version": "(, )"
+          },
+          "Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces, Version=1.5.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL": {
+            "target": "Package",
+            "version": "(, )"
+          },
+          "Microsoft.VisualStudio.Debugger.Interop.10.0": {
+            "target": "Package",
+            "version": "(, )"
+          },
+          "Microsoft.VisualStudio.Debugger.Interop.11.0": {
+            "target": "Package",
+            "version": "(, )"
+          },
+          "Microsoft.VisualStudio.Debugger.Interop.15.0": {
+            "target": "Package",
+            "version": "(, )"
+          },
+          "Microsoft.VisualStudio.Debugger.InteropA": {
+            "target": "Package",
+            "version": "(, )"
+          },
+          "Microsoft.VisualStudio.Interop": {
+            "target": "Package",
+            "version": "(, )"
+          },
+          "Microsoft.VisualStudio.OLE.Interop": {
+            "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+            "suppressParent": "Compile",
+            "target": "Package",
+            "version": "(, )"
+          },
+          "Microsoft.VisualStudio.Shared.VSCodeDebugProtocol, Version=16.7.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL": {
+            "target": "Package",
+            "version": "(, )"
+          },
+          "Microsoft.VisualStudio.Shell.15.0": {
+            "target": "Package",
+            "version": "(, )"
+          },
+          "Microsoft.VisualStudio.Shell.Framework": {
+            "target": "Package",
+            "version": "(, )"
+          },
+          "Microsoft.VisualStudio.Shell.Interop.11.0, Version=11.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL": {
+            "target": "Package",
+            "version": "(, )"
+          },
+          "Microsoft.VisualStudio.Shell.Interop.8.0, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a": {
+            "target": "Package",
+            "version": "(, )"
+          },
+          "Microsoft.VisualStudio.Shell.Interop.9.0, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a": {
+            "target": "Package",
+            "version": "(, )"
+          },
+          "Microsoft.VisualStudio.Threading": {
+            "target": "Package",
+            "version": "(, )"
+          },
+          "Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed": {
+            "target": "Package",
+            "version": "(, )"
+          }
+        }
+      }
+    }
+  },
+  "logs": [
+    {
+      "code": "NU1604",
+      "level": "Error",
+      "message": "Project dependency Microsoft.CSharp does not contain an inclusive lower bound. Include a lower bound in the dependency version to ensure consistent restore results.",
+      "libraryId": "Microsoft.CSharp",
+      "targetGraphs": [
+        ".NETFramework,Version=v4.7.2"
+      ]
+    },
+    {
+      "code": "NU1604",
+      "level": "Error",
+      "message": "Project dependency Microsoft.Python.Core does not contain an inclusive lower bound. Include a lower bound in the dependency version to ensure consistent restore results.",
+      "libraryId": "Microsoft.Python.Core",
+      "targetGraphs": [
+        ".NETFramework,Version=v4.7.2"
+      ]
+    },
+    {
+      "code": "NU1604",
+      "level": "Error",
+      "message": "Project dependency Microsoft.Python.Parsing does not contain an inclusive lower bound. Include a lower bound in the dependency version to ensure consistent restore results.",
+      "libraryId": "Microsoft.Python.Parsing",
+      "targetGraphs": [
+        ".NETFramework,Version=v4.7.2"
+      ]
+    },
+    {
+      "code": "NU1604",
+      "level": "Error",
+      "message": "Project dependency Microsoft.VisualStudio.ComponentModelHost does not contain an inclusive lower bound. Include a lower bound in the dependency version to ensure consistent restore results.",
+      "libraryId": "Microsoft.VisualStudio.ComponentModelHost",
+      "targetGraphs": [
+        ".NETFramework,Version=v4.7.2"
+      ]
+    },
+    {
+      "code": "NU1604",
+      "level": "Error",
+      "message": "Project dependency Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces, Version=1.5.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL does not contain an inclusive lower bound. Include a lower bound in the dependency version to ensure consistent restore results.",
+      "libraryId": "Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces, Version=1.5.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL",
+      "targetGraphs": [
+        ".NETFramework,Version=v4.7.2"
+      ]
+    },
+    {
+      "code": "NU1604",
+      "level": "Error",
+      "message": "Project dependency Microsoft.VisualStudio.Debugger.Interop.10.0 does not contain an inclusive lower bound. Include a lower bound in the dependency version to ensure consistent restore results.",
+      "libraryId": "Microsoft.VisualStudio.Debugger.Interop.10.0",
+      "targetGraphs": [
+        ".NETFramework,Version=v4.7.2"
+      ]
+    },
+    {
+      "code": "NU1604",
+      "level": "Error",
+      "message": "Project dependency Microsoft.VisualStudio.Debugger.Interop.11.0 does not contain an inclusive lower bound. Include a lower bound in the dependency version to ensure consistent restore results.",
+      "libraryId": "Microsoft.VisualStudio.Debugger.Interop.11.0",
+      "targetGraphs": [
+        ".NETFramework,Version=v4.7.2"
+      ]
+    },
+    {
+      "code": "NU1604",
+      "level": "Error",
+      "message": "Project dependency Microsoft.VisualStudio.Debugger.Interop.15.0 does not contain an inclusive lower bound. Include a lower bound in the dependency version to ensure consistent restore results.",
+      "libraryId": "Microsoft.VisualStudio.Debugger.Interop.15.0",
+      "targetGraphs": [
+        ".NETFramework,Version=v4.7.2"
+      ]
+    },
+    {
+      "code": "NU1604",
+      "level": "Error",
+      "message": "Project dependency Microsoft.VisualStudio.Debugger.InteropA does not contain an inclusive lower bound. Include a lower bound in the dependency version to ensure consistent restore results.",
+      "libraryId": "Microsoft.VisualStudio.Debugger.InteropA",
+      "targetGraphs": [
+        ".NETFramework,Version=v4.7.2"
+      ]
+    },
+    {
+      "code": "NU1604",
+      "level": "Error",
+      "message": "Project dependency Microsoft.VisualStudio.Interop does not contain an inclusive lower bound. Include a lower bound in the dependency version to ensure consistent restore results.",
+      "libraryId": "Microsoft.VisualStudio.Interop",
+      "targetGraphs": [
+        ".NETFramework,Version=v4.7.2"
+      ]
+    },
+    {
+      "code": "NU1604",
+      "level": "Error",
+      "message": "Project dependency Microsoft.VisualStudio.OLE.Interop does not contain an inclusive lower bound. Include a lower bound in the dependency version to ensure consistent restore results.",
+      "libraryId": "Microsoft.VisualStudio.OLE.Interop",
+      "targetGraphs": [
+        ".NETFramework,Version=v4.7.2"
+      ]
+    },
+    {
+      "code": "NU1604",
+      "level": "Error",
+      "message": "Project dependency Microsoft.VisualStudio.Shared.VSCodeDebugProtocol, Version=16.7.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL does not contain an inclusive lower bound. Include a lower bound in the dependency version to ensure consistent restore results.",
+      "libraryId": "Microsoft.VisualStudio.Shared.VSCodeDebugProtocol, Version=16.7.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL",
+      "targetGraphs": [
+        ".NETFramework,Version=v4.7.2"
+      ]
+    },
+    {
+      "code": "NU1604",
+      "level": "Error",
+      "message": "Project dependency Microsoft.VisualStudio.Shell.15.0 does not contain an inclusive lower bound. Include a lower bound in the dependency version to ensure consistent restore results.",
+      "libraryId": "Microsoft.VisualStudio.Shell.15.0",
+      "targetGraphs": [
+        ".NETFramework,Version=v4.7.2"
+      ]
+    },
+    {
+      "code": "NU1604",
+      "level": "Error",
+      "message": "Project dependency Microsoft.VisualStudio.Shell.Framework does not contain an inclusive lower bound. Include a lower bound in the dependency version to ensure consistent restore results.",
+      "libraryId": "Microsoft.VisualStudio.Shell.Framework",
+      "targetGraphs": [
+        ".NETFramework,Version=v4.7.2"
+      ]
+    },
+    {
+      "code": "NU1604",
+      "level": "Error",
+      "message": "Project dependency Microsoft.VisualStudio.Shell.Interop.11.0, Version=11.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL does not contain an inclusive lower bound. Include a lower bound in the dependency version to ensure consistent restore results.",
+      "libraryId": "Microsoft.VisualStudio.Shell.Interop.11.0, Version=11.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL",
+      "targetGraphs": [
+        ".NETFramework,Version=v4.7.2"
+      ]
+    },
+    {
+      "code": "NU1604",
+      "level": "Error",
+      "message": "Project dependency Microsoft.VisualStudio.Shell.Interop.8.0, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a does not contain an inclusive lower bound. Include a lower bound in the dependency version to ensure consistent restore results.",
+      "libraryId": "Microsoft.VisualStudio.Shell.Interop.8.0, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a",
+      "targetGraphs": [
+        ".NETFramework,Version=v4.7.2"
+      ]
+    },
+    {
+      "code": "NU1604",
+      "level": "Error",
+      "message": "Project dependency Microsoft.VisualStudio.Shell.Interop.9.0, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a does not contain an inclusive lower bound. Include a lower bound in the dependency version to ensure consistent restore results.",
+      "libraryId": "Microsoft.VisualStudio.Shell.Interop.9.0, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a",
+      "targetGraphs": [
+        ".NETFramework,Version=v4.7.2"
+      ]
+    },
+    {
+      "code": "NU1604",
+      "level": "Error",
+      "message": "Project dependency Microsoft.VisualStudio.Threading does not contain an inclusive lower bound. Include a lower bound in the dependency version to ensure consistent restore results.",
+      "libraryId": "Microsoft.VisualStudio.Threading",
+      "targetGraphs": [
+        ".NETFramework,Version=v4.7.2"
+      ]
+    },
+    {
+      "code": "NU1604",
+      "level": "Error",
+      "message": "Project dependency Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed does not contain an inclusive lower bound. Include a lower bound in the dependency version to ensure consistent restore results.",
+      "libraryId": "Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed",
+      "targetGraphs": [
+        ".NETFramework,Version=v4.7.2"
+      ]
+    },
+    {
+      "code": "NU1101",
+      "level": "Error",
+      "message": "Unable to find package Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces, Version=1.5.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL. No packages exist with this id in source(s): Microsoft Visual Studio Offline Packages, nuget.org",
+      "libraryId": "Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces, Version=1.5.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL",
+      "targetGraphs": [
+        ".NETFramework,Version=v4.7.2"
+      ]
+    },
+    {
+      "code": "NU1101",
+      "level": "Error",
+      "message": "Unable to find package Microsoft.VisualStudio.Shared.VSCodeDebugProtocol, Version=16.7.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL. No packages exist with this id in source(s): Microsoft Visual Studio Offline Packages, nuget.org",
+      "libraryId": "Microsoft.VisualStudio.Shared.VSCodeDebugProtocol, Version=16.7.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL",
+      "targetGraphs": [
+        ".NETFramework,Version=v4.7.2"
+      ]
+    },
+    {
+      "code": "NU1101",
+      "level": "Error",
+      "message": "Unable to find package Microsoft.VisualStudio.Interop. No packages exist with this id in source(s): Microsoft Visual Studio Offline Packages, nuget.org",
+      "libraryId": "Microsoft.VisualStudio.Interop",
+      "targetGraphs": [
+        ".NETFramework,Version=v4.7.2"
+      ]
+    },
+    {
+      "code": "NU1101",
+      "level": "Error",
+      "message": "Unable to find package Microsoft.VisualStudio.Shell.Interop.11.0, Version=11.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL. No packages exist with this id in source(s): Microsoft Visual Studio Offline Packages, nuget.org",
+      "libraryId": "Microsoft.VisualStudio.Shell.Interop.11.0, Version=11.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL",
+      "targetGraphs": [
+        ".NETFramework,Version=v4.7.2"
+      ]
+    },
+    {
+      "code": "NU1101",
+      "level": "Error",
+      "message": "Unable to find package Microsoft.VisualStudio.Shell.Interop.8.0, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a. No packages exist with this id in source(s): Microsoft Visual Studio Offline Packages, nuget.org",
+      "libraryId": "Microsoft.VisualStudio.Shell.Interop.8.0, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a",
+      "targetGraphs": [
+        ".NETFramework,Version=v4.7.2"
+      ]
+    },
+    {
+      "code": "NU1101",
+      "level": "Error",
+      "message": "Unable to find package Microsoft.VisualStudio.Shell.Interop.9.0, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a. No packages exist with this id in source(s): Microsoft Visual Studio Offline Packages, nuget.org",
+      "libraryId": "Microsoft.VisualStudio.Shell.Interop.9.0, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a",
+      "targetGraphs": [
+        ".NETFramework,Version=v4.7.2"
+      ]
+    },
+    {
+      "code": "NU1101",
+      "level": "Error",
+      "message": "Unable to find package Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed. No packages exist with this id in source(s): Microsoft Visual Studio Offline Packages, nuget.org",
+      "libraryId": "Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed",
+      "targetGraphs": [
+        ".NETFramework,Version=v4.7.2"
+      ]
+    },
+    {
+      "code": "NU1101",
+      "level": "Error",
+      "message": "Unable to find package Microsoft.Python.Core. No packages exist with this id in source(s): Microsoft Visual Studio Offline Packages, nuget.org",
+      "libraryId": "Microsoft.Python.Core",
+      "targetGraphs": [
+        ".NETFramework,Version=v4.7.2"
+      ]
+    }
+  ]
+}
