@@ -13,6 +13,7 @@
 //
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
+extern alias OLEInterop;
 
 using System;
 using System.Collections.Generic;
@@ -82,7 +83,7 @@ namespace Microsoft.PythonTools.ProjectWizards {
         }
 
         private static void OpenFile(DTE2 dte, string fileName) {
-            var serviceProvider = new ServiceProvider(dte as VisualStudio.OLE.Interop.IServiceProvider);
+            var serviceProvider = new ServiceProvider(dte as OLEInterop::Microsoft.VisualStudio.OLE.Interop.IServiceProvider);
             VsShellUtilities.OpenDocument(serviceProvider, fileName);
             Command command = dte.Commands.Item("SolutionExplorer.SyncWithActiveDocument");
             if (command.IsAvailable) {

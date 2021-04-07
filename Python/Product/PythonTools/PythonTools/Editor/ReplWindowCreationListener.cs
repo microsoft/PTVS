@@ -13,6 +13,7 @@
 //
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
+extern alias OLEInterop;
 
 using System;
 using System.ComponentModel.Composition;
@@ -30,7 +31,7 @@ namespace Microsoft.PythonTools.Editor {
         [Import(typeof(SVsServiceProvider))]
         public IServiceProvider Site;
 
-        public IOleCommandTarget GetCommandTarget(IWpfTextView textView, IOleCommandTarget nextTarget) {
+        public OLEInterop::Microsoft.VisualStudio.OLE.Interop.IOleCommandTarget GetCommandTarget(IWpfTextView textView, OLEInterop::Microsoft.VisualStudio.OLE.Interop.IOleCommandTarget nextTarget) {
             return ReplEditFilter.GetOrCreate(Site, Site.GetComponentModel(), textView, nextTarget);
         }
     }

@@ -32,7 +32,7 @@ namespace Microsoft.PythonTools.ProjectWizards {
                 return;
             }
 
-            var projectDir = PathUtils.GetParent(projectItem.FileNames[0]);
+            var projectDir = PathUtils.GetParent(projectItem.get_FileNames(0));
 
             // Also copy Microsoft.PythonTools.WebRole.dll and ptvsd into the project
             var ptvsdSource = PythonToolsInstallPath.TryGetFile("ptvsd\\__init__.py", GetType().Assembly);

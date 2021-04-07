@@ -22,6 +22,7 @@ using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools.Infrastructure;
 using Microsoft.VisualStudioTools.Project.Automation;
+using VSLangProj;
 
 namespace Microsoft.VisualStudioTools.Project {
     [ComVisible(true)]
@@ -441,6 +442,9 @@ namespace Microsoft.VisualStudioTools.Project {
         public object get_Extender(string ExtenderName) {
             throw new NotImplementedException();
         }
+
+        [Browsable(false)]
+        object ProjectProperties.Extender => throw new NotImplementedException();
 
         #endregion
     }

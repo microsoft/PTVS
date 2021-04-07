@@ -11,6 +11,7 @@ $need_symlink = @(
     "Microsoft.Python.Parsing",
     "Microsoft.Extensions.FileSystemGlobbing",
     "Microsoft.VisualStudio.LanguageServer.Protocol",
+    "Microsoft.VisualStudio.Debugger.Engine",
     "Microsoft.VSSDK.BuildTools",
     "Microsoft.VSSDK.Debugger.VSDConfigTool",
     "Newtonsoft.Json"

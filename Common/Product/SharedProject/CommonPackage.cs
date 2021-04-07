@@ -176,7 +176,7 @@ namespace Microsoft.VisualStudioTools {
             }
 #endif
             if (docView is IVsCodeWindow window) {
-                if (ErrorHandler.Failed(window.GetPrimaryView(out var textView))) {
+                if (ErrorHandler.Failed(window.GetPrimaryView(out IVsTextView textView))) {
                     // TODO: Report error
                     return null;
                 }

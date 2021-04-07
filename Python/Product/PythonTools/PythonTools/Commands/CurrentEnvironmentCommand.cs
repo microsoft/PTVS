@@ -13,6 +13,7 @@
 //
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
+extern alias OLEInterop;
 
 using System;
 using System.ComponentModel.Design;
@@ -42,7 +43,7 @@ namespace Microsoft.PythonTools.Commands {
             _logger = serviceProvider.GetService(typeof(IPythonToolsLogger)) as IPythonToolsLogger;
         }
 
-        public override void Invoke(object inArg, IntPtr outArg, OLECMDEXECOPT options) {
+        public override void Invoke(object inArg, IntPtr outArg, OLEInterop::Microsoft.VisualStudio.OLE.Interop.OLECMDEXECOPT options) {
             // getting the current value
             if (outArg != IntPtr.Zero) {
                 var text = _envSwitchMgr.CurrentFactory?.Configuration.Description ?? string.Empty;

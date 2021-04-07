@@ -13,6 +13,7 @@
 //
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
+extern alias OLEInterop;
 
 using System;
 using System.Collections.Generic;
@@ -78,7 +79,7 @@ namespace Microsoft.PythonTools.Project.Web {
 
         #endregion
 
-        protected override int QueryStatusCommand(uint itemid, ref Guid pguidCmdGroup, uint cCmds, VisualStudio.OLE.Interop.OLECMD[] prgCmds, IntPtr pCmdText) {
+        protected override int QueryStatusCommand(uint itemid, ref Guid pguidCmdGroup, uint cCmds, OLEInterop::Microsoft.VisualStudio.OLE.Interop.OLECMD[] prgCmds, IntPtr pCmdText) {
             if (pguidCmdGroup == CommonGuidList.guidOfficeSharePointCmdSet) {
                 for (int i = 0; i < prgCmds.Length; i++) {
                     // Report it as supported so that it's not routed any
@@ -100,7 +101,7 @@ namespace Microsoft.PythonTools.Project.Web {
             _innerVsProjectFlavorCfgProvider = inner as IVsProjectFlavorCfgProvider;
             _innerProject = inner as IVsProject;
             _innerProject3 = inner as IVsProject3;
-            _innerVsHierarchy = inner as IVsHierarchy;
+            _innerVsHierarchy = (IVsHierarchy)inner;
 
             if (serviceProvider == null) {
                 serviceProvider = _site;
