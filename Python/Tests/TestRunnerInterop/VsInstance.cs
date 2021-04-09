@@ -246,7 +246,8 @@ namespace TestRunnerInterop {
             }
 
             try {
-                var r = dte.GetObject(container).Execute(name, arguments);
+                var containerObj = dte.GetObject(container) as dynamic;
+                var r = containerObj.Execute(name, arguments);
                 if (!r.IsSuccess) {
                     if (r.ExceptionType == "Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException") {
                         throw new AssertInconclusiveException(r.ExceptionMessage);

@@ -16,6 +16,7 @@
 
 using System;
 using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.ComTypes;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Flavor;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -32,7 +33,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             throw new NotImplementedException();
         }
 
-        public int GetTypeLibOfClsid(Guid clsid, out VisualStudio.OLE.Interop.ITypeLib pptLib) {
+        public int GetTypeLibOfClsid(Guid clsid, out ITypeLib pptLib) {
             throw new NotImplementedException();
         }
 

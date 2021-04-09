@@ -83,7 +83,7 @@ namespace TestUtilities.Mocks {
             throw new NotImplementedException();
         }
 
-        public int LoadUILibrary(ref Guid guidPackage, uint dwExFlags, out uint phinstOut) {
+        public int LoadUILibrary(ref Guid guidPackage, uint dwExFlags, out IntPtr phinstOut) {
             throw new NotImplementedException();
         }
 
