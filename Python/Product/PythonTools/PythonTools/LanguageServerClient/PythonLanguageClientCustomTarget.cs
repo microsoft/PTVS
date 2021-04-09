@@ -105,7 +105,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 // Special case language_server/analysis_complete. We need this for testing so we 
                 // know when it's okay to try to bring up intellisense
                 if (te.EventName == "language_server/analysis_complete") {
-                    AnalysisComplete.Raise(this, EventArgs.Empty);
+                    AnalysisComplete.Invoke(this, EventArgs.Empty);
                 }
             } catch {
 
