@@ -10,7 +10,9 @@
         <PreviewImage>PythonProjectBig.ico</PreviewImage>
     </Metadata>
     <Installation SystemComponent="true" AllUsers="true" InstalledByMsi="true">
-        <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[17.0,18.0)" />
+        <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[17.0,18.0)">
+            <ProductArchitecture>amd64</ProductArchitecture>
+        </InstallationTarget>
     </Installation>
     <Dependencies>
         <Dependency Id="Microsoft.Framework.NDP" DisplayName="Microsoft .NET Framework" Version="4.6" />
