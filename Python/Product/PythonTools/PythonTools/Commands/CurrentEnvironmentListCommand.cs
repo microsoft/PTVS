@@ -13,7 +13,6 @@
 //
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
-extern alias OLEInterop;
 
 using System;
 using System.ComponentModel.Design;
@@ -36,7 +35,7 @@ namespace Microsoft.PythonTools.Commands {
             _envSwitchMgr = serviceProvider.GetPythonToolsService().EnvironmentSwitcherManager;
         }
 
-        public override void Invoke(object inArg, IntPtr outArg, OLEInterop::Microsoft.VisualStudio.OLE.Interop.OLECMDEXECOPT options) {
+        public override void Invoke(object inArg, IntPtr outArg, Microsoft.VisualStudio.OLE.Interop.OLECMDEXECOPT options) {
             var envs = _envSwitchMgr.AllFactories
                 .Select(f => f.Configuration.Description)
                 .OrderBy(desc => desc)

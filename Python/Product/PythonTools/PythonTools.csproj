@@ -127,6 +127,7 @@
     <Reference Include="Microsoft.VisualStudio.Debugger.Engine">
       <HintPath>$(PackagesPath)\Microsoft.VisualStudio.Debugger.Engine\ref\net45\Microsoft.VisualStudio.Debugger.Engine.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.VisualStudio.Debugger.Interop.10.0" />
     <Reference Include="Microsoft.VisualStudio.Debugger.Interop.11.0" />
     <Reference Include="Microsoft.VisualStudio.Debugger.Interop.14.0" />
     <Reference Include="Microsoft.VisualStudio.Debugger.InteropA" />
@@ -145,30 +146,13 @@
     <Reference Include="Microsoft.VisualStudio.Shell.15.0" />
     <Reference Include="Microsoft.VisualStudio.Shell.Framework" />
     <Reference Include="Microsoft.VisualStudio.Shell.Design" />
-    <Reference Include="Microsoft.VisualStudio.Shell.Interop, Version=7.1.40304.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">    
-      <Aliases>ShellInterop</Aliases>    
-    </Reference>
-    <Reference Include="Microsoft.VisualStudio.OLE.Interop">
-      <Aliases>OLEInterop</Aliases>    
-    </Reference>
+    <Reference Include="Microsoft.VisualStudio.OLE.Interop"/>
     <Reference Include="Microsoft.VisualStudio.Interop"/>
-    <Reference Include="Microsoft.VisualStudio.Shell.Interop.8.0">
-      <Aliases>Interop8</Aliases>    
-    </Reference>
-    <Reference Include="Microsoft.VisualStudio.Shell.Interop.9.0">
-      <Aliases>Interop9</Aliases>    
-    </Reference>
-    <Reference Include="Microsoft.VisualStudio.Shell.Interop.10.0">
-      <Aliases>Interop10</Aliases>    
-    </Reference>
     <Reference Include="Microsoft.VisualStudio.TemplateWizardInterface" />
     <Reference Include="Microsoft.VisualStudio.Text.Data" />
     <Reference Include="Microsoft.VisualStudio.Text.Logic" />
     <Reference Include="Microsoft.VisualStudio.Text.UI" />
     <Reference Include="Microsoft.VisualStudio.Text.UI.Wpf" />
-    <Reference Include="Microsoft.VisualStudio.TextManager.Interop">
-      <Aliases>TextManagerInterop</Aliases>    
-    </Reference>
     <Reference Include="Microsoft.VisualStudio.VSHelp, Version=7.0.3300.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>

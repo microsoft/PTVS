@@ -58,17 +58,7 @@
     </Reference>
     <Reference Include="Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces, Version=1.5.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Debugger.InteropA" />
-    <Reference Include="Microsoft.VisualStudio.OLE.Interop">
-      <Aliases>OLEInterop</Aliases>    
-    </Reference>
-    <Reference Include="Microsoft.VisualStudio.Shell.Interop.10.0">
-      <Aliases>Interop10</Aliases>    
-    </Reference>
-    <Reference Include="Microsoft.VisualStudio.Shell.Interop.11.0, Version=11.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <EmbedInteropTypes>True</EmbedInteropTypes>
-    </Reference>
-    <Reference Include="Microsoft.VisualStudio.Shell.Interop.8.0, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-    <Reference Include="Microsoft.VisualStudio.Shell.Interop.9.0, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+    <Reference Include="Microsoft.VisualStudio.OLE.Interop"/>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Core" />

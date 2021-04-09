@@ -113,7 +113,8 @@ namespace Microsoft.CookiecutterTools.Model {
         private EnvDTE.Project FindProject(string projectUniqueName) {
             var dte = _dte;
             var items = (Array)dte.ToolWindows.SolutionExplorer.SelectedItems;
-            foreach (var proj in dte.ActiveSolutionProjects) {
+            var projects = (Array)dte.ActiveSolutionProjects;
+            foreach (var proj in projects) {
                 var p = proj as EnvDTE.Project;
                 if (p != null && p.UniqueName == projectUniqueName) {
                     return p;
@@ -210,7 +211,8 @@ namespace Microsoft.CookiecutterTools.Model {
                 // C++ project
                 try {
                     if (proj.Object != null) {
-                        return proj.Object.ProjectDirectory;
+                        var dyn = proj.Object as dynamic;
+                        return dyn.ProjectDirectory;
                     }
                 } catch (Exception) {
                 }

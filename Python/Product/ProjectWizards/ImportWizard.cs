@@ -19,7 +19,6 @@
 // backwards compatibility until we can merge ImportWizard into the main DLL.
 //
 // All new wizards should be added to Microsoft.PythonTools.ProjectWizards.
-extern alias OLEInterop;
 
 using System;
 using System.Collections.Generic;
@@ -46,7 +45,7 @@ namespace Microsoft.PythonTools.ProjectWizards {
                 // If it fails (doesn't exist/contains files/read-only), let the directory stay.
             }
 
-            var oleProvider = automationObject as OLEInterop::Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
+            var oleProvider = automationObject as Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
             if (oleProvider == null) {
                 MessageBox.Show("Unable to start wizard: no automation object available.", "Visual Studio");
                 throw new WizardBackoutException();

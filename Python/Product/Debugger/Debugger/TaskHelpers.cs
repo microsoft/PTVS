@@ -13,7 +13,6 @@
 //
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
-extern alias Interop10;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -48,7 +47,7 @@ namespace Microsoft.PythonTools.Debugger {
         }
 
         private static ThreadedWaitDialogHelper.Session StartWaitDialog(double delayToShowDialog) {
-            var factory = _twdf.Value as Interop10::Microsoft.VisualStudio.Shell.Interop.IVsThreadedWaitDialogFactory;
+            var factory = _twdf.Value as Microsoft.VisualStudio.Shell.Interop.IVsThreadedWaitDialogFactory;
             return factory?.StartWaitDialog(
                 null,
                 new ThreadedWaitDialogProgressData(Strings.DebuggerInProgress, isCancelable: true),

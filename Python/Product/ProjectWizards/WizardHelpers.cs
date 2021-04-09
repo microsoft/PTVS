@@ -13,13 +13,12 @@
 //
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
-extern alias OLEInterop;
 
 using System;
 using System.Windows.Forms;
 using EnvDTE;
 using Microsoft.VisualStudio.Shell;
-using IOleServiceProvider = OLEInterop::Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
+using IOleServiceProvider = Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
 
 namespace Microsoft.PythonTools.ProjectWizards {
     static class WizardHelpers {

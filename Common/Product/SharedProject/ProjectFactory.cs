@@ -30,7 +30,7 @@ namespace Microsoft.VisualStudioTools.Project {
     /// </summary>
 
     public abstract class ProjectFactory : FlavoredProjectFactoryBase,
-        IVsAsynchronousProjectCreate, IVsProjectUpgradeViaFactory4, IVsProjectUpgradeViaFactory {
+        IVsProjectUpgradeViaFactory4, IVsProjectUpgradeViaFactory {
         #region fields
         private IServiceProvider _site;
 

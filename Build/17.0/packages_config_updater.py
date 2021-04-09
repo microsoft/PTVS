@@ -70,6 +70,7 @@ def get_latest_package_version(package_id):
         if (len(matches) > 1):
             hasVersion = [s for s in matches if version in s]
             if (len(hasVersion)):
+                hasVersion.sort(reverse=True)
                 return hasVersion[0].split(' ')[1]
         
         if (len(matches) > 0):
