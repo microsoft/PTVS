@@ -56,22 +56,22 @@
   <ItemGroup>
     <ProjectReference Include="..\BuildTasks\BuildTasks.csproj">
       <Project>{89d51398-a003-44ba-b1b2-cfc6f8396d7e}</Project>
-      <Name>Microsoft.PythonTools.BuildTasks</Name>
+      <Name>BuildTasks</Name>
       <IncludeInVSIX>True</IncludeInVSIX>
     </ProjectReference>
     <ProjectReference Include="..\Debugger\Debugger.csproj">
       <Project>{DECC7971-FA58-4DB0-9561-BFFADD393BBD}</Project>
-      <Name>Microsoft.PythonTools.Debugger</Name>
+      <Name>Debugger</Name>
       <IncludeInVSIX>True</IncludeInVSIX>
     </ProjectReference>
     <ProjectReference Include="..\Debugger.Concord\Debugger.Concord.csproj">
       <Project>{515F701E-336D-4D58-AF4B-E976BC33C957}</Project>
-      <Name>Microsoft.PythonTools.Debugger.Concord</Name>
+      <Name>Debugger.Concord</Name>
       <IncludeInVSIX>True</IncludeInVSIX>
     </ProjectReference>
     <ProjectReference Include="..\EnvironmentsList\EnvironmentsList.csproj">
       <Project>{b20e082b-4d3c-457d-b2bd-60420b434573}</Project>
-      <Name>Microsoft.PythonTools.EnvironmentsList</Name>
+      <Name>EnvironmentsList</Name>
       <IncludeInVSIX>True</IncludeInVSIX>
       <Private>False</Private>
     </ProjectReference>
@@ -81,13 +81,13 @@
     </ProjectReference>
     <ProjectReference Include="..\RunElevated\RunElevated.csproj">
       <Project>{4e18d41e-5e73-461f-9289-f6709257171a}</Project>
-      <Name>Microsoft.PythonTools.RunElevated</Name>
+      <Name>RunElevated</Name>
       <IncludeInVSIX>True</IncludeInVSIX>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
     <ProjectReference Include="..\VSInterpreters\VSInterpreters.csproj">
       <Project>{815db0cd-c0dd-4997-b43c-abee4dbeffe7}</Project>
-      <Name>Microsoft.PythonTools.VSInterpreters</Name>
+      <Name>VSInterpreters</Name>
       <IncludeInVSIX>True</IncludeInVSIX>
     </ProjectReference>
     <ProjectReference Include="..\Attacher\Attacher.csproj">
@@ -98,16 +98,16 @@
     <ProjectReference2 Include="..\AttacherX86\AttacherX86.csproj" />
     <ProjectReference Include="..\Common\Common.csproj">
       <Project>{b3db0521-d9e3-4f48-9e2e-e5ecae886049}</Project>
-      <Name>Microsoft.PythonTools.Common</Name>
+      <Name>Common</Name>
       <IncludeInVSIX>True</IncludeInVSIX>
     </ProjectReference>
     <ProjectReference Include="..\VSCommon\VSCommon.csproj">
       <Project>{A52AC77F-6DF9-4387-BB08-8DED3FD95A0F}</Project>
-      <Name>Microsoft.PythonTools.VSCommon</Name>
+      <Name>VSCommon</Name>
       <IncludeInVSIX>True</IncludeInVSIX>
     </ProjectReference>
     <Reference Include="Microsoft.VisualStudio.InteractiveWindow" />
-    <Reference Include="Microsoft.VisualStudio.Validation, Version=16.9.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.VisualStudio.Validation" />
     <Reference Include="Microsoft.VisualStudio.VsInteractiveWindow" />
     <Reference Include="Microsoft.VisualStudio.Telemetry" />
   </ItemGroup>
@@ -146,10 +146,10 @@
     <Reference Include="Microsoft.VisualStudio.Shell.15.0" />
     <Reference Include="Microsoft.VisualStudio.Shell.Framework" />
     <Reference Include="Microsoft.VisualStudio.Shell.Design" />
-    <Reference Include="Microsoft.VisualStudio.OLE.Interop"/>
-    <Reference Include="Microsoft.VisualStudio.TextManager.Interop"/>
-    <Reference Include="Microsoft.VisualStudio.TextManager.Interop.8.0"/>
-    <Reference Include="Microsoft.VisualStudio.Interop"/>
+    <Reference Include="Microsoft.VisualStudio.OLE.Interop" />
+    <Reference Include="Microsoft.VisualStudio.TextManager.Interop" />
+    <Reference Include="Microsoft.VisualStudio.TextManager.Interop.8.0" />
+    <Reference Include="Microsoft.VisualStudio.Interop" />
     <Reference Include="Microsoft.VisualStudio.TemplateWizardInterface" />
     <Reference Include="Microsoft.VisualStudio.Text.Data" />
     <Reference Include="Microsoft.VisualStudio.Text.Logic" />
@@ -163,8 +163,7 @@
     </Reference>
     <Reference Include="Microsoft.VisualStudio.Workspace" />
     <Reference Include="Microsoft.VisualStudio.Workspace.VSIntegration.Contracts" />
-    <Reference Include="Newtonsoft.Json, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed">
-      <HintPath>$(PackagesPath)\Microsoft.VSSDK.BuildTools\tools\vssdk\bin\lib\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Newtonsoft.Json">
       <Private>True</Private>
       <IncludeInVSIX>False</IncludeInVSIX>
     </Reference>

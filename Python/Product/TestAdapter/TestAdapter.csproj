@@ -72,7 +72,7 @@
     <Reference Include="Microsoft.VisualStudio.ComponentModelHost" />
     <Reference Include="Microsoft.VisualStudio.CoreUtility" />
     <Reference Include="Microsoft.VisualStudio.OLE.Interop">
-      <Aliases>OLEInterop</Aliases>    
+      <Aliases>OLEInterop</Aliases>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.Threading" />
     <Reference Include="PresentationCore" />
@@ -90,10 +90,9 @@
     <Reference Include="WindowsBase" />
     <Reference Include="Microsoft.VisualStudio.Settings.15.0" />
     <Reference Include="Microsoft.VisualStudio.Threading" />
-    <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed">
+    <Reference Include="Newtonsoft.Json">
       <HintPath>$(PackagesPath)\Newtonsoft.Json\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
-      <IncludeInVSIX>True</IncludeInVSIX>
     </Reference>
     <Reference Include="Microsoft.Python.Parsing">
       <Private>True</Private>
@@ -137,7 +136,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Common\Common.csproj">
       <Project>{b3db0521-d9e3-4f48-9e2e-e5ecae886049}</Project>
-      <Name>Microsoft.PythonTools.Common</Name>
+      <Name>Common</Name>
     </ProjectReference>
     <ProjectReference Include="..\TestAdapter.Executor\TestAdapter.Executor.csproj">
       <Project>{44e8bb56-c38e-49a8-8bc1-7af40d0ac725}</Project>
@@ -145,7 +144,7 @@
     </ProjectReference>
     <ProjectReference Include="..\VSInterpreters\VSInterpreters.csproj">
       <Project>{815db0cd-c0dd-4997-b43c-abee4dbeffe7}</Project>
-      <Name>Microsoft.PythonTools.VSInterpreters</Name>
+      <Name>VSInterpreters</Name>
     </ProjectReference>
     <ProjectReference Include="..\VSCommon\VSCommon.csproj">
       <Project>{a52ac77f-6df9-4387-bb08-8ded3fd95a0f}</Project>

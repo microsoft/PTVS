@@ -1,27 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Choose>
-    <When Condition=" '$(VisualStudioVersion)'=='15.0'  Or '$(TargetVisualStudioVersion)'=='VS150' ">
-      <PropertyGroup>
-        <MinimumVisualStudioVersion>15.0</MinimumVisualStudioVersion>
-        <FileUpgradeFlags>
-        </FileUpgradeFlags>
-        <UpgradeBackupLocation>
-        </UpgradeBackupLocation>
-        <OldToolsVersion>14.0</OldToolsVersion>
-      </PropertyGroup>
-    </When>
-    <When Condition=" '$(VisualStudioVersion)'=='16.0'  Or '$(TargetVisualStudioVersion)'=='VS160' ">
-      <PropertyGroup>
-        <MinimumVisualStudioVersion>16.0</MinimumVisualStudioVersion>
-        <FileUpgradeFlags>
-        </FileUpgradeFlags>
-        <UpgradeBackupLocation>
-        </UpgradeBackupLocation>
-        <OldToolsVersion>16.0</OldToolsVersion>
-      </PropertyGroup>
-    </When>
-  </Choose>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="..\TestProjectBefore.settings" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -34,17 +12,9 @@
     <RootNamespace>TestUtilities.Python</RootNamespace>
     <AssemblyName>TestUtilities.Python</AssemblyName>
     <FileAlignment>512</FileAlignment>
-    <ProjectTypeGuids>{82b43b9b-a64c-4715-b499-d71e9ca2bd60};{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <UseCodebase>true</UseCodebase>
-    <UseVSSDK>true</UseVSSDK>
-    <CreateVsixContainer>true</CreateVsixContainer>
-    <DeployExtension>$(BuildingInsideVisualStudio)</DeployExtension>
-    <IsProductComponent>true</IsProductComponent>
-    <ExtensionInstallationRoot>Extensions</ExtensionInstallationRoot>
-    <ExtensionInstallationFolder>Microsoft\PythonTests\TestUtilities</ExtensionInstallationFolder>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
-    <PlatformTarget>AnyCpu</PlatformTarget>
+    <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.Build, Version=$(MicrosoftBuildAssemblyVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
@@ -87,6 +57,44 @@
       <Private>True</Private>
     </Reference>
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="$(BuildRoot)\Common\Tests\MockVsTests\MockVsTests.csproj">
+      <Project>{a390e1c0-0d90-4a9e-8413-3e959bb07292}</Project>
+      <Name>MockVsTests</Name>
+    </ProjectReference>
+    <ProjectReference Include="$(BuildRoot)\Common\Tests\SccPackage\TestSccPackage.csproj">
+      <Project>{e75e5db1-0ea0-4247-a830-fe467c016816}</Project>
+      <Name>TestSccPackage</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Product\VSInterpreters\VSInterpreters.csproj">
+      <Project>{815db0cd-c0dd-4997-b43c-abee4dbeffe7}</Project>
+      <Name>VSInterpreters</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Product\PythonTools\PythonTools.csproj">
+      <Project>{fa7be5f5-e04f-4613-b7ac-70ce10d1bb68}</Project>
+      <Name>Microsoft.PythonTools</Name>
+    </ProjectReference>
+    <ProjectReference Include="$(BuildRoot)\Common\Tests\Utilities.UI\TestUtilities.UI.csproj">
+      <Project>{E8150EBC-6B62-40BF-BF91-1DC60149B530}</Project>
+      <Name>TestUtilities.UI</Name>
+    </ProjectReference>
+    <ProjectReference Include="$(BuildRoot)\Common\Tests\Utilities\TestUtilities.csproj">
+      <Project>{d092d54e-ff29-4d32-9aee-4ef704c92f67}</Project>
+      <Name>TestUtilities</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Utilities.Python.Analysis\TestUtilities.Python.Analysis.csproj">
+      <Project>{a731c4c3-3741-4080-a946-c47574c1f3bf}</Project>
+      <Name>TestUtilities.Python.Analysis</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Product\Common\Common.csproj">
+      <Project>{b3db0521-d9e3-4f48-9e2e-e5ecae886049}</Project>
+      <Name>Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Product\VSCommon\VSCommon.csproj">
+      <Project>{a52ac77f-6df9-4387-bb08-8ded3fd95a0f}</Project>
+      <Name>VSCommon</Name>
+    </ProjectReference>
+  </ItemGroup>  
   <ItemGroup>
     <Compile Include="AddEnvironmentDialogWrapperBase.cs" />
     <Compile Include="AddExistingEnvironmentDialogWrapper.cs" />
@@ -133,50 +141,10 @@
     <Compile Include="VSPackage.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\Common\Tests\MockVsTests\MockVsTests.csproj">
-      <Project>{a390e1c0-0d90-4a9e-8413-3e959bb07292}</Project>
-      <Name>MockVsTests</Name>
-      <IncludeInVsix>true</IncludeInVsix>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\Common\Tests\SccPackage\TestSccPackage.csproj">
-      <Project>{e75e5db1-0ea0-4247-a830-fe467c016816}</Project>
-      <Name>TestSccPackage</Name>
-      <IncludeInVsix>true</IncludeInVsix>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Product\VSInterpreters\VSInterpreters.csproj">
-      <Project>{815db0cd-c0dd-4997-b43c-abee4dbeffe7}</Project>
-      <Name>VSInterpreters</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Product\PythonTools\PythonTools.csproj">
-      <Project>{fa7be5f5-e04f-4613-b7ac-70ce10d1bb68}</Project>
-      <Name>PythonTools</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\Common\Tests\Utilities.UI\TestUtilities.UI.csproj">
-      <Project>{e8150ebc-6b62-40bf-bf91-1dc60149b530}</Project>
-      <Name>TestUtilities.UI</Name>
-      <IncludeInVsix>true</IncludeInVsix>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\Common\Tests\Utilities\TestUtilities.csproj">
-      <Project>{d092d54e-ff29-4d32-9aee-4ef704c92f67}</Project>
-      <Name>TestUtilities</Name>
-      <IncludeInVsix>true</IncludeInVsix>
-    </ProjectReference>
-    <ProjectReference Include="..\Utilities.Python.Analysis\TestUtilities.Python.Analysis.csproj">
-      <Project>{a731c4c3-3741-4080-a946-c47574c1f3bf}</Project>
-      <Name>TestUtilities.Python.Analysis</Name>
-      <IncludeInVsix>true</IncludeInVsix>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Product\Common\Common.csproj">
-      <Project>{b3db0521-d9e3-4f48-9e2e-e5ecae886049}</Project>
-      <Name>Common</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Product\VSCommon\VSCommon.csproj">
-      <Project>{a52ac77f-6df9-4387-bb08-8ded3fd95a0f}</Project>
-      <Name>VSCommon</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="source.extension.vsixmanifest" />
   </ItemGroup>
   <Import Project="..\TestProjectAfter.settings" />
+  <Target Name="BeforeBuild">
+    <Message Text="Configuration and Platform and BuildRoot = $(Configuration) $(Platform) $(BuildRoot)" />
+  </Target>
 </Project>

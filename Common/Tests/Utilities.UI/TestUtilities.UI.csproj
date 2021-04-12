@@ -13,14 +13,8 @@
     <AssemblyName>TestUtilities.UI</AssemblyName>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Platform)' == 'AnyCPUAnyCPU' ">
+  <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
-    <DefineConstants>$(DefineConstants);TRACE;DEBUG</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
-    <DefineConstants>$(DefineConstants);TRACE</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Accessibility" />
@@ -52,18 +46,30 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <Choose>
-    <When Condition="$(VSTarget) == '10.0' or '$(VSTarget)' == '11.0' or '$(VSTarget)' == '12.0' or '$(VSTarget)' == '14.0'">
+    <When Condition="'$(VSTarget)' == '10.0'">
       <ItemGroup>
+        <Reference Include="Microsoft.VisualStudio.Settings, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=x86" />
+        <Reference Include="Microsoft.VisualStudio.Shell.Immutable.10.0, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+      </ItemGroup>
+    </When>
+    <When Condition="'$(VSTarget)' == '11.0' or '$(VSTarget)' == '12.0' or '$(VSTarget)' == '14.0' or '$(VSTarget)' == '15.0'">
+      <ItemGroup>
+        <Reference Include="Microsoft.VisualStudio.Settings.$(VSTarget), Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=x86" />
         <Reference Include="Microsoft.VisualStudio.Shell.$(VSTarget)" />
+        <Reference Include="Microsoft.VisualStudio.Shell.Immutable.10.0, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
       </ItemGroup>
     </When>
     <Otherwise>
       <ItemGroup>
+        <Reference Include="Microsoft.VisualStudio.Settings.15.0" />
         <Reference Include="Microsoft.VisualStudio.Shell.15.0" />
         <Reference Include="Microsoft.VisualStudio.Shell.Framework" />
       </ItemGroup>
     </Otherwise>
   </Choose>
+  <ItemGroup>
+    <Reference Include="Microsoft.VisualStudio.QualityTools.Vsip" />
+  </ItemGroup>
   <ItemGroup>
     <Compile Include="..\..\Product\SharedProject\ExceptionExtensions.cs">
       <Link>ExceptionExtensions.cs</Link>
