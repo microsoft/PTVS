@@ -225,10 +225,10 @@ namespace Microsoft.PythonTools.Interpreter {
                 return;
             }
 
-            ForceDiscoverInterpreterFactories();
+            ForceDiscoverInterpreterFactories().DoNotWait();
         }
 
-        private async void ForceDiscoverInterpreterFactories() {
+        private async System.Threading.Tasks.Task ForceDiscoverInterpreterFactories() {
             DiscoveryStarted?.Invoke(this, EventArgs.Empty);
 
             // Discover the available interpreters...
@@ -485,7 +485,7 @@ namespace Microsoft.PythonTools.Interpreter {
             public void Dispose() {
                 Interlocked.Decrement(ref _provider._ignoreNotifications);
                 if (_forceDiscovery) {
-                    _provider.ForceDiscoverInterpreterFactories();
+                    _provider.ForceDiscoverInterpreterFactories().DoNotWait();
                 } else {
                     _provider.DiscoverInterpreterFactories();
                 }
