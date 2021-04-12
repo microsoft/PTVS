@@ -10,7 +10,7 @@
 
   <PropertyGroup>
     <Language>C#</Language>        <!-- Duplicated from the C# targets file -->
-    <Platform Condition="'$(Platform)'==''">x86</Platform>
+    <Platform Condition="'$(Platform)'==''">AnyCPU</Platform>
 
     <DefineConstants>$(DefineConstants);USE_PYTHON_TESTDATA</DefineConstants>
 

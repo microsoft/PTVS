@@ -49,9 +49,9 @@
     </Content>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ProjectReference Include="..\AttacherX86\AttacherX86.csproj">
+    <ProjectReference Include="..\Attacher\Attacher.csproj">
       <Project>{f3a5829d-ee15-4be7-828f-2519172c6671}</Project>
-      <Name>Microsoft.PythonTools.AttacherX86</Name>
+      <Name>Microsoft.PythonTools.Attacher</Name>
     </ProjectReference>
     <ProjectReference Include="..\BuildTasks\BuildTasks.csproj">
       <Project>{89d51398-a003-44ba-b1b2-cfc6f8396d7e}</Project>
