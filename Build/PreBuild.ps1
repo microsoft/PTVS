@@ -12,6 +12,7 @@ $need_symlink = @(
     "Microsoft.Extensions.FileSystemGlobbing",
     "Microsoft.VisualStudio.LanguageServer.Protocol",
     "Microsoft.VisualStudio.Debugger.Engine",
+    "Microsoft.VisualStudio.Interop",
     "Microsoft.VSSDK.BuildTools",
     "Microsoft.VSSDK.Debugger.VSDConfigTool",
     "Newtonsoft.Json"
