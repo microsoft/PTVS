@@ -225,10 +225,10 @@ namespace Microsoft.PythonTools.Interpreter {
                 return;
             }
 
-            ForceDiscoverInterpreterFactories();
+            ForceDiscoverInterpreterFactories().DoNotWait();
         }
 
-        private void ForceDiscoverInterpreterFactories() {
+        private async System.Threading.Tasks.Task ForceDiscoverInterpreterFactories() {
             DiscoveryStarted?.Invoke(this, EventArgs.Empty);
 
             // Discover the available interpreters...
@@ -237,7 +237,7 @@ namespace Microsoft.PythonTools.Interpreter {
             var found = new List<PythonInterpreterInformation>();
 
             try {
-                FindCondaEnvironments(found);
+                found.AddRange(await FindCondaEnvironments());
             } catch (ObjectDisposedException) {
                 // We are aborting, so silently return with no results.
                 return;
@@ -300,15 +300,17 @@ namespace Microsoft.PythonTools.Interpreter {
             public string RootPrefixFolder = null;
         }
 
-        private void FindCondaEnvironments(List<PythonInterpreterInformation> envs) {
+        private async Task<IReadOnlyList<PythonInterpreterInformation>> FindCondaEnvironments() {
             var mainCondaExePath = _condaLocatorProvider?.FindLocator()?.CondaExecutablePath;
             if (!string.IsNullOrEmpty(mainCondaExePath)) {
-                envs.AddRange(FindCondaEnvironments(mainCondaExePath));
+                return await FindCondaEnvironments(mainCondaExePath);
             }
+            return Enumerable.Empty<PythonInterpreterInformation>().ToList().AsReadOnly();
         }
 
-        private IReadOnlyList<PythonInterpreterInformation> FindCondaEnvironments(string condaPath) {
-            var condaInfoResult = _joinableTaskFactory.Run(() => ExecuteCondaInfoAsync(condaPath));
+        private async Task<IReadOnlyList<PythonInterpreterInformation>> FindCondaEnvironments(string condaPath) {
+            // Make sure to run this on a background thread as it can take a long time.
+            var condaInfoResult = await System.Threading.Tasks.Task.Run(() => ExecuteCondaInfoAsync(condaPath));
             if (condaInfoResult != null) {
                 // We skip the root to avoid duplicate entries, root is
                 // discovered by CPythonInterpreterFactoryProvider already.
@@ -483,7 +485,7 @@ namespace Microsoft.PythonTools.Interpreter {
             public void Dispose() {
                 Interlocked.Decrement(ref _provider._ignoreNotifications);
                 if (_forceDiscovery) {
-                    _provider.ForceDiscoverInterpreterFactories();
+                    _provider.ForceDiscoverInterpreterFactories().DoNotWait();
                 } else {
                     _provider.DiscoverInterpreterFactories();
                 }
