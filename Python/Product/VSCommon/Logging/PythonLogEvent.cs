@@ -144,5 +144,9 @@ namespace Microsoft.PythonTools.Logging {
         /// Publish using the button on Python 'Publish' project property page
         /// </summary>
         PythonSpecificPublish,
+        /// <summary>
+        /// Warn about untrusted workspace.
+        /// </summary>
+        UntrustedWorkspaceInfoBar,
     }
 }
