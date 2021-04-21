@@ -37,17 +37,26 @@ namespace Microsoft.PythonTools {
         private VirtualEnvCreateInfoBar _virtualEnvCreateInfoBar;
         private TestFrameworkWorkspaceInfoBar _testFrameworkInfoBar;
         private PythonNotSupportedInfoBar _pythonVersionNotSupportedInfoBar;
+        private UntrustedWorkspaceInfoBar _untrustedWorkspaceInfoBar;
         private bool _infoBarCheckTriggered;
 
         public WorkspaceInfoBarManager(IServiceProvider serviceProvider) {
             _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
             _pythonWorkspaceService = serviceProvider.GetComponentModel().GetService<IPythonWorkspaceContextProvider>();
+            _pythonWorkspaceService.WorkspaceOpening += OnWorkspaceOpening;
             _pythonWorkspaceService.WorkspaceInitialized += OnWorkspaceInitialized;
             _docTable = _serviceProvider.GetService(typeof(SVsRunningDocumentTable)) as IVsRunningDocumentTable;
         }
 
         public void Dispose() {
+            _pythonWorkspaceService.WorkspaceOpening -= OnWorkspaceOpening;
             _pythonWorkspaceService.WorkspaceInitialized -= OnWorkspaceInitialized;
+        }
+
+        private void OnWorkspaceOpening(object sender, PythonWorkspaceContextEventArgs e) {
+            var workspace = e.Workspace;
+            _untrustedWorkspaceInfoBar = new UntrustedWorkspaceInfoBar(_serviceProvider, workspace);
+            workspace.IsTrustedQueried += TriggerUntrustedWorkspaceInfoBar;
         }
 
         private void OnWorkspaceInitialized(object sender, PythonWorkspaceContextEventArgs e) {
@@ -67,6 +76,10 @@ namespace Microsoft.PythonTools {
             workspace.AddActionOnClose(
                 _pythonVersionNotSupportedInfoBar,
                  obj => { ((PythonInfoBar)obj).Dispose(); workspace.ActiveInterpreterChanged -= TriggerPythonNotSupportedInforBar; }
+            );
+            workspace.AddActionOnClose(
+                _untrustedWorkspaceInfoBar,
+                 obj => { ((PythonInfoBar)obj).Dispose(); workspace.IsTrustedQueried -= TriggerUntrustedWorkspaceInfoBar; }
             );
 
             workspace.ActiveInterpreterChanged += TriggerPythonNotSupportedInforBar;
@@ -148,6 +161,14 @@ namespace Microsoft.PythonTools {
 
         private Task TriggerPythonNotSupportedInforBarAsync() {
             return _pythonVersionNotSupportedInfoBar.CheckAsync();
+        }
+
+        private void TriggerUntrustedWorkspaceInfoBar(object sender, EventArgs e) {
+            TriggerUntrustedWorkspaceInfoBar().HandleAllExceptions(_serviceProvider, GetType()).DoNotWait();
+        }
+
+        private Task TriggerUntrustedWorkspaceInfoBar() {
+            return _untrustedWorkspaceInfoBar.CheckAsync();
         }
 
         public int OnAfterFirstDocumentLock(uint docCookie, uint dwRDTLockType, uint dwReadLocksRemaining, uint dwEditLocksRemaining) {

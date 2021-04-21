@@ -2998,4 +2998,16 @@ Please specify at least one package.</value>
   <data name="PythonInterpreterPathNullOrEmpty" xml:space="preserve">
     <value>Unable to start debugging because the Python interpreter path is null or empty</value>
   </data>
+  <data name="UntrustedWorkspaceInfoBarText" xml:space="preserve">
+    <value>Workspace contains binaries that appear to be Python interpreters, but could be malware. Visual Studio needs to execute them to retrieve interpreter information. Do you trust the binaries in this workspace?</value>
+  </data>
+  <data name="AlwaysTrustWorkspaceInfoBarAction" xml:space="preserve">
+    <value>Always trust</value>
+  </data>
+  <data name="TrustOnceWorkspaceInfoBarAction" xml:space="preserve">
+    <value>Trust this time</value>
+  </data>
+  <data name="DontTrustWorkspaceInfoBarAction" xml:space="preserve">
+    <value>Do not trust</value>
+  </data>
 </root>

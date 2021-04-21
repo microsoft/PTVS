@@ -40,6 +40,7 @@ namespace Microsoft.PythonTools.Interpreter {
         private Dictionary<object, Action<object>> _actionsOnClose;
 
         private bool _isDisposed;
+        private bool? _isTrusted;
 
         // Cached settings values
         // OnSettingsChanged compares with current value to raise more specific events.
@@ -49,7 +50,6 @@ namespace Microsoft.PythonTools.Interpreter {
         private string _testFramework;
         private string _unitTestRootDirectory;
         private string _unitTestPattern;
-
 
         // These are set in initialize
         private IPythonInterpreterFactory _factory;
@@ -70,6 +70,16 @@ namespace Microsoft.PythonTools.Interpreter {
         public event EventHandler SearchPathsSettingChanged;
 
         public event EventHandler TestSettingChanged;
+
+        /// <summary>
+        /// <see cref="IsTrusted"/> has changed.
+        /// </summary>
+        public event EventHandler IsTrustedChanged;
+
+        /// <summary>
+        /// <see cref="IsTrusted"/> was queried, and its value is unknown.
+        /// </summary>
+        public event EventHandler IsTrustedQueried;
 
         /// <summary>
         /// The effective interpreter for this workspace has changed.
@@ -94,6 +104,21 @@ namespace Microsoft.PythonTools.Interpreter {
             get {
                 lock (_cacheLock) {
                     return _factoryIsDefault == true;
+                }
+            }
+        }
+
+        public bool IsTrusted {
+            get {
+                if (_isTrusted == null) {
+                    IsTrustedQueried?.Invoke(this, EventArgs.Empty);
+                }
+                return _isTrusted == true;
+            }
+            set {
+                if (_isTrusted != value) {
+                    _isTrusted = value;
+                    IsTrustedChanged?.Invoke(this, EventArgs.Empty);
                 }
             }
         }
