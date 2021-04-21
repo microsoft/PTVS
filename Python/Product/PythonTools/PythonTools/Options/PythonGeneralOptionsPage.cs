@@ -16,6 +16,7 @@
 
 using System;
 using System.Runtime.InteropServices;
+using Microsoft.PythonTools.Project;
 
 namespace Microsoft.PythonTools.Options {
     [ComVisible(true)]
@@ -37,6 +38,7 @@ namespace Microsoft.PythonTools.Options {
         private void ResetSuppressDialog(object sender, EventArgs e) {
             PyService.SuppressDialogOptions.Reset();
             PyService.SuppressDialogOptions.Save();
+            UntrustedWorkspaceInfoBar.ClearTrustedWorkspaces(PyService);
         }
 
         /// <summary>

@@ -41,6 +41,16 @@ namespace Microsoft.PythonTools.Interpreter {
         event EventHandler TestSettingChanged;
 
         /// <summary>
+        /// <see cref="IsTrusted"/> has changed.
+        /// </summary>
+        event EventHandler IsTrustedChanged;
+
+        /// <summary>
+        /// <see cref="IsTrusted"/> was queried.
+        /// </summary>
+        event EventHandler IsTrustedQueried;
+
+        /// <summary>
         /// Display name for the workspace.
         /// </summary>
         string WorkspaceName { get; }
@@ -63,6 +73,16 @@ namespace Microsoft.PythonTools.Interpreter {
         /// Whether the <see cref="CurrentFactory"/> is set to the global default.
         /// </summary>
         bool IsCurrentFactoryDefault { get; }
+
+        /// <summary>
+        /// Whether the workspace is trusted or not.
+        /// </summary>
+        /// <remarks>
+        /// A trusted workspace is one that is assumed to not contain any malicious executable payload -
+        /// native binaries, Python code etc. If the workspace is untrusted, no code that comes from
+        /// it should be executed implicitly.
+        /// </remarks>
+        bool IsTrusted { get; set; }
 
         /// <summary>
         /// Get an absolute path from a workspace relative path.

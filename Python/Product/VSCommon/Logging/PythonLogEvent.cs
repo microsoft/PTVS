@@ -109,6 +109,9 @@ namespace Microsoft.PythonTools.Logging {
         /// <summary>
         /// Events from language server
         /// </summary>
-        LanguageServer
+        LanguageServer,
+        /// Warn about untrusted workspace.
+        /// </summary>
+        UntrustedWorkspaceInfoBar,
     }
 }
