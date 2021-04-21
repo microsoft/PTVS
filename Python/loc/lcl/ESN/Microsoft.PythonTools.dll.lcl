@@ -403,6 +403,9 @@
       <Item ItemId=";_showVariablesClassComboBox.AccessibleName" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Combo Box">
           <Val><![CDATA[Show class variables ComboBox]]></Val>
+          <Tgt Cat="Combo Box" Stat="Loc" Orig="New">
+            <Val><![CDATA[Cuadro combinado para mostrar variables de clase]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Dlg" />
       </Item>
@@ -421,6 +424,9 @@
       <Item ItemId=";_showVariablesFunctionComboBox.AccessibleName" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Combo Box">
           <Val><![CDATA[Show function variables ComboBox]]></Val>
+          <Tgt Cat="Combo Box" Stat="Loc" Orig="New">
+            <Val><![CDATA[Cuadro combinado para mostrar variables de función]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Dlg" />
       </Item>
@@ -451,6 +457,9 @@
       <Item ItemId=";_showVariablesProtectedComboBox.AccessibleName" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Combo Box">
           <Val><![CDATA[Show protected variables ComboBox]]></Val>
+          <Tgt Cat="Combo Box" Stat="Loc" Orig="New">
+            <Val><![CDATA[Cuadro combinado para mostrar variables protegidas]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Dlg" />
       </Item>
@@ -469,6 +478,9 @@
       <Item ItemId=";_showVariablesSpecialComboBox.AccessibleName" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Combo Box">
           <Val><![CDATA[Show special variables ComboBox]]></Val>
+          <Tgt Cat="Combo Box" Stat="Loc" Orig="New">
+            <Val><![CDATA[Cuadro combinado para mostrar variables especiales]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Dlg" />
       </Item>
