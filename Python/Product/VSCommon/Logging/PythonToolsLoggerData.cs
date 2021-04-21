@@ -228,4 +228,15 @@ namespace Microsoft.PythonTools.Logging {
         public bool IsErrorRangeNotSupported { get; set; }
         public bool IsRange { get; set; }
     }
+    
+    sealed class UntrustedWorkspaceInfoBarInfo : PythonToolsLoggerData {
+        public string Action { get; set; }
+    }
+
+    static class UntrustedWorkspaceInfoBarAction {
+        public const string Prompt = "Prompt";
+        public const string AlwaysTrust = "AlwaysTrust";
+        public const string TrustOnce = "TrustOnce";
+        public const string DontTrust = "DontTrust";
+    }
 }

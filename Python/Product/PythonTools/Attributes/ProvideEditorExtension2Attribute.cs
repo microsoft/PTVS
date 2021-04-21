@@ -205,6 +205,7 @@ namespace Microsoft.PythonTools {
                     editorKey.SetValue("CommonPhysicalViewAttributes", (int)_commonViewAttrs);
                 }
                 editorKey.SetValue("Package", context.ComponentType.GUID.ToString("B"));
+                editorKey.SetValue("DeferUntilIntellisenseIsReady", 0);
             }
 
             using (Key extensionKey = context.CreateKey(RegKeyName + "\\Extensions")) {
