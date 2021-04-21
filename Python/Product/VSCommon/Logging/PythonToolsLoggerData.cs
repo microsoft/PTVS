@@ -219,4 +219,16 @@ namespace Microsoft.PythonTools.Logging {
         public string Version { get; set; }
         public bool IsIronPython { get; set; }
     }
+
+
+    sealed class UntrustedWorkspaceInfoBarInfo : PythonToolsLoggerData {
+        public string Action { get; set; }
+    }
+
+    static class UntrustedWorkspaceInfoBarAction {
+        public const string Prompt = "Prompt";
+        public const string AlwaysTrust = "AlwaysTrust";
+        public const string TrustOnce = "TrustOnce";
+        public const string DontTrust = "DontTrust";
+    }
 }
