@@ -19,7 +19,7 @@ namespace Microsoft.PythonTools {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class Strings {
@@ -7391,6 +7391,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Trust this time.
+        /// </summary>
+        public static string TrustOnceWorkspaceInfoBarAction {
+            get {
+                return ResourceManager.GetString("TrustOnceWorkspaceInfoBarAction", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Basic.
         /// </summary>
         public static string TypeCheckingModeBasic {
@@ -7432,14 +7441,6 @@ namespace Microsoft.PythonTools {
         public static string TypeshedPathsToolTip {
             get {
                 return ResourceManager.GetString("TypeshedPathsToolTip", resourceCulture);
-            }
-        }
-        
-        ///   Looks up a localized string similar to Trust this time.
-        /// </summary>
-        public static string TrustOnceWorkspaceInfoBarAction {
-            get {
-                return ResourceManager.GetString("TrustOnceWorkspaceInfoBarAction", resourceCulture);
             }
         }
         
