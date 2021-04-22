@@ -66,6 +66,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 _workspaceContextProvider.WorkspaceClosed -= OnWorkspaceClosed;
                 if (_workspace != null) {
                     _workspace.InterpreterSettingChanged -= OnInterpreterSettingChanged;
+                    _workspace.IsTrustedChanged -= OnIsTrustedChanged;
                 }
                 if (_folderWatcher != null) {
                     _folderWatcher.Dispose();
@@ -116,6 +117,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 // Cleanup state associated with the previous workspace, if any
                 if (_workspace != null) {
                     _workspace.InterpreterSettingChanged -= OnInterpreterSettingChanged;
+                    _workspace.IsTrustedChanged -= OnIsTrustedChanged;
                     _workspace = null;
                 }
 
@@ -128,6 +130,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 _workspace = workspace;
                 if (_workspace != null) {
                     _workspace.InterpreterSettingChanged += OnInterpreterSettingChanged;
+                    _workspace.IsTrustedChanged += OnIsTrustedChanged;
                     try {
                         _folderWatcher = new FileWatcher(_workspace.Location, "*.*");
                         _folderWatcher.Created += OnFileCreatedDeletedRenamed;
@@ -144,6 +147,10 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         private void OnInterpreterSettingChanged(object sender, EventArgs e) {
+            DiscoverInterpreterFactories();
+        }
+
+        private void OnIsTrustedChanged(object sender, EventArgs e) {
             DiscoverInterpreterFactories();
         }
 
@@ -202,7 +209,7 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        private static IEnumerable<PythonInterpreterInformation> FindWorkspaceInterpreters(IPythonWorkspaceContext workspace) {
+        private IEnumerable<PythonInterpreterInformation> FindWorkspaceInterpreters(IPythonWorkspaceContext workspace) {
             var found = new List<PythonInterpreterInformation>();
 
             if (workspace != null) {
@@ -229,7 +236,7 @@ namespace Microsoft.PythonTools.Interpreter {
             return found;
         }
 
-        private static IEnumerable<PythonInterpreterInformation> FindInterpretersInSubFolders(string workspaceFolder) {
+        private IEnumerable<PythonInterpreterInformation> FindInterpretersInSubFolders(string workspaceFolder) {
             foreach (var dir in PathUtils.EnumerateDirectories(workspaceFolder, recurse: false)) {
                 var file = PathUtils.FindFile(dir, "python.exe", depthLimit: 1);
                 if (!string.IsNullOrEmpty(file)) {
@@ -292,8 +299,12 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        private static PythonInterpreterInformation CreateEnvironmentInfo(string interpreterPath) {
+        private PythonInterpreterInformation CreateEnvironmentInfo(string interpreterPath) {
             if (!File.Exists(interpreterPath)) {
+                return null;
+            }
+
+            if (!_workspace.IsTrusted) {
                 return null;
             }
 

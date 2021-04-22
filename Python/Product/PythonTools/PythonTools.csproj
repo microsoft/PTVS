@@ -362,6 +362,7 @@
     <Compile Include="PythonTools\Project\ConfigureTestFrameworkInfoBar.cs" />
     <Compile Include="PythonTools\Project\PythonInfoBar.cs" />
     <Compile Include="PythonTools\Project\PackageInstallInfoBar.cs" />
+    <Compile Include="PythonTools\Project\UntrustedWorkspaceInfoBar.cs" />
     <Compile Include="PythonTools\Project\PythonNotSupportedInfoBar.cs" />
     <Compile Include="PythonTools\Project\PythonTestPropertyPage.cs" />
     <Compile Include="PythonTools\Project\PythonTestPropertyPageView.xaml.cs">

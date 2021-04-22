@@ -964,6 +964,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Always trust.
+        /// </summary>
+        public static string AlwaysTrustWorkspaceInfoBarAction {
+            get {
+                return ResourceManager.GetString("AlwaysTrustWorkspaceInfoBarAction", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Analyzing {0}.
         /// </summary>
         public static string Analyzer_Analyzing {
@@ -3137,6 +3146,15 @@ namespace Microsoft.PythonTools {
         public static string DontShowAgain {
             get {
                 return ResourceManager.GetString("DontShowAgain", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Do not trust.
+        /// </summary>
+        public static string DontTrustWorkspaceInfoBarAction {
+            get {
+                return ResourceManager.GetString("DontTrustWorkspaceInfoBarAction", resourceCulture);
             }
         }
         
@@ -7417,6 +7435,14 @@ namespace Microsoft.PythonTools {
             }
         }
         
+        ///   Looks up a localized string similar to Trust this time.
+        /// </summary>
+        public static string TrustOnceWorkspaceInfoBarAction {
+            get {
+                return ResourceManager.GetString("TrustOnceWorkspaceInfoBarAction", resourceCulture);
+            }
+        }
+        
         /// <summary>
         ///   Looks up a localized string similar to Visual Studio was unable to launch the elevated process..
         /// </summary>
@@ -7603,6 +7629,15 @@ namespace Microsoft.PythonTools {
         public static string UnresolvedModuleTooltipRefreshing {
             get {
                 return ResourceManager.GetString("UnresolvedModuleTooltipRefreshing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Workspace contains binaries that appear to be Python interpreters, but could be malware. Visual Studio needs to execute them to retrieve interpreter information. Do you trust the binaries in this workspace?.
+        /// </summary>
+        public static string UntrustedWorkspaceInfoBarText {
+            get {
+                return ResourceManager.GetString("UntrustedWorkspaceInfoBarText", resourceCulture);
             }
         }
         
