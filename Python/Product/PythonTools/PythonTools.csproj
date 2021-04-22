@@ -351,6 +351,7 @@
     <Compile Include="PythonTools\LanguageServerClient\PythonLanguageClientContextProject.cs" />
     <Compile Include="PythonTools\LanguageServerClient\LanguageServer.cs" />
     <Compile Include="PythonTools\LanguageServerClient\ReplDocument.cs" />
+    <Compile Include="PythonTools\LanguageServerClient\ResultConverter.cs" />
     <Compile Include="PythonTools\LanguageServerClient\StreamHacking\MessageParser.cs" />
     <Compile Include="PythonTools\LanguageServerClient\StreamHacking\StreamData.cs" />
     <Compile Include="PythonTools\LanguageServerClient\StreamHacking\StreamIntercepter.cs" />

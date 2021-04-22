@@ -7391,6 +7391,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Trust this time.
+        /// </summary>
+        public static string TrustOnceWorkspaceInfoBarAction {
+            get {
+                return ResourceManager.GetString("TrustOnceWorkspaceInfoBarAction", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Basic.
         /// </summary>
         public static string TypeCheckingModeBasic {
@@ -7432,14 +7441,6 @@ namespace Microsoft.PythonTools {
         public static string TypeshedPathsToolTip {
             get {
                 return ResourceManager.GetString("TypeshedPathsToolTip", resourceCulture);
-            }
-        }
-        
-        ///   Looks up a localized string similar to Trust this time.
-        /// </summary>
-        public static string TrustOnceWorkspaceInfoBarAction {
-            get {
-                return ResourceManager.GetString("TrustOnceWorkspaceInfoBarAction", resourceCulture);
             }
         }
         

@@ -21,6 +21,7 @@ using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudioTools;
 using LSP = Microsoft.VisualStudio.LanguageServer.Protocol;
 
 namespace Microsoft.PythonTools.Navigation.Navigable {
@@ -47,10 +48,10 @@ namespace Microsoft.PythonTools.Navigation.Navigable {
             try {
                 PythonToolsPackage.NavigateTo(
                     _serviceProvider,
-                    VariableLocation.Uri.LocalPath,
+                    CommonUtils.GetLocalFilePath(VariableLocation.Uri),
                     Guid.Empty,
-                    VariableLocation.Range.Start.Line - 1,
-                    VariableLocation.Range.Start.Character - 1
+                    VariableLocation.Range.Start.Line,
+                    VariableLocation.Range.Start.Character
                 );
             } catch (Exception ex) when (!ex.IsCriticalException()) {
                 MessageBox.Show(Strings.CannotGoToDefn_Name.FormatUI(SymbolSpan.GetText()), Strings.ProductTitle);

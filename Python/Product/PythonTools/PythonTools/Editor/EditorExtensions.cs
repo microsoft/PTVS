@@ -110,6 +110,14 @@ namespace Microsoft.PythonTools.Editor.Core {
             return new SnapshotSpan(startSnapshotPoint, endSnapshotPoint);
         }
 
+        //internal static LSP.Position GetPosition(this SnapshotPoint point) {
+        //    var containingLine = point.GetContainingLine();
+        //    var lineNumber = containingLine.LineNumber;
+        //    var offsetLine = containingLine.Start.Position;
+        //    var character = point.Position - offsetLine;
+        //    return new LSP.Position(lineNumber, character);
+        //}
+
         // TODO: currently unused, could be deleted
         //public static SourceLocation ToSourceLocation(this SnapshotPoint point) {
         //    return new SourceLocation(
