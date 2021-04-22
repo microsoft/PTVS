@@ -151,6 +151,8 @@ namespace Microsoft.PythonTools {
 
         internal WorkspaceInfoBarManager WorkspaceInfoBarManager { get; }
 
+        internal LanguageServerClient.PythonLanguageClient LanguageClient { get; set; }
+
         #region Public API
 
         public PythonFormattingOptions FormattingOptions => _formattingOptions.Value;
