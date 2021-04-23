@@ -29,6 +29,7 @@
         <UpgradeBackupLocation>
         </UpgradeBackupLocation>
         <OldToolsVersion>17.0</OldToolsVersion>
+        <LangVersion>latest</LangVersion>
       </PropertyGroup>
     </When>
   </Choose>
