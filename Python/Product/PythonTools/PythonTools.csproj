@@ -322,12 +322,16 @@
     <Compile Include="PythonTools\LanguageServerClient\PythonLanguageClientContextProject.cs" />
     <Compile Include="PythonTools\LanguageServerClient\LanguageServer.cs" />
     <Compile Include="PythonTools\LanguageServerClient\ReplDocument.cs" />
+    <Compile Include="PythonTools\LanguageServerClient\ResultConverter.cs" />
     <Compile Include="PythonTools\LanguageServerClient\StreamHacking\MessageParser.cs" />
     <Compile Include="PythonTools\LanguageServerClient\StreamHacking\StreamData.cs" />
     <Compile Include="PythonTools\LanguageServerClient\StreamHacking\StreamIntercepter.cs" />
     <Compile Include="PythonTools\LanguageServerClient\WorkspaceFolderChanged\DidChangeWorkspaceFoldersParams.cs" />
     <Compile Include="PythonTools\LanguageServerClient\WorkspaceFolderChanged\WorkspaceFolder.cs" />
     <Compile Include="PythonTools\LanguageServerClient\WorkspaceFolderChanged\WorkspaceFoldersChangeEvent.cs" />
+    <Compile Include="PythonTools\Navigation\Navigable\NavigableSymbol.cs" />
+    <Compile Include="PythonTools\Navigation\Navigable\NavigableSymbolSource.cs" />
+    <Compile Include="PythonTools\Navigation\Navigable\NavigableSymbolSourceProvider.cs" />
     <Compile Include="PythonTools\Options\PythonAdvancedEditorOptionsControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
