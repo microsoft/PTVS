@@ -92,7 +92,7 @@ namespace Microsoft.PythonTools.Editor.Core {
             int startCharacterValue = startCharacter.HasValue ? startCharacter.Value : startSnapshotLine.Length;
 
             // This should be >, not >=. Lines have one more position than characters, and length gives the number of characters.
-            if (startCharacterValue > startSnapshotLine.Length) {
+            if (startCharacterValue > startSnapshotLine.Length || startCharacterValue < 0) {
                 return new SnapshotSpan(snapshot, new Span());
             }
 
