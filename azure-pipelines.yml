@@ -117,7 +117,7 @@ steps:
 
 # Run npm ci to install pylance
 - powershell: 'npm install --verbose'
-  condition: ${{ if notin(variables['Build.Reason'], 'PullRequest') }}
+  condition: notin(variables['Build.Reason'], 'PullRequest')
   displayName: 'Install pylance with npm'
 
 # Run a powershell script that does a package restore, some symlinking, and installs debugpy
