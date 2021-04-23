@@ -77,6 +77,22 @@ namespace Microsoft.VisualStudioTools {
         }
 
         /// <summary>
+        /// Returns the local path for a URI
+        /// </summary>
+        /// <param name="documentUri"></param>
+        /// <returns></returns>
+        public static string GetLocalFilePath(Uri documentUri)
+        {
+            Requires.Argument(documentUri.IsFile, nameof(documentUri), "There were no clients that can open the document.");
+
+            // Note: this would remove the '/' from some Uri returned on some LSP providers
+            string absolutePath = documentUri.LocalPath.TrimStart('/');
+            string fullPath = Path.GetFullPath(absolutePath);
+
+            return fullPath;
+        }
+
+        /// <summary>
         /// Normalizes and returns the provided directory path, always
         /// ending with '/'.
         /// </summary>

@@ -3040,6 +3040,7 @@ Please specify at least one package.</value>
   </data>
   <data name="ConfigFileAlreadyExists" xml:space="preserve">
     <value>Type checker configuration file already exists in this folder.</value>
+  </data>
   <data name="UntrustedWorkspaceInfoBarText" xml:space="preserve">
     <value>Workspace contains binaries that appear to be Python interpreters, but could be malware. Visual Studio needs to execute them to retrieve interpreter information. Do you trust the binaries in this workspace?</value>
   </data>

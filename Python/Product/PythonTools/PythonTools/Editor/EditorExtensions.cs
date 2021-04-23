@@ -19,6 +19,7 @@ using System.Diagnostics;
 using Microsoft.Python.Core.Text;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
+using LSP = Microsoft.VisualStudio.LanguageServer.Protocol;
 
 namespace Microsoft.PythonTools.Editor.Core {
     internal static class EditorExtensions {
@@ -63,6 +64,59 @@ namespace Microsoft.PythonTools.Editor.Core {
             }
             return null;
         }
+
+        internal static SnapshotSpan GetSnapshotSpan(this ITextView textView, LSP.Range range) {
+            Requires.NotNull(range, nameof(range));
+            Requires.NotNull(textView, nameof(textView));
+
+            return textView.TextSnapshot.GetSnapshotSpan(range.Start.Line, range.Start.Character, range.End.Line, range.End.Character);
+        }
+
+        internal static SnapshotSpan GetSnapshotSpan(this ITextSnapshot snapshot, LSP.Range range) {
+            Requires.NotNull(range, nameof(range));
+            Requires.NotNull(snapshot, nameof(snapshot));
+
+            return snapshot.GetSnapshotSpan(range.Start.Line, range.Start.Character, range.End.Line, range.End.Character);
+        }
+
+        internal static SnapshotSpan GetSnapshotSpan(this ITextSnapshot snapshot, int startLine, int? startCharacter, int endLine, int? endCharacter) {
+            if (startLine > endLine || (startLine == endLine && startCharacter > endCharacter)) {
+                return new SnapshotSpan(snapshot, new Span());
+            }
+
+            if (endLine >= snapshot.LineCount) {
+                return new SnapshotSpan(snapshot, new Span());
+            }
+
+            var startSnapshotLine = snapshot.GetLineFromLineNumber(startLine);
+            int startCharacterValue = startCharacter.HasValue ? startCharacter.Value : startSnapshotLine.Length;
+
+            // This should be >, not >=. Lines have one more position than characters, and length gives the number of characters.
+            if (startCharacterValue > startSnapshotLine.Length || startCharacterValue < 0) {
+                return new SnapshotSpan(snapshot, new Span());
+            }
+
+            var startSnapshotPoint = startSnapshotLine.Start.Add(startCharacterValue);
+
+            var endSnapshotLine = snapshot.GetLineFromLineNumber(endLine);
+            int endCharacterValue = endCharacter.HasValue ? endCharacter.Value : endSnapshotLine.Length;
+
+            if (endCharacterValue > endSnapshotLine.Length) {
+                return new SnapshotSpan(snapshot, new Span());
+            }
+
+            var endSnapshotPoint = endSnapshotLine.Start.Add(endCharacterValue);
+
+            return new SnapshotSpan(startSnapshotPoint, endSnapshotPoint);
+        }
+
+        //internal static LSP.Position GetPosition(this SnapshotPoint point) {
+        //    var containingLine = point.GetContainingLine();
+        //    var lineNumber = containingLine.LineNumber;
+        //    var offsetLine = containingLine.Start.Position;
+        //    var character = point.Position - offsetLine;
+        //    return new LSP.Position(lineNumber, character);
+        //}
 
         // TODO: currently unused, could be deleted
         //public static SourceLocation ToSourceLocation(this SnapshotPoint point) {

@@ -110,7 +110,7 @@ namespace PythonToolsTests {
 
             public IEnumerable<IPythonInterpreterFactory> Interpreters { get; private set; }
 
-            public IEnumerable<InterpreterConfiguration> Configurations { 
+            public IEnumerable<InterpreterConfiguration> Configurations {
                 get {
                     return Interpreters.Select(x => x.Configuration);
                 }
@@ -352,6 +352,8 @@ namespace PythonToolsTests {
             public event EventHandler SearchPathsSettingChanged;
             public event EventHandler ActiveInterpreterChanged;
             public event EventHandler TestSettingChanged;
+            public event EventHandler IsTrustedChanged;
+            public event EventHandler IsTrustedQueried;
 #pragma warning restore CS0067
 
             public void Dispose() {
@@ -403,6 +405,12 @@ namespace PythonToolsTests {
 
             public Task SetPropertyAsync(string propertyName, bool? propertyVal) {
                 throw new NotImplementedException();
+            }
+
+            public bool IsTrusted {
+                get => true;
+                set {
+                }
             }
 
             public IEnumerable<string> EnumerateUserFiles(Predicate<string> predicate) => throw new NotImplementedException();
