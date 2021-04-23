@@ -100,6 +100,7 @@
       <ItemGroup>
         <Reference Include="Microsoft.VisualStudio.Shell.15.0" />
         <Reference Include="Microsoft.VisualStudio.Shell.Framework" />
+        <Reference Include="Microsoft.VisualStudio.Interop" />
       </ItemGroup>
     </Otherwise>
   </Choose>
