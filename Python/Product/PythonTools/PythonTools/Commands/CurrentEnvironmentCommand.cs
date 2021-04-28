@@ -32,29 +32,28 @@ using Task = System.Threading.Tasks.Task;
 namespace Microsoft.PythonTools.Commands {
     class CurrentEnvironmentCommand : OleMenuCommand {
         private readonly IServiceProvider _serviceProvider;
-        private readonly EnvironmentSwitcherManager _envSwitchMgr;
-        private readonly IPythonToolsLogger _logger;
+        private EnvironmentSwitcherManager _envSwitchMgr = null;
 
         public CurrentEnvironmentCommand(IServiceProvider serviceProvider)
             : base(null, null, QueryStatus, new CommandID(CommonGuidList.guidPythonToolsCmdSet, (int)PkgCmdIDList.comboIdCurrentEnvironment)) {
             _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-            _envSwitchMgr = serviceProvider.GetPythonToolsService().EnvironmentSwitcherManager;
-            _logger = serviceProvider.GetService(typeof(IPythonToolsLogger)) as IPythonToolsLogger;
         }
 
         public override void Invoke(object inArg, IntPtr outArg, OLECMDEXECOPT options) {
+            var logger = _serviceProvider.GetService(typeof(IPythonToolsLogger)) as IPythonToolsLogger;
+
             // getting the current value
             if (outArg != IntPtr.Zero) {
-                var text = _envSwitchMgr.CurrentFactory?.Configuration.Description ?? string.Empty;
+                var text = EnvSwitchManager.CurrentFactory?.Configuration.Description ?? string.Empty;
                 Marshal.GetNativeVariantForObject(text, outArg);
             }
 
             // setting the current value
             if (inArg != null) {
                 var text = inArg as string;
-                var factory = _envSwitchMgr.AllFactories.SingleOrDefault(f => f.Configuration.Description == text);
+                var factory = EnvSwitchManager.AllFactories.SingleOrDefault(f => f.Configuration.Description == text);
                 if (factory != null) {
-                    _logger?.LogEvent(PythonLogEvent.SelectEnvFromToolbar, new SelectEnvFromToolbarInfo() {
+                    logger?.LogEvent(PythonLogEvent.SelectEnvFromToolbar, new SelectEnvFromToolbarInfo() {
                         InterpreterId = factory.Configuration.Id,
                         Architecture = factory.Configuration.Architecture.ToString(),
                         Version = factory.Configuration.Version.ToString(),
@@ -64,24 +63,33 @@ namespace Microsoft.PythonTools.Commands {
                     SwitchToFactoryAsync(factory).HandleAllExceptions(_serviceProvider, GetType()).DoNotWait();
                 } else {
                     // The special "Add Environment..." entry, or any entry that no longer exists brings up the add dialog
-                    _logger?.LogEvent(PythonLogEvent.AddEnvFromToolbar, null);
+                    logger?.LogEvent(PythonLogEvent.AddEnvFromToolbar, null);
                     AddEnvironmentCommand
-                        .AddEnvironmentAsync(_envSwitchMgr, _serviceProvider, AddEnvironmentDialog.PageKind.VirtualEnvironment)
+                        .AddEnvironmentAsync(_serviceProvider, AddEnvironmentDialog.PageKind.VirtualEnvironment)
                         .HandleAllExceptions(_serviceProvider, GetType())
                         .DoNotWait();
                 }
             }
         }
 
+        private EnvironmentSwitcherManager EnvSwitchManager {
+            get {
+                if (_envSwitchMgr == null) {
+                    _envSwitchMgr = _serviceProvider.GetPythonToolsService().EnvironmentSwitcherManager;
+                }
+                return _envSwitchMgr;
+            }
+        }
+
         private static void QueryStatus(object sender, EventArgs e) {
             var omc = sender as CurrentEnvironmentCommand;
             if (omc != null) {
-                omc.Enabled = omc._envSwitchMgr.IsInPythonMode;
+                omc.Enabled = omc.EnvSwitchManager.IsInPythonMode;
             }
         }
 
         private async Task SwitchToFactoryAsync(IPythonInterpreterFactory factory) {
-            await _envSwitchMgr.SwitchToFactoryAsync(factory);
+            await EnvSwitchManager.SwitchToFactoryAsync(factory);
             var uiShell = _serviceProvider.GetService(typeof(SVsUIShell)) as IVsUIShell;
             uiShell?.UpdateCommandUI(0);
         }

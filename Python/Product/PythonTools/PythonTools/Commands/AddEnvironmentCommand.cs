@@ -25,7 +25,6 @@ namespace Microsoft.PythonTools.Commands {
     class AddEnvironmentCommand : IAsyncCommand {
         private readonly IServiceProvider _serviceProvider;
         private readonly AddEnvironmentDialog.PageKind _page;
-        private readonly EnvironmentSwitcherManager _envSwitchMgr;
 
         public AddEnvironmentCommand(IServiceProvider serviceProvider)
             : this(serviceProvider, AddEnvironmentDialog.PageKind.VirtualEnvironment) {
@@ -34,16 +33,16 @@ namespace Microsoft.PythonTools.Commands {
         public AddEnvironmentCommand(IServiceProvider serviceProvider, AddEnvironmentDialog.PageKind page) {
             _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
             _page = page;
-            _envSwitchMgr = serviceProvider.GetPythonToolsService().EnvironmentSwitcherManager;
         }
 
         public CommandStatus Status => CommandStatus.SupportedAndEnabled;
 
         public Task InvokeAsync() {
-            return AddEnvironmentAsync(_envSwitchMgr, _serviceProvider, _page);
+            return AddEnvironmentAsync(_serviceProvider, _page);
         }
 
-        public static Task AddEnvironmentAsync(EnvironmentSwitcherManager envSwitchMgr, IServiceProvider serviceProvider, AddEnvironmentDialog.PageKind page) {
+        public static Task AddEnvironmentAsync(IServiceProvider serviceProvider, AddEnvironmentDialog.PageKind page) {
+            var envSwitchMgr = serviceProvider.GetPythonToolsService().EnvironmentSwitcherManager;
             var workspace = (envSwitchMgr.Context as EnvironmentSwitcherWorkspaceContext)?.Workspace;
             var project = (envSwitchMgr.Context as EnvironmentSwitcherProjectContext)?.Project;
             if (workspace == null && project == null) {

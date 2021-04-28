@@ -37,6 +37,7 @@ using CompletionItem = Microsoft.VisualStudio.Language.Intellisense.AsyncComplet
 using ServiceProvider = Microsoft.VisualStudio.Shell.ServiceProvider;
 using Microsoft.VisualStudio.LanguageServer.Client;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Repl.Completion {
 
@@ -57,33 +58,11 @@ namespace Microsoft.PythonTools.Repl.Completion {
         private readonly IAsyncCompletionBroker editorCompletionBroker;
         private readonly PythonLanguageClient languageClient;
         private readonly string[] delimiterCharacters = new[] { " ", "\r", "\n", "\t" };
-
         private readonly char[] typicalDimissChars = new[] { ';', ' ' };
-
-        /// <summary>
-        /// Union of all triggerg characters of all language servers.
-        /// For correctness, we should keep a map of trigger characters of each language server,
-        /// and request completion from only the servers whose trigger character matches the typed character.
-        /// </summary>
         private readonly char[] triggerCharacters;
         private readonly ImmutableHashSet<char> serverCommitCharacters;
 
         private CancellationToken retriggerToken;
-        private int getCompletionCount = 0;
-        private int getCompletionWithTriggerLocationTranslationCount = 0;
-        private int getCompletionTriggerLocationTranslationFailedCount = 0;
-        private int getCompletionTriggerLocationTranslationUnavailableCount = 0;
-        private int getCompletionCanceledCount = 0;
-        private int getCompletionFailedCount = 0;
-        private int newCompletionItemFailedCount = 0;
-        private int getCompletionListEmptyCount = 0;
-        private int getCompletionListIncompleteCount = 0;
-        private int commitHandledCount = 0;
-        private int commitUnhandledCount = 0;
-        private int commitWithTextEdit = 0;
-        private int resolveOnCommitCount = 0;
-        private string contentTypeName;
-        private Dictionary<string, object> commonTelemetryProperties;
 
         public AsyncCompletionSource(
             ITextView textView,
@@ -98,7 +77,6 @@ namespace Microsoft.PythonTools.Repl.Completion {
             this.editorCompletionBroker = editorCompletionBroker;
             this.navigatorService = navigatorService;
             this.languageClient = languageClient;
-            this.contentTypeName = PythonCoreConstants.ContentType;
 
             Requires.NotNull(this.navigatorService, nameof(this.navigatorService));
 
@@ -240,7 +218,6 @@ namespace Microsoft.PythonTools.Repl.Completion {
                     try {
                         ThreadHelper.JoinableTaskFactory.Run(async () => {
                             await this.ResolveCompletionItemAsync(item, token);
-                            this.resolveOnCommitCount++;
                         });
                     } catch (Exception ex) when (!(ex is OperationCanceledException)) {
                         // We have not received the resolved item due to an error.
@@ -266,7 +243,6 @@ namespace Microsoft.PythonTools.Repl.Completion {
 
                         if (protocolItem.TextEdit != null) {
                             Utilities.ApplyTextEdit(protocolItem.TextEdit, triggerLocation.Snapshot, buffer);
-                            this.commitWithTextEdit++;
                         } else if (protocolItem.InsertText != null) {
                             buffer.Replace(session.ApplicableToSpan.GetSpan(buffer.CurrentSnapshot), protocolItem.InsertText);
                         } else if (protocolItem.Label != null) {
@@ -280,7 +256,6 @@ namespace Microsoft.PythonTools.Repl.Completion {
                         this.textView.Caret.EnsureVisible();
 
                         this.ExecuteCompletionCommand(languageClient, protocolItem, token);
-                        this.commitHandledCount++;
                         return CommitResult.Handled;
                     }
                 }
@@ -288,7 +263,6 @@ namespace Microsoft.PythonTools.Repl.Completion {
                 this.ExecuteCompletionCommand(languageClient, protocolItem, token);
             }
 
-            this.commitUnhandledCount++;
             return CommitResult.Unhandled;
         }
 
@@ -307,17 +281,13 @@ namespace Microsoft.PythonTools.Repl.Completion {
             var requestContext = Utilities.GetContextFromTrigger(trigger, isRegisteredTriggerCharacter);
 
             // It is important that this is the first await on the method to ensure ordering, awaiting on something else before this might scrambling the order of calls
-            var completionContext = await this.broker.SynchronizationManager.QueueRequestTaskAsync(
-                async () => {
-                    return await this.GetCompletionContextTaskAsync(requestContext, triggerLocation, token).ConfigureAwait(false);
-                }, token).ConfigureAwait(false);
+            var completionContextTask = await this.GetCompletionContextTaskAsync(requestContext, triggerLocation, token).ConfigureAwait(false);
 
             if (token.IsCancellationRequested) {
-                return CompletionContext.Empty;
+                return CompletionContext.Empty; 
             }
 
-            this.getCompletionCount++;
-            return completionContext;
+            return await completionContextTask.ConfigureAwait(false);
         }
 
         /// <summary>
@@ -326,21 +296,17 @@ namespace Microsoft.PythonTools.Repl.Completion {
         public async Task<CompletionContext> GetCompletionContextAsync(IAsyncCompletionSession session, CompletionTrigger trigger, SnapshotPoint triggerLocation, SnapshotSpan applicableToSpan, CancellationToken token) {
             // LSP spec requires that triggerKind is TriggerChar only if the character is among these designated as trigger characters.
             var isRegisteredTriggerCharacter = trigger.Reason == CompletionTriggerReason.Insertion && this.triggerCharacters.Contains(trigger.Character);
-            var requestContext = CompletionUtilities.GetContextFromTrigger(trigger, isRegisteredTriggerCharacter);
+            var requestContext = Utilities.GetContextFromTrigger(trigger, isRegisteredTriggerCharacter);
 
             // It is important that this is the first await on the method to ensure ordering, awaiting on something else before this might scrambling the order of calls
-            var completionContext = await this.broker.SynchronizationManager.QueueRequestTaskAsync(
-                async () => {
-                    return await this.GetCompletionContextTaskAsync(requestContext, triggerLocation, token).ConfigureAwait(false);
-                }, token).ConfigureAwait(false);
+            var completionContextTask = await this.GetCompletionContextTaskAsync(requestContext, triggerLocation, token).ConfigureAwait(false);
 
-            this.getCompletionCount++;
-            return completionContext;
+            return await completionContextTask.ConfigureAwait(false);
         }
 
-        private async Task<Task<CompletionContext>> GetCompletionContextTaskAsync(CompletionContext requestContext, SnapshotPoint triggerLocation, CancellationToken token) {
+        private async Task<Task<CompletionContext>> GetCompletionContextTaskAsync(LSP.CompletionContext requestContext, SnapshotPoint triggerLocation, CancellationToken token) {
+            // TODO: Should this be using the ILanguageServiceBroker2 calls instead? That will include the necessary sync that the LanguageServiceBroker does
             if (token.IsCancellationRequested) {
-                this.getCompletionCanceledCount++;
                 return System.Threading.Tasks.Task.FromResult(CompletionContext.Empty);
             }
 
@@ -348,7 +314,7 @@ namespace Microsoft.PythonTools.Repl.Completion {
                 return System.Threading.Tasks.Task.FromResult(CompletionContext.Empty);
             }
 
-            var itemBag = new ConcurrentBag<(ILanguageClient, LSP.CompletionItem, Func<LSP.CompletionItem, CancellationToken, Task<LSP.CompletionItem>>?)>();
+            var itemBag = new ConcurrentBag<(ILanguageClient, LSP.CompletionItem, Func<LSP.CompletionItem, CancellationToken, Task<LSP.CompletionItem>>)>();
             var isIncomplete = false;
 
             Func<(ILanguageClient client, LSP.CompletionList completionList), System.Threading.Tasks.Task> progressAction = (partialResults) => {
@@ -356,7 +322,7 @@ namespace Microsoft.PythonTools.Repl.Completion {
                     return System.Threading.Tasks.Task.CompletedTask;
                 }
 
-                Func<LSP.CompletionItem, CancellationToken, Task<LSP.CompletionItem>> resolveCompletionTask = (i, c) => clientInstance.InvokeCompletionResolveAsync(i, c);
+                Func<LSP.CompletionItem, CancellationToken, Task<LSP.CompletionItem>> resolveCompletionTask = (i, c) => clientInstance.InvokeResolveAsync(i, c);
                 foreach (var completionItem in partialResults.completionList.Items) {
                     itemBag.Add((clientInstance, completionItem, resolveCompletionTask));
                 }
@@ -366,51 +332,58 @@ namespace Microsoft.PythonTools.Repl.Completion {
                 return System.Threading.Tasks.Task.CompletedTask;
             };
 
-            /*
-             * LSP servers provide completion items on the last known snapshot, so we need to translate triggerLocation
-             * to the current snapshot at the server.
-             *
-             * In local scenarios, we can get the server's current snapshot from the broker.SnapshotsSent property.
-             * This method is executed within a semaphore which guarantees that we won't update the snapshot in parallel
-             * by dispatching a textDocument\didChange request.
-             *
-             * In remote scenarios, this solution remains prone to race conditions!!
-             * The coauthoring service (LiveShare) updates the server snapshot outside of this semaphore,
-             * which means that the version on the server may be different than the one available in broker.SnapshotsSent.
-             * The symptom of this issue is exceptions when creating CompletionItems, if their text edit range does not exist
-             * at the snapshot we mapped to here.
-             *
-             * We're making a few assumptions here:
-             * That IRemoteLanguageServiceBroker.SnapshotSent is set in both local and remote scenarios
-             * That we're not using projection, and all snapshots are on TextView.TextBuffer
-             * We're aggressively canceling requests if any assumptions are not fulfilled.
-             */
-
-            ImmutableList<ITextSnapshot>? snapshotsSent = null;
-            if (this.broker.SnapshotsSent.TryGetValue(triggerLocation.Snapshot.TextBuffer, out snapshotsSent)
-                && snapshotsSent != null && snapshotsSent.Count > 0) {
-                // Assume that the last element in the list is the last sent snapshot, and it corresponds to the server's current snapshot.
-                var lastSnapshotSent = snapshotsSent[snapshotsSent.Count - 1];
-                if (triggerLocation.Snapshot != lastSnapshotSent) {
-                    try {
-                        triggerLocation = triggerLocation.TranslateTo(lastSnapshotSent, PointTrackingMode.Positive);
-                        this.getCompletionWithTriggerLocationTranslationCount++;
-                    } catch (Exception) {
-                        this.getCompletionTriggerLocationTranslationFailedCount++;
-                        return System.Threading.Tasks.Task.FromResult(CompletionContext.Empty);
-                    }
-                }
-            } else {
-                this.getCompletionTriggerLocationTranslationUnavailableCount++;
-                return System.Threading.Tasks.Task.FromResult(CompletionContext.Empty);
-            }
-
             // The following call enqueues the RPC request. We may not yield (await) before this call.
-            var requestTask = await ((IRemoteCompletionBroker)this.broker.CompletionBroker)
-                .GetCompletionRequestAsync(triggerLocation, this.textView.TextDataModel.DocumentBuffer, requestContext, token, progressAction)
+            var requestTask = await GetCompletionRequestAsync(triggerLocation, triggerLocation.Snapshot.TextBuffer, requestContext, token, progressAction)
                 .ConfigureAwait(false);
 
             return this.CompletionResultsToContextAsync(requestTask, triggerLocation, itemBag, isIncomplete, token);
+        }
+
+        public async Task<Task<CompletionResults>> GetCompletionRequestAsync(
+            SnapshotPoint triggerPoint,
+            ITextBuffer documentBuffer,
+            LSP.CompletionContext requestContext,
+            CancellationToken token,
+            Func<(ILanguageClient, LSP.CompletionList), System.Threading.Tasks.Task> progressAction = null) {
+            bool isIncomplete = false;
+            var items = new List<(ILanguageClient, LSP.CompletionItem, Func<LSP.CompletionItem, CancellationToken, Task<LSP.CompletionItem>>)>();
+            var suggestionMode = false;
+
+            if (this.languageClient.TextDocumentFactoryService.TryGetTextDocument(documentBuffer, out ITextDocument textDocument)) {
+                var position = triggerPoint.GetPosition();
+
+                var textDocumentId = new LSP.TextDocumentIdentifier();
+                textDocumentId.Uri = new Uri(textDocument.FilePath);
+
+                var param = new LSP.CompletionParams();
+                param.TextDocument = textDocumentId;
+                param.Position = position;
+                param.Context = requestContext;
+
+                // The following call enqueues the RPC request. We may not yield (await) before this call.
+                var resultTask = this.languageClient.InvokeCompletionAsync(param, token);
+
+                return this.CompletionListsToCompletionResultsAsync(resultTask);
+            }
+
+            var results = new CompletionResults() { ResultsAreIncomplete = isIncomplete, Items = items.ToArray(), SuggestionMode = suggestionMode };
+            return System.Threading.Tasks.Task.FromResult(results);
+        }
+
+        private async Task<CompletionResults> CompletionListsToCompletionResultsAsync(
+            Task<object> completionTask) {
+            var items = new List<(ILanguageClient client, LSP.CompletionItem completionItem, Func<LSP.CompletionItem, CancellationToken, Task<LSP.CompletionItem>> resolver)>();
+            var suggestionMode = false;
+            object taskResults = await completionTask.ConfigureAwait(false);
+            var converted = ResultConverter.ConvertResult(taskResults as Newtonsoft.Json.Linq.JObject) as LSP.CompletionList[];
+            Func<LSP.CompletionItem, CancellationToken, Task<LSP.CompletionItem>> resolveFunc = (c, t) => this.languageClient.InvokeResolveAsync(c, t);
+            if (converted != null) {
+                foreach (var completionItem in converted[0].Items) {
+                    items.Add((this.languageClient, completionItem as LSP.CompletionItem, resolveFunc));
+                }
+            }
+
+            return new CompletionResults() { ResultsAreIncomplete = converted != null ? converted[0].IsIncomplete : false, Items = items.ToArray(), SuggestionMode = suggestionMode };
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Usage", "VSTHRD003:Avoid awaiting foreign Tasks", Justification = "Request needs to be prepared and called separately for synchronization")]
@@ -425,16 +398,14 @@ namespace Microsoft.PythonTools.Repl.Completion {
                 // Await the response to the RPC request
                 results = await data.ConfigureAwait(false);
             } catch (Exception ex) when (!(ex is OperationCanceledException)) {
-                this.getCompletionFailedCount++;
                 throw;
             }
 
             if (token.IsCancellationRequested) {
-                this.getCompletionCanceledCount++;
                 return CompletionContext.Empty;
             }
 
-            SuggestionItemOptions? suggestionItemOptions = null;
+            SuggestionItemOptions suggestionItemOptions = null;
             if (results.SuggestionMode) {
                 suggestionItemOptions = new SuggestionItemOptions(string.Empty, string.Empty);
             }
@@ -459,29 +430,12 @@ namespace Microsoft.PythonTools.Repl.Completion {
                 try {
                     var completionItem = this.CreateCompletionItem(mergedItem.client, mergedItem.completionItem, mergedItem.resolver, triggerLocation, completionFilters);
                     itemsBuilder.Add(completionItem);
-                } catch (Exception ex) {
-                    this.newCompletionItemFailedCount++;
-                    this.telemetryLogger?.PostEvent(
-                        eventName: TelemetryConstants.CompletionItemProcessingFailedEventName,
-                        exceptionObj: ex,
-                        properties: new Dictionary<string, object>(this.commonTelemetryProperties)
-                        {
-                            { "clientName", mergedItem.client.Client.Name }, { "itemName", mergedItem.completionItem.Label },
-                        });
-
+                } catch (Exception) {
                     // It appears that we are in a broken state. This might be caused by coauthoring service
                     // taking mergedItem.client's snapshot out of sync of the triggerLocation.Snapshot.
                     // Send telemetry and don't provide any completion items.
                     return CompletionContext.Empty;
                 }
-            }
-
-            if (itemsBuilder.Count == 0) {
-                this.getCompletionListEmptyCount++;
-            }
-
-            if (results.ResultsAreIncomplete) {
-                this.getCompletionListIncompleteCount++;
             }
 
             return new CompletionContext(
@@ -492,7 +446,7 @@ namespace Microsoft.PythonTools.Repl.Completion {
                 isIncomplete: results.ResultsAreIncomplete | isIncomplete);
         }
 
-        private SnapshotSpan GetApplicableToSpan(SnapshotPoint applicablePoint, LSP.CompletionItem? item = null) {
+        private SnapshotSpan GetApplicableToSpan(SnapshotPoint applicablePoint, LSP.CompletionItem item = null) {
             if (item?.TextEdit != null) {
                 return item.TextEdit.Range.ToSnapshotSpan(applicablePoint.Snapshot);
             }
@@ -501,9 +455,7 @@ namespace Microsoft.PythonTools.Repl.Completion {
             // walk left and right until we reach the end of the word
             var leftExtent = applicablePoint;
             var rightExtent = applicablePoint;
-            var stopCharacters = this.delimiterCharacters
-                .Union(((IRemoteCompletionBroker)this.broker.CompletionBroker).GetCompletionTriggerCharacters(applicablePoint.Snapshot.ContentType))
-                .Union(((IRemoteCompletionBroker)this.broker.CompletionBroker).GetCompletionCommitCharacters(applicablePoint.Snapshot.ContentType));
+            var stopCharacters = this.delimiterCharacters.Union(this.triggerCharacters.Select(c => c.ToString()));
             if (item != null && item.CommitCharacters?.Length > 0) {
                 stopCharacters = stopCharacters.Union(item.CommitCharacters);
             }
@@ -524,7 +476,7 @@ namespace Microsoft.PythonTools.Repl.Completion {
         }
 
         private bool ShouldTriggerCompletion(CompletionTrigger trigger, SnapshotPoint triggerLocation) {
-            if (!this.broker.CompletionBroker.IsSupported(triggerLocation.Snapshot.ContentType, triggerLocation.Snapshot.TextBuffer.GetClientName())) {
+            if (!triggerLocation.Snapshot.TextBuffer.IsReplBuffer()) {
                 return false;
             }
 
@@ -549,7 +501,7 @@ namespace Microsoft.PythonTools.Repl.Completion {
                 return false;
             }
 
-            return ((RemoteCompletionBroker)this.broker.CompletionBroker).IsCompletionTriggerCharacter(triggerLocation.Snapshot.ContentType, trigger.Character);
+            return this.triggerCharacters.Contains(trigger.Character);
         }
 
         private CompletionItem CreateCompletionItem(ILanguageClient client, LSP.CompletionItem item, Func<LSP.CompletionItem, CancellationToken, Task<LSP.CompletionItem>> resolver, SnapshotPoint triggerLocation, Dictionary<LSP.CompletionItemKind?, CompletionFilter> completionFilters) {
@@ -652,9 +604,7 @@ namespace Microsoft.PythonTools.Repl.Completion {
                 this.retriggerToken = token;
                 this.editorCompletionBroker.GetSession(this.textView).Dismissed += this.RetriggerWhenDismissed;
             } else {
-                this.broker.SynchronizationManager.QueueRequestTaskAsync(
-                    () => this.broker.ExecuteCommandBroker.GetRequestAsync(client, executeCommandParams, token),
-                    token).SafeFileAndForget(TelemetryConstants.CompletionItemCommandFailedEventName);
+                this.languageClient.InvokeCommandAsync(executeCommandParams, token).DoNotWait();
             }
         }
 

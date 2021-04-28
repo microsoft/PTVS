@@ -14,10 +14,12 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using Microsoft.VisualStudio.Language.Intellisense.AsyncCompletion;
 using Microsoft.VisualStudio.LanguageServer.Client;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Operations;
 using Microsoft.VisualStudio.Threading;
@@ -27,10 +29,12 @@ namespace Microsoft.PythonTools.Repl.Completion {
 
     [Export(typeof(IAsyncCompletionSourceProvider))]
     [ContentType(CodeRemoteContentDefinition.CodeRemoteBaseTypeName)]
-    [Name("LSPCompletion")] // standardize with c#
+    [Name("PythonReplCompletions")] 
     internal class AsyncCompletionSourceProvider : IAsyncCompletionSourceProvider {
         private readonly Dictionary<ITextView, AsyncCompletionSource> sourceMap = new Dictionary<ITextView, AsyncCompletionSource>();
 
+        [Import(typeof(SVsServiceProvider))]
+        public IServiceProvider ServiceProvider = null;
 
         [Import]
         public ITextStructureNavigatorSelectorService TextStructureNavigatorSelectorService { get; set; } = null;
@@ -39,33 +43,30 @@ namespace Microsoft.PythonTools.Repl.Completion {
         public IAsyncCompletionBroker EditorCompletionBroker { get; set; } = null;
 
         public IAsyncCompletionSource GetOrCreate(ITextView textView) {
-            AsyncCompletionSource source;
-            if (!this.sourceMap.TryGetValue(textView, out source)) {
-                source = new AsyncCompletionSource(
-                    this.RemoteLanguageServiceBroker,
-                    textView,
-                    this.TextStructureNavigatorSelectorService,
-                    this.EditorCompletionBroker,
-                    this.TelemetryLogger);
-                this.sourceMap.Add(textView, source);
+            AsyncCompletionSource source = null;
 
-                if (this.AnyServerSupportsCompletion(textView)) {
+            // First make sure this is for a REPL text view. One of the buffers has to be a repl buffer
+            var matches = textView.BufferGraph.GetTextBuffers((b) => b.IsReplBuffer());
+            if (matches.Count > 0) {
+                // Then make sure we have a language client to use.
+                var service = ServiceProvider.GetService(typeof(PythonToolsService)) as PythonToolsService;
+                var languageClient = service.LanguageClient;
+                if (languageClient != null && !this.sourceMap.TryGetValue(textView, out source)) {
+                    source = new AsyncCompletionSource(
+                        textView,
+                        this.TextStructureNavigatorSelectorService,
+                        this.EditorCompletionBroker,
+                        languageClient);
+                    this.sourceMap.Add(textView, source);
+
                     // We want to make sure we don't block on commit as language servers can take a while to return results.
                     textView.Options.SetOptionValue(DefaultOptions.NonBlockingCompletionOptionId, true);
+                    textView.Closed += this.OnTextViewClosed;
                 }
 
-                textView.Closed += this.OnTextViewClosed;
             }
 
             return source;
-        }
-
-        private bool AnyServerSupportsCompletion(ITextView textView) {
-            if (this.RemoteLanguageServiceBroker.CompletionBroker is IRemoteCompletionBroker broker) {
-                return broker.AnyServerSupportsCompletion(new[] { textView.TextBuffer.ContentType }, textView.TextBuffer.GetClientName());
-            }
-
-            return false;
         }
 
         private void OnTextViewClosed(object sender, System.EventArgs e) {

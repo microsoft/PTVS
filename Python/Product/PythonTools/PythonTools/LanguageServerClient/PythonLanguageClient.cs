@@ -95,6 +95,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         private bool _sentInitialWorkspaceFolders = false;
         private FileWatcher.Listener _fileListener;
         private static TaskCompletionSource<int> _readyTcs = new System.Threading.Tasks.TaskCompletionSource<int>();
+        private bool _modifiedInitialize = false;
 
         public PythonLanguageClient() {
             _disposables = new DisposableBag(GetType().Name);
@@ -262,14 +263,23 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         public Task<TResult> InvokeWithParameterObjectAsync<TResult>(string targetName, object argument = null, CancellationToken cancellationToken = default)
             => _rpc == null ? Task.FromResult(default(TResult)) : _rpc.InvokeWithParameterObjectAsync<TResult>(targetName, argument, cancellationToken);
 
-        public Task<object> InvokeTextDocumentSymbols(LSP.DocumentSymbolParams request, CancellationToken cancellationToken)
+        public Task<object> InvokeTextDocumentSymbolsAsync(LSP.DocumentSymbolParams request, CancellationToken cancellationToken)
                     => _rpc == null ? Task.FromResult(default(object)) : _rpc.InvokeWithParameterObjectAsync<object>("textDocument/documentSymbol", request, cancellationToken);
 
-        public Task<object> InvokeTextDocumentDefinition(LSP.TextDocumentPositionParams request, CancellationToken cancellationToken)
+        public Task<object> InvokeTextDocumentDefinitionAsync(LSP.TextDocumentPositionParams request, CancellationToken cancellationToken)
                     => _rpc == null ? Task.FromResult(default(object)) : _rpc.InvokeWithParameterObjectAsync<object>("textDocument/definition", request, cancellationToken);
 
-        public Task<LSP.Location[]> InvokeReferences(LSP.ReferenceParams request, CancellationToken cancellationToken)
+        public Task<LSP.Location[]> InvokeReferencesAsync(LSP.ReferenceParams request, CancellationToken cancellationToken)
             => _rpc == null ? Task.FromResult<LSP.Location[]>(null) : _rpc.InvokeWithParameterObjectAsync<LSP.Location[]>("textDocument/references", request, cancellationToken);
+
+        public Task<object> InvokeCompletionAsync(LSP.CompletionParams request, CancellationToken cancellationToken)
+            => _rpc == null ? Task.FromResult<object>(null) : _rpc.InvokeWithParameterObjectAsync<object>("textDocument/completion", request, cancellationToken);
+
+        public Task<LSP.CompletionItem> InvokeResolveAsync(LSP.CompletionItem request, CancellationToken cancellationToken)
+            => _rpc == null ? Task.FromResult<LSP.CompletionItem>(null) : _rpc.InvokeWithParameterObjectAsync<LSP.CompletionItem>("completionItem/resolve", request, cancellationToken);
+        
+        public Task<object> InvokeCommandAsync(LSP.ExecuteCommandParams request, CancellationToken cancellationToken)
+            => _rpc == null ? Task.FromResult<object>(null) : _rpc.InvokeWithParameterObjectAsync<object>("workspace/executeCommand", request, cancellationToken);
 
         private void OnSettingsChanged(object sender, EventArgs e) => SendDidChangeConfigurations().DoNotWait();
 
@@ -430,7 +440,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
 
         // This is all a hack until VSSDK LanguageServer can handle workspace folders and dynamic registration
-        private StreamData OnSendToServer(StreamData data) {
+        private Tuple<StreamData, bool> OnSendToServer(StreamData data) {
             var message = MessageParser.Deserialize(data);
             if (message != null) {
                 if (_isDebugging) {
@@ -455,8 +465,9 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                                 messageParams["rootPath"] = "";
                                 messageParams["rootUri"] = "";
 
-                                // Need to rewrite the message now
-                                return MessageParser.Serialize(message);
+                                // Need to rewrite the message now. 
+                                _modifiedInitialize = true;
+                                return Tuple.Create(MessageParser.Serialize(message), false);
                             }
                         }
                     }
@@ -464,7 +475,10 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                     // Don't care if this happens. Just skip the message
                 }
             }
-            return data;
+
+            // Return the tuple that indicates if we need to keep listening or not
+            // We need to keep listening if debugging or haven't modified initialize yet
+            return Tuple.Create(data, !_modifiedInitialize || _isDebugging);
         }
 
         private async Task OnWorkspaceOpening(object sende, EventArgs e) {

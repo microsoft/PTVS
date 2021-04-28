@@ -79,6 +79,13 @@ namespace Microsoft.PythonTools.Editor.Core {
             return snapshot.GetSnapshotSpan(range.Start.Line, range.Start.Character, range.End.Line, range.End.Character);
         }
 
+        internal static SnapshotPoint GetSnapshotPositionFromProtocolPosition(this ITextSnapshot textSnapshot, LSP.Position position) {
+            var snapshotPosition = textSnapshot.GetLineFromLineNumber(position.Line).Start + position.Character;
+
+            return new SnapshotPoint(textSnapshot, snapshotPosition);
+        }
+
+
         internal static SnapshotSpan GetSnapshotSpan(this ITextSnapshot snapshot, int startLine, int? startCharacter, int endLine, int? endCharacter) {
             if (startLine > endLine || (startLine == endLine && startCharacter > endCharacter)) {
                 return new SnapshotSpan(snapshot, new Span());

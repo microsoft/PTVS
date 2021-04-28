@@ -39,6 +39,7 @@
     <DeployExtension>false</DeployExtension>
     <DefineConstants>$(DefineConstants);$(SignedSym);SHAREDPROJECT_OLESERVICEPROVIDER</DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -697,6 +698,11 @@
     <Compile Include="PythonTools\WebProject\PythonWebPropertyPage.cs" />
     <Compile Include="PythonTools\Wpf\ModernStyles.cs" />
     <Compile Include="PythonTools\Wpf\VisualTreeExtensions.cs" />
+    <Compile Include="Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
     <Compile Include="VsCredentials.cs" />
     <Compile Include="PythonTools\Commands\UsePythonStepping.cs" />
     <Compile Include="PythonTools\Commands\ShowNativePythonFrames.cs" />
@@ -1053,6 +1059,8 @@
       <MergeWithCTO>true</MergeWithCTO>
       <CustomToolNamespace>Microsoft.PythonTools</CustomToolNamespace>
       <ManifestResourceName>Microsoft.PythonTools.Resources</ManifestResourceName>
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
