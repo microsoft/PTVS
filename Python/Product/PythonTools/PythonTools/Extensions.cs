@@ -852,6 +852,10 @@ namespace Microsoft.PythonTools {
                    (snapshot[0] == '%' || snapshot[0] == '$'); // IPython and normal repl commands
         }
 
+        internal static bool IsReplBuffer(this ITextBuffer buffer) {
+            return buffer.Properties.ContainsProperty(typeof(IInteractiveEvaluator));
+        }
+
         internal static bool IsOpenGrouping(this ClassificationSpan span) {
             return span.ClassificationType.IsOfType(PythonPredefinedClassificationTypeNames.Grouping) &&
                 span.Span.Length == 1 &&
