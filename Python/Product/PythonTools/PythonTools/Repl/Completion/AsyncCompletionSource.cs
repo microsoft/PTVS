@@ -38,6 +38,7 @@ using ServiceProvider = Microsoft.VisualStudio.Shell.ServiceProvider;
 using Microsoft.VisualStudio.LanguageServer.Client;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.VisualStudio.InteractiveWindow;
 
 namespace Microsoft.PythonTools.Repl.Completion {
 
@@ -349,21 +350,12 @@ namespace Microsoft.PythonTools.Repl.Completion {
             var items = new List<(ILanguageClient, LSP.CompletionItem, Func<LSP.CompletionItem, CancellationToken, Task<LSP.CompletionItem>>)>();
             var suggestionMode = false;
 
-            if (this.languageClient.TextDocumentFactoryService.TryGetTextDocument(documentBuffer, out ITextDocument textDocument)) {
+            // We need to use the REPL to make the request
+            if (documentBuffer.Properties.TryGetProperty(typeof(IInteractiveEvaluator), out IInteractiveEvaluator evaluator) &&
+                evaluator is SelectableReplEvaluator replEvaluator) { 
                 var position = triggerPoint.GetPosition();
-
-                var textDocumentId = new LSP.TextDocumentIdentifier();
-                textDocumentId.Uri = new Uri(textDocument.FilePath);
-
-                var param = new LSP.CompletionParams();
-                param.TextDocument = textDocumentId;
-                param.Position = position;
-                param.Context = requestContext;
-
-                // The following call enqueues the RPC request. We may not yield (await) before this call.
-                var resultTask = this.languageClient.InvokeCompletionAsync(param, token);
-
-                return this.CompletionListsToCompletionResultsAsync(resultTask);
+                var task = replEvaluator.GetAnalysisCompletions(position, requestContext, token);
+                return this.CompletionListsToCompletionResultsAsync(task);
             }
 
             var results = new CompletionResults() { ResultsAreIncomplete = isIncomplete, Items = items.ToArray(), SuggestionMode = suggestionMode };

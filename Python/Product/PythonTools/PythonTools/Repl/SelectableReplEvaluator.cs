@@ -375,8 +375,8 @@ namespace Microsoft.PythonTools.Repl {
                 ?? new OverloadDoc[0];
         }
 
-        public async Task<LSP.CompletionItem[]> GetAnalysisCompletions(SnapshotPoint triggerPoint, LSP.CompletionContext context, CancellationToken token) {
-            return (await (_evaluator as IPythonInteractiveIntellisense)?.GetAnalysisCompletions(triggerPoint, context, token))
+        public async Task<object> GetAnalysisCompletions(LSP.Position position, LSP.CompletionContext context, CancellationToken token) {
+            return (await (_evaluator as IPythonInteractiveIntellisense)?.GetAnalysisCompletions(position, context, token))
                 ?? Array.Empty<LSP.CompletionItem>();
         }
     }
