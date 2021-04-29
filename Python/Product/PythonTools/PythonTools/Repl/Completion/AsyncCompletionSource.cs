@@ -39,6 +39,7 @@ using Microsoft.VisualStudio.LanguageServer.Client;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.InteractiveWindow;
+using Microsoft.VisualStudio.Text.Projection;
 
 namespace Microsoft.PythonTools.Repl.Completion {
 
@@ -159,12 +160,12 @@ namespace Microsoft.PythonTools.Repl.Completion {
                         return new CompletionStartData(CompletionParticipation.ProvidesItems, new SnapshotSpan(triggerLocation, 0));
                     } else {
                         // When non trigger character is typed, completion should be applicable to the entire word
-                        var applicableToSpan = this.GetApplicableToSpan(triggerLocation.Position > 0 ? triggerLocation - 1 : triggerLocation);
+                        var applicableToSpan = this.GetApplicableToSpan(this.textView.TextSnapshot, triggerLocation.Position > 0 ? triggerLocation - 1 : triggerLocation);
                         return new CompletionStartData(CompletionParticipation.ProvidesItems, applicableToSpan);
                     }
                 } else {
                     // When completion is invoked by other means than typing, it should be applicable to the entire word
-                    var applicableToSpan = this.GetApplicableToSpan(triggerLocation);
+                    var applicableToSpan = this.GetApplicableToSpan(this.textView.TextSnapshot, triggerLocation);
                     return new CompletionStartData(CompletionParticipation.ProvidesItems, applicableToSpan);
                 }
             }
@@ -396,6 +397,9 @@ namespace Microsoft.PythonTools.Repl.Completion {
             if (token.IsCancellationRequested) {
                 return CompletionContext.Empty;
             }
+            if (triggerLocation.Snapshot.Version != triggerLocation.Snapshot.TextBuffer.CurrentSnapshot.Version) {
+                return CompletionContext.Empty;
+            }
 
             SuggestionItemOptions suggestionItemOptions = null;
             if (results.SuggestionMode) {
@@ -438,29 +442,43 @@ namespace Microsoft.PythonTools.Repl.Completion {
                 isIncomplete: results.ResultsAreIncomplete | isIncomplete);
         }
 
-        private SnapshotSpan GetApplicableToSpan(SnapshotPoint applicablePoint, LSP.CompletionItem item = null) {
+        private SnapshotSpan GetApplicableToSpan(ITextSnapshot owningSnapshot, SnapshotPoint applicablePoint, LSP.CompletionItem item = null) {
+            SnapshotSpan result = new SnapshotSpan();
+
+            // See if this is from a text edit
             if (item?.TextEdit != null) {
-                return item.TextEdit.Range.ToSnapshotSpan(applicablePoint.Snapshot);
+                result = item.TextEdit.Range.ToSnapshotSpan(applicablePoint.Snapshot);
+            } else {
+                // Fallback to extent of word. At least, it will be a zero-length span at the trigger pointzero-
+                // walk left and right until we reach the end of the word
+                var leftExtent = applicablePoint;
+                var rightExtent = applicablePoint;
+                var stopCharacters = this.delimiterCharacters.Union(this.triggerCharacters.Select(c => c.ToString()));
+                if (item != null && item.CommitCharacters?.Length > 0) {
+                    stopCharacters = stopCharacters.Union(item.CommitCharacters);
+                }
+
+                while (leftExtent.Position > 0 && !stopCharacters.Contains(GetStringAt(leftExtent - 1))) {
+                    leftExtent -= 1;
+                }
+
+                while (rightExtent.Position < applicablePoint.Snapshot.Length - 1 && !stopCharacters.Contains(GetStringAt(rightExtent))) {
+                    rightExtent += 1;
+                }
+
+                result = new SnapshotSpan(leftExtent, rightExtent);
             }
 
-            // Fallback to extent of word. At least, it will be a zero-length span at the trigger pointzero-
-            // walk left and right until we reach the end of the word
-            var leftExtent = applicablePoint;
-            var rightExtent = applicablePoint;
-            var stopCharacters = this.delimiterCharacters.Union(this.triggerCharacters.Select(c => c.ToString()));
-            if (item != null && item.CommitCharacters?.Length > 0) {
-                stopCharacters = stopCharacters.Union(item.CommitCharacters);
+            // If the original snapshot is a projection snapshot, map up to it
+            if (owningSnapshot is IProjectionSnapshot projectionSnapshot) {
+                var spans = projectionSnapshot.MapFromSourceSnapshot(result);
+                if (spans != null && spans.Count > 0) {
+                    result = new SnapshotSpan(projectionSnapshot, spans[0]);
+                }
             }
 
-            while (leftExtent.Position > 0 && !stopCharacters.Contains(GetStringAt(leftExtent - 1))) {
-                leftExtent -= 1;
-            }
+            return result;
 
-            while (rightExtent.Position < applicablePoint.Snapshot.Length - 1 && !stopCharacters.Contains(GetStringAt(rightExtent))) {
-                rightExtent += 1;
-            }
-
-            return new SnapshotSpan(leftExtent, rightExtent);
 
             string GetStringAt(SnapshotPoint point) {
                 return point.GetChar().ToString(CultureInfo.InvariantCulture);
@@ -515,7 +533,7 @@ namespace Microsoft.PythonTools.Repl.Completion {
                 automationText: item.Label,
                 attributeIcons: ImmutableArray<ImageElement>.Empty,
                 commitCharacters: new char[0].ToImmutableArray(),
-                applicableToSpan: this.GetApplicableToSpan(triggerLocation, item),
+                applicableToSpan: this.GetApplicableToSpan(this.textView.TextSnapshot, triggerLocation, item),
                 isCommittedAsSnippet: item.InsertTextFormat == LSP.InsertTextFormat.Snippet,
                 isPreselected: item.Preselect);
 
