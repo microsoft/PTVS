@@ -42,7 +42,14 @@ using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.Text.Projection;
 
 namespace Microsoft.PythonTools.Repl.Completion {
-
+    /// <summary>
+    /// This class implements auto complete for the REPL windows
+    /// </summary>
+    /// <remarks>
+    /// Theoretically this wouldn't be necessary if LanguageServer.Client.Implementation supported projection buffers.
+    /// See issue: https://dev.azure.com/devdiv/DevDiv/_workitems/edit/1321167
+    /// Most of the code in this file was copied from the LanguageServer.Client.Implementaton and adapted to work with ILanguageClient
+    /// </remarks>
     internal class AsyncCompletionSource : IAsyncCompletionUniversalSource {
         public const string ResolvePropertyKey = "resolve";
         public const string ProtocolItemKey = "protocolItem";
