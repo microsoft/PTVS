@@ -228,11 +228,15 @@ namespace Microsoft.PythonTools.Repl.Completion {
         }
 
         internal static SnapshotSpan ToSnapshotSpan(this Range range, ITextSnapshot snapshot) {
-            var startLine = snapshot.GetLineFromLineNumber(range.Start.Line);
-            var startPosition = startLine.Start + range.Start.Character;
-            var endLine = snapshot.GetLineFromLineNumber(range.End.Line);
-            var endPosition = endLine.Start + range.End.Character;
-            return new SnapshotSpan(startPosition, endPosition);
+            try {
+                var startLine = snapshot.GetLineFromLineNumber(range.Start.Line);
+                var startPosition = startLine.Start + range.Start.Character;
+                var endLine = snapshot.GetLineFromLineNumber(range.End.Line);
+                var endPosition = endLine.Start + range.End.Character;
+                return new SnapshotSpan(startPosition, endPosition);
+            } catch (ArgumentOutOfRangeException) {
+                return new SnapshotSpan();
+            }
         }
 
         internal static CompletionContext GetContextFromTrigger(VisualStudio.Language.Intellisense.AsyncCompletion.Data.CompletionTrigger trigger, bool hasRegisteredTriggerCharacter) {
@@ -246,31 +250,31 @@ namespace Microsoft.PythonTools.Repl.Completion {
         internal static string GetFilterName(CompletionItemKind? completionKind) {
             return completionKind switch {
                 null => string.Empty,
-                CompletionItemKind.Class => Resources.CompletionFilterClass,
-                CompletionItemKind.Color => Resources.CompletionFilterColor,
-                CompletionItemKind.Constant => Resources.CompletionFilterConstant,
-                CompletionItemKind.Constructor => Resources.CompletionFilterConstructor,
-                CompletionItemKind.Enum => Resources.CompletionFilterEnum,
-                CompletionItemKind.EnumMember => Resources.CompletionFilterEnumMember,
-                CompletionItemKind.Event => Resources.CompletionFilterEvent,
-                CompletionItemKind.Field => Resources.CompletionFilterField,
-                CompletionItemKind.File => Resources.CompletionFilterFile,
-                CompletionItemKind.Folder => Resources.CompletionFilterFolder,
-                CompletionItemKind.Function => Resources.CompletionFilterFunction,
-                CompletionItemKind.Interface => Resources.CompletionFilterInterface,
-                CompletionItemKind.Keyword => Resources.CompletionFilterKeyword,
-                CompletionItemKind.Method => Resources.CompletionFilterMethod,
-                CompletionItemKind.Module => Resources.CompletionFilterModule,
-                CompletionItemKind.Operator => Resources.CompletionFilterOperator,
-                CompletionItemKind.Property => Resources.CompletionFilterProperty,
-                CompletionItemKind.Reference => Resources.CompletionFilterReference,
-                CompletionItemKind.Snippet => Resources.CompletionFilterSnippet,
-                CompletionItemKind.Struct => Resources.CompletionFilterStruct,
-                CompletionItemKind.Text => Resources.CompletionFilterText,
-                CompletionItemKind.TypeParameter => Resources.CompletionFilterTypeParameter,
-                CompletionItemKind.Unit => Resources.CompletionFilterUnit,
-                CompletionItemKind.Value => Resources.CompletionFilterValue,
-                CompletionItemKind.Variable => Resources.CompletionFilterVariable,
+                CompletionItemKind.Class => Strings.CompletionFilterClass,
+                CompletionItemKind.Color => Strings.CompletionFilterColor,
+                CompletionItemKind.Constant => Strings.CompletionFilterConstant,
+                CompletionItemKind.Constructor => Strings.CompletionFilterConstructor,
+                CompletionItemKind.Enum => Strings.CompletionFilterEnum,
+                CompletionItemKind.EnumMember => Strings.CompletionFilterEnumMember,
+                CompletionItemKind.Event => Strings.CompletionFilterEvent,
+                CompletionItemKind.Field => Strings.CompletionFilterField,
+                CompletionItemKind.File => Strings.CompletionFilterFile,
+                CompletionItemKind.Folder => Strings.CompletionFilterFolder,
+                CompletionItemKind.Function => Strings.CompletionFilterFunction,
+                CompletionItemKind.Interface => Strings.CompletionFilterInterface,
+                CompletionItemKind.Keyword => Strings.CompletionFilterKeyword,
+                CompletionItemKind.Method => Strings.CompletionFilterMethod,
+                CompletionItemKind.Module => Strings.CompletionFilterModule,
+                CompletionItemKind.Operator => Strings.CompletionFilterOperator,
+                CompletionItemKind.Property => Strings.CompletionFilterProperty,
+                CompletionItemKind.Reference => Strings.CompletionFilterReference,
+                CompletionItemKind.Snippet => Strings.CompletionFilterSnippet,
+                CompletionItemKind.Struct => Strings.CompletionFilterStruct,
+                CompletionItemKind.Text => Strings.CompletionFilterText,
+                CompletionItemKind.TypeParameter => Strings.CompletionFilterTypeParameter,
+                CompletionItemKind.Unit => Strings.CompletionFilterUnit,
+                CompletionItemKind.Value => Strings.CompletionFilterValue,
+                CompletionItemKind.Variable => Strings.CompletionFilterVariable,
                 _ => Enum.GetName(typeof(CompletionItemKind), completionKind)
             };
         }
