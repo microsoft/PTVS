@@ -9,11 +9,11 @@ namespace Microsoft.PythonTools.Repl.Completion {
     internal static class MarkdownUtil {
         // This regex matches markdown code blocks. It extracts the content into two groups:
         // the language name and the code content.
-        private const string CodeBlockRegex = "^```(.*)[\\S\\s]^([\\S\\s]*?)[\\S\\s]^```";
+        private static readonly Regex CodeBlockRegex = new Regex("^```(.*)[\\S\\s]^([\\S\\s]*?)[\\S\\s]^```", RegexOptions.Compiled | RegexOptions.Multiline);
 
         public static IEnumerable<string> ExtractCodeBlocks(string markdown) {
             var matchList = new List<string>();
-            var matches = Regex.Matches(markdown, CodeBlockRegex, RegexOptions.Multiline);
+            var matches = CodeBlockRegex.Matches(markdown);
 
             if (matches.Count > 0) {
                 foreach (Match match in matches) {

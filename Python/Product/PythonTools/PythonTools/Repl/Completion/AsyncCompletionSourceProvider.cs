@@ -50,7 +50,7 @@ namespace Microsoft.PythonTools.Repl.Completion {
             if (matches.Count > 0) {
                 // Then make sure we have a language client to use.
                 var service = ServiceProvider.GetService(typeof(PythonToolsService)) as PythonToolsService;
-                var languageClient = service.LanguageClient;
+                var languageClient = service?.LanguageClient;
                 if (languageClient != null && !this.sourceMap.TryGetValue(textView, out source)) {
                     source = new AsyncCompletionSource(
                         textView,
