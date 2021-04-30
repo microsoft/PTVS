@@ -34,10 +34,10 @@ namespace Microsoft.PythonTools.LanguageServerClient.FileWatcher {
                 workspaceService.CurrentWorkspace.GetService<IFileWatcherService>().OnFileSystemChanged += OnFileChanged;
                 _root = workspaceService.CurrentWorkspace.Location;
             } else {
-                var dte = (EnvDTE80.DTE2)site.GetService(typeof(EnvDTE.DTE));
-                if (dte != null && dte.Solution != null && dte.Solution.FileName != null) {
+                var path = GetSolutionDirectory(site);
+                if (path != null) {
                     _solutionWatcher = new System.IO.FileSystemWatcher();
-                    _solutionWatcher.Path = Path.GetDirectoryName(dte.Solution.FileName);
+                    _solutionWatcher.Path = path;
                     _solutionWatcher.IncludeSubdirectories = true;
                     _solutionWatcher.NotifyFilter = 
                         NotifyFilters.LastWrite | NotifyFilters.CreationTime | 
@@ -50,6 +50,18 @@ namespace Microsoft.PythonTools.LanguageServerClient.FileWatcher {
                     _root = _solutionWatcher.Path;
                 }
             }
+        }
+
+        private string GetSolutionDirectory(IServiceProvider site) {
+            try {
+                var dte = (EnvDTE80.DTE2)site.GetService(typeof(EnvDTE.DTE));
+                var path = dte?.Solution?.FileName;
+                return Path.GetDirectoryName(path);
+
+            } catch {
+                return null;
+            }
+
         }
 
         public void AddPatterns(VisualStudio.LanguageServer.Protocol.FileSystemWatcher[] patterns) {

@@ -39,6 +39,7 @@
     <DeployExtension>false</DeployExtension>
     <DefineConstants>$(DefineConstants);$(SignedSym);SHAREDPROJECT_OLESERVICEPROVIDER</DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -448,8 +449,13 @@
     <Compile Include="PythonTools\LanguageServerClient\PythonLanguageClientCustomTarget.cs" />
     <Compile Include="PythonTools\Intellisense\PythonMemberTypeExtensions.cs" />
     <Compile Include="PythonTools\Editor\TokenCache.cs" />
+    <Compile Include="PythonTools\Repl\Completion\AsyncCompletionSource.cs" />
+    <Compile Include="PythonTools\Repl\Completion\AsyncCompletionSourceProvider.cs" />
+    <Compile Include="PythonTools\Repl\Completion\CompletionResult.cs" />
     <Compile Include="PythonTools\Repl\Completion\ExpressionFinder.cs" />
     <Compile Include="PythonTools\Repl\Completion\FindExpressionOptions.cs" />
+    <Compile Include="PythonTools\Repl\Completion\MarkdownUtil.cs" />
+    <Compile Include="PythonTools\Repl\Completion\Utilities.cs" />
     <Compile Include="PythonTools\Utility\MessageBox.cs" />
     <Compile Include="PythonTools\Utility\Interpreters.cs" />
     <Compile Include="PythonTools\Utility\Settings.cs" />

@@ -30,12 +30,12 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         private readonly JoinableTaskContext _joinableTaskContext;
         private readonly NodeEnvironmentProvider _nodeEnvironmentProvider;
         private readonly IServiceProvider _site;
-        private readonly Func<StreamData, StreamData> _serverSendHandler;
+        private readonly Func<StreamData, Tuple<StreamData, bool>> _serverSendHandler;
 
         public LanguageServer(
             IServiceProvider site, 
             JoinableTaskContext joinableTaskContext,
-            Func<StreamData, StreamData> serverSendHandler) {
+            Func<StreamData, Tuple<StreamData, bool>> serverSendHandler) {
             _site = site ?? throw new ArgumentNullException(nameof(site));
             _joinableTaskContext = joinableTaskContext ?? throw new ArgumentNullException(nameof(joinableTaskContext));
             _nodeEnvironmentProvider = new NodeEnvironmentProvider(site, joinableTaskContext);
@@ -46,8 +46,6 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         public string CancellationFolderName { get; }
 
         public async Task<Connection> ActivateAsync() {
-            await _joinableTaskContext.Factory.SwitchToMainThreadAsync();
-
             var nodePath = await _nodeEnvironmentProvider.GetNodeExecutablePath();
             if (!File.Exists(nodePath)) {
                 MessageBox.ShowErrorMessage(_site, Strings.LanguageClientNodejsNotFound);
@@ -65,8 +63,6 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             }
 
             var serverFolderPath = Path.GetDirectoryName(serverFilePath);
-
-            await Task.Yield();
 
             var info = new ProcessStartInfo {
                 FileName = nodePath,

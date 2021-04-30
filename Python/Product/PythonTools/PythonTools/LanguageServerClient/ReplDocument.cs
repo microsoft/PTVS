@@ -75,17 +75,17 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             }
         }
 
-        public async Task<LSP.CompletionItem[]> GetCompletions(SnapshotPoint triggerPoint, LSP.CompletionContext context, CancellationToken token) {
+        public async Task<object> GetCompletions(LSP.Position position, LSP.CompletionContext context, CancellationToken token) {
             var completionParams = new LSP.CompletionParams() {
                 TextDocument = new LSP.TextDocumentIdentifier() {
                     Uri = DocumentUri,
                 },
-                Position = GetDocumentPosition(triggerPoint.GetPosition()),
+                Position = GetDocumentPosition(position),
                 Context = context,
             };
 
             var res = await _client.InvokeTextDocumentCompletionAsync(completionParams, token);
-            return res?.Items ?? Array.Empty<LSP.CompletionItem>();
+            return res;
         }
 
         private void OnSubmissionBufferAdded(object sender, SubmissionBufferAddedEventArgs e) {

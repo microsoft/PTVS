@@ -23,10 +23,10 @@ namespace Microsoft.PythonTools.LanguageServerClient.StreamHacking {
     /// </summary>
     class StreamIntercepter : Stream {
         private Stream baseStream;
-        private Func<StreamData, StreamData> writeHandler;
+        private Func<StreamData, Tuple<StreamData, bool>> writeHandler;
         private Action<StreamData> readHandler;
 
-        public StreamIntercepter(Stream stream, Func<StreamData, StreamData> writeHandler, Action<StreamData> readHandler) {
+        public StreamIntercepter(Stream stream, Func<StreamData, Tuple<StreamData, bool>> writeHandler, Action<StreamData> readHandler) {
             this.baseStream = stream;
             this.readHandler = readHandler;
             this.writeHandler = writeHandler;
@@ -52,8 +52,16 @@ namespace Microsoft.PythonTools.LanguageServerClient.StreamHacking {
         public override long Seek(long offset, SeekOrigin origin) => baseStream.Seek(offset, origin);
         public override void SetLength(long value) => baseStream.SetLength(value);
         public override void Write(byte[] buffer, int offset, int count) {
-            var writeHandlerResult = writeHandler.Invoke(new StreamData{ bytes = buffer, offset = offset, count = count });
-            baseStream.Write(writeHandlerResult.bytes, writeHandlerResult.offset, writeHandlerResult.count);
+            if (writeHandler != null) {
+                var writeHandlerResult = writeHandler.Invoke(new StreamData { bytes = buffer, offset = offset, count = count });
+                baseStream.Write(writeHandlerResult.Item1.bytes, writeHandlerResult.Item1.offset, writeHandlerResult.Item1.count);
+                if (!writeHandlerResult.Item2) {
+                    writeHandler = null;
+                }
+            } else {
+                baseStream.Write(buffer, offset, count);
+            }
+
         }
     }
 }

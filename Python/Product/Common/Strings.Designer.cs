@@ -1218,6 +1218,231 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Classes.
+        /// </summary>
+        public static string CompletionFilterClass {
+            get {
+                return ResourceManager.GetString("CompletionFilterClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Colors.
+        /// </summary>
+        public static string CompletionFilterColor {
+            get {
+                return ResourceManager.GetString("CompletionFilterColor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Constants.
+        /// </summary>
+        public static string CompletionFilterConstant {
+            get {
+                return ResourceManager.GetString("CompletionFilterConstant", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Constructors.
+        /// </summary>
+        public static string CompletionFilterConstructor {
+            get {
+                return ResourceManager.GetString("CompletionFilterConstructor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enums.
+        /// </summary>
+        public static string CompletionFilterEnum {
+            get {
+                return ResourceManager.GetString("CompletionFilterEnum", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enum members.
+        /// </summary>
+        public static string CompletionFilterEnumMember {
+            get {
+                return ResourceManager.GetString("CompletionFilterEnumMember", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Events.
+        /// </summary>
+        public static string CompletionFilterEvent {
+            get {
+                return ResourceManager.GetString("CompletionFilterEvent", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Fields.
+        /// </summary>
+        public static string CompletionFilterField {
+            get {
+                return ResourceManager.GetString("CompletionFilterField", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Files.
+        /// </summary>
+        public static string CompletionFilterFile {
+            get {
+                return ResourceManager.GetString("CompletionFilterFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Folders.
+        /// </summary>
+        public static string CompletionFilterFolder {
+            get {
+                return ResourceManager.GetString("CompletionFilterFolder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Functions.
+        /// </summary>
+        public static string CompletionFilterFunction {
+            get {
+                return ResourceManager.GetString("CompletionFilterFunction", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Interfaces.
+        /// </summary>
+        public static string CompletionFilterInterface {
+            get {
+                return ResourceManager.GetString("CompletionFilterInterface", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Keywords.
+        /// </summary>
+        public static string CompletionFilterKeyword {
+            get {
+                return ResourceManager.GetString("CompletionFilterKeyword", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Methods.
+        /// </summary>
+        public static string CompletionFilterMethod {
+            get {
+                return ResourceManager.GetString("CompletionFilterMethod", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Modules.
+        /// </summary>
+        public static string CompletionFilterModule {
+            get {
+                return ResourceManager.GetString("CompletionFilterModule", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Operators.
+        /// </summary>
+        public static string CompletionFilterOperator {
+            get {
+                return ResourceManager.GetString("CompletionFilterOperator", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Properties.
+        /// </summary>
+        public static string CompletionFilterProperty {
+            get {
+                return ResourceManager.GetString("CompletionFilterProperty", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to References.
+        /// </summary>
+        public static string CompletionFilterReference {
+            get {
+                return ResourceManager.GetString("CompletionFilterReference", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Snippets.
+        /// </summary>
+        public static string CompletionFilterSnippet {
+            get {
+                return ResourceManager.GetString("CompletionFilterSnippet", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Structs.
+        /// </summary>
+        public static string CompletionFilterStruct {
+            get {
+                return ResourceManager.GetString("CompletionFilterStruct", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Names.
+        /// </summary>
+        public static string CompletionFilterText {
+            get {
+                return ResourceManager.GetString("CompletionFilterText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Type parameters.
+        /// </summary>
+        public static string CompletionFilterTypeParameter {
+            get {
+                return ResourceManager.GetString("CompletionFilterTypeParameter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Units.
+        /// </summary>
+        public static string CompletionFilterUnit {
+            get {
+                return ResourceManager.GetString("CompletionFilterUnit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Values.
+        /// </summary>
+        public static string CompletionFilterValue {
+            get {
+                return ResourceManager.GetString("CompletionFilterValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Variables.
+        /// </summary>
+        public static string CompletionFilterVariable {
+            get {
+                return ResourceManager.GetString("CompletionFilterVariable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to ----- Failed to create &apos;{0}&apos; -----
         ///
         ///.
