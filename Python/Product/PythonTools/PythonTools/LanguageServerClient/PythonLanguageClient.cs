@@ -246,10 +246,10 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
 
         public Task InvokeTextDocumentDidOpenAsync(LSP.DidOpenTextDocumentParams request)
-            => _rpc == null ? Task.CompletedTask : _rpc.NotifyWithParameterObjectAsync("textDocument/didOpen", request);
+            => NotifyWithParametersAsync("textDocument/didOpen", request);
 
         public Task InvokeTextDocumentDidChangeAsync(LSP.DidChangeTextDocumentParams request)
-            => _rpc == null ? Task.CompletedTask : _rpc.NotifyWithParameterObjectAsync("textDocument/didChange", request);
+            => NotifyWithParametersAsync("textDocument/didChange", request);
 
         public Task InvokeDidChangeConfigurationAsync(LSP.DidChangeConfigurationParams request)
             => _rpc == null ? Task.CompletedTask : _rpc.NotifyWithParameterObjectAsync("workspace/didChangeConfiguration", request);
@@ -265,25 +265,38 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
 
         public Task<object> InvokeTextDocumentCompletionAsync(LSP.CompletionParams request, CancellationToken cancellationToken = default)
-            => _rpc == null ? Task.FromResult<object>(null) : _rpc.InvokeWithParameterObjectAsync<object>("textDocument/completion", request, cancellationToken);
-
-        public Task<TResult> InvokeWithParameterObjectAsync<TResult>(string targetName, object argument = null, CancellationToken cancellationToken = default)
-            => _rpc == null ? Task.FromResult(default(TResult)) : _rpc.InvokeWithParameterObjectAsync<TResult>(targetName, argument, cancellationToken);
+            => InvokeWithParametersAsync<object>("textDocument/completion", request, cancellationToken);
 
         public Task<object> InvokeTextDocumentSymbolsAsync(LSP.DocumentSymbolParams request, CancellationToken cancellationToken)
-                    => _rpc == null ? Task.FromResult(default(object)) : _rpc.InvokeWithParameterObjectAsync<object>("textDocument/documentSymbol", request, cancellationToken);
+            => InvokeWithParametersAsync<object>("textDocument/documentSymbol", request, cancellationToken);
 
         public Task<object> InvokeTextDocumentDefinitionAsync(LSP.TextDocumentPositionParams request, CancellationToken cancellationToken)
-                    => _rpc == null ? Task.FromResult(default(object)) : _rpc.InvokeWithParameterObjectAsync<object>("textDocument/definition", request, cancellationToken);
+            => InvokeWithParametersAsync<object>("textDocument/definition", request, cancellationToken);
 
         public Task<LSP.Location[]> InvokeReferencesAsync(LSP.ReferenceParams request, CancellationToken cancellationToken)
-            => _rpc == null ? Task.FromResult<LSP.Location[]>(null) : _rpc.InvokeWithParameterObjectAsync<LSP.Location[]>("textDocument/references", request, cancellationToken);
+            => InvokeWithParametersAsync<LSP.Location[]>("textDocument/references", request, cancellationToken);
 
         public Task<LSP.CompletionItem> InvokeResolveAsync(LSP.CompletionItem request, CancellationToken cancellationToken)
-            => _rpc == null ? Task.FromResult<LSP.CompletionItem>(null) : _rpc.InvokeWithParameterObjectAsync<LSP.CompletionItem>("completionItem/resolve", request, cancellationToken);
+            => InvokeWithParametersAsync<LSP.CompletionItem>("completionItem/resolve", request, cancellationToken);
         
         public Task<object> InvokeCommandAsync(LSP.ExecuteCommandParams request, CancellationToken cancellationToken)
-            => _rpc == null ? Task.FromResult<object>(null) : _rpc.InvokeWithParameterObjectAsync<object>("workspace/executeCommand", request, cancellationToken);
+            => InvokeWithParametersAsync<object>("workspace/executeCommand", request, cancellationToken);
+
+
+        private async Task<R> InvokeWithParametersAsync<R>(string request, object parameters, CancellationToken t) where R: class {
+            await _readyTcs.Task.ConfigureAwait(false);
+            if (_rpc != null) {
+                return await _rpc.InvokeWithParameterObjectAsync<R>(request, parameters, t);
+            }
+            return null;
+        }
+
+        private async Task NotifyWithParametersAsync(string request, object parameters) {
+            await _readyTcs.Task.ConfigureAwait(false);
+            if (_rpc != null) {
+                await _rpc.NotifyWithParameterObjectAsync(request, parameters);
+            }
+        }
 
         private void OnSettingsChanged(object sender, EventArgs e) => SendDidChangeConfigurations().DoNotWait();
 

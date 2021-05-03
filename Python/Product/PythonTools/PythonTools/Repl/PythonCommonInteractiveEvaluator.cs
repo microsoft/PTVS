@@ -317,7 +317,10 @@ namespace Microsoft.PythonTools.Repl {
         public abstract void AbortExecution();
 
         public Task<object> GetAnalysisCompletions(LSP.Position position, LSP.CompletionContext context, CancellationToken token) {
-            return Document.GetCompletions(position, context, token);
+            if (Document != null) {
+                return Document.GetCompletions(position, context, token);
+            }
+            return Task.FromResult<object>(null);
         }
 
         public bool CanExecuteCode(string text) {

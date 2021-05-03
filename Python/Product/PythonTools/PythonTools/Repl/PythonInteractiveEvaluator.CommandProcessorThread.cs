@@ -255,7 +255,7 @@ namespace Microsoft.PythonTools.Repl {
                 }
 
                 var pco = Interlocked.Exchange(ref _preConnectionOutput, null);
-                if (pco != null) {
+                if (pco != null && !_eval.IsDisconnected) {
                     lock (pco) {
                         try {
                             _eval.WriteError(pco.ToString(), addNewline: false);
