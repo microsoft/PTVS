@@ -154,7 +154,7 @@ namespace Microsoft.PythonTools.Repl {
                 await PythonLanguageClient.ReadyTask;
                 var client = _serviceProvider.GetPythonToolsService().LanguageClient;
                 if (client != null) {
-                    client.AddClientContext(new PythonLanguageClientContextRepl(evaluator), true);
+                    client.AddClientContext(new PythonLanguageClientContextRepl(evaluator)); // Don't fire a settings change. This can crash node for some reason
                     Document = new ReplDocument(_serviceProvider, _window, client);
                     await Document.InitializeAsync();
                 }
