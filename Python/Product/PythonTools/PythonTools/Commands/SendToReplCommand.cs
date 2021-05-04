@@ -150,27 +150,29 @@ namespace Microsoft.PythonTools.Commands {
             e.TextView.Caret.PositionChanged -= Caret_PositionChanged;
         }
 
+        public override int? EditFilterQueryStatus(ref VisualStudio.OLE.Interop.OLECMD cmd, IntPtr pCmdText) {
+            var activeView = CommonPackage.GetActiveTextView(_serviceProvider);
+
+            InterpreterConfiguration config;
+            if ((config = activeView?.GetInterpreterConfigurationAtCaret(_serviceProvider)) != null) {
+                if (activeView.Selection.Mode == TextSelectionMode.Box ||
+                    config?.IsRunnable() != true) {
+                    cmd.cmdf = (uint)(OLECMDF.OLECMDF_SUPPORTED);
+                } else {
+                    cmd.cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
+                }
+            } else {
+                cmd.cmdf = (uint)(OLECMDF.OLECMDF_INVISIBLE);
+            }
+
+            return VSConstants.S_OK;
+        }
+
         public override EventHandler BeforeQueryStatus {
             get {
                 return (sender, args) => {
-                    var cmd = (OleMenuCommand)sender;
-                    cmd.Visible = true;
-                    cmd.Supported = true;
-
-                    var activeView = CommonPackage.GetActiveTextView(_serviceProvider);
-
-                    InterpreterConfiguration config;
-                    if ((config = activeView?.GetInterpreterConfigurationAtCaret(_serviceProvider)) != null) {
-                        if (activeView.Selection.Mode == TextSelectionMode.Box ||
-                            config?.IsRunnable() != true) {
-                            cmd.Enabled = false;
-                        } else {
-                            cmd.Enabled = true;
-                        }
-                    } else {
-                        cmd.Visible = false;
-                        cmd.Supported = false;
-                    }
+                    ((OleMenuCommand)sender).Visible = false;
+                    ((OleMenuCommand)sender).Supported = false;
                 };
             }
         }
