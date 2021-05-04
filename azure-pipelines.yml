@@ -144,6 +144,15 @@ steps:
     platform: $(Platform)
     configuration: $(BuildConfiguration)
 
+# Build the tests
+- task: MSBuild@1
+  displayName: 'Build product'
+  inputs:
+    solution: Python/Tests/dirs.proj
+    msbuildVersion: $(MsBuildVersion)
+    platform: $(Platform)
+    configuration: $(BuildConfiguration)
+
 # Build the installer
 - task: MSBuild@1
   displayName: 'Build installer'
