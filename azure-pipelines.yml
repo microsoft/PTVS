@@ -241,6 +241,7 @@ steps:
 # Compress staging output
 - task: ArchiveFiles@2
   displayName: 'Compress staging dir'
+  condition: notin(variables['Build.Reason'], 'PullRequest')
   inputs:
     rootFolderOrFile: '$(Build.ArtifactStagingDirectory)'
     includeRootFolder: false
@@ -267,6 +268,7 @@ steps:
 
 # Publish build artifact: staging output
 - task: PublishBuildArtifacts@1
+  condition: notin(variables['Build.Reason'], 'PullRequest')
   displayName: 'Upload staging zip to build artifacts'
   inputs:
     PathtoPublish: '$(Build.ArtifactStagingDirectory)/PTVSBuildArchive.zip'
