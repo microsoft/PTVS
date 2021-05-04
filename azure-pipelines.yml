@@ -146,7 +146,7 @@ steps:
 
 # Build the tests
 - task: MSBuild@1
-  displayName: 'Build product'
+  displayName: 'Build tests'
   inputs:
     solution: Python/Tests/dirs.proj
     msbuildVersion: $(MsBuildVersion)
