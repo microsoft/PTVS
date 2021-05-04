@@ -241,6 +241,16 @@ steps:
       archiveFile: '$(Build.ArtifactStagingDirectory)/PTVSBuildArchive.zip'
       replaceExistingArchive: true
 
+  # Compress just the test data
+  - task: ArchiveFiles@2
+    displayName: 'Compress staging dir'
+    inputs:
+      rootFolderOrFile: '$(Build.ArtifactStagingDirectory)/src/Python/Tests/TestData'
+      includeRootFolder: false
+      archiveType: 'zip'
+      archiveFile: '$(Build.ArtifactStagingDirectory)/TestData.zip'
+      replaceExistingArchive: true
+
   # Publish build artifact: binaries
   - task: PublishBuildArtifacts@1
     displayName: 'Upload binaries to build artifacts'
@@ -254,3 +264,10 @@ steps:
     inputs:
       PathtoPublish: '$(Build.ArtifactStagingDirectory)/PTVSBuildArchive.zip'
       ArtifactName: 'PTVS Staging Output'
+
+  # Publish test data archive (so we don't have to pull down everything to run tests)
+  - task: PublishBuildArtifacts@1
+    displayName: 'Upload test data zip to build artifacts'
+    inputs:
+      PathtoPublish: '$(Build.ArtifactStagingDirectory)/TestData.zip'
+      ArtifactName: 'TestData'
