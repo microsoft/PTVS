@@ -286,7 +286,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         private async Task<R> InvokeWithParametersAsync<R>(string request, object parameters, CancellationToken t) where R: class {
             await _readyTcs.Task.ConfigureAwait(false);
             if (_rpc != null) {
-                return await _rpc.InvokeWithParameterObjectAsync<R>(request, parameters, t);
+                return await _rpc.InvokeWithParameterObjectAsync<R>(request, parameters, t).ConfigureAwait(false);
             }
             return null;
         }
@@ -294,7 +294,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         private async Task NotifyWithParametersAsync(string request, object parameters) {
             await _readyTcs.Task.ConfigureAwait(false);
             if (_rpc != null) {
-                await _rpc.NotifyWithParameterObjectAsync(request, parameters);
+                await _rpc.NotifyWithParameterObjectAsync(request, parameters).ConfigureAwait(false);
             }
         }
 
