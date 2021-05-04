@@ -154,24 +154,24 @@ steps:
 
   # copy some files around to prepare for publishing build artifacts
   - task: CopyFiles@2
-    displayName: 'Copy source to staging/src'
+    displayName: 'Copy source to staging/BuildArchive/src'
     inputs:
       SourceFolder: '$(Build.SourcesDirectory)'
-      TargetFolder: '$(Build.ArtifactStagingDirectory)/src'
+      TargetFolder: '$(Build.ArtifactStagingDirectory)/BuildArchive/src'
       CleanTargetFolder: true
 
   - task: CopyFiles@2
     displayName: 'Copy layout to staging'
     inputs:
       SourceFolder: '$(Build.BinariesDirectory)/layout'
-      TargetFolder: '$(Build.ArtifactStagingDirectory)/layout'
+      TargetFolder: '$(Build.ArtifactStagingDirectory)/BuildArchive/layout'
       CleanTargetFolder: true
 
   - task: CopyFiles@2
     displayName: 'Copy binaries to staging'
     inputs:
       SourceFolder: '$(Build.BinariesDirectory)/raw/binaries'
-      TargetFolder: '$(Build.ArtifactStagingDirectory)/binaries'
+      TargetFolder: '$(Build.ArtifactStagingDirectory)/BuildArchive/binaries'
       CleanTargetFolder: true
 
   - task: CopyFiles@2
@@ -194,13 +194,19 @@ steps:
         PyDebugAttach*.dll
         VsPyProf*.pdb
         VsPyProf*.dll
-      TargetFolder: '$(Build.ArtifactStagingDirectory)/symbols_and_binaries'
+      TargetFolder: '$(Build.ArtifactStagingDirectory)/BuildArchive/symbols_and_binaries'
+
+  - task: CopyFiles@2
+    displayName: 'TestData for Unit tests'
+    inputs:
+      SourceFolder: '$(Build.SourcesDirectory)/src/Python/Tests/TestData'
+      TargetFolder: '$(Build.ArtifactStagingDirectory)/TestData'
 
   # Index sources and publish symbols
   - task: PublishSymbols@2
     displayName: 'Publish symbols'
     inputs:
-      symbolsFolder: '$(Build.ArtifactStagingDirectory)/symbols_and_binaries'
+      symbolsFolder: '$(Build.ArtifactStagingDirectory)/BuildArchive/symbols_and_binaries'
       searchPattern: '*.pdb'
       symbolServerType: TeamServices
 
@@ -211,12 +217,20 @@ steps:
 
   # Compress staging output
   - task: ArchiveFiles@2
-    displayName: 'Compress staging dir'
+    displayName: 'Compress build archive dir'
     inputs:
-      rootFolderOrFile: '$(Build.ArtifactStagingDirectory)'
+      rootFolderOrFile: '$(Build.ArtifactStagingDirectory)/BuildArchive'
       includeRootFolder: false
       archiveType: 'zip'
       archiveFile: '$(Build.ArtifactStagingDirectory)/PTVSBuildArchive.zip'
+      replaceExistingArchive: true
+  - task: ArchiveFiles@2
+    displayName: 'Compress test data dir'
+    inputs:
+      rootFolderOrFile: '$(Build.ArtifactStagingDirectory)/TestData'
+      includeRootFolder: false
+      archiveType: 'zip'
+      archiveFile: '$(Build.ArtifactStagingDirectory)/TestData.zip'
       replaceExistingArchive: true
 
   # Publish build artifact: binaries
@@ -232,3 +246,9 @@ steps:
     inputs:
       PathtoPublish: '$(Build.ArtifactStagingDirectory)/PTVSBuildArchive.zip'
       ArtifactName: 'PTVS Staging Output'
+
+  - task: PublishBuildArtifacts@1
+    displayName: 'Upload testdata zip to build artifacts'
+    inputs:
+      PathtoPublish: '$(Build.ArtifactStagingDirectory)/TestData.zip'
+      ArtifactName: 'TestData'
