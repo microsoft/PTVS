@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <RunConfiguration>
+    <MaxCpuCount>1</MaxCpuCount>
+    <ResultsDirectory>.\TestResults</ResultsDirectory>
+    <TargetPlatform>x86</TargetPlatform>
+    <TargetFrameworkVersion>Framework45</TargetFrameworkVersion>
+    
+  </RunConfiguration>
+
+  <!-- Configurations for data collectors -->
+  <DataCollectionRunSettings>
+    <DataCollectors>
+      
+    </DataCollectors>
+  </DataCollectionRunSettings>
+
+  <MSTest>
+    <MapInconclusiveToFailed>False</MapInconclusiveToFailed>
+    <CaptureTraceOutput>True</CaptureTraceOutput>
+    <DeleteDeploymentDirectoryAfterTestRunIsComplete>True</DeleteDeploymentDirectoryAfterTestRunIsComplete>
+    <DeploymentEnabled>False</DeploymentEnabled>
+    <TestTimeout>300000</TestTimeout>
+  </MSTest>
+
+</RunSettings>

@@ -252,7 +252,7 @@ steps:
 
 # Compress just the test data
 - task: ArchiveFiles@2
-  displayName: 'Compress staging dir'
+  displayName: 'Compress test data dir'
   inputs:
     rootFolderOrFile: '$(Build.ArtifactStagingDirectory)/src/Python/Tests/TestData'
     includeRootFolder: false
