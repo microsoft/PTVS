@@ -21,7 +21,7 @@
     <CaptureTraceOutput>True</CaptureTraceOutput>
     <DeleteDeploymentDirectoryAfterTestRunIsComplete>True</DeleteDeploymentDirectoryAfterTestRunIsComplete>
     <DeploymentEnabled>False</DeploymentEnabled>
-    <TestTimeout>300000</TestTimeout>
+    <TestTimeout>60000</TestTimeout>
   </MSTest>
 
 </RunSettings>
