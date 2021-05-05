@@ -1,6 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <RunSettings>
   <RunConfiguration>
+    <!-- Not running in parallel -->
     <MaxCpuCount>1</MaxCpuCount>
     <ResultsDirectory>.\TestResults</ResultsDirectory>
     <TargetPlatform>x86</TargetPlatform>
