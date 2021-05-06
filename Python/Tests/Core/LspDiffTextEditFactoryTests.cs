@@ -156,7 +156,7 @@ four_hundred=4* 100
                 new TextEdit[] {
                     new TextEdit() {
                         Range = new Range() { Start = new Position(0, 0), End = new Position(1, 6) },
-                        NewText = "list = [1, 2, 3]",
+                        NewText = "\r\nlist = [1, 2, 3]",
                     },
                 }
             );

@@ -314,6 +314,10 @@ namespace PythonToolsTests {
                 pv.Version != PythonLanguageVersion.V33
             );
 
+            if (python == null) {
+                Assert.Inconclusive("No python with virtualenv");
+            }
+
             ImportWizardVirtualEnvWorker(python, "virtualenv", "lib\\orig-prefix.txt", false);
         }
 

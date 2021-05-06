@@ -79,18 +79,6 @@ namespace Microsoft.PythonTools {
                 token.ClassificationType.IsOfType(PredefinedClassificationTypeNames.String);
         }
 
-        /// <summary>
-        /// REplacement for Succeeded as this brings in an assembly not found during testing
-        /// </summary>
-        /// <param name="hr"></param>
-        internal static bool Succeeded(int hr) {
-            return hr > 0;
-        }
-        internal static void ThrowOnFailure(int hr) {
-            if (!Succeeded(hr)) {
-                throw new InvalidOperationException($"HR Failed: 0x{hr:X8}");
-            }
-        }
 
         /// <summary>
         /// Returns the span to use for the provided intellisense session.
@@ -208,13 +196,13 @@ namespace Microsoft.PythonTools {
         public static IEnumerable<IVsProject> EnumerateLoadedProjects(this IVsSolution solution) {
             var guid = new Guid(PythonConstants.ProjectFactoryGuid);
             IEnumHierarchies hierarchies;
-            ThrowOnFailure((solution.GetProjectEnum(
+            CommonUtils.ThrowOnFailure((solution.GetProjectEnum(
                 (uint)(__VSENUMPROJFLAGS.EPF_MATCHTYPE | __VSENUMPROJFLAGS.EPF_LOADEDINSOLUTION),
                 ref guid,
                 out hierarchies)));
             IVsHierarchy[] hierarchy = new IVsHierarchy[1];
             uint fetched;
-            while (Succeeded(hierarchies.Next(1, hierarchy, out fetched)) && fetched == 1) {
+            while (CommonUtils.Succeeded(hierarchies.Next(1, hierarchy, out fetched)) && fetched == 1) {
                 var project = hierarchy[0] as IVsProject;
                 if (project != null) {
                     yield return project;
@@ -247,7 +235,7 @@ namespace Microsoft.PythonTools {
 
         internal static string GetNameProperty(this IVsHierarchy project) {
             object value;
-            ThrowOnFailure(project.GetProperty(
+            CommonUtils.ThrowOnFailure(project.GetProperty(
                 (uint)VSConstants.VSITEMID.Root,
                 (int)__VSHPROPID.VSHPROPID_Name,
                 out value
@@ -257,7 +245,7 @@ namespace Microsoft.PythonTools {
 
         internal static Guid GetProjectIDGuidProperty(this IVsHierarchy project) {
             Guid guid;
-            ThrowOnFailure(project.GetGuidProperty(
+            CommonUtils.ThrowOnFailure(project.GetGuidProperty(
                 (uint)VSConstants.VSITEMID.Root,
                 (int)__VSHPROPID.VSHPROPID_ProjectIDGuid,
                 out guid
@@ -387,7 +375,7 @@ namespace Microsoft.PythonTools {
             }
 
             object projectObj;
-            ThrowOnFailure(hierarchy.GetProperty(itemid, (int)__VSHPROPID.VSHPROPID_ExtObject, out projectObj));
+            CommonUtils.ThrowOnFailure(hierarchy.GetProperty(itemid, (int)__VSHPROPID.VSHPROPID_ExtObject, out projectObj));
             return (projectObj as EnvDTE.Project)?.GetPythonProject();
         }
 
@@ -527,14 +515,14 @@ namespace Microsoft.PythonTools {
 
                 var pkgGuid = CommonGuidList.guidPythonToolsPackage;
                 IVsPackage pkg;
-                if (!Succeeded(shell.IsPackageLoaded(ref pkgGuid, out pkg)) && pkg != null) {
+                if (!CommonUtils.Succeeded(shell.IsPackageLoaded(ref pkgGuid, out pkg)) && pkg != null) {
                     Debug.Fail("Python Tools Package was loaded but could not get service");
                     return null;
                 }
                 var hr = shell.LoadPackage(ref pkgGuid, out pkg);
-                if (!Succeeded(hr)) {
+                if (!CommonUtils.Succeeded(hr)) {
                     Debug.Fail("Failed to load Python Tools Package: 0x{0:X08}".FormatUI(hr));
-                    ThrowOnFailure(hr);
+                    CommonUtils.ThrowOnFailure(hr);
                 }
 
                 pyService = (PythonToolsService)serviceProvider.GetService(typeof(PythonToolsService));
@@ -576,7 +564,7 @@ namespace Microsoft.PythonTools {
             }
 
             if (owner == IntPtr.Zero) {
-                ThrowOnFailure(uiShell.GetDialogOwnerHwnd(out owner));
+                CommonUtils.ThrowOnFailure(uiShell.GetDialogOwnerHwnd(out owner));
             }
 
             VSSAVEFILENAMEW[] saveInfo = new VSSAVEFILENAMEW[1];
@@ -594,7 +582,7 @@ namespace Microsoft.PythonTools {
                 if (hr == VSConstants.OLE_E_PROMPTSAVECANCELLED) {
                     return null;
                 }
-                ThrowOnFailure(hr);
+                CommonUtils.ThrowOnFailure(hr);
                 return Marshal.PtrToStringAuto(saveInfo[0].pwzFileName);
             } finally {
                 if (pFileName != IntPtr.Zero) {
@@ -630,7 +618,7 @@ namespace Microsoft.PythonTools {
             }
 
             if (owner == IntPtr.Zero) {
-                ThrowOnFailure(uiShell.GetDialogOwnerHwnd(out owner));
+                CommonUtils.ThrowOnFailure(uiShell.GetDialogOwnerHwnd(out owner));
             }
 
             VSOPENFILENAMEW[] openInfo = new VSOPENFILENAMEW[1];
@@ -648,7 +636,7 @@ namespace Microsoft.PythonTools {
                 if (hr == VSConstants.OLE_E_PROMPTSAVECANCELLED) {
                     return null;
                 }
-                ThrowOnFailure(hr);
+                CommonUtils.ThrowOnFailure(hr);
                 return Marshal.PtrToStringAuto(openInfo[0].pwzFileName);
             } finally {
                 if (pFileName != IntPtr.Zero) {
@@ -700,16 +688,16 @@ namespace Microsoft.PythonTools {
             public ShellInitializedNotification(IVsShell shell) {
                 _shell = shell;
                 _tcs = new TaskCompletionSource<object>();
-                ThrowOnFailure(_shell.AdviseShellPropertyChanges(this, out _cookie));
+                CommonUtils.ThrowOnFailure(_shell.AdviseShellPropertyChanges(this, out _cookie));
 
                 // Check again in case we raised with initialization
                 object value;
-                if (Succeeded(_shell.GetProperty((int)__VSSPROPID4.VSSPROPID_ShellInitialized, out value)) &&
+                if (CommonUtils.Succeeded(_shell.GetProperty((int)__VSSPROPID4.VSSPROPID_ShellInitialized, out value)) &&
                     CheckProperty((int)__VSSPROPID4.VSSPROPID_ShellInitialized, value)) {
                     return;
                 }
 
-                if (Succeeded(_shell.GetProperty((int)__VSSPROPID6.VSSPROPID_ShutdownStarted, out value)) &&
+                if (CommonUtils.Succeeded(_shell.GetProperty((int)__VSSPROPID6.VSSPROPID_ShutdownStarted, out value)) &&
                     CheckProperty((int)__VSSPROPID6.VSSPROPID_ShutdownStarted, value)) {
                     return;
                 }
@@ -832,7 +820,7 @@ namespace Microsoft.PythonTools {
             }
 
             if (owner == IntPtr.Zero) {
-                ThrowOnFailure(uiShell.GetDialogOwnerHwnd(out owner));
+                CommonUtils.ThrowOnFailure(uiShell.GetDialogOwnerHwnd(out owner));
             }
 
             VSBROWSEINFOW[] browseInfo = new VSBROWSEINFOW[1];
@@ -847,7 +835,7 @@ namespace Microsoft.PythonTools {
                 if (hr == VSConstants.OLE_E_PROMPTSAVECANCELLED) {
                     return null;
                 }
-                ThrowOnFailure(hr);
+                CommonUtils.ThrowOnFailure(hr);
                 return Marshal.PtrToStringAuto(browseInfo[0].pwzDirName);
             } finally {
                 if (pDirName != IntPtr.Zero) {
