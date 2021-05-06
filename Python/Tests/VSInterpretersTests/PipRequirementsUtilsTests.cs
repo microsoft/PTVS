@@ -153,24 +153,18 @@ namespace VSInterpretersTests {
 
         [TestMethod, Priority(UnitTestPriority.P0)]
         public async Task DetectReqPkgMissingPython3Async() {
-            PythonVersion pythonInterpreter =   PythonPaths.Python37_x64 ??
-                                                PythonPaths.Python37 ??
-                                                PythonPaths.Python36_x64 ??
-                                                PythonPaths.Python36 ??
-                                                PythonPaths.Python35_x64 ??
-                                                PythonPaths.Python35;
+            PythonVersion pythonInterpreter = PythonPaths.LatestVersion;
             pythonInterpreter.AssertInstalled("Unable to run test because python 3.5, 3.6, or 3.7 must be installed");
 
             await DetectReqPkgMissingAsync(pythonInterpreter);
         }
 
         private async Task DetectReqPkgMissingAsync(PythonVersion pythonInterpreter) {
-            string virtualEnvPath = TestData.GetTempPath();
-            string interpreterExePath = Path.Combine(virtualEnvPath, "Scripts", "python.exe");
-            string reqTextPath = Path.Combine(virtualEnvPath, "requirements.txt");
             var installPackages = new[] { "cookies >= 2.0", "Bottle==0.8.2" };
 
-            pythonInterpreter.CreateVirtualEnv(virtualEnvPath, installPackages);
+            var virtualEnvPath = pythonInterpreter.CreateVirtualEnv(VirtualEnvName.First, installPackages);
+            string interpreterExePath = Path.Combine(virtualEnvPath, "Scripts", "python.exe");
+            string reqTextPath = Path.Combine(virtualEnvPath, "requirements.txt");
 
             // Test cases for packages not missing
             bool isPackageMissing = await PipRequirementsUtils.DetectMissingPackagesAsync(interpreterExePath, reqTextPath);

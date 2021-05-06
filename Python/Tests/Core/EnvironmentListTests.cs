@@ -784,12 +784,7 @@ namespace PythonToolsUITests {
 
         [TestMethod, Priority(UnitTestPriority.P0)]
         public void FilterInterpreterPython3() {
-            PythonVersion pythonInterpreter =   PythonPaths.Python37_x64 ??
-                                                PythonPaths.Python37 ??
-                                                PythonPaths.Python36_x64 ??
-                                                PythonPaths.Python36 ??
-                                                PythonPaths.Python35_x64 ??
-                                                PythonPaths.Python35;
+            PythonVersion pythonInterpreter = PythonPaths.LatestVersion;
 
             pythonInterpreter.AssertInstalled("Unable to run test because python 3.5, 3.6 or 3.7 must be installed");
             FilterPythonInterpreterEnv(pythonInterpreter);
@@ -856,13 +851,7 @@ namespace PythonToolsUITests {
                 return null;
             }
 
-            string env = TestData.GetTempPath();
-            if (env.Length > 140) {
-                env = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
-                DeleteFolder.Add(env);
-            }
-
-            pythonVersion.CreateVirtualEnv(env);
+            var env = pythonVersion.CreateVirtualEnv(VirtualEnvName.First);
             var interpreterConfiguration = new VisualStudioInterpreterConfiguration(
                     "Mock;" + Guid.NewGuid().ToString(),
                     Path.GetFileName(PathUtils.TrimEndSeparator(env)),
@@ -895,7 +884,7 @@ namespace PythonToolsUITests {
         }
 
         private MockInterpreterOptionsService MakeEmptyVEnv() {
-            var python = PythonPaths.Python37_x64 ?? PythonPaths.Python37 ?? PythonPaths.Python36_x64 ?? PythonPaths.Python36;
+            var python = PythonPaths.LatestVersion;
             if (python == null) {
                 Assert.Inconclusive("Required base Python environment not found.");
             }

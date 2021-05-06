@@ -55,7 +55,6 @@ namespace TestAdapterTests {
 
             switch (testFramework) {
                 case "Pytest": {
-                        var envDir = TestData.GetTempPath();
                         var packages = new List<string>();
                         if (installFramework) {
                             packages.Add("pytest");
@@ -63,7 +62,7 @@ namespace TestAdapterTests {
                         if (installCoverage) {
                             packages.Add("coverage");
                         }
-                        pythonVersion.CreateVirtualEnv(envDir, packages);
+                        var envDir = pythonVersion.CreateVirtualEnv(VirtualEnvName.First, packages);
                         env.InterpreterPath = Path.Combine(envDir, "scripts", "python.exe");
                     }
                     break;
@@ -76,8 +75,8 @@ namespace TestAdapterTests {
                         if (installCoverage) {
                             packages.Add("coverage");
                         }
-                        pythonVersion.CreateVirtualEnv(envDir, packages);
-                        env.InterpreterPath = Path.Combine(envDir, "scripts", "python.exe");
+                        var envDir2 = pythonVersion.CreateVirtualEnv(VirtualEnvName.First, packages);
+                        env.InterpreterPath = Path.Combine(envDir2, "scripts", "python.exe");
                     } else {
                         env.InterpreterPath = pythonVersion.InterpreterPath;
                     }

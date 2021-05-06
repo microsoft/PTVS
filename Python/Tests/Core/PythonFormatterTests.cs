@@ -85,10 +85,10 @@ b =100 *2
             var actual = await formatter.FormatDocumentAsync(interpreterExePath, filePath, contents, null, new string[0]);
             var expected = new TextEdit[] {
                 new TextEdit() {
-                    NewText = "a = [0, 2, 3]\r\nb = 100 * 2\r\n",
+                    NewText = "\r\na = [0, 2, 3]\r\nb = 100 * 2",
                     Range = new Range() {
                         Start = new Position(0, 0),
-                        End = new Position(2, 0),
+                        End = new Position(1, 9),
                     }
                 }
             };
@@ -122,11 +122,10 @@ b =100 *2
         }
 
         private static string CreateVirtualEnv(IPythonFormatter formatter) {
-            var python = PythonPaths.Python37_x64 ?? PythonPaths.Python37;
+            var python = PythonPaths.LatestVersion;
             python.AssertInstalled();
 
-            var envPath = TestData.GetTempPath();
-            python.CreateVirtualEnv(envPath, new[] { formatter.Package });
+            var envPath = python.CreateVirtualEnv(VirtualEnvName.First, new[] { formatter.Package });
 
             return Path.Combine(envPath, "scripts", "python.exe");
         }
