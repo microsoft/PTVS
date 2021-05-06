@@ -176,8 +176,9 @@ namespace PythonToolsUITests {
             var sln = app.CopyProjectForTest(@"TestData\InfoBar\InfoBarMissingPackages\InfoBarMissingPackages.sln");
 
             basePython.CreateVirtualEnv(
-                Path.Combine(Path.GetDirectoryName(sln), "env"), 
-                new[] { "bottle" }
+                VirtualEnvName.First,
+                new[] { "bottle" },
+                Path.Combine(Path.GetDirectoryName(sln), "env")
             );
 
             using (new PythonOptionsSetter(app.Dte, promptForPackageInstallation: true)) {
@@ -196,8 +197,9 @@ namespace PythonToolsUITests {
             var sln = app.CopyProjectForTest(@"TestData\InfoBar\InfoBarMissingPackages\InfoBarMissingPackages.sln");
 
             basePython.CreateVirtualEnv(
-                Path.Combine(Path.GetDirectoryName(sln), "env"), 
-                new[] { "bottle", "cookies" }
+                VirtualEnvName.First,
+                new[] { "bottle", "cookies" },
+                Path.Combine(Path.GetDirectoryName(sln), "env")
             );
 
             using (new PythonOptionsSetter(app.Dte, promptForPackageInstallation: true)) {
@@ -340,7 +342,7 @@ namespace PythonToolsUITests {
             }
 
             if (virtualEnvBase != null) {
-                virtualEnvBase.CreateVirtualEnv(Path.Combine(workspaceFolder, "env"), virtualEnvPackages);
+                virtualEnvBase.CreateVirtualEnv(VirtualEnvName.First, virtualEnvPackages, Path.Combine(workspaceFolder, "env"));
             }
 
             return workspaceFolder;

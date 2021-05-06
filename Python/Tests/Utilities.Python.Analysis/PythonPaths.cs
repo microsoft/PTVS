@@ -230,10 +230,8 @@ namespace TestUtilities {
         /// <summary>
         /// Creates a Python virtual environment in specified directory and installs the specified packages.
         /// </summary>
-        public static string CreateVirtualEnv(this PythonVersion pyVersion, VirtualEnvName envName, IEnumerable<string> packages) {
-            pyVersion.CreateVirtualEnv(envName);
-            var envPath = GetVirtualEnvPath(envName);
-
+        public static string CreateVirtualEnv(this PythonVersion pyVersion, VirtualEnvName envName, IEnumerable<string> packages, string rootDirectory = null) {
+            var envPath = pyVersion.CreateVirtualEnv(envName, rootDirectory);
             var envPythonExePath = Path.Combine(envPath, "scripts", "python.exe");
             foreach (var package in packages.MaybeEnumerate()) {
                 using (var output = ProcessOutput.RunHiddenAndCapture(envPythonExePath, "-m", "pip", "install", package)) {
@@ -265,7 +263,10 @@ namespace TestUtilities {
         }
 
         private static string GetVirtualEnvPath(VirtualEnvName envName, string rootDirectory = null) {
-            var root = rootDirectory ?? TestData.GetTempPath("envs");
+            if (rootDirectory != null) {
+                return rootDirectory;
+            }
+            var root = TestData.GetTempPath("envs");
             return Path.Combine(root, envName.ToString());
         }
     }
