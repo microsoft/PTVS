@@ -239,7 +239,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 if (projInfo != null) {
                     try {
                         config = projInfo.GetLaunchConfigurationOrThrow();
-                        fullEnvironment = LaunchConfigurationUtils.GetFullEnvironment(config, _serviceProvider);
+                        fullEnvironment = LaunchConfigurationUtils.GetFullEnvironment(config, _serviceProvider, _serviceProvider.GetUIThread());
                     } catch {
                     }
                     nativeCode = projInfo.GetProperty(PythonConstants.EnableNativeCodeDebugging);

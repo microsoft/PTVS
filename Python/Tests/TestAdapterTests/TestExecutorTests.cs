@@ -1232,6 +1232,7 @@ if __name__ == '__main__':
     }
 
     [TestClass]
+    [Ignore]
     public class TestExecutorTests27 : TestExecutorTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {

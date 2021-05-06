@@ -18,12 +18,13 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Interpreter {
     public class LaunchConfigurationUtils {
-        public static Dictionary<string, string> GetFullEnvironment(LaunchConfiguration config, IServiceProvider serviceProvider) {
+        public static Dictionary<string, string> GetFullEnvironment(LaunchConfiguration config, IServiceProvider serviceProvider, UIThreadBase uiThread) {
             if (config.Interpreter == null) {
                 throw new ArgumentNullException(nameof(Interpreter));
             }
@@ -48,7 +49,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 var condaExe = CondaUtils.GetRootCondaExecutablePath(serviceProvider);
                 var prefixPath = config.Interpreter.GetPrefixPath();
                 if (File.Exists(condaExe) && Directory.Exists(prefixPath)) {
-                    var condaEnv = ThreadHelper.JoinableTaskFactory.Run(() => CondaUtils.GetActivationEnvironmentVariablesForPrefixAsync(condaExe, prefixPath));
+                    var condaEnv = uiThread.InvokeTaskSync(() => CondaUtils.GetActivationEnvironmentVariablesForPrefixAsync(condaExe, prefixPath), CancellationToken.None);
                     baseEnv = PathUtils.MergeEnvironments(baseEnv.AsEnumerable<string, string>(), condaEnv, "Path", pathVar);
                 }
             }

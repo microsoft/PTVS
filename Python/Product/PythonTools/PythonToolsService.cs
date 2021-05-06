@@ -56,6 +56,7 @@ namespace Microsoft.PythonTools {
         private readonly Lazy<SuppressDialogOptions> _suppressDialogOptions;
         private readonly IdleManager _idleManager;
         private readonly DiagnosticsProvider _diagnosticsProvider;
+        private readonly bool _forTests;
 
         public static object CreateService(IServiceContainer container, Type serviceType) {
             if (serviceType.IsEquivalentTo(typeof(PythonToolsService))) {
@@ -71,6 +72,7 @@ namespace Microsoft.PythonTools {
         }
 
         internal PythonToolsService(IServiceContainer container, bool forTests = false) {
+            _forTests = forTests;
             _container = container;
 
             _langPrefs = new Lazy<LanguagePreferences>(() => new LanguagePreferences(Site, typeof(PythonLanguageInfo).GUID));
@@ -109,6 +111,10 @@ namespace Microsoft.PythonTools {
             InitializeLogging();
             EnvironmentSwitcherManager.Initialize();
         }
+
+        public bool ForTests => _forTests;
+
+        internal UIThreadBase UIThread => _container.GetUIThread();
 
         public void Dispose() {
             if (_langPrefs.IsValueCreated) {
@@ -366,7 +372,7 @@ namespace Microsoft.PythonTools {
         #endregion
 
         internal Dictionary<string, string> GetFullEnvironment(LaunchConfiguration config)
-            => LaunchConfigurationUtils.GetFullEnvironment(config, _container);
+            => LaunchConfigurationUtils.GetFullEnvironment(config, _container, UIThread);
 
         internal IEnumerable<string> GetGlobalPythonSearchPaths(InterpreterConfiguration interpreter) {
             if (!GeneralOptions.ClearGlobalPythonPath) {

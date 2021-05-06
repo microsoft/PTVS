@@ -46,13 +46,13 @@ namespace PythonToolsTests {
                 var window = new MockReplWindow(evaluator);
                 evaluator._Initialize(window);
 
-                TestOutput(window, evaluator, "print 'hello'", true, "hello");
+                TestOutput(window, evaluator, "print('hello')", true, "hello");
                 TestOutput(window, evaluator, "42", true, "42");
-                TestOutput(window, evaluator, "for i in xrange(2):  print i\n", true, "0", "1");
+                TestOutput(window, evaluator, "for i in range(2):  print(i)\n", true, "0", "1");
                 TestOutput(window, evaluator, "raise Exception()\n", false, "Traceback (most recent call last):", "  File \"<stdin>\", line 1, in <module>", "Exception");
 
-                TestOutput(window, evaluator, "try:\r\n    print 'hello'\r\nexcept:\r\n    print 'goodbye'\r\n    \r\n    ", true, "hello");
-                TestOutput(window, evaluator, "try:\r\n    print 'hello'\r\nfinally:\r\n    print 'goodbye'\r\n    \r\n    ", true, "hello", "goodbye");
+                TestOutput(window, evaluator, "try:\r\n    print('hello')\r\nexcept:\r\n    print('goodbye')\r\n    \r\n    ", true, "hello");
+                TestOutput(window, evaluator, "try:\r\n    print('hello')\r\nfinally:\r\n    print('goodbye')\r\n    \r\n    ", true, "hello", "goodbye");
 
                 TestOutput(window, evaluator, "import sys", true);
                 TestOutput(window, evaluator, "sys.exit(0)", false);
@@ -86,15 +86,15 @@ namespace PythonToolsTests {
         [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         public void TestCanExecute() {
             using (var evaluator = MakeEvaluator()) {
-                Assert.IsTrue(evaluator.CanExecuteCode("print 'hello'"));
+                Assert.IsTrue(evaluator.CanExecuteCode("print('hello')"));
                 Assert.IsTrue(evaluator.CanExecuteCode("42"));
-                Assert.IsTrue(evaluator.CanExecuteCode("for i in xrange(2):  print i\r\n\r\n"));
+                Assert.IsTrue(evaluator.CanExecuteCode("for i in range(2):  print(i)\r\n\r\n"));
                 Assert.IsTrue(evaluator.CanExecuteCode("raise Exception()\n"));
 
-                Assert.IsFalse(evaluator.CanExecuteCode("try:\r\n    print 'hello'\r\nexcept:\r\n    print 'goodbye'\r\n    "));
-                Assert.IsTrue(evaluator.CanExecuteCode("try:\r\n    print 'hello'\r\nexcept:\r\n    print 'goodbye'\r\n    \r\n"));
-                Assert.IsFalse(evaluator.CanExecuteCode("try:\r\n    print 'hello'\r\nfinally:\r\n    print 'goodbye'\r\n    "));
-                Assert.IsTrue(evaluator.CanExecuteCode("try:\r\n    print 'hello'\r\nfinally:\r\n    print 'goodbye'\r\n    \r\n"));
+                Assert.IsFalse(evaluator.CanExecuteCode("try:\r\n    print('hello')\r\nexcept:\r\n    print('goodbye')\r\n    "));
+                Assert.IsTrue(evaluator.CanExecuteCode("try:\r\n    print('hello')\r\nexcept:\r\n    print('goodbye')\r\n    \r\n"));
+                Assert.IsFalse(evaluator.CanExecuteCode("try:\r\n    print('hello')\r\nfinally:\r\n    print('goodbye')\r\n    "));
+                Assert.IsTrue(evaluator.CanExecuteCode("try:\r\n    print('hello')\r\nfinally:\r\n    print('goodbye')\r\n    \r\n"));
                 Assert.IsFalse(evaluator.CanExecuteCode("x = \\"));
                 Assert.IsTrue(evaluator.CanExecuteCode("x = \\\r\n42\r\n\r\n"));
 
@@ -205,7 +205,7 @@ f()",
         }
 
         private static PythonInteractiveEvaluator MakeEvaluator() {
-            var python = PythonPaths.Python27_x64 ?? PythonPaths.Python27;
+            var python = PythonPaths.LatestVersion;
             python.AssertInstalled();
             var provider = new SimpleFactoryProvider(python.InterpreterPath, python.InterpreterPath);
             var eval = new PythonInteractiveEvaluator(PythonToolsTestUtilities.CreateMockServiceProvider()) {
