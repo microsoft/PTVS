@@ -465,7 +465,7 @@ NameError: name 'does_not_exist' is not defined
 
         internal override PythonVersion Version {
             get {
-                return PythonPaths.Python37 ?? PythonPaths.Python37_x64;
+                return PythonPaths.LatestVersion;
             }
         }
     }

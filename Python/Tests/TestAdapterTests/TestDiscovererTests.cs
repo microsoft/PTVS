@@ -782,12 +782,12 @@ namespace TestAdapterTests {
     }
 
     [TestClass]
-    public class TestDiscovererTests37 : TestDiscovererTests {
+    public class TestDiscovererTestsLatest : TestDiscovererTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
         }
 
-        protected override PythonVersion Version => PythonPaths.Python37_x64 ?? PythonPaths.Python37;
+        protected override PythonVersion Version => PythonPaths.LatestVersion;
     }
 }

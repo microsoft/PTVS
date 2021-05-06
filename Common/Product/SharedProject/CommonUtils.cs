@@ -14,14 +14,16 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using Microsoft.VisualStudio.Shell;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 
 namespace Microsoft.VisualStudioTools {
-    internal static class CommonUtils {
+    public static class CommonUtils {
         private static readonly char[] InvalidPathChars = GetInvalidPathChars();
 
         private static readonly char[] DirectorySeparators = new[] {
@@ -31,6 +33,55 @@ namespace Microsoft.VisualStudioTools {
 
         private static char[] GetInvalidPathChars() {
             return Path.GetInvalidPathChars().Concat(new[] { '*', '?' }).ToArray();
+        }
+
+        /// <summary>
+        /// Checks if a HRESULT is a success return code.
+        /// </summary>
+        /// <param name="hr">The HRESULT to test.</param>
+        /// <returns>true if hr represents a success, false otherwise.</returns>
+        /// <remarks>Copied here so that ErrorHandler from the shell doesn't need to be present in tests</remarks>
+        public static bool Succeeded(int hr)
+        {
+            return (hr >= 0);
+        }
+
+        /// <summary>
+        /// Checks if a HRESULT is an error return code.
+        /// </summary>
+        /// <param name="hr">The HRESULT to test.</param>
+        /// <returns>true if hr represents an error, false otherwise.</returns>
+        public static bool Failed(int hr)
+        {
+            return (hr < 0);
+        }
+        
+        /// <summary>
+        /// Checks if the parameter is a success or failure HRESULT and throws an exception in case
+        /// of failure.
+        /// </summary>
+        /// <param name="hr">The HRESULT to test.</param>
+        public static int ThrowOnFailure(int hr)
+        {
+            return ThrowOnFailure(hr, null);
+        }
+
+        /// <summary>
+        /// Checks if the parameter is a success or failure HRESULT and throws an exception if it is a
+        /// failure that is not included in the array of well-known failures.
+        /// </summary>
+        /// <param name="hr">The HRESULT to test.</param>
+        /// <param name="expectedHRFailure">Array of well-known and expected failures.</param>
+        public static int ThrowOnFailure(int hr, params int[] expectedHRFailure)
+        {
+            if (Failed(hr))
+            {
+                if ((null == expectedHRFailure) || (Array.IndexOf(expectedHRFailure, hr) < 0))
+                {
+                    Marshal.ThrowExceptionForHR(hr);
+                }
+            }
+            return hr;
         }
 
         internal static bool TryMakeUri(string path, bool isDirectory, UriKind kind, out Uri uri) {
@@ -54,6 +105,31 @@ namespace Microsoft.VisualStudioTools {
             } catch (ArgumentException ex) {
                 throw new ArgumentException("Path was invalid", throwParameterName, ex);
             }
+        }
+
+        /// <summary>
+        /// Log to the activity log. Wraps calls so unit tests can use
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="message"></param>
+        public static void ActivityLogError(string source, string message)
+        {
+            try
+            {
+                ActivityLogErrorInternal(source, message);
+            } 
+            catch
+            {
+                // Cannot log to ActivityLog. This may occur if we are
+                // outside of VS right now (for example, unit tests).
+                System.Diagnostics.Trace.TraceError(message);
+            }
+
+        }
+
+        private static void ActivityLogErrorInternal(string source, string message)
+        {
+            ActivityLog.LogError(source, message);
         }
 
         /// <summary>
@@ -83,8 +159,6 @@ namespace Microsoft.VisualStudioTools {
         /// <returns></returns>
         public static string GetLocalFilePath(Uri documentUri)
         {
-            Requires.Argument(documentUri.IsFile, nameof(documentUri), "There were no clients that can open the document.");
-
             // Note: this would remove the '/' from some Uri returned on some LSP providers
             string absolutePath = documentUri.LocalPath.TrimStart('/');
             string fullPath = Path.GetFullPath(absolutePath);

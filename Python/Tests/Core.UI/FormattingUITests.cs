@@ -198,7 +198,7 @@ def g ():    return 5 ** 2
 
             // The project references a virtual env in 'env' subfolder,
             // which we need to create before opening the project.
-            python.CreateVirtualEnv(Path.Combine(projFolder, "env"), new[] { formatter });
+            python.CreateVirtualEnv(VirtualEnvName.First, new[] { formatter }, Path.Combine(projFolder, "env"));
 
             return slnPath;
         }

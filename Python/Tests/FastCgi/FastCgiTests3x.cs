@@ -33,9 +33,7 @@ namespace FastCgiTests {
 
         public override PythonVersion PythonVersion {
             get {
-                return PythonPaths.Python37_x64 ?? PythonPaths.Python37 ??
-                       PythonPaths.Python36_x64 ?? PythonPaths.Python36 ??
-                       PythonPaths.Python35_x64 ?? PythonPaths.Python35;
+                return PythonPaths.LatestVersion;
             }
         }
     }
