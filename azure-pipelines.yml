@@ -251,6 +251,7 @@ steps:
     replaceExistingArchive: true
 
 # Compress just the test data
+# Used in this release task to run tests: https://devdiv.visualstudio.com/DevDiv/_taskgroup/a7b18468-aab5-4be7-b718-02f85b0828c4
 - task: ArchiveFiles@2
   displayName: 'Compress test data dir'
   inputs:
