@@ -758,6 +758,7 @@ namespace TestAdapterTests {
     }
 
     [TestClass]
+    [Ignore]
     public class TestDiscovererTests27 : TestDiscovererTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {

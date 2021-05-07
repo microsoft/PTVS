@@ -63,7 +63,7 @@ namespace Microsoft.PythonTools.Commands {
 
             if (file != null) {
                 try {
-                    ThreadHelper.JoinableTaskFactory.Run(async () => await DoConvert(file, version));
+                    _serviceProvider.GetPythonToolsService().UIThread.Invoke(async () => await DoConvert(file, version));
                 } catch (Exception ex) {
                     ex.ReportUnhandledException(_serviceProvider, GetType());
                 }

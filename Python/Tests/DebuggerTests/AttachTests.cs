@@ -1352,6 +1352,7 @@ int main(int argc, char* argv[]) {
     }
 
     [TestClass]
+    [Ignore]
     public class AttachTests27 : AttachTests {
         internal override PythonVersion Version {
             get {
@@ -1361,6 +1362,7 @@ int main(int argc, char* argv[]) {
     }
 
     [TestClass]
+    [Ignore]
     public class AttachTests27_x64 : AttachTests {
         internal override PythonVersion Version {
             get {

@@ -72,6 +72,12 @@ namespace Microsoft.PythonTools.Editor.Formatting {
                 );
             }
 
+            if (output.StandardErrorLines.Any(e => e.Contains("ImportError"))) {
+                throw new ApplicationException(
+                    string.Join(Environment.NewLine, output.StandardErrorLines)
+                );
+            }
+
             if (output.ExitCode < 0) {
                 throw new ApplicationException(
                     string.Join(Environment.NewLine, output.StandardErrorLines)

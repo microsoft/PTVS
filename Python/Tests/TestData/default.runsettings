@@ -16,6 +16,13 @@
     </DataCollectors>
   </DataCollectionRunSettings>
 
+  <!-- Configuration for loggers-->
+  <LoggerRunSettings>
+    <Loggers>
+      <Logger friendlyName="console" enabled="True"/>
+    </Loggers>
+  </LoggerRunSettings>
+
   <MSTest>
     <MapInconclusiveToFailed>False</MapInconclusiveToFailed>
     <CaptureTraceOutput>True</CaptureTraceOutput>

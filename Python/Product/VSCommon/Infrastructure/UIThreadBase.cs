@@ -29,7 +29,7 @@ namespace Microsoft.VisualStudioTools {
     /// doesn't take assembly names into account when generating an interfaces GUID, resulting 
     /// in resolution issues when we reference the interface from multiple assemblies.
     /// </summary>
-    abstract class UIThreadBase {
+    public abstract class UIThreadBase {
         public abstract void Invoke(Action action);
         public abstract T Invoke<T>(Func<T> func);
         public abstract Task InvokeAsync(Action action);

@@ -661,7 +661,10 @@ namespace Microsoft.PythonTools.Repl {
             _window.TextView.Options.SetOptionValue(InteractiveWindowOptions.SmartUpDown, UseSmartHistoryKeys);
             _commands = GetInteractiveCommands(_serviceProvider, _window, this);
 
-            await InitializeLanguageServerAsync();
+            // Startup language server when not doing unit tests
+            if (!_serviceProvider.GetPythonToolsService().ForTests) {
+                await InitializeLanguageServerAsync();
+            }
 
             return ExecutionResult.Success;
         }
