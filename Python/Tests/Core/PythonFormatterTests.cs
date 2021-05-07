@@ -103,6 +103,10 @@ b =100 *2
             python.AssertInstalled();
 
             var envPath = python.CreateVirtualEnv(VirtualEnvName.First, new[] { formatter.Package });
+            var installedPath = Path.Combine(envPath, "Scripts", $"{formatter.Package}.exe");
+            Assert.IsTrue(
+                File.Exists(installedPath),
+                $"Cannot find {installedPath} in virtual env");
 
             return Path.Combine(envPath, "scripts", "python.exe");
         }
