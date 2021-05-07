@@ -66,12 +66,14 @@ namespace Microsoft.PythonTools.Editor.Formatting {
 
             await output;
 
-            Console.WriteLine($"Output of tool {String.Join(" ", GetToolCommandArgs(documentFilePath, range, extraArgs))}");
-            Console.WriteLine(String.Join("\n", output.StandardOutputLines));
-            Console.WriteLine(String.Join("\n", output.StandardErrorLines));
-
             if (output.StandardErrorLines.Any(e => e.Contains("No module named"))) {
                 throw new PythonFormatterModuleNotFoundException(
+                    string.Join(Environment.NewLine, output.StandardErrorLines)
+                );
+            }
+
+            if (output.StandardErrorLines.Any(e => e.Contains("ImportError"))) {
+                throw new ApplicationException(
                     string.Join(Environment.NewLine, output.StandardErrorLines)
                 );
             }

@@ -59,6 +59,12 @@ b =100 *2
 
         [TestMethod, Priority(0)]
         public async Task FormatDocumentBlack() {
+            var python = PythonPaths.LatestVersion;
+            if (python.Version < Microsoft.Python.Parsing.PythonLanguageVersion.V37) {
+                // Black requires 37 or newer
+                Assert.Inconclusive("Black formatting requires 37 or later");
+            }
+
             var formatter = new PythonFormatterBlack();
             var interpreterExePath = CreateVirtualEnv(formatter);
 
