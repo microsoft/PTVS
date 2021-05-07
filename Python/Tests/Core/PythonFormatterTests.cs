@@ -38,7 +38,7 @@ b =100 *2
 
             // We don't need to check correct formatting (as it changes with version) but rather
             // that it made any changes
-            Assert.IsTrue(actual.Length > 0);
+            Assert.IsTrue(actual.Length > 0, "No actual edits performed by Yapf");
         }
 
         [TestMethod, Priority(0)]
@@ -54,7 +54,7 @@ b =100 *2
             var actual = await formatter.FormatDocumentAsync(interpreterExePath, filePath, contents, null, new string[0]);
             // We don't need to check correct formatting (as it changes with version) but rather
             // that it made any changes
-            Assert.IsTrue(actual.Length > 0);
+            Assert.IsTrue(actual.Length > 0, "No actual edits performed by Autopep8");
         }
 
         [TestMethod, Priority(0)]
@@ -70,7 +70,7 @@ b =100 *2
             var actual = await formatter.FormatDocumentAsync(interpreterExePath, filePath, contents, null, new string[0]);
             // We don't need to check correct formatting (as it changes with version) but rather
             // that it made any changes
-            Assert.IsTrue(actual.Length > 0);
+            Assert.IsTrue(actual.Length > 0, "No actual edits performed by Black");
         }
 
         [TestMethod, Priority(0)]
