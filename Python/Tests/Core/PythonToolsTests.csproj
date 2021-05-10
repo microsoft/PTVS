@@ -44,19 +44,20 @@
     <Reference Include="Microsoft.Build, Version=$(MicrosoftBuildAssemblyVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Microsoft.Build.Framework, Version=$(MicrosoftBuildAssemblyVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="Microsoft.Python.Analysis.Engine" />
-    <Reference Include="Microsoft.PythonTools.Analyzer" />
     <Reference Include="Microsoft.VisualStudio.CodeSense.Common">
       <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces">
-        <Private>True</Private>    
-     </Reference>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Microsoft.VisualStudio.Shared.VSCodeDebugProtocol">
-        <Private>True</Private>   
+      <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.InteractiveWindow" />
     <Reference Include="Microsoft.VisualStudio.LanguageServer.Protocol">
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.LanguageServer.Client">
       <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.LiveShare.LanguageServices.16.3">
@@ -70,7 +71,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.Platform.VSEditor">
-        <Private>True</Private>
+      <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.Language" />
     <Reference Include="Microsoft.VisualStudio.Language.Intellisense" />
@@ -96,10 +97,16 @@
     <Reference Include="Microsoft.VisualStudio.Shell.Interop.11.0, Version=11.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
+    <Reference Include="Microsoft.VisualStudio.Validation" />
     <Reference Include="Microsoft.VisualStudio.Workspace" />
     <Reference Include="Microsoft.VisualStudio.Workspace.VSIntegration.Contracts" />
+    <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed">
+      <HintPath>$(PackagesPath)\Newtonsoft.Json\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
+    <Reference Include="StreamJsonRpc" />
     <Reference Include="System" />
     <Reference Include="System.Collections.Immutable" />
     <Reference Include="System.ComponentModel.Composition" />
@@ -110,40 +117,46 @@
     <Reference Include="System.XML" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="WindowsBase" />
+    <Reference Include="Microsoft.Python.Core">
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.Python.Parsing">
+      <Private>True</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\DebuggerTests\DebugExtensions.cs">
       <Link>DebugExtensions.cs</Link>
     </Compile>
     <Compile Include="AssemblySetup.cs" />
-    <Compile Include="AutoIndentTests.cs" />
+    <None Include="AutoIndentTests.cs" />
+    <Compile Include="PythonFormatterTests.cs" />
+    <Compile Include="LspDiffTextEditFactoryTests.cs" />
     <Compile Include="BuildTasksTests.cs" />
-    <Compile Include="CodeCellTests.cs" />
+    <None Include="CodeCellTests.cs" />
     <Compile Include="PythonWorkspaceContextProviderTests.cs" />
     <Compile Include="PythonWorkspaceContextTests.cs" />
     <Compile Include="WorkspaceInterpreterFactoryTests.cs" />
     <Compile Include="CoverageTests.cs" />
     <Compile Include="CondaEnvironmentManagerTests.cs" />
     <Compile Include="CondaInterpreterFactoryTests.cs" />
-    <Compile Include="InvalidEncodingSquiggleProviderTests.cs" />
-    <Compile Include="EditorTests.cs" />
-    <Compile Include="CodeFormatterTests.cs" />
-    <Compile Include="CommentBlockTests.cs" />
-    <Compile Include="LiveShareTests.cs" />
-    <Compile Include="LocationTrackerTests.cs" />
+    <None Include="InvalidEncodingSquiggleProviderTests.cs" />
+    <None Include="EditorTests.cs" />
+    <None Include="CodeFormatterTests.cs" />
+    <None Include="CommentBlockTests.cs" />
+    <None Include="LocationTrackerTests.cs" />
     <Compile Include="PathUtilsTests.cs" />
     <Compile Include="CPythonInterpreterTests.cs" />
     <Compile Include="DebugReplEvaluatorTests.cs" />
     <Compile Include="EnvironmentListTests.cs" />
-    <Compile Include="ExtractMethodTests.cs" />
-    <Compile Include="FuzzyStringMatcherTests.cs" />
+    <None Include="ExtractMethodTests.cs" />
+    <None Include="FuzzyStringMatcherTests.cs" />
     <Compile Include="ImportWizardTests.cs" />
     <Compile Include="LauncherTests.cs" />
     <Compile Include="Pep440VersionTests.cs" />
     <Compile Include="ProcessOutputTests.cs" />
     <Compile Include="ProjectUpgradeTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ProximityExpressionWalkerTests.cs" />
     <Compile Include="PythonProjectTests.cs" />
     <Compile Include="RegistryWatcherTest.cs" />
     <Compile Include="ReplEvaluatorTests.cs" />
@@ -160,10 +173,6 @@
     <ProjectReference Include="..\..\Product\Debugger\Debugger.csproj">
       <Project>{DECC7971-FA58-4DB0-9561-BFFADD393BBD}</Project>
       <Name>Debugger</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Product\LiveShare\LiveShare.csproj">
-      <Project>{4065a3c8-0e5e-42ac-9d94-509aa90c90e9}</Project>
-      <Name>LiveShare</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Product\VSInterpreters\VSInterpreters.csproj">
       <Project>{815db0cd-c0dd-4997-b43c-abee4dbeffe7}</Project>
@@ -206,5 +215,6 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="..\TestProjectAfter.settings" />
 </Project>

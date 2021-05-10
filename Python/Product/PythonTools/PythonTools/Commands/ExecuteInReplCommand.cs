@@ -38,10 +38,6 @@ namespace Microsoft.PythonTools.Commands {
             _serviceProvider = serviceProvider;
         }
 
-        internal static IVsInteractiveWindow/*!*/ EnsureReplWindow(IServiceProvider serviceProvider, VsProjectAnalyzer analyzer, PythonProjectNode project, IPythonWorkspaceContext workspace) {
-            return EnsureReplWindow(serviceProvider, analyzer.InterpreterFactory.Configuration, project, workspace);
-        }
-
         internal static IVsInteractiveWindow/*!*/ EnsureReplWindow(IServiceProvider serviceProvider, InterpreterConfiguration config, PythonProjectNode project, IPythonWorkspaceContext workspace) {
             var compModel = serviceProvider.GetComponentModel();
             var provider = compModel.GetService<InteractiveWindowProvider>();
@@ -215,7 +211,7 @@ namespace Microsoft.PythonTools.Commands {
             var eval = (IPythonInteractiveEvaluator)window.InteractiveWindow.Evaluator;
 
             // The interpreter may take some time to startup, do this off the UI thread.
-            await ThreadHelper.JoinableTaskFactory.RunAsync(async () => {
+            await _serviceProvider.GetPythonToolsService().UIThread.InvokeAsync(async () => {
                 await ((IInteractiveEvaluator)eval).ResetAsync();
 
                 window.InteractiveWindow.WriteLine(Strings.ExecuteInReplCommand_RunningMessage.FormatUI(config.ScriptName));

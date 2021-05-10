@@ -28,13 +28,11 @@ namespace Microsoft.PythonTools.Logging {
     /// </summary>
     abstract class PythonToolsLoggerData {
         public static IDictionary<string, object> AsDictionary(object obj) {
-            IDictionary<string, object> res;
-
             if (obj == null) {
                 return null;
             }
 
-            if ((res = obj as IDictionary<string, object>) != null) {
+            if (obj is IDictionary<string, object> res) {
                 return res;
             }
 
@@ -220,7 +218,17 @@ namespace Microsoft.PythonTools.Logging {
         public bool IsIronPython { get; set; }
     }
 
-
+    sealed class FormatDocumentInfo : PythonToolsLoggerData {
+        public string Version { get; set; }
+        public string Formatter { get; set; }
+        public long TimeMilliseconds { get; set; }
+        public bool IsError { get; set; }
+        public bool IsErrorModuleNotInstalled { get; set; }
+        public bool IsErrorInstallingModule { get; set; }
+        public bool IsErrorRangeNotSupported { get; set; }
+        public bool IsRange { get; set; }
+    }
+    
     sealed class UntrustedWorkspaceInfoBarInfo : PythonToolsLoggerData {
         public string Action { get; set; }
     }

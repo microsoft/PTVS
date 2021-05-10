@@ -241,7 +241,12 @@ sub_package";
             doc.InvokeTask(async () => {
                 var point = doc.TextView.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(line - 1).Start.Add(column - 1);
                 doc.TextView.Caret.MoveTo(point);
-                await doc.WaitForAnalyzerAtCaretAsync();
+
+                // Note that this waits for language server to be up and running
+                // but that doesn't mean the quick actions are ready for that document
+                // so the test will need to wait/try again until the correct results
+                // are in or until a predetermined timeout.
+                await doc.WaitForLanguageServerInitializedAtCaretAsync();
             });
 
             if (expectedActions.Length > 0) {

@@ -61,11 +61,6 @@ namespace Microsoft.PythonTools.Debugger {
         /// </summary>
         bool ShowFunctionReturnValue { get; }
         
-        /// <summary>
-        /// True to use the legacy debugger. Default is false.
-        /// </summary>
-        bool UseLegacyDebugger { get; }
-
         PresentationMode VariablePresentationForClasses { get; }
         PresentationMode VariablePresentationForFunctions { get; }
         PresentationMode VariablePresentationForProtected { get; }

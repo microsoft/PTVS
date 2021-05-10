@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Collections.Generic;
 
 namespace Microsoft.PythonTools.Logging {
     /// <summary>
@@ -31,6 +32,14 @@ namespace Microsoft.PythonTools.Logging {
         /// </summary>
         void LogEvent(PythonLogEvent logEvent, object argument);
 
+        /// <summary>
+        /// Informs the logger of an event.  Unknown events should be ignored.
+        /// </summary>
+        void LogEvent(string eventName, IReadOnlyDictionary<string, object> properties, IReadOnlyDictionary<string, double> measurements);
+
+        /// <summary>
+        /// Reports an exception.
+        /// </summary>
         void LogFault(Exception ex, string description, bool dumpProcess);
     }
 }

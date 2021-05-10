@@ -52,7 +52,6 @@
       <HintPath>$(CommonProgramFiles)\Microsoft Shared\MSEnv\PublicAssemblies\envdte.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Build, Version=$(MicrosoftBuildAssemblyVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-    <Reference Include="Microsoft.Python.Analysis.Engine" />
     <Reference Include="Microsoft.PythonTools.Ipc.Json" />
     <Reference Include="Microsoft.VisualStudio.InteractiveWindow" />
     <Reference Include="Microsoft.VisualStudio.VsInteractiveWindow" />
@@ -101,6 +100,12 @@
     <Reference Include="UIAutomationClient" />
     <Reference Include="UIAutomationTypes" />
     <Reference Include="WindowsBase" />
+    <Reference Include="Microsoft.Python.Core">
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.Python.Parsing">
+      <Private>True</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AddEnvironmentDialogWrapperBase.cs" />
@@ -110,9 +115,9 @@
     <Compile Include="DebuggingGeneralOptionsSetter.cs" />
     <Compile Include="DefaultInterpreterSetter.cs" />
     <Compile Include="Django\NewAppDialog.cs" />
-    <Compile Include="EditorTestToolset.cs" />
+    <None Include="EditorTestToolset.cs" />
     <Compile Include="EnvironmentVariableSetter.cs" />
-    <Compile Include="EventTaskSources.cs" />
+    <None Include="EventTaskSources.cs" />
     <Compile Include="InterpreterWithPackageSetter.cs" />
     <Compile Include="MefExportProviders.cs" />
     <Compile Include="MockInteractiveWindowCommandsFactory.cs" />
@@ -124,7 +129,7 @@
     <Compile Include="PythonInstallPackagesInfoBar.cs" />
     <Compile Include="PythonCreateCondaEnvInfoBar.cs" />
     <Compile Include="PythonCreateVirtualEnvInfoBar.cs" />
-    <Compile Include="PythonProjectExtensions.cs" />
+    <None Include="PythonProjectExtensions.cs" />
     <Compile Include="PythonServiceGeneralOptionsSetter.cs" />
     <Compile Include="PythonOptionsSetter.cs" />
     <Compile Include="PythonProjectDebugProperties.cs" />
@@ -138,7 +143,6 @@
     <Compile Include="PythonProjectProcessor.cs" />
     <Compile Include="PythonTestDefinitions.cs" />
     <Compile Include="PythonTestExplorerGridView.cs" />
-    <Compile Include="PythonToolsOptionsImporter.cs" />
     <Compile Include="PythonToolsTestUtilities.cs" />
     <Compile Include="EditorWindowExtensions.cs" />
     <Compile Include="PythonVisualStudioApp.cs" />

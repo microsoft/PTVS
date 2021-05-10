@@ -18,7 +18,6 @@ using System;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Options;
 using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Project {

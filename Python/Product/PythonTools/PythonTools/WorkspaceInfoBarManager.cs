@@ -18,7 +18,6 @@ using System;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
-using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Logging;
@@ -43,14 +42,18 @@ namespace Microsoft.PythonTools {
         public WorkspaceInfoBarManager(IServiceProvider serviceProvider) {
             _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
             _pythonWorkspaceService = serviceProvider.GetComponentModel().GetService<IPythonWorkspaceContextProvider>();
-            _pythonWorkspaceService.WorkspaceOpening += OnWorkspaceOpening;
-            _pythonWorkspaceService.WorkspaceInitialized += OnWorkspaceInitialized;
+            if (_pythonWorkspaceService != null) {
+                _pythonWorkspaceService.WorkspaceOpening += OnWorkspaceOpening;
+                _pythonWorkspaceService.WorkspaceInitialized += OnWorkspaceInitialized;
+            }
             _docTable = _serviceProvider.GetService(typeof(SVsRunningDocumentTable)) as IVsRunningDocumentTable;
         }
 
         public void Dispose() {
-            _pythonWorkspaceService.WorkspaceOpening -= OnWorkspaceOpening;
-            _pythonWorkspaceService.WorkspaceInitialized -= OnWorkspaceInitialized;
+            if (_pythonWorkspaceService != null) {
+                _pythonWorkspaceService.WorkspaceOpening -= OnWorkspaceOpening;
+                _pythonWorkspaceService.WorkspaceInitialized -= OnWorkspaceInitialized;
+            }
         }
 
         private void OnWorkspaceOpening(object sender, PythonWorkspaceContextEventArgs e) {

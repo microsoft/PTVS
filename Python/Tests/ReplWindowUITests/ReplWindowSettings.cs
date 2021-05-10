@@ -49,22 +49,6 @@ namespace ReplWindowUITests {
                 }
             },
             {
-                "IronPython27",
-                new ReplWindowProxySettings {
-                    Version = PythonPaths.IronPython27,
-                    SourceFileName = "string",
-                    ExitHelp = ReplWindowProxySettings.IronPython27ExitHelp,
-                }
-            },
-            {
-                "IronPython27_x64",
-                new ReplWindowProxySettings {
-                    Version = PythonPaths.IronPython27_x64,
-                    SourceFileName = "string",
-                    ExitHelp = ReplWindowProxySettings.IronPython27ExitHelp,
-                }
-            },            
-            {
                 "Python35",
                 new ReplWindowProxySettings {
                     Version = PythonPaths.Python35,

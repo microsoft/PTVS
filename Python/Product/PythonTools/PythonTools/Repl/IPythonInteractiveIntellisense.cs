@@ -16,19 +16,20 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Python.Parsing;
 using Microsoft.PythonTools.Intellisense;
+using Microsoft.VisualStudio.Text;
+using LSP = Microsoft.VisualStudio.LanguageServer.Protocol;
 
 namespace Microsoft.PythonTools.Repl {
     interface IPythonInteractiveIntellisense {
         bool LiveCompletionsOnly { get; }
         IEnumerable<KeyValuePair<string, string>> GetAvailableScopesAndPaths();
-        CompletionResult[] GetMemberNames(string text);
-        OverloadDoc[] GetSignatureDocumentation(string text);
-        VsProjectAnalyzer Analyzer { get; }
-        Task<VsProjectAnalyzer> GetAnalyzerAsync();
-        Uri DocumentUri { get; }
-
-        Uri NextDocumentUri();
+        Task<CompletionResult[]> GetMemberNamesAsync(string text, CancellationToken ct);
+        Task<OverloadDoc[]> GetSignatureDocumentationAsync(string text, CancellationToken ct);
+        Task<object> GetAnalysisCompletions(LSP.Position position, LSP.CompletionContext context, CancellationToken token);
+        PythonLanguageVersion LanguageVersion { get; }
     }
 }

@@ -195,6 +195,14 @@ namespace TestUtilities.UI {
             Dte.ExecuteCommand("View.ResourceView");
         }
 
+        public void OpenErrorList() {
+            Dte.ExecuteCommand("View.ErrorList");
+        }
+
+        public void OpenTaskList() {
+            Dte.ExecuteCommand("View.TaskList");
+        }
+
         public IntPtr OpenDialogWithDteExecuteCommand(string commandName, string commandArgs = "") {
             Task task = Task.Factory.StartNew(() => {
                 Dte.ExecuteCommand(commandName, commandArgs);

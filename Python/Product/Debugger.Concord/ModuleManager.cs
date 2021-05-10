@@ -17,6 +17,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using Microsoft.Python.Parsing;
 using Microsoft.PythonTools.Debugger.Concord.Proxies;
 using Microsoft.PythonTools.Debugger.Concord.Proxies.Structs;
 using Microsoft.PythonTools.Infrastructure;
@@ -70,7 +71,7 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             _pyrtInfo = process.GetPythonRuntimeInfo();
 
             LoadInitialPythonModules();
-            string pyCodeFunctionName = (_pyrtInfo.LanguageVersion < Parsing.PythonLanguageVersion.V38) ? "PyCode_New" : "PyCode_NewWithPosOnlyArgs";
+            string pyCodeFunctionName = (_pyrtInfo.LanguageVersion < PythonLanguageVersion.V38) ? "PyCode_New" : "PyCode_NewWithPosOnlyArgs";
             LocalComponent.CreateRuntimeDllFunctionBreakpoint(_pyrtInfo.DLLs.Python, pyCodeFunctionName, PythonDllBreakpointHandlers.PyCode_New, enable: true, debugStart: true);
             LocalComponent.CreateRuntimeDllFunctionBreakpoint(_pyrtInfo.DLLs.Python, "PyCode_NewEmpty", PythonDllBreakpointHandlers.PyCode_NewEmpty, enable: true, debugStart: true);
         }

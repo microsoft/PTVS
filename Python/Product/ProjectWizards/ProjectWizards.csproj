@@ -45,7 +45,6 @@
     <Reference Include="EnvDTE80, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
-    <Reference Include="Microsoft.Python.Analysis.Engine" />
     <Reference Include="Microsoft.VisualStudio.ComponentModelHost" />
     <Reference Include="Microsoft.VisualStudio.OLE.Interop, Version=7.1.40304.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     </Reference>
@@ -76,9 +75,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\PythonTools\Guids.cs">
-      <Link>Guids.cs</Link>
-    </Compile>
     <Compile Include="..\PythonTools\PkgCmdID.cs">
       <Link>PkgCmdID.cs</Link>
     </Compile>
@@ -88,6 +84,7 @@
     <Compile Include="AzureDebugWebConfigWizard.cs" />
     <Compile Include="CookiecutterWizard.cs" />
     <Compile Include="ImportWizard.cs" />
+    <Compile Include="MsPythonConfigWizard.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="WindowsSDKWizard.cs" />
     <Compile Include="WizardHelpers.cs" />

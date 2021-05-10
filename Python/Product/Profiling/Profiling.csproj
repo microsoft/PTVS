@@ -1,27 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Choose>
-    <When Condition=" '$(VisualStudioVersion)'=='15.0'  Or '$(TargetVisualStudioVersion)'=='VS150' ">
-      <PropertyGroup>
-        <MinimumVisualStudioVersion>15.0</MinimumVisualStudioVersion>
-        <FileUpgradeFlags>
-        </FileUpgradeFlags>
-        <UpgradeBackupLocation>
-        </UpgradeBackupLocation>
-        <OldToolsVersion>14.0</OldToolsVersion>
-      </PropertyGroup>
-    </When>
-    <When Condition=" '$(VisualStudioVersion)'=='16.0'  Or '$(TargetVisualStudioVersion)'=='VS160' ">
-      <PropertyGroup>
-        <MinimumVisualStudioVersion>16.0</MinimumVisualStudioVersion>
-        <FileUpgradeFlags>
-        </FileUpgradeFlags>
-        <UpgradeBackupLocation>
-        </UpgradeBackupLocation>
-        <OldToolsVersion>16.0</OldToolsVersion>
-      </PropertyGroup>
-    </When>
-  </Choose>
   <Import Project="..\ProjectBefore.settings" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -35,24 +13,25 @@
     <AssemblyName>Microsoft.PythonTools.Profiling</AssemblyName>
     <UseVSSDK>true</UseVSSDK>
     <CreateVsixContainer>true</CreateVsixContainer>
-    <DefineConstants Condition="$(IncludeExternalProfilerDriver) == 'true'">EXTERNAL_PROFILER_DRIVER;$(DefineConstants)</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'x86' ">
     <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
+    <CopyVsixExtensionFiles>False</CopyVsixExtensionFiles>
+    <DeployExtension>False</DeployExtension>
+    <CreateVsixContainer>False</CreateVsixContainer>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+    <CopyVsixExtensionFiles>False</CopyVsixExtensionFiles>
+    <DeployExtension>False</DeployExtension>
+    <CreateVsixContainer>False</CreateVsixContainer>
+  </PropertyGroup>
   <ItemGroup>
-    <Reference Include="DiagnosticsHub.Packaging.Interop, Version=15.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <EmbedInteropTypes>False</EmbedInteropTypes>
-    </Reference>
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="Microsoft.DiagnosticsHub.Packaging.InteropEx, Version=15.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-    </Reference>
     <Reference Include="Microsoft.VisualStudio.CommandBars, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
-    <Reference Include="Microsoft.Python.Analysis.Engine" />
     <Reference Include="Microsoft.VisualStudio.ComponentModelHost" />
     <Reference Include="Microsoft.VisualStudio.OLE.Interop" />
     <Reference Include="Microsoft.VisualStudio.Shell.Interop" />
@@ -228,7 +207,6 @@
     </ProjectReference>
     <ProjectReference2 Include="..\VsPyProf\VsPyProf.vcxproj" />
     <ProjectReference2 Include="..\VsPyProf\VsPyProfX86.vcxproj" />
-    <ProjectReference2 Include="..\ExternalProfilerDriver\ExternalProfilerDriver.csproj" Condition="'$(IncludeExternalProfilerDriver)' == 'True'" />
   </ItemGroup>
   <Import Project="..\ProjectAfter.settings" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

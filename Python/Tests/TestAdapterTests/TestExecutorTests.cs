@@ -21,6 +21,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Xml;
+using Microsoft.Python.Parsing;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.TestAdapter;
 using Microsoft.PythonTools.TestAdapter.Pytest;
@@ -1228,6 +1232,7 @@ if __name__ == '__main__':
     }
 
     [TestClass]
+    [Ignore]
     public class TestExecutorTests27 : TestExecutorTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
@@ -1238,22 +1243,12 @@ if __name__ == '__main__':
     }
 
     [TestClass]
-    public class TestExecutorTests35 : TestExecutorTests {
+    public class TestExecutorTestsLatest : TestExecutorTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
         }
 
-        protected override PythonVersion Version => PythonPaths.Python35_x64 ?? PythonPaths.Python35;
-    }
-
-    [TestClass]
-    public class TestExecutorTests37 : TestExecutorTests {
-        [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
-            AssertListener.Initialize();
-        }
-
-        protected override PythonVersion Version => PythonPaths.Python37_x64 ?? PythonPaths.Python37;
+        protected override PythonVersion Version => PythonPaths.LatestVersion;
     }
 }

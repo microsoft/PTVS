@@ -108,14 +108,14 @@ namespace Microsoft.PythonTools.Project {
         /// 
         /// New in 2.0.
         /// </summary>
-        Projects.ProjectAnalyzer GetProjectAnalyzer();
+        //Projects.ProjectAnalyzer GetProjectAnalyzer();
 
         /// <summary>
         /// Raised when the analyzer for the project has changed.
         /// 
         /// New in 2.0.
         /// </summary>
-        event EventHandler ProjectAnalyzerChanged;
+        //event EventHandler ProjectAnalyzerChanged;
 
         /// <summary>
         /// Returns a command with the provided name if one is available. The
@@ -162,7 +162,7 @@ namespace Microsoft.PythonTools.Project {
         /// Handlers should only modify internal state or add specializations
         /// (which will be resolved later).
         /// </summary>
-        event EventHandler<AnalyzerChangingEventArgs> ProjectAnalyzerChanging;
+        //event EventHandler<AnalyzerChangingEventArgs> ProjectAnalyzerChanging;
 
         /// <summary>
         /// Gets the interpreter factory for this project and throws if it is

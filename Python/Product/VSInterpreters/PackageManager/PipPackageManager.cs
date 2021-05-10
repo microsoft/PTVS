@@ -22,10 +22,12 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.PythonTools.Analysis;
+using Microsoft.Python.Core.IO;
+using Microsoft.Python.Core.OS;
 using Microsoft.PythonTools.Infrastructure;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using PathUtils = Microsoft.PythonTools.Infrastructure.PathUtils;
 
 namespace Microsoft.PythonTools.Interpreter {
     sealed class PipPackageManager : IPackageManager, IDisposable {
@@ -474,9 +476,13 @@ namespace Microsoft.PythonTools.Interpreter {
 
                     if (packages == null) {
                         // Pip failed, so return a directory listing
-                        var paths = await PythonLibraryPath.GetDatabaseSearchPathsAsync(_factory.Configuration, null);
+                        var paths = await PythonLibraryPath.GetSearchPathsAsync(
+                            _factory.Configuration,
+                            new FileSystem(new OSPlatform()),
+                            new ProcessServices()
+                        );
 
-                        packages = await Task.Run(() => paths.Where(p => !p.IsStandardLibrary && Directory.Exists(p.Path))
+                        packages = await Task.Run(() => paths.Where(p => p.Type != PythonLibraryPathType.StdLib && Directory.Exists(p.Path))
                             .SelectMany(p => PathUtils.EnumerateDirectories(p.Path, recurse: false))
                             .Select(path => Path.GetFileName(path))
                             .Select(name => PackageNameRegex.Match(name))
@@ -636,7 +642,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
             if (paths == null) {
                 try {
-                    paths = (await PythonLibraryPath.GetDatabaseSearchPathsAsync(_factory.Configuration, null))
+                    paths = (await PythonLibraryPath.GetSearchPathsAsync(_factory.Configuration, new FileSystem(new OSPlatform()), new ProcessServices()))
                         .Select(p => p.Path)
                         .ToArray();
                 } catch (InvalidOperationException) {

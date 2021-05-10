@@ -51,18 +51,14 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         public event EventHandler<PythonWorkspaceContextEventArgs> WorkspaceClosing;
-
         public event EventHandler<PythonWorkspaceContextEventArgs> WorkspaceClosed;
-
         public event EventHandler<PythonWorkspaceContextEventArgs> WorkspaceOpening;
-
         public event EventHandler<PythonWorkspaceContextEventArgs> WorkspaceInitialized;
 
         public IPythonWorkspaceContext Workspace {
             get {
-                EnsureInitialized();
-
                 lock (_currentContextLock) {
+                    EnsureInitialized();
                     return _currentContext;
                 }
             }
@@ -74,12 +70,10 @@ namespace Microsoft.PythonTools.Interpreter {
 
         private void EnsureInitialized() {
             lock (_currentContextLock) {
-                if (_initialized) {
-                    return;
+                if (!_initialized) {
+                    _initialized = true;
+                    InitializeCurrentContext();
                 }
-
-                _initialized = true;
-                InitializeCurrentContext();
             }
         }
 
@@ -111,13 +105,15 @@ namespace Microsoft.PythonTools.Interpreter {
                 // workspace folder for factories.
                 WorkspaceOpening?.Invoke(this, new PythonWorkspaceContextEventArgs(context));
 
-                // Workspace sets its interpreter factory instance,
-                // now that they've been discovered by the factory provider.
-                context.Initialize();
-
                 lock (_currentContextLock) {
                     _currentContext = context;
                 }
+
+                // Workspace sets its interpreter factory instance
+                // This can trigger WorkspaceInterpreterFactoryProvider discovery
+                // which needs to look at this object's _currentContext, which is why we
+                // set that before calling initialize.
+                context.Initialize();
 
                 // Let users know this workspace context is all initialized
                 WorkspaceInitialized?.Invoke(this, new PythonWorkspaceContextEventArgs(context));

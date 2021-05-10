@@ -117,571 +117,88 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="_completionCommitedBy.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Left, Right</value>
-  </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <data name="_completionCommitedBy.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 15</value>
-  </data>
-  <data name="_completionCommitedBy.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 2, 4, 2</value>
-  </data>
-  <data name="_completionCommitedBy.Size" type="System.Drawing.Size, System.Drawing">
-    <value>458, 20</value>
-  </data>
+  <metadata name="tableLayoutPanel1.GenerateMember" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>False</value>
+  </metadata>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="_completionCommitedBy.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;_completionCommitedBy.Name" xml:space="preserve">
-    <value>_completionCommitedBy</value>
-  </data>
-  <data name="&gt;&gt;_completionCommitedBy.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;_completionCommitedBy.Parent" xml:space="preserve">
-    <value>tableLayoutPanel3</value>
-  </data>
-  <data name="&gt;&gt;_completionCommitedBy.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="_completionCommitedByLabel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Left</value>
-  </data>
-  <data name="_completionCommitedByLabel.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="_completionCommitedByLabel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 0</value>
-  </data>
-  <data name="_completionCommitedByLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
-  </data>
-  <data name="_completionCommitedByLabel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>219, 13</value>
-  </data>
-  <data name="_completionCommitedByLabel.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="_completionCommitedByLabel.Text" xml:space="preserve">
-    <value>Committed by &amp;typing the following characters:</value>
-  </data>
-  <data name="_completionCommitedByLabel.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
-    <value>MiddleLeft</value>
-  </data>
-  <data name="&gt;&gt;_completionCommitedByLabel.Name" xml:space="preserve">
-    <value>_completionCommitedByLabel</value>
-  </data>
-  <data name="&gt;&gt;_completionCommitedByLabel.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;_completionCommitedByLabel.Parent" xml:space="preserve">
-    <value>tableLayoutPanel3</value>
-  </data>
-  <data name="&gt;&gt;_completionCommitedByLabel.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="_enterCommits.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Left</value>
-  </data>
-  <data name="_enterCommits.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="_enterCommits.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 39</value>
-  </data>
-  <data name="_enterCommits.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 2, 4, 2</value>
-  </data>
-  <data name="_enterCommits.Size" type="System.Drawing.Size, System.Drawing">
-    <value>182, 17</value>
-  </data>
-  <data name="_enterCommits.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <data name="_enterCommits.Text" xml:space="preserve">
-    <value>&amp;Enter commits current completion</value>
-  </data>
-  <data name="&gt;&gt;_enterCommits.Name" xml:space="preserve">
-    <value>_enterCommits</value>
-  </data>
-  <data name="&gt;&gt;_enterCommits.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;_enterCommits.Parent" xml:space="preserve">
-    <value>tableLayoutPanel3</value>
-  </data>
-  <data name="&gt;&gt;_enterCommits.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="_intersectMembers.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Left</value>
-  </data>
-  <data name="_intersectMembers.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="_intersectMembers.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 2</value>
-  </data>
-  <data name="_intersectMembers.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 2, 4, 2</value>
-  </data>
-  <data name="_intersectMembers.Size" type="System.Drawing.Size, System.Drawing">
-    <value>272, 17</value>
-  </data>
-  <data name="_intersectMembers.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="_intersectMembers.Text" xml:space="preserve">
-    <value>Member completion displays &amp;intersection of members</value>
-  </data>
-  <data name="&gt;&gt;_intersectMembers.Name" xml:space="preserve">
-    <value>_intersectMembers</value>
-  </data>
-  <data name="&gt;&gt;_intersectMembers.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;_intersectMembers.Parent" xml:space="preserve">
-    <value>tableLayoutPanel2</value>
-  </data>
-  <data name="&gt;&gt;_intersectMembers.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="_selectionInCompletionGroupBox.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="_selectionInCompletionGroupBox.AutoSizeMode" type="System.Windows.Forms.AutoSizeMode, System.Windows.Forms">
-    <value>GrowAndShrink</value>
-  </data>
-  <data name="tableLayoutPanel3.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="tableLayoutPanel3.AutoSizeMode" type="System.Windows.Forms.AutoSizeMode, System.Windows.Forms">
-    <value>GrowAndShrink</value>
-  </data>
-  <data name="tableLayoutPanel3.ColumnCount" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="_newLineAfterCompleteCompletion.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Left</value>
-  </data>
-  <data name="_newLineAfterCompleteCompletion.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="_newLineAfterCompleteCompletion.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 60</value>
-  </data>
-  <data name="_newLineAfterCompleteCompletion.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 2, 4, 2</value>
-  </data>
-  <data name="_newLineAfterCompleteCompletion.Size" type="System.Drawing.Size, System.Drawing">
-    <value>250, 17</value>
-  </data>
-  <data name="_newLineAfterCompleteCompletion.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="_newLineAfterCompleteCompletion.Text" xml:space="preserve">
-    <value>&amp;Add new line on enter at end of fully typed word</value>
-  </data>
-  <data name="&gt;&gt;_newLineAfterCompleteCompletion.Name" xml:space="preserve">
-    <value>_newLineAfterCompleteCompletion</value>
-  </data>
-  <data name="&gt;&gt;_newLineAfterCompleteCompletion.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;_newLineAfterCompleteCompletion.Parent" xml:space="preserve">
-    <value>tableLayoutPanel3</value>
-  </data>
-  <data name="&gt;&gt;_newLineAfterCompleteCompletion.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="tableLayoutPanel3.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Fill</value>
-  </data>
-  <data name="tableLayoutPanel3.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 16</value>
-  </data>
-  <data name="tableLayoutPanel3.RowCount" type="System.Int32, mscorlib">
-    <value>4</value>
-  </data>
-  <data name="tableLayoutPanel3.Size" type="System.Drawing.Size, System.Drawing">
-    <value>466, 79</value>
-  </data>
-  <data name="tableLayoutPanel3.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;tableLayoutPanel3.Name" xml:space="preserve">
-    <value>tableLayoutPanel3</value>
-  </data>
-  <data name="&gt;&gt;tableLayoutPanel3.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TableLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;tableLayoutPanel3.Parent" xml:space="preserve">
-    <value>_selectionInCompletionGroupBox</value>
-  </data>
-  <data name="&gt;&gt;tableLayoutPanel3.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="tableLayoutPanel3.LayoutSettings" type="System.Windows.Forms.TableLayoutSettings, System.Windows.Forms">
-    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="_completionCommitedByLabel" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_completionCommitedBy" Row="1" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_enterCommits" Row="2" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_newLineAfterCompleteCompletion" Row="3" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="Percent,100" /&gt;&lt;Rows Styles="AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0" /&gt;&lt;/TableLayoutSettings&gt;</value>
-  </data>
-  <data name="_selectionInCompletionGroupBox.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Fill</value>
-  </data>
-  <data name="_selectionInCompletionGroupBox.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 91</value>
-  </data>
-  <data name="_selectionInCompletionGroupBox.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>6, 3, 6, 3</value>
-  </data>
-  <data name="_selectionInCompletionGroupBox.Size" type="System.Drawing.Size, System.Drawing">
-    <value>472, 98</value>
-  </data>
-  <data name="_selectionInCompletionGroupBox.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="_selectionInCompletionGroupBox.Text" xml:space="preserve">
-    <value>Selection in Completion List</value>
-  </data>
-  <data name="&gt;&gt;_selectionInCompletionGroupBox.Name" xml:space="preserve">
-    <value>_selectionInCompletionGroupBox</value>
-  </data>
-  <data name="&gt;&gt;_selectionInCompletionGroupBox.Type" xml:space="preserve">
-    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;_selectionInCompletionGroupBox.Parent" xml:space="preserve">
-    <value>tableLayoutPanel1</value>
-  </data>
-  <data name="&gt;&gt;_selectionInCompletionGroupBox.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="_completionResultsGroupBox.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="_completionResultsGroupBox.AutoSizeMode" type="System.Windows.Forms.AutoSizeMode, System.Windows.Forms">
-    <value>GrowAndShrink</value>
-  </data>
-  <data name="tableLayoutPanel2.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="tableLayoutPanel2.AutoSizeMode" type="System.Windows.Forms.AutoSizeMode, System.Windows.Forms">
-    <value>GrowAndShrink</value>
-  </data>
-  <data name="tableLayoutPanel2.ColumnCount" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="_filterCompletions.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Left</value>
-  </data>
-  <data name="_filterCompletions.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="_filterCompletions.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 23</value>
-  </data>
-  <data name="_filterCompletions.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 2, 4, 2</value>
-  </data>
-  <data name="_filterCompletions.Size" type="System.Drawing.Size, System.Drawing">
-    <value>173, 17</value>
-  </data>
-  <data name="_filterCompletions.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="_filterCompletions.Text" xml:space="preserve">
-    <value>&amp;Filter list based on search string</value>
-  </data>
-  <data name="&gt;&gt;_filterCompletions.Name" xml:space="preserve">
-    <value>_filterCompletions</value>
-  </data>
-  <data name="&gt;&gt;_filterCompletions.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;_filterCompletions.Parent" xml:space="preserve">
-    <value>tableLayoutPanel2</value>
-  </data>
-  <data name="&gt;&gt;_filterCompletions.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="_autoListIdentifiers.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Left</value>
-  </data>
-  <data name="_autoListIdentifiers.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="_autoListIdentifiers.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 44</value>
-  </data>
-  <data name="_autoListIdentifiers.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 2, 4, 2</value>
-  </data>
-  <data name="_autoListIdentifiers.Size" type="System.Drawing.Size, System.Drawing">
-    <value>250, 17</value>
-  </data>
-  <data name="_autoListIdentifiers.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <data name="_autoListIdentifiers.Text" xml:space="preserve">
-    <value>A&amp;utomatically show completions for all identifiers</value>
-  </data>
-  <data name="&gt;&gt;_autoListIdentifiers.Name" xml:space="preserve">
-    <value>_autoListIdentifiers</value>
-  </data>
-  <data name="&gt;&gt;_autoListIdentifiers.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;_autoListIdentifiers.Parent" xml:space="preserve">
-    <value>tableLayoutPanel2</value>
-  </data>
-  <data name="&gt;&gt;_autoListIdentifiers.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="tableLayoutPanel2.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Fill</value>
-  </data>
-  <data name="tableLayoutPanel2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 16</value>
-  </data>
-  <data name="tableLayoutPanel2.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 4, 3, 4</value>
-  </data>
-  <data name="tableLayoutPanel2.RowCount" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="tableLayoutPanel2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>466, 63</value>
-  </data>
-  <data name="tableLayoutPanel2.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;tableLayoutPanel2.Name" xml:space="preserve">
-    <value>tableLayoutPanel2</value>
-  </data>
-  <data name="&gt;&gt;tableLayoutPanel2.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TableLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;tableLayoutPanel2.Parent" xml:space="preserve">
-    <value>_completionResultsGroupBox</value>
-  </data>
-  <data name="&gt;&gt;tableLayoutPanel2.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="tableLayoutPanel2.LayoutSettings" type="System.Windows.Forms.TableLayoutSettings, System.Windows.Forms">
-    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="_intersectMembers" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_filterCompletions" Row="1" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_autoListIdentifiers" Row="2" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="Percent,50" /&gt;&lt;Rows Styles="Percent,50,AutoSize,0,AutoSize,0" /&gt;&lt;/TableLayoutSettings&gt;</value>
-  </data>
-  <data name="_completionResultsGroupBox.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Fill</value>
-  </data>
-  <data name="_completionResultsGroupBox.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 3</value>
-  </data>
-  <data name="_completionResultsGroupBox.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>6, 3, 6, 3</value>
-  </data>
-  <data name="_completionResultsGroupBox.Size" type="System.Drawing.Size, System.Drawing">
-    <value>472, 82</value>
-  </data>
-  <data name="_completionResultsGroupBox.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="_completionResultsGroupBox.Text" xml:space="preserve">
-    <value>Completion Results</value>
-  </data>
-  <data name="&gt;&gt;_completionResultsGroupBox.Name" xml:space="preserve">
-    <value>_completionResultsGroupBox</value>
-  </data>
-  <data name="&gt;&gt;_completionResultsGroupBox.Type" xml:space="preserve">
-    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;_completionResultsGroupBox.Parent" xml:space="preserve">
-    <value>tableLayoutPanel1</value>
-  </data>
-  <data name="&gt;&gt;_completionResultsGroupBox.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="_miscOptionsGroupBox.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="_miscOptionsGroupBox.AutoSizeMode" type="System.Windows.Forms.AutoSizeMode, System.Windows.Forms">
-    <value>GrowAndShrink</value>
-  </data>
-  <data name="tableLayoutPanel4.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="tableLayoutPanel4.AutoSizeMode" type="System.Windows.Forms.AutoSizeMode, System.Windows.Forms">
-    <value>GrowAndShrink</value>
-  </data>
-  <data name="tableLayoutPanel4.ColumnCount" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="_outliningOnOpen.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Left</value>
-  </data>
-  <data name="_outliningOnOpen.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="_outliningOnOpen.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 2</value>
-  </data>
-  <data name="_outliningOnOpen.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 2, 4, 2</value>
-  </data>
-  <data name="_outliningOnOpen.Size" type="System.Drawing.Size, System.Drawing">
-    <value>199, 17</value>
-  </data>
-  <data name="_outliningOnOpen.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="_outliningOnOpen.Text" xml:space="preserve">
-    <value>Enter &amp;outlining mode when files open</value>
-  </data>
-  <data name="&gt;&gt;_outliningOnOpen.Name" xml:space="preserve">
-    <value>_outliningOnOpen</value>
-  </data>
-  <data name="&gt;&gt;_outliningOnOpen.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;_outliningOnOpen.Parent" xml:space="preserve">
-    <value>tableLayoutPanel4</value>
-  </data>
-  <data name="&gt;&gt;_outliningOnOpen.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="_pasteRemovesReplPrompts.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Left</value>
-  </data>
-  <data name="_pasteRemovesReplPrompts.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="_pasteRemovesReplPrompts.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 23</value>
-  </data>
-  <data name="_pasteRemovesReplPrompts.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 2, 4, 2</value>
-  </data>
-  <data name="_pasteRemovesReplPrompts.Size" type="System.Drawing.Size, System.Drawing">
-    <value>167, 17</value>
-  </data>
-  <data name="_pasteRemovesReplPrompts.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="_pasteRemovesReplPrompts.Text" xml:space="preserve">
-    <value>&amp;Paste removes REPL prompts</value>
-  </data>
-  <data name="&gt;&gt;_pasteRemovesReplPrompts.Name" xml:space="preserve">
-    <value>_pasteRemovesReplPrompts</value>
-  </data>
-  <data name="&gt;&gt;_pasteRemovesReplPrompts.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;_pasteRemovesReplPrompts.Parent" xml:space="preserve">
-    <value>tableLayoutPanel4</value>
-  </data>
-  <data name="&gt;&gt;_pasteRemovesReplPrompts.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="_colorNames.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Left</value>
-  </data>
-  <data name="_colorNames.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="_colorNames.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 44</value>
-  </data>
-  <data name="_colorNames.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 2, 4, 2</value>
-  </data>
-  <data name="_colorNames.Size" type="System.Drawing.Size, System.Drawing">
-    <value>159, 17</value>
-  </data>
-  <data name="_colorNames.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="_colorNames.Text" xml:space="preserve">
-    <value>Color &amp;names based on types</value>
-  </data>
-  <data name="&gt;&gt;_colorNames.Name" xml:space="preserve">
-    <value>_colorNames</value>
-  </data>
-  <data name="&gt;&gt;_colorNames.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;_colorNames.Parent" xml:space="preserve">
-    <value>tableLayoutPanel4</value>
-  </data>
-  <data name="&gt;&gt;_colorNames.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="tableLayoutPanel4.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Fill</value>
-  </data>
-  <data name="tableLayoutPanel4.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 16</value>
-  </data>
-  <data name="tableLayoutPanel4.RowCount" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="tableLayoutPanel4.Size" type="System.Drawing.Size, System.Drawing">
-    <value>466, 63</value>
-  </data>
-  <data name="tableLayoutPanel4.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;tableLayoutPanel4.Name" xml:space="preserve">
-    <value>tableLayoutPanel4</value>
-  </data>
-  <data name="&gt;&gt;tableLayoutPanel4.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TableLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;tableLayoutPanel4.Parent" xml:space="preserve">
-    <value>_miscOptionsGroupBox</value>
-  </data>
-  <data name="&gt;&gt;tableLayoutPanel4.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="tableLayoutPanel4.LayoutSettings" type="System.Windows.Forms.TableLayoutSettings, System.Windows.Forms">
-    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="_outliningOnOpen" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_pasteRemovesReplPrompts" Row="1" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_colorNames" Row="2" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="Percent,100,Absolute,20" /&gt;&lt;Rows Styles="AutoSize,0,AutoSize,0,AutoSize,0,Absolute,20" /&gt;&lt;/TableLayoutSettings&gt;</value>
-  </data>
-  <data name="_miscOptionsGroupBox.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Fill</value>
-  </data>
-  <data name="_miscOptionsGroupBox.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 195</value>
-  </data>
-  <data name="_miscOptionsGroupBox.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>6, 3, 6, 3</value>
-  </data>
-  <data name="_miscOptionsGroupBox.Size" type="System.Drawing.Size, System.Drawing">
-    <value>472, 82</value>
-  </data>
-  <data name="_miscOptionsGroupBox.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <data name="_miscOptionsGroupBox.Text" xml:space="preserve">
-    <value>Miscellaneous Options</value>
-  </data>
-  <data name="&gt;&gt;_miscOptionsGroupBox.Name" xml:space="preserve">
-    <value>_miscOptionsGroupBox</value>
-  </data>
-  <data name="&gt;&gt;_miscOptionsGroupBox.Type" xml:space="preserve">
-    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;_miscOptionsGroupBox.Parent" xml:space="preserve">
-    <value>tableLayoutPanel1</value>
-  </data>
-  <data name="&gt;&gt;_miscOptionsGroupBox.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
   <data name="tableLayoutPanel1.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="tableLayoutPanel1.AutoSizeMode" type="System.Windows.Forms.AutoSizeMode, System.Windows.Forms">
     <value>GrowAndShrink</value>
   </data>
   <data name="tableLayoutPanel1.ColumnCount" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="_completeFunctionParens.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Left</value>
+  </data>
+  <data name="_completeFunctionParens.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="_completeFunctionParens.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="_completeFunctionParens.Location" type="System.Drawing.Point, System.Drawing">
+    <value>11, 47</value>
+  </data>
+  <data name="_completeFunctionParens.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>11, 6, 11, 6</value>
+  </data>
+  <data name="_completeFunctionParens.Size" type="System.Drawing.Size, System.Drawing">
+    <value>381, 29</value>
+  </data>
+  <data name="_completeFunctionParens.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="_completeFunctionParens.Text" xml:space="preserve">
+    <value>&amp;Automatically add brackets for functions</value>
+  </data>
+  <data name="&gt;&gt;_completeFunctionParens.Name" xml:space="preserve">
+    <value>_completeFunctionParens</value>
+  </data>
+  <data name="&gt;&gt;_completeFunctionParens.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_completeFunctionParens.Parent" xml:space="preserve">
+    <value>tableLayoutPanel1</value>
+  </data>
+  <data name="&gt;&gt;_completeFunctionParens.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="_autoImportCompletions.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Left</value>
+  </data>
+  <data name="_autoImportCompletions.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="_autoImportCompletions.Location" type="System.Drawing.Point, System.Drawing">
+    <value>11, 6</value>
+  </data>
+  <data name="_autoImportCompletions.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>11, 6, 11, 6</value>
+  </data>
+  <data name="_autoImportCompletions.Size" type="System.Drawing.Size, System.Drawing">
+    <value>293, 29</value>
+  </data>
+  <data name="_autoImportCompletions.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="_autoImportCompletions.Text" xml:space="preserve">
+    <value>&amp;Offer auto-import completions</value>
+  </data>
+  <data name="&gt;&gt;_autoImportCompletions.Name" xml:space="preserve">
+    <value>_autoImportCompletions</value>
+  </data>
+  <data name="&gt;&gt;_autoImportCompletions.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_autoImportCompletions.Parent" xml:space="preserve">
+    <value>tableLayoutPanel1</value>
+  </data>
+  <data name="&gt;&gt;_autoImportCompletions.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="tableLayoutPanel1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
@@ -691,13 +208,13 @@
     <value>0, 0</value>
   </data>
   <data name="tableLayoutPanel1.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 4, 3, 4</value>
+    <value>6, 6, 6, 6</value>
   </data>
   <data name="tableLayoutPanel1.RowCount" type="System.Int32, mscorlib">
-    <value>4</value>
+    <value>3</value>
   </data>
   <data name="tableLayoutPanel1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>484, 302</value>
+    <value>699, 510</value>
   </data>
   <data name="tableLayoutPanel1.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -715,28 +232,19 @@
     <value>0</value>
   </data>
   <data name="tableLayoutPanel1.LayoutSettings" type="System.Windows.Forms.TableLayoutSettings, System.Windows.Forms">
-    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="_completionResultsGroupBox" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_selectionInCompletionGroupBox" Row="1" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_miscOptionsGroupBox" Row="2" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;/Controls&gt;&lt;Columns Styles="Percent,100" /&gt;&lt;Rows Styles="AutoSize,0,AutoSize,0,AutoSize,0,Absolute,22" /&gt;&lt;/TableLayoutSettings&gt;</value>
+    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="_completeFunctionParens" Row="1" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_autoImportCompletions" Row="0" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;/Controls&gt;&lt;Columns Styles="Percent,100,Absolute,545" /&gt;&lt;Rows Styles="AutoSize,0,AutoSize,0,Absolute,20" /&gt;&lt;/TableLayoutSettings&gt;</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
-    <value>6, 13</value>
-  </data>
-  <data name="$this.AutoScroll" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="$this.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="$this.AutoSizeMode" type="System.Windows.Forms.AutoSizeMode, System.Windows.Forms">
-    <value>GrowAndShrink</value>
+    <value>11, 24</value>
   </data>
   <data name="$this.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>6, 8, 6, 8</value>
+    <value>6, 6, 6, 6</value>
   </data>
   <data name="$this.Size" type="System.Drawing.Size, System.Drawing">
-    <value>484, 302</value>
+    <value>699, 510</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>PythonAdvancedEditorOptionsControl</value>

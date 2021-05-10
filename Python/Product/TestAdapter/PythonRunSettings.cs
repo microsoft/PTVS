@@ -20,6 +20,7 @@ using System.ComponentModel.Composition;
 using System.IO;
 using System.Linq;
 using System.Xml.XPath;
+using Microsoft.PythonTools.Common;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.ComponentModelHost;
@@ -67,7 +68,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 
                             var dte = (EnvDTE.DTE)_serviceProvider.GetService(typeof(EnvDTE.DTE));
                             dte.Commands.Raise(
-                                GuidList.guidPythonToolsCmdSet.ToString("B"),
+                                CommonGuidList.guidPythonToolsCmdSet.ToString("B"),
                                 cmdidImportCoverage,
                                 ref inObj,
                                 ref outObj
@@ -238,7 +239,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 if (projInfo != null) {
                     try {
                         config = projInfo.GetLaunchConfigurationOrThrow();
-                        fullEnvironment = LaunchConfigurationUtils.GetFullEnvironment(config, _serviceProvider);
+                        fullEnvironment = LaunchConfigurationUtils.GetFullEnvironment(config, _serviceProvider, _serviceProvider.GetUIThread());
                     } catch {
                     }
                     nativeCode = projInfo.GetProperty(PythonConstants.EnableNativeCodeDebugging);

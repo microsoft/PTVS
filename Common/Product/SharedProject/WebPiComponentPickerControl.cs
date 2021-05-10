@@ -90,10 +90,7 @@ namespace Microsoft.VisualStudioTools.Project {
 
                 var fullMessage = SR.GetString(SR.WebPiFeedError, feedSource, ex);
                 Trace.WriteLine(fullMessage);
-                try {
-                    ActivityLog.LogError("WebPiComponentPickerControl", fullMessage);
-                } catch (InvalidOperationException) {
-                }
+                CommonUtils.ActivityLogError("WebPiComponentPickerControl", fullMessage);
             }
         }
 

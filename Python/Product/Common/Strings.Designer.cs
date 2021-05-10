@@ -1218,6 +1218,231 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Classes.
+        /// </summary>
+        public static string CompletionFilterClass {
+            get {
+                return ResourceManager.GetString("CompletionFilterClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Colors.
+        /// </summary>
+        public static string CompletionFilterColor {
+            get {
+                return ResourceManager.GetString("CompletionFilterColor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Constants.
+        /// </summary>
+        public static string CompletionFilterConstant {
+            get {
+                return ResourceManager.GetString("CompletionFilterConstant", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Constructors.
+        /// </summary>
+        public static string CompletionFilterConstructor {
+            get {
+                return ResourceManager.GetString("CompletionFilterConstructor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enums.
+        /// </summary>
+        public static string CompletionFilterEnum {
+            get {
+                return ResourceManager.GetString("CompletionFilterEnum", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enum members.
+        /// </summary>
+        public static string CompletionFilterEnumMember {
+            get {
+                return ResourceManager.GetString("CompletionFilterEnumMember", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Events.
+        /// </summary>
+        public static string CompletionFilterEvent {
+            get {
+                return ResourceManager.GetString("CompletionFilterEvent", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Fields.
+        /// </summary>
+        public static string CompletionFilterField {
+            get {
+                return ResourceManager.GetString("CompletionFilterField", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Files.
+        /// </summary>
+        public static string CompletionFilterFile {
+            get {
+                return ResourceManager.GetString("CompletionFilterFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Folders.
+        /// </summary>
+        public static string CompletionFilterFolder {
+            get {
+                return ResourceManager.GetString("CompletionFilterFolder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Functions.
+        /// </summary>
+        public static string CompletionFilterFunction {
+            get {
+                return ResourceManager.GetString("CompletionFilterFunction", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Interfaces.
+        /// </summary>
+        public static string CompletionFilterInterface {
+            get {
+                return ResourceManager.GetString("CompletionFilterInterface", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Keywords.
+        /// </summary>
+        public static string CompletionFilterKeyword {
+            get {
+                return ResourceManager.GetString("CompletionFilterKeyword", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Methods.
+        /// </summary>
+        public static string CompletionFilterMethod {
+            get {
+                return ResourceManager.GetString("CompletionFilterMethod", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Modules.
+        /// </summary>
+        public static string CompletionFilterModule {
+            get {
+                return ResourceManager.GetString("CompletionFilterModule", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Operators.
+        /// </summary>
+        public static string CompletionFilterOperator {
+            get {
+                return ResourceManager.GetString("CompletionFilterOperator", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Properties.
+        /// </summary>
+        public static string CompletionFilterProperty {
+            get {
+                return ResourceManager.GetString("CompletionFilterProperty", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to References.
+        /// </summary>
+        public static string CompletionFilterReference {
+            get {
+                return ResourceManager.GetString("CompletionFilterReference", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Snippets.
+        /// </summary>
+        public static string CompletionFilterSnippet {
+            get {
+                return ResourceManager.GetString("CompletionFilterSnippet", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Structs.
+        /// </summary>
+        public static string CompletionFilterStruct {
+            get {
+                return ResourceManager.GetString("CompletionFilterStruct", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Names.
+        /// </summary>
+        public static string CompletionFilterText {
+            get {
+                return ResourceManager.GetString("CompletionFilterText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Type parameters.
+        /// </summary>
+        public static string CompletionFilterTypeParameter {
+            get {
+                return ResourceManager.GetString("CompletionFilterTypeParameter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Units.
+        /// </summary>
+        public static string CompletionFilterUnit {
+            get {
+                return ResourceManager.GetString("CompletionFilterUnit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Values.
+        /// </summary>
+        public static string CompletionFilterValue {
+            get {
+                return ResourceManager.GetString("CompletionFilterValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Variables.
+        /// </summary>
+        public static string CompletionFilterVariable {
+            get {
+                return ResourceManager.GetString("CompletionFilterVariable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to ----- Failed to create &apos;{0}&apos; -----
         ///
         ///.
@@ -1592,6 +1817,15 @@ namespace Microsoft.PythonTools {
         public static string CondaStatusCenterInstallFailure {
             get {
                 return ResourceManager.GetString("CondaStatusCenterInstallFailure", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Type checker configuration file already exists in this folder..
+        /// </summary>
+        public static string ConfigFileAlreadyExists {
+            get {
+                return ResourceManager.GetString("ConfigFileAlreadyExists", resourceCulture);
             }
         }
         
@@ -2572,11 +2806,11 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to This debug REPL feature is only supported with the legacy debugger..
+        ///   Looks up a localized string similar to Debugging REPL feature is not yet supported..
         /// </summary>
-        public static string DebugReplFeatureNotSupportedWithExperimentalDebugger {
+        public static string DebugReplFeatureNotSupported {
             get {
-                return ResourceManager.GetString("DebugReplFeatureNotSupportedWithExperimentalDebugger", resourceCulture);
+                return ResourceManager.GetString("DebugReplFeatureNotSupported", resourceCulture);
             }
         }
         
@@ -3069,6 +3303,33 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Open files only.
+        /// </summary>
+        public static string DiagnosticModeOpenFiles {
+            get {
+                return ResourceManager.GetString("DiagnosticModeOpenFiles", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Analyzes and reports errors on only open files or the entire workspace..
+        /// </summary>
+        public static string DiagnosticModeToolTip {
+            get {
+                return ResourceManager.GetString("DiagnosticModeToolTip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Workspace.
+        /// </summary>
+        public static string DiagnosticModeWorkspace {
+            get {
+                return ResourceManager.GetString("DiagnosticModeWorkspace", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Diagnostics log was copied to the clipboard..
         /// </summary>
         public static string DiagnosticsLogCopiedToClipboard {
@@ -3488,6 +3749,15 @@ namespace Microsoft.PythonTools {
         public static string ErrorTestCaseNotFound {
             get {
                 return ResourceManager.GetString("ErrorTestCaseNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to install code formatter. Error {0}..
+        /// </summary>
+        public static string ErrorUnableToInstallFormatter {
+            get {
+                return ResourceManager.GetString("ErrorUnableToInstallFormatter", resourceCulture);
             }
         }
         
@@ -4048,24 +4318,6 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to There was an error loading ptvsd from the current environment. Please upgrade or uninstall ptvsd..
-        /// </summary>
-        public static string ImportPtvsdModuleNotFoundMessage {
-            get {
-                return ResourceManager.GetString("ImportPtvsdModuleNotFoundMessage", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Debugger package could not be loaded.
-        /// </summary>
-        public static string ImportPtvsdModuleNotFoundTitle {
-            get {
-                return ResourceManager.GetString("ImportPtvsdModuleNotFoundTitle", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to _Back.
         /// </summary>
         public static string ImportWizard_BackButton {
@@ -4401,6 +4653,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Install &apos;{0}&apos; in environment &apos;{1}&apos; now?.
+        /// </summary>
+        public static string InstallFormatterPrompt {
+            get {
+                return ResourceManager.GetString("InstallFormatterPrompt", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to ----- Failed to install &apos;{0}&apos; -----
         ///
         ///.
@@ -4636,6 +4897,33 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Language server initialization failed.\n\n{0}.
+        /// </summary>
+        public static string LanguageClientInitializeFailed {
+            get {
+                return ResourceManager.GetString("LanguageClientInitializeFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Node.js was not found. It is required to run Pylance language server..
+        /// </summary>
+        public static string LanguageClientNodejsNotFound {
+            get {
+                return ResourceManager.GetString("LanguageClientNodejsNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Pylance language server was not found. Please reinstall Python Tools..
+        /// </summary>
+        public static string LanguageClientPylanceNotFound {
+            get {
+                return ResourceManager.GetString("LanguageClientPylanceNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} (alias of {1}).
         /// </summary>
         public static string LibraryNodeAliasOf {
@@ -4677,6 +4965,51 @@ namespace Microsoft.PythonTools {
         public static string LinesBetweenMethodsInClassShort {
             get {
                 return ResourceManager.GetString("LinesBetweenMethodsInClassShort", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error.
+        /// </summary>
+        public static string LogLevelError {
+            get {
+                return ResourceManager.GetString("LogLevelError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Information.
+        /// </summary>
+        public static string LogLevelInformation {
+            get {
+                return ResourceManager.GetString("LogLevelInformation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Specifies the level of logging for the Output panel..
+        /// </summary>
+        public static string LogLevelToolTip {
+            get {
+                return ResourceManager.GetString("LogLevelToolTip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Trace.
+        /// </summary>
+        public static string LogLevelTrace {
+            get {
+                return ResourceManager.GetString("LogLevelTrace", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Warning.
+        /// </summary>
+        public static string LogLevelWarning {
+            get {
+                return ResourceManager.GetString("LogLevelWarning", resourceCulture);
             }
         }
         
@@ -4952,7 +5285,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unnstalling &apos;{0}&apos;.
+        ///   Looks up a localized string similar to Uninstalling &apos;{0}&apos;.
         /// </summary>
         public static string PackageUninstalling {
             get {
@@ -4961,7 +5294,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unnstalling &apos;{0}&apos;. See the Output Window for more information..
+        ///   Looks up a localized string similar to Uninstalling &apos;{0}&apos;. See the Output Window for more information..
         /// </summary>
         public static string PackageUninstallingSeeOutputWindow {
             get {
@@ -5074,60 +5407,6 @@ namespace Microsoft.PythonTools {
         public static string ProjectText {
             get {
                 return ResourceManager.GetString("ProjectText", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Use the legacy debugger.
-        /// </summary>
-        public static string PtvsdDisableCaption {
-            get {
-                return ResourceManager.GetString("PtvsdDisableCaption", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Future debugging sessions will use the legacy debugger. You can also change this setting in Tools, Options, Python, Debugging page by changing the &apos;Use legacy debugger&apos; option..
-        /// </summary>
-        public static string PtvsdDisableSubtext {
-            get {
-                return ResourceManager.GetString("PtvsdDisableSubtext", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to To debug this Python environment, please use the legacy debugger. Older versions of Python are not supported. See our &lt;a href=&quot;https://aka.ms/upgradeptvsd&quot;&gt;documentation&lt;/a&gt; for a list of supported Python versions and environment types..
-        /// </summary>
-        public static string PtvsdIncompatibleEnvMessage {
-            get {
-                return ResourceManager.GetString("PtvsdIncompatibleEnvMessage", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Debugger does not support this Python environment.
-        /// </summary>
-        public static string PtvsdIncompatibleEnvTitle {
-            get {
-                return ResourceManager.GetString("PtvsdIncompatibleEnvTitle", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Learn more.
-        /// </summary>
-        public static string PtvsdLearnMoreCaption {
-            get {
-                return ResourceManager.GetString("PtvsdLearnMoreCaption", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to View documentation on supported Python environments and how to upgrade or uninstall the ptvsd debugger package..
-        /// </summary>
-        public static string PtvsdLearnMoreSubtext {
-            get {
-                return ResourceManager.GetString("PtvsdLearnMoreSubtext", resourceCulture);
             }
         }
         
@@ -5631,7 +5910,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to You&apos;re using Python {0}. Some new features might not work as expected until Visual Studio officially supports this version..
+        ///   Looks up a localized string similar to You&apos;re using Python {0}. Some features might not work as expected since Visual Studio no longer supports this version..
         /// </summary>
         public static string PythonVersionNotSupportedInfoBarText {
             get {
@@ -6701,6 +6980,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Additional import search resolution paths. You can use line breaks or semicolons to separate multiple paths..
+        /// </summary>
+        public static string SearchPathsToolTip {
+            get {
+                return ResourceManager.GetString("SearchPathsToolTip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to An unexpected error occurred.
         ///
         ///You can get more information by running Visual Studio with the /log parameter on the command line, and then examining the file &apos;{0}&apos;, or by checking Event Viewer..
@@ -7202,6 +7490,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Path to directory containing custom type stub files..
+        /// </summary>
+        public static string StubPathToolTip {
+            get {
+                return ResourceManager.GetString("StubPathToolTip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Surround With.
         /// </summary>
         public static string SurroundWith {
@@ -7324,6 +7621,51 @@ namespace Microsoft.PythonTools {
         public static string TrustOnceWorkspaceInfoBarAction {
             get {
                 return ResourceManager.GetString("TrustOnceWorkspaceInfoBarAction", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Basic.
+        /// </summary>
+        public static string TypeCheckingModeBasic {
+            get {
+                return ResourceManager.GetString("TypeCheckingModeBasic", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Off.
+        /// </summary>
+        public static string TypeCheckingModeOff {
+            get {
+                return ResourceManager.GetString("TypeCheckingModeOff", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Strict.
+        /// </summary>
+        public static string TypeCheckingModeStrict {
+            get {
+                return ResourceManager.GetString("TypeCheckingModeStrict", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Defines the default rule set for type checking..
+        /// </summary>
+        public static string TypeCheckingModeToolTip {
+            get {
+                return ResourceManager.GetString("TypeCheckingModeToolTip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Paths to look for typeshed modules. You can use line breaks or semicolons to separate multiple paths..
+        /// </summary>
+        public static string TypeshedPathsToolTip {
+            get {
+                return ResourceManager.GetString("TypeshedPathsToolTip", resourceCulture);
             }
         }
         
@@ -7819,6 +8161,15 @@ namespace Microsoft.PythonTools {
         public static string WarningInvalidEncoding {
             get {
                 return ResourceManager.GetString("WarningInvalidEncoding", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Pylance language server does not support Python 2.x. Type checking will be performed as in Python 3.x..
+        /// </summary>
+        public static string WarningPython2NotSupported {
+            get {
+                return ResourceManager.GetString("WarningPython2NotSupported", resourceCulture);
             }
         }
         

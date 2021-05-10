@@ -39,40 +39,23 @@ namespace PythonToolsUITestsRunner {
         public static void ClassCleanup() => VsTestContext.Instance.Dispose();
         #endregion
 
-        [TestMethod, Priority(UITestPriority.P2)]
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void ToggleableOptionTest() {
-            _vs.RunTest(nameof(PythonToolsUITests.FormattingUITests.ToggleableOptionTest));
+        public void FormatAutopep8() {
+            _vs.RunTest(nameof(PythonToolsUITests.FormattingUITests.FormatAutopep8));
         }
 
-        [TestMethod, Priority(UITestPriority.P2_FAILING_UI_TEST)]
+        // https://github.com/microsoft/PTVS/issues/5879
+        [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void FormatDocument() {
-            _vs.RunTest(nameof(PythonToolsUITests.FormattingUITests.FormatDocument));
+        public void FormatBlack() {
+            _vs.RunTest(nameof(PythonToolsUITests.FormattingUITests.FormatBlack));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void FormatAsyncDocument() {
-            _vs.RunTest(nameof(PythonToolsUITests.FormattingUITests.FormatAsyncDocument));
-        }
-
-        [TestMethod, Priority(UITestPriority.P2_FAILING_UI_TEST)]
-        [TestCategory("Installed")]
-        public void FormatSelection() {
-            _vs.RunTest(nameof(PythonToolsUITests.FormattingUITests.FormatSelection));
-        }
-
-        [TestMethod, Priority(UITestPriority.P0)]
-        [TestCategory("Installed")]
-        public void FormatSelectionNoSelection() {
-            _vs.RunTest(nameof(PythonToolsUITests.FormattingUITests.FormatSelectionNoSelection));
-        }
-
-        [TestMethod, Priority(UITestPriority.P2_FAILING_UI_TEST)]
-        [TestCategory("Installed")]
-        public void FormatReduceLines() {
-            _vs.RunTest(nameof(PythonToolsUITests.FormattingUITests.FormatReduceLines));
+        public void FormatYapf() {
+            _vs.RunTest(nameof(PythonToolsUITests.FormattingUITests.FormatYapf));
         }
     }
 }

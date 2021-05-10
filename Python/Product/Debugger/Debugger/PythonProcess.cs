@@ -22,10 +22,11 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Python.Core.Text;
+using Microsoft.Python.Parsing;
+using Microsoft.Python.Parsing.Ast;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Ipc.Json;
-using Microsoft.PythonTools.Parsing;
-using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudioTools;
 using LDP = Microsoft.PythonTools.Debugger.LegacyDebuggerProtocol;
 
@@ -152,7 +153,15 @@ namespace Microsoft.PythonTools.Debugger {
 
         public PythonLanguageVersion LanguageVersion => _langVersion;
 
-        public bool HasExited => _process?.HasExited == true;
+        public bool HasExited {
+            get {
+                try {
+                    return _process?.HasExited == true;
+                } catch {
+                    return true;
+                }
+            }
+        }
 
         public async Task StartAsync(bool startListening = true) {
             _process.Start();

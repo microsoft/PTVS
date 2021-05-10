@@ -1,3 +1,0 @@
-This project file automatically collects all files in the source directory.
-
-Do not add or remove files within Visual Studio.

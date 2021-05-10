@@ -59,7 +59,6 @@ namespace Microsoft.PythonTools.Debugger {
                     _stream = new DebugRemoteAdapterProcessStream(new NetworkStream(socket, ownsSocket: true));
                     _stream.Disconnected += OnDisconnected;
                     _stream.Initialized += OnInitialized;
-                    _stream.LegacyDebugger += OnLegacyDebugger;
                 } else {
                     Debug.WriteLine("Timed out waiting for debugger to connect.", nameof(DebugAdapterRemoteProcess));
                     logger?.LogEvent(PythonLogEvent.DebugAdapterConnectionTimeout, "Attach");
@@ -73,6 +72,8 @@ namespace Microsoft.PythonTools.Debugger {
 
         private void OnDisconnected(object sender, EventArgs e) {
             if (_stream != null) {
+                _stream.Disconnected -= OnDisconnected;
+                _stream.Initialized -= OnInitialized;
                 _stream.Dispose();
             }
             Exited?.Invoke(this, null);
@@ -84,8 +85,6 @@ namespace Microsoft.PythonTools.Debugger {
                 DebugPyVersionHelper.VerifyDebugPyVersion,
                 DebugPyVersionHelper.ShowDebugPyVersionError);
         }
-
-        private void OnLegacyDebugger(object sender, EventArgs e) => DebugPyVersionHelper.ShowLegacyPtvsdVersionError();
 
         public IntPtr Handle => IntPtr.Zero;
 

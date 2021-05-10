@@ -27,15 +27,14 @@ using System.Windows.Forms;
 using System.Xml;
 using System.Xml.XPath;
 using Microsoft.Build.Execution;
-using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Commands;
+using Microsoft.PythonTools.Common;
 using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Environments;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Logging;
-using Microsoft.PythonTools.Navigation;
 using Microsoft.PythonTools.Projects;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Azure;
@@ -44,6 +43,8 @@ using Microsoft.VisualStudio.Imaging.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TextManager.Interop;
+using Microsoft.VisualStudio.Utilities;
+using Microsoft.VisualStudio.Workspace.VSIntegration.Contracts;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 using IServiceProvider = System.IServiceProvider;
@@ -65,12 +66,9 @@ namespace Microsoft.PythonTools.Project {
         // they can be located and removed when that directory is removed from the path.
         private static readonly object _searchPathEntryKey = new { Name = "SearchPathEntry" };
 
-        private readonly PythonEditorServices _services;
         private readonly VsProjectContextProvider _vsProjectContext;
 
         private object _designerContext;
-        private VsProjectAnalyzer _analyzer;
-        private readonly HashSet<AnalysisEntry> _warnOnLaunchFiles = new HashSet<AnalysisEntry>();
         private PythonDebugPropertyPage _debugPropPage;
         internal readonly SearchPathManager _searchPaths;
         private CommonSearchPathContainerNode _searchPathContainer;
@@ -81,11 +79,8 @@ namespace Microsoft.PythonTools.Project {
         private readonly IPythonToolsLogger _logger;
 
         private IReadOnlyList<IPackageManager> _activePackageManagers;
-        private readonly System.Threading.Timer _reanalyzeProjectNotification;
 
         private FileWatcher _projectFileWatcher;
-        private readonly HashSet<AnalysisEntry> _pendingChanges, _pendingDeletes;
-        private readonly System.Threading.Timer _deferredChangeNotification;
 
         internal List<CustomCommand> _customCommands;
         private string _customCommandsDisplayLabel;
@@ -100,26 +95,20 @@ namespace Microsoft.PythonTools.Project {
         private readonly PythonNotSupportedInfoBar _pythonVersionNotSupportedInfoBar;
 
         private readonly SemaphoreSlim _recreatingAnalyzer = new SemaphoreSlim(1);
-        private int _analyzerAbnormalExitCount;
+
+        public event EventHandler LanguageServerInterpreterChanged;
+
+        public event EventHandler LanguageServerSearchPathsChanged;
 
         public PythonProjectNode(IServiceProvider serviceProvider) : base(serviceProvider, null) {
-            _services = serviceProvider.GetEditorServices();
-            if (_services == null) {
-                throw new InvalidOperationException("Unable to initialize services");
-            }
+            _logger = serviceProvider.GetPythonToolsService().Logger;
+            _vsProjectContext = serviceProvider.GetComponentModel().GetService<VsProjectContextProvider>();
 
-            _logger = _services.Python.Logger;
-
-            _vsProjectContext = _services.ComponentModel.GetService<VsProjectContextProvider>();
+            InterpreterOptions = serviceProvider.GetComponentModel().GetService<IInterpreterOptionsService>();
+            InterpreterRegistry = serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>();
 
             _searchPaths = new SearchPathManager(serviceProvider);
             _searchPaths.Changed += SearchPaths_Changed;
-
-            _pendingChanges = new HashSet<AnalysisEntry>();
-            _pendingDeletes = new HashSet<AnalysisEntry>();
-            _deferredChangeNotification = new System.Threading.Timer(ProjectFile_Notify);
-
-            _reanalyzeProjectNotification = new System.Threading.Timer(ReanalyzeProject_Notify);
 
             Type projectNodePropsType = typeof(PythonProjectNodeProperties);
             AddCATIDMapping(projectNodePropsType, projectNodePropsType.GUID);
@@ -226,9 +215,9 @@ namespace Microsoft.PythonTools.Project {
             });
         }
 
-        public IInterpreterOptionsService InterpreterOptions => _services.InterpreterOptionsService;
+        public IInterpreterOptionsService InterpreterOptions { get; }
 
-        public IInterpreterRegistryService InterpreterRegistry => _services.InterpreterRegistryService;
+        public IInterpreterRegistryService InterpreterRegistry { get; }
 
         public IPythonInterpreterFactory ActiveInterpreter {
             get {
@@ -293,10 +282,11 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private void PackageManager_InstalledFilesChanged(object sender, EventArgs e) {
-            try {
-                _reanalyzeProjectNotification.Change(500, Timeout.Infinite);
-            } catch (ObjectDisposedException) {
-            }
+            // TODO: Pylance
+            //try {
+            //    _reanalyzeProjectNotification.Change(500, Timeout.Infinite);
+            //} catch (ObjectDisposedException) {
+            //}
         }
 
         private string ReplaceMSBuildPath(string id) {
@@ -337,7 +327,7 @@ namespace Microsoft.PythonTools.Project {
             InterpreterFactoriesChanged?.Invoke(this, EventArgs.Empty);
         }
 
-        public void AddInterpreterDefinitionAndReference(InterpreterConfiguration config) {
+        public void AddInterpreterDefinitionAndReference(Interpreter.InterpreterConfiguration config) {
             lock (_validFactories) {
                 if (_validFactories.Contains(config.Id)) {
                     return;
@@ -478,7 +468,7 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        internal IEnumerable<InterpreterConfiguration> InterpreterConfigurations {
+        internal IEnumerable<Interpreter.InterpreterConfiguration> InterpreterConfigurations {
             get {
                 foreach (var config in _validFactories) {
                     var value = InterpreterRegistry.FindConfiguration(config);
@@ -533,22 +523,8 @@ namespace Microsoft.PythonTools.Project {
             get { return Strings.IssueTrackerUrl; }
         }
 
-        private static string GetSearchPathEntry(AnalysisEntry entry) {
-            object result;
-            entry.Properties.TryGetValue(_searchPathEntryKey, out result);
-            return (string)result;
-        }
-
-        private static void SetSearchPathEntry(AnalysisEntry entry, string value) {
-            entry.Properties[_searchPathEntryKey] = value;
-        }
-
         public override CommonFileNode CreateCodeFileNode(ProjectElement item) {
             return new PythonFileNode(this, item);
-        }
-
-        public override CommonFileNode CreateNonCodeFileNode(ProjectElement item) {
-            return new PythonNonCodeFileNode(this, item);
         }
 
         protected override ConfigProvider CreateConfigProvider() {
@@ -619,13 +595,9 @@ namespace Microsoft.PythonTools.Project {
             return typeof(PythonGeneralPropertyPage);
         }
 
-        public override Type GetEditorFactoryType() {
-            return typeof(PythonEditorFactory);
-        }
+        public override Type GetEditorFactoryType() => null;
 
-        public override Type GetLibraryManagerType() {
-            return typeof(IPythonLibraryManager);
-        }
+        public override Type GetLibraryManagerType() => null;
 
         protected override NodeProperties CreatePropertiesObject() {
             return new PythonProjectNodeProperties(this);
@@ -645,30 +617,6 @@ namespace Microsoft.PythonTools.Project {
                 return true;
             }
             return base.FilterItemTypeToBeAddedToHierarchy(itemType);
-        }
-
-        public override int QueryService(ref Guid guidService, out object result) {
-#if DEV15
-            // Sometimes this service is requested from us and it always seems
-            // to lead to infinite recursion. All callers seem to handle the
-            // failure case, so let's just bail immediately.
-            if (guidService == typeof(SVSMDTypeResolutionService).GUID) {
-                result = null;
-                return VSConstants.E_FAIL;
-            }
-#endif
-
-            var designerSupport = _services.ComponentModel?.GetService<IXamlDesignerSupport>();
-
-            if (designerSupport != null && guidService == designerSupport.DesignerContextTypeGuid) {
-                result = DesignerContext;
-                if (result == null) {
-                    result = DesignerContext = designerSupport?.CreateDesignerContext();
-                }
-                return VSConstants.S_OK;
-            }
-
-            return base.QueryService(ref guidService, out result);
         }
 
         public override int GenerateUniqueItemName(uint itemIdLoc, string ext, string suggestedRoot, out string itemName) {
@@ -702,7 +650,6 @@ namespace Microsoft.PythonTools.Project {
 
             _interpretersContainer = new InterpretersContainerNode(this);
             this.AddChild(_interpretersContainer);
-            RefreshInterpreters(alwaysCollapse: true);
 
             OnProjectPropertyChanged += PythonProjectNode_OnProjectPropertyChanged;
 
@@ -713,6 +660,9 @@ namespace Microsoft.PythonTools.Project {
             } finally {
                 ActiveInterpreterChanged += OnActiveInterpreterChanged;
             }
+
+            // Needs to be refreshed after the active interpreter has been updated
+            RefreshInterpreters(alwaysCollapse: true);
 
             base.Reload();
 
@@ -730,11 +680,6 @@ namespace Microsoft.PythonTools.Project {
             if (!this.IsAppxPackageableProject()) {
                 _searchPaths.LoadPathsFromString(ProjectHome, GetProjectProperty(PythonConstants.SearchPathSetting, false));
             }
-
-            ReanalyzeProject(ActiveInterpreter)
-                .HandleAllExceptions(Site, GetType(), allowUI: false)
-                .DoNotWait();
-
         }
 
         public override void OnOpenItem(string fullPathToSourceFile) {
@@ -939,24 +884,11 @@ namespace Microsoft.PythonTools.Project {
             return null;
         }
 
-
         private void SearchPaths_Changed(object sender, EventArgs e) {
             // Update solution explorer
-            Site.GetUIThread().InvokeAsync(() =>
-                RefreshSearchPaths()
-            );
+            RefreshSearchPaths();
 
-            // Update analyzer
-            UpdateAnalyzerSearchPaths();
-        }
-
-        private void UpdateAnalyzerSearchPaths(VsProjectAnalyzer analyzer = null) {
-            analyzer = analyzer ?? _analyzer;
-            if (analyzer != null) {
-                analyzer.SetSearchPathsAsync(_searchPaths.GetAbsoluteSearchPaths())
-                    .HandleAllExceptions(Site, GetType())
-                    .DoNotWait();
-            }
+            LanguageServerSearchPathsChanged?.Invoke(this, EventArgs.Empty);
         }
 
         /// <summary>
@@ -976,10 +908,9 @@ namespace Microsoft.PythonTools.Project {
             } else if (!_searchPaths.AddOrReplace(moniker, absolutePath, false)) {
                 // Didn't change a search path, so we need to trigger reanalysis
                 // manually.
-                UpdateAnalyzerSearchPaths();
+                LanguageServerSearchPathsChanged?.Invoke(this, EventArgs.Empty);
             }
         }
-
 
         /// <summary>
         /// Executes Add Search Path menu command.
@@ -1051,13 +982,6 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        ProjectAnalyzer IPythonProject.GetProjectAnalyzer() {
-            return _analyzer;
-        }
-
-        public event EventHandler ProjectAnalyzerChanged;
-        public event EventHandler<AnalyzerChangingEventArgs> ProjectAnalyzerChanging;
-
         public override IProjectLauncher GetLauncher() {
             return PythonToolsPackage.GetLauncher(Site, this);
         }
@@ -1087,24 +1011,11 @@ namespace Microsoft.PythonTools.Project {
                     }
                 }
 
-                if (_analyzer != null) {
-                    UnHookErrorsAndWarnings(_analyzer);
-                    _analyzer.ClearAllTasks();
-
-                    if (_analyzer.RemoveUser()) {
-                        _analyzer.AbnormalAnalysisExit -= AnalysisProcessExited;
-                        _analyzer.Dispose();
-                    }
-                    _analyzer = null;
-                }
-
                 _condaEnvCreateInfoBar.Dispose();
                 _virtualEnvCreateInfoBar.Dispose();
                 _packageInstallInfoBar.Dispose();
                 _testFrameworkInfoBar.Dispose();
                 _pythonVersionNotSupportedInfoBar.Dispose();
-
-                _reanalyzeProjectNotification.Dispose();
 
                 foreach (var pm in _activePackageManagers.MaybeEnumerate()) {
                     pm.InstalledFilesChanged -= PackageManager_InstalledFilesChanged;
@@ -1118,7 +1029,6 @@ namespace Microsoft.PythonTools.Project {
                 var watcher = _projectFileWatcher;
                 _projectFileWatcher = null;
                 watcher?.Dispose();
-                _deferredChangeNotification.Dispose();
 
                 if (_interpretersContainer != null) {
                     _interpretersContainer.Dispose();
@@ -1153,104 +1063,10 @@ namespace Microsoft.PythonTools.Project {
             return VSConstants.S_OK;
         }
 
-        public async Task<VsProjectAnalyzer> GetAnalyzerAsync() {
-            if (IsClosing || IsClosed) {
-                Debug.Fail("GetAnalyzer() called on closed project " + new StackTrace(true).ToString());
-                return await _services.Python.GetSharedAnalyzerAsync();
-            } else if (_analyzer == null) {
-                return await Site.GetUIThread().InvokeTask(async () => {
-                    if (_analyzer == null) {
-                        await ReanalyzeProject(ActiveInterpreter);
-                    }
-                    if (_analyzer == null) {
-                        return await _services.Python.GetSharedAnalyzerAsync(ActiveInterpreter);
-                    }
-                    return _analyzer;
-                });
-            }
-            return _analyzer;
-        }
-
-        public VsProjectAnalyzer TryGetAnalyzer() {
-            return _analyzer;
-        }
-
-        private async Task<VsProjectAnalyzer> CreateAnalyzerAsync(IPythonInterpreterFactory factory) {
-            bool inProc = false;
-            var ipp = BuildProject.GetProperty("_InProcessPythonAnalyzer");
-            if (ipp != null) {
-                if (ipp.EvaluatedValue?.IsTrue() ?? false) {
-                    inProc = true;
-                }
-            }
-
-            var res = await VsProjectAnalyzer.CreateForProjectAsync(
-                _services,
-                factory,
-                Url,
-                ProjectHome,
-                inProcess: inProc
-            );
-            res.AbnormalAnalysisExit += AnalysisProcessExited;
-
-            HookErrorsAndWarnings(res);
-            UpdateAnalyzerSearchPaths(res);
-            return res;
-        }
-
-        private void AnalysisProcessExited(object sender, AbnormalAnalysisExitEventArgs e) {
-            _analyzerAbnormalExitCount++;
-
-            if (_logger == null) {
-                return;
-            }
-
-            var msg = new StringBuilder()
-                .AppendFormat("Exit Code: {0}", e.ExitCode)
-                .AppendLine()
-                .AppendLine(" ------ STD ERR ------ ")
-                .Append(e.StdErr)
-                .AppendLine(" ------ END STD ERR ------ ");
-            _logger.LogEvent(
-                PythonLogEvent.AnalysisExitedAbnormally,
-                msg.ToString()
-            );
-
-            if (IsClosed) {
-                return;
-            }
-
-            if (_analyzerAbnormalExitCount < 5) {
-                var factory = ActiveInterpreter;
-
-                Site.GetUIThread().InvokeTask(async () => {
-                    await ReanalyzeProject(factory).HandleAllExceptions(Site, GetType());
-                }).DoNotWait();
-            }
-        }
-
-        private void HookErrorsAndWarnings(VsProjectAnalyzer res) {
-            res.ShouldWarnOnLaunchChanged += OnShouldWarnOnLaunchChanged;
-        }
-
-        private void UnHookErrorsAndWarnings(VsProjectAnalyzer res) {
-            res.ShouldWarnOnLaunchChanged -= OnShouldWarnOnLaunchChanged;
-            _warnOnLaunchFiles.Clear();
-        }
-
-        private void OnShouldWarnOnLaunchChanged(object sender, EntryEventArgs e) {
-            if (_diskNodes.ContainsKey(e.Entry.Path ?? "")) {
-                if (((VsProjectAnalyzer)sender).ShouldWarnOnLaunch(e.Entry)) {
-                    _warnOnLaunchFiles.Add(e.Entry);
-                } else {
-                    _warnOnLaunchFiles.Remove(e.Entry);
-                }
-            }
-        }
-
         public bool ShouldWarnOnLaunch {
             get {
-                return _warnOnLaunchFiles.Any();
+                // Warn on launch no longer supported
+                return false;
             }
         }
 
@@ -1382,227 +1198,7 @@ namespace Microsoft.PythonTools.Project {
                 return;
             }
 
-            var factory = ActiveInterpreter;
-
-            Site.GetUIThread().InvokeTask(async () => {
-                await _pythonVersionNotSupportedInfoBar.CheckAsync();
-                await ReanalyzeProject(factory).HandleAllExceptions(Site, GetType());
-            }).DoNotWait();
-        }
-
-        private void ReanalyzeProject_Notify(object state) {
-            Site.GetUIThread().InvokeTask(async () => {
-                if (_analyzer != null) {
-                    await _analyzer.NotifyModulesChangedAsync().ConfigureAwait(false);
-                }
-            });
-        }
-
-        private async Task ReanalyzeProject(IPythonInterpreterFactory factory) {
-#if DEBUG
-            var output = OutputWindowRedirector.GetGeneral(Site);
-            await ReanalyzeProjectHelper(factory, output);
-#else
-            await ReanalyzeProjectHelper(factory, null);
-#endif
-        }
-
-        private async Task ReanalyzeProjectHelper(IPythonInterpreterFactory factory, Redirector log) {
-            if (IsClosing || IsClosed) {
-                // This deferred event is no longer important.
-                log?.WriteLine("Project has closed");
-                return;
-            }
-
-            var projectHome = ProjectHome;
-
-            if (string.IsNullOrEmpty(projectHome)) {
-                // The project is still opening, so we are probably
-                // creating the wrong analyzer anyway.
-                log?.WriteLine("Project was not open");
-                return;
-            }
-
-            try {
-                if (!_recreatingAnalyzer.Wait(0)) {
-                    // Someone else is recreating, so wait for them to finish and return
-                    log?.WriteLine("Waiting for existing call");
-                    await _recreatingAnalyzer.WaitAsync();
-                    try {
-                        log?.WriteLine("Existing call complete");
-                    } catch {
-                        _recreatingAnalyzer.Release();
-                        throw;
-                    }
-                    if (_analyzer?.InterpreterFactory == factory) {
-                        _recreatingAnalyzer.Release();
-                        return;
-                    }
-                }
-            } catch (ObjectDisposedException) {
-                return;
-            }
-
-            IVsStatusbar statusBar = null;
-            bool statusBarConfigured = false;
-            try {
-                if ((statusBar = Site.GetService(typeof(SVsStatusbar)) as IVsStatusbar) != null) {
-                    statusBar.SetText(Strings.AnalyzingProject);
-                    try {
-                        object index = (short)0;
-                        statusBar.Animation(1, ref index);
-                    } catch (ArgumentNullException) {
-                        // Issue in status bar implementation
-                        // https://github.com/Microsoft/PTVS/issues/3064
-                        // Silently suppress since animation is not critical.
-                    }
-                    statusBar.FreezeOutput(1);
-                    statusBarConfigured = true;
-                }
-
-                log?.WriteLine("Refreshing interpreters");
-                RefreshInterpreters();
-                log?.WriteLine("Refreshed interpreters");
-
-                if (_analyzer != null) {
-                    log?.WriteLine($"Unhooking events from {_analyzer}");
-                    UnHookErrorsAndWarnings(_analyzer);
-                    log?.WriteLine("Unhooked events");
-                }
-                var oldWatcher = _projectFileWatcher;
-                _projectFileWatcher = new FileWatcher(projectHome) {
-                    EnableRaisingEvents = true,
-                    IncludeSubdirectories = true,
-                    NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite
-                };
-                _projectFileWatcher.Changed += ProjectFile_Changed;
-                _projectFileWatcher.Deleted += ProjectFile_Deleted;
-                oldWatcher?.Dispose();
-
-                log?.WriteLine("Creating new analyzer");
-                var analyzer = await CreateAnalyzerAsync(factory);
-                Debug.Assert(analyzer != null);
-                log?.WriteLine($"Created analyzer {analyzer}");
-
-                ProjectAnalyzerChanging?.Invoke(this, new AnalyzerChangingEventArgs(_analyzer, analyzer));
-
-                var oldAnalyzer = Interlocked.Exchange(ref _analyzer, analyzer);
-
-                if (oldAnalyzer != null) {
-                    if (analyzer != null) {
-                        int beforeCount = analyzer.Files.Count();
-                        log?.WriteLine($"Transferring from old analyzer {oldAnalyzer}, which has {oldAnalyzer.Files.Count()} files");
-                        await analyzer.TransferFromOldAnalyzer(oldAnalyzer);
-                        log?.WriteLine($"Tranferred {analyzer.Files.Count() - beforeCount} files");
-                        log?.WriteLine($"Old analyzer now has {oldAnalyzer.Files.Count()} files");
-                    }
-                    if (oldAnalyzer.RemoveUser()) {
-                        log?.WriteLine("Disposing old analyzer");
-                        oldAnalyzer.Dispose();
-                    }
-                }
-
-                var files = AllVisibleDescendants
-                    .OfType<PythonFileNode>()
-                    .Select(f => f.Url)
-                    .Where(File.Exists)
-                    .ToArray();
-
-                var fileSet = new Lazy<HashSet<string>>(() => new HashSet<string>(files, StringComparer.OrdinalIgnoreCase));
-
-                log?.WriteLine($"Project includes files:{Environment.NewLine}    {string.Join(Environment.NewLine + "    ", files)}");
-
-                foreach (var existing in _services.Python.GetActiveSharedAnalyzers().Select(kv => kv.Value).Where(v => !v.IsDisposed)) {
-                    foreach (var kv in existing.LoadedFiles) {
-                        if (fileSet.Value.Contains(kv.Key)) {
-                            log?.WriteLine($"Unloading {kv.Key} from default analyzer");
-                            foreach (var b in (kv.Value.TryGetBufferParser()?.AllBuffers).MaybeEnumerate()) {
-                                PythonTextBufferInfo.MarkForReplacement(b);
-                            }
-                            try {
-                                await existing.UnloadFileAsync(kv.Value);
-                            } catch (ObjectDisposedException) {
-                                break;
-                            }
-                        }
-                    }
-                }
-
-                if (analyzer != null) {
-                    // Set search paths first, as it will save full reanalysis later
-                    log?.WriteLine("Setting search paths");
-                    await analyzer.SetSearchPathsAsync(_searchPaths.GetAbsoluteSearchPaths());
-                    // Add all our files into our analyzer
-                    log?.WriteLine($"Adding {files.Length} files");
-                    await analyzer.AnalyzeFileAsync(files);
-                }
-
-                ProjectAnalyzerChanged?.Invoke(this, EventArgs.Empty);
-            } catch (ObjectDisposedException) {
-                // Raced with project disposal
-            } catch (Exception ex) {
-                log?.WriteErrorLine(ex.ToString());
-                throw;
-            } finally {
-                try {
-                    if (statusBar != null && statusBarConfigured) {
-                        statusBar.FreezeOutput(0);
-                        object index = (short)0;
-                        statusBar.Animation(0, ref index);
-                        statusBar.Clear();
-                    }
-                } finally {
-                    try {
-                        _recreatingAnalyzer.Release();
-                    } catch (ObjectDisposedException) {
-                    }
-                }
-            }
-        }
-
-        private void ProjectFile_Deleted(object sender, FileSystemEventArgs e) {
-            var entry = _analyzer?.GetAnalysisEntryFromPath(e.FullPath);
-            if (entry != null) {
-                lock (_pendingChanges) {
-                    _pendingDeletes.Add(entry);
-                    try {
-                        _deferredChangeNotification.Change(500, Timeout.Infinite);
-                    } catch (ObjectDisposedException) {
-                    }
-                }
-            }
-        }
-
-        private void ProjectFile_Changed(object sender, FileSystemEventArgs e) {
-            var entry = _analyzer?.GetAnalysisEntryFromPath(e.FullPath);
-            if (entry != null) {
-                lock (_pendingChanges) {
-                    _pendingChanges.Add(entry);
-                    try {
-                        _deferredChangeNotification.Change(500, Timeout.Infinite);
-                    } catch (ObjectDisposedException) {
-                    }
-                }
-            }
-        }
-
-        private void ProjectFile_Notify(object state) {
-            var analyzer = _analyzer;
-            Uri[] changed, deleted;
-
-            lock (_pendingChanges) {
-                if (analyzer == null) {
-                    return;
-                }
-                changed = _pendingChanges.Concat(_pendingDeletes.Where(e => File.Exists(e.Path))).Select(e => e.DocumentUri).ToArray();
-                deleted = _pendingDeletes.Where(e => !File.Exists(e.Path)).Select(e => e.DocumentUri).ToArray();
-                _pendingChanges.Clear();
-                _pendingDeletes.Clear();
-            }
-
-            analyzer.NotifyFileChangesAsync(Enumerable.Empty<Uri>(), deleted, changed)
-                .HandleAllExceptions(Site, GetType())
-                .DoNotWait();
+            LanguageServerInterpreterChanged?.Invoke(this, EventArgs.Empty);
         }
 
         protected override string AssemblyReferenceTargetMoniker {
@@ -1617,7 +1213,7 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        internal int OpenCommandPrompt(string path, InterpreterConfiguration interpreterConfig = null, string subtitle = null) {
+        internal int OpenCommandPrompt(string path, Interpreter.InterpreterConfiguration interpreterConfig = null, string subtitle = null) {
             var psi = new ProcessStartInfo(Path.Combine(Environment.SystemDirectory, "cmd.exe"));
             psi.UseShellExecute = false;
             psi.WorkingDirectory = path;
@@ -1697,7 +1293,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         internal override int QueryStatusOnNode(Guid cmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result) {
-            if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
+            if (cmdGroup == CommonGuidList.guidPythonToolsCmdSet) {
                 IPythonInterpreterFactory factory;
                 switch ((int)cmd) {
                     case PythonConstants.OpenInteractiveForEnvironment:
@@ -1752,7 +1348,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         protected override QueryStatusResult QueryStatusSelectionOnNodes(IList<HierarchyNode> selectedNodes, Guid cmdGroup, uint cmd, IntPtr pCmdText) {
-            if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
+            if (cmdGroup == CommonGuidList.guidPythonToolsCmdSet) {
                 var command = GetCustomCommand(cmd);
                 if (command != null) {
                     // Update display text for the menu commands.
@@ -1814,7 +1410,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         protected override int ExecCommandIndependentOfSelection(Guid cmdGroup, uint cmdId, uint cmdExecOpt, IntPtr vaIn, IntPtr vaOut, CommandOrigin commandOrigin, out bool handled) {
-            if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
+            if (cmdGroup == CommonGuidList.guidPythonToolsCmdSet) {
                 var command = GetCustomCommand(cmdId);
                 handled = true;
 
@@ -1878,7 +1474,7 @@ namespace Microsoft.PythonTools.Project {
             string description;
             if (args != null && args.TryGetValue("e", out description) && !string.IsNullOrEmpty(description)) {
                 var service = Site.GetComponentModel().GetService<IInterpreterRegistryService>();
-                InterpreterConfiguration config;
+                Interpreter.InterpreterConfiguration config;
 
                 config = InterpreterConfigurations.FirstOrDefault(
                     // Description is a localized string, hence CCIC
@@ -1927,7 +1523,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         protected internal override string QueryCommandArguments(Guid cmdGroup, uint cmdId, CommandOrigin commandOrigin) {
-            if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
+            if (cmdGroup == CommonGuidList.guidPythonToolsCmdSet) {
                 switch ((int)cmdId) {
                     case PythonConstants.ActivateEnvironment:
                         return "e,env,environment:";
@@ -1945,7 +1541,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         protected override int ExecCommandThatDependsOnSelectedNodes(Guid cmdGroup, uint cmdId, uint cmdExecOpt, IntPtr vaIn, IntPtr vaOut, CommandOrigin commandOrigin, IList<HierarchyNode> selectedNodes, out bool handled) {
-            if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
+            if (cmdGroup == CommonGuidList.guidPythonToolsCmdSet) {
                 handled = true;
                 switch ((int)cmdId) {
                     case PythonConstants.ActivateEnvironment:
@@ -1968,7 +1564,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         protected override bool DisableCmdInCurrentMode(Guid cmdGroup, uint cmd) {
-            if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
+            if (cmdGroup == CommonGuidList.guidPythonToolsCmdSet) {
                 if (IsCurrentStateASuppressCommandsMode()) {
                     switch ((int)cmd) {
                         case CommonConstants.StartDebuggingCmdId:
@@ -2491,11 +2087,7 @@ namespace Microsoft.PythonTools.Project {
 
                 Debug.WriteLine("Failed to add virtual environment.\r\n{0}", ex.InnerException ?? ex);
 
-                try {
-                    ActivityLog.LogError(Strings.ProductTitle, (ex.InnerException ?? ex).ToString());
-                } catch (InvalidOperationException) {
-                    // Activity log may be unavailable
-                }
+                CommonUtils.ActivityLogError(Strings.ProductTitle, (ex.InnerException ?? ex).ToString());
             } finally {
                 statusBar.Animation(0, ref index);
             }
@@ -2561,7 +2153,7 @@ namespace Microsoft.PythonTools.Project {
                 pathVar,
                 architecture,
                 languageVersion,
-                InterpreterUIMode.CannotBeDefault | InterpreterUIMode.CannotBeConfigured
+                Interpreter.InterpreterUIMode.CannotBeDefault | Interpreter.InterpreterUIMode.CannotBeConfigured
             );
 
             if (!QueryEditProjectFile(false)) {
@@ -2676,7 +2268,7 @@ namespace Microsoft.PythonTools.Project {
 
         public override Guid SharedCommandGuid {
             get {
-                return GuidList.guidPythonToolsCmdSet;
+                return CommonGuidList.guidPythonToolsCmdSet;
             }
         }
 
@@ -2931,31 +2523,12 @@ namespace Microsoft.PythonTools.Project {
                 remove { _node.ActiveInterpreterChanged -= value; }
             }
 
-            public override event EventHandler ProjectAnalyzerChanged {
-                add { _node.ProjectAnalyzerChanged += value; }
-                remove { _node.ProjectAnalyzerChanged -= value; }
-            }
-
             public override IPythonInterpreterFactory GetInterpreterFactory() {
                 return _node.GetInterpreterFactory();
             }
 
             public override LaunchConfiguration GetLaunchConfigurationOrThrow() {
                 return _node.GetLaunchConfigurationOrThrow();
-            }
-
-            [Obsolete("Use the async version if possible")]
-            public override ProjectAnalyzer Analyzer {
-                get {
-                    if (_node.IsClosing || _node.IsClosed) {
-                        return null;
-                    }
-                    return _node.TryGetAnalyzer();
-                }
-            }
-
-            public override async Task<ProjectAnalyzer> GetAnalyzerAsync() {
-                return await _node.GetAnalyzerAsync();
             }
 
             public override string GetProperty(string name) {

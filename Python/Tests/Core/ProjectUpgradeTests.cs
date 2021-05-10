@@ -368,7 +368,6 @@ namespace PythonToolsTests {
                 new { Name = "CPython35InterpreterId.pyproj", Expected = 1, Id = "Global|PythonCore|3.5-32" },
                 new { Name = "CPythonx64InterpreterId.pyproj", Expected = 1, Id = "Global|PythonCore|3.5" },
                 new { Name = "MSBuildInterpreterId.pyproj", Expected = 1, Id = "MSBuild|env|$(MSBuildProjectFullPath)" },
-                new { Name = "IronPythonInterpreterId.pyproj", Expected = 1, Id = "IronPython|2.7-32" },
                 new { Name = "UnknownInterpreterId.pyproj", Expected = 1, Id = (string)null },
             }) {
                 int actual;
@@ -419,7 +418,6 @@ namespace PythonToolsTests {
             var upgrade = (IVsProjectUpgradeViaFactory)factory;
             foreach (var testCase in new[] {
                 new { Name = "CPythonInterpreterReference.pyproj", Expected = 1, Id = "Global|PythonCore|3.5-32" },
-                new { Name = "IronPythonInterpreterReference.pyproj", Expected = 1, Id = "IronPython|2.7-32" },
                 new { Name = "UnknownInterpreterReference.pyproj", Expected = 1, Id = (string)null },
             }) {
                 int actual;
@@ -537,55 +535,6 @@ namespace PythonToolsTests {
                         AssertUtil.Contains(
                             File.ReadAllText(project),
                             "<WebBrowserUrl>http://localhost</WebBrowserUrl>"
-                        );
-                    }
-                    Assert.AreEqual(Guid.Empty, factoryGuid);
-                }
-            }
-        }
-
-        [TestMethod, Priority(UnitTestPriority.P1)]
-        public void MscorlibReferenceUpgrade() {
-            // IronPython projects typically require mscorlib reference.
-            // We'll add it if there are any other .NET references
-            var factory = new PythonProjectFactory(null);
-            var sp = new MockServiceProvider();
-            sp.Services[typeof(SVsQueryEditQuerySave).GUID] = null;
-            sp.Services[typeof(SVsActivityLog).GUID] = new MockActivityLog();
-            factory.Site = sp;
-
-            var upgrade = (IVsProjectUpgradeViaFactory)factory;
-            foreach (var testCase in new[] {
-                new { Name = "NoNetReferences.pyproj", Expected = 0 },
-                new { Name = "HasMscorlib.pyproj", Expected = 0 },
-                new { Name = "NoMscorlib.pyproj", Expected = 1 },
-            }) {
-                int actual;
-                Guid factoryGuid;
-                string newLocation;
-
-                var project = TestData.GetPath("TestData\\ProjectUpgrade\\" + testCase.Name);
-                using (FileUtils.Backup(project)) {
-
-                    var hr = upgrade.UpgradeProject(
-                        project,
-                        0u,  // no backups
-                        null,
-                        out newLocation,
-                        null,
-                        out actual,
-                        out factoryGuid
-                    );
-
-                    Assert.AreEqual(0, hr, string.Format("Wrong HR for {0}", testCase.Name));
-                    Assert.AreEqual(testCase.Expected, actual, string.Format("Wrong result for {0}", testCase.Name));
-                    Assert.AreEqual(project, newLocation, string.Format("Wrong location for {0}", testCase.Name));
-                    Console.WriteLine(File.ReadAllText(project));
-
-                    if (testCase.Expected != 0) {
-                        AssertUtil.Contains(
-                            File.ReadAllText(project),
-                            "<Reference Include=\"mscorlib"
                         );
                     }
                     Assert.AreEqual(Guid.Empty, factoryGuid);

@@ -1,27 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Choose>
-    <When Condition=" '$(VisualStudioVersion)'=='15.0'  Or '$(TargetVisualStudioVersion)'=='VS150' ">
-      <PropertyGroup>
-        <MinimumVisualStudioVersion>15.0</MinimumVisualStudioVersion>
-        <FileUpgradeFlags>
-        </FileUpgradeFlags>
-        <UpgradeBackupLocation>
-        </UpgradeBackupLocation>
-        <OldToolsVersion>14.0</OldToolsVersion>
-      </PropertyGroup>
-    </When>
-    <When Condition=" '$(VisualStudioVersion)'=='16.0'  Or '$(TargetVisualStudioVersion)'=='VS160' ">
-      <PropertyGroup>
-        <MinimumVisualStudioVersion>16.0</MinimumVisualStudioVersion>
-        <FileUpgradeFlags>
-        </FileUpgradeFlags>
-        <UpgradeBackupLocation>
-        </UpgradeBackupLocation>
-        <OldToolsVersion>16.0</OldToolsVersion>
-      </PropertyGroup>
-    </When>
-  </Choose>
   <Import Project="..\ProjectBefore.settings" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -50,9 +28,13 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Microsoft.Extensions.FileSystemGlobbing, Version=3.1.8.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <Private>True</Private>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Reference>
     <Reference Include="Microsoft.VisualStudio.Shell.15.0" />
     <Reference Include="Microsoft.VisualStudio.Shell.Framework" />
-    <Reference Include="Microsoft.Python.Analysis.Engine" />
+    <Reference Include="System" />
   </ItemGroup>
   <ItemDefinitionGroup>
     <ProjectReference>
@@ -87,6 +69,10 @@
       <Project>{b20e082b-4d3c-457d-b2bd-60420b434573}</Project>
       <Name>Microsoft.PythonTools.EnvironmentsList</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Ipc.Json\Ipc.Json.csproj">
+      <Project>{e1e1613d-0c96-42f9-9f2d-052c72533297}</Project>
+      <Name>Ipc.Json</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ProjectWizards\ProjectWizards.csproj">
       <Project>{3814d9db-10e6-4478-bd98-6c5840612af8}</Project>
       <Name>Microsoft.PythonTools.ProjectWizards</Name>
@@ -117,10 +103,6 @@
       <Project>{24f9e050-9f7e-4fe8-895d-819e527b8f45}</Project>
       <Name>Microsoft.PythonTools.Workspace</Name>
     </ProjectReference>
-    <ProjectReference Include="..\XamlDesignerSupport\XamlDesignerSupport.csproj">
-      <Project>{0caebf32-5d08-43a9-b7ba-f80bfe372824}</Project>
-      <Name>Microsoft.PythonTools.XamlDesignerSupport</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Attacher\Attacher.csproj">
       <Project>{666A22BB-0CB5-4C08-A20F-E17450DA6573}</Project>
       <Name>Microsoft.PythonTools.Attacher</Name>
@@ -138,12 +120,19 @@
     </ProjectReference2>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="$(MSBuildThisFileDirectory)..\..\..\node_modules\@pylance\**\*.*" Exclude="*.map" CopyToOutputDirectory="PreserveNewest">
+      <TargetPath>%(RecursiveDir)\%(Filename)%(Extension)</TargetPath>
+      <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
     <None Include="source.extension.vsixmanifest" />
     <Content Include="License_en-US.rtf" />
     <Content Include="$(PackagesPath)\Newtonsoft.Json\lib\net45\Newtonsoft.Json.dll" />
+    <Content Include="$(PackagesPath)\Microsoft.VisualStudio.LanguageServer.Protocol\lib\netstandard2.0\Microsoft.VisualStudio.LanguageServer.Protocol.dll" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ProvideRawCodeBaseAttribute.cs" />
   </ItemGroup>
   <Import Project="..\ProjectAfter.settings" />
   <!-- Temporary workaround for the interop DLL not being available in 15.5 -->
@@ -151,19 +140,6 @@
     <ItemGroup>
       <_InteropDll Include="$(DevEnvDir)Extensions\*\Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces.dll" />
       <Content Include="..\..\References\Dev$(VSTarget)\Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces.dll;VSCodeInterop.pkgdef" Condition="@(_InteropDll) == ''" />
-    </ItemGroup>
-  </Target>
-  <Target Name="_IncludeLanguageServer" BeforeTargets="AssignTargetPaths">
-    <ItemGroup>
-      <LanguageServerFiles Include="$(PackagesPath)\Microsoft.VisualStudio.Python.LanguageServer\lib\vs16\**\*" />
-      <LanguageServerFiles>
-        <IncludeInVSIX>true</IncludeInVSIX>
-        <Link>\%(RecursiveDir)\%(Filename)%(Extension)</Link>
-        <VSIXSubPath>\%(RecursiveDir)</VSIXSubPath>
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </LanguageServerFiles>
-      <Content Include="@(LanguageServerFiles)" />
-      <FileWrites Include="@(LanguageServerFiles)" />
     </ItemGroup>
   </Target>
 </Project>

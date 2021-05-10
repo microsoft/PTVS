@@ -22,10 +22,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 using System.Windows.Forms;
+using Microsoft.Python.Parsing;
 using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.PythonTools.Debugger.Transports;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Parsing;
 using LDP = Microsoft.PythonTools.Debugger.LegacyDebuggerProtocol;
 
 namespace Microsoft.PythonTools.Debugger.Remote {

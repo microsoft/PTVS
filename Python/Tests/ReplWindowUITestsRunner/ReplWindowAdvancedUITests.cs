@@ -53,20 +53,20 @@ namespace ReplWindowUITestsRunner {
 
         #region Advanced Signature Help tests
 
-        [TestMethod, Priority(UITestPriority.P2)]
-        [TestCategory("Interactive")]
-        [TestCategory("Installed")]
-        public void SimpleSignatureHelp() {
-            _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.SimpleSignatureHelp), Interpreter);
-        }
+        //[TestMethod, Priority(UITestPriority.P2)]
+        //[TestCategory("Interactive")]
+        //[TestCategory("Installed")]
+        //public void SimpleSignatureHelp() {
+        //    _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.SimpleSignatureHelp), Interpreter);
+        //}
 
-        [Ignore] // https://github.com/Microsoft/PTVS/issues/2689
-        [TestMethod, Priority(UITestPriority.P2)]
-        [TestCategory("Interactive")]
-        [TestCategory("Installed")]
-        public void SignatureHelpDefaultValue() {
-            _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.SignatureHelpDefaultValue), Interpreter);
-        }
+        //[Ignore] // https://github.com/Microsoft/PTVS/issues/2689
+        //[TestMethod, Priority(UITestPriority.P2)]
+        //[TestCategory("Interactive")]
+        //[TestCategory("Installed")]
+        //public void SignatureHelpDefaultValue() {
+        //    _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.SignatureHelpDefaultValue), Interpreter);
+        //}
 
         #endregion
 
@@ -93,19 +93,19 @@ namespace ReplWindowUITestsRunner {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.CompletionWrongText), Interpreter);
         }
 
-        [TestMethod, Priority(UITestPriority.P2)]
-        [TestCategory("Interactive")]
-        [TestCategory("Installed")]
-        public void CompletionFullTextWithoutNewLine() {
-            _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.CompletionFullTextWithoutNewLine), Interpreter);
-        }
+        //[TestMethod, Priority(UITestPriority.P2)]
+        //[TestCategory("Interactive")]
+        //[TestCategory("Installed")]
+        //public void CompletionFullTextWithoutNewLine() {
+        //    _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.CompletionFullTextWithoutNewLine), Interpreter);
+        //}
 
-        [TestMethod, Priority(UITestPriority.P2)]
-        [TestCategory("Interactive")]
-        [TestCategory("Installed")]
-        public void CompletionFullTextWithNewLine() {
-            _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.CompletionFullTextWithNewLine), Interpreter);
-        }
+        //[TestMethod, Priority(UITestPriority.P2)]
+        //[TestCategory("Interactive")]
+        //[TestCategory("Installed")]
+        //public void CompletionFullTextWithNewLine() {
+        //    _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.CompletionFullTextWithNewLine), Interpreter);
+        //}
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Interactive")]

@@ -17,13 +17,12 @@
 using System;
 using EnvDTE;
 using Microsoft.PythonTools.Options;
-using Microsoft.PythonTools.Parsing;
+using Microsoft.Python.Parsing;
 
 namespace TestUtilities.Python {
     public class PythonOptionsSetter : IDisposable {
         private readonly DTE _dte;
         private readonly bool? _promptBeforeRunningWithBuildErrorSetting;
-        private readonly bool? _autoAnalyzeStandardLibrary;
         private readonly Severity? _indentationInconsistencySeverity;
         private readonly bool? _teeStandardOutput;
         private readonly bool? _waitOnAbnormalExit;
@@ -35,7 +34,6 @@ namespace TestUtilities.Python {
         public PythonOptionsSetter(
             DTE dte,
             bool? promptBeforeRunningWithBuildErrorSetting = null,
-            bool? autoAnalyzeStandardLibrary = null,
             Severity? indentationInconsistencySeverity = null,
             bool? teeStandardOutput = null,
             bool? waitOnAbnormalExit = null,
@@ -50,11 +48,6 @@ namespace TestUtilities.Python {
             if (promptBeforeRunningWithBuildErrorSetting.HasValue) {
                 _promptBeforeRunningWithBuildErrorSetting = options.PromptBeforeRunningWithBuildErrorSetting;
                 options.PromptBeforeRunningWithBuildErrorSetting = promptBeforeRunningWithBuildErrorSetting.Value;
-            }
-
-            if (autoAnalyzeStandardLibrary.HasValue) {
-                _autoAnalyzeStandardLibrary = options.AutoAnalyzeStandardLibrary;
-                options.AutoAnalyzeStandardLibrary = autoAnalyzeStandardLibrary.Value;
             }
 
             if (indentationInconsistencySeverity.HasValue) {
@@ -98,10 +91,6 @@ namespace TestUtilities.Python {
 
             if (_promptBeforeRunningWithBuildErrorSetting.HasValue) {
                 options.PromptBeforeRunningWithBuildErrorSetting = _promptBeforeRunningWithBuildErrorSetting.Value;
-            }
-
-            if (_autoAnalyzeStandardLibrary.HasValue) {
-                options.AutoAnalyzeStandardLibrary = _autoAnalyzeStandardLibrary.Value;
             }
 
             if (_indentationInconsistencySeverity.HasValue) {

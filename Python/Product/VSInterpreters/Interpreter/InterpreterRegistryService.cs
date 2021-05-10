@@ -21,8 +21,6 @@ using System.ComponentModel.Composition;
 using System.ComponentModel.Composition.Primitives;
 using System.Diagnostics;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Microsoft.PythonTools.Interpreter {
     [Export(typeof(IInterpreterRegistryService))]
@@ -371,23 +369,5 @@ namespace Microsoft.PythonTools.Interpreter {
                 }
             }
         }
-
-        public void GetSerializationInfo(IPythonInterpreterFactory factory, out string assembly, out string typeName, out Dictionary<string, object> properties) {
-            if (factory is ICustomInterpreterSerialization serializer) {
-                if (!serializer.GetSerializationInfo(out assembly, out typeName, out properties)) {
-                    throw new InvalidOperationException($"Unable to serialize {factory.Configuration.Id}");
-                }
-                return;
-            }
-
-            var fallback = typeof(IPythonInterpreterFactory);
-            assembly = fallback.Assembly.Location;
-            typeName = "Microsoft.PythonTools.Interpreter.AnalysisOnlyInterpreterFactory";
-            properties = new Dictionary<string, object>();
-            if (factory.Configuration?.Version != null) {
-                properties[nameof(Version)] = factory.Configuration.Version.ToString();
-            }
-        }
     }
-
 }

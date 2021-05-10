@@ -20,6 +20,7 @@ using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
+using Microsoft.PythonTools.Common;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
@@ -78,7 +79,7 @@ namespace Microsoft.PythonTools.Project.Web {
         #endregion
 
         protected override int QueryStatusCommand(uint itemid, ref Guid pguidCmdGroup, uint cCmds, VisualStudio.OLE.Interop.OLECMD[] prgCmds, IntPtr pCmdText) {
-            if (pguidCmdGroup == GuidList.guidOfficeSharePointCmdSet) {
+            if (pguidCmdGroup == CommonGuidList.guidOfficeSharePointCmdSet) {
                 for (int i = 0; i < prgCmds.Length; i++) {
                     // Report it as supported so that it's not routed any
                     // further, but disable it and make it invisible.
@@ -189,10 +190,10 @@ namespace Microsoft.PythonTools.Project.Web {
         }
 
         int IOleCommandTarget.Exec(ref Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
-            if (pguidCmdGroup == GuidList.guidWebPackgeCmdId) {
+            if (pguidCmdGroup == CommonGuidList.guidWebPackgeCmdId) {
                 if (nCmdID == 0x101 /*  EnablePublishToWindowsAzureMenuItem*/) {
                     var shell = (IVsShell)((IServiceProvider)this).GetService(typeof(SVsShell));
-                    var webPublishPackageGuid = GuidList.guidWebPackageGuid;
+                    var webPublishPackageGuid = CommonGuidList.guidWebPackageGuid;
                     IVsPackage package;
 
                     int res = shell.LoadPackage(ref webPublishPackageGuid, out package);
@@ -281,7 +282,7 @@ namespace Microsoft.PythonTools.Project.Web {
         }
 
         int IOleCommandTarget.QueryStatus(ref Guid pguidCmdGroup, uint cCmds, OLECMD[] prgCmds, IntPtr pCmdText) {
-            if (pguidCmdGroup == GuidList.guidEureka) {
+            if (pguidCmdGroup == CommonGuidList.guidEureka) {
                 for (int i = 0; i < prgCmds.Length; i++) {
                     switch (prgCmds[i].cmdID) {
                         case 0x102: // View in Web Page Inspector from Eureka web tools
@@ -289,7 +290,7 @@ namespace Microsoft.PythonTools.Project.Web {
                             return VSConstants.S_OK;
                     }
                 }
-            } else if (pguidCmdGroup == GuidList.guidVenusCmdId) {
+            } else if (pguidCmdGroup == CommonGuidList.guidVenusCmdId) {
                 for (int i = 0; i < prgCmds.Length; i++) {
                     switch (prgCmds[i].cmdID) {
                         case 0x034: /* add app assembly folder */
@@ -307,7 +308,7 @@ namespace Microsoft.PythonTools.Project.Web {
                             return VSConstants.S_OK;
                     }
                 }
-            } else if (pguidCmdGroup == GuidList.guidWebAppCmdId) {
+            } else if (pguidCmdGroup == CommonGuidList.guidWebAppCmdId) {
                 for (int i = 0; i < prgCmds.Length; i++) {
                     switch (prgCmds[i].cmdID) {
                         case 0x06A: /* check accessibility */

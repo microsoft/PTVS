@@ -19,9 +19,9 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using Microsoft.Python.Parsing;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Project.ImportWizard;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
@@ -264,6 +264,13 @@ namespace PythonToolsTests {
                     "Virtualenv was not created correctly"
                 );
 
+                if (!brokenBaseInterpreter) {
+                    var interpreter = new PythonInterpreterView($"Test{venvModuleName}", "TestEnv", Path.Combine(sourcePath, "env"));
+                    settings.Dispatcher.Invoke((Action)(() => settings.AvailableInterpreters.Add(interpreter)));
+                    settings.SelectedInterpreter = interpreter;
+                }
+                settings.DetectVirtualEnv = true;
+
                 settings.SourcePath = sourcePath;
 
                 string path = CreateRequestedProject(settings);
@@ -307,6 +314,10 @@ namespace PythonToolsTests {
                 pv.Version != PythonLanguageVersion.V33
             );
 
+            if (python == null) {
+                Assert.Inconclusive("No python with virtualenv");
+            }
+
             ImportWizardVirtualEnvWorker(python, "virtualenv", "lib\\orig-prefix.txt", false);
         }
 
@@ -329,6 +340,10 @@ namespace PythonToolsTests {
                 // skip testing on 3.3 to avoid false failures
                 pv.Version != PythonLanguageVersion.V33
             );
+
+            if (python == null) {
+                Assert.Inconclusive("No python with virtualenv");
+            }
 
             ImportWizardVirtualEnvWorker(python, "virtualenv", "lib\\orig-prefix.txt", true);
         }

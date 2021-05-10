@@ -1,8 +1,8 @@
 <VSTemplate Version="2.0.0" Type="Project" xmlns="http://schemas.microsoft.com/developer/vstemplate/2005">
   <TemplateData>
-    <Name Package="{6dbd7c1e-1f1b-496d-ac7c-c55dae66c783}" ID="5020" />
-    <Description Package="{6dbd7c1e-1f1b-496d-ac7c-c55dae66c783}" ID="5021" />
-    <Icon Package="{6dbd7c1e-1f1b-496d-ac7c-c55dae66c783}" ID="414" />
+    <Name Package="{FC6A1BC9-C491-41DB-8D23-D33ABCCF84AE}" ID="5020" />
+    <Description Package="{FC6A1BC9-C491-41DB-8D23-D33ABCCF84AE}" ID="5021" />
+    <Icon Package="{FC6A1BC9-C491-41DB-8D23-D33ABCCF84AE}" ID="414" />
     <ProjectType>Python</ProjectType>
     <TemplateID>Microsoft.Python.MachineLearning.Clustering</TemplateID>
     <SortOrder>20</SortOrder>

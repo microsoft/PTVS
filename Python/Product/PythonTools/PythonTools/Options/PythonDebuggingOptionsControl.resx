@@ -127,13 +127,13 @@
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="_promptOnBuildError.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 3</value>
+    <value>11, 6</value>
   </data>
   <data name="_promptOnBuildError.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>6, 3, 6, 3</value>
+    <value>11, 6, 11, 6</value>
   </data>
   <data name="_promptOnBuildError.Size" type="System.Drawing.Size, System.Drawing">
-    <value>244, 17</value>
+    <value>440, 29</value>
   </data>
   <data name="_promptOnBuildError.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -160,13 +160,13 @@
     <value>True</value>
   </data>
   <data name="_waitOnAbnormalExit.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 26</value>
+    <value>11, 47</value>
   </data>
   <data name="_waitOnAbnormalExit.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>6, 3, 6, 3</value>
+    <value>11, 6, 11, 6</value>
   </data>
   <data name="_waitOnAbnormalExit.Size" type="System.Drawing.Size, System.Drawing">
-    <value>235, 17</value>
+    <value>423, 29</value>
   </data>
   <data name="_waitOnAbnormalExit.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -193,13 +193,13 @@
     <value>True</value>
   </data>
   <data name="_waitOnNormalExit.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 49</value>
+    <value>11, 88</value>
   </data>
   <data name="_waitOnNormalExit.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>6, 3, 6, 3</value>
+    <value>11, 6, 11, 6</value>
   </data>
   <data name="_waitOnNormalExit.Size" type="System.Drawing.Size, System.Drawing">
-    <value>223, 17</value>
+    <value>401, 29</value>
   </data>
   <data name="_waitOnNormalExit.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -226,13 +226,13 @@
     <value>True</value>
   </data>
   <data name="_teeStdOut.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 72</value>
+    <value>11, 129</value>
   </data>
   <data name="_teeStdOut.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>6, 3, 6, 3</value>
+    <value>11, 6, 11, 6</value>
   </data>
   <data name="_teeStdOut.Size" type="System.Drawing.Size, System.Drawing">
-    <value>240, 17</value>
+    <value>427, 29</value>
   </data>
   <data name="_teeStdOut.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -259,13 +259,13 @@
     <value>True</value>
   </data>
   <data name="_breakOnSystemExitZero.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 95</value>
+    <value>11, 170</value>
   </data>
   <data name="_breakOnSystemExitZero.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>6, 3, 6, 3</value>
+    <value>11, 6, 11, 6</value>
   </data>
   <data name="_breakOnSystemExitZero.Size" type="System.Drawing.Size, System.Drawing">
-    <value>275, 17</value>
+    <value>494, 29</value>
   </data>
   <data name="_breakOnSystemExitZero.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -292,13 +292,13 @@
     <value>True</value>
   </data>
   <data name="_debugStdLib.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 118</value>
+    <value>11, 211</value>
   </data>
   <data name="_debugStdLib.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>6, 3, 6, 3</value>
+    <value>11, 6, 11, 6</value>
   </data>
   <data name="_debugStdLib.Size" type="System.Drawing.Size, System.Drawing">
-    <value>252, 17</value>
+    <value>453, 29</value>
   </data>
   <data name="_debugStdLib.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -325,13 +325,13 @@
     <value>True</value>
   </data>
   <data name="_showFunctionReturnValue.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 141</value>
+    <value>11, 252</value>
   </data>
   <data name="_showFunctionReturnValue.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>6, 3, 6, 3</value>
+    <value>11, 6, 11, 6</value>
   </data>
   <data name="_showFunctionReturnValue.Size" type="System.Drawing.Size, System.Drawing">
-    <value>153, 17</value>
+    <value>268, 29</value>
   </data>
   <data name="_showFunctionReturnValue.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
@@ -350,42 +350,6 @@
   </data>
   <data name="&gt;&gt;_showFunctionReturnValue.ZOrder" xml:space="preserve">
     <value>6</value>
-  </data>
-  <data name="_useLegacyDebugger.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Left</value>
-  </data>
-  <data name="_useLegacyDebugger.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="_useLegacyDebugger.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="_useLegacyDebugger.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 164</value>
-  </data>
-  <data name="_useLegacyDebugger.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>6, 3, 6, 3</value>
-  </data>
-  <data name="_useLegacyDebugger.Size" type="System.Drawing.Size, System.Drawing">
-    <value>127, 17</value>
-  </data>
-  <data name="_useLegacyDebugger.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
-  </data>
-  <data name="_useLegacyDebugger.Text" xml:space="preserve">
-    <value>U&amp;se legacy debugger</value>
-  </data>
-  <data name="&gt;&gt;_useLegacyDebugger.Name" xml:space="preserve">
-    <value>_useLegacyDebugger</value>
-  </data>
-  <data name="&gt;&gt;_useLegacyDebugger.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;_useLegacyDebugger.Parent" xml:space="preserve">
-    <value>tableLayoutPanel2</value>
-  </data>
-  <data name="&gt;&gt;_useLegacyDebugger.ZOrder" xml:space="preserve">
-    <value>7</value>
   </data>
   <data name="tableLayoutPanel2.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -693,6 +657,9 @@
   <data name="tableLayoutPanel2.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 0</value>
   </data>
+  <data name="tableLayoutPanel2.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 6, 6, 6</value>
+  </data>
   <data name="tableLayoutPanel2.RowCount" type="System.Int32, mscorlib">
     <value>10</value>
   </data>
@@ -721,10 +688,10 @@
     <value>True</value>
   </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
-    <value>6, 13</value>
+    <value>11, 24</value>
   </data>
   <data name="$this.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>6, 8, 6, 8</value>
+    <value>11, 15, 11, 15</value>
   </data>
   <data name="$this.Size" type="System.Drawing.Size, System.Drawing">
     <value>357, 585</value>

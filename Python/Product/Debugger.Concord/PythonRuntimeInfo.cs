@@ -17,7 +17,7 @@
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 using Microsoft.PythonTools.Debugger.Concord.Proxies.Structs;
-using Microsoft.PythonTools.Parsing;
+using Microsoft.Python.Parsing;
 using Microsoft.VisualStudio.Debugger;
 using Microsoft.VisualStudio.Debugger.Native;
 
@@ -74,6 +74,7 @@ namespace Microsoft.PythonTools.Debugger.Concord {
                 case "36": return PythonLanguageVersion.V36;
                 case "37": return PythonLanguageVersion.V37;
                 case "38": return PythonLanguageVersion.V38;
+                case "39": return PythonLanguageVersion.V39;
                 default: return PythonLanguageVersion.None;
             }
         }

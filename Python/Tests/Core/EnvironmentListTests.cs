@@ -24,11 +24,12 @@ using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using Microsoft.Python.Parsing;
+using Microsoft.PythonTools;
 using Microsoft.PythonTools.Environments;
 using Microsoft.PythonTools.EnvironmentsList;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Win32;
@@ -36,6 +37,7 @@ using PythonToolsTests;
 using TestUtilities;
 using TestUtilities.Mocks;
 using TestUtilities.Python;
+using InterpreterUIMode = Microsoft.PythonTools.Interpreter.InterpreterUIMode;
 
 namespace PythonToolsUITests {
     [TestClass]
@@ -55,7 +57,7 @@ namespace PythonToolsUITests {
         }
 
 
-        private static InterpreterConfiguration MockInterpreterConfiguration(string description, Version version, InterpreterUIMode uiMode) {
+        private static Microsoft.PythonTools.Interpreter.InterpreterConfiguration MockInterpreterConfiguration(string description, Version version, InterpreterUIMode uiMode) {
             return new VisualStudioInterpreterConfiguration(
                 $"Mock|{Guid.NewGuid()}",
                 description,
@@ -70,7 +72,7 @@ namespace PythonToolsUITests {
             );
         }
 
-        private static InterpreterConfiguration MockInterpreterConfiguration(string description, Version version) {
+        private static Microsoft.PythonTools.Interpreter.InterpreterConfiguration MockInterpreterConfiguration(string description, Version version) {
             return MockInterpreterConfiguration(description, version, InterpreterUIMode.Normal);
         }
 
@@ -365,7 +367,6 @@ namespace PythonToolsUITests {
 
                 var expected = new HashSet<string>(
                     PythonPaths.Versions
-                        .Where(v => !v.IsIronPython)
                         .Select(v => v.InterpreterPath),
                     StringComparer.OrdinalIgnoreCase
                 );
@@ -783,12 +784,7 @@ namespace PythonToolsUITests {
 
         [TestMethod, Priority(UnitTestPriority.P0)]
         public void FilterInterpreterPython3() {
-            PythonVersion pythonInterpreter =   PythonPaths.Python37_x64 ??
-                                                PythonPaths.Python37 ??
-                                                PythonPaths.Python36_x64 ??
-                                                PythonPaths.Python36 ??
-                                                PythonPaths.Python35_x64 ??
-                                                PythonPaths.Python35;
+            PythonVersion pythonInterpreter = PythonPaths.LatestVersion;
 
             pythonInterpreter.AssertInstalled("Unable to run test because python 3.5, 3.6 or 3.7 must be installed");
             FilterPythonInterpreterEnv(pythonInterpreter);
@@ -811,22 +807,6 @@ namespace PythonToolsUITests {
 
             condaInterpreter.AssertInstalled();
             FilterCondaInterpreter(condaInterpreter);
-        }
-
-        [TestMethod, Priority(UnitTestPriority.P1)]
-        public void FilterInterpreterIronpython2() {
-            PythonVersion ironpythonInterpreter = PythonPaths.IronPython27_x64 ?? PythonPaths.IronPython27;
-            if (ironpythonInterpreter == null) {
-                Assert.Inconclusive("Iron python 2.7 not found");
-            }
-
-            Assert.IsTrue(InterpreterView.ExcludeInterpreter(ironpythonInterpreter.Configuration, InterpreterView.InterpreterFilter.ExcludeAll));
-            Assert.IsTrue(InterpreterView.ExcludeInterpreter(ironpythonInterpreter.Configuration, InterpreterView.InterpreterFilter.ExcludeIronpython));
-            Assert.IsFalse(InterpreterView.ExcludeInterpreter(ironpythonInterpreter.Configuration, InterpreterView.InterpreterFilter.None));
-            Assert.IsFalse(InterpreterView.ExcludeInterpreter(
-                ironpythonInterpreter.Configuration,
-                InterpreterView.InterpreterFilter.ExcludeVirtualEnv | InterpreterView.InterpreterFilter.ExcludeCondaEnv)
-            );
         }
 
         #region Test Helpers
@@ -871,13 +851,7 @@ namespace PythonToolsUITests {
                 return null;
             }
 
-            string env = TestData.GetTempPath();
-            if (env.Length > 140) {
-                env = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
-                DeleteFolder.Add(env);
-            }
-
-            pythonVersion.CreateVirtualEnv(env);
+            var env = pythonVersion.CreateVirtualEnv(VirtualEnvName.First);
             var interpreterConfiguration = new VisualStudioInterpreterConfiguration(
                     "Mock;" + Guid.NewGuid().ToString(),
                     Path.GetFileName(PathUtils.TrimEndSeparator(env)),
@@ -910,7 +884,7 @@ namespace PythonToolsUITests {
         }
 
         private MockInterpreterOptionsService MakeEmptyVEnv() {
-            var python = PythonPaths.Python37_x64 ?? PythonPaths.Python37 ?? PythonPaths.Python36_x64 ?? PythonPaths.Python36;
+            var python = PythonPaths.LatestVersion;
             if (python == null) {
                 Assert.Inconclusive("Required base Python environment not found.");
             }

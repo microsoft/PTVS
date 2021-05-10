@@ -20,10 +20,11 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Editor;
+using Microsoft.PythonTools.Editor.Core;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
+using Microsoft.PythonTools.LanguageServerClient;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Shell;
@@ -31,6 +32,8 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Operations;
+using Newtonsoft.Json.Linq;
+using LSP = Microsoft.VisualStudio.LanguageServer.Protocol;
 
 namespace Microsoft.PythonTools.Navigation.Navigable {
     class NavigableSymbolSource : INavigableSymbolSource {
@@ -41,6 +44,7 @@ namespace Microsoft.PythonTools.Navigation.Navigable {
 
         private static readonly string[] _classifications = new string[] {
             PredefinedClassificationTypeNames.Identifier,
+            PredefinedClassificationTypeNames.Type,
             PythonPredefinedClassificationTypeNames.Class,
             PythonPredefinedClassificationTypeNames.Function,
             PythonPredefinedClassificationTypeNames.Module,
@@ -67,54 +71,46 @@ namespace Microsoft.PythonTools.Navigation.Navigable {
                 return null;
             }
 
-            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+            // Check with pylance, which will give us a precise
+            // result, including the source location.
+            var result = await GetDefinitionLocationsAsync(extent.Span, cancellationToken).ConfigureAwait(false);
 
-            var entry = _buffer.TryGetAnalysisEntry();
-            if (entry == null) {
-                return null;
-            }
+            cancellationToken.ThrowIfCancellationRequested();
 
-            foreach (var token in _classifier.GetClassificationSpans(extent.Span)) {
-                cancellationToken.ThrowIfCancellationRequested();
-
-                // Quickly eliminate anything that isn't the right classification.
-                var name = token.ClassificationType.Classification;
-                if (!_classifications.Any(c => name.Contains(c))) {
-                    continue;
-                }
-
-                cancellationToken.ThrowIfCancellationRequested();
-
-                // Check with the analyzer, which will give us a precise
-                // result, including the source location.
-                var result = await GetDefinitionLocationsAsync(entry, token.Span.Start).ConfigureAwait(false);
-
-                cancellationToken.ThrowIfCancellationRequested();
-
-                if (result.Any()) {
-                    return new NavigableSymbol(_serviceProvider, result.First(), token.Span);
-                }
+            if (result != null && result.Any()) {
+                return result.First();
             }
 
             return null;
         }
 
-        internal static async Task<AnalysisVariable[]> GetDefinitionLocationsAsync(AnalysisEntry entry, SnapshotPoint pt) {
-            var list = new List<AnalysisVariable>();
+        internal async Task<NavigableSymbol[]> GetDefinitionLocationsAsync(SnapshotSpan span, CancellationToken cancellationToken) {
 
-            var result = await entry.Analyzer.AnalyzeExpressionAsync(entry, pt, ExpressionAtPointPurpose.FindDefinition).ConfigureAwait(false);
-            foreach (var variable in (result?.Variables).MaybeEnumerate()) {
-                if ((variable.Type == VariableType.Definition || variable.Type == VariableType.Value) &&
-                    !string.IsNullOrEmpty(variable.Location.FilePath)) {
-                    list.Add(variable);
+            var service = _serviceProvider.GetService(typeof(PythonToolsService)) as PythonToolsService;
+            if (service != null && service.LanguageClient != null) {
+                var result = await service.LanguageClient.InvokeTextDocumentDefinitionAsync(
+                    new LSP.TextDocumentPositionParams {
+                        TextDocument = new LSP.TextDocumentIdentifier {
+                            Uri = new System.Uri(_buffer.GetFilePath())
+                        },
+                        Position = span.Start.GetPosition()
+                    },
+                    cancellationToken);
+
+                if (result != null) {
+                    if (result is JToken token) {
+                        var array = ResultConverter.ConvertResult(token);
+                        var locations = array as LSP.Location[];
+                        if (locations != null) {
+                            return locations.OrderBy(l => l.Range.Start.Line).Select(l => {
+                                return new NavigableSymbol(_serviceProvider, span.GetText(), l, span);
+                            }).ToArray();
+                        }
+                    }
                 }
             }
 
-            return list
-                .OrderBy(v => v.Location.DocumentUri?.AbsoluteUri ?? "")
-                .ThenBy(v => v.Location.StartLine)
-                .ThenBy(v => v.Location.StartColumn)
-                .ToArray();
+            return null;
         }
     }
 }

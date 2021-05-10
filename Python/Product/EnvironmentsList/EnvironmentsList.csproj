@@ -71,8 +71,6 @@
     <Reference Include="WindowsBase" />
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
-    <Reference Include="Microsoft.Python.Analysis.Engine" />
-    <Reference Include="Microsoft.PythonTools.Analyzer" />
     <Reference Include="Microsoft.VisualStudio.Settings.15.0" />
     <Reference Include="Microsoft.VisualStudio.ImageCatalog" />
     <Reference Include="Microsoft.VisualStudio.Imaging" />

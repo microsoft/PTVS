@@ -33,7 +33,7 @@ namespace Microsoft.PythonTools.BuildTasks {
                 added = _contexts.Add(context);
             }
             if (added) {
-                ProjectsChanaged?.Invoke(this, EventArgs.Empty);
+                ProjectsChanged?.Invoke(this, EventArgs.Empty);
             }
         }
 
@@ -43,7 +43,7 @@ namespace Microsoft.PythonTools.BuildTasks {
                 removed = _contexts.Remove(context);
             }
             if (removed) {
-                ProjectsChanaged?.Invoke(this, EventArgs.Empty);
+                ProjectsChanged?.Invoke(this, EventArgs.Empty);
             }
         }
 
@@ -59,7 +59,7 @@ namespace Microsoft.PythonTools.BuildTasks {
             }
         }
 
-        public event EventHandler ProjectsChanaged;
+        public event EventHandler ProjectsChanged;
 
         public event EventHandler<ProjectChangedEventArgs> ProjectChanged {
             add {

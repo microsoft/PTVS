@@ -16,15 +16,15 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Windows;
+using Microsoft.Python.Parsing;
 using Microsoft.PythonTools.CodeCoverage;
-using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Intellisense;
-using Microsoft.PythonTools.Parsing;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Threading;
+using Microsoft.VisualStudio.Workspace.VSIntegration.Contracts;
 using Microsoft.VisualStudioTools;
 using Task = System.Threading.Tasks.Task;
 
@@ -40,7 +40,7 @@ namespace Microsoft.PythonTools.Commands {
             
         }
 
-        public override async void DoCommand(object sender, EventArgs args) {
+        public override void DoCommand(object sender, EventArgs args) {
             var oe = args as OleMenuCmdEventArgs;
             string file = oe.InValue as string;
             PythonLanguageVersion? version = null;
@@ -63,7 +63,7 @@ namespace Microsoft.PythonTools.Commands {
 
             if (file != null) {
                 try {
-                    await DoConvert(file, version);
+                    _serviceProvider.GetPythonToolsService().UIThread.Invoke(async () => await DoConvert(file, version));
                 } catch (Exception ex) {
                     ex.ReportUnhandledException(_serviceProvider, GetType());
                 }
@@ -92,7 +92,8 @@ namespace Microsoft.PythonTools.Commands {
                 // Discover what version we should use for this if one hasn't been provided...
                 if (version == null) {
                     foreach (var file in fileInfo) {
-                        version = ((await _serviceProvider.FindAnalyzerAsync(file.Filename)) as VsProjectAnalyzer)?.LanguageVersion;
+                        var factory = GetFactory(_serviceProvider, file.Filename);
+                        version = factory?.Configuration.Version.ToLanguageVersion();
                         if (version.HasValue) {
                             break;
                         }
@@ -104,6 +105,24 @@ namespace Microsoft.PythonTools.Commands {
 
                 // Then export as .coveragexml
                 new CoverageExporter(outp, covInfo).Export();
+            }
+        }
+
+        private static IPythonInterpreterFactory GetFactory(IServiceProvider serviceProvider, string filePath) {
+            var project = serviceProvider.GetProjectContainingFile(filePath);
+            if (project != null) {
+                return project.ActiveInterpreter;
+            } else {
+                var componentModel = serviceProvider.GetComponentModel();
+                var workspaceService = componentModel.GetService<IVsFolderWorkspaceService>();
+                var registryService = componentModel.GetService<IInterpreterRegistryService>();
+                var optionsService = componentModel.GetService<IInterpreterOptionsService>();
+
+                if (workspaceService.CurrentWorkspace != null) {
+                    return workspaceService.CurrentWorkspace.GetInterpreterFactory(registryService, optionsService);
+                } else {
+                    return optionsService.DefaultInterpreter;
+                }
             }
         }
 

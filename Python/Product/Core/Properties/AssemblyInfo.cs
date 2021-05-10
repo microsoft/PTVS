@@ -18,6 +18,7 @@ using System;
 using System.Reflection;
 using System.Resources;
 using System.Runtime.InteropServices;
+using Microsoft.PythonTools.Core;
 using Microsoft.VisualStudio.Shell;
 
 [assembly: AssemblyTitle("Visual Studio - Python support")]
@@ -27,10 +28,20 @@ using Microsoft.VisualStudio.Shell;
 [assembly: CLSCompliant(false)]
 [assembly: NeutralResourcesLanguage("en-US")]
 
-[assembly: ProvideCodeBase(AssemblyName = "Microsoft.Python.LanguageServer.Core", CodeBase = "Microsoft.Python.LanguageServer.Core.dll")]
-[assembly: ProvideCodeBase(AssemblyName = "Microsoft.Python.Analysis.Engine", CodeBase = "Microsoft.Python.Analysis.Engine.dll")]
-[assembly: ProvideCodeBase(AssemblyName = "Microsoft.PythonTools.Ipc.Json", CodeBase = "Microsoft.PythonTools.Ipc.Json.dll")]
-[assembly: ProvideCodeBase(AssemblyName = "Microsoft.PythonTools.Analyzer", CodeBase = "Microsoft.PythonTools.Analyzer.exe")]
+[assembly: ProvideRawCodeBase(
+     AssemblyName = "Microsoft.Python.Core", CodeBase = @"$PackageFolder$\Microsoft.Python.Core.dll",
+     Version = ParserNuGetPackageInfo.Version, Culture = ParserNuGetPackageInfo.Culture, PublicKeyToken = ParserNuGetPackageInfo.PublicKeyToken
+ )]
+
+[assembly: ProvideRawCodeBase(
+     AssemblyName = "Microsoft.Python.Parsing", CodeBase = @"$PackageFolder$\Microsoft.Python.Parsing.dll",
+     Version = ParserNuGetPackageInfo.Version, Culture = ParserNuGetPackageInfo.Culture, PublicKeyToken = ParserNuGetPackageInfo.PublicKeyToken
+ )]
+
+[assembly: ProvideCodeBase(AssemblyName = "Microsoft.Python.Core", CodeBase = @"$PackageFolder$\Microsoft.Python.Core.dll")]
+[assembly: ProvideCodeBase(AssemblyName = "Microsoft.Python.Parsing", CodeBase = @"$PackageFolder$\Microsoft.Python.Parsing.dll")]
+
+[assembly: ProvideRawCodeBase(AssemblyName = "Microsoft.VisualStudio.LanguageServer.Protocol", CodeBase = @"$PackageFolder$\Microsoft.VisualStudio.LanguageServer.Protocol.dll", Version = "16.9.5.24609", Culture = "neutral", PublicKeyToken = "b03f5f7f11d50a3a")]
 
 [assembly: ProvideCodeBase(AssemblyName = "Microsoft.PythonTools", CodeBase = "Microsoft.PythonTools.dll", Version = AssemblyVersionInfo.StableVersion)]
 [assembly: ProvideCodeBase(AssemblyName = "Microsoft.PythonTools.Attacher", CodeBase = "Microsoft.PythonTools.Attacher.exe", Version = AssemblyVersionInfo.StableVersion)]
@@ -39,7 +50,16 @@ using Microsoft.VisualStudio.Shell;
 [assembly: ProvideCodeBase(AssemblyName = "Microsoft.PythonTools.EnvironmentsList", CodeBase = "Microsoft.PythonTools.EnvironmentsList.dll", Version = AssemblyVersionInfo.StableVersion)]
 [assembly: ProvideCodeBase(AssemblyName = "Microsoft.PythonTools.Debugger", CodeBase = "Microsoft.PythonTools.Debugger.dll", Version = AssemblyVersionInfo.StableVersion)]
 [assembly: ProvideCodeBase(AssemblyName = "Microsoft.PythonTools.Debugger.Concord", CodeBase = "Microsoft.PythonTools.Debugger.Concord.dll", Version = AssemblyVersionInfo.StableVersion)]
+[assembly: ProvideCodeBase(AssemblyName = "Microsoft.PythonTools.Ipc.Json", CodeBase = "Microsoft.PythonTools.Ipc.Json.dll", Version = AssemblyVersionInfo.StableVersion)]
 [assembly: ProvideCodeBase(AssemblyName = "Microsoft.PythonTools.ProjectWizards", CodeBase = "Microsoft.PythonTools.ProjectWizards.dll", Version = AssemblyVersionInfo.StableVersion)]
 [assembly: ProvideCodeBase(AssemblyName = "Microsoft.PythonTools.VSCommon", CodeBase = "Microsoft.PythonTools.VSCommon.dll", Version = AssemblyVersionInfo.StableVersion)]
 [assembly: ProvideCodeBase(AssemblyName = "Microsoft.PythonTools.VSInterpreters", CodeBase = "Microsoft.PythonTools.VSInterpreters.dll", Version = AssemblyVersionInfo.StableVersion)]
 [assembly: ProvideCodeBase(AssemblyName = "Microsoft.PythonTools.Workspace", CodeBase = "Microsoft.PythonTools.Workspace.dll", Version = AssemblyVersionInfo.StableVersion)]
+[assembly: ProvideCodeBase(AssemblyName = "Microsoft.Extensions.FileSystemGlobbing", CodeBase = "Microsoft.Extensions.FileSystemGlobbing.dll", Version = "3.1.8.0")]
+
+internal static class ParserNuGetPackageInfo {
+    // important: keep in sync with Build\16.0\package.config
+    public const string Version = "0.5.59.0";
+    public const string Culture = "neutral";
+    public const string PublicKeyToken = "b03f5f7f11d50a3a";
+}

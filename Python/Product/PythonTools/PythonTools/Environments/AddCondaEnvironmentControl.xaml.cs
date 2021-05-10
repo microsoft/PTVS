@@ -18,7 +18,6 @@ using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using Microsoft.PythonTools.Analysis.Infrastructure;
 using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Environments {

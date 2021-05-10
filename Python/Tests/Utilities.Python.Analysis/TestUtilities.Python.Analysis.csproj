@@ -48,22 +48,21 @@
     <Reference Include="System.Core" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Xml" />
-    <Reference Include="Microsoft.Python.Analysis.Engine" />
-    <Reference Include="Microsoft.PythonTools.Analyzer" />
+    <Reference Include="Microsoft.Python.Core">
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.Python.Parsing">
+      <Private>True</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\..\Product\IronPythonResolver\Resolver.cs">
-      <Link>Resolver.cs</Link>
-    </Compile>
     <Compile Include="MockCondaLocator.cs" />
     <Compile Include="MockInterpreterOptionsService.cs" />
-    <Compile Include="MockPythonInterpreter.cs" />
     <Compile Include="MockPythonInterpreterFactory.cs" />
     <Compile Include="MockCondaLocatorProvider.cs" />
     <Compile Include="MockPythonInterpreterFactoryProvider.cs" />
     <Compile Include="MSTestEnvironment.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="PythonAnalysis.cs" />
     <Compile Include="PythonPaths.cs" />
     <Compile Include="TestPackageManagerUI.cs" />
   </ItemGroup>

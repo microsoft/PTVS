@@ -1,4 +1,3 @@
-extern alias analysis;
 // Python Tools for Visual Studio
 // Copyright(c) Microsoft Corporation
 // All rights reserved.
@@ -17,10 +16,8 @@ extern alias analysis;
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.IO;
 using System.Threading.Tasks;
-using analysis::Microsoft.PythonTools.Parsing;
-using Microsoft.PythonTools;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Document;
@@ -31,88 +28,75 @@ using TestUtilities.UI.Python;
 
 namespace PythonToolsUITests {
     public class FormattingUITests {
-        public void ToggleableOptionTest(PythonVisualStudioApp app) {
-            app.PythonToolsService.SetFormattingOption("SpaceBeforeClassDeclarationParen", true);
-            foreach (var expectedResult in new bool?[] { false, null, true }) {
-                using (var dialog = ToolsOptionsDialog.FromDte(app)) {
-                    dialog.SelectedView = "Text Editor/Python/Formatting/Spacing";
-                    var spacingView = FormattingOptionsTreeView.FromDialog(dialog);
+        private const string FormatDocumentMessage = "Format Document";
+        private const string FormatSelectionMessage = "Format Selection - first line selected";
+        private const string FormatSelectionNoSelectionMessage = "Format Selection - no selection, caret on first line";
 
-                    var value = spacingView.WaitForItem(
-                        "Class Definitions",
-                        "Insert space between a class name and bases list"
-                    );
-                    Assert.IsNotNull(value, "Did not find item");
+        private PythonVersion Version => PythonPaths.Python37_x64 ?? PythonPaths.Python38_x64;
 
-                    value.SetFocus();
-                    Mouse.MoveTo(value.GetClickablePoint());
-                    Mouse.Click(System.Windows.Input.MouseButton.Left);
+        public void FormatAutopep8(PythonVisualStudioApp app) {
+            var slnPath = PrepareProject(app, Version, "autopep8");
 
-                    dialog.OK();
-
-                    Assert.AreEqual(
-                        expectedResult,
-                        app.PythonToolsService.GetFormattingOption("SpaceBeforeClassDeclarationParen")
-                    );
-                }
-            }
-        }
-
-        public void FormatDocument(PythonVisualStudioApp app) {
-            FormattingTest(app, "document.py", null, @"# the quick brown fox jumped over the slow lazy dog the quick brown fox jumped
-# over the slow lazy dog
-def f():
+            Console.WriteLine(FormatDocumentMessage);
+            FormattingTest(app, slnPath, "document.py", null, @"def f(one, two, three, four, five, six, seven, eight, nine, ten, eleven, twelve):
     pass
 
-# short comment
-def g():
-    pass", new[] { Span.FromBounds(0, 78), Span.FromBounds(80, 186) }, null, null);
+
+def g(): return 5 ** 2
+", new[] { Span.FromBounds(0, 83), Span.FromBounds(93, 214) });
+
+            Console.WriteLine(FormatSelectionMessage);
+            FormattingTest(app, slnPath, "document.py", new Span(0, 85), @"def f(one, two, three, four, five, six, seven, eight, nine, ten, eleven, twelve):
+    pass
+def g ():    return 5 ** 2
+", new[] { Span.FromBounds(0, 83) });
+
+            Console.WriteLine(FormatSelectionNoSelectionMessage);
+            FormattingTest(app, slnPath, "document.py", new Span(0, 0), @"def f(one, two, three, four, five, six, seven, eight, nine, ten, eleven, twelve):
+    pass
+def g ():    return 5 ** 2
+", new[] { Span.FromBounds(0, 83) });
         }
 
-        public void FormatAsyncDocument(PythonVisualStudioApp app) {
-            FormattingTest(app, "async.py", null, @"async  def f(x):
-    async  for  i in await  x:
-        pass
-    # comment before
-    async   with x:
-        pass
-    [  x   async for x  in await    x]", new Span[] { }, null, null, new Version(3, 6));
-        }
+        public void FormatBlack(PythonVisualStudioApp app) {
+            var slnPath = PrepareProject(app, Version, "black");
 
-
-        public void FormatSelection(PythonVisualStudioApp app) {
-            FormattingTest(app, "selection.py", new Span(0, 121), @"# the quick brown fox jumped over the slow lazy dog the quick brown fox jumped
-# over the slow lazy dog
-def f():
+            Console.WriteLine(FormatDocumentMessage);
+            FormattingTest(app, slnPath, "document.py", null, @"def f(one, two, three, four, five, six, seven, eight, nine, ten, eleven, twelve):
     pass
 
-# short comment
+
 def g():
-    pass", new[] { Span.FromBounds(0, 78), Span.FromBounds(80, 186) }, null, null);
+    return 5 ** 2
+", new[] { Span.FromBounds(0, 81), Span.FromBounds(91, 182), Span.FromBounds(93, 219) });
         }
 
-        public void FormatSelectionNoSelection(PythonVisualStudioApp app) {
-            FormattingTest(app, "selection2.py", new Span(5, 0), @"x=1
+        public void FormatYapf(PythonVisualStudioApp app) {
+            var slnPath = PrepareProject(app, Version, "yapf");
 
-y=2
+            Console.WriteLine(FormatDocumentMessage);
+            FormattingTest(app, slnPath, "document.py", null, @"def f(one, two, three, four, five, six, seven, eight, nine, ten, eleven,
+      twelve):
+    pass
 
-z=3", new Span[0], null, null);
-        }
 
-        public void FormatReduceLines(PythonVisualStudioApp app) {
-            FormattingTest(
-                app,
-                "linereduction.py",
-                null,
-                "(a + b + c + d + e + f)\r\n",
-                new[] { new Span(0, 23), Span.FromBounds(25, 50) },
-                s => {
-                    var v = s.GetFormattingOption("SpacesAroundBinaryOperators");
-                    s.SetFormattingOption("SpacesAroundBinaryOperators", true);
-                    return v;
-                },
-                (s, v) => s.SetFormattingOption("SpacesAroundBinaryOperators", v)
-            );
+def g():
+    return 5**2
+", new[] { Span.FromBounds(0, 90), Span.FromBounds(100, 231) });
+
+            Console.WriteLine(FormatSelectionMessage);
+            FormattingTest(app, slnPath, "document.py", new Span(0, 85), @"def f(one, two, three, four, five, six, seven, eight, nine, ten, eleven,
+      twelve):
+    pass
+def g ():    return 5 ** 2
+", new[] { Span.FromBounds(0, 90) });
+
+            Console.WriteLine(FormatSelectionNoSelectionMessage);
+            FormattingTest(app, slnPath, "document.py", new Span(0, 0), @"def f(one, two, three, four, five, six, seven, eight, nine, ten, eleven,
+      twelve):
+    pass
+def g ():    return 5 ** 2
+", new[] { Span.FromBounds(0, 90) });
         }
 
         /// <summary>
@@ -124,82 +108,99 @@ z=3", new Span[0], null, null);
         /// <param name="changedSpans">The spans which should be marked as changed in the buffer after formatting</param>
         private static void FormattingTest(
             PythonVisualStudioApp app,
+            string slnPath,
             string filename,
             Span? selection,
             string expectedText,
-            Span[] changedSpans,
-            Func<PythonToolsService, object> updateSettings,
-            Action<PythonToolsService, object> revertSettings,
-            Version version = null
-        ) {
-            using (version == null ? null : app.SelectDefaultInterpreter(PythonPaths.Versions.FirstOrDefault(v => v.Version.ToVersion() >= version))) {
-                var o = updateSettings?.Invoke(app.PythonToolsService);
-                if (revertSettings != null) {
-                    app.OnDispose(() => revertSettings(app.PythonToolsService, o));
-                }
+            Span[] changedSpans) {
 
-                var project = app.OpenProject(@"TestData\FormattingTests\FormattingTests.sln");
-                var item = project.ProjectItems.Item(filename);
-                var window = item.Open();
-                window.Activate();
-                var doc = app.GetDocument(item.Document.FullName);
+            var project = app.OpenProject(slnPath);
+            var item = project.ProjectItems.Item(filename);
+            var window = item.Open();
+            window.Activate();
+            var doc = app.GetDocument(item.Document.FullName);
 
-                var aggFact = app.ComponentModel.GetService<IViewTagAggregatorFactoryService>();
-                var changeTags = aggFact.CreateTagAggregator<ChangeTag>(doc.TextView);
+            var aggFact = app.ComponentModel.GetService<IViewTagAggregatorFactoryService>();
+            var changeTags = aggFact.CreateTagAggregator<ChangeTag>(doc.TextView);
 
-                // format the selection or document
-                if (selection == null) {
-                    DoFormatDocument(app);
-                } else {
-                    doc.Invoke(() => doc.TextView.Selection.Select(new SnapshotSpan(doc.TextView.TextBuffer.CurrentSnapshot, selection.Value), false));
-                    DoFormatSelection(app);
-                }
-
-                // verify the contents are correct
-                string actual = null;
-                int steady = 50;
-                for (int i = 0; i < 100; i++) {
-                    actual = doc.TextView.TextBuffer.CurrentSnapshot.GetText();
-
-                    if (expectedText == actual) {
-                        if (--steady <= 0) {
-                            break;
-                        }
+            // format the selection or document
+            if (selection == null) {
+                DoFormatDocument(app);
+            } else {
+                doc.Invoke(() => {
+                    if (selection.Value.Length == 0) {
+                        doc.TextView.Selection.Clear();
+                        doc.TextView.Caret.MoveTo(new SnapshotPoint(doc.TextView.TextBuffer.CurrentSnapshot, selection.Value.Start));
                     } else {
-                        steady = 50;
+                        doc.TextView.Selection.Select(new SnapshotSpan(doc.TextView.TextBuffer.CurrentSnapshot, selection.Value), false);
                     }
-                    System.Threading.Thread.Sleep(100);
-                }
-                Assert.AreEqual(expectedText, actual);
+                });
+                DoFormatSelection(app);
+            }
 
-                // verify the change tags are correct
-                var snapshot = doc.TextView.TextBuffer.CurrentSnapshot;
-                var tags = changeTags.GetTags(
-                    new SnapshotSpan(
-                        doc.TextView.TextBuffer.CurrentSnapshot,
-                        new Span(0, doc.TextView.TextBuffer.CurrentSnapshot.Length)
+            // verify the contents are correct
+            string actual = null;
+            int steady = 50;
+            for (int i = 0; i < 100; i++) {
+                actual = doc.TextView.TextBuffer.CurrentSnapshot.GetText();
+
+                if (expectedText == actual) {
+                    if (--steady <= 0) {
+                        break;
+                    }
+                } else {
+                    steady = 50;
+                }
+                System.Threading.Thread.Sleep(100);
+            }
+            Assert.AreEqual(expectedText, actual);
+
+            // verify the change tags are correct
+            var snapshot = doc.TextView.TextBuffer.CurrentSnapshot;
+            var tags = changeTags.GetTags(
+                new SnapshotSpan(
+                    doc.TextView.TextBuffer.CurrentSnapshot,
+                    new Span(0, doc.TextView.TextBuffer.CurrentSnapshot.Length)
+                )
+            );
+            List<Span> result = new List<Span>();
+            foreach (var tag in tags) {
+                result.Add(
+                    new Span(
+                        tag.Span.Start.GetPoint(doc.TextView.TextBuffer.CurrentSnapshot, PositionAffinity.Successor).Value.Position,
+                        tag.Span.End.GetPoint(doc.TextView.TextBuffer.CurrentSnapshot, PositionAffinity.Successor).Value.Position
                     )
                 );
-                List<Span> result = new List<Span>();
-                foreach (var tag in tags) {
-                    result.Add(
-                        new Span(
-                            tag.Span.Start.GetPoint(doc.TextView.TextBuffer.CurrentSnapshot, PositionAffinity.Successor).Value.Position,
-                            tag.Span.End.GetPoint(doc.TextView.TextBuffer.CurrentSnapshot, PositionAffinity.Successor).Value.Position
-                        )
-                    );
-                }
-
-                // dump the spans for creating tests easier
-                foreach (var span in result) {
-                    Console.WriteLine(span);
-                }
-
-                Assert.AreEqual(result.Count, changedSpans.Length);
-                for (int i = 0; i < result.Count; i++) {
-                    Assert.AreEqual(result[i], changedSpans[i]);
-                }
             }
+
+            // dump the spans for creating tests easier
+            foreach (var span in result) {
+                Console.WriteLine(span);
+            }
+
+            Assert.AreEqual(result.Count, changedSpans.Length);
+            for (int i = 0; i < result.Count; i++) {
+                Assert.AreEqual(result[i], changedSpans[i]);
+            }
+
+            app.Dte.Solution.Close(false);
+        }
+
+        private static string PrepareProject(PythonVisualStudioApp app, PythonVersion python, string formatter) {
+            var slnPath = app.CopyProjectForTest(@"TestData\FormattingTests\FormattingTests.sln");
+            var projFolder = Path.GetDirectoryName(slnPath);
+            var projPath = Path.Combine(projFolder, "FormattingTests.pyproj");
+
+            // The project file has a placeholder for the formatter which we must replace
+            var projContents = File.ReadAllText(projPath);
+            projContents = projContents.Replace("$$FORMATTER$$", formatter);
+            File.WriteAllText(projPath, projContents);
+
+            // The project references a virtual env in 'env' subfolder,
+            // which we need to create before opening the project.
+            python.CreateVirtualEnv(VirtualEnvName.First, new[] { formatter }, Path.Combine(projFolder, "env"));
+
+            return slnPath;
         }
 
         private static void DoFormatSelection(VisualStudioApp app) {

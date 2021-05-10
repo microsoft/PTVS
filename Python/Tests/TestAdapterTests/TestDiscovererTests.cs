@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Microsoft.Python.Parsing;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.TestAdapter.Pytest;
 using Microsoft.PythonTools.TestAdapter.UnitTest;
@@ -338,7 +339,7 @@ namespace TestAdapterTests {
            
             var errors = string.Join(Environment.NewLine, logger.GetErrors());
 
-            if (Version.Version > Microsoft.PythonTools.Parsing.PythonLanguageVersion.V27) {
+            if (Version.Version > PythonLanguageVersion.V27) {
                 AssertUtil.Contains(errors,
                     "SyntaxError: invalid syntax"
                 );
@@ -757,6 +758,7 @@ namespace TestAdapterTests {
     }
 
     [TestClass]
+    [Ignore]
     public class TestDiscovererTests27 : TestDiscovererTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
@@ -781,12 +783,12 @@ namespace TestAdapterTests {
     }
 
     [TestClass]
-    public class TestDiscovererTests37 : TestDiscovererTests {
+    public class TestDiscovererTestsLatest : TestDiscovererTests {
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
         }
 
-        protected override PythonVersion Version => PythonPaths.Python37_x64 ?? PythonPaths.Python37;
+        protected override PythonVersion Version => PythonPaths.LatestVersion;
     }
 }

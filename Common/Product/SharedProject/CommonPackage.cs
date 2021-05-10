@@ -20,7 +20,6 @@ using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
@@ -84,19 +83,22 @@ namespace Microsoft.VisualStudioTools {
         internal static object CommandsLock => _commandsLock;
 
         protected override void Dispose(bool disposing) {
-            _uiThread.MustBeCalledFromUIThreadOrThrow();
+            _uiThread?.MustBeCalledFromUIThreadOrThrow();
             try {
-                if (_componentID != 0) {
+                if (_componentID != 0)
+                {
                     _compMgr.FRevokeComponent(_componentID);
                     _componentID = 0;
                 }
 
-                if (_libraryManager != null) {
+                if (_libraryManager != null)
+                {
                     _libraryManager.Dispose();
                     _libraryManager = null;
                 }
             } finally {
                 base.Dispose(disposing);
+
             }
         }
 
@@ -204,7 +206,10 @@ namespace Microsoft.VisualStudioTools {
                 AddService<UIThreadBase>(_uiThread, true);
             }
 
-            AddService(GetLibraryManagerType(), CreateLibraryManager, true);
+            var libraryManagerType = GetLibraryManagerType();
+            if (libraryManagerType != null) {
+                AddService(libraryManagerType, CreateLibraryManager, true);
+            }
 
             var crinfo = new OLECRINFO {
                 cbSize = (uint)Marshal.SizeOf(typeof(OLECRINFO)),

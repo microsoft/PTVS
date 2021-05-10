@@ -20,7 +20,6 @@ using System.ComponentModel.Composition;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.Shell;
 using MSBuild = Microsoft.Build.Evaluation;
@@ -80,7 +79,7 @@ namespace Microsoft.PythonTools.Interpreter {
                         Log("Failed to get IProjectContextProvider {0}", ce);
                         continue;
                     }
-                    providerValue.ProjectsChanaged += Provider_ProjectContextsChanged;
+                    providerValue.ProjectsChanged += Provider_ProjectContextsChanged;
                     providerValue.ProjectChanged += Provider_ProjectChanged;
                     Provider_ProjectContextsChanged(providerValue, EventArgs.Empty);
                 }

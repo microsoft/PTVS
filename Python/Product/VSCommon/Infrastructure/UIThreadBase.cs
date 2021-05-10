@@ -29,7 +29,7 @@ namespace Microsoft.VisualStudioTools {
     /// doesn't take assembly names into account when generating an interfaces GUID, resulting 
     /// in resolution issues when we reference the interface from multiple assemblies.
     /// </summary>
-    abstract class UIThreadBase {
+    public abstract class UIThreadBase {
         public abstract void Invoke(Action action);
         public abstract T Invoke<T>(Func<T> func);
         public abstract Task InvokeAsync(Action action);
@@ -150,10 +150,12 @@ namespace Microsoft.VisualStudioTools {
 #if DEBUG
                 var shell = (IVsShell)serviceProvider.GetService(typeof(SVsShell));
                 object shutdownStarted;
-                if (shell != null &&
-                    ErrorHandler.Succeeded(shell.GetProperty((int)__VSSPROPID6.VSSPROPID_ShutdownStarted, out shutdownStarted)) &&
-                    !(bool)shutdownStarted) {
-                    Debug.Fail("No UIThread service but shell is not shutting down");
+                if (shell != null) {
+                    int hr = shell.GetProperty((int)__VSSPROPID6.VSSPROPID_ShutdownStarted, out shutdownStarted);
+                    if (hr >= 0 && !(bool)shutdownStarted) {
+                        Debug.Fail("No UIThread service but shell is not shutting down");
+
+                    }
                 }
 #endif
                 return new NoOpUIThread();

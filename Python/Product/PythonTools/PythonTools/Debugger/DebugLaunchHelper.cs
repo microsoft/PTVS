@@ -172,8 +172,8 @@ namespace Microsoft.PythonTools.Debugger {
         }
 
         public static unsafe DebugTargetInfo CreateDebugTargetInfo(IServiceProvider provider, LaunchConfiguration config) {
-            if (config.Interpreter.Version < new Version(2, 6) && config.Interpreter.Version > new Version(0, 0)) {
-                // We don't support Python 2.5 now that our debugger needs the json module
+            if (config.Interpreter.Version < new Version(3, 0) && config.Interpreter.Version > new Version(0, 0)) {
+                // We no longer support Python 2.x.
                 throw new NotSupportedException(Strings.DebuggerPythonVersionNotSupported);
             }
 
@@ -216,12 +216,9 @@ namespace Microsoft.PythonTools.Debugger {
                 } else {
                     var pyService = provider.GetPythonToolsService();
                     // Set the Python debugger
-                    dti.Info.clsidCustom = pyService.DebuggerOptions.UseLegacyDebugger ? AD7Engine.DebugEngineGuid : DebugAdapterLauncher.VSCodeDebugEngine;
+                    dti.Info.clsidCustom = DebugAdapterLauncher.VSCodeDebugEngine;
                     dti.Info.grfLaunch = (uint)__VSDBGLAUNCHFLAGS.DBGLAUNCH_StopDebuggingOnEnd;
-
-                    if (!pyService.DebuggerOptions.UseLegacyDebugger) {
-                        dti.Info.bstrOptions = GetLaunchJsonForVsCodeDebugAdapter(provider, config, fullEnvironment);
-                    }
+                    dti.Info.bstrOptions = GetLaunchJsonForVsCodeDebugAdapter(provider, config, fullEnvironment);
                 }
                 
                 // Null out dti so that it is not disposed before we return.

@@ -26,7 +26,6 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Ipc.Json;
 using Microsoft.PythonTools.TestAdapter.Config;

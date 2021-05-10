@@ -30,12 +30,14 @@ using Microsoft.Build.Execution;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Logging;
 using Microsoft.PythonTools.BuildTasks;
+using Microsoft.PythonTools.Common;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudioTools;
 using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.Project {
@@ -115,7 +117,7 @@ namespace Microsoft.PythonTools.Project {
             }
 
             var package = typeof(PythonToolsPackage).GUID;
-            var cmdSet = GuidList.guidPythonToolsCmdSet;
+            var cmdSet = CommonGuidList.guidPythonToolsCmdSet;
             uint cmdId;
 
             ErrorHandler.ThrowOnFailure(commands.AddNamedCommand(
@@ -177,7 +179,7 @@ namespace Microsoft.PythonTools.Project {
                 var rm = new System.Resources.ResourceManager(ns, asm);
                 return rm.GetString(key, CultureInfo.CurrentUICulture) ?? key;
             } catch (Exception ex) {
-                ActivityLog.LogError(Strings.ProductTitle, Strings.FailedToReadResource.FormatUI(assembly, ns, key, ex));
+                CommonUtils.ActivityLogError(Strings.ProductTitle, Strings.FailedToReadResource.FormatUI(assembly, ns, key, ex));
                 return key;
             }
         }
@@ -291,7 +293,7 @@ namespace Microsoft.PythonTools.Project {
                     }
 
                     // Log error to the ActivityLog.
-                    ActivityLog.LogError(Strings.ProductTitle, Strings.ErrorRunningCustomCommand.FormatUI(_target, ex));
+                    CommonUtils.ActivityLogError(Strings.ProductTitle, Strings.ErrorRunningCustomCommand.FormatUI(_target, ex));
                 }
             });
 
@@ -694,7 +696,7 @@ namespace Microsoft.PythonTools.Project {
                     // Swallow OperationCanceledException, it is normal for async operation to be cancelled
                     ActivityLog.LogInformation(Strings.ProductTitle, Strings.CustomCommandCanceled.FormatUI(_label));
                 } catch (Exception ex) {
-                    ActivityLog.LogError(Strings.ProductTitle, Strings.ErrorRunningCustomCommand.FormatUI(_label, ex));
+                    CommonUtils.ActivityLogError(Strings.ProductTitle, Strings.ErrorRunningCustomCommand.FormatUI(_label, ex));
                     var outWindow = OutputWindowRedirector.GetGeneral(project.Site);
                     if (outWindow != null) {
                         outWindow.WriteErrorLine(Strings.ErrorRunningCustomCommand.FormatUI(_label, ex));

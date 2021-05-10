@@ -27,22 +27,14 @@ namespace TestAdapterTests.Mocks {
             ProjectName = projectName;
         }
 
-        [Obsolete]
-        public override ProjectAnalyzer Analyzer => throw new NotImplementedException();
-
         public override string ProjectHome { get; }
 
         public override string ProjectName { get; }
 
 #pragma warning disable 67
-        public override event EventHandler ProjectAnalyzerChanged;
         public override event EventHandler<PythonProjectPropertyChangedArgs> ProjectPropertyChanged;
         public override event EventHandler ActiveInterpreterChanged;
 #pragma warning restore  67
-
-        public override Task<ProjectAnalyzer> GetAnalyzerAsync() {
-            throw new NotImplementedException();
-        }
 
         public override IPythonInterpreterFactory GetInterpreterFactory() {
             throw new NotImplementedException();

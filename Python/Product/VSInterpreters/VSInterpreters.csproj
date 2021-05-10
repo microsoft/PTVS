@@ -43,13 +43,15 @@
       <Project>{b3db0521-d9e3-4f48-9e2e-e5ecae886049}</Project>
       <Name>Microsoft.PythonTools.Common</Name>
     </ProjectReference>
+    <ProjectReference Include="..\VSCommon\VSCommon.csproj">
+      <Project>{a52ac77f-6df9-4387-bb08-8ded3fd95a0f}</Project>
+      <Name>VSCommon</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Accessibility">
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
-    <Reference Include="Microsoft.Python.Analysis.Engine" />
-    <Reference Include="Microsoft.PythonTools.Analyzer" />
     <Reference Include="Microsoft.Build, Version=$(MicrosoftBuildAssemblyVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Microsoft.Build.Conversion.$(MicrosoftBuildAssemblyVersionSuffix), Version=$(MicrosoftBuildEngineAssemblyVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Microsoft.Build.Engine, Version=$(MicrosoftBuildEngineAssemblyVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
@@ -80,13 +82,30 @@
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
+    <Reference Include="Microsoft.Python.Parsing">
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.Python.Core">
+      <Private>True</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="InterpreterArchitecture.cs" />
+    <Compile Include="Interpreter\AstPythonInterpreterFactory.cs" />
+    <Compile Include="Interpreter\IInterpreterLog.cs" />
+    <Compile Include="Interpreter\IInterpreterRegistryService.cs" />
+    <Compile Include="Interpreter\InMemoryProject.cs" />
+    <Compile Include="Interpreter\InterpreterConfiguration.cs" />
+    <Compile Include="Interpreter\InterpreterFactoryCreationOptions.cs" />
+    <Compile Include="Interpreter\InterpreterFactoryCreator.cs" />
+    <Compile Include="Interpreter\InterpreterRegistryConstants.cs" />
     <Compile Include="..\..\..\Common\Product\SharedProject\FileWatcher.cs">
       <Link>Interpreter\FileWatcher.cs</Link>
     </Compile>
     <Compile Include="Interpreter\InterpreterUIMode.cs" />
+    <Compile Include="Interpreter\IPythonInterpreterFactory.cs" />
     <Compile Include="Interpreter\LaunchConfiguration.cs" />
+    <Compile Include="Interpreter\NoInterpretersException.cs" />
     <Compile Include="Interpreter\LaunchConfigurationUtils.cs" />
     <Compile Include="Interpreter\PythonInterpreterFactoryExtensions.cs" />
     <Compile Include="Interpreter\VisualStudioInterpreterConfiguration.cs" />
@@ -104,6 +123,7 @@
     <Compile Include="Interpreter\ICondaEnvironmentManager.cs" />
     <Compile Include="Interpreter\CondaEnvironmentManager.cs" />
     <Compile Include="Interpreter\ICondaLocator.cs" />
+    <Compile Include="ModulePath.cs" />
     <Compile Include="PackageManager\CPythonCondaPackageManagerProvider.cs" />
     <Compile Include="PackageManager\IPackageManager.cs" />
     <Compile Include="PackageManager\IPackageManagerProvider.cs" />
@@ -111,11 +131,11 @@
     <Compile Include="PackageManager\NoPackageManager.cs" />
     <Compile Include="PackageManager\PackageManagerFactoryExtensions.cs" />
     <Compile Include="PackageManager\CPythonPipPackageManagerProvider.cs" />
+    <Compile Include="PackageManager\PackageSpec.cs" />
+    <Compile Include="PackageManager\PackageVersion.cs" />
     <Compile Include="PackageManager\PipRequirementsUtils.cs" />
     <Compile Include="PackageManager\PipPackageManagerCommands.cs" />
-    <Compile Include="Projects\AnalysisCompleteEventArgs.cs" />
     <Compile Include="Projects\IPythonProjectProvider.cs" />
-    <Compile Include="Projects\ProjectAnalyzer.cs" />
     <Compile Include="Projects\PythonProject.cs" />
     <Compile Include="Projects\PythonProjectPropertyChangedArgs.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -138,6 +158,7 @@
     <Compile Include="PackageManager\PipPackageManager.cs" />
     <Compile Include="Interpreter\PythonInterpreterInformation.cs" />
     <Compile Include="Interpreter\PythonRegistrySearch.cs" />
+    <Compile Include="PythonLibraryPath.cs" />
     <Compile Include="RegistryWatcher.cs" />
     <Compile Include="PythonWorkspaceContextEventArgs.cs" />
     <Compile Include="WorkspaceExtensions.cs" />

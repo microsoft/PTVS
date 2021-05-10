@@ -17,25 +17,28 @@
 using System;
 using System.Collections.Generic;
 using System.Windows;
-using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudioTools;
+using LSP = Microsoft.VisualStudio.LanguageServer.Protocol;
 
 namespace Microsoft.PythonTools.Navigation.Navigable {
     class NavigableSymbol : INavigableSymbol {
         private readonly IServiceProvider _serviceProvider;
 
-        public NavigableSymbol(IServiceProvider serviceProvider, AnalysisVariable variable, SnapshotSpan span) {
+        public NavigableSymbol(IServiceProvider serviceProvider, string name, LSP.Location variableLocation, SnapshotSpan span) {
             _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-            Variable = variable ?? throw new ArgumentNullException(nameof(variable));
+            Variable = name ?? throw new ArgumentNullException(nameof(name));
+            VariableLocation = variableLocation ?? throw new ArgumentNullException(nameof(variableLocation));
             SymbolSpan = span;
         }
 
         public SnapshotSpan SymbolSpan { get; }
 
-        internal AnalysisVariable Variable { get; }
+        internal string Variable { get; }
+        internal LSP.Location VariableLocation { get; }
 
         // FYI: This is for future extensibility, it's currently ignored (in 15.3)
         public IEnumerable<INavigableRelationship> Relationships =>
@@ -45,10 +48,10 @@ namespace Microsoft.PythonTools.Navigation.Navigable {
             try {
                 PythonToolsPackage.NavigateTo(
                     _serviceProvider,
-                    Variable.Location.FilePath,
+                    CommonUtils.GetLocalFilePath(VariableLocation.Uri),
                     Guid.Empty,
-                    Variable.Location.StartLine - 1,
-                    Variable.Location.StartColumn - 1
+                    VariableLocation.Range.Start.Line,
+                    VariableLocation.Range.Start.Character
                 );
             } catch (Exception ex) when (!ex.IsCriticalException()) {
                 MessageBox.Show(Strings.CannotGoToDefn_Name.FormatUI(SymbolSpan.GetText()), Strings.ProductTitle);

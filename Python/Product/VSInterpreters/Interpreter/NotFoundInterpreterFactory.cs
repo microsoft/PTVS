@@ -15,23 +15,9 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Interpreter {
-    sealed class NotFoundInterpreter : IPythonInterpreter {
-        public void Dispose() { }
-        public void Initialize(PythonAnalyzer state) { }
-        public IPythonType GetBuiltinType(BuiltinTypeId id) { throw new KeyNotFoundException(); }
-        public IList<string> GetModuleNames() { return new string[0]; }
-        public event EventHandler ModuleNamesChanged { add { } remove { } }
-        public IPythonModule ImportModule(string name) { return null; }
-        public IModuleContext CreateModuleContext() { return null; }
-    }
-
     sealed public class NotFoundInterpreterFactory : IPythonInterpreterFactory {
         public NotFoundInterpreterFactory(
             string id,
@@ -57,9 +43,5 @@ namespace Microsoft.PythonTools.Interpreter {
         public InterpreterConfiguration Configuration { get; private set; }
         public Guid Id { get; private set; }
         public void NotifyImportNamesChanged() { }
-
-        public IPythonInterpreter CreateInterpreter() {
-            return new NotFoundInterpreter();
-        }
     }
 }

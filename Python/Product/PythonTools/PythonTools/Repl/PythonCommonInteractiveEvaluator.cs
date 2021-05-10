@@ -23,12 +23,13 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Python.Parsing;
 using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.LanguageServerClient;
 using Microsoft.PythonTools.Options;
-using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.InteractiveWindow.Commands;
@@ -39,6 +40,7 @@ using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
 using Microsoft.VisualStudio.Utilities;
 using Microsoft.VisualStudioTools;
 using Task = System.Threading.Tasks.Task;
+using LSP = Microsoft.VisualStudio.LanguageServer.Protocol;
 
 namespace Microsoft.PythonTools.Repl {
     [InteractiveWindowRole("Execution")]
@@ -61,7 +63,6 @@ namespace Microsoft.PythonTools.Repl {
         private IInteractiveWindow _window;
         private PythonInteractiveOptions _options;
 
-        protected VsProjectAnalyzer _analyzer;
         private Uri _documentUri;
         private int _nextDocumentIndex;
 
@@ -98,7 +99,7 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             if (disposing) {
-                _analyzer?.Dispose();
+                Document?.Dispose();
             }
         }
 
@@ -131,6 +132,46 @@ namespace Microsoft.PythonTools.Repl {
 
         internal bool AssociatedWorkspaceHasChanged { get; set; }
 
+        private IContentType ContentType => (IContentType)_window?.Properties[typeof(IContentType)];
+
+        private ReplDocument Document { get; set; }
+
+        internal virtual async Task InitializeLanguageServerAsync() {
+            if (ContentType == null) {
+                Debug.Fail("ContentType should have been set before evaluator initialization.");
+                return;
+            }
+
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+            var evaluator = _window.Evaluator as PythonCommonInteractiveEvaluator;
+            if (evaluator == null && _window.Evaluator is SelectableReplEvaluator selEvaluator) {
+                evaluator = selEvaluator.Evaluator as PythonCommonInteractiveEvaluator;
+            }
+
+            // Activation will now be automatic, but we'll still need to maintain a ReplDocument
+            if (evaluator != null) {
+                await PythonLanguageClient.ReadyTask;
+                var client = _serviceProvider.GetPythonToolsService().LanguageClient;
+                if (client != null) {
+                    client.AddClientContext(new PythonLanguageClientContextRepl(evaluator)); // Don't fire a settings change. This can crash node for some reason
+                    Document = new ReplDocument(_serviceProvider, _window, client);
+                    await Document.InitializeAsync();
+                }
+            }
+        }
+
+        internal async Task RestartLanguageServerAsync() {
+            if (ContentType != null) {
+                // TODO: Pylance
+                //PythonLanguageClient.DisposeLanguageClient(ContentType.TypeName);
+                Document?.Dispose();
+                Document = null;
+            }
+
+            await InitializeLanguageServerAsync();
+        }
+
         private PythonProjectNode GetAssociatedPythonProject(InterpreterConfiguration interpreter = null) {
             _serviceProvider.GetUIThread().MustBeCalledFromUIThread();
 
@@ -161,59 +202,8 @@ namespace Microsoft.PythonTools.Repl {
             return _serviceProvider.GetWorkspace();
         }
 
-        public virtual VsProjectAnalyzer Analyzer => _analyzer;
-
-        public virtual async Task<VsProjectAnalyzer> GetAnalyzerAsync() {
-            if (_analyzer != null) {
-                return _analyzer;
-            }
-
-            var config = Configuration;
-            IPythonInterpreterFactory factory = null;
-            if (config?.Interpreter != null) {
-                var interpreterService = _serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>();
-                factory = interpreterService.FindInterpreter(config.Interpreter.Id);
-            }
-
-            return await _serviceProvider.GetUIThread().InvokeTask(async () => {
-                var a = _analyzer;
-                if (a != null) {
-                    return a;
-                }
-                if (factory == null) {
-                    a = await _serviceProvider.GetPythonToolsService().GetSharedAnalyzerAsync();
-                } else {
-                    a = await VsProjectAnalyzer.CreateForInteractiveAsync(
-                        _serviceProvider.GetComponentModel().GetService<PythonEditorServices>(),
-                        factory,
-                        DisplayName.IfNullOrEmpty("Unnamed")
-                    );
-
-                    IEnumerable<string> sp;
-
-                    var workspace = GetAssociatedPythonWorkspace(config.Interpreter);
-                    var pyProject = GetAssociatedPythonProject(config.Interpreter);
-
-                    if (workspace != null) {
-                        sp = workspace.GetAbsoluteSearchPaths().ToArray();
-                    } else if (pyProject != null) {
-                        sp = pyProject.GetSearchPaths();
-                    } else {
-                        var sln = _serviceProvider.GetService(typeof(SVsSolution)) as IVsSolution;
-                        sp = sln?.EnumerateLoadedPythonProjects().SelectMany(p => p.GetSearchPaths()).ToArray();
-                    }
-                    await a.SetSearchPathsAsync(sp.MaybeEnumerate());
-                }
-                if (_analyzer != null) {
-                    a.Dispose();
-                } else {
-                    _analyzer = a;
-                }
-                return _analyzer;
-            });
-        }
-
         public virtual Uri DocumentUri { get => _documentUri; protected set => _documentUri = value; }
+
         public virtual Uri NextDocumentUri() {
             var d = DocumentUri;
             if (d != null) {
@@ -320,11 +310,18 @@ namespace Microsoft.PythonTools.Repl {
 
         public abstract IEnumerable<KeyValuePair<string, string>> GetAvailableScopesAndPaths();
 
-        public abstract CompletionResult[] GetMemberNames(string text);
+        public abstract Task<CompletionResult[]> GetMemberNamesAsync(string text, CancellationToken ct);
 
-        public abstract OverloadDoc[] GetSignatureDocumentation(string text);
+        public abstract Task<OverloadDoc[]> GetSignatureDocumentationAsync(string text, CancellationToken ct);
 
         public abstract void AbortExecution();
+
+        public Task<object> GetAnalysisCompletions(LSP.Position position, LSP.CompletionContext context, CancellationToken token) {
+            if (Document != null) {
+                return Document.GetCompletions(position, context, token);
+            }
+            return Task.FromResult<object>(null);
+        }
 
         public bool CanExecuteCode(string text) {
             return CanExecuteCode(text, out _);
@@ -342,7 +339,7 @@ namespace Microsoft.PythonTools.Repl {
 
             var config = Configuration;
             var parser = Parser.CreateParser(new StringReader(text), LanguageVersion);
-            parser.ParseInteractiveCode(out pr);
+            parser.ParseInteractiveCode(null, out pr);
             if (pr == ParseResult.IncompleteStatement || pr == ParseResult.Empty) {
                 return text.EndsWithOrdinal("\n");
             }
@@ -603,7 +600,7 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             var txt = System.Windows.Clipboard.GetText();
-            if (!serviceProvider.GetPythonToolsService().AdvancedOptions.PasteRemovesReplPrompts) {
+            if (!serviceProvider.GetPythonToolsService().FormattingOptions.PasteRemovesReplPrompts) {
                 return txt;
             }
 
@@ -661,16 +658,13 @@ namespace Microsoft.PythonTools.Repl {
 
             WriteOutput(msg, addNewline: true);
 
-            var langBuffer = _window.CurrentLanguageBuffer;
-            if (langBuffer != null) {
-                // Reinitializing, and our new language buffer does not automatically
-                // get connected to the Intellisense controller. Let's fix that.
-                var controller = IntellisenseControllerProvider.GetController(_window.TextView);
-                controller?.ConnectSubjectBuffer(langBuffer);
-            }
-
             _window.TextView.Options.SetOptionValue(InteractiveWindowOptions.SmartUpDown, UseSmartHistoryKeys);
             _commands = GetInteractiveCommands(_serviceProvider, _window, this);
+
+            // Startup language server when not doing unit tests
+            if (!_serviceProvider.GetPythonToolsService().ForTests) {
+                await InitializeLanguageServerAsync();
+            }
 
             return ExecutionResult.Success;
         }
@@ -678,13 +672,18 @@ namespace Microsoft.PythonTools.Repl {
         public async Task<ExecutionResult> ResetAsync(bool initialize = true) {
             await UpdatePropertiesFromProjectMonikerAsync();
             await UpdatePropertiesFromWorkspaceMonikerAsync();
-            return await ResetWorkerAsync(initialize, false);
+
+            var res = await ResetWorkerAsync(initialize, false);
+            await RestartLanguageServerAsync();
+            return res;
         }
 
         public async Task<ExecutionResult> ResetAsync(bool initialize, bool quiet) {
             await UpdatePropertiesFromProjectMonikerAsync();
             await UpdatePropertiesFromWorkspaceMonikerAsync();
-            return await ResetWorkerAsync(initialize, quiet);
+            var res = await ResetWorkerAsync(initialize, quiet);
+            await RestartLanguageServerAsync();
+            return res;
         }
 
         protected abstract Task<ExecutionResult> ResetWorkerAsync(bool initialize, bool quiet);

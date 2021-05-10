@@ -16,34 +16,24 @@
 
 using System.Threading.Tasks;
 using Microsoft.PythonTools;
-using Microsoft.PythonTools.Intellisense;
+using Microsoft.PythonTools.LanguageServerClient;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TestUtilities.UI.Python {
     static class EditorWindowExtensions {
-        public static async Task<VsProjectAnalyzer> WaitForAnalyzerAtCaretAsync(this EditorWindow doc) {
-            for (int i = 0; i < 100; i++) {
-                var analyzer = doc.TextView.GetAnalyzerAtCaret(doc.VisualStudioApp.ServiceProvider);
-                if (analyzer != null) {
-                    return analyzer;
-                }
-                await Task.Delay(100);
-            }
+        public static async Task WaitForLanguageServerInitializedAtCaretAsync(this EditorWindow doc) {
+            Assert.Fail("WaitForLanguageServerInitializedAtCaretAsync to be implemented.");
+            //for (int i = 0; i < 100; i++) {
+            //    var buffer = doc.TextView.GetPythonBufferAtCaret();
+            //    var lsc = PythonLanguageClient.FindLanguageClient(buffer.ContentType.TypeName);
+            //    if (lsc?.IsInitialized == true) {
+            //        return;
+            //    }
 
-            Assert.Fail("Timed out waiting for analyzer");
-            return null;
-        }
+            //    await Task.Delay(100);
+            //}
 
-        public static async Task WaitForAnalysisAtCaretAsync(this EditorWindow doc) {
-            for (int i = 0; i < 100; i++) {
-                var analysis = doc.TextView.GetAnalysisAtCaret(doc.VisualStudioApp.ServiceProvider);
-                if (analysis != null && analysis.IsAnalyzed) {
-                    return;
-                }
-                await Task.Delay(100);
-            }
-
-            Assert.Fail("Timed out waiting for analyzer");
+            //Assert.Fail("Timed out waiting for language server initialization");
         }
     }
 }

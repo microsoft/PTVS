@@ -15,17 +15,11 @@
 // permissions and limitations under the License.
 
 using System;
-using System.IO;
 using System.Linq;
-using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Project;
-using Microsoft.PythonTools.Project.Web;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Workspace;
 using Microsoft.VisualStudio.Workspace.Debug;
-using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Workspace {
     [ExportLaunchDebugTarget(

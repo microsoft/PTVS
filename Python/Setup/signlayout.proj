@@ -30,7 +30,6 @@
         Microsoft.PythonTools.Debugger.Concord.dll;
         Microsoft.PythonTools.dll;
         Microsoft.PythonTools.EnvironmentsList.dll;
-        Microsoft.PythonTools.LiveShare.dll;
         Microsoft.PythonTools.Profiling.dll;
         Microsoft.PythonTools.ProjectWizards.dll;
         Microsoft.PythonTools.RunElevated.exe;
@@ -40,34 +39,15 @@
         Microsoft.PythonTools.VSInterpreters.dll;
         Microsoft.PythonTools.WebRole.dll;
         Microsoft.PythonTools.Workspace.dll;
-        Microsoft.PythonTools.XamlDesignerSupport.dll;
         Microsoft.CookiecutterTools.dll;
         "/>
-
-    <ManagedFiles Include="
-        ExternalProfilerDriver.exe;
-        " Condition="$(IncludeExternalProfilerDriver)" />
 
     <ManagedFiles Include="
         Microsoft.PythonTools.Django.dll;
         " Condition="$(IncludeDjango)" />
     <ManagedFiles Include="
-        Microsoft.PythonTools.Django.Analysis.dll;
-        " Condition="$(IncludeDjango) and $(IncludeDjangoHtmlExtensions)" />
-    <ManagedFiles Include="
-        Microsoft.IronPythonTools.Resolver.dll;
-        Microsoft.PythonTools.IronPython.dll;
-        Microsoft.PythonTools.IronPython.Interpreter.dll;
-        " Condition="$(IncludeIronPython)" />
-    <ManagedFiles Include="
-        Microsoft.PythonTools.Miniconda.dll;
-        " Condition="$(IncludeMiniconda)" />
-    <ManagedFiles Include="
         Microsoft.PythonTools.Debugger.VCLauncher.dll;
         " Condition="$(IncludeVCDebugLauncher)" />
-    <ManagedFiles Include="
-        Microsoft.PythonTools.Wsl.dll;
-        " Condition="$(IncludeWsl)" />
 
     <UnmanagedFiles Include="
         Microsoft.PythonTools.Debugger.Helper.x64.dll;

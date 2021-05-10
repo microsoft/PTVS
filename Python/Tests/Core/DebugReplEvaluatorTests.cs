@@ -465,7 +465,7 @@ NameError: name 'does_not_exist' is not defined
 
         internal override PythonVersion Version {
             get {
-                return PythonPaths.Python37 ?? PythonPaths.Python37_x64;
+                return PythonPaths.LatestVersion;
             }
         }
     }
@@ -482,28 +482,5 @@ NameError: name 'does_not_exist' is not defined
                 return PythonPaths.Python27 ?? PythonPaths.Python27_x64;
             }
         }
-    }
-
-    [TestClass]
-    public class DebugReplEvaluatorTestsIPy : DebugReplEvaluatorTests {
-        [ClassInitialize]
-        public static new void DoDeployment(TestContext context) {
-            AssertListener.Initialize();
-        }
-
-        internal override PythonVersion Version {
-            get {
-                return PythonPaths.IronPython27 ?? PythonPaths.IronPython27_x64;
-            }
-        }
-
-        [TestMethod, Priority(UnitTestPriority.P2_FAILING)]
-        public override async Task ChangeFrame() => await base.ChangeFrame();
-
-        [TestMethod, Priority(UnitTestPriority.P2_FAILING)]
-        public override async Task ChangeModule() => await base.ChangeModule();
-
-        [TestMethod, Priority(UnitTestPriority.P2_FAILING)]
-        public override async Task ChangeProcess() => await base.ChangeProcess();
     }
 }

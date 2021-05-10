@@ -23,6 +23,8 @@ Python/Product/PythonTools/Templates/Projects/*/LaunchWorker.ps1
 Python/Product/Django/Templates/Projects/*/*RoleConfiguration.mht
 Python/Product/Django/Templates/Projects/*/ConfigureCloudService.ps1
 Python/Product/Django/Templates/Projects/*/ps.cmd
+Python/Product/Pylance/Pylance/**/*
 __pycache__/
 /Python/*.VC.opendb
 /Python/*.VC.db
+/node_modules/*

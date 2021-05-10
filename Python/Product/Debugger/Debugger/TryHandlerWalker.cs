@@ -16,7 +16,7 @@
 
 using System;
 using System.Collections.Generic;
-using Microsoft.PythonTools.Parsing.Ast;
+using Microsoft.Python.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Debugger {
     /// <summary>

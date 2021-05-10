@@ -51,7 +51,6 @@
     <Reference Include="EnvDTE, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
-    <Reference Include="Microsoft.Python.Analysis.Engine" />
     <Reference Include="Microsoft.VisualStudio.InteractiveWindow" />
     <Reference Include="Microsoft.VisualStudio.VsInteractiveWindow" />
     <Reference Include="Microsoft.VisualStudio.ComponentModelHost" />
@@ -86,6 +85,12 @@
     <Reference Include="System.Windows.Forms" />
     <Reference Include="UIAutomationClient" />
     <Reference Include="WindowsBase" />
+    <Reference Include="Microsoft.Python.Core">
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.Python.Parsing">
+      <Private>True</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -118,10 +123,6 @@
     <ProjectReference Include="..\..\..\Common\Tests\Utilities\TestUtilities.csproj">
       <Project>{D092D54E-FF29-4D32-9AEE-4EF704C92F67}</Project>
       <Name>TestUtilities</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Core\PythonToolsTests.csproj">
-      <Project>{61d65f46-7957-47c1-8ba3-48d192236d5d}</Project>
-      <Name>PythonToolsTests</Name>
     </ProjectReference>
     <ProjectReference Include="..\Utilities.Python.Analysis\TestUtilities.Python.Analysis.csproj">
       <Project>{A731C4C3-3741-4080-A946-C47574C1F3BF}</Project>

@@ -19,7 +19,7 @@ using System.Collections.Generic;
 using Microsoft.PythonTools.Interpreter;
 
 namespace TestUtilities.Python {
-    public class MockPythonInterpreterFactory : IPythonInterpreterFactory, ICustomInterpreterSerialization, IDisposable {
+    public class MockPythonInterpreterFactory : IPythonInterpreterFactory, IDisposable {
         internal bool? _success;
         public Dictionary<string, object> _properties;
 
@@ -30,18 +30,10 @@ namespace TestUtilities.Python {
             Configuration = config;
         }
 
-        private MockPythonInterpreterFactory(Dictionary<string, object> properties) {
-            Configuration = InterpreterConfiguration.FromDictionary(properties);
-        }
-
         public void Dispose() {
         }
 
         public InterpreterConfiguration Configuration { get; }
-
-        public IPythonInterpreter CreateInterpreter() {
-            return new MockPythonInterpreter(this);
-        }
 
         public Dictionary<string, object> Properties {
             get {
@@ -56,13 +48,6 @@ namespace TestUtilities.Python {
             object value = null;
             _properties?.TryGetValue(propName, out value);
             return value;
-        }
-
-        bool ICustomInterpreterSerialization.GetSerializationInfo(out string assembly, out string typeName, out Dictionary<string, object> properties) {
-            assembly = GetType().Assembly.Location;
-            typeName = GetType().FullName;
-            properties = Configuration.ToDictionary();
-            return true;
         }
 
         public void NotifyImportNamesChanged() { }

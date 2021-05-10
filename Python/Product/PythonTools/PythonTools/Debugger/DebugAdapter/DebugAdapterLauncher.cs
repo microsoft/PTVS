@@ -19,7 +19,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Web;
 using System.Windows.Forms;
@@ -48,7 +47,6 @@ namespace Microsoft.PythonTools.Debugger {
         public ITargetHostProcess LaunchAdapter(IAdapterLaunchInfo launchInfo, ITargetHostInterop targetInterop) {
             if (launchInfo.LaunchType == LaunchType.Attach) {
                 var debugAttachInfo = (DebugAttachInfo)_debugInfo;
-
                 return DebugAdapterRemoteProcess.Attach(debugAttachInfo);
             }
 
@@ -60,14 +58,11 @@ namespace Microsoft.PythonTools.Debugger {
         }
 
         public void UpdateLaunchOptions(IAdapterLaunchInfo adapterLaunchInfo) {
-            if (adapterLaunchInfo.LaunchType == LaunchType.Launch) {
-                _debugInfo = GetLaunchDebugInfo(adapterLaunchInfo.LaunchJson);
-            } else {
-                _debugInfo = GetTcpAttachDebugInfo(adapterLaunchInfo);
-            }
+            _debugInfo = adapterLaunchInfo.LaunchType == LaunchType.Launch
+                ? GetLaunchDebugInfo(adapterLaunchInfo.LaunchJson)
+                : (DebugInfo)GetTcpAttachDebugInfo(adapterLaunchInfo);
 
             AddDebuggerOptions(adapterLaunchInfo, _debugInfo);
-
             adapterLaunchInfo.LaunchJson = _debugInfo.GetJsonString();
         }
 
@@ -129,9 +124,9 @@ namespace Microsoft.PythonTools.Debugger {
         private static void SetLaunchDebugOptions(DebugLaunchInfo debugLaunchInfo, JObject adapterLaunchInfoJson) {
             string[] options = SplitDebugOptions(adapterLaunchInfoJson.Value<string>("options"));
 
-            string djangoOption = options.FirstOrDefault(x => x.StartsWith("DJANGO_DEBUG"));
+            var djangoOption = options.FirstOrDefault(x => x.StartsWith("DJANGO_DEBUG"));
             if (djangoOption != null) {
-                string[] parsedOption = djangoOption.Split('=');
+                var parsedOption = djangoOption.Split('=');
                 if (parsedOption.Length == 2) {
                     debugLaunchInfo.DebugDjango = parsedOption[1].Trim().ToLower().Equals("true");
                 }
@@ -148,7 +143,7 @@ namespace Microsoft.PythonTools.Debugger {
 
         private static string[] SplitDebugOptions(string options) {
             var res = new List<string>();
-            int lastStart = 0;
+            var lastStart = 0;
             for (int i = 0; i < options.Length; i++) {
                 if (options[i] == ';') {
                     if (i < options.Length - 1 && options[i + 1] != ';') {

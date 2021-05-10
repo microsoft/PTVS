@@ -340,14 +340,26 @@ namespace Microsoft.PythonTools.Environments {
             string libPath,
             IInterpreterRegistryService service
         ) {
+            IPythonInterpreterFactory match = null;
             string basePath = PathUtils.TrimEndSeparator(GetOrigPrefixPath(prefixPath, libPath));
 
             if (Directory.Exists(basePath)) {
-                return service.Interpreters.FirstOrDefault(interp =>
-                    PathUtils.IsSamePath(PathUtils.TrimEndSeparator(interp.Configuration.GetPrefixPath()), basePath)
-                );
+                match = service.Interpreters.FirstOrDefault(interp =>
+                    PathUtils.IsSamePath(PathUtils.TrimEndSeparator(interp.Configuration.GetPrefixPath()), basePath));
             }
-            return null;
+
+            // Special case, we may have the store installed interpreter. In this situation both
+            // paths end with the same entry. Note, os.path.realpath can't seem to say these are the same anymore. 
+            if (match == null && Directory.Exists(basePath) && basePath.Contains("PythonSoftwareFoundation.Python")) {
+                var baseDir = Path.GetFileName(basePath);
+                var baseEnd = baseDir.Substring(Math.Max(0, baseDir.LastIndexOf('_')));
+                match = service.Interpreters.FirstOrDefault(interp => {
+                    var interpDir = Path.GetFileName(PathUtils.TrimEndSeparator(interp.Configuration.GetPrefixPath()));
+                    var interpEnd = interpDir.Substring(Math.Max(0, interpDir.LastIndexOf('_')));
+                    return baseEnd == interpEnd;
+                });
+            }
+            return match;
         }
 
         public static string GetOrigPrefixPath(string prefixPath, string libPath = null) {

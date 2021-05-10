@@ -17,6 +17,7 @@
 using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 
@@ -161,16 +162,20 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
                 Debug.Assert(parentNode != null, "Failed to get the parent node");
 
                 // Get the ProjectItems object for the parent node
-                if (parentNode is ProjectNode) {
-                    // The root node for the project
-                    return ((OAProject)parentNode.GetAutomationObject()).ProjectItems;
-                } else if (parentNode is FolderNode) {
-                    // The root node for the project
-                    return ((OAFolderItem)parentNode.GetAutomationObject()).ProjectItems;
-                } else {
-                    // Not supported. Override this method in derived classes to return appropriate collection object
-                    Debug.WriteLine("Do not know Collection for type {0} with parent {1}", GetType().FullName, parentNode.GetType().FullName);
-                    throw new InvalidOperationException();
+                switch (parentNode) {
+                    case ProjectNode _:
+                        // The root node for the project
+                        return ((OAProject)parentNode.GetAutomationObject()).ProjectItems;
+                    case FolderNode _:
+                        // The root node for the project
+                        return ((OAFolderItem)parentNode.GetAutomationObject()).ProjectItems;
+                    case InterpretersContainerNode _:
+                        // The root node for the item
+                        return ((OAProjectItem)parentNode.GetAutomationObject()).ProjectItems;
+                    default:
+                        // Not supported. Override this method in derived classes to return appropriate collection object
+                        Debug.WriteLine("Do not know Collection for type {0} with parent {1}", GetType().FullName, parentNode.GetType().FullName);
+                        return null;
                 }
             }
         }

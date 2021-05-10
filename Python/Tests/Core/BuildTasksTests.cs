@@ -25,9 +25,9 @@ using Microsoft.Build.Evaluation;
 using Microsoft.Build.Execution;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Logging;
+using Microsoft.Python.Parsing;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.Python;
@@ -121,11 +121,6 @@ namespace PythonToolsTests {
             var proj = new Project(TestData.GetPath(@"TestData\Targets\Commands4.pyproj"));
 
             foreach (var version in PythonPaths.Versions) {
-                if (version.IsIronPython) {
-                    // IronPython isn't registered on developer machines...
-                    continue;
-                }
-
                 var verStr = version.Version.ToVersion().ToString();
                 proj.SetProperty("InterpreterId", version.Id.ToString());
                 proj.RemoveItems(proj.ItemsIgnoringCondition.Where(i => i.ItemType == "InterpreterReference").ToArray());

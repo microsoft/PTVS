@@ -1,4 +1,4 @@
-param ($vstarget, $source, $outdir)
+param ($pylanceTgz, $vstarget, $source, $outdir)
 
 $ErrorActionPreference = "Stop"
 
@@ -8,10 +8,12 @@ $ErrorActionPreference = "Stop"
 $need_symlink = @(
     "python",
     "MicroBuild.Core",
+    "Microsoft.Python.Parsing",
+    "Microsoft.Extensions.FileSystemGlobbing",
+    "Microsoft.VisualStudio.LanguageServer.Protocol",
     "Microsoft.VSSDK.BuildTools",
     "Microsoft.VSSDK.Debugger.VSDConfigTool",
-    "Newtonsoft.Json",
-    "Microsoft.VisualStudio.Python.LanguageServer"
+    "Newtonsoft.Json"
 )
 
 if (-not $vstarget) {

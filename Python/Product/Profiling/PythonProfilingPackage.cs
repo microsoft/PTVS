@@ -23,6 +23,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using Microsoft.PythonTools.Common;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Project;
@@ -34,10 +35,6 @@ using Microsoft.VisualStudioTools.Project;
 using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.Profiling {
-
-    using global::DiagnosticsHub.Packaging.Interop;
-    using Microsoft.DiagnosticsHub.Packaging.InteropEx;
-
     /// <summary>
     /// This is the class that implements the package exposed by this assembly.
     ///
@@ -72,9 +69,6 @@ namespace Microsoft.PythonTools.Profiling {
         internal static readonly string PerformanceFileFilter = Strings.PerformanceReportFilesFilter;
         private AutomationProfiling _profilingAutomation;
         private static OleMenuCommand _stopCommand, _startCommand;
-#if EXTERNAL_PROFILER_DRIVER
-        private const string ExternalProfilerDriverExe = "ExternalProfilerDriver.exe";
-#endif
 
         /// <summary>
         /// Default constructor of the package.
@@ -119,7 +113,7 @@ namespace Microsoft.PythonTools.Profiling {
 
             // Ensure Python Tools package is loaded
             var shell = (IVsShell7)GetService(typeof(SVsShell));
-            var ptvsPackage = GuidList.guidPythonToolsPackage;
+            var ptvsPackage = CommonGuidList.guidPythonToolsPackage;
             await shell.LoadPackageAsync(ref ptvsPackage);
 
             // Add our command handlers for menu (commands must exist in the .vsct file)
@@ -231,9 +225,9 @@ namespace Microsoft.PythonTools.Profiling {
                 }
 
                 if (target.ProjectTarget != null) {
-                    ProfileProjectTarget(session, target.ProjectTarget, openReport, target.UseVTune);
+                    ProfileProjectTarget(session, target.ProjectTarget, openReport);
                 } else if (target.StandaloneTarget != null) {
-                    ProfileStandaloneTarget(session, target.StandaloneTarget, openReport, target.UseVTune);
+                    ProfileStandaloneTarget(session, target.StandaloneTarget, openReport);
                 } else {
                     if (MessageBox.Show(Strings.ProfilingSessionNotConfigured, Strings.NoProfilingTargetTitle, MessageBoxButton.YesNo) == MessageBoxResult.Yes) {
                         var newTarget = session.OpenTargetProperties();
@@ -245,18 +239,18 @@ namespace Microsoft.PythonTools.Profiling {
             });
         }
 
-        private void ProfileProjectTarget(SessionNode session, ProjectTarget projectTarget, bool openReport, bool useVTune) {
+        private void ProfileProjectTarget(SessionNode session, ProjectTarget projectTarget, bool openReport) {
             var project = Solution.EnumerateLoadedPythonProjects()
                 .SingleOrDefault(p => p.GetProjectIDGuidProperty() == projectTarget.TargetProject);
 
             if (project != null) {
-                ProfileProject(session, project, openReport, useVTune);
+                ProfileProject(session, project, openReport);
             } else {
                 MessageBox.Show(Strings.ProjectNotFoundInSolution, Strings.ProductTitle);
             }
         }
 
-        private static void ProfileProject(SessionNode session, PythonProjectNode project, bool openReport, bool useVTune) {
+        private static void ProfileProject(SessionNode session, PythonProjectNode project, bool openReport) {
             LaunchConfiguration config = null;
             try {
                 config = project?.GetLaunchConfigurationOrThrow();
@@ -287,18 +281,10 @@ namespace Microsoft.PythonTools.Profiling {
                 }
             }
 
-#if EXTERNAL_PROFILER_DRIVER
-            if (useVTune) {
-                RunVTune(session, config, openReport);
-            } else {
-#endif
-                RunProfiler(session, config, openReport);
-#if EXTERNAL_PROFILER_DRIVER
-            }
-#endif
+            RunProfiler(session, config, openReport);
         }
 
-        private static void ProfileStandaloneTarget(SessionNode session, StandaloneTarget runTarget, bool openReport, bool useVTune) {
+        private static void ProfileStandaloneTarget(SessionNode session, StandaloneTarget runTarget, bool openReport) {
             LaunchConfiguration config;
             if (runTarget.PythonInterpreter != null) {
                 var registry = session._serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>();
@@ -316,65 +302,8 @@ namespace Microsoft.PythonTools.Profiling {
             config.ScriptArguments = runTarget.Arguments;
             config.WorkingDirectory = runTarget.WorkingDirectory;
 
-#if EXTERNAL_PROFILER_DRIVER
-            if (useVTune) {
-                RunVTune(session, config, openReport);
-            } else {
-#endif
-                RunProfiler(session, config, openReport);
-#if EXTERNAL_PROFILER_DRIVER
-            }
-#endif
+            RunProfiler(session, config, openReport);
         }
-
-#if EXTERNAL_PROFILER_DRIVER
-        private static void RunVTune(SessionNode session, LaunchConfiguration config, bool openReport) {
-
-            var interpreter = config.GetInterpreterPath();
-            if (!File.Exists(interpreter)) {
-                MessageBox.Show(Strings.CannotFindPythonInterpreter, Strings.ProductTitle);
-                return;
-            }
-
-            string outPathDir = Path.GetTempPath();
-            var subpath = Path.Combine(outPathDir, Path.GetRandomFileName());
-            while (Directory.Exists(subpath) || File.Exists(subpath)) {
-                subpath = Path.Combine(outPathDir, Path.GetRandomFileName());
-            }
-            outPathDir = subpath;
-
-            string outPath = Path.Combine(outPathDir, "pythontrace.diagsession");
-
-            var driver = PythonToolsInstallPath.GetFile(ExternalProfilerDriverExe, typeof(PythonProfilingPackage).Assembly);
-
-            var procInfo = new ProcessStartInfo(driver) {
-                CreateNoWindow = false,
-                Arguments = string.Join(" ", new[] {
-                    "-d",
-                    ProcessOutput.QuoteSingleArgument(outPathDir),
-                    "--",
-                    ProcessOutput.QuoteSingleArgument(interpreter),
-                    config.InterpreterArguments,
-                    string.IsNullOrEmpty(config.ScriptName) ? "" : ProcessOutput.QuoteSingleArgument(config.ScriptName),
-                    config.ScriptArguments
-                }),
-                WorkingDirectory = config.WorkingDirectory,
-            };
-
-            var proc = new Process { StartInfo = procInfo };
-            var dte = (EnvDTE.DTE)session._serviceProvider.GetService(typeof(EnvDTE.DTE));
-            proc.EnableRaisingEvents = true;
-            proc.Exited += (_, args) => {
-                if (!File.Exists(Path.Combine(outPathDir, "Sample.dwjson"))) {
-                    MessageBox.Show(Strings.CannotFindGeneratedFile, Strings.ProductTitle);
-                } else {
-                    PackageTrace(outPathDir);
-                    dte.ItemOperations.OpenFile(Path.Combine(outPathDir, "trace.diagsession"));
-                }
-            };
-            proc.Start();
-        }
-#endif
 
         private static void RunProfiler(SessionNode session, LaunchConfiguration config, bool openReport) {
             var process = new ProfiledProcess(
@@ -526,58 +455,5 @@ namespace Microsoft.PythonTools.Profiling {
                 return _profilingProcess != null;
             }
         }
-
-#if EXTERNAL_PROFILER_DRIVER
-        public static bool CheckForExternalProfiler() {
-            var driver = PythonToolsInstallPath.TryGetFile(ExternalProfilerDriverExe, typeof(PythonProfilingPackage).Assembly);
-            if (string.IsNullOrEmpty(driver)) {
-                return false;
-            }
-
-            try {
-                var psi = new ProcessStartInfo(driver, "-p") {
-                    UseShellExecute = false,
-                    // Arguments = args,
-                    CreateNoWindow = true,
-                    RedirectStandardOutput = false,
-                    RedirectStandardError = false,
-                };
-
-                using (var process = Process.Start(psi)) {
-                    process.WaitForExit();
-                    return (process.ExitCode == 0);
-                }
-            } catch (Exception ex) {
-                Debug.Fail($"Failed to launch {driver} because {ex}");
-            }
-
-            return false;
-        }
-
-        public static void PackageTrace(string dirname) {
-            var cpuToolId = new Guid("96f1f3e8-f762-4cd2-8ed9-68ec25c2c722");
-            using (var package = DhPackage.CreateLegacyPackage()) {
-                package.AddTool(ref cpuToolId);
-
-                // Contains the data to analyze
-                package.CreateResourceFromPath(
-                    "DiagnosticsHub.Resource.DWJsonFile",
-                    Path.Combine(dirname, "Sample.dwjson"),
-                    null,
-                    CompressionOption.CompressionOption_Normal);
-
-                // Counter data to show in swimlane
-                package.CreateResourceFromPath(
-                    "DiagnosticsHub.Resource.CountersFile",
-                    Path.Combine(dirname, "Session.counters"),
-                    null,
-                    CompressionOption.CompressionOption_Normal);
-
-                // You can add the commit option (CommitOption.CommitOption_CleanUpResources) and it will delete
-                // the resources added from disk after they have been committed to the DiagSession
-                package.CommitToPath(Path.Combine(dirname, "trace"), CommitOption.CommitOption_Archive);
-            }
-        }
-#endif
     }
 }

@@ -38,7 +38,6 @@ namespace Microsoft.PythonTools.Options {
             _breakOnSystemExitZero.Checked = pyService.DebuggerOptions.BreakOnSystemExitZero;
             _debugStdLib.Checked = pyService.DebuggerOptions.DebugStdLib;
             _showFunctionReturnValue.Checked = pyService.DebuggerOptions.ShowFunctionReturnValue;
-            _useLegacyDebugger.Checked = pyService.DebuggerOptions.UseLegacyDebugger;
 
             // variable presentation
             _showVariablesClassComboBox.SelectedItem = pyService.DebuggerOptions.VariablePresentationForClasses;
@@ -55,7 +54,6 @@ namespace Microsoft.PythonTools.Options {
             pyService.DebuggerOptions.BreakOnSystemExitZero = _breakOnSystemExitZero.Checked;
             pyService.DebuggerOptions.DebugStdLib = _debugStdLib.Checked;
             pyService.DebuggerOptions.ShowFunctionReturnValue = _showFunctionReturnValue.Checked;
-            pyService.DebuggerOptions.UseLegacyDebugger = _useLegacyDebugger.Checked;
 
             // variable presentation
             pyService.DebuggerOptions.VariablePresentationForClasses = (PresentationMode)_showVariablesClassComboBox.SelectedItem;

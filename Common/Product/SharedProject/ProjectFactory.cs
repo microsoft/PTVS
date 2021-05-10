@@ -30,26 +30,20 @@ namespace Microsoft.VisualStudioTools.Project {
     /// </summary>
 
     public abstract class ProjectFactory : FlavoredProjectFactoryBase,
-#if DEV11_OR_LATER
- IVsAsynchronousProjectCreate,
-        IVsProjectUpgradeViaFactory4,
-#endif
- IVsProjectUpgradeViaFactory {
+        IVsAsynchronousProjectCreate, IVsProjectUpgradeViaFactory4, IVsProjectUpgradeViaFactory {
         #region fields
-        private System.IServiceProvider site;
+        private IServiceProvider _site;
 
         /// <summary>
         /// The msbuild engine that we are going to use.
         /// </summary>
-        private MSBuild.ProjectCollection buildEngine;
+        private readonly MSBuild.ProjectCollection _buildEngine;
 
         /// <summary>
         /// The msbuild project for the project file.
         /// </summary>
-        private MSBuild.Project buildProject;
-#if DEV11_OR_LATER
+        private MSBuild.Project _buildProject;
         private readonly Lazy<IVsTaskSchedulerService> taskSchedulerService;
-#endif
 
         // (See GetSccInfo below.)
         // When we upgrade a project, we need to cache the SCC info in case
@@ -65,27 +59,23 @@ namespace Microsoft.VisualStudioTools.Project {
         [Obsolete("Use Site instead")]
         protected Microsoft.VisualStudio.Shell.Package Package {
             get {
-                return (Microsoft.VisualStudio.Shell.Package)this.site;
+                return (Microsoft.VisualStudio.Shell.Package)_site;
             }
         }
 
         protected internal System.IServiceProvider Site {
             get {
-                return this.site;
+                return _site;
             }
             internal set {
-                this.site = value;
+                _site = value;
             }
         }
 
         /// <summary>
         /// The msbuild project for the project file.
         /// </summary>
-        protected MSBuild.Project BuildProject {
-            get	{
-                return this.buildProject;
-            }
-        }
+        protected MSBuild.Project BuildProject => _buildProject;
 
         #endregion
 
@@ -97,11 +87,9 @@ namespace Microsoft.VisualStudioTools.Project {
 
         protected ProjectFactory(IServiceProvider serviceProvider)
             : base(serviceProvider) {
-            this.site = serviceProvider;
-            this.buildEngine = MSBuild.ProjectCollection.GlobalProjectCollection;
-#if DEV11_OR_LATER
-            this.taskSchedulerService = new Lazy<IVsTaskSchedulerService>(() => Site.GetService(typeof(SVsTaskSchedulerService)) as IVsTaskSchedulerService);
-#endif
+            _site = serviceProvider;
+            _buildEngine = MSBuild.ProjectCollection.GlobalProjectCollection;
+            taskSchedulerService = new Lazy<IVsTaskSchedulerService>(() => Site.GetService(typeof(SVsTaskSchedulerService)) as IVsTaskSchedulerService);
         }
 
         #endregion
@@ -129,16 +117,16 @@ namespace Microsoft.VisualStudioTools.Project {
                 canceled = 0;
 
                 // Get the list of GUIDs from the project/template
-                string guidsList = this.ProjectTypeGuids(fileName);
+                string guidsList = ProjectTypeGuids(fileName);
 
                 // Launch the aggregate creation process (we should be called back on our IVsAggregatableProjectFactoryCorrected implementation)
-                IVsCreateAggregateProject aggregateProjectFactory = (IVsCreateAggregateProject)this.Site.GetService(typeof(SVsCreateAggregateProject));
+                IVsCreateAggregateProject aggregateProjectFactory = (IVsCreateAggregateProject)Site.GetService(typeof(SVsCreateAggregateProject));
                 int hr = aggregateProjectFactory.CreateAggregateProject(guidsList, fileName, location, name, flags, ref projectGuid, out project);
                 if (hr == VSConstants.E_ABORT)
                     canceled = 1;
-                ErrorHandler.ThrowOnFailure(hr);
+                CommonUtils.ThrowOnFailure(hr);
 
-                this.buildProject = null;
+                _buildProject = null;
             }
         }
 
@@ -147,18 +135,16 @@ namespace Microsoft.VisualStudioTools.Project {
         /// initialization just yet.
         /// Delegate to CreateProject implemented by the derived class.
         /// </summary>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Reliability", "CA2000:Dispose objects before losing scope",
-            Justification = "The global property handles is instantiated here and used in the project node that will Dispose it")]
         protected override object PreCreateForOuter(IntPtr outerProjectIUnknown) {
-            Utilities.CheckNotNull(this.buildProject, "The build project should have been initialized before calling PreCreateForOuter.");
+            Utilities.CheckNotNull(_buildProject, "The build project should have been initialized before calling PreCreateForOuter.");
 
             // Please be very carefull what is initialized here on the ProjectNode. Normally this should only instantiate and return a project node.
             // The reason why one should very carefully add state to the project node here is that at this point the aggregation has not yet been created and anything that would cause a CCW for the project to be created would cause the aggregation to fail
             // Our reasoning is that there is no other place where state on the project node can be set that is known by the Factory and has to execute before the Load method.
-            ProjectNode node = this.CreateProject();
+            ProjectNode node = CreateProject();
             Utilities.CheckNotNull(node, "The project failed to be created");
-            node.BuildEngine = this.buildEngine;
-            node.BuildProject = this.buildProject;
+            node.BuildEngine = _buildEngine;
+            node.BuildProject = _buildProject;
             return node;
         }
 
@@ -172,13 +158,12 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <returns>List of semi-colon separated GUIDs</returns>
         protected override string ProjectTypeGuids(string file) {
             // Load the project so we can extract the list of GUIDs
-
-            this.buildProject = Utilities.ReinitializeMsBuildProject(this.buildEngine, file, this.buildProject);
+            _buildProject = Utilities.ReinitializeMsBuildProject(_buildEngine, file, _buildProject);
 
             // Retrieve the list of GUIDs, if it is not specify, make it our GUID
-            string guids = buildProject.GetPropertyValue(ProjectFileConstants.ProjectTypeGuids);
-            if (String.IsNullOrEmpty(guids))
-                guids = this.GetType().GUID.ToString("B");
+            string guids = _buildProject.GetPropertyValue(ProjectFileConstants.ProjectTypeGuids);
+            if (string.IsNullOrEmpty(guids))
+                guids = GetType().GUID.ToString("B");
 
             return guids;
         }
@@ -287,7 +272,7 @@ namespace Microsoft.VisualStudioTools.Project {
 
             public void Log(__VSUL_ERRORLEVEL level, string text) {
                 if (_logger != null) {
-                    ErrorHandler.ThrowOnFailure(_logger.LogMessage((uint)level, _projectName, _projectFile, text));
+                    CommonUtils.ThrowOnFailure(_logger.LogMessage((uint)level, _projectName, _projectFile, text));
                 }
             }
         }
@@ -335,7 +320,7 @@ namespace Microsoft.VisualStudioTools.Project {
                 out dummy
             );
 
-            if (!ErrorHandler.Succeeded(hr)) {
+            if (!CommonUtils.Succeeded(hr)) {
                 return hr;
             }
 
@@ -413,13 +398,13 @@ namespace Microsoft.VisualStudioTools.Project {
                 }
 
 
-                var queryEdit = site.GetService(typeof(SVsQueryEditQuerySave)) as IVsQueryEditQuerySave2;
+                var queryEdit = _site.GetService(typeof(SVsQueryEditQuerySave)) as IVsQueryEditQuerySave2;
                 if (queryEdit != null) {
                     uint editVerdict;
                     uint queryEditMoreInfo;
                     var tagVSQueryEditFlags_QEF_AllowUnopenedProjects = (tagVSQueryEditFlags)0x80;
 
-                    ErrorHandler.ThrowOnFailure(queryEdit.QueryEditFiles(
+                    CommonUtils.ThrowOnFailure(queryEdit.QueryEditFiles(
                         (uint)(tagVSQueryEditFlags.QEF_ForceEdit_NoPrompting |
                             tagVSQueryEditFlags.QEF_DisallowInMemoryEdits |
                             tagVSQueryEditFlags_QEF_AllowUnopenedProjects),
@@ -447,7 +432,7 @@ namespace Microsoft.VisualStudioTools.Project {
                             out dummy
                         );
 
-                        if (!ErrorHandler.Succeeded(hr)) {
+                        if (!CommonUtils.Succeeded(hr)) {
                             return hr;
                         }
                         if (pUpgradeRequired == 0) {
@@ -515,13 +500,7 @@ namespace Microsoft.VisualStudioTools.Project {
                 }
 
                 logger.Log(__VSUL_ERRORLEVEL.VSUL_ERROR, SR.GetString(SR.UnexpectedUpgradeError, ex.Message));
-                try {
-                    ActivityLog.LogError(GetType().FullName, ex.ToString());
-                } catch (InvalidOperationException) {
-                    // Cannot log to ActivityLog. This may occur if we are
-                    // outside of VS right now (for example, unit tests).
-                    System.Diagnostics.Trace.TraceError(ex.ToString());
-                }
+                CommonUtils.ActivityLogError(GetType().FullName, ex.ToString());
                 return VSConstants.E_FAIL;
             }
         }
@@ -568,13 +547,7 @@ namespace Microsoft.VisualStudioTools.Project {
                 }
                 // Log the error and don't attempt to upgrade the project.
                 logger.Log(__VSUL_ERRORLEVEL.VSUL_ERROR, SR.GetString(SR.UnexpectedUpgradeError, ex.Message));
-                try {
-                    ActivityLog.LogError(GetType().FullName, ex.ToString());
-                } catch (InvalidOperationException) {
-                    // Cannot log to ActivityLog. This may occur if we are
-                    // outside of VS right now (for example, unit tests).
-                    System.Diagnostics.Trace.TraceError(ex.ToString());
-                }
+                CommonUtils.ActivityLogError(GetType().FullName, ex.ToString());
                 pUpgradeRequired = 0;
             }
             pUpgradeProjectCapabilityFlags = (uint)backupSupport;
@@ -649,13 +622,7 @@ namespace Microsoft.VisualStudioTools.Project {
                 }
                 // Log the error and don't attempt to upgrade the project.
                 logger.Log(__VSUL_ERRORLEVEL.VSUL_ERROR, SR.GetString(SR.UnexpectedUpgradeError, ex.Message));
-                try {
-                    ActivityLog.LogError(GetType().FullName, ex.ToString());
-                } catch (InvalidOperationException) {
-                    // Cannot log to ActivityLog. This may occur if we are
-                    // outside of VS right now (for example, unit tests).
-                    System.Diagnostics.Trace.TraceError(ex.ToString());
-                }
+                CommonUtils.ActivityLogError(GetType().FullName, ex.ToString());
                 pUpgradeRequired = (uint)__VSPPROJECTUPGRADEVIAFACTORYREPAIRFLAGS.VSPUVF_PROJECT_NOREPAIR;
             }
             pUpgradeProjectCapabilityFlags = (uint)backupSupport;

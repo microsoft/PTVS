@@ -148,54 +148,54 @@ namespace PythonToolsUITests {
         }
 
         //[TestMethod, Priority(UITestPriority.P0)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void LoadSearchPath(PythonVisualStudioApp app) {
-            var project = app.OpenProject(@"TestData\LoadSearchPaths.sln");
+        //[HostType("VSTestHost"), TestCategory("Installed")]
+        //public void LoadSearchPath(PythonVisualStudioApp app) {
+        //    var project = app.OpenProject(@"TestData\LoadSearchPaths.sln");
 
-            // Ensure we complete analysis. VS may crash if the invalid
-            // path is not handled correctly.
-            project.GetPythonProject().GetAnalyzer().WaitForCompleteAnalysis(_ => true);
+        //    // Ensure we complete analysis. VS may crash if the invalid
+        //    // path is not handled correctly.
+        //    project.GetPythonProject().GetAnalyzer().WaitForCompleteAnalysis(_ => true);
 
-            var tree = app.OpenSolutionExplorer();
+        //    var tree = app.OpenSolutionExplorer();
 
-            const string sln = "Solution 'LoadSearchPaths' (1 project)";
-            const string proj = "LoadSearchPaths";
-            var sp = Strings.SearchPaths;
+        //    const string sln = "Solution 'LoadSearchPaths' (1 project)";
+        //    const string proj = "LoadSearchPaths";
+        //    var sp = Strings.SearchPaths;
 
-            // Entered in file as ..\AddSearchPaths\
-            var path1 = tree.WaitForItem(sln, proj, sp, "..\\AddSearchPaths");
-            Assert.IsNotNull(path1, "Could not find ..\\AddSearchPaths");
+        //    // Entered in file as ..\AddSearchPaths\
+        //    var path1 = tree.WaitForItem(sln, proj, sp, "..\\AddSearchPaths");
+        //    Assert.IsNotNull(path1, "Could not find ..\\AddSearchPaths");
 
-            // Entered in file as ..\HelloWorld
-            var path2 = tree.WaitForItem(sln, proj, sp, "..\\HelloWorld");
-            Assert.IsNotNull(path2, "Could not find ..\\HelloWorld");
+        //    // Entered in file as ..\HelloWorld
+        //    var path2 = tree.WaitForItem(sln, proj, sp, "..\\HelloWorld");
+        //    Assert.IsNotNull(path2, "Could not find ..\\HelloWorld");
 
-            // Entered in file as ..\LoadSearchPaths\NotHere\..\ - resolves to .\
-            var path3 = tree.WaitForItem(sln, proj, sp, ".");
-            Assert.IsNotNull(path3, "Could not find .");
+        //    // Entered in file as ..\LoadSearchPaths\NotHere\..\ - resolves to .\
+        //    var path3 = tree.WaitForItem(sln, proj, sp, ".");
+        //    Assert.IsNotNull(path3, "Could not find .");
 
-            // Entered in file as .\NotHere\
-            var path4 = tree.WaitForItem(sln, proj, sp, "NotHere");
-            Assert.IsNotNull(path4, "Could not find NotHere");
-            Assert.AreEqual("NotHere", path4.Current.Name);
+        //    // Entered in file as .\NotHere\
+        //    var path4 = tree.WaitForItem(sln, proj, sp, "NotHere");
+        //    Assert.IsNotNull(path4, "Could not find NotHere");
+        //    Assert.AreEqual("NotHere", path4.Current.Name);
 
-            AutomationWrapper.Select(path4);
-            app.ExecuteCommand("Edit.Delete"); // should not prompt, https://pytools.codeplex.com/workitem/1233
-            Assert.IsNull(tree.WaitForItemRemoved(sln, proj, sp, "NotHere"));
+        //    AutomationWrapper.Select(path4);
+        //    app.ExecuteCommand("Edit.Delete"); // should not prompt, https://pytools.codeplex.com/workitem/1233
+        //    Assert.IsNull(tree.WaitForItemRemoved(sln, proj, sp, "NotHere"));
 
-            // Entered in file as Invalid*Search?Path
-            var path5 = tree.WaitForItem(sln, proj, sp, "Invalid*Search?Path");
-            Assert.IsNotNull(path5, "Could not find Invalid*Search?Path");
-            Assert.AreEqual(path5.Current.Name, "Invalid*Search?Path");
+        //    // Entered in file as Invalid*Search?Path
+        //    var path5 = tree.WaitForItem(sln, proj, sp, "Invalid*Search?Path");
+        //    Assert.IsNotNull(path5, "Could not find Invalid*Search?Path");
+        //    Assert.AreEqual(path5.Current.Name, "Invalid*Search?Path");
 
-            AutomationWrapper.Select(path5);
-            app.ExecuteCommand("Edit.Delete");
-            Assert.IsNull(tree.WaitForItemRemoved(sln, proj, sp, "Invalid*Search?Path"));
+        //    AutomationWrapper.Select(path5);
+        //    app.ExecuteCommand("Edit.Delete");
+        //    Assert.IsNull(tree.WaitForItemRemoved(sln, proj, sp, "Invalid*Search?Path"));
 
-            // Ensure NotHere hasn't come back
-            path4 = tree.WaitForItem(sln, proj, sp, "NotHere");
-            Assert.IsNull(path4, "NotHere came back");
-        }
+        //    // Ensure NotHere hasn't come back
+        //    path4 = tree.WaitForItem(sln, proj, sp, "NotHere");
+        //    Assert.IsNull(path4, "NotHere came back");
+        //}
 
         //[TestMethod, Priority(UITestPriority.P0)]
         [HostType("VSTestHost"), TestCategory("Installed")]

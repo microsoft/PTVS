@@ -44,20 +44,9 @@ namespace Microsoft.PythonTools.Debugger.Remote {
         }
 
         public int EnumProcesses(out IEnumDebugProcesses2 ppEnum) {
-            if (!PythonDebugOptionsServiceHelper.Options.UseLegacyDebugger) {
-                var process = new PythonRemoteDebugProcess(this, 54321, "Python", "*", "*");
-                ppEnum = new PythonRemoteEnumDebugProcesses(process);
-                return VSConstants.S_OK;
-            } else {
-                var process = TaskHelpers.RunSynchronouslyOnUIThread(ct => PythonRemoteDebugProcess.ConnectAsync(this, _debugLog, ct));
-                if (process == null) {
-                    ppEnum = null;
-                    return VSConstants.E_FAIL;
-                } else {
-                    ppEnum = new PythonRemoteEnumDebugProcesses(process);
-                    return VSConstants.S_OK;
-                }
-            }
+            var process = new PythonRemoteDebugProcess(this, 54321, "Python", "*", "*");
+            ppEnum = new PythonRemoteEnumDebugProcesses(process);
+            return VSConstants.S_OK;
         }
 
         public int GetPortId(out Guid pguidPort) {

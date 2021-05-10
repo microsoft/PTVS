@@ -26,12 +26,12 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Windows.Forms;
+using Microsoft.PythonTools.Common;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TemplateWizard;
-using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.ProjectWizards {
     public sealed class CookiecutterWizard : IWizard {
@@ -93,7 +93,7 @@ namespace Microsoft.PythonTools.ProjectWizards {
                 var templateUri = Resolve(new Uri(wizardData));
 
                 object inObj = projName + "|" + directory + "|" + templateUri.ToString();
-                var guid = GuidList.guidCookiecutterCmdSet;
+                var guid = CommonGuidList.guidCookiecutterCmdSet;
                 uiShell.PostExecCommand(ref guid, cmdidNewProjectFromTemplate, 0, ref inObj);
             }
             throw new WizardCancelledException();
@@ -104,11 +104,11 @@ namespace Microsoft.PythonTools.ProjectWizards {
         }
 
         private static int EnsurePythonPackageLoaded(IServiceProvider serviceProvider) {
-            return EnsurePackageLoaded(serviceProvider, GuidList.guidPythonToolsPackage);
+            return EnsurePackageLoaded(serviceProvider, CommonGuidList.guidPythonToolsPackage);
         }
 
         private static int EnsureCookiecutterPackageLoaded(IServiceProvider serviceProvider) {
-            return EnsurePackageLoaded(serviceProvider, GuidList.guidCookiecutterPackage);
+            return EnsurePackageLoaded(serviceProvider, CommonGuidList.guidCookiecutterPackage);
         }
 
         private static int EnsurePackageLoaded(IServiceProvider serviceProvider, Guid packageGuid) {

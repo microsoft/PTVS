@@ -183,10 +183,10 @@ No files will be deleted from disk.</value>
     <value>'{0}' failed to uninstall. Exit code: {1}</value>
   </data>
   <data name="PackageUninstalling" xml:space="preserve">
-    <value>Unnstalling '{0}'</value>
+    <value>Uninstalling '{0}'</value>
   </data>
   <data name="PackageUninstallingSeeOutputWindow" xml:space="preserve">
-    <value>Unnstalling '{0}'. See the Output Window for more information.</value>
+    <value>Uninstalling '{0}'. See the Output Window for more information.</value>
   </data>
   <data name="PackageUninstallSucceeded" xml:space="preserve">
     <value>'{0}' was uninstalled successfully.</value>
@@ -2679,32 +2679,8 @@ Please specify at least one package.</value>
   <data name="WarningEncodingDifferentFromDefault" xml:space="preserve">
     <value>File is saved in encoding '{0}' which does not match default UTF-8 encoding</value>
   </data>
-  <data name="ImportPtvsdModuleNotFoundMessage" xml:space="preserve">
-    <value>There was an error loading ptvsd from the current environment. Please upgrade or uninstall ptvsd.</value>
-  </data>
-  <data name="ImportPtvsdModuleNotFoundTitle" xml:space="preserve">
-    <value>Debugger package could not be loaded</value>
-  </data>
-  <data name="PtvsdDisableCaption" xml:space="preserve">
-    <value>Use the legacy debugger</value>
-  </data>
-  <data name="PtvsdDisableSubtext" xml:space="preserve">
-    <value>Future debugging sessions will use the legacy debugger. You can also change this setting in Tools, Options, Python, Debugging page by changing the 'Use legacy debugger' option.</value>
-  </data>
-  <data name="PtvsdLearnMoreCaption" xml:space="preserve">
-    <value>Learn more</value>
-  </data>
-  <data name="PtvsdLearnMoreSubtext" xml:space="preserve">
-    <value>View documentation on supported Python environments and how to upgrade or uninstall the ptvsd debugger package.</value>
-  </data>
-  <data name="PtvsdIncompatibleEnvTitle" xml:space="preserve">
-    <value>Debugger does not support this Python environment</value>
-  </data>
-  <data name="PtvsdIncompatibleEnvMessage" xml:space="preserve">
-    <value>To debug this Python environment, please use the legacy debugger. Older versions of Python are not supported. See our &lt;a href="https://aka.ms/upgradeptvsd"&gt;documentation&lt;/a&gt; for a list of supported Python versions and environment types.</value>
-  </data>
-  <data name="DebugReplFeatureNotSupportedWithExperimentalDebugger" xml:space="preserve">
-    <value>This debug REPL feature is only supported with the legacy debugger.</value>
+  <data name="DebugReplFeatureNotSupported" xml:space="preserve">
+    <value>Debugging REPL feature is not yet supported.</value>
   </data>
   <data name="RunMypyLabel" xml:space="preserve">
     <value>Run Mypy</value>
@@ -2977,11 +2953,21 @@ Please specify at least one package.</value>
     <value>Results for pytest not found {0}</value>
     <comment>{0} is the expected file path</comment>
   </data>
+  <data name="LanguageClientNodejsNotFound" xml:space="preserve">
+    <value>Node.js was not found. It is required to run Pylance language server.</value>
+  </data>
+  <data name="LanguageClientPylanceNotFound" xml:space="preserve">
+    <value>Pylance language server was not found. Please reinstall Python Tools.</value>
+  </data>
+  <data name="LanguageClientInitializeFailed" xml:space="preserve">
+    <value>Language server initialization failed.\n\n{0}</value>
+    <comment>{0} is the error details</comment>
+  </data>
   <data name="PythonVersionNotSupportedDontShowMessageAgain" xml:space="preserve">
     <value>Don't show this message again</value>
   </data>
   <data name="PythonVersionNotSupportedInfoBarText" xml:space="preserve">
-    <value>You're using Python {0}. Some new features might not work as expected until Visual Studio officially supports this version.</value>
+    <value>You're using Python {0}. Some features might not work as expected since Visual Studio no longer supports this version.</value>
     <comment>{0} is the Python version</comment>
   </data>
   <data name="PythonVersionNotSupportMoreInfo" xml:space="preserve">
@@ -2998,6 +2984,63 @@ Please specify at least one package.</value>
   <data name="PythonInterpreterPathNullOrEmpty" xml:space="preserve">
     <value>Unable to start debugging because the Python interpreter path is null or empty</value>
   </data>
+  <data name="ErrorUnableToInstallFormatter" xml:space="preserve">
+    <value>Unable to install code formatter. Error {0}.</value>
+  </data>
+  <data name="InstallFormatterPrompt" xml:space="preserve">
+    <value>Install '{0}' in environment '{1}' now?</value>
+  </data>
+  <data name="DiagnosticModeOpenFiles" xml:space="preserve">
+    <value>Open files only</value>
+  </data>
+  <data name="DiagnosticModeWorkspace" xml:space="preserve">
+    <value>Workspace</value>
+  </data>
+  <data name="LogLevelError" xml:space="preserve">
+    <value>Error</value>
+  </data>
+  <data name="LogLevelInformation" xml:space="preserve">
+    <value>Information</value>
+  </data>
+  <data name="LogLevelTrace" xml:space="preserve">
+    <value>Trace</value>
+  </data>
+  <data name="LogLevelWarning" xml:space="preserve">
+    <value>Warning</value>
+  </data>
+  <data name="TypeCheckingModeBasic" xml:space="preserve">
+    <value>Basic</value>
+  </data>
+  <data name="TypeCheckingModeStrict" xml:space="preserve">
+    <value>Strict</value>
+  </data>
+  <data name="DiagnosticModeToolTip" xml:space="preserve">
+    <value>Analyzes and reports errors on only open files or the entire workspace.</value>
+  </data>
+  <data name="LogLevelToolTip" xml:space="preserve">
+    <value>Specifies the level of logging for the Output panel.</value>
+  </data>
+  <data name="SearchPathsToolTip" xml:space="preserve">
+    <value>Additional import search resolution paths. You can use line breaks or semicolons to separate multiple paths.</value>
+  </data>
+  <data name="StubPathToolTip" xml:space="preserve">
+    <value>Path to directory containing custom type stub files.</value>
+  </data>
+  <data name="TypeCheckingModeToolTip" xml:space="preserve">
+    <value>Defines the default rule set for type checking.</value>
+  </data>
+  <data name="TypeshedPathsToolTip" xml:space="preserve">
+    <value>Paths to look for typeshed modules. You can use line breaks or semicolons to separate multiple paths.</value>
+  </data>
+  <data name="TypeCheckingModeOff" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="WarningPython2NotSupported" xml:space="preserve">
+    <value>Pylance language server does not support Python 2.x. Type checking will be performed as in Python 3.x.</value>
+  </data>
+  <data name="ConfigFileAlreadyExists" xml:space="preserve">
+    <value>Type checker configuration file already exists in this folder.</value>
+  </data>
   <data name="UntrustedWorkspaceInfoBarText" xml:space="preserve">
     <value>Workspace contains binaries that appear to be Python interpreters, but could be malware. Visual Studio needs to execute them to retrieve interpreter information. Do you trust the binaries in this workspace?</value>
   </data>
@@ -3009,5 +3052,105 @@ Please specify at least one package.</value>
   </data>
   <data name="DontTrustWorkspaceInfoBarAction" xml:space="preserve">
     <value>Do not trust</value>
+  </data>
+  <data name="CompletionFilterClass" xml:space="preserve">
+    <value>Classes</value>
+    <comment>Describes items of specific kind. Use plural and capitalized noun.</comment>
+  </data>
+  <data name="CompletionFilterColor" xml:space="preserve">
+    <value>Colors</value>
+    <comment>Describes items of specific kind. Use plural and capitalized noun.</comment>
+  </data>
+  <data name="CompletionFilterConstant" xml:space="preserve">
+    <value>Constants</value>
+    <comment>Describes items of specific kind. Use plural and capitalized noun.</comment>
+  </data>
+  <data name="CompletionFilterConstructor" xml:space="preserve">
+    <value>Constructors</value>
+    <comment>Describes items of specific kind. Use plural and capitalized noun.</comment>
+  </data>
+  <data name="CompletionFilterEnum" xml:space="preserve">
+    <value>Enums</value>
+    <comment>Describes items of specific kind. Use plural and capitalized noun.</comment>
+  </data>
+  <data name="CompletionFilterEnumMember" xml:space="preserve">
+    <value>Enum members</value>
+    <comment>Describes items of specific kind. Use plural and capitalized noun.</comment>
+  </data>
+  <data name="CompletionFilterEvent" xml:space="preserve">
+    <value>Events</value>
+    <comment>Describes items of specific kind. Use plural and capitalized noun.</comment>
+  </data>
+  <data name="CompletionFilterField" xml:space="preserve">
+    <value>Fields</value>
+    <comment>Describes items of specific kind. Use plural and capitalized noun.</comment>
+  </data>
+  <data name="CompletionFilterFile" xml:space="preserve">
+    <value>Files</value>
+    <comment>Describes items of specific kind. Use plural and capitalized noun.</comment>
+  </data>
+  <data name="CompletionFilterFolder" xml:space="preserve">
+    <value>Folders</value>
+    <comment>Describes items of specific kind. Use plural and capitalized noun.</comment>
+  </data>
+  <data name="CompletionFilterFunction" xml:space="preserve">
+    <value>Functions</value>
+    <comment>Describes items of specific kind. Use plural and capitalized noun.</comment>
+  </data>
+  <data name="CompletionFilterInterface" xml:space="preserve">
+    <value>Interfaces</value>
+    <comment>Describes items of specific kind. Use plural and capitalized noun.</comment>
+  </data>
+  <data name="CompletionFilterKeyword" xml:space="preserve">
+    <value>Keywords</value>
+    <comment>Describes items of specific kind. Use plural and capitalized noun.</comment>
+  </data>
+  <data name="CompletionFilterMethod" xml:space="preserve">
+    <value>Methods</value>
+    <comment>Describes items of specific kind. Use plural and capitalized noun.</comment>
+  </data>
+  <data name="CompletionFilterModule" xml:space="preserve">
+    <value>Modules</value>
+    <comment>Describes items of specific kind. Use plural and capitalized noun.</comment>
+  </data>
+  <data name="CompletionFilterOperator" xml:space="preserve">
+    <value>Operators</value>
+    <comment>Describes items of specific kind. Use plural and capitalized noun.</comment>
+  </data>
+  <data name="CompletionFilterProperty" xml:space="preserve">
+    <value>Properties</value>
+    <comment>Describes items of specific kind. Use plural and capitalized noun.</comment>
+  </data>
+  <data name="CompletionFilterReference" xml:space="preserve">
+    <value>References</value>
+    <comment>Describes items of specific kind. Use plural and capitalized noun.</comment>
+  </data>
+  <data name="CompletionFilterSnippet" xml:space="preserve">
+    <value>Snippets</value>
+    <comment>Describes items of specific kind. Use plural and capitalized noun.</comment>
+  </data>
+  <data name="CompletionFilterStruct" xml:space="preserve">
+    <value>Structs</value>
+    <comment>Describes items of specific kind. Use plural and capitalized noun.</comment>
+  </data>
+  <data name="CompletionFilterText" xml:space="preserve">
+    <value>Names</value>
+    <comment>Describes items of specific kind.  Use plural and capitalized noun. Note that "text" is very generic and "name" feels like an appropriate choice for the UI</comment>
+  </data>
+  <data name="CompletionFilterTypeParameter" xml:space="preserve">
+    <value>Type parameters</value>
+    <comment>Describes items of specific kind. Use plural and capitalized noun.</comment>
+  </data>
+  <data name="CompletionFilterUnit" xml:space="preserve">
+    <value>Units</value>
+    <comment>Describes items of specific kind. Use plural and capitalized noun.</comment>
+  </data>
+  <data name="CompletionFilterValue" xml:space="preserve">
+    <value>Values</value>
+    <comment>Describes items of specific kind. Use plural and capitalized noun.</comment>
+  </data>
+  <data name="CompletionFilterVariable" xml:space="preserve">
+    <value>Variables</value>
+    <comment>Describes items of specific kind. Use plural and capitalized noun.</comment>
   </data>
 </root>

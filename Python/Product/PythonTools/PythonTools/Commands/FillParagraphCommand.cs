@@ -82,7 +82,7 @@ namespace Microsoft.PythonTools.Commands {
 
                 int curLine = 0, curOffset = fillPrefix.Prefix.Length;
 
-                int columnCutoff = _serviceProvider.GetPythonToolsService().GetCodeFormattingOptions().WrappingWidth - fillPrefix.Prefix.Length;
+                int columnCutoff = 80 - fillPrefix.Prefix.Length;
                 int defaultColumnCutoff = columnCutoff;
                 StringBuilder newText = new StringBuilder(end.Position - start.Position);
                 while (curLine < lines.Length) {

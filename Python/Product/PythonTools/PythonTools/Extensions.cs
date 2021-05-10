@@ -33,8 +33,8 @@ using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.InterpreterList;
-using Microsoft.PythonTools.Parsing;
-using Microsoft.PythonTools.Parsing.Ast;
+using Microsoft.Python.Parsing;
+using Microsoft.Python.Parsing.Ast;
 using Microsoft.PythonTools.Project;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
@@ -54,6 +54,9 @@ using Microsoft.VisualStudio.Utilities;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 using Task = System.Threading.Tasks.Task;
+using Microsoft.PythonTools.LanguageServerClient;
+using Microsoft.PythonTools.Utility;
+using Microsoft.PythonTools.Common;
 
 namespace Microsoft.PythonTools {
     static class Extensions {
@@ -62,42 +65,12 @@ namespace Microsoft.PythonTools {
         internal static bool IsAppxPackageableProject(this ProjectNode projectNode) {
             var appxProp = projectNode.BuildProject.GetPropertyValue(ProjectFileConstants.AppxPackage);
             var containerProp = projectNode.BuildProject.GetPropertyValue(ProjectFileConstants.WindowsAppContainer);
-            var appxFlag = false;
-            var containerFlag = false;
 
-            if (bool.TryParse(appxProp, out appxFlag) && bool.TryParse(containerProp, out containerFlag)) {
+            if (bool.TryParse(appxProp, out bool appxFlag) && bool.TryParse(containerProp, out bool containerFlag)) {
                 return appxFlag && containerFlag;
             } else {
                 return false;
             }
-        }
-
-        public static StandardGlyphGroup ToGlyphGroup(this PythonMemberType objectType) {
-            StandardGlyphGroup group;
-            switch (objectType) {
-                case PythonMemberType.Class: group = StandardGlyphGroup.GlyphGroupClass; break;
-                case PythonMemberType.DelegateInstance:
-                case PythonMemberType.Delegate: group = StandardGlyphGroup.GlyphGroupDelegate; break;
-                case PythonMemberType.Enum: group = StandardGlyphGroup.GlyphGroupEnum; break;
-                case PythonMemberType.Namespace: group = StandardGlyphGroup.GlyphGroupNamespace; break;
-                case PythonMemberType.Multiple: group = StandardGlyphGroup.GlyphGroupOverload; break;
-                case PythonMemberType.Field: group = StandardGlyphGroup.GlyphGroupField; break;
-                case PythonMemberType.Module: group = StandardGlyphGroup.GlyphGroupModule; break;
-                case PythonMemberType.Property: group = StandardGlyphGroup.GlyphGroupProperty; break;
-                case PythonMemberType.Instance: group = StandardGlyphGroup.GlyphGroupVariable; break;
-                case PythonMemberType.Constant: group = StandardGlyphGroup.GlyphGroupVariable; break;
-                case PythonMemberType.EnumInstance: group = StandardGlyphGroup.GlyphGroupEnumMember; break;
-                case PythonMemberType.Event: group = StandardGlyphGroup.GlyphGroupEvent; break;
-                case PythonMemberType.Keyword: group = StandardGlyphGroup.GlyphKeyword; break;
-                case PythonMemberType.CodeSnippet: group = StandardGlyphGroup.GlyphCSharpExpansion; break;
-                case PythonMemberType.NamedArgument: group = StandardGlyphGroup.GlyphGroupMapItem; break;
-                case PythonMemberType.Function:
-                case PythonMemberType.Method:
-                default:
-                    group = StandardGlyphGroup.GlyphGroupMethod;
-                    break;
-            }
-            return group;
         }
 
         internal static bool CanComplete(this ClassificationSpan token) {
@@ -106,90 +79,91 @@ namespace Microsoft.PythonTools {
                 token.ClassificationType.IsOfType(PredefinedClassificationTypeNames.String);
         }
 
+
         /// <summary>
         /// Returns the span to use for the provided intellisense session.
         /// </summary>
         /// <returns>A tracking span. The span may be of length zero if there
         /// is no suitable token at the trigger point.</returns>
-        internal static ITrackingSpan GetApplicableSpan(this IIntellisenseSession session, ITextBuffer buffer) {
-            var snapshot = buffer.CurrentSnapshot;
-            var triggerPoint = session.GetTriggerPoint(buffer);
+        //internal static ITrackingSpan GetApplicableSpan(this IIntellisenseSession session, ITextBuffer buffer) {
+        //    var snapshot = buffer.CurrentSnapshot;
+        //    var triggerPoint = session.GetTriggerPoint(buffer);
 
-            var span = snapshot.GetApplicableSpan(triggerPoint.GetPosition(snapshot), session.IsCompleteWordMode());
-            if (span != null) {
-                return span;
-            }
-            return snapshot.CreateTrackingSpan(triggerPoint.GetPosition(snapshot), 0, SpanTrackingMode.EdgeInclusive);
-        }
+        //    var span = snapshot.GetApplicableSpan(triggerPoint.GetPosition(snapshot), session.IsCompleteWordMode());
+        //    if (span != null) {
+        //        return span;
+        //    }
+        //    return snapshot.CreateTrackingSpan(triggerPoint.GetPosition(snapshot), 0, SpanTrackingMode.EdgeInclusive);
+        //}
 
         /// <summary>
         /// Returns the applicable span at the provided position.
         /// </summary>
         /// <returns>A tracking span, or null if there is no token at the
         /// provided position.</returns>
-        internal static ITrackingSpan GetApplicableSpan(this ITextSnapshot snapshot, int position, bool completeWord) {
-            var classifier = snapshot.TextBuffer.GetPythonClassifier();
-            var line = snapshot.GetLineFromPosition(position);
-            if (classifier == null || line == null) {
-                return null;
-            }
+        //internal static ITrackingSpan GetApplicableSpan(this ITextSnapshot snapshot, int position, bool completeWord) {
+        //    var classifier = snapshot.TextBuffer.GetPythonClassifier();
+        //    var line = snapshot.GetLineFromPosition(position);
+        //    if (classifier == null || line == null) {
+        //        return null;
+        //    }
 
-            var spanLength = position - line.Start.Position;
-            if (completeWord) {
-                // Increase position by one to include 'fob' in: "abc.|fob"
-                if (spanLength < line.Length) {
-                    spanLength += 1;
-                }
-            }
+        //    var spanLength = position - line.Start.Position;
+        //    if (completeWord) {
+        //        // Increase position by one to include 'fob' in: "abc.|fob"
+        //        if (spanLength < line.Length) {
+        //            spanLength += 1;
+        //        }
+        //    }
 
-            var classifications = classifier.GetClassificationSpans(new SnapshotSpan(line.Start, spanLength));
-            // Handle "|"
-            if (classifications == null || classifications.Count == 0) {
-                return null;
-            }
+        //    var classifications = classifier.GetClassificationSpans(new SnapshotSpan(line.Start, spanLength));
+        //    // Handle "|"
+        //    if (classifications == null || classifications.Count == 0) {
+        //        return null;
+        //    }
 
-            var lastToken = classifications[classifications.Count - 1];
-            // Handle "fob |"
-            if (lastToken == null || position > lastToken.Span.End) {
-                return null;
-            }
+        //    var lastToken = classifications[classifications.Count - 1];
+        //    // Handle "fob |"
+        //    if (lastToken == null || position > lastToken.Span.End) {
+        //        return null;
+        //    }
 
-            if (position > lastToken.Span.Start) {
-                if (lastToken.ClassificationType.IsOfType(PredefinedClassificationTypeNames.String)) {
-                    // Handle "'contents of strin|g"
-                    var text = lastToken.Span.GetText();
-                    var span = GetStringContentSpan(text, lastToken.Span.Start) ?? lastToken.Span;
+        //    if (position > lastToken.Span.Start) {
+        //        if (lastToken.ClassificationType.IsOfType(PredefinedClassificationTypeNames.String)) {
+        //            // Handle "'contents of strin|g"
+        //            var text = lastToken.Span.GetText();
+        //            var span = GetStringContentSpan(text, lastToken.Span.Start) ?? lastToken.Span;
 
-                    return snapshot.CreateTrackingSpan(span, SpanTrackingMode.EdgeInclusive);
-                }
+        //            return snapshot.CreateTrackingSpan(span, SpanTrackingMode.EdgeInclusive);
+        //        }
 
-                if (lastToken.CanComplete()) {
-                    // Handle "fo|o" : when it is 'show member' or 'complete word' use complete token.
-                    // When it is autocompletion (as when typing in front of the existing contruct), take left part only.
-                    var span = completeWord ? lastToken.Span : Span.FromBounds(lastToken.Span.Start, position);
-                    return snapshot.CreateTrackingSpan(span, SpanTrackingMode.EdgeInclusive);
-                }
+        //        if (lastToken.CanComplete()) {
+        //            // Handle "fo|o" : when it is 'show member' or 'complete word' use complete token.
+        //            // When it is autocompletion (as when typing in front of the existing contruct), take left part only.
+        //            var span = completeWord ? lastToken.Span : Span.FromBounds(lastToken.Span.Start, position);
+        //            return snapshot.CreateTrackingSpan(span, SpanTrackingMode.EdgeInclusive);
+        //        } 
 
-                // Handle "<|="
-                return null;
-            }
+        //        // Handle "<|="
+        //        return null;
+        //    }
 
-            var secondLastToken = classifications.Count >= 2 ? classifications[classifications.Count - 2] : null;
-            if (lastToken.Span.Start == position && lastToken.CanComplete() &&
-                (secondLastToken == null ||             // Handle "|fob"
-                 position > secondLastToken.Span.End || // Handle "if |fob"
-                 !secondLastToken.CanComplete())) {     // Handle "abc.|fob"
-                return snapshot.CreateTrackingSpan(lastToken.Span, SpanTrackingMode.EdgeInclusive);
-            }
+        //    var secondLastToken = classifications.Count >= 2 ? classifications[classifications.Count - 2] : null;
+        //    if (lastToken.Span.Start == position && lastToken.CanComplete() &&
+        //        (secondLastToken == null ||             // Handle "|fob"
+        //         position > secondLastToken.Span.End || // Handle "if |fob"
+        //         !secondLastToken.CanComplete())) {     // Handle "abc.|fob"
+        //        return snapshot.CreateTrackingSpan(lastToken.Span, SpanTrackingMode.EdgeInclusive);
+        //    }
 
-            // Handle "abc|."
-            // ("ab|c." would have been treated as "ab|c")
-            if (secondLastToken != null && secondLastToken.Span.End == position && secondLastToken.CanComplete()) {
-                return snapshot.CreateTrackingSpan(secondLastToken.Span, SpanTrackingMode.EdgeInclusive);
-            }
+        //    // Handle "abc|."
+        //    // ("ab|c." would have been treated as "ab|c")
+        //    if (secondLastToken != null && secondLastToken.Span.End == position && secondLastToken.CanComplete()) {
+        //        return snapshot.CreateTrackingSpan(secondLastToken.Span, SpanTrackingMode.EdgeInclusive);
+        //    }
 
-            return null;
-        }
+        //    return null;
+        //}
 
         internal static Span? GetStringContentSpan(string text, int globalStart = 0) {
             var firstQuote = text.IndexOfAny(QuoteChars);
@@ -222,13 +196,13 @@ namespace Microsoft.PythonTools {
         public static IEnumerable<IVsProject> EnumerateLoadedProjects(this IVsSolution solution) {
             var guid = new Guid(PythonConstants.ProjectFactoryGuid);
             IEnumHierarchies hierarchies;
-            ErrorHandler.ThrowOnFailure((solution.GetProjectEnum(
+            CommonUtils.ThrowOnFailure((solution.GetProjectEnum(
                 (uint)(__VSENUMPROJFLAGS.EPF_MATCHTYPE | __VSENUMPROJFLAGS.EPF_LOADEDINSOLUTION),
                 ref guid,
                 out hierarchies)));
             IVsHierarchy[] hierarchy = new IVsHierarchy[1];
             uint fetched;
-            while (ErrorHandler.Succeeded(hierarchies.Next(1, hierarchy, out fetched)) && fetched == 1) {
+            while (CommonUtils.Succeeded(hierarchies.Next(1, hierarchy, out fetched)) && fetched == 1) {
                 var project = hierarchy[0] as IVsProject;
                 if (project != null) {
                     yield return project;
@@ -261,7 +235,7 @@ namespace Microsoft.PythonTools {
 
         internal static string GetNameProperty(this IVsHierarchy project) {
             object value;
-            ErrorHandler.ThrowOnFailure(project.GetProperty(
+            CommonUtils.ThrowOnFailure(project.GetProperty(
                 (uint)VSConstants.VSITEMID.Root,
                 (int)__VSHPROPID.VSHPROPID_Name,
                 out value
@@ -271,7 +245,7 @@ namespace Microsoft.PythonTools {
 
         internal static Guid GetProjectIDGuidProperty(this IVsHierarchy project) {
             Guid guid;
-            ErrorHandler.ThrowOnFailure(project.GetGuidProperty(
+            CommonUtils.ThrowOnFailure(project.GetGuidProperty(
                 (uint)VSConstants.VSITEMID.Root,
                 (int)__VSHPROPID.VSHPROPID_ProjectIDGuid,
                 out guid
@@ -279,56 +253,22 @@ namespace Microsoft.PythonTools {
             return guid;
         }
 
-
-        internal static PythonEditorServices GetEditorServices(this IServiceProvider serviceProvider) {
-            return serviceProvider.GetComponentModel()?.GetService<PythonEditorServices>();
-        }
-
         internal static async Task<PythonLanguageVersion> GetLanguageVersionAsync(this ITextView textView, IServiceProvider serviceProvider) {
-            var evaluator = textView.TextBuffer.GetInteractiveWindow().GetPythonEvaluator();
-            if (evaluator != null) {
-                return evaluator.LanguageVersion;
-            }
-
-            var entry = textView.TextBuffer.TryGetAnalysisEntry();
-            if (entry?.Analyzer != null) {
-                return entry.Analyzer.LanguageVersion;
-            }
-
-            var analyzer = await serviceProvider.FindAnalyzerAsync(textView);
-            if (analyzer is VsProjectAnalyzer pyAnalyzer) {
-                return pyAnalyzer.LanguageVersion;
-            }
-
-            var defaultInterp = serviceProvider.GetPythonToolsService().InterpreterOptionsService.DefaultInterpreter;
-            if (defaultInterp?.Configuration != null) {
-                try {
-                    return defaultInterp.Configuration.Version.ToLanguageVersion();
-                } catch (InvalidOperationException) {
-                }
-            }
-
-            return PythonLanguageVersion.None;
+            var tb = textView.TextBuffer;
+            return tb.GetInteractiveWindow().GetPythonEvaluator()?.LanguageVersion ??
+                   tb.GetInterpreterConfiguration(serviceProvider).Version.ToLanguageVersion();
         }
 
-        /// <summary>
-        /// Returns the active VsProjectAnalyzer being used for where the caret is currently located in this view.
-        /// </summary>
-        internal static VsProjectAnalyzer GetAnalyzerAtCaret(this ITextView textView, IServiceProvider serviceProvider) {
-            return GetAnalysisAtCaret(textView, serviceProvider)?.Analyzer;
-        }
+        internal static InterpreterConfiguration GetInterpreterConfigurationAtCaret(this ITextView textView, IServiceProvider serviceProvider) {
+            serviceProvider.GetUIThread().MustBeCalledFromUIThread();
 
-        /// <summary>
-        /// Returns the AnalysisEntry being used for where the caret is currently located in this view.
-        /// 
-        /// Returns null if the caret isn't in Python code or an analysis doesn't exist for some reason.
-        /// </summary>
-        internal static AnalysisEntry GetAnalysisAtCaret(this ITextView textView, IServiceProvider serviceProvider) {
-            var buffer = textView.GetPythonBufferAtCaret();
-            if (buffer != null) {
-                return buffer.TryGetAnalysisEntry();
-            }
-            return textView.TryGetAnalysisEntry(serviceProvider);
+            // TODO
+            //var client = PythonLanguageClient.FindLanguageClient(textView.TextBuffer);
+            //if (client?.Configuration != null) {
+            //    return client.Configuration;
+            //}
+
+            return serviceProvider.GetPythonToolsService().InterpreterOptionsService.DefaultInterpreter?.Configuration;
         }
 
         /// <summary>
@@ -435,7 +375,7 @@ namespace Microsoft.PythonTools {
             }
 
             object projectObj;
-            ErrorHandler.ThrowOnFailure(hierarchy.GetProperty(itemid, (int)__VSHPROPID.VSHPROPID_ExtObject, out projectObj));
+            CommonUtils.ThrowOnFailure(hierarchy.GetProperty(itemid, (int)__VSHPROPID.VSHPROPID_ExtObject, out projectObj));
             return (projectObj as EnvDTE.Project)?.GetPythonProject();
         }
 
@@ -459,42 +399,42 @@ namespace Microsoft.PythonTools {
             return workspaceContextProvider.Workspace;
         }
 
-        internal static ITrackingSpan GetCaretSpan(this ITextView view) {
-            var caretPoint = view.GetPythonCaret();
-            Debug.Assert(caretPoint != null);
-            var snapshot = caretPoint.Value.Snapshot;
-            var caretPos = caretPoint.Value.Position;
+        //internal static ITrackingSpan GetCaretSpan(this ITextView view) {
+        //    var caretPoint = view.GetPythonCaret();
+        //    Debug.Assert(caretPoint != null);
+        //    var snapshot = caretPoint.Value.Snapshot;
+        //    var caretPos = caretPoint.Value.Position;
 
-            // fob(
-            //    ^
-            //    +---  Caret here
-            //
-            // We want to lookup fob, not fob(
-            //
-            ITrackingSpan span;
-            if (caretPos != snapshot.Length) {
-                string curChar = snapshot.GetText(caretPos, 1);
-                if (!IsIdentifierChar(curChar[0]) && caretPos > 0) {
-                    string prevChar = snapshot.GetText(caretPos - 1, 1);
-                    if (IsIdentifierChar(prevChar[0])) {
-                        caretPos--;
-                    }
-                }
-                span = snapshot.CreateTrackingSpan(
-                    caretPos,
-                    1,
-                    SpanTrackingMode.EdgeInclusive
-                );
-            } else {
-                span = snapshot.CreateTrackingSpan(
-                    caretPos,
-                    0,
-                    SpanTrackingMode.EdgeInclusive
-                );
-            }
+        //    // fob(
+        //    //    ^
+        //    //    +---  Caret here
+        //    //
+        //    // We want to lookup fob, not fob(
+        //    //
+        //    ITrackingSpan span;
+        //    if (caretPos != snapshot.Length) {
+        //        string curChar = snapshot.GetText(caretPos, 1);
+        //        if (!IsIdentifierChar(curChar[0]) && caretPos > 0) {
+        //            string prevChar = snapshot.GetText(caretPos - 1, 1);
+        //            if (IsIdentifierChar(prevChar[0])) {
+        //                caretPos--;
+        //            }
+        //        }
+        //        span = snapshot.CreateTrackingSpan(
+        //            caretPos,
+        //            1,
+        //            SpanTrackingMode.EdgeInclusive
+        //        );
+        //    } else {
+        //        span = snapshot.CreateTrackingSpan(
+        //            caretPos,
+        //            0,
+        //            SpanTrackingMode.EdgeInclusive
+        //        );
+        //    }
 
-            return span;
-        }
+        //    return span;
+        //}
 
         private static bool IsIdentifierChar(char curChar) {
             return Char.IsLetterOrDigit(curChar) || curChar == '_';
@@ -573,16 +513,16 @@ namespace Microsoft.PythonTools {
             if (pyService == null) {
                 var shell = (IVsShell)serviceProvider.GetService(typeof(SVsShell));
 
-                var pkgGuid = GuidList.guidPythonToolsPackage;
+                var pkgGuid = CommonGuidList.guidPythonToolsPackage;
                 IVsPackage pkg;
-                if (!ErrorHandler.Succeeded(shell.IsPackageLoaded(ref pkgGuid, out pkg)) && pkg != null) {
+                if (!CommonUtils.Succeeded(shell.IsPackageLoaded(ref pkgGuid, out pkg)) && pkg != null) {
                     Debug.Fail("Python Tools Package was loaded but could not get service");
                     return null;
                 }
                 var hr = shell.LoadPackage(ref pkgGuid, out pkg);
-                if (!ErrorHandler.Succeeded(hr)) {
+                if (!CommonUtils.Succeeded(hr)) {
                     Debug.Fail("Failed to load Python Tools Package: 0x{0:X08}".FormatUI(hr));
-                    ErrorHandler.ThrowOnFailure(hr);
+                    CommonUtils.ThrowOnFailure(hr);
                 }
 
                 pyService = (PythonToolsService)serviceProvider.GetService(typeof(PythonToolsService));
@@ -624,7 +564,7 @@ namespace Microsoft.PythonTools {
             }
 
             if (owner == IntPtr.Zero) {
-                ErrorHandler.ThrowOnFailure(uiShell.GetDialogOwnerHwnd(out owner));
+                CommonUtils.ThrowOnFailure(uiShell.GetDialogOwnerHwnd(out owner));
             }
 
             VSSAVEFILENAMEW[] saveInfo = new VSSAVEFILENAMEW[1];
@@ -642,7 +582,7 @@ namespace Microsoft.PythonTools {
                 if (hr == VSConstants.OLE_E_PROMPTSAVECANCELLED) {
                     return null;
                 }
-                ErrorHandler.ThrowOnFailure(hr);
+                CommonUtils.ThrowOnFailure(hr);
                 return Marshal.PtrToStringAuto(saveInfo[0].pwzFileName);
             } finally {
                 if (pFileName != IntPtr.Zero) {
@@ -678,7 +618,7 @@ namespace Microsoft.PythonTools {
             }
 
             if (owner == IntPtr.Zero) {
-                ErrorHandler.ThrowOnFailure(uiShell.GetDialogOwnerHwnd(out owner));
+                CommonUtils.ThrowOnFailure(uiShell.GetDialogOwnerHwnd(out owner));
             }
 
             VSOPENFILENAMEW[] openInfo = new VSOPENFILENAMEW[1];
@@ -696,7 +636,7 @@ namespace Microsoft.PythonTools {
                 if (hr == VSConstants.OLE_E_PROMPTSAVECANCELLED) {
                     return null;
                 }
-                ErrorHandler.ThrowOnFailure(hr);
+                CommonUtils.ThrowOnFailure(hr);
                 return Marshal.PtrToStringAuto(openInfo[0].pwzFileName);
             } finally {
                 if (pFileName != IntPtr.Zero) {
@@ -748,16 +688,16 @@ namespace Microsoft.PythonTools {
             public ShellInitializedNotification(IVsShell shell) {
                 _shell = shell;
                 _tcs = new TaskCompletionSource<object>();
-                ErrorHandler.ThrowOnFailure(_shell.AdviseShellPropertyChanges(this, out _cookie));
+                CommonUtils.ThrowOnFailure(_shell.AdviseShellPropertyChanges(this, out _cookie));
 
                 // Check again in case we raised with initialization
                 object value;
-                if (ErrorHandler.Succeeded(_shell.GetProperty((int)__VSSPROPID4.VSSPROPID_ShellInitialized, out value)) &&
+                if (CommonUtils.Succeeded(_shell.GetProperty((int)__VSSPROPID4.VSSPROPID_ShellInitialized, out value)) &&
                     CheckProperty((int)__VSSPROPID4.VSSPROPID_ShellInitialized, value)) {
                     return;
                 }
 
-                if (ErrorHandler.Succeeded(_shell.GetProperty((int)__VSSPROPID6.VSSPROPID_ShutdownStarted, out value)) &&
+                if (CommonUtils.Succeeded(_shell.GetProperty((int)__VSSPROPID6.VSSPROPID_ShutdownStarted, out value)) &&
                     CheckProperty((int)__VSSPROPID6.VSSPROPID_ShutdownStarted, value)) {
                     return;
                 }
@@ -880,7 +820,7 @@ namespace Microsoft.PythonTools {
             }
 
             if (owner == IntPtr.Zero) {
-                ErrorHandler.ThrowOnFailure(uiShell.GetDialogOwnerHwnd(out owner));
+                CommonUtils.ThrowOnFailure(uiShell.GetDialogOwnerHwnd(out owner));
             }
 
             VSBROWSEINFOW[] browseInfo = new VSBROWSEINFOW[1];
@@ -895,7 +835,7 @@ namespace Microsoft.PythonTools {
                 if (hr == VSConstants.OLE_E_PROMPTSAVECANCELLED) {
                     return null;
                 }
-                ErrorHandler.ThrowOnFailure(hr);
+                CommonUtils.ThrowOnFailure(hr);
                 return Marshal.PtrToStringAuto(browseInfo[0].pwzDirName);
             } finally {
                 if (pDirName != IntPtr.Zero) {
@@ -911,6 +851,10 @@ namespace Microsoft.PythonTools {
             return snapshot.TextBuffer.Properties.ContainsProperty(typeof(IInteractiveEvaluator)) &&
                    snapshot.Length != 0 &&
                    (snapshot[0] == '%' || snapshot[0] == '$'); // IPython and normal repl commands
+        }
+
+        internal static bool IsReplBuffer(this ITextBuffer buffer) {
+            return buffer.Properties.ContainsProperty(typeof(IInteractiveEvaluator));
         }
 
         internal static bool IsOpenGrouping(this ClassificationSpan span) {
@@ -956,6 +900,18 @@ namespace Microsoft.PythonTools {
 
         internal static int GetStartIncludingIndentation(this Node self, PythonAst ast) {
             return self.StartIndex - (self.GetIndentationLevel(ast) ?? "").Length;
+        }
+
+        internal static string GetIndentationLevel(this Node self, PythonAst ast) {
+            var leading = self.GetLeadingWhiteSpace(ast);
+            // we only want the trailing leading space for the current line...
+            for (int i = leading.Length - 1; i >= 0; i--) {
+                if (leading[i] == '\r' || leading[i] == '\n') {
+                    leading = leading.Substring(i + 1);
+                    break;
+                }
+            }
+            return leading;
         }
 
         internal static bool IsIronPython(this InterpreterConfiguration config) {

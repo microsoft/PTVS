@@ -43,7 +43,6 @@
     <Reference Include="Microsoft.Build, Version=$(MicrosoftBuildAssemblyVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Microsoft.Build.Framework, Version=$(MicrosoftBuildAssemblyVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Microsoft.Build.Utilities.$(MicrosoftBuildAssemblyVersionSuffix), Version=$(MicrosoftBuildAssemblyVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-    <Reference Include="Microsoft.Python.Analysis.Engine" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -51,19 +50,40 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="Microsoft.Python.Parsing">
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.Python.Core">
+      <Private>True</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\VSInterpreters\Interpreter\CPythonInterpreterFactoryConstants.cs">
       <Link>Interpreter\CPythonInterpreterFactoryConstants.cs</Link>
     </Compile>
+    <Compile Include="..\VSInterpreters\Interpreter\InterpreterArchitecture.cs">
+      <Link>Interpreter\InterpreterArchitecture.cs</Link>
+    </Compile>
+    <Compile Include="..\VSInterpreters\Interpreter\InterpreterConfiguration.cs">
+      <Link>Interpreter\InterpreterConfiguration.cs</Link>
+    </Compile>
+    <Compile Include="..\VSInterpreters\Interpreter\InterpreterRegistryConstants.cs">
+      <Link>Interpreter\InterpreterRegistryConstants.cs</Link>
+    </Compile>
     <Compile Include="..\VSInterpreters\Interpreter\InterpreterUIMode.cs">
       <Link>Interpreter\InterpreterUIMode.cs</Link>
+    </Compile>
+    <Compile Include="..\VSInterpreters\Interpreter\IPythonInterpreterFactory.cs">
+      <Link>Interpreter\IPythonInterpreterFactory.cs</Link>
     </Compile>
     <Compile Include="..\VSInterpreters\Interpreter\LaunchConfiguration.cs">
       <Link>Interpreter\LaunchConfiguration.cs</Link>
     </Compile>
     <Compile Include="..\VSInterpreters\Interpreter\MSBuildConstants.cs">
       <Link>Interpreter\MSBuildConstants.cs</Link>
+    </Compile>
+    <Compile Include="..\VSInterpreters\Interpreter\NoInterpretersException.cs">
+      <Link>Interpreter\NoInterpretersException.cs</Link>
     </Compile>
     <Compile Include="..\VSInterpreters\Interpreter\PythonInterpreterFactoryExtensions.cs">
       <Link>Interpreter\PythonInterpreterFactoryExtensions.cs</Link>
@@ -76,6 +96,9 @@
     </Compile>
     <Compile Include="..\VSInterpreters\Interpreter\VisualStudioInterpreterConfiguration.cs">
       <Link>Interpreter\VisualStudioInterpreterConfiguration.cs</Link>
+    </Compile>
+    <Compile Include="..\VSInterpreters\ModulePath.cs">
+      <Link>Interpreter\ModulePath.cs</Link>
     </Compile>
     <Compile Include="ConvertPathToModuleName.cs" />
     <Compile Include="PythonCommand.cs" />

@@ -49,10 +49,6 @@ namespace Microsoft.PythonTools.Django {
     [ProvideLanguageService(typeof(DjangoLanguageInfo), "Django Templates", 107, RequestStockColors = true, ShowSmartIndent = true, ShowCompletion = true, DefaultToInsertSpaces = true, HideAdvancedMembersByDefault = false, EnableAdvancedMembersOption = true, ShowDropDownOptions = true)]
     [ProvideLanguageExtension(typeof(DjangoLanguageInfo), ".djt")]
     [ProvideDebugLanguage("Django Templates", DjangoTemplateLanguageId, "{" + DjangoExpressionEvaluatorGuid + "}", "{EC1375B7-E2CE-43E8-BF75-DC638DE1F1F9}")]
-#if DJANGO_HTML_EDITOR
-    [ProvideEditorExtension2(typeof(DjangoEditorFactory), ".djt", 50, "*:1", ProjectGuid = "{A2FE74E1-B743-11d0-AE1A-00A0C90FFFC3}", TemplateDir = ".\\NullPath", NameResourceID = 102, DefaultName = "webpage")]
-    [ProvideEditorLogicalView(typeof(DjangoEditorFactory), VSConstants.LOGVIEWID.TextView_string)]
-#endif
     [ProvideKeyBindingTable(GuidList.guidDjangoKeyBindingString, 102)]
     [Guid(GuidList.guidDjangoPkgString)]
     [ProvideObject(typeof(DjangoProject), RegisterUsing = RegistrationMethod.CodeBase)]
@@ -92,12 +88,8 @@ namespace Microsoft.PythonTools.Django {
             var langService = new DjangoLanguageInfo(this);
             ((IServiceContainer)this).AddService(langService.GetType(), langService, true);
 
-#if DJANGO_HTML_EDITOR
-            //Create Editor Factory. Note that the base Package class will call Dispose on it.
-            RegisterEditorFactory(new DjangoEditorFactory(this));
-#endif
             RegisterProjectFactory(new DjangoProjectFactory(this));
-            
+
             // Add our command handlers for menu (commands must exist in the .vsct file)
             OleMenuCommandService mcs = GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
             if (null != mcs) {

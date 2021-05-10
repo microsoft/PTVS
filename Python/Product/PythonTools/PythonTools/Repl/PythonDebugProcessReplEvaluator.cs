@@ -22,12 +22,12 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Python.Parsing;
 using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.Debugger.Remote;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.InteractiveWindow.Commands;
 using Microsoft.VisualStudio.Utilities;
@@ -120,27 +120,13 @@ namespace Microsoft.PythonTools.Repl {
             return result;
         }
 
+        internal override Task InitializeLanguageServerAsync() {
+            // Don't run a language server for debug repl, at least for now
+            return Task.CompletedTask;
+        }
 
         private async void OnModulesChanged(object sender, EventArgs e) {
             await RefreshAvailableScopes();
-        }
-
-        public override VsProjectAnalyzer Analyzer {
-            get {
-                if (_analyzer != null) {
-                    return _analyzer;
-                }
-
-                if (!string.IsNullOrEmpty(_currentFrameFilename)) {
-                    var project = _serviceProvider.GetProjectContainingFile(_currentFrameFilename);
-                    _analyzer = project?.TryGetAnalyzer();
-                    if (_analyzer != null) {
-                        return _analyzer;
-                    }
-                }
-
-                return base.Analyzer;
-            }
         }
 
         internal async Task<KeyValuePair<string, string>[]> RefreshAvailableScopes() {
@@ -218,7 +204,6 @@ namespace Microsoft.PythonTools.Repl {
 
         public PythonProcess Process {
             get { return _process; }
-
         }
 
         public int ProcessId {
@@ -263,20 +248,20 @@ namespace Microsoft.PythonTools.Repl {
             return Enumerable.Empty<KeyValuePair<string, string>>();
         }
 
-        public override CompletionResult[] GetMemberNames(string text) {
+        public override async Task<CompletionResult[]> GetMemberNamesAsync(string text, CancellationToken ct) {
             if (_currentScopeName == CurrentFrameScopeFixedName && string.IsNullOrEmpty(text) && _currentFrameLocals != null) {
                 return _currentFrameLocals.ToArray();
             };
 
-            return _serviceProvider.GetUIThread().InvokeTaskSync(async () => await GetMemberNamesAsync(text), CancellationToken.None);
+            return await GetMemberNamesInternalAsync(text, ct);
         }
 
-        public override OverloadDoc[] GetSignatureDocumentation(string text) {
+        public override Task<OverloadDoc[]> GetSignatureDocumentationAsync(string text, CancellationToken ct) {
             // TODO: implement this
-            return new OverloadDoc[0];
+            return Task.FromResult(new OverloadDoc[0]);
         }
 
-        private async Task<CompletionResult[]> GetMemberNamesAsync(string text) {
+        private async Task<CompletionResult[]> GetMemberNamesInternalAsync(string text, CancellationToken ct) {
             // TODO: implement support for getting members for module scope,
             // not just for current frame scope
             if (_currentScopeName == CurrentFrameScopeFixedName) {
@@ -299,7 +284,7 @@ namespace Microsoft.PythonTools.Repl {
                             var completionResults = result.StringRepr
                                 .Split(':')
                                 .Where(r => !string.IsNullOrEmpty(r))
-                                .Select(r => new CompletionResult(r, Interpreter.PythonMemberType.Field))
+                                .Select(r => new CompletionResult(r, PythonMemberType.Generic))
                                 .ToArray();
 
                             return completionResults;
@@ -352,7 +337,6 @@ namespace Microsoft.PythonTools.Repl {
             _currentScopeFileName = null;
             if (_currentFrameFilename != frame.FileName) {
                 _currentFrameFilename = frame.FileName;
-                _analyzer = null;
             }
             UpdateFrameLocals(frame);
             if (verbose) {
@@ -413,7 +397,7 @@ namespace Microsoft.PythonTools.Repl {
         private void UpdateFrameLocals(PythonStackFrame frame) {
             _currentFrameLocals = frame.Locals.Union(frame.Parameters)
                 .Where(r => !string.IsNullOrEmpty(r.Expression))
-                .Select(r => new CompletionResult(r.Expression, Interpreter.PythonMemberType.Field))
+                .Select(r => new CompletionResult(r.Expression, PythonMemberType.Generic))
                 .ToArray();
         }
 

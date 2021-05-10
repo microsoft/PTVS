@@ -23,10 +23,10 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Python.Parsing;
 using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.Debugger.Remote;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 
@@ -1352,6 +1352,7 @@ int main(int argc, char* argv[]) {
     }
 
     [TestClass]
+    [Ignore]
     public class AttachTests27 : AttachTests {
         internal override PythonVersion Version {
             get {
@@ -1361,6 +1362,7 @@ int main(int argc, char* argv[]) {
     }
 
     [TestClass]
+    [Ignore]
     public class AttachTests27_x64 : AttachTests {
         internal override PythonVersion Version {
             get {
@@ -1368,35 +1370,4 @@ int main(int argc, char* argv[]) {
             }
         }
     }
-
-    [TestClass]
-    public class AttachTestsIpy27 : AttachTests {
-        internal override PythonVersion Version {
-            get {
-                return PythonPaths.IronPython27 ?? PythonPaths.IronPython27_x64;
-            }
-        }
-
-        // IronPython does not support normal attach.
-        public override async Task AttachMultithreadedSleeper() { }
-        public override async Task AttachNewThread_PyGILState_Ensure() { }
-        public override async Task AttachNewThread_PyThreadState_New() { }
-        public override async Task AttachReattach() { }
-        public override async Task AttachReattachInfiniteThreads() { }
-        public override async Task AttachReattachThreadingInited() { }
-        public override async Task AttachSingleThreadedSleeper() { }
-        public override async Task AttachThreadingStartNewThread() { }
-        public override async Task AttachTimeoutThreadsInitialized() { }
-        public override async Task AttachTimeout() { }
-        public override async Task AttachWithOutputRedirection() { }
-        public override async Task AttachAndStepWithBlankSysPrefix() { }
-
-        [TestMethod, Priority(UnitTestPriority.P2)]
-        public override async Task AttachPtvsdAndStopDebugging() => await base.AttachPtvsdAndStopDebugging();
-
-        protected override string PtvsdInterpreterArguments {
-            get { return "-X:Tracing -X:Frames"; }
-        }
-    }
-
 }

@@ -21,6 +21,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
+using Microsoft.PythonTools.Common;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Logging;
@@ -97,7 +98,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public override Guid MenuGroupId {
-            get { return GuidList.guidPythonToolsCmdSet; }
+            get { return CommonGuidList.guidPythonToolsCmdSet; }
         }
 
         private static ProjectElement MakeElement(PythonProjectNode project) {
@@ -399,7 +400,7 @@ namespace Microsoft.PythonTools.Project {
                 }
             }
 
-            if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
+            if (cmdGroup == CommonGuidList.guidPythonToolsCmdSet) {
                 switch (cmd) {
                     case PythonConstants.ActivateEnvironment:
                         result |= QueryStatusResult.SUPPORTED;

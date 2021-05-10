@@ -130,10 +130,13 @@
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="scriptsLabel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 8</value>
+    <value>6, 11</value>
+  </data>
+  <data name="scriptsLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 0, 6, 0</value>
   </data>
   <data name="scriptsLabel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>42, 13</value>
+    <value>78, 25</value>
   </data>
   <data name="scriptsLabel.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -169,10 +172,13 @@
     <value>Left, Right</value>
   </data>
   <data name="scriptsTextBox.Location" type="System.Drawing.Point, System.Drawing">
-    <value>51, 4</value>
+    <value>96, 9</value>
+  </data>
+  <data name="scriptsTextBox.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 6, 6, 6</value>
   </data>
   <data name="scriptsTextBox.Size" type="System.Drawing.Size, System.Drawing">
-    <value>405, 20</value>
+    <value>749, 29</value>
   </data>
   <data name="scriptsTextBox.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -199,10 +205,13 @@
     <value>GrowAndShrink</value>
   </data>
   <data name="browseScriptsButton.Location" type="System.Drawing.Point, System.Drawing">
-    <value>462, 3</value>
+    <value>857, 6</value>
+  </data>
+  <data name="browseScriptsButton.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 6, 6, 6</value>
   </data>
   <data name="browseScriptsButton.Size" type="System.Drawing.Size, System.Drawing">
-    <value>26, 23</value>
+    <value>37, 35</value>
   </data>
   <data name="browseScriptsButton.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -229,10 +238,13 @@
     <value>True</value>
   </data>
   <data name="useSmartHistoryCheckBox.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 32</value>
+    <value>6, 53</value>
+  </data>
+  <data name="useSmartHistoryCheckBox.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 6, 6, 6</value>
   </data>
   <data name="useSmartHistoryCheckBox.Size" type="System.Drawing.Size, System.Drawing">
-    <value>182, 17</value>
+    <value>320, 29</value>
   </data>
   <data name="useSmartHistoryCheckBox.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -258,11 +270,14 @@
   <data name="tableLayoutPanel1.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 0</value>
   </data>
+  <data name="tableLayoutPanel1.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 6, 6, 6</value>
+  </data>
   <data name="tableLayoutPanel1.RowCount" type="System.Int32, mscorlib">
     <value>5</value>
   </data>
   <data name="tableLayoutPanel1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>491, 315</value>
+    <value>900, 582</value>
   </data>
   <data name="tableLayoutPanel1.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -295,10 +310,13 @@
     <value>True</value>
   </data>
   <data name="neverEvaluateButton.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 3</value>
+    <value>6, 6</value>
+  </data>
+  <data name="neverEvaluateButton.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 6, 6, 6</value>
   </data>
   <data name="neverEvaluateButton.Size" type="System.Drawing.Size, System.Drawing">
-    <value>156, 17</value>
+    <value>278, 29</value>
   </data>
   <data name="neverEvaluateButton.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -322,13 +340,13 @@
     <value>True</value>
   </data>
   <data name="evaluateNoCallsButton.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 23</value>
+    <value>6, 41</value>
   </data>
   <data name="evaluateNoCallsButton.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>3, 0, 3, 0</value>
+    <value>6, 0, 6, 0</value>
   </data>
   <data name="evaluateNoCallsButton.Size" type="System.Drawing.Size, System.Drawing">
-    <value>250, 17</value>
+    <value>450, 29</value>
   </data>
   <data name="evaluateNoCallsButton.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -352,10 +370,13 @@
     <value>True</value>
   </data>
   <data name="alwaysEvaluateButton.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 43</value>
+    <value>6, 76</value>
+  </data>
+  <data name="alwaysEvaluateButton.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 6, 6, 6</value>
   </data>
   <data name="alwaysEvaluateButton.Size" type="System.Drawing.Size, System.Drawing">
-    <value>138, 17</value>
+    <value>247, 29</value>
   </data>
   <data name="alwaysEvaluateButton.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -379,10 +400,13 @@
     <value>True</value>
   </data>
   <data name="liveCompletionsOnlyCheckBox.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 66</value>
+    <value>6, 117</value>
+  </data>
+  <data name="liveCompletionsOnlyCheckBox.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 6, 6, 6</value>
   </data>
   <data name="liveCompletionsOnlyCheckBox.Size" type="System.Drawing.Size, System.Drawing">
-    <value>175, 17</value>
+    <value>314, 29</value>
   </data>
   <data name="liveCompletionsOnlyCheckBox.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -406,13 +430,16 @@
     <value>Fill</value>
   </data>
   <data name="tableLayoutPanel2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 16</value>
+    <value>6, 28</value>
+  </data>
+  <data name="tableLayoutPanel2.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 6, 6, 6</value>
   </data>
   <data name="tableLayoutPanel2.RowCount" type="System.Int32, mscorlib">
     <value>4</value>
   </data>
   <data name="tableLayoutPanel2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>479, 86</value>
+    <value>876, 152</value>
   </data>
   <data name="tableLayoutPanel2.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -436,10 +463,16 @@
     <value>Fill</value>
   </data>
   <data name="completionModeGroup.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 55</value>
+    <value>6, 94</value>
+  </data>
+  <data name="completionModeGroup.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 6, 6, 6</value>
+  </data>
+  <data name="completionModeGroup.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 6, 6, 6</value>
   </data>
   <data name="completionModeGroup.Size" type="System.Drawing.Size, System.Drawing">
-    <value>485, 105</value>
+    <value>888, 186</value>
   </data>
   <data name="completionModeGroup.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -466,13 +499,13 @@
     <value>True</value>
   </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
-    <value>6, 13</value>
+    <value>11, 24</value>
   </data>
   <data name="$this.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>6, 8, 6, 8</value>
+    <value>11, 15, 11, 15</value>
   </data>
   <data name="$this.Size" type="System.Drawing.Size, System.Drawing">
-    <value>491, 315</value>
+    <value>900, 582</value>
   </data>
   <data name="&gt;&gt;_tooltips.Name" xml:space="preserve">
     <value>_tooltips</value>

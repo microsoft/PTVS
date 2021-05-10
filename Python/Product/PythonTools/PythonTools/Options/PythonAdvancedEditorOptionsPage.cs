@@ -14,8 +14,8 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
 using System.Runtime.InteropServices;
+using System.Windows.Forms;
 
 namespace Microsoft.PythonTools.Options {
     [ComVisible(true)]
@@ -23,7 +23,7 @@ namespace Microsoft.PythonTools.Options {
         private PythonAdvancedEditorOptionsControl _window;
 
         // replace the default UI of the dialog page w/ our own UI.
-        protected override System.Windows.Forms.IWin32Window Window {
+        protected override IWin32Window Window {
             get {
                 if (_window == null) {
                     _window = new PythonAdvancedEditorOptionsControl();
@@ -33,28 +33,23 @@ namespace Microsoft.PythonTools.Options {
             }
         }
 
-        public override void ResetSettings() {
-            PyService.AdvancedOptions.Reset();
-        }
+        /// <summary>
+        /// Resets settings back to their defaults. This should be followed by
+        /// a call to <see cref="SaveSettingsToStorage"/> to commit the new
+        /// values.
+        /// </summary>
+        public override void ResetSettings() => PyService.AdvancedEditorOptions.Reset();
 
         public override void LoadSettingsFromStorage() {
-            // Load settings from storage.
-            PyService.AdvancedOptions.Load();
-
+            PyService.AdvancedEditorOptions.Load();
             // Synchronize UI with backing properties.
-            if (_window != null) {
-                _window.SyncControlWithPageSettings(PyService);
-            }
+            _window?.SyncControlWithPageSettings(PyService);
         }
 
         public override void SaveSettingsToStorage() {
             // Synchronize backing properties with UI.
-            if (_window != null) {
-                _window.SyncPageWithControlSettings(PyService);
-            }
-
-            // Save settings.
-            PyService.AdvancedOptions.Save();
+            _window?.SyncPageWithControlSettings(PyService);
+            PyService.AdvancedEditorOptions.Save();
         }
     }
 }

@@ -46,7 +46,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             try {
-                var enumerator = await mgr.EnumerateExpansionsAsync(GuidList.guidPythonLanguageServiceGuid, 1, null, 0, 0, 0);
+                var enumerator = await mgr.EnumerateExpansionsAsync(CommonGuidList.guidPythonLanguageServiceGuid, 1, null, 0, 0, 0);
                 if (enumerator == null) {
                     return null;
                 }

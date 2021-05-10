@@ -14,14 +14,8 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.PythonTools.Editor;
-using TestUtilities;
-using TestUtilities.Python;
 using TestUtilities.UI;
 using TestUtilities.UI.Python;
-using System.Threading;
-using Microsoft.PythonTools.Intellisense;
 
 namespace PythonToolsUITests {
     public class RemoveImportTests {
@@ -274,15 +268,16 @@ def f():
 
             var doc = app.GetDocument(item.Document.FullName);
 
-            VsProjectAnalyzer analyzer = null;
             doc.InvokeTask(async () => {
                 var point = doc.TextView.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(line - 1).Start.Add(column - 1);
                 doc.TextView.Caret.MoveTo(point);
-                analyzer = await doc.WaitForAnalyzerAtCaretAsync();
-            });
 
-            Assert.IsNotNull(analyzer, "Failed to get analyzer");
-            analyzer.WaitForCompleteAnalysis(_ => true);
+                // Note that this waits for language server to be up and running
+                // but that doesn't mean the quick actions are ready for that document
+                // so the test will need to wait/try again until the correct results
+                // are in or until a predetermined timeout.
+                await doc.WaitForLanguageServerInitializedAtCaretAsync();
+            });
 
             if (allScopes) {
                 app.ExecuteCommand("EditorContextMenus.CodeWindow.RemoveImports.AllScopes");

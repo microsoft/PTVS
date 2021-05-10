@@ -16,8 +16,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
 
 namespace Microsoft.PythonTools.Interpreter {
     public class VisualStudioInterpreterConfiguration : InterpreterConfiguration, IEquatable<VisualStudioInterpreterConfiguration> {

@@ -26,11 +26,12 @@ using System.Threading;
 using Microsoft.PythonTools.Debugger.Concord.Proxies;
 using Microsoft.PythonTools.Debugger.Concord.Proxies.Structs;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Parsing;
-using Microsoft.PythonTools.Parsing.Ast;
+using Microsoft.Python.Parsing;
+using Microsoft.Python.Parsing.Ast;
 using Microsoft.VisualStudio.Debugger;
 using Microsoft.VisualStudio.Debugger.CallStack;
 using Microsoft.VisualStudio.Debugger.Evaluation;
+using Microsoft.Python.Core.Text;
 
 namespace Microsoft.PythonTools.Debugger.Concord {
     internal class ExpressionEvaluator : DkmDataItem {
@@ -563,7 +564,7 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             var parserOptions = new ParserOptions { ErrorSink = new StringErrorSink() };
             var parser = Parser.CreateParser(new StringReader(expression.Text), pyrtInfo.LanguageVersion, parserOptions);
 
-            var expr = ((ReturnStatement)parser.ParseTopExpression().Body).Expression;
+            var expr = ((ReturnStatement)parser.ParseTopExpression(null).Body).Expression;
             string errorText = parserOptions.ErrorSink.ToString();
             if (!string.IsNullOrEmpty(errorText)) {
                 completionRoutine(new DkmEvaluateExpressionAsyncResult(DkmFailedEvaluationResult.Create(
@@ -823,7 +824,7 @@ namespace Microsoft.PythonTools.Debugger.Concord {
 
             var parserOptions = new ParserOptions { ErrorSink = new StringErrorSink() };
             var parser = Parser.CreateParser(new StringReader(value), pyrtInfo.LanguageVersion, parserOptions);
-            var body = (ReturnStatement)parser.ParseTopExpression().Body;
+            var body = (ReturnStatement)parser.ParseTopExpression(null).Body;
             errorText = parserOptions.ErrorSink.ToString();
             if (!string.IsNullOrEmpty(errorText)) {
                 return;

@@ -15,14 +15,9 @@
 // permissions and limitations under the License.
 
 using System;
-using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Intellisense {
-    using AP = AnalysisProtocol;
-
     sealed class CompletionResult {
-        private readonly AP.CompletionValue[] _values;
-
         internal CompletionResult(string name, PythonMemberType memberType) {
             MergeKey = name ?? throw new ArgumentNullException(nameof(name));
             Name = name;
@@ -30,24 +25,17 @@ namespace Microsoft.PythonTools.Intellisense {
             MemberType = memberType;
         }
 
-        internal CompletionResult(string mergeKey, string name, string completion, string doc, PythonMemberType memberType, AP.CompletionValue[] values) {
-            MergeKey = mergeKey ?? throw new ArgumentNullException(nameof(mergeKey));
-            Name = name ?? throw new ArgumentNullException(nameof(name));
-            Completion = completion ?? throw new ArgumentNullException(nameof(completion));
-            MemberType = memberType;
-            Documentation = doc;
-            _values = values;
-        }
-
         public string Completion { get; }
+
         public string Documentation { get; }
+
         public PythonMemberType MemberType { get; }
+
         public string Name { get; }
+
         /// <summary>
         /// Items with the same merge key may be merged together.
         /// </summary>
         public string MergeKey { get; }
-
-        internal AP.CompletionValue[] Values => _values ?? Array.Empty<AP.CompletionValue>();
     }
 }

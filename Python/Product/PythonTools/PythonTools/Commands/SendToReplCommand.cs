@@ -18,11 +18,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
+using Microsoft.Python.Parsing;
 using Microsoft.PythonTools.Editor.Core;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.InteractiveWindow;
@@ -60,14 +60,14 @@ namespace Microsoft.PythonTools.Commands {
         public override async void DoCommand(object sender, EventArgs args) {
             var activeView = CommonPackage.GetActiveTextView(_serviceProvider);
             var project = activeView.GetProjectAtCaret(_serviceProvider);
-            var analyzer = activeView.GetAnalyzerAtCaret(_serviceProvider);
+            var configuration = activeView.GetInterpreterConfigurationAtCaret(_serviceProvider);
             ITextSelection selection = activeView.Selection;
             ITextSnapshot snapshot = activeView.TextBuffer.CurrentSnapshot;
             var workspace = _serviceProvider.GetWorkspace();
 
             IVsInteractiveWindow repl;
             try {
-                repl = ExecuteInReplCommand.EnsureReplWindow(_serviceProvider, analyzer, project, workspace);
+                repl = ExecuteInReplCommand.EnsureReplWindow(_serviceProvider, configuration, project, workspace);
             } catch (MissingInterpreterException ex) {
                 MessageBox.Show(ex.Message, Strings.ProductTitle);
                 return;
@@ -152,12 +152,11 @@ namespace Microsoft.PythonTools.Commands {
 
         public override int? EditFilterQueryStatus(ref VisualStudio.OLE.Interop.OLECMD cmd, IntPtr pCmdText) {
             var activeView = CommonPackage.GetActiveTextView(_serviceProvider);
-            
-            Intellisense.VsProjectAnalyzer analyzer;
-            if (activeView != null && (analyzer = activeView.GetAnalyzerAtCaret(_serviceProvider)) != null) {
 
+            InterpreterConfiguration config;
+            if ((config = activeView?.GetInterpreterConfigurationAtCaret(_serviceProvider)) != null) {
                 if (activeView.Selection.Mode == TextSelectionMode.Box ||
-                    analyzer?.InterpreterFactory?.IsRunnable() != true) {
+                    config?.IsRunnable() != true) {
                     cmd.cmdf = (uint)(OLECMDF.OLECMDF_SUPPORTED);
                 } else {
                     cmd.cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
@@ -282,7 +281,7 @@ namespace Microsoft.PythonTools.Commands {
                 // So that we don't dedent "x = 1" when we submit it by its self.
 
                 var combinedText = (pendingInput ?? string.Empty) + input;
-                var oldLineCount =  string.IsNullOrEmpty(pendingInput) ?
+                var oldLineCount = string.IsNullOrEmpty(pendingInput) ?
                     0 :
                     pendingInput.Split(_newLineChars, StringSplitOptions.None).Length - 1;
 

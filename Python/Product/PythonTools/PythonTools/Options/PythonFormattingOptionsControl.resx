@@ -117,71 +117,158 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="_optionsTree.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Top</value>
-  </data>
-  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <data name="_optionsTree.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 0</value>
-  </data>
-  <data name="_optionsTree.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>0, 0, 0, 0</value>
-  </data>
-  <data name="_optionsTree.Size" type="System.Drawing.Size, System.Drawing">
-    <value>383, 174</value>
-  </data>
+  <metadata name="tableLayoutPanel1.GenerateMember" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>False</value>
+  </metadata>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="_optionsTree.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
+  <data name="tableLayoutPanel1.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
   </data>
-  <data name="&gt;&gt;_optionsTree.Name" xml:space="preserve">
-    <value>_optionsTree</value>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="tableLayoutPanel1.AutoSizeMode" type="System.Windows.Forms.AutoSizeMode, System.Windows.Forms">
+    <value>GrowAndShrink</value>
   </data>
-  <data name="&gt;&gt;_optionsTree.Type" xml:space="preserve">
-    <value>Microsoft.PythonTools.Options.OptionsTreeView, Microsoft.PythonTools, Version=3.0.0.2015, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="&gt;&gt;_optionsTree.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;_optionsTree.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="_editorHost.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Fill</value>
-  </data>
-  <data name="_editorHost.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 174</value>
-  </data>
-  <data name="_editorHost.Size" type="System.Drawing.Size, System.Drawing">
-    <value>383, 106</value>
-  </data>
-  <data name="_editorHost.TabIndex" type="System.Int32, mscorlib">
+  <data name="tableLayoutPanel1.ColumnCount" type="System.Int32, mscorlib">
     <value>2</value>
   </data>
-  <data name="_editorHost.Text" xml:space="preserve">
-    <value>elementHost1</value>
+  <metadata name="formatterLabel.GenerateMember" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>False</value>
+  </metadata>
+  <data name="formatterLabel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Left</value>
   </data>
-  <data name="&gt;&gt;_editorHost.Name" xml:space="preserve">
-    <value>_editorHost</value>
+  <data name="formatterLabel.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
   </data>
-  <data name="&gt;&gt;_editorHost.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Integration.ElementHost, WindowsFormsIntegration, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35</value>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="formatterLabel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 6</value>
   </data>
-  <data name="&gt;&gt;_editorHost.Parent" xml:space="preserve">
+  <data name="formatterLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 0, 6, 0</value>
+  </data>
+  <data name="formatterLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>101, 25</value>
+  </data>
+  <data name="formatterLabel.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="formatterLabel.Text" xml:space="preserve">
+    <value>&amp;Formatter:</value>
+  </data>
+  <data name="formatterLabel.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>MiddleLeft</value>
+  </data>
+  <data name="&gt;&gt;formatterLabel.Name" xml:space="preserve">
+    <value>formatterLabel</value>
+  </data>
+  <data name="&gt;&gt;formatterLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;formatterLabel.Parent" xml:space="preserve">
+    <value>tableLayoutPanel1</value>
+  </data>
+  <data name="&gt;&gt;formatterLabel.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="_formatterCombo.Location" type="System.Drawing.Point, System.Drawing">
+    <value>157, 3</value>
+  </data>
+  <data name="_formatterCombo.Size" type="System.Drawing.Size, System.Drawing">
+    <value>135, 32</value>
+  </data>
+  <data name="_formatterCombo.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="&gt;&gt;_formatterCombo.Name" xml:space="preserve">
+    <value>_formatterCombo</value>
+  </data>
+  <data name="&gt;&gt;_formatterCombo.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_formatterCombo.Parent" xml:space="preserve">
+    <value>tableLayoutPanel1</value>
+  </data>
+  <data name="&gt;&gt;_formatterCombo.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="_pasteRemovesReplPrompts.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Left</value>
+  </data>
+  <data name="_pasteRemovesReplPrompts.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="_pasteRemovesReplPrompts.Location" type="System.Drawing.Point, System.Drawing">
+    <value>11, 44</value>
+  </data>
+  <data name="_pasteRemovesReplPrompts.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>11, 6, 11, 6</value>
+  </data>
+  <data name="_pasteRemovesReplPrompts.Size" type="System.Drawing.Size, System.Drawing">
+    <value>298, 29</value>
+  </data>
+  <data name="_pasteRemovesReplPrompts.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="_pasteRemovesReplPrompts.Text" xml:space="preserve">
+    <value>&amp;Paste removes REPL prompts</value>
+  </data>
+  <data name="&gt;&gt;_pasteRemovesReplPrompts.Name" xml:space="preserve">
+    <value>_pasteRemovesReplPrompts</value>
+  </data>
+  <data name="&gt;&gt;_pasteRemovesReplPrompts.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_pasteRemovesReplPrompts.Parent" xml:space="preserve">
+    <value>tableLayoutPanel1</value>
+  </data>
+  <data name="&gt;&gt;_pasteRemovesReplPrompts.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="tableLayoutPanel1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="tableLayoutPanel1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 0</value>
+  </data>
+  <data name="tableLayoutPanel1.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 6, 6, 6</value>
+  </data>
+  <data name="tableLayoutPanel1.RowCount" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="tableLayoutPanel1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>699, 510</value>
+  </data>
+  <data name="tableLayoutPanel1.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;tableLayoutPanel1.Name" xml:space="preserve">
+    <value>tableLayoutPanel1</value>
+  </data>
+  <data name="&gt;&gt;tableLayoutPanel1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TableLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tableLayoutPanel1.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;_editorHost.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;tableLayoutPanel1.ZOrder" xml:space="preserve">
     <value>0</value>
+  </data>
+  <data name="tableLayoutPanel1.LayoutSettings" type="System.Windows.Forms.TableLayoutSettings, System.Windows.Forms">
+    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="formatterLabel" Row="0" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_formatterCombo" Row="0" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="_pasteRemovesReplPrompts" Row="1" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;/Controls&gt;&lt;Columns Styles="Percent,100,Absolute,545" /&gt;&lt;Rows Styles="AutoSize,0,AutoSize,0,Absolute,20" /&gt;&lt;/TableLayoutSettings&gt;</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
-    <value>6, 13</value>
+    <value>11, 24</value>
+  </data>
+  <data name="$this.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 6, 6, 6</value>
   </data>
   <data name="$this.Size" type="System.Drawing.Size, System.Drawing">
-    <value>383, 280</value>
+    <value>699, 510</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>PythonFormattingOptionsControl</value>

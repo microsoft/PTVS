@@ -19,18 +19,20 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Python.Parsing;
 using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Options;
-using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.InteractiveWindow.Commands;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Utilities;
 using Microsoft.VisualStudioTools;
+using LSP = Microsoft.VisualStudio.LanguageServer.Protocol;
 
 namespace Microsoft.PythonTools.Repl {
     [InteractiveWindowRole("Debug")]
@@ -132,12 +134,12 @@ namespace Microsoft.PythonTools.Repl {
                 return true;
             }
             if (string.IsNullOrWhiteSpace(text) && text.EndsWithOrdinal("\n")) {
-                pr = ParseResult.Empty;
+                //pr = ParseResult.Empty;
                 return true;
             }
 
             var parser = Parser.CreateParser(new StringReader(text), PythonLanguageVersion.None);
-            parser.ParseInteractiveCode(out pr);
+            parser.ParseInteractiveCode(null, out pr);
             if (pr == ParseResult.IncompleteStatement || pr == ParseResult.Empty) {
                 return text.EndsWithOrdinal("\n");
             }
@@ -240,21 +242,6 @@ namespace Microsoft.PythonTools.Repl {
 
         public IInteractiveWindow CurrentWindow { get; set; }
 
-        public VsProjectAnalyzer Analyzer => _activeEvaluator?.Analyzer;
-        public Task<VsProjectAnalyzer> GetAnalyzerAsync() {
-            if (_activeEvaluator != null) {
-                return _activeEvaluator.GetAnalyzerAsync();
-            } else if (CustomDebugAdapterProtocolExtension.CanUseExperimental()) {
-                var tid = _serviceProvider.GetDTE().Debugger.CurrentThread.ID;
-                var currentFrameFilename = CustomDebugAdapterProtocolExtension.GetCurrentFrameFilename(tid);
-                var project = _serviceProvider.GetProjectContainingFile(currentFrameFilename);
-                if (project != null) {
-                    return project.GetAnalyzerAsync();
-                }
-            }
-            return Task.FromResult<VsProjectAnalyzer>(null);
-        }
-
         public Uri DocumentUri {
             get {
                 if (_activeEvaluator != null) {
@@ -276,6 +263,8 @@ namespace Microsoft.PythonTools.Repl {
 
         public string DisplayName => Strings.DebugReplDisplayName;
 
+        public PythonLanguageVersion LanguageVersion => _activeEvaluator?.LanguageVersion ?? PythonLanguageVersion.None;
+
         public IEnumerable<KeyValuePair<string, string>> GetAvailableScopesAndPaths() {
             if (_activeEvaluator != null) {
                 return _activeEvaluator.GetAvailableScopesAndPaths();
@@ -284,9 +273,9 @@ namespace Microsoft.PythonTools.Repl {
             return Enumerable.Empty<KeyValuePair<string, string>>();
         }
 
-        public CompletionResult[] GetMemberNames(string text) {
+        public async Task<CompletionResult[]> GetMemberNamesAsync(string text, CancellationToken ct) {
             if (_activeEvaluator != null) {
-                return _activeEvaluator.GetMemberNames(text);
+                return await _activeEvaluator.GetMemberNamesAsync(text, ct);
             } else if (CustomDebugAdapterProtocolExtension.CanUseExperimental()) {
                 var expression = string.Format(CultureInfo.InvariantCulture, "':'.join(dir({0}))", text ?? "");
                 var tid = _serviceProvider.GetDTE().Debugger.CurrentThread.ID;
@@ -296,7 +285,7 @@ namespace Microsoft.PythonTools.Repl {
                     var completionResults = result.message
                                     .Split(':')
                                     .Where(r => !string.IsNullOrEmpty(r))
-                                    .Select(r => new CompletionResult(r, Interpreter.PythonMemberType.Field))
+                                    .Select(r => new CompletionResult(r, PythonMemberType.Generic))
                                     .ToArray();
                     return completionResults;
                 }
@@ -305,9 +294,9 @@ namespace Microsoft.PythonTools.Repl {
             return new CompletionResult[0];
         }
 
-        public OverloadDoc[] GetSignatureDocumentation(string text) {
+        public async Task<OverloadDoc[]> GetSignatureDocumentationAsync(string text, CancellationToken ct) {
             if (_activeEvaluator != null) {
-                return _activeEvaluator.GetSignatureDocumentation(text);
+                return await _activeEvaluator.GetSignatureDocumentationAsync(text, ct);
             }
 
             return new OverloadDoc[0];
@@ -617,7 +606,7 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         private void NotSupported() {
-            CurrentWindow.WriteError(Strings.DebugReplFeatureNotSupportedWithExperimentalDebugger);
+            CurrentWindow.WriteError(Strings.DebugReplFeatureNotSupported);
         }
 
         private void NoExecutionIfNotStoppedInDebuggerError() {
@@ -625,15 +614,7 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public Task<ExecutionResult> InitializeAsync() {
-            _commands = PythonInteractiveEvaluator.GetInteractiveCommands(_serviceProvider, CurrentWindow, this);
-
-            var langBuffer = CurrentWindow.CurrentLanguageBuffer;
-            if (langBuffer != null) {
-                // Reinitializing, and our new language buffer does not automatically
-                // get connected to the Intellisense controller. Let's fix that.
-                var controller = IntellisenseControllerProvider.GetController(CurrentWindow.TextView);
-                controller?.ConnectSubjectBuffer(langBuffer);
-            }
+            _commands = PythonCommonInteractiveEvaluator.GetInteractiveCommands(_serviceProvider, CurrentWindow, this);
 
             CurrentWindow.TextView.Options.SetOptionValue(InteractiveWindowOptions.SmartUpDown, CurrentOptions.UseSmartHistory);
             CurrentWindow.WriteLine(Strings.DebugReplHelpMessage);
@@ -648,6 +629,11 @@ namespace Microsoft.PythonTools.Repl {
 
         public string GetPrompt() {
             return _activeEvaluator?.GetPrompt();
+        }
+
+        public Task<object> GetAnalysisCompletions(LSP.Position triggerPoint, LSP.CompletionContext context, CancellationToken token) {
+            // No analysis completions for debug repl
+            return Task.FromResult<object>(null);
         }
     }
 

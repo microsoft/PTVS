@@ -21,10 +21,9 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using Microsoft.Python.Parsing;
+using Microsoft.PythonTools.Common;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Intellisense;
-using Microsoft.PythonTools.Language;
-using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Editor;
@@ -195,16 +194,7 @@ namespace Microsoft.PythonTools.Repl {
                         }
                         break;
                 }
-            } else if (pguidCmdGroup == CommonConstants.Std2KCmdGroupGuid) {
-                switch ((VSConstants.VSStd2KCmdID)nCmdID) {
-                    case VSConstants.VSStd2KCmdID.CANCEL:
-                        var controller = IntellisenseControllerProvider.GetController(_textView);
-                        if (controller != null && controller.DismissCompletionSession()) {
-                            return VSConstants.S_OK;
-                        }
-                        break;
-                }
-            } else if (pguidCmdGroup == GuidList.guidPythonToolsCmdSet) {
+            } else if (pguidCmdGroup == CommonGuidList.guidPythonToolsCmdSet) {
                 switch (nCmdID) {
                     case PkgCmdIDList.comboIdReplScopes:
                         ScopeComboBoxHandler(pvaIn, pvaOut);
@@ -245,7 +235,7 @@ namespace Microsoft.PythonTools.Repl {
             if (pguidCmdGroup == VSConstants.GUID_VSStandardCommandSet97) {
                 //switch ((VSConstants.VSStd97CmdID)cmdID) {
                 //}
-            } else if (pguidCmdGroup == GuidList.guidPythonToolsCmdSet) {
+            } else if (pguidCmdGroup == CommonGuidList.guidPythonToolsCmdSet) {
                 switch (cmdID) {
                     case PkgCmdIDList.comboIdReplScopes:
                         return _scopeListVisible ? CommandEnabled : CommandDisabledAndHidden;
@@ -607,7 +597,7 @@ namespace Microsoft.PythonTools.Repl {
 
                     var parser = Parser.CreateParser(new StringReader(newCode), version);
                     ParseResult result;
-                    parser.ParseInteractiveCode(out result);
+                    parser.ParseInteractiveCode(null, out result);
 
                     // if this parse is invalid then we need more text to be valid.
                     // But if this text is invalid and the previous parse was incomplete

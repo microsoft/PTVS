@@ -36,7 +36,6 @@
     <UseVSSDK>true</UseVSSDK>
     <CreateVsixContainer>true</CreateVsixContainer>
     <NoWarn>1762;0436</NoWarn>
-    <DefineConstants Condition="$(IncludeDjangoHtmlExtensions) == 'true'">DJANGO_HTML_EDITOR;$(DefineConstants)</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -104,6 +103,13 @@
     <Reference Include="Microsoft.VisualStudio.TextManager.Interop.8.0, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Microsoft.VisualStudio.TextManager.Interop.9.0, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Microsoft.Build, Version=$(MicrosoftBuildAssemblyVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+    <Reference Include="Microsoft.Python.Core">
+      <Private>True</Private>
+      <IncludeInVSIX>True</IncludeInVSIX>
+    </Reference>
+    <Reference Include="Microsoft.Python.Parsing">
+      <IncludeInVSIX>True</IncludeInVSIX>
+    </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
     <Reference Include="PresentationUI, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35" />
@@ -131,7 +137,6 @@
     </Reference>
     <Reference Include="Microsoft.VisualStudio.InteractiveWindow" />
     <Reference Include="Microsoft.VisualStudio.VsInteractiveWindow" />
-    <Reference Include="Microsoft.Python.Analysis.Engine" />
   </ItemGroup>
   <ItemDefinitionGroup>
     <ZipProject>
@@ -262,76 +267,6 @@
   <ItemGroup>
     <Folder Include="Resources\" />
   </ItemGroup>
-  <Choose>
-    <When Condition="$(IncludeDjangoHtmlExtensions) == 'true'">
-      <ItemGroup>
-        <Reference Include="Microsoft.VisualStudio.Web.HTML" />
-        <Reference Include="Microsoft.WebTools.Languages.Shared.dll" Condition=" '$(VSTarget)' == '16.0' " />
-        <Reference Include="Microsoft.WebTools.Languages.Shared.Editor.dll" Condition=" '$(VSTarget)' == '16.0' " />
-        <Reference Include="Microsoft.WebTools.Languages.Html.dll" Condition=" '$(VSTarget)' == '16.0' " />
-        <Reference Include="Microsoft.WebTools.Languages.Html.Editor.dll" Condition=" '$(VSTarget)' == '16.0' " />
-        <Reference Include="Microsoft.WebTools.Languages.Html.VS.dll" Condition=" '$(VSTarget)' == '16.0' " />
-      </ItemGroup>
-      <ItemGroup>
-        <Compile Include="DjangoEditorFactory.cs" />
-        <Compile Include="Formatting\TemplateEditorFormatterProvider.cs" />
-        <Compile Include="Intellisense\AnalyzerExtensions.cs" />
-        <Compile Include="Intellisense\DjangoCompletionSource.cs" />
-        <Compile Include="Intellisense\DjangoCompletionSourceBase.cs" />
-        <Compile Include="Intellisense\DjangoCompletionSourceProvider.cs" />
-        <Compile Include="Intellisense\DjangoPredefinedClassificationTypeNames.cs" />
-        <Compile Include="Intellisense\ProjectBlockCompletionContext.cs" />
-        <Compile Include="Intellisense\ProjectBlockCompletionContextBase.cs" />
-        <Compile Include="Intellisense\TemplateCompletionController.cs" />
-        <Compile Include="Intellisense\TemplateCompletionControllerProvider.cs" />
-        <Compile Include="Intellisense\TextBufferExtensions.cs" />
-        <Compile Include="TemplateContentType.cs" />
-        <Compile Include="TemplateParsing\DjangoBlock.cs" />
-        <Compile Include="TemplateParsing\DjangoBlocks\BlockParseInfo.cs" />
-        <Compile Include="TemplateParsing\DjangoBlocks\DjangoArgumentlessBlock.cs" />
-        <Compile Include="TemplateParsing\DjangoBlocks\DjangoAutoEscapeBlock.cs" />
-        <Compile Include="TemplateParsing\DjangoBlocks\DjangoFilterBlock.cs" />
-        <Compile Include="TemplateParsing\DjangoBlocks\DjangoForBlock.cs" />
-        <Compile Include="TemplateParsing\DjangoBlocks\DjangoIfBlock.cs" />
-        <Compile Include="TemplateParsing\DjangoBlocks\DjangoIfOrIfNotEqualBlock.cs" />
-        <Compile Include="TemplateParsing\DjangoBlocks\DjangoLoadBlock.cs" />
-        <Compile Include="TemplateParsing\DjangoBlocks\DjangoMultiVariableArgumentBlock.cs" />
-        <Compile Include="TemplateParsing\DjangoBlocks\DjangoSpacelessBlock.cs" />
-        <Compile Include="TemplateParsing\DjangoBlocks\DjangoTemplateTagBlock.cs" />
-        <Compile Include="TemplateParsing\DjangoBlocks\DjangoUnknownBlock.cs" />
-        <Compile Include="TemplateParsing\DjangoBlocks\DjangoUrlBlock.cs" />
-        <Compile Include="TemplateParsing\DjangoBlocks\DjangoWidthRatioBlock.cs" />
-        <Compile Include="TemplateParsing\DjangoFilter.cs" />
-        <Compile Include="TemplateParsing\DjangoFormatDefinitions.cs" />
-        <Compile Include="TemplateParsing\DjangoVariable.cs" />
-        <Compile Include="TemplateParsing\DjangoVariableValue.cs" />
-        <Compile Include="TemplateParsing\IContentTypeMetadata.cs" />
-        <Compile Include="TemplateParsing\IDjangoCompletionContext.cs" />
-        <Compile Include="TemplateParsing\TemplateArtifact.cs" />
-        <Compile Include="TemplateParsing\TemplateArtifactCollection.cs" />
-        <Compile Include="TemplateParsing\TemplateArtifactProcessor.cs" />
-        <Compile Include="TemplateParsing\TemplateBlockHandler.cs" />
-        <Compile Include="TemplateParsing\TemplateBufferGenerator.cs" />
-        <Compile Include="TemplateParsing\TemplateClassifier.cs" />
-        <Compile Include="TemplateParsing\TemplateClassifierBase.cs" />
-        <Compile Include="TemplateParsing\TemplateClassifierProvider.cs" />
-        <Compile Include="TemplateParsing\TemplateClassifierProviderBase.cs" />
-        <Compile Include="TemplateParsing\TemplateContentTypeHandler.cs" />
-        <Compile Include="TemplateParsing\TemplateContentTypeHandlerProvider.cs" />
-        <Compile Include="TemplateParsing\TemplateRegion.cs" />
-        <Compile Include="TemplateParsing\TemplateToken.cs" />
-        <Compile Include="TemplateParsing\TemplateTokenizer.cs" />
-        <Compile Include="TemplateParsing\TemplateTokenKind.cs" />
-      </ItemGroup>
-      <ItemGroup>
-        <ProjectReference Include="..\Django.Analysis\Django.Analysis.csproj">
-          <Project>{74d0775f-2d1e-4685-9bd4-0658f496f8dc}</Project>
-          <Name>Django.Analysis</Name>
-          <IncludeInVSIX>True</IncludeInVSIX>
-        </ProjectReference>
-      </ItemGroup>
-    </When>
-  </Choose>
   <PropertyGroup>
     <UseCodebase>true</UseCodebase>
   </PropertyGroup>

@@ -31,7 +31,6 @@ using System.Windows.Controls;
 using System.Windows.Markup;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
@@ -256,7 +255,7 @@ namespace Microsoft.PythonTools.Repl {
                 }
 
                 var pco = Interlocked.Exchange(ref _preConnectionOutput, null);
-                if (pco != null) {
+                if (pco != null && !_eval.IsDisconnected) {
                     lock (pco) {
                         try {
                             _eval.WriteError(pco.ToString(), addNewline: false);
@@ -573,7 +572,6 @@ namespace Microsoft.PythonTools.Repl {
                                 // parameter as optional (for consistency with
                                 // signature help from the database)
                                 false,
-                                null,
                                 name.Substring(equals + 1)
                             );
                         }
@@ -821,7 +819,7 @@ namespace Microsoft.PythonTools.Repl {
                     case "__builtin__.getset_descriptor":
                         return new CompletionResult(name, PythonMemberType.Property);
                     case "__builtin__.namespace#":
-                        return new CompletionResult(name, PythonMemberType.Namespace);
+                        return new CompletionResult(name, PythonMemberType.Module);
                     case "__builtin__.type":
                         return new CompletionResult(name, PythonMemberType.Class);
                     case "__builtin__.function":
@@ -830,7 +828,7 @@ namespace Microsoft.PythonTools.Repl {
                         return new CompletionResult(name, PythonMemberType.Module);
                 }
 
-                return new CompletionResult(name, PythonMemberType.Field);
+                return new CompletionResult(name, PythonMemberType.Generic);
             }
 
             public void SetScope(string scopeName) {

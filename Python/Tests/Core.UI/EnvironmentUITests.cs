@@ -20,10 +20,11 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
+using Microsoft.Python.Parsing;
 using Microsoft.PythonTools;
+using Microsoft.PythonTools.Common;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools;
@@ -247,12 +248,6 @@ namespace PythonToolsUITests {
         public void DeleteVEnv(PythonVisualStudioApp app) {
             using (var procs = new ProcessScope("Microsoft.PythonTools.Analyzer"))
             using (var dis = InitPython3(app)) {
-                var options = app.GetService<PythonToolsService>().GeneralOptions;
-                var oldAutoAnalyze = options.AutoAnalyzeStandardLibrary;
-                app.OnDispose(() => { options.AutoAnalyzeStandardLibrary = oldAutoAnalyze; options.Save(); });
-                options.AutoAnalyzeStandardLibrary = false;
-                options.Save();
-
                 var project = CreateTemporaryProject(app);
 
                 TreeNode env = app.CreateProjectVirtualEnvironment(project, out string envName, out string envPath);
@@ -552,8 +547,7 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
                 // Create a virtual environment in a folder outside the workspace
                 // Note: we need to use a real virtual env for this, because the
                 // workspace factory provider runs the env's python.exe.
-                var envPath = TestData.GetTempPath("testenv");
-                basePython.CreateVirtualEnv(envPath);
+                var envPath = basePython.CreateVirtualEnv(VirtualEnvName.First);
 
                 // Add existing virtual environment dialog, custom path to a
                 // virtual env located outside of workspace root.
@@ -761,7 +755,7 @@ dependencies:
 
             var switchMgr = app.PythonToolsService.EnvironmentSwitcherManager;
             for (int i = 10; i >= 0; i--) {
-                var actualVisible = UIContext.FromUIContextGuid(GuidList.guidPythonToolbarUIContext).IsActive;
+                var actualVisible = UIContext.FromUIContextGuid(CommonGuidList.guidPythonToolbarUIContext).IsActive;
                 var actualDescription = switchMgr.CurrentFactory?.Configuration.Description;
 
                 if (actualVisible == expectedVisible && actualDescription == expectedDescription) {

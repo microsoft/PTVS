@@ -52,7 +52,8 @@ namespace Microsoft.PythonTools {
         public const string PublishPropertyPageGuid = "63DF0877-CF53-4975-B200-2B11D669AB00";
         public const string TestPropertyPageGuid = "D3B8505A-A2A7-49ED-B2C1-400136801EC6";
         internal const string WebPropertyPageGuid = "76EED3B5-14B1-413B-937A-F6F79AC1F8C8";
-        internal const string EditorFactoryPromptForEncodingGuid = "CA887E0B-55C6-4AE9-B5CF-A2EEFBA90A3E";
+        internal const string TextMateEditorGuid = "3B902123-F8A7-4915-9F01-361F908088D0";
+        //internal const string EditorFactoryPromptForEncodingGuid = "CA887E0B-55C6-4AE9-B5CF-A2EEFBA90A3E";
 
         internal const string InterpreterItemType = "32235F49-CF87-4F2C-A986-B38D229976A3";
         internal const string InterpretersPackageItemType = "64D8C685-F085-4E04-B759-3DF715EBA3FA";
@@ -129,6 +130,10 @@ namespace Microsoft.PythonTools {
         public const string CommandLineArgumentsSetting = "CommandLineArguments";
         public const string StartupFileSetting = "StartupFile";
         public const string IsWindowsApplicationSetting = "IsWindowsApplication";
+        public const string FormatterSetting = "Formatter";
+        public const string ExtraPathsSetting = "ExtraPaths";
+        public const string StubPathSetting = "StubPath";
+        public const string TypeCheckingModeSetting = "TypeCheckingMode";
         public const string EnvironmentSetting = "Environment";
         public const string TestFrameworkSetting = "TestFramework";
         public const string UnitTestRootDirectorySetting = "UnitTestRootDirectory";

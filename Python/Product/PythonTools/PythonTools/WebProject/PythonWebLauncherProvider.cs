@@ -17,7 +17,6 @@
 using System;
 using System.ComponentModel.Composition;
 using System.Text.RegularExpressions;
-using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.BuildTasks;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
