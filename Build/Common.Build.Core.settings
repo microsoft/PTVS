@@ -22,7 +22,7 @@
     <VSTarget Condition="$(VSTarget)=='' and '$(VisualStudioVersion)'=='11.0'">11.0</VSTarget>
     <VSTarget Condition="$(VSTarget)==''">10.0</VSTarget>
     
-    <VSTargetName Condition="'$(VSTarget)' == '17.0'">2019</VSTargetName>
+    <VSTargetName Condition="'$(VSTarget)' == '17.0'">2022</VSTargetName>
     <VSTargetName Condition="'$(VSTarget)' == '16.0'">2019</VSTargetName>
     <VSTargetName Condition="'$(VSTarget)' == '15.0'">2017</VSTargetName>
     <VSTargetName Condition="'$(VSTarget)' == '14.0'">2015</VSTargetName>
@@ -36,7 +36,7 @@
     The version number that will identify a specific build. This appears in
     Programs and Features, Extension Manager, and Help About.
     -->
-    <FileVersionPrefix Condition="$(FileVersionPrefix) == ''">16.2</FileVersionPrefix>
+    <FileVersionPrefix Condition="$(FileVersionPrefix) == ''">17.0</FileVersionPrefix>
     <FileVersion Condition="$(FileVersion) == ''">$(FileVersionPrefix).$(BuildNumber)</FileVersion>
     <!--
     The version number that will identify assembly compatibility.
