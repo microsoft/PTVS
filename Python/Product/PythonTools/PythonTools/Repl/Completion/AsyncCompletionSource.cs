@@ -414,7 +414,7 @@ namespace Microsoft.PythonTools.Repl.Completion {
             }
 
             List<(ILanguageClient client, LSP.CompletionItem completionItem, Func<LSP.CompletionItem, CancellationToken, Task<LSP.CompletionItem>> resolver)> mergedItemList = itemBag.Concat(results.Items).ToList();
-            var completionKindSet = new HashSet<LSP.CompletionItemKind?>(mergedItemList.Select(value => value.completionItem.Kind));
+            var completionKindSet = new HashSet<LSP.CompletionItemKind>(mergedItemList.Select(value => value.completionItem.Kind));
             var completionFilters = new Dictionary<LSP.CompletionItemKind?, CompletionFilter>();
             foreach (var completionKind in completionKindSet) {
                 var filterName = Utilities.GetFilterName(completionKind);
