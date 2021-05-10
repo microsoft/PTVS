@@ -88,7 +88,7 @@ namespace TestUtilities.Python {
             var optionsService = new MockPythonToolsOptionsService();
             serviceProvider.AddService(typeof(IPythonToolsOptionsService), optionsService, true);
 
-            var ptvsService = new PythonToolsService(serviceProvider);
+            var ptvsService = new PythonToolsService(serviceProvider, true);
             serviceProvider.AddService(typeof(PythonToolsService), ptvsService);
             return serviceProvider;
         }

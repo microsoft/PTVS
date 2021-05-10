@@ -57,7 +57,7 @@ namespace Microsoft.PythonTools.Commands {
             } catch (UnauthorizedAccessException) {
                 MessageBox.Show(Strings.ErrorImportWizardUnauthorizedAccess, Strings.ProductTitle);
             } catch (Exception ex) {
-                ActivityLog.LogError(Strings.ProductTitle, ex.ToString());
+                CommonUtils.ActivityLogError(Strings.ProductTitle, ex.ToString());
                 MessageBox.Show(Strings.ErrorImportWizardException.FormatUI(ex.GetType().Name), Strings.ProductTitle);
             }
             statusBar.SetText(Strings.StatusImportWizardError);

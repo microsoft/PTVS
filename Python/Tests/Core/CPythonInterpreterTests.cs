@@ -57,19 +57,19 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(UnitTestPriority.P1)]
-        public void DiscoverRegistryRace() {
-            // https://github.com/Microsoft/PTVS/issues/558
+        //[TestMethod, Priority(UnitTestPriority.P1)]
+        //public void DiscoverRegistryRace() {
+        //    // https://github.com/Microsoft/PTVS/issues/558
 
-            using (var key = Registry.CurrentUser.CreateSubKey(@"Software\Python\PythonCore")) {
-                for (int changes = 0; changes < 1000; ++changes) {
-                    // Doesn't matter about the name - we just want to trigger
-                    // discovery and then remove the key during GetSubKeyNames.
-                    key.CreateSubKey("NotARealInterpreter").Close();
-                    key.DeleteSubKey("NotARealInterpreter", false);
-                }
-            }
-        }
+        //    using (var key = Registry.CurrentUser.CreateSubKey(@"Software\Python\PythonCore")) {
+        //        for (int changes = 0; changes < 1000; ++changes) {
+        //            // Doesn't matter about the name - we just want to trigger
+        //            // discovery and then remove the key during GetSubKeyNames.
+        //            key.CreateSubKey("NotARealInterpreter").Close();
+        //            key.DeleteSubKey("NotARealInterpreter", false);
+        //        }
+        //    }
+        //}
 
         //[TestMethod, Priority(UnitTestPriority.P2_FAILING)]
         //public void ImportFromSearchPath() {

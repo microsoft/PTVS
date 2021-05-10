@@ -149,22 +149,16 @@ namespace Microsoft.PythonTools.Repl {
                 evaluator = selEvaluator.Evaluator as PythonCommonInteractiveEvaluator;
             }
 
-            // TODO: Pylance
             // Activation will now be automatic, but we'll still need to maintain a ReplDocument
-            //if (evaluator != null) {
-            //    var context = new PythonLanguageClientContextRepl(evaluator, ContentType.TypeName);
-            //    await PythonLanguageClient.EnsureLanguageClientAsync(
-            //        _serviceProvider,
-            //        ThreadHelper.JoinableTaskContext,
-            //        context
-            //    );
-
-            //    var client = PythonLanguageClient.FindLanguageClient(ContentType.TypeName);
-            //    if (client != null) {
-            //        Document = new ReplDocument(_serviceProvider, _window, client);
-            //        await Document.InitializeAsync();
-            //    }
-            //}
+            if (evaluator != null) {
+                await PythonLanguageClient.ReadyTask;
+                var client = _serviceProvider.GetPythonToolsService().LanguageClient;
+                if (client != null) {
+                    client.AddClientContext(new PythonLanguageClientContextRepl(evaluator)); // Don't fire a settings change. This can crash node for some reason
+                    Document = new ReplDocument(_serviceProvider, _window, client);
+                    await Document.InitializeAsync();
+                }
+            }
         }
 
         internal async Task RestartLanguageServerAsync() {
@@ -322,8 +316,11 @@ namespace Microsoft.PythonTools.Repl {
 
         public abstract void AbortExecution();
 
-        public Task<LSP.CompletionItem[]> GetAnalysisCompletions(SnapshotPoint triggerPoint, LSP.CompletionContext context, CancellationToken token) {
-            return Document.GetCompletions(triggerPoint, context, token);
+        public Task<object> GetAnalysisCompletions(LSP.Position position, LSP.CompletionContext context, CancellationToken token) {
+            if (Document != null) {
+                return Document.GetCompletions(position, context, token);
+            }
+            return Task.FromResult<object>(null);
         }
 
         public bool CanExecuteCode(string text) {
@@ -664,7 +661,10 @@ namespace Microsoft.PythonTools.Repl {
             _window.TextView.Options.SetOptionValue(InteractiveWindowOptions.SmartUpDown, UseSmartHistoryKeys);
             _commands = GetInteractiveCommands(_serviceProvider, _window, this);
 
-            await InitializeLanguageServerAsync();
+            // Startup language server when not doing unit tests
+            if (!_serviceProvider.GetPythonToolsService().ForTests) {
+                await InitializeLanguageServerAsync();
+            }
 
             return ExecutionResult.Success;
         }

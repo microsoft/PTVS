@@ -124,7 +124,7 @@ namespace Microsoft.VisualStudioTools.Project {
                 int hr = aggregateProjectFactory.CreateAggregateProject(guidsList, fileName, location, name, flags, ref projectGuid, out project);
                 if (hr == VSConstants.E_ABORT)
                     canceled = 1;
-                ErrorHandler.ThrowOnFailure(hr);
+                CommonUtils.ThrowOnFailure(hr);
 
                 _buildProject = null;
             }
@@ -272,7 +272,7 @@ namespace Microsoft.VisualStudioTools.Project {
 
             public void Log(__VSUL_ERRORLEVEL level, string text) {
                 if (_logger != null) {
-                    ErrorHandler.ThrowOnFailure(_logger.LogMessage((uint)level, _projectName, _projectFile, text));
+                    CommonUtils.ThrowOnFailure(_logger.LogMessage((uint)level, _projectName, _projectFile, text));
                 }
             }
         }
@@ -320,7 +320,7 @@ namespace Microsoft.VisualStudioTools.Project {
                 out dummy
             );
 
-            if (!ErrorHandler.Succeeded(hr)) {
+            if (!CommonUtils.Succeeded(hr)) {
                 return hr;
             }
 
@@ -404,7 +404,7 @@ namespace Microsoft.VisualStudioTools.Project {
                     uint queryEditMoreInfo;
                     var tagVSQueryEditFlags_QEF_AllowUnopenedProjects = (tagVSQueryEditFlags)0x80;
 
-                    ErrorHandler.ThrowOnFailure(queryEdit.QueryEditFiles(
+                    CommonUtils.ThrowOnFailure(queryEdit.QueryEditFiles(
                         (uint)(tagVSQueryEditFlags.QEF_ForceEdit_NoPrompting |
                             tagVSQueryEditFlags.QEF_DisallowInMemoryEdits |
                             tagVSQueryEditFlags_QEF_AllowUnopenedProjects),
@@ -432,7 +432,7 @@ namespace Microsoft.VisualStudioTools.Project {
                             out dummy
                         );
 
-                        if (!ErrorHandler.Succeeded(hr)) {
+                        if (!CommonUtils.Succeeded(hr)) {
                             return hr;
                         }
                         if (pUpgradeRequired == 0) {
@@ -500,13 +500,7 @@ namespace Microsoft.VisualStudioTools.Project {
                 }
 
                 logger.Log(__VSUL_ERRORLEVEL.VSUL_ERROR, SR.GetString(SR.UnexpectedUpgradeError, ex.Message));
-                try {
-                    ActivityLog.LogError(GetType().FullName, ex.ToString());
-                } catch (InvalidOperationException) {
-                    // Cannot log to ActivityLog. This may occur if we are
-                    // outside of VS right now (for example, unit tests).
-                    System.Diagnostics.Trace.TraceError(ex.ToString());
-                }
+                CommonUtils.ActivityLogError(GetType().FullName, ex.ToString());
                 return VSConstants.E_FAIL;
             }
         }
@@ -553,13 +547,7 @@ namespace Microsoft.VisualStudioTools.Project {
                 }
                 // Log the error and don't attempt to upgrade the project.
                 logger.Log(__VSUL_ERRORLEVEL.VSUL_ERROR, SR.GetString(SR.UnexpectedUpgradeError, ex.Message));
-                try {
-                    ActivityLog.LogError(GetType().FullName, ex.ToString());
-                } catch (InvalidOperationException) {
-                    // Cannot log to ActivityLog. This may occur if we are
-                    // outside of VS right now (for example, unit tests).
-                    System.Diagnostics.Trace.TraceError(ex.ToString());
-                }
+                CommonUtils.ActivityLogError(GetType().FullName, ex.ToString());
                 pUpgradeRequired = 0;
             }
             pUpgradeProjectCapabilityFlags = (uint)backupSupport;
@@ -634,13 +622,7 @@ namespace Microsoft.VisualStudioTools.Project {
                 }
                 // Log the error and don't attempt to upgrade the project.
                 logger.Log(__VSUL_ERRORLEVEL.VSUL_ERROR, SR.GetString(SR.UnexpectedUpgradeError, ex.Message));
-                try {
-                    ActivityLog.LogError(GetType().FullName, ex.ToString());
-                } catch (InvalidOperationException) {
-                    // Cannot log to ActivityLog. This may occur if we are
-                    // outside of VS right now (for example, unit tests).
-                    System.Diagnostics.Trace.TraceError(ex.ToString());
-                }
+                CommonUtils.ActivityLogError(GetType().FullName, ex.ToString());
                 pUpgradeRequired = (uint)__VSPPROJECTUPGRADEVIAFACTORYREPAIRFLAGS.VSPUVF_PROJECT_NOREPAIR;
             }
             pUpgradeProjectCapabilityFlags = (uint)backupSupport;

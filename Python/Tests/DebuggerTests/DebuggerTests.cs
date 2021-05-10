@@ -2247,6 +2247,7 @@ namespace DebuggerTests {
     }
 
     [TestClass]
+    [Ignore]
     public class DebuggerTests27 : DebuggerTests {
         internal override PythonVersion Version {
             get {
@@ -2256,6 +2257,7 @@ namespace DebuggerTests {
     }
 
     [TestClass]
+    [Ignore]
     public class DebuggerTests27_x64 : DebuggerTests {
         internal override PythonVersion Version {
             get {

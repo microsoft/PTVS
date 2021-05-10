@@ -2087,11 +2087,7 @@ namespace Microsoft.PythonTools.Project {
 
                 Debug.WriteLine("Failed to add virtual environment.\r\n{0}", ex.InnerException ?? ex);
 
-                try {
-                    ActivityLog.LogError(Strings.ProductTitle, (ex.InnerException ?? ex).ToString());
-                } catch (InvalidOperationException) {
-                    // Activity log may be unavailable
-                }
+                CommonUtils.ActivityLogError(Strings.ProductTitle, (ex.InnerException ?? ex).ToString());
             } finally {
                 statusBar.Animation(0, ref index);
             }

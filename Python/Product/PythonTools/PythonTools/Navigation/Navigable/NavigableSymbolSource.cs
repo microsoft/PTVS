@@ -88,7 +88,7 @@ namespace Microsoft.PythonTools.Navigation.Navigable {
 
             var service = _serviceProvider.GetService(typeof(PythonToolsService)) as PythonToolsService;
             if (service != null && service.LanguageClient != null) {
-                var result = await service.LanguageClient.InvokeTextDocumentDefinition(
+                var result = await service.LanguageClient.InvokeTextDocumentDefinitionAsync(
                     new LSP.TextDocumentPositionParams {
                         TextDocument = new LSP.TextDocumentIdentifier {
                             Uri = new System.Uri(_buffer.GetFilePath())

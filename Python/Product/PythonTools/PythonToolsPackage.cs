@@ -68,7 +68,7 @@ namespace Microsoft.PythonTools {
 
     // This attribute is needed to let the shell know that this package exposes some menus.
     [ProvideMenuResource("Menus.ctmenu", 1)]
-    //[ProvideKeyBindingTable(PythonConstants.EditorFactoryGuid, 3004, AllowNavKeyBinding = true)]
+    [ProvideKeyBindingTable(PythonConstants.TextMateEditorGuid, 3004, AllowNavKeyBinding = true)]
     [Description("Python Tools Package")]
     [ProvideAutomationObject("VsPython")]
     [ProvideLanguageEditorOptionPage(typeof(PythonAdvancedEditorOptionsPage), PythonConstants.LanguageName, "", "Advanced", "#113")]
@@ -190,13 +190,7 @@ namespace Microsoft.PythonTools {
                 if (!e.Observed) {
                     var str = e.Exception.ToString();
                     if (str.Contains("Python")) {
-                        try {
-                            ActivityLog.LogError(
-                                "UnobservedTaskException",
-                                $"An exception in a task was not observed: {e.Exception}"
-                            );
-                        } catch (InvalidOperationException) {
-                        }
+                        CommonUtils.ActivityLogError("UnobservedTaskException", $"An exception in a task was not observed: {e.Exception}");
                         Debug.Fail("An exception in a task was not observed. See ActivityLog.xml for more details.", e.Exception.ToString());
                     }
                     e.SetObserved();

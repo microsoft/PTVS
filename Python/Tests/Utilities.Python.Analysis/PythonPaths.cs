@@ -26,6 +26,13 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TestUtilities {
+    public enum VirtualEnvName {
+        First,
+        Second,
+        Third,
+        Fourth
+    }
+
     public class PythonPaths {
         private static readonly List<PythonInterpreterInformation> _foundInRegistry = PythonRegistrySearch
             .PerformDefaultSearch()
@@ -65,7 +72,7 @@ namespace TestUtilities {
         }
 
         private static PythonVersion GetCPythonVersion(PythonLanguageVersion version, InterpreterArchitecture arch) {
-            var res = _foundInRegistry.FirstOrDefault(ii => 
+            var res = _foundInRegistry.FirstOrDefault(ii =>
                 ii.Configuration.Id.StartsWith("Global|PythonCore|") &&
                 ii.Configuration.Architecture == arch &&
                 ii.Configuration.Version == version.ToVersion()
@@ -120,14 +127,32 @@ namespace TestUtilities {
                 if (Python35 != null) yield return Python35;
                 if (Python36 != null) yield return Python36;
                 if (Python37 != null) yield return Python37;
-                if (Python38 != null) yield return Python37;
-                if (Python39 != null) yield return Python37;
+                if (Python38 != null) yield return Python38;
+                if (Python39 != null) yield return Python39;
                 if (Python27_x64 != null) yield return Python27_x64;
                 if (Python35_x64 != null) yield return Python35_x64;
                 if (Python36_x64 != null) yield return Python36_x64;
                 if (Python37_x64 != null) yield return Python37_x64;
-                if (Python38_x64 != null) yield return Python36_x64;
-                if (Python39_x64 != null) yield return Python37_x64;
+                if (Python38_x64 != null) yield return Python38_x64;
+                if (Python39_x64 != null) yield return Python39_x64;
+            }
+        }
+
+        public static PythonVersion LatestVersion {
+            get {
+                if (Python39 != null) return Python39;
+                if (Python38 != null) return Python38;
+                if (Python37 != null) return Python37;
+                if (Python36 != null) return Python36;
+                if (Python35 != null) return Python35;
+                if (Python27 != null) return Python27;
+                if (Python39_x64 != null) return Python39_x64;
+                if (Python38_x64 != null) return Python38_x64;
+                if (Python37_x64 != null) return Python37_x64;
+                if (Python36_x64 != null) return Python36_x64;
+                if (Python35_x64 != null) return Python35_x64;
+                if (Python27_x64 != null) return Python27_x64;
+                return null;
             }
         }
 
@@ -205,9 +230,8 @@ namespace TestUtilities {
         /// <summary>
         /// Creates a Python virtual environment in specified directory and installs the specified packages.
         /// </summary>
-        public static void CreateVirtualEnv(this PythonVersion pyVersion, string envPath, IEnumerable<string> packages) {
-            pyVersion.CreateVirtualEnv(envPath);
-
+        public static string CreateVirtualEnv(this PythonVersion pyVersion, VirtualEnvName envName, IEnumerable<string> packages, string rootDirectory = null) {
+            var envPath = pyVersion.CreateVirtualEnv(envName, rootDirectory);
             var envPythonExePath = Path.Combine(envPath, "scripts", "python.exe");
             foreach (var package in packages.MaybeEnumerate()) {
                 using (var output = ProcessOutput.RunHiddenAndCapture(envPythonExePath, "-m", "pip", "install", package)) {
@@ -215,21 +239,35 @@ namespace TestUtilities {
                     Assert.AreEqual(0, output.ExitCode);
                 }
             }
+            return envPath;
         }
 
         /// <summary>
         /// Creates a Python virtual environment in specified directory.
         /// </summary>
-        public static void CreateVirtualEnv(this PythonVersion pyVersion, string envPath) {
-            var virtualEnvModule = (pyVersion.Version < PythonLanguageVersion.V30) ? "virtualenv" : "venv";
-            using (var p = ProcessOutput.RunHiddenAndCapture(pyVersion.InterpreterPath, "-m", virtualEnvModule, envPath)) {
-                Console.WriteLine(p.Arguments);
-                Assert.IsTrue(p.Wait(TimeSpan.FromMinutes(3)));
-                Console.WriteLine(string.Join(Environment.NewLine, p.StandardOutputLines.Concat(p.StandardErrorLines)));
-                Assert.AreEqual(0, p.ExitCode);
+        public static string CreateVirtualEnv(this PythonVersion pyVersion, VirtualEnvName envName, string rootDirectory = null) {
+            // Only create this virtual env if it doesn't already exist.
+            var envPath = GetVirtualEnvPath(envName, rootDirectory);
+            if (!File.Exists(Path.Combine(envPath, "scripts", "python.exe"))) {
+                var virtualEnvModule = (pyVersion.Version < PythonLanguageVersion.V30) ? "virtualenv" : "venv";
+                using (var p = ProcessOutput.RunHiddenAndCapture(pyVersion.InterpreterPath, "-m", virtualEnvModule, envPath)) {
+                    Console.WriteLine(p.Arguments);
+                    Assert.IsTrue(p.Wait(TimeSpan.FromMinutes(3)));
+                    Console.WriteLine(string.Join(Environment.NewLine, p.StandardOutputLines.Concat(p.StandardErrorLines)));
+                    Assert.AreEqual(0, p.ExitCode);
+                }
             }
 
             Assert.IsTrue(File.Exists(Path.Combine(envPath, "scripts", "python.exe")));
+            return envPath;
+        }
+
+        private static string GetVirtualEnvPath(VirtualEnvName envName, string rootDirectory = null) {
+            if (rootDirectory != null) {
+                return rootDirectory;
+            }
+            var root = TestData.GetTempPath("envs");
+            return Path.Combine(root, envName.ToString());
         }
     }
 }

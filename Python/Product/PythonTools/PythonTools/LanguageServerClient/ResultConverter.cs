@@ -35,6 +35,8 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                         return new LSP.SymbolInformation[] { jObject.ToObject<LSP.SymbolInformation>(jsonSerializer) };
                     } else if (IsLocation(jObject)) {
                         return new LSP.Location[] { jObject.ToObject<LSP.Location>(jsonSerializer) };
+                    } else if (IsCompletionList(jObject)) {
+                        return new LSP.CompletionList[] { jObject.ToObject<LSP.CompletionList>(jsonSerializer) };
                     }
                 }
             }
@@ -50,6 +52,10 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
         private static bool IsLocation(JToken jobject) {
             return (jobject != null && jobject["uri"] != null);
+        }
+
+        private static bool IsCompletionList(JToken jobject) {
+            return (jobject != null && jobject["isIncomplete"] != null);
         }
     }
 }

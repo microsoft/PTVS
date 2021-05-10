@@ -79,9 +79,9 @@ namespace PythonToolsTests {
 
         [TestMethod, Priority(UnitTestPriority.P0)]
         public void WatchWorkspaceVirtualEnvCreated() {
-            var python = PythonPaths.Python37_x64 ?? PythonPaths.Python37;
+            var python = PythonPaths.LatestVersion;
 
-            var workspaceFolder = TestData.GetTempPath();
+            var workspaceFolder = TestData.GetTempPath("workspace");
             Directory.CreateDirectory(workspaceFolder);
             File.WriteAllText(Path.Combine(workspaceFolder, "app.py"), string.Empty);
 
@@ -93,7 +93,7 @@ namespace PythonToolsTests {
             // Create virtual env inside the workspace folder (one level from root)
             var configs = TestTriggerDiscovery(
                 workspaceContext,
-                () => python.CreateVirtualEnv(Path.Combine(workspaceFolder, "env"))
+                () => python.CreateVirtualEnv(VirtualEnvName.First, Path.Combine(workspaceFolder, "env"))
             ).ToArray();
 
             Assert.AreEqual(1, configs.Length);
@@ -106,7 +106,7 @@ namespace PythonToolsTests {
 
         [TestMethod, Priority(UnitTestPriority.P0)]
         public void DetectLocalEnvOutsideWorkspace() {
-            var python = PythonPaths.Python37_x64 ?? PythonPaths.Python37;
+            var python = PythonPaths.LatestVersion;
 
             var tempFolder = TestData.GetTempPath();
             var workspaceFolder = Path.Combine(tempFolder, "workspace");
@@ -200,13 +200,13 @@ namespace PythonToolsTests {
         }
 
         private WorkspaceTestHelper.MockWorkspaceContext CreateEnvAndGetWorkspaceService(string envName) {
-            var python = PythonPaths.Python37_x64 ?? PythonPaths.Python37;
+            var python = PythonPaths.LatestVersion;
 
             var workspacePath = TestData.GetTempPath();
             Directory.CreateDirectory(workspacePath);
             File.WriteAllText(Path.Combine(workspacePath, "app.py"), string.Empty);
 
-            python.CreateVirtualEnv(Path.Combine(workspacePath, envName));
+            python.CreateVirtualEnv(VirtualEnvName.First, Path.Combine(workspacePath, envName));
 
             return new WorkspaceTestHelper.MockWorkspaceContext(new WorkspaceTestHelper.MockWorkspace(workspacePath));
         }

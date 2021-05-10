@@ -483,8 +483,8 @@ namespace Microsoft.PythonTools.InterpreterList {
             // TODO: this is assuming that all environments that CanBeDeleted are conda environments, which may not be true in the future
             var view = e.Parameter as EnvironmentView;
             var result = MessageBox.Show(
-                Resources.EnvironmentPathsExtensionDeleteConfirmation.FormatUI(view.Configuration.GetPrefixPath()),
-                Resources.ProductTitle,
+                EnvironmentsList.Resources.EnvironmentPathsExtensionDeleteConfirmation.FormatUI(view.Configuration.GetPrefixPath()),
+                EnvironmentsList.Resources.ProductTitle,
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Question
             );

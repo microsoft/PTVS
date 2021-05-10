@@ -29,7 +29,7 @@ namespace Microsoft.PythonTools.Repl {
         IEnumerable<KeyValuePair<string, string>> GetAvailableScopesAndPaths();
         Task<CompletionResult[]> GetMemberNamesAsync(string text, CancellationToken ct);
         Task<OverloadDoc[]> GetSignatureDocumentationAsync(string text, CancellationToken ct);
-        Task<LSP.CompletionItem[]> GetAnalysisCompletions(SnapshotPoint triggerPoint, LSP.CompletionContext context, CancellationToken token);
+        Task<object> GetAnalysisCompletions(LSP.Position position, LSP.CompletionContext context, CancellationToken token);
         PythonLanguageVersion LanguageVersion { get; }
     }
 }

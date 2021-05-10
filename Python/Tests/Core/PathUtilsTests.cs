@@ -628,60 +628,56 @@ namespace PythonToolsTests {
 
         [TestMethod, Priority(UnitTestPriority.P0)]
         public void TestEnumerateDirectories() {
-            // Use "Windows", as we won't be able to enumerate everything in
-            // here, but we should still not crash.
-            var windows = Environment.GetEnvironmentVariable("SYSTEMROOT");
-            var dirs = PathUtils.EnumerateDirectories(windows).ToList();
+            var root = Path.Combine(TestData.Root, "TestData");
+            var dirs = PathUtils.EnumerateDirectories(root).ToList();
             Assert.AreNotEqual(0, dirs.Count);
 
             // Expect all paths to be rooted
             AssertUtil.ContainsExactly(dirs.Where(d => !Path.IsPathRooted(d)));
             // Expect all paths to be within Windows
-            AssertUtil.ContainsExactly(dirs.Where(d => !PathUtils.IsSubpathOf(windows, d)));
+            AssertUtil.ContainsExactly(dirs.Where(d => !PathUtils.IsSubpathOf(root, d)));
 
-            dirs = PathUtils.EnumerateDirectories(windows, recurse: false, fullPaths: false).ToList();
+            dirs = PathUtils.EnumerateDirectories(root, recurse: false, fullPaths: false).ToList();
             Assert.AreNotEqual(0, dirs.Count);
 
             // Expect all paths to be relative
             AssertUtil.ContainsExactly(dirs.Where(d => Path.IsPathRooted(d)));
-            // Expect all paths to be within Windows
-            AssertUtil.ContainsExactly(dirs.Where(d => !Directory.Exists(Path.Combine(windows, d))));
+            // Expect all paths to be within root
+            AssertUtil.ContainsExactly(dirs.Where(d => !Directory.Exists(Path.Combine(root, d))));
         }
 
         [TestMethod, Priority(UnitTestPriority.P0)]
         public void TestEnumerateFiles() {
-            // Use "Windows", as we won't be able to enumerate everything in
-            // here, but we should still not crash.
-            var windows = Environment.GetEnvironmentVariable("SYSTEMROOT");
-            var files = PathUtils.EnumerateFiles(windows).ToList();
+            var root = Path.Combine(TestData.Root, "TestData");
+            var files = PathUtils.EnumerateFiles(root).ToList();
             Assert.AreNotEqual(0, files.Count);
 
             // Expect all paths to be rooted
             AssertUtil.ContainsExactly(files.Where(f => !Path.IsPathRooted(f)));
             // Expect all paths to be within Windows
-            AssertUtil.ContainsExactly(files.Where(f => !PathUtils.IsSubpathOf(windows, f)));
+            AssertUtil.ContainsExactly(files.Where(f => !PathUtils.IsSubpathOf(root, f)));
             // Expect multiple extensions
             Assert.AreNotEqual(1, files.Select(f => Path.GetExtension(f)).ToSet().Count);
 
-            files = PathUtils.EnumerateFiles(windows, recurse: false, fullPaths: false).ToList();
+            files = PathUtils.EnumerateFiles(root, recurse: false, fullPaths: false).ToList();
             Assert.AreNotEqual(0, files.Count);
 
             // Expect all paths to be relative
             AssertUtil.ContainsExactly(files.Where(f => Path.IsPathRooted(f)));
             // Expect all paths to be only filenames
             AssertUtil.ContainsExactly(files.Where(f => f.IndexOfAny(new[] { '\\', '/' }) >= 0));
-            // Expect all paths to be within Windows
-            AssertUtil.ContainsExactly(files.Where(f => !File.Exists(Path.Combine(windows, f))));
+            // Expect all paths to be within root
+            AssertUtil.ContainsExactly(files.Where(f => !File.Exists(Path.Combine(root, f))));
 
-            files = PathUtils.EnumerateFiles(windows, "*.exe", recurse: false, fullPaths: false).ToList();
+            files = PathUtils.EnumerateFiles(root, "*.sln", recurse: false, fullPaths: false).ToList();
             Assert.AreNotEqual(0, files.Count);
 
             // Expect all paths to be relative
             AssertUtil.ContainsExactly(files.Where(f => Path.IsPathRooted(f)));
-            // Expect all paths to be within Windows
-            AssertUtil.ContainsExactly(files.Where(f => !File.Exists(Path.Combine(windows, f))));
+            // Expect all paths to be within root
+            AssertUtil.ContainsExactly(files.Where(f => !File.Exists(Path.Combine(root, f))));
             // Expect only one extension
-            AssertUtil.ContainsExactly(files.Select(f => Path.GetExtension(f).ToLowerInvariant()).ToSet(), ".exe");
+            AssertUtil.ContainsExactly(files.Select(f => Path.GetExtension(f).ToLowerInvariant()).ToSet(), ".sln");
         }
 
         [TestMethod, Priority(UnitTestPriority.P0)]

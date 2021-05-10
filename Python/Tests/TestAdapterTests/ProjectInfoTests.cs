@@ -49,9 +49,10 @@ namespace TestAdapterTests {
                 .Select(i => Task.Run(async
                     () => {
                         projectMap.Clear();
-                        projectMap[projectName] = new ProjectInfo(dummyProject);
+                        var info = new ProjectInfo(dummyProject);
+                        projectMap[projectName] = info;
                         foreach (int j in Enumerable.Range(1, 1000)) {
-                            projectMap[projectName].AddTestContainer(dummyDiscoverer, j.ToString() + ".py");
+                            info.AddTestContainer(dummyDiscoverer, j.ToString() + ".py");
                         }
                         
                         await Task.Delay(100);

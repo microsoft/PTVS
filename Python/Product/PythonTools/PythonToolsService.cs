@@ -56,6 +56,7 @@ namespace Microsoft.PythonTools {
         private readonly Lazy<SuppressDialogOptions> _suppressDialogOptions;
         private readonly IdleManager _idleManager;
         private readonly DiagnosticsProvider _diagnosticsProvider;
+        private readonly bool _forTests;
 
         public static object CreateService(IServiceContainer container, Type serviceType) {
             if (serviceType.IsEquivalentTo(typeof(PythonToolsService))) {
@@ -70,7 +71,8 @@ namespace Microsoft.PythonTools {
             return null;
         }
 
-        internal PythonToolsService(IServiceContainer container) {
+        internal PythonToolsService(IServiceContainer container, bool forTests = false) {
+            _forTests = forTests;
             _container = container;
 
             _langPrefs = new Lazy<LanguagePreferences>(() => new LanguagePreferences(Site, typeof(PythonLanguageInfo).GUID));
@@ -79,7 +81,7 @@ namespace Microsoft.PythonTools {
 
             _optionsService = (IPythonToolsOptionsService)container.GetService(typeof(IPythonToolsOptionsService));
 
-            _idleManager = new IdleManager(container);
+            _idleManager = !forTests ? new IdleManager(container) : null;
             _formattingOptions = new Lazy<PythonFormattingOptions>(CreateFormattingOptions);
             _advancedEditorOptions = new Lazy<PythonAdvancedEditorOptions>(CreateAdvancedEditorOptions);
             _debuggerOptions = new Lazy<PythonDebuggingOptions>(CreateDebuggerOptions);
@@ -94,17 +96,25 @@ namespace Microsoft.PythonTools {
             EnvironmentSwitcherManager = new EnvironmentSwitcherManager(container);
             WorkspaceInfoBarManager = new WorkspaceInfoBarManager(container);
 
-            _idleManager.OnIdle += OnIdleInitialization;
+            if (_idleManager != null) {
+                _idleManager.OnIdle += OnIdleInitialization;
+            }
         }
 
         private void OnIdleInitialization(object sender, ComponentManagerEventArgs e) {
             Site.AssertShellIsInitialized();
 
-            _idleManager.OnIdle -= OnIdleInitialization;
+            if (_idleManager != null) {
+                _idleManager.OnIdle -= OnIdleInitialization;
+            }
 
             InitializeLogging();
             EnvironmentSwitcherManager.Initialize();
         }
+
+        public bool ForTests => _forTests;
+
+        internal UIThreadBase UIThread => _container.GetUIThread();
 
         public void Dispose() {
             if (_langPrefs.IsValueCreated) {
@@ -362,7 +372,7 @@ namespace Microsoft.PythonTools {
         #endregion
 
         internal Dictionary<string, string> GetFullEnvironment(LaunchConfiguration config)
-            => LaunchConfigurationUtils.GetFullEnvironment(config, _container);
+            => LaunchConfigurationUtils.GetFullEnvironment(config, _container, UIThread);
 
         internal IEnumerable<string> GetGlobalPythonSearchPaths(InterpreterConfiguration interpreter) {
             if (!GeneralOptions.ClearGlobalPythonPath) {

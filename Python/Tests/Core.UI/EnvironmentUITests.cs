@@ -547,8 +547,7 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
                 // Create a virtual environment in a folder outside the workspace
                 // Note: we need to use a real virtual env for this, because the
                 // workspace factory provider runs the env's python.exe.
-                var envPath = TestData.GetTempPath("testenv");
-                basePython.CreateVirtualEnv(envPath);
+                var envPath = basePython.CreateVirtualEnv(VirtualEnvName.First);
 
                 // Add existing virtual environment dialog, custom path to a
                 // virtual env located outside of workspace root.

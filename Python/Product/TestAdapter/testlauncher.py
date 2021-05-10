@@ -177,7 +177,8 @@ class TestCollector(object):
             notfound = getattr(collector, '_notfound', [])
             if notfound:
                   for arg, exc in notfound: 
-                      line = "(no name {!r} in any of {!r})".format(arg, exc.args[0])
+                      arg_zero = exc[0] if isinstance(exc, list) else exc.args[0]
+                      line = "(no name {!r} in any of {!r})".format(arg, arg_zero)
                       print("ERROR: not found: {}\n{}".format(arg, line))
                   #clear errors 
                   collector._notfound = []

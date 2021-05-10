@@ -3053,4 +3053,104 @@ Please specify at least one package.</value>
   <data name="DontTrustWorkspaceInfoBarAction" xml:space="preserve">
     <value>Do not trust</value>
   </data>
+  <data name="CompletionFilterClass" xml:space="preserve">
+    <value>Classes</value>
+    <comment>Describes items of specific kind. Use plural and capitalized noun.</comment>
+  </data>
+  <data name="CompletionFilterColor" xml:space="preserve">
+    <value>Colors</value>
+    <comment>Describes items of specific kind. Use plural and capitalized noun.</comment>
+  </data>
+  <data name="CompletionFilterConstant" xml:space="preserve">
+    <value>Constants</value>
+    <comment>Describes items of specific kind. Use plural and capitalized noun.</comment>
+  </data>
+  <data name="CompletionFilterConstructor" xml:space="preserve">
+    <value>Constructors</value>
+    <comment>Describes items of specific kind. Use plural and capitalized noun.</comment>
+  </data>
+  <data name="CompletionFilterEnum" xml:space="preserve">
+    <value>Enums</value>
+    <comment>Describes items of specific kind. Use plural and capitalized noun.</comment>
+  </data>
+  <data name="CompletionFilterEnumMember" xml:space="preserve">
+    <value>Enum members</value>
+    <comment>Describes items of specific kind. Use plural and capitalized noun.</comment>
+  </data>
+  <data name="CompletionFilterEvent" xml:space="preserve">
+    <value>Events</value>
+    <comment>Describes items of specific kind. Use plural and capitalized noun.</comment>
+  </data>
+  <data name="CompletionFilterField" xml:space="preserve">
+    <value>Fields</value>
+    <comment>Describes items of specific kind. Use plural and capitalized noun.</comment>
+  </data>
+  <data name="CompletionFilterFile" xml:space="preserve">
+    <value>Files</value>
+    <comment>Describes items of specific kind. Use plural and capitalized noun.</comment>
+  </data>
+  <data name="CompletionFilterFolder" xml:space="preserve">
+    <value>Folders</value>
+    <comment>Describes items of specific kind. Use plural and capitalized noun.</comment>
+  </data>
+  <data name="CompletionFilterFunction" xml:space="preserve">
+    <value>Functions</value>
+    <comment>Describes items of specific kind. Use plural and capitalized noun.</comment>
+  </data>
+  <data name="CompletionFilterInterface" xml:space="preserve">
+    <value>Interfaces</value>
+    <comment>Describes items of specific kind. Use plural and capitalized noun.</comment>
+  </data>
+  <data name="CompletionFilterKeyword" xml:space="preserve">
+    <value>Keywords</value>
+    <comment>Describes items of specific kind. Use plural and capitalized noun.</comment>
+  </data>
+  <data name="CompletionFilterMethod" xml:space="preserve">
+    <value>Methods</value>
+    <comment>Describes items of specific kind. Use plural and capitalized noun.</comment>
+  </data>
+  <data name="CompletionFilterModule" xml:space="preserve">
+    <value>Modules</value>
+    <comment>Describes items of specific kind. Use plural and capitalized noun.</comment>
+  </data>
+  <data name="CompletionFilterOperator" xml:space="preserve">
+    <value>Operators</value>
+    <comment>Describes items of specific kind. Use plural and capitalized noun.</comment>
+  </data>
+  <data name="CompletionFilterProperty" xml:space="preserve">
+    <value>Properties</value>
+    <comment>Describes items of specific kind. Use plural and capitalized noun.</comment>
+  </data>
+  <data name="CompletionFilterReference" xml:space="preserve">
+    <value>References</value>
+    <comment>Describes items of specific kind. Use plural and capitalized noun.</comment>
+  </data>
+  <data name="CompletionFilterSnippet" xml:space="preserve">
+    <value>Snippets</value>
+    <comment>Describes items of specific kind. Use plural and capitalized noun.</comment>
+  </data>
+  <data name="CompletionFilterStruct" xml:space="preserve">
+    <value>Structs</value>
+    <comment>Describes items of specific kind. Use plural and capitalized noun.</comment>
+  </data>
+  <data name="CompletionFilterText" xml:space="preserve">
+    <value>Names</value>
+    <comment>Describes items of specific kind.  Use plural and capitalized noun. Note that "text" is very generic and "name" feels like an appropriate choice for the UI</comment>
+  </data>
+  <data name="CompletionFilterTypeParameter" xml:space="preserve">
+    <value>Type parameters</value>
+    <comment>Describes items of specific kind. Use plural and capitalized noun.</comment>
+  </data>
+  <data name="CompletionFilterUnit" xml:space="preserve">
+    <value>Units</value>
+    <comment>Describes items of specific kind. Use plural and capitalized noun.</comment>
+  </data>
+  <data name="CompletionFilterValue" xml:space="preserve">
+    <value>Values</value>
+    <comment>Describes items of specific kind. Use plural and capitalized noun.</comment>
+  </data>
+  <data name="CompletionFilterVariable" xml:space="preserve">
+    <value>Variables</value>
+    <comment>Describes items of specific kind. Use plural and capitalized noun.</comment>
+  </data>
 </root>
