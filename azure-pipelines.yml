@@ -9,9 +9,8 @@ name: $(date:yy)$(DayOfYear)$(rev:.r)
 trigger:
   branches:
     include:
-      - master
+      - main
       - release/*
-      - feature/pylance
   paths:
     exclude:
       - 'azure-pipelines-policy.yml'
@@ -22,9 +21,8 @@ trigger:
 pr:
   branches:
     include:
-      - master
+      - main
       - release/*
-      - feature/pylance
   paths:
     exclude:
       - 'azure-pipelines-policy.yml'
