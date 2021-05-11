@@ -17,7 +17,7 @@ schedules:
   displayName: Nightly build
   branches:
     include:
-    - master
+    - main
 
 # The agent pool the build will run on
 pool:
