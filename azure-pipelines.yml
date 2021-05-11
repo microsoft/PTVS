@@ -33,7 +33,7 @@ pool:
   name: VSEng-MicroBuildVS2019
   demands: 
   - msbuild
-  - VisualStudio_17.0
+  - VisualStudio_16.0
 
 # Build variables
 # None of these are settable at build queue time. To do that, remove the variable from this list,
