@@ -166,6 +166,7 @@
     <Reference Include="Microsoft.VisualStudio.Workspace" />
     <Reference Include="Microsoft.VisualStudio.Workspace.VSIntegration.Contracts" />
     <Reference Include="Newtonsoft.Json">
+      <HintPath>$(PackagesPath)\Newtonsoft.Json\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
       <IncludeInVSIX>False</IncludeInVSIX>
     </Reference>
