@@ -30,7 +30,7 @@ pr:
 
 # The agent pool the build will run on
 pool:
-  name: VSEng-MicroBuildVS2019
+  name: VSEngSS-Microbuild2019
   demands: 
   - msbuild
   - VisualStudio_16.0
@@ -143,6 +143,7 @@ steps:
     msbuildVersion: $(MsBuildVersion)
     platform: $(Platform)
     configuration: $(BuildConfiguration)
+    msbuildArguments: /p:VSTarget=$(VSTarget_Override)
 
 # Build the tests
 - task: MSBuild@1
@@ -152,6 +153,7 @@ steps:
     msbuildVersion: $(MsBuildVersion)
     platform: $(Platform)
     configuration: $(BuildConfiguration)
+    msbuildArguments: /p:VSTarget=$(VSTarget_Override)
 
 # Build the installer
 - task: MSBuild@1
@@ -162,6 +164,7 @@ steps:
     platform: $(Platform)
     configuration: $(BuildConfiguration)
     msbuildArguments: '/p:SkipProduct=true'
+    msbuildArguments: /p:VSTarget=$(VSTarget_Override)
 
 # Publish buld artifact: raw
 - task: PublishBuildArtifacts@1
