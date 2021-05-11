@@ -163,7 +163,7 @@ steps:
     msbuildVersion: $(MsBuildVersion)
     platform: $(Platform)
     configuration: $(BuildConfiguration)
-    msbuildArguments: '/p:SkipProduct=true' '/p:VSTarget=$(VSTarget_Override)'
+    msbuildArguments: '/p:SkipProduct=true /p:VSTarget=$(VSTarget_Override)'
 
 # Publish buld artifact: raw
 - task: PublishBuildArtifacts@1
