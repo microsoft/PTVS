@@ -30,7 +30,7 @@ pr:
 
 # The agent pool the build will run on
 pool:
-  name: VSEngSS-Microbuild2019
+  name: VSEng-Microbuild2019
   demands: 
   - msbuild
   - VisualStudio_16.0
