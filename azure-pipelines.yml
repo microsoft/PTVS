@@ -53,6 +53,8 @@ variables:
     value: false
   - name: TrackFileAccess
     value: false
+  - name: VSTarget
+    value: 17.0
   
   # PTVS variable group
   # This contains variables shared between the PTVS "product" pipeline and the PTVS "policy" pipeline.
