@@ -33,7 +33,7 @@ pool:
   name: VSEng-MicroBuildVS2019
   demands: 
   - msbuild
-  - VisualStudio_16.0
+  - VisualStudio_17.0
 
 # Build variables
 # None of these are settable at build queue time. To do that, remove the variable from this list,
@@ -42,7 +42,7 @@ variables:
   - name: DropRoot
     value: \\cpvsbuild\Drops\DSTools\PTVS\$(Build.SourceBranchName)\$(Build.BuildNumber)\
   - name: FileVersionPrefix
-    value: 16.10
+    value: 17.0
   - name: IncludeDjangoHtmlExtensions
     value: true
   - name: IncludeMiniconda
