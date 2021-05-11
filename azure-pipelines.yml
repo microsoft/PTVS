@@ -53,7 +53,7 @@ variables:
     value: false
   - name: TrackFileAccess
     value: false
-  - name: VSTarget
+  - name: VSTarget_Override
     value: 17.0
   
   # PTVS variable group
@@ -125,7 +125,7 @@ steps:
   displayName: 'Restore packages'
   inputs:
     scriptName: Build/PreBuild.ps1
-    arguments: '-vstarget $(VSTarget)'
+    arguments: '-vstarget $(VSTarget_Override)'
 
 # Clean the old swix outputs
 - task: DeleteFiles@1
