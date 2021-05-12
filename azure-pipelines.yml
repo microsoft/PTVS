@@ -189,6 +189,7 @@ steps:
     DropFolder: '$(Build.StagingDirectory)\release'
     DropServiceUri: 'https://devdiv.artifacts.visualstudio.com/DefaultCollection'
     VSDropServiceUri: 'https://vsdrop.corp.microsoft.com/file/v1'
+    AccessToken: '$(System.AccessToken)'
   continueOnError: true
 
 # copy some files around to prepare for publishing build artifacts
