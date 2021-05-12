@@ -120,6 +120,14 @@ steps:
   condition: notin(variables['Build.Reason'], 'PullRequest')
   displayName: 'Install pylance with npm'
 
+# Clean old packages
+- task: DeleteFiles@1
+  displayName: 'Clean old packages'
+  inputs:
+    SourceFolder: 'packages'
+    Contents: '**'
+  continueOnError: true
+
 # Run a powershell script that does a package restore, some symlinking, and installs debugpy
 - task: PowerShell@1
   displayName: 'Restore packages'
