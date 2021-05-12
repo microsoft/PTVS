@@ -222,6 +222,10 @@
   <Target Name="AfterBuild">
   </Target>
   -->
+  <Target Name="GenerateVsixContainer">
+    <CallTarget Targets="SetVsSDKEnvironmentVariables"/>
+    <CallTarget Targets="CreateVsixContainer"/>
+  </Target>
   <Target Name="_AddImportsToVsix" BeforeTargets="PrepareForBuild">
     <ItemGroup>
       <Content Include="@(XamlPropertyRule)" />
