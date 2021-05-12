@@ -21,6 +21,16 @@
         <OldToolsVersion>16.0</OldToolsVersion>
       </PropertyGroup>
     </When>
+    <When Condition=" '$(VisualStudioVersion)'=='17.0'  Or '$(TargetVisualStudioVersion)'=='VS170' ">
+      <PropertyGroup>
+        <MinimumVisualStudioVersion>17.0</MinimumVisualStudioVersion>
+        <FileUpgradeFlags>
+        </FileUpgradeFlags>
+        <UpgradeBackupLocation>
+        </UpgradeBackupLocation>
+        <OldToolsVersion>17.0</OldToolsVersion>
+      </PropertyGroup>
+    </When>
   </Choose>
   <Import Project="..\TestProjectBefore.settings" />
   <PropertyGroup>
@@ -70,13 +80,7 @@
     <Reference Include="System" />
     <Reference Include="Microsoft.VisualStudio.Shell.15.0" />
     <Reference Include="Microsoft.VisualStudio.Shell.Framework" />
-    <Reference Include="Microsoft.VisualStudio.Shell.Interop, Version=7.1.40304.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-    <Reference Include="Microsoft.VisualStudio.OLE.Interop, Version=7.1.40304.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-    <Reference Include="Microsoft.VisualStudio.Shell.Interop.8.0, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-    <Reference Include="Microsoft.VisualStudio.Shell.Interop.9.0, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-    <Reference Include="Microsoft.VisualStudio.Shell.Interop.10.0, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <EmbedInteropTypes>True</EmbedInteropTypes>
-    </Reference>
+    <Reference Include="Microsoft.VisualStudio.Interop" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>

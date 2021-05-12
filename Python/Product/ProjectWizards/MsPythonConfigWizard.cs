@@ -82,7 +82,7 @@ namespace Microsoft.PythonTools.ProjectWizards {
         }
 
         private static void OpenFile(DTE2 dte, string fileName) {
-            var serviceProvider = new ServiceProvider(dte as VisualStudio.OLE.Interop.IServiceProvider);
+            var serviceProvider = new ServiceProvider(dte as Microsoft.VisualStudio.OLE.Interop.IServiceProvider);
             VsShellUtilities.OpenDocument(serviceProvider, fileName);
             Command command = dte.Commands.Item("SolutionExplorer.SyncWithActiveDocument");
             if (command.IsAvailable) {

@@ -45,7 +45,6 @@ using Microsoft.VisualStudio.Shell;
 
 [assembly: ProvideCodeBase(AssemblyName = "Microsoft.PythonTools", CodeBase = "Microsoft.PythonTools.dll", Version = AssemblyVersionInfo.StableVersion)]
 [assembly: ProvideCodeBase(AssemblyName = "Microsoft.PythonTools.Attacher", CodeBase = "Microsoft.PythonTools.Attacher.exe", Version = AssemblyVersionInfo.StableVersion)]
-[assembly: ProvideCodeBase(AssemblyName = "Microsoft.PythonTools.AttacherX86", CodeBase = "Microsoft.PythonTools.AttacherX86.exe", Version = AssemblyVersionInfo.StableVersion)]
 [assembly: ProvideCodeBase(AssemblyName = "Microsoft.PythonTools.Common", CodeBase = "Microsoft.PythonTools.Common.dll", Version = AssemblyVersionInfo.StableVersion)]
 [assembly: ProvideCodeBase(AssemblyName = "Microsoft.PythonTools.EnvironmentsList", CodeBase = "Microsoft.PythonTools.EnvironmentsList.dll", Version = AssemblyVersionInfo.StableVersion)]
 [assembly: ProvideCodeBase(AssemblyName = "Microsoft.PythonTools.Debugger", CodeBase = "Microsoft.PythonTools.Debugger.dll", Version = AssemblyVersionInfo.StableVersion)]
@@ -56,6 +55,7 @@ using Microsoft.VisualStudio.Shell;
 [assembly: ProvideCodeBase(AssemblyName = "Microsoft.PythonTools.VSInterpreters", CodeBase = "Microsoft.PythonTools.VSInterpreters.dll", Version = AssemblyVersionInfo.StableVersion)]
 [assembly: ProvideCodeBase(AssemblyName = "Microsoft.PythonTools.Workspace", CodeBase = "Microsoft.PythonTools.Workspace.dll", Version = AssemblyVersionInfo.StableVersion)]
 [assembly: ProvideCodeBase(AssemblyName = "Microsoft.Extensions.FileSystemGlobbing", CodeBase = "Microsoft.Extensions.FileSystemGlobbing.dll", Version = "3.1.8.0")]
+[assembly: ProvideCodeBase(AssemblyName = "Microsoft.VisualStudio.Interop", CodeBase = "Microsoft.VisualStudio.Interop.dll")]
 
 internal static class ParserNuGetPackageInfo {
     // important: keep in sync with Build\16.0\package.config

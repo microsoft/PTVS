@@ -207,7 +207,7 @@ namespace Microsoft.PythonTools {
             }
         }
 
-        public override IVsAsyncToolWindowFactory GetAsyncToolWindowFactory(Guid toolWindowType)
+        public override Microsoft.VisualStudio.Shell.Interop.IVsAsyncToolWindowFactory GetAsyncToolWindowFactory(Guid toolWindowType)
             => toolWindowType == typeof(InterpreterListToolWindow).GUID ? this : base.GetAsyncToolWindowFactory(toolWindowType);
 
         protected override Task<object> InitializeToolWindowAsync(Type toolWindowType, int id, CancellationToken cancellationToken)

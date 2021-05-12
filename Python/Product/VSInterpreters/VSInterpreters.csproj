@@ -21,6 +21,16 @@
         <OldToolsVersion>16.0</OldToolsVersion>
       </PropertyGroup>
     </When>
+    <When Condition=" '$(VisualStudioVersion)'=='17.0'  Or '$(TargetVisualStudioVersion)'=='VS170' ">
+      <PropertyGroup>
+        <MinimumVisualStudioVersion>17.0</MinimumVisualStudioVersion>
+        <FileUpgradeFlags>
+        </FileUpgradeFlags>
+        <UpgradeBackupLocation>
+        </UpgradeBackupLocation>
+        <OldToolsVersion>17.0</OldToolsVersion>
+      </PropertyGroup>
+    </When>
   </Choose>
   <Import Project="..\ProjectBefore.settings" />
   <PropertyGroup>
@@ -41,7 +51,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Common\Common.csproj">
       <Project>{b3db0521-d9e3-4f48-9e2e-e5ecae886049}</Project>
-      <Name>Microsoft.PythonTools.Common</Name>
+      <Name>Common</Name>
     </ProjectReference>
     <ProjectReference Include="..\VSCommon\VSCommon.csproj">
       <Project>{a52ac77f-6df9-4387-bb08-8ded3fd95a0f}</Project>
@@ -62,14 +72,12 @@
     <Reference Include="Microsoft.VisualStudio.ComponentModelHost" />
     <Reference Include="Microsoft.VisualStudio.Shell.Framework" />
     <Reference Include="Microsoft.VisualStudio.Shell.15.0" />
-    <Reference Include="Microsoft.VisualStudio.Shell.Interop" />
-    <Reference Include="Microsoft.VisualStudio.Shell.Interop.10.0">
-      <EmbedInteropTypes>True</EmbedInteropTypes>
-    </Reference>
+    <Reference Include="Microsoft.VisualStudio.Interop" />
+    <Reference Include="Microsoft.VisualStudio.Shell.Interop.10.0" />
     <Reference Include="Microsoft.VisualStudio.Threading" />
     <Reference Include="Microsoft.VisualStudio.Workspace" />
     <Reference Include="Microsoft.VisualStudio.Workspace.VSIntegration.Contracts" />
-    <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed">
+    <Reference Include="Newtonsoft.Json">
       <HintPath>$(PackagesPath)\Newtonsoft.Json\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
     </Reference>

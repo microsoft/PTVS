@@ -21,6 +21,16 @@
         <OldToolsVersion>16.0</OldToolsVersion>
       </PropertyGroup>
     </When>
+    <When Condition=" '$(VisualStudioVersion)'=='17.0'  Or '$(TargetVisualStudioVersion)'=='VS170' ">
+      <PropertyGroup>
+        <MinimumVisualStudioVersion>17.0</MinimumVisualStudioVersion>
+        <FileUpgradeFlags>
+        </FileUpgradeFlags>
+        <UpgradeBackupLocation>
+        </UpgradeBackupLocation>
+        <OldToolsVersion>17.0</OldToolsVersion>
+      </PropertyGroup>
+    </When>
   </Choose>
   <Import Project="..\ProjectBefore.settings" />
   <PropertyGroup>
@@ -137,7 +147,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Common\Common.csproj">
       <Project>{b3db0521-d9e3-4f48-9e2e-e5ecae886049}</Project>
-      <Name>Microsoft.PythonTools.Common</Name>
+      <Name>Common</Name>
     </ProjectReference>
     <ProjectReference2 Include="..\WebRole\WebRole.csproj" />
   </ItemGroup>

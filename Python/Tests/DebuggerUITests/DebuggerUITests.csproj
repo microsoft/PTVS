@@ -21,6 +21,16 @@
         <OldToolsVersion>16.0</OldToolsVersion>
       </PropertyGroup>
     </When>
+    <When Condition=" '$(VisualStudioVersion)'=='17.0'  Or '$(TargetVisualStudioVersion)'=='VS170' ">
+      <PropertyGroup>
+        <MinimumVisualStudioVersion>17.0</MinimumVisualStudioVersion>
+        <FileUpgradeFlags>
+        </FileUpgradeFlags>
+        <UpgradeBackupLocation>
+        </UpgradeBackupLocation>
+        <OldToolsVersion>17.0</OldToolsVersion>
+      </PropertyGroup>
+    </When>
   </Choose>
   <Import Project="..\TestProjectBefore.settings" />
   <PropertyGroup>
@@ -48,35 +58,16 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="EnvDTE, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-      <EmbedInteropTypes>False</EmbedInteropTypes>
-    </Reference>
-    <Reference Include="EnvDTE80, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-      <EmbedInteropTypes>False</EmbedInteropTypes>
-    </Reference>
-    <Reference Include="EnvDTE90, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-      <EmbedInteropTypes>False</EmbedInteropTypes>
-    </Reference>
-    <Reference Include="envdte90a, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-      <EmbedInteropTypes>False</EmbedInteropTypes>
-      <HintPath>$(CommonProgramFiles)\Microsoft Shared\MSEnv\PublicAssemblies\envdte90a.dll</HintPath>
-    </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Microsoft.VisualStudio.ComponentModelHost" />
-    <Reference Include="Microsoft.VisualStudio.Debugger.Interop.10.0, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
-    <Reference Include="Microsoft.VisualStudio.Debugger.Interop.11.0, Version=11.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
-    <Reference Include="Microsoft.VisualStudio.Debugger.InteropA, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-    <Reference Include="Microsoft.VisualStudio.OLE.Interop, Version=7.1.40304.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+    <Reference Include="Microsoft.VisualStudio.Debugger.Interop.10.0" />
+    <Reference Include="Microsoft.VisualStudio.Debugger.Interop.11.0" />
+    <Reference Include="Microsoft.VisualStudio.Debugger.InteropA" />
     <Reference Include="Microsoft.VisualStudio.QualityTools.ExecutionCommon" />
     <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Shell.15.0" />
     <Reference Include="Microsoft.VisualStudio.Shell.Framework" />
-    <Reference Include="Microsoft.VisualStudio.Shell.Interop, Version=7.1.40304.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-    <Reference Include="Microsoft.VisualStudio.Shell.Interop.10.0, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <EmbedInteropTypes>False</EmbedInteropTypes>
-    </Reference>
-    <Reference Include="Microsoft.VisualStudio.Shell.Interop.8.0, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-    <Reference Include="Microsoft.VisualStudio.Shell.Interop.9.0, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+    <Reference Include="Microsoft.VisualStudio.Interop" />
     <Reference Include="Microsoft.VisualStudio.Text.UI.Wpf" />
     <Reference Include="Microsoft.VisualStudio.Utilities" />
     <Reference Include="System" />

@@ -1,6 +1,6 @@
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
     <Metadata>
-        <Identity Id="96492FC7-7BC6-46F7-8559-66BB4E09FD1E" Version="16.0.0" Language="en-US" Publisher="Microsoft Corporation" />
+        <Identity Id="96492FC7-7BC6-46F7-8559-66BB4E09FD1E" Version="17.0.0" Language="en-US" Publisher="Microsoft Corporation" />
         <DisplayName>Python</DisplayName>
         <Description xml:space="preserve">Provides support for editing and debugging Python programs.</Description>
         <MoreInfo>http://aka.ms/ptvs</MoreInfo>
@@ -10,15 +10,17 @@
         <PreviewImage>PythonProjectBig.ico</PreviewImage>
     </Metadata>
     <Installation SystemComponent="true" AllUsers="true" InstalledByMsi="true">
-        <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[16.0,17.0)" />
+        <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[17.0,18.0)">
+            <ProductArchitecture>amd64</ProductArchitecture>
+        </InstallationTarget>
     </Installation>
     <Dependencies>
         <Dependency Id="Microsoft.Framework.NDP" DisplayName="Microsoft .NET Framework" Version="4.6" />
-        <Dependency IsRequired="false" Version="[16.0,17.0)" d:Source="Installed" Id="TestWindow.Microsoft.0771d463-d74d-4e95-aac2-39d3c7ec1f97" DisplayName="Test Explorer" />
+        <Dependency IsRequired="false" Version="[17.0,18.0)" d:Source="Installed" Id="TestWindow.Microsoft.0771d463-d74d-4e95-aac2-39d3c7ec1f97" DisplayName="Test Explorer" />
         <Dependency d:Source="Installed" Id="1F42C6D0-F876-4AF0-8185-1BEB0A325BB2" DisplayName="VisualStudio Interactive Components" />
     </Dependencies>
     <Prerequisites>
-        <Prerequisite Id="Microsoft.VisualStudio.Component.CoreEditor" Version="[16.0,17.0)" DisplayName="Visual Studio core editor" />
+        <Prerequisite Id="Microsoft.VisualStudio.Component.CoreEditor" Version="[17.0,18.0)" DisplayName="Visual Studio core editor" />
     </Prerequisites>
     <Assets>
         <Asset Type="Microsoft.VisualStudio.Package" Path="|%CurrentProject%;PkgdefProjectOutputGroup|" />
@@ -49,5 +51,6 @@
         <Asset Type="Microsoft.VisualStudio.Assembly" d:Source="File" Path="Microsoft.PythonTools.Attacher.exe" />
         <Asset Type="Microsoft.VisualStudio.Assembly" d:Source="File" Path="Microsoft.PythonTools.ProjectWizards.dll" />
         <Asset Type="Microsoft.VisualStudio.Assembly" d:Source="File" Path="Microsoft.Extensions.FileSystemGlobbing.dll" />
+        <Asset Type="Microsoft.VisualStudio.Assembly" d:Source="File" Path="Microsoft.VisualStudio.Interop.dll" />
     </Assets>
 </PackageManifest>

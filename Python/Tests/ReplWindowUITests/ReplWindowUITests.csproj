@@ -21,7 +21,17 @@
         <OldToolsVersion>16.0</OldToolsVersion>
       </PropertyGroup>
     </When>
-  </Choose>
+      <When Condition=" '$(VisualStudioVersion)'=='17.0'  Or '$(TargetVisualStudioVersion)'=='VS170' ">
+      <PropertyGroup>
+        <MinimumVisualStudioVersion>17.0</MinimumVisualStudioVersion>
+        <FileUpgradeFlags>
+        </FileUpgradeFlags>
+        <UpgradeBackupLocation>
+        </UpgradeBackupLocation>
+        <OldToolsVersion>17.0</OldToolsVersion>
+      </PropertyGroup>
+    </When>
+</Choose>
   <Import Project="..\TestProjectBefore.settings" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -48,34 +58,21 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="EnvDTE, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-      <EmbedInteropTypes>False</EmbedInteropTypes>
-    </Reference>
     <Reference Include="Microsoft.VisualStudio.InteractiveWindow" />
     <Reference Include="Microsoft.VisualStudio.VsInteractiveWindow" />
     <Reference Include="Microsoft.VisualStudio.ComponentModelHost" />
     <Reference Include="Microsoft.VisualStudio.CoreUtility" />
     <Reference Include="Microsoft.VisualStudio.Language.Intellisense" />
     <Reference Include="Microsoft.VisualStudio.Language.StandardClassification" />
-    <Reference Include="Microsoft.VisualStudio.OLE.Interop, Version=7.1.40304.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+    <Reference Include="Microsoft.VisualStudio.Interop" />
     <Reference Include="Microsoft.VisualStudio.QualityTools.ExecutionCommon" />
-    <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework" />
     <Reference Include="Microsoft.VisualStudio.Shell.15.0" />
     <Reference Include="Microsoft.VisualStudio.Shell.Framework" />
-    <Reference Include="Microsoft.VisualStudio.Shell.Interop, Version=7.1.40304.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-    <Reference Include="Microsoft.VisualStudio.Shell.Interop.10.0, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <EmbedInteropTypes>False</EmbedInteropTypes>
-    </Reference>
-    <Reference Include="Microsoft.VisualStudio.Shell.Interop.11.0, Version=11.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" Condition="'$(VSTarget)' != '10.0'">
-      <EmbedInteropTypes>False</EmbedInteropTypes>
-    </Reference>
-    <Reference Include="Microsoft.VisualStudio.Shell.Interop.8.0, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-    <Reference Include="Microsoft.VisualStudio.Shell.Interop.9.0, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Microsoft.VisualStudio.Text.Data" />
     <Reference Include="Microsoft.VisualStudio.Text.Logic" />
     <Reference Include="Microsoft.VisualStudio.Text.UI" />
     <Reference Include="Microsoft.VisualStudio.Text.UI.Wpf" />
-    <Reference Include="Microsoft.VisualStudio.TextManager.Interop, Version=7.1.40304.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Microsoft.VisualStudio.Utilities" />
     <Reference Include="PresentationCore" />
     <Reference Include="System" />

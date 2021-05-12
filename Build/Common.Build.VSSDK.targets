@@ -76,6 +76,7 @@
   </Target>
 
   <!-- Import the VS SDK headers -->
+  <Import Project="$(PackagesPath)Microsoft.VSSDK.BuildTools\build\Microsoft.VSSDK.BuildTools.targets" />
   <Import Project="$(PackagesPath)Microsoft.VSSDK.BuildTools\tools\vssdk\Microsoft.VsSDK.targets" />
 
   <!-- For non-debug builds, don't copy debug symbols -->

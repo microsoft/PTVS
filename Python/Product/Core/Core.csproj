@@ -34,6 +34,10 @@
     </Reference>
     <Reference Include="Microsoft.VisualStudio.Shell.15.0" />
     <Reference Include="Microsoft.VisualStudio.Shell.Framework" />
+    <Reference Include="Microsoft.VisualStudio.Interop" >
+      <Private>True</Private>
+      <IncludeInVSIX>True</IncludeInVSIX>
+    </Reference>
     <Reference Include="System" />
   </ItemGroup>
   <ItemDefinitionGroup>
@@ -51,7 +55,7 @@
   <ItemGroup>
     <ProjectReference Include="..\AttacherX86\AttacherX86.csproj">
       <Project>{f3a5829d-ee15-4be7-828f-2519172c6671}</Project>
-      <Name>Microsoft.PythonTools.AttacherX86</Name>
+      <Name>AttacherX86</Name>
     </ProjectReference>
     <ProjectReference Include="..\BuildTasks\BuildTasks.csproj">
       <Project>{89d51398-a003-44ba-b1b2-cfc6f8396d7e}</Project>
@@ -71,7 +75,7 @@
     </ProjectReference>
     <ProjectReference Include="..\Ipc.Json\Ipc.Json.csproj">
       <Project>{e1e1613d-0c96-42f9-9f2d-052c72533297}</Project>
-      <Name>Ipc.Json</Name>
+      <Name>Microsoft.PythonTools.Ipc.Json</Name>
     </ProjectReference>
     <ProjectReference Include="..\ProjectWizards\ProjectWizards.csproj">
       <Project>{3814d9db-10e6-4478-bd98-6c5840612af8}</Project>
@@ -129,6 +133,10 @@
     <Content Include="License_en-US.rtf" />
     <Content Include="$(PackagesPath)\Newtonsoft.Json\lib\net45\Newtonsoft.Json.dll" />
     <Content Include="$(PackagesPath)\Microsoft.VisualStudio.LanguageServer.Protocol\lib\netstandard2.0\Microsoft.VisualStudio.LanguageServer.Protocol.dll" />
+    <!-- Temporary workaround for the interop DLL not being available in 17 -->
+    <Content Include="$(PackagesPath)\Microsoft.VisualStudio.Interop\lib\net20\Microsoft.VisualStudio.Interop.dll">
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />

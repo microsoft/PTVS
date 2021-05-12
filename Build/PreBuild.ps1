@@ -11,13 +11,15 @@ $need_symlink = @(
     "Microsoft.Python.Parsing",
     "Microsoft.Extensions.FileSystemGlobbing",
     "Microsoft.VisualStudio.LanguageServer.Protocol",
+    "Microsoft.VisualStudio.Debugger.Engine",
+    "Microsoft.VisualStudio.Interop",
     "Microsoft.VSSDK.BuildTools",
     "Microsoft.VSSDK.Debugger.VSDConfigTool",
     "Newtonsoft.Json"
 )
 
 if (-not $vstarget) {
-    $vstarget = "16.0"
+    $vstarget = "17.0"
 } elseif ($vstarget.ToString() -match "^\d\d$") {
     $vstarget = "$vstarget.0"
 }

@@ -21,6 +21,16 @@
         <OldToolsVersion>16.0</OldToolsVersion>
       </PropertyGroup>
     </When>
+    <When Condition=" '$(VisualStudioVersion)'=='17.0'  Or '$(TargetVisualStudioVersion)'=='VS170' ">
+      <PropertyGroup>
+        <MinimumVisualStudioVersion>17.0</MinimumVisualStudioVersion>
+        <FileUpgradeFlags>
+        </FileUpgradeFlags>
+        <UpgradeBackupLocation>
+        </UpgradeBackupLocation>
+        <OldToolsVersion>17.0</OldToolsVersion>
+      </PropertyGroup>
+    </When>
   </Choose>
   <Import Project="..\ProjectBefore.settings" />
   <PropertyGroup>
@@ -39,24 +49,11 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="EnvDTE, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-      <EmbedInteropTypes>False</EmbedInteropTypes>
-    </Reference>
-    <Reference Include="envdte80, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-      <EmbedInteropTypes>False</EmbedInteropTypes>
-    </Reference>
-    <Reference Include="envdte90, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-      <EmbedInteropTypes>False</EmbedInteropTypes>
-    </Reference>
     <Reference Include="Microsoft.VisualStudio.ImageCatalog" />
     <Reference Include="Microsoft.VisualStudio.Imaging.Interop.14.0.DesignTime, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <EmbedInteropTypes>True</EmbedInteropTypes>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
-    <Reference Include="Microsoft.VisualStudio.Shell.Interop" />
-    <Reference Include="Microsoft.VisualStudio.Shell.Interop.8.0" />
-    <Reference Include="Microsoft.VisualStudio.Shell.Interop.9.0" />
-    <Reference Include="Microsoft.VisualStudio.Shell.Interop.10.0" />
-    <Reference Include="Microsoft.VisualStudio.Shell.Interop.11.0" />
+    <Reference Include="Microsoft.VisualStudio.Interop" />
     <Reference Include="Microsoft.VisualStudio.Shell.15.0" />
     <Reference Include="Microsoft.VisualStudio.Shell.Framework" />
     <Reference Include="Microsoft.VisualStudio.ComponentModelHost" />
@@ -71,10 +68,6 @@
     <Reference Include="Microsoft.VisualStudio.Text.Logic" />
     <Reference Include="Microsoft.VisualStudio.Text.UI" />
     <Reference Include="Microsoft.VisualStudio.Text.UI.Wpf" />
-    <Reference Include="Microsoft.VisualStudio.TextManager.Interop" />
-    <Reference Include="Microsoft.VisualStudio.TextManager.Interop.8.0, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-      <EmbedInteropTypes>False</EmbedInteropTypes>
-    </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
     <Reference Include="System" />
@@ -106,11 +99,11 @@
   <ItemGroup>
     <ProjectReference Include="..\Common\Common.csproj">
       <Project>{b3db0521-d9e3-4f48-9e2e-e5ecae886049}</Project>
-      <Name>Microsoft.PythonTools.Common</Name>
+      <Name>Common</Name>
     </ProjectReference>
     <ProjectReference Include="..\Debugger\Debugger.csproj">
       <Project>{decc7971-fa58-4db0-9561-bffadd393bbd}</Project>
-      <Name>Microsoft.PythonTools.Debugger</Name>
+      <Name>Debugger</Name>
     </ProjectReference>
     <ProjectReference Include="..\PythonTools\PythonTools.csproj">
       <Project>{fa7be5f5-e04f-4613-b7ac-70ce10d1bb68}</Project>
@@ -118,11 +111,11 @@
     </ProjectReference>
     <ProjectReference Include="..\VSInterpreters\VSInterpreters.csproj">
       <Project>{815db0cd-c0dd-4997-b43c-abee4dbeffe7}</Project>
-      <Name>Microsoft.PythonTools.VSInterpreters</Name>
+      <Name>VSInterpreters</Name>
     </ProjectReference>
     <ProjectReference Include="..\VSCommon\VSCommon.csproj">
       <Project>{a52ac77f-6df9-4387-bb08-8ded3fd95a0f}</Project>
-      <Name>Microsoft.PythonTools.VSCommon</Name>
+      <Name>VSCommon</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

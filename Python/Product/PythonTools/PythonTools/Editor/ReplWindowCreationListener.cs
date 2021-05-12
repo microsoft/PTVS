@@ -21,7 +21,6 @@ using Microsoft.VisualStudio.InteractiveWindow.Shell;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Utilities;
-using IOleCommandTarget = Microsoft.VisualStudio.OLE.Interop.IOleCommandTarget;
 
 namespace Microsoft.PythonTools.Editor {
     [Export(typeof(IVsInteractiveWindowOleCommandTargetProvider))]
@@ -30,7 +29,7 @@ namespace Microsoft.PythonTools.Editor {
         [Import(typeof(SVsServiceProvider))]
         public IServiceProvider Site;
 
-        public IOleCommandTarget GetCommandTarget(IWpfTextView textView, IOleCommandTarget nextTarget) {
+        public Microsoft.VisualStudio.OLE.Interop.IOleCommandTarget GetCommandTarget(IWpfTextView textView, Microsoft.VisualStudio.OLE.Interop.IOleCommandTarget nextTarget) {
             return ReplEditFilter.GetOrCreate(Site, Site.GetComponentModel(), textView, nextTarget);
         }
     }

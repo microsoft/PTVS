@@ -35,7 +35,7 @@ namespace Microsoft.PythonTools.Commands {
             _envSwitchMgr = serviceProvider.GetPythonToolsService().EnvironmentSwitcherManager;
         }
 
-        public override void Invoke(object inArg, IntPtr outArg, OLECMDEXECOPT options) {
+        public override void Invoke(object inArg, IntPtr outArg, Microsoft.VisualStudio.OLE.Interop.OLECMDEXECOPT options) {
             var envs = _envSwitchMgr.AllFactories
                 .Select(f => f.Configuration.Description)
                 .OrderBy(desc => desc)

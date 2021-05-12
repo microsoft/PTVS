@@ -10,7 +10,7 @@
 
   <PropertyGroup>
     <Language>C#</Language>        <!-- Duplicated from the C# targets file -->
-    <Platform Condition="'$(Platform)'==''">x86</Platform>
+    <Platform Condition="'$(Platform)'==''">AnyCPU</Platform>
 
     <DefineConstants>$(DefineConstants);USE_PYTHON_TESTDATA</DefineConstants>
 
@@ -33,6 +33,14 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <DefineConstants>TRACE;$(DefineConstants)</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(VSTarget)' == '17.0' ">
+    <DefineConstants>$(DefineConstants);DEV17;DEV17_OR_LATER;DEV16_OR_LATER;DEV15_OR_LATER;DEV14_OR_LATER;DEV12_OR_LATER;DEV11_OR_LATER</DefineConstants>
+    <VSCTDefinitions>DEV17;DEV17_OR_LATER;DEV16_OR_LATER;DEV15_OR_LATER;DEV14_OR_LATER;DEV12_OR_LATER;DEV11_OR_LATER</VSCTDefinitions>
+    <MicrosoftBuildAssemblyVersion>15.1.0.0</MicrosoftBuildAssemblyVersion>
+    <MicrosoftBuildEngineAssemblyVersion>15.1.0.0</MicrosoftBuildEngineAssemblyVersion>
+    <MicrosoftBuildAssemblyVersionSuffix>Core</MicrosoftBuildAssemblyVersionSuffix>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(VSTarget)' == '16.0' ">

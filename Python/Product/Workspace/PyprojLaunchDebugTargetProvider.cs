@@ -63,14 +63,8 @@ namespace Microsoft.PythonTools.Workspace {
             }
 
             var solution = serviceProvider.GetService(typeof(SVsSolution)) as IVsSolution;
-            var solution4 = solution as IVsSolution4;
             var debugger = serviceProvider.GetShellDebugger();
 
-            if (solution == null || solution4 == null) {
-                throw new InvalidOperationException();
-            }
-
-            solution4.EnsureSolutionIsLoaded(0);
             var proj = solution.EnumerateLoadedPythonProjects()
                 .FirstOrDefault(p => string.Equals(p.GetMkDocument(), moniker, StringComparison.OrdinalIgnoreCase));
 

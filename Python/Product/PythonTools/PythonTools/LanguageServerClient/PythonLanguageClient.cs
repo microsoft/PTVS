@@ -314,7 +314,6 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             // Meaning we shouldn't need to do this if they do it for us.
             await JoinableTaskContext.Factory.SwitchToMainThreadAsync();
             IComponentModel componentModel = Site.GetService(typeof(SComponentModel)) as IComponentModel;
-            Assumes.Present(componentModel);
 
             SVsServiceProvider syncServiceProvider = componentModel.GetService<SVsServiceProvider>();
             RunningDocumentTable rdt = new RunningDocumentTable(syncServiceProvider);

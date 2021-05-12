@@ -1,4 +1,4 @@
-﻿// Visual Studio Shared Project
+﻿    // Visual Studio Shared Project
 // Copyright(c) Microsoft Corporation
 // All rights reserved.
 //
@@ -924,8 +924,6 @@ namespace TestUtilities.UI {
             if (fullPath.EndsWith(".sln", StringComparison.OrdinalIgnoreCase)) {
                 t = Task.Run(() => {
                     ErrorHandler.ThrowOnFailure(solution.OpenSolutionFile((uint)0, fullPath));
-                    // Force all projects to load before running any tests.
-                    solution4.EnsureSolutionIsLoaded((uint)__VSBSLFLAGS.VSBSLFLAGS_None);
                 });
             } else {
                 t = Task.Run(() => {
@@ -943,8 +941,6 @@ namespace TestUtilities.UI {
                         ref iidUnknown,
                         out projPtr
                     ));
-                    // Force all projects to load before running any tests.
-                    solution4.EnsureSolutionIsLoaded((uint)__VSBSLFLAGS.VSBSLFLAGS_None);
                 });
             }
             using (var cts = System.Diagnostics.Debugger.IsAttached ? new CancellationTokenSource() : new CancellationTokenSource(30000)) {

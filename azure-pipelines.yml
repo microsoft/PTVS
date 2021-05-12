@@ -30,7 +30,7 @@ pr:
 
 # The agent pool the build will run on
 pool:
-  name: VSEng-MicroBuildVS2019
+  name: VSEngSS-MicroBuild2019
   demands: 
   - msbuild
   - VisualStudio_16.0
@@ -42,7 +42,7 @@ variables:
   - name: DropRoot
     value: \\cpvsbuild\Drops\DSTools\PTVS\$(Build.SourceBranchName)\$(Build.BuildNumber)\
   - name: FileVersionPrefix
-    value: 16.10
+    value: 17.0
   - name: IncludeDjangoHtmlExtensions
     value: true
   - name: IncludeMiniconda
@@ -53,6 +53,8 @@ variables:
     value: false
   - name: TrackFileAccess
     value: false
+  - name: VSTarget_Override
+    value: 17.0
   
   # PTVS variable group
   # This contains variables shared between the PTVS "product" pipeline and the PTVS "policy" pipeline.
@@ -118,12 +120,20 @@ steps:
   condition: notin(variables['Build.Reason'], 'PullRequest')
   displayName: 'Install pylance with npm'
 
+# Clean old packages
+- task: DeleteFiles@1
+  displayName: 'Clean old packages'
+  inputs:
+    SourceFolder: 'packages'
+    Contents: '**'
+  continueOnError: true
+
 # Run a powershell script that does a package restore, some symlinking, and installs debugpy
 - task: PowerShell@1
   displayName: 'Restore packages'
   inputs:
     scriptName: Build/PreBuild.ps1
-    arguments: '-vstarget $(VSTarget)'
+    arguments: '-vstarget $(VSTarget_Override)'
 
 # Clean the old swix outputs
 - task: DeleteFiles@1
@@ -141,6 +151,7 @@ steps:
     msbuildVersion: $(MsBuildVersion)
     platform: $(Platform)
     configuration: $(BuildConfiguration)
+    msbuildArguments: '/p:VSTarget=$(VSTarget_Override)'
 
 # Build the tests
 - task: MSBuild@1
@@ -150,6 +161,7 @@ steps:
     msbuildVersion: $(MsBuildVersion)
     platform: $(Platform)
     configuration: $(BuildConfiguration)
+    msbuildArguments: '/p:VSTarget=$(VSTarget_Override)'
 
 # Build the installer
 - task: MSBuild@1
@@ -159,7 +171,7 @@ steps:
     msbuildVersion: $(MsBuildVersion)
     platform: $(Platform)
     configuration: $(BuildConfiguration)
-    msbuildArguments: '/p:SkipProduct=true'
+    msbuildArguments: '/p:SkipProduct=true /p:VSTarget=$(VSTarget_Override)'
 
 # Publish buld artifact: raw
 - task: PublishBuildArtifacts@1

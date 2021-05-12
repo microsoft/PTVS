@@ -14,11 +14,11 @@ echo This script should be run as an administrator.
 set D=%~dp0
 
 rem Guess some directories for Visual Studio 16
-call :docopy "%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Preview\MSBuild\Microsoft\VisualStudio\v16.0"
+call :docopy "%VSINSTALLDIR%\MSBuild\Microsoft\VisualStudio\v17.0"
+if errorlevel 1 call :docopy "%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Preview\MSBuild\Microsoft\VisualStudio\v16.0"
 if errorlevel 1 call :docopy "%SystemDrive%\VS\MSBuild\Microsoft\VisualStudio\v15.0"
 if errorlevel 1 call :docopy "%ProgramFiles(x86)%\MSBuild\Microsoft\VisualStudio\v15.0"
-
-call :docopy "%ProgramFiles(x86)%\MSBuild\Microsoft\VisualStudio\v14.0"
+if errorlevel 1 call :docopy "%ProgramFiles(x86)%\MSBuild\Microsoft\VisualStudio\v14.0"
 
 pause
 exit /B 0

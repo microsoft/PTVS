@@ -13,7 +13,6 @@
 //
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
-
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -48,7 +47,8 @@ namespace Microsoft.PythonTools.Debugger {
         }
 
         private static ThreadedWaitDialogHelper.Session StartWaitDialog(double delayToShowDialog) {
-            return _twdf.Value?.StartWaitDialog(
+            var factory = _twdf.Value as Microsoft.VisualStudio.Shell.Interop.IVsThreadedWaitDialogFactory;
+            return factory?.StartWaitDialog(
                 null,
                 new ThreadedWaitDialogProgressData(Strings.DebuggerInProgress, isCancelable: true),
                 TimeSpan.FromSeconds(delayToShowDialog)

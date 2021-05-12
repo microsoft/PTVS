@@ -21,6 +21,16 @@
         <OldToolsVersion>16.0</OldToolsVersion>
       </PropertyGroup>
     </When>
+    <When Condition=" '$(VisualStudioVersion)'=='17.0'  Or '$(TargetVisualStudioVersion)'=='VS170' ">
+      <PropertyGroup>
+        <MinimumVisualStudioVersion>17.0</MinimumVisualStudioVersion>
+        <FileUpgradeFlags>
+        </FileUpgradeFlags>
+        <UpgradeBackupLocation>
+        </UpgradeBackupLocation>
+        <OldToolsVersion>17.0</OldToolsVersion>
+      </PropertyGroup>
+    </When>
   </Choose>
   <Import Project="..\ProjectBefore.settings" />
   <PropertyGroup>
@@ -42,7 +52,7 @@
     <Reference Include="Microsoft.Build, Version=$(MicrosoftBuildAssemblyVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Microsoft.Build.Framework, Version=$(MicrosoftBuildAssemblyVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Microsoft.Build.Utilities.$(MicrosoftBuildAssemblyVersionSuffix), Version=$(MicrosoftBuildAssemblyVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-    <Reference Include="Microsoft.VisualStudio.OLE.Interop, Version=7.1.40304.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+    <Reference Include="Microsoft.VisualStudio.Interop" />
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Core" />
@@ -96,15 +106,15 @@
   <ItemGroup>
     <ProjectReference Include="..\VSCommon\VSCommon.csproj">
       <Project>{a52ac77f-6df9-4387-bb08-8ded3fd95a0f}</Project>
-      <Name>Microsoft.PythonTools.VSCommon</Name>
+      <Name>VSCommon</Name>
     </ProjectReference>
     <ProjectReference Include="..\VSInterpreters\VSInterpreters.csproj">
       <Project>{815db0cd-c0dd-4997-b43c-abee4dbeffe7}</Project>
-      <Name>Microsoft.PythonTools.VSInterpreters</Name>
+      <Name>VSInterpreters</Name>
     </ProjectReference>
     <ProjectReference Include="..\Common\Common.csproj">
       <Project>{b3db0521-d9e3-4f48-9e2e-e5ecae886049}</Project>
-      <Name>Microsoft.PythonTools.Common</Name>
+      <Name>Common</Name>
     </ProjectReference>
     <ProjectReference2 Include="..\WebRole\WebRole.csproj" />
   </ItemGroup>
