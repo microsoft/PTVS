@@ -129,7 +129,7 @@
 
 
   <Target Name="_UpdateLayoutWithSignedBinaries"
-          DependsOnTargets="_GetBinariesInLayout, _GetJsFilesInLayout"
+          DependsOnTargets="_GetBinariesInLayout;_GetJsFilesInLayout"
           AfterTargets="SignFiles">
     <Copy SourceFiles="%(_BinariesToCopy.FullPath)" DestinationFiles="%(_BinariesToCopy.TargetPath)" />
   </Target>
