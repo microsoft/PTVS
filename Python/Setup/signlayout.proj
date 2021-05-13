@@ -108,7 +108,7 @@
 
   <Target Name="_GetBinariesInLayout">
     <ItemGroup>
-      <_BinariesInLayout Include="$(LayoutOutputPath)**\*.exe;$(LayoutOutputPath)**\*.dll;$(LayoutOutputPath)**\*.js" />
+      <_BinariesInLayout Include="$(LayoutOutputPath)**\*.exe;$(LayoutOutputPath)**\*.dll" />
       <_BinariesWithSignedSource Include="$(BinariesOutputPath)%(_BinariesInLayout.Filename)%(_BinariesInLayout.Extension)">
         <TargetPath>%(_BinariesInLayout.FullPath)</TargetPath>
       </_BinariesWithSignedSource>
@@ -116,8 +116,20 @@
     </ItemGroup>
   </Target>
 
+  <Target Name="_GetJSFilesInLayout">
+    <ItemGroup>
+      <!-- Special case the pylance files -->
+      <_FilesInLayout Include="$(LayoutOutputPath)\Microsoft.PythonTools.Core\pylance\**\*.js" />
+      <_FilesWithSignedSource Include="$(BinariesOutputPath)pylance\%(_FilesInLayout.RecursiveDir)%(_FilesInLayout.Filename)%(_FilesInLayout.Extension)">
+        <TargetPath>%(_FilesInLayout.FullPath)</TargetPath>
+      </_FilesWithSignedSource>
+      <_BinariesToCopy Include="@(_FilesWithSignedSource)" Condition="Exists(%(FullPath))" />
+    </ItemGroup>
+  </Target>
+
+
   <Target Name="_UpdateLayoutWithSignedBinaries"
-          DependsOnTargets="_GetBinariesInLayout"
+          DependsOnTargets="_GetBinariesInLayout, _GetJsFilesInLayout"
           AfterTargets="SignFiles">
     <Copy SourceFiles="%(_BinariesToCopy.FullPath)" DestinationFiles="%(_BinariesToCopy.TargetPath)" />
   </Target>
