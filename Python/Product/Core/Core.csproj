@@ -124,7 +124,7 @@
     </ProjectReference2>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="$(MSBuildThisFileDirectory)..\..\..\node_modules\@pylance\**\*.*" Exclude="*.map" CopyToOutputDirectory="PreserveNewest">
+    <Content Include="$(BinariesOutputPath)pylance\**\*.*" Exclude="*.map" CopyToOutputDirectory="PreserveNewest">
       <TargetPath>%(RecursiveDir)\%(Filename)%(Extension)</TargetPath>
       <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
       <IncludeInVSIX>true</IncludeInVSIX>
