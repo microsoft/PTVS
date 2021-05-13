@@ -89,7 +89,7 @@
       <PylanceFilesToSign Include="$(BinariesOutputPath)pylance\**\*.js" />
       <FilesToSign Include="@(PylanceFilesToSign)">
         <Authenticode>Microsoft400</Authenticode>
-        <StrongName>StrongName</StrongName>
+        <StrongName></StrongName>
         <SignedPath>$(BinariesOutputPath)pylance\%(RecursiveDir)%(Filename)%(Extension)</SignedPath>
         <UnsignedPath>$(UnsignedOutputPath)%(RecursiveDir)%(Filename)%(Extension)</UnsignedPath>
       </FilesToSign>
