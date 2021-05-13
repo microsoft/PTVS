@@ -40,6 +40,7 @@
         Microsoft.PythonTools.WebRole.dll;
         Microsoft.PythonTools.Workspace.dll;
         Microsoft.CookiecutterTools.dll;
+        Microsoft.PythonTools.Ipc.Json.DLL;
         "/>
 
     <ManagedFiles Include="
@@ -79,6 +80,17 @@
         <Authenticode>Microsoft400</Authenticode>
         <StrongName>StrongName</StrongName>
         <SignedPath>$(BinariesOutputPath)localize\%(RecursiveDir)%(Filename)%(Extension)</SignedPath>
+        <UnsignedPath>$(UnsignedOutputPath)%(RecursiveDir)%(Filename)%(Extension)</UnsignedPath>
+      </FilesToSign>
+    </ItemGroup>
+  </Target>
+  <Target Name="_AddPylanceFiles" BeforeTargets="_PreserveUnsigned;ListFiles">
+    <ItemGroup>
+      <PylanceFilesToSign Include="$(BinariesOutputPath)pylance\**\*.js" />
+      <FilesToSign Include="@(PylanceFilesToSign)">
+        <Authenticode>Microsoft400</Authenticode>
+        <StrongName>StrongName</StrongName>
+        <SignedPath>$(BinariesOutputPath)pylance\%(RecursiveDir)%(Filename)%(Extension)</SignedPath>
         <UnsignedPath>$(UnsignedOutputPath)%(RecursiveDir)%(Filename)%(Extension)</UnsignedPath>
       </FilesToSign>
     </ItemGroup>
