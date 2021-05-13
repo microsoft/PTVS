@@ -108,7 +108,7 @@
 
   <Target Name="_GetBinariesInLayout">
     <ItemGroup>
-      <_BinariesInLayout Include="$(LayoutOutputPath)**\*.exe;$(LayoutOutputPath)**\*.dll" />
+      <_BinariesInLayout Include="$(LayoutOutputPath)**\*.exe;$(LayoutOutputPath)**\*.dll;$(LayoutOutputPath)**\*.js" />
       <_BinariesWithSignedSource Include="$(BinariesOutputPath)%(_BinariesInLayout.Filename)%(_BinariesInLayout.Extension)">
         <TargetPath>%(_BinariesInLayout.FullPath)</TargetPath>
       </_BinariesWithSignedSource>
