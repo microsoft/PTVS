@@ -30,7 +30,7 @@
   <Target Name="_GenerateSwrMetadata">
     <MakeDir Directories="$([System.IO.Path]::GetDirectoryName($(SwrFile)))" />
 
-    <WriteLinesToFile File="$(SwrFile).tmp" Lines="use vs%0D%0A%0D%0Apackage name=$(MSBuildProjectName)%0D%0A  version=$(SwixVersion)%0D%0A  vs.package.type=$(SwixPackageType)" Overwrite="yes" Encoding="ASCII" />
+    <WriteLinesToFile File="$(SwrFile).tmp" Lines="use vs%0D%0A%0D%0Apackage name=$(MSBuildProjectName)%0D%0A  version=$(SwixVersion)%0D%0A  vs.package.type=$(SwixPackageType)  vs.package.productArch=$(SetupProductArch)" Overwrite="yes" Encoding="ASCII" />
     <WriteLinesToFile File="$(SwrFile).tmp" Lines="%20%20vs.package.language=$(LangCountry)" Overwrite="no" Encoding="ASCII" Condition="$(OutputLocalized) and $(LangCountry) != ''" />
 
     <PropertyGroup>
