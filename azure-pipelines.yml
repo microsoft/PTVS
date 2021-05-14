@@ -215,6 +215,13 @@ steps:
     CleanTargetFolder: true
 
 - task: CopyFiles@2
+  displayName: 'Copy swix to staging'
+  inputs:
+    SourceFolder: '$(Build.BinariesDirectory)/raw/setup'
+    TargetFolder: '$(Build.ArtifactStagingDirectory)/setup'
+    CleanTargetFolder: true
+
+- task: CopyFiles@2
   displayName: 'Prepare for symbol publishing'
   inputs:
     SourceFolder: '$(Build.ArtifactStagingDirectory)/binaries'
