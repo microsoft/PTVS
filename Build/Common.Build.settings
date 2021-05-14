@@ -17,6 +17,10 @@
     
     <TargetFrameworkVersion Condition="'$(TargetFrameworkVersion)' == ''">v4.7.2</TargetFrameworkVersion>
     <TargetFrameworkMoniker>.NETFramework,Version=$(TargetFrameworkVersion)</TargetFrameworkMoniker>
+
+    <!-- Default product arch (needed for vsix manifest/setup authoring)-->
+    <!-- See this note here: https://dev.azure.com/devdiv/DevDiv/_wiki/wikis/DevDiv.wiki/21383/How-to-configure-VSIX-to-use-the-productArch-property?anchor=2.-set-%60setupproductarch%60-msbuild-property -->
+    <SetupProductArch>neutral</SetupProductArch>
     
     <!-- Enables VS SDK build steps.
     
