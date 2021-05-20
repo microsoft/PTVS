@@ -13,7 +13,7 @@ CT_VALUES = {
     'CT_SYSCOLOR': 3,
 }
 
-for VS_VERSION in (15, 16):
+for VS_VERSION in (15, 16, 17):
     print('Writing to {}'.format(THEME_PKGDEF.format(VS_VERSION)))
     output = open(THEME_PKGDEF.format(VS_VERSION), 'w', encoding='ascii')
 
