@@ -237,10 +237,6 @@ steps:
       Microsoft.Python.Analysis.Engine.pdb
       Microsoft.Python.LanguageServer.Core.dll
       Microsoft.Python.LanguageServer.Core.pdb
-      Microsoft.Python.Parsing.dll
-      Microsoft.Python.Parsing.pdb
-      Microsoft.Python.Core.dll
-      Microsoft.Python.Core.pdb
       PyDebugAttach*.pdb
       PyDebugAttach*.dll
       VsPyProf*.pdb

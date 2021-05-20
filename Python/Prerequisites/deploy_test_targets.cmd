@@ -13,12 +13,9 @@ echo This script should be run as an administrator.
 
 set D=%~dp0
 
-rem Guess some directories for Visual Studio 16
+if NOT EXIST "%VSINSTALLDIR%" call :failure
+
 call :docopy "%VSINSTALLDIR%\MSBuild\Microsoft\VisualStudio\v17.0"
-if errorlevel 1 call :docopy "%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Preview\MSBuild\Microsoft\VisualStudio\v16.0"
-if errorlevel 1 call :docopy "%SystemDrive%\VS\MSBuild\Microsoft\VisualStudio\v15.0"
-if errorlevel 1 call :docopy "%ProgramFiles(x86)%\MSBuild\Microsoft\VisualStudio\v15.0"
-if errorlevel 1 call :docopy "%ProgramFiles(x86)%\MSBuild\Microsoft\VisualStudio\v14.0"
 
 pause
 exit /B 0
@@ -38,4 +35,21 @@ if not exist "%TARGET%" mkdir "%TARGET%"
 copy /Y "*.targets" "%TARGET%"
 popd
 
+set TARGET=%VSINSTALLDIR%\MSBuild\Microsoft\VC\v160\Platforms
+pushd "%D%..\Product\VCDebugLauncher\VCTargets"
+echo.
+echo Copying:
+echo     from %CD%
+echo     to %TARGET%
+if not exist "%TARGET%" mkdir "%TARGET%"
+robocopy /E /XO Win32 "%TARGET%\Win32" *.*
+robocopy /E /XO x64 "%TARGET%\X64" *.*
+popd
+
 exit /B 0
+
+:failure
+echo.
+echo VSINSTALLDIR not found. You may need to run this from a Dev command prompt
+echo.
+exit /B 1
