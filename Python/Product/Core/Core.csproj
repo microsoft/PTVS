@@ -34,9 +34,8 @@
     </Reference>
     <Reference Include="Microsoft.VisualStudio.Shell.15.0" />
     <Reference Include="Microsoft.VisualStudio.Shell.Framework" />
-    <Reference Include="Microsoft.VisualStudio.Interop" >
-      <Private>True</Private>
-      <IncludeInVSIX>True</IncludeInVSIX>
+    <Reference Include="Microsoft.VisualStudio.Interop">
+      <IncludeInVSIX>False</IncludeInVSIX>
     </Reference>
     <Reference Include="System" />
   </ItemGroup>
@@ -133,10 +132,8 @@
     <Content Include="License_en-US.rtf" />
     <Content Include="$(PackagesPath)\Newtonsoft.Json\lib\net45\Newtonsoft.Json.dll" />
     <Content Include="$(PackagesPath)\Microsoft.VisualStudio.LanguageServer.Protocol\lib\netstandard2.0\Microsoft.VisualStudio.LanguageServer.Protocol.dll" />
+    <Content Include="D:\Source\PTVS\packages\\Microsoft.VisualStudio.Interop\lib\net20\Microsoft.VisualStudio.Interop.dll" />
     <!-- Temporary workaround for the interop DLL not being available in 17 -->
-    <Content Include="$(PackagesPath)\Microsoft.VisualStudio.Interop\lib\net20\Microsoft.VisualStudio.Interop.dll">
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -151,7 +151,9 @@
     <Reference Include="Microsoft.VisualStudio.Shell.Interop" />
     <Reference Include="Microsoft.VisualStudio.TextManager.Interop" />
     <Reference Include="Microsoft.VisualStudio.TextManager.Interop.8.0" />
-    <Reference Include="Microsoft.VisualStudio.Interop" />
+    <Reference Include="Microsoft.VisualStudio.Interop">
+      <IncludeInVSIX>False</IncludeInVSIX>
+    </Reference>
     <Reference Include="Microsoft.VisualStudio.TemplateWizardInterface" />
     <Reference Include="Microsoft.VisualStudio.Text.Data" />
     <Reference Include="Microsoft.VisualStudio.Text.Logic" />
