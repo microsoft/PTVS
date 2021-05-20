@@ -55,11 +55,10 @@ using Microsoft.VisualStudio.Shell;
 [assembly: ProvideCodeBase(AssemblyName = "Microsoft.PythonTools.VSInterpreters", CodeBase = "Microsoft.PythonTools.VSInterpreters.dll", Version = AssemblyVersionInfo.StableVersion)]
 [assembly: ProvideCodeBase(AssemblyName = "Microsoft.PythonTools.Workspace", CodeBase = "Microsoft.PythonTools.Workspace.dll", Version = AssemblyVersionInfo.StableVersion)]
 [assembly: ProvideCodeBase(AssemblyName = "Microsoft.Extensions.FileSystemGlobbing", CodeBase = "Microsoft.Extensions.FileSystemGlobbing.dll", Version = "3.1.8.0")]
-[assembly: ProvideCodeBase(AssemblyName = "Microsoft.VisualStudio.Interop", CodeBase = "Microsoft.VisualStudio.Interop.dll")]
 
 internal static class ParserNuGetPackageInfo {
-    // important: keep in sync with Build\16.0\package.config
-    public const string Version = "0.5.59.0";
+    // important: keep in sync with Build\17.0\package.config
+    public const string Version = "0.646.0";
     public const string Culture = "neutral";
     public const string PublicKeyToken = "b03f5f7f11d50a3a";
 }
