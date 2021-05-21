@@ -163,48 +163,49 @@ namespace Microsoft.PythonTools.Environments {
             // which won't go back to 0 if multiple conda environments are being
             // created around the same time. We need the discovery in order to find
             // the new factory.
-            using (_factoryProvider?.SuppressDiscoverFactories(forceDiscoveryOnDispose: true)) {
-                taskHandler?.Progress.Report(new TaskProgressData() {
-                    CanBeCanceled = false,
-                    ProgressText = Strings.CondaStatusCenterCreateProgressCreating,
-                    PercentComplete = null,
-                });
+            
+            taskHandler?.Progress.Report(new TaskProgressData() {
+                CanBeCanceled = false,
+                ProgressText = Strings.CondaStatusCenterCreateProgressCreating,
+                PercentComplete = null,
+            });
 
-                bool failed = true;
-                bool useEnvFile = !string.IsNullOrEmpty(_envFilePath);
+            bool failed = true;
+            bool useEnvFile = !string.IsNullOrEmpty(_envFilePath);
 
-                try {
-                    if (useEnvFile) {
-                        if (!await _condaMgr.CreateFromEnvironmentFileAsync(
-                            _envNameOrPath,
-                            _envFilePath,
-                            ui,
-                            ct
-                        )) {
-                            throw new ApplicationException(Strings.CondaStatusCenterCreateFailure);
-                        }
-                    } else {
-                        if (!await _condaMgr.CreateAsync(
-                            _envNameOrPath,
-                            _packages.ToArray(),
-                            ui,
-                            ct
-                        )) {
-                            throw new ApplicationException(Strings.CondaStatusCenterCreateFailure);
-                        }
+            try {
+                if (useEnvFile) {
+                    if (!await _condaMgr.CreateFromEnvironmentFileAsync(
+                        _envNameOrPath,
+                        _envFilePath,
+                        ui,
+                        ct
+                    )) {
+                        throw new ApplicationException(Strings.CondaStatusCenterCreateFailure);
                     }
-
-                    failed = false;
-                } finally {
-                    _logger?.LogEvent(PythonLogEvent.CreateCondaEnv, new CreateCondaEnvInfo() {
-                        Failed = failed,
-                        FromEnvironmentFile = useEnvFile,
-                        SetAsDefault = _setAsDefault,
-                        SetAsCurrent = _setAsCurrent,
-                        OpenEnvironmentsWindow = _viewInEnvWindow,
-                    });
+                } else {
+                    if (!await _condaMgr.CreateAsync(
+                        _envNameOrPath,
+                        _packages.ToArray(),
+                        ui,
+                        ct
+                    )) {
+                        throw new ApplicationException(Strings.CondaStatusCenterCreateFailure);
+                    }
                 }
+
+                failed = false;
+            } finally {
+                _logger?.LogEvent(PythonLogEvent.CreateCondaEnv, new CreateCondaEnvInfo() {
+                    Failed = failed,
+                    FromEnvironmentFile = useEnvFile,
+                    SetAsDefault = _setAsDefault,
+                    SetAsCurrent = _setAsCurrent,
+                    OpenEnvironmentsWindow = _viewInEnvWindow,
+                });
             }
+
+            await _factoryProvider.ForceDiscoverInterpreterFactories();
 
             var expectedId = CondaEnvironmentFactoryConstants.GetInterpreterId(
                 CondaEnvironmentFactoryProvider.EnvironmentCompanyName,
