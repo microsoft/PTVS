@@ -22,6 +22,8 @@ using Microsoft.VisualStudio.Debugger.CallStack;
 using Microsoft.VisualStudio.Debugger.Evaluation;
 
 namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
+    [StructProxy(MaxVersion = PythonLanguageVersion.V38, StructName = "PyFrameObject")]
+    [StructProxy(MinVersion = PythonLanguageVersion.V39, StructName = "_frame")]
     internal class PyFrameObject : PyVarObject {
         public class Fields_27_35 {
             public StructField<PointerProxy<PyCodeObject>> f_code;

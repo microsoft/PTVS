@@ -27,6 +27,8 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             public StructField<PointerProxy<PyDictObject>> modules;
             [FieldProxy(MinVersion = PythonLanguageVersion.V36)]
             public StructField<PointerProxy> eval_frame;
+            [FieldProxy(MinVersion = PythonLanguageVersion.V38)]
+            public StructField<ceval_state> ceval;
         }
 
         private readonly Fields _fields;
@@ -60,6 +62,8 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             get { return GetFieldProxy(_fields.eval_frame); }
         }
 
+        public ceval_state ceval => GetFieldProxy(_fields.ceval);
+
         private class InterpHeadHolder : DkmDataItem {
             public readonly PointerProxy<PyInterpreterState> Proxy;
 
@@ -84,6 +88,24 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             for (var tstate = tstate_head.TryRead(); tstate != null; tstate = tstate.next.TryRead()) {
                 yield return tstate;
             }
+        }
+
+        [StructProxy(MinVersion = PythonLanguageVersion.V38, StructName = "_ceval_state")]
+        public class ceval_state : StructProxy {
+            private class Fields {
+                public StructField<Int32Proxy> recursion_limit;
+                public StructField<Int32Proxy> tracing_possible;
+            }
+
+            private readonly Fields _fields;
+
+            public ceval_state(DkmProcess process, ulong address)
+                : base(process, address) {
+                InitializeStruct(this, out _fields);
+            }
+
+            public Int32Proxy recursion_limit => GetFieldProxy(_fields.recursion_limit);
+            public Int32Proxy tracing_possible => GetFieldProxy(_fields.tracing_possible);
         }
     }
 }

@@ -157,7 +157,7 @@ struct BreakpointData {
 // sets breakpointDataInUseByTraceFunc = currentBreakpointData, which indicates to debugger that this data
 // is in use and should not be modified. TraceFunc then checks the value of currentBreakpointData again
 // to make sure it was not modified (which is possible because debugger could have done that between reading
-// currentBreakpointData and setting breakpointDataInUseByTraceFunc). If it was modified, then the whole 
+// currentBreakpointData and setting breakpointDataInUseByTraceFunc). If it was modified, then the whole
 // process restarts from the beginning; otherwise, TraceFunc uses the data to match trace info against.
 //
 // From debugger perspective, when it needs to write breakpoint data, it looks at breakpointDataInUseByTraceFunc,
@@ -231,7 +231,7 @@ __declspec(dllexport)
 volatile uint64_t evalLoopExcValue; // pointer to exc_value fetched after evaluation
 
 __declspec(dllexport)
-volatile uint64_t evalLoopExcStr; // pointer to str(exc_value) 
+volatile uint64_t evalLoopExcStr; // pointer to str(exc_value)
 
 __declspec(dllexport)
 volatile uint32_t evalLoopSEHCode; // if a structured exception occured during eval, the return value of GetExceptionCode
@@ -363,7 +363,7 @@ void OnBreakpointHit() {
 
 // Note that this is only reported for step in/over, not for step out - debugger handles the latter via native breakpoints.
 __declspec(dllexport) __declspec(noinline)
-void OnStepComplete() { 
+void OnStepComplete() {
     volatile char dummy = 0;
     UNREFERENCED_PARAMETER(dummy);
 }
@@ -527,7 +527,7 @@ static void TraceReturn(void* frame) {
 #pragma warning(disable:4211 28112) // nonstandard extension used: redefined extern to static
                                     // If "objectsToRelease" is accessed through interlocked function even once,
                                         //it must always be accessed through interlocked functions
-                                        //Waring supressed because there is no other interlocked operation performed on 
+                                        //Waring supressed because there is no other interlocked operation performed on
                                         //This variable and we want to avoid it here due to performance reasons
 
 static void ReleasePendingObjects() {
@@ -590,6 +590,19 @@ void *EvalFrameFunc(void* f, int throwFlag)
 {
     if (DefaultEvalFrameFunc)
         return (*DefaultEvalFrameFunc)(f, throwFlag);
+
+    return nullptr;
+}
+
+typedef void* (*_PyFrameEvalFunction_39)(void*,void*, int);
+__declspec(dllexport)
+_PyFrameEvalFunction_39 DefaultEvalFrameFunc_39 = nullptr;
+
+__declspec(dllexport)
+void* EvalFrameFunc_39(void* ts, void* f, int throwFlag)
+{
+    if (DefaultEvalFrameFunc_39)
+        return (*DefaultEvalFrameFunc_39)(ts, f, throwFlag);
 
     return nullptr;
 }
