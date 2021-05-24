@@ -67,9 +67,13 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
                 if (frame.ModuleInstance == pythonInfo.DLLs.Python) {
                     addr = pythonInfo.DLLs.Python.GetFunctionAddress("PyEval_EvalFrameEx");
                 }
-            } else {
+            } else if (pythonInfo.LanguageVersion < PythonLanguageVersion.V39) {
                 if (frame.ModuleInstance == pythonInfo.DLLs.DebuggerHelper) {
                     addr = pythonInfo.DLLs.DebuggerHelper.GetFunctionAddress("EvalFrameFunc");
+                }
+            } else {
+                if (frame.ModuleInstance == pythonInfo.DLLs.DebuggerHelper) {
+                    addr = pythonInfo.DLLs.DebuggerHelper.GetFunctionAddress("EvalFrameFunc_39");
                 }
             }
 
