@@ -230,10 +230,10 @@ namespace Microsoft.PythonTools.Infrastructure {
                 config.pszFooter = Footer;
                 config.pszVerificationText = VerificationText;
                 config.pfCallback = Callback;
-                config.hMainIcon = (IntPtr)GetIconResource(MainIcon);
-                config.hFooterIcon = (IntPtr)GetIconResource(FooterIcon);
+                config.MainIcon.hMainIcon = (int)GetIconResource(MainIcon);
+                config.FooterIcon.hMainIcon = (int)GetIconResource(FooterIcon);
 
-                if (Width.HasValue) {
+                if (Width.HasValue && Width.Value != 0) {
                     config.cxWidth = (uint)Width.Value;
                 } else {
                     config.dwFlags |= NativeMethods.TASKDIALOG_FLAGS.TDF_SIZE_TO_CONTENT;
@@ -264,8 +264,8 @@ namespace Microsoft.PythonTools.Infrastructure {
 
                 int selectedButton, selectedRadioButton;
                 bool verified;
-                ErrorHandler.ThrowOnFailure(NativeMethods.TaskDialogIndirect(
-                    ref config,
+                ErrorHandler.ThrowOnFailure((int)NativeMethods.TaskDialogIndirect(
+                    config,
                     out selectedButton,
                     out selectedRadioButton,
                     out verified
@@ -294,24 +294,28 @@ namespace Microsoft.PythonTools.Infrastructure {
             return SelectedButton;
         }
 
-        private int Callback(IntPtr hwnd, uint uNotification, UIntPtr wParam, IntPtr lParam, IntPtr lpRefData) {
+        private int Callback(IntPtr hwnd,
+                uint uNotification,
+                IntPtr wParam,
+                IntPtr lParam,
+                IntPtr lpRefData) {
             try {
-                switch ((NativeMethods.TASKDIALOG_NOTIFICATION)uNotification) {
-                    case NativeMethods.TASKDIALOG_NOTIFICATION.TDN_CREATED:
+                switch ((NativeMethods.TASKDIALOG_NOTIFICATIONS)uNotification) {
+                    case NativeMethods.TASKDIALOG_NOTIFICATIONS.TDN_CREATED:
                         foreach (var btn in _buttons.Where(b => b.ElevationRequired)) {
                             NativeMethods.SendMessage(
                                 hwnd,
-                                (int)NativeMethods.TASKDIALOG_MESSAGE.TDM_SET_BUTTON_ELEVATION_REQUIRED_STATE,
+                                (int)NativeMethods.TASKDIALOG_MESSAGES.TDM_SET_BUTTON_ELEVATION_REQUIRED_STATE,
                                 new IntPtr(GetButtonId(btn, _buttons)),
                                 new IntPtr(1)
                             );
                         }
                         break;
-                    case NativeMethods.TASKDIALOG_NOTIFICATION.TDN_NAVIGATED:
+                    case NativeMethods.TASKDIALOG_NOTIFICATIONS.TDN_NAVIGATED:
                         break;
-                    case NativeMethods.TASKDIALOG_NOTIFICATION.TDN_BUTTON_CLICKED:
+                    case NativeMethods.TASKDIALOG_NOTIFICATIONS.TDN_BUTTON_CLICKED:
                         break;
-                    case NativeMethods.TASKDIALOG_NOTIFICATION.TDN_HYPERLINK_CLICKED:
+                    case NativeMethods.TASKDIALOG_NOTIFICATIONS.TDN_HYPERLINK_CLICKED:
                         var url = Marshal.PtrToStringUni(lParam);
                         var hevt = HyperlinkClicked;
                         if (hevt != null) {
@@ -320,19 +324,19 @@ namespace Microsoft.PythonTools.Infrastructure {
                             Process.Start(new ProcessStartInfo { FileName = url, UseShellExecute = true });
                         }
                         break;
-                    case NativeMethods.TASKDIALOG_NOTIFICATION.TDN_TIMER:
+                    case NativeMethods.TASKDIALOG_NOTIFICATIONS.TDN_TIMER:
                         break;
-                    case NativeMethods.TASKDIALOG_NOTIFICATION.TDN_DESTROYED:
+                    case NativeMethods.TASKDIALOG_NOTIFICATIONS.TDN_DESTROYED:
                         break;
-                    case NativeMethods.TASKDIALOG_NOTIFICATION.TDN_RADIO_BUTTON_CLICKED:
+                    case NativeMethods.TASKDIALOG_NOTIFICATIONS.TDN_RADIO_BUTTON_CLICKED:
                         break;
-                    case NativeMethods.TASKDIALOG_NOTIFICATION.TDN_DIALOG_CONSTRUCTED:
+                    case NativeMethods.TASKDIALOG_NOTIFICATIONS.TDN_DIALOG_CONSTRUCTED:
                         break;
-                    case NativeMethods.TASKDIALOG_NOTIFICATION.TDN_VERIFICATION_CLICKED:
+                    case NativeMethods.TASKDIALOG_NOTIFICATIONS.TDN_VERIFICATION_CLICKED:
                         break;
-                    case NativeMethods.TASKDIALOG_NOTIFICATION.TDN_HELP:
+                    case NativeMethods.TASKDIALOG_NOTIFICATIONS.TDN_HELP:
                         break;
-                    case NativeMethods.TASKDIALOG_NOTIFICATION.TDN_EXPANDO_BUTTON_CLICKED:
+                    case NativeMethods.TASKDIALOG_NOTIFICATIONS.TDN_EXPANDO_BUTTON_CLICKED:
                         break;
                     default:
                         break;
@@ -509,8 +513,141 @@ namespace Microsoft.PythonTools.Infrastructure {
             internal const int IDYES = 6;
             internal const int IDNO = 7;
             internal const int IDCLOSE = 8;
+            internal const int WM_USER = 0x0400;
+            internal static IntPtr NO_PARENT = IntPtr.Zero;
 
+            [DllImport(ExternDll.User32, CharSet = CharSet.Auto, SetLastError = true)]
+            internal static extern IntPtr SendMessage(
+                IntPtr hWnd,
+                uint msg,
+                IntPtr wParam,
+                IntPtr lParam
+            );
+
+            [DllImport(ExternDll.ComCtl32, CharSet = CharSet.Auto, SetLastError = true)]
+            internal static extern HRESULT TaskDialog(
+                IntPtr hwndParent,
+                IntPtr hInstance,
+                [MarshalAs(UnmanagedType.LPWStr)] string pszWindowtitle,
+                [MarshalAs(UnmanagedType.LPWStr)] string pszMainInstruction,
+                [MarshalAs(UnmanagedType.LPWStr)] string pszContent,
+                NativeMethods.TASKDIALOG_COMMON_BUTTON_FLAGS dwCommonButtons,
+                [MarshalAs(UnmanagedType.LPWStr)] string pszIcon,
+                [In, Out] ref int pnButton);
+
+            [DllImport(ExternDll.ComCtl32, CharSet = CharSet.Auto, SetLastError = true)]
+            internal static extern HRESULT TaskDialogIndirect(
+                [In] NativeMethods.TASKDIALOGCONFIG pTaskConfig,
+                [Out] out int pnButton,
+                [Out] out int pnRadioButton,
+                [MarshalAs(UnmanagedType.Bool)][Out] out bool pVerificationFlagChecked);
+
+            internal delegate HRESULT TDIDelegate(
+                [In] NativeMethods.TASKDIALOGCONFIG pTaskConfig,
+                [Out] out int pnButton,
+                [Out] out int pnRadioButton,
+                [Out] out bool pVerificationFlagChecked);
+
+
+            // Main task dialog configuration struct.
+            // NOTE: Packing must be set to 4 to make this work on 64-bit platforms.
+            [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto, Pack = 4)]
+            internal class TASKDIALOGCONFIG {
+                internal uint cbSize;
+                internal IntPtr hwndParent;
+                internal IntPtr hInstance;
+                internal TASKDIALOG_FLAGS dwFlags;
+                internal TASKDIALOG_COMMON_BUTTON_FLAGS dwCommonButtons;
+                [MarshalAs(UnmanagedType.LPWStr)]
+                internal string pszWindowTitle;
+                internal TASKDIALOGCONFIG_ICON_UNION MainIcon; // NOTE: 32-bit union field, holds pszMainIcon as well
+                [MarshalAs(UnmanagedType.LPWStr)]
+                internal string pszMainInstruction;
+                [MarshalAs(UnmanagedType.LPWStr)]
+                internal string pszContent;
+                internal uint cButtons;
+                internal IntPtr pButtons;           // Ptr to TASKDIALOG_BUTTON structs
+                internal int nDefaultButton;
+                internal uint cRadioButtons;
+                internal IntPtr pRadioButtons;      // Ptr to TASKDIALOG_BUTTON structs
+                internal int nDefaultRadioButton;
+                [MarshalAs(UnmanagedType.LPWStr)]
+                internal string pszVerificationText;
+                [MarshalAs(UnmanagedType.LPWStr)]
+                internal string pszExpandedInformation;
+                [MarshalAs(UnmanagedType.LPWStr)]
+                internal string pszExpandedControlText;
+                [MarshalAs(UnmanagedType.LPWStr)]
+                internal string pszCollapsedControlText;
+                internal TASKDIALOGCONFIG_ICON_UNION FooterIcon;  // NOTE: 32-bit union field, holds pszFooterIcon as well
+                [MarshalAs(UnmanagedType.LPWStr)]
+                internal string pszFooter;
+                internal PFTASKDIALOGCALLBACK pfCallback;
+                internal IntPtr lpCallbackData;
+                internal uint cxWidth;
+            }
+
+            internal const int IGNORED = (int)HRESULT.S_OK;
+
+            // NOTE: We include a "spacer" so that the struct size varies on 
+            // 64-bit architectures.
+            [StructLayout(LayoutKind.Explicit, CharSet = CharSet.Auto)]
+            internal struct TASKDIALOGCONFIG_ICON_UNION {
+                internal TASKDIALOGCONFIG_ICON_UNION(int i) {
+                    spacer = IntPtr.Zero;
+                    pszIcon = 0;
+                    hMainIcon = i;
+                }
+
+                [FieldOffset(0)]
+                internal int hMainIcon;
+                [FieldOffset(0)]
+                internal int pszIcon;
+                [FieldOffset(0)]
+                internal IntPtr spacer;
+            }
+
+            // NOTE: Packing must be set to 4 to make this work on 64-bit platforms.
+            [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto, Pack = 4)]
+            internal struct TASKDIALOG_BUTTON {
+                public TASKDIALOG_BUTTON(int n, string txt) {
+                    nButtonID = n;
+                    pszButtonText = txt;
+                }
+
+                internal int nButtonID;
+                [MarshalAs(UnmanagedType.LPWStr)]
+                internal string pszButtonText;
+            }
+
+            // Task Dialog - identifies common buttons.
+            [Flags]
+            internal enum TASKDIALOG_COMMON_BUTTON_FLAGS {
+                TDCBF_OK_BUTTON = 0x0001, // selected control return value IDOK
+                TDCBF_YES_BUTTON = 0x0002, // selected control return value IDYES
+                TDCBF_NO_BUTTON = 0x0004, // selected control return value IDNO
+                TDCBF_CANCEL_BUTTON = 0x0008, // selected control return value IDCANCEL
+                TDCBF_RETRY_BUTTON = 0x0010, // selected control return value IDRETRY
+                TDCBF_CLOSE_BUTTON = 0x0020  // selected control return value IDCLOSE
+            }
+
+            // Identify button *return values* - note that, unfortunately, these are different
+            // from the inbound button values.
+            internal enum TASKDIALOG_COMMON_BUTTON_RETURN_ID {
+                IDOK = 1,
+                IDCANCEL = 2,
+                IDABORT = 3,
+                IDRETRY = 4,
+                IDIGNORE = 5,
+                IDYES = 6,
+                IDNO = 7,
+                IDCLOSE = 8
+            }
+
+            // Task Dialog - flags
+            [Flags]
             internal enum TASKDIALOG_FLAGS {
+                NONE = 0,
                 TDF_ENABLE_HYPERLINKS = 0x0001,
                 TDF_USE_HICON_MAIN = 0x0002,
                 TDF_USE_HICON_FOOTER = 0x0004,
@@ -527,42 +664,10 @@ namespace Microsoft.PythonTools.Infrastructure {
                 TDF_RTL_LAYOUT = 0x2000,
                 TDF_NO_DEFAULT_RADIO_BUTTON = 0x4000,
                 TDF_CAN_BE_MINIMIZED = 0x8000,
-                TDF_SIZE_TO_CONTENT = 0x01000000
+                TDF_SIZE_TO_CONTENT = 0x01000000    
             }
 
-            internal enum TASKDIALOG_COMMON_BUTTON_FLAGS {
-                TDCBF_OK_BUTTON = 0x0001,
-                TDCBF_YES_BUTTON = 0x0002,
-                TDCBF_NO_BUTTON = 0x0004,
-                TDCBF_CANCEL_BUTTON = 0x0008,
-                TDCBF_RETRY_BUTTON = 0x0010,
-                TDCBF_CLOSE_BUTTON = 0x0020
-            }
-
-            internal enum TASKDIALOG_NOTIFICATION : uint {
-                TDN_CREATED = 0,
-                TDN_NAVIGATED = 1,
-                TDN_BUTTON_CLICKED = 2,     // wParam = Button ID
-                TDN_HYPERLINK_CLICKED = 3,  // lParam = (LPCWSTR)pszHREF
-                TDN_TIMER = 4,              // wParam = Milliseconds since dialog created or timer reset
-                TDN_DESTROYED = 5,
-                TDN_RADIO_BUTTON_CLICKED = 6,   // wParam = Radio Button ID
-                TDN_DIALOG_CONSTRUCTED = 7,
-                TDN_VERIFICATION_CLICKED = 8,   // wParam = 1 if checkbox checked, 0 if not, lParam is unused and always 0
-                TDN_HELP = 9,
-                TDN_EXPANDO_BUTTON_CLICKED = 10 // wParam = 0 (dialog is now collapsed), wParam != 0 (dialog is now expanded)
-            };
-
-            internal enum TASKDIALOG_ICON : ushort {
-              TD_WARNING_ICON = unchecked((ushort)-1),
-              TD_ERROR_ICON = unchecked((ushort)-2),
-              TD_INFORMATION_ICON = unchecked((ushort)-3),
-              TD_SHIELD_ICON = unchecked((ushort)-4)
-            }
-
-            const int WM_USER = 0x0400;
-
-            internal enum TASKDIALOG_MESSAGE : int {
+            internal enum TASKDIALOG_MESSAGES {
                 TDM_NAVIGATE_PAGE = WM_USER + 101,
                 TDM_CLICK_BUTTON = WM_USER + 102, // wParam = Button ID
                 TDM_SET_MARQUEE_PROGRESS_BAR = WM_USER + 103, // wParam = 0 (nonMarque) wParam != 0 (Marquee)
@@ -579,63 +684,107 @@ namespace Microsoft.PythonTools.Infrastructure {
                 TDM_SET_BUTTON_ELEVATION_REQUIRED_STATE = WM_USER + 115, // wParam = Button ID, lParam = 0 (elevation not required), lParam != 0 (elevation required)
                 TDM_UPDATE_ICON = WM_USER + 116  // wParam = icon element (TASKDIALOG_ICON_ELEMENTS), lParam = new icon (hIcon if TDF_USE_HICON_* was set, PCWSTR otherwise)
             }
-
-            [SuppressMessage("Microsoft.Interoperability", "CA1400:PInvokeEntryPointsShouldExist",
-                Justification = "Entry point exists but CA can't find it")]
-            [DllImport("comctl32.dll", SetLastError = true)]
-            internal static extern int TaskDialogIndirect(
-                ref TASKDIALOGCONFIG pTaskConfig,
-                out int pnButton,
-                out int pnRadioButton,
-                [MarshalAs(UnmanagedType.Bool)] out bool pfverificationFlagChecked);
-
-            internal delegate int PFTASKDIALOGCALLBACK(IntPtr hwnd, uint uNotification, UIntPtr wParam, IntPtr lParam, IntPtr lpRefData);
-
-            [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
-            internal struct TASKDIALOG_BUTTON {
-                public int nButtonID;
-                [MarshalAs(UnmanagedType.LPWStr)]
-                public string pszButtonText;
+            
+            internal enum TASKDIALOG_ICON : ushort {
+              TD_WARNING_ICON = unchecked((ushort)-1),
+              TD_ERROR_ICON = unchecked((ushort)-2),
+              TD_INFORMATION_ICON = unchecked((ushort)-3),
+              TD_SHIELD_ICON = unchecked((ushort)-4)
             }
 
-            [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
-            internal struct TASKDIALOGCONFIG {
-                public uint cbSize;
-                public IntPtr hwndParent;
-                public IntPtr hInstance;
-                public TASKDIALOG_FLAGS dwFlags;
-                public TASKDIALOG_COMMON_BUTTON_FLAGS dwCommonButtons;
-                [MarshalAs(UnmanagedType.LPWStr)]
-                public string pszWindowTitle;
-                public IntPtr hMainIcon;
-                [MarshalAs(UnmanagedType.LPWStr)]
-                public string pszMainInstruction;
-                [MarshalAs(UnmanagedType.LPWStr)]
-                public string pszContent;
-                public uint cButtons;
-                public IntPtr pButtons;
-                public int nDefaultButton;
-                public uint cRadioButtons;
-                public IntPtr pRadioButtons;
-                public int nDefaultRadioButton;
-                [MarshalAs(UnmanagedType.LPWStr)]
-                public string pszVerificationText;
-                [MarshalAs(UnmanagedType.LPWStr)]
-                public string pszExpandedInformation;
-                [MarshalAs(UnmanagedType.LPWStr)]
-                public string pszExpandedControlText;
-                [MarshalAs(UnmanagedType.LPWStr)]
-                public string pszCollapsedControlText;
-                public IntPtr hFooterIcon;
-                [MarshalAs(UnmanagedType.LPWStr)]
-                public string pszFooter;
-                public PFTASKDIALOGCALLBACK pfCallback;
-                public IntPtr lpCallbackData;
-                public uint cxWidth;
+            internal enum TASKDIALOG_NOTIFICATIONS {
+                TDN_CREATED = 0,
+                TDN_NAVIGATED = 1,
+                TDN_BUTTON_CLICKED = 2,            // wParam = Button ID
+                TDN_HYPERLINK_CLICKED = 3,         // lParam = (LPCWSTR)pszHREF
+                TDN_TIMER = 4,                     // wParam = Milliseconds since dialog created or timer reset
+                TDN_DESTROYED = 5,
+                TDN_RADIO_BUTTON_CLICKED = 6,      // wParam = Radio Button ID
+                TDN_DIALOG_CONSTRUCTED = 7,
+                TDN_VERIFICATION_CLICKED = 8,      // wParam = 1 if checkbox checked, 0 if not, lParam is unused and always 0
+                TDN_HELP = 9,
+                TDN_EXPANDO_BUTTON_CLICKED = 10    // wParam = 0 (dialog is now collapsed), wParam != 0 (dialog is now expanded)
             }
 
-            [DllImport("user32.dll")]
-            internal static extern IntPtr SendMessage(IntPtr hWnd, int Msg, IntPtr wParam, IntPtr lParam);
+            // Task Dialog config and related structs (for TaskDialogIndirect())
+            internal delegate int PFTASKDIALOGCALLBACK(
+                IntPtr hwnd,
+                uint msg,
+                IntPtr wParam,
+                IntPtr lParam,
+                IntPtr lpRefData);
+
+            // Misc small classes and enums   
+            internal enum HRESULT : long {
+                S_FALSE = 0x0001,
+                S_OK = 0x0000,
+                E_INVALIDARG = 0x80070057,
+                E_OUTOFMEMORY = 0x8007000E
+            }
+
+            // Window States
+            internal enum NativeDialogShowState {
+                PreShow,
+                Showing,
+                Closing,
+                Closed
+            }
+
+            internal class ExternDll {
+                internal const string ComCtl32 = "comctl32.dll";
+                internal const string Kernel32 = "kernel32.dll";
+                internal const string ComDlg32 = "comdlg32.dll";
+                internal const string User32 = "user32.dll";
+                internal const string Shell32 = "shell32.dll";
+            }
+
+            /// <summary>
+            /// Identifies one of the standard buttons that 
+            /// can be displayed via TaskDialog.
+            /// </summary>
+            [Flags]
+            internal enum TaskDialogStandardButton {
+                None = 0x0000,
+                Ok = 0x0001,
+                Yes = 0x0002,
+                No = 0x0004,
+                Cancel = 0x0008,
+                Retry = 0x0010,
+                Close = 0x0020
+            }
+
+            /// <summary>
+            /// Provides standard combinations of standard buttons in the TaskDialog.
+            /// </summary>
+            internal enum TaskDialogStandardButtons {
+                None = TaskDialogStandardButton.None,
+                Cancel = TaskDialogStandardButton.Cancel,
+                OkCancel = TaskDialogStandardButton.Ok | TaskDialogStandardButton.Cancel,
+                Yes = TaskDialogStandardButton.Yes,
+                YesNo = TaskDialogStandardButton.Yes | TaskDialogStandardButton.No,
+                YesNoCancel = TaskDialogStandardButton.Yes | TaskDialogStandardButton.No | TaskDialogStandardButton.Cancel,
+                RetryCancel = TaskDialogStandardButton.Retry | TaskDialogStandardButton.Cancel,
+                Close = TaskDialogStandardButton.Close
+            }
+
+            /// <summary>
+            /// Specifies the icon displayed in a task dialog.
+            /// </summary>
+            internal enum TaskDialogStandardIcon {
+                Warning = 65535,
+                Error = 65534,
+                Information = 65533,
+                Shield = 65532,
+                ShieldBlueBG = 65531,
+                SecurityWarning = 65530,
+                SecurityError = 65529,
+                SecuritySuccess = 65528,
+                SecurityShieldGray = 65527
+            }
+
+            internal static bool Failed(HRESULT hresult) {
+                return ((int)hresult < 0);
+            }
         }
     }
 

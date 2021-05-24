@@ -13,7 +13,7 @@ using StreamJsonRpc;
 
 namespace Microsoft.PythonTools.LanguageServerClient.FileWatcher {
     class Listener : IDisposable {
-        private readonly JsonRpc _rpc;
+        private JsonRpc _rpc;
         private System.IO.FileSystemWatcher _solutionWatcher;
         private Microsoft.Extensions.FileSystemGlobbing.Matcher _matcher = new Microsoft.Extensions.FileSystemGlobbing.Matcher(StringComparison.InvariantCultureIgnoreCase);
         private bool disposedValue;
@@ -21,6 +21,7 @@ namespace Microsoft.PythonTools.LanguageServerClient.FileWatcher {
 
         public Listener(StreamJsonRpc.JsonRpc rpc, IVsFolderWorkspaceService workspaceService, IServiceProvider site) {
             this._rpc = rpc;
+            this._rpc.Disconnected += _rpc_Disconnected;
 
             // Ignore some common directories
             _matcher.AddExclude("**/.vs/**/*.*");
@@ -50,6 +51,11 @@ namespace Microsoft.PythonTools.LanguageServerClient.FileWatcher {
                     _root = _solutionWatcher.Path;
                 }
             }
+        }
+
+        private void _rpc_Disconnected(object sender, JsonRpcDisconnectedEventArgs e) {
+            _rpc.Disconnected -= _rpc_Disconnected;
+            _rpc = null;
         }
 
         private string GetSolutionDirectory(IServiceProvider site) {
@@ -89,8 +95,8 @@ namespace Microsoft.PythonTools.LanguageServerClient.FileWatcher {
             await OnFileChanged(sender, e);
         }
         private async Task OnFileChanged(object sender, System.IO.FileSystemEventArgs e) {
-            // Skip directory change events
-            if (!e.IsDirectoryChanged()) {
+            // Skip directory change events and when rpc has ben disconnected
+            if (!e.IsDirectoryChanged() && _rpc != null) {
                 // Create something to match with
                 var item = new InMemoryDirectoryInfo(_root, new string[] { e.FullPath });
 
