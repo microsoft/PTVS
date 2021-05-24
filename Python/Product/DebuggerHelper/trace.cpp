@@ -594,6 +594,8 @@ void *EvalFrameFunc(void* f, int throwFlag)
     return nullptr;
 }
 
+// In Python 3.9 the eval function added the thread state. So
+// we need a new function def to accomodate that change.
 typedef void* (*_PyFrameEvalFunction_39)(void*,void*, int);
 __declspec(dllexport)
 _PyFrameEvalFunction_39 DefaultEvalFrameFunc_39 = nullptr;
