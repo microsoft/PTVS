@@ -128,6 +128,16 @@ steps:
     Contents: '**'
   continueOnError: true
 
+# In order for packages to use correct credentials, run the restore portion manually
+- task: NuGetCommand@2
+  inputs:
+    command: 'restore'
+    restoreSolution: 'build/17.0/packages.config'
+    feedsToUse: 'config'
+    nugetConfigPath: 'build/17.0/nuget.config'
+    externalFeedCredentials: 'azure-public/vs-impl, azure-public/vssdk'
+    restoreDirectory: 'packages'
+
 # Run a powershell script that does a package restore, some symlinking, and installs debugpy
 - task: PowerShell@1
   displayName: 'Restore packages'
