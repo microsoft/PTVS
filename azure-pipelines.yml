@@ -132,12 +132,11 @@ steps:
 - task: NuGetCommand@2
   inputs:
     command: 'restore'
-    restoreSolution: 'build/17.0/packages.config'
-    feedsToUse: 'config'
-    nugetConfigPath: 'build/17.0/nuget.config'
-    externalFeedCredentials: 'azure-public/vs-impl, azure-public/vssdk'
+    restoreSolution: 'build\17.0\packages.config'
+    feedsToUse: 'select'
+    vstsFeed: '0bdbc590-a062-4c3f-b0f6-9383f67865ee/4dc31e3f-b0e6-49bf-814b-a664d8c63655'
     restoreDirectory: 'packages'
-
+    
 # Run a powershell script that does a package restore, some symlinking, and installs debugpy
 - task: PowerShell@1
   displayName: 'Restore packages'
