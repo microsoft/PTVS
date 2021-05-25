@@ -130,6 +130,7 @@ steps:
 
 # In order for packages to use correct credentials, run the restore portion manually
 - task: NuGetCommand@2
+  displayName: 'Nuget restore with security'
   inputs:
     command: 'restore'
     restoreSolution: 'build/$(VSTarget_Override)/packages.config'
