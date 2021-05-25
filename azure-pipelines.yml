@@ -131,13 +131,27 @@ steps:
 # In order for packages to use correct credentials, run the restore portion manually
 - task: NuGetCommand@2
   displayName: 'Nuget restore with security'
+  condition: notin(variables['Build.Reason'], 'PullRequest')
+  continueOnError: true
   inputs:
     command: 'restore'
     restoreSolution: 'build/$(VSTarget_Override)/packages.config'
     feedsToUse: 'config'
     nugetConfigPath: 'build/$(VSTarget_Override)/nuget.config'
     restoreDirectory: 'packages'
-    # externalFeedCredentials: 'ptvs_packages'
+    externalFeedCredentials: 'ptvs_packages'
+
+# When doing a fork PR, we have to restore using the original nuget.config settings
+- task: NuGetCommand@2
+  displayName: 'Nuget restore without security'
+  condition: in(variables['Build.Reason'], 'PullRequest')
+  continueOnError: true
+  inputs:
+    command: 'restore'
+    restoreSolution: 'build/$(VSTarget_Override)/packages.config'
+    feedsToUse: 'config'
+    nugetConfigPath: 'build/pr_nuget.config'
+    restoreDirectory: 'packages'
 
 # Run a powershell script that does a package restore, some symlinking, and installs debugpy
 - task: PowerShell@1
