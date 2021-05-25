@@ -91,7 +91,7 @@ namespace Microsoft.PythonTools.Debugger.Concord {
                     f_globals = fields.f_globals.Offset;
                     f_locals = fields.f_locals.Offset;
                     f_lineno = fields.f_lineno.Offset;
-                }
+                } 
             }
         }
 
@@ -214,7 +214,6 @@ namespace Microsoft.PythonTools.Debugger.Concord {
         private readonly DkmNativeInstructionAddress _traceFunc;
         private readonly DkmNativeInstructionAddress _evalFrameFunc;
         private readonly PointerProxy _defaultEvalFrameFunc;
-        private readonly Int32Proxy _pyTracingPossible;
         private readonly ByteProxy _isTracing;
 
         // A step-in gate is a function inside the Python interpreter or one of the libaries that may call out
@@ -257,11 +256,13 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             _pyrtInfo = process.GetPythonRuntimeInfo();
 
             _traceFunc = _pyrtInfo.DLLs.DebuggerHelper.GetExportedFunctionAddress("TraceFunc");
-            _evalFrameFunc = _pyrtInfo.DLLs.DebuggerHelper.GetExportedFunctionAddress("EvalFrameFunc");
-            _defaultEvalFrameFunc = _pyrtInfo.DLLs.DebuggerHelper.GetExportedStaticVariable<PointerProxy>("DefaultEvalFrameFunc");
+            _evalFrameFunc = _pyrtInfo.LanguageVersion >= PythonLanguageVersion.V39 ?
+                _pyrtInfo.DLLs.DebuggerHelper.GetExportedFunctionAddress("EvalFrameFunc_39"):
+                _pyrtInfo.DLLs.DebuggerHelper.GetExportedFunctionAddress("EvalFrameFunc");
+            _defaultEvalFrameFunc = _pyrtInfo.LanguageVersion >= PythonLanguageVersion.V39 ?
+                _pyrtInfo.DLLs.DebuggerHelper.GetExportedStaticVariable<PointerProxy>("DefaultEvalFrameFunc_39") :
+                _pyrtInfo.DLLs.DebuggerHelper.GetExportedStaticVariable<PointerProxy>("DefaultEvalFrameFunc");
             _isTracing = _pyrtInfo.DLLs.DebuggerHelper.GetExportedStaticVariable<ByteProxy>("isTracing");
-            _pyTracingPossible = _pyrtInfo.GetRuntimeState()?.ceval.tracing_possible
-                ?? _pyrtInfo.DLLs.Python.GetStaticVariable<Int32Proxy>("_Py_TracingPossible");
 
             if (kind == Kind.StepIn) {
                 var fieldOffsets = _pyrtInfo.DLLs.DebuggerHelper.GetExportedStaticVariable<CliStructProxy<FieldOffsets>>("fieldOffsets");
@@ -310,6 +311,17 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             }
         }
 
+        private Int32Proxy GetTracingPossible(PythonRuntimeInfo pyrtInfo, DkmProcess process) {
+           if (pyrtInfo.LanguageVersion == PythonLanguageVersion.V37) {
+               return _pyrtInfo.GetRuntimeState().ceval.tracing_possible;
+           } else if (pyrtInfo.LanguageVersion > PythonLanguageVersion.V37) {
+               foreach (var interp in PyInterpreterState.GetInterpreterStates(process)) {
+                   return interp.ceval.tracing_possible;
+               }
+           }
+           return pyrtInfo.DLLs.Python.GetStaticVariable<Int32Proxy>("_Py_TracingPossible");
+        }
+
         private void AddStepInGate(StepInGateHandler handler, DkmNativeModuleInstance module, string funcName, bool hasMultipleExitPoints) {
             var gate = new StepInGate {
                 Handler = handler,
@@ -327,7 +339,8 @@ namespace Microsoft.PythonTools.Debugger.Concord {
         public unsafe void RegisterTracing(PyThreadState tstate) {
             tstate.use_tracing.Write(1);
             tstate.c_tracefunc.Write(_traceFunc.GetPointer());
-            _pyTracingPossible.Write(_pyTracingPossible.Read() + 1);
+            var pyTracingPossible = GetTracingPossible(_pyrtInfo, _process);
+            pyTracingPossible.Write(pyTracingPossible.Read() + 1);
             _isTracing.Write(1);
         }
 

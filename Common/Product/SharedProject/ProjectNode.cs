@@ -5835,9 +5835,6 @@ If the files in the existing folder have the same names as files in the folder y
         /// </summary>
         internal HierarchyNode FindNodeByFullPath(string name) {
             Site.GetUIThread().MustBeCalledFromUIThread();
-
-            Debug.Assert(Path.IsPathRooted(name), $"{name} is not a full path");
-
             HierarchyNode res;
             _diskNodes.TryGetValue(name, out res);
             return res;
@@ -5987,11 +5984,19 @@ If the files in the existing folder have the same names as files in the folder y
         }
 
         private string EnsureRootedPath(string name) {
-            if (!Path.IsPathRooted(name)) {
-                name = CommonUtils.GetAbsoluteFilePath(
-                    ProjectHome,
-                    name
-                );
+            try
+            {
+                if (!Path.IsPathRooted(name))
+                {
+                    name = CommonUtils.GetAbsoluteFilePath(
+                        ProjectHome,
+                        name
+                    );
+                }
+            }
+            catch (ArgumentException)
+            {
+
             }
             return name;
         }

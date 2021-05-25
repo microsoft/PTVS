@@ -30,6 +30,11 @@ namespace Microsoft.PythonTools.Debugger.Concord {
     internal class ModuleManager : DkmDataItem {
         public static DkmResolvedDocument[] FindDocuments(DkmModule module, DkmSourceFileId sourceFileId) {
             DkmDocumentMatchStrength matchStrength;
+            // Shortcut invalid modules.
+            if (module.Name.Contains("<")) {
+                return new DkmResolvedDocument[0];
+            }
+
             if (string.Equals(module.Name, sourceFileId.DocumentName, StringComparison.OrdinalIgnoreCase)) {
                 matchStrength = DkmDocumentMatchStrength.FullPath;
             } else {

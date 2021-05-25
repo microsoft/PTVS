@@ -22,6 +22,8 @@ using Microsoft.VisualStudio.Debugger.CallStack;
 using Microsoft.VisualStudio.Debugger.Evaluation;
 
 namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
+    [StructProxy(MaxVersion = PythonLanguageVersion.V38, StructName = "PyFrameObject")]
+    [StructProxy(MinVersion = PythonLanguageVersion.V39, StructName = "_frame")]
     internal class PyFrameObject : PyVarObject {
         public class Fields_27_35 {
             public StructField<PointerProxy<PyCodeObject>> f_code;
@@ -65,9 +67,13 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
                 if (frame.ModuleInstance == pythonInfo.DLLs.Python) {
                     addr = pythonInfo.DLLs.Python.GetFunctionAddress("PyEval_EvalFrameEx");
                 }
-            } else {
+            } else if (pythonInfo.LanguageVersion < PythonLanguageVersion.V39) {
                 if (frame.ModuleInstance == pythonInfo.DLLs.DebuggerHelper) {
                     addr = pythonInfo.DLLs.DebuggerHelper.GetFunctionAddress("EvalFrameFunc");
+                }
+            } else {
+                if (frame.ModuleInstance == pythonInfo.DLLs.DebuggerHelper) {
+                    addr = pythonInfo.DLLs.DebuggerHelper.GetFunctionAddress("EvalFrameFunc_39");
                 }
             }
 
