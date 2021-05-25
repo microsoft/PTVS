@@ -136,8 +136,8 @@ steps:
     restoreSolution: 'build/$(VSTarget_Override)/packages.config'
     feedsToUse: 'config'
     nugetConfigPath: 'build/$(VSTarget_Override)/nuget.config'
-    externalFeedCredentials: 'ptvs_packages'
     restoreDirectory: 'packages'
+    # externalFeedCredentials: 'ptvs_packages'
 
 # Run a powershell script that does a package restore, some symlinking, and installs debugpy
 - task: PowerShell@1
