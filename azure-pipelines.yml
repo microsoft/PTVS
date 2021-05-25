@@ -130,6 +130,7 @@ steps:
 
 # In order for packages to use correct credentials, run the restore portion manually
 - task: NuGetAuthenticate@0
+  displayName: 'Add authentication'
   inputs:
     nuGetServiceConnections: 'azure-public/vs-impl, azure-public/vssdk'
     
