@@ -128,6 +128,9 @@ steps:
     Contents: '**'
   continueOnError: true
 
+- task: NuGetAuthenticate@0
+  displayName: Nuget Authenticate
+
 # In order for packages to use correct credentials, run the restore portion manually
 - task: NuGetCommand@2
   displayName: 'Nuget restore with security'
