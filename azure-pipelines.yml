@@ -139,7 +139,6 @@ steps:
     feedsToUse: 'config'
     nugetConfigPath: 'build/$(VSTarget_Override)/nuget.config'
     restoreDirectory: 'packages'
-    externalFeedCredentials:
 
 # When doing a fork PR, we have to restore using the original nuget.config settings
 # - task: NuGetCommand@2
