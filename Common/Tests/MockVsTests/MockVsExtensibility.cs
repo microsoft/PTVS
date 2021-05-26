@@ -75,7 +75,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             throw new NotImplementedException();
         }
 
-        public EnvDTE.wizardResult RunWizardFile(string bstrWizFilename, int hwndOwner, ref object[] vContextParams) {
+        public EnvDTE.wizardResult RunWizardFile(string bstrWizFilename, IntPtr hwndOwner, ref object[] vContextParams) {
             throw new NotImplementedException();
         }
 
@@ -186,11 +186,11 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             throw new NotImplementedException();
         }
 
-        public int RunWizardFile(string bstrWizFilename, int hwndOwner, ref Array vContextParams, out int pResult) {
+        public int RunWizardFile(string bstrWizFilename, IntPtr hwndOwner, ref Array vContextParams, out int pResult) {
             throw new NotImplementedException();
         }
 
-        public int RunWizardFileEx(string bstrWizFilename, int hwndOwner, ref Array vContextParams, ref Array vCustomParams, out int pResult) {
+        public int RunWizardFileEx(string bstrWizFilename, IntPtr hwndOwner, ref Array vContextParams, ref Array vCustomParams, out int pResult) {
             throw new NotImplementedException();
         }
 
