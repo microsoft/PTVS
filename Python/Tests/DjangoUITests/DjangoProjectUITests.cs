@@ -255,7 +255,7 @@ namespace DjangoUITests {
 
             window.Activate();
             var hwnd = window.HWnd;
-            var projProps = new ProjectPropertiesWindow(new IntPtr(hwnd));
+            var projProps = new ProjectPropertiesWindow(hwnd);
 
             // FYI This is broken on Dev15 (15.0 up to latest build as of now 15.3 build 26507)
             // Active page can't be changed via UI automation.
