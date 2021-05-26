@@ -1380,7 +1380,7 @@ namespace Microsoft.VisualStudioTools.Project {
             try {
                 Array contextParamsAsArray = contextParams;
 
-                int result = ivsExtensibility.RunWizardFile(wizardToRun, (int)dlgOwner, ref contextParamsAsArray, out wizResultAsInt);
+                var result = ivsExtensibility.RunWizardFile(wizardToRun, dlgOwner, ref contextParamsAsArray, out wizResultAsInt);
 
                 if (!ErrorHandler.Succeeded(result) && result != VSConstants.OLE_E_PROMPTSAVECANCELLED) {
                     ErrorHandler.ThrowOnFailure(result);
@@ -2828,7 +2828,7 @@ namespace Microsoft.VisualStudioTools.Project {
                 try {
                     fileName = Path.GetFileNameWithoutExtension(newFileName);
                 }
-                    // We want to be consistent in the error message and exception we throw. fileName could be for example #¤&%"¤&"%  and that would trigger an ArgumentException on Path.IsRooted.
+                    // We want to be consistent in the error message and exception we throw. fileName could be for example #ï¿½&%"ï¿½&"%  and that would trigger an ArgumentException on Path.IsRooted.
                 catch (ArgumentException) {
                     errorMessage = SR.GetString(SR.ErrorInvalidFileName, newFileName);
                 }

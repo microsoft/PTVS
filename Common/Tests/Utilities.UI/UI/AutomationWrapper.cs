@@ -359,7 +359,7 @@ namespace TestUtilities.UI {
             AutomationWrapper.DumpElement(AutomationElement.FromHandle(hwnd));
 
             // if we have a dialog open dump the main VS window too
-            var mainHwnd = new IntPtr(((EnvDTE.DTE)sp.GetService(typeof(EnvDTE.DTE))).MainWindow.HWnd);
+            var mainHwnd = ((EnvDTE.DTE)sp.GetService(typeof(EnvDTE.DTE))).MainWindow.HWnd;
             if (mainHwnd != hwnd) {
                 Console.WriteLine("VS: ");
                 AutomationWrapper.DumpElement(AutomationElement.FromHandle(mainHwnd));

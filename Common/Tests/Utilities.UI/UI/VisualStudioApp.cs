@@ -49,7 +49,7 @@ namespace TestUtilities.UI {
         private bool _isDisposed, _skipCloseAll;
 
         public VisualStudioApp(IServiceProvider site)
-            : this(new IntPtr(GetDTE(site).MainWindow.HWnd)) {
+            : this(GetDTE(site).MainWindow.HWnd) {
             // TODO: Make site non-optional
             ServiceProvider = site ?? Microsoft.VisualStudio.Shell.ServiceProvider.GlobalProvider;
             _dte = GetDTE(site);
@@ -616,7 +616,7 @@ namespace TestUtilities.UI {
         /// buttonId is the button to press to dismiss.
         /// </summary>
         private void CheckAndDismissDialog(string[] text, int dlgField, string buttonId, bool assertIfNoDialog) {
-            var handle = new IntPtr(Dte.MainWindow.HWnd);
+            var handle = Dte.MainWindow.HWnd;
             IVsUIShell uiShell = ServiceProvider.GetService(typeof(IVsUIShell)) as IVsUIShell;
             IntPtr hwnd;
             uiShell.GetDialogOwnerHwnd(out hwnd);

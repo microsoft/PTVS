@@ -26,6 +26,12 @@ if (-not $vstarget) {
 
 $buildroot = $MyInvocation.MyCommand.Definition | Split-Path -Parent | Split-Path -Parent
 
+if ($env:BUILD_BINARIESDIRECTORY) {
+    $nuget_config = "$vstarget\nuget.config"
+} else {
+    $nuget_config = "pr_nuget.config"
+}
+   
 if (-not $outdir) {
     if ($env:BUILD_BINARIESDIRECTORY) {
         $outdir = "${env:BUILD_BINARIESDIRECTORY}"
@@ -39,7 +45,7 @@ $outdir = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPat
 
 Push-Location "$buildroot\Build"
 try {
-    $arglist = "restore", "$vstarget\packages.config", "-OutputDirectory", "`"$outdir`"", "-Config", "$vstarget\nuget.config", "-NonInteractive"
+    $arglist = "restore", "$vstarget\packages.config", "-OutputDirectory", "`"$outdir`"", "-Config", "$nuget_config", "-NonInteractive"
     $nuget = Get-Command nuget.exe -EA 0
     if (-not $nuget) {
         $nuget = Get-Command .\nuget.exe
