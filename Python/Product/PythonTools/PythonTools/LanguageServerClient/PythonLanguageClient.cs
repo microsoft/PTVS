@@ -181,7 +181,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             // This is where we send the settings for each client context.
             // Pylance will send a workspace/configuration request for each workspace
             // We return the language server settings as a response
-            object[] result = new object[0] { };
+            List<object> result = new List<object>();
 
             // Return the matching results
             foreach (var item in args.requestParams.items) {
@@ -234,15 +234,12 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                     };
                 }
 
-                // Copy settings in order
-                var resultArray = new object[result.Length + 1];
-                result.CopyTo(resultArray, 0);
-                resultArray[result.Length] = settings;
-                result = resultArray;
+                // Add to our results
+                result.Add(settings);
             }
 
-            args.requestResult = result;
-
+            // Convert into an array for serialization
+            args.requestResult = result.ToArray();
         }
 
         public async Task OnServerInitializedAsync() {
