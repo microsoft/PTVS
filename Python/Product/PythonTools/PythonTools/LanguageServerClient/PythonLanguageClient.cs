@@ -362,6 +362,9 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         }
 
         private void OnSettingsChanged(object sender, EventArgs e) => InvokeDidChangeConfigurationAsync(new LSP.DidChangeConfigurationParams() {
+            // If we pass null settings and workspace.configuration is supported, Pylance will ask
+            // us for per workspace configuration settings. Otherwise we can send
+            // global settings here.
             Settings = null
         }).DoNotWait();
 
