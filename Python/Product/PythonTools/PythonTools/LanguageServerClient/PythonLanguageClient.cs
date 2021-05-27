@@ -173,7 +173,76 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             customTarget.WatchedFilesRegistered += WatchedFilesRegistered;
             customTarget.WorkspaceFolderChangeRegistered += OnWorkspaceFolderWatched;
             customTarget.AnalysisComplete += OnAnalysisComplete;
+            customTarget.WorkspaceConfiguration += OnWorkspaceConfiguration;
             await StartAsync.InvokeAsync(this, EventArgs.Empty);
+        }
+
+        private async Task OnWorkspaceConfiguration(object sender, WorkspaceConfiguration.ConfigurationArgs args) {
+            // This is where we send the settings for each client context.
+            // Pylance will send a workspace/configuration request for each workspace
+            // We return the language server settings as a response
+            object[] result = new object[0] { };
+
+            // Return the matching results
+            foreach (var item in args.requestParams.items) {
+                // Find the matching context for the item
+                var context = _clientContexts.Find(c => item.scopeUri != null && PathUtils.IsSamePath(c.RootPath, item.scopeUri.LocalPath));
+                if (context == null)
+                    continue;
+
+                if (context is PythonLanguageClientContextProject) {
+                    // Project interactions are main thread only.
+                    await JoinableTaskContext.Factory.SwitchToMainThreadAsync();
+                }
+
+                object settings = null;
+                if (item.section == "python") {
+                    Debug.Assert(_analysisOptions != null);
+
+                    var extraPaths = UserSettings.GetStringSetting(
+                        PythonConstants.ExtraPathsSetting, null, Site, PythonWorkspaceContextProvider.Workspace, out _)?.Split(';')
+                        ?? _analysisOptions.ExtraPaths;
+
+                    var stubPath = UserSettings.GetStringSetting(
+                        PythonConstants.StubPathSetting, null, Site, PythonWorkspaceContextProvider.Workspace, out _)
+                        ?? _analysisOptions.StubPath;
+
+                    var typeCheckingMode = UserSettings.GetStringSetting(
+                        PythonConstants.TypeCheckingModeSetting, null, Site, PythonWorkspaceContextProvider.Workspace, out _)
+                        ?? _analysisOptions.TypeCheckingMode;
+
+                    var ver3 = new Version(3, 0);
+                    if (context.InterpreterConfiguration.Version < ver3) {
+                        MessageBox.ShowWarningMessage(Site, Strings.WarningPython2NotSupported);
+                    }
+
+                    settings = new LanguageServerSettings.PythonSettings {
+                        pythonPath = context.InterpreterConfiguration.InterpreterPath,
+                        venvPath = string.Empty,
+                        analysis = new LanguageServerSettings.PythonSettings.PythonAnalysisSettings {
+                            logLevel = _analysisOptions.LogLevel,
+                            autoSearchPaths = _analysisOptions.AutoSearchPaths,
+                            diagnosticMode = _analysisOptions.DiagnosticMode,
+                            extraPaths = extraPaths,
+                            stubPath = stubPath,
+                            typeshedPaths = _analysisOptions.TypeshedPaths,
+                            typeCheckingMode = typeCheckingMode,
+                            useLibraryCodeForTypes = true,
+                            completeFunctionParens = _advancedEditorOptions.CompleteFunctionParens,
+                            autoImportCompletions = _advancedEditorOptions.AutoImportCompletions
+                        }
+                    };
+                }
+
+                // Copy settings in order
+                var resultArray = new object[result.Length + 1];
+                result.CopyTo(resultArray, 0);
+                resultArray[result.Length] = settings;
+                result = resultArray;
+            }
+
+            args.requestResult = result;
+
         }
 
         public async Task OnServerInitializedAsync() {
@@ -237,12 +306,9 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
         public void Dispose() => _disposables.TryDispose();
 
-        public void AddClientContext(IPythonLanguageClientContext context, bool fireSettingsChanged = false) {
+        public void AddClientContext(IPythonLanguageClientContext context) {
             _clientContexts.Add(context);
             context.InterpreterChanged += OnSettingsChanged;
-            if (fireSettingsChanged) {
-                SendDidChangeConfiguration(context).DoNotWait();
-            }
         }
 
         public Task InvokeTextDocumentDidOpenAsync(LSP.DidOpenTextDocumentParams request)
@@ -298,15 +364,13 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             }
         }
 
-        private void OnSettingsChanged(object sender, EventArgs e) => SendDidChangeConfigurations().DoNotWait();
+        private void OnSettingsChanged(object sender, EventArgs e) => InvokeDidChangeConfigurationAsync(new LSP.DidChangeConfigurationParams() {
+            Settings = null
+        }).DoNotWait();
 
         private void OnAnalysisComplete(object sender, EventArgs e) {
             // Used by test code to know when it's okay to try and use intellisense
             _readyTcs.TrySetResult(0);
-        }
-
-        private Task SendDidChangeConfigurations() {
-            return Task.WhenAll(_clientContexts.Select(c => SendDidChangeConfiguration(c)));
         }
 
         private async Task SendDocumentOpensAsync() {
@@ -372,57 +436,6 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             return true;
         }
 
-        private async Task SendDidChangeConfiguration(IPythonLanguageClientContext context) {
-            if (context is PythonLanguageClientContextProject) {
-                // Project interactions are main thread only.
-                await JoinableTaskContext.Factory.SwitchToMainThreadAsync();
-            }
-
-            Debug.Assert(context != null);
-            Debug.Assert(_analysisOptions != null);
-
-            var extraPaths = UserSettings.GetStringSetting(
-                PythonConstants.ExtraPathsSetting, null, Site, PythonWorkspaceContextProvider.Workspace, out _)?.Split(';')
-                ?? _analysisOptions.ExtraPaths;
-
-            var stubPath = UserSettings.GetStringSetting(
-                PythonConstants.StubPathSetting, null, Site, PythonWorkspaceContextProvider.Workspace, out _)
-                ?? _analysisOptions.StubPath;
-
-            var typeCheckingMode = UserSettings.GetStringSetting(
-                PythonConstants.TypeCheckingModeSetting, null, Site, PythonWorkspaceContextProvider.Workspace, out _)
-                ?? _analysisOptions.TypeCheckingMode;
-
-            var ver3 = new Version(3, 0);
-            if (context.InterpreterConfiguration.Version < ver3) {
-                MessageBox.ShowWarningMessage(Site, Strings.WarningPython2NotSupported);
-            }
-
-            var settings = new LanguageServerSettings {
-                python = new LanguageServerSettings.PythonSettings {
-                    pythonPath = context.InterpreterConfiguration.InterpreterPath,
-                    venvPath = string.Empty,
-                    analysis = new LanguageServerSettings.PythonSettings.PythonAnalysisSettings {
-                        logLevel = _analysisOptions.LogLevel,
-                        autoSearchPaths = _analysisOptions.AutoSearchPaths,
-                        diagnosticMode = _analysisOptions.DiagnosticMode,
-                        extraPaths = extraPaths,
-                        stubPath = stubPath,
-                        typeshedPaths = _analysisOptions.TypeshedPaths,
-                        typeCheckingMode = typeCheckingMode,
-                        useLibraryCodeForTypes = true,
-                        completeFunctionParens = _advancedEditorOptions.CompleteFunctionParens,
-                        autoImportCompletions = _advancedEditorOptions.AutoImportCompletions
-                    }
-                }
-            };
-
-            var config = new LSP.DidChangeConfigurationParams() {
-                Settings = settings
-            };
-            await InvokeDidChangeConfigurationAsync(config);
-        }
-
         private void OnWorkspaceOrSolutionOpened() {
             if (WorkspaceService.CurrentWorkspace != null) {
                 OnWorkspaceOpening(this, EventArgs.Empty).DoNotWait();
@@ -472,6 +485,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                                 }
                                 capabilities["workspace"]["workspaceFolders"] = true;
                                 capabilities["workspace"]["didChangeWatchedFiles"]["dynamicRegistration"] = true;
+                                capabilities["workspace"]["configuration"] = true;
 
                                 // Root path and root URI should not be sent. They're deprecated and will
                                 // just confuse pylance with respect to what is the root folder. 

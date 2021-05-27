@@ -329,6 +329,9 @@
     <Compile Include="PythonTools\LanguageServerClient\StreamHacking\MessageParser.cs" />
     <Compile Include="PythonTools\LanguageServerClient\StreamHacking\StreamData.cs" />
     <Compile Include="PythonTools\LanguageServerClient\StreamHacking\StreamIntercepter.cs" />
+    <Compile Include="PythonTools\LanguageServerClient\WorkspaceConfiguration\ConfigurationArgs.cs" />
+    <Compile Include="PythonTools\LanguageServerClient\WorkspaceConfiguration\ConfigurationItem.cs" />
+    <Compile Include="PythonTools\LanguageServerClient\WorkspaceConfiguration\ConfigurationParams.cs" />
     <Compile Include="PythonTools\LanguageServerClient\WorkspaceFolderChanged\DidChangeWorkspaceFoldersParams.cs" />
     <Compile Include="PythonTools\LanguageServerClient\WorkspaceFolderChanged\WorkspaceFolder.cs" />
     <Compile Include="PythonTools\LanguageServerClient\WorkspaceFolderChanged\WorkspaceFoldersChangeEvent.cs" />
