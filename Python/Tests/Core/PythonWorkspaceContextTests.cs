@@ -20,10 +20,12 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.Workspace;
 using TestUtilities;
 using TestUtilities.Python;
 
@@ -39,7 +41,7 @@ namespace PythonToolsTests {
         public void DefaultInterpreter() {
             var data = PrepareWorkspace(WorkspaceTestHelper.PythonNoId);
 
-            var workspaceContext = new PythonWorkspaceContext(data.Workspace, data.OptionsService, data.RegistryService);
+            var workspaceContext = new PythonWorkspaceContext(data.Workspace, null, data.OptionsService, data.RegistryService);
             workspaceContext.Initialize();
 
             var interpreter = workspaceContext.ReadInterpreterSetting();
@@ -51,7 +53,7 @@ namespace PythonToolsTests {
         public void InstalledInterpreter() {
             var data = PrepareWorkspace(WorkspaceTestHelper.Python27Id);
 
-            var workspaceContext = new PythonWorkspaceContext(data.Workspace, data.OptionsService, data.RegistryService);
+            var workspaceContext = new PythonWorkspaceContext(data.Workspace, null, data.OptionsService, data.RegistryService);
             workspaceContext.Initialize();
 
             var interpreter = workspaceContext.ReadInterpreterSetting();
@@ -63,7 +65,7 @@ namespace PythonToolsTests {
         public void UnavailableInterpreter() {
             var data = PrepareWorkspace(WorkspaceTestHelper.PythonUnavailableId);
 
-            var workspaceContext = new PythonWorkspaceContext(data.Workspace, data.OptionsService, data.RegistryService);
+            var workspaceContext = new PythonWorkspaceContext(data.Workspace, null, data.OptionsService, data.RegistryService);
             workspaceContext.Initialize();
 
             var interpreter = workspaceContext.ReadInterpreterSetting();
@@ -72,10 +74,21 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
+        public async Task EvalSearchPaths() {
+            var data = PrepareWorkspace(WorkspaceTestHelper.Python27Id);
+
+            var workspaceContext = new PythonWorkspaceContext(data.Workspace, await data.Workspace.GetPropertyEvaluatorServiceAsync(), data.OptionsService, data.RegistryService);
+            workspaceContext.Initialize();
+            var searchPaths = workspaceContext.GetAbsoluteSearchPaths().ToArray();
+            Assert.IsTrue(searchPaths[1].Contains(WorkspaceTestHelper.Evaluated_Result), "Evaluation not being done for search paths");
+
+        }
+
+        [TestMethod, Priority(UnitTestPriority.P1)]
         public void ChangeInterpreterSetting() {
             var data = PrepareWorkspace(WorkspaceTestHelper.Python27Id);
 
-            var workspaceContext = new PythonWorkspaceContext(data.Workspace, data.OptionsService, data.RegistryService);
+            var workspaceContext = new PythonWorkspaceContext(data.Workspace, null, data.OptionsService, data.RegistryService);
             workspaceContext.Initialize();
 
             var interpreter = workspaceContext.ReadInterpreterSetting();
@@ -93,7 +106,7 @@ namespace PythonToolsTests {
                 };
 
                 var updatedSettings = new WorkspaceTestHelper.MockWorkspaceSettings(
-                    new Dictionary<string, string> { { "Interpreter", WorkspaceTestHelper.Python37Id } }
+                    new Dictionary<string, object> { { "Interpreter", WorkspaceTestHelper.Python37Id } }
                 );
                 data.Workspace.SettingsManager.SimulateChangeSettings(updatedSettings);
 
@@ -110,7 +123,7 @@ namespace PythonToolsTests {
         public void RemoveInterpreterSetting() {
             var data = PrepareWorkspace(WorkspaceTestHelper.Python27Id);
 
-            var workspaceContext = new PythonWorkspaceContext(data.Workspace, data.OptionsService, data.RegistryService);
+            var workspaceContext = new PythonWorkspaceContext(data.Workspace, null, data.OptionsService, data.RegistryService);
             workspaceContext.Initialize();
 
             var interpreter = workspaceContext.ReadInterpreterSetting();
@@ -128,7 +141,7 @@ namespace PythonToolsTests {
                 };
 
                 var updatedSettings = new WorkspaceTestHelper.MockWorkspaceSettings(
-                    new Dictionary<string, string> { { "Interpreter", WorkspaceTestHelper.PythonNoId } }
+                    new Dictionary<string, object> { { "Interpreter", WorkspaceTestHelper.PythonNoId } }
                 );
                 data.Workspace.SettingsManager.SimulateChangeSettings(updatedSettings);
 
@@ -145,7 +158,7 @@ namespace PythonToolsTests {
         public void RemoveInterpreterSettingAlreadyDefault() {
             var data = PrepareWorkspace(WorkspaceTestHelper.DefaultFactory.Configuration.Id);
 
-            var workspaceContext = new PythonWorkspaceContext(data.Workspace, data.OptionsService, data.RegistryService);
+            var workspaceContext = new PythonWorkspaceContext(data.Workspace, null, data.OptionsService, data.RegistryService);
             workspaceContext.Initialize();
 
             var interpreter = workspaceContext.ReadInterpreterSetting();
@@ -163,7 +176,7 @@ namespace PythonToolsTests {
                 };
 
                 var updatedSettings = new WorkspaceTestHelper.MockWorkspaceSettings(
-                    new Dictionary<string, string> { { "Interpreter", WorkspaceTestHelper.PythonNoId } }
+                    new Dictionary<string, object> { { "Interpreter", WorkspaceTestHelper.PythonNoId } }
                 );
                 data.Workspace.SettingsManager.SimulateChangeSettings(updatedSettings);
 
@@ -180,7 +193,7 @@ namespace PythonToolsTests {
         public void ChangeDefaultInterpreterInUse() {
             var data = PrepareWorkspace(WorkspaceTestHelper.PythonNoId);
 
-            var workspaceContext = new PythonWorkspaceContext(data.Workspace, data.OptionsService, data.RegistryService);
+            var workspaceContext = new PythonWorkspaceContext(data.Workspace, null, data.OptionsService, data.RegistryService);
             workspaceContext.Initialize();
 
             var interpreter = workspaceContext.ReadInterpreterSetting();
@@ -207,7 +220,7 @@ namespace PythonToolsTests {
             // We don't use the global default
             var data = PrepareWorkspace(WorkspaceTestHelper.Python27Id);
 
-            var workspaceContext = new PythonWorkspaceContext(data.Workspace, data.OptionsService, data.RegistryService);
+            var workspaceContext = new PythonWorkspaceContext(data.Workspace, null, data.OptionsService, data.RegistryService);
             workspaceContext.Initialize();
 
             var interpreter = workspaceContext.ReadInterpreterSetting();
@@ -233,7 +246,7 @@ namespace PythonToolsTests {
         public void RemoveInterpreterInUse() {
             var data = PrepareWorkspace(WorkspaceTestHelper.Python27Id);
 
-            var workspaceContext = new PythonWorkspaceContext(data.Workspace, data.OptionsService, data.RegistryService);
+            var workspaceContext = new PythonWorkspaceContext(data.Workspace, null, data.OptionsService, data.RegistryService);
             workspaceContext.Initialize();
 
             var interpreter = workspaceContext.ReadInterpreterSetting();
@@ -261,7 +274,7 @@ namespace PythonToolsTests {
         public void RemoveInterpreterNotInUse() {
             var data = PrepareWorkspace(WorkspaceTestHelper.Python27Id);
 
-            var workspaceContext = new PythonWorkspaceContext(data.Workspace, data.OptionsService, data.RegistryService);
+            var workspaceContext = new PythonWorkspaceContext(data.Workspace, null, data.OptionsService, data.RegistryService);
             workspaceContext.Initialize();
 
             var interpreter = workspaceContext.ReadInterpreterSetting();
@@ -293,7 +306,7 @@ namespace PythonToolsTests {
         [TestMethod, Priority(UnitTestPriority.P1)]
         public void EnumerateWorkspaceFiles() {
             (var testDataSetup, var includedWorkspaceFilePaths) = GenerateWorkspace();
-            var workspaceContext = new PythonWorkspaceContext(testDataSetup.Workspace, testDataSetup.OptionsService, testDataSetup.RegistryService);
+            var workspaceContext = new PythonWorkspaceContext(testDataSetup.Workspace, null, testDataSetup.OptionsService, testDataSetup.RegistryService);
 
             TestRegexOne(workspaceContext, includedWorkspaceFilePaths);
             TestRegexTwo(workspaceContext, includedWorkspaceFilePaths);

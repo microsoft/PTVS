@@ -184,7 +184,7 @@ namespace Microsoft.PythonTools.Interpreter {
             var settingsMgr = _workspace.GetSettingsManager();
             var settings = settingsMgr.GetAggregatedSettings(PythonSettingsType);
             var searchPaths = settings.UnionPropertyArray<string>(SearchPathsProperty);
-            var evaled = searchPaths.Select(s => _propertyEvaluatorService.EvaluateNoError(s, _workspace.Location, null));
+            var evaled = searchPaths.Select(s => _propertyEvaluatorService?.EvaluateNoError(s, _workspace.Location, null) ?? s);
 
             return evaled.ToArray();
         }
