@@ -213,24 +213,28 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         internal void WriteOutput(string text, bool addNewline = true) {
-            var wnd = CurrentWindow;
-            if (wnd == null) {
-                lock (_deferredOutput) {
-                    _deferredOutput.Append(text);
+            if (!_isDisposed) {
+                var wnd = CurrentWindow;
+                if (wnd == null) {
+                    lock (_deferredOutput) {
+                        _deferredOutput.Append(text);
+                    }
+                } else {
+                    AppendTextWithEscapes(wnd, text, addNewline, isError: false);
                 }
-            } else {
-                AppendTextWithEscapes(wnd, text, addNewline, isError: false);
             }
         }
 
         internal void WriteError(string text, bool addNewline = true) {
-            var wnd = CurrentWindow;
-            if (wnd == null) {
-                lock (_deferredOutput) {
-                    _deferredOutput.Append(text);
+            if (!_isDisposed) {
+                var wnd = CurrentWindow;
+                if (wnd == null) {
+                    lock (_deferredOutput) {
+                        _deferredOutput.Append(text);
+                    }
+                } else {
+                    AppendTextWithEscapes(wnd, text, addNewline, isError: true);
                 }
-            } else {
-                AppendTextWithEscapes(wnd, text, addNewline, isError: true);
             }
         }
 
