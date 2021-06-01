@@ -390,7 +390,7 @@ namespace DiffMatchPatch {
 
       // Convert the diff back to original text.
       diff_charsToLines(diffs, linearray);
-      // Eliminate freak matches (e.g. blank lines)
+      // Eliminate unexpected matches (e.g. blank lines)
       diff_cleanupSemantic(diffs);
 
       // Rediff any replacement blocks, this time character-by-character.
