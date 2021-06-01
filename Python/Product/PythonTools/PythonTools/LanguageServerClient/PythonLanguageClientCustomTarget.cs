@@ -28,6 +28,7 @@ using Newtonsoft.Json.Linq;
 using StreamJsonRpc;
 using Task = System.Threading.Tasks.Task;
 using Microsoft.VisualStudio.LanguageServer.Protocol;
+using Microsoft.PythonTools.LanguageServerClient.WorkspaceConfiguration;
 
 namespace Microsoft.PythonTools.LanguageServerClient {
     internal class PythonLanguageClientCustomTarget {
@@ -82,6 +83,11 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         /// Has to be internal so JsonRpc doesn't register this as a method.
         /// </summary>
         internal event EventHandler AnalysisComplete;
+
+        /// <summary>
+        /// Event fired when pylance sends a workspace/configuration request
+        /// </summary>
+        internal event AsyncEventHandler<ConfigurationArgs> WorkspaceConfiguration;
 
         [JsonRpcMethod("telemetry/event")]
         public void OnTelemetryEvent(JToken arg) {
@@ -153,6 +159,17 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                     _joinableTaskContext.Factory.RunAsync(async () => this.WatchedFilesRegistered.Invoke(this, options));
                 }
             }
+        }
+
+        [JsonRpcMethod("workspace/configuration")]
+        public async Task<object> OnWorkspaceConfiguration(JToken arg) {
+            var reqParams = arg.ToObject<ConfigurationParams>();
+            if (this.WorkspaceConfiguration != null && reqParams != null) {
+                var eventArgs = new ConfigurationArgs { requestParams = reqParams, requestResult = null };
+                await this.WorkspaceConfiguration.InvokeAsync(this, eventArgs);
+                return eventArgs.requestResult;
+            }
+            return null;
         }
     }
 }
