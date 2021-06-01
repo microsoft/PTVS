@@ -24,6 +24,7 @@ using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.Threading;
 using Microsoft.VisualStudio.Workspace;
+using Microsoft.VisualStudio.Workspace.Evaluator;
 using Microsoft.VisualStudio.Workspace.Intellisense;
 using Microsoft.VisualStudio.Workspace.Settings;
 using Microsoft.VisualStudio.Workspace.VSIntegration.Contracts;
@@ -37,6 +38,7 @@ namespace PythonToolsTests {
         public const string Python36Id = "Global|PythonCore|3.6";
         public const string Python37Id = "Global|PythonCore|3.7";
         public const string PythonUnavailableId = "Global|PythonCore|2.8";
+        public const string Evaluated_Result = "Evaluated_Result";
 
         private static InterpreterConfiguration Python27Config = new InterpreterConfiguration(Python27Id, "Mock 2.7");
         private static InterpreterConfiguration Python36Config = new InterpreterConfiguration(Python36Id, "Mock 3.6");
@@ -56,7 +58,10 @@ namespace PythonToolsTests {
 
         public static MockWorkspace CreateMockWorkspace(string workspaceFolder, string interpreterSetting) {
             var aggregatedSettings = new MockWorkspaceSettings(
-                new Dictionary<string, string> { { "Interpreter", interpreterSetting } }
+                new Dictionary<string, object> { 
+                    { "Interpreter", interpreterSetting },
+                    { "SearchPaths", new String[] {"${workspaceRoot}" } }
+                }
             );
             var settingsManager = new MockWorkspaceSettingsManager(aggregatedSettings);
             return new MockWorkspace(workspaceFolder, settingsManager);
@@ -164,17 +169,18 @@ namespace PythonToolsTests {
         }
 
         public class MockWorkspace : IWorkspace {
-            public MockWorkspace(string location) {
-                Location = location;
-                SettingsManager = new MockWorkspaceSettingsManager();
+            public MockWorkspace(string location) : this(location, new MockWorkspaceSettingsManager()){
             }
 
             public MockWorkspace(string location, MockWorkspaceSettingsManager settingsManager) {
                 Location = location;
                 SettingsManager = settingsManager;
+                PropertyEvaluator = new MockPropertyEvaluatorService();
             }
 
             internal MockWorkspaceSettingsManager SettingsManager { get; }
+
+            internal MockPropertyEvaluatorService PropertyEvaluator { get; }
 
             public string Location { get; private set; }
 
@@ -228,6 +234,9 @@ namespace PythonToolsTests {
                 if (serviceType == typeof(IWorkspaceSettingsManager)) {
                     return Task.FromResult<object>(SettingsManager);
                 }
+                if (serviceType == typeof(IPropertyEvaluatorService)) {
+                    return Task.FromResult<object>(PropertyEvaluator);
+                }
 
                 throw new NotImplementedException();
             }
@@ -272,14 +281,32 @@ namespace PythonToolsTests {
             }
         }
 
+        public class MockPropertyEvaluatorService : IPropertyEvaluatorService {
+            public AsyncEvent<PropertyVariablesChangedEventArgs> OnPropertyVariablesChanged { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
+            public IConfiguredPropertyEvaluator CreateConfiguredPropertyEvaluator(string fileScopePath, IReadOnlyCollection<string> inheritEnvironments, IEnumerable<Tuple<IPropertyEvaluator, IPropertyEvaluatorMetadata>> localPropertyEvaluators) => throw new NotImplementedException();
+            public Tuple<IPropertyEvaluator, IPropertyEvaluatorMetadata> CreatePropertyGroupEvaluator(IReadOnlyCollection<PropertyGroup> propertyGroups) => throw new NotImplementedException();
+            public Tuple<IPropertyEvaluator, IPropertyEvaluatorMetadata> CreatePropertySettingsEvaluator(IPropertySettings source, int groupPriority, int priority) => throw new NotImplementedException();
+            public Tuple<IPropertyEvaluator, IPropertyEvaluatorMetadata> CreateWorkspaceSettingsSourceEvaluator(IWorkspaceSettingsSource source, int groupPriority, int priority) => throw new NotImplementedException();
+            public EvaluationResult Evaluate(string content, string fileScopePath, IReadOnlyCollection<string> inheritEnvironments, IEnumerable<Tuple<IPropertyEvaluator, IPropertyEvaluatorMetadata>> localPropertyEvaluators) {
+                return new EvaluationResult(true, content.Contains("${") ? Evaluated_Result : content, new EvaluationError[0]);
+            }
+            public IReadOnlyCollection<string> GetProperties(string prefixNamespace, IReadOnlyCollection<string> inheritEnvironments) => throw new NotImplementedException();
+            public IReadOnlyCollection<Tuple<IPropertyEvaluator, IPropertyEvaluatorMetadata>> GetPropertyEvaluators(string prefixNamespace) => throw new NotImplementedException();
+            public IReadOnlyCollection<PropertyGroup> ParsePropertyGroups(string jsonPropertyGroups, GroupDefaultOptions defaultOptions) => throw new NotImplementedException();
+            public IReadOnlyCollection<PropertyGroup> ParsePropertyGroups(IWorkspaceSettingsSource[] propertyGroups, GroupDefaultOptions defaultOptions) => throw new NotImplementedException();
+            public IReadOnlyCollection<PropertyGroup> ParsePropertyGroups(IPropertySettings[] propertyGroupArray, GroupDefaultOptions defaultOptions) => throw new NotImplementedException();
+            public IReadOnlyCollection<MatchPropertyResult> SelectPropertyEvaluators(PropertyContext propertyContext, IEnumerable<Tuple<IPropertyEvaluator, IPropertyEvaluatorMetadata>> localPropertyEvaluators) => throw new NotImplementedException();
+        }
+
         public class MockWorkspaceSettings : IWorkspaceSettings {
-            private readonly Dictionary<string, string> _keyValuePairs;
+            private readonly Dictionary<string, object> _keyValuePairs;
 
             public MockWorkspaceSettings() {
-                _keyValuePairs = new Dictionary<string, string>();
+                _keyValuePairs = new Dictionary<string, object>();
             }
 
-            public MockWorkspaceSettings(Dictionary<string, string> keyValuePairs) {
+            public MockWorkspaceSettings(Dictionary<string, object> keyValuePairs) {
                 _keyValuePairs = keyValuePairs;
             }
 
@@ -293,15 +320,15 @@ namespace PythonToolsTests {
                 value = defaultValue;
                 originator = this;
 
-                if (typeof(T) != typeof(string)) {
+                if (typeof(T) != typeof(string) && typeof(T) != typeof(String [])) {
                     return WorkspaceSettingsResult.Error;
                 }
 
-                if (_keyValuePairs.TryGetValue(key, out string v)) {
+                if (_keyValuePairs.TryGetValue(key, out object v)) {
                     value = (T)(object)v;
                 }
 
-                return WorkspaceSettingsResult.Success;
+                return value != null ? WorkspaceSettingsResult.Success : WorkspaceSettingsResult.Error;
             }
 
             public WorkspaceSettingsResult GetProperty<T>(string key, out T value, T defaultValue = default(T)) {

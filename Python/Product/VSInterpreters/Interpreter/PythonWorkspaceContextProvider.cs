@@ -17,7 +17,9 @@
 using System;
 using System.ComponentModel.Composition;
 using System.Threading.Tasks;
+using Microsoft.Python.Core;
 using Microsoft.VisualStudio.Threading;
+using Microsoft.VisualStudio.Workspace;
 using Microsoft.VisualStudio.Workspace.VSIntegration.Contracts;
 
 namespace Microsoft.PythonTools.Interpreter {
@@ -72,7 +74,7 @@ namespace Microsoft.PythonTools.Interpreter {
             lock (_currentContextLock) {
                 if (!_initialized) {
                     _initialized = true;
-                    InitializeCurrentContext();
+                    InitializeCurrentContext().DoNotWait();
                 }
             }
         }
@@ -81,7 +83,7 @@ namespace Microsoft.PythonTools.Interpreter {
             await _joinableTaskContext.Factory.SwitchToMainThreadAsync();
 
             CloseCurrentContext();
-            InitializeCurrentContext();
+            await InitializeCurrentContext();
         }
 
         private void CloseCurrentContext() {
@@ -96,10 +98,10 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        private void InitializeCurrentContext() {
+        private async Task InitializeCurrentContext() {
             var workspace = _workspaceService.CurrentWorkspace;
             if (workspace != null) {
-                var context = new PythonWorkspaceContext(workspace, _optionsService.Value, _registryService.Value);
+                var context = new PythonWorkspaceContext(workspace, await workspace.GetPropertyEvaluatorServiceAsync(), _optionsService.Value, _registryService.Value);
 
                 // Workspace interpreter factory provider will rescan the
                 // workspace folder for factories.

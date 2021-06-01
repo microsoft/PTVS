@@ -195,47 +195,52 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                     await JoinableTaskContext.Factory.SwitchToMainThreadAsync();
                 }
 
-                object settings = null;
-                if (item.section == "python") {
-                    Debug.Assert(_analysisOptions != null);
+                Debug.Assert(_analysisOptions != null);
 
-                    var extraPaths = UserSettings.GetStringSetting(
-                        PythonConstants.ExtraPathsSetting, null, Site, PythonWorkspaceContextProvider.Workspace, out _)?.Split(';')
-                        ?? _analysisOptions.ExtraPaths;
+                var extraPaths = UserSettings.GetStringSetting(
+                    PythonConstants.ExtraPathsSetting, null, Site, PythonWorkspaceContextProvider.Workspace, out _)?.Split(';')
+                    ?? _analysisOptions.ExtraPaths;
 
-                    var stubPath = UserSettings.GetStringSetting(
-                        PythonConstants.StubPathSetting, null, Site, PythonWorkspaceContextProvider.Workspace, out _)
-                        ?? _analysisOptions.StubPath;
+                // Add search paths to extraPaths for pylance to look through
+                var searchPaths = context.SearchPaths.ToArray();
+                extraPaths = extraPaths == null ? searchPaths : extraPaths.Concat(searchPaths).ToArray();
 
-                    var typeCheckingMode = UserSettings.GetStringSetting(
-                        PythonConstants.TypeCheckingModeSetting, null, Site, PythonWorkspaceContextProvider.Workspace, out _)
-                        ?? _analysisOptions.TypeCheckingMode;
+                var stubPath = UserSettings.GetStringSetting(
+                    PythonConstants.StubPathSetting, null, Site, PythonWorkspaceContextProvider.Workspace, out _)
+                    ?? _analysisOptions.StubPath;
 
-                    var ver3 = new Version(3, 0);
-                    if (context.InterpreterConfiguration.Version < ver3) {
-                        MessageBox.ShowWarningMessage(Site, Strings.WarningPython2NotSupported);
-                    }
+                var typeCheckingMode = UserSettings.GetStringSetting(
+                    PythonConstants.TypeCheckingModeSetting, null, Site, PythonWorkspaceContextProvider.Workspace, out _)
+                    ?? _analysisOptions.TypeCheckingMode;
 
-                    settings = new LanguageServerSettings.PythonSettings {
-                        pythonPath = context.InterpreterConfiguration.InterpreterPath,
-                        venvPath = string.Empty,
-                        analysis = new LanguageServerSettings.PythonSettings.PythonAnalysisSettings {
-                            logLevel = _analysisOptions.LogLevel,
-                            autoSearchPaths = _analysisOptions.AutoSearchPaths,
-                            diagnosticMode = _analysisOptions.DiagnosticMode,
-                            extraPaths = extraPaths,
-                            stubPath = stubPath,
-                            typeshedPaths = _analysisOptions.TypeshedPaths,
-                            typeCheckingMode = typeCheckingMode,
-                            useLibraryCodeForTypes = true,
-                            completeFunctionParens = _advancedEditorOptions.CompleteFunctionParens,
-                            autoImportCompletions = _advancedEditorOptions.AutoImportCompletions
-                        }
-                    };
+                var ver3 = new Version(3, 0);
+                if (context.InterpreterConfiguration.Version < ver3) {
+                    MessageBox.ShowWarningMessage(Site, Strings.WarningPython2NotSupported);
                 }
 
-                // Add to our results
-                result.Add(settings);
+                var settings = new LanguageServerSettings.PythonSettings {
+                    pythonPath = context.InterpreterConfiguration.InterpreterPath,
+                    venvPath = string.Empty,
+                    analysis = new LanguageServerSettings.PythonSettings.PythonAnalysisSettings {
+                        logLevel = _analysisOptions.LogLevel,
+                        autoSearchPaths = _analysisOptions.AutoSearchPaths,
+                        diagnosticMode = _analysisOptions.DiagnosticMode,
+                        extraPaths = extraPaths,
+                        stubPath = stubPath,
+                        typeshedPaths = _analysisOptions.TypeshedPaths,
+                        typeCheckingMode = typeCheckingMode,
+                        useLibraryCodeForTypes = true,
+                        completeFunctionParens = _advancedEditorOptions.CompleteFunctionParens,
+                        autoImportCompletions = _advancedEditorOptions.AutoImportCompletions
+                    }
+                };
+
+                // Add to our results based on the section asked for
+                if (item.section == "python") {
+                    result.Add(settings);
+                } else if (item.section == "python.analysis") {
+                    result.Add(settings.analysis);
+                }
             }
 
             // Convert into an array for serialization
@@ -306,6 +311,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         public void AddClientContext(IPythonLanguageClientContext context) {
             _clientContexts.Add(context);
             context.InterpreterChanged += OnSettingsChanged;
+            context.SearchPathsChanged += OnSettingsChanged;
         }
 
         public Task InvokeTextDocumentDidOpenAsync(LSP.DidOpenTextDocumentParams request)
@@ -341,12 +347,12 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
         public Task<LSP.CompletionItem> InvokeResolveAsync(LSP.CompletionItem request, CancellationToken cancellationToken)
             => InvokeWithParametersAsync<LSP.CompletionItem>("completionItem/resolve", request, cancellationToken);
-        
+
         public Task<object> InvokeCommandAsync(LSP.ExecuteCommandParams request, CancellationToken cancellationToken)
             => InvokeWithParametersAsync<object>("workspace/executeCommand", request, cancellationToken);
 
 
-        private async Task<R> InvokeWithParametersAsync<R>(string request, object parameters, CancellationToken t) where R: class {
+        private async Task<R> InvokeWithParametersAsync<R>(string request, object parameters, CancellationToken t) where R : class {
             await _readyTcs.Task.ConfigureAwait(false);
             if (_rpc != null) {
                 return await _rpc.InvokeWithParameterObjectAsync<R>(request, parameters, t).ConfigureAwait(false);
@@ -457,8 +463,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         private void CreateClientContexts() {
             if (PythonWorkspaceContextProvider.Workspace != null) {
                 AddClientContext(new PythonLanguageClientContextWorkspace(PythonWorkspaceContextProvider.Workspace));
-            }
-            else {
+            } else {
                 var nodes = from n in ProjectContextProvider.ProjectNodes
                             select new PythonLanguageClientContextProject(n);
                 foreach (var n in nodes) {

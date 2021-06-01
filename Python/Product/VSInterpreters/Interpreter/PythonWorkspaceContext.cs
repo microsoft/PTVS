@@ -23,6 +23,7 @@ using System.Threading.Tasks;
 using Microsoft.Python.Core;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.Workspace;
+using Microsoft.VisualStudio.Workspace.Evaluator;
 using Microsoft.VisualStudio.Workspace.Settings;
 using EnumerableExtensions = Microsoft.PythonTools.Infrastructure.EnumerableExtensions;
 
@@ -35,6 +36,7 @@ namespace Microsoft.PythonTools.Interpreter {
         private const string UnitTestPatternProperty = "UnitTestPattern";
 
         private readonly IWorkspace _workspace;
+        private readonly IPropertyEvaluatorService _propertyEvaluatorService;
         private readonly IInterpreterOptionsService _optionsService;
         private readonly IInterpreterRegistryService _registryService;
         private readonly IWorkspaceSettingsManager _workspaceSettingsMgr;
@@ -58,12 +60,15 @@ namespace Microsoft.PythonTools.Interpreter {
 
         public PythonWorkspaceContext(
             IWorkspace workspace,
+            IPropertyEvaluatorService workspacePropertyEvaluator,
             IInterpreterOptionsService optionsService,
             IInterpreterRegistryService registryService) {
             _workspace = workspace ?? throw new ArgumentNullException(nameof(workspace));
             _optionsService = optionsService ?? throw new ArgumentNullException(nameof(optionsService));
             _registryService = registryService ?? throw new ArgumentNullException(nameof(registryService));
             _workspaceSettingsMgr = _workspace.GetSettingsManager();
+            _propertyEvaluatorService = workspacePropertyEvaluator;
+            
 
             // Initialization in 2 phases (Constructor + Initialize) is needed to
             // break a circular dependency.
@@ -179,13 +184,14 @@ namespace Microsoft.PythonTools.Interpreter {
             var settingsMgr = _workspace.GetSettingsManager();
             var settings = settingsMgr.GetAggregatedSettings(PythonSettingsType);
             var searchPaths = settings.UnionPropertyArray<string>(SearchPathsProperty);
+            var evaled = searchPaths.Select(s => _propertyEvaluatorService?.EvaluateNoError(s, _workspace.Location, null) ?? s);
 
-            return searchPaths.ToArray();
+            return evaled.ToArray();
         }
 
         public IEnumerable<string> GetAbsoluteSearchPaths() {
             lock (_cacheLock) {
-                return new[] { "." }.Union(_searchPaths).Select(sp => PathUtils.GetAbsoluteDirectoryPath(_workspace.Location, sp));
+                return new[] { "." }.Union(_searchPaths).Select(sp => _workspace.MakeRooted(sp));
             }
         }
 
