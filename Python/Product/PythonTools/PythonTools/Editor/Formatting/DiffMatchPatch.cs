@@ -2265,7 +2265,7 @@ namespace DiffMatchPatch {
             // Start of next patch.
             break;
           } else {
-            // WTF?
+            // Patch mode not expected
             throw new ArgumentException(
                 "Invalid patch mode '" + sign + "' in: " + line);
           }
