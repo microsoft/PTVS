@@ -39,6 +39,8 @@ namespace Microsoft.PythonTools.Project {
     [ProvideObject(typeof(PythonWebProject))]
     [ProvideProjectFactory(typeof(PythonWebProjectFactory), PythonConstants.LanguageName, "#127", "pyproj", "pyproj", ".\\NullPath", LanguageVsTemplate = PythonConstants.LanguageName)]
     [ProvideFileFilter(PythonConstants.WebProjectFactoryGuid, "/1", "#128", 100)]
+    [ProvideProjectItem(PythonConstants.ProjectFactoryGuid, itemCategoryName: "#3016", templatesDir: "NewFileItems", priority: 50)]
+    [ProvideProjectItem(VSConstants.CLSID.MiscellaneousFilesProject_string, itemCategoryName: "#3016", templatesDir: "NewFileItems", priority: 50)]
     [ProvideLanguageTemplates("{349C5851-65DF-11DA-9384-00065B846F21}", "Python", PythonConstants.ProjectSystemPackageGuid, "Web", "Python Application Project Templates", "{888888a0-9f3d-457c-b088-3a5042f75d52}", ".py", "Python", "{9AF89C0F-85F6-4A20-9023-5D15D912F3B1}")]
     [Guid(PythonConstants.ProjectSystemPackageGuid)]
     [DeveloperActivity("Python", typeof(PythonProjectPackage))]
