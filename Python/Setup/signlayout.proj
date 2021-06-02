@@ -30,6 +30,7 @@
         Microsoft.PythonTools.Debugger.Concord.dll;
         Microsoft.PythonTools.dll;
         Microsoft.PythonTools.EnvironmentsList.dll;
+        Microsoft.PythonTools.LiveShare.dll;
         Microsoft.PythonTools.Profiling.dll;
         Microsoft.PythonTools.ProjectWizards.dll;
         Microsoft.PythonTools.RunElevated.exe;
@@ -46,6 +47,9 @@
     <ManagedFiles Include="
         Microsoft.PythonTools.Django.dll;
         " Condition="$(IncludeDjango)" />
+    <ManagedFiles Include="
+        Microsoft.PythonTools.Django.Analysis.dll;
+        " Condition="$(IncludeDjango) and $(IncludeDjangoHtmlExtensions)" />
     <ManagedFiles Include="
         Microsoft.PythonTools.Debugger.VCLauncher.dll;
         " Condition="$(IncludeVCDebugLauncher)" />

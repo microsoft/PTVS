@@ -17,16 +17,6 @@
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
-    <CopyVsixExtensionFiles>False</CopyVsixExtensionFiles>
-    <DeployExtension>False</DeployExtension>
-    <CreateVsixContainer>False</CreateVsixContainer>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
-    <CopyVsixExtensionFiles>False</CopyVsixExtensionFiles>
-    <DeployExtension>False</DeployExtension>
-    <CreateVsixContainer>False</CreateVsixContainer>
-  </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Microsoft.VisualStudio.CommandBars, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">

@@ -332,9 +332,9 @@
 
   <Symbols>
     <!-- This is the package guid. -->
-    <GuidSymbol name="guidCookiecutterPkg" value="{09B8B622-5967-4D96-B142-C1F89EA2E738}" />
+    <GuidSymbol name="guidCookiecutterPkg" value="{8261E28A-54EC-44D2-ADED-8F9366B9196B}" />
     <!-- This is the guid used to group the menu commands together -->
-    <GuidSymbol name="guidCookiecutterCmdSet" value="{A31E381E-CF66-4BED-B8FB-53B7C67FBFDA}">
+    <GuidSymbol name="guidCookiecutterCmdSet" value="{6C1555D3-B9B7-4D39-B657-1A35A0F3C461}">
       <!-- Commands -->
       <IDSymbol name="cmdidCookiecutterExplorer" value ="0x1001"/>
       <IDSymbol name="cmdidHome" value="0x1002" />
@@ -362,7 +362,7 @@
       <IDSymbol name="ContextNavGroup" value="0x3002" />
       <IDSymbol name="ContextLinksGroup" value="0x3003" />
     </GuidSymbol>
-    <GuidSymbol name="guidPythonToolsCmdSet" value="{44AFF35A-AA6E-46AA-BC75-D4AC9F7E7655}">
+    <GuidSymbol name="guidPythonToolsCmdSet" value="{bdfa79d2-2cd2-474a-a82a-ce8694116825}">
       <IDSymbol name="WindowCommandsGroup" value="0x1014" />
     </GuidSymbol>
     <GuidSymbol name="guidCookiecutterImages" value="{50EDF200-5C99-4968-ABC0-CF1A2C490F00}">

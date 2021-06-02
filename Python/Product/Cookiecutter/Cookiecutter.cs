@@ -12,9 +12,9 @@ namespace Microsoft.CookiecutterTools
     /// </summary>
     internal sealed partial class PackageGuids
     {
-        public const string guidCookiecutterPkgString = "09B8B622-5967-4D96-B142-C1F89EA2E738";
-        public const string guidCookiecutterCmdSetString = "A31E381E-CF66-4BED-B8FB-53B7C67FBFDA";
-        public const string guidPythonToolsCmdSetString = "44AFF35A-AA6E-46AA-BC75-D4AC9F7E7655";
+        public const string guidCookiecutterPkgString = "8261e28a-54ec-44d2-aded-8f9366b9196b";
+        public const string guidCookiecutterCmdSetString = "6c1555d3-b9b7-4d39-b657-1a35a0f3c461";
+        public const string guidPythonToolsCmdSetString = "bdfa79d2-2cd2-474a-a82a-ce8694116825";
         public const string guidCookiecutterImagesString = "50edf200-5c99-4968-abc0-cf1a2c490f00";
         public static Guid guidCookiecutterPkg = new Guid(guidCookiecutterPkgString);
         public static Guid guidCookiecutterCmdSet = new Guid(guidCookiecutterCmdSetString);

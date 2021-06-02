@@ -353,16 +353,6 @@
   <PropertyGroup>
     <UseCodebase>true</UseCodebase>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
-    <CopyVsixExtensionFiles>False</CopyVsixExtensionFiles>
-    <DeployExtension>False</DeployExtension>
-    <CreateVsixContainer>False</CreateVsixContainer>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
-    <CopyVsixExtensionFiles>False</CopyVsixExtensionFiles>
-    <DeployExtension>False</DeployExtension>
-    <CreateVsixContainer>False</CreateVsixContainer>
-  </PropertyGroup>
   <Import Project="..\ProjectAfter.settings" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
