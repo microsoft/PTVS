@@ -80,7 +80,7 @@
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";AddCondaEnvironmentFileWatermark" ItemType="0" PsrId="211" Leaf="true">
-        <Str Cat="Text">
+        <Str Cat="Text" UsrLk="true">
           <Val><![CDATA[environment.yml]]></Val>
         </Str>
         <Disp Icon="Str" />
@@ -734,7 +734,7 @@
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";AddVirtualEnvironmentFileWatermark" ItemType="0" PsrId="211" Leaf="true">
-        <Str Cat="Text">
+        <Str Cat="Text" UsrLk="true">
           <Val><![CDATA[requirements.txt]]></Val>
         </Str>
         <Disp Icon="Str" />
@@ -934,6 +934,12 @@
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[其他資訊:]]></Val>
           </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";AlwaysTrustWorkspaceInfoBarAction" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Always trust]]></Val>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -1177,6 +1183,156 @@
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[開啟 Python 環境可取得詳細資料。]]></Val>
           </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";CompletionFilterClass" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Classes]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";CompletionFilterColor" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Colors]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";CompletionFilterConstant" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Constants]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";CompletionFilterConstructor" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Constructors]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";CompletionFilterEnum" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Enums]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";CompletionFilterEnumMember" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Enum members]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";CompletionFilterEvent" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Events]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";CompletionFilterField" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Fields]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";CompletionFilterFile" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Files]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";CompletionFilterFolder" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Folders]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";CompletionFilterFunction" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Functions]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";CompletionFilterInterface" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Interfaces]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";CompletionFilterKeyword" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Keywords]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";CompletionFilterMethod" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Methods]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";CompletionFilterModule" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Modules]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";CompletionFilterOperator" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Operators]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";CompletionFilterProperty" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Properties]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";CompletionFilterReference" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[References]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";CompletionFilterSnippet" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Snippets]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";CompletionFilterStruct" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Structs]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";CompletionFilterText" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Names]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";CompletionFilterTypeParameter" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Type parameters]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";CompletionFilterUnit" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Units]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";CompletionFilterValue" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Values]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";CompletionFilterVariable" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Variables]]></Val>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -1564,6 +1720,12 @@
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[無法安裝其他套件。]]></Val>
           </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";ConfigFileAlreadyExists" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Type checker configuration file already exists in this folder.]]></Val>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -2521,15 +2683,9 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";DebugReplFeatureNotSupportedWithExperimentalDebugger" ItemType="0" PsrId="211" Leaf="true">
+      <Item ItemId=";DebugReplFeatureNotSupported" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[This debug REPL feature is only supported with the legacy debugger.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[僅舊版偵錯工具支援此偵錯 REPL 功能。]]></Val>
-          </Tgt>
-          <Prev Cat="Text">
-            <Val><![CDATA[This debug REPL feature is not supported with the experimental debugger.]]></Val>
-          </Prev>
+          <Val><![CDATA[Debugging REPL feature is not yet supported.]]></Val>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -3037,6 +3193,24 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";DiagnosticModeOpenFiles" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Open files only]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";DiagnosticModeToolTip" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Analyzes and reports errors on only open files or the entire workspace.]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";DiagnosticModeWorkspace" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Workspace]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";DiagnosticsLogCopiedToClipboard" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Diagnostics log was copied to the clipboard.]]></Val>
@@ -3082,6 +3256,12 @@
           <Prev Cat="Text">
             <Val><![CDATA[Do not show this warning again.]]></Val>
           </Prev>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";DontTrustWorkspaceInfoBarAction" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Do not trust]]></Val>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -3433,6 +3613,12 @@
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[找不到測試結果的測試案例: {0}]]></Val>
           </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";ErrorUnableToInstallFormatter" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Unable to install code formatter. Error {0}.]]></Val>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -3979,24 +4165,6 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
-      <Item ItemId=";ImportPtvsdModuleNotFoundMessage" ItemType="0" PsrId="211" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[There was an error loading ptvsd from the current environment. Please upgrade or uninstall ptvsd.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[從目前環境中載入 ptvsd 時發生錯誤。請升級或解除安裝 ptvsd。]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";ImportPtvsdModuleNotFoundTitle" ItemType="0" PsrId="211" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Debugger package could not be loaded]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[無法載入偵錯工具套件]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
       <Item ItemId=";ImportWizardBottleProjectCustomization" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Bottle Web Project]]></Val>
@@ -4303,6 +4471,12 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";InstallFormatterPrompt" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Install '{0}' in environment '{1}' now?]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";InstallPackagesStatusCenterProgressCompleted" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Packages installed successfully]]></Val>
@@ -4552,6 +4726,24 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";LanguageClientInitializeFailed" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Language server initialization failed.\n\n{0}]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";LanguageClientNodejsNotFound" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Node.js was not found. It is required to run Pylance language server.]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";LanguageClientPylanceNotFound" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Pylance language server was not found. Please reinstall Python Tools.]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";LibraryNodeAliasOf" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[{0} (alias of {1})]]></Val>
@@ -4594,6 +4786,36 @@
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[類別成員宣告之間的行]]></Val>
           </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";LogLevelError" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Error]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";LogLevelInformation" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Information]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";LogLevelToolTip" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Specifies the level of logging for the Output panel.]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";LogLevelTrace" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Trace]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";LogLevelWarning" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Warning]]></Val>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -4881,19 +5103,25 @@
       </Item>
       <Item ItemId=";PackageUninstalling" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Unnstalling '{0}']]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
+          <Val><![CDATA[Uninstalling '{0}']]></Val>
+          <Tgt Cat="Text" Stat="Update" Orig="New">
             <Val><![CDATA[正在解除安裝 '{0}']]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Unnstalling '{0}']]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";PackageUninstallingSeeOutputWindow" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Unnstalling '{0}'. See the Output Window for more information.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
+          <Val><![CDATA[Uninstalling '{0}'. See the Output Window for more information.]]></Val>
+          <Tgt Cat="Text" Stat="Update" Orig="New">
             <Val><![CDATA[正在解除安裝 '{0}'。如需詳細資訊，請參閱輸出視窗。]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Unnstalling '{0}'. See the Output Window for more information.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -4996,75 +5224,6 @@
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[專案]]></Val>
           </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";PtvsdDisableCaption" ItemType="0" PsrId="211" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Use the legacy debugger]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[使用舊版偵錯工具]]></Val>
-          </Tgt>
-          <Prev Cat="Text">
-            <Val><![CDATA[Disable the experimental debugger]]></Val>
-          </Prev>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";PtvsdDisableSubtext" ItemType="0" PsrId="211" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Future debugging sessions will use the legacy debugger. You can also change this setting in Tools, Options, Python, Debugging page by changing the 'Use legacy debugger' option.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[未來的偵錯工作階段會使用舊版偵錯工具。您也可以變更 [使用舊版偵錯工具]5D; 選項，在 [工具]5D;、[選項]5D;、[Python]5D;、[偵錯頁面]5D; 變更此設定。]]></Val>
-          </Tgt>
-          <Prev Cat="Text">
-            <Val><![CDATA[Future debugging sessions will not use the experimental debugger. You can also change this setting in the Tools/Options/Python/Experimental page.]]></Val>
-          </Prev>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";PtvsdIncompatibleEnvMessage" ItemType="0" PsrId="211" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[To debug this Python environment, please use the legacy debugger. Older versions of Python are not supported. See our <a href="https://aka.ms/upgradeptvsd">documentation</a> for a list of supported Python versions and environment types.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[若要偵錯這個 Python 環境，請使用舊版偵錯工具。不支援較舊的 Python 版本。如需支援的 Python 版本和環境類型清單，請參閱我們的<a href="https://aka.ms/upgradeptvsd">文件</a>。]]></Val>
-          </Tgt>
-          <Prev Cat="Text">
-            <Val><![CDATA[The experimental debugger is incompatible with this Python environment. See the documentation for a list of supported Python environments.]]></Val>
-          </Prev>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";PtvsdIncompatibleEnvTitle" ItemType="0" PsrId="211" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Debugger does not support this Python environment]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[偵錯工具不支援這個 Python 環境]]></Val>
-          </Tgt>
-          <Prev Cat="Text">
-            <Val><![CDATA[Debugger is incompatible with this environment]]></Val>
-          </Prev>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";PtvsdLearnMoreCaption" ItemType="0" PsrId="211" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Learn more]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[深入了解]]></Val>
-          </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";PtvsdLearnMoreSubtext" ItemType="0" PsrId="211" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[View documentation on supported Python environments and how to upgrade or uninstall the ptvsd debugger package.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[檢視文件，了解支援的 Python 環境及如何升級或解除安裝 ptvsd 偵錯工具套件。]]></Val>
-          </Tgt>
-          <Prev Cat="Text">
-            <Val><![CDATA[View documentation in your web browser on supported Python environments and how to upgrade or uninstall the ptvsd debugger package.]]></Val>
-          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -5577,12 +5736,12 @@
       </Item>
       <Item ItemId=";PythonVersionNotSupportedInfoBarText" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[You're using Python {0}. Some new features might not work as expected until Visual Studio officially supports this version.]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
+          <Val><![CDATA[You're using Python {0}. Some features might not work as expected since Visual Studio no longer supports this version.]]></Val>
+          <Tgt Cat="Text" Stat="Update" Orig="New">
             <Val><![CDATA[您正在使用 Python {0}。在 Visual Studio 正式支援此版本之前，某些新功能可能無法正常運作。]]></Val>
           </Tgt>
           <Prev Cat="Text">
-            <Val><![CDATA[You are using Python {0} and some features might not work because Visual Studio doesn't support it yet.]]></Val>
+            <Val><![CDATA[You're using Python {0}. Some new features might not work as expected until Visual Studio officially supports this version.]]></Val>
           </Prev>
         </Str>
         <Disp Icon="Str" />
@@ -6637,6 +6796,12 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";SearchPathsToolTip" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Additional import search resolution paths. You can use line breaks or semicolons to separate multiple paths.]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";SeeActivityLog" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[An unexpected error occurred.]D;]A;]D;]A;You can get more information by running Visual Studio with the /log parameter on the command line, and then examining the file '{0}', or by checking Event Viewer.]]></Val>
@@ -7132,6 +7297,12 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";StubPathToolTip" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Path to directory containing custom type stub files.]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";SurroundWith" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Surround With]]></Val>
@@ -7246,6 +7417,42 @@
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[未預期的測試結果: {0}.{1}]]></Val>
           </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";TrustOnceWorkspaceInfoBarAction" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Trust this time]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";TypeCheckingModeBasic" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Basic]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";TypeCheckingModeOff" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Off]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";TypeCheckingModeStrict" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Strict]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";TypeCheckingModeToolTip" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Defines the default rule set for type checking.]]></Val>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";TypeshedPathsToolTip" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Paths to look for typeshed modules. You can use line breaks or semicolons to separate multiple paths.]]></Val>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -7426,6 +7633,12 @@
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[無法解析 "{0}"。]D;]A;必須重新整理使用中環境的完成 DB，]D;]A;在完成前可能遺漏了 IntelliSense。]D;]A;請參閱 Python 環境視窗以取得詳細資料。]]></Val>
           </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";UntrustedWorkspaceInfoBarText" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Workspace contains binaries that appear to be Python interpreters, but could be malware. Visual Studio needs to execute them to retrieve interpreter information. Do you trust the binaries in this workspace?]]></Val>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -7723,6 +7936,12 @@
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[無法辨識編碼名稱: '{0}']]></Val>
           </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";WarningPython2NotSupported" ItemType="0" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Pylance language server does not support Python 2.x. Type checking will be performed as in Python 3.x.]]></Val>
         </Str>
         <Disp Icon="Str" />
       </Item>
