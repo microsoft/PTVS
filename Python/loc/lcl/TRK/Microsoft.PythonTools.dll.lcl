@@ -518,7 +518,7 @@
         <Str Cat="Check Box">
           <Val><![CDATA[&Paste removes REPL prompts]]></Val>
           <Tgt Cat="Check Box" Stat="Loc" Orig="New">
-            <Val><![CDATA[Yapıştırma RE&PL istemlerini kaldırır]]></Val>
+            <Val><![CDATA[&Yapıştırma REPL istemlerini kaldırır]]></Val>
           </Tgt>
         </Str>
         <Bin BinId="1">
