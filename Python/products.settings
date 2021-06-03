@@ -2,6 +2,7 @@
   <PropertyGroup>
     <!-- Include Django by default -->
     <IncludeDjango Condition="'$(IncludeDjango)' == ''">true</IncludeDjango>
+    <IncludeDjangoHtmlExtensions Condition="'$(IncludeDjangoHtmlExtensions)' == ''">true</IncludeDjangoHtmlExtensions>
     
     <!-- Include VCDebugLauncher by default -->
     <IncludeVCDebugLauncher Condition="'$(VCDebugLauncher)' == ''">true</IncludeVCDebugLauncher>
