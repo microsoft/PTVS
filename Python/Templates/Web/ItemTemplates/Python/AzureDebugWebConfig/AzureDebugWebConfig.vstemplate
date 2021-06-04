@@ -11,7 +11,7 @@
     <ProjectItem ReplaceParameters="true" TargetFileName="web.debug.config" ItemType="Content">web.debug.config</ProjectItem>
   </TemplateContent>
   <WizardExtension>
-    <Assembly>Microsoft.PythonTools.ProjectWizards, Version=16.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</Assembly>
+    <Assembly>Microsoft.PythonTools.ProjectWizards, Version=17.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</Assembly>
     <FullClassName>Microsoft.PythonTools.ProjectWizards.AzureDebugWebConfigWizard</FullClassName>
   </WizardExtension>
 </VSTemplate>
