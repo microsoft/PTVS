@@ -15,7 +15,7 @@
     <Project File="FromExistingCode.pyproj" ReplaceParameters="true" IgnoreProjectParameter="$true$"></Project>
   </TemplateContent>
   <WizardExtension>
-    <Assembly>Microsoft.PythonTools.ProjectWizards, Version=16.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</Assembly>
+    <Assembly>Microsoft.PythonTools.ProjectWizards, Version=17.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</Assembly>
     <FullClassName>Microsoft.PythonTools.ProjectWizards.ImportWizard</FullClassName>
   </WizardExtension>
 </VSTemplate>
