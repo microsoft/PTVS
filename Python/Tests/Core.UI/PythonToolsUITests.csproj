@@ -104,6 +104,7 @@
   <ItemGroup>
     <Compile Include="AddImportTests.cs" />
     <Compile Include="BraceCompletionUITests.cs" />
+    <Compile Include="EnvironmentListTests.cs" />
     <Compile Include="IntellisenseTests.cs" />
     <Compile Include="SmartIndentUITests.cs" />
     <Compile Include="SignatureHelpUITests.cs" />

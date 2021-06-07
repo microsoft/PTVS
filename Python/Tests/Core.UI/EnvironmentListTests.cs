@@ -33,7 +33,6 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Win32;
-using PythonToolsTests;
 using TestUtilities;
 using TestUtilities.Mocks;
 using TestUtilities.Python;

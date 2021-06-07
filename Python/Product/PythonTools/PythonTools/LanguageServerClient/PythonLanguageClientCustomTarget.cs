@@ -163,13 +163,17 @@ namespace Microsoft.PythonTools.LanguageServerClient {
 
         [JsonRpcMethod("workspace/configuration")]
         public async Task<object> OnWorkspaceConfiguration(JToken arg) {
-            var reqParams = arg.ToObject<ConfigurationParams>();
-            if (this.WorkspaceConfiguration != null && reqParams != null) {
-                var eventArgs = new ConfigurationArgs { requestParams = reqParams, requestResult = null };
-                await this.WorkspaceConfiguration.InvokeAsync(this, eventArgs);
-                return eventArgs.requestResult;
+            try {
+                var reqParams = arg.ToObject<ConfigurationParams>();
+                if (this.WorkspaceConfiguration != null && reqParams != null) {
+                    var eventArgs = new ConfigurationArgs { requestParams = reqParams, requestResult = null };
+                    await this.WorkspaceConfiguration.InvokeAsync(this, eventArgs);
+                    return eventArgs.requestResult;
+                }
+                return null;
+            } catch {
+                return null;
             }
-            return null;
         }
     }
 }
