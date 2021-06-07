@@ -31,6 +31,7 @@
       <_NugetAssemblies Include="$(PackagesPath)\Microsoft.Extensions.*\lib\netstandard2.0\Microsoft.Extensions.*.dll" />
       <_NugetAssemblies Include="$(PackagesPath)\StreamJsonRpc*\lib\netstandard2.0\StreamJsonRpc.dll" />
       <_NugetAssemblies Include="$(PackagesPath)\System.*\lib\netstandard2.0\System.*.dll" />
+      <_NugetAssemblies Include="$(PackagesPath)\Microsoft.NET.*\lib\net472\Microsoft.NET.*.dll" />
     </ItemGroup>
     <PropertyGroup>
       <AssemblySearchPaths>

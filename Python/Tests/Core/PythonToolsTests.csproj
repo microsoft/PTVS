@@ -71,12 +71,6 @@
     <Reference Include="Microsoft.VisualStudio.ComponentModelHost" />
     <Reference Include="Microsoft.VisualStudio.Composition" />
     <Reference Include="Microsoft.VisualStudio.CoreUtility" />
-    <Reference Include="Microsoft.VisualStudio.Editor.Implementation">
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Microsoft.VisualStudio.Platform.VSEditor">
-      <Private>True</Private>
-    </Reference>
     <Reference Include="Microsoft.VisualStudio.Language" />
     <Reference Include="Microsoft.VisualStudio.Language.Intellisense" />
     <Reference Include="Microsoft.VisualStudio.Language.StandardClassification" />
@@ -117,6 +111,9 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.Python.Parsing">
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.NET.StringTools">
       <Private>True</Private>
     </Reference>
   </ItemGroup>
