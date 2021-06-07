@@ -80,7 +80,9 @@
     <Reference Include="Microsoft.VisualStudio.Language" />
     <Reference Include="Microsoft.VisualStudio.Language.Intellisense" />
     <Reference Include="Microsoft.VisualStudio.Language.StandardClassification" />
-    <Reference Include="Microsoft.VisualStudio.Interop" />
+    <Reference Include="Microsoft.VisualStudio.Interop">
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.TemplateWizardInterface" />
     <Reference Include="Microsoft.VisualStudio.Text.Data" />
@@ -142,7 +144,6 @@
     <Compile Include="PathUtilsTests.cs" />
     <Compile Include="CPythonInterpreterTests.cs" />
     <Compile Include="DebugReplEvaluatorTests.cs" />
-    <Compile Include="EnvironmentListTests.cs" />
     <None Include="ExtractMethodTests.cs" />
     <None Include="FuzzyStringMatcherTests.cs" />
     <Compile Include="ImportWizardTests.cs" />
