@@ -256,6 +256,15 @@ steps:
     searchPattern: '*.pdb'
     symbolServerType: TeamServices
 
+# Create bootstrapper for running integration tests
+- task: MicroBuildBuildVSBootstrapper@2
+  inputs:
+    vsMajorVersion: '17'
+    bootstrapperCoreFeedSource: 'https://devdiv.pkgs.visualstudio.com/_packaging/Setup/nuget/v3/index.json'
+    bootstrapperCoreDependenciesFeedSource: 'https://devdiv.pkgs.visualstudio.com/_packaging/Setup-Dependencies/nuget/v3/index.json'
+    nugetOrgPublicFeedSource: 'https://api.nuget.org/v3/index.json'
+    outputFolder: $(Build.BinariesDirectory)/raw/binaries
+
 # MicroBuild cleanup
 - task: MicroBuildCleanup@1
   displayName: 'Execute cleanup tasks'
@@ -304,3 +313,12 @@ steps:
   inputs:
     PathtoPublish: '$(Build.ArtifactStagingDirectory)/TestData.zip'
     ArtifactName: 'TestData'
+
+# Publish bootstrapper info
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: $(Build.StagingDirectory)\MicroBuild\Output
+    ArtifactName: MicroBuildOutputs
+    ArtifactType: Container
+  displayName: 'Publish Artifact: MicroBuildOutputs'
+  condition: succeeded()
