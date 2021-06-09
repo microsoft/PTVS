@@ -258,12 +258,15 @@ steps:
 
 # Create bootstrapper for running integration tests
 - task: MicroBuildBuildVSBootstrapper@2
+  displayName: 'Build Bootstrapper.json'
   inputs:
+    channelName: 'int.main'
     vsMajorVersion: '17'
     bootstrapperCoreFeedSource: 'https://devdiv.pkgs.visualstudio.com/_packaging/Setup/nuget/v3/index.json'
     bootstrapperCoreDependenciesFeedSource: 'https://devdiv.pkgs.visualstudio.com/_packaging/Setup-Dependencies/nuget/v3/index.json'
     nugetOrgPublicFeedSource: 'https://api.nuget.org/v3/index.json'
     outputFolder: $(Build.BinariesDirectory)/raw/binaries
+    manifests: 'https://vsdrop.corp.microsoft.com/file/v1/Products/DevDiv/microsoft/PTVS/$(Build.SourceBranchName)/$(Build.BuildNumber);Microsoft.PythonTools.vsman'
 
 # MicroBuild cleanup
 - task: MicroBuildCleanup@1
