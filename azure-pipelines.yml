@@ -267,7 +267,7 @@ steps:
     bootstrapperCoreDependenciesFeedSource: 'https://devdiv.pkgs.visualstudio.com/_packaging/Setup-Dependencies/nuget/v3/index.json'
     nugetOrgPublicFeedSource: 'https://api.nuget.org/v3/index.json'
     outputFolder: $(Build.BinariesDirectory)/raw/binaries
-    manifests: 'https://vsdrop.corp.microsoft.com/file/v1/Products/DevDiv/microsoft/PTVS/$(Build.SourceBranchName)/$(Build.BuildNumber);Microsoft.PythonTools.vsman'
+    manifests: $(Build.StagingDirectory)\release\Microsoft.PythonTools.vsman
 
 # MicroBuild cleanup
 - task: MicroBuildCleanup@1
