@@ -256,9 +256,10 @@ steps:
     searchPattern: '*.pdb'
     symbolServerType: TeamServices
 
-# Create bootstrapper for running integration tests
+# Create bootstrapper for running integration tests. They only run on CI, not PR
 - task: MicroBuildBuildVSBootstrapper@2
   displayName: 'Build Bootstrapper.json'
+  condition: notin(variables['Build.Reason'], 'PullRequest')
   inputs:
     channelName: 'int.main'
     vsMajorVersion: '17'
