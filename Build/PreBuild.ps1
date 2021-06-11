@@ -70,7 +70,7 @@ try {
     Start-Process -Wait -NoNewWindow "$outdir\python\tools\python.exe" -ErrorAction Stop -ArgumentList $debugpyarglist
 
     Write-Host "Updating Microsoft.Python.*.dll pdbs to be windows format"
-    Get-ChildItem "$PSScriptRoot\..\packages\Microsoft.Python.Parsing\lib\netstandard2.0" -Filter "*.pdb" | ForEach-Object {
+    Get-ChildItem "$outdir\Microsoft.Python.Parsing\lib\netstandard2.0" -Filter "*.pdb" | ForEach-Object {
         # Skip if there's already a pdb2 file
         # Convert each pdb $_.FullName
         $dir = $_.Directory
