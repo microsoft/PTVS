@@ -78,7 +78,7 @@ try {
         $pdb2 = "$dir\$base.pdb2"
         if (!(Test-Path $pdb2)) {
             Write-Host "Modifying" $_.Name
-            Start-Process -Wait -NoNewWindow "packages\Microsoft.DiaSymReader.Pdb2Pdb\tools\Pdb2Pdb.exe" -ErrorAction Stop -ArgumentList "$dir\$base.dll"
+            Start-Process -Wait -NoNewWindow "$outdir\Microsoft.DiaSymReader.Pdb2Pdb\tools\Pdb2Pdb.exe" -ErrorAction Stop -ArgumentList "$dir\$base.dll"
             # That should have created a pdb2 file. Rename it to the .pdb file
             Copy-Item $_.FullName "$dir\$base.old_pdb"
             Copy-Item "$dir\$base.pdb2" $_.FullName -Force
