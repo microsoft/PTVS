@@ -71,14 +71,20 @@ try {
 
     Write-Host "Updating Microsoft.Python.*.dll pdbs to be windows format"
     Get-ChildItem "$PSScriptRoot\..\packages\Microsoft.Python.Parsing\lib\netstandard2.0" -Filter "*.pdb" | ForEach-Object {
+        # Skip if there's already a pdb2 file
         # Convert each pdb $_.FullName
         $dir = $_.Directory
         $base = $_.BaseName
-        Write-Host "Modifying" $_.Name
-        Start-Process -Wait -NoNewWindow "packages\Microsoft.DiaSymReader.Pdb2Pdb\tools\Pdb2Pdb.exe" -ErrorAction Stop -ArgumentList "$dir\$base.dll"
-        # That should have created a pdb2 file. Rename it to the .pdb file
-        Copy-Item $_.FullName "$dir\$base.old_pdb"
-        Copy-Item "$dir\$base.pdb2" $_.FullName -Force
+        $pdb2 = "$dir\$base.pdb2"
+        if (!(Test-Path $pdb2)) {
+            Write-Host "Modifying" $_.Name
+            Start-Process -Wait -NoNewWindow "packages\Microsoft.DiaSymReader.Pdb2Pdb\tools\Pdb2Pdb.exe" -ErrorAction Stop -ArgumentList "$dir\$base.dll"
+            # That should have created a pdb2 file. Rename it to the .pdb file
+            Copy-Item $_.FullName "$dir\$base.old_pdb"
+            Copy-Item "$dir\$base.pdb2" $_.FullName -Force
+        } else {
+            Write-Host "Already updated the pdb for" $_.FullName
+        }
     } | Out-Null
 } finally {
     Pop-Location
