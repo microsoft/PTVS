@@ -3,6 +3,7 @@
                     xmlns:s="clr-namespace:System;assembly=mscorlib"
                     xmlns:img="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Imaging"
                     xmlns:vsm="clr-namespace:System.Windows;assembly=PresentationFramework"
+                    xmlns:vsfx="clr-namespace:Microsoft.VisualStudio.Shell;assembly=Microsoft.VisualStudio.Shell.15.0"
                     xmlns:wpf="clr-namespace:Microsoft.VisualStudioTools.Wpf">
 
     <Style x:Key="FocusVisualStyle" TargetType="{x:Type Control}">
@@ -822,84 +823,11 @@
 
     </Style>
 
-    <Style TargetType="{x:Type RadioButton}" BasedOn="{StaticResource {x:Type Control}}">
-        <Setter Property="VerticalContentAlignment" Value="Center" />
-        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="{x:Type RadioButton}">
-                    <Grid Background="Transparent">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <Ellipse Stroke="{TemplateBinding BorderBrush}"
-                                 StrokeThickness="{TemplateBinding BorderThickness}"
-                                 Fill="{TemplateBinding Background}"
-                                 MinWidth="{Binding ActualHeight,RelativeSource={RelativeSource Self}}"
-                                 MinHeight="{Binding ActualWidth,RelativeSource={RelativeSource Self}}"/>
-                        <Ellipse x:Name="optionMark"
-                                 Fill="{TemplateBinding Foreground}"
-                                 Margin="5"
-                                 Opacity="0" />
-                        <Grid Grid.Column="1" Margin="4 0 0 0">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="auto" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-                            <Rectangle x:Name="focusRect"
-                                       Grid.Column="0"
-                                       RenderOptions.EdgeMode="Aliased"
-                                       Stroke="{DynamicResource {x:Static wpf:Controls.ForegroundKey}}"
-                                       StrokeThickness="1"
-                                       StrokeDashArray="1 1"
-                                       Visibility="Hidden" />
-                            <ContentPresenter x:Name="contentPresenter"
-                                              Grid.Column="0"
-                                              ContentTemplate="{TemplateBinding ContentTemplate}"
-                                              Content="{TemplateBinding Content}"
-                                              ContentStringFormat="{TemplateBinding ContentStringFormat}"
-                                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                              Margin="{TemplateBinding Padding}"
-                                              RecognizesAccessKey="True"
-                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
-                        </Grid>
-                    </Grid>
-                    <ControlTemplate.Triggers>
-                        <Trigger Property="IsFocused" Value="True">
-                            <Setter Property="Visibility" TargetName="focusRect" Value="Visible" />
-                        </Trigger>
-                        <Trigger Property="IsChecked" Value="True">
-                            <Setter Property="Opacity" TargetName="optionMark" Value="1" />
-                        </Trigger>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="optionMark" Property="Fill" Value="{DynamicResource {x:Static wpf:Controls.ControlForegroundHoverKey}}" />
-                        </Trigger>
-                        <Trigger Property="IsPressed" Value="True">
-                            <Setter TargetName="optionMark" Property="Fill" Value="{DynamicResource {x:Static wpf:Controls.ControlForegroundPressedKey}}" />
-                        </Trigger>
-                    </ControlTemplate.Triggers>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
-        <Style.Triggers>
-            <Trigger Property="IsMouseOver" Value="True">
-                <Setter Property="Background" Value="{DynamicResource {x:Static wpf:Controls.ControlBackgroundHoverKey}}" />
-                <Setter Property="BorderBrush" Value="{DynamicResource {x:Static wpf:Controls.ControlBorderHoverKey}}" />
-            </Trigger>
-            <Trigger Property="IsPressed" Value="True">
-                <Setter Property="Background" Value="{DynamicResource {x:Static wpf:Controls.ControlBackgroundPressedKey}}" />
-                <Setter Property="BorderBrush" Value="{DynamicResource {x:Static wpf:Controls.ControlBorderPressedKey}}" />
-                <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:Controls.ControlForegroundPressedKey}}" />
-            </Trigger>
-            <Trigger Property="IsEnabled" Value="False">
-                <Setter Property="Background" Value="{DynamicResource {x:Static wpf:Controls.ControlBackgroundDisabledKey}}" />
-                <Setter Property="BorderBrush" Value="{DynamicResource {x:Static wpf:Controls.ControlBorderDisabledKey}}" />
-                <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:Controls.ControlForegroundDisabledKey}}" />
-            </Trigger>
-        </Style.Triggers>
+    <Style
+    TargetType="RadioButton" BasedOn="{StaticResource {x:Static vsfx:VsResourceKeys.ThemedDialogRadioButtonStyleKey}}"
+    />
 
-    </Style>
+
     <Style TargetType="{x:Type RepeatButton}">
         <Setter Property="Background" Value="{DynamicResource {x:Static wpf:Controls.ScrollBarArrowBackgroundKey}}" />
         <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:Controls.ScrollBarArrowKey}}" />
