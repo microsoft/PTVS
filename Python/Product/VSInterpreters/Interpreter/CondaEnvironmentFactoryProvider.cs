@@ -228,7 +228,7 @@ namespace Microsoft.PythonTools.Interpreter {
             ForceDiscoverInterpreterFactories().DoNotWait();
         }
 
-        private async System.Threading.Tasks.Task ForceDiscoverInterpreterFactories() {
+        public async System.Threading.Tasks.Task ForceDiscoverInterpreterFactories() {
             DiscoveryStarted?.Invoke(this, EventArgs.Empty);
 
             // Discover the available interpreters...
@@ -471,29 +471,5 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         #endregion
-
-        private sealed class DiscoverOnDispose : IDisposable {
-            private readonly CondaEnvironmentFactoryProvider _provider;
-            private readonly bool _forceDiscovery;
-
-            public DiscoverOnDispose(CondaEnvironmentFactoryProvider provider, bool forceDiscovery) {
-                _provider = provider;
-                _forceDiscovery = forceDiscovery;
-                Interlocked.Increment(ref _provider._ignoreNotifications);
-            }
-
-            public void Dispose() {
-                Interlocked.Decrement(ref _provider._ignoreNotifications);
-                if (_forceDiscovery) {
-                    _provider.ForceDiscoverInterpreterFactories().DoNotWait();
-                } else {
-                    _provider.DiscoverInterpreterFactories();
-                }
-            }
-        }
-
-        internal IDisposable SuppressDiscoverFactories(bool forceDiscoveryOnDispose) {
-            return new DiscoverOnDispose(this, forceDiscoveryOnDispose);
-        }
     }
 }
