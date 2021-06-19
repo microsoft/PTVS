@@ -53,7 +53,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                 _deleted = true;
                 TaskHelpers.RunSynchronouslyOnUIThread(ct => _breakpoint.RemoveAsync(ct));
                 _pendingBreakpoint.OnBoundBreakpointDeleted(this);
-                _engine.BreakpointManager.RemoveBoundBreakpoint(_breakpoint);
+                //_engine.BreakpointManager.RemoveBoundBreakpoint(_breakpoint);
             }
 
             return VSConstants.S_OK;

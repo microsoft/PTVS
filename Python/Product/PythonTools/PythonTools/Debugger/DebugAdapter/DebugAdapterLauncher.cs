@@ -24,6 +24,7 @@ using System.Web;
 using System.Windows.Forms;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces;
+using Microsoft.VisualStudio.Debugger.Interop;
 using Microsoft.VisualStudio.Shell;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -46,10 +47,24 @@ namespace Microsoft.PythonTools.Debugger {
 
         public ITargetHostProcess LaunchAdapter(IAdapterLaunchInfo launchInfo, ITargetHostInterop targetInterop) {
             if (launchInfo.LaunchType == LaunchType.Attach) {
-                var debugAttachInfo = (DebugAttachInfo)_debugInfo;
-                return DebugAdapterRemoteProcess.Attach(debugAttachInfo);
+                return LaunchAdapterForAttach(launchInfo, targetInterop);
             }
 
+            return LaunchAdapterForLaunch(launchInfo, targetInterop);
+        }
+
+        public void UpdateLaunchOptions(IAdapterLaunchInfo adapterLaunchInfo) {
+            _debugInfo = adapterLaunchInfo.LaunchType == LaunchType.Launch
+                ? GetLaunchDebugInfo(adapterLaunchInfo.LaunchJson)
+                : (DebugInfo)GetAttachDebugInfo(adapterLaunchInfo);
+
+            AddDebuggerOptions(adapterLaunchInfo, _debugInfo);
+            adapterLaunchInfo.LaunchJson = _debugInfo.GetJsonString();
+        }
+
+        #region Launch
+
+        private ITargetHostProcess LaunchAdapterForLaunch(IAdapterLaunchInfo launchInfo, ITargetHostInterop targetInterop) {
             var debugLaunchInfo = (DebugLaunchInfo)_debugInfo;
             var debugPyAdapterDirectory = Path.GetDirectoryName(PythonToolsInstallPath.GetFile("debugpy\\adapter\\__init__.py"));
             var targetProcess = new DebugAdapterProcess(_adapterHostContext, targetInterop, debugPyAdapterDirectory);
@@ -57,16 +72,6 @@ namespace Microsoft.PythonTools.Debugger {
             return targetProcess.StartProcess(debugLaunchInfo.InterpreterPathAndArguments.FirstOrDefault(), debugLaunchInfo.LaunchWebPageUrl);
         }
 
-        public void UpdateLaunchOptions(IAdapterLaunchInfo adapterLaunchInfo) {
-            _debugInfo = adapterLaunchInfo.LaunchType == LaunchType.Launch
-                ? GetLaunchDebugInfo(adapterLaunchInfo.LaunchJson)
-                : (DebugInfo)GetTcpAttachDebugInfo(adapterLaunchInfo);
-
-            AddDebuggerOptions(adapterLaunchInfo, _debugInfo);
-            adapterLaunchInfo.LaunchJson = _debugInfo.GetJsonString();
-        }
-
-        #region Launch
         private static DebugLaunchInfo GetLaunchDebugInfo(string adapterLaunchJson) {
             var adapterLaunchInfoJson = JObject.Parse(adapterLaunchJson);
             adapterLaunchInfoJson = adapterLaunchInfoJson.Value<JObject>("ConfigurationProperties") ?? adapterLaunchInfoJson;//Based on the VS version, the JSON could be nested in ConfigurationProperties
@@ -164,16 +169,39 @@ namespace Microsoft.PythonTools.Debugger {
         #endregion
 
         #region Attach
-        private static DebugAttachInfo GetTcpAttachDebugInfo(IAdapterLaunchInfo adapterLaunchInfo) {
+
+        private ITargetHostProcess LaunchAdapterForAttach(IAdapterLaunchInfo launchInfo, ITargetHostInterop targetInterop) {
+            var debugAttachInfo = (DebugAttachInfo)_debugInfo;
+            if (debugAttachInfo.RemoteUri != null) {
+                // This is a remote attach scenario
+                return DebugAdapterRemoteProcess.Attach(debugAttachInfo);
+            }
+
+            // We need to start debugpy locally using the same python that the process we're attaching to is using
+            AD_PROCESS_ID adProcessId = new AD_PROCESS_ID();
+            adProcessId.ProcessIdType = (uint)enum_AD_PROCESS_ID.AD_PROCESS_ID_SYSTEM;
+            adProcessId.dwProcessId = (uint)launchInfo.AttachProcessId;
+            launchInfo.DebugPort.GetProcess(adProcessId, out var process);
+            process.GetName(VisualStudio.Debugger.Interop.enum_GETNAME_TYPE.GN_FILENAME, out var processName);
+            var debugPyAdapterDirectory = Path.GetDirectoryName(PythonToolsInstallPath.GetFile("debugpy\\adapter\\__init__.py"));
+            var targetProcess = new DebugAdapterProcess(_adapterHostContext, targetInterop, debugPyAdapterDirectory);
+            return targetProcess.StartProcess(processName, null);
+        }
+
+        private static DebugAttachInfo GetAttachDebugInfo(IAdapterLaunchInfo adapterLaunchInfo) {
             var debugAttachInfo = new DebugAttachInfo();
-
             adapterLaunchInfo.DebugPort.GetPortName(out var adapterHostPortInfo);
-            debugAttachInfo.RemoteUri = new Uri(adapterHostPortInfo);
 
-            var uriInfo = new Uri(adapterHostPortInfo);
-            debugAttachInfo.Host = uriInfo.Host;
-            debugAttachInfo.Port = uriInfo.Port;
+            // If this is a remote URI, pull out the host and port.
+            if (adapterHostPortInfo != null && adapterHostPortInfo.Contains(":")) {
+                debugAttachInfo.RemoteUri = new Uri(adapterHostPortInfo);
 
+                var uriInfo = new Uri(adapterHostPortInfo);
+                debugAttachInfo.Host = uriInfo.Host;
+                debugAttachInfo.Port = uriInfo.Port;
+            } else {
+                debugAttachInfo.Host = adapterHostPortInfo;
+            }
             return debugAttachInfo;
         }
 
