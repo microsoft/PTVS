@@ -69,7 +69,7 @@ namespace Microsoft.PythonTools.Debugger {
             var debugPyAdapterDirectory = Path.GetDirectoryName(PythonToolsInstallPath.GetFile("debugpy\\adapter\\__init__.py"));
             var targetProcess = new DebugAdapterProcess(_adapterHostContext, targetInterop, debugPyAdapterDirectory);
 
-            return targetProcess.StartProcess(debugLaunchInfo.InterpreterPathAndArguments.FirstOrDefault(), debugLaunchInfo.LaunchWebPageUrl);
+            return targetProcess.StartProcess(debugLaunchInfo.InterpreterPathAndArguments.FirstOrDefault(), debugLaunchInfo.LaunchWebPageUrl, null);
         }
 
         private static DebugLaunchInfo GetLaunchDebugInfo(string adapterLaunchJson) {
@@ -172,20 +172,13 @@ namespace Microsoft.PythonTools.Debugger {
 
         private ITargetHostProcess LaunchAdapterForAttach(IAdapterLaunchInfo launchInfo, ITargetHostInterop targetInterop) {
             var debugAttachInfo = (DebugAttachInfo)_debugInfo;
-            if (debugAttachInfo.RemoteUri != null) {
+            if (launchInfo.LaunchLocation == LaunchLocation.Remote) {
                 // This is a remote attach scenario
-                return DebugAdapterRemoteProcess.Attach(debugAttachInfo);
+                return DebugAdapterAttachProcess.RemoteAttach(debugAttachInfo);
+            } else {
+                // This is a local attach scenario
+                return DebugAdapterAttachProcess.LocalAttach(debugAttachInfo, launchInfo, targetInterop);
             }
-
-            // We need to start debugpy locally using the same python that the process we're attaching to is using
-            AD_PROCESS_ID adProcessId = new AD_PROCESS_ID();
-            adProcessId.ProcessIdType = (uint)enum_AD_PROCESS_ID.AD_PROCESS_ID_SYSTEM;
-            adProcessId.dwProcessId = (uint)launchInfo.AttachProcessId;
-            launchInfo.DebugPort.GetProcess(adProcessId, out var process);
-            process.GetName(VisualStudio.Debugger.Interop.enum_GETNAME_TYPE.GN_FILENAME, out var processName);
-            var debugPyAdapterDirectory = Path.GetDirectoryName(PythonToolsInstallPath.GetFile("debugpy\\adapter\\__init__.py"));
-            var targetProcess = new DebugAdapterProcess(_adapterHostContext, targetInterop, debugPyAdapterDirectory);
-            return targetProcess.StartProcess(processName, null);
         }
 
         private static DebugAttachInfo GetAttachDebugInfo(IAdapterLaunchInfo adapterLaunchInfo) {

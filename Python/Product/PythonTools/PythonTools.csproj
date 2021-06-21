@@ -240,6 +240,9 @@
     <Compile Include="Attributes\ProvideNewFileTemplatesAttribute.cs" />
     <Compile Include="Attributes\RegistrationAttributeBuilder.cs" />
     <Compile Include="Attributes\RegistrationAttributeBuilder.RegKey.cs" />
+    <Compile Include="PythonTools\Debugger\DebugAdapter\DebugAdapterAttachProcess.cs" />
+    <Compile Include="PythonTools\Debugger\DebugAdapter\DebugAdapterAttachProcessStream.cs" />
+    <Compile Include="PythonTools\Debugger\DebugAdapter\DebugAdapterLaunchProcess.cs" />
     <Compile Include="PythonTools\Editor\BraceCompletion\BraceCompletionContext.cs" />
     <Compile Include="PythonTools\Editor\BraceCompletion\BraceCompletionContextProvider.cs" />
     <Compile Include="PythonTools\Editor\Formatting\PythonFormatterAutopep8.cs" />
@@ -259,9 +262,6 @@
     <Compile Include="PythonTools\Editor\Indent\SmartIndent.cs" />
     <Compile Include="PythonTools\Debugger\CustomDebugAdapterProtocolExtension.cs" />
     <Compile Include="PythonTools\Debugger\DebugAdapter\DebugAdapterLauncher.cs" />
-    <Compile Include="PythonTools\Debugger\DebugAdapter\DebugAdapterProcess.cs" />
-    <Compile Include="PythonTools\Debugger\DebugAdapter\DebugAdapterRemoteProcess.cs" />
-    <Compile Include="PythonTools\Debugger\DebugAdapter\DebugAdapterRemoteProcessStream.cs" />
     <Compile Include="PythonTools\Debugger\DebugAdapter\DebugInfo.cs" />
     <Compile Include="PythonTools\Debugger\DebugPyVersionHelper.cs" />
     <Compile Include="PythonTools\Commands\CurrentEnvironmentListCommand.cs" />
