@@ -180,7 +180,9 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
         ~AD7Engine() {
             Debug.WriteLine("Python Engine Finalized " + GetHashCode());
-            Marshal.ReleaseComObject(_adapterHostEngine);
+            if (_adapterHostEngine is IDisposable disposable) {
+                disposable.Dispose();
+            }
             _adapterHostEngine = null;
 
             foreach (var engine in _engines) {
