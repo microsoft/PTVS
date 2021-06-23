@@ -27,6 +27,7 @@
       <_NugetAssemblies Include="$(PackagesPath)\Microsoft.VisualStudio.*\lib\vs16\Microsoft.*.dll" />
       <_NugetAssemblies Include="$(PackagesPath)\Microsoft.Build*\lib\net472\Microsoft.*.dll" />
       <_NugetAssemblies Include="$(PackagesPath)\Microsoft.Internal.VisualStudio.*\lib\net45\Microsoft.Internal.VisualStudio.*.dll" />
+      <_NugetAssemblies Include="$(PackagesPath)\Microsoft.Internal.VisualStudio.*\lib\net472\Microsoft.Internal.VisualStudio.*.dll" />
       <_NugetAssemblies Include="$(PackagesPath)\Microsoft.Python.*\lib\netstandard2.0\Microsoft.Python.*.dll" />
       <_NugetAssemblies Include="$(PackagesPath)\Microsoft.Extensions.*\lib\netstandard2.0\Microsoft.Extensions.*.dll" />
       <_NugetAssemblies Include="$(PackagesPath)\StreamJsonRpc*\lib\netstandard2.0\StreamJsonRpc.dll" />

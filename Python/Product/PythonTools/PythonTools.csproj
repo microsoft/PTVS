@@ -221,8 +221,8 @@
     <Reference Include="Microsoft.VisualStudio.Threading" />
     <Reference Include="Microsoft.VisualStudio.Shell.Framework" />
     <Reference Include="Microsoft.VisualStudio.LanguageServer.Client" />
-    <Reference Include="Microsoft.Internal.VisualStudio.Shell.Embeddable">
-      <EmbedInteropTypes>True</EmbedInteropTypes>
+    <Reference Include="Microsoft.Internal.VisualStudio.Shell.Framework">
+      <Private>false</Private>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.LanguageServer.Protocol">
       <Private>True</Private>
