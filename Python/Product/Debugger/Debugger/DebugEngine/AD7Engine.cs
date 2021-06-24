@@ -50,27 +50,16 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         Justification = "We do not control ownership of this class")]
     [ComVisible(true)]
     [Guid(Guids.DebugEngineCLSID)]
-    public sealed class AD7Engine : IDebugEngine2, IDebugEngineLaunch2, IDebugProgram3, IDebugSymbolSettings100, IThreadIdMapper {
+    public sealed class AD7Engine : IDebugEngine2, IDebugEngineLaunch2, IDebugProgram3, IDebugSymbolSettings100 {
         // used to send events to the debugger. Some examples of these events are thread create, exception thrown, module load.
         private IDebugEventCallback2 _events;
 
-        // The core of the engine is implemented by PythonProcess - we wrap and expose that to VS.
-        private PythonProcess _process;
-
-        // mapping between PythonProcess threads and AD7Threads
         private IDebugEngine3 _adapterHostEngine = null; // VSCodeDebugAdapterHost engine 
         private IDebugEngineLaunch2 _adapterHostEngineLaunch = null;
         private IDebugProgram3 _adapterHostProgram = null;
         private static HashSet<WeakReference> _engines = new HashSet<WeakReference>();
         private static readonly Guid AdapterHostClsid = new Guid("DAB324E9-7B35-454C-ACA8-F6BB0D5C8673");
         private static readonly Guid AdapterHostEngineId = new Guid("{86432F39-ADFD-4C56-AA8F-AF8FCDC66039}");
-
-
-        // Python thread IDs can be 64-bit (e.g. when remotely debugging a 64-bit Linux system), but VS debugger APIs only work
-        // with 32-bit identifiers, so we need to set up a mapping system. If the thread ID is small enough to fit into 32 bits,
-        // it is used as is; otherwise, we generate a new one.
-        private readonly Dictionary<uint, long> _threadIdMapping = new Dictionary<uint, long>();
-        private uint _lastGeneratedVsTid;
 
         internal static event EventHandler<AD7EngineEventArgs> EngineAttached;
         internal static event EventHandler<AD7EngineEventArgs> EngineDetaching;
@@ -166,16 +155,13 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         /// running machine.
         /// </summary>
         public const string DirMappingSetting = "DIR_MAPPING";
-
         public AD7Engine() {
             Debug.WriteLine("Python Engine Created " + GetHashCode());
-            _engines.Add(new WeakReference(this));
             var localRegistry = ServiceProvider.GlobalProvider.GetService(typeof(SLocalRegistry)) as ILocalRegistry;
             var adapterHostEngine = localRegistry.CreateInstance(AdapterHostClsid);
             _adapterHostEngine = adapterHostEngine as IDebugEngine3;
             _adapterHostEngineLaunch = _adapterHostEngine as IDebugEngineLaunch2;
             _adapterHostEngine.SetEngineGuid(AdapterHostEngineId);
-
         }
 
         ~AD7Engine() {
@@ -184,85 +170,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                 disposable.Dispose();
             }
             _adapterHostEngine = null;
-
-            foreach (var engine in _engines) {
-                if (engine.Target == this) {
-                    _engines.Remove(engine);
-                    break;
-                }
-            }
         }
 
-        internal static IList<AD7Engine> GetEngines() {
-            List<AD7Engine> engines = new List<AD7Engine>();
-            foreach (var engine in AD7Engine._engines) {
-                AD7Engine target = (AD7Engine)engine.Target;
-                if (target != null) {
-                    engines.Add(target);
-                }
-            }
-            return engines;
-        }
-
-        internal PythonProcess Process {
-            get {
-                return _process;
-            }
-        }
-
-        /// <summary>
-        /// Map a generic 64-bit thread ID to a 32-bit thread ID usable in VS. If necessary (i.e. if the ID does not fit into 32 bits,
-        /// or if it is already used), generates a new fake ID, and establishes the mapping between the two.
-        /// </summary>
-        /// <returns>The original ID if it could be used as is, generated ID otherwise.</returns>
-        internal uint RegisterThreadId(long tid) {
-            uint vsTid;
-
-            if (tid <= uint.MaxValue && !_threadIdMapping.ContainsKey((uint)tid)) {
-                vsTid = (uint)tid;
-            } else {
-                do {
-                    vsTid = ++_lastGeneratedVsTid;
-                } while (_threadIdMapping.ContainsKey(vsTid));
-            }
-
-            _threadIdMapping[vsTid] = tid;
-            return vsTid;
-        }
-
-        internal void UnregisterThreadId(uint vsTid) {
-            _threadIdMapping.Remove(vsTid);
-        }
-
-        long? IThreadIdMapper.GetPythonThreadId(uint vsThreadId) {
-            long result;
-            return _threadIdMapping.TryGetValue(vsThreadId, out result) ? result : (long?)null;
-        }
-
-        private static bool IsDebuggingPythonOnly(IDebugProgram2 program) {
-            IDebugProcess2 process;
-            program.GetProcess(out process);
-
-            IEnumDebugPrograms2 enumPrograms;
-            process.EnumPrograms(out enumPrograms);
-
-            while (true) {
-                IDebugProgram2[] programs = new IDebugProgram2[1];
-                uint fetched = 0;
-                if (enumPrograms.Next(1, programs, ref fetched) != VSConstants.S_OK || fetched != 1 || programs[0] == null) {
-                    break;
-                }
-
-                string engineName;
-                Guid engineGuid;
-                programs[0].GetEngineInfo(out engineName, out engineGuid);
-                if (engineGuid != AD7Engine.DebugEngineGuid) {
-                    return false;
-                }
-            }
-
-            return true;
-        }
 
         #region IDebugEngine2 Members
 
@@ -649,73 +558,5 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         }
 
         #endregion
-
-        /// <summary>
-        /// Returns information about the given stack frame for the given process and thread ID.
-        /// 
-        /// If the process, thread, or frame are unknown the null is returned.
-        /// 
-        /// New in 1.5.
-        /// </summary>
-        internal static IDebugDocumentContext2 GetCodeMappingDocument(int processId, int threadId, int frame) {
-            if (frame < 0) {
-                return null;
-            }
-
-            var engine = _engines.Select(e => e.Target as AD7Engine).FirstOrDefault(e => e?._process?.Id == processId);
-            if (engine == null) {
-                return null;
-            }
-
-            PythonThread thread = null; // TODO: engine._threads.Keys.FirstOrDefault(t => t.Id == threadId);
-            if (thread == null) {
-                return null;
-            }
-
-            var curFrame = thread.Frames.ElementAtOrDefault(frame);
-            if (curFrame == null) {
-                return null;
-            }
-
-            if (curFrame.Kind == FrameKind.Django) {
-                var djangoFrame = (DjangoStackFrame)curFrame;
-
-                return new AD7DocumentContext(djangoFrame.SourceFile,
-                    new TEXT_POSITION() { dwLine = (uint)djangoFrame.SourceLine, dwColumn = 0 },
-                    new TEXT_POSITION() { dwLine = (uint)djangoFrame.SourceLine, dwColumn = 0 },
-                    new AD7MemoryAddress(engine, djangoFrame.SourceFile, (uint)djangoFrame.SourceLine, curFrame),
-                    FrameKind.Python
-                );
-            }
-
-            return null;
-        }
-
-        internal Task RefreshThreadFrames(long threadId, CancellationToken ct) {
-            return _process.RefreshThreadFramesAsync(threadId, ct);
-        }
-
-        internal static AD7Engine GetEngineForProcess(EnvDTE.Process process) {
-            EnvDTE80.Process2 process2 = (EnvDTE80.Process2)process;
-            foreach (var engine in AD7Engine._engines) {
-                AD7Engine target = (AD7Engine)engine.Target;
-                if (target != null) {
-                    var pythonProcess = target.Process as PythonRemoteProcess;
-                    if (pythonProcess != null) {
-                        if (process2.Transport.ID == PythonRemoteDebugPortSupplier.PortSupplierId) {
-                            Uri transportUri;
-                            if (Uri.TryCreate(process2.TransportQualifier, UriKind.RelativeOrAbsolute, out transportUri) && (pythonProcess.Uri == transportUri)) {
-                                return target;
-                            }
-                        }
-                    } else if (target.Process != null) {
-                        if ((target.Process.Id == process.ProcessID) && (Guid.Parse(process2.Transport.ID) == DebuggerConstants.guidLocalPortSupplier)) {
-                            return target;
-                        }
-                    }
-                }
-            }
-            return null;
-        }
     }
 }
