@@ -940,6 +940,9 @@
       <Item ItemId=";AlwaysTrustWorkspaceInfoBarAction" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Always trust]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Immer vertrauen]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -1255,6 +1258,9 @@
       <Item ItemId=";CompletionFilterInterface" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Interfaces]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Schnittstellen]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -1267,12 +1273,18 @@
       <Item ItemId=";CompletionFilterMethod" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Methods]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Methoden]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";CompletionFilterModule" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Modules]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Module]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -1285,6 +1297,9 @@
       <Item ItemId=";CompletionFilterProperty" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Properties]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Eigenschaften]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -1321,6 +1336,9 @@
       <Item ItemId=";CompletionFilterUnit" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Units]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Einheiten]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -1726,6 +1744,9 @@
       <Item ItemId=";ConfigFileAlreadyExists" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Type checker configuration file already exists in this folder.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Die Konfigurationsdatei der Typüberprüfung ist in diesem Ordner bereits vorhanden.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -3202,6 +3223,9 @@
       <Item ItemId=";DiagnosticModeToolTip" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Analyzes and reports errors on only open files or the entire workspace.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Analysiert und meldet Fehler nur für geöffnete Dateien oder den gesamten Arbeitsbereich.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -4729,6 +4753,9 @@
       <Item ItemId=";LanguageClientInitializeFailed" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Language server initialization failed.\n\n{0}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Fehler bei der Initialisierung des sprach Servers.\n\n{0}]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -4810,6 +4837,9 @@
       <Item ItemId=";LogLevelTrace" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Trace]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Ablaufverfolgung]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -5104,8 +5134,8 @@
       <Item ItemId=";PackageUninstalling" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Uninstalling '{0}']]></Val>
-          <Tgt Cat="Text" Stat="Update" Orig="New">
-            <Val><![CDATA["{0}" wird deinstalliert.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA["{0}" wird deinstalliert]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[Unnstalling '{0}']]></Val>
@@ -6799,6 +6829,9 @@
       <Item ItemId=";SearchPathsToolTip" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Additional import search resolution paths. You can use line breaks or semicolons to separate multiple paths.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Zusätzliche Suchauflösungspfade für den Import. Sie können Zeilenumbrüche oder Semikolons verwenden, um mehrere Pfade zu trennen.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -7429,6 +7462,9 @@
       <Item ItemId=";TypeCheckingModeBasic" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Basic]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Basic]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -7453,6 +7489,9 @@
       <Item ItemId=";TypeshedPathsToolTip" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Paths to look for typeshed modules. You can use line breaks or semicolons to separate multiple paths.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Pfade zum Suchen nach typengestrichenen Modulen. Sie können Zeilenumbrüche oder Semikolons verwenden, um mehrere Pfade zu trennen.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
