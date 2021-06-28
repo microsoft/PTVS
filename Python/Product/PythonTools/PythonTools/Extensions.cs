@@ -746,6 +746,8 @@ namespace Microsoft.PythonTools {
             if (debugger == null) {
                 return;
             }
+
+            // TODO: Debug Repl - this is only necessary for the debug repl. Once it goes away, remove this function.
             var vsDebugger = serviceProvider.GetShellDebugger() as IDebugRefreshNotification140;
             if (vsDebugger != null) {
                 // Passing fCallstackFormattingAffected = TRUE to OnExpressionEvaluationRefreshRequested to force refresh
