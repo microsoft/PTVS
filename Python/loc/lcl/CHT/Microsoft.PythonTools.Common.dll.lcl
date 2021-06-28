@@ -940,6 +940,9 @@
       <Item ItemId=";AlwaysTrustWorkspaceInfoBarAction" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Always trust]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[永遠信任]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -1255,6 +1258,9 @@
       <Item ItemId=";CompletionFilterInterface" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Interfaces]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[介面]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -1273,6 +1279,9 @@
       <Item ItemId=";CompletionFilterModule" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Modules]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[模組]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -1285,6 +1294,9 @@
       <Item ItemId=";CompletionFilterProperty" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Properties]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[屬性]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -1321,6 +1333,9 @@
       <Item ItemId=";CompletionFilterUnit" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Units]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[單位]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -1726,6 +1741,9 @@
       <Item ItemId=";ConfigFileAlreadyExists" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Type checker configuration file already exists in this folder.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[此資料夾中已有類型檢查程式設定檔。]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -3202,6 +3220,9 @@
       <Item ItemId=";DiagnosticModeToolTip" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Analyzes and reports errors on only open files or the entire workspace.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[僅針對開啟的檔案或針對整個工作區分析及回報錯誤。]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -4729,6 +4750,9 @@
       <Item ItemId=";LanguageClientInitializeFailed" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Language server initialization failed.\n\n{0}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[語言伺服器初始化失敗。\n\n{0}]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -5104,7 +5128,7 @@
       <Item ItemId=";PackageUninstalling" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Uninstalling '{0}']]></Val>
-          <Tgt Cat="Text" Stat="Update" Orig="New">
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[正在解除安裝 '{0}']]></Val>
           </Tgt>
           <Prev Cat="Text">
@@ -6799,6 +6823,9 @@
       <Item ItemId=";SearchPathsToolTip" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Additional import search resolution paths. You can use line breaks or semicolons to separate multiple paths.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[其他匯入搜尋解析路徑。您可以使用分行符號或分號來分隔多個路徑。]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -7453,6 +7480,9 @@
       <Item ItemId=";TypeshedPathsToolTip" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Paths to look for typeshed modules. You can use line breaks or semicolons to separate multiple paths.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[用於尋找 typeshed 模組的路徑。您可以使用分行符號或分號來分隔多個路徑。]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
