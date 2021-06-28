@@ -122,12 +122,13 @@ namespace Microsoft.PythonTools.Repl {
             if (_commands.InCommand) {
                 return true;
             }
-            if (_activeEvaluator != null) {
-                return _activeEvaluator.CanExecuteCode(text);
-            } else if (CustomDebugAdapterProtocolExtension.CanUseExperimental()) {
+            if (CustomDebugAdapterProtocolExtension.CanUseExperimental()) {
                 return CanExecuteCodeExperimental(text);
             }
-            return true;
+            if (_activeEvaluator != null) {
+                return _activeEvaluator.CanExecuteCode(text);
+            }
+            return false;
         }
 
         bool CanExecuteCodeExperimental(string text) {
@@ -162,21 +163,19 @@ namespace Microsoft.PythonTools.Repl {
                 return ExecutionResult.Succeeded;
             }
 
-            if (_activeEvaluator != null) {
-                return _activeEvaluator.ExecuteCodeAsync(text);
-            } else {
-                if (CustomDebugAdapterProtocolExtension.CanUseExperimental()) {
-                    var tid = _serviceProvider.GetDTE().Debugger.CurrentThread.ID;
-                    (bool isSuccessful, string message) result = CustomDebugAdapterProtocolExtension.EvaluateReplRequest(text, tid);
+            if (CustomDebugAdapterProtocolExtension.CanUseExperimental()) {
+                var tid = _serviceProvider.GetDTE().Debugger.CurrentThread.ID;
+                (bool isSuccessful, string message) result = CustomDebugAdapterProtocolExtension.EvaluateReplRequest(text, tid);
 
-                    if (!result.isSuccessful) {
-                        CurrentWindow.WriteError(result.message);
-                        return ExecutionResult.Failed;
-                    }
-
-                    CurrentWindow.Write(result.message);
+                if (!result.isSuccessful) {
+                    CurrentWindow.WriteError(result.message);
+                    return ExecutionResult.Failed;
                 }
-            }
+
+                CurrentWindow.Write(result.message);
+            } else if (_activeEvaluator != null) {
+                return _activeEvaluator.ExecuteCodeAsync(text);
+            } 
 
             return ExecutionResult.Succeeded;
         }
@@ -354,7 +353,7 @@ namespace Microsoft.PythonTools.Repl {
 
         internal void FrameUp() {
             if (_activeEvaluator != null) {
-                //_activeEvaluator.FrameUp();
+                _activeEvaluator.FrameUp();
             } else if (CustomDebugAdapterProtocolExtension.CanUseExperimental()) {
                 NotSupported();
             } else {
@@ -364,7 +363,7 @@ namespace Microsoft.PythonTools.Repl {
 
         internal void FrameDown() {
             if (_activeEvaluator != null) {
-                //_activeEvaluator.FrameDown();
+                _activeEvaluator.FrameDown();
             } else if (CustomDebugAdapterProtocolExtension.CanUseExperimental()) {
                 NotSupported();
             } else {

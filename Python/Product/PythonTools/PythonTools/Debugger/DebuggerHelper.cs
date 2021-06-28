@@ -146,9 +146,11 @@ namespace Microsoft.PythonTools.Debugger {
         }
 
         private static bool IsPythonDebugger(IDebugEngine2 engine) {
-            engine.GetEngineId(out var guid);
-            if (guid == AD7Engine.DebugEngineGuid) {
-                return true;
+            if (engine != null) {
+                engine.GetEngineId(out var guid);
+                if (guid == AD7Engine.DebugEngineGuid) {
+                    return true;
+                }
             }
             return false;
         }
