@@ -244,6 +244,7 @@
     <Compile Include="PythonTools\Debugger\DebugAdapter\DebugAdapterAttachProcess.cs" />
     <Compile Include="PythonTools\Debugger\DebugAdapter\DebugAdapterAttachProcessStream.cs" />
     <Compile Include="PythonTools\Debugger\DebugAdapter\DebugAdapterLaunchProcess.cs" />
+    <Compile Include="PythonTools\Debugger\DebugAdapter\ProcessExtensions.cs" />
     <Compile Include="PythonTools\Debugger\DebuggerHelper.cs" />
     <Compile Include="PythonTools\Debugger\IDebugUnixShellPort.cs" />
     <Compile Include="PythonTools\Editor\BraceCompletion\BraceCompletionContext.cs" />

@@ -20,7 +20,9 @@ using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.PythonTools.Debugger.DebugAdapter;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Logging;
 using Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces;
@@ -28,7 +30,7 @@ using Microsoft.VisualStudio.Debugger.Interop;
 
 namespace Microsoft.PythonTools.Debugger {
     internal sealed class DebugAdapterAttachProcess : ITargetHostProcess, IDisposable {
-        private const int _debuggerConnectionTimeout = 20000; // 20 seconds
+        private const int _debuggerConnectionTimeout = 60000; // 60 seconds. Can take a long time to connect
         private DebugAdapterAttachProcessStream _stream;
         private bool _debuggerConnected = false;
         private Process _debugPyProcess = null;
@@ -45,6 +47,7 @@ namespace Microsoft.PythonTools.Debugger {
         }
 
         private void DebugPyProcess_Exited(object sender, EventArgs e) {
+            Debug.WriteLine($"DebugPy exited:");
             Exited?.Invoke(this, EventArgs.Empty);
         }
 
@@ -72,7 +75,7 @@ namespace Microsoft.PythonTools.Debugger {
             debugPyProcess.Start();
 
             // Connect to this port
-            return attachedProcess.ConnectSocket(new System.Uri($"http://localhost:{port}")) ? attachedProcess : null;
+            return attachedProcess.ConnectSocket(new System.Uri($"http://localhost:{port}"), debugPyProcess) ? attachedProcess : null;
         }
 
         public static ITargetHostProcess RemoteAttach(DebugAttachInfo debugAttachInfo) {
@@ -91,7 +94,7 @@ namespace Microsoft.PythonTools.Debugger {
             return port;
         }
 
-        private bool ConnectSocket(Uri uri) {
+        private bool ConnectSocket(Uri uri, Process startupProcess = null) {
             _debuggerConnected = false;
             Socket socket = null; 
             EndPoint endpoint;
@@ -108,12 +111,18 @@ namespace Microsoft.PythonTools.Debugger {
             // Need an intermediary here so it's the correct type.
             Func<Task> socketTask =
                 async () => {
+                    // Wait for process exit if we have a 'startup' process
+                    if (startupProcess != null) {
+                        await startupProcess.WaitForExitAsync(CancellationToken.None);
+                    }
+
                     // Keep looping. debugpy may not be started yet.
                     while (socket == null) {
                         try {
                             socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.IP);
                             await socket.ConnectAsync(endpoint);
-                        } catch {
+                        } catch (Exception e) {
+                            System.Diagnostics.Debug.WriteLine($"Socker error attaching: {e}");
                             socket.Dispose();
                             socket = null;
                             await Task.Delay(1000);
@@ -124,7 +133,7 @@ namespace Microsoft.PythonTools.Debugger {
                     socketTask(),
                     Task.Delay(_debuggerConnectionTimeout)));
             try {
-                if (socket.Connected) {
+                if (socket != null && socket.Connected) {
                     _debuggerConnected = true;
                     _stream = new DebugAdapterAttachProcessStream(new NetworkStream(socket, ownsSocket: true));
                     _stream.Disconnected += OnDisconnected;
