@@ -18,6 +18,7 @@ using System;
 using System.IO;
 using System.Reflection;
 using Microsoft.Win32;
+using PeezoSlug;
 
 namespace Microsoft.PythonTools.Infrastructure {
     static class PythonToolsInstallPath {

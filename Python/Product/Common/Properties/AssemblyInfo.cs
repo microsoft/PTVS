@@ -19,6 +19,7 @@ using System.Reflection;
 using System.Resources;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using PeezoSlug;
 
 [assembly: AssemblyTitle("Visual Studio - Python infrastructure")]
 [assembly: AssemblyDescription("Private infrastructure helpers for Python support in Visual Studio.")]
