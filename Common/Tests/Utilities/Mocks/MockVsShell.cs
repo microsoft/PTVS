@@ -19,11 +19,15 @@ using System.Collections.Generic;
 
 namespace TestUtilities.Mocks
 {
+#pragma warning disable CS0246 // The type or namespace name 'IVsShell' could not be found (are you missing a using directive or an assembly reference?)
     public class MockVsShell : IVsShell
+#pragma warning restore CS0246 // The type or namespace name 'IVsShell' could not be found (are you missing a using directive or an assembly reference?)
     {
         public readonly Dictionary<int, object> Properties = new Dictionary<int, object>();
         public readonly object ReadOnlyPropertyValue = new object();
+#pragma warning disable CS0246 // The type or namespace name 'IVsShellPropertyEvents' could not be found (are you missing a using directive or an assembly reference?)
         private readonly List<IVsShellPropertyEvents> _listeners = new List<IVsShellPropertyEvents>();
+#pragma warning restore CS0246 // The type or namespace name 'IVsShellPropertyEvents' could not be found (are you missing a using directive or an assembly reference?)
 
         public int GetProperty(int propid, out object pvar)
         {
@@ -61,19 +65,25 @@ namespace TestUtilities.Mocks
         }
 
 
+#pragma warning disable CS0246 // The type or namespace name 'IVsBroadcastMessageEvents' could not be found (are you missing a using directive or an assembly reference?)
         public int AdviseBroadcastMessages(IVsBroadcastMessageEvents pSink, out uint pdwCookie)
+#pragma warning restore CS0246 // The type or namespace name 'IVsBroadcastMessageEvents' could not be found (are you missing a using directive or an assembly reference?)
         {
             throw new NotImplementedException();
         }
 
+#pragma warning disable CS0246 // The type or namespace name 'IVsShellPropertyEvents' could not be found (are you missing a using directive or an assembly reference?)
         public int AdviseShellPropertyChanges(IVsShellPropertyEvents pSink, out uint pdwCookie)
+#pragma warning restore CS0246 // The type or namespace name 'IVsShellPropertyEvents' could not be found (are you missing a using directive or an assembly reference?)
         {
             _listeners.Add(pSink);
             pdwCookie = (uint)_listeners.Count - 1;
             return VSConstants.S_OK;
         }
 
+#pragma warning disable CS0246 // The type or namespace name 'IEnumPackages' could not be found (are you missing a using directive or an assembly reference?)
         public int GetPackageEnum(out IEnumPackages ppenum)
+#pragma warning restore CS0246 // The type or namespace name 'IEnumPackages' could not be found (are you missing a using directive or an assembly reference?)
         {
             throw new NotImplementedException();
         }
@@ -83,12 +93,16 @@ namespace TestUtilities.Mocks
             throw new NotImplementedException();
         }
 
+#pragma warning disable CS0246 // The type or namespace name 'IVsPackage' could not be found (are you missing a using directive or an assembly reference?)
         public int IsPackageLoaded(ref Guid guidPackage, out IVsPackage ppPackage)
+#pragma warning restore CS0246 // The type or namespace name 'IVsPackage' could not be found (are you missing a using directive or an assembly reference?)
         {
             throw new NotImplementedException();
         }
 
+#pragma warning disable CS0246 // The type or namespace name 'IVsPackage' could not be found (are you missing a using directive or an assembly reference?)
         public int LoadPackage(ref Guid guidPackage, out IVsPackage ppPackage)
+#pragma warning restore CS0246 // The type or namespace name 'IVsPackage' could not be found (are you missing a using directive or an assembly reference?)
         {
             throw new NotImplementedException();
         }

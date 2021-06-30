@@ -65,7 +65,9 @@ namespace TestRunnerInterop {
         //  http://blogs.msdn.com/b/kirillosenkov/archive/2011/08/10/how-to-get-dte-from-visual-studio-process-id.aspx
         [SuppressMessage("Microsoft.Design", "CA1060:MovePInvokesToNativeMethodsClass")]
         [DllImport("ole32.dll")]
+#pragma warning disable CS0246 // The type or namespace name 'IBindCtx' could not be found (are you missing a using directive or an assembly reference?)
         private static extern int CreateBindCtx(uint reserved, out IBindCtx ppbc);
+#pragma warning restore CS0246 // The type or namespace name 'IBindCtx' could not be found (are you missing a using directive or an assembly reference?)
 
         public DTE GetDTE() {
             var dte = GetDTE(_processId);

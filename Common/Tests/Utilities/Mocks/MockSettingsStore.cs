@@ -21,7 +21,11 @@ using System.Linq;
 
 namespace TestUtilities.Mocks
 {
+#pragma warning disable CS0012 // The type 'SYSTEMTIME' is defined in an assembly that is not referenced. You must add a reference to assembly 'Microsoft.VisualStudio.Shell.Interop.8.0, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a'.
+#pragma warning disable CS0012 // The type 'SYSTEMTIME' is defined in an assembly that is not referenced. You must add a reference to assembly 'Microsoft.VisualStudio.Shell.Interop.8.0, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a'.
     public class MockSettingsStore : IVsSettingsStore, IVsWritableSettingsStore
+#pragma warning restore CS0012 // The type 'SYSTEMTIME' is defined in an assembly that is not referenced. You must add a reference to assembly 'Microsoft.VisualStudio.Shell.Interop.8.0, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a'.
+#pragma warning restore CS0012 // The type 'SYSTEMTIME' is defined in an assembly that is not referenced. You must add a reference to assembly 'Microsoft.VisualStudio.Shell.Interop.8.0, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a'.
     {
         public bool AllowEmptyCollections { get; set; }
 
@@ -125,7 +129,9 @@ namespace TestUtilities.Mocks
             return FindValue(collectionPath, propertyName, ref value);
         }
 
+#pragma warning disable CS0246 // The type or namespace name 'SYSTEMTIME' could not be found (are you missing a using directive or an assembly reference?)
         public int GetLastWriteTime(string collectionPath, SYSTEMTIME[] lastWriteTime)
+#pragma warning restore CS0246 // The type or namespace name 'SYSTEMTIME' could not be found (are you missing a using directive or an assembly reference?)
         {
             throw new NotImplementedException();
         }

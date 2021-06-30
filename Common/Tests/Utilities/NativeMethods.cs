@@ -38,7 +38,9 @@ namespace TestUtilities
         /// <param name="prot">Pointer to running object table interface</param>
         /// <returns></returns>
         [DllImport("ole32.dll")]
+#pragma warning disable CS0246 // The type or namespace name 'IRunningObjectTable' could not be found (are you missing a using directive or an assembly reference?)
         public static extern int GetRunningObjectTable(int reserved, out IRunningObjectTable prot);
+#pragma warning restore CS0246 // The type or namespace name 'IRunningObjectTable' could not be found (are you missing a using directive or an assembly reference?)
 
         /// <summary>
         /// Win32 GetWindowThreadProcessId: Get process ID from a window handle
@@ -53,7 +55,9 @@ namespace TestUtilities
         /// <param name="ppbc">Bind context.</param>
         /// <returns>HRESULT</returns>
         [DllImport("ole32.dll")]
+#pragma warning disable CS0246 // The type or namespace name 'IBindCtx' could not be found (are you missing a using directive or an assembly reference?)
         public static extern int CreateBindCtx(int reserved, out IBindCtx ppbc);
+#pragma warning restore CS0246 // The type or namespace name 'IBindCtx' could not be found (are you missing a using directive or an assembly reference?)
 
         /// <summary>
         /// Register message filter for COM.
@@ -61,7 +65,11 @@ namespace TestUtilities
         /// <param name="lpMessageFilter">New filter to register.</param>
         /// <param name="lplpMessageFilter">Old filter. Save it if you need to restore it later.</param>
         [DllImport("ole32.dll")]
+#pragma warning disable CS0246 // The type or namespace name 'IMessageFilter' could not be found (are you missing a using directive or an assembly reference?)
+#pragma warning disable CS0246 // The type or namespace name 'IMessageFilter' could not be found (are you missing a using directive or an assembly reference?)
         public static extern int CoRegisterMessageFilter(IMessageFilter lpMessageFilter, out IMessageFilter lplpMessageFilter);
+#pragma warning restore CS0246 // The type or namespace name 'IMessageFilter' could not be found (are you missing a using directive or an assembly reference?)
+#pragma warning restore CS0246 // The type or namespace name 'IMessageFilter' could not be found (are you missing a using directive or an assembly reference?)
 
         /// <summary>
         /// Get the foreground window

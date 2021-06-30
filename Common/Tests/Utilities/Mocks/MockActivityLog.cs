@@ -22,7 +22,9 @@ using System.Text.RegularExpressions;
 
 namespace TestUtilities.Mocks
 {
+#pragma warning disable CS0246 // The type or namespace name 'IVsActivityLog' could not be found (are you missing a using directive or an assembly reference?)
     public class MockActivityLog : IVsActivityLog
+#pragma warning restore CS0246 // The type or namespace name 'IVsActivityLog' could not be found (are you missing a using directive or an assembly reference?)
     {
         public readonly List<string> Items = new List<string>();
 
