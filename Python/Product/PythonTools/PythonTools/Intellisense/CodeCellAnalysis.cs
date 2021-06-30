@@ -14,7 +14,6 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using Microsoft.PythonTools.Infrastructure;
@@ -50,7 +49,7 @@ namespace Microsoft.PythonTools.Intellisense {
             // preceding a cell.
             bool seenMarker = false, seenComment = false;
             bool seenWhitespace = false;
-            foreach(var current in LinesForward(line)) {
+            foreach (var current in LinesForward(line)) {
                 var text = current.GetText();
                 if (IsCellMarker(text)) {
                     // Certainly started in a comment preceding a cell
@@ -73,7 +72,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 // following a comment or following code. If the latter, we are
                 // part of the previous cell; otherwise, we are part of the
                 // following cell.
-                foreach(var current in LinesBackward(line)) {
+                foreach (var current in LinesBackward(line)) {
                     var text = current.GetText();
                     if (IsCellMarker(text)) {
                         // In the cell we just found
@@ -93,7 +92,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             bool lookingForCell = true;
-            foreach(var current in LinesBackward(start)) {
+            foreach (var current in LinesBackward(start)) {
                 var text = current.GetText();
                 if (IsCellMarker(text)) {
                     if (lookingForCell) {
@@ -134,7 +133,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var snapshot = line.Snapshot;
             ITextSnapshotLine end = null, endInclWhitespace = null, endInclComment = null;
-            foreach(var current in LinesForward(line)) {
+            foreach (var current in LinesForward(line)) {
                 var text = current.GetText();
                 if (IsCellMarker(text)) {
                     if (end == null) {

@@ -37,7 +37,7 @@ namespace Microsoft.CookiecutterTools.Telemetry {
         /// <summary>
         /// True if telemetry is actually being recorder
         /// </summary>
-        public bool IsEnabled  => _session.IsOptedIn;
+        public bool IsEnabled => _session.IsOptedIn;
         public bool CanCollectPrivateInformation => _session.CanCollectPrivateInformation;
 
         /// <summary>

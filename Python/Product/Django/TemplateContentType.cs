@@ -16,7 +16,6 @@
 
 using System.ComponentModel.Composition;
 using Microsoft.VisualStudio.Utilities;
-using Microsoft.WebTools.Languages.Shared.ContentTypes;
 
 namespace Microsoft.PythonTools.Django {
     /// <summary>

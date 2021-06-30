@@ -15,11 +15,10 @@
 // permissions and limitations under the License.
 
 using System;
-using System.IO;
 using Microsoft.VisualStudio.Shell;
 
 namespace Microsoft.PythonTools {
-    [AttributeUsage(AttributeTargets.Class, AllowMultiple=true)]
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
     class ProvideFileFilterAttribute : RegistrationAttribute {
         private readonly string _id, _name, _filter;
         private readonly int _sortPriority;

@@ -23,7 +23,6 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.CookiecutterTools.Infrastructure;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Shell.Interop;
 using Newtonsoft.Json.Linq;
 
 namespace Microsoft.CookiecutterTools.Model {

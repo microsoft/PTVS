@@ -27,21 +27,18 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Settings;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudio.Text.Adornments;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.MockVsTests;
 using TestUtilities.Python;
 
 namespace PythonToolsMockTests {
-    using TaskProvider = Microsoft.PythonTools.Intellisense.TaskProvider;
-
     [Export(typeof(IMockPackage))]
     sealed class MockPythonToolsPackage : IMockPackage {
         private readonly IServiceContainer _serviceContainer;
         private readonly List<Action> _onDispose = new List<Action>();
 
         [ImportingConstructor]
-        public MockPythonToolsPackage([Import(typeof(SVsServiceProvider))]IServiceContainer serviceProvider) {
+        public MockPythonToolsPackage([Import(typeof(SVsServiceProvider))] IServiceContainer serviceProvider) {
             _serviceContainer = serviceProvider;
         }
 
@@ -49,7 +46,7 @@ namespace PythonToolsMockTests {
             var settings = (IVsSettingsManager)_serviceContainer.GetService(typeof(SVsSettingsManager));
             IVsWritableSettingsStore store;
             ErrorHandler.ThrowOnFailure(settings.GetWritableSettingsStore((uint)SettingsScope.Configuration, out store));
-            
+
             _serviceContainer.AddService(typeof(IPythonToolsOptionsService), (sp, t) => new MockPythonToolsOptionsService());
             _serviceContainer.AddService(typeof(IClipboardService), (sp, t) => new MockClipboardService());
             _serviceContainer.AddService(typeof(MockErrorProviderFactory), (sp, t) => new MockErrorProviderFactory(), true);

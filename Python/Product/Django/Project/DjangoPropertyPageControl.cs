@@ -15,11 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.Windows.Forms;
-using Microsoft.PythonTools;
-using Microsoft.PythonTools.Project;
-using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Django.Project {
     public partial class DjangoPropertyPageControl : UserControl {

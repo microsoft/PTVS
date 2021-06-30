@@ -14,19 +14,22 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
 using System.Windows;
 
-namespace Microsoft.VisualStudioTools.Wpf {
-    public static class LambdaProperties {
+namespace Microsoft.VisualStudioTools.Wpf
+{
+    public static class LambdaProperties
+    {
         public static readonly DependencyProperty ImportedNamespacesProperty = DependencyProperty.RegisterAttached(
             "ImportedNamespaces", typeof(string), typeof(LambdaProperties));
 
-        public static string GetImportedNamespaces(object obj) {
+        public static string GetImportedNamespaces(object obj)
+        {
             return null;
         }
 
-        public static void SetImportedNamespaces(object obj, string value) {
+        public static void SetImportedNamespaces(object obj, string value)
+        {
         }
     }
 }

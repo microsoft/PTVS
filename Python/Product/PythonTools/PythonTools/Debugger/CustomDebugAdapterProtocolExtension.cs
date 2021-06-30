@@ -24,13 +24,13 @@ using Microsoft.VisualStudio.Shared.VSCodeDebugProtocol.Messages;
 namespace Microsoft.PythonTools.Debugger {
     [ComVisible(true)]
     [Guid(CustomProtocolExtensionCLSIDNoBraces)]
-    public class CustomDebugAdapterProtocolExtension : ICustomProtocolExtension { 
+    public class CustomDebugAdapterProtocolExtension : ICustomProtocolExtension {
         private IDebugAdapterHostContext _context;
         private IProtocolHostOperations _hostOperations;
 
         public const string CustomProtocolExtensionCLSIDNoBraces = "A5E59A97-43B8-4B65-833A-5300076553E1";
         public const string CustomProtocolExtensionCLSID = "{" + CustomProtocolExtensionCLSIDNoBraces + "}";
-        public CustomDebugAdapterProtocolExtension() {}
+        public CustomDebugAdapterProtocolExtension() { }
 
         private static CustomDebugAdapterProtocolExtension Evaluator { get; set; }
         public static bool CanUseExperimental() {
@@ -76,19 +76,19 @@ namespace Microsoft.PythonTools.Debugger {
             where TResponse : ResponseBody {
             Evaluator?._hostOperations.SendRequest(request, completionFunc, errorFunc);
         }
-       
-        public static void SendRequest<TArgs>(DebugRequest<TArgs> request, Action<TArgs> completionFunc, Action<TArgs, ProtocolException> errorFunc = null) 
+
+        public static void SendRequest<TArgs>(DebugRequest<TArgs> request, Action<TArgs> completionFunc, Action<TArgs, ProtocolException> errorFunc = null)
             where TArgs : class, new() {
             Evaluator?._hostOperations.SendRequest(request, completionFunc, errorFunc);
         }
-        
+
         public static TResponse SendRequestSync<TArgs, TResponse>(DebugRequestWithResponse<TArgs, TResponse> request)
             where TArgs : class, new()
             where TResponse : ResponseBody {
             return Evaluator?._hostOperations.SendRequestSync(request);
         }
 
-        public static void SendRequestSync<TArgs>(DebugRequest<TArgs> request) 
+        public static void SendRequestSync<TArgs>(DebugRequest<TArgs> request)
             where TArgs : class, new() {
             Evaluator?._hostOperations.SendRequestSync(request);
         }

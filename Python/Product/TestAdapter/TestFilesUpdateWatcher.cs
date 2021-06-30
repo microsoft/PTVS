@@ -16,12 +16,8 @@
 
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.ComponentModel.Composition;
 using System.IO;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-using Microsoft.VisualStudioTools;
 
 namespace Microsoft.VisualStudioTools.TestAdapter {
     class TestFilesUpdateWatcher : IDisposable {
@@ -33,7 +29,7 @@ namespace Microsoft.VisualStudioTools.TestAdapter {
         }
 
         public bool AddWatch(string path) {
-             if (!String.IsNullOrEmpty(path)) {
+            if (!String.IsNullOrEmpty(path)) {
                 var directoryName = Path.GetDirectoryName(path);
                 var filter = Path.GetFileName(path);// String.Format("*{0}",Path.GetFileName(path));
 
@@ -87,7 +83,7 @@ namespace Microsoft.VisualStudioTools.TestAdapter {
         }
 
         public void RemoveWatch(string path) {
-            if (!String.IsNullOrEmpty(path) 
+            if (!String.IsNullOrEmpty(path)
                 && _fileWatchers.TryRemove(path, out FileSystemWatcher watcher)) {
                 watcher.EnableRaisingEvents = false;
                 watcher.Changed -= OnChanged;

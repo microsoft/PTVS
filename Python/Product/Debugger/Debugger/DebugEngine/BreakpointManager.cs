@@ -15,7 +15,6 @@
 // permissions and limitations under the License.
 
 using System.Collections.Generic;
-using Microsoft.VisualStudio.Debugger.Interop;
 
 namespace Microsoft.PythonTools.Debugger.DebugEngine {
     // This class manages breakpoints for the engine. 

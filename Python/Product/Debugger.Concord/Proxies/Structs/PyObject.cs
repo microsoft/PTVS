@@ -20,9 +20,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
-using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing;
-using Microsoft.VisualStudio.Debugger;
 
 namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
@@ -130,7 +128,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
         }
 
         [Conditional("DEBUG")]
-        protected void CheckPyType<TObject>() where TObject : PyObject  {
+        protected void CheckPyType<TObject>() where TObject : PyObject {
             // Check whether this is a freshly allocated object and skip the type check if so.
             if (ob_refcnt.Read() == 0) {
                 return;
@@ -274,37 +272,38 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
                 IValueStore value;
                 switch (memberDef.type.Read()) {
                     case PyMemberDefType.T_OBJECT:
-                    case PyMemberDefType.T_OBJECT_EX:
-                        {
-                            var objProxy = GetFieldProxy(new StructField<PointerProxy<PyObject>> { Process = Process, Offset = offset });
-                            if (!objProxy.IsNull) {
-                                value = objProxy;
-                            } else {
-                                value = new ValueStore<PyObject>(None(Process));
-                            }
-                        } break;
-                    case PyMemberDefType.T_STRING:
-                        {
-                            var ptr = GetFieldProxy(new StructField<PointerProxy> { Process = Process, Offset = offset }).Read();
-                            if (ptr != 0) {
-                                var proxy = new CStringProxy(Process, ptr);
-                                if (langVer <= PythonLanguageVersion.V27) {
-                                    value = new ValueStore<AsciiString>(proxy.ReadAscii());
-                                } else {
-                                    value = new ValueStore<string>(proxy.ReadUnicode());
-                                }
-                            } else {
-                                value = new ValueStore<PyObject>(None(Process));
-                            }
-                        } break;
-                    case PyMemberDefType.T_STRING_INPLACE: {
-                            var proxy = new CStringProxy(Process, Address.OffsetBy(offset));
+                    case PyMemberDefType.T_OBJECT_EX: {
+                        var objProxy = GetFieldProxy(new StructField<PointerProxy<PyObject>> { Process = Process, Offset = offset });
+                        if (!objProxy.IsNull) {
+                            value = objProxy;
+                        } else {
+                            value = new ValueStore<PyObject>(None(Process));
+                        }
+                    }
+                    break;
+                    case PyMemberDefType.T_STRING: {
+                        var ptr = GetFieldProxy(new StructField<PointerProxy> { Process = Process, Offset = offset }).Read();
+                        if (ptr != 0) {
+                            var proxy = new CStringProxy(Process, ptr);
                             if (langVer <= PythonLanguageVersion.V27) {
                                 value = new ValueStore<AsciiString>(proxy.ReadAscii());
                             } else {
                                 value = new ValueStore<string>(proxy.ReadUnicode());
                             }
-                        } break;
+                        } else {
+                            value = new ValueStore<PyObject>(None(Process));
+                        }
+                    }
+                    break;
+                    case PyMemberDefType.T_STRING_INPLACE: {
+                        var proxy = new CStringProxy(Process, Address.OffsetBy(offset));
+                        if (langVer <= PythonLanguageVersion.V27) {
+                            value = new ValueStore<AsciiString>(proxy.ReadAscii());
+                        } else {
+                            value = new ValueStore<string>(proxy.ReadUnicode());
+                        }
+                    }
+                    break;
                     case PyMemberDefType.T_BYTE:
                         value = GetFieldProxy(new StructField<SByteProxy> { Process = Process, Offset = offset });
                         break;

@@ -106,7 +106,7 @@ namespace PythonToolsTests {
             using (var closingEvent = new AutoResetEvent(false))
             using (var closedEvent = new AutoResetEvent(false)) {
                 provider.WorkspaceOpening += (sender, e) => { openEvent.Set(); };
-                provider.WorkspaceInitialized += (sender, e) => { initEvent.Set();};
+                provider.WorkspaceInitialized += (sender, e) => { initEvent.Set(); };
                 provider.WorkspaceClosed += (sender, e) => { closedEvent.Set(); };
                 provider.WorkspaceClosing += (sender, e) => { closingEvent.Set(); };
 

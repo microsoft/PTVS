@@ -19,7 +19,6 @@ using System.Diagnostics;
 using System.Linq;
 using Microsoft.Dia;
 using Microsoft.PythonTools.Parsing;
-using Microsoft.VisualStudio.Debugger;
 
 namespace Microsoft.PythonTools.Debugger.Concord.Proxies {
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]

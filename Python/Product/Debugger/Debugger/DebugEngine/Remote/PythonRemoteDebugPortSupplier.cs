@@ -23,7 +23,6 @@ using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.PythonTools.Debugger.Transports;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Debugger.Interop;
 
 namespace Microsoft.PythonTools.Debugger.Remote {
 

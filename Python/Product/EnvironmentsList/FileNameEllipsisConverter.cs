@@ -23,7 +23,7 @@ using System.Windows.Data;
 namespace Microsoft.PythonTools.EnvironmentsList {
     [ValueConversion(typeof(string), typeof(string))]
     sealed class FileNameEllipsisConverter : IValueConverter {
-        private static readonly char[] PathSeparators = new [] {
+        private static readonly char[] PathSeparators = new[] {
             Path.DirectorySeparatorChar,
             Path.AltDirectorySeparatorChar
         };

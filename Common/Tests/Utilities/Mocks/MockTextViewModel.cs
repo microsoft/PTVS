@@ -14,42 +14,51 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Utilities;
+using System;
 
-namespace TestUtilities.Mocks {
-    public class MockTextViewModel : ITextViewModel {
+namespace TestUtilities.Mocks
+{
+    public class MockTextViewModel : ITextViewModel
+    {
         public ITextBuffer DataBuffer { get; set; }
 
-        public ITextDataModel DataModel {
+        public ITextDataModel DataModel
+        {
             get { throw new NotImplementedException(); }
         }
 
         public ITextBuffer EditBuffer { get; set; }
 
-        public SnapshotPoint GetNearestPointInVisualBuffer(SnapshotPoint editBufferPoint) {
+        public SnapshotPoint GetNearestPointInVisualBuffer(SnapshotPoint editBufferPoint)
+        {
             throw new NotImplementedException();
         }
 
-        public SnapshotPoint GetNearestPointInVisualSnapshot(SnapshotPoint editBufferPoint, ITextSnapshot targetVisualSnapshot, PointTrackingMode trackingMode) {
+        public SnapshotPoint GetNearestPointInVisualSnapshot(SnapshotPoint editBufferPoint, ITextSnapshot targetVisualSnapshot, PointTrackingMode trackingMode)
+        {
             throw new NotImplementedException();
         }
 
-        public bool IsPointInVisualBuffer(SnapshotPoint editBufferPoint, PositionAffinity affinity) {
+        public bool IsPointInVisualBuffer(SnapshotPoint editBufferPoint, PositionAffinity affinity)
+        {
             throw new NotImplementedException();
         }
 
-        public ITextBuffer VisualBuffer {
+        public ITextBuffer VisualBuffer
+        {
             get { throw new NotImplementedException(); }
         }
 
-        public PropertyCollection Properties {
+        public PropertyCollection Properties
+        {
             get { throw new NotImplementedException(); }
         }
 
-        public void Dispose() {
+        public void Dispose()
+        {
             throw new NotImplementedException();
         }
     }

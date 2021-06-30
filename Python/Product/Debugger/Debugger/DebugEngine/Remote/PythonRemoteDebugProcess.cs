@@ -23,7 +23,6 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Ipc.Json;
-using Microsoft.VisualStudio.Debugger.Interop;
 using LDP = Microsoft.PythonTools.Debugger.LegacyDebuggerProtocol;
 
 namespace Microsoft.PythonTools.Debugger.Remote {
@@ -198,29 +197,28 @@ namespace Microsoft.PythonTools.Debugger.Remote {
                             case ConnErrorMessages.RemoteSslError:
                                 // User has already got a warning dialog and clicked "Cancel" on that, so no further prompts are needed.
                                 return null;
-                            default:
-                                {
-                                    // Azure uses HTTP 503 (Service Unavailable) to indicate that websocket connections are not supported. Show a special error message for that.
-                                    var wsEx = connEx.InnerException as WebSocketException;
-                                    if (wsEx != null) {
-                                        var webEx = wsEx.InnerException as WebException;
-                                        if (webEx != null) {
-                                            var httpResponse = webEx.Response as HttpWebResponse;
-                                            if (httpResponse != null && httpResponse.StatusCode == HttpStatusCode.ServiceUnavailable) {
-                                                errText = Strings.RemoteAzureServiceUnavailable_Host.FormatUI(port.Uri);
-                                                break;
-                                            }
+                            default: {
+                                // Azure uses HTTP 503 (Service Unavailable) to indicate that websocket connections are not supported. Show a special error message for that.
+                                var wsEx = connEx.InnerException as WebSocketException;
+                                if (wsEx != null) {
+                                    var webEx = wsEx.InnerException as WebException;
+                                    if (webEx != null) {
+                                        var httpResponse = webEx.Response as HttpWebResponse;
+                                        if (httpResponse != null && httpResponse.StatusCode == HttpStatusCode.ServiceUnavailable) {
+                                            errText = Strings.RemoteAzureServiceUnavailable_Host.FormatUI(port.Uri);
+                                            break;
                                         }
                                     }
-
-                                    errText = Strings.RemoteServiceUnavailable_Host.FormatUI(port.Uri);
-                                    for (var ex = connEx.InnerException; ex != null; ex = ex.InnerException) {
-                                        if (ex.InnerException == null) {
-                                            errText += "\r\n\r\n{0}\r\n{1}".FormatUI(Strings.AdditionalInformation, ex.Message);
-                                        }
-                                    }
-                                    break;
                                 }
+
+                                errText = Strings.RemoteServiceUnavailable_Host.FormatUI(port.Uri);
+                                for (var ex = connEx.InnerException; ex != null; ex = ex.InnerException) {
+                                    if (ex.InnerException == null) {
+                                        errText += "\r\n\r\n{0}\r\n{1}".FormatUI(Strings.AdditionalInformation, ex.Message);
+                                    }
+                                }
+                                break;
+                            }
                         }
 
                         DialogResult dlgRes = MessageBox.Show(errText, Strings.ProductTitle, MessageBoxButtons.RetryCancel, MessageBoxIcon.Error);

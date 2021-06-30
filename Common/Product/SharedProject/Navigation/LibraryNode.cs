@@ -14,23 +14,23 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using Microsoft.VisualStudio.Language.Intellisense;
+using Microsoft.VisualStudio.Shell;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.Threading;
-using Microsoft.VisualStudio.Language.Intellisense;
-using Microsoft.VisualStudio.OLE.Interop;
-using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
 using VSConstants = Microsoft.VisualStudio.VSConstants;
 
-namespace Microsoft.VisualStudioTools.Navigation {
-    
+namespace Microsoft.VisualStudioTools.Navigation
+{
+
     /// <summary>
     /// Single node inside the tree of the libraries in the object browser or class view.
     /// </summary>
-    class LibraryNode : SimpleObjectList<LibraryNode>, IVsNavInfo, IVsNavInfoNode, ISimpleObject {
+    class LibraryNode : SimpleObjectList<LibraryNode>, IVsNavInfo, IVsNavInfoNode, ISimpleObject
+    {
         private string _name, _fullname;
         private readonly LibraryNode _parent;
         private LibraryNodeCapabilities _capabilities;
@@ -40,7 +40,8 @@ namespace Microsoft.VisualStudioTools.Navigation {
         private readonly Dictionary<string, LibraryNode[]> _childrenByName;
         private bool _duplicatedByName;
 
-        public LibraryNode(LibraryNode parent, string name, string fullname, LibraryNodeType type, LibraryNodeCapabilities capabilities = LibraryNodeCapabilities.None, IList<LibraryNode> children = null) : base(children) {
+        public LibraryNode(LibraryNode parent, string name, string fullname, LibraryNodeType type, LibraryNodeCapabilities capabilities = LibraryNodeCapabilities.None, IList<LibraryNode> children = null) : base(children)
+        {
             Debug.Assert(name != null);
 
             _parent = parent;
@@ -54,39 +55,48 @@ namespace Microsoft.VisualStudioTools.Navigation {
         }
 
         protected LibraryNode(LibraryNode node)
-            : this(node, node.FullName) {
+            : this(node, node.FullName)
+        {
         }
 
-        protected LibraryNode(LibraryNode node, string newFullName) {
+        protected LibraryNode(LibraryNode node, string newFullName)
+        {
             _parent = node._parent;
             _capabilities = node._capabilities;
             _name = node._name;
             _tooltip = node._tooltip;
             _type = node._type;
             _fullname = newFullName;
-            foreach (var child in node.Children) {
+            foreach (var child in node.Children)
+            {
                 Children.Add(child);
             }
             _childrenByName = new Dictionary<string, LibraryNode[]>(node._childrenByName);
             _filteredView = new Dictionary<LibraryNodeType, LibraryNode>();
         }
 
-        protected void SetCapabilityFlag(LibraryNodeCapabilities flag, bool value) {
-            if (value) {
+        protected void SetCapabilityFlag(LibraryNodeCapabilities flag, bool value)
+        {
+            if (value)
+            {
                 _capabilities |= flag;
-            } else {
+            }
+            else
+            {
                 _capabilities &= ~flag;
             }
         }
 
-        public LibraryNode Parent {
+        public LibraryNode Parent
+        {
             get { return _parent; }
         }
 
         /// <summary>
         /// Get or Set if the node can be deleted.
         /// </summary>
-        public bool CanDelete {
+        public bool CanDelete
+        {
             get { return (0 != (_capabilities & LibraryNodeCapabilities.AllowDelete)); }
             set { SetCapabilityFlag(LibraryNodeCapabilities.AllowDelete, value); }
         }
@@ -94,7 +104,8 @@ namespace Microsoft.VisualStudioTools.Navigation {
         /// <summary>
         /// Get or Set if the node can be associated with some source code.
         /// </summary>
-        public bool CanGoToSource {
+        public bool CanGoToSource
+        {
             get { return (0 != (_capabilities & LibraryNodeCapabilities.HasSourceContext)); }
             set { SetCapabilityFlag(LibraryNodeCapabilities.HasSourceContext, value); }
         }
@@ -102,7 +113,8 @@ namespace Microsoft.VisualStudioTools.Navigation {
         /// <summary>
         /// Get or Set if the node can be renamed.
         /// </summary>
-        public bool CanRename {
+        public bool CanRename
+        {
             get { return (0 != (_capabilities & LibraryNodeCapabilities.AllowRename)); }
             set { SetCapabilityFlag(LibraryNodeCapabilities.AllowRename, value); }
         }
@@ -113,21 +125,28 @@ namespace Microsoft.VisualStudioTools.Navigation {
 
         public override uint Capabilities { get { return (uint)_capabilities; } }
 
-        public string TooltipText {
+        public string TooltipText
+        {
             get { return _tooltip; }
         }
 
-        internal void AddNode(LibraryNode node) {
-            lock (Children) {
+        internal void AddNode(LibraryNode node)
+        {
+            lock (Children)
+            {
                 Children.Add(node);
                 LibraryNode[] nodes;
-                if (!_childrenByName.TryGetValue(node.Name, out nodes)) {
+                if (!_childrenByName.TryGetValue(node.Name, out nodes))
+                {
                     // common case, no duplicates by name
                     _childrenByName[node.Name] = new[] { node };
-                } else {
+                }
+                else
+                {
                     // uncommon case, duplicated by name
                     _childrenByName[node.Name] = nodes = nodes.Append(node);
-                    foreach (var dupNode in nodes) {
+                    foreach (var dupNode in nodes)
+                    {
                         dupNode.DuplicatedByName = true;
                     }
                 }
@@ -135,20 +154,29 @@ namespace Microsoft.VisualStudioTools.Navigation {
             Update();
         }
 
-        internal void RemoveNode(LibraryNode node) {
-            if (node != null) {
-                lock (Children) {
+        internal void RemoveNode(LibraryNode node)
+        {
+            if (node != null)
+            {
+                lock (Children)
+                {
                     Children.Remove(node);
 
                     LibraryNode[] items;
-                    if (_childrenByName.TryGetValue(node.Name, out items)) {
-                        if (items.Length == 1) {
+                    if (_childrenByName.TryGetValue(node.Name, out items))
+                    {
+                        if (items.Length == 1)
+                        {
                             System.Diagnostics.Debug.Assert(items[0] == node);
                             _childrenByName.Remove(node.Name);
-                        } else {
+                        }
+                        else
+                        {
                             var newItems = new LibraryNode[items.Length - 1];
-                            for (int i = 0, write = 0; i < items.Length; i++) {
-                                if (items[i] != node) {
+                            for (int i = 0, write = 0; i < items.Length; i++)
+                            {
+                                if (items[i] != node)
+                                {
                                     newItems[write++] = items[i];
                                 }
                             }
@@ -160,23 +188,28 @@ namespace Microsoft.VisualStudioTools.Navigation {
             }
         }
 
-        public virtual object BrowseObject {
+        public virtual object BrowseObject
+        {
             get { return null; }
         }
 
-        public override uint CategoryField(LIB_CATEGORY category) {
+        public override uint CategoryField(LIB_CATEGORY category)
+        {
             uint fieldValue = 0;
 
-            switch (category) {
+            switch (category)
+            {
                 case (LIB_CATEGORY)_LIB_CATEGORY2.LC_PHYSICALCONTAINERTYPE:
                     fieldValue = (uint)_LIBCAT_PHYSICALCONTAINERTYPE.LCPT_PROJECT;
                     break;
                 case LIB_CATEGORY.LC_NODETYPE:
                     fieldValue = (uint)_LIBCAT_NODETYPE.LCNT_SYMBOL;
                     break;
-                case LIB_CATEGORY.LC_LISTTYPE: {
+                case LIB_CATEGORY.LC_LISTTYPE:
+                    {
                         LibraryNodeType subTypes = LibraryNodeType.None;
-                        foreach (LibraryNode node in Children) {
+                        foreach (LibraryNode node in Children)
+                        {
                             subTypes |= node._type;
                         }
                         fieldValue = (uint)subTypes;
@@ -200,46 +233,58 @@ namespace Microsoft.VisualStudioTools.Navigation {
             return fieldValue;
         }
 
-        public virtual LibraryNode Clone() {
+        public virtual LibraryNode Clone()
+        {
             return new LibraryNode(this);
         }
 
-        public virtual LibraryNode Clone(string newFullName) {
+        public virtual LibraryNode Clone(string newFullName)
+        {
             return new LibraryNode(this, newFullName);
         }
 
         /// <summary>
         /// Performs the operations needed to delete this node.
         /// </summary>
-        public virtual void Delete() {
+        public virtual void Delete()
+        {
         }
 
         /// <summary>
         /// Perform a Drag and Drop operation on this node.
         /// </summary>
-        public virtual void DoDragDrop(OleDataObject dataObject, uint keyState, uint effect) {
+        public virtual void DoDragDrop(OleDataObject dataObject, uint keyState, uint effect)
+        {
         }
 
-        public virtual uint EnumClipboardFormats(_VSOBJCFFLAGS flags, VSOBJCLIPFORMAT[] formats) {
+        public virtual uint EnumClipboardFormats(_VSOBJCFFLAGS flags, VSOBJCLIPFORMAT[] formats)
+        {
             return 0;
         }
 
-        public virtual void FillDescription(_VSOBJDESCOPTIONS flags, IVsObjectBrowserDescription3 description) {
+        public virtual void FillDescription(_VSOBJDESCOPTIONS flags, IVsObjectBrowserDescription3 description)
+        {
             description.ClearDescriptionText();
             description.AddDescriptionText3(_name, VSOBDESCRIPTIONSECTION.OBDS_NAME, null);
         }
 
-        public IVsSimpleObjectList2 FilterView(uint filterType) {
+        public IVsSimpleObjectList2 FilterView(uint filterType)
+        {
             var libraryNodeType = (LibraryNodeType)filterType;
             LibraryNode filtered = null;
-            if (_filteredView.TryGetValue(libraryNodeType, out filtered)) {
+            if (_filteredView.TryGetValue(libraryNodeType, out filtered))
+            {
                 return filtered as IVsSimpleObjectList2;
             }
             filtered = this.Clone();
-            for (int i = 0; i < filtered.Children.Count; ) {
-                if (0 == (filtered.Children[i]._type & libraryNodeType)) {
+            for (int i = 0; i < filtered.Children.Count;)
+            {
+                if (0 == (filtered.Children[i]._type & libraryNodeType))
+                {
                     filtered.Children.RemoveAt(i);
-                } else {
+                }
+                else
+                {
                     i += 1;
                 }
             }
@@ -247,25 +292,31 @@ namespace Microsoft.VisualStudioTools.Navigation {
             return filtered as IVsSimpleObjectList2;
         }
 
-        public virtual void GotoSource(VSOBJGOTOSRCTYPE gotoType) {
+        public virtual void GotoSource(VSOBJGOTOSRCTYPE gotoType)
+        {
             // Do nothing.
         }
 
-        public virtual IVsSimpleObjectList2 FindReferences() {
+        public virtual IVsSimpleObjectList2 FindReferences()
+        {
             return null;
         }
 
-        public virtual string Name {
-            get {
+        public virtual string Name
+        {
+            get
+            {
                 return _name;
             }
         }
 
-        public virtual string GetTextRepresentation(VSTREETEXTOPTIONS options) {
+        public virtual string GetTextRepresentation(VSTREETEXTOPTIONS options)
+        {
             return Name;
         }
 
-        public LibraryNodeType NodeType {
+        public LibraryNodeType NodeType
+        {
             get { return _type; }
         }
 
@@ -275,51 +326,64 @@ namespace Microsoft.VisualStudioTools.Navigation {
         /// <param name="hierarchy">The hierarchy containing the items.</param>
         /// <param name="itemId">The item id of the item.</param>
         /// <param name="itemsCount">Number of items.</param>
-        public virtual void SourceItems(out IVsHierarchy hierarchy, out uint itemId, out uint itemsCount) {
+        public virtual void SourceItems(out IVsHierarchy hierarchy, out uint itemId, out uint itemsCount)
+        {
             hierarchy = null;
             itemId = 0;
             itemsCount = 0;
         }
 
-        public virtual void Rename(string newName, uint flags) {
+        public virtual void Rename(string newName, uint flags)
+        {
             this._name = newName;
         }
 
-        public virtual string UniqueName {
+        public virtual string UniqueName
+        {
             get { return Name; }
         }
 
-        public string FullName {
-            get {
+        public string FullName
+        {
+            get
+            {
                 return _fullname;
             }
         }
 
-        public CommandID ContextMenuID {
-            get {
+        public CommandID ContextMenuID
+        {
+            get
+            {
                 return null;
             }
         }
 
-        public virtual StandardGlyphGroup GlyphType {
-            get {
+        public virtual StandardGlyphGroup GlyphType
+        {
+            get
+            {
                 return StandardGlyphGroup.GlyphGroupModule;
             }
         }
 
-        public virtual VSTREEDISPLAYDATA DisplayData {
-            get {
+        public virtual VSTREEDISPLAYDATA DisplayData
+        {
+            get
+            {
                 var res = new VSTREEDISPLAYDATA();
                 res.Image = res.SelectedImage = (ushort)GlyphType;
                 return res;
             }
         }
 
-        public virtual IVsSimpleObjectList2 DoSearch(VSOBSEARCHCRITERIA2 criteria) {
+        public virtual IVsSimpleObjectList2 DoSearch(VSOBSEARCHCRITERIA2 criteria)
+        {
             return null;
         }
 
-        public override void Update() {
+        public override void Update()
+        {
             base.Update();
             _filteredView.Clear();
         }
@@ -328,16 +392,22 @@ namespace Microsoft.VisualStudioTools.Navigation {
         /// Visit this node and its children.
         /// </summary>
         /// <param name="visitor">Visitor to invoke methods on when visiting the nodes.</param>
-        public void Visit(ILibraryNodeVisitor visitor, CancellationToken ct = default(CancellationToken)) {
-            if (ct.IsCancellationRequested) {
+        public void Visit(ILibraryNodeVisitor visitor, CancellationToken ct = default(CancellationToken))
+        {
+            if (ct.IsCancellationRequested)
+            {
                 visitor.LeaveNode(this, ct);
                 return;
             }
 
-            if (visitor.EnterNode(this, ct)) {
-                lock (Children) {
-                    foreach (var child in Children) {
-                        if (ct.IsCancellationRequested) {
+            if (visitor.EnterNode(this, ct))
+            {
+                lock (Children)
+                {
+                    foreach (var child in Children)
+                    {
+                        if (ct.IsCancellationRequested)
+                        {
                             visitor.LeaveNode(this, ct);
                             return;
                         }
@@ -351,12 +421,14 @@ namespace Microsoft.VisualStudioTools.Navigation {
 
         #region IVsNavInfoNode Members
 
-        int IVsNavInfoNode.get_Name(out string pbstrName) {
+        int IVsNavInfoNode.get_Name(out string pbstrName)
+        {
             pbstrName = UniqueName;
             return VSConstants.S_OK;
         }
 
-        int IVsNavInfoNode.get_Type(out uint pllt) {
+        int IVsNavInfoNode.get_Type(out uint pllt)
+        {
             pllt = (uint)_type;
             return VSConstants.S_OK;
         }
@@ -369,7 +441,8 @@ namespace Microsoft.VisualStudioTools.Navigation {
         /// This enumeration is a copy of _LIB_LISTCAPABILITIES with the Flags attribute set.
         /// </summary>
         [Flags()]
-        public enum LibraryNodeCapabilities {
+        public enum LibraryNodeCapabilities
+        {
             None = _LIB_LISTCAPABILITIES.LLC_NONE,
             HasBrowseObject = _LIB_LISTCAPABILITIES.LLC_HASBROWSEOBJ,
             HasDescriptionPane = _LIB_LISTCAPABILITIES.LLC_HASDESCPANE,
@@ -385,21 +458,27 @@ namespace Microsoft.VisualStudioTools.Navigation {
 
         #region IVsNavInfo
 
-        private class VsEnumNavInfoNodes : IVsEnumNavInfoNodes {
+        private class VsEnumNavInfoNodes : IVsEnumNavInfoNodes
+        {
             private readonly IEnumerator<IVsNavInfoNode> _nodeEnum;
 
-            public VsEnumNavInfoNodes(IEnumerator<IVsNavInfoNode> nodeEnum) {
+            public VsEnumNavInfoNodes(IEnumerator<IVsNavInfoNode> nodeEnum)
+            {
                 _nodeEnum = nodeEnum;
             }
 
-            public int Clone(out IVsEnumNavInfoNodes ppEnum) {
+            public int Clone(out IVsEnumNavInfoNodes ppEnum)
+            {
                 ppEnum = new VsEnumNavInfoNodes(_nodeEnum);
                 return VSConstants.S_OK;
             }
 
-            public int Next(uint celt, IVsNavInfoNode[] rgelt, out uint pceltFetched) {
-                for (pceltFetched = 0; pceltFetched < celt; ++pceltFetched) {
-                    if (!_nodeEnum.MoveNext()) {
+            public int Next(uint celt, IVsNavInfoNode[] rgelt, out uint pceltFetched)
+            {
+                for (pceltFetched = 0; pceltFetched < celt; ++pceltFetched)
+                {
+                    if (!_nodeEnum.MoveNext())
+                    {
                         return VSConstants.S_FALSE;
                     }
                     rgelt[pceltFetched] = _nodeEnum.Current;
@@ -407,13 +486,17 @@ namespace Microsoft.VisualStudioTools.Navigation {
                 return VSConstants.S_OK;
             }
 
-            public int Reset() {
+            public int Reset()
+            {
                 return VSConstants.E_NOTIMPL;
             }
 
-            public int Skip(uint celt) {
-                while (celt-- > 0) {
-                    if (!_nodeEnum.MoveNext()) {
+            public int Skip(uint celt)
+            {
+                while (celt-- > 0)
+                {
+                    if (!_nodeEnum.MoveNext())
+                    {
                         return VSConstants.S_FALSE;
                     }
                 }
@@ -421,18 +504,22 @@ namespace Microsoft.VisualStudioTools.Navigation {
             }
         }
 
-        public virtual int GetLibGuid(out Guid pGuid) {
+        public virtual int GetLibGuid(out Guid pGuid)
+        {
             pGuid = Guid.Empty;
             return VSConstants.E_NOTIMPL;
         }
 
-        public int EnumCanonicalNodes(out IVsEnumNavInfoNodes ppEnum) {
+        public int EnumCanonicalNodes(out IVsEnumNavInfoNodes ppEnum)
+        {
             return EnumPresentationNodes(0, out ppEnum);
         }
 
-        public int EnumPresentationNodes(uint dwFlags, out IVsEnumNavInfoNodes ppEnum) {
+        public int EnumPresentationNodes(uint dwFlags, out IVsEnumNavInfoNodes ppEnum)
+        {
             var path = new Stack<LibraryNode>();
-            for (LibraryNode node = this; node != null; node = node.Parent) {
+            for (LibraryNode node = this; node != null; node = node.Parent)
+            {
                 path.Push(node);
             }
 
@@ -440,7 +527,8 @@ namespace Microsoft.VisualStudioTools.Navigation {
             return VSConstants.S_OK;
         }
 
-        public int GetSymbolType(out uint pdwType) {
+        public int GetSymbolType(out uint pdwType)
+        {
             pdwType = (uint)_type;
             return VSConstants.S_OK;
         }
@@ -455,7 +543,8 @@ namespace Microsoft.VisualStudioTools.Navigation {
     /// Flags attribute is set so that it is possible to specify more than one value.
     /// </summary>
     [Flags()]
-    enum LibraryNodeType {
+    enum LibraryNodeType
+    {
         None = 0,
         Hierarchy = _LIB_LISTTYPE.LLT_HIERARCHY,
         Namespaces = _LIB_LISTTYPE.LLT_NAMESPACES,
@@ -478,7 +567,8 @@ namespace Microsoft.VisualStudioTools.Navigation {
     /// <summary>
     /// Visitor interface used to enumerate all <see cref="LibraryNode"/>s in the library.
     /// </summary>
-    interface ILibraryNodeVisitor {
+    interface ILibraryNodeVisitor
+    {
         /// <summary>
         /// Called on each node before any of its child nodes are visited.
         /// </summary>

@@ -20,7 +20,6 @@ using System.ComponentModel.Composition;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.Shell;
 using MSBuild = Microsoft.Build.Evaluation;
@@ -58,9 +57,9 @@ namespace Microsoft.PythonTools.Interpreter {
 
         [ImportingConstructor]
         public MSBuildProjectInterpreterFactoryProvider(
-            [ImportMany]Lazy<IProjectContextProvider>[] contextProviders,
-            [ImportMany]Lazy<IPythonInterpreterFactoryProvider, Dictionary<string, object>>[] factoryProviders,
-            [ImportMany]Lazy<IInterpreterLog>[] loggers,
+            [ImportMany] Lazy<IProjectContextProvider>[] contextProviders,
+            [ImportMany] Lazy<IPythonInterpreterFactoryProvider, Dictionary<string, object>>[] factoryProviders,
+            [ImportMany] Lazy<IInterpreterLog>[] loggers,
             [Import(typeof(SVsServiceProvider), AllowDefault = true)] IServiceProvider site = null) {
             _site = site;
             _factoryProviders = factoryProviders;

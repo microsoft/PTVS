@@ -16,7 +16,6 @@
 
 using System;
 using System.Runtime.Serialization;
-using Microsoft.PythonTools.Project;
 
 namespace Microsoft.PythonTools {
     [Serializable]

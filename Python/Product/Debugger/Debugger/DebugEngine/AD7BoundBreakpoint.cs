@@ -19,7 +19,6 @@ using System.Threading;
 using Microsoft.PythonTools.Debugger.Remote;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Debugger.Interop;
 
 namespace Microsoft.PythonTools.Debugger.DebugEngine {
     // This class represents a breakpoint that has been bound to a location in the debuggee. It is a child of the pending breakpoint

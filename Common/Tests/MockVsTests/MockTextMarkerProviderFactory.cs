@@ -14,17 +14,21 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.ComponentModel.Composition;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Adornments;
 using Microsoft.VisualStudio.Text.Tagging;
+using System.ComponentModel.Composition;
 
-namespace Microsoft.VisualStudioTools.MockVsTests {
+namespace Microsoft.VisualStudioTools.MockVsTests
+{
     [Export(typeof(ITextMarkerProviderFactory))]
-    class MockTextMarkerProviderFactory : ITextMarkerProviderFactory {
-        public SimpleTagger<TextMarkerTag> GetTextMarkerTagger(ITextBuffer textBuffer) {
+    class MockTextMarkerProviderFactory : ITextMarkerProviderFactory
+    {
+        public SimpleTagger<TextMarkerTag> GetTextMarkerTagger(ITextBuffer textBuffer)
+        {
             SimpleTagger<TextMarkerTag> tagger;
-            if (textBuffer.Properties.TryGetProperty(typeof(SimpleTagger<TextMarkerTag>), out tagger)) {
+            if (textBuffer.Properties.TryGetProperty(typeof(SimpleTagger<TextMarkerTag>), out tagger))
+            {
                 return tagger;
             }
             tagger = new SimpleTagger<TextMarkerTag>(textBuffer);

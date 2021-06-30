@@ -19,12 +19,9 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.PythonTools.Editor;
-using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Editor;
-using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Navigation {
@@ -143,7 +140,7 @@ namespace Microsoft.PythonTools.Navigation {
             return VSConstants.E_FAIL;
         }
 
-        public int ValidateBreakpointLocation(IVsTextBuffer pBuffer, int iLine, int iCol, TextSpan[] pCodeSpan) {            
+        public int ValidateBreakpointLocation(IVsTextBuffer pBuffer, int iLine, int iCol, TextSpan[] pCodeSpan) {
             int len;
             if (!ErrorHandler.Succeeded(pBuffer.GetLengthOfLine(iLine, out len))) {
                 len = iCol;

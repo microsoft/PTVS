@@ -22,8 +22,6 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Utilities;
-using Microsoft.WebTools.Languages.Shared.Editor.Completion;
-using Microsoft.WebTools.Languages.Shared.Editor.Services;
 
 namespace Microsoft.PythonTools.Django.Intellisense {
     [Export(typeof(IIntellisenseControllerProvider))]
@@ -37,7 +35,7 @@ namespace Microsoft.PythonTools.Django.Intellisense {
         private readonly IAsyncQuickInfoBroker _quickInfoBroker;
 
         [ImportingConstructor]
-        public TemplateCompletionControllerProvider([Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider, ICompletionBroker completionBroker, IAsyncQuickInfoBroker quickInfoBroker, ISignatureHelpBroker signatureHelpBroker) {
+        public TemplateCompletionControllerProvider([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider, ICompletionBroker completionBroker, IAsyncQuickInfoBroker quickInfoBroker, ISignatureHelpBroker signatureHelpBroker) {
             _completionBroker = completionBroker;
             _quickInfoBroker = quickInfoBroker;
             _signatureHelpBroker = signatureHelpBroker;

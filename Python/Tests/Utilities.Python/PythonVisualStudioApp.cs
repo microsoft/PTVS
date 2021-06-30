@@ -29,7 +29,6 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.InteractiveWindow.Shell;
 using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools;
 using TestUtilities.Python;
@@ -230,7 +229,7 @@ namespace TestUtilities.UI.Python {
                     }
                     Assert.IsNotNull(element, "Missing Text Explorer window");
                     var testExplorer = new AutomationWrapper(element);
-              
+
                     var searchBox = testExplorer.FindByName("Search Test Explorer");
                     Assert.IsNotNull(searchBox, "Missing Search Bar Textbox");
 

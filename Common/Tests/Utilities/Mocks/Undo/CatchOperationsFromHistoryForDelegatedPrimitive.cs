@@ -16,17 +16,20 @@
 
 using System;
 
-namespace TestUtilities.Mocks {
+namespace TestUtilities.Mocks
+{
     /// <summary>
     /// This class is to make it easy to catch new undo/redo operations while a delegated primitive
     /// is in progress--it is called from DelegatedUndoPrimitive.Undo and .Redo with the IDispose
     /// using pattern to set up the history to send operations our way.
     /// </summary>
-    internal sealed class CatchOperationsFromHistoryForDelegatedPrimitive : IDisposable {
+    internal sealed class CatchOperationsFromHistoryForDelegatedPrimitive : IDisposable
+    {
         private readonly MockTextUndoHistory _history;
         private readonly MockTextUndoPrimitive _primitive;
 
-        public CatchOperationsFromHistoryForDelegatedPrimitive(MockTextUndoHistory history, MockTextUndoPrimitive primitive, DelegatedUndoPrimitiveState state) {
+        public CatchOperationsFromHistoryForDelegatedPrimitive(MockTextUndoHistory history, MockTextUndoPrimitive primitive, DelegatedUndoPrimitiveState state)
+        {
             _history = history;
             _primitive = primitive;
 
@@ -34,7 +37,8 @@ namespace TestUtilities.Mocks {
             history.ForwardToUndoOperation(primitive);
         }
 
-        public void Dispose() {
+        public void Dispose()
+        {
             _history.EndForwardToUndoOperation(_primitive);
             _primitive.State = DelegatedUndoPrimitiveState.Inactive;
         }

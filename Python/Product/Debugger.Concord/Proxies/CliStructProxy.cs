@@ -17,7 +17,6 @@
 using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using Microsoft.VisualStudio.Debugger;
 
 namespace Microsoft.PythonTools.Debugger.Concord.Proxies {
     internal struct CliStructProxy<TStruct> : IWritableDataProxy<TStruct> {

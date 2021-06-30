@@ -22,9 +22,6 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using Microsoft.PythonTools.Debugger.Concord.Proxies;
-using Microsoft.VisualStudio.Debugger;
-using Microsoft.VisualStudio.Debugger.Breakpoints;
-using Microsoft.VisualStudio.Debugger.Stepping;
 
 namespace Microsoft.PythonTools.Debugger.Concord {
     internal unsafe class TraceManager : DkmDataItem {
@@ -292,7 +289,7 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             } else if (stepper != _stepper) {
                 Debug.Fail("Trying to cancel a step while no step or another step is in progress.");
                 throw new InvalidOperationException();
-            } 
+            }
 
             StepDone(stepper.Thread);
         }

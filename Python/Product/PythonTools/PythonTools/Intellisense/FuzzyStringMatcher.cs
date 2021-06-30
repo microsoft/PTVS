@@ -47,7 +47,7 @@ namespace Microsoft.PythonTools.Intellisense {
         readonly bool _ignoreCase;
 
         readonly static bool[] _ignoreCaseMap = new[] { false, true, false, true, false, true, false, false, true };
-        readonly static Matcher[] _matcherMap = new Matcher[] { 
+        readonly static Matcher[] _matcherMap = new Matcher[] {
             PrefixMatch, PrefixMatch,
             SubstringMatch, SubstringMatch,
             FuzzyMatch, FuzzyMatch,

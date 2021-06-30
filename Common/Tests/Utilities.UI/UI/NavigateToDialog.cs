@@ -15,25 +15,30 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Diagnostics;
 using System.Threading;
 using System.Windows.Automation;
 
-namespace TestUtilities.UI {
-    public class NavigateToDialog : AutomationWrapper, IDisposable {
+namespace TestUtilities.UI
+{
+    public class NavigateToDialog : AutomationWrapper, IDisposable
+    {
         public NavigateToDialog(IntPtr hwnd)
-            : base(AutomationElement.FromHandle(hwnd)) {
+            : base(AutomationElement.FromHandle(hwnd))
+        {
         }
 
         public NavigateToDialog(AutomationElement element)
-            : base(element) {
+            : base(element)
+        {
         }
 
-        public void Dispose() {
+        public void Dispose()
+        {
             Close();
         }
 
-        public void GoToSelection() {
+        public void GoToSelection()
+        {
 #if DEV12_OR_LATER
             ClickButtonByAutomationId("PART_SearchButton");
 #else
@@ -41,7 +46,8 @@ namespace TestUtilities.UI {
 #endif
         }
 
-        public void Close() {
+        public void Close()
+        {
 #if DEV12_OR_LATER
             try {
                 GetSearchBox().SetFocus();
@@ -55,12 +61,15 @@ namespace TestUtilities.UI {
 #endif
         }
 
-        public string SearchTerm {
-            get {
+        public string SearchTerm
+        {
+            get
+            {
                 var term = (ValuePattern)GetSearchBox().GetCurrentPattern(ValuePattern.Pattern);
                 return term.Current.Value;
             }
-            set {
+            set
+            {
                 var term = (ValuePattern)GetSearchBox().GetCurrentPattern(ValuePattern.Pattern);
                 term.SetValue(string.Empty);
                 GetSearchBox().SetFocus();
@@ -68,7 +77,8 @@ namespace TestUtilities.UI {
             }
         }
 
-        internal AutomationElement GetSearchBox() {
+        internal AutomationElement GetSearchBox()
+        {
 #if DEV12_OR_LATER
             return Element.FindFirst(TreeScope.Descendants, new AndCondition(
                 new PropertyCondition(AutomationElement.AutomationIdProperty, "PART_SearchBox"),
@@ -105,16 +115,19 @@ namespace TestUtilities.UI {
             return 0;
         }
 #else
-        private GridPattern GetResultsList() {
+        private GridPattern GetResultsList()
+        {
             return (GridPattern)Element.FindFirst(TreeScope.Descendants,
                 new PropertyCondition(AutomationElement.AutomationIdProperty, "results")
             ).GetCurrentPattern(GridPattern.Pattern);
         }
 
-        internal int WaitForNumberOfResults(int results) {
+        internal int WaitForNumberOfResults(int results)
+        {
             var list = GetResultsList();
 
-            for (int count = 10; count > 0 && list.Current.RowCount < results; --count) {
+            for (int count = 10; count > 0 && list.Current.RowCount < results; --count)
+            {
                 Thread.Sleep(1000);
             }
             return list.Current.RowCount;

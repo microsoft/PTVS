@@ -36,7 +36,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         public static readonly ICommand Remove = new RoutedCommand();
 
         private readonly ConfigurationExtensionProvider _provider;
-        
+
         public ConfigurationExtension(ConfigurationExtensionProvider provider) {
             _provider = provider;
             DataContextChanged += ConfigurationExtension_DataContextChanged;

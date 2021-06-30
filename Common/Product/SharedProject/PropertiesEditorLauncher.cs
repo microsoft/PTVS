@@ -14,23 +14,25 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using Microsoft.VisualStudio.Shell;
 using System;
 using System.ComponentModel;
-using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
 using ErrorHandler = Microsoft.VisualStudio.ErrorHandler;
 
-namespace Microsoft.VisualStudioTools.Project {
+namespace Microsoft.VisualStudioTools.Project
+{
     /// <summary>
     /// This class is used to enable launching the project properties
     /// editor from the Properties Browser.
     /// </summary>
 
-    public class PropertiesEditorLauncher : ComponentEditor {
+    public class PropertiesEditorLauncher : ComponentEditor
+    {
         private ServiceProvider serviceProvider;
 
         #region ctor
-        public PropertiesEditorLauncher(ServiceProvider serviceProvider) {
+        public PropertiesEditorLauncher(ServiceProvider serviceProvider)
+        {
             Utilities.ArgumentNotNull("serviceProvider", serviceProvider);
 
             this.serviceProvider = serviceProvider;
@@ -41,8 +43,10 @@ namespace Microsoft.VisualStudioTools.Project {
         /// Launch the Project Properties Editor (properties pages)
         /// </summary>
         /// <returns>If we succeeded or not</returns>
-        public override bool EditComponent(ITypeDescriptorContext context, object component) {
-            if (component is ProjectNodeProperties) {
+        public override bool EditComponent(ITypeDescriptorContext context, object component)
+        {
+            if (component is ProjectNodeProperties)
+            {
                 IVsPropertyPageFrame propertyPageFrame = (IVsPropertyPageFrame)serviceProvider.GetService((typeof(SVsPropertyPageFrame)));
 
                 int hr = propertyPageFrame.ShowFrame(Guid.Empty);

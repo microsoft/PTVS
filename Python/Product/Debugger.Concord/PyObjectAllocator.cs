@@ -18,7 +18,6 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using Microsoft.PythonTools.Debugger.Concord.Proxies;
 using Microsoft.PythonTools.Debugger.Concord.Proxies.Structs;
-using Microsoft.VisualStudio.Debugger;
 
 namespace Microsoft.PythonTools.Debugger.Concord {
     internal class PyObjectAllocator : DkmDataItem {

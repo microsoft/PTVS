@@ -46,7 +46,7 @@ namespace Microsoft.PythonTools.Options {
 
             _buffer = bufferFactory.CreateTextBuffer(textContentType);
             var editor = editorFactory.CreateTextView(_buffer, CreateRoleSet());
-            
+
             _editorHost.Child = (UIElement)editor;
             _buffer.Replace(new Span(0, 0), DefaultText);
         }
@@ -100,9 +100,9 @@ namespace Microsoft.PythonTools.Options {
                     _nodes[option.Key] = optNode;
                 }
             }
-            _optionsTree.EndUpdate();          
+            _optionsTree.EndUpdate();
         }
-        
+
         internal void OnActivated() {
             // when the user switches between pages we lose focus and when
             // we come back our selected node changes.  So we track the node

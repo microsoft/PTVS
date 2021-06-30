@@ -3,8 +3,6 @@
 // </copyright>
 
 using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 
 // The following assembly information is common to all VisualStudioTools Test assemblies.
 // If you get compiler errors CS0579, "Duplicate '<attributename>' attribute", check your 
@@ -17,7 +15,8 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyVersion(AssemblyVersionInfo.StableVersion)]
 [assembly: AssemblyFileVersion(AssemblyVersionInfo.Version)]
 
-class AssemblyVersionInfo {
+class AssemblyVersionInfo
+{
     // This version string (and the comments for StableVersion and Version)
     // should be updated manually between major releases.
     // Servicing branches should retain the value

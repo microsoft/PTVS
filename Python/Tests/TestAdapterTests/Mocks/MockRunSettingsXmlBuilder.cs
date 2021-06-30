@@ -15,9 +15,7 @@
 // permissions and limitations under the License.
 
 using System.IO;
-using System.Runtime.InteropServices;
 using System.Text;
-using Microsoft.PythonTools;
 
 namespace TestAdapterTests.Mocks {
     class MockRunSettingsXmlBuilder {

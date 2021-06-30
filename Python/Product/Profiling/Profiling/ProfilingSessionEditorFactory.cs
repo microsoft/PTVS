@@ -25,7 +25,6 @@ using System.Xml;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.PythonTools.Profiling {
     /// <summary>

@@ -24,15 +24,14 @@ using System.Text;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.TestAdapter;
 using Microsoft.PythonTools.TestAdapter.Pytest;
-using Microsoft.PythonTools.TestAdapter.UnitTest;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.TestWindow.Extensibility;
+using pt::Microsoft.PythonTools.CodeCoverage;
 using TestAdapterTests.Mocks;
 using TestUtilities;
 using TestUtilities.Python;
-using pt::Microsoft.PythonTools.CodeCoverage;
 
 namespace TestAdapterTests {
     [TestClass, Ignore]
@@ -334,7 +333,7 @@ if __name__ == '__main__':
 
             //Check for Partial Results
             Assert.IsTrue(recorder.Results.Any());
-            Assert.AreEqual(TestOutcome.Passed, recorder.Results.Single( r => r.TestCase.DisplayName == discoverySink.Tests[0].DisplayName).Outcome);
+            Assert.AreEqual(TestOutcome.Passed, recorder.Results.Single(r => r.TestCase.DisplayName == discoverySink.Tests[0].DisplayName).Outcome);
             Assert.AreEqual(TestOutcome.Skipped, recorder.Results.Single(r => r.TestCase.DisplayName == discoverySink.Tests[1].DisplayName).Outcome);
         }
 

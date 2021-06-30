@@ -20,16 +20,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.Serialization;
-using Microsoft.VisualStudio.Debugger;
-using Microsoft.VisualStudio.Debugger.Breakpoints;
-using Microsoft.VisualStudio.Debugger.CallStack;
-using Microsoft.VisualStudio.Debugger.ComponentInterfaces;
-using Microsoft.VisualStudio.Debugger.CustomRuntimes;
-using Microsoft.VisualStudio.Debugger.Evaluation;
-using Microsoft.VisualStudio.Debugger.Exceptions;
-using Microsoft.VisualStudio.Debugger.Native;
-using Microsoft.VisualStudio.Debugger.Stepping;
-using Microsoft.VisualStudio.Debugger.Symbols;
 
 namespace Microsoft.PythonTools.Debugger.Concord {
     public class RemoteComponent :

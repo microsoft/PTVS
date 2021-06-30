@@ -19,7 +19,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
-using static System.FormattableString;
 using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.Debugger {

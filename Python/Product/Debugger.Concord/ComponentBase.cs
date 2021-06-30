@@ -22,8 +22,6 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
-using Microsoft.VisualStudio.Debugger;
-using Microsoft.VisualStudio.Debugger.ComponentInterfaces;
 
 namespace Microsoft.PythonTools.Debugger.Concord {
     public abstract class ComponentBase : IDkmCustomMessageForwardReceiver, IDkmCustomMessageCallbackReceiver {

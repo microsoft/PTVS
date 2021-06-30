@@ -18,7 +18,7 @@ using System;
 using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Options {
-    public sealed class GeneralOptions{
+    public sealed class GeneralOptions {
         private readonly PythonToolsService _pyService;
         private Severity _indentationInconsistencySeverity;
 

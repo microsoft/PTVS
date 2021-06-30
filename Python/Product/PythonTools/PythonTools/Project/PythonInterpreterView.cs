@@ -14,7 +14,6 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
 using System.Xml.Serialization;
 using Microsoft.PythonTools.Interpreter;
 
@@ -26,7 +25,7 @@ namespace Microsoft.PythonTools {
         readonly string _name;
         readonly string _id;
         readonly string _path;
-        
+
         /// <summary>
         /// Create a PythonInterpreterView with values from an IPythonInterpreterFactory.
         /// </summary>
@@ -75,7 +74,7 @@ namespace Microsoft.PythonTools {
         /// <summary>
         /// The Guid identifying the interpreter.
         /// </summary>
-        public string Id { 
+        public string Id {
             get {
                 return _id;
             }
@@ -84,7 +83,7 @@ namespace Microsoft.PythonTools {
         /// <summary>
         /// The path to the interpreter, if available.
         /// </summary>
-        public string Path { 
+        public string Path {
             get {
                 return _path;
             }
@@ -138,4 +137,4 @@ namespace Microsoft.PythonTools {
         }
     }
 }
- 
+

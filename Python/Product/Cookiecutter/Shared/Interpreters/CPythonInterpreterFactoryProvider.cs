@@ -16,10 +16,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.Composition;
-using System.Diagnostics;
 using System.Linq;
-using System.Threading;
 using Microsoft.Win32;
 
 namespace Microsoft.CookiecutterTools.Interpreters {

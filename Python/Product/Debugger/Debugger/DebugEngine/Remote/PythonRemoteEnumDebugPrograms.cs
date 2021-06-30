@@ -14,9 +14,6 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using Microsoft.VisualStudio.Debugger.Interop;
-
 namespace Microsoft.PythonTools.Debugger.Remote {
     internal class PythonRemoteEnumDebugPrograms : PythonRemoteEnumDebug<IDebugProgram2>, IEnumDebugPrograms2 {
 

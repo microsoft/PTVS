@@ -16,14 +16,16 @@
 
 using System;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 
-namespace TestUtilities {
-    internal static class AssemblyExtensions {
+namespace TestUtilities
+{
+    internal static class AssemblyExtensions
+    {
         public static string GetAssemblyDirectory(this Assembly assembly) => Path.GetDirectoryName(assembly.GetAssemblyPath());
 
-        public static string GetAssemblyPath(this Assembly assembly) {
+        public static string GetAssemblyPath(this Assembly assembly)
+        {
             var codeBase = assembly.CodeBase;
             return new Uri(codeBase).LocalPath;
         }

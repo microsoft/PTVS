@@ -24,7 +24,6 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Logging;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.PythonTools {
     class WorkspaceInfoBarManager : IVsRunningDocTableEvents, IDisposable {

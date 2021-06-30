@@ -14,18 +14,21 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
 using Microsoft.VisualStudio.Text;
+using System;
 
-namespace TestUtilities.Mocks {
-    public class MockTextVersion : ITextVersion2 {
+namespace TestUtilities.Mocks
+{
+    public class MockTextVersion : ITextVersion2
+    {
         private readonly int _version;
         private readonly MockTextImageVersion _imageVersion;
         internal readonly MockTextSnapshot _snapshot;
         private MockTextVersion _nextVersion;
         private INormalizedTextChangeCollection _changes;
-        
-        public MockTextVersion(int version, MockTextSnapshot snapshot) {
+
+        public MockTextVersion(int version, MockTextSnapshot snapshot)
+        {
             _version = version;
             _snapshot = snapshot;
             _imageVersion = new MockTextImageVersion(this);
@@ -36,31 +39,38 @@ namespace TestUtilities.Mocks {
         /// </summary>
         public INormalizedTextChangeCollection Changes => _changes;
 
-        public ITrackingSpan CreateCustomTrackingSpan(Span span, TrackingFidelityMode trackingFidelity, object customState, CustomTrackToVersion behavior) {
+        public ITrackingSpan CreateCustomTrackingSpan(Span span, TrackingFidelityMode trackingFidelity, object customState, CustomTrackToVersion behavior)
+        {
             throw new NotImplementedException();
         }
 
-        public ITrackingPoint CreateTrackingPoint(int position, PointTrackingMode trackingMode, TrackingFidelityMode trackingFidelity) {
+        public ITrackingPoint CreateTrackingPoint(int position, PointTrackingMode trackingMode, TrackingFidelityMode trackingFidelity)
+        {
             throw new NotImplementedException();
         }
 
-        public ITrackingPoint CreateTrackingPoint(int position, PointTrackingMode trackingMode) {
+        public ITrackingPoint CreateTrackingPoint(int position, PointTrackingMode trackingMode)
+        {
             throw new NotImplementedException();
         }
 
-        public ITrackingSpan CreateTrackingSpan(int start, int length, SpanTrackingMode trackingMode, TrackingFidelityMode trackingFidelity) {
+        public ITrackingSpan CreateTrackingSpan(int start, int length, SpanTrackingMode trackingMode, TrackingFidelityMode trackingFidelity)
+        {
             throw new NotImplementedException();
         }
 
-        public ITrackingSpan CreateTrackingSpan(int start, int length, SpanTrackingMode trackingMode) {
+        public ITrackingSpan CreateTrackingSpan(int start, int length, SpanTrackingMode trackingMode)
+        {
             throw new NotImplementedException();
         }
 
-        public ITrackingSpan CreateTrackingSpan(Span span, SpanTrackingMode trackingMode, TrackingFidelityMode trackingFidelity) {
+        public ITrackingSpan CreateTrackingSpan(Span span, SpanTrackingMode trackingMode, TrackingFidelityMode trackingFidelity)
+        {
             throw new NotImplementedException();
         }
 
-        public ITrackingSpan CreateTrackingSpan(Span span, SpanTrackingMode trackingMode) {
+        public ITrackingSpan CreateTrackingSpan(Span span, SpanTrackingMode trackingMode)
+        {
             throw new NotImplementedException();
         }
 
@@ -76,7 +86,8 @@ namespace TestUtilities.Mocks {
 
         public ITextImageVersion ImageVersion => _imageVersion;
 
-        internal void SetNext(MockTextVersion nextVersion, params ITextChange[] changes) {
+        internal void SetNext(MockTextVersion nextVersion, params ITextChange[] changes)
+        {
             _nextVersion = nextVersion;
             _changes = new MockNormalizedTextChangeCollection(changes);
         }

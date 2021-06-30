@@ -16,7 +16,6 @@
 
 using System;
 using System.Diagnostics;
-using System.IO;
 using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;

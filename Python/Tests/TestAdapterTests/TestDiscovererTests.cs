@@ -335,7 +335,7 @@ namespace TestAdapterTests {
             var discoverer = new UnittestTestDiscoverer();
 
             discoverer.DiscoverTests(new[] { testFilePath1, testFilePath2 }, discoveryContext, logger, discoverySink);
-           
+
             var errors = string.Join(Environment.NewLine, logger.GetErrors());
 
             if (Version.Version > Microsoft.PythonTools.Parsing.PythonLanguageVersion.V27) {
@@ -503,7 +503,7 @@ namespace TestAdapterTests {
             DiscoverTests(testEnv, new[] { testFilePath }, runSettings, expectedTests);
         }
 
-     
+
         [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
         public void DiscoverUnittestTimeoutError() {

@@ -52,7 +52,7 @@ namespace Microsoft.PythonTools.Debugger {
            IntPtr lpThreadAttributes, UIntPtr dwStackSize, IntPtr lpStartAddress, IntPtr lpParameter, uint dwCreationFlags, IntPtr lpThreadId);
 
         [DllImport("kernel32.dll", SetLastError = true)]
-        public static extern bool WriteProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, [MarshalAs(UnmanagedType.LPWStr)]string lpBuffer, IntPtr nSize, out int lpNumberOfBytesWritten);
+        public static extern bool WriteProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, [MarshalAs(UnmanagedType.LPWStr)] string lpBuffer, IntPtr nSize, out int lpNumberOfBytesWritten);
 
         [DllImport("kernel32.dll")]
         public static extern IntPtr OpenProcess(ProcessAccessFlags dwDesiredAccess, [MarshalAs(UnmanagedType.Bool)] bool bInheritHandle, int dwProcessId);
@@ -61,7 +61,7 @@ namespace Microsoft.PythonTools.Debugger {
         public static extern bool EnumProcessModules(IntPtr hProcess, IntPtr lphModule, int cb, [MarshalAs(UnmanagedType.U4)] out int lpcbNeeded);
 
         [DllImport("psapi.dll", CharSet = CharSet.Unicode)]
-        public static extern uint GetModuleBaseName(IntPtr hProcess, IntPtr hModule, [Out]StringBuilder lpBaseName, uint nSize);
+        public static extern uint GetModuleBaseName(IntPtr hProcess, IntPtr hModule, [Out] StringBuilder lpBaseName, uint nSize);
 
         [DllImport("kernel32.dll", SetLastError = true, ExactSpelling = true)]
         public static extern IntPtr VirtualAllocEx(IntPtr hProcess, IntPtr lpAddress, UIntPtr dwSize, AllocationType flAllocationType, MemoryProtection flProtect);

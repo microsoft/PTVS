@@ -17,7 +17,6 @@
 using System;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Debugger.Interop;
 
 namespace Microsoft.PythonTools.Debugger.DebugEngine {
     // This class represents the information that describes a bound breakpoint.

@@ -15,8 +15,6 @@
 // permissions and limitations under the License.
 
 using System.IO;
-using Microsoft.WebTools.Languages.Html.Artifacts;
-using Microsoft.WebTools.Languages.Shared.Text;
 
 namespace Microsoft.PythonTools.Django.TemplateParsing {
     /// <summary>

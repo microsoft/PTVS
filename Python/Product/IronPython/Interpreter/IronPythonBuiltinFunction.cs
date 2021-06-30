@@ -14,9 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
 using System.Collections.Generic;
-using IronPython.Runtime.Types;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.IronPythonTools.Interpreter {
@@ -55,10 +53,10 @@ namespace Microsoft.IronPythonTools.Interpreter {
                     var overloads = ri != null ? ri.GetBuiltinFunctionOverloads(Value) : new ObjectIdentityHandle[0];
                     var result = new IronPythonBuiltinFunctionTarget[overloads.Length];
                     var decltype = (IronPythonType)DeclaringType;
-                    for(int i = 0; i<overloads.Length; i++){
+                    for (int i = 0; i < overloads.Length; i++) {
                         result[i] = new IronPythonBuiltinFunctionTarget(
-                            Interpreter, 
-                            overloads[i], 
+                            Interpreter,
+                            overloads[i],
                             decltype
                         );
 

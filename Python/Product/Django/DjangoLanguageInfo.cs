@@ -18,7 +18,6 @@ using System;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
-using Microsoft.VisualStudio.TextManager.Interop;
 
 namespace Microsoft.PythonTools.Django {
     /// <summary>

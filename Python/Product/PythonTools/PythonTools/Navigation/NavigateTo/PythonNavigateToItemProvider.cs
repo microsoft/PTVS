@@ -24,9 +24,7 @@ using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
-using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Language.NavigateTo.Interfaces;
-using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text.PatternMatching;
 using AP = Microsoft.PythonTools.Intellisense.AnalysisProtocol;
 

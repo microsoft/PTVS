@@ -41,7 +41,7 @@ namespace Microsoft.PythonTools.Profiling {
         /// </summary>
         /// <param name="baselineFile"></param>
         public CompareReportsView(string baselineFile)
-        : this(){
+        : this() {
             BaselineFile = baselineFile;
         }
 
@@ -135,4 +135,4 @@ namespace Microsoft.PythonTools.Profiling {
         public event PropertyChangedEventHandler PropertyChanged;
     }
 }
- 
+

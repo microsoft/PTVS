@@ -15,10 +15,8 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.Design;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -28,7 +26,6 @@ using Microsoft.CookiecutterTools.Infrastructure;
 using Microsoft.CookiecutterTools.Model;
 using Microsoft.CookiecutterTools.Telemetry;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Threading;
@@ -90,19 +87,19 @@ namespace Microsoft.CookiecutterTools {
             await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
 
             if (GetService(typeof(UIThreadBase)) == null) {
-                ((IServiceContainer) this).AddService(typeof(UIThreadBase), new UIThread(JoinableTaskFactory), true);
+                ((IServiceContainer)this).AddService(typeof(UIThreadBase), new UIThread(JoinableTaskFactory), true);
             }
 
             CookiecutterTelemetry.Initialize();
-            
+
             _projectSystem = new ProjectSystemClient(DTE);
             Trace.WriteLine("Leaving {0}.InitializeAsync()".FormatInvariant(this));
         }
 
-        public override IVsAsyncToolWindowFactory GetAsyncToolWindowFactory(Guid toolWindowType) 
+        public override IVsAsyncToolWindowFactory GetAsyncToolWindowFactory(Guid toolWindowType)
             => toolWindowType == typeof(CookiecutterToolWindow).GUID ? this : base.GetAsyncToolWindowFactory(toolWindowType);
 
-        protected override Task<object> InitializeToolWindowAsync(Type toolWindowType, int id, CancellationToken cancellationToken) 
+        protected override Task<object> InitializeToolWindowAsync(Type toolWindowType, int id, CancellationToken cancellationToken)
             => toolWindowType == typeof(CookiecutterToolWindow) ? Task.FromResult<object>(this) : base.InitializeToolWindowAsync(toolWindowType, id, cancellationToken);
 
         protected override void Dispose(bool disposing) {

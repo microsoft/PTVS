@@ -19,7 +19,6 @@ using System.Text;
 using System.Threading;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Debugger.Interop;
 
 namespace Microsoft.PythonTools.Debugger.DebugEngine {
     // An implementation of IDebugProperty2
@@ -223,7 +222,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
         public int GetStringCharLength(out uint pLen) {
             var result = TaskHelpers.RunSynchronouslyOnUIThread(ct => _evalResult.Frame.ExecuteTextAsync(_evalResult.Expression, PythonEvaluationResultReprKind.RawLen, ct));
-            pLen = (uint)(result.ExceptionText != null ? result.ExceptionText.Length : result.Length); 
+            pLen = (uint)(result.ExceptionText != null ? result.ExceptionText.Length : result.Length);
             return VSConstants.S_OK;
         }
 

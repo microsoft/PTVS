@@ -14,22 +14,19 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using Microsoft.VisualStudio;
+using Microsoft.Win32.SafeHandles;
 using System;
-using System.ComponentModel;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.OLE.Interop;
-using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudio.TextManager.Interop;
-using Microsoft.Win32.SafeHandles;
 
-namespace Microsoft.VisualStudioTools.Project {
-    internal static class NativeMethods {
+namespace Microsoft.VisualStudioTools.Project
+{
+    internal static class NativeMethods
+    {
         // IIDS
         public static readonly Guid IID_IUnknown = new Guid("{00000000-0000-0000-C000-000000000046}");
 
@@ -481,7 +478,8 @@ namespace Microsoft.VisualStudioTools.Project {
             FW_BOLD = 700;
 
         [StructLayout(LayoutKind.Sequential)]
-        public struct NMHDR {
+        public struct NMHDR
+        {
             public IntPtr hwndFrom;
             public int idFrom;
             public int code;
@@ -490,8 +488,10 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <devdoc>
         /// Helper class for setting the text parameters to OLECMDTEXT structures.
         /// </devdoc>
-        public static class OLECMDTEXT {
-            public static void SetText(IntPtr pCmdTextInt, string text) {
+        public static class OLECMDTEXT
+        {
+            public static void SetText(IntPtr pCmdTextInt, string text)
+            {
                 Microsoft.VisualStudio.OLE.Interop.OLECMDTEXT pCmdText = (Microsoft.VisualStudio.OLE.Interop.OLECMDTEXT)Marshal.PtrToStructure(pCmdTextInt, typeof(Microsoft.VisualStudio.OLE.Interop.OLECMDTEXT));
                 char[] menuText = text.ToCharArray();
 
@@ -520,7 +520,8 @@ namespace Microsoft.VisualStudioTools.Project {
             /// </summary>
             /// <param name="pCmdTextInt">The structure to read.</param>
             /// <returns>The value of the flags.</returns>
-            public static OLECMDTEXTF GetFlags(IntPtr pCmdTextInt) {
+            public static OLECMDTEXTF GetFlags(IntPtr pCmdTextInt)
+            {
                 Microsoft.VisualStudio.OLE.Interop.OLECMDTEXT pCmdText = (Microsoft.VisualStudio.OLE.Interop.OLECMDTEXT)Marshal.PtrToStructure(pCmdTextInt, typeof(Microsoft.VisualStudio.OLE.Interop.OLECMDTEXT));
 
                 if ((pCmdText.cmdtextf & (int)OLECMDTEXTF.OLECMDTEXTF_NAME) != 0)
@@ -536,7 +537,8 @@ namespace Microsoft.VisualStudioTools.Project {
             /// <summary>
             /// Flags for the OLE command text
             /// </summary>
-            public enum OLECMDTEXTF {
+            public enum OLECMDTEXTF
+            {
                 /// <summary>No flag</summary>
                 OLECMDTEXTF_NONE = 0,
                 /// <summary>The name of the command is required.</summary>
@@ -549,7 +551,8 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <devdoc>
         /// OLECMDF enums for IOleCommandTarget
         /// </devdoc>
-        public enum tagOLECMDF {
+        public enum tagOLECMDF
+        {
             OLECMDF_SUPPORTED = 1,
             OLECMDF_ENABLED = 2,
             OLECMDF_LATCHED = 4,
@@ -578,7 +581,8 @@ namespace Microsoft.VisualStudioTools.Project {
         [DllImport("user32", CallingConvention = CallingConvention.Winapi)]
         public static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
 
-        public static void SetErrorDescription(string description, params object[] args) {
+        public static void SetErrorDescription(string description, params object[] args)
+        {
             ICreateErrorInfo errInfo;
             ErrorHandler.ThrowOnFailure(CreateErrorInfo(out errInfo));
 
@@ -599,7 +603,8 @@ namespace Microsoft.VisualStudioTools.Project {
         static extern int SetErrorInfo(uint dwReserved, IErrorInfo perrinfo);
 
         [ComImport(), Guid("9BDA66AE-CA28-4e22-AA27-8A7218A0E3FA"), InterfaceTypeAttribute(ComInterfaceType.InterfaceIsIUnknown)]
-        public interface IEventHandler {
+        public interface IEventHandler
+        {
 
             // converts the underlying codefunction into an event handler for the given event
             // if the given event is NULL, then the function will handle no events
@@ -615,7 +620,8 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
         [ComImport(), Guid("A55CCBCC-7031-432d-B30A-A68DE7BDAD75"), InterfaceTypeAttribute(ComInterfaceType.InterfaceIsIUnknown)]
-        public interface IParameterKind {
+        public interface IParameterKind
+        {
 
             void SetParameterPassingMode(PARAMETER_PASSING_MODE ParamPassingMode);
             void SetParameterArrayDimensions(int uDimensions);
@@ -624,7 +630,8 @@ namespace Microsoft.VisualStudioTools.Project {
             int GetParameterPassingMode();
         }
 
-        public enum PARAMETER_PASSING_MODE {
+        public enum PARAMETER_PASSING_MODE
+        {
             cmParameterTypeIn = 1,
             cmParameterTypeOut = 2,
             cmParameterTypeInOut = 3
@@ -634,7 +641,8 @@ namespace Microsoft.VisualStudioTools.Project {
         ComImport, ComVisible(true), Guid("3E596484-D2E4-461a-A876-254C4F097EBB"),
         InterfaceTypeAttribute(ComInterfaceType.InterfaceIsIUnknown)
         ]
-        public interface IMethodXML {
+        public interface IMethodXML
+        {
             // Generate XML describing the contents of this function's body.
             void GetXML(ref string pbstrXML);
 
@@ -646,11 +654,12 @@ namespace Microsoft.VisualStudioTools.Project {
 
             // This is really a textpoint
             [PreserveSig]
-            int GetBodyPoint([MarshalAs(UnmanagedType.Interface)]out object bodyPoint);
+            int GetBodyPoint([MarshalAs(UnmanagedType.Interface)] out object bodyPoint);
         }
 
         [ComImport(), Guid("EA1A87AD-7BC5-4349-B3BE-CADC301F17A3"), InterfaceTypeAttribute(ComInterfaceType.InterfaceIsIUnknown)]
-        public interface IVBFileCodeModelEvents {
+        public interface IVBFileCodeModelEvents
+        {
 
             [PreserveSig]
             int StartEdit();
@@ -665,7 +674,8 @@ namespace Microsoft.VisualStudioTools.Project {
         [GuidAttribute("23BBD58A-7C59-449b-A93C-43E59EFC080C")]
         [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
         [ComImport()]
-        public interface ICodeClassBase {
+        public interface ICodeClassBase
+        {
             [PreserveSig()]
             int GetBaseName(out string pBaseName);
         }
@@ -679,7 +689,8 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <summary>
         /// Specifies options for a bitmap image associated with a task item.
         /// </summary>
-        public enum VSTASKBITMAP {
+        public enum VSTASKBITMAP
+        {
             BMP_COMPILE = -1,
             BMP_SQUIGGLE = -2,
             BMP_COMMENT = -3,
@@ -696,7 +707,8 @@ namespace Microsoft.VisualStudioTools.Project {
         /// Defines the values that are not supported by the System.Environment.SpecialFolder enumeration
         /// </summary>
         [ComVisible(true)]
-        public enum ExtendedSpecialFolder {
+        public enum ExtendedSpecialFolder
+        {
             /// <summary>
             /// Identical to CSIDL_COMMON_STARTUP
             /// </summary>
@@ -729,7 +741,8 @@ namespace Microsoft.VisualStudioTools.Project {
         [DllImport("kernel32", EntryPoint = "GetBinaryTypeW", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Winapi)]
         private static extern bool _GetBinaryType(string lpApplicationName, out GetBinaryTypeResult lpBinaryType);
 
-        private enum GetBinaryTypeResult : uint {
+        private enum GetBinaryTypeResult : uint
+        {
             SCS_32BIT_BINARY = 0,
             SCS_DOS_BINARY = 1,
             SCS_WOW_BINARY = 2,
@@ -739,11 +752,14 @@ namespace Microsoft.VisualStudioTools.Project {
             SCS_64BIT_BINARY = 6
         }
 
-        public static ProcessorArchitecture GetBinaryType(string path) {
+        public static ProcessorArchitecture GetBinaryType(string path)
+        {
             GetBinaryTypeResult result;
 
-            if (_GetBinaryType(path, out result)) {
-                switch (result) {
+            if (_GetBinaryType(path, out result))
+            {
+                switch (result)
+                {
                     case GetBinaryTypeResult.SCS_32BIT_BINARY:
                         return ProcessorArchitecture.X86;
                     case GetBinaryTypeResult.SCS_64BIT_BINARY:
@@ -783,7 +799,7 @@ namespace Microsoft.VisualStudioTools.Project {
         [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
         public static extern uint GetFinalPathNameByHandle(
             SafeHandle hFile,
-            [Out]StringBuilder lpszFilePath,
+            [Out] StringBuilder lpszFilePath,
             uint cchFilePath,
             uint dwFlags
         );
@@ -800,31 +816,36 @@ namespace Microsoft.VisualStudioTools.Project {
         );
 
         [Flags]
-        public enum FileDesiredAccess : uint {
+        public enum FileDesiredAccess : uint
+        {
             FILE_LIST_DIRECTORY = 1
         }
 
         [Flags]
-        public enum FileShareFlags : uint {
+        public enum FileShareFlags : uint
+        {
             FILE_SHARE_READ = 0x00000001,
             FILE_SHARE_WRITE = 0x00000002,
             FILE_SHARE_DELETE = 0x00000004
         }
 
         [Flags]
-        public enum FileCreationDisposition : uint {
+        public enum FileCreationDisposition : uint
+        {
             OPEN_EXISTING = 3
         }
 
         [Flags]
-        public enum FileFlagsAndAttributes : uint {
+        public enum FileFlagsAndAttributes : uint
+        {
             FILE_FLAG_BACKUP_SEMANTICS = 0x02000000
         }
 
         public static IntPtr INVALID_FILE_HANDLE = new IntPtr(-1);
         public static IntPtr INVALID_HANDLE_VALUE = new IntPtr(-1);
 
-        public enum LogonType {
+        public enum LogonType
+        {
             LOGON32_LOGON_INTERACTIVE = 2,
             LOGON32_LOGON_NETWORK,
             LOGON32_LOGON_BATCH,
@@ -834,7 +855,8 @@ namespace Microsoft.VisualStudioTools.Project {
             LOGON32_LOGON_NEW_CREDENTIALS
         }
 
-        public enum LogonProvider {
+        public enum LogonProvider
+        {
             LOGON32_PROVIDER_DEFAULT = 0,
             LOGON32_PROVIDER_WINNT35,
             LOGON32_PROVIDER_WINNT40,
@@ -851,7 +873,8 @@ namespace Microsoft.VisualStudioTools.Project {
         public const int CONNECT_PROMPT = 0x10;
         public const int RESOURCETYPE_DISK = 1;
 
-        public struct _NETRESOURCE {
+        public struct _NETRESOURCE
+        {
             public uint dwScope;
             public uint dwType;
             public uint dwDisplayType;
@@ -880,7 +903,8 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </summary>
         /// <param name="symlink">DirectoryInfo object for the suspected symlink.</param>
         /// <returns>A string of the actual path.</returns>
-        internal static string GetAbsolutePathToDirectory(string symlink) {
+        internal static string GetAbsolutePathToDirectory(string symlink)
+        {
             const int FILE_FLAG_BACKUP_SEMANTICS = 0x02000000;
             const int DEVICE_QUERY_ACCESS = 0;
 
@@ -891,14 +915,17 @@ namespace Microsoft.VisualStudioTools.Project {
                 System.IntPtr.Zero,
                 FileMode.Open,
                 FILE_FLAG_BACKUP_SEMANTICS,
-                System.IntPtr.Zero)) {
-                if (directoryHandle.IsInvalid) {
+                System.IntPtr.Zero))
+            {
+                if (directoryHandle.IsInvalid)
+                {
                     Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
                 }
 
                 StringBuilder path = new StringBuilder(512);
                 int pathSize = GetFinalPathNameByHandle(directoryHandle, path, path.Capacity, 0);
-                if (pathSize < 0) {
+                if (pathSize < 0)
+                {
                     Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
                 }
 
@@ -927,7 +954,8 @@ namespace Microsoft.VisualStudioTools.Project {
         internal static extern bool MoveFile(String src, String dst);
     }
 
-    internal class CredUI {
+    internal class CredUI
+    {
         private const string advapi32Dll = "advapi32.dll";
         private const string credUIDll = "credui.dll";
 
@@ -938,7 +966,8 @@ namespace Microsoft.VisualStudioTools.Project {
         ERROR_LOGON_FAILURE = 1326;  // Logon failure: unknown user name or bad password.
 
         [Flags]
-        public enum CREDUI_FLAGS : uint {
+        public enum CREDUI_FLAGS : uint
+        {
             INCORRECT_PASSWORD = 0x1,
             DO_NOT_PERSIST = 0x2,
             REQUEST_ADMINISTRATOR = 0x4,
@@ -959,7 +988,8 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        public class CREDUI_INFO {
+        public class CREDUI_INFO
+        {
             public int cbSize;
             [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Reliability", "CA2006:UseSafeHandleToEncapsulateNativeResources")]
             public IntPtr hwndParentCERParent;
@@ -971,7 +1001,8 @@ namespace Microsoft.VisualStudioTools.Project {
             public IntPtr hbmBannerCERHandle;
         }
 
-        public enum CredUIReturnCodes : uint {
+        public enum CredUIReturnCodes : uint
+        {
             NO_ERROR = 0,
             ERROR_CANCELLED = 1223,
             ERROR_NO_SUCH_LOGON_SESSION = 1312,
@@ -984,7 +1015,7 @@ namespace Microsoft.VisualStudioTools.Project {
 
         // Copied from wincred.h
         public const uint
-            // Values of the Credential Type field.
+        // Values of the Credential Type field.
         CRED_TYPE_GENERIC = 1,
         CRED_TYPE_DOMAIN_PASSWORD = 2,
         CRED_TYPE_DOMAIN_CERTIFICATE = 3,
@@ -1007,7 +1038,8 @@ namespace Microsoft.VisualStudioTools.Project {
         CREDUI_MAX_USERNAME_LENGTH = CRED_MAX_USERNAME_LENGTH,
         CREDUI_MAX_PASSWORD_LENGTH = (CRED_MAX_CREDENTIAL_BLOB_SIZE / 2);
 
-        internal enum CRED_PERSIST : uint {
+        internal enum CRED_PERSIST : uint
+        {
             NONE = 0,
             SESSION = 1,
             LOCAL_MACHINE = 2,
@@ -1015,7 +1047,8 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
-        public struct NativeCredential {
+        public struct NativeCredential
+        {
             public uint flags;
             public uint type;
             public string targetName;
@@ -1102,20 +1135,25 @@ namespace Microsoft.VisualStudioTools.Project {
             );
     }
 
-    struct User32RECT {
+    struct User32RECT
+    {
         public int left;
         public int top;
         public int right;
         public int bottom;
 
-        public int Width {
-            get {
+        public int Width
+        {
+            get
+            {
                 return right - left;
             }
         }
 
-        public int Height {
-            get {
+        public int Height
+        {
+            get
+            {
                 return bottom - top;
             }
         }
@@ -1123,7 +1161,8 @@ namespace Microsoft.VisualStudioTools.Project {
 
     [Guid("22F03340-547D-101B-8E65-08002B2BD119")]
     [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-    interface ICreateErrorInfo {
+    interface ICreateErrorInfo
+    {
         int SetGUID(
              ref Guid rguid
          );
@@ -1138,7 +1177,8 @@ namespace Microsoft.VisualStudioTools.Project {
     }
 
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
-    struct WIN32_FIND_DATA {
+    struct WIN32_FIND_DATA
+    {
         public uint dwFileAttributes;
         public System.Runtime.InteropServices.ComTypes.FILETIME ftCreationTime;
         public System.Runtime.InteropServices.ComTypes.FILETIME ftLastAccessTime;

@@ -16,8 +16,10 @@
 
 using System.Windows.Automation;
 
-namespace TestUtilities.UI {
-    public class ObjectBrowser : AutomationWrapper {
+namespace TestUtilities.UI
+{
+    public class ObjectBrowser : AutomationWrapper
+    {
         private TypeBrowserPane _typeBrowserPane;
         private TypeNavigatorPane _typeNavigatorPane;
         private DetailPane _detailPane;
@@ -28,7 +30,8 @@ namespace TestUtilities.UI {
         private Button _forwardButton;
 
         public ObjectBrowser(AutomationElement element)
-            : base(element) {
+            : base(element)
+        {
         }
 
         /// <summary>
@@ -37,9 +40,12 @@ namespace TestUtilities.UI {
         /// <history>
         /// [xiangyan] 1/26/2011 created
         /// </history>
-        public TypeBrowserPane TypeBrowserPane {
-            get {
-                if (_typeBrowserPane == null) {
+        public TypeBrowserPane TypeBrowserPane
+        {
+            get
+            {
+                if (_typeBrowserPane == null)
+                {
                     Condition con = new AndCondition(
                                 new PropertyCondition(
                                     AutomationElement.ClassNameProperty,
@@ -55,7 +61,7 @@ namespace TestUtilities.UI {
                         _typeBrowserPane = new TypeBrowserPane(el);
                 }
                 return _typeBrowserPane;
-        }
+            }
         }
 
         /// <summary>
@@ -64,9 +70,12 @@ namespace TestUtilities.UI {
         /// <history>
         /// [xiangyan] 1/26/2011 created
         /// </history>
-        public TypeNavigatorPane TypeNavigatorPane {
-            get {
-                if (_typeNavigatorPane == null) {
+        public TypeNavigatorPane TypeNavigatorPane
+        {
+            get
+            {
+                if (_typeNavigatorPane == null)
+                {
                     Condition con = new AndCondition(
                                 new PropertyCondition(
                                     AutomationElement.ClassNameProperty,
@@ -82,7 +91,7 @@ namespace TestUtilities.UI {
                         _typeNavigatorPane = new TypeNavigatorPane(el);
                 }
                 return _typeNavigatorPane;
-        }
+            }
         }
 
         /// <summary>
@@ -91,9 +100,12 @@ namespace TestUtilities.UI {
         /// <history>
         /// [xiangyan] 1/26/2011 created
         /// </history>
-        public DetailPane DetailPane {
-            get {
-                if (_detailPane == null) {
+        public DetailPane DetailPane
+        {
+            get
+            {
+                if (_detailPane == null)
+                {
                     Condition con = new AndCondition(
                                 new PropertyCondition(
                                     AutomationElement.ClassNameProperty,
@@ -109,7 +121,7 @@ namespace TestUtilities.UI {
                         _detailPane = new DetailPane(el);
                 }
                 return _detailPane;
-        }
+            }
         }
 
         /// <summary>
@@ -118,9 +130,12 @@ namespace TestUtilities.UI {
         /// <history>
         /// [xiangyan] 1/28/2011 created
         /// </history>
-        public TextBox SearchText {
-            get {
-                if (_searchText == null) {
+        public TextBox SearchText
+        {
+            get
+            {
+                if (_searchText == null)
+                {
                     Condition con = new AndCondition(
                                 new PropertyCondition(
                                     AutomationElement.ClassNameProperty,
@@ -133,7 +148,8 @@ namespace TestUtilities.UI {
                             );
                     AutomationElement el = this.Element.FindFirst(TreeScope.Descendants, con);
 
-                    if (el != null) {
+                    if (el != null)
+                    {
                         _searchText = new TextBox(el);
                     }
                 }
@@ -147,9 +163,12 @@ namespace TestUtilities.UI {
         /// <history>
         /// [xiangyan] 1/28/2011 created
         /// </history>
-        public Button SearchButton {
-            get {
-                if (_searchButton == null) {
+        public Button SearchButton
+        {
+            get
+            {
+                if (_searchButton == null)
+                {
                     Condition con = new AndCondition(
                                 new PropertyCondition(
                                     AutomationElement.ClassNameProperty,
@@ -162,7 +181,8 @@ namespace TestUtilities.UI {
                             );
                     AutomationElementCollection ell = this.Element.FindAll(TreeScope.Descendants, con);
 
-                    if (ell.Count == 2) {
+                    if (ell.Count == 2)
+                    {
                         _searchButton = new Button(ell[1]);
                     }
                 }
@@ -176,9 +196,12 @@ namespace TestUtilities.UI {
         /// <history>
         /// [xiangyan] 1/28/2011 created
         /// </history>
-        public Button ClearSearchButton {
-            get {
-                if (_clearSearchButton == null) {
+        public Button ClearSearchButton
+        {
+            get
+            {
+                if (_clearSearchButton == null)
+                {
                     Condition con = new AndCondition(
                                 new PropertyCondition(
                                     AutomationElement.ClassNameProperty,
@@ -190,7 +213,8 @@ namespace TestUtilities.UI {
                                 )
                             );
                     AutomationElement el = this.Element.FindFirst(TreeScope.Descendants, con);
-                    if (el != null) {
+                    if (el != null)
+                    {
                         _clearSearchButton = new Button(el);
                     }
                 }
@@ -204,9 +228,12 @@ namespace TestUtilities.UI {
         /// <history>
         /// [xiangyan] 1/28/2011 created
         /// </history>
-        public Button BackButton {
-            get {
-                if (_backButton == null) {
+        public Button BackButton
+        {
+            get
+            {
+                if (_backButton == null)
+                {
                     Condition con = new AndCondition(
                                 new PropertyCondition(
                                     AutomationElement.ClassNameProperty,
@@ -218,7 +245,8 @@ namespace TestUtilities.UI {
                                 )
                             );
                     AutomationElement el = this.Element.FindFirst(TreeScope.Descendants, con);
-                    if (el != null) {
+                    if (el != null)
+                    {
                         _backButton = new Button(el);
                     }
                 }
@@ -232,9 +260,12 @@ namespace TestUtilities.UI {
         /// <history>
         /// [xiangyan] 1/28/2011 created
         /// </history>
-        public Button ForwardButton {
-            get {
-                if (_forwardButton == null) {
+        public Button ForwardButton
+        {
+            get
+            {
+                if (_forwardButton == null)
+                {
                     Condition con = new AndCondition(
                                 new PropertyCondition(
                                     AutomationElement.ClassNameProperty,
@@ -246,7 +277,8 @@ namespace TestUtilities.UI {
                                 )
                             );
                     AutomationElement el = this.Element.FindFirst(TreeScope.Descendants, con);
-                    if (el != null) {
+                    if (el != null)
+                    {
                         _forwardButton = new Button(el);
                     }
                 }
@@ -254,10 +286,13 @@ namespace TestUtilities.UI {
             }
         }
 
-        public void EnsureLoaded() {
-            for (int i = 0; i < 30; i++) {
+        public void EnsureLoaded()
+        {
+            for (int i = 0; i < 30; i++)
+            {
                 var node = TypeBrowserPane.Nodes[0];
-                if (node.Value != "No information. Try browsing a different component set.") {
+                if (node.Value != "No information. Try browsing a different component set.")
+                {
                     break;
                 }
                 System.Threading.Thread.Sleep(100);

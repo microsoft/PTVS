@@ -16,12 +16,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Reflection;
-using IronPython.Runtime;
-using IronPython.Runtime.Operations;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.Scripting;
-using Microsoft.Scripting.Generation;
 
 namespace Microsoft.IronPythonTools.Interpreter {
     class IronPythonParameterInfo : IParameterInfo {

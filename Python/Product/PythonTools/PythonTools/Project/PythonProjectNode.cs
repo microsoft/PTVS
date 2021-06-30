@@ -42,8 +42,6 @@ using Microsoft.VisualStudio.Azure;
 using Microsoft.VisualStudio.Imaging;
 using Microsoft.VisualStudio.Imaging.Interop;
 using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 using IServiceProvider = System.IServiceProvider;
@@ -2034,7 +2032,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
 
-#region IPythonProject Members
+        #region IPythonProject Members
 
         string IPythonProject.ProjectName {
             get {
@@ -2105,9 +2103,9 @@ namespace Microsoft.PythonTools.Project {
             return base.GetUnevaluatedProperty(name);
         }
 
-#endregion
+        #endregion
 
-#region Search Path support
+        #region Search Path support
 
         internal int AddSearchPathZip() {
             var fileName = Site.BrowseForFileOpen(
@@ -2141,9 +2139,9 @@ namespace Microsoft.PythonTools.Project {
             return VSConstants.S_OK;
         }
 
-#endregion
+        #endregion
 
-#region Package Installation support
+        #region Package Installation support
 
         private int ExecInstallPythonPackage(Dictionary<string, string> args, IList<HierarchyNode> selectedNodes) {
             InterpretersNode selectedInterpreter;

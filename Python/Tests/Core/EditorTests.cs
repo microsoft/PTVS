@@ -16,11 +16,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading;
 using Microsoft.PythonTools;
-using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Editor.Core;
 using Microsoft.PythonTools.Intellisense;
@@ -312,12 +310,12 @@ def f():
 
             SnapshotOutlineTest(content,
                 new ExpectedTag(8, 282,
-                    "\"hello\":\"world\",\r\n        \"hello\":\"world\",\"hello\":[1,\r\n" + 
-                    "                                 2,3,4,\r\n" + 
-                    "                                 5],\r\n" + 
-                    "        \"hello\":\"world\",\r\n" + 
-                    "        \"check\": (\"tuple1\",\r\n" + 
-                    "                  \"tuple2\"," + 
+                    "\"hello\":\"world\",\r\n        \"hello\":\"world\",\"hello\":[1,\r\n" +
+                    "                                 2,3,4,\r\n" +
+                    "                                 5],\r\n" +
+                    "        \"hello\":\"world\",\r\n" +
+                    "        \"check\": (\"tuple1\",\r\n" +
+                    "                  \"tuple2\"," +
                     "\r\n                  \"tuple3\"," +
                     "\r\n                  \"tuple4\")"),
                 new ExpectedTag(59, 138, "1,\r\n                                 2,3,4,\r\n                                 5"),

@@ -14,12 +14,13 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.ComponentModel.Design;
 using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
+using System.ComponentModel.Design;
 
-namespace Microsoft.VisualStudioTools.Navigation {
-    public interface ISimpleObject {
+namespace Microsoft.VisualStudioTools.Navigation
+{
+    public interface ISimpleObject
+    {
         bool CanDelete { get; }
         bool CanGoToSource { get; }
         bool CanRename { get; }

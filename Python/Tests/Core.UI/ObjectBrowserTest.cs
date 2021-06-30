@@ -15,13 +15,10 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Windows.Automation;
 using EnvDTE;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using TestUtilities;
-using TestUtilities.Python;
 using TestUtilities.UI;
 
 namespace PythonToolsUITests {

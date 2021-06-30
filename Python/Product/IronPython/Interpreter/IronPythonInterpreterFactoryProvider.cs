@@ -19,10 +19,8 @@ using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
 using System.IO;
-using System.Reflection;
 using System.Threading;
 using Microsoft.PythonTools;
-using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.Win32;
@@ -244,7 +242,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
         }
 
         internal static InterpreterFactoryCreationOptions GetCreationOptions(IServiceProvider site, InterpreterConfiguration config) {
-            return new InterpreterFactoryCreationOptions {};
+            return new InterpreterFactoryCreationOptions { };
         }
     }
 }

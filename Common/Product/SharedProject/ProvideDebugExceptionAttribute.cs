@@ -14,12 +14,12 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using Microsoft.VisualStudio.Shell;
 using System;
 using System.Linq;
-using Microsoft.VisualStudio.Debugger.Interop;
-using Microsoft.VisualStudio.Shell;
 
-namespace Microsoft.VisualStudioTools {
+namespace Microsoft.VisualStudioTools
+{
     /// <summary>
     /// Registers an exception in the Debug->Exceptions window.
     /// 
@@ -27,7 +27,8 @@ namespace Microsoft.VisualStudioTools {
     /// to be registered independently (to provide their code/state settings).
     /// </summary>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
-    class ProvideDebugExceptionAttribute : RegistrationAttribute {
+    class ProvideDebugExceptionAttribute : RegistrationAttribute
+    {
         // EXCEPTION_STATE flags that are valid for DKM exception entries (directly under the engine key)
         private const enum_EXCEPTION_STATE DkmValidFlags =
             enum_EXCEPTION_STATE.EXCEPTION_STOP_FIRST_CHANCE |
@@ -41,49 +42,64 @@ namespace Microsoft.VisualStudioTools {
         private int _code;
         private enum_EXCEPTION_STATE _state;
 
-        public ProvideDebugExceptionAttribute(string engineGuid, string category, params string[] path) {
+        public ProvideDebugExceptionAttribute(string engineGuid, string category, params string[] path)
+        {
             _engineGuid = engineGuid;
             _category = category;
             _path = path;
             _state = enum_EXCEPTION_STATE.EXCEPTION_JUST_MY_CODE_SUPPORTED | enum_EXCEPTION_STATE.EXCEPTION_STOP_USER_UNCAUGHT;
         }
 
-        public int Code {
-            get {
+        public int Code
+        {
+            get
+            {
                 return _code;
             }
-            set {
+            set
+            {
                 _code = value;
             }
         }
 
-        public enum_EXCEPTION_STATE State {
-            get {
+        public enum_EXCEPTION_STATE State
+        {
+            get
+            {
                 return _state;
             }
-            set {
+            set
+            {
                 _state = value;
             }
         }
 
-        public bool BreakByDefault {
-            get {
+        public bool BreakByDefault
+        {
+            get
+            {
                 return _state.HasFlag(enum_EXCEPTION_STATE.EXCEPTION_STOP_USER_UNCAUGHT);
             }
-            set {
-                if (value) {
+            set
+            {
+                if (value)
+                {
                     _state |= enum_EXCEPTION_STATE.EXCEPTION_STOP_USER_UNCAUGHT;
-                } else {
+                }
+                else
+                {
                     _state &= ~enum_EXCEPTION_STATE.EXCEPTION_STOP_USER_UNCAUGHT;
                 }
             }
         }
 
-        public override void Register(RegistrationAttribute.RegistrationContext context) {
+        public override void Register(RegistrationAttribute.RegistrationContext context)
+        {
             var engineKey = context.CreateKey("AD7Metrics\\Exception\\" + _engineGuid);
 
             var key = engineKey.CreateSubkey(_category);
-            foreach (var pathElem in _path) {
+            foreach (var pathElem in _path)
+            {
                 key = key.CreateSubkey(pathElem);
             }
             key.SetValue("Code", _code);
@@ -95,12 +111,14 @@ namespace Microsoft.VisualStudioTools {
             // settings for the entire category without having to enumerate the entire category 
             // hive structure when loading the debug engine.
             string name = _path.LastOrDefault();
-            if (name == null || !BreakByDefault) {
+            if (name == null || !BreakByDefault)
+            {
                 engineKey.SetValue(name ?? "*", (int)(_state & DkmValidFlags));
             }
         }
 
-        public override void Unregister(RegistrationAttribute.RegistrationContext context) {
+        public override void Unregister(RegistrationAttribute.RegistrationContext context)
+        {
         }
     }
 }

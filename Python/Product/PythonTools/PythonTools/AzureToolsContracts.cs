@@ -17,8 +17,7 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace Microsoft.VisualStudio.Azure
-{
+namespace Microsoft.VisualStudio.Azure {
     /// <summary>
     /// An interface that an implementation of <see cref="T:Microsoft.VisualStudio.Shell.Interop.IVsHierarchy"/> for a project
     /// can optionally implement to receive notifications from an Azure project that adds it as a role.

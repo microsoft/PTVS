@@ -14,46 +14,53 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using Microsoft.VisualStudio.Language.Intellisense;
+using Microsoft.VisualStudioTools.MockVsTests;
+using Microsoft.VisualStudioTools.Project;
 using System;
 using System.IO;
 using System.Linq;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Language.Intellisense;
-using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudioTools.MockVsTests;
-using Microsoft.VisualStudioTools.Project;
 using TestUtilities.SharedProject;
 
-namespace TestUtilities.UI {
-    public static class TestExtensions {
-        public static IVisualStudioInstance ToVs(this SolutionFile self, VisualStudioApp app) {
-            if (app == null) {
+namespace TestUtilities.UI
+{
+    public static class TestExtensions
+    {
+        public static IVisualStudioInstance ToVs(this SolutionFile self, VisualStudioApp app)
+        {
+            if (app == null)
+            {
                 return self.ToMockVs();
             }
             return new VisualStudioInstance(self, app);
         }
 
-        public static string[] GetDisplayTexts(this ICompletionSession completionSession) {
+        public static string[] GetDisplayTexts(this ICompletionSession completionSession)
+        {
             return completionSession.CompletionSets.First().Completions.Select(x => x.DisplayText).ToArray();
         }
 
-        public static string[] GetInsertionTexts(this ICompletionSession completionSession) {
+        public static string[] GetInsertionTexts(this ICompletionSession completionSession)
+        {
             return completionSession.CompletionSets.First().Completions.Select(x => x.InsertionText).ToArray();
         }
 
-        public static bool GetIsFolderExpanded(this EnvDTE.Project project, string folder) {
+        public static bool GetIsFolderExpanded(this EnvDTE.Project project, string folder)
+        {
             return GetNodeState(project, folder, __VSHIERARCHYITEMSTATE.HIS_Expanded);
         }
 
-        public static bool GetIsItemBolded(this EnvDTE.Project project, string item) {
+        public static bool GetIsItemBolded(this EnvDTE.Project project, string item)
+        {
             return GetNodeState(project, item, __VSHIERARCHYITEMSTATE.HIS_Bold);
         }
 
-        public static bool GetNodeState(this EnvDTE.Project project, string item, __VSHIERARCHYITEMSTATE state) {
+        public static bool GetNodeState(this EnvDTE.Project project, string item, __VSHIERARCHYITEMSTATE state)
+        {
             IVsHierarchy hier = null;
             uint id = 0;
-            ThreadHelper.JoinableTaskFactory.RunAsync(async () => {
+            ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+            {
                 await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
                 hier = ((dynamic)project).Project as IVsHierarchy;
@@ -67,7 +74,8 @@ namespace TestUtilities.UI {
                 );
 
                 string itemPath = Path.Combine((string)projectDir, item);
-                if (ErrorHandler.Failed(hier.ParseCanonicalName(itemPath, out id))) {
+                if (ErrorHandler.Failed(hier.ParseCanonicalName(itemPath, out id)))
+                {
                     ErrorHandler.ThrowOnFailure(
                         hier.ParseCanonicalName(itemPath + "\\", out id)
                     );

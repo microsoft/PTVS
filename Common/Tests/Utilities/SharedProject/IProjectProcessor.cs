@@ -16,7 +16,8 @@
 
 using MSBuild = Microsoft.Build.Evaluation;
 
-namespace TestUtilities.SharedProject {
+namespace TestUtilities.SharedProject
+{
     /// <summary>
     /// Updates the generated file before and/or after the project file is generated.
     /// 
@@ -26,7 +27,8 @@ namespace TestUtilities.SharedProject {
     /// Classes implementing this interface should be exported with a ProjectExtensionAttribute
     /// specifying which project type the processor applies to.
     /// </summary>
-    public interface IProjectProcessor {
+    public interface IProjectProcessor
+    {
         /// <summary>
         /// Runs before any test case defined content is added to the project.
         /// 

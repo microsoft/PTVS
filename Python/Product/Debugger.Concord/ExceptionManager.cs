@@ -21,10 +21,6 @@ using System.Linq;
 using System.Text;
 using Microsoft.PythonTools.Debugger.Concord.Proxies.Structs;
 using Microsoft.PythonTools.Parsing;
-using Microsoft.VisualStudio.Debugger;
-using Microsoft.VisualStudio.Debugger.Breakpoints;
-using Microsoft.VisualStudio.Debugger.CustomRuntimes;
-using Microsoft.VisualStudio.Debugger.Exceptions;
 
 namespace Microsoft.PythonTools.Debugger.Concord {
     internal class ExceptionManager : DkmDataItem {
@@ -110,7 +106,7 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             }
         }
 
-        public bool MonitorExceptions { 
+        public bool MonitorExceptions {
             get {
                 return _monitorExceptions;
             }
@@ -183,8 +179,7 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             } catch {
             }
 
-            new RemoteComponent.RaiseExceptionRequest
-            {
+            new RemoteComponent.RaiseExceptionRequest {
                 ThreadId = thread.UniqueId,
                 Name = typeName,
                 AdditionalInformation = Encoding.Unicode.GetBytes(additionalInfo)

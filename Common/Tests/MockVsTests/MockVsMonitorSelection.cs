@@ -17,11 +17,11 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Shell.Interop;
 
-namespace Microsoft.VisualStudioTools.MockVsTests {
-    class MockVsMonitorSelection : IVsMonitorSelection, IVsMonitorSelection2 {
+namespace Microsoft.VisualStudioTools.MockVsTests
+{
+    class MockVsMonitorSelection : IVsMonitorSelection, IVsMonitorSelection2
+    {
         private readonly MockVs _vs;
         private uint _lastSelectionEventsCookie;
         private readonly Dictionary<uint, IVsSelectionEvents> _listeners = new Dictionary<uint, IVsSelectionEvents>();
@@ -41,32 +41,37 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         private ISelectionContainer _container;
 
 
-        public MockVsMonitorSelection(MockVs vs) {
+        public MockVsMonitorSelection(MockVs vs)
+        {
             _vs = vs;
             _emptyCtx = new MockVsTrackSelectionEx(this);
         }
 
         public int AdviseSelectionEvents(
             IVsSelectionEvents pSink,
-            [ComAliasName("Microsoft.VisualStudio.Shell.Interop.VSCOOKIE")]out uint pdwCookie) {
+            [ComAliasName("Microsoft.VisualStudio.Shell.Interop.VSCOOKIE")] out uint pdwCookie)
+        {
             _lastSelectionEventsCookie++;
             pdwCookie = _lastSelectionEventsCookie;
             _listeners.Add(pdwCookie, pSink);
             return VSConstants.S_OK;
         }
 
-        internal void NotifyElementChanged(MockVsTrackSelectionEx mockVsTrackSelectionEx, uint elementid) {
+        internal void NotifyElementChanged(MockVsTrackSelectionEx mockVsTrackSelectionEx, uint elementid)
+        {
             throw new NotImplementedException();
         }
 
-        internal void NotifySelectionContextChanged(MockVsTrackSelectionEx mockVsTrackSelectionEx) {
+        internal void NotifySelectionContextChanged(MockVsTrackSelectionEx mockVsTrackSelectionEx)
+        {
             var oldHier = _hier;
             var oldItem = _itemid;
             var oldMis = _mis;
             var oldContainer = _container;
 
             var sel = mockVsTrackSelectionEx ?? _emptyCtx;
-            if (sel != null) {
+            if (sel != null)
+            {
                 sel.GetCurrentSelection(
                     out _hier,
                     out _itemid,
@@ -78,9 +83,11 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             if (oldHier != _hier ||
                 oldItem != _itemid ||
                 oldMis != _mis ||
-                oldContainer != _container) {
+                oldContainer != _container)
+            {
                 // something changed, tell our listeners...
-                foreach (var listener in _listeners.Values) {
+                foreach (var listener in _listeners.Values)
+                {
                     listener.OnSelectionChanged(
                         oldHier,
                         oldItem,
@@ -96,15 +103,18 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         public int UnadviseSelectionEvents(
-            [ComAliasName("Microsoft.VisualStudio.Shell.Interop.VSCOOKIE")]uint dwCookie) {
+            [ComAliasName("Microsoft.VisualStudio.Shell.Interop.VSCOOKIE")] uint dwCookie)
+        {
             _listeners.Remove(dwCookie);
             return VSConstants.S_OK;
         }
 
         public int GetCmdUIContextCookie(
-            [ComAliasName("Microsoft.VisualStudio.OLE.Interop.REFGUID")]ref Guid rguidCmdUI,
-            [ComAliasName("Microsoft.VisualStudio.Shell.Interop.VSCOOKIE")]out uint pdwCmdUICookie) {
-            if (_cmdUIContextsByGuid.TryGetValue(rguidCmdUI, out pdwCmdUICookie)) {
+            [ComAliasName("Microsoft.VisualStudio.OLE.Interop.REFGUID")] ref Guid rguidCmdUI,
+            [ComAliasName("Microsoft.VisualStudio.Shell.Interop.VSCOOKIE")] out uint pdwCmdUICookie)
+        {
+            if (_cmdUIContextsByGuid.TryGetValue(rguidCmdUI, out pdwCmdUICookie))
+            {
                 return VSConstants.S_OK;
             }
 
@@ -117,35 +127,45 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         public int IsCmdUIContextActive(
-            [ComAliasName("Microsoft.VisualStudio.Shell.Interop.VSCOOKIE")]uint dwCmdUICookie,
-            [ComAliasName("Microsoft.VisualStudio.OLE.Interop.BOOL")]out int pfActive) {
+            [ComAliasName("Microsoft.VisualStudio.Shell.Interop.VSCOOKIE")] uint dwCmdUICookie,
+            [ComAliasName("Microsoft.VisualStudio.OLE.Interop.BOOL")] out int pfActive)
+        {
             pfActive = _cmdUIContextsActive[(int)dwCmdUICookie] ? 1 : 0;
             return VSConstants.S_OK;
         }
 
         public int SetCmdUIContext(
-            [ComAliasName("Microsoft.VisualStudio.Shell.Interop.VSCOOKIE")]uint dwCmdUICookie,
-            [ComAliasName("Microsoft.VisualStudio.OLE.Interop.BOOL")]int fActive) {
+            [ComAliasName("Microsoft.VisualStudio.Shell.Interop.VSCOOKIE")] uint dwCmdUICookie,
+            [ComAliasName("Microsoft.VisualStudio.OLE.Interop.BOOL")] int fActive)
+        {
             _cmdUIContextsActive[(int)dwCmdUICookie] = fActive != 0;
-            foreach (var kvp in _listeners) {
+            foreach (var kvp in _listeners)
+            {
                 kvp.Value.OnCmdUIContextChanged(dwCmdUICookie, fActive);
             }
 
             return VSConstants.S_OK;
         }
 
-        public int GetCurrentSelection(out IntPtr ppHier, out uint pitemid, out IVsMultiItemSelect ppMIS, out IntPtr ppSC) {
+        public int GetCurrentSelection(out IntPtr ppHier, out uint pitemid, out IVsMultiItemSelect ppMIS, out IntPtr ppSC)
+        {
             ppMIS = _mis;
             ppSC = IntPtr.Zero;
 
-            if (_hier != null) {
+            if (_hier != null)
+            {
                 ppHier = Marshal.GetIUnknownForObject(_hier);
-                if (_mis == null) {
+                if (_mis == null)
+                {
                     pitemid = _itemid;
-                } else {
+                }
+                else
+                {
                     pitemid = VSConstants.VSITEMID_SELECTION;
                 }
-            } else {
+            }
+            else
+            {
                 ppHier = IntPtr.Zero;
                 pitemid = 0;
             }
@@ -153,13 +173,17 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             return VSConstants.S_OK;
         }
 
-        public int GetCurrentElementValue([ComAliasName("Microsoft.VisualStudio.Shell.Interop.VSSELELEMID")]uint elementid, out object pvarValue) {
+        public int GetCurrentElementValue([ComAliasName("Microsoft.VisualStudio.Shell.Interop.VSSELELEMID")] uint elementid, out object pvarValue)
+        {
             throw new NotImplementedException();
         }
 
-        public int GetElementID(ref Guid rguidElement, out uint pElementId) {
-            for (int i = 0; i < _selectionContexts.Count; i++) {
-                if (_selectionContexts[i].Id == rguidElement) {
+        public int GetElementID(ref Guid rguidElement, out uint pElementId)
+        {
+            for (int i = 0; i < _selectionContexts.Count; i++)
+            {
+                if (_selectionContexts[i].Id == rguidElement)
+                {
                     pElementId = (uint)i;
                     return VSConstants.S_OK;
                 }
@@ -168,15 +192,18 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             return VSConstants.E_INVALIDARG;
         }
 
-        public int GetEmptySelectionContext(out IVsTrackSelectionEx ppEmptySelCtxt) {
+        public int GetEmptySelectionContext(out IVsTrackSelectionEx ppEmptySelCtxt)
+        {
             ppEmptySelCtxt = _emptyCtx;
             return VSConstants.S_OK;
         }
 
-        class SelectionContext {
+        class SelectionContext
+        {
             public readonly Guid Id;
 
-            public SelectionContext(Guid id) {
+            public SelectionContext(Guid id)
+            {
                 Id = id;
             }
         }

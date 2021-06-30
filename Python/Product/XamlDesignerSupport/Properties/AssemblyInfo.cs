@@ -17,7 +17,6 @@
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Windows;
 
 [assembly: AssemblyTitle("Visual Studio - Python XAML designer support")]
 [assembly: AssemblyDescription("Provides integration between Python projects and the XAML designer.")]

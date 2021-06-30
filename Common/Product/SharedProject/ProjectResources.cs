@@ -15,7 +15,6 @@
 // permissions and limitations under the License.
 
 using System;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
@@ -23,8 +22,10 @@ using System.Resources;
 using System.Runtime.CompilerServices;
 using System.Threading;
 
-namespace Microsoft.VisualStudioTools.Project {
-    internal class SR {
+namespace Microsoft.VisualStudioTools.Project
+{
+    internal class SR
+    {
         internal const string AddReferenceDialogTitle = "AddReferenceDialogTitle";
         internal const string AddReferenceExtensions = "AddReferenceExtensions";
         internal const string AddToNullProjectError = "AddToNullProjectError";
@@ -195,8 +196,10 @@ namespace Microsoft.VisualStudioTools.Project {
             LazyThreadSafetyMode.ExecutionAndPublication
         );
 
-        private static ResourceManager Manager {
-            get {
+        private static ResourceManager Manager
+        {
+            get
+            {
                 return _manager.Value;
             }
         }
@@ -210,13 +213,16 @@ namespace Microsoft.VisualStudioTools.Project {
 #endif
 
 
-        protected static string GetStringInternal(ResourceManager manager, string value, object[] args) {
+        protected static string GetStringInternal(ResourceManager manager, string value, object[] args)
+        {
             string result = manager.GetString(value, CultureInfo.CurrentUICulture);
-            if (result == null) {
+            if (result == null)
+            {
                 return null;
             }
 
-            if (args.Length == 0) {
+            if (args.Length == 0)
+            {
                 Debug.Assert(result.IndexOf("{0}", StringComparison.Ordinal) < 0, "Resource string '" + value + "' requires format arguments.");
                 return result;
             }
@@ -234,7 +240,8 @@ namespace Microsoft.VisualStudioTools.Project {
             return string.Format(CultureInfo.CurrentCulture, result, args);
         }
 
-        public static string GetString(string value, params object[] args) {
+        public static string GetString(string value, params object[] args)
+        {
             var result = GetStringInternal(Manager, value, args);
             Debug.Assert(result != null, "String resource '" + value + "' is missing");
             return result ?? value;
@@ -253,10 +260,14 @@ namespace Microsoft.VisualStudioTools.Project {
             [CallerFilePath] string callerFile = null,
             [CallerLineNumber] int callerLineNumber = 0,
             [CallerMemberName] string callerName = null
-        ) {
-            if (string.IsNullOrEmpty(callerName)) {
+        )
+        {
+            if (string.IsNullOrEmpty(callerName))
+            {
                 callerName = callerType != null ? callerType.FullName : string.Empty;
-            } else if (callerType != null) {
+            }
+            else if (callerType != null)
+            {
                 callerName = callerType.FullName + "." + callerName;
             }
 

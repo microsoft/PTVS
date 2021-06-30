@@ -14,13 +14,15 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using Microsoft.VisualStudio.Setup.Configuration;
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
-using Microsoft.VisualStudio.Setup.Configuration;
 
-namespace TestUtilities {
-    public static class VisualStudioPath {
+namespace TestUtilities
+{
+    public static class VisualStudioPath
+    {
         private static Lazy<string> RootLazy { get; } = new Lazy<string>(GetVsRoot);
         private static Lazy<string> CommonExtensionsLazy { get; } = new Lazy<string>(() => Root == null ? null : Path.Combine(Root, @"CommonExtensions\"));
         private static Lazy<string> PrivateAssembliesLazy { get; } = new Lazy<string>(() => Root == null ? null : Path.Combine(Root, @"PrivateAssemblies\"));
@@ -31,15 +33,20 @@ namespace TestUtilities {
         public static string PrivateAssemblies => PrivateAssembliesLazy.Value;
         public static string PublicAssemblies => PublicAssembliesLazy.Value;
 
-        private static string GetVsRoot() {
-            try {
+        private static string GetVsRoot()
+        {
+            try
+            {
                 var configuration = (ISetupConfiguration2)new SetupConfiguration();
                 var current = (ISetupInstance2)configuration.GetInstanceForCurrentProcess();
                 var path = current.ResolvePath(current.GetProductPath());
                 return Path.GetDirectoryName(path);
-            } catch (COMException) {
+            }
+            catch (COMException)
+            {
                 var path = Environment.GetEnvironmentVariable($"VisualStudio_IDE_{AssemblyVersionInfo.VSVersion}");
-                if (string.IsNullOrEmpty(path)) {
+                if (string.IsNullOrEmpty(path))
+                {
                     path = Environment.GetEnvironmentVariable("VisualStudio_IDE");
                 }
                 return path;

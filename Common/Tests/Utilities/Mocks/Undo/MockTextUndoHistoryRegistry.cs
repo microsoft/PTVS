@@ -14,23 +14,26 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using Microsoft.VisualStudio.Text.Operations;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using Microsoft.VisualStudio.Text.Operations;
 
-namespace TestUtilities.Mocks {
+namespace TestUtilities.Mocks
+{
     [ExcludeFromCodeCoverage]
     [Export(typeof(ITextUndoHistoryRegistry))]
     [Export(typeof(MockTextUndoHistoryRegistry))]
-    public class MockTextUndoHistoryRegistry : ITextUndoHistoryRegistry {
+    public class MockTextUndoHistoryRegistry : ITextUndoHistoryRegistry
+    {
         private readonly Dictionary<ITextUndoHistory, int> _histories;
         private readonly Dictionary<KeyWeakReference, ITextUndoHistory> _weakContextMapping;
         private readonly Dictionary<object, ITextUndoHistory> _strongContextMapping;
 
-        public MockTextUndoHistoryRegistry() {
+        public MockTextUndoHistoryRegistry()
+        {
             // set up the list of histories
             _histories = new Dictionary<ITextUndoHistory, int>();
 
@@ -49,8 +52,10 @@ namespace TestUtilities.Mocks {
         /// </summary>
         /// <param name="context"></param>
         /// <returns></returns>
-        public ITextUndoHistory RegisterHistory(object context) {
-            if (context == null) {
+        public ITextUndoHistory RegisterHistory(object context)
+        {
+            if (context == null)
+            {
                 throw new ArgumentNullException(nameof(context));
             }
 
@@ -63,13 +68,17 @@ namespace TestUtilities.Mocks {
         /// <param name="context"></param>
         /// <param name="keepAlive"></param>
         /// <returns></returns>
-        public ITextUndoHistory RegisterHistory(object context, bool keepAlive) {
-            if (context == null) {
+        public ITextUndoHistory RegisterHistory(object context, bool keepAlive)
+        {
+            if (context == null)
+            {
                 throw new ArgumentNullException(nameof(context));
             }
 
-            if (_strongContextMapping.TryGetValue(context, out var result)) {
-                if (!keepAlive) {
+            if (_strongContextMapping.TryGetValue(context, out var result))
+            {
+                if (!keepAlive)
+                {
                     _strongContextMapping.Remove(context);
                     _weakContextMapping.Add(new KeyWeakReference(context), result);
                 }
@@ -78,8 +87,10 @@ namespace TestUtilities.Mocks {
             }
 
             var reference = new KeyWeakReference(context);
-            if (_weakContextMapping.TryGetValue(reference, out result)) {
-                if (keepAlive) {
+            if (_weakContextMapping.TryGetValue(reference, out result))
+            {
+                if (keepAlive)
+                {
                     _weakContextMapping.Remove(reference);
                     _strongContextMapping.Add(context, result);
                 }
@@ -90,9 +101,12 @@ namespace TestUtilities.Mocks {
             result = new MockTextUndoHistory(this);
             _histories.Add(result, 1);
 
-            if (keepAlive) {
+            if (keepAlive)
+            {
                 _strongContextMapping.Add(context, result);
-            } else {
+            }
+            else
+            {
                 _weakContextMapping.Add(reference, result);
             }
 
@@ -104,12 +118,15 @@ namespace TestUtilities.Mocks {
         /// </summary>
         /// <param name="context"></param>
         /// <returns></returns>
-        public ITextUndoHistory GetHistory(object context) {
-            if (context == null) {
+        public ITextUndoHistory GetHistory(object context)
+        {
+            if (context == null)
+            {
                 throw new ArgumentNullException(nameof(context));
             }
 
-            if (!TryGetHistory(context, out var history)) {
+            if (!TryGetHistory(context, out var history))
+            {
                 throw new InvalidOperationException("Cannot find context in registry");
             }
 
@@ -122,8 +139,10 @@ namespace TestUtilities.Mocks {
         /// <param name="context"></param>
         /// <param name="history"></param>
         /// <returns></returns>
-        public bool TryGetHistory(object context, out ITextUndoHistory history) {
-            if (context == null) {
+        public bool TryGetHistory(object context, out ITextUndoHistory history)
+        {
+            if (context == null)
+            {
                 throw new ArgumentNullException(nameof(context));
             }
 
@@ -136,12 +155,15 @@ namespace TestUtilities.Mocks {
         /// </summary>
         /// <param name="context"></param>
         /// <param name="history"></param>
-        public void AttachHistory(object context, ITextUndoHistory history) {
-            if (context == null) {
+        public void AttachHistory(object context, ITextUndoHistory history)
+        {
+            if (context == null)
+            {
                 throw new ArgumentNullException(nameof(context));
             }
 
-            if (history == null) {
+            if (history == null)
+            {
                 throw new ArgumentNullException(nameof(history));
             }
 
@@ -154,28 +176,38 @@ namespace TestUtilities.Mocks {
         /// <param name="context"></param>
         /// <param name="history"></param>
         /// <param name="keepAlive"></param>
-        public void AttachHistory(object context, ITextUndoHistory history, bool keepAlive) {
-            if (context == null) {
+        public void AttachHistory(object context, ITextUndoHistory history, bool keepAlive)
+        {
+            if (context == null)
+            {
                 throw new ArgumentNullException(nameof(context));
             }
 
-            if (history == null) {
+            if (history == null)
+            {
                 throw new ArgumentNullException(nameof(history));
             }
 
-            if (_strongContextMapping.ContainsKey(context) || _weakContextMapping.ContainsKey(new KeyWeakReference(context))) {
+            if (_strongContextMapping.ContainsKey(context) || _weakContextMapping.ContainsKey(new KeyWeakReference(context)))
+            {
                 throw new InvalidOperationException("Attached history already containst context");
             }
 
-            if (!_histories.ContainsKey(history)) {
+            if (!_histories.ContainsKey(history))
+            {
                 _histories.Add(history, 1);
-            } else {
+            }
+            else
+            {
                 ++_histories[history];
             }
 
-            if (keepAlive) {
+            if (keepAlive)
+            {
                 _strongContextMapping.Add(context, history);
-            } else {
+            }
+            else
+            {
                 _weakContextMapping.Add(new KeyWeakReference(context), history);
             }
         }
@@ -184,12 +216,15 @@ namespace TestUtilities.Mocks {
         /// 
         /// </summary>
         /// <param name="history"></param>
-        public void RemoveHistory(ITextUndoHistory history) {
-            if (history == null) {
+        public void RemoveHistory(ITextUndoHistory history)
+        {
+            if (history == null)
+            {
                 throw new ArgumentNullException(nameof(history));
             }
 
-            if (!_histories.ContainsKey(history)) {
+            if (!_histories.ContainsKey(history))
+            {
                 return;
             }
 

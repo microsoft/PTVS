@@ -16,7 +16,6 @@
 
 using System;
 using System.Runtime.InteropServices;
-using Microsoft.WebTools.Languages.Html.VS.Package.Common;
 
 namespace Microsoft.PythonTools.Django {
     [Guid(GuidList.guidDjangoEditorFactoryString)]

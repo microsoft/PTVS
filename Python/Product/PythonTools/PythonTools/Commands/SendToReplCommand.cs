@@ -27,7 +27,6 @@ using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.InteractiveWindow.Shell;
-using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
@@ -152,7 +151,7 @@ namespace Microsoft.PythonTools.Commands {
 
         public override int? EditFilterQueryStatus(ref VisualStudio.OLE.Interop.OLECMD cmd, IntPtr pCmdText) {
             var activeView = CommonPackage.GetActiveTextView(_serviceProvider);
-            
+
             Intellisense.VsProjectAnalyzer analyzer;
             if (activeView != null && (analyzer = activeView.GetAnalyzerAtCaret(_serviceProvider)) != null) {
 
@@ -282,7 +281,7 @@ namespace Microsoft.PythonTools.Commands {
                 // So that we don't dedent "x = 1" when we submit it by its self.
 
                 var combinedText = (pendingInput ?? string.Empty) + input;
-                var oldLineCount =  string.IsNullOrEmpty(pendingInput) ?
+                var oldLineCount = string.IsNullOrEmpty(pendingInput) ?
                     0 :
                     pendingInput.Split(_newLineChars, StringSplitOptions.None).Length - 1;
 

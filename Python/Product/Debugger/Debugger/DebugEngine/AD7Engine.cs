@@ -21,7 +21,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Web;
 using System.Windows.Forms;
 using Microsoft.PythonTools.Debugger.Remote;
@@ -30,7 +29,6 @@ using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Debugger.Interop;
 using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
 using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.Debugger.DebugEngine {
@@ -515,7 +513,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                 _modules.Clear();
 
                 debuggedProcess.Dispose();
-            } else if (eventObject is AD7CustomEvent) { 
+            } else if (eventObject is AD7CustomEvent) {
             } else {
                 Debug.Fail("Unknown synchronous event");
             }
@@ -631,35 +629,33 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         // This method can forward the call to the appropriate form of the Debugging SDK Helpers function, SetMetric.
         int IDebugEngine2.SetMetric(string pszMetric, object varValue) {
             switch (pszMetric) {
-                case "JustMyCodeStepping":
-                    {
-                        var enabledUint = varValue as uint?;
-                        if (enabledUint.HasValue) {
-                            var enabled = enabledUint.Value != 0;
-                            if (_justMyCodeEnabled != enabled) {
-                                _justMyCodeEnabled = enabled;
-                                TaskHelpers.RunSynchronouslyOnUIThread(ct => SetExceptionInfoAsync(_defaultBreakOnExceptionMode, _breakOnException, ct));
-                            }
+                case "JustMyCodeStepping": {
+                    var enabledUint = varValue as uint?;
+                    if (enabledUint.HasValue) {
+                        var enabled = enabledUint.Value != 0;
+                        if (_justMyCodeEnabled != enabled) {
+                            _justMyCodeEnabled = enabled;
+                            TaskHelpers.RunSynchronouslyOnUIThread(ct => SetExceptionInfoAsync(_defaultBreakOnExceptionMode, _breakOnException, ct));
                         }
-                        return VSConstants.S_OK;
+                    }
+                    return VSConstants.S_OK;
+                }
+
+                case DebugOptionsMetric: {
+                    if (_engineCreated) {
+                        Debug.Fail(DebugOptionsMetric + " metric can only be sent immediately in response to IDebugEngineCreateEvent2.");
+                        return VSConstants.E_FAIL;
                     }
 
-                case DebugOptionsMetric:
-                    {
-                        if (_engineCreated) {
-                            Debug.Fail(DebugOptionsMetric + " metric can only be sent immediately in response to IDebugEngineCreateEvent2.");
-                            return VSConstants.E_FAIL;
-                        }
-
-                        var options = varValue as string;
-                        if (!string.IsNullOrEmpty(options)) {
-                            // ParseOptions only overwrites the flags that are explicitly set to True or False, leaving any
-                            // already existing values intact. Thus, any options that were previouly passed to LaunchSuspended
-                            // are preserved unless explicitly overwritten here. 
-                            ParseOptions(options);
-                        }
-                        return VSConstants.S_OK;
+                    var options = varValue as string;
+                    if (!string.IsNullOrEmpty(options)) {
+                        // ParseOptions only overwrites the flags that are explicitly set to True or False, leaving any
+                        // already existing values intact. Thus, any options that were previouly passed to LaunchSuspended
+                        // are preserved unless explicitly overwritten here. 
+                        ParseOptions(options);
                     }
+                    return VSConstants.S_OK;
+                }
 
                 default:
                     return VSConstants.S_OK;

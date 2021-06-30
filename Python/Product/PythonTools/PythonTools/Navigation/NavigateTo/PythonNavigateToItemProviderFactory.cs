@@ -16,13 +16,10 @@
 
 using System;
 using System.ComponentModel.Composition;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Language.Intellisense;
-using Microsoft.VisualStudio.Language.NavigateTo.Interfaces;
-using Microsoft.VisualStudio.Text.PatternMatching;
-using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudioTools;
 using Microsoft.PythonTools.Editor;
+using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Language.NavigateTo.Interfaces;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Navigation.NavigateTo {
     [Export(typeof(INavigateToItemProviderFactory))]

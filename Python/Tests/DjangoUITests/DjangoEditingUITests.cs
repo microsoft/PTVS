@@ -28,16 +28,13 @@ using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Operations;
 using TestUtilities;
-using util::TestUtilities.UI;
 using TestUtilities.UI.Python;
+using util::TestUtilities.UI;
 #if DEV16_OR_LATER
 using Microsoft.WebTools.Languages.Html.Editor.Document;
 using Microsoft.WebTools.Languages.Html.Editor.Tree;
 using Microsoft.WebTools.Languages.Html.Editor.Settings;
 #else
-using Microsoft.Html.Editor.Document;
-using Microsoft.Html.Editor.Settings;
-using Microsoft.Html.Editor.Tree;
 #endif
 
 namespace DjangoUITests {
@@ -1046,107 +1043,107 @@ namespace DjangoUITests {
         }
 
         private static void SelectAllAndDeleteTest(VisualStudioApp app, string filename) {
-                Window window;
-                var item = OpenDjangoProjectItem(app, filename, out window);
+            Window window;
+            var item = OpenDjangoProjectItem(app, filename, out window);
 
-                item.Invoke(() => {
-                    using (var edit = item.TextView.TextBuffer.CreateEdit()) {
-                        edit.Delete(new Span(0, item.TextView.TextBuffer.CurrentSnapshot.Length));
-                        edit.Apply();
-                    }
-                });
+            item.Invoke(() => {
+                using (var edit = item.TextView.TextBuffer.CreateEdit()) {
+                    edit.Delete(new Span(0, item.TextView.TextBuffer.CurrentSnapshot.Length));
+                    edit.Apply();
+                }
+            });
 
-                WaitForHtmlTreeUpdate(item.TextView);
+            WaitForHtmlTreeUpdate(item.TextView);
 
-                var snapshot = item.TextView.TextBuffer.CurrentSnapshot;
-                var classifier = item.Classifier;
-                var spans = classifier.GetClassificationSpans(new SnapshotSpan(snapshot, 0, snapshot.Length));
-                Classification.Verify(spans);
-                window.Close(vsSaveChanges.vsSaveChangesNo);
+            var snapshot = item.TextView.TextBuffer.CurrentSnapshot;
+            var classifier = item.Classifier;
+            var spans = classifier.GetClassificationSpans(new SnapshotSpan(snapshot, 0, snapshot.Length));
+            Classification.Verify(spans);
+            window.Close(vsSaveChanges.vsSaveChangesNo);
         }
 
         private static void DeletionTest(VisualStudioApp app, string filename, int line, int column, int deletionCount, params Classification[] expected) {
-                Window window;
-                var item = OpenDjangoProjectItem(app, filename, out window);
-                item.MoveCaret(line, column);
-                for (int i = 0; i < deletionCount; i++) {
-                    Keyboard.Backspace();
-                }
-
-                WaitForHtmlTreeUpdate(item.TextView);
-
-                var snapshot = item.TextView.TextBuffer.CurrentSnapshot;
-                var classifier = item.Classifier;
-                var spans = classifier.GetClassificationSpans(new SnapshotSpan(snapshot, 0, snapshot.Length));
-                Classification.Verify(
-                    spans,
-                    expected
-                );
-                window.Close(vsSaveChanges.vsSaveChangesNo);
+            Window window;
+            var item = OpenDjangoProjectItem(app, filename, out window);
+            item.MoveCaret(line, column);
+            for (int i = 0; i < deletionCount; i++) {
+                Keyboard.Backspace();
             }
 
+            WaitForHtmlTreeUpdate(item.TextView);
+
+            var snapshot = item.TextView.TextBuffer.CurrentSnapshot;
+            var classifier = item.Classifier;
+            var spans = classifier.GetClassificationSpans(new SnapshotSpan(snapshot, 0, snapshot.Length));
+            Classification.Verify(
+                spans,
+                expected
+            );
+            window.Close(vsSaveChanges.vsSaveChangesNo);
+        }
+
         private static void PasteTest(VisualStudioApp app, string filename, int line, int column, string selectionText, string pasteText, params Classification[] expected) {
-                Window window;
-                var item = OpenDjangoProjectItem(app, filename, out window);
-                item.MoveCaret(line, column);
+            Window window;
+            var item = OpenDjangoProjectItem(app, filename, out window);
+            item.MoveCaret(line, column);
 
-                var snapshot = item.TextView.TextBuffer.CurrentSnapshot;
+            var snapshot = item.TextView.TextBuffer.CurrentSnapshot;
 
-                var selectionStart = snapshot.GetText().IndexOf(selectionText);
-                item.Invoke(() => {
-                    item.TextView.Selection.Select(new SnapshotSpan(item.TextView.TextBuffer.CurrentSnapshot, new Span(selectionStart, selectionText.Length)), false);
-                    System.Windows.Clipboard.SetText(pasteText);
-                });
+            var selectionStart = snapshot.GetText().IndexOf(selectionText);
+            item.Invoke(() => {
+                item.TextView.Selection.Select(new SnapshotSpan(item.TextView.TextBuffer.CurrentSnapshot, new Span(selectionStart, selectionText.Length)), false);
+                System.Windows.Clipboard.SetText(pasteText);
+            });
 
-                WaitForTextChange(item.TextView, () => {
-                    Keyboard.ControlV();
-                });
-                WaitForHtmlTreeUpdate(item.TextView);
+            WaitForTextChange(item.TextView, () => {
+                Keyboard.ControlV();
+            });
+            WaitForHtmlTreeUpdate(item.TextView);
 
-                IList<ClassificationSpan> spans = null;
-                item.Invoke(() => {
-                    snapshot = item.TextView.TextBuffer.CurrentSnapshot;
-                    var classifier = item.Classifier;
-                    spans = classifier.GetClassificationSpans(new SnapshotSpan(snapshot, 0, snapshot.Length));
-                });
-                Assert.IsNotNull(spans);
-                Classification.Verify(
-                    spans,
-                    expected
-                );
-                window.Close(vsSaveChanges.vsSaveChangesNo);
+            IList<ClassificationSpan> spans = null;
+            item.Invoke(() => {
+                snapshot = item.TextView.TextBuffer.CurrentSnapshot;
+                var classifier = item.Classifier;
+                spans = classifier.GetClassificationSpans(new SnapshotSpan(snapshot, 0, snapshot.Length));
+            });
+            Assert.IsNotNull(spans);
+            Classification.Verify(
+                spans,
+                expected
+            );
+            window.Close(vsSaveChanges.vsSaveChangesNo);
         }
 
         private static void CutUndoTest(VisualStudioApp app, string filename, int line, int column, string selectionText, params Classification[] expected) {
-                Window window;
-                var item = OpenDjangoProjectItem(app, filename, out window);
-                item.MoveCaret(line, column);
+            Window window;
+            var item = OpenDjangoProjectItem(app, filename, out window);
+            item.MoveCaret(line, column);
 
-                var snapshot = item.TextView.TextBuffer.CurrentSnapshot;
+            var snapshot = item.TextView.TextBuffer.CurrentSnapshot;
 
-                var selectionStart = snapshot.GetText().IndexOf(selectionText);
-                item.Invoke(() => {
-                    item.TextView.Selection.Select(new SnapshotSpan(item.TextView.TextBuffer.CurrentSnapshot, new Span(selectionStart, selectionText.Length)), false);
-                    Keyboard.ControlX();
-                });
+            var selectionStart = snapshot.GetText().IndexOf(selectionText);
+            item.Invoke(() => {
+                item.TextView.Selection.Select(new SnapshotSpan(item.TextView.TextBuffer.CurrentSnapshot, new Span(selectionStart, selectionText.Length)), false);
+                Keyboard.ControlX();
+            });
 
-                WaitForTextChange(item.TextView, () => {
-                    Keyboard.ControlZ();
-                });
-                WaitForHtmlTreeUpdate(item.TextView);
+            WaitForTextChange(item.TextView, () => {
+                Keyboard.ControlZ();
+            });
+            WaitForHtmlTreeUpdate(item.TextView);
 
-                IList<ClassificationSpan> spans = null;
-                item.Invoke(() => {
-                    snapshot = item.TextView.TextBuffer.CurrentSnapshot;
-                    var classifier = item.Classifier;
-                    spans = classifier.GetClassificationSpans(new SnapshotSpan(snapshot, 0, snapshot.Length));
-                });
-                Assert.IsNotNull(spans);
-                Classification.Verify(
-                    spans,
-                    expected
-                );
-                window.Close(vsSaveChanges.vsSaveChangesNo);
+            IList<ClassificationSpan> spans = null;
+            item.Invoke(() => {
+                snapshot = item.TextView.TextBuffer.CurrentSnapshot;
+                var classifier = item.Classifier;
+                spans = classifier.GetClassificationSpans(new SnapshotSpan(snapshot, 0, snapshot.Length));
+            });
+            Assert.IsNotNull(spans);
+            Classification.Verify(
+                spans,
+                expected
+            );
+            window.Close(vsSaveChanges.vsSaveChangesNo);
         }
 
         private static void InsertionTest(VisualStudioApp app, string filename, int line, int column, string insertionText, params Classification[] expected) {

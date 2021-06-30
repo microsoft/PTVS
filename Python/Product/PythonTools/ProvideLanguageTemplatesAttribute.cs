@@ -33,15 +33,15 @@ namespace Microsoft.PythonTools {
     internal sealed class ProvideLanguageTemplatesAttribute : RegistrationAttribute {
         private readonly string _projectFactory, _languageName, _package, _languageGuid, _description, _templateGroup,
             _codeFileExtension, _templateFolder, _webProjectGuid;
-        
-        public ProvideLanguageTemplatesAttribute(string projectFactory, string languageName, string package, 
+
+        public ProvideLanguageTemplatesAttribute(string projectFactory, string languageName, string package,
             string templateGroup, string description, string languageProjectGuid, string codeFileExtension, string templateFolder, string webProjectGuid) {
             _projectFactory = projectFactory;
             _languageName = languageName;
             _package = package;
             _description = description;
             _languageGuid = languageProjectGuid;
-            _templateGroup = templateGroup;            
+            _templateGroup = templateGroup;
             _codeFileExtension = codeFileExtension;
             _templateFolder = templateGroup;
             _webProjectGuid = webProjectGuid;

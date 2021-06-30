@@ -32,7 +32,6 @@ using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Win32;
-using PythonToolsTests;
 using TestUtilities;
 using TestUtilities.Mocks;
 using TestUtilities.Python;
@@ -774,7 +773,7 @@ namespace PythonToolsUITests {
 
         [TestMethod, Priority(UnitTestPriority.P1)]
         public void FilterInterpreterPython2() {
-            PythonVersion pythonInterpreter =   PythonPaths.Python27_x64 ??
+            PythonVersion pythonInterpreter = PythonPaths.Python27_x64 ??
                                                 PythonPaths.Python27;
 
             pythonInterpreter.AssertInstalled("Unable to run test because python 2.7 must be installed");
@@ -783,7 +782,7 @@ namespace PythonToolsUITests {
 
         [TestMethod, Priority(UnitTestPriority.P0)]
         public void FilterInterpreterPython3() {
-            PythonVersion pythonInterpreter =   PythonPaths.Python37_x64 ??
+            PythonVersion pythonInterpreter = PythonPaths.Python37_x64 ??
                                                 PythonPaths.Python37 ??
                                                 PythonPaths.Python36_x64 ??
                                                 PythonPaths.Python36 ??
@@ -804,7 +803,7 @@ namespace PythonToolsUITests {
 
         [TestMethod, Priority(UnitTestPriority.P0)]
         public void FilterInterpreterConda3() {
-            PythonVersion condaInterpreter =    PythonPaths.Anaconda37_x64 ??
+            PythonVersion condaInterpreter = PythonPaths.Anaconda37_x64 ??
                                                 PythonPaths.Anaconda36_x64 ??
                                                 PythonPaths.Anaconda37 ??
                                                 PythonPaths.Anaconda36;

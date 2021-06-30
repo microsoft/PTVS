@@ -14,28 +14,34 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
 using Microsoft.Build.Construction;
+using System;
 using MSBuild = Microsoft.Build.Evaluation;
 
-namespace TestUtilities.SharedProject {
-    public class TargetDefinition : ProjectContentGenerator {
+namespace TestUtilities.SharedProject
+{
+    public class TargetDefinition : ProjectContentGenerator
+    {
         public readonly string Name;
         public readonly Action<ProjectTargetElement>[] Creators;
-        
-        public TargetDefinition(string name, params Action<ProjectTargetElement>[] creators) {
+
+        public TargetDefinition(string name, params Action<ProjectTargetElement>[] creators)
+        {
             Name = name;
             Creators = creators;
         }
 
         public string DependsOnTargets { get; set; }
 
-        public override void Generate(ProjectType projectType, MSBuild.Project project) {
+        public override void Generate(ProjectType projectType, MSBuild.Project project)
+        {
             var target = project.Xml.AddTarget(Name);
-            if (!string.IsNullOrEmpty(DependsOnTargets)) {
+            if (!string.IsNullOrEmpty(DependsOnTargets))
+            {
                 target.DependsOnTargets = DependsOnTargets;
             }
-            foreach (var creator in Creators) {
+            foreach (var creator in Creators)
+            {
                 creator(target);
             }
         }

@@ -15,7 +15,6 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Threading;
 using System.Windows.Automation;
 
 namespace TestUtilities.UI.Python {
@@ -100,8 +99,7 @@ namespace TestUtilities.UI.Python {
             }
         }
 
-        public string WorkingDir
-        {
+        public string WorkingDir {
             get {
                 return WorkingDirectoryTextBox.GetValue();
             }

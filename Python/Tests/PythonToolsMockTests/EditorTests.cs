@@ -20,13 +20,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using System.Threading;
-using pythontools::Microsoft.PythonTools;
-using pythontools::Microsoft.PythonTools.Intellisense;
 using analysis::Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools.MockVsTests;
+using pythontools::Microsoft.PythonTools;
+using pythontools::Microsoft.PythonTools.Intellisense;
 using TestUtilities;
 
 namespace PythonToolsMockTests {

@@ -22,7 +22,7 @@ using TestUtilities;
 namespace CookiecutterTests {
     [TestClass]
     public class GitHubClientTests {
-       [TestMethod]
+        [TestMethod]
         public async Task CheckEncoding() {
             // Use a repository with a description in Chinese to check UTF-8 decoding
             var client = new GitHubClient();

@@ -18,7 +18,6 @@ using System;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.PythonTools.Profiling {
     [Guid(WindowGuidString)]
@@ -31,7 +30,7 @@ namespace Microsoft.PythonTools.Profiling {
             ToolClsid = GuidList.VsUIHierarchyWindow_guid;
             Caption = Strings.PerformanceToolWindowTitle;
         }
-        
+
         public override void OnToolWindowCreated() {
             base.OnToolWindowCreated();
 

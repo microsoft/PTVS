@@ -19,8 +19,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
-namespace Microsoft.VisualStudioTools.Project {
-    class VirtualProjectElement : ProjectElement {
+namespace Microsoft.VisualStudioTools.Project
+{
+    class VirtualProjectElement : ProjectElement
+    {
         private readonly Dictionary<string, string> _virtualProperties;
 
         /// <summary>
@@ -32,15 +34,19 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <param name="existingItem">an MSBuild.ProjectItem; can be null if virtualFolder is true</param>
         /// <param name="virtualFolder">Is this item virtual (such as reference folder)</param>
         internal VirtualProjectElement(ProjectNode project)
-            : base(project) {
+            : base(project)
+        {
             _virtualProperties = new Dictionary<string, string>();
         }
 
-        protected override string ItemType {
-            get {
+        protected override string ItemType
+        {
+            get
+            {
                 return "";
             }
-            set {
+            set
+            {
             }
         }
 
@@ -49,7 +55,8 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </summary>
         /// <param name="attributeName">Name of the attribute to set</param>
         /// <param name="attributeValue">Value to give to the attribute</param>
-        public override void SetMetadata(string attributeName, string attributeValue) {
+        public override void SetMetadata(string attributeName, string attributeValue)
+        {
             Debug.Assert(String.Compare(attributeName, ProjectFileConstants.Include, StringComparison.OrdinalIgnoreCase) != 0, "Use rename as this won't work");
 
             // For virtual node, use our virtual property collection
@@ -61,24 +68,29 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </summary>
         /// <param name="attributeName">Name of the attribute to get the value for</param>
         /// <returns>Value of the attribute</returns>
-        public override string GetMetadata(string attributeName) {
+        public override string GetMetadata(string attributeName)
+        {
             // For virtual items, use our virtual property collection
-            if (!_virtualProperties.ContainsKey(attributeName)) {
+            if (!_virtualProperties.ContainsKey(attributeName))
+            {
                 return String.Empty;
             }
 
             return _virtualProperties[attributeName];
         }
 
-        public override void Rename(string newPath) {
+        public override void Rename(string newPath)
+        {
             _virtualProperties[ProjectFileConstants.Include] = newPath;
         }
 
-        public override bool Equals(object obj) {
+        public override bool Equals(object obj)
+        {
             return Object.ReferenceEquals(this, obj);
         }
 
-        public override int GetHashCode() {
+        public override int GetHashCode()
+        {
             return RuntimeHelpers.GetHashCode(this);
         }
     }

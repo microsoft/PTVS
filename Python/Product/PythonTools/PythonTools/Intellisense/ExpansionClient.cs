@@ -18,17 +18,14 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Xml.Linq;
 using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Editor.Core;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
-using Microsoft.VisualStudio.TextManager.Interop;
 
 namespace Microsoft.PythonTools.Intellisense {
     class ExpansionClient : IVsExpansionClient {
@@ -164,7 +161,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     int selectedIndex = templateText.IndexOfOrdinal("$selected$", ignoreCase: true);
                     if (selectedIndex != -1) {
                         var selection = _textView.Selection;
-                        
+
                         // now we need to get the indentation of the $selected$ element within the template,
                         // as we'll need to indent the selected code to that level.
                         string indentation = GetTemplateSelectionIndentation(templateText, selectedIndex);
@@ -178,7 +175,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         }
                         var selectedSpan = Span.FromBounds(start, end);
 
-                        if (surroundsWithStatement && 
+                        if (surroundsWithStatement &&
                             String.IsNullOrWhiteSpace(_textView.TextBuffer.CurrentSnapshot.GetText(selectedSpan))) {
                             // we require a statement here and the user hasn't selected any code to surround,
                             // so we insert a pass statement (and we'll select it after the completion is done)
@@ -194,7 +191,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
                             // we want to leave the pass statement selected so the user can just
                             // continue typing over it...
-                            var startLine = _textView.TextBuffer.CurrentSnapshot.GetLineFromPosition(startPosition + selectedIndex);                            
+                            var startLine = _textView.TextBuffer.CurrentSnapshot.GetLineFromPosition(startPosition + selectedIndex);
                             _selectEndSpan = true;
                             endSpan = new TextSpan() {
                                 iStartLine = startLine.LineNumber,
@@ -205,7 +202,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         }
 
                         IndentSpan(
-                            edit, 
+                            edit,
                             indentation,
                             _textView.TextBuffer.CurrentSnapshot.GetLineFromPosition(start).LineNumber + 1, // 1st line is already indented
                             _textView.TextBuffer.CurrentSnapshot.GetLineFromPosition(end).LineNumber

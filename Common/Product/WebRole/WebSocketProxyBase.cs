@@ -24,15 +24,18 @@ using System.Threading.Tasks;
 using System.Web;
 using System.Web.WebSockets;
 
-namespace Microsoft.VisualStudioTools {
-    public abstract class WebSocketProxyBase : IHttpHandler {
+namespace Microsoft.VisualStudioTools
+{
+    public abstract class WebSocketProxyBase : IHttpHandler
+    {
         private static long _lastId;
         private static Task _currentSession; // represents the current active debugging session, and completes when it is over
         private static volatile StringWriter _log;
 
         private readonly long _id;
 
-        public WebSocketProxyBase() {
+        public WebSocketProxyBase()
+        {
             _id = Interlocked.Increment(ref _lastId);
         }
 
@@ -42,18 +45,24 @@ namespace Microsoft.VisualStudioTools {
 
         public abstract void ProcessHelpPageRequest(HttpContext context);
 
-        public bool IsReusable {
+        public bool IsReusable
+        {
             get { return false; }
         }
 
-        public void ProcessRequest(HttpContext context) {
-            if (context.IsWebSocketRequest) {
+        public void ProcessRequest(HttpContext context)
+        {
+            if (context.IsWebSocketRequest)
+            {
                 context.AcceptWebSocketRequest(WebSocketRequestHandler);
-            } else {
+            }
+            else
+            {
                 context.Response.ContentType = "text/html";
                 context.Response.ContentEncoding = Encoding.UTF8;
 
-                switch (context.Request.QueryString["debug"]) {
+                switch (context.Request.QueryString["debug"])
+                {
                     case "startlog":
                         _log = new StringWriter();
                         context.Response.Write("Logging is now enabled. <a href='?debug=viewlog'>View</a>. <a href='?debug=stoplog'>Disable</a>.");
@@ -64,20 +73,26 @@ namespace Microsoft.VisualStudioTools {
                         context.Response.Write("Logging is now disabled. <a href='?debug=startlog'>Enable</a>.");
                         return;
 
-                    case "clearlog": {
+                    case "clearlog":
+                        {
                             var log = _log;
-                            if (log != null) {
+                            if (log != null)
+                            {
                                 log.GetStringBuilder().Clear();
                             }
                             context.Response.Write("Log is cleared. <a href='?debug=viewlog'>View</a>.");
                             return;
                         }
 
-                    case "viewlog": {
+                    case "viewlog":
+                        {
                             var log = _log;
-                            if (log == null) {
+                            if (log == null)
+                            {
                                 context.Response.Write("Logging is disabled. <a href='?debug=startlog'>Enable</a>.");
-                            } else {
+                            }
+                            else
+                            {
                                 context.Response.Write("Logging is enabled. <a href='?debug=clearlog'>Clear</a>. <a href='?debug=stoplog'>Disable</a>. <p><pre>");
                                 context.Response.Write(HttpUtility.HtmlDecode(log.ToString()));
                                 context.Response.Write("</pre>");
@@ -91,15 +106,19 @@ namespace Microsoft.VisualStudioTools {
             }
         }
 
-        private async Task WebSocketRequestHandler(AspNetWebSocketContext context) {
+        private async Task WebSocketRequestHandler(AspNetWebSocketContext context)
+        {
             Log("Accepted web socket request from {0}.", context.UserHostAddress);
 
             TaskCompletionSource<bool> tcs = null;
-            if (!AllowConcurrentConnections) {
+            if (!AllowConcurrentConnections)
+            {
                 tcs = new TaskCompletionSource<bool>();
-                while (true) {
+                while (true)
+                {
                     var currentSession = Interlocked.CompareExchange(ref _currentSession, tcs.Task, null);
-                    if (currentSession == null) {
+                    if (currentSession == null)
+                    {
                         break;
                     }
                     Log("Another session is active, waiting for completion.");
@@ -108,10 +127,13 @@ namespace Microsoft.VisualStudioTools {
                 }
             }
 
-            try {
+            try
+            {
                 var webSocket = context.WebSocket;
-                using (var tcpClient = new TcpClient("localhost", DebuggerPort)) {
-                    try {
+                using (var tcpClient = new TcpClient("localhost", DebuggerPort))
+                {
+                    try
+                    {
                         var stream = tcpClient.GetStream();
                         var cts = new CancellationTokenSource();
 
@@ -123,11 +145,16 @@ namespace Microsoft.VisualStudioTools {
                         var copyFromStreamToWebSocketTask = CopyFromStreamToWebSocketWorker(stream, webSocket, cts.Token);
                         var copyFromWebSocketToStreamTask = CopyFromWebSocketToStreamWorker(webSocket, stream, cts.Token);
                         Task completedTask = null;
-                        try {
+                        try
+                        {
                             completedTask = await Task.WhenAny(copyFromStreamToWebSocketTask, copyFromWebSocketToStreamTask);
-                        } catch (IOException ex) {
+                        }
+                        catch (IOException ex)
+                        {
                             Log(ex);
-                        } catch (WebSocketException ex) {
+                        }
+                        catch (WebSocketException ex)
+                        {
                             Log(ex);
                         }
 
@@ -135,49 +162,66 @@ namespace Microsoft.VisualStudioTools {
                         // it is normally blocked on a read, and this will cancel it if possible, and throw OperationCanceledException.
                         Log("One of the workers completed, shutting down the remaining one.");
                         cts.Cancel();
-                        try {
+                        try
+                        {
                             await Task.WhenAny(Task.WhenAll(copyFromStreamToWebSocketTask, copyFromWebSocketToStreamTask), Task.Delay(1000));
-                        } catch (OperationCanceledException ex) {
+                        }
+                        catch (OperationCanceledException ex)
+                        {
                             Log(ex);
                         }
 
                         // Try to gracefully close the websocket if it's still open - this is not necessary, but nice to have.
                         Log("Both workers shut down, trying to close websocket.");
-                        try {
+                        try
+                        {
                             await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
-                        } catch (WebSocketException ex) {
+                        }
+                        catch (WebSocketException ex)
+                        {
                             Log(ex);
                         }
-                    } finally {
+                    }
+                    finally
+                    {
                         // Gracefully close the TCP socket. This is crucial to avoid "Remote debugger already attached" problems.
                         Log("Shutting down TCP socket.");
-                        try {
+                        try
+                        {
                             tcpClient.Client.Shutdown(SocketShutdown.Both);
                             tcpClient.Client.Disconnect(false);
-                        } catch (SocketException ex) {
+                        }
+                        catch (SocketException ex)
+                        {
                             Log(ex);
                         }
                         Log("All done!");
                     }
                 }
-            } finally {
-                if (tcs != null) {
+            }
+            finally
+            {
+                if (tcs != null)
+                {
                     Volatile.Write(ref _currentSession, null);
                     tcs.SetResult(true);
                 }
             }
         }
 
-        private async Task CopyFromStreamToWebSocketWorker(Stream stream, WebSocket webSocket, CancellationToken ct) {
+        private async Task CopyFromStreamToWebSocketWorker(Stream stream, WebSocket webSocket, CancellationToken ct)
+        {
             var buffer = new byte[0x10000];
-            while (webSocket.State == WebSocketState.Open) {
+            while (webSocket.State == WebSocketState.Open)
+            {
                 ct.ThrowIfCancellationRequested();
 
                 Log("TCP -> WS: waiting for packet.");
                 int count = await stream.ReadAsync(buffer, 0, buffer.Length, ct);
                 Log("TCP -> WS: received packet:\n{0}", Encoding.UTF8.GetString(buffer, 0, count));
 
-                if (count == 0) {
+                if (count == 0)
+                {
                     Log("TCP -> WS: zero-length TCP packet received, connection closed.");
                     break;
                 }
@@ -187,9 +231,11 @@ namespace Microsoft.VisualStudioTools {
             }
         }
 
-        private async Task CopyFromWebSocketToStreamWorker(WebSocket webSocket, Stream stream, CancellationToken ct) {
+        private async Task CopyFromWebSocketToStreamWorker(WebSocket webSocket, Stream stream, CancellationToken ct)
+        {
             var buffer = new ArraySegment<byte>(new byte[0x10000]);
-            while (webSocket.State == WebSocketState.Open) {
+            while (webSocket.State == WebSocketState.Open)
+            {
                 ct.ThrowIfCancellationRequested();
 
                 Log("WS -> TCP: waiting for packet.");
@@ -201,16 +247,20 @@ namespace Microsoft.VisualStudioTools {
             }
         }
 
-        private void Log(object o) {
+        private void Log(object o)
+        {
             var log = _log;
-            if (log != null) {
+            if (log != null)
+            {
                 log.WriteLine(_id + " :: " + o);
             }
         }
 
-        private void Log(string format, object arg1) {
+        private void Log(string format, object arg1)
+        {
             var log = _log;
-            if (log != null) {
+            if (log != null)
+            {
                 log.WriteLine(_id + " :: " + format, arg1);
             }
         }

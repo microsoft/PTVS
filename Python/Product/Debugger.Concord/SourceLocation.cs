@@ -18,8 +18,6 @@ using System;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
-using Microsoft.VisualStudio.Debugger;
-using Microsoft.VisualStudio.Debugger.Native;
 
 namespace Microsoft.PythonTools.Debugger.Concord {
     internal class SourceLocation : DkmDataItem, IEquatable<SourceLocation> {

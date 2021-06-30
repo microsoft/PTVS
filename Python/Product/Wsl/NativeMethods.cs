@@ -28,7 +28,7 @@ namespace Microsoft.PythonTools.Wsl {
         [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
         public static extern uint GetFinalPathNameByHandle(
             SafeHandle hFile,
-            [Out]StringBuilder lpszFilePath,
+            [Out] StringBuilder lpszFilePath,
             uint cchFilePath,
             uint dwFlags
         );

@@ -18,8 +18,6 @@ using System.Diagnostics;
 using System.Text.RegularExpressions;
 using Microsoft.PythonTools.Debugger.Concord.Proxies.Structs;
 using Microsoft.PythonTools.Parsing;
-using Microsoft.VisualStudio.Debugger;
-using Microsoft.VisualStudio.Debugger.Native;
 
 namespace Microsoft.PythonTools.Debugger.Concord {
 

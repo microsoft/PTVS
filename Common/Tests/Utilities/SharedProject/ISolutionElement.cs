@@ -15,17 +15,15 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using MSBuild = Microsoft.Build.Evaluation;
 
-namespace TestUtilities.SharedProject {
+namespace TestUtilities.SharedProject
+{
     /// <summary>
     /// Represents a solution element such as a project or solution folder.
     /// </summary>
-    public interface ISolutionElement {
+    public interface ISolutionElement
+    {
         /// <summary>
         /// Gets the name of the solution element
         /// </summary>

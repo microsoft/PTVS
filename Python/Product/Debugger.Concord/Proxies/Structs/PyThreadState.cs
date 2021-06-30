@@ -17,7 +17,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.PythonTools.Parsing;
-using Microsoft.VisualStudio.Debugger;
 
 namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
     [StructProxy(StructName = "_ts")]
@@ -108,7 +107,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             return PyInterpreterState.GetInterpreterStates(process).SelectMany(interp => interp.GetThreadStates());
         }
 
-        
+
     }
 
     [StructProxy(MinVersion = PythonLanguageVersion.V37, StructName = "_PyErr_StackItem")]

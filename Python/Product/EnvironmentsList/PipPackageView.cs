@@ -51,12 +51,11 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                         _upgradeVersion = p.ExactVersion;
                         OnPropertyChanged("UpgradeVersion");
                     }
-                    
+
                     if (!String.IsNullOrEmpty(p.Description) && p.Description != _package.Description) {
                         _package.Description = p.Description;
                         OnPropertyChanged("Description");
-                    }
-                    else if (_package.Description == null) {
+                    } else if (_package.Description == null) {
                         _package.Description = string.Empty;
                         OnPropertyChanged("Description");
                     }

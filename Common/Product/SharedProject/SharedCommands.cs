@@ -14,14 +14,10 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Microsoft.VisualStudioTools {
-    enum SharedCommands {
+namespace Microsoft.VisualStudioTools
+{
+    enum SharedCommands
+    {
         AddExistingFolder = 0x10001,
         OpenCommandPromptHere = 0x10002,
         CopyFullPath = 0x10003

@@ -40,6 +40,19 @@
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'PTVS1|AnyCPU'">
+    <OutputPath>bin\PTVS1\</OutputPath>
+    <DefineConstants>TRACE;;USE_PYTHON_TESTDATA;DEV10</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Optimize>true</Optimize>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <NoWarn>436;1998</NoWarn>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <LangVersion>7.3</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>C:\Users\peezo\source\repos\PeezoSlug\PTVS\\Build\xTVS.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.Python.Analysis.Engine" />
     <Reference Include="Microsoft.PythonTools.Ipc.Json" />
@@ -97,7 +110,7 @@
     <Compile Include="Pytest\PytestTestExecutor.cs" />
     <Compile Include="Common\Services\ExecutorService.cs" />
     <Compile Include="Pytest\JunitXmlTestResultParser.cs" />
-    <Compile Include="Common\Services\CodeCoverage.cs" />   
+    <Compile Include="Common\Services\CodeCoverage.cs" />
     <Compile Include="Common\Services\ProcessExecute.cs" />
     <Compile Include="Common\Services\PythonDebugMode.cs" />
     <Compile Include="Common\TestCollection.cs" />

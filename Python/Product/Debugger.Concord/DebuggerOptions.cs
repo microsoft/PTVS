@@ -15,7 +15,6 @@
 // permissions and limitations under the License.
 
 using System.ComponentModel;
-using Microsoft.VisualStudio.Debugger;
 
 namespace Microsoft.PythonTools.Debugger.Concord {
     public static class DebuggerOptions {

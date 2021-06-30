@@ -21,7 +21,8 @@ namespace TestUtilities.UI
     public class TextBox : AutomationWrapper
     {
         public TextBox(AutomationElement element)
-            : base(element) { 
+            : base(element)
+        {
         }
 
         public string Value

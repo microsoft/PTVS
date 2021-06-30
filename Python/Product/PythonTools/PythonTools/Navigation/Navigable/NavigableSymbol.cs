@@ -17,7 +17,6 @@
 using System;
 using System.Collections.Generic;
 using System.Windows;
-using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio.Language.Intellisense;

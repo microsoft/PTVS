@@ -25,10 +25,7 @@ using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Editor;
-using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.TextManager.Interop;
-using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Refactoring {

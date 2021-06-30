@@ -16,7 +16,6 @@
 
 using System;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Debugger.Interop;
 
 namespace Microsoft.PythonTools.Debugger.DebugEngine {
     // This class represents a document context to the debugger. A document context represents a location within a source file. 

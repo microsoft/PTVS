@@ -17,8 +17,6 @@
 using System;
 using System.Diagnostics;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudioTools;
 
 namespace Microsoft.CookiecutterTools.Infrastructure {
     sealed class OutputWindowRedirector : Redirector {

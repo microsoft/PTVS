@@ -15,7 +15,6 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Reflection;
 using System.Text.RegularExpressions;
 
 namespace Microsoft.PythonTools.Interpreter {

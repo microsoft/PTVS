@@ -14,14 +14,15 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Microsoft.Build.Construction;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
-namespace TestUtilities.SharedProject {
+namespace TestUtilities.SharedProject
+{
     /// <summary>
     /// Base class for all test cases which generate projects at runtime in a language
     /// agnostic way.  This class will initialize the MEF catalog and get the various
@@ -32,10 +33,12 @@ namespace TestUtilities.SharedProject {
     /// This helps to make the project definition more readable and similar to typical
     /// MSBuild structure.
     /// </summary>
-    public class ProjectGenerator {
+    public class ProjectGenerator
+    {
         public IEnumerable<ProjectType> ProjectTypes { get; set; }
 
-        public ProjectGenerator(IServiceProvider site) {
+        public ProjectGenerator(IServiceProvider site)
+        {
             // Initialize our ProjectTypes information from the catalog
             var container = ((IComponentModel)site.GetService(typeof(SComponentModel))).DefaultExportProvider;
 
@@ -53,7 +56,8 @@ namespace TestUtilities.SharedProject {
             // Then create the ProjectTypes
             ProjectTypes = container
                 .GetExports<ProjectTypeDefinition, IProjectTypeDefinitionMetadata>()
-                .Select(lazyVal => {
+                .Select(lazyVal =>
+                {
                     var md = lazyVal.Metadata;
                     IProjectProcessor[] processors;
                     processorsMap.TryGetValue(md.ProjectExtension, out processors);
@@ -71,7 +75,8 @@ namespace TestUtilities.SharedProject {
             Assert.IsTrue(ProjectTypes.Count() > 0, "no project types were registered and no tests will run");
         }
 
-        public ProjectGenerator(params ProjectType[] types) {
+        public ProjectGenerator(params ProjectType[] types)
+        {
             ProjectTypes = types.ToArray();
         }
 
@@ -79,7 +84,8 @@ namespace TestUtilities.SharedProject {
         /// Helper function to create a ProjectProperty object to simply syntax in 
         /// project definitions.
         /// </summary>
-        public static ProjectProperty Property(string name, string value) {
+        public static ProjectProperty Property(string name, string value)
+        {
             return new ProjectProperty(name, value);
         }
 
@@ -87,16 +93,18 @@ namespace TestUtilities.SharedProject {
         /// Helper function to create a StartupFileProjectProperty object to simply syntax in 
         /// project definitions.
         /// </summary>
-        public static StartupFileProjectProperty StartupFile(string filename) {
+        public static StartupFileProjectProperty StartupFile(string filename)
+        {
             return new StartupFileProjectProperty(filename);
         }
-        
+
         /// <summary>
         /// Helper function to create a group of properties when creating project definitions.
         /// These aren't strictly necessary and just serve to add structure to the code
         /// and make it similar to an MSBuild project file.
         /// </summary>
-        public static ProjectContentGroup PropertyGroup(params ProjectProperty[] properties) {
+        public static ProjectContentGroup PropertyGroup(params ProjectProperty[] properties)
+        {
             return new ProjectContentGroup(properties);
         }
 
@@ -104,7 +112,8 @@ namespace TestUtilities.SharedProject {
         /// Helper function to create a CompileItem object to simply syntax in 
         /// defining project definitions.
         /// </summary>
-        public static CompileItem Compile(string name, string content = null, bool isExcluded = false, bool isMissing = false) {
+        public static CompileItem Compile(string name, string content = null, bool isExcluded = false, bool isMissing = false)
+        {
             return new CompileItem(name, content, isExcluded, isMissing);
         }
 
@@ -112,7 +121,8 @@ namespace TestUtilities.SharedProject {
         /// Helper function to create a CompileItem object to simply syntax in 
         /// defining project definitions.
         /// </summary>
-        public static ContentItem Content(string name, string content, bool isExcluded = false) {
+        public static ContentItem Content(string name, string content, bool isExcluded = false)
+        {
             return new ContentItem(name, content, isExcluded);
         }
 
@@ -120,7 +130,8 @@ namespace TestUtilities.SharedProject {
         /// Helper function to create a SymbolicLinkItem object to simply syntax in 
         /// defining project definitions.
         /// </summary>
-        public static SymbolicLinkItem SymbolicLink(string name, string referencePath, bool isExcluded = false, bool isMissing = false) {
+        public static SymbolicLinkItem SymbolicLink(string name, string referencePath, bool isExcluded = false, bool isMissing = false)
+        {
             return new SymbolicLinkItem(name, referencePath, isExcluded, isMissing);
         }
 
@@ -128,7 +139,8 @@ namespace TestUtilities.SharedProject {
         /// Helper function to create a FolderItem object to simply syntax in 
         /// defining project definitions.
         /// </summary>
-        public static FolderItem Folder(string name, bool isExcluded = false, bool isMissing = false) {
+        public static FolderItem Folder(string name, bool isExcluded = false, bool isMissing = false)
+        {
             return new FolderItem(name, isExcluded, isMissing);
         }
 
@@ -136,7 +148,8 @@ namespace TestUtilities.SharedProject {
         /// Helper function to create a CustomItem object which is an MSBuild item with
         /// the specified item type.
         /// </summary>
-        public static CustomItem CustomItem(string itemType, string name, string content = null, bool isExcluded = false, bool isMissing = false, IEnumerable<KeyValuePair<string, string>> metadata = null) {
+        public static CustomItem CustomItem(string itemType, string name, string content = null, bool isExcluded = false, bool isMissing = false, IEnumerable<KeyValuePair<string, string>> metadata = null)
+        {
             return new CustomItem(itemType, name, content, isExcluded, isMissing, metadata);
         }
 
@@ -145,7 +158,8 @@ namespace TestUtilities.SharedProject {
         /// These aren't strictly necessary and just serve to add structure to the code
         /// and make it similar to an MSBuild project file.
         /// </summary>
-        public static ProjectContentGroup ItemGroup(params ProjectContentGenerator[] properties) {
+        public static ProjectContentGroup ItemGroup(params ProjectContentGenerator[] properties)
+        {
             return new ProjectContentGroup(properties);
         }
 
@@ -153,7 +167,8 @@ namespace TestUtilities.SharedProject {
         /// Returns a new SolutionFolder object which can be used to create
         /// a solution folder in the generated project.
         /// </summary>
-        public static SolutionFolder SolutionFolder(string name) {
+        public static SolutionFolder SolutionFolder(string name)
+        {
             return new SolutionFolder(name);
         }
 
@@ -162,7 +177,8 @@ namespace TestUtilities.SharedProject {
         /// inside of the project file.  The various stages of the target can be
         /// created using the members of the static Tasks class.
         /// </summary>
-        public static TargetDefinition Target(string name, params Action<ProjectTargetElement>[] creators) {
+        public static TargetDefinition Target(string name, params Action<ProjectTargetElement>[] creators)
+        {
             return new TargetDefinition(name, creators);
         }
 
@@ -171,7 +187,8 @@ namespace TestUtilities.SharedProject {
         /// inside of the project file.  The various stages of the target can be
         /// created using the members of the static Tasks class.
         /// </summary>
-        public static TargetDefinition Target(string name, string dependsOnTargets, params Action<ProjectTargetElement>[] creators) {
+        public static TargetDefinition Target(string name, string dependsOnTargets, params Action<ProjectTargetElement>[] creators)
+        {
             return new TargetDefinition(name, creators) { DependsOnTargets = dependsOnTargets };
         }
 
@@ -180,22 +197,27 @@ namespace TestUtilities.SharedProject {
         /// </summary>
         /// <param name="project"></param>
         /// <returns></returns>
-        public static ImportDefinition Import(string project) {
+        public static ImportDefinition Import(string project)
+        {
             return new ImportDefinition(project);
         }
 
         /// <summary>
         /// Provides tasks for creating target definitions in generated projects.
         /// </summary>
-        public static class Tasks {
+        public static class Tasks
+        {
             /// <summary>
             /// Creates a task which outputs a message during the build.
             /// </summary>
-            public static Action<ProjectTargetElement> Message(string message, string importance = null) {
-                return target => {
+            public static Action<ProjectTargetElement> Message(string message, string importance = null)
+            {
+                return target =>
+                {
                     var messageTask = target.AddTask("Message");
                     messageTask.SetParameter("Text", message);
-                    if (importance != null) {
+                    if (importance != null)
+                    {
                         messageTask.SetParameter("Importance", importance);
                     }
                 };

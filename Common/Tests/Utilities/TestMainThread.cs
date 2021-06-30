@@ -21,15 +21,18 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace TestUtilities {
+namespace TestUtilities
+{
     [ExcludeFromCodeCoverage]
-    public class TestMainThread : IDisposable {
+    public class TestMainThread : IDisposable
+    {
         private readonly TestMainThreadService _service;
         private readonly Action _onDispose;
         private readonly CancellationTokenSource _cts = new CancellationTokenSource();
         private readonly AsyncLocal<BlockingLoop> _blockingLoop = new AsyncLocal<BlockingLoop>();
 
-        internal TestMainThread(TestMainThreadService service, Action onDispose) {
+        internal TestMainThread(TestMainThreadService service, Action onDispose)
+        {
             _service = service;
             _onDispose = onDispose;
         }
@@ -38,42 +41,56 @@ namespace TestUtilities {
 
         public void Dispose() => _onDispose();
 
-        public void Post(Action action) {
+        public void Post(Action action)
+        {
             var bl = _blockingLoop.Value;
-            if (bl != null) {
+            if (bl != null)
+            {
                 bl.Post(action);
-            } else {
+            }
+            else
+            {
                 TestEnvironmentImpl.Instance.TryAddTaskToWait(_service.InvokeAsync(action));
             }
         }
 
-        public bool Wait(Func<Task> method, int ms = Timeout.Infinite, CancellationToken cancellationToken = default(CancellationToken)) {
+        public bool Wait(Func<Task> method, int ms = Timeout.Infinite, CancellationToken cancellationToken = default(CancellationToken))
+        {
             var delayTask = Task.Delay(ms, cancellationToken);
             var resultTask = BlockUntilCompleted(() => Task.WhenAny(method(), delayTask));
             return resultTask != delayTask;
         }
 
-        public bool Wait<T>(Func<Task<T>> method, out T result, int ms = Timeout.Infinite, CancellationToken cancellationToken = default(CancellationToken)) {
+        public bool Wait<T>(Func<Task<T>> method, out T result, int ms = Timeout.Infinite, CancellationToken cancellationToken = default(CancellationToken))
+        {
             var delayTask = Task.Delay(ms, cancellationToken);
             var resultTask = BlockUntilCompleted(() => Task.WhenAny(method(), delayTask));
             result = resultTask is Task<T> task ? task.GetAwaiter().GetResult() : default(T);
             return resultTask != delayTask;
         }
 
-        private TResult BlockUntilCompleted<TResult>(Func<Task<TResult>> func) {
+        private TResult BlockUntilCompleted<TResult>(Func<Task<TResult>> func)
+        {
             var task = BlockUntilCompletedImpl(func);
             return ((Task<TResult>)task).Result;
         }
 
-        private Task BlockUntilCompletedImpl(Func<Task> func) {
-            if (_service.Thread != Thread.CurrentThread) {
-                try {
+        private Task BlockUntilCompletedImpl(Func<Task> func)
+        {
+            if (_service.Thread != Thread.CurrentThread)
+            {
+                try
+                {
                     var task = func();
                     task.GetAwaiter().GetResult();
                     return task;
-                } catch (OperationCanceledException ex) {
+                }
+                catch (OperationCanceledException ex)
+                {
                     return CreateCanceled(ex);
-                } catch (Exception ex) {
+                }
+                catch (Exception ex)
+                {
                     return Task.FromException(ex);
                 }
             }
@@ -82,10 +99,13 @@ namespace TestUtilities {
             var blockingLoopSynchronizationContext = new BlockingLoopSynchronizationContext(_service, this, sc);
             SynchronizationContext.SetSynchronizationContext(blockingLoopSynchronizationContext);
             var bl = new BlockingLoop(func, sc);
-            try {
+            try
+            {
                 _blockingLoop.Value = bl;
                 bl.Start();
-            } finally {
+            }
+            finally
+            {
                 _blockingLoop.Value = null;
                 SynchronizationContext.SetSynchronizationContext(sc);
             }
@@ -93,7 +113,8 @@ namespace TestUtilities {
             return bl.Task;
         }
 
-        public static Task CreateCanceled(OperationCanceledException exception) {
+        public static Task CreateCanceled(OperationCanceledException exception)
+        {
             var atmb = new AsyncTaskMethodBuilder();
             atmb.SetException(exception);
             return atmb.Task;
@@ -101,7 +122,8 @@ namespace TestUtilities {
 
         public void CancelPendingTasks() => _cts.Cancel();
 
-        private class BlockingLoop {
+        private class BlockingLoop
+        {
             private readonly Func<Task> _func;
             private readonly SynchronizationContext _previousSyncContext;
             private readonly AutoResetEvent _are;
@@ -109,46 +131,55 @@ namespace TestUtilities {
 
             public Task Task { get; private set; }
 
-            public BlockingLoop(Func<Task> func, SynchronizationContext previousSyncContext) {
+            public BlockingLoop(Func<Task> func, SynchronizationContext previousSyncContext)
+            {
                 _func = func;
                 _previousSyncContext = previousSyncContext;
                 _are = new AutoResetEvent(false);
                 _actions = new ConcurrentQueue<Action>();
             }
 
-            public void Start() {
+            public void Start()
+            {
                 Task = _func();
                 Task.ContinueWith(Complete);
-                while (!Task.IsCompleted) {
+                while (!Task.IsCompleted)
+                {
                     _are.WaitOne();
                     ProcessQueue();
                 }
             }
 
             // TODO: Add support for cancellation token
-            public void Post(Action action) {
+            public void Post(Action action)
+            {
                 _actions.Enqueue(action);
                 _are.Set();
-                if (Task.IsCompleted) {
+                if (Task.IsCompleted)
+                {
                     _previousSyncContext.Post(c => ProcessQueue(), null);
                 }
             }
 
             private void Complete(Task task) => _are.Set();
 
-            private void ProcessQueue() {
-                while (_actions.TryDequeue(out var action)) {
+            private void ProcessQueue()
+            {
+                while (_actions.TryDequeue(out var action))
+                {
                     action();
                 }
             }
         }
 
-        private class BlockingLoopSynchronizationContext : SynchronizationContext {
+        private class BlockingLoopSynchronizationContext : SynchronizationContext
+        {
             private readonly TestMainThreadService _service;
             private readonly TestMainThread _mainThread;
             private readonly SynchronizationContext _innerSynchronizationContext;
 
-            public BlockingLoopSynchronizationContext(TestMainThreadService service, TestMainThread mainThread, SynchronizationContext innerSynchronizationContext) {
+            public BlockingLoopSynchronizationContext(TestMainThreadService service, TestMainThread mainThread, SynchronizationContext innerSynchronizationContext)
+            {
                 _service = service;
                 _mainThread = mainThread;
                 _innerSynchronizationContext = innerSynchronizationContext;
@@ -157,11 +188,15 @@ namespace TestUtilities {
             public override void Send(SendOrPostCallback d, object state)
                 => _innerSynchronizationContext.Send(d, state);
 
-            public override void Post(SendOrPostCallback d, object state) {
+            public override void Post(SendOrPostCallback d, object state)
+            {
                 var bl = _mainThread._blockingLoop.Value;
-                if (bl != null) {
+                if (bl != null)
+                {
                     bl.Post(() => d(state));
-                } else {
+                }
+                else
+                {
                     _innerSynchronizationContext.Post(d, state);
                 }
             }

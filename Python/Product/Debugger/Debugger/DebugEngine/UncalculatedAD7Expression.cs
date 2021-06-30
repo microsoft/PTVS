@@ -16,9 +16,7 @@
 
 using System;
 using System.Threading;
-using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Debugger.Interop;
 
 namespace Microsoft.PythonTools.Debugger.DebugEngine {
     // This class represents a succesfully parsed expression to the debugger. 
@@ -51,9 +49,9 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         int IDebugExpression2.EvaluateAsync(enum_EVALFLAGS dwFlags, IDebugEventCallback2 pExprCallback) {
             TaskHelpers.RunSynchronouslyOnUIThread(ct => _frame.StackFrame.ExecuteTextAsync(_expression, (obj) => {
                 _frame.Engine.Send(
-                    new AD7ExpressionEvaluationCompleteEvent(this, new AD7Property(_frame, obj, _writable)), 
-                    AD7ExpressionEvaluationCompleteEvent.IID, 
-                    _frame.Engine, 
+                    new AD7ExpressionEvaluationCompleteEvent(this, new AD7Property(_frame, obj, _writable)),
+                    AD7ExpressionEvaluationCompleteEvent.IID,
+                    _frame.Engine,
                     _frame.Thread);
             }, ct));
             return VSConstants.S_OK;
@@ -68,7 +66,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                 result = obj;
                 completion.Set();
             }, ct));
-            
+
             while (!_frame.StackFrame.Thread.Process.HasExited && !completion.WaitOne(Math.Min((int)dwTimeout, 100))) {
                 if (dwTimeout <= 100) {
                     break;

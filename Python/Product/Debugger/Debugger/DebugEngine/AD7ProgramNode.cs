@@ -17,7 +17,6 @@
 using System;
 using System.Diagnostics;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Debugger.Interop;
 
 namespace Microsoft.PythonTools.Debugger.DebugEngine {
     // This class implements IDebugProgramNode2.

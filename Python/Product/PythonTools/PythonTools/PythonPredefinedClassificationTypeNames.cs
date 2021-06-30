@@ -22,7 +22,7 @@ namespace Microsoft.PythonTools {
         /// operator grouping.
         /// </summary>
         public const string Grouping = "Python grouping";
-       
+
         /// <summary>
         /// Classification used for comma characters when used outside of a literal, comment, etc...
         /// </summary>

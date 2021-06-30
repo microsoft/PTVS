@@ -15,9 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
-using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.TextManager.Interop;
 
 namespace Microsoft.PythonTools.Refactoring {
     /// <summary>

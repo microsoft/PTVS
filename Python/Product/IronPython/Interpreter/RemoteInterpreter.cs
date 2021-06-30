@@ -36,7 +36,6 @@ using Microsoft.Scripting.Generation;
 using Microsoft.Scripting.Hosting;
 using Microsoft.Scripting.Hosting.Providers;
 using Microsoft.Scripting.Runtime;
-using Microsoft.Win32;
 
 namespace Microsoft.IronPythonTools.Interpreter {
     /// <summary>
@@ -837,7 +836,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
         }
 
         internal ObjectIdentityHandle GetConstructorFunctionDeclaringType(ObjectIdentityHandle function) {
-            return CallAndHandle(() => 
+            return CallAndHandle(() =>
                 MakeHandle(
                     GetTypeFromType(
                         ((ConstructorFunction)Unwrap(function)).Overloads.Targets

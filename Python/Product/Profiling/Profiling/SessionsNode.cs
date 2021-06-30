@@ -23,7 +23,6 @@ using System.Windows.Forms;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Profiling {
@@ -168,7 +167,7 @@ namespace Microsoft.PythonTools.Profiling {
 
                 case __VSHPROPID.VSHPROPID_NextSibling:
                     pvar = VSConstants.VSITEMID_NIL;
-                    for(int i = 0; i<_sessions.Count; i++) {
+                    for (int i = 0; i < _sessions.Count; i++) {
                         if (_sessions[i].ItemId == itemid && i < _sessions.Count - 1) {
                             pvar = _sessions[i + 1].ItemId;
                         }

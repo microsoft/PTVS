@@ -14,14 +14,8 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
 using System.Collections.Generic;
-using System.Reflection;
-using IronPython.Runtime;
-using IronPython.Runtime.Operations;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.Scripting;
-using Microsoft.Scripting.Generation;
 
 namespace Microsoft.IronPythonTools.Interpreter {
     class IronPythonNewClsParameterInfo : IParameterInfo {

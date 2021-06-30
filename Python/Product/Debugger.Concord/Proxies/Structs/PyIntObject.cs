@@ -17,7 +17,6 @@
 using System;
 using System.Diagnostics;
 using Microsoft.PythonTools.Parsing;
-using Microsoft.VisualStudio.Debugger;
 
 namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
     [StructProxy(MaxVersion = PythonLanguageVersion.V27)]

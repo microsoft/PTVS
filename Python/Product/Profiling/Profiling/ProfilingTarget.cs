@@ -107,7 +107,7 @@ namespace Microsoft.PythonTools.Profiling {
             }
             return false;
         }
-        
+
     }
 
     [Serializable]

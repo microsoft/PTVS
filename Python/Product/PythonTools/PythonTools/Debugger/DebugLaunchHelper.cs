@@ -26,9 +26,7 @@ using System.Web;
 using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.VisualStudio.Debugger;
 using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
 using Newtonsoft.Json.Linq;
 
 namespace Microsoft.PythonTools.Debugger {
@@ -223,7 +221,7 @@ namespace Microsoft.PythonTools.Debugger {
                         dti.Info.bstrOptions = GetLaunchJsonForVsCodeDebugAdapter(provider, config, fullEnvironment);
                     }
                 }
-                
+
                 // Null out dti so that it is not disposed before we return.
                 var result = dti;
                 dti = null;

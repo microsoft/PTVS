@@ -75,7 +75,7 @@ namespace Microsoft.PythonTools.BuildTasks {
         private string _executeIn = ExecuteInConsole;
 
         protected virtual bool IsValidExecuteInValue(string value, out string message) {
-            message = "ExecuteIn must be one of: " + string.Join(", ", _executeIns.Select(s => '"' + s + '"'));;
+            message = "ExecuteIn must be one of: " + string.Join(", ", _executeIns.Select(s => '"' + s + '"')); ;
             return _executeIns.Any(s => s.Equals(value, StringComparison.OrdinalIgnoreCase));
         }
 
@@ -241,7 +241,7 @@ namespace Microsoft.PythonTools.BuildTasks {
     public class RunPythonCommand : PythonCommandTask {
         private readonly Lazy<List<string>> _consoleOutput = new Lazy<List<string>>();
         private readonly Lazy<List<string>> _consoleError = new Lazy<List<string>>();
-        
+
         internal RunPythonCommand(string projectPath, IBuildEngine buildEngine)
             : base(projectPath, buildEngine) {
         }

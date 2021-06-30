@@ -14,13 +14,16 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Operations;
+using System;
 
-namespace Microsoft.VisualStudioTools.MockVsTests {
-    public class MockTextBufferUndoManager : ITextBufferUndoManager {
-        public MockTextBufferUndoManager(ITextBuffer buffer) {
+namespace Microsoft.VisualStudioTools.MockVsTests
+{
+    public class MockTextBufferUndoManager : ITextBufferUndoManager
+    {
+        public MockTextBufferUndoManager(ITextBuffer buffer)
+        {
             TextBuffer = buffer;
         }
 
@@ -28,7 +31,8 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
 
         public ITextUndoHistory TextBufferUndoHistory => throw new NotImplementedException();
 
-        public void UnregisterUndoHistory() {
+        public void UnregisterUndoHistory()
+        {
             throw new NotImplementedException();
         }
     }

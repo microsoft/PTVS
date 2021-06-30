@@ -124,7 +124,7 @@ namespace Microsoft.PythonTools.Wsl.Debugger {
                 ),
                 "read -p 'Press Enter to exit . . .'"
             );
-            
+
             var psi = new ProcessStartInfo {
                 FileName = _bashPath.Value ?? throw new InvalidOperationException("WSL is not installed"),
                 Arguments = QuoteSingleArgument(FixPath(sh)),
@@ -280,7 +280,7 @@ namespace Microsoft.PythonTools.Wsl.Debugger {
                     uint pathLen = NativeMethods.MAX_PATH + 1;
                     uint res;
                     StringBuilder filePathBuilder;
-                    for (;;) {
+                    for (; ; ) {
                         filePathBuilder = new StringBuilder(checked((int)pathLen));
                         res = NativeMethods.GetFinalPathNameByHandle(
                             dirHandle,

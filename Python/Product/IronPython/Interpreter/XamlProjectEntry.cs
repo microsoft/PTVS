@@ -45,7 +45,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
             }
         }
 
-#region IProjectEntry Members
+        #region IProjectEntry Members
 
         public bool IsAnalyzed {
             get { return _analysis != null; }
@@ -112,15 +112,15 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
         public void RemovedFromProject() { }
 
-#endregion
+        #endregion
 
-#region IXamlProjectEntry Members
+        #region IXamlProjectEntry Members
 
         public XamlAnalysis Analysis {
             get { return _analysis; }
         }
 
-#endregion
+        #endregion
 
         public void Dispose() { }
     }

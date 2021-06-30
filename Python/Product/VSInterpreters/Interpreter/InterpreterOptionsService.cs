@@ -136,7 +136,7 @@ namespace Microsoft.PythonTools.Interpreter {
                     .Where(PythonInterpreterFactoryExtensions.IsRunnable)
                     .LastOrDefault(c => c.CanBeAutoDefault());
                 id = defaultConfig?.Id;
-            
+
                 if (!string.IsNullOrEmpty(id)) {
                     using (var interpreterOptions = Registry.CurrentUser.CreateSubKey(DefaultInterpreterOptionsCollection)) {
                         interpreterOptions?.SetValue(DefaultInterpreterSetting, id);
@@ -299,7 +299,7 @@ namespace Microsoft.PythonTools.Interpreter {
                         key.DeleteValue(DescriptionKey, false);
                     }
 
-                    var vsConfig = (VisualStudioInterpreterConfiguration) config;
+                    var vsConfig = (VisualStudioInterpreterConfiguration)config;
                     using (var installPath = key.CreateSubKey("InstallPath")) {
                         string exePath = config.InterpreterPath ?? vsConfig.WindowsInterpreterPath ?? "";
                         if (!string.IsNullOrEmpty(vsConfig.PrefixPath)) {

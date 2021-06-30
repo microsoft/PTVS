@@ -21,22 +21,22 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.PythonTools.Django.Analysis;
+using Microsoft.PythonTools.Django.TemplateParsing;
+using Microsoft.PythonTools.Django.TemplateParsing.DjangoBlocks;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
-using Microsoft.PythonTools.Django.TemplateParsing.DjangoBlocks;
-using Microsoft.PythonTools.Django.TemplateParsing;
 using TestUtilities;
 using Classification = Microsoft.PythonTools.Django.TemplateParsing.Classification;
 
 namespace DjangoTests {
     [TestClass]
     public class DjangoTemplateParserTests {
-#region Filter parser tests
+        #region Filter parser tests
 
         [TestMethod, Priority(UnitTestPriority.P0)]
         public void FilterRegexTests() {
-            var testCases = new[] { 
+            var testCases = new[] {
                 new { Got = ("100"), Expected = DjangoVariable.Number("100", 0) },
                 new { Got = ("100.0"), Expected = DjangoVariable.Number("100.0", 0) },
                 new { Got = ("+100"), Expected = DjangoVariable.Number("+100", 0) },
@@ -65,7 +65,7 @@ namespace DjangoTests {
                 new { Got = ("{{ \"fob\" }}"), Expected = DjangoVariable.Constant("\"fob\"", 3) },
                 new { Got = ("{{ fob }}"), Expected = DjangoVariable.Variable("fob", 3) },
                 new { Got = ("{{ fob.oar }}"), Expected = DjangoVariable.Variable("fob.oar", 3) },
-                new { Got = ("{{ fob|oar }}"), Expected = DjangoVariable.Variable("fob", 3, new DjangoFilter("oar", 7)) },                
+                new { Got = ("{{ fob|oar }}"), Expected = DjangoVariable.Variable("fob", 3, new DjangoFilter("oar", 7)) },
                 new { Got = ("{{ fob|oar|baz }}"), Expected = DjangoVariable.Variable("fob", 3, new DjangoFilter("oar", 7), new DjangoFilter("baz", 11)) },
                 new { Got = ("{{ fob|oar:'fob' }}"), Expected = DjangoVariable.Variable("fob", 3, DjangoFilter.Constant("oar", 7, "'fob'", 11)) },
                 new { Got = ("{{ fob|oar:42 }}"), Expected = DjangoVariable.Variable("fob", 3, DjangoFilter.Number("oar", 7, "42", 11)) },
@@ -104,241 +104,241 @@ namespace DjangoTests {
             }
         }
 
-#endregion
+        #endregion
 
-#region Block parser tests
+        #region Block parser tests
 
         [TestMethod, Priority(UnitTestPriority.P0)]
         public void BlockParserTests() {
-            var testCases = new[] { 
-                new { 
-                    Got = ("for x in "), 
+            var testCases = new[] {
+                new {
+                    Got = ("for x in "),
                     Expected = (DjangoBlock)new DjangoForBlock(new BlockParseInfo("for", "x in ", 0), 6, null, 9, -1, new[] { new Tuple<string, int>("x",  4) }),
                     Context = TestCompletionContext.Simple,
                     Completions = new[] {
-                        new { 
+                        new {
                             Position = 9,
                             Expected = new[] { "fob", "oar" }
                         },
-                        new { 
+                        new {
                             Position = 4,
                             Expected = new string[0]
                         }
                     }
                 },
-                new { 
-                    Got = ("for x in oar"), 
+                new {
+                    Got = ("for x in oar"),
                     Expected = (DjangoBlock)new DjangoForBlock(new BlockParseInfo("for", "x in oar", 0), 6, DjangoVariable.Variable("oar", 9), 12, -1, new[] { new Tuple<string, int>("x",  4) }),
                     Context = TestCompletionContext.Simple,
                     Completions = new[] {
-                        new { 
+                        new {
                             Position = 9,
                             Expected = new[] { "fob", "oar" }
                         },
-                        new { 
+                        new {
                             Position = 4,
                             Expected = new string[0]
                         }
                     }
                 },
-                new { 
-                    Got = ("for x in b"), 
+                new {
+                    Got = ("for x in b"),
                     Expected = (DjangoBlock)new DjangoForBlock(new BlockParseInfo("for", "x in b", 0), 6, DjangoVariable.Variable("b", 9), 10, -1, new[] { new Tuple<string, int>("x",  4) }),
                     Context = TestCompletionContext.Simple,
                     Completions = new[] {
-                        new { 
+                        new {
                             Position = 10,
                             Expected = new [] { "fob", "oar" }
                         },
-                        new { 
+                        new {
                             Position = 4,
                             Expected = new string[0]
                         }
                     }
                 },
 
-                new { 
-                    Got = ("autoescape"), 
+                new {
+                    Got = ("autoescape"),
                     Expected = (DjangoBlock)new DjangoAutoEscapeBlock(new BlockParseInfo("autoescape", "", 0), -1, -1),
                     Context = TestCompletionContext.Simple,
                     Completions = new[] {
-                        new { 
+                        new {
                             Position = 10,
                             Expected = new[] { "on", "off" }
                         }
                     }
                 },
-                new { 
-                    Got = ("autoescape on"), 
+                new {
+                    Got = ("autoescape on"),
                     Expected = (DjangoBlock)new DjangoAutoEscapeBlock(new BlockParseInfo("autoescape", " on", 0), 11, 2),
                     Context = TestCompletionContext.Simple,
                     Completions = new[] {
-                        new { 
+                        new {
                             Position = 10,
                             Expected = new string[0]
                         }
                     }
                 },
-                new { 
-                    Got = ("comment"), 
+                new {
+                    Got = ("comment"),
                     Expected = (DjangoBlock)new DjangoArgumentlessBlock(new BlockParseInfo("comment", "", 0)),
                     Context = TestCompletionContext.Simple,
                     Completions = new[] {
-                        new { 
+                        new {
                             Position = 0,
                             Expected = new string[0]
                         }
                     }
                 },
-                new { 
-                    Got = ("spaceless"), 
+                new {
+                    Got = ("spaceless"),
                     Expected = (DjangoBlock)new DjangoSpacelessBlock(new BlockParseInfo("spaceless", "", 0)),
                     Context = TestCompletionContext.Simple,
                     Completions = new[] {
-                        new { 
+                        new {
                             Position = 0,
                             Expected = new string[0]
                         }
                     }
                 },
-                new { 
-                    Got = ("filter "), 
+                new {
+                    Got = ("filter "),
                     Expected = (DjangoBlock)new DjangoFilterBlock(new BlockParseInfo("filter", " ", 0), DjangoVariable.Variable("", 7)),
                     Context = TestCompletionContext.Simple,
                     Completions = new[] {
-                        new { 
+                        new {
                             Position = 7,
                             Expected = new [] { "cut", "lower" }
                         }
                     }
                 },
-                new { 
-                    Got = ("ifequal "), 
+                new {
+                    Got = ("ifequal "),
                     Expected = (DjangoBlock)new DjangoIfOrIfNotEqualBlock(new BlockParseInfo("ifequal", " ", 0), DjangoVariable.Variable("", 8)),
                     Context = TestCompletionContext.Simple,
                     Completions = new[] {
-                        new { 
+                        new {
                             Position = 8,
                             Expected = new [] { "fob", "oar" }
                         }
                     }
                 },
-                new { 
-                    Got = ("ifequal fob "), 
+                new {
+                    Got = ("ifequal fob "),
                     Expected = (DjangoBlock)new DjangoIfOrIfNotEqualBlock(new BlockParseInfo("ifequal", " fob ", 0), DjangoVariable.Variable("fob", 8)),
                     Context = TestCompletionContext.Simple,
                     Completions = new[] {
-                        new { 
+                        new {
                             Position = 12,
                             Expected = new [] { "fob", "oar" }
                         }
                     }
                 },
-                new { 
-                    Got = ("if "), 
+                new {
+                    Got = ("if "),
                     Expected = (DjangoBlock)new DjangoIfBlock(new BlockParseInfo("if", " ", 0)),
                     Context = TestCompletionContext.Simple,
                     Completions = new[] {
-                        new { 
+                        new {
                             Position = 3,
                             Expected = new [] { "fob", "oar", "not" }
                         }
                     }
                 },
-                new { 
-                    Got = ("if fob "), 
+                new {
+                    Got = ("if fob "),
                     Expected = (DjangoBlock)new DjangoIfBlock(new BlockParseInfo("if", " fob ", 0), new BlockClassification(new Span(3, 3), Classification.Identifier)),
                     Context = TestCompletionContext.Simple,
                     Completions = new[] {
-                        new { 
+                        new {
                             Position = 7,
                             Expected = new [] { "and", "or" }
                         }
                     }
                 },
-                new { 
-                    Got = ("if fob and "), 
+                new {
+                    Got = ("if fob and "),
                     Expected = (DjangoBlock)new DjangoIfBlock(new BlockParseInfo("if", " fob and ", 0), new BlockClassification(new Span(3, 3), Classification.Identifier), new BlockClassification(new Span(7, 3), Classification.Keyword)),
                     Context = TestCompletionContext.Simple,
                     Completions = new[] {
-                        new { 
+                        new {
                             Position = 11,
                             Expected = new [] { "fob", "oar", "not" }
                         }
                     }
                 },
-                new { 
-                    Got = ("firstof "), 
+                new {
+                    Got = ("firstof "),
                     Expected = (DjangoBlock)new DjangoMultiVariableArgumentBlock(new BlockParseInfo("firstof", " ", 0)),
                     Context = TestCompletionContext.Simple,
                     Completions = new[] {
-                        new { 
+                        new {
                             Position = 8,
                             Expected = new [] { "fob", "oar" }
                         }
                     }
                 },
-                new { 
-                    Got = ("firstof fob|"), 
+                new {
+                    Got = ("firstof fob|"),
                     Expected = (DjangoBlock)new DjangoMultiVariableArgumentBlock(new BlockParseInfo("firstof", " fob|", 0), DjangoVariable.Variable("fob", 8)),
                     Context = TestCompletionContext.Simple,
                     Completions = new[] {
-                        new { 
+                        new {
                             Position = 12,
                             Expected = new [] { "cut", "lower" }
                         }
                     }
                 },
-                new { 
-                    Got = ("spaceless "), 
+                new {
+                    Got = ("spaceless "),
                     Expected = (DjangoBlock)new DjangoSpacelessBlock(new BlockParseInfo("spaceless", " ", 0)),
                     Context = TestCompletionContext.Simple,
                     Completions = new[] {
-                        new { 
+                        new {
                             Position = 10,
                             Expected = new string[0]
                         }
                     }
                 },
-                new { 
-                    Got = ("widthratio "), 
+                new {
+                    Got = ("widthratio "),
                     Expected = (DjangoBlock)new DjangoWidthRatioBlock(new BlockParseInfo("widthratio", " ", 0)),
                     Context = TestCompletionContext.Simple,
                     Completions = new[] {
-                        new { 
+                        new {
                             Position = 11,
                             Expected = new [] { "fob", "oar" }
                         }
                     }
                 },
-                new { 
-                    Got = ("templatetag "), 
+                new {
+                    Got = ("templatetag "),
                     Expected = (DjangoBlock)new DjangoTemplateTagBlock(new BlockParseInfo("templatetag", " ", 0), 11, null),
                     Context = TestCompletionContext.Simple,
                     Completions = new[] {
-                        new { 
+                        new {
                             Position = 11,
                             Expected = new [] { "openblock", "closeblock", "openvariable", "closevariable", "openbrace", "closebrace", "opencomment", "closecomment" }
                         }
                     }
                 },
-                new { 
-                    Got = ("templatetag open"), 
+                new {
+                    Got = ("templatetag open"),
                     Expected = (DjangoBlock)new DjangoTemplateTagBlock(new BlockParseInfo("templatetag", " open", 0), 11, null),
                     Context = TestCompletionContext.Simple,
                     Completions = new[] {
-                        new { 
+                        new {
                             Position = 15,
                             Expected = new [] { "openblock", "openvariable", "openbrace", "opencomment" }
                         }
                     }
                 },
-                new { 
-                    Got = ("templatetag openblock "), 
+                new {
+                    Got = ("templatetag openblock "),
                     Expected = (DjangoBlock)new DjangoTemplateTagBlock(new BlockParseInfo("templatetag", " openblock ", 0), 11, "openblock"),
                     Context = TestCompletionContext.Simple,
                     Completions = new[] {
-                        new { 
+                        new {
                             Position = 22,
                             Expected = new string[0]
                         }
@@ -528,9 +528,9 @@ namespace DjangoTests {
             _blockValidators[expected.GetType()](expected, got);
         }
 
-#endregion
+        #endregion
 
-#region Template tokenizer tests
+        #region Template tokenizer tests
 
         [TestMethod, Priority(UnitTestPriority.P0)]
         public void TestSimpleVariable() {
@@ -712,8 +712,8 @@ namespace DjangoTests {
 </body>
 </html>";
 
-            TokenizerTest(code, 
-                /*unclosed*/true, 
+            TokenizerTest(code,
+                /*unclosed*/true,
                 new TemplateToken(TemplateTokenKind.Text, 0, 49),
                 new TemplateToken(TemplateTokenKind.Block, 50, 80, isClosed: false)
             );
@@ -775,7 +775,7 @@ namespace DjangoTests {
             }
         }
 
-#endregion
+        #endregion
     }
 
     class TestCompletionContext : IDjangoCompletionContext {
@@ -791,7 +791,7 @@ namespace DjangoTests {
             }
         }
 
-#region IDjangoCompletionContext Members       
+        #region IDjangoCompletionContext Members       
 
         public Dictionary<string, TagInfo> Filters {
             get { return _filters; }
@@ -816,7 +816,7 @@ namespace DjangoTests {
             return new Dictionary<string, PythonMemberType>();
         }
 
-#endregion
+        #endregion
     }
 }
 

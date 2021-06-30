@@ -16,7 +16,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using Microsoft.PythonTools.Ipc.Json;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -34,13 +33,12 @@ namespace Microsoft.PythonTools.Debugger {
                 if (type.IsSubclassOf(typeof(Request))) {
                     var command = type.GetField("Command");
                     if (command != null) {
-                        all["request." + (string) command.GetRawConstantValue()] = type;
+                        all["request." + (string)command.GetRawConstantValue()] = type;
                     }
-                }
-                else if (type.IsSubclassOf(typeof(Event))) {
+                } else if (type.IsSubclassOf(typeof(Event))) {
                     var name = type.GetField("Name");
                     if (name != null) {
-                        all["event." + (string) name.GetRawConstantValue()] = type;
+                        all["event." + (string)name.GetRawConstantValue()] = type;
                     }
                 }
             }

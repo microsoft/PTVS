@@ -20,7 +20,6 @@ using System.Linq;
 using System.Threading;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.PythonTools {
     sealed class SearchPathManager : IVsFileChangeEvents, IDisposable {

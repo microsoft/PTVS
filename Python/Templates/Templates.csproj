@@ -27,6 +27,18 @@
     <OutputPathSuffix>templates\</OutputPathSuffix>
     <IntermediateOutputPathSuffix>$(MSBuildProjectName)\</IntermediateOutputPathSuffix>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'PTVS1|AnyCPU'">
+    <OutputPath>bin\PTVS1\</OutputPath>
+    <DefineConstants>TRACE;;USE_PYTHON_TESTDATA;DEV10</DefineConstants>
+    <Optimize>true</Optimize>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <NoWarn>436;1998;2008</NoWarn>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <LangVersion>7.3</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>C:\Users\peezo\source\repos\PeezoSlug\PTVS\\Build\xTVS.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
   <Import Project="$(BuildRoot)\Build\Common.Build.settings" />
   <Import Project="$(BuildRoot)\Python\products.settings" />
   <PropertyGroup>

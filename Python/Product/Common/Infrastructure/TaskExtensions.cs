@@ -15,7 +15,6 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Diagnostics;
 using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -39,7 +38,7 @@ namespace Microsoft.PythonTools.Infrastructure {
             }
 
             var synchronizationContext = SynchronizationContext.Current;
-            if (synchronizationContext != null && synchronizationContext.GetType() != typeof (SynchronizationContext)) {
+            if (synchronizationContext != null && synchronizationContext.GetType() != typeof(SynchronizationContext)) {
                 task.ContinueWith(DoNotWaitSynchronizationContextContinuation, synchronizationContext, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
             } else {
                 task.ContinueWith(DoNotWaitThreadContinuation, TaskContinuationOptions.ExecuteSynchronously);
@@ -62,7 +61,7 @@ namespace Microsoft.PythonTools.Infrastructure {
         }
 
         private static void DoNotWaitSynchronizationContextContinuation(Task task, object state) {
-            var context = (SynchronizationContext) state;
+            var context = (SynchronizationContext)state;
             context.Post(ReThrowTaskException, task);
         }
 

@@ -29,7 +29,7 @@ namespace Microsoft.PythonTools.Intellisense {
         internal readonly IServiceProvider _serviceProvider;
 
         [ImportingConstructor]
-        public CompletionSourceProvider([Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider, IGlyphService glyphService) {
+        public CompletionSourceProvider([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider, IGlyphService glyphService) {
             _pyService = serviceProvider.GetPythonToolsService();
             _glyphService = glyphService;
             _serviceProvider = serviceProvider;

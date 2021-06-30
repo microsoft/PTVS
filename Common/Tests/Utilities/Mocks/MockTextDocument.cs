@@ -14,17 +14,20 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using Microsoft.VisualStudio.Text;
 using System;
 using System.IO;
 using System.Text;
-using Microsoft.VisualStudio.Text;
 
-namespace TestUtilities.Mocks {
-    public class MockTextDocument : ITextDocument {
+namespace TestUtilities.Mocks
+{
+    public class MockTextDocument : ITextDocument
+    {
         private string _filePath;
         private readonly ITextBuffer _buffer;
 
-        public MockTextDocument(ITextBuffer buffer, string filePath) {
+        public MockTextDocument(ITextBuffer buffer, string filePath)
+        {
             _buffer = buffer;
             _filePath = filePath;
         }
@@ -32,99 +35,123 @@ namespace TestUtilities.Mocks {
 
         #region ITextDocument Members
 
-        public event EventHandler DirtyStateChanged {
+        public event EventHandler DirtyStateChanged
+        {
             add { throw new NotImplementedException(); }
             remove { throw new NotImplementedException(); }
         }
 
-        public Encoding Encoding {
-            get {
+        public Encoding Encoding
+        {
+            get
+            {
                 return Encoding.UTF8;
             }
-            set {
+            set
+            {
                 throw new NotImplementedException();
             }
         }
 
-        public event EventHandler<EncodingChangedEventArgs> EncodingChanged {
-            add {  }
-            remove {  }
+        public event EventHandler<EncodingChangedEventArgs> EncodingChanged
+        {
+            add { }
+            remove { }
         }
 
-        public event EventHandler<TextDocumentFileActionEventArgs> FileActionOccurred {
+        public event EventHandler<TextDocumentFileActionEventArgs> FileActionOccurred
+        {
             add { throw new NotImplementedException(); }
             remove { throw new NotImplementedException(); }
         }
 
-        public string FilePath {
+        public string FilePath
+        {
             get { return _filePath; }
         }
 
-        public bool IsDirty {
+        public bool IsDirty
+        {
             get { throw new NotImplementedException(); }
         }
 
-        public bool IsReloading {
+        public bool IsReloading
+        {
             get { throw new NotImplementedException(); }
         }
 
-        public DateTime LastContentModifiedTime {
+        public DateTime LastContentModifiedTime
+        {
             get { throw new NotImplementedException(); }
         }
 
-        public DateTime LastSavedTime {
+        public DateTime LastSavedTime
+        {
             get { throw new NotImplementedException(); }
         }
 
-        public ReloadResult Reload(EditOptions options) {
+        public ReloadResult Reload(EditOptions options)
+        {
             throw new NotImplementedException();
         }
 
-        public ReloadResult Reload() {
+        public ReloadResult Reload()
+        {
             throw new NotImplementedException();
         }
 
-        public void Rename(string newFilePath) {
+        public void Rename(string newFilePath)
+        {
             _filePath = newFilePath;
         }
 
-        public void Save() {
+        public void Save()
+        {
             File.WriteAllText(_filePath, TextBuffer.CurrentSnapshot.GetText());
         }
 
-        public void SaveAs(string filePath, bool overwrite, bool createFolder, Microsoft.VisualStudio.Utilities.IContentType newContentType) {
+        public void SaveAs(string filePath, bool overwrite, bool createFolder, Microsoft.VisualStudio.Utilities.IContentType newContentType)
+        {
             throw new NotImplementedException();
         }
 
-        public void SaveAs(string filePath, bool overwrite, Microsoft.VisualStudio.Utilities.IContentType newContentType) {
+        public void SaveAs(string filePath, bool overwrite, Microsoft.VisualStudio.Utilities.IContentType newContentType)
+        {
             throw new NotImplementedException();
         }
 
-        public void SaveAs(string filePath, bool overwrite, bool createFolder) {
+        public void SaveAs(string filePath, bool overwrite, bool createFolder)
+        {
             throw new NotImplementedException();
         }
 
-        public void SaveAs(string filePath, bool overwrite) {
+        public void SaveAs(string filePath, bool overwrite)
+        {
             throw new NotImplementedException();
         }
 
-        public void SaveCopy(string filePath, bool overwrite, bool createFolder) {
+        public void SaveCopy(string filePath, bool overwrite, bool createFolder)
+        {
             throw new NotImplementedException();
         }
 
-        public void SaveCopy(string filePath, bool overwrite) {
+        public void SaveCopy(string filePath, bool overwrite)
+        {
             throw new NotImplementedException();
         }
 
-        public void SetEncoderFallback(EncoderFallback fallback) {
+        public void SetEncoderFallback(EncoderFallback fallback)
+        {
             throw new NotImplementedException();
         }
 
-        public ITextBuffer TextBuffer {
+        public ITextBuffer TextBuffer
+        {
             get { return _buffer; }
         }
 
-        public void UpdateDirtyState(bool isDirty, DateTime lastContentModifiedTime) {
+        public void UpdateDirtyState(bool isDirty, DateTime lastContentModifiedTime)
+        {
             throw new NotImplementedException();
         }
 
@@ -132,7 +159,8 @@ namespace TestUtilities.Mocks {
 
         #region IDisposable Members
 
-        public void Dispose() {
+        public void Dispose()
+        {
         }
 
         #endregion

@@ -16,7 +16,6 @@
 
 using System.Collections.Generic;
 using Microsoft.PythonTools.Parsing;
-using Microsoft.VisualStudio.Debugger;
 
 namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
     [StructProxy(StructName = "_is")]

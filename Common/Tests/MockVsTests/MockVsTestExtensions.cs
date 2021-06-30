@@ -14,16 +14,18 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using Microsoft.VisualStudio;
 using TestUtilities;
 using TestUtilities.SharedProject;
 
-namespace Microsoft.VisualStudioTools.MockVsTests {
-    public static class MockVsTestExtensions {
-        public static IVisualStudioInstance ToMockVs(this SolutionFile self) {
+namespace Microsoft.VisualStudioTools.MockVsTests
+{
+    public static class MockVsTestExtensions
+    {
+        public static IVisualStudioInstance ToMockVs(this SolutionFile self)
+        {
             MockVs vs = new MockVs();
-            vs.Invoke(() => {
+            vs.Invoke(() =>
+            {
                 // HACK: The default targets files require a function that we don't provide
                 // The tests are mostly still broken, but they get further now. We should probably
                 // move them into UI tests, as we can't emulate the MSBuild environment well enough

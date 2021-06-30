@@ -26,9 +26,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Adornments;
 using Microsoft.VisualStudio.Text.Tagging;
@@ -36,8 +34,6 @@ using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Intellisense {
-    using AP = AnalysisProtocol;
-
     class TaskProviderItem {
         private readonly string _moniker;
         private readonly string _message;
@@ -482,7 +478,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private void Worker(object param) {
-            for (;;) {
+            for (; ; ) {
                 var self = (Thread)param;
                 if (Interlocked.CompareExchange(ref _worker, self, null) != null) {
                     // Not us, so abort
@@ -641,7 +637,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
                 using (tagger.Update()) {
                     if (buffers.Remove(kv.Key)) {
-                        tagger.RemoveTagSpans(span => 
+                        tagger.RemoveTagSpans(span =>
                             _monikers.Contains((span.Tag as ErrorTagWithMoniker)?.Moniker) &&
                             span.Span.TextBuffer == kv.Key
                         );
@@ -744,11 +740,11 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public int Next(uint celt, IVsTaskItem[] rgelt, uint[] pceltFetched = null) {
             bool fetchedAny = false;
-            
+
             if (pceltFetched != null && pceltFetched.Length > 0) {
                 pceltFetched[0] = 0;
             }
-            
+
             for (int i = 0; i < celt && _enumerator.MoveNext(); i++) {
                 if (pceltFetched != null && pceltFetched.Length > 0) {
                     pceltFetched[0] = (uint)i + 1;

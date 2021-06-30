@@ -43,7 +43,7 @@ namespace Microsoft.PythonTools.Project {
                 return this.Node.ProjectMgr.GetProjectProperty(PythonConstants.SearchPathSetting, true);
             }
         }
-        
+
         /// <summary>
         /// Gets the command line arguments for the project.
         /// </summary>
@@ -126,7 +126,7 @@ namespace Microsoft.PythonTools.Project {
             get {
                 // Cloud Service projects inspect this value to determine which
                 // OS to deploy.
-                switch(HierarchyNode.ProjectMgr.Site.GetUIThread().Invoke(() => Node.GetProjectProperty("TargetFrameworkVersion"))) {
+                switch (HierarchyNode.ProjectMgr.Site.GetUIThread().Invoke(() => Node.GetProjectProperty("TargetFrameworkVersion"))) {
                     case "v4.0":
                         return 0x40000;
                     case "v4.5":

@@ -15,7 +15,6 @@
 // permissions and limitations under the License.
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using TestUtilities;
 using TestUtilities.Python;
 
 namespace PythonToolsMockTests {

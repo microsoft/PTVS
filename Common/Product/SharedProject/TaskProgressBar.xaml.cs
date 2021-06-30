@@ -19,18 +19,20 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
-using Microsoft.VisualStudio.PlatformUI;
 
-namespace Microsoft.VisualStudioTools.Project {
+namespace Microsoft.VisualStudioTools.Project
+{
     /// <summary>
     /// Interaction logic for WaitForCompleteAnalysisDialog.xaml
     /// </summary>
-    partial class TaskProgressBar : DialogWindowVersioningWorkaround {
+    partial class TaskProgressBar : DialogWindowVersioningWorkaround
+    {
         private readonly Task _task;
         private readonly DispatcherTimer _timer;
         private readonly CancellationTokenSource _cancelSource;
 
-        public TaskProgressBar(Task task, CancellationTokenSource cancelSource, string message) {
+        public TaskProgressBar(Task task, CancellationTokenSource cancelSource, string message)
+        {
             _task = task;
             InitializeComponent();
             _waitLabel.Text = message;
@@ -41,11 +43,13 @@ namespace Microsoft.VisualStudioTools.Project {
             _cancelSource = cancelSource;
         }
 
-        void TimerTick(object sender, EventArgs e) {
+        void TimerTick(object sender, EventArgs e)
+        {
             _progress.Value = (_progress.Value + 1) % 100;
         }
 
-        protected override void OnInitialized(System.EventArgs e) {
+        protected override void OnInitialized(System.EventArgs e)
+        {
             // when the task completes we post back onto our UI thread to close the dialog box.
             // Capture the UI scheduler, and setup a continuation to do the close.
             var curScheduler = TaskScheduler.FromCurrentSynchronizationContext();
@@ -54,28 +58,33 @@ namespace Microsoft.VisualStudioTools.Project {
             base.OnInitialized(e);
         }
 
-        class CloseDialog {
+        class CloseDialog
+        {
             private readonly TaskScheduler _ui;
             private readonly TaskProgressBar _progressBar;
 
-            public CloseDialog(TaskScheduler uiScheduler, TaskProgressBar progressBar) {
+            public CloseDialog(TaskScheduler uiScheduler, TaskProgressBar progressBar)
+            {
                 _ui = uiScheduler;
                 _progressBar = progressBar;
             }
 
-            public void Close(Task task) {
+            public void Close(Task task)
+            {
                 var newTask = new Task(CloseWorker);
                 newTask.Start(_ui);
                 newTask.Wait();
             }
 
-            private void CloseWorker() {
+            private void CloseWorker()
+            {
                 _progressBar.DialogResult = true;
                 _progressBar.Close();
             }
         }
 
-        private void _cancelButton_Click(object sender, RoutedEventArgs e) {
+        private void _cancelButton_Click(object sender, RoutedEventArgs e)
+        {
             _cancelSource.Cancel();
             this.DialogResult = false;
             this.Close();

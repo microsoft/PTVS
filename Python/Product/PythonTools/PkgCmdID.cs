@@ -16,7 +16,6 @@
 
 // PkgCmdID.cs
 // MUST match PkgCmdID.h
-using System;
 
 namespace Microsoft.PythonTools {
     static class PkgCmdIDList {

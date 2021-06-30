@@ -28,7 +28,6 @@ using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.PythonTools.Refactoring {
     using AP = AnalysisProtocol;
@@ -255,7 +254,7 @@ namespace Microsoft.PythonTools.Refactoring {
             if (pythonVersion < PythonLanguageVersion.V30) {
                 return Python2IdentifierRegex.IsMatch(identifier);
             }
-            
+
             //Python3 identifiers can include unicode characters
             if (!Tokenizer.IsIdentifierStartChar(identifier[0])) {
                 return false;
@@ -287,8 +286,7 @@ namespace Microsoft.PythonTools.Refactoring {
             try {
                 var response = await _previewer.GetExtractionResult(info);
                 PreviewText = response.methodBody;
-            }
-            catch (Exception ex) {
+            } catch (Exception ex) {
                 Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
                 PreviewText = Strings.ExtractMethod_FailedToGetPreview;
             }
@@ -324,13 +322,11 @@ namespace Microsoft.PythonTools.Refactoring {
                         if (info[0].bstrFaceName != null) {
                             return info[0].bstrFaceName;
                         }
-                    }
-                    finally {
+                    } finally {
                         store.CloseCategory();
                     }
                 }
-            }
-            catch { }
+            } catch { }
 
             return "Consolas";
         }

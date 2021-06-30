@@ -19,7 +19,6 @@ using System.IO;
 using System.Linq;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Debugger.Interop;
 
 namespace Microsoft.PythonTools.Debugger.DebugEngine {
     // Represents a logical stack frame on the thread stack. 
@@ -30,7 +29,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         private readonly PythonStackFrame _stackFrame;
 
         // An array of this frame's parameters
-        private readonly  PythonEvaluationResult[] _parameters;
+        private readonly PythonEvaluationResult[] _parameters;
 
         // An array of this frame's locals
         private readonly PythonEvaluationResult[] _locals;
@@ -385,7 +384,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             if (guidFilter == DebuggerConstants.guidFilterLocalsPlusArgs ||
                     guidFilter == DebuggerConstants.guidFilterAllLocalsPlusArgs ||
                     guidFilter == DebuggerConstants.guidFilterAllLocals) {
-                        CreateLocalsPlusArgsProperties(dwRadix, out elementsReturned, out ppEnum);
+                CreateLocalsPlusArgsProperties(dwRadix, out elementsReturned, out ppEnum);
                 hr = VSConstants.S_OK;
             } else if (guidFilter == DebuggerConstants.guidFilterLocals) {
                 CreateLocalProperties(dwRadix, out elementsReturned, out ppEnum);

@@ -14,27 +14,27 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
-using Microsoft.VisualStudio.Shell.Interop;
 using MSBuild = Microsoft.Build.Evaluation;
 
-namespace Microsoft.VisualStudioTools.Project {
+namespace Microsoft.VisualStudioTools.Project
+{
 
     /// <summary>
     /// Interface for manipulating build dependency
     /// </summary>
     /// <remarks>Normally this should be an internal interface but since it shouldbe available for the aggregator it must be made public.</remarks>
     [ComVisible(true)]
-    public interface IBuildDependencyUpdate {
+    public interface IBuildDependencyUpdate
+    {
         /// <summary>
         /// Defines a container for storing BuildDependencies
         /// </summary>
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1819:PropertiesShouldNotReturnArrays")]
-        IVsBuildDependency[] BuildDependencies {
+        IVsBuildDependency[] BuildDependencies
+        {
             get;
         }
 
@@ -55,14 +55,16 @@ namespace Microsoft.VisualStudioTools.Project {
     /// <summary>
     /// Provides access to the reference data container.
     /// </summary>
-    internal interface IReferenceContainerProvider {
+    internal interface IReferenceContainerProvider
+    {
         IReferenceContainer GetReferenceContainer();
     }
 
     /// <summary>
     /// Defines a container for manipulating references
     /// </summary>
-    internal interface IReferenceContainer {
+    internal interface IReferenceContainer
+    {
         IList<ReferenceNode> EnumReferences();
         ReferenceNode AddReferenceFromSelectorData(VSCOMPONENTSELECTORDATA selectorData);
         void LoadReferencesFromBuildProject(MSBuild.Project buildProject);
@@ -71,7 +73,8 @@ namespace Microsoft.VisualStudioTools.Project {
     /// <summary>
     /// Defines support for single file generator
     /// </summary>
-    public interface ISingleFileGenerator {
+    public interface ISingleFileGenerator
+    {
         ///<summary>
         /// Runs the generator on the item represented by the document moniker.
         /// </summary>

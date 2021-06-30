@@ -18,7 +18,6 @@ using System;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using Microsoft.CookiecutterTools;
 
 namespace Microsoft.CookiecutterTools.Infrastructure {
     public static class ExceptionExtensions {

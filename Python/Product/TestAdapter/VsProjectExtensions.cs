@@ -19,7 +19,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.PythonTools.TestAdapter {
     internal static class VsProjectExtensions {
@@ -194,6 +193,6 @@ namespace Microsoft.PythonTools.TestAdapter {
                 return strRet;
             }
         }
-        
+
     }
 }

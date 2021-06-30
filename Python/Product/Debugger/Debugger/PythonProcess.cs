@@ -112,7 +112,7 @@ namespace Microsoft.PythonTools.Debugger {
             processInfo.RedirectStandardInput = (options & PythonDebugOptions.RedirectInput) != 0;
             processInfo.WorkingDirectory = dir;
 
-            processInfo.Arguments = 
+            processInfo.Arguments =
                 (String.IsNullOrWhiteSpace(interpreterOptions) ? "" : (interpreterOptions + " ")) +
                 "\"" + PythonToolsInstallPath.GetFile("ptvsd_launcher.py") + "\" " +
                 "\"" + dir + "\" " +
@@ -343,7 +343,7 @@ namespace Microsoft.PythonTools.Debugger {
 
         public PythonBreakpoint AddDjangoBreakpoint(string filename, int lineNo) {
             int id = _breakpointCounter++;
-            var res = new PythonBreakpoint(this, filename, lineNo, PythonBreakpointConditionKind.Always, "", PythonBreakpointPassCountKind.Always, 0 , id, true);
+            var res = new PythonBreakpoint(this, filename, lineNo, PythonBreakpointConditionKind.Always, "", PythonBreakpointPassCountKind.Always, 0, id, true);
             _breakpoints[id] = res;
             return res;
         }
@@ -554,7 +554,7 @@ namespace Microsoft.PythonTools.Debugger {
                                     expressions.Add(text);
                                 }
                             }
-                        
+
                         } else {
                             var text = ToDottedNameString(expr, ast);
                             if (text != null) {

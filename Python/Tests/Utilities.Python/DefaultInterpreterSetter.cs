@@ -15,10 +15,8 @@
 // permissions and limitations under the License.
 
 using System;
-using Microsoft.PythonTools;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.ComponentModelHost;
-using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TestUtilities.UI {

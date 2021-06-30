@@ -16,10 +16,8 @@
 
 using System;
 using System.Diagnostics;
-using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Debugger.Interop;
-using Microsoft.VisualStudio.Shell;
 
 namespace Microsoft.PythonTools.Debugger.DebugEngine {
     // This class implements IDebugThread2 which represents a thread running in a program.
@@ -242,7 +240,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                     } else {
                         props[0].dwThreadCategory = (uint)enum_THREADCATEGORY.THREADCATEGORY_Main;
                     }
-                    
+
                     props[0].dwFields |= (uint)enum_THREADPROPERTY_FIELDS100.TPF100_CATEGORY;
                 }
 
@@ -276,7 +274,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             THREADCATEGORY_RPC = (THREADCATEGORY_Main + 1),
             THREADCATEGORY_Unknown = (THREADCATEGORY_RPC + 1)
         }
-   
+
         #endregion
 
         #region Uncalled interface methods

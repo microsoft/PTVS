@@ -63,7 +63,7 @@ namespace VSInterpretersTests {
                 var buffer = new char[7];
                 Assert.AreEqual(7, r.Read(buffer, 0, 7));
                 Assert.AreEqual("0123456", ToString(buffer));
-                
+
                 // We do not get a full read here, by design
                 Assert.AreEqual(3, r.Read(buffer, 0, 7));
                 Assert.AreEqual("789", ToString(buffer.Take(3)));
@@ -83,7 +83,7 @@ namespace VSInterpretersTests {
                 var buffer = new char[7];
                 Assert.AreEqual(7, r.ReadBlock(buffer, 0, 7));
                 Assert.AreEqual("0123456", ToString(buffer));
-                
+
                 Assert.AreEqual(7, r.ReadBlock(buffer, 0, 7));
                 Assert.AreEqual("789ABCD", ToString(buffer));
 

@@ -16,7 +16,6 @@
 
 using System;
 using System.Runtime.InteropServices;
-using Microsoft.VisualStudio.Debugger.Interop;
 
 namespace Microsoft.PythonTools.Debugger.DebugEngine {
     static class EngineUtils {

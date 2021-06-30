@@ -21,8 +21,6 @@ using System.ComponentModel.Composition;
 using System.ComponentModel.Composition.Primitives;
 using System.Diagnostics;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Microsoft.PythonTools.Interpreter {
     [Export(typeof(IInterpreterRegistryService))]
@@ -39,7 +37,7 @@ namespace Microsoft.PythonTools.Interpreter {
         private const string InterpreterFactoryIdMetadata = "InterpreterFactoryId";
 
         [ImportingConstructor]
-        public InterpreterRegistryService([ImportMany]Lazy<IPythonInterpreterFactoryProvider, IDictionary<string, object>>[] providers, [ImportMany]Lazy<IInterpreterLog>[] loggers) {
+        public InterpreterRegistryService([ImportMany] Lazy<IPythonInterpreterFactoryProvider, IDictionary<string, object>>[] providers, [ImportMany] Lazy<IInterpreterLog>[] loggers) {
             _providers = providers;
             _loggers = loggers;
         }

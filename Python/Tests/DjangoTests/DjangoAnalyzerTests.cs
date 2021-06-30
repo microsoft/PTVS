@@ -15,7 +15,6 @@
 // permissions and limitations under the License.
 
 #if DJANGO_HTML_EDITOR
-using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -26,11 +25,9 @@ using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Django.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Interpreter.Ast;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
-using TestUtilities.Python;
 
 namespace DjangoTests {
     [TestClass]
@@ -40,7 +37,7 @@ namespace DjangoTests {
             AssertListener.Initialize();
         }
 
-        private void TestSingleRenderVariable(string template, string value="data") {
+        private void TestSingleRenderVariable(string template, string value = "data") {
             var proj = AnalyzerTest(TestData.GetPath("TestData\\DjangoAnalysisTestApp"), out _);
 
             var vars = proj.GetVariablesForTemplateFile(TestData.GetPath("TestData\\DjangoAnalysisTestApp\\test_render\\templates\\" + template));

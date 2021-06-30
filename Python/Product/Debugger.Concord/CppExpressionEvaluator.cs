@@ -16,11 +16,6 @@
 
 using System;
 using System.Collections.ObjectModel;
-using Microsoft.VisualStudio.Debugger;
-using Microsoft.VisualStudio.Debugger.CallStack;
-using Microsoft.VisualStudio.Debugger.CustomRuntimes;
-using Microsoft.VisualStudio.Debugger.Evaluation;
-using Microsoft.VisualStudio.Debugger.Native;
 
 namespace Microsoft.PythonTools.Debugger.Concord {
     internal class CppExpressionEvaluator {

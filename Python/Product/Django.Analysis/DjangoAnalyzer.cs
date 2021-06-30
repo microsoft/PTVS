@@ -16,9 +16,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.Composition;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -43,7 +41,7 @@ namespace Microsoft.PythonTools.Django.Analysis {
         private PythonAnalyzer _analyzer;
         internal static readonly Dictionary<string, string> _knownTags = MakeKnownTagsTable();
         internal static readonly Dictionary<string, string> _knownFilters = MakeKnownFiltersTable();
-        
+
         public DjangoAnalyzer() {
             foreach (var tagName in _nestedEndTags) {
                 _tags[tagName] = new TagInfo("", null);

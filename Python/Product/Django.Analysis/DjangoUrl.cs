@@ -15,8 +15,8 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace Microsoft.PythonTools.Django.Analysis {

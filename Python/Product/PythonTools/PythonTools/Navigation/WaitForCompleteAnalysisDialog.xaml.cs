@@ -18,7 +18,6 @@ using System;
 using System.Threading;
 using System.Windows;
 using Microsoft.PythonTools.Intellisense;
-using Microsoft.VisualStudio.PlatformUI;
 using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Navigation {
@@ -56,7 +55,7 @@ namespace Microsoft.PythonTools.Navigation {
                 }
                 return false;
             }
-            
+
             bool? dialogResult = null;
             try {
                 Dispatcher.Invoke((Action)(() => {

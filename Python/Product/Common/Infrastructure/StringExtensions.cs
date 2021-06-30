@@ -17,7 +17,6 @@
 using System;
 using System.Diagnostics;
 using System.Globalization;
-using System.Text.RegularExpressions;
 
 namespace Microsoft.PythonTools.Infrastructure {
     static class StringExtensions {

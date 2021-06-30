@@ -15,7 +15,6 @@
 // permissions and limitations under the License.
 
 using System;
-using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Options {
     /// <summary>

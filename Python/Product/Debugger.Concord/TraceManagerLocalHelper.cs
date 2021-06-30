@@ -21,12 +21,6 @@ using System.Runtime.InteropServices;
 using Microsoft.PythonTools.Debugger.Concord.Proxies;
 using Microsoft.PythonTools.Debugger.Concord.Proxies.Structs;
 using Microsoft.PythonTools.Parsing;
-using Microsoft.VisualStudio.Debugger;
-using Microsoft.VisualStudio.Debugger.Breakpoints;
-using Microsoft.VisualStudio.Debugger.CallStack;
-using Microsoft.VisualStudio.Debugger.CustomRuntimes;
-using Microsoft.VisualStudio.Debugger.Evaluation;
-using Microsoft.VisualStudio.Debugger.Native;
 
 namespace Microsoft.PythonTools.Debugger.Concord {
     // This class implements functionality that is logically a part of TraceManager, but has to be implemented on LocalComponent
@@ -390,7 +384,7 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             var frameFormatOptions = new DkmFrameFormatOptions(DkmVariableInfoFlags.None, DkmFrameNameFormatOptions.None, DkmEvaluationFlags.None, 10000, 10);
             var stackContext = DkmStackContext.Create(inspectionSession, thread, DkmCallStackFilterOptions.None, frameFormatOptions, null, null);
             DkmStackFrame frame = null;
-            for (int pyFrameCount = 0; pyFrameCount != 2; ) {
+            for (int pyFrameCount = 0; pyFrameCount != 2;) {
                 DkmStackFrame[] frames = null;
                 var workList = DkmWorkList.Create(null);
                 stackContext.GetNextFrames(workList, 1, (result) => { frames = result.Frames; });

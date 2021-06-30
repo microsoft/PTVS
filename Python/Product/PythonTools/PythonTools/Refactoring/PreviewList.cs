@@ -16,8 +16,6 @@
 
 using System;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudio.TextManager.Interop;
 
 namespace Microsoft.PythonTools.Refactoring {
     /// <summary>

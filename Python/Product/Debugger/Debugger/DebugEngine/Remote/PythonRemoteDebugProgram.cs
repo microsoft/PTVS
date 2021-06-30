@@ -16,8 +16,6 @@
 
 using System;
 using Microsoft.PythonTools.Debugger.DebugEngine;
-using Microsoft.PythonTools.Interpreter;
-using Microsoft.VisualStudio.Debugger.Interop;
 
 namespace Microsoft.PythonTools.Debugger.Remote {
     internal class PythonRemoteDebugProgram : IDebugProgram2 {

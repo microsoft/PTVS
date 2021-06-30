@@ -18,8 +18,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.PythonTools.Django.Intellisense;
-using Microsoft.WebTools.Languages.Html.Artifacts;
-using Microsoft.WebTools.Languages.Shared.Text;
 
 namespace Microsoft.PythonTools.Django.TemplateParsing {
     /// <summary>

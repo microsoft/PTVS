@@ -21,9 +21,7 @@ using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio.Language.Intellisense;
-using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.TextManager.Interop;
 
 namespace Microsoft.PythonTools.Refactoring {
     /// <summary>
@@ -184,7 +182,7 @@ namespace Microsoft.PythonTools.Refactoring {
         public _VSTREESTATECHANGEREFRESH ToggleState() {
             var oldParentState = _parent.CheckState;
             _checked = !_checked;
-            
+
             _parent.UpdateTempFile();
 
             var newParentState = _parent.CheckState;

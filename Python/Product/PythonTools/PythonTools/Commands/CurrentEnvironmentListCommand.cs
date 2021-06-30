@@ -19,7 +19,6 @@ using System.ComponentModel.Design;
 using System.Linq;
 using System.Runtime.InteropServices;
 using Microsoft.PythonTools.Environments;
-using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
 using IServiceProvider = System.IServiceProvider;
 

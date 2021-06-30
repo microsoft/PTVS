@@ -18,8 +18,7 @@
 using System;
 using System.Globalization;
 
-namespace Microsoft.VisualStudio.Shell
-{
+namespace Microsoft.VisualStudio.Shell {
     /// <summary>
     /// This attribute adds the property page registration for Component picker 
     /// For Example:
@@ -32,8 +31,7 @@ namespace Microsoft.VisualStudio.Shell
     ///     "ComponentType"=".Net Assembly"
     /// </summary>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = true)]
-    public sealed class ProvideComponentPickerPropertyPageAttribute : RegistrationAttribute
-    {
+    public sealed class ProvideComponentPickerPropertyPageAttribute : RegistrationAttribute {
         private string _packageGuid;
         private string _pageGuid;
         private string _pageRegKeyName;
@@ -50,8 +48,7 @@ namespace Microsoft.VisualStudio.Shell
         /// <param name="packageType">The type of pacakge that provides the page</param>
         /// <param name="pageType">The page type that needs to be registered</param>
         /// <param name="pageRegKeyName">Registry key name for the page.</param>
-        public ProvideComponentPickerPropertyPageAttribute(Type packageType, Type pageType, string pageRegKeyName)
-        {
+        public ProvideComponentPickerPropertyPageAttribute(Type packageType, Type pageType, string pageRegKeyName) {
             if (packageType == null)
                 throw new ArgumentNullException("packageType");
             if (pageType == null)
@@ -67,32 +64,28 @@ namespace Microsoft.VisualStudio.Shell
         /// <summary>
         /// Get the pacakge Guid
         /// </summary>
-        public string PacakgeGuid
-        {
+        public string PacakgeGuid {
             get { return _packageGuid; }
         }
 
         /// <summary>
         /// Get the Guid representing the property page
         /// </summary>
-        public string PageGuid
-        {
+        public string PageGuid {
             get { return _pageGuid; }
         }
 
         /// <summary>
         /// Get the property page reg key name.
         /// </summary>
-        public string PageRegKeyName
-        {
+        public string PageRegKeyName {
             get { return _pageRegKeyName; }
         }
 
         /// <summary>
         /// Get or Set the AddToMru value
         /// </summary>
-        public bool AddToMru
-        {
+        public bool AddToMru {
             get { return _addToMRU; }
             set { _addToMRU = value; }
         }
@@ -100,8 +93,7 @@ namespace Microsoft.VisualStudio.Shell
         /// <summary>
         /// Get or set the Component Type value.
         /// </summary>
-        public string ComponentType
-        {
+        public string ComponentType {
             get { return _componentType; }
             set { _componentType = value; }
         }
@@ -109,8 +101,7 @@ namespace Microsoft.VisualStudio.Shell
         /// <summary>
         /// Get or Set the Sort reg value
         /// </summary>
-        public int SortOrder
-        {
+        public int SortOrder {
             get { return _sortOrder; }
             set { _sortOrder = value; }
         }
@@ -118,8 +109,7 @@ namespace Microsoft.VisualStudio.Shell
         /// <summary>
         /// get / sets default page name value 
         /// </summary>
-        public string DefaultPageNameValue
-        {
+        public string DefaultPageNameValue {
             get { return _defaultPageNameValue; }
             set { _defaultPageNameValue = value; }
         }
@@ -127,8 +117,7 @@ namespace Microsoft.VisualStudio.Shell
         /// <summary>
         /// Property that gets the page reg key name
         /// </summary>
-        private string PageRegKey
-        {
+        private string PageRegKey {
             get { return string.Format(CultureInfo.InvariantCulture, @"ComponentPickerPages\{0}", PageRegKeyName); }
         }
         /// <summary>
@@ -136,10 +125,8 @@ namespace Microsoft.VisualStudio.Shell
         ///     contains the location where the registration inforomation should be placed.
         ///     It also contains other information such as the type being registered and path information.
         /// </summary>
-        public override void Register(RegistrationContext context)
-        {
-            using (Key childKey = context.CreateKey(PageRegKey))
-            {
+        public override void Register(RegistrationContext context) {
+            using (Key childKey = context.CreateKey(PageRegKey)) {
                 childKey.SetValue(string.Empty, DefaultPageNameValue);
                 childKey.SetValue("Package", PacakgeGuid);
                 childKey.SetValue("Page", PageGuid);
@@ -159,8 +146,7 @@ namespace Microsoft.VisualStudio.Shell
         /// Unregister property page
         /// </summary>
         /// <param name="context"></param>
-        public override void Unregister(RegistrationContext context)
-        {
+        public override void Unregister(RegistrationContext context) {
             context.RemoveKey(PageRegKey);
         }
     }

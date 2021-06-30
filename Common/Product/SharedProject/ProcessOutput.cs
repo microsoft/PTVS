@@ -24,16 +24,17 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Win32.SafeHandles;
 
-namespace Microsoft.VisualStudioTools.Infrastructure {
+namespace Microsoft.VisualStudioTools.Infrastructure
+{
     /// <summary>
     /// Base class that can receive output from <see cref="ProcessOutput"/>.
     /// 
     /// If this class implements <see cref="IDisposable"/>, it will be disposed
     /// when the <see cref="ProcessOutput"/> object is disposed.
     /// </summary>
-    abstract class Redirector {
+    abstract class Redirector
+    {
         /// <summary>
         /// Called when a line is written to standard output.
         /// </summary>
@@ -51,50 +52,64 @@ namespace Microsoft.VisualStudioTools.Infrastructure {
         /// Called when output is written that should be brought to the user's
         /// attention. The default implementation does nothing.
         /// </summary>
-        public virtual void Show() {
+        public virtual void Show()
+        {
         }
 
         /// <summary>
         /// Called when output is written that should be brought to the user's
         /// immediate attention. The default implementation does nothing.
         /// </summary>
-        public virtual void ShowAndActivate() {
+        public virtual void ShowAndActivate()
+        {
         }
     }
 
-    sealed class TeeRedirector : Redirector, IDisposable {
+    sealed class TeeRedirector : Redirector, IDisposable
+    {
         private readonly Redirector[] _redirectors;
 
-        public TeeRedirector(params Redirector[] redirectors) {
+        public TeeRedirector(params Redirector[] redirectors)
+        {
             _redirectors = redirectors;
         }
 
-        public void Dispose() {
-            foreach (var redir in _redirectors.OfType<IDisposable>()) {
+        public void Dispose()
+        {
+            foreach (var redir in _redirectors.OfType<IDisposable>())
+            {
                 redir.Dispose();
             }
         }
 
-        public override void WriteLine(string line) {
-            foreach (var redir in _redirectors) {
+        public override void WriteLine(string line)
+        {
+            foreach (var redir in _redirectors)
+            {
                 redir.WriteLine(line);
             }
         }
 
-        public override void WriteErrorLine(string line) {
-            foreach (var redir in _redirectors) {
+        public override void WriteErrorLine(string line)
+        {
+            foreach (var redir in _redirectors)
+            {
                 redir.WriteErrorLine(line);
             }
         }
 
-        public override void Show() {
-            foreach (var redir in _redirectors) {
+        public override void Show()
+        {
+            foreach (var redir in _redirectors)
+            {
                 redir.Show();
             }
         }
 
-        public override void ShowAndActivate() {
-            foreach (var redir in _redirectors) {
+        public override void ShowAndActivate()
+        {
+            foreach (var redir in _redirectors)
+            {
                 redir.ShowAndActivate();
             }
         }
@@ -103,7 +118,8 @@ namespace Microsoft.VisualStudioTools.Infrastructure {
     /// <summary>
     /// Represents a process and its captured output.
     /// </summary>
-    sealed class ProcessOutput : IDisposable {
+    sealed class ProcessOutput : IDisposable
+    {
         private readonly Process _process;
         private readonly string _arguments;
         private readonly List<string> _output, _error;
@@ -125,7 +141,8 @@ namespace Microsoft.VisualStudioTools.Infrastructure {
         /// <param name="filename">Executable file to run.</param>
         /// <param name="arguments">Arguments to pass.</param>
         /// <returns>A <see cref="ProcessOutput"/> object.</returns>
-        public static ProcessOutput RunVisible(string filename, params string[] arguments) {
+        public static ProcessOutput RunVisible(string filename, params string[] arguments)
+        {
             return Run(filename, arguments, null, null, true, null);
         }
 
@@ -136,7 +153,8 @@ namespace Microsoft.VisualStudioTools.Infrastructure {
         /// <param name="filename">Executable file to run.</param>
         /// <param name="arguments">Arguments to pass.</param>
         /// <returns>A <see cref="ProcessOutput"/> object.</returns>
-        public static ProcessOutput RunHiddenAndCapture(string filename, params string[] arguments) {
+        public static ProcessOutput RunHiddenAndCapture(string filename, params string[] arguments)
+        {
             return Run(filename, arguments, null, null, false, null);
         }
 
@@ -174,11 +192,14 @@ namespace Microsoft.VisualStudioTools.Infrastructure {
             bool elevate = false,
             Encoding outputEncoding = null,
             Encoding errorEncoding = null
-        ) {
-            if (string.IsNullOrEmpty(filename)) {
+        )
+        {
+            if (string.IsNullOrEmpty(filename))
+            {
                 throw new ArgumentException("Filename required", "filename");
             }
-            if (elevate) {
+            if (elevate)
+            {
                 return RunElevated(
                     filename,
                     arguments,
@@ -191,10 +212,13 @@ namespace Microsoft.VisualStudioTools.Infrastructure {
             }
 
             var psi = new ProcessStartInfo(filename);
-            if (quoteArgs) {
+            if (quoteArgs)
+            {
                 psi.Arguments = string.Join(" ",
                     arguments.Where(a => a != null).Select(QuoteSingleArgument));
-            } else {
+            }
+            else
+            {
                 psi.Arguments = string.Join(" ", arguments.Where(a => a != null));
             }
             psi.WorkingDirectory = workingDirectory;
@@ -205,8 +229,10 @@ namespace Microsoft.VisualStudioTools.Infrastructure {
             psi.RedirectStandardInput = !visible;
             psi.StandardOutputEncoding = outputEncoding ?? psi.StandardOutputEncoding;
             psi.StandardErrorEncoding = errorEncoding ?? outputEncoding ?? psi.StandardErrorEncoding;
-            if (env != null) {
-                foreach (var kv in env) {
+            if (env != null)
+            {
+                foreach (var kv in env)
+                {
                     psi.EnvironmentVariables[kv.Key] = kv.Value;
                 }
             }
@@ -236,20 +262,25 @@ namespace Microsoft.VisualStudioTools.Infrastructure {
             bool quoteArgs = true,
             Encoding outputEncoding = null,
             Encoding errorEncoding = null
-        ) {
+        )
+        {
             var outFile = Path.GetTempFileName();
             var errFile = Path.GetTempFileName();
-            var psi = new ProcessStartInfo(Path.Combine(Environment.SystemDirectory, "cmd.exe")) {
+            var psi = new ProcessStartInfo(Path.Combine(Environment.SystemDirectory, "cmd.exe"))
+            {
                 CreateNoWindow = true,
                 WindowStyle = ProcessWindowStyle.Hidden,
                 UseShellExecute = true,
                 Verb = "runas"
             };
 
-        string args;
-            if (quoteArgs) {
+            string args;
+            if (quoteArgs)
+            {
                 args = string.Join(" ", arguments.Where(a => a != null).Select(QuoteSingleArgument));
-            } else {
+            }
+            else
+            {
                 args = string.Join(" ", arguments.Where(a => a != null));
             }
             psi.Arguments = string.Format("/S /C \"{0} {1} >>{2} 2>>{3}\"",
@@ -265,16 +296,24 @@ namespace Microsoft.VisualStudioTools.Infrastructure {
             var process = new Process();
             process.StartInfo = psi;
             var result = new ProcessOutput(process, redirector);
-            if (redirector != null) {
-                result.Exited += (s, e) => {
-                    try {
-                        try {
+            if (redirector != null)
+            {
+                result.Exited += (s, e) =>
+                {
+                    try
+                    {
+                        try
+                        {
                             var lines = File.ReadAllLines(outFile, outputEncoding ?? Encoding.Default);
-                            foreach (var line in lines) {
+                            foreach (var line in lines)
+                            {
                                 redirector.WriteLine(line);
                             }
-                        } catch (Exception ex) {
-                            if (IsCriticalException(ex)) {
+                        }
+                        catch (Exception ex)
+                        {
+                            if (IsCriticalException(ex))
+                            {
                                 throw;
                             }
                             redirector.WriteErrorLine("Failed to obtain standard output from elevated process.");
@@ -287,13 +326,18 @@ namespace Microsoft.VisualStudioTools.Infrastructure {
                             Trace.TraceError(ex.ToString());
 #endif
                         }
-                        try {
+                        try
+                        {
                             var lines = File.ReadAllLines(errFile, errorEncoding ?? outputEncoding ?? Encoding.Default);
-                            foreach (var line in lines) {
+                            foreach (var line in lines)
+                            {
                                 redirector.WriteErrorLine(line);
                             }
-                        } catch (Exception ex) {
-                            if (IsCriticalException(ex)) {
+                        }
+                        catch (Exception ex)
+                        {
+                            if (IsCriticalException(ex))
+                            {
                                 throw;
                             }
                             redirector.WriteErrorLine("Failed to obtain standard error from elevated process.");
@@ -306,95 +350,127 @@ namespace Microsoft.VisualStudioTools.Infrastructure {
                             Trace.TraceError(ex.ToString());
 #endif
                         }
-                    } finally {
-                        try {
+                    }
+                    finally
+                    {
+                        try
+                        {
                             File.Delete(outFile);
-                        } catch { }
-                        try {
+                        }
+                        catch { }
+                        try
+                        {
                             File.Delete(errFile);
-                        } catch { }
+                        }
+                        catch { }
                     }
                 };
             }
             return result;
         }
 
-        internal static IEnumerable<string> SplitLines(string source) {
+        internal static IEnumerable<string> SplitLines(string source)
+        {
             int start = 0;
             int end = source.IndexOfAny(EolChars);
-            while (end >= start) {
+            while (end >= start)
+            {
                 yield return source.Substring(start, end - start);
                 start = end + 1;
-                if (source[start - 1] == '\r' && start < source.Length && source[start] == '\n') {
+                if (source[start - 1] == '\r' && start < source.Length && source[start] == '\n')
+                {
                     start += 1;
                 }
 
-                if (start < source.Length) {
+                if (start < source.Length)
+                {
                     end = source.IndexOfAny(EolChars, start);
-                } else {
+                }
+                else
+                {
                     end = -1;
                 }
             }
-            if (start <= 0) {
+            if (start <= 0)
+            {
                 yield return source;
-            } else if (start < source.Length) {
+            }
+            else if (start < source.Length)
+            {
                 yield return source.Substring(start);
             }
         }
 
-        internal static string QuoteSingleArgument(string arg) {
-            if (string.IsNullOrEmpty(arg)) {
+        internal static string QuoteSingleArgument(string arg)
+        {
+            if (string.IsNullOrEmpty(arg))
+            {
                 return "\"\"";
             }
-            if (arg.IndexOfAny(_needToBeQuoted) < 0) {
+            if (arg.IndexOfAny(_needToBeQuoted) < 0)
+            {
                 return arg;
             }
 
-            if (arg.StartsWith("\"", StringComparison.Ordinal) && arg.EndsWith("\"", StringComparison.Ordinal)) {
+            if (arg.StartsWith("\"", StringComparison.Ordinal) && arg.EndsWith("\"", StringComparison.Ordinal))
+            {
                 bool inQuote = false;
                 int consecutiveBackslashes = 0;
-                foreach (var c in arg) {
-                    if (c == '"') {
-                        if (consecutiveBackslashes % 2 == 0) {
+                foreach (var c in arg)
+                {
+                    if (c == '"')
+                    {
+                        if (consecutiveBackslashes % 2 == 0)
+                        {
                             inQuote = !inQuote;
                         }
                     }
 
-                    if (c == '\\') {
+                    if (c == '\\')
+                    {
                         consecutiveBackslashes += 1;
-                    } else {
+                    }
+                    else
+                    {
                         consecutiveBackslashes = 0;
                     }
                 }
-                if (!inQuote) {
+                if (!inQuote)
+                {
                     return arg;
                 }
             }
 
             var newArg = arg.Replace("\"", "\\\"");
-            if (newArg.EndsWith("\\", StringComparison.Ordinal)) {
+            if (newArg.EndsWith("\\", StringComparison.Ordinal))
+            {
                 newArg += "\\";
             }
             return "\"" + newArg + "\"";
         }
 
-        private ProcessOutput(Process process, Redirector redirector) {
+        private ProcessOutput(Process process, Redirector redirector)
+        {
             _arguments = QuoteSingleArgument(process.StartInfo.FileName) + " " + process.StartInfo.Arguments;
             _redirector = redirector;
-            if (_redirector == null) {
+            if (_redirector == null)
+            {
                 _output = new List<string>();
                 _error = new List<string>();
             }
 
             _process = process;
-            if (_process.StartInfo.RedirectStandardOutput) {
+            if (_process.StartInfo.RedirectStandardOutput)
+            {
                 _process.OutputDataReceived += OnOutputDataReceived;
             }
-            if (_process.StartInfo.RedirectStandardError) {
+            if (_process.StartInfo.RedirectStandardError)
+            {
                 _process.ErrorDataReceived += OnErrorDataReceived;
             }
 
-            if (!_process.StartInfo.RedirectStandardOutput && !_process.StartInfo.RedirectStandardError) {
+            if (!_process.StartInfo.RedirectStandardOutput && !_process.StartInfo.RedirectStandardError)
+            {
                 // If we are receiving output events, we signal that the process
                 // has exited when one of them receives null. Otherwise, we have
                 // to listen for the Exited event.
@@ -404,95 +480,132 @@ namespace Microsoft.VisualStudioTools.Infrastructure {
             }
             _process.EnableRaisingEvents = true;
 
-            try {
+            try
+            {
                 _process.Start();
-            } catch (Exception ex) {
-                if (IsCriticalException(ex)) {
+            }
+            catch (Exception ex)
+            {
+                if (IsCriticalException(ex))
+                {
                     throw;
                 }
-                if (_redirector != null) {
-                    foreach (var line in SplitLines(ex.ToString())) {
+                if (_redirector != null)
+                {
+                    foreach (var line in SplitLines(ex.ToString()))
+                    {
                         _redirector.WriteErrorLine(line);
                     }
-                } else if (_error != null) {
+                }
+                else if (_error != null)
+                {
                     _error.AddRange(SplitLines(ex.ToString()));
                 }
                 _process = null;
             }
 
-            if (_process != null) {
-                if (_process.StartInfo.RedirectStandardOutput) {
+            if (_process != null)
+            {
+                if (_process.StartInfo.RedirectStandardOutput)
+                {
                     _process.BeginOutputReadLine();
                 }
-                if (_process.StartInfo.RedirectStandardError) {
+                if (_process.StartInfo.RedirectStandardError)
+                {
                     _process.BeginErrorReadLine();
                 }
-                
-                if (_process.StartInfo.RedirectStandardInput) {
+
+                if (_process.StartInfo.RedirectStandardInput)
+                {
                     // Close standard input so that we don't get stuck trying to read input from the user.
-                    try {
+                    try
+                    {
                         _process.StandardInput.Close();
-                    } catch (InvalidOperationException) {
+                    }
+                    catch (InvalidOperationException)
+                    {
                         // StandardInput not available
                     }
                 }
             }
         }
 
-        private void OnOutputDataReceived(object sender, DataReceivedEventArgs e) {
-            if (_isDisposed) {
+        private void OnOutputDataReceived(object sender, DataReceivedEventArgs e)
+        {
+            if (_isDisposed)
+            {
                 return;
             }
 
-            if (e.Data == null) {
+            if (e.Data == null)
+            {
                 bool shouldExit;
-                lock (_seenNullLock) {
+                lock (_seenNullLock)
+                {
                     _seenNullInOutput = true;
                     shouldExit = _seenNullInError || !_process.StartInfo.RedirectStandardError;
                 }
-                if (shouldExit) {
+                if (shouldExit)
+                {
                     OnExited(_process, EventArgs.Empty);
                 }
-            } else if (!string.IsNullOrEmpty(e.Data)) {
-                foreach (var line in SplitLines(e.Data)) {
-                    if (_output != null) {
+            }
+            else if (!string.IsNullOrEmpty(e.Data))
+            {
+                foreach (var line in SplitLines(e.Data))
+                {
+                    if (_output != null)
+                    {
                         _output.Add(line);
                     }
-                    if (_redirector != null) {
+                    if (_redirector != null)
+                    {
                         _redirector.WriteLine(line);
                     }
                 }
             }
         }
 
-        private void OnErrorDataReceived(object sender, DataReceivedEventArgs e) {
-            if (_isDisposed) {
+        private void OnErrorDataReceived(object sender, DataReceivedEventArgs e)
+        {
+            if (_isDisposed)
+            {
                 return;
             }
 
-            if (e.Data == null) {
+            if (e.Data == null)
+            {
                 bool shouldExit;
-                lock (_seenNullLock) {
+                lock (_seenNullLock)
+                {
                     _seenNullInError = true;
                     shouldExit = _seenNullInOutput || !_process.StartInfo.RedirectStandardOutput;
                 }
-                if (shouldExit) {
+                if (shouldExit)
+                {
                     OnExited(_process, EventArgs.Empty);
                 }
-            } else if (!string.IsNullOrEmpty(e.Data)) {
-                foreach (var line in SplitLines(e.Data)) {
-                    if (_error != null) {
+            }
+            else if (!string.IsNullOrEmpty(e.Data))
+            {
+                foreach (var line in SplitLines(e.Data))
+                {
+                    if (_error != null)
+                    {
                         _error.Add(line);
                     }
-                    if (_redirector != null) {
+                    if (_redirector != null)
+                    {
                         _redirector.WriteLine(line);
                     }
                 }
             }
         }
 
-        public int? ProcessId {
-            get {
+        public int? ProcessId
+        {
+            get
+            {
                 return _process != null ? _process.Id : (int?)null;
             }
         }
@@ -500,8 +613,10 @@ namespace Microsoft.VisualStudioTools.Infrastructure {
         /// <summary>
         /// The arguments that were originally passed, including the filename.
         /// </summary>
-        public string Arguments {
-            get {
+        public string Arguments
+        {
+            get
+            {
                 return _arguments;
             }
         }
@@ -509,8 +624,10 @@ namespace Microsoft.VisualStudioTools.Infrastructure {
         /// <summary>
         /// True if the process started. False if an error occurred.
         /// </summary>
-        public bool IsStarted {
-            get {
+        public bool IsStarted
+        {
+            get
+            {
                 return _process != null;
             }
         }
@@ -519,9 +636,12 @@ namespace Microsoft.VisualStudioTools.Infrastructure {
         /// The exit code or null if the process never started or has not
         /// exited.
         /// </summary>
-        public int? ExitCode {
-            get {
-                if (_process == null || !_process.HasExited) {
+        public int? ExitCode
+        {
+            get
+            {
+                if (_process == null || !_process.HasExited)
+                {
                     return null;
                 }
                 return _process.ExitCode;
@@ -531,25 +651,40 @@ namespace Microsoft.VisualStudioTools.Infrastructure {
         /// <summary>
         /// Gets or sets the priority class of the process.
         /// </summary>
-        public ProcessPriorityClass PriorityClass {
-            get {
-                if (_process != null && !_process.HasExited) {
-                    try {
+        public ProcessPriorityClass PriorityClass
+        {
+            get
+            {
+                if (_process != null && !_process.HasExited)
+                {
+                    try
+                    {
                         return _process.PriorityClass;
-                    } catch (Win32Exception) {
-                    } catch (InvalidOperationException) {
+                    }
+                    catch (Win32Exception)
+                    {
+                    }
+                    catch (InvalidOperationException)
+                    {
                         // Return Normal if we've raced with the process
                         // exiting.
                     }
                 }
                 return ProcessPriorityClass.Normal;
             }
-            set {
-                if (_process != null && !_process.HasExited) {
-                    try {
+            set
+            {
+                if (_process != null && !_process.HasExited)
+                {
+                    try
+                    {
                         _process.PriorityClass = value;
-                    } catch (Win32Exception) {
-                    } catch (InvalidOperationException) {
+                    }
+                    catch (Win32Exception)
+                    {
+                    }
+                    catch (InvalidOperationException)
+                    {
                         // Silently fail if we've raced with the process
                         // exiting.
                     }
@@ -560,34 +695,49 @@ namespace Microsoft.VisualStudioTools.Infrastructure {
         /// <summary>
         /// The redirector that was originally passed.
         /// </summary>
-        public Redirector Redirector {
+        public Redirector Redirector
+        {
             get { return _redirector; }
         }
 
-        private void FlushAndCloseOutput() {
-            if (_process == null) {
+        private void FlushAndCloseOutput()
+        {
+            if (_process == null)
+            {
                 return;
             }
 
-            if (_process.StartInfo.RedirectStandardOutput) {
-                try {
+            if (_process.StartInfo.RedirectStandardOutput)
+            {
+                try
+                {
                     _process.CancelOutputRead();
-                } catch (InvalidOperationException) {
+                }
+                catch (InvalidOperationException)
+                {
                     // Reader has already been cancelled
                 }
             }
-            if (_process.StartInfo.RedirectStandardError) {
-                try {
+            if (_process.StartInfo.RedirectStandardError)
+            {
+                try
+                {
                     _process.CancelErrorRead();
-                } catch (InvalidOperationException) {
+                }
+                catch (InvalidOperationException)
+                {
                     // Reader has already been cancelled
                 }
             }
 
-            if (_waitHandleEvent != null) {
-                try {
+            if (_waitHandleEvent != null)
+            {
+                try
+                {
                     _waitHandleEvent.Set();
-                } catch (ObjectDisposedException) {
+                }
+                catch (ObjectDisposedException)
+                {
                 }
             }
         }
@@ -596,8 +746,10 @@ namespace Microsoft.VisualStudioTools.Infrastructure {
         /// The lines of text sent to standard output. These do not include
         /// newline characters.
         /// </summary>
-        public IEnumerable<string> StandardOutputLines {
-            get {
+        public IEnumerable<string> StandardOutputLines
+        {
+            get
+            {
                 return _output;
             }
         }
@@ -606,8 +758,10 @@ namespace Microsoft.VisualStudioTools.Infrastructure {
         /// The lines of text sent to standard error. These do not include
         /// newline characters.
         /// </summary>
-        public IEnumerable<string> StandardErrorLines {
-            get {
+        public IEnumerable<string> StandardErrorLines
+        {
+            get
+            {
                 return _error;
             }
         }
@@ -615,12 +769,16 @@ namespace Microsoft.VisualStudioTools.Infrastructure {
         /// <summary>
         /// A handle that can be waited on. It triggers when the process exits.
         /// </summary>
-        public WaitHandle WaitHandle {
-            get {
-                if (_process == null) {
+        public WaitHandle WaitHandle
+        {
+            get
+            {
+                if (_process == null)
+                {
                     return null;
                 }
-                if (_waitHandleEvent == null) {
+                if (_waitHandleEvent == null)
+                {
                     _waitHandleEvent = new ManualResetEvent(_haveRaisedExitedEvent);
                 }
                 return _waitHandleEvent;
@@ -630,8 +788,10 @@ namespace Microsoft.VisualStudioTools.Infrastructure {
         /// <summary>
         /// Waits until the process exits.
         /// </summary>
-        public void Wait() {
-            if (_process != null) {
+        public void Wait()
+        {
+            if (_process != null)
+            {
                 _process.WaitForExit();
                 // Should have already been called, in which case this is a no-op
                 OnExited(this, EventArgs.Empty);
@@ -645,10 +805,13 @@ namespace Microsoft.VisualStudioTools.Infrastructure {
         /// <returns>
         /// True if the process exited before the timeout expired.
         /// </returns>
-        public bool Wait(TimeSpan timeout) {
-            if (_process != null) {
+        public bool Wait(TimeSpan timeout)
+        {
+            if (_process != null)
+            {
                 bool exited = _process.WaitForExit((int)timeout.TotalMilliseconds);
-                if (exited) {
+                if (exited)
+                {
                     // Should have already been called, in which case this is a no-op
                     OnExited(this, EventArgs.Empty);
                 }
@@ -660,23 +823,34 @@ namespace Microsoft.VisualStudioTools.Infrastructure {
         /// <summary>
         /// Enables using 'await' on this object.
         /// </summary>
-        public TaskAwaiter<int> GetAwaiter() {
-            if (_awaiter == null) {
-                if (_process == null) {
+        public TaskAwaiter<int> GetAwaiter()
+        {
+            if (_awaiter == null)
+            {
+                if (_process == null)
+                {
                     var tcs = new TaskCompletionSource<int>();
                     tcs.SetCanceled();
                     _awaiter = tcs.Task;
-                } else if (_process.HasExited) {
+                }
+                else if (_process.HasExited)
+                {
                     // Should have already been called, in which case this is a no-op
                     OnExited(this, EventArgs.Empty);
                     var tcs = new TaskCompletionSource<int>();
                     tcs.SetResult(_process.ExitCode);
                     _awaiter = tcs.Task;
-                } else {
-                    _awaiter = Task.Run(() => {
-                        try {
+                }
+                else
+                {
+                    _awaiter = Task.Run(() =>
+                    {
+                        try
+                        {
                             Wait();
-                        } catch (Win32Exception) {
+                        }
+                        catch (Win32Exception)
+                        {
                             throw new OperationCanceledException();
                         }
                         return _process.ExitCode;
@@ -690,8 +864,10 @@ namespace Microsoft.VisualStudioTools.Infrastructure {
         /// <summary>
         /// Immediately stops the process.
         /// </summary>
-        public void Kill() {
-            if (_process != null && !_process.HasExited) {
+        public void Kill()
+        {
+            if (_process != null && !_process.HasExited)
+            {
                 _process.Kill();
                 // Should have already been called, in which case this is a no-op
                 OnExited(this, EventArgs.Empty);
@@ -703,14 +879,17 @@ namespace Microsoft.VisualStudioTools.Infrastructure {
         /// </summary>
         public event EventHandler Exited;
 
-        private void OnExited(object sender, EventArgs e) {
-            if (_isDisposed || _haveRaisedExitedEvent) {
+        private void OnExited(object sender, EventArgs e)
+        {
+            if (_isDisposed || _haveRaisedExitedEvent)
+            {
                 return;
             }
             _haveRaisedExitedEvent = true;
             FlushAndCloseOutput();
             var evt = Exited;
-            if (evt != null) {
+            if (evt != null)
+            {
                 evt(this, e);
             }
         }
@@ -718,30 +897,38 @@ namespace Microsoft.VisualStudioTools.Infrastructure {
         /// <summary>
         /// Called to dispose of unmanaged resources.
         /// </summary>
-        public void Dispose() {
-            if (!_isDisposed) {
+        public void Dispose()
+        {
+            if (!_isDisposed)
+            {
                 _isDisposed = true;
-                if (_process != null) {
-                    if (_process.StartInfo.RedirectStandardOutput) {
+                if (_process != null)
+                {
+                    if (_process.StartInfo.RedirectStandardOutput)
+                    {
                         _process.OutputDataReceived -= OnOutputDataReceived;
                     }
-                    if (_process.StartInfo.RedirectStandardError) {
+                    if (_process.StartInfo.RedirectStandardError)
+                    {
                         _process.ErrorDataReceived -= OnErrorDataReceived;
                     }
                     _process.Dispose();
                 }
                 var disp = _redirector as IDisposable;
-                if (disp != null) {
+                if (disp != null)
+                {
                     disp.Dispose();
                 }
-                if (_waitHandleEvent != null) {
+                if (_waitHandleEvent != null)
+                {
                     _waitHandleEvent.Set();
                     _waitHandleEvent.Dispose();
                 }
             }
         }
 
-        private static bool IsCriticalException(Exception ex) {
+        private static bool IsCriticalException(Exception ex)
+        {
             return ex is StackOverflowException ||
                 ex is OutOfMemoryException ||
                 ex is ThreadAbortException ||

@@ -17,7 +17,6 @@
 using System;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Debugger.Interop;
 
 namespace Microsoft.PythonTools.Debugger.Remote {
     // This class is used by the Attach to Process dialog when Python remote debug transport is active

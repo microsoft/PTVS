@@ -14,10 +14,8 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
 using System.Windows;
 using System.Windows.Input;
-using Microsoft.VisualStudio.PlatformUI;
 using Microsoft.Win32;
 
 namespace Microsoft.PythonTools.Profiling {
@@ -26,7 +24,7 @@ namespace Microsoft.PythonTools.Profiling {
     /// </summary>
     public partial class CompareReportsWindow : DialogWindowVersioningWorkaround {
         private readonly CompareReportsView _viewModel;
-        
+
         internal CompareReportsWindow(CompareReportsView viewModel) {
             _viewModel = viewModel;
 

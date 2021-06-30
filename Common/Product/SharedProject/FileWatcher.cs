@@ -15,36 +15,36 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
-namespace Microsoft.VisualStudioTools {
+namespace Microsoft.VisualStudioTools
+{
     /// <summary>
     ///     Listens to the file system change notifications and raises events when a directory,
     ///     or file in a directory, changes.  This replaces using FileSystemWatcher as this
     ///     implementation/wrapper uses a guard to make sure we don't try to operate during disposal.
     /// </summary>
-    internal sealed class FileWatcher : IDisposable {
+    internal sealed class FileWatcher : IDisposable
+    {
         private FileSystemWatcher _fsw;
 
-        public FileWatcher(string path = "", string filter = "*.*") {
+        public FileWatcher(string path = "", string filter = "*.*")
+        {
             _fsw = new FileSystemWatcher(path, filter);
         }
 
         public bool IsDisposing { get; private set; }
 
-        public bool EnableRaisingEvents {
+        public bool EnableRaisingEvents
+        {
             get { return !IsDisposing ? _fsw.EnableRaisingEvents : false; }
             set { if (!IsDisposing) { _fsw.EnableRaisingEvents = value; } }
         }
 
-        public bool IncludeSubdirectories {
+        public bool IncludeSubdirectories
+        {
             get { return !IsDisposing ? _fsw.IncludeSubdirectories : false; }
             set { if (!IsDisposing) { _fsw.IncludeSubdirectories = value; } }
         }
@@ -52,65 +52,84 @@ namespace Microsoft.VisualStudioTools {
         /// <summary>
         /// The internal buffer size in bytes. The default is 8192 (8 KB).
         /// </summary>
-        public int InternalBufferSize {
+        public int InternalBufferSize
+        {
             get { return !IsDisposing ? _fsw.InternalBufferSize : 0; }
             set { if (!IsDisposing) { _fsw.InternalBufferSize = value; } }
         }
 
-        public NotifyFilters NotifyFilter {
+        public NotifyFilters NotifyFilter
+        {
             get { return !IsDisposing ? _fsw.NotifyFilter : new NotifyFilters(); }
             set { if (!IsDisposing) { _fsw.NotifyFilter = value; } }
         }
 
-        public event FileSystemEventHandler Changed {
-            add {
+        public event FileSystemEventHandler Changed
+        {
+            add
+            {
                 _fsw.Changed += value;
             }
-            remove {
+            remove
+            {
                 _fsw.Changed -= value;
             }
         }
 
-        public event FileSystemEventHandler Created {
-            add {
+        public event FileSystemEventHandler Created
+        {
+            add
+            {
                 _fsw.Created += value;
             }
-            remove {
+            remove
+            {
                 _fsw.Created -= value;
             }
         }
 
-        public event FileSystemEventHandler Deleted {
-            add {
+        public event FileSystemEventHandler Deleted
+        {
+            add
+            {
                 _fsw.Deleted += value;
             }
-            remove {
+            remove
+            {
                 _fsw.Deleted -= value;
             }
         }
 
-        public event ErrorEventHandler Error {
-            add {
+        public event ErrorEventHandler Error
+        {
+            add
+            {
                 _fsw.Error += value;
             }
-            remove {
+            remove
+            {
                 _fsw.Error -= value;
             }
         }
 
-        public event RenamedEventHandler Renamed {
-            add {
+        public event RenamedEventHandler Renamed
+        {
+            add
+            {
                 _fsw.Renamed += value;
             }
-            remove {
+            remove
+            {
                 _fsw.Renamed -= value;
             }
         }
 
         [SuppressMessage("Microsoft.Usage", "CA2213:DisposableFieldsShouldBeDisposed", MessageId = "_fsw",
             Justification = "Will be disposed on a separate thread to avoid deadlocks")]
-        public void Dispose() {
-            if (!IsDisposing) {
+        public void Dispose()
+        {
+            if (!IsDisposing)
+            {
                 IsDisposing = true;
 
                 // Call the _fsw dispose method from the background so it doesn't block anything else.
@@ -122,10 +141,11 @@ namespace Microsoft.VisualStudioTools {
 
         private void BackgroundDispose()
         {
-            try{
+            try
+            {
                 _fsw.Dispose();
             }
-            catch(Exception){}
+            catch (Exception) { }
         }
     }
 }

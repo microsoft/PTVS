@@ -16,15 +16,19 @@
 
 using System;
 
-namespace TestUtilities.Mocks {
-    internal class AutoEnclose : IDisposable {
+namespace TestUtilities.Mocks
+{
+    internal class AutoEnclose : IDisposable
+    {
         private readonly Action _end;
 
-        public AutoEnclose(Action end) {
+        public AutoEnclose(Action end)
+        {
             _end = end;
         }
 
-        public void Dispose() {
+        public void Dispose()
+        {
             _end?.Invoke();
         }
     }

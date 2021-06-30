@@ -16,31 +16,36 @@
 
 using System;
 using System.Collections.Generic;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Shell.Interop;
 
-namespace Microsoft.VisualStudioTools.MockVsTests {
-    class MockOutputWindow : IVsOutputWindow {
+namespace Microsoft.VisualStudioTools.MockVsTests
+{
+    class MockOutputWindow : IVsOutputWindow
+    {
         private static Dictionary<Guid, MockOutputWindowPane> _panes = new Dictionary<Guid, MockOutputWindowPane>() {
             {VSConstants.OutputWindowPaneGuid.GeneralPane_guid, new MockOutputWindowPane("General") }
         };
 
-        public int CreatePane(ref Guid rguidPane, string pszPaneName, int fInitVisible, int fClearWithSolution) {
+        public int CreatePane(ref Guid rguidPane, string pszPaneName, int fInitVisible, int fClearWithSolution)
+        {
             MockOutputWindowPane pane;
-            if (_panes.TryGetValue(rguidPane, out pane)) {
+            if (_panes.TryGetValue(rguidPane, out pane))
+            {
                 _panes[rguidPane] = new MockOutputWindowPane(pszPaneName);
             }
             return VSConstants.S_OK;
         }
 
-        public int DeletePane(ref Guid rguidPane) {
+        public int DeletePane(ref Guid rguidPane)
+        {
             _panes.Remove(rguidPane);
             return VSConstants.S_OK;
         }
 
-        public int GetPane(ref Guid rguidPane, out IVsOutputWindowPane ppPane) {
+        public int GetPane(ref Guid rguidPane, out IVsOutputWindowPane ppPane)
+        {
             MockOutputWindowPane pane;
-            if (_panes.TryGetValue(rguidPane, out pane)) {
+            if (_panes.TryGetValue(rguidPane, out pane))
+            {
                 ppPane = pane;
                 return VSConstants.S_OK;
             }

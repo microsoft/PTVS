@@ -14,22 +14,24 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using Microsoft.VisualStudio;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.InteropServices;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Shell.Interop;
 
-namespace Microsoft.VisualStudioTools.Infrastructure {
-    sealed class TaskDialog {
+namespace Microsoft.VisualStudioTools.Infrastructure
+{
+    sealed class TaskDialog
+    {
         private readonly IServiceProvider _provider;
         private readonly List<TaskDialogButton> _buttons;
         private readonly List<TaskDialogButton> _radioButtons;
 
-        public TaskDialog(IServiceProvider provider) {
+        public TaskDialog(IServiceProvider provider)
+        {
             _provider = provider;
             _buttons = new List<TaskDialogButton>();
             _radioButtons = new List<TaskDialogButton>();
@@ -41,18 +43,23 @@ namespace Microsoft.VisualStudioTools.Infrastructure {
             Exception exception,
             string message = null,
             string issueTrackerUrl = null
-        ) {
+        )
+        {
             string suffix = string.IsNullOrEmpty(issueTrackerUrl) ?
                 "Please press Ctrl+C to copy the contents of this dialog and report this error." :
                 "Please press Ctrl+C to copy the contents of this dialog and report this error to our <a href=\"issuetracker\">issue tracker</a>.";
 
-            if (string.IsNullOrEmpty(message)) {
+            if (string.IsNullOrEmpty(message))
+            {
                 message = suffix;
-            } else {
+            }
+            else
+            {
                 message += Environment.NewLine + Environment.NewLine + suffix;
             }
-            
-            var td = new TaskDialog(provider) {
+
+            var td = new TaskDialog(provider)
+            {
                 MainInstruction = "An unexpected error occurred",
                 Content = message,
                 EnableHyperlinks = true,
@@ -61,9 +68,12 @@ namespace Microsoft.VisualStudioTools.Infrastructure {
                 ExpandedInformation = exception.ToString()
             };
             td.Buttons.Add(TaskDialogButton.Close);
-            if (!string.IsNullOrEmpty(issueTrackerUrl)) {
-                td.HyperlinkClicked += (s, e) => {
-                    if (e.Url == "issuetracker") {
+            if (!string.IsNullOrEmpty(issueTrackerUrl))
+            {
+                td.HyperlinkClicked += (s, e) =>
+                {
+                    if (e.Url == "issuetracker")
+                    {
                         Process.Start(issueTrackerUrl);
                     }
                 };
@@ -80,20 +90,28 @@ namespace Microsoft.VisualStudioTools.Infrastructure {
             string retryButtonText,
             string cancelButtonText,
             Func<Exception, bool> canRetry = null
-        ) {
-            for (int retryCount = 1; ; ++retryCount) {
-                try {
+        )
+        {
+            for (int retryCount = 1; ; ++retryCount)
+            {
+                try
+                {
                     action(retryCount);
                     return;
-                } catch (Exception ex) {
-                    if (ex.IsCriticalException()) {
+                }
+                catch (Exception ex)
+                {
+                    if (ex.IsCriticalException())
+                    {
                         throw;
                     }
-                    if (canRetry != null && !canRetry(ex)) {
+                    if (canRetry != null && !canRetry(ex))
+                    {
                         throw;
                     }
 
-                    var td = new TaskDialog(provider) {
+                    var td = new TaskDialog(provider)
+                    {
                         Title = title,
                         MainInstruction = failedText,
                         Content = ex.Message,
@@ -105,7 +123,8 @@ namespace Microsoft.VisualStudioTools.Infrastructure {
                     td.Buttons.Add(retry);
                     td.Buttons.Add(new TaskDialogButton(cancelButtonText));
                     var button = td.ShowModal();
-                    if (button != retry) {
+                    if (button != retry)
+                    {
                         throw new OperationCanceledException();
                     }
                 }
@@ -121,19 +140,27 @@ namespace Microsoft.VisualStudioTools.Infrastructure {
             string retryButtonText,
             string cancelButtonText,
             Func<Exception, bool> canRetry = null
-        ) {
-            for (int retryCount = 1; ; ++retryCount) {
-                try {
+        )
+        {
+            for (int retryCount = 1; ; ++retryCount)
+            {
+                try
+                {
                     return func(retryCount);
-                } catch (Exception ex) {
-                    if (ex.IsCriticalException()) {
+                }
+                catch (Exception ex)
+                {
+                    if (ex.IsCriticalException())
+                    {
                         throw;
                     }
-                    if (canRetry != null && !canRetry(ex)) {
+                    if (canRetry != null && !canRetry(ex))
+                    {
                         throw;
                     }
 
-                    var td = new TaskDialog(provider) {
+                    var td = new TaskDialog(provider)
+                    {
                         Title = title,
                         MainInstruction = failedText,
                         Content = ex.Message,
@@ -146,21 +173,24 @@ namespace Microsoft.VisualStudioTools.Infrastructure {
                     td.Buttons.Add(retry);
                     td.Buttons.Add(cancel);
                     var button = td.ShowModal();
-                    if (button == cancel) {
+                    if (button == cancel)
+                    {
                         throw new OperationCanceledException();
                     }
                 }
             }
         }
 
-        public TaskDialogButton ShowModal() {
+        public TaskDialogButton ShowModal()
+        {
             var config = new NativeMethods.TASKDIALOGCONFIG();
             config.cbSize = (uint)Marshal.SizeOf(typeof(NativeMethods.TASKDIALOGCONFIG));
             config.pButtons = IntPtr.Zero;
             config.pRadioButtons = IntPtr.Zero;
 
             var uiShell = (IVsUIShell)_provider.GetService(typeof(SVsUIShell));
-            if (uiShell == null) {
+            if (uiShell == null)
+            {
                 // We are shutting down, so return the default
                 return SelectedButton;
             }
@@ -170,53 +200,73 @@ namespace Microsoft.VisualStudioTools.Infrastructure {
             var customButtons = new List<TaskDialogButton>();
             config.dwCommonButtons = 0;
 
-            foreach (var button in Buttons) {
+            foreach (var button in Buttons)
+            {
                 var flag = GetButtonFlag(button);
-                if (flag != 0) {
+                if (flag != 0)
+                {
                     config.dwCommonButtons |= flag;
-                } else {
+                }
+                else
+                {
                     customButtons.Add(button);
                 }
             }
 
-            try {
-                if (customButtons.Any()) {
+            try
+            {
+                if (customButtons.Any())
+                {
                     config.cButtons = (uint)customButtons.Count;
                     var ptr = config.pButtons = Marshal.AllocHGlobal(customButtons.Count * Marshal.SizeOf(typeof(NativeMethods.TASKDIALOG_BUTTON)));
-                    for (int i = 0; i < customButtons.Count; ++i) {
+                    for (int i = 0; i < customButtons.Count; ++i)
+                    {
                         NativeMethods.TASKDIALOG_BUTTON data;
                         data.nButtonID = GetButtonId(null, null, i);
-                        if (string.IsNullOrEmpty(customButtons[i].Subtext)) {
+                        if (string.IsNullOrEmpty(customButtons[i].Subtext))
+                        {
                             data.pszButtonText = customButtons[i].Text;
-                        } else {
+                        }
+                        else
+                        {
                             data.pszButtonText = string.Format("{0}\n{1}", customButtons[i].Text, customButtons[i].Subtext);
                         }
                         Marshal.StructureToPtr(data, ptr + i * Marshal.SizeOf(typeof(NativeMethods.TASKDIALOG_BUTTON)), false);
                     }
-                } else {
+                }
+                else
+                {
                     config.cButtons = 0;
                     config.pButtons = IntPtr.Zero;
                 }
 
-                if (_buttons.Any() && SelectedButton != null) {
+                if (_buttons.Any() && SelectedButton != null)
+                {
                     config.nDefaultButton = GetButtonId(SelectedButton, customButtons);
-                } else {
+                }
+                else
+                {
                     config.nDefaultButton = 0;
                 }
 
-                if (_radioButtons.Any()) {
+                if (_radioButtons.Any())
+                {
                     config.cRadioButtons = (uint)_radioButtons.Count;
                     var ptr = config.pRadioButtons = Marshal.AllocHGlobal(_radioButtons.Count * Marshal.SizeOf(typeof(NativeMethods.TASKDIALOG_BUTTON)));
-                    for (int i = 0; i < _radioButtons.Count; ++i) {
+                    for (int i = 0; i < _radioButtons.Count; ++i)
+                    {
                         NativeMethods.TASKDIALOG_BUTTON data;
                         data.nButtonID = GetRadioId(null, null, i);
                         data.pszButtonText = _radioButtons[i].Text;
                         Marshal.StructureToPtr(data, ptr + i * Marshal.SizeOf(typeof(NativeMethods.TASKDIALOG_BUTTON)), false);
                     }
 
-                    if (SelectedRadioButton != null) {
+                    if (SelectedRadioButton != null)
+                    {
                         config.nDefaultRadioButton = GetRadioId(SelectedRadioButton, _radioButtons);
-                    } else {
+                    }
+                    else
+                    {
                         config.nDefaultRadioButton = 0;
                     }
                 }
@@ -233,30 +283,40 @@ namespace Microsoft.VisualStudioTools.Infrastructure {
                 config.hMainIcon = (IntPtr)GetIconResource(MainIcon);
                 config.hFooterIcon = (IntPtr)GetIconResource(FooterIcon);
 
-                if (Width.HasValue) {
+                if (Width.HasValue)
+                {
                     config.cxWidth = (uint)Width.Value;
-                } else {
+                }
+                else
+                {
                     config.dwFlags |= NativeMethods.TASKDIALOG_FLAGS.TDF_SIZE_TO_CONTENT;
                 }
-                if (EnableHyperlinks) {
+                if (EnableHyperlinks)
+                {
                     config.dwFlags |= NativeMethods.TASKDIALOG_FLAGS.TDF_ENABLE_HYPERLINKS;
                 }
-                if (AllowCancellation) {
+                if (AllowCancellation)
+                {
                     config.dwFlags |= NativeMethods.TASKDIALOG_FLAGS.TDF_ALLOW_DIALOG_CANCELLATION;
                 }
-                if (UseCommandLinks && config.cButtons > 0) {
+                if (UseCommandLinks && config.cButtons > 0)
+                {
                     config.dwFlags |= NativeMethods.TASKDIALOG_FLAGS.TDF_USE_COMMAND_LINKS;
                 }
-                if (!ShowExpandedInformationInContent) {
+                if (!ShowExpandedInformationInContent)
+                {
                     config.dwFlags |= NativeMethods.TASKDIALOG_FLAGS.TDF_EXPAND_FOOTER_AREA;
                 }
-                if (ExpandedByDefault) {
+                if (ExpandedByDefault)
+                {
                     config.dwFlags |= NativeMethods.TASKDIALOG_FLAGS.TDF_EXPANDED_BY_DEFAULT;
                 }
-                if (SelectedVerified) {
+                if (SelectedVerified)
+                {
                     config.dwFlags |= NativeMethods.TASKDIALOG_FLAGS.TDF_VERIFICATION_FLAG_CHECKED;
                 }
-                if (CanMinimize) {
+                if (CanMinimize)
+                {
                     config.dwFlags |= NativeMethods.TASKDIALOG_FLAGS.TDF_CAN_BE_MINIMIZED;
                 }
 
@@ -274,17 +334,23 @@ namespace Microsoft.VisualStudioTools.Infrastructure {
                 SelectedButton = GetButton(selectedButton, customButtons);
                 SelectedRadioButton = GetRadio(selectedRadioButton, _radioButtons);
                 SelectedVerified = verified;
-            } finally {
+            }
+            finally
+            {
                 uiShell.EnableModeless(1);
 
-                if (config.pButtons != IntPtr.Zero) {
-                    for (int i = 0; i < customButtons.Count; ++i) {
+                if (config.pButtons != IntPtr.Zero)
+                {
+                    for (int i = 0; i < customButtons.Count; ++i)
+                    {
                         Marshal.DestroyStructure(config.pButtons + i * Marshal.SizeOf(typeof(NativeMethods.TASKDIALOG_BUTTON)), typeof(NativeMethods.TASKDIALOG_BUTTON));
                     }
                     Marshal.FreeHGlobal(config.pButtons);
                 }
-                if (config.pRadioButtons != IntPtr.Zero) {
-                    for (int i = 0; i < _radioButtons.Count; ++i) {
+                if (config.pRadioButtons != IntPtr.Zero)
+                {
+                    for (int i = 0; i < _radioButtons.Count; ++i)
+                    {
                         Marshal.DestroyStructure(config.pRadioButtons + i * Marshal.SizeOf(typeof(NativeMethods.TASKDIALOG_BUTTON)), typeof(NativeMethods.TASKDIALOG_BUTTON));
                     }
                     Marshal.FreeHGlobal(config.pRadioButtons);
@@ -294,11 +360,15 @@ namespace Microsoft.VisualStudioTools.Infrastructure {
             return SelectedButton;
         }
 
-        private int Callback(IntPtr hwnd, uint uNotification, UIntPtr wParam, IntPtr lParam, IntPtr lpRefData) {
-            try {
-                switch ((NativeMethods.TASKDIALOG_NOTIFICATION)uNotification) {
+        private int Callback(IntPtr hwnd, uint uNotification, UIntPtr wParam, IntPtr lParam, IntPtr lpRefData)
+        {
+            try
+            {
+                switch ((NativeMethods.TASKDIALOG_NOTIFICATION)uNotification)
+                {
                     case NativeMethods.TASKDIALOG_NOTIFICATION.TDN_CREATED:
-                        foreach (var btn in _buttons.Where(b => b.ElevationRequired)) {
+                        foreach (var btn in _buttons.Where(b => b.ElevationRequired))
+                        {
                             NativeMethods.SendMessage(
                                 hwnd,
                                 (int)NativeMethods.TASKDIALOG_MESSAGE.TDM_SET_BUTTON_ELEVATION_REQUIRED_STATE,
@@ -314,9 +384,12 @@ namespace Microsoft.VisualStudioTools.Infrastructure {
                     case NativeMethods.TASKDIALOG_NOTIFICATION.TDN_HYPERLINK_CLICKED:
                         var url = Marshal.PtrToStringUni(lParam);
                         var hevt = HyperlinkClicked;
-                        if (hevt != null) {
+                        if (hevt != null)
+                        {
                             hevt(this, new TaskDialogHyperlinkClickedEventArgs(url));
-                        } else {
+                        }
+                        else
+                        {
                             Process.Start(new ProcessStartInfo { FileName = url, UseShellExecute = true });
                         }
                         break;
@@ -338,8 +411,11 @@ namespace Microsoft.VisualStudioTools.Infrastructure {
                         break;
                 }
                 return VSConstants.S_OK;
-            } catch (Exception ex) {
-                if (ex.IsCriticalException()) {
+            }
+            catch (Exception ex)
+            {
+                if (ex.IsCriticalException())
+                {
                     throw;
                 }
                 return Marshal.GetHRForException(ex);
@@ -374,14 +450,18 @@ namespace Microsoft.VisualStudioTools.Infrastructure {
         /// </summary>
         public event EventHandler<TaskDialogHyperlinkClickedEventArgs> HyperlinkClicked;
 
-        public List<TaskDialogButton> Buttons {
-            get {
+        public List<TaskDialogButton> Buttons
+        {
+            get
+            {
                 return _buttons;
             }
         }
 
-        public List<TaskDialogButton> RadioButtons {
-            get {
+        public List<TaskDialogButton> RadioButtons
+        {
+            get
+            {
                 return _radioButtons;
             }
         }
@@ -391,26 +471,42 @@ namespace Microsoft.VisualStudioTools.Infrastructure {
         public bool SelectedVerified { get; set; }
 
 
-        private static NativeMethods.TASKDIALOG_COMMON_BUTTON_FLAGS GetButtonFlag(TaskDialogButton button) {
-            if (button == TaskDialogButton.OK) {
+        private static NativeMethods.TASKDIALOG_COMMON_BUTTON_FLAGS GetButtonFlag(TaskDialogButton button)
+        {
+            if (button == TaskDialogButton.OK)
+            {
                 return NativeMethods.TASKDIALOG_COMMON_BUTTON_FLAGS.TDCBF_OK_BUTTON;
-            } else if (button == TaskDialogButton.Cancel) {
+            }
+            else if (button == TaskDialogButton.Cancel)
+            {
                 return NativeMethods.TASKDIALOG_COMMON_BUTTON_FLAGS.TDCBF_CANCEL_BUTTON;
-            } else if (button == TaskDialogButton.Yes) {
+            }
+            else if (button == TaskDialogButton.Yes)
+            {
                 return NativeMethods.TASKDIALOG_COMMON_BUTTON_FLAGS.TDCBF_YES_BUTTON;
-            } else if (button == TaskDialogButton.No) {
+            }
+            else if (button == TaskDialogButton.No)
+            {
                 return NativeMethods.TASKDIALOG_COMMON_BUTTON_FLAGS.TDCBF_NO_BUTTON;
-            } else if (button == TaskDialogButton.Retry) {
+            }
+            else if (button == TaskDialogButton.Retry)
+            {
                 return NativeMethods.TASKDIALOG_COMMON_BUTTON_FLAGS.TDCBF_RETRY_BUTTON;
-            } else if (button == TaskDialogButton.Close) {
+            }
+            else if (button == TaskDialogButton.Close)
+            {
                 return NativeMethods.TASKDIALOG_COMMON_BUTTON_FLAGS.TDCBF_CLOSE_BUTTON;
-            } else {
+            }
+            else
+            {
                 return 0;
             }
         }
 
-        private static NativeMethods.TASKDIALOG_ICON GetIconResource(TaskDialogIcon icon) {
-            switch (icon) {
+        private static NativeMethods.TASKDIALOG_ICON GetIconResource(TaskDialogIcon icon)
+        {
+            switch (icon)
+            {
                 case TaskDialogIcon.None:
                     return 0;
                 case TaskDialogIcon.Error:
@@ -430,26 +526,42 @@ namespace Microsoft.VisualStudioTools.Infrastructure {
             TaskDialogButton button,
             IList<TaskDialogButton> customButtons = null,
             int indexHint = -1
-        ) {
-            if (indexHint >= 0) {
+        )
+        {
+            if (indexHint >= 0)
+            {
                 return indexHint + 1000;
             }
 
-            if (button == TaskDialogButton.OK) {
+            if (button == TaskDialogButton.OK)
+            {
                 return NativeMethods.IDOK;
-            } else if (button == TaskDialogButton.Cancel) {
+            }
+            else if (button == TaskDialogButton.Cancel)
+            {
                 return NativeMethods.IDCANCEL;
-            } else if (button == TaskDialogButton.Yes) {
+            }
+            else if (button == TaskDialogButton.Yes)
+            {
                 return NativeMethods.IDYES;
-            } else if (button == TaskDialogButton.No) {
+            }
+            else if (button == TaskDialogButton.No)
+            {
                 return NativeMethods.IDNO;
-            } else if (button == TaskDialogButton.Retry) {
+            }
+            else if (button == TaskDialogButton.Retry)
+            {
                 return NativeMethods.IDRETRY;
-            } else if (button == TaskDialogButton.Close) {
+            }
+            else if (button == TaskDialogButton.Close)
+            {
                 return NativeMethods.IDCLOSE;
-            } else if (customButtons != null) {
+            }
+            else if (customButtons != null)
+            {
                 int i = customButtons.IndexOf(button);
-                if (i >= 0) {
+                if (i >= 0)
+                {
                     return i + 1000;
                 }
             }
@@ -457,8 +569,10 @@ namespace Microsoft.VisualStudioTools.Infrastructure {
             return -1;
         }
 
-        private static TaskDialogButton GetButton(int id, IList<TaskDialogButton> customButtons = null) {
-            switch (id) {
+        private static TaskDialogButton GetButton(int id, IList<TaskDialogButton> customButtons = null)
+        {
+            switch (id)
+            {
                 case NativeMethods.IDOK:
                     return TaskDialogButton.OK;
                 case NativeMethods.IDCANCEL:
@@ -473,7 +587,8 @@ namespace Microsoft.VisualStudioTools.Infrastructure {
                     return TaskDialogButton.Close;
             }
 
-            if (customButtons != null && id >= 1000 && id - 1000 < customButtons.Count) {
+            if (customButtons != null && id >= 1000 && id - 1000 < customButtons.Count)
+            {
                 return customButtons[id - 1000];
             }
 
@@ -484,23 +599,28 @@ namespace Microsoft.VisualStudioTools.Infrastructure {
             TaskDialogButton button,
             IList<TaskDialogButton> buttons,
             int indexHint = -1
-        ) {
-            if (indexHint >= 0) {
+        )
+        {
+            if (indexHint >= 0)
+            {
                 return indexHint + 2000;
             }
 
             return buttons.IndexOf(button) + 2000;
         }
 
-        private static TaskDialogButton GetRadio(int id, IList<TaskDialogButton> buttons) {
-            if (id >= 2000 && id - 2000 < buttons.Count) {
+        private static TaskDialogButton GetRadio(int id, IList<TaskDialogButton> buttons)
+        {
+            if (id >= 2000 && id - 2000 < buttons.Count)
+            {
                 return buttons[id - 2000];
             }
 
             return null;
         }
 
-        private static class NativeMethods {
+        private static class NativeMethods
+        {
             internal const int IDOK = 1;
             internal const int IDCANCEL = 2;
             internal const int IDABORT = 3;
@@ -510,7 +630,8 @@ namespace Microsoft.VisualStudioTools.Infrastructure {
             internal const int IDNO = 7;
             internal const int IDCLOSE = 8;
 
-            internal enum TASKDIALOG_FLAGS {
+            internal enum TASKDIALOG_FLAGS
+            {
                 TDF_ENABLE_HYPERLINKS = 0x0001,
                 TDF_USE_HICON_MAIN = 0x0002,
                 TDF_USE_HICON_FOOTER = 0x0004,
@@ -530,7 +651,8 @@ namespace Microsoft.VisualStudioTools.Infrastructure {
                 TDF_SIZE_TO_CONTENT = 0x01000000
             }
 
-            internal enum TASKDIALOG_COMMON_BUTTON_FLAGS {
+            internal enum TASKDIALOG_COMMON_BUTTON_FLAGS
+            {
                 TDCBF_OK_BUTTON = 0x0001,
                 TDCBF_YES_BUTTON = 0x0002,
                 TDCBF_NO_BUTTON = 0x0004,
@@ -539,7 +661,8 @@ namespace Microsoft.VisualStudioTools.Infrastructure {
                 TDCBF_CLOSE_BUTTON = 0x0020
             }
 
-            internal enum TASKDIALOG_NOTIFICATION : uint {
+            internal enum TASKDIALOG_NOTIFICATION : uint
+            {
                 TDN_CREATED = 0,
                 TDN_NAVIGATED = 1,
                 TDN_BUTTON_CLICKED = 2,     // wParam = Button ID
@@ -553,16 +676,18 @@ namespace Microsoft.VisualStudioTools.Infrastructure {
                 TDN_EXPANDO_BUTTON_CLICKED = 10 // wParam = 0 (dialog is now collapsed), wParam != 0 (dialog is now expanded)
             };
 
-            internal enum TASKDIALOG_ICON : ushort {
-              TD_WARNING_ICON = unchecked((ushort)-1),
-              TD_ERROR_ICON = unchecked((ushort)-2),
-              TD_INFORMATION_ICON = unchecked((ushort)-3),
-              TD_SHIELD_ICON = unchecked((ushort)-4)
+            internal enum TASKDIALOG_ICON : ushort
+            {
+                TD_WARNING_ICON = unchecked((ushort)-1),
+                TD_ERROR_ICON = unchecked((ushort)-2),
+                TD_INFORMATION_ICON = unchecked((ushort)-3),
+                TD_SHIELD_ICON = unchecked((ushort)-4)
             }
 
             const int WM_USER = 0x0400;
 
-            internal enum TASKDIALOG_MESSAGE : int {
+            internal enum TASKDIALOG_MESSAGE : int
+            {
                 TDM_NAVIGATE_PAGE = WM_USER + 101,
                 TDM_CLICK_BUTTON = WM_USER + 102, // wParam = Button ID
                 TDM_SET_MARQUEE_PROGRESS_BAR = WM_USER + 103, // wParam = 0 (nonMarque) wParam != 0 (Marquee)
@@ -592,14 +717,16 @@ namespace Microsoft.VisualStudioTools.Infrastructure {
             internal delegate int PFTASKDIALOGCALLBACK(IntPtr hwnd, uint uNotification, UIntPtr wParam, IntPtr lParam, IntPtr lpRefData);
 
             [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
-            internal struct TASKDIALOG_BUTTON {
+            internal struct TASKDIALOG_BUTTON
+            {
                 public int nButtonID;
                 [MarshalAs(UnmanagedType.LPWStr)]
                 public string pszButtonText;
             }
 
             [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
-            internal struct TASKDIALOGCONFIG {
+            internal struct TASKDIALOGCONFIG
+            {
                 public uint cbSize;
                 public IntPtr hwndParent;
                 public IntPtr hInstance;
@@ -639,18 +766,24 @@ namespace Microsoft.VisualStudioTools.Infrastructure {
         }
     }
 
-    class TaskDialogButton {
-        public TaskDialogButton(string text) {
+    class TaskDialogButton
+    {
+        public TaskDialogButton(string text)
+        {
             int i = text.IndexOfAny(Environment.NewLine.ToCharArray());
-            if (i < 0) {
+            if (i < 0)
+            {
                 Text = text;
-            } else {
+            }
+            else
+            {
                 Text = text.Remove(i);
                 Subtext = text.Substring(i).TrimStart();
             }
         }
 
-        public TaskDialogButton(string text, string subtext) {
+        public TaskDialogButton(string text, string subtext)
+        {
             Text = text;
             Subtext = subtext;
         }
@@ -668,17 +801,20 @@ namespace Microsoft.VisualStudioTools.Infrastructure {
         public static readonly TaskDialogButton Close = new TaskDialogButton();
     }
 
-    sealed class TaskDialogHyperlinkClickedEventArgs : EventArgs {
+    sealed class TaskDialogHyperlinkClickedEventArgs : EventArgs
+    {
         private readonly string _url;
 
-        public TaskDialogHyperlinkClickedEventArgs(string url) {
+        public TaskDialogHyperlinkClickedEventArgs(string url)
+        {
             _url = url;
         }
 
         public string Url { get { return _url; } }
     }
 
-    enum TaskDialogIcon {
+    enum TaskDialogIcon
+    {
         None,
         Error,
         Warning,

@@ -59,7 +59,7 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         protected void Dispose(bool disposing) {
-            foreach(var tag in _registryTags.MaybeEnumerate()) {
+            foreach (var tag in _registryTags.MaybeEnumerate()) {
                 RegistryWatcher.Instance.Remove(tag);
             }
             _registryTags?.Clear();
@@ -184,7 +184,7 @@ namespace Microsoft.PythonTools.Interpreter {
             if (Volatile.Read(ref _ignoreNotifications) > 0) {
                 return;
             }
-            
+
             // Discover the available interpreters...
             bool anyChanged = false;
 

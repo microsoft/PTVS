@@ -16,10 +16,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Xml;
-using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.CodeCoverage {
@@ -411,9 +407,9 @@ namespace Microsoft.PythonTools.CodeCoverage {
                 // name expression...
                 var nameSpan = node.GetNameSpan(_ast);
                 MarkCoverage(
-                    true, 
-                    nameSpan.Start, 
-                    nameSpan.End, 
+                    true,
+                    nameSpan.Start,
+                    nameSpan.End,
                     IsCovered(node.GetStart(_ast).Line)
                 );
                 return true;

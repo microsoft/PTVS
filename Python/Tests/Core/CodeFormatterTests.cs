@@ -66,9 +66,9 @@ class Oar(object):
     def say_hello( self ):
         method_end";
 
-            var options = new CodeFormattingOptions() { 
-                SpaceBeforeClassDeclarationParen = true, 
-                SpaceWithinFunctionDeclarationParens = true 
+            var options = new CodeFormattingOptions() {
+                SpaceBeforeClassDeclarationParen = true,
+                SpaceWithinFunctionDeclarationParens = true
             };
 
             await CodeFormattingTest(input, selection, expected, "    def say_hello .. method_end", options);

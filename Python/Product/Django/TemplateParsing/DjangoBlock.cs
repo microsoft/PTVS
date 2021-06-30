@@ -17,10 +17,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.VisualStudio.Language.Intellisense;
-using Microsoft.VisualStudio.Text;
 using Microsoft.PythonTools.Django.TemplateParsing.DjangoBlocks;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.VisualStudio.Language.Intellisense;
+using Microsoft.VisualStudio.Text;
 
 namespace Microsoft.PythonTools.Django.TemplateParsing {
     class DjangoBlock {

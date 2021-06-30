@@ -40,12 +40,12 @@ namespace Microsoft.PythonTools.ProjectWizards {
             if (File.Exists(ptvsdSource) && !Directory.Exists(ptvsdDest)) {
                 Directory.CreateDirectory(ptvsdDest);
                 var sourceDir = PathUtils.GetParent(ptvsdSource);
-                foreach (var file in PathUtils.EnumerateFiles(sourceDir, pattern: "*.py" , fullPaths: false)) {
+                foreach (var file in PathUtils.EnumerateFiles(sourceDir, pattern: "*.py", fullPaths: false)) {
                     var destFile = PathUtils.GetAbsoluteFilePath(ptvsdDest, file);
                     if (!Directory.Exists(PathUtils.GetParent(destFile))) {
                         Directory.CreateDirectory(PathUtils.GetParent(destFile));
                     }
-                    
+
                     File.Copy(PathUtils.GetAbsoluteFilePath(sourceDir, file), destFile, true);
                 }
 

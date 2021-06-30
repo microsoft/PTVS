@@ -14,11 +14,10 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using Microsoft.VisualStudio;
 using System;
 using System.Diagnostics;
 using System.IO;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Shell.Interop;
 using VsCommands2K = Microsoft.VisualStudio.VSConstants.VSStd2KCmdID;
 using VSConstants = Microsoft.VisualStudio.VSConstants;
 #if DEV14_OR_LATER
@@ -26,18 +25,23 @@ using Microsoft.VisualStudio.Imaging;
 using Microsoft.VisualStudio.Imaging.Interop;
 #endif
 
-namespace Microsoft.VisualStudioTools.Project {
+namespace Microsoft.VisualStudioTools.Project
+{
 
-    internal class CommonFolderNode : FolderNode {
+    internal class CommonFolderNode : FolderNode
+    {
         private CommonProjectNode _project;
 
         public CommonFolderNode(CommonProjectNode root, ProjectElement element)
-            : base(root, element) {
+            : base(root, element)
+        {
             _project = root;
         }
 
-        public override bool IsNonMemberItem {
-            get {
+        public override bool IsNonMemberItem
+        {
+            get
+            {
                 return ItemNode is AllFilesProjectElement;
             }
         }
@@ -50,8 +54,10 @@ namespace Microsoft.VisualStudioTools.Project {
             return base.GetIconMoniker(open);
         }
 #else
-        public override object GetIconHandle(bool open) {
-            if (ItemNode.IsExcluded) {
+        public override object GetIconHandle(bool open)
+        {
+            if (ItemNode.IsExcluded)
+            {
                 return ProjectMgr.GetIconHandleByName(open ?
                     ProjectNode.ImageName.OpenExcludedFolder :
                     ProjectNode.ImageName.ExcludedFolder
@@ -61,18 +67,23 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 #endif
 
-        internal override int QueryStatusOnNode(Guid cmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result) {
+        internal override int QueryStatusOnNode(Guid cmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result)
+        {
             //Hide Exclude from Project command, show everything else normal Folder node supports
-            if (cmdGroup == Microsoft.VisualStudioTools.Project.VsMenus.guidStandardCommandSet2K) {
-                switch ((VsCommands2K)cmd) {
+            if (cmdGroup == Microsoft.VisualStudioTools.Project.VsMenus.guidStandardCommandSet2K)
+            {
+                switch ((VsCommands2K)cmd)
+                {
                     case VsCommands2K.EXCLUDEFROMPROJECT:
-                        if (ItemNode.IsExcluded) {
+                        if (ItemNode.IsExcluded)
+                        {
                             result |= QueryStatusResult.NOTSUPPORTED | QueryStatusResult.INVISIBLE;
                             return VSConstants.S_OK;
                         }
                         break;
                     case VsCommands2K.INCLUDEINPROJECT:
-                        if (ItemNode.IsExcluded) {
+                        if (ItemNode.IsExcluded)
+                        {
                             result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
                             return VSConstants.S_OK;
                         }
@@ -81,10 +92,14 @@ namespace Microsoft.VisualStudioTools.Project {
                         result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
                         return VSConstants.S_OK;
                 }
-            } else if (cmdGroup == ProjectMgr.SharedCommandGuid) {
-                switch ((SharedCommands)cmd) {
+            }
+            else if (cmdGroup == ProjectMgr.SharedCommandGuid)
+            {
+                switch ((SharedCommands)cmd)
+                {
                     case SharedCommands.AddExistingFolder:
-                        if (!ItemNode.IsExcluded) {
+                        if (!ItemNode.IsExcluded)
+                        {
                             result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
                             return VSConstants.S_OK;
                         }
@@ -94,14 +109,20 @@ namespace Microsoft.VisualStudioTools.Project {
             return base.QueryStatusOnNode(cmdGroup, cmd, pCmdText, ref result);
         }
 
-        internal override int ExecCommandOnNode(Guid cmdGroup, uint cmd, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
-            if (cmdGroup == Microsoft.VisualStudioTools.Project.VsMenus.guidStandardCommandSet2K) {
-                if ((VsCommands2K)cmd == CommonConstants.OpenFolderInExplorerCmdId) {
+        internal override int ExecCommandOnNode(Guid cmdGroup, uint cmd, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut)
+        {
+            if (cmdGroup == Microsoft.VisualStudioTools.Project.VsMenus.guidStandardCommandSet2K)
+            {
+                if ((VsCommands2K)cmd == CommonConstants.OpenFolderInExplorerCmdId)
+                {
                     Process.Start(this.Url);
                     return VSConstants.S_OK;
                 }
-            } else if (cmdGroup == ProjectMgr.SharedCommandGuid) {
-                switch ((SharedCommands)cmd) {
+            }
+            else if (cmdGroup == ProjectMgr.SharedCommandGuid)
+            {
+                switch ((SharedCommands)cmd)
+                {
                     case SharedCommands.AddExistingFolder:
                         return ProjectMgr.AddExistingFolderToNode(this);
                     case SharedCommands.OpenCommandPromptHere:
@@ -124,31 +145,39 @@ namespace Microsoft.VisualStudioTools.Project {
         /// Handles the exclude from project command.
         /// </summary>
         /// <returns></returns>
-        internal override int ExcludeFromProject() {
+        internal override int ExcludeFromProject()
+        {
             ProjectMgr.Site.GetUIThread().MustBeCalledFromUIThread();
 
             Debug.Assert(this.ProjectMgr != null, "The project item " + this.ToString() + " has not been initialised correctly. It has a null ProjectMgr");
             if (!ProjectMgr.QueryEditProjectFile(false) ||
-                !ProjectMgr.QueryFolderRemove(Parent, Url)) {
+                !ProjectMgr.QueryFolderRemove(Parent, Url))
+            {
                 return VSConstants.E_FAIL;
             }
 
-            for (var child = FirstChild; child != null; child = child.NextSibling) {
+            for (var child = FirstChild; child != null; child = child.NextSibling)
+            {
                 // we automatically exclude all children below us too
                 int hr = child.ExcludeFromProject();
-                if (ErrorHandler.Failed(hr)) {
+                if (ErrorHandler.Failed(hr))
+                {
                     return hr;
                 }
             }
 
             ResetNodeProperties();
             ItemNode.RemoveFromProjectFile();
-            if (!Directory.Exists(CommonUtils.TrimEndSeparator(Url))) {
+            if (!Directory.Exists(CommonUtils.TrimEndSeparator(Url)))
+            {
                 ProjectMgr.OnItemDeleted(this);
                 Parent.RemoveChild(this);
-            } else {
+            }
+            else
+            {
                 ItemNode = new AllFilesProjectElement(Url, ItemNode.ItemTypeName, ProjectMgr);
-                if (!ProjectMgr.IsShowingAllFiles) {
+                if (!ProjectMgr.IsShowingAllFiles)
+                {
                     IsVisible = false;
                     ProjectMgr.OnInvalidateItems(Parent);
                 }
@@ -161,26 +190,32 @@ namespace Microsoft.VisualStudioTools.Project {
             return VSConstants.S_OK;
         }
 
-        internal override int ExcludeFromProjectWithProgress() {
+        internal override int ExcludeFromProjectWithProgress()
+        {
             using (new WaitDialog(
                 "Excluding files and folders...",
                 "Excluding files and folders in your project, this may take several seconds...",
-                ProjectMgr.Site)) {
+                ProjectMgr.Site))
+            {
                 return ExcludeFromProjectWithRefresh();
             }
         }
 
-        internal override int IncludeInProject(bool includeChildren) {
-            if (Parent.ItemNode != null && Parent.ItemNode.IsExcluded) {
+        internal override int IncludeInProject(bool includeChildren)
+        {
+            if (Parent.ItemNode != null && Parent.ItemNode.IsExcluded)
+            {
                 // if our parent is excluded it needs to first be included
                 int hr = Parent.IncludeInProject(false);
-                if (ErrorHandler.Failed(hr)) {
+                if (ErrorHandler.Failed(hr))
+                {
                     return hr;
                 }
             }
 
             if (!ProjectMgr.QueryEditProjectFile(false) ||
-                !ProjectMgr.QueryFolderAdd(Parent, Url)) {
+                !ProjectMgr.QueryFolderAdd(Parent, Url))
+            {
                 return VSConstants.E_FAIL;
             }
 
@@ -191,11 +226,14 @@ namespace Microsoft.VisualStudioTools.Project {
             );
             IsVisible = true;
 
-            if (includeChildren) {
-                for (var child = FirstChild; child != null; child = child.NextSibling) {
+            if (includeChildren)
+            {
+                for (var child = FirstChild; child != null; child = child.NextSibling)
+                {
                     // we automatically include all children below us too
                     int hr = child.IncludeInProject(includeChildren);
-                    if (ErrorHandler.Failed(hr)) {
+                    if (ErrorHandler.Failed(hr))
+                    {
                         return hr;
                     }
                 }
@@ -210,31 +248,40 @@ namespace Microsoft.VisualStudioTools.Project {
             return VSConstants.S_OK;
         }
 
-        internal override int IncludeInProjectWithProgress(bool includeChildren) {
+        internal override int IncludeInProjectWithProgress(bool includeChildren)
+        {
             using (new WaitDialog(
                 "Including files and folders...",
                 "Including files and folders to your project, this may take several seconds...",
-                ProjectMgr.Site)) {
+                ProjectMgr.Site))
+            {
                 return IncludeInProjectWithRefresh(includeChildren);
             }
         }
 
-        public override void RenameFolder(string newName) {
+        public override void RenameFolder(string newName)
+        {
             string oldName = Url;
             _project.SuppressFileChangeNotifications();
-            try {
+            try
+            {
                 base.RenameFolder(newName);
-            } finally {
+            }
+            finally
+            {
                 _project.RestoreFileChangeNotifications();
             }
 
-            if (ProjectMgr.TryDeactivateSymLinkWatcher(this)) {
+            if (ProjectMgr.TryDeactivateSymLinkWatcher(this))
+            {
                 ProjectMgr.CreateSymLinkWatcher(Url);
             }
         }
 
-        public override  bool Remove(bool removeFromStorage) {
-            if (base.Remove(removeFromStorage)) {
+        public override bool Remove(bool removeFromStorage)
+        {
+            if (base.Remove(removeFromStorage))
+            {
 
                 // if we were a symlink folder, we need to stop watching now.
                 ProjectMgr.TryDeactivateSymLinkWatcher(this);
@@ -243,7 +290,8 @@ namespace Microsoft.VisualStudioTools.Project {
             return false;
         }
 
-        public override void Close() {
+        public override void Close()
+        {
             base.Close();
 
             // make sure this thing doesn't stick around...
@@ -253,12 +301,15 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <summary>
         /// Common Folder Node can only be deleted from file system.
         /// </summary>        
-        internal override bool CanDeleteItem(__VSDELETEITEMOPERATION deleteOperation) {
+        internal override bool CanDeleteItem(__VSDELETEITEMOPERATION deleteOperation)
+        {
             return deleteOperation == __VSDELETEITEMOPERATION.DELITEMOP_DeleteFromStorage;
         }
 
-        public new CommonProjectNode ProjectMgr {
-            get {
+        public new CommonProjectNode ProjectMgr
+        {
+            get
+            {
                 return (CommonProjectNode)base.ProjectMgr;
             }
         }

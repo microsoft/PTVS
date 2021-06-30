@@ -16,11 +16,13 @@
 
 using System.Collections.Generic;
 
-namespace Microsoft.VisualStudioTools.Project {
+namespace Microsoft.VisualStudioTools.Project
+{
     /// <summary>
     /// Defines an interface for providing launch parameters.
     /// </summary>
-    public interface IProjectLaunchProperties {
+    public interface IProjectLaunchProperties
+    {
         /// <summary>
         /// Gets the arguments to launch the project with.
         /// </summary>

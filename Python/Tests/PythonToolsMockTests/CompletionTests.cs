@@ -22,17 +22,13 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using analysis::Microsoft.PythonTools.Interpreter;
 using analysis::Microsoft.PythonTools.Parsing;
-using Microsoft.PythonTools.Interpreter;
-using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudioTools.MockVsTests;
 using pythontools::Microsoft.PythonTools;
 using pythontools::Microsoft.PythonTools.Intellisense;
 using TestUtilities;
-using TestUtilities.Mocks;
 
 namespace PythonToolsMockTests {
     [TestClass]
@@ -365,18 +361,18 @@ except (sys."}) {
         [TestMethod, Priority(UnitTestPriority.P1)]
         public void SignatureHelp() {
             var prefixes = new[] { "", "(", "a = ", "f(", "l[", "{", "if " };
-            var sigs = new[] { 
+            var sigs = new[] {
                 new { Expr = "f(", Param = 0, Function="f" } ,
                 new { Expr = "f(1,", Param = 1, Function="f" },
-                new { Expr = "f(1, 2,", Param = 2, Function="f" }, 
-                new { Expr = "f(1, (1, 2),", Param = 2, Function="f" }, 
-                new { Expr = "f(1, a + b,", Param = 2, Function="f" }, 
-                new { Expr = "f(1, a or b,", Param = 2, Function="f" }, 
-                new { Expr = "f(1, a if True else b,", Param = 2, Function="f" }, 
-                new { Expr = "a.f(1, a if True else b,", Param = 2, Function="a.f" }, 
-                new { Expr = "a().f(1, a if True else b,", Param = 2, Function="a().f" }, 
-                new { Expr = "a(2, 3, 4).f(1, a if True else b,", Param = 2, Function="a(2, 3, 4).f" }, 
-                new { Expr = "a(2, (3, 4), 4).f(1, a if True else b,", Param = 2, Function="a(2, (3, 4), 4).f" }, 
+                new { Expr = "f(1, 2,", Param = 2, Function="f" },
+                new { Expr = "f(1, (1, 2),", Param = 2, Function="f" },
+                new { Expr = "f(1, a + b,", Param = 2, Function="f" },
+                new { Expr = "f(1, a or b,", Param = 2, Function="f" },
+                new { Expr = "f(1, a if True else b,", Param = 2, Function="f" },
+                new { Expr = "a.f(1, a if True else b,", Param = 2, Function="a.f" },
+                new { Expr = "a().f(1, a if True else b,", Param = 2, Function="a().f" },
+                new { Expr = "a(2, 3, 4).f(1, a if True else b,", Param = 2, Function="a(2, 3, 4).f" },
+                new { Expr = "a(2, (3, 4), 4).f(1, a if True else b,", Param = 2, Function="a(2, (3, 4), 4).f" },
                 new { Expr = "f(lambda a, b, c: 42", Param = 0, Function="f" } ,
                 new { Expr = "f(lambda a, b, c", Param = 0, Function="f" } ,
                 new { Expr = "f(lambda a: lambda b, c: 42", Param = 0, Function="f" } ,
@@ -619,7 +615,7 @@ f(1, 2, 3, 4,")) {
                 AssertUtil.ContainsExactly(editor.GetCompletions(-1), "as");
             }
         }
-        
+
         [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
         public void CompletionInTripleQuotedString() {
@@ -684,7 +680,7 @@ while True:
 lambda larg1, larg2: None";
 
 
-            using (var view = new PythonEditor(code, filename:"file.py")) {
+            using (var view = new PythonEditor(code, filename: "file.py")) {
                 // we get the appropriate subexpression
                 TestQuickInfo(view, code.IndexOf("cls."), code.IndexOf("cls.") + 4, "cls: <unknown type>");
                 TestQuickInfo(view, code.IndexOf("cls.") + 4 + 1, code.IndexOf("cls.") + 4 + 1 + 11, "cls._parse_block: <unknown type>");
@@ -1119,7 +1115,7 @@ async def g():
 
             for (var i = start; i < end; i++) {
                 var quickInfo = view.Analyzer.GetQuickInfoAsync(
-                    (AnalysisEntry) view.GetAnalysisEntry(),
+                    (AnalysisEntry)view.GetAnalysisEntry(),
                     view.View.TextView,
                     new SnapshotPoint(snapshot, start)
                 ).Result;
@@ -1176,7 +1172,7 @@ async def g():
             if (location < 0) {
                 location = view.CurrentSnapshot.Length + location;
             }
-            
+
             sigs = GetSignatureAnalysis(view, location);
             Assert.AreEqual(expectedExpression, sigs.Text, view.Text);
             Assert.AreEqual(paramIndex, sigs.ParameterIndex, view.Text);

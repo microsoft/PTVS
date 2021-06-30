@@ -15,7 +15,6 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using Microsoft.Win32;

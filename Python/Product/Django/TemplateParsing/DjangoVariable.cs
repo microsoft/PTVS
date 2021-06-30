@@ -280,9 +280,9 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                 return Enumerable.Empty<CompletionInfo>();
             }
             return dictionary.Select(key => new CompletionInfo(
-                key.Key, 
-                glyph, 
-                key.Key, 
+                key.Key,
+                glyph,
+                key.Key,
                 key.Value.Documentation
             ));
         }

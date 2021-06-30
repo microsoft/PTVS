@@ -25,7 +25,7 @@ namespace Microsoft.PythonTools.Infrastructure.Commands {
             _commandRange = commandRange ?? throw new ArgumentNullException(nameof(commandRange));
             _maxCount = commandRange.MaxCount;
         }
-        
+
         protected override void SetStatus() {
             var index = MatchedCommandId - CommandID.ID;
             if (index >= _maxCount) {
@@ -37,7 +37,7 @@ namespace Microsoft.PythonTools.Infrastructure.Commands {
 
             if (MatchedCommandId == 0) {
                 index = 0;
-            } 
+            }
 
             var status = _commandRange.GetStatus(index);
 

@@ -97,7 +97,7 @@ namespace Microsoft.PythonTools {
     /// Represents the method that will handle a registry change event.
     /// </summary>
     delegate void RegistryChangedEventHandler(object sender, RegistryChangedEventArgs e);
-    
+
     /// <summary>
     /// Provides notifications when registry values are modified.
     /// </summary>
@@ -105,7 +105,7 @@ namespace Microsoft.PythonTools {
         readonly object _eventsLock = new object();
         readonly List<WatchEntry> _entries;
         List<RegistryWatcher> _extraWatchers;
-        
+
         readonly AutoResetEvent _itemAdded;
         bool _shutdown;
         readonly Thread _thread;
@@ -121,7 +121,7 @@ namespace Microsoft.PythonTools {
             _entries = new List<WatchEntry>();
             _entries.Add(new WatchEntry());
             _itemAdded = _entries[0].EventHandle;
-            
+
             _thread = new Thread(Worker);
             _thread.IsBackground = true;
             _thread.Start(this);
@@ -131,7 +131,7 @@ namespace Microsoft.PythonTools {
             if (_shutdown == false) {
                 _shutdown = true;
                 _itemAdded.Set();
-                
+
                 var extras = _extraWatchers;
                 _extraWatchers = null;
                 if (extras != null) {

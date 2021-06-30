@@ -25,7 +25,6 @@ using System.Windows.Input;
 using EnvDTE;
 using Microsoft.PythonTools;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.UI.Python;

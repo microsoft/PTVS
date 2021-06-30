@@ -14,15 +14,18 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.ComponentModel.Composition;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Adornments;
 using Microsoft.VisualStudio.Text.Tagging;
+using System.ComponentModel.Composition;
 
-namespace Microsoft.VisualStudioTools.MockVsTests {
+namespace Microsoft.VisualStudioTools.MockVsTests
+{
     [Export(typeof(IErrorProviderFactory))]
-    public class MockErrorProviderFactory : IErrorProviderFactory {
-        public SimpleTagger<ErrorTag> GetErrorTagger(ITextBuffer textBuffer) {
+    public class MockErrorProviderFactory : IErrorProviderFactory
+    {
+        public SimpleTagger<ErrorTag> GetErrorTagger(ITextBuffer textBuffer)
+        {
             return textBuffer.Properties.GetOrCreateSingletonProperty(
                 () => new SimpleTagger<ErrorTag>(textBuffer)
             );

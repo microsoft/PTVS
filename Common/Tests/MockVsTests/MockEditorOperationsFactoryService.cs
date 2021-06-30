@@ -14,14 +14,17 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.ComponentModel.Composition;
 using Microsoft.VisualStudio.Text.Operations;
+using System.ComponentModel.Composition;
 using TestUtilities.Mocks;
 
-namespace Microsoft.VisualStudioTools.MockVsTests {
+namespace Microsoft.VisualStudioTools.MockVsTests
+{
     [Export(typeof(IEditorOperationsFactoryService))]
-    class MockEditorOperationsFactoryService : IEditorOperationsFactoryService {
-        public IEditorOperations GetEditorOperations(VisualStudio.Text.Editor.ITextView textView) {
+    class MockEditorOperationsFactoryService : IEditorOperationsFactoryService
+    {
+        public IEditorOperations GetEditorOperations(VisualStudio.Text.Editor.ITextView textView)
+        {
             return new MockEditorOperations((MockTextView)textView);
         }
     }

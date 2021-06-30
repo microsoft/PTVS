@@ -69,8 +69,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
         static public Guid guidLocalPortSupplier { get; } = new Guid("708C1ECA-FF48-11D2-904F-00C04FA302A1");
 
-        public const int E_EVALUATE_BUSY_WITH_EVALUATION=unchecked((int)0x80040030);
-        public const int E_EVALUATE_TIMEOUT=unchecked((int)0x80040031);
+        public const int E_EVALUATE_BUSY_WITH_EVALUATION = unchecked((int)0x80040030);
+        public const int E_EVALUATE_TIMEOUT = unchecked((int)0x80040031);
     }
 
     static class DebuggerLanguageNames {

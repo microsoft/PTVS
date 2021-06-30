@@ -19,8 +19,6 @@ using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Text;
 using Microsoft.PythonTools.Parsing;
-using Microsoft.VisualStudio.Debugger;
-using Microsoft.VisualStudio.Debugger.Evaluation;
 
 namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
     [StructProxy(MaxVersion = PythonLanguageVersion.V27, StructName = "PyUnicodeObject")]
@@ -206,7 +204,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
 
             return result;
         }
-        
+
 
         public override string ToString() {
             byte[] buf;

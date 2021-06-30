@@ -15,7 +15,6 @@
 // permissions and limitations under the License.
 
 using System.Linq;
-using Microsoft.VisualStudio.Debugger;
 
 namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
     internal class PyTypeObject : PyObject {

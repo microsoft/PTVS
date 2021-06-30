@@ -34,10 +34,6 @@ using Microsoft.VisualStudioTools.Project;
 using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.Profiling {
-
-    using global::DiagnosticsHub.Packaging.Interop;
-    using Microsoft.DiagnosticsHub.Packaging.InteropEx;
-
     /// <summary>
     /// This is the class that implements the package exposed by this assembly.
     ///
@@ -292,7 +288,7 @@ namespace Microsoft.PythonTools.Profiling {
                 RunVTune(session, config, openReport);
             } else {
 #endif
-                RunProfiler(session, config, openReport);
+            RunProfiler(session, config, openReport);
 #if EXTERNAL_PROFILER_DRIVER
             }
 #endif
@@ -321,7 +317,7 @@ namespace Microsoft.PythonTools.Profiling {
                 RunVTune(session, config, openReport);
             } else {
 #endif
-                RunProfiler(session, config, openReport);
+            RunProfiler(session, config, openReport);
 #if EXTERNAL_PROFILER_DRIVER
             }
 #endif

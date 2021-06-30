@@ -14,11 +14,12 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using Microsoft.VisualStudio.Shell;
 using System;
 using System.Globalization;
-using Microsoft.VisualStudio.Shell;
 
-namespace Microsoft.VisualStudioTools {
+namespace Microsoft.VisualStudioTools
+{
 
     /// <summary>
     /// This attribute registers an additional path for code snippets to live
@@ -27,7 +28,8 @@ namespace Microsoft.VisualStudioTools {
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = true)]
     // Disable the "IdentifiersShouldNotHaveIncorrectSuffix" warning.
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1711")]
-    sealed class ProvideCodeExpansionPathAttribute : RegistrationAttribute {
+    sealed class ProvideCodeExpansionPathAttribute : RegistrationAttribute
+    {
         private readonly string _languageStringId;
         private readonly string _description;
         private readonly string _paths;
@@ -36,7 +38,8 @@ namespace Microsoft.VisualStudioTools {
         /// Creates a new RegisterSnippetsAttribute.
         /// </summary>
         public ProvideCodeExpansionPathAttribute(string languageStringId, string description,
-                                          string paths) {
+                                          string paths)
+        {
             _languageStringId = languageStringId;
             _description = description;
             _paths = paths;
@@ -45,21 +48,24 @@ namespace Microsoft.VisualStudioTools {
         /// <summary>
         /// Returns the string to use for the language name.
         /// </summary>
-        public string LanguageStringId {
+        public string LanguageStringId
+        {
             get { return _languageStringId; }
         }
 
         /// <summary>
         /// Returns the paths to look for snippets.
         /// </summary>
-        public string Paths {
+        public string Paths
+        {
             get { return _paths; }
         }
 
         /// <summary>
         /// The reg key name of the project.
         /// </summary>
-        private string LanguageName() {
+        private string LanguageName()
+        {
             return string.Format(CultureInfo.InvariantCulture, "Languages\\CodeExpansions\\{0}", LanguageStringId);
         }
 
@@ -70,13 +76,16 @@ namespace Microsoft.VisualStudioTools {
         /// Contains the location where the registration information should be placed.
         /// It also contains other informations as the type being registered and path information.
         /// </param>
-        public override void Register(RegistrationContext context) {
-            using (Key childKey = context.CreateKey(LanguageName())) {
+        public override void Register(RegistrationContext context)
+        {
+            using (Key childKey = context.CreateKey(LanguageName()))
+            {
                 string snippetPaths = context.ComponentPath;
                 snippetPaths = System.IO.Path.Combine(snippetPaths, Paths);
                 snippetPaths = context.EscapePath(System.IO.Path.GetFullPath(snippetPaths));
 
-                using (Key pathsSubKey = childKey.CreateSubkey("Paths")) {
+                using (Key pathsSubKey = childKey.CreateSubkey("Paths"))
+                {
                     pathsSubKey.SetValue(_description, snippetPaths);
                 }
             }
@@ -89,7 +98,8 @@ namespace Microsoft.VisualStudioTools {
         /// Contains the location where the registration information should be placed.
         /// It also contains other informations as the type being registered and path information.
         /// </param>
-        public override void Unregister(RegistrationContext context) {
+        public override void Unregister(RegistrationContext context)
+        {
         }
     }
 }

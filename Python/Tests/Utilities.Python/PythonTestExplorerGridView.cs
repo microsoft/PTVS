@@ -16,10 +16,8 @@
 
 using System;
 using System.Diagnostics;
-using System.Drawing;
 using System.Threading;
 using System.Windows.Automation;
-using System.Windows.Input;
 
 namespace TestUtilities.UI {
     public class PythonTestExplorerGridView : ListView {
@@ -110,7 +108,7 @@ namespace TestUtilities.UI {
                         Console.WriteLine("Failed to expand {0}", splitPath[depth]);
                     }
                     return FindNode(node.FindAll(TreeScope.Children, Condition.TrueCondition), splitPath, depth + 1);
-               }
+                }
             }
             return null;
         }

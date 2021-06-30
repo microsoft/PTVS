@@ -28,7 +28,6 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Imaging;
 using Microsoft.VisualStudio.Imaging.Interop;
 using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 using Clipboard = System.Windows.Forms.Clipboard;
@@ -152,7 +151,7 @@ namespace Microsoft.PythonTools.Project {
                     if (logger != null) {
                         foreach (var p in packages) {
                             logger.LogEvent(PythonLogEvent.PythonPackage,
-                                new PackageInfo {Name = p.Value.Name.ToLowerInvariant()});
+                                new PackageInfo { Name = p.Value.Name.ToLowerInvariant() });
                         }
                     }
                 } catch (Exception ex) {

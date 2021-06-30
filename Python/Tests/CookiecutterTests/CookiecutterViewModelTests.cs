@@ -18,11 +18,11 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using TestUtilities;
-using Microsoft.CookiecutterTools.ViewModel;
 using Microsoft.CookiecutterTools.Model;
 using Microsoft.CookiecutterTools.Telemetry;
+using Microsoft.CookiecutterTools.ViewModel;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using TestUtilities;
 
 namespace CookiecutterTests {
     [TestClass]
@@ -82,7 +82,7 @@ namespace CookiecutterTests {
             _vm.OutputFolderPath = outputProjectFolder;
         }
 
-       [TestMethod]
+        [TestMethod]
         public async Task Search() {
             PopulateInstalledSource();
 
@@ -245,9 +245,9 @@ namespace CookiecutterTests {
         public async Task ContextItemsAddNewItem() {
             _projectSystemClient.IsSolutionOpen = true;
             _vm.TargetProjectLocation = new ProjectLocation() {
-                ProjectUniqueName="TestProject",
-                ProjectKind= "{EB4B2D97-897B-4A9B-926F-38D7FAAAF399}",
-                FolderPath="C:\\TestProject",
+                ProjectUniqueName = "TestProject",
+                ProjectKind = "{EB4B2D97-897B-4A9B-926F-38D7FAAAF399}",
+                FolderPath = "C:\\TestProject",
             };
             _vm.ProjectName = null;
             _vm.InitializeContextItems(contextWithValueSourcesOpenProject);

@@ -15,7 +15,6 @@
 // permissions and limitations under the License.
 
 using System;
-using Microsoft.PythonTools.Intellisense;
 
 namespace Microsoft.PythonTools.Options {
     public sealed class AdvancedEditorOptions {

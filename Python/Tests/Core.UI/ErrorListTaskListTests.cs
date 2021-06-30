@@ -20,7 +20,6 @@ using System.IO;
 using System.Linq;
 using Microsoft.PythonTools;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools;
 using TestUtilities;

@@ -108,10 +108,10 @@ namespace Microsoft.PythonTools.Repl {
 #if DEBUG
             if (!debugMode) {
 #endif
-                var env = processInfo.Environment;
-                foreach (var kv in _serviceProvider.GetPythonToolsService().GetFullEnvironment(Configuration)) {
-                    env[kv.Key] = kv.Value;
-                }
+            var env = processInfo.Environment;
+            foreach (var kv in _serviceProvider.GetPythonToolsService().GetFullEnvironment(Configuration)) {
+                env[kv.Key] = kv.Value;
+            }
 #if DEBUG
             }
 #endif
@@ -147,7 +147,7 @@ namespace Microsoft.PythonTools.Repl {
                     WriteError(Strings.ErrorStartingInteractiveProcess.FormatUI(e.ToString()));
                 }
                 return null;
-            } catch (Exception e) when(!e.IsCriticalException()) {
+            } catch (Exception e) when (!e.IsCriticalException()) {
                 Debug.Fail(e.ToUnhandledExceptionMessage(GetType()));
                 return null;
             }
@@ -268,7 +268,7 @@ namespace Microsoft.PythonTools.Repl {
                 if (!IsProcessExpectedToExit) {
                     try {
                         _eval.WriteError(Strings.ReplExited);
-                    } catch (Exception ex) when(!ex.IsCriticalException()) {
+                    } catch (Exception ex) when (!ex.IsCriticalException()) {
                     }
                 }
                 IsProcessExpectedToExit = false;

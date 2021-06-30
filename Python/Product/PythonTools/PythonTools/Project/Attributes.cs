@@ -16,7 +16,6 @@
 
 using System;
 using System.ComponentModel;
-using System.Globalization;
 
 namespace Microsoft.PythonTools.Project {
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Property | AttributeTargets.Field, Inherited = false, AllowMultiple = false)]

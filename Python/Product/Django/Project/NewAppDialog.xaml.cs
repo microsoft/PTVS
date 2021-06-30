@@ -14,19 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
-using Microsoft.VisualStudio.PlatformUI;
 using Microsoft.VisualStudio.Shell;
 
 namespace Microsoft.PythonTools.Django.Project {
@@ -38,7 +26,7 @@ namespace Microsoft.PythonTools.Django.Project {
 
         public static readonly object BackgroundKey = VsBrushes.WindowKey;
         public static readonly object ForegroundKey = VsBrushes.WindowTextKey;
-        
+
         public NewAppDialog() {
             InitializeComponent();
 

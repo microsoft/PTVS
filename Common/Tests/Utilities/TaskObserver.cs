@@ -14,19 +14,20 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities.Ben.Demystifier;
 
-namespace TestUtilities {
-    internal class TaskObserver {
+namespace TestUtilities
+{
+    internal class TaskObserver
+    {
         private readonly int _secondsTimeout;
         private readonly Action<Task> _afterTaskCompleted;
         private readonly TaskCompletionSource<Exception> _tcs;
@@ -34,16 +35,19 @@ namespace TestUtilities {
         private int _count;
         private bool _isTestCompleted;
 
-        public TaskObserver(int secondsTimeout) {
+        public TaskObserver(int secondsTimeout)
+        {
             _secondsTimeout = secondsTimeout;
             _afterTaskCompleted = AfterTaskCompleted;
             _tcs = new TaskCompletionSource<Exception>();
             _stackTraces = new ConcurrentDictionary<Task, StackFrame[]>();
         }
 
-        public void Add(Task task) {
+        public void Add(Task task)
+        {
             // No reason to watch for task if it is completed already
-            if (task.IsCompleted) {
+            if (task.IsCompleted)
+            {
                 task.GetAwaiter().GetResult();
             }
 
@@ -51,29 +55,38 @@ namespace TestUtilities {
             _stackTraces.TryAdd(task, GetFilteredStackTrace());
             task.ContinueWith(_afterTaskCompleted, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
         }
-        
-        public void WaitForObservedTask() {
+
+        public void WaitForObservedTask()
+        {
             TestCompleted();
             _tcs.Task.Wait(_secondsTimeout * 1000);
 
-            try {
+            try
+            {
                 // Disable the failing of tests for now, this is too common
                 // with the current analyzer. We can re-enable later, like
                 // after we've switched to LSC and gotten rid of current analyzer code.
                 //Summarize();
-            } finally {
+            }
+            finally
+            {
                 _stackTraces.Clear();
             }
         }
 
-        private void Summarize() { 
+        private void Summarize()
+        {
             var incompleteTasks = new Queue<KeyValuePair<Task, StackFrame[]>>();
             var failedTasks = new Queue<KeyValuePair<StackFrame[], Exception>>();
-            foreach (var kvp in _stackTraces) {
+            foreach (var kvp in _stackTraces)
+            {
                 var task = kvp.Key;
-                if (!task.IsCompleted) {
+                if (!task.IsCompleted)
+                {
                     incompleteTasks.Enqueue(kvp);
-                } else if (task.IsFaulted && task.Exception != null) {
+                }
+                else if (task.IsFaulted && task.Exception != null)
+                {
                     var aggregateException = task.Exception.Flatten();
                     var exception = aggregateException.InnerExceptions.Count == 1
                         ? aggregateException.InnerException
@@ -83,26 +96,32 @@ namespace TestUtilities {
                 }
             }
 
-            if (incompleteTasks.Count == 0 && failedTasks.Count == 0) {
+            if (incompleteTasks.Count == 0 && failedTasks.Count == 0)
+            {
                 return;
             }
 
             var message = new StringBuilder();
             var hasIncompleteTasks = incompleteTasks.Count > 0;
             var hasFailedTasks = failedTasks.Count > 0;
-            if (hasIncompleteTasks) {
-                if (incompleteTasks.Count > 1) {
+            if (hasIncompleteTasks)
+            {
+                if (incompleteTasks.Count > 1)
+                {
                     message
                         .Append(incompleteTasks.Count)
                         .AppendLine(" tasks that have been started during test run are still not completed:")
                         .AppendLine();
-                } else {
+                }
+                else
+                {
                     message
                         .AppendLine("One task that has been started during test run is still not completed:")
                         .AppendLine();
                 }
 
-                while (incompleteTasks.Count > 0) {
+                while (incompleteTasks.Count > 0)
+                {
                     var kvp = incompleteTasks.Dequeue();
                     var task = kvp.Key;
                     message
@@ -116,19 +135,24 @@ namespace TestUtilities {
                         .AppendLine();
                 }
 
-                if (hasFailedTasks) {
+                if (hasFailedTasks)
+                {
                     message
                         .Append("Also, ");
                 }
             }
 
-            if (hasFailedTasks) {
-                if (failedTasks.Count > 1) {
+            if (hasFailedTasks)
+            {
+                if (failedTasks.Count > 1)
+                {
                     message
                         .Append(failedTasks.Count)
                         .AppendLine(" not awaited tasks have failed:")
                         .AppendLine();
-                } else {
+                }
+                else
+                {
                     message
                         .Append(hasIncompleteTasks ? "one" : "One")
                         .AppendLine(" not awaited tasks has failed:")
@@ -136,7 +160,8 @@ namespace TestUtilities {
                 }
             }
 
-            while (failedTasks.Count > 0) {
+            while (failedTasks.Count > 0)
+            {
                 var kvp = failedTasks.Dequeue();
                 message
                     .Append(kvp.Value.GetType().Name)
@@ -153,40 +178,52 @@ namespace TestUtilities {
             throw new AssertFailedException(message.ToString());
         }
 
-        private void TestCompleted() {
+        private void TestCompleted()
+        {
             Volatile.Write(ref _isTestCompleted, true);
-            if (_count == 0) {
+            if (_count == 0)
+            {
                 _tcs.TrySetResult(null);
             }
         }
 
-        private void AfterTaskCompleted(Task task) {
+        private void AfterTaskCompleted(Task task)
+        {
             var count = Interlocked.Decrement(ref _count);
-            if (!task.IsFaulted) {
+            if (!task.IsFaulted)
+            {
                 _stackTraces.TryRemove(task, out _);
-            } else if (Debugger.IsAttached) {
+            }
+            else if (Debugger.IsAttached)
+            {
                 Debugger.Break();
             }
 
-            if (count == 0 && Volatile.Read(ref _isTestCompleted)) {
+            if (count == 0 && Volatile.Read(ref _isTestCompleted))
+            {
                 _tcs.TrySetResult(null);
             }
         }
 
-        private static StackFrame[] GetFilteredStackTrace() {
+        private static StackFrame[] GetFilteredStackTrace()
+        {
             var stackTrace = new StackTrace(2, true).GetFrames() ?? new StackFrame[0];
             var filteredStackTrace = new List<StackFrame>();
             var skip = true;
-            foreach (var frame in stackTrace) {
+            foreach (var frame in stackTrace)
+            {
                 var frameMethod = frame.GetMethod();
-                if (skip) {
-                    if (frameMethod.Name == "DoNotWait" && frameMethod.DeclaringType?.Name == "TaskExtensions") {
+                if (skip)
+                {
+                    if (frameMethod.Name == "DoNotWait" && frameMethod.DeclaringType?.Name == "TaskExtensions")
+                    {
                         skip = false;
                     }
                     continue;
                 }
 
-                if (frameMethod.DeclaringType?.Namespace?.StartsWith("Microsoft.VisualStudio.TestPlatform.MSTestFramework", StringComparison.Ordinal) ?? false) {
+                if (frameMethod.DeclaringType?.Namespace?.StartsWith("Microsoft.VisualStudio.TestPlatform.MSTestFramework", StringComparison.Ordinal) ?? false)
+                {
                     continue;
                 }
 

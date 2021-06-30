@@ -67,7 +67,7 @@ namespace DjangoTests {
                 switch (requiredState) {
                     case DbState.OarApp:
                         using (var output = ProcessOutput.Run(Version.InterpreterPath,
-                            new [] {"manage.py", "migrate", "--noinput"},
+                            new[] { "manage.py", "migrate", "--noinput" },
                             DebuggerTestPath,
                             null, false, null)) {
                             output.Wait();
@@ -79,7 +79,7 @@ namespace DjangoTests {
                         }
 
                         using (var output = ProcessOutput.Run(Version.InterpreterPath,
-                            new [] {"manage.py", "loaddata", "data.json"},
+                            new[] { "manage.py", "loaddata", "data.json" },
                             DebuggerTestPath,
                             null, false, null)) {
                             output.Wait();
@@ -111,7 +111,7 @@ namespace DjangoTests {
                 Path.Combine(Environment.CurrentDirectory, DebuggerTestPath, "Templates\\polls\\loop.html"),
                 "runserver --noreload",
                 new[] { 1 }, // break on line 1,
-                new Action<PythonProcess>[] { x => {  } },
+                new Action<PythonProcess>[] { x => { } },
                 new WebPageRequester("http://127.0.0.1:8000/loop/").DoRequest,
                 PythonDebugOptions.DjangoDebugging,
                 false,
@@ -169,7 +169,7 @@ namespace DjangoTests {
             Init(DbState.OarApp);
 
             string cwd = Path.Combine(Environment.CurrentDirectory, DebuggerTestPath);
-            
+
             await new BreakpointTest(this, "manage.py") {
                 BreakFileName = Path.Combine(cwd, "Templates", "polls", "index.html"),
                 Breakpoints = {

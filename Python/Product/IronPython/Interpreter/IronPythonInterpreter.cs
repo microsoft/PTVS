@@ -28,7 +28,6 @@ using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Interpreter.Ast;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
@@ -111,7 +110,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
             var domain = AppDomain.CreateDomain("IronPythonAnalysisDomain", null, setup);
             using (new RemoteAssemblyResolver(domain, ironPythonAssemblyPath)) {
-                remoteInterpreter = (RemoteInterpreterProxy) domain.CreateInstanceAndUnwrap(
+                remoteInterpreter = (RemoteInterpreterProxy)domain.CreateInstanceAndUnwrap(
                     typeof(RemoteInterpreterProxy).Assembly.FullName,
                     typeof(RemoteInterpreterProxy).FullName);
             }

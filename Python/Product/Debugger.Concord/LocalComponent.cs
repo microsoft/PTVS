@@ -21,19 +21,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.Serialization;
 using Microsoft.Dia;
-using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.Debugger.Concord.Proxies;
-using Microsoft.PythonTools.Debugger.Concord.Proxies.Structs;
 using Microsoft.PythonTools.Parsing;
-using Microsoft.VisualStudio.Debugger;
-using Microsoft.VisualStudio.Debugger.Breakpoints;
-using Microsoft.VisualStudio.Debugger.CallStack;
-using Microsoft.VisualStudio.Debugger.ComponentInterfaces;
-using Microsoft.VisualStudio.Debugger.DefaultPort;
-using Microsoft.VisualStudio.Debugger.Evaluation;
-using Microsoft.VisualStudio.Debugger.Evaluation.IL;
-using Microsoft.VisualStudio.Debugger.Native;
-using Microsoft.VisualStudio.Debugger.Symbols;
 
 namespace Microsoft.PythonTools.Debugger.Concord {
     public class LocalComponent :
@@ -260,7 +249,7 @@ namespace Microsoft.PythonTools.Debugger.Concord {
                     }
                 }
             }
-            
+
             if (process.GetPythonRuntimeInstance() != null) {
                 return;
             }
@@ -371,7 +360,7 @@ namespace Microsoft.PythonTools.Debugger.Concord {
                 throw new InvalidOperationException();
             }
 
-            ee.GetFrameLocals(inspectionContext, workList, stackFrame, completionRoutine);            
+            ee.GetFrameLocals(inspectionContext, workList, stackFrame, completionRoutine);
         }
 
         void IDkmLanguageExpressionEvaluator.GetChildren(DkmEvaluationResult result, DkmWorkList workList, int initialRequestSize, DkmInspectionContext inspectionContext, DkmCompletionRoutine<DkmGetChildrenAsyncResult> completionRoutine) {
@@ -575,7 +564,7 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             var process = moduleInstance.Process;
             var runtimeBreakpoints = process.GetOrCreateDataItem(() => new RuntimeDllBreakpoints());
 
-            using (var moduleSym = moduleInstance.GetSymbols()) 
+            using (var moduleSym = moduleInstance.GetSymbols())
             using (var funcSym = moduleSym.Object.GetSymbol(SymTagEnum.SymTagFunction, funcName)) {
                 var funcEnds = funcSym.Object.GetSymbols(SymTagEnum.SymTagFuncDebugStart, null);
                 try {

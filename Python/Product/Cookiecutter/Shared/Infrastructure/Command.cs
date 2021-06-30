@@ -15,7 +15,6 @@
 // permissions and limitations under the License.
 
 using System;
-using Microsoft.VisualStudio.OLE.Interop;
 
 namespace Microsoft.CookiecutterTools.Infrastructure {
     /// <summary>

@@ -21,6 +21,6 @@ namespace Microsoft.PythonTools.Profiling {
 
         public Profile(string name) {
             Name = name;
-        }        
+        }
     }
 }

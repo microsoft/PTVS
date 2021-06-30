@@ -139,7 +139,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 e.CanExecute = false;
                 return;
             }
-            
+
             var view = e.Parameter as PipPackageView;
             if (view == null) {
                 e.CanExecute = false;

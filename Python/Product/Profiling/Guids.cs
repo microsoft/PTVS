@@ -18,10 +18,8 @@
 // MUST match guids.h
 using System;
 
-namespace Microsoft.PythonTools.Profiling
-{
-    static class GuidList
-    {
+namespace Microsoft.PythonTools.Profiling {
+    static class GuidList {
         public const string guidPythonToolsPkgString = "6dbd7c1e-1f1b-496d-ac7c-c55dae66c783";
         public static readonly Guid guidPythonToolsPackage = new Guid(guidPythonToolsPkgString);
 

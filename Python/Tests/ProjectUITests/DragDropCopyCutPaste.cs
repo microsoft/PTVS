@@ -17,16 +17,12 @@
 using System;
 using System.IO;
 using System.Linq;
-using System.Windows;
-using System.Windows.Automation;
 using System.Windows.Input;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.SharedProject;
 using TestUtilities.UI;
-using Keyboard = TestUtilities.UI.Keyboard;
-using Mouse = TestUtilities.UI.Mouse;
 
 namespace ProjectUITests {
     public class DragDropCopyCutPaste {

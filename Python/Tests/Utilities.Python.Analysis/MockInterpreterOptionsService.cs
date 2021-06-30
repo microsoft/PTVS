@@ -17,9 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
-using Microsoft.PythonTools;
 using Microsoft.PythonTools.Interpreter;
 
 namespace TestUtilities.Python {
@@ -62,8 +60,8 @@ namespace TestUtilities.Python {
                 evt(this, EventArgs.Empty);
             }
         }
-        
-        
+
+
         public IEnumerable<IPythonInterpreterFactory> Interpreters {
             get { return _providers.Where(p => p != null).SelectMany(p => p.GetInterpreterFactories()); }
         }

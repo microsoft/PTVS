@@ -14,29 +14,34 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
 using Microsoft.VisualStudio.Text.Operations;
+using System;
 
-namespace TestUtilities.Mocks {
-    internal sealed class NullMergeUndoTransactionPolicy : IMergeTextUndoTransactionPolicy {
+namespace TestUtilities.Mocks
+{
+    internal sealed class NullMergeUndoTransactionPolicy : IMergeTextUndoTransactionPolicy
+    {
         private static NullMergeUndoTransactionPolicy _instance;
 
-        private NullMergeUndoTransactionPolicy() {}
+        private NullMergeUndoTransactionPolicy() { }
 
         /// <summary>
         /// Gets the <see cref="NullMergeUndoTransactionPolicy"/> object.
         /// </summary>
         public static IMergeTextUndoTransactionPolicy Instance => _instance ?? (_instance = new NullMergeUndoTransactionPolicy());
 
-        public bool TestCompatiblePolicy(IMergeTextUndoTransactionPolicy other) {
+        public bool TestCompatiblePolicy(IMergeTextUndoTransactionPolicy other)
+        {
             return false;
         }
 
-        public bool CanMerge(ITextUndoTransaction newerTransaction, ITextUndoTransaction olderTransaction) {
+        public bool CanMerge(ITextUndoTransaction newerTransaction, ITextUndoTransaction olderTransaction)
+        {
             return false;
         }
 
-        public void PerformTransactionMerge(ITextUndoTransaction existingTransaction, ITextUndoTransaction newTransaction) {
+        public void PerformTransactionMerge(ITextUndoTransaction existingTransaction, ITextUndoTransaction newTransaction)
+        {
             throw new InvalidOperationException("Strings.NullMergePolicyCannotMerge");
         }
     }

@@ -15,13 +15,8 @@
 // permissions and limitations under the License.
 
 using System;
-using System.ComponentModel;
-using System.Windows;
 using System.Windows.Markup;
 using System.Xaml;
-using System.Windows.Data;
-using System.Globalization;
-using Microsoft.VisualStudioTools.Wpf;
 
 namespace Microsoft.VisualStudioTools.Wpf {
     [ContentProperty("Lambda")]

@@ -17,7 +17,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.Scripting.Actions;
 
 namespace Microsoft.IronPythonTools.Interpreter {
     class IronPythonNamespace : PythonObject, IPythonModule {

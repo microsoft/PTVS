@@ -20,7 +20,6 @@ using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Commands {
@@ -68,7 +67,7 @@ namespace Microsoft.PythonTools.Commands {
             if (config == null) {
                 var service = _serviceProvider.GetComponentModel().GetService<IInterpreterOptionsService>();
                 var registry = _serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>();
-                config = service.DefaultInterpreter?.Configuration ?? 
+                config = service.DefaultInterpreter?.Configuration ??
                     registry.Configurations
                     .Where(PythonInterpreterFactoryExtensions.IsRunnable)
                     .FirstOrDefault();

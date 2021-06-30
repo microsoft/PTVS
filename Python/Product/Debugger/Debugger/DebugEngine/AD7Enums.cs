@@ -15,7 +15,6 @@
 // permissions and limitations under the License.
 
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Debugger.Interop;
 
 // These classes use a generic enumerator implementation to create the various enumerators required by the engine.
 // They allow the enumeration of everything from programs to breakpoints.

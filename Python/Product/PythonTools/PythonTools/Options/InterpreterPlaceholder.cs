@@ -33,7 +33,7 @@ namespace Microsoft.PythonTools.Options {
                 InterpreterUIMode.Normal
             );
         }
-        
+
         public InterpreterConfiguration Configuration { get; private set; }
 
         public Guid Id => Guid.Empty;

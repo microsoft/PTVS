@@ -22,7 +22,6 @@ using System.Windows.Input;
 using analysis::Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Language.Intellisense;
-using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.MockVsTests;
@@ -114,7 +113,7 @@ namespace PythonToolsMockTests {
                 var interpreters = ((IComponentModel)project.GetService(typeof(SComponentModel)))
                     .GetService<IInterpreterRegistryService>()
                     .Interpreters;
-                
+
                 var v27 = interpreters.Where(x => x.Configuration.Id == "Global|PythonCore|2.7-32").First();
                 var v34 = interpreters.Where(x => x.Configuration.Id == "Global|PythonCore|3.4-32").First();
                 var interpOptions = (UIThreadBase)project.GetService(typeof(IComponentModel));

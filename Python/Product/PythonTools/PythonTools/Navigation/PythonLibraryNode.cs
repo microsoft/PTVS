@@ -19,15 +19,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Language;
-using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Language.Intellisense;
-using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Navigation;
 
@@ -183,8 +180,8 @@ namespace Microsoft.PythonTools.Navigation {
                     foreach (var reference in value.locations.MaybeEnumerate()) {
                         var entry = analyzer.GetAnalysisEntryFromPath(reference.file);
                         var analysis = analyzer.WaitForRequest(analyzer.AnalyzeExpressionAsync(
-                            entry, 
-                            Name, 
+                            entry,
+                            Name,
                             new SourceLocation(reference.startLine, reference.startColumn)
                         ), "PythonLibraryNode.AnalyzeExpression");
                         vars.AddRange(analysis.Variables);

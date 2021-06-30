@@ -16,7 +16,6 @@
 
 using System.ComponentModel.Composition;
 using System.Diagnostics;
-using System.Linq;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.BraceCompletion;

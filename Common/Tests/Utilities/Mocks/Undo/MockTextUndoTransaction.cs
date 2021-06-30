@@ -14,20 +14,23 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using Microsoft.VisualStudio.Text.Operations;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.VisualStudio.Text.Operations;
 
-namespace TestUtilities.Mocks {
-    internal class MockTextUndoTransaction : ITextUndoTransaction {
+namespace TestUtilities.Mocks
+{
+    internal class MockTextUndoTransaction : ITextUndoTransaction
+    {
         private readonly MockTextUndoHistory _history;
         private readonly MockTextUndoTransaction _parent;
 
         private UndoTransactionState _state;
         private readonly List<ITextUndoPrimitive> _primitives;
 
-        public MockTextUndoTransaction(ITextUndoHistory history, ITextUndoTransaction parent, string description) {
+        public MockTextUndoTransaction(ITextUndoHistory history, ITextUndoTransaction parent, string description)
+        {
             _history = history as MockTextUndoHistory;
             _parent = parent as MockTextUndoTransaction;
 
@@ -43,7 +46,8 @@ namespace TestUtilities.Mocks {
         /// This is how you turn transaction into "Invalid" state. Use it to indicate that this transaction is retired forever,
         /// such as when clearing transactions from the redo stack.
         /// </summary>
-        internal void Invalidate() {
+        internal void Invalidate()
+        {
             _state = UndoTransactionState.Invalid;
         }
 
@@ -73,13 +77,15 @@ namespace TestUtilities.Mocks {
         /// UndoPrimitives allows access to the list of primitives in this transaction container, but should only be called
         /// after the transaction has been completed. 
         /// </summary>
-        public IList<ITextUndoPrimitive> UndoPrimitives => IsReadOnly ? (IList<ITextUndoPrimitive>) _primitives.AsReadOnly() : _primitives;
+        public IList<ITextUndoPrimitive> UndoPrimitives => IsReadOnly ? (IList<ITextUndoPrimitive>)_primitives.AsReadOnly() : _primitives;
 
         /// <summary>
         /// Complete marks the transaction finished and eligible for Undo.
         /// </summary>
-        public void Complete() {
-            if (State != UndoTransactionState.Open) {
+        public void Complete()
+        {
+            if (State != UndoTransactionState.Open)
+            {
                 throw new InvalidOperationException("Complete called on transaction that is not opened");
             }
 
@@ -94,8 +100,10 @@ namespace TestUtilities.Mocks {
         /// all of this transaction's undo history, so that transactions are not really recursive (they
         /// exist for rollback).
         /// </summary>
-        public void FlattenPrimitivesToParent() {
-            if (_parent != null) {
+        public void FlattenPrimitivesToParent()
+        {
+            if (_parent != null)
+            {
                 // first, copy up each primitive. 
                 _parent.CopyPrimitivesFrom(this);
 
@@ -109,8 +117,10 @@ namespace TestUtilities.Mocks {
         /// Copies all of the primitives from the given transaction, and appends them to the UndoPrimitives list.
         /// </summary>
         /// <param name="transaction">The MockTextUndoTransaction to copy from.</param>
-        public void CopyPrimitivesFrom(MockTextUndoTransaction transaction) {
-            foreach (var p in transaction.UndoPrimitives) {
+        public void CopyPrimitivesFrom(MockTextUndoTransaction transaction)
+        {
+            foreach (var p in transaction.UndoPrimitives)
+            {
                 AddUndo(p);
             }
         }
@@ -118,8 +128,10 @@ namespace TestUtilities.Mocks {
         /// <summary>
         /// Cancel marks an Open transaction Canceled, and Undoes and clears any primitives that have been added.
         /// </summary>
-        public void Cancel() {
-            for (var i = _primitives.Count - 1; i >= 0; --i) {
+        public void Cancel()
+        {
+            for (var i = _primitives.Count - 1; i >= 0; --i)
+            {
                 _primitives[i].Undo();
             }
 
@@ -131,7 +143,8 @@ namespace TestUtilities.Mocks {
         /// AddUndo adds a new primitive to the end of the list when the transaction is Open.
         /// </summary>
         /// <param name="undo"></param>
-        public void AddUndo(ITextUndoPrimitive undo) {
+        public void AddUndo(ITextUndoPrimitive undo)
+        {
             _primitives.Add(undo);
             undo.Parent = this;
 
@@ -141,9 +154,11 @@ namespace TestUtilities.Mocks {
         /// <summary>
         /// This is called by AddUndo, so that primitives are always in a fully merged state as we go.
         /// </summary>
-        protected void MergeMostRecentUndoPrimitive() {
+        protected void MergeMostRecentUndoPrimitive()
+        {
             // no merging unless there are at least two items
-            if (_primitives.Count < 2) {
+            if (_primitives.Count < 2)
+            {
                 return;
             }
 
@@ -152,15 +167,18 @@ namespace TestUtilities.Mocks {
             ITextUndoPrimitive victim = null;
             var victimIndex = -1;
 
-            for (var i = _primitives.Count - 2; i >= 0; --i) {
-                if (top.GetType() == _primitives[i].GetType() && top.CanMerge(_primitives[i])) {
+            for (var i = _primitives.Count - 2; i >= 0; --i)
+            {
+                if (top.GetType() == _primitives[i].GetType() && top.CanMerge(_primitives[i]))
+                {
                     victim = _primitives[i];
                     victimIndex = i;
                     break;
                 }
             }
 
-            if (victim != null) {
+            if (victim != null)
+            {
                 var newPrimitive = top.Merge(victim);
                 _primitives.RemoveRange(_primitives.Count - 1, 1);
                 _primitives.RemoveRange(victimIndex, 1);
@@ -173,13 +191,17 @@ namespace TestUtilities.Mocks {
         /// <summary>
         /// This is true iff every contained primitive is CanRedo and we are in an Undone state.
         /// </summary>
-        public bool CanRedo {
-            get {
-                if (_state == UndoTransactionState.Invalid) {
+        public bool CanRedo
+        {
+            get
+            {
+                if (_state == UndoTransactionState.Invalid)
+                {
                     return true;
                 }
 
-                if (State != UndoTransactionState.Undone) {
+                if (State != UndoTransactionState.Undone)
+                {
                     return false;
                 }
 
@@ -190,13 +212,17 @@ namespace TestUtilities.Mocks {
         /// <summary>
         /// This is true iff every contained primitive is CanUndo and we are in a Completed state.
         /// </summary>
-        public bool CanUndo{
-            get {
-                if (_state == UndoTransactionState.Invalid) {
+        public bool CanUndo
+        {
+            get
+            {
+                if (_state == UndoTransactionState.Invalid)
+                {
                     return true;
                 }
 
-                if (State != UndoTransactionState.Completed) {
+                if (State != UndoTransactionState.Completed)
+                {
                     return false;
                 }
 
@@ -207,18 +233,22 @@ namespace TestUtilities.Mocks {
         /// <summary>
         /// 
         /// </summary>
-        public void Do() {
-            if (_state == UndoTransactionState.Invalid) {
+        public void Do()
+        {
+            if (_state == UndoTransactionState.Invalid)
+            {
                 return;
             }
 
-            if (!CanRedo) {
+            if (!CanRedo)
+            {
                 throw new InvalidOperationException("Strings.DoCalledButCanRedoFalse");
             }
 
             _state = UndoTransactionState.Redoing;
 
-            for (var i = 0; i < _primitives.Count; ++i) {
+            for (var i = 0; i < _primitives.Count; ++i)
+            {
                 _primitives[i].Do();
             }
 
@@ -228,18 +258,22 @@ namespace TestUtilities.Mocks {
         /// <summary>
         /// This defers to the linked transaction if there is one.
         /// </summary>
-        public void Undo() {
-            if (_state == UndoTransactionState.Invalid) {
+        public void Undo()
+        {
+            if (_state == UndoTransactionState.Invalid)
+            {
                 return;
             }
 
-            if (!CanUndo) {
+            if (!CanUndo)
+            {
                 throw new InvalidOperationException("Strings.UndoCalledButCanUndoFalse");
             }
 
             _state = UndoTransactionState.Undoing;
 
-            for (var i = _primitives.Count - 1; i >= 0; --i) {
+            for (var i = _primitives.Count - 1; i >= 0; --i)
+            {
                 _primitives[i].Undo();
             }
 
@@ -251,8 +285,10 @@ namespace TestUtilities.Mocks {
         /// <summary>
         /// Closes a transaction and disposes it.
         /// </summary>
-        public void Dispose() {
-            switch (State) {
+        public void Dispose()
+        {
+            switch (State)
+            {
                 case UndoTransactionState.Open:
                     Cancel();
                     break;

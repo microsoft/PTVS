@@ -34,8 +34,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
             get;
         }
 
-        DjangoUrl[] Urls
-        {
+        DjangoUrl[] Urls {
             get;
         }
 

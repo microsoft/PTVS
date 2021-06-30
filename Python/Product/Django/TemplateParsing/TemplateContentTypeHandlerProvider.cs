@@ -16,7 +16,6 @@
 
 using System.ComponentModel.Composition;
 using Microsoft.VisualStudio.Utilities;
-using Microsoft.WebTools.Languages.Html.Editor.ContentType.Def;
 
 namespace Microsoft.PythonTools.Django.TemplateParsing {
     [Export(typeof(IContentTypeHandlerProvider))]

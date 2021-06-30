@@ -84,7 +84,7 @@ namespace AnalysisTests {
         public static string IndentCode(string code, string indentation) {
             StringBuilder res = new StringBuilder();
             var lines = code.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
-            for(int i = 0; i<lines.Length; i++) {
+            for (int i = 0; i < lines.Length; i++) {
                 res.Append(indentation);
                 res.Append(lines[i]);
                 if (i != lines.Length - 1) {

@@ -17,11 +17,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
-using Microsoft.VisualStudio.Debugger;
-using Microsoft.VisualStudio.Debugger.Evaluation;
 
 namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
     internal abstract class PyByteArrayObject : PyVarObject {

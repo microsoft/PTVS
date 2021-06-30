@@ -17,9 +17,6 @@
 using System;
 using System.Diagnostics;
 using Microsoft.PythonTools.Parsing;
-using Microsoft.VisualStudio.Debugger;
-using Microsoft.VisualStudio.Debugger.CallStack;
-using Microsoft.VisualStudio.Debugger.Evaluation;
 
 namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
     internal class PyFrameObject : PyVarObject {
@@ -83,7 +80,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
 
             if (frame.InstructionAddress == null) {
                 return null;
-            } 
+            }
             if (frame.RuntimeInstance.Id.RuntimeType != Guids.PythonRuntimeTypeGuid && !IsInEvalFrame(frame)) {
                 return null;
             }

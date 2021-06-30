@@ -14,7 +14,6 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Text;
 using AP = Microsoft.PythonTools.Intellisense.AnalysisProtocol;
 

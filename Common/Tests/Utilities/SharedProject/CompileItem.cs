@@ -18,14 +18,16 @@ using System.Collections.Generic;
 using System.IO;
 using MSBuild = Microsoft.Build.Evaluation;
 
-namespace TestUtilities.SharedProject {
+namespace TestUtilities.SharedProject
+{
     /// <summary>
     /// Generates a source code file.  The extension will be the code extension for
     /// the project type being generated and content will be the default content.
     /// 
     /// The item is added to the project if not excluded.
     /// </summary>
-    public sealed class CompileItem : ProjectContentGenerator {
+    public sealed class CompileItem : ProjectContentGenerator
+    {
         public readonly string Name, Content, LinkFile;
         public readonly bool IsExcluded;
         public readonly bool IsMissing;
@@ -39,7 +41,8 @@ namespace TestUtilities.SharedProject {
         /// If content is not provided or is null then the default sample code
         /// from the project type will be used.
         /// </summary>
-        public CompileItem(string name, string content = null, bool isExcluded = false, bool isMissing = false, string link = null) {
+        public CompileItem(string name, string content = null, bool isExcluded = false, bool isMissing = false, string link = null)
+        {
             Name = name;
             IsExcluded = isExcluded;
             IsMissing = isMissing;
@@ -47,15 +50,19 @@ namespace TestUtilities.SharedProject {
             LinkFile = link;
         }
 
-        public override void Generate(ProjectType projectType, MSBuild.Project project) {
+        public override void Generate(ProjectType projectType, MSBuild.Project project)
+        {
             var filename = Path.Combine(project.DirectoryPath, Name + projectType.CodeExtension);
-            if (!IsMissing) {
+            if (!IsMissing)
+            {
                 File.WriteAllText(filename, Content ?? projectType.SampleCode);
             }
 
-            if (!IsExcluded) {
+            if (!IsExcluded)
+            {
                 List<KeyValuePair<string, string>> metadata = new List<KeyValuePair<string, string>>();
-                if (LinkFile != null) {
+                if (LinkFile != null)
+                {
                     metadata.Add(new KeyValuePair<string, string>("Link", LinkFile + projectType.CodeExtension));
                 }
 
@@ -67,7 +74,8 @@ namespace TestUtilities.SharedProject {
             }
         }
 
-        public CompileItem Link(string link) {
+        public CompileItem Link(string link)
+        {
             return new CompileItem(
                 Name,
                 Content,

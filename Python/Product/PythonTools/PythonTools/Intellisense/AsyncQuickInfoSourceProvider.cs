@@ -27,7 +27,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly IServiceProvider _serviceProvider;
 
         [ImportingConstructor]
-        public QuickInfoSourceProvider([Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider) {
+        public QuickInfoSourceProvider([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider) {
             _serviceProvider = serviceProvider;
         }
 

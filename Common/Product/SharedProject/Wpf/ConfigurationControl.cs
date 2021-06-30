@@ -19,11 +19,13 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 
-namespace Microsoft.VisualStudioTools.Wpf {
+namespace Microsoft.VisualStudioTools.Wpf
+{
     [TemplatePart(Name = "PART_TextBox", Type = typeof(TextBox))]
     [TemplatePart(Name = "PART_Watermark", Type = typeof(TextBlock))]
     [TemplatePart(Name = "PART_BrowseButton", Type = typeof(Button))]
-    sealed class ConfigurationTextBoxWithHelp : Control {
+    sealed class ConfigurationTextBoxWithHelp : Control
+    {
         public static readonly DependencyProperty WatermarkProperty = DependencyProperty.Register("Watermark", typeof(string), typeof(ConfigurationTextBoxWithHelp), new PropertyMetadata());
         public static readonly DependencyProperty HelpTextProperty = DependencyProperty.Register("HelpText", typeof(string), typeof(ConfigurationTextBoxWithHelp), new PropertyMetadata());
         public static readonly DependencyProperty TextProperty = DependencyProperty.Register("Text", typeof(string), typeof(ConfigurationTextBoxWithHelp), new PropertyMetadata());
@@ -35,61 +37,73 @@ namespace Microsoft.VisualStudioTools.Wpf {
 
         private TextBox _textBox;
 
-        public string Watermark {
+        public string Watermark
+        {
             get { return (string)GetValue(WatermarkProperty); }
             set { SetValue(WatermarkProperty, value); }
         }
 
-        public string HelpText {
+        public string HelpText
+        {
             get { return (string)GetValue(HelpTextProperty); }
             set { SetValue(HelpTextProperty, value); }
         }
 
-        public string Text {
+        public string Text
+        {
             get { return (string)GetValue(TextProperty); }
             set { SetValue(TextProperty, value); }
         }
 
-        public bool IsReadOnly {
+        public bool IsReadOnly
+        {
             get { return (bool)GetValue(IsReadOnlyProperty); }
             set { SetValue(IsReadOnlyProperty, value); }
         }
 
-        public bool IsRequiredForForm {
+        public bool IsRequiredForForm
+        {
             get { return (bool)GetValue(IsRequiredForFormProperty); }
             set { SetValue(IsRequiredForFormProperty, value); }
         }
 
-        public Style BrowseButtonStyle {
+        public Style BrowseButtonStyle
+        {
             get { return (Style)GetValue(BrowseButtonStyleProperty); }
             set { SetValue(BrowseButtonStyleProperty, value); }
         }
 
-        public object BrowseCommandParameter {
+        public object BrowseCommandParameter
+        {
             get { return (object)GetValue(BrowseCommandParameterProperty); }
             set { SetValue(BrowseCommandParameterProperty, value); }
         }
 
-        public string BrowseAutomationName {
+        public string BrowseAutomationName
+        {
             get { return (string)GetValue(BrowseAutomationNameProperty); }
             set { SetValue(BrowseAutomationNameProperty, value); }
         }
 
-        public override void OnApplyTemplate() {
+        public override void OnApplyTemplate()
+        {
             base.OnApplyTemplate();
 
             _textBox = GetTemplateChild("PART_TextBox") as TextBox;
         }
 
-        protected override void OnAccessKey(AccessKeyEventArgs e) {
-            if (_textBox != null) {
+        protected override void OnAccessKey(AccessKeyEventArgs e)
+        {
+            if (_textBox != null)
+            {
                 _textBox.Focus();
             }
         }
     }
 
     [TemplatePart(Name = "PART_ComboBox", Type = typeof(ComboBox))]
-    sealed class ConfigurationComboBoxWithHelp : Control {
+    sealed class ConfigurationComboBoxWithHelp : Control
+    {
         public static readonly DependencyProperty WatermarkProperty = DependencyProperty.Register("Watermark", typeof(string), typeof(ConfigurationComboBoxWithHelp), new PropertyMetadata());
         public static readonly DependencyProperty HelpTextProperty = DependencyProperty.Register("HelpText", typeof(string), typeof(ConfigurationComboBoxWithHelp), new PropertyMetadata());
         public static readonly DependencyProperty IsRequiredForFormProperty = DependencyProperty.Register("IsRequiredForForm", typeof(bool), typeof(ConfigurationComboBoxWithHelp), new PropertyMetadata());
@@ -98,39 +112,47 @@ namespace Microsoft.VisualStudioTools.Wpf {
 
         private ComboBox _comboBox;
 
-        public string Watermark {
+        public string Watermark
+        {
             get { return (string)GetValue(WatermarkProperty); }
             set { SetValue(WatermarkProperty, value); }
         }
 
-        public string HelpText {
+        public string HelpText
+        {
             get { return (string)GetValue(HelpTextProperty); }
             set { SetValue(HelpTextProperty, value); }
         }
 
-        public bool IsRequiredForForm {
+        public bool IsRequiredForForm
+        {
             get { return (bool)GetValue(IsRequiredForFormProperty); }
             set { SetValue(IsRequiredForFormProperty, value); }
         }
 
-        public string Value {
+        public string Value
+        {
             get { return (string)GetValue(ValueProperty); }
             set { SetValue(ValueProperty, value); }
         }
-        
-        public IList<string> Values {
+
+        public IList<string> Values
+        {
             get { return (IList<string>)GetValue(ValuesProperty); }
             set { SetValue(ValuesProperty, value); }
         }
 
-        public override void OnApplyTemplate() {
+        public override void OnApplyTemplate()
+        {
             base.OnApplyTemplate();
 
             _comboBox = GetTemplateChild("PART_ComboBox") as ComboBox;
         }
 
-        protected override void OnAccessKey(AccessKeyEventArgs e) {
-            if (_comboBox != null) {
+        protected override void OnAccessKey(AccessKeyEventArgs e)
+        {
+            if (_comboBox != null)
+            {
                 _comboBox.Focus();
             }
         }

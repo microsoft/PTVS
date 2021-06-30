@@ -14,42 +14,51 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace TestUtilities {
-    public sealed class AssemblyLoader : IDisposable {
+namespace TestUtilities
+{
+    public sealed class AssemblyLoader : IDisposable
+    {
         private readonly Dictionary<string, List<string>> _knownAssemblies = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
 
-        internal AssemblyLoader() {
+        internal AssemblyLoader()
+        {
             AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
         }
 
-        public void AddPaths(params string[] paths) {
-            if (paths == null) {
+        public void AddPaths(params string[] paths)
+        {
+            if (paths == null)
+            {
                 throw new ArgumentNullException(nameof(paths));
             }
 
-            if (paths.Length == 0) {
+            if (paths.Length == 0)
+            {
                 throw new ArgumentException($"{nameof(paths)} should not be empty", nameof(paths));
             }
 
-            foreach (var path in paths) {
+            foreach (var path in paths)
+            {
                 EnumerateAssemblies(path);
             }
         }
 
-        public static void EnsureLoaded(params string[] assemblyNames) {
-            foreach (var assemblyName in assemblyNames) {
+        public static void EnsureLoaded(params string[] assemblyNames)
+        {
+            foreach (var assemblyName in assemblyNames)
+            {
                 var loadedAssembly = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(a => string.Equals(a.GetName().Name, assemblyName, StringComparison.OrdinalIgnoreCase))
                     ?? Assembly.Load(new AssemblyName { Name = assemblyName });
 
-                if (loadedAssembly == null) {
+                if (loadedAssembly == null)
+                {
                     throw new AssertFailedException($"Can't find {assemblyName} assembly");
                 }
 
@@ -57,69 +66,99 @@ namespace TestUtilities {
             }
         }
 
-        public void Dispose() {
+        public void Dispose()
+        {
             AppDomain.CurrentDomain.AssemblyResolve -= CurrentDomain_AssemblyResolve;
         }
 
-        private Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args) {
+        private Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
+        {
             var assemblyName = new AssemblyName(args.Name).Name;
             return ResolveAssembly(assemblyName, AssemblyLoadFrom);
         }
 
-        private Assembly ResolveAssembly(string assemblyName, Func<string, string, Assembly> assemblyLoader) {
-            if (!string.Equals(Path.GetExtension(assemblyName), ".dll", StringComparison.OrdinalIgnoreCase)) {
+        private Assembly ResolveAssembly(string assemblyName, Func<string, string, Assembly> assemblyLoader)
+        {
+            if (!string.Equals(Path.GetExtension(assemblyName), ".dll", StringComparison.OrdinalIgnoreCase))
+            {
                 assemblyName += ".dll";
             }
 
-            if (!_knownAssemblies.TryGetValue(assemblyName, out var assemblyPaths)) {
+            if (!_knownAssemblies.TryGetValue(assemblyName, out var assemblyPaths))
+            {
                 return null;
             }
 
-            foreach (var assemblyPath in assemblyPaths) {
+            foreach (var assemblyPath in assemblyPaths)
+            {
                 var assembly = assemblyLoader(assemblyName, assemblyPath);
-                if (assembly != null) {
+                if (assembly != null)
+                {
                     return assembly;
                 }
             }
 
             return null;
         }
-        
-        private static Assembly AssemblyLoad(string assemblyName, string assemblyPath) {
-            try {
-                return Assembly.Load(new AssemblyName {
+
+        private static Assembly AssemblyLoad(string assemblyName, string assemblyPath)
+        {
+            try
+            {
+                return Assembly.Load(new AssemblyName
+                {
                     Name = assemblyName,
                     CodeBase = new Uri(assemblyPath).AbsoluteUri
                 });
-            } catch (FileLoadException) {
+            }
+            catch (FileLoadException)
+            {
                 return null;
-            } catch (IOException) {
+            }
+            catch (IOException)
+            {
                 return null;
-            } catch (BadImageFormatException) {
+            }
+            catch (BadImageFormatException)
+            {
                 return null;
             }
         }
 
-        private static Assembly AssemblyLoadFrom(string assemblyName, string assemblyPath) {
-            try {
+        private static Assembly AssemblyLoadFrom(string assemblyName, string assemblyPath)
+        {
+            try
+            {
                 return Assembly.LoadFrom(assemblyPath);
-            } catch (FileLoadException) {
+            }
+            catch (FileLoadException)
+            {
                 return null;
-            } catch (IOException) {
+            }
+            catch (IOException)
+            {
                 return null;
-            } catch (BadImageFormatException) {
+            }
+            catch (BadImageFormatException)
+            {
                 return null;
             }
         }
 
-        private void EnumerateAssemblies(string directory) {
-            foreach (var path in Directory.EnumerateFiles(directory, "*.dll", SearchOption.AllDirectories)) {
+        private void EnumerateAssemblies(string directory)
+        {
+            foreach (var path in Directory.EnumerateFiles(directory, "*.dll", SearchOption.AllDirectories))
+            {
                 var name = Path.GetFileName(path);
-                if (name != null) {
-                    if (_knownAssemblies.TryGetValue(name, out var paths)) {
+                if (name != null)
+                {
+                    if (_knownAssemblies.TryGetValue(name, out var paths))
+                    {
                         paths.Add(path);
-                    } else {
-                        _knownAssemblies[name] = new List<string>{ path };
+                    }
+                    else
+                    {
+                        _knownAssemblies[name] = new List<string> { path };
                     }
                 }
             }

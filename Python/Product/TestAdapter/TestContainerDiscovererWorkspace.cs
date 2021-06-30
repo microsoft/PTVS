@@ -43,8 +43,8 @@ namespace Microsoft.PythonTools.TestAdapter {
 
         [ImportingConstructor]
         private TestContainerDiscovererWorkspace(
-            [Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider,
-            [Import(typeof(IOperationState))]IOperationState operationState,
+            [Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider,
+            [Import(typeof(IOperationState))] IOperationState operationState,
             [Import] IPythonWorkspaceContextProvider workspaceContextProvider,
             [Import] IInterpreterOptionsService interpreterOptionsService,
             [Import] IInterpreterRegistryService interpreterRegistryService

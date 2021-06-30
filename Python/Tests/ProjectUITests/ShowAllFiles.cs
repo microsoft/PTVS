@@ -19,10 +19,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools.Project;
-using TestUtilities;
 using TestUtilities.SharedProject;
 using TestUtilities.UI;
 using Keyboard = TestUtilities.UI.Keyboard;
@@ -370,11 +368,11 @@ namespace ProjectUITests {
                     solution.AssertFileExists("ShowAllFiles", "Folder", "File.txt");
                     solution.AssertFolderExists("ShowAllFiles", "Folder", "SubFolder");
                     solution.AssertFileExists("ShowAllFiles", "Folder", "SubFolder", "SubFile.txt");
-                                        
+
                     // create some stuff, it should show up...
                     File.WriteAllText(Path.Combine(solution.SolutionDirectory, @"ShowAllFiles\NewFile.txt"), "");
                     solution.AssertFileExists("ShowAllFiles", "NewFile.txt");
-                    
+
                     File.WriteAllText(Path.Combine(solution.SolutionDirectory, @"ShowAllFiles\Folder\NewFile.txt"), "");
                     solution.AssertFileExists("ShowAllFiles", "Folder", "NewFile.txt");
                     Assert.IsTrue(dteProject.GetIsFolderExpanded(@"Folder"));
@@ -384,39 +382,39 @@ namespace ProjectUITests {
 
                     Directory.CreateDirectory(Path.Combine(solution.SolutionDirectory, @"ShowAllFiles\NewFolder"));
                     solution.AssertFolderExists("ShowAllFiles", "NewFolder");
-                    
+
                     Directory.CreateDirectory(Path.Combine(solution.SolutionDirectory, @"ShowAllFiles\NewFolder\SubFolder"));
                     solution.AssertFolderExists("ShowAllFiles", "NewFolder", "SubFolder");
-                    
+
                     File.WriteAllText(Path.Combine(solution.SolutionDirectory, @"ShowAllFiles\NewFolder\SubFolder\NewFile.txt"), "");
                     solution.AssertFileExists("ShowAllFiles", "NewFolder", "SubFolder", "NewFile.txt");
-                    
+
                     // delete some stuff, it should go away
                     File.Delete(Path.Combine(solution.SolutionDirectory, @"ShowAllFiles\Folder\File.txt"));
                     Assert.IsNull(solution.WaitForItemRemoved("ShowAllFiles", "Folder", "File.txt"));
-                    
+
                     File.Delete(Path.Combine(solution.SolutionDirectory, @"ShowAllFiles\NewFile.txt"));
                     Assert.IsNull(solution.WaitForItemRemoved("ShowAllFiles", "NewFile.txt"));
-                    
+
                     File.Delete(Path.Combine(solution.SolutionDirectory, @"ShowAllFiles\NewFolder\NewFile.txt"));
                     Assert.IsNull(solution.WaitForItemRemoved("ShowAllFiles", "NewFolder", "NewFile.txt"));
-                    
+
                     File.Delete(Path.Combine(solution.SolutionDirectory, @"ShowAllFiles\NewFolder\SubFolder\NewFile.txt"));
                     Assert.IsNull(solution.WaitForItemRemoved("ShowAllFiles", "NewFolder", "SubFolder", "NewFile.txt"));
-                    
+
                     Directory.Delete(Path.Combine(solution.SolutionDirectory, @"ShowAllFiles\NewFolder\SubFolder"));
                     Assert.IsNull(solution.WaitForItemRemoved("ShowAllFiles", "NewFolder", "SubFolder"));
-                    
+
                     Directory.Delete(Path.Combine(solution.SolutionDirectory, @"ShowAllFiles\NewFolder"));
                     Assert.IsNull(solution.WaitForItemRemoved("ShowAllFiles", "NewFolder"));
-                    
+
                     Directory.Move(
                         Path.Combine(solution.SolutionDirectory, @"MovedIntoShowAllFiles"),
                         Path.Combine(solution.SolutionDirectory, @"ShowAllFiles\MovedIntoShowAllFiles")
                     );
 
                     Assert.IsNotNull(solution.WaitForItem("ShowAllFiles", "MovedIntoShowAllFiles", "Text.txt"));
-                    
+
                     // move it back
                     Directory.Move(
                         Path.Combine(solution.SolutionDirectory, @"ShowAllFiles\MovedIntoShowAllFiles"),
@@ -701,7 +699,7 @@ namespace ProjectUITests {
                     ProjectGenerator.ItemGroup(
                         ProjectGenerator.Folder("Folder", isExcluded: true),
                         ProjectGenerator.Folder("Folder\\SubFolder", isExcluded: true),
-                        ProjectGenerator.Compile("NotInProject", isExcluded:true),
+                        ProjectGenerator.Compile("NotInProject", isExcluded: true),
                         ProjectGenerator.Compile("Folder\\File", isExcluded: true),
                         ProjectGenerator.Content("Folder\\SubFolder\\SubFile.txt", "", isExcluded: true)
                     ),
@@ -908,7 +906,7 @@ namespace ProjectUITests {
                         solution.WaitForItem("CopyExcludedFolderWithItem", "NewFolder1", "NewFolder2")
                     );
                     solution.ExecuteCommand("Project.ShowAllFiles"); // stop showing all
-                    
+
                     Assert.IsNull(
                         solution.WaitForItemRemoved("CopyExcludedFolderWithItem", "NewFolder1", "NewFolder2")
                     );

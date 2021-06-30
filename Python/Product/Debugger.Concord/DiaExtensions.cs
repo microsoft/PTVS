@@ -17,7 +17,6 @@
 using System;
 using System.Diagnostics;
 using Microsoft.Dia;
-using Microsoft.VisualStudio.Debugger.Native;
 
 namespace Microsoft.PythonTools.Debugger.Concord {
     internal enum DiaLocationType : uint {

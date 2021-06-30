@@ -27,7 +27,7 @@ namespace Microsoft.PythonTools.Intellisense {
         internal readonly IServiceProvider _serviceProvider;
 
         [ImportingConstructor]
-        public SignatureHelpSourceProvider([Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider) {
+        public SignatureHelpSourceProvider([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider) {
             _serviceProvider = serviceProvider;
         }
 

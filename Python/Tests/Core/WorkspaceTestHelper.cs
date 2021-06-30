@@ -110,7 +110,7 @@ namespace PythonToolsTests {
 
             public IEnumerable<IPythonInterpreterFactory> Interpreters { get; private set; }
 
-            public IEnumerable<InterpreterConfiguration> Configurations { 
+            public IEnumerable<InterpreterConfiguration> Configurations {
                 get {
                     return Interpreters.Select(x => x.Configuration);
                 }

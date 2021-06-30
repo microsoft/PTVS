@@ -1132,7 +1132,7 @@ int main(int argc, char* argv[]) {
                 await frame.ExecuteTextAsync("i = None", PythonEvaluationResultReprKind.Normal, TimeoutToken());
                 await proc.ResumeAsync(TimeoutToken());
             }, waitBeforeAttach: async () => {
-                for (int i = 0;; ++i) {
+                for (int i = 0; ; ++i) {
                     if (File.Exists(runFile)) {
                         File.Delete(runFile);
                         break;
@@ -1301,8 +1301,7 @@ int main(int argc, char* argv[]) {
             }
         }
 
-        public override async Task AttachNewThread_PyThreadState_New()
-        {
+        public override async Task AttachNewThread_PyThreadState_New() {
             // PyEval_AcquireLock deprecated in 3.2
         }
     }

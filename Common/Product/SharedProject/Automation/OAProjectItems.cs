@@ -14,25 +14,26 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using EnvDTE;
+using Microsoft.VisualStudio;
 using System;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
-using EnvDTE;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Shell.Interop;
 
-namespace Microsoft.VisualStudioTools.Project.Automation {
+namespace Microsoft.VisualStudioTools.Project.Automation
+{
     /// <summary>
     /// Contains ProjectItem objects
     /// </summary>
     [ComVisible(true)]
-    public class OAProjectItems : OANavigableProjectItems {
+    public class OAProjectItems : OANavigableProjectItems
+    {
         #region ctor
         internal OAProjectItems(OAProject project, HierarchyNode nodeWithItems)
-            : base(project, nodeWithItems) {
+            : base(project, nodeWithItems)
+        {
         }
         #endregion
 
@@ -44,18 +45,23 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
         /// </summary>
         /// <param name="directory">The full path of the directory to add.</param>
         /// <returns>A ProjectItem object.</returns>
-        public override ProjectItem AddFromDirectory(string directory) {
+        public override ProjectItem AddFromDirectory(string directory)
+        {
             CheckProjectIsValid();
 
-            return Project.ProjectNode.Site.GetUIThread().Invoke<EnvDTE.ProjectItem>(() => {
+            return Project.ProjectNode.Site.GetUIThread().Invoke<EnvDTE.ProjectItem>(() =>
+            {
                 ProjectItem result = AddFolder(directory, null);
 
-                foreach (string subdirectory in Directory.EnumerateDirectories(directory)) {
+                foreach (string subdirectory in Directory.EnumerateDirectories(directory))
+                {
                     result.ProjectItems.AddFromDirectory(Path.Combine(directory, subdirectory));
                 }
 
-                foreach (var extension in this.Project.ProjectNode.CodeFileExtensions) {
-                    foreach (string filename in Directory.EnumerateFiles(directory, "*" + extension)) {
+                foreach (var extension in this.Project.ProjectNode.CodeFileExtensions)
+                {
+                    foreach (string filename in Directory.EnumerateFiles(directory, "*" + extension))
+                    {
                         result.ProjectItems.AddFromFile(Path.Combine(directory, filename));
                     }
                 }
@@ -69,21 +75,27 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
         /// <param name="fileName">The full path and file name of the template project file.</param>
         /// <param name="name">The file name to use for the new project item.</param>
         /// <returns>A ProjectItem object. </returns>
-        public override EnvDTE.ProjectItem AddFromTemplate(string fileName, string name) {
+        public override EnvDTE.ProjectItem AddFromTemplate(string fileName, string name)
+        {
             CheckProjectIsValid();
 
             ProjectNode proj = this.Project.ProjectNode;
             EnvDTE.ProjectItem itemAdded = null;
 
-            using (AutomationScope scope = new AutomationScope(this.Project.ProjectNode.Site)) {
+            using (AutomationScope scope = new AutomationScope(this.Project.ProjectNode.Site))
+            {
                 // Determine the operation based on the extension of the filename.
                 // We should run the wizard only if the extension is vstemplate
                 // otherwise it's a clone operation
                 VSADDITEMOPERATION op;
-                Project.ProjectNode.Site.GetUIThread().Invoke(() => {
-                    if (Utilities.IsTemplateFile(fileName)) {
+                Project.ProjectNode.Site.GetUIThread().Invoke(() =>
+                {
+                    if (Utilities.IsTemplateFile(fileName))
+                    {
                         op = VSADDITEMOPERATION.VSADDITEMOP_RUNWIZARD;
-                    } else {
+                    }
+                    else
+                    {
                         op = VSADDITEMOPERATION.VSADDITEMOP_CLONEFILE;
                     }
 
@@ -103,8 +115,10 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
             return itemAdded;
         }
 
-        private void CheckProjectIsValid() {
-            if (this.Project == null || this.Project.ProjectNode == null || this.Project.ProjectNode.Site == null || this.Project.ProjectNode.IsClosed) {
+        private void CheckProjectIsValid()
+        {
+            if (this.Project == null || this.Project.ProjectNode == null || this.Project.ProjectNode.Site == null || this.Project.ProjectNode.IsClosed)
+            {
                 throw new InvalidOperationException();
             }
         }
@@ -118,21 +132,26 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
         /// <param name="name">The name of the new folder to add</param>
         /// <param name="kind">A string representing a Guid of the folder kind.</param>
         /// <returns>A ProjectItem representing the newly added folder.</returns>
-        public override ProjectItem AddFolder(string name, string kind) {
+        public override ProjectItem AddFolder(string name, string kind)
+        {
             Project.CheckProjectIsValid();
 
             //Verify name is not null or empty
             Utilities.ValidateFileName(this.Project.ProjectNode.Site, name);
 
             //Verify that kind is null, empty, or a physical folder
-            if (!(string.IsNullOrEmpty(kind) || kind.Equals(EnvDTE.Constants.vsProjectItemKindPhysicalFolder))) {
+            if (!(string.IsNullOrEmpty(kind) || kind.Equals(EnvDTE.Constants.vsProjectItemKindPhysicalFolder)))
+            {
                 throw new ArgumentException("Parameter specification for AddFolder was not meet", "kind");
             }
 
-            return Project.ProjectNode.Site.GetUIThread().Invoke<EnvDTE.ProjectItem>(() => {
+            return Project.ProjectNode.Site.GetUIThread().Invoke<EnvDTE.ProjectItem>(() =>
+            {
                 var existingChild = this.NodeWithItems.FindImmediateChildByName(name);
-                if (existingChild != null) {
-                    if (existingChild.IsNonMemberItem && ErrorHandler.Succeeded(existingChild.IncludeInProject(false))) {
+                if (existingChild != null)
+                {
+                    if (existingChild.IsNonMemberItem && ErrorHandler.Succeeded(existingChild.IncludeInProject(false)))
+                    {
                         return existingChild.GetAutomationObject() as ProjectItem;
                     }
                     throw new ArgumentException(String.Format(CultureInfo.CurrentCulture, "Folder already exists with the name '{0}'", name));
@@ -141,7 +160,8 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
                 ProjectNode proj = this.Project.ProjectNode;
 
                 HierarchyNode newFolder = null;
-                using (AutomationScope scope = new AutomationScope(this.Project.ProjectNode.Site)) {
+                using (AutomationScope scope = new AutomationScope(this.Project.ProjectNode.Site))
+                {
 
                     //In the case that we are adding a folder to a folder, we need to build up
                     //the path to the project node.
@@ -159,7 +179,8 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
         /// </summary>
         /// <param name="filePath">The path and file name of the project item to be added.</param>
         /// <returns>A ProjectItem object. </returns>
-        public override EnvDTE.ProjectItem AddFromFileCopy(string filePath) {
+        public override EnvDTE.ProjectItem AddFromFileCopy(string filePath)
+        {
             return this.AddItem(filePath, VSADDITEMOPERATION.VSADDITEMOP_CLONEFILE);
         }
 
@@ -168,7 +189,8 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
         /// </summary>
         /// <param name="fileName">The file name of the item to add as a project item. </param>
         /// <returns>A ProjectItem object. </returns>
-        public override EnvDTE.ProjectItem AddFromFile(string fileName) {
+        public override EnvDTE.ProjectItem AddFromFile(string fileName)
+        {
             return this.AddItem(fileName, VSADDITEMOPERATION.VSADDITEMOP_LINKTOFILE);
         }
 
@@ -181,21 +203,27 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
         /// <param name="path">The full path of the item to add.</param>
         /// <param name="op">The <paramref name="VSADDITEMOPERATION"/> to use when adding the item.</param>
         /// <returns>A ProjectItem object. </returns>
-        protected virtual EnvDTE.ProjectItem AddItem(string path, VSADDITEMOPERATION op) {
+        protected virtual EnvDTE.ProjectItem AddItem(string path, VSADDITEMOPERATION op)
+        {
             CheckProjectIsValid();
-            return Project.ProjectNode.Site.GetUIThread().Invoke<EnvDTE.ProjectItem>(() => {
+            return Project.ProjectNode.Site.GetUIThread().Invoke<EnvDTE.ProjectItem>(() =>
+            {
                 ProjectNode proj = this.Project.ProjectNode;
                 EnvDTE.ProjectItem itemAdded = null;
-                using (AutomationScope scope = new AutomationScope(this.Project.ProjectNode.Site)) {
+                using (AutomationScope scope = new AutomationScope(this.Project.ProjectNode.Site))
+                {
                     VSADDRESULT[] result = new VSADDRESULT[1];
                     ErrorHandler.ThrowOnFailure(proj.AddItem(this.NodeWithItems.ID, op, path, 0, new string[1] { path }, IntPtr.Zero, result));
 
                     string realPath = null;
-                    if (op != VSADDITEMOPERATION.VSADDITEMOP_LINKTOFILE) {
+                    if (op != VSADDITEMOPERATION.VSADDITEMOP_LINKTOFILE)
+                    {
                         string fileName = Path.GetFileName(path);
                         string fileDirectory = proj.GetBaseDirectoryForAddingFiles(this.NodeWithItems);
                         realPath = Path.Combine(fileDirectory, fileName);
-                    } else {
+                    }
+                    else
+                    {
                         realPath = path;
                     }
 
@@ -212,20 +240,28 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
         /// <param name="result">The <paramref name="VSADDRESULT"/> returned by the Add methods</param>
         /// <param name="path">The full path of the item added.</param>
         /// <returns>A ProjectItem object.</returns>
-        private EnvDTE.ProjectItem EvaluateAddResult(VSADDRESULT result, string path) {
-            return Project.ProjectNode.Site.GetUIThread().Invoke<EnvDTE.ProjectItem>(() => {
-                if (result != VSADDRESULT.ADDRESULT_Failure) {
-                    if (Directory.Exists(path)) {
+        private EnvDTE.ProjectItem EvaluateAddResult(VSADDRESULT result, string path)
+        {
+            return Project.ProjectNode.Site.GetUIThread().Invoke<EnvDTE.ProjectItem>(() =>
+            {
+                if (result != VSADDRESULT.ADDRESULT_Failure)
+                {
+                    if (Directory.Exists(path))
+                    {
                         path = CommonUtils.EnsureEndSeparator(path);
                     }
                     HierarchyNode nodeAdded = this.NodeWithItems.ProjectMgr.FindNodeByFullPath(path);
                     Debug.Assert(nodeAdded != null, "We should have been able to find the new element in the hierarchy");
-                    if (nodeAdded != null) {
+                    if (nodeAdded != null)
+                    {
                         EnvDTE.ProjectItem item = null;
                         var fileNode = nodeAdded as FileNode;
-                        if (fileNode != null) {
+                        if (fileNode != null)
+                        {
                             item = new OAFileItem(this.Project, fileNode);
-                        } else {
+                        }
+                        else
+                        {
                             item = new OAProjectItem(this.Project, nodeAdded);
                         }
 

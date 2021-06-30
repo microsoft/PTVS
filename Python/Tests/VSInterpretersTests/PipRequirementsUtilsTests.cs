@@ -15,7 +15,6 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -144,7 +143,7 @@ namespace VSInterpretersTests {
 
         [TestMethod, Priority(UnitTestPriority.P1)]
         public async Task DetectReqPkgMissingPython2Async() {
-            PythonVersion pythonInterpreter =   PythonPaths.Python27_x64 ??
+            PythonVersion pythonInterpreter = PythonPaths.Python27_x64 ??
                                                 PythonPaths.Python27;
             pythonInterpreter.AssertInstalled("Unable to run test because python 2.7 must be installed");
 
@@ -153,7 +152,7 @@ namespace VSInterpretersTests {
 
         [TestMethod, Priority(UnitTestPriority.P0)]
         public async Task DetectReqPkgMissingPython3Async() {
-            PythonVersion pythonInterpreter =   PythonPaths.Python37_x64 ??
+            PythonVersion pythonInterpreter = PythonPaths.Python37_x64 ??
                                                 PythonPaths.Python37 ??
                                                 PythonPaths.Python36_x64 ??
                                                 PythonPaths.Python36 ??

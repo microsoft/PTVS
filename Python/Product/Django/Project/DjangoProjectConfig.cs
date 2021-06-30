@@ -16,15 +16,13 @@
 
 using System;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.OLE.Interop;
-using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.PythonTools.Django.Project {
     /// <summary>
     /// Merges the PTVS IVsCfg object with the Venus IVsCfg implementation redirecting
     /// things appropriately to either one.
     /// </summary>
-    class DjangoProjectConfig : 
+    class DjangoProjectConfig :
         IVsCfg,
         IVsProjectCfg,
         IVsProjectCfg2,
@@ -32,8 +30,7 @@ namespace Microsoft.PythonTools.Django.Project {
         IVsDebuggableProjectCfg,
         ISpecifyPropertyPages,
         IVsSpecifyProjectDesignerPages,
-        IVsCfgBrowseObject
-    {
+        IVsCfgBrowseObject {
         private readonly IVsCfg _pythonCfg;
         private readonly IVsProjectFlavorCfg _webCfg;
 
@@ -181,8 +178,7 @@ namespace Microsoft.PythonTools.Django.Project {
         }
 
         public int get_CfgType(ref Guid iidCfg, out IntPtr ppCfg) {
-            if (iidCfg == typeof(IVsDebuggableProjectCfg).GUID)
-            {
+            if (iidCfg == typeof(IVsDebuggableProjectCfg).GUID) {
                 var pyCfg = _pythonCfg as IVsProjectFlavorCfg;
                 if (pyCfg != null) {
                     return pyCfg.get_CfgType(ref iidCfg, out ppCfg);

@@ -21,8 +21,10 @@ using System;
 using System.Reflection;
 using System.Reflection.Emit;
 
-namespace TestUtilities.Ben.Demystifier {
-    internal sealed class ILReader {
+namespace TestUtilities.Ben.Demystifier
+{
+    internal sealed class ILReader
+    {
         private static readonly OpCode[] singleByteOpCode;
         private static readonly OpCode[] doubleByteOpCode;
 
@@ -35,8 +37,10 @@ namespace TestUtilities.Ben.Demystifier {
         public int MetadataToken { get; private set; }
         public MemberInfo Operand { get; private set; }
 
-        public bool Read(MethodBase methodInfo) {
-            if (_ptr < _cil.Length) {
+        public bool Read(MethodBase methodInfo)
+        {
+            if (_ptr < _cil.Length)
+            {
                 OpCode = ReadOpCode();
                 Operand = ReadOperand(OpCode, methodInfo);
                 return true;
@@ -44,29 +48,37 @@ namespace TestUtilities.Ben.Demystifier {
             return false;
         }
 
-        private OpCode ReadOpCode() {
+        private OpCode ReadOpCode()
+        {
             var instruction = ReadByte();
             return instruction < 254 ? singleByteOpCode[instruction] : doubleByteOpCode[ReadByte()];
         }
 
-        private MemberInfo ReadOperand(OpCode code, MethodBase methodInfo) {
+        private MemberInfo ReadOperand(OpCode code, MethodBase methodInfo)
+        {
             MetadataToken = 0;
-            switch (code.OperandType) {
+            switch (code.OperandType)
+            {
                 case OperandType.InlineMethod:
                     MetadataToken = ReadInt();
                     Type[] methodArgs = null;
-                    if (methodInfo.GetType() != typeof(ConstructorInfo) && !methodInfo.GetType().IsSubclassOf(typeof(ConstructorInfo))) {
+                    if (methodInfo.GetType() != typeof(ConstructorInfo) && !methodInfo.GetType().IsSubclassOf(typeof(ConstructorInfo)))
+                    {
                         methodArgs = methodInfo.GetGenericArguments();
                     }
 
                     Type[] typeArgs = null;
-                    if (methodInfo.DeclaringType != null) {
+                    if (methodInfo.DeclaringType != null)
+                    {
                         typeArgs = methodInfo.DeclaringType.GetGenericArguments();
                     }
 
-                    try {
+                    try
+                    {
                         return methodInfo.Module.ResolveMember(MetadataToken, typeArgs, methodArgs);
-                    } catch {
+                    }
+                    catch
+                    {
                         // Can return System.ArgumentException : Token xxx is not a valid MemberInfo token in the scope of module xxx.dll
                         return null;
                     }
@@ -77,7 +89,8 @@ namespace TestUtilities.Ben.Demystifier {
 
         private byte ReadByte() => _cil[_ptr++];
 
-        private int ReadInt() {
+        private int ReadInt()
+        {
             var b1 = ReadByte();
             var b2 = ReadByte();
             var b3 = ReadByte();
@@ -85,13 +98,15 @@ namespace TestUtilities.Ben.Demystifier {
             return b1 | b2 << 8 | b3 << 16 | b4 << 24;
         }
 
-        static ILReader(){
+        static ILReader()
+        {
             singleByteOpCode = new OpCode[225];
             doubleByteOpCode = new OpCode[31];
 
             var fields = GetOpCodeFields();
 
-            foreach (var field in fields) {
+            foreach (var field in fields)
+            {
                 var code = (OpCode)field.GetValue(null);
                 if (code.OpCodeType == OpCodeType.Nternal)
                     continue;

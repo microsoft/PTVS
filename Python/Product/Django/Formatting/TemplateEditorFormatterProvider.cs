@@ -16,7 +16,6 @@
 
 using System.ComponentModel.Composition;
 using Microsoft.VisualStudio.Utilities;
-using Microsoft.WebTools.Languages.Shared.Editor.Formatting;
 
 namespace Microsoft.PythonTools.Django.Formatting {
     [Export(typeof(IEditorFormatterProvider))]

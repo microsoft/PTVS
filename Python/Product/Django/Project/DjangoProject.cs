@@ -29,7 +29,6 @@ using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Flavor;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -43,8 +42,7 @@ namespace Microsoft.PythonTools.Django.Project {
         IVsProjectFlavorCfgProvider,
         IVsProject,
         IDjangoProject,
-        IVsFilterAddProjectItemDlg
-    {
+        IVsFilterAddProjectItemDlg {
         private IVsProject _innerProject;
         private IVsProject3 _innerProject3;
         private IVsProjectFlavorCfgProvider _innerVsProjectFlavorCfgProvider;
@@ -701,14 +699,14 @@ namespace Microsoft.PythonTools.Django.Project {
 
         private static Guid[] CfgSpecificPropertyPagesToAdd = new Guid[0];
 
-        private static HashSet<Guid> PropertyPagesToRemove = new HashSet<Guid> { 
+        private static HashSet<Guid> PropertyPagesToRemove = new HashSet<Guid> {
             new Guid("{8C0201FE-8ECA-403C-92A3-1BC55F031979}"),   // typeof(DeployPropertyPageComClass)
             new Guid("{ED3B544C-26D8-4348-877B-A1F7BD505ED9}"),   // typeof(DatabaseDeployPropertyPageComClass)
             new Guid("{909D16B3-C8E8-43D1-A2B8-26EA0D4B6B57}"),   // Microsoft.VisualStudio.Web.Application.WebPropertyPage
             new Guid("{379354F2-BBB3-4BA9-AA71-FBE7B0E5EA94}"),   // Microsoft.VisualStudio.Web.Application.SilverlightLinksPage
         };
 
-        internal static HashSet<Guid> CfgSpecificPropertyPagesToRemove = new HashSet<Guid> { 
+        internal static HashSet<Guid> CfgSpecificPropertyPagesToRemove = new HashSet<Guid> {
             new Guid("{A553AD0B-2F9E-4BCE-95B3-9A1F7074BC27}"),   // Package/Publish Web 
             new Guid("{9AB2347D-948D-4CD2-8DBE-F15F0EF78ED3}"),   // Package/Publish SQL 
         };

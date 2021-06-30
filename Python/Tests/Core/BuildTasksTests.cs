@@ -18,19 +18,15 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.Build.Construction;
 using Microsoft.Build.Evaluation;
 using Microsoft.Build.Execution;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Logging;
-using Microsoft.PythonTools;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
-using TestUtilities.Python;
 
 namespace PythonToolsTests {
     // TODO: Rewrite these tests as UI tests
@@ -71,7 +67,7 @@ namespace PythonToolsTests {
             var loc = PathUtils.EnsureEndSeparator(TestData.GetTempPath());
             proj.Save(Path.Combine(loc, string.Format("test.proj")));
 
-            foreach(var test in new [] {
+            foreach (var test in new[] {
                 new { ProjectHome="", Expected=loc },
                 new { ProjectHome=".", Expected=loc },
                 new { ProjectHome="..", Expected=PathUtils.EnsureEndSeparator(Path.GetDirectoryName(Path.GetDirectoryName(loc))) },

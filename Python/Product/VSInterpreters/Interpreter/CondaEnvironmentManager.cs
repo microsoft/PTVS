@@ -43,7 +43,7 @@ namespace Microsoft.PythonTools.Interpreter {
         public void Dispose() {
             if (!_isDisposed) {
                 _isDisposed = true;
-               _working.Dispose();
+                _working.Dispose();
             }
         }
 

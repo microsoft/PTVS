@@ -19,7 +19,7 @@ using System;
 namespace Microsoft.PythonTools.Debugger {
     enum OutputChannel {
         Debug,
-        StdOut, 
+        StdOut,
         StdErr,
     }
 

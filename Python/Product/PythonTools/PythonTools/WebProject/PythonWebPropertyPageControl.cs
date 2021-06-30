@@ -15,12 +15,8 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
-using Microsoft.PythonTools;
-using Microsoft.PythonTools.Project;
-using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project.Web {
     public partial class PythonWebPropertyPageControl : UserControl {

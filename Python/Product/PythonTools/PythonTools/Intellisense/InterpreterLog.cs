@@ -18,7 +18,6 @@ using System;
 using System.ComponentModel.Composition;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.PythonTools.Intellisense {
     [Export(typeof(IInterpreterLog))]
@@ -26,7 +25,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly IVsActivityLog _activityLog;
 
         [ImportingConstructor]
-        public InterpreterLog([Import(typeof(SVsServiceProvider))]IServiceProvider provider) {
+        public InterpreterLog([Import(typeof(SVsServiceProvider))] IServiceProvider provider) {
             _activityLog = (IVsActivityLog)provider.GetService(typeof(SVsActivityLog));
         }
 

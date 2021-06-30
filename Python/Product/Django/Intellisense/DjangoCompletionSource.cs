@@ -21,8 +21,6 @@ using Microsoft.PythonTools.Django.TemplateParsing;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
-using Microsoft.WebTools.Languages.Html.Editor.Document;
-using Microsoft.WebTools.Languages.Shared.Text;
 
 namespace Microsoft.PythonTools.Django.Intellisense {
     internal class DjangoCompletionSource : DjangoCompletionSourceBase {

@@ -15,14 +15,14 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
-using Microsoft.VisualStudio.Shell.Interop;
 
-namespace Microsoft.VisualStudioTools.Project {
+namespace Microsoft.VisualStudioTools.Project
+{
     #region structures
     [StructLayoutAttribute(LayoutKind.Sequential)]
-    internal struct _DROPFILES {
+    internal struct _DROPFILES
+    {
         public Int32 pFiles;
         public Int32 X;
         public Int32 Y;
@@ -38,7 +38,8 @@ namespace Microsoft.VisualStudioTools.Project {
     /// Defines the currect state of a property page.
     /// </summary>
     [Flags]
-    public enum PropPageStatus {
+    public enum PropPageStatus
+    {
 
         Dirty = 0x1,
 
@@ -51,7 +52,8 @@ namespace Microsoft.VisualStudioTools.Project {
     /// Defines the status of the command being queried
     /// </summary>
     [Flags]
-    public enum QueryStatusResult {
+    public enum QueryStatusResult
+    {
         /// <summary>
         /// The command is not supported.
         /// </summary>
@@ -86,7 +88,8 @@ namespace Microsoft.VisualStudioTools.Project {
     /// <summary>
     /// Defines the type of item to be added to the hierarchy.
     /// </summary>
-    public enum HierarchyAddType {
+    public enum HierarchyAddType
+    {
         AddNewItem,
         AddExistingItem
     }
@@ -94,7 +97,8 @@ namespace Microsoft.VisualStudioTools.Project {
     /// <summary>
     /// Defines the component from which a command was issued.
     /// </summary>
-    public enum CommandOrigin {
+    public enum CommandOrigin
+    {
         UiHierarchy,
         OleCommandTarget
     }
@@ -102,7 +106,8 @@ namespace Microsoft.VisualStudioTools.Project {
     /// <summary>
     /// Defines the current status of the build process.
     /// </summary>
-    public enum MSBuildResult {
+    public enum MSBuildResult
+    {
         /// <summary>
         /// The build is currently suspended.
         /// </summary>
@@ -127,7 +132,8 @@ namespace Microsoft.VisualStudioTools.Project {
     /// <summary>
     /// Defines the type of action to be taken in showing the window frame.
     /// </summary>
-    public enum WindowFrameShowAction {
+    public enum WindowFrameShowAction
+    {
         DoNotShow,
         Show,
         ShowNoActivate,
@@ -137,7 +143,8 @@ namespace Microsoft.VisualStudioTools.Project {
     /// <summary>
     /// Defines drop types
     /// </summary>
-    internal enum DropDataType {
+    internal enum DropDataType
+    {
         None,
         Shell,
         VsStg,
@@ -148,7 +155,8 @@ namespace Microsoft.VisualStudioTools.Project {
     /// Used by the hierarchy node to decide which element to redraw.
     /// </summary>
     [Flags]
-    public enum UIHierarchyElement {
+    public enum UIHierarchyElement
+    {
         None = 0,
 
         /// <summary>
@@ -175,7 +183,8 @@ namespace Microsoft.VisualStudioTools.Project {
     /// <summary>
     /// Defines the global propeties used by the msbuild project.
     /// </summary>
-    public enum GlobalProperty {
+    public enum GlobalProperty
+    {
         /// <summary>
         /// Property specifying that we are building inside VS.
         /// </summary>
@@ -243,11 +252,13 @@ namespace Microsoft.VisualStudioTools.Project {
     }
     #endregion
 
-    public class AfterProjectFileOpenedEventArgs : EventArgs {
+    public class AfterProjectFileOpenedEventArgs : EventArgs
+    {
 
     }
 
-    public class BeforeProjectFileClosedEventArgs : EventArgs {
+    public class BeforeProjectFileClosedEventArgs : EventArgs
+    {
         #region fields
         private bool _removed;
         private IVsHierarchy _hierarchy;
@@ -257,12 +268,15 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <summary>
         /// true if the project was removed from the solution before the solution was closed. false if the project was removed from the solution while the solution was being closed.
         /// </summary>
-        internal bool Removed {
+        internal bool Removed
+        {
             get { return _removed; }
         }
 
-        internal IVsHierarchy Hierarchy {
-            get {
+        internal IVsHierarchy Hierarchy
+        {
+            get
+            {
                 return _hierarchy;
             }
         }
@@ -270,7 +284,8 @@ namespace Microsoft.VisualStudioTools.Project {
         #endregion
 
         #region ctor
-        internal BeforeProjectFileClosedEventArgs(IVsHierarchy hierarchy, bool removed) {
+        internal BeforeProjectFileClosedEventArgs(IVsHierarchy hierarchy, bool removed)
+        {
             this._removed = removed;
             _hierarchy = hierarchy;
         }
@@ -280,26 +295,31 @@ namespace Microsoft.VisualStudioTools.Project {
     /// <summary>
     /// Argument of the event raised when a project property is changed.
     /// </summary>
-    public class ProjectPropertyChangedArgs : EventArgs {
+    public class ProjectPropertyChangedArgs : EventArgs
+    {
         private string propertyName;
         private string oldValue;
         private string newValue;
 
-        internal ProjectPropertyChangedArgs(string propertyName, string oldValue, string newValue) {
+        internal ProjectPropertyChangedArgs(string propertyName, string oldValue, string newValue)
+        {
             this.propertyName = propertyName;
             this.oldValue = oldValue;
             this.newValue = newValue;
         }
 
-        public string NewValue {
+        public string NewValue
+        {
             get { return newValue; }
         }
 
-        public string OldValue {
+        public string OldValue
+        {
             get { return oldValue; }
         }
 
-        public string PropertyName {
+        public string PropertyName
+        {
             get { return propertyName; }
         }
     }
@@ -307,14 +327,17 @@ namespace Microsoft.VisualStudioTools.Project {
     /// <summary>
     /// This class is used for the events raised by a HierarchyNode object.
     /// </summary>
-    internal class HierarchyNodeEventArgs : EventArgs {
+    internal class HierarchyNodeEventArgs : EventArgs
+    {
         private HierarchyNode child;
 
-        internal HierarchyNodeEventArgs(HierarchyNode child) {
+        internal HierarchyNodeEventArgs(HierarchyNode child)
+        {
             this.child = child;
         }
 
-        public HierarchyNode Child {
+        public HierarchyNode Child
+        {
             get { return this.child; }
         }
     }
@@ -322,7 +345,8 @@ namespace Microsoft.VisualStudioTools.Project {
     /// <summary>
     /// Event args class for triggering file change event arguments.
     /// </summary>
-    public class FileChangedOnDiskEventArgs : EventArgs {
+    public class FileChangedOnDiskEventArgs : EventArgs
+    {
         #region Private fields
         /// <summary>
         /// File name that was changed on disk.
@@ -345,7 +369,8 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </summary>
         /// <param name="fileName">File name that was changed on disk.</param>
         /// <param name="id">The item id of the file that was changed on disk.</param>
-        internal FileChangedOnDiskEventArgs(string fileName, uint id, _VSFILECHANGEFLAGS flag) {
+        internal FileChangedOnDiskEventArgs(string fileName, uint id, _VSFILECHANGEFLAGS flag)
+        {
             this.fileName = fileName;
             this.itemID = id;
             this.fileChangeFlag = flag;
@@ -355,8 +380,10 @@ namespace Microsoft.VisualStudioTools.Project {
         /// Gets the file name that was changed on disk.
         /// </summary>
         /// <value>The file that was changed on disk.</value>
-        public string FileName {
-            get {
+        public string FileName
+        {
+            get
+            {
                 return this.fileName;
             }
         }
@@ -365,8 +392,10 @@ namespace Microsoft.VisualStudioTools.Project {
         /// Gets item id of the file that has changed
         /// </summary>
         /// <value>The file that was changed on disk.</value>
-        internal uint ItemID {
-            get {
+        internal uint ItemID
+        {
+            get
+            {
                 return this.itemID;
             }
         }
@@ -375,8 +404,10 @@ namespace Microsoft.VisualStudioTools.Project {
         /// The reason while the file has chnaged on disk.
         /// </summary>
         /// <value>The reason while the file has chnaged on disk.</value>
-        public _VSFILECHANGEFLAGS FileChangeFlag {
-            get {
+        public _VSFILECHANGEFLAGS FileChangeFlag
+        {
+            get
+            {
                 return this.fileChangeFlag;
             }
         }

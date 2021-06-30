@@ -22,12 +22,12 @@ namespace Microsoft.PythonTools.Intellisense {
         /// The set of options used by the analyzer.
         /// </summary>
         public GetMemberOptions MemberOptions { get; set; }
-        
+
         /// <summary>
         /// Only show completions for members belonging to all potential types
         /// of the variable.
         /// </summary>
-        public bool IntersectMembers { 
+        public bool IntersectMembers {
             get { return MemberOptions.HasFlag(GetMemberOptions.IntersectMultipleResults); }
             set {
                 if (value) {

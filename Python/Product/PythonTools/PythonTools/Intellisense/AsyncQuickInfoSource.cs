@@ -45,14 +45,14 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public static void AddQuickInfo(ITextView view, QuickInfo info) => view.Properties[typeof(QuickInfo)] = info;
 
-        private static QuickInfo GetQuickInfo(ITextView view) 
+        private static QuickInfo GetQuickInfo(ITextView view)
             => view.Properties.TryGetProperty(typeof(QuickInfo), out QuickInfo quickInfo) ? quickInfo : null;
 
-        private void CurSessionStateChanged(object sender, QuickInfoSessionStateChangedEventArgs e) 
+        private void CurSessionStateChanged(object sender, QuickInfoSessionStateChangedEventArgs e)
             => _curSession = null;
 
         #endregion
 
-        public void Dispose() {}
+        public void Dispose() { }
     }
 }

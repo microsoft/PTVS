@@ -251,14 +251,14 @@ namespace FactoryProviderTypeLoadException {
 
             var catalogLog = new MockLogger();
             var container = InterpreterCatalog.CreateContainer(
-                catalogLog, 
-                FactoryProviderTypeLoadErrorPath, 
-                typeof(IInterpreterOptionsService).Assembly.Location, 
+                catalogLog,
+                FactoryProviderTypeLoadErrorPath,
+                typeof(IInterpreterOptionsService).Assembly.Location,
                 typeof(IInterpreterRegistryService).Assembly.Location,
                 GetType().Assembly.Location
             );
 
-            var log = container.GetExport<MockLogger>().Value; 
+            var log = container.GetExport<MockLogger>().Value;
             var service = container.GetExportedValue<IInterpreterOptionsService>();
             var registry = container.GetExportedValue<IInterpreterRegistryService>();
 

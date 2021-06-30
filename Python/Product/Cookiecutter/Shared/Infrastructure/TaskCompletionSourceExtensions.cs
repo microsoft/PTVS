@@ -19,7 +19,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.CookiecutterTools.Infrastructure {
     internal static class TaskCompletionSourceExtensions {
-        public static CancellationTokenRegistration RegisterForCancellation<T>(this TaskCompletionSource<T> taskCompletionSource, CancellationToken cancellationToken) 
+        public static CancellationTokenRegistration RegisterForCancellation<T>(this TaskCompletionSource<T> taskCompletionSource, CancellationToken cancellationToken)
             => taskCompletionSource.RegisterForCancellation(-1, cancellationToken);
 
         public static CancellationTokenRegistration RegisterForCancellation<T>(this TaskCompletionSource<T> taskCompletionSource, int millisecondsDelay, CancellationToken cancellationToken) {

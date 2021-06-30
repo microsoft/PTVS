@@ -16,7 +16,8 @@
 
 using Microsoft.VisualStudio.Text;
 
-namespace TestUtilities.Mocks {
+namespace TestUtilities.Mocks
+{
     public interface ITextImageVersion { }
     public interface ITextVersion2 : ITextVersion { }
     public struct VersionedPosition { }

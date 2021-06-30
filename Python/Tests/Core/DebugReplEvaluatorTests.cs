@@ -28,7 +28,6 @@ using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.InteractiveWindow.Commands;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
-using TestUtilities.Mocks;
 using TestUtilities.Python;
 
 namespace PythonToolsTests {

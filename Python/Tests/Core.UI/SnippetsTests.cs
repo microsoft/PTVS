@@ -37,7 +37,7 @@ namespace PythonToolsUITests {
 
         private static readonly Snippet[] BasicSnippets = new Snippet[] {
             new Snippet(
-                "class", 
+                "class",
                 "class ClassName(object):\r\n    $body$",
                 new Declaration("myclass", "class myclass(object):\r\n    $body$"),
                 new Declaration("(base)", "class myclass(base):\r\n    $body$")
@@ -85,7 +85,7 @@ namespace PythonToolsUITests {
             using (var vs = pg.Generate(BasicProjectDefinition).ToVs(app)) {
                 foreach (var snippet in BasicSnippets) {
                     TestOneTabSnippet(vs, snippet);
-                    
+
                     vs.CloseActiveWindow(vsSaveChanges.vsSaveChangesNo);
                 }
             }
@@ -263,7 +263,7 @@ namespace PythonToolsUITests {
                     new Declaration("quox", "import\r\nimport unittest\r\n\r\nclass mytest(unittest.TestCase):\r\n    def test_quox(self):\r\n        self.fail(\"Not implemented\")\r\n")
                 );
 
-                TestOneInsertSnippetMoveCaret(vs, snippet, "Test", file: "badimport.py", line:2);
+                TestOneInsertSnippetMoveCaret(vs, snippet, "Test", file: "badimport.py", line: 2);
 
                 vs.CloseActiveWindow(vsSaveChanges.vsSaveChangesNo);
             }

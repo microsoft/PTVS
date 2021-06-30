@@ -22,11 +22,13 @@ using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Interop;
 
-namespace Microsoft.VisualStudioTools.Wpf {
+namespace Microsoft.VisualStudioTools.Wpf
+{
     /// <summary>
     /// Infrastructure class.
     /// </summary>
-    public static class Commands {
+    public static class Commands
+    {
         private static readonly RoutedCommand _browseFolder = new RoutedCommand();
         private static readonly RoutedCommand _browseOpenFile = new RoutedCommand();
         private static readonly RoutedCommand _browseSaveFile = new RoutedCommand();
@@ -52,8 +54,10 @@ namespace Microsoft.VisualStudioTools.Wpf {
         /// <summary>
         /// Handles the CanExecute event for all commands defined in this class.
         /// </summary>
-        public static void CanExecute(Window window, object sender, CanExecuteRoutedEventArgs e) {
-            if (e.Command == BrowseFolder || e.Command == BrowseOpenFile || e.Command == BrowseSaveFile) {
+        public static void CanExecute(Window window, object sender, CanExecuteRoutedEventArgs e)
+        {
+            if (e.Command == BrowseFolder || e.Command == BrowseOpenFile || e.Command == BrowseSaveFile)
+            {
                 e.CanExecute = e.OriginalSource is TextBox;
             }
         }
@@ -61,24 +65,36 @@ namespace Microsoft.VisualStudioTools.Wpf {
         /// <summary>
         /// Handles the Executed event for all commands defined in this class.
         /// </summary>
-        public static void Executed(Window window, object sender, ExecutedRoutedEventArgs e) {
-            if (e.Command == BrowseFolder) {
+        public static void Executed(Window window, object sender, ExecutedRoutedEventArgs e)
+        {
+            if (e.Command == BrowseFolder)
+            {
                 BrowseFolderExecute(window, e);
-            } else if (e.Command == BrowseOpenFile) {
+            }
+            else if (e.Command == BrowseOpenFile)
+            {
                 BrowseOpenFileExecute(window, e);
-            } else if (e.Command == BrowseSaveFile) {
+            }
+            else if (e.Command == BrowseSaveFile)
+            {
                 BrowseSaveFileExecute(window, e);
             }
         }
 
-        private static void BrowseFolderExecute(Window window, ExecutedRoutedEventArgs e) {
+        private static void BrowseFolderExecute(Window window, ExecutedRoutedEventArgs e)
+        {
             var tb = (TextBox)e.OriginalSource;
-            if (!tb.AcceptsReturn) {
+            if (!tb.AcceptsReturn)
+            {
                 var path = e.Parameter as string ?? tb.GetValue(TextBox.TextProperty) as string;
-                while (!string.IsNullOrEmpty(path) && !Directory.Exists(path)) {
-                    try {
+                while (!string.IsNullOrEmpty(path) && !Directory.Exists(path))
+                {
+                    try
+                    {
                         path = Path.GetDirectoryName(path);
-                    } catch (ArgumentException) {
+                    }
+                    catch (ArgumentException)
+                    {
                         path = null; // path was in incorrect format, continue with default (current) directory
                     }
                 }
@@ -86,38 +102,49 @@ namespace Microsoft.VisualStudioTools.Wpf {
                     window == null ? IntPtr.Zero : new WindowInteropHelper(window).Handle,
                     path
                 );
-                if (path != null) {
+                if (path != null)
+                {
                     tb.SetCurrentValue(TextBox.TextProperty, path);
                     var binding = BindingOperations.GetBindingExpressionBase(tb, TextBox.TextProperty);
-                    if (binding != null) {
+                    if (binding != null)
+                    {
                         binding.UpdateSource();
                     }
                 }
-            } else {
+            }
+            else
+            {
                 var existing = tb.GetValue(TextBox.TextProperty) as string;
                 var path = e.Parameter as string;
-                while (!string.IsNullOrEmpty(path) && !Directory.Exists(path)) {
+                while (!string.IsNullOrEmpty(path) && !Directory.Exists(path))
+                {
                     path = Path.GetDirectoryName(path);
                 }
                 path = Dialogs.BrowseForDirectory(
                     window == null ? IntPtr.Zero : new WindowInteropHelper(window).Handle,
                     path
                 );
-                if (path != null) {
-                    if (string.IsNullOrEmpty(existing)) {
+                if (path != null)
+                {
+                    if (string.IsNullOrEmpty(existing))
+                    {
                         tb.SetCurrentValue(TextBox.TextProperty, path);
-                    } else {
+                    }
+                    else
+                    {
                         tb.SetCurrentValue(TextBox.TextProperty, existing.TrimEnd(new[] { '\r', '\n' }) + Environment.NewLine + path);
                     }
                     var binding = BindingOperations.GetBindingExpressionBase(tb, TextBox.TextProperty);
-                    if (binding != null) {
+                    if (binding != null)
+                    {
                         binding.UpdateSource();
                     }
                 }
             }
         }
 
-        private static void BrowseOpenFileExecute(Window window, ExecutedRoutedEventArgs e) {
+        private static void BrowseOpenFileExecute(Window window, ExecutedRoutedEventArgs e)
+        {
             var tb = (TextBox)e.OriginalSource;
             var filter = (e.Parameter as string) ?? "All Files (*.*)|*.*";
 
@@ -127,16 +154,19 @@ namespace Microsoft.VisualStudioTools.Wpf {
                 filter,
                 path
             );
-            if (path != null) {
+            if (path != null)
+            {
                 tb.SetCurrentValue(TextBox.TextProperty, path);
                 var binding = BindingOperations.GetBindingExpressionBase(tb, TextBox.TextProperty);
-                if (binding != null) {
+                if (binding != null)
+                {
                     binding.UpdateSource();
                 }
             }
         }
 
-        private static void BrowseSaveFileExecute(Window window, ExecutedRoutedEventArgs e) {
+        private static void BrowseSaveFileExecute(Window window, ExecutedRoutedEventArgs e)
+        {
             var tb = (TextBox)e.OriginalSource;
             var filter = (e.Parameter as string) ?? "All Files (*.*)|*.*";
 
@@ -146,10 +176,12 @@ namespace Microsoft.VisualStudioTools.Wpf {
                 filter,
                 path
             );
-            if (path != null) {
+            if (path != null)
+            {
                 tb.SetCurrentValue(TextBox.TextProperty, path);
                 var binding = BindingOperations.GetBindingExpressionBase(tb, TextBox.TextProperty);
-                if (binding != null) {
+                if (binding != null)
+                {
                     binding.UpdateSource();
                 }
             }

@@ -14,30 +14,36 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using Microsoft.VisualStudio.Language.Intellisense;
+using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Editor;
 using System;
 using System.ComponentModel.Composition;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.VisualStudio.Language.Intellisense;
-using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Text.Editor;
 
-namespace Microsoft.VisualStudioTools.MockVsTests {
+namespace Microsoft.VisualStudioTools.MockVsTests
+{
     [Export(typeof(IAsyncQuickInfoBroker))]
-    class MockAsyncQuickInfoBroker : IAsyncQuickInfoBroker {
-        public bool IsQuickInfoActive(ITextView textView) {
+    class MockAsyncQuickInfoBroker : IAsyncQuickInfoBroker
+    {
+        public bool IsQuickInfoActive(ITextView textView)
+        {
             throw new NotImplementedException();
         }
 
-        public Task<IAsyncQuickInfoSession> TriggerQuickInfoAsync(ITextView textView, ITrackingPoint triggerPoint = null, QuickInfoSessionOptions options = QuickInfoSessionOptions.None, CancellationToken cancellationToken = new CancellationToken()) {
+        public Task<IAsyncQuickInfoSession> TriggerQuickInfoAsync(ITextView textView, ITrackingPoint triggerPoint = null, QuickInfoSessionOptions options = QuickInfoSessionOptions.None, CancellationToken cancellationToken = new CancellationToken())
+        {
             throw new NotImplementedException();
         }
 
-        public IAsyncQuickInfoSession GetSession(ITextView textView) {
+        public IAsyncQuickInfoSession GetSession(ITextView textView)
+        {
             throw new NotImplementedException();
         }
 
-        public Task<QuickInfoItemsCollection> GetQuickInfoItemsAsync(ITextView textView, ITrackingPoint triggerPoint, CancellationToken cancellationToken) {
+        public Task<QuickInfoItemsCollection> GetQuickInfoItemsAsync(ITextView textView, ITrackingPoint triggerPoint, CancellationToken cancellationToken)
+        {
             throw new NotImplementedException();
         }
     }

@@ -16,9 +16,7 @@
 
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing;
-using Microsoft.VisualStudio.Debugger;
 
 namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
     [StructProxy(StructName = "PyDictObject", MinVersion = PythonLanguageVersion.V33, MaxVersion = PythonLanguageVersion.V35)]

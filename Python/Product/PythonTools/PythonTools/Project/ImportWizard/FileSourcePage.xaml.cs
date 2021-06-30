@@ -32,7 +32,7 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
         private async void SourcePathTextBox_SourceUpdated(object sender, DataTransferEventArgs e) {
             Debug.Assert(DataContext is ImportSettings);
             var settings = (ImportSettings)DataContext;
-            SourcePathDoesNotExist.Visibility = 
+            SourcePathDoesNotExist.Visibility =
                 (string.IsNullOrEmpty(settings.SourcePath) || Directory.Exists(settings.SourcePath)) ?
                 System.Windows.Visibility.Collapsed :
                 System.Windows.Visibility.Visible;

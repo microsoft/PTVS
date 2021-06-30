@@ -127,7 +127,7 @@ namespace Microsoft.PythonTools.TestAdapter.Pytest {
                 } while (navNode.MoveToNext());
             }
         }
-        
+
         internal static XPathDocument Read(string xml) {
             var settings = new XmlReaderSettings {
                 XmlResolver = null

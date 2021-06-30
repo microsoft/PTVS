@@ -26,7 +26,7 @@ using ProjectItem = EnvDTE.ProjectItem;
 
 namespace Microsoft.PythonTools.ProjectWizards {
     public sealed class WindowsSDKWizard : IWizard {
-        public void ProjectFinishedGenerating(Project project) {}
+        public void ProjectFinishedGenerating(Project project) { }
         public void BeforeOpeningFile(ProjectItem projectItem) { }
         public void ProjectItemFinishedGenerating(ProjectItem projectItem) { }
         public void RunFinished() { }
@@ -50,13 +50,13 @@ namespace Microsoft.PythonTools.ProjectWizards {
                     string dirName = Directory.GetDirectories(keyValue, "10.*").OrderByDescending(x => x).FirstOrDefault();
                     winSDKVersion = Path.GetFileName(dirName);
                 }
-            } catch(Exception ex) {
+            } catch (Exception ex) {
                 if (ex.IsCriticalException()) {
                     throw;
                 }
             }
-            
-            if(string.IsNullOrEmpty(winSDKVersion)){
+
+            if (string.IsNullOrEmpty(winSDKVersion)) {
                 winSDKVersion = "10.0.0.0"; // Default value to put in project file
             }
 

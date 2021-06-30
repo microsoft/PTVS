@@ -18,7 +18,6 @@ using System;
 using System.Diagnostics;
 using System.Linq.Expressions;
 using Microsoft.PythonTools.Debugger.Concord.Proxies.Structs;
-using Microsoft.VisualStudio.Debugger;
 
 namespace Microsoft.PythonTools.Debugger.Concord.Proxies {
 

@@ -26,7 +26,6 @@ using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Projects;
 using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestWindow.Extensibility;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.TestAdapter;
@@ -47,8 +46,8 @@ namespace Microsoft.PythonTools.TestAdapter {
 
         [ImportingConstructor]
         private TestContainerDiscovererProject(
-            [Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider,
-            [Import(typeof(IOperationState))]IOperationState operationState,
+            [Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider,
+            [Import(typeof(IOperationState))] IOperationState operationState,
             [Import] IPythonWorkspaceContextProvider workspaceContextProvider,
             [Import] IInterpreterOptionsService interpreterOptionsService
         ) {

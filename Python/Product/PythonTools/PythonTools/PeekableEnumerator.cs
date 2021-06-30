@@ -32,7 +32,7 @@ namespace Microsoft.PythonTools {
 
         public void Reset() {
             _enumerator = _enumerable.GetEnumerator();
-            
+
             HasPrevious = false;
             Previous = default(T);
 

@@ -24,7 +24,6 @@ using Microsoft.PythonTools.InterpreterList;
 using Microsoft.PythonTools.Logging;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.TaskStatusCenter;
-using Microsoft.VisualStudio.Workspace;
 using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Environments {

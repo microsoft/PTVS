@@ -14,23 +14,24 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using Microsoft.VisualStudio;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Shell.Interop;
 using IServiceProvider = System.IServiceProvider;
 
-namespace Microsoft.VisualStudioTools.Project {
+namespace Microsoft.VisualStudioTools.Project
+{
     /// <summary>
     /// This object is in charge of reloading nodes that have file monikers that can be listened to changes
     /// </summary>
-    internal class FileChangeManager : IVsFileChangeEvents {
+    internal class FileChangeManager : IVsFileChangeEvents
+    {
         #region nested objects
         /// <summary>
         /// Defines a data structure that can link a item moniker to the item and its file change cookie.
         /// </summary>
-        private struct ObservedItemInfo {
+        private struct ObservedItemInfo
+        {
             /// <summary>
             /// Defines the id of the item that is to be reloaded.
             /// </summary>
@@ -44,12 +45,15 @@ namespace Microsoft.VisualStudioTools.Project {
             /// <summary>
             /// Defines the nested project item that is to be reloaded.
             /// </summary>
-            internal uint ItemID {
-                get {
+            internal uint ItemID
+            {
+                get
+                {
                     return this.itemID;
                 }
 
-                set {
+                set
+                {
                     this.itemID = value;
                 }
             }
@@ -57,12 +61,15 @@ namespace Microsoft.VisualStudioTools.Project {
             /// <summary>
             /// Defines the file change cookie that is returned when listenning on file changes on the nested project item.
             /// </summary>
-            internal uint FileChangeCookie {
-                get {
+            internal uint FileChangeCookie
+            {
+                get
+                {
                     return this.fileChangeCookie;
                 }
 
-                set {
+                set
+                {
                     this.fileChangeCookie = value;
                 }
             }
@@ -97,16 +104,19 @@ namespace Microsoft.VisualStudioTools.Project {
         /// Overloaded ctor.
         /// </summary>
         /// <param name="nodeParam">An instance of a project item.</param>
-        internal FileChangeManager(IServiceProvider serviceProvider) {
+        internal FileChangeManager(IServiceProvider serviceProvider)
+        {
             #region input validation
-            if (serviceProvider == null) {
+            if (serviceProvider == null)
+            {
                 throw new ArgumentNullException("serviceProvider");
             }
             #endregion
 
             this.fileChangeService = (IVsFileChangeEx)serviceProvider.GetService(typeof(SVsFileChangeEx));
 
-            if (this.fileChangeService == null) {
+            if (this.fileChangeService == null)
+            {
                 // VS is in bad state, since the SVsFileChangeEx could not be proffered.
                 throw new InvalidOperationException();
             }
@@ -117,16 +127,19 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <summary>
         /// Disposes resources.
         /// </summary>
-        public void Dispose() {
+        public void Dispose()
+        {
             // Don't dispose more than once
-            if (this.disposed) {
+            if (this.disposed)
+            {
                 return;
             }
 
             this.disposed = true;
 
             // Unsubscribe from the observed source files.
-            foreach (ObservedItemInfo info in this.observedItems.Values) {
+            foreach (ObservedItemInfo info in this.observedItems.Values)
+            {
                 ErrorHandler.ThrowOnFailure(this.fileChangeService.UnadviseFileChange(info.FileChangeCookie));
             }
 
@@ -143,19 +156,25 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <param name="filesChanged">Array of file names.</param>
         /// <param name="flags">Array of flags indicating the type of changes. See _VSFILECHANGEFLAGS.</param>
         /// <returns>If the method succeeds, it returns S_OK. If it fails, it returns an error code.</returns>
-        int IVsFileChangeEvents.FilesChanged(uint numberOfFilesChanged, string[] filesChanged, uint[] flags) {
-            if (filesChanged == null) {
+        int IVsFileChangeEvents.FilesChanged(uint numberOfFilesChanged, string[] filesChanged, uint[] flags)
+        {
+            if (filesChanged == null)
+            {
                 throw new ArgumentNullException("filesChanged");
             }
 
-            if (flags == null) {
+            if (flags == null)
+            {
                 throw new ArgumentNullException("flags");
             }
 
-            if (this.FileChangedOnDisk != null) {
-                for (int i = 0; i < numberOfFilesChanged; i++) {
+            if (this.FileChangedOnDisk != null)
+            {
+                for (int i = 0; i < numberOfFilesChanged; i++)
+                {
                     string fullFileName = Utilities.CanonicalizeFileName(filesChanged[i]);
-                    if (this.observedItems.ContainsKey(fullFileName)) {
+                    if (this.observedItems.ContainsKey(fullFileName))
+                    {
                         ObservedItemInfo info = this.observedItems[fullFileName];
                         this.FileChangedOnDisk(this, new FileChangedOnDiskEventArgs(fullFileName, info.ItemID, (_VSFILECHANGEFLAGS)flags[i]));
                     }
@@ -170,7 +189,8 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </summary>
         /// <param name="directory">Name of the directory that had a change.</param>
         /// <returns>If the method succeeds, it returns S_OK. If it fails, it returns an error code. </returns>
-        int IVsFileChangeEvents.DirectoryChanged(string directory) {
+        int IVsFileChangeEvents.DirectoryChanged(string directory)
+        {
             return VSConstants.S_OK;
         }
         #endregion
@@ -180,7 +200,8 @@ namespace Microsoft.VisualStudioTools.Project {
         /// Observe when the given file is updated on disk. In this case we do not care about the item id that represents the file in the hierarchy.
         /// </summary>
         /// <param name="fileName">File to observe.</param>
-        internal void ObserveItem(string fileName) {
+        internal void ObserveItem(string fileName)
+        {
             this.ObserveItem(fileName, VSConstants.VSITEMID_NIL);
         }
 
@@ -189,15 +210,18 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </summary>
         /// <param name="fileName">File to observe.</param>
         /// <param name="id">The item id of the item to observe.</param>
-        internal void ObserveItem(string fileName, uint id) {
+        internal void ObserveItem(string fileName, uint id)
+        {
             #region Input validation
-            if (String.IsNullOrEmpty(fileName)) {
+            if (String.IsNullOrEmpty(fileName))
+            {
                 throw new ArgumentException(SR.GetString(SR.InvalidParameter), "fileName");
             }
             #endregion
 
             string fullFileName = Utilities.CanonicalizeFileName(fileName);
-            if (!this.observedItems.ContainsKey(fullFileName)) {
+            if (!this.observedItems.ContainsKey(fullFileName))
+            {
                 // Observe changes to the file
                 uint fileChangeCookie;
                 ErrorHandler.ThrowOnFailure(this.fileChangeService.AdviseFileChange(fullFileName, (uint)(_VSFILECHANGEFLAGS.VSFILECHG_Time | _VSFILECHANGEFLAGS.VSFILECHG_Del), this, out fileChangeCookie));
@@ -216,15 +240,18 @@ namespace Microsoft.VisualStudioTools.Project {
         /// </summary>
         /// <param name="fileName">File to ignore observing.</param>
         /// <param name="ignore">Flag indicating whether or not to ignore changes (1 to ignore, 0 to stop ignoring).</param>
-        internal void IgnoreItemChanges(string fileName, bool ignore) {
+        internal void IgnoreItemChanges(string fileName, bool ignore)
+        {
             #region Input validation
-            if (String.IsNullOrEmpty(fileName)) {
+            if (String.IsNullOrEmpty(fileName))
+            {
                 throw new ArgumentException(SR.GetString(SR.InvalidParameter), "fileName");
             }
             #endregion
 
             string fullFileName = Utilities.CanonicalizeFileName(fileName);
-            if (this.observedItems.ContainsKey(fullFileName)) {
+            if (this.observedItems.ContainsKey(fullFileName))
+            {
                 // Call ignore file with the flags specified.
                 ErrorHandler.ThrowOnFailure(this.fileChangeService.IgnoreFile(0, fileName, ignore ? 1 : 0));
             }
@@ -234,16 +261,19 @@ namespace Microsoft.VisualStudioTools.Project {
         /// Stop observing when the file is updated on disk.
         /// </summary>
         /// <param name="fileName">File to stop observing.</param>
-        internal void StopObservingItem(string fileName) {
+        internal void StopObservingItem(string fileName)
+        {
             #region Input validation
-            if (String.IsNullOrEmpty(fileName)) {
+            if (String.IsNullOrEmpty(fileName))
+            {
                 throw new ArgumentException(SR.GetString(SR.InvalidParameter), "fileName");
             }
             #endregion
 
             string fullFileName = Utilities.CanonicalizeFileName(fileName);
 
-            if (this.observedItems.ContainsKey(fullFileName)) {
+            if (this.observedItems.ContainsKey(fullFileName))
+            {
                 // Get the cookie that was used for this.observedItems to this file.
                 ObservedItemInfo itemInfo = this.observedItems[fullFileName];
 

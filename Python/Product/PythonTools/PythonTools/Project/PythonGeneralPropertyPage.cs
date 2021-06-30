@@ -80,7 +80,7 @@ namespace Microsoft.PythonTools.Project {
             Project.SetProjectProperty(CommonConstants.StartupFile, _control.StartupFile);
             Project.SetProjectProperty(CommonConstants.WorkingDirectory, _control.WorkingDirectory);
             Project.SetProjectProperty(CommonConstants.IsWindowsApplication, _control.IsWindowsApplication.ToString());
-            
+
             var interp = _control.DefaultInterpreter;
             if (interp != null && !PythonProject.InterpreterFactories.Contains(interp)) {
                 PythonProject.AddInterpreter(interp.Configuration.Id);

@@ -15,9 +15,11 @@
 // permissions and limitations under the License.
 
 
-namespace TestUtilities {
+namespace TestUtilities
+{
     // http://msdn.microsoft.com/en-us/library/ms645505(VS.85).aspx
-    public enum MessageBoxButton {
+    public enum MessageBoxButton
+    {
         /// <summary>
         /// A meta-value used to indicate that the "normal" close behavior should be used.
         /// </summary>

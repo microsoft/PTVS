@@ -40,7 +40,6 @@ using Microsoft.PythonTools.Projects;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.Language.Intellisense;
-using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
@@ -258,8 +257,8 @@ namespace Microsoft.PythonTools.Intellisense {
                 return;
             }
 
-            _conn = outOfProc 
-                ? StartSubprocessConnection(comment.IfNullOrEmpty(DefaultComment), out _analysisProcess) 
+            _conn = outOfProc
+                ? StartSubprocessConnection(comment.IfNullOrEmpty(DefaultComment), out _analysisProcess)
                 : StartThreadConnection(comment.IfNullOrEmpty(DefaultComment), out _analysisProcess);
 
             if (!string.IsNullOrEmpty(_conn.LogFilename)) {
@@ -2468,7 +2467,7 @@ namespace Microsoft.PythonTools.Intellisense {
             Debug.Assert(entry.Analyzer == this);
 
             var analysis = await GetExpressionAtPointAsync(point, ExpressionAtPointPurpose.Hover, TimeSpan.FromMilliseconds(200.0)).ConfigureAwait(false);
-            
+
             if (analysis?.Entry != null) {
                 var line = point.GetContainingLine();
                 var req = new AP.QuickInfoRequest() {

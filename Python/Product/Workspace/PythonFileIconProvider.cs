@@ -15,16 +15,11 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.VisualStudio.Imaging;
 using Microsoft.VisualStudio.Imaging.Interop;
 using Microsoft.VisualStudio.Workspace;
-using Microsoft.VisualStudio.Workspace.Extensions.VS;
 
 namespace Microsoft.PythonTools.Workspace {
     [Export(typeof(IVsFileIconProvider))]

@@ -14,11 +14,8 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Projects;
 using Microsoft.PythonTools.TestAdapter;
@@ -53,7 +50,7 @@ namespace TestAdapterTests {
                         foreach (int j in Enumerable.Range(1, 1000)) {
                             projectMap[projectName].AddTestContainer(dummyDiscoverer, j.ToString() + ".py");
                         }
-                        
+
                         await Task.Delay(100);
                     }
                 )

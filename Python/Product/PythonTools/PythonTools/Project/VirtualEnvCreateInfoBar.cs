@@ -107,7 +107,7 @@ namespace Microsoft.PythonTools.Project {
             if (IsCreated || IsGloballySuppressed) {
                 return;
             }
-        
+
             RequirementsTxtPath = Project.GetRequirementsTxtPath();
             Caption = Project.Caption;
             Context = InfoBarContexts.Project;

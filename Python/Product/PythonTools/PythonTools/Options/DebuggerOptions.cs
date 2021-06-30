@@ -14,8 +14,8 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.PythonTools.Debugger;
 using System;
+using Microsoft.PythonTools.Debugger;
 
 namespace Microsoft.PythonTools.Options {
     public sealed class DebuggerOptions {
@@ -175,25 +175,25 @@ namespace Microsoft.PythonTools.Options {
             get;
             set;
         }
-        
-        public PresentationMode VariablePresentationForClasses { 
-            get; 
-            set; 
+
+        public PresentationMode VariablePresentationForClasses {
+            get;
+            set;
         }
 
-        public PresentationMode VariablePresentationForFunctions { 
-            get; 
-            set; 
+        public PresentationMode VariablePresentationForFunctions {
+            get;
+            set;
         }
 
-        public PresentationMode VariablePresentationForProtected { 
-            get; 
-            set; 
+        public PresentationMode VariablePresentationForProtected {
+            get;
+            set;
         }
-        
-        public PresentationMode VariablePresentationForSpecial { 
-            get; 
-            set; 
+
+        public PresentationMode VariablePresentationForSpecial {
+            get;
+            set;
         }
     }
 }

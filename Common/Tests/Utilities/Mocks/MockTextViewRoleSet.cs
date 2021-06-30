@@ -14,20 +14,23 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using Microsoft.VisualStudio.Text.Editor;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.VisualStudio.Text.Editor;
 
-namespace TestUtilities.Mocks {
-    class MockTextViewRoleSet : ITextViewRoleSet {
+namespace TestUtilities.Mocks
+{
+    class MockTextViewRoleSet : ITextViewRoleSet
+    {
         private HashSet<string> _roles = new HashSet<string>();
 
         public bool Contains(string textViewRole) => _roles.Contains(textViewRole);
         public bool ContainsAll(IEnumerable<string> textViewRoles) => textViewRoles.All(r => _roles.Contains(r));
         public bool ContainsAny(IEnumerable<string> textViewRoles) => textViewRoles.Any(r => _roles.Contains(r));
         public IEnumerator<string> GetEnumerator() => _roles.GetEnumerator();
-        public ITextViewRoleSet UnionWith(ITextViewRoleSet roleSet) {
+        public ITextViewRoleSet UnionWith(ITextViewRoleSet roleSet)
+        {
             _roles.UnionWith(roleSet);
             return this;
         }

@@ -16,10 +16,8 @@
 
 using System;
 using System.Diagnostics;
-using System.IO;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Debugger.Interop;
 
 namespace Microsoft.PythonTools.Debugger.DebugEngine {
     // this class represents a module loaded in the debuggee process to the debugger. 

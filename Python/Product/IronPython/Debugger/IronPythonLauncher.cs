@@ -22,7 +22,6 @@ using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.IronPythonTools.Debugger {
@@ -59,7 +58,7 @@ namespace Microsoft.IronPythonTools.Debugger {
             } catch (NoInterpretersException) {
                 throw new NoInterpretersException(null, NoIronPythonHelpPage.Value);
             }
-            
+
             return Launch(config, debug);
         }
 

@@ -14,27 +14,33 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Collections.Generic;
-using System.Linq;
 using System.Windows.Automation;
 
-namespace TestUtilities.UI {
-    public class ComboBox : AutomationWrapper {
+namespace TestUtilities.UI
+{
+    public class ComboBox : AutomationWrapper
+    {
         public ComboBox(AutomationElement element)
-            : base(element) {
+            : base(element)
+        {
         }
 
-        public void SelectItem(string name) {
+        public void SelectItem(string name)
+        {
             ExpandCollapsePattern pat = (ExpandCollapsePattern)Element.GetCurrentPattern(ExpandCollapsePattern.Pattern);
             pat.Expand();
-            try {
+            try
+            {
                 var item = Element.FindFirst(TreeScope.Descendants, new PropertyCondition(AutomationElement.NameProperty, name));
 
-                if (item == null) {
+                if (item == null)
+                {
                     throw new ElementNotAvailableException(name + " is not in the combobox");
                 }
                 ((SelectionItemPattern)item.GetCurrentPattern(SelectionItemPattern.Pattern)).Select();
-            } finally {
+            }
+            finally
+            {
                 pat.Collapse();
             }
         }
@@ -44,12 +50,14 @@ namespace TestUtilities.UI {
         /// Only use this if SelectItem doesn't work!
         /// </summary
         /// <param name="name"></param>
-        public void ClickItem(string name) {
+        public void ClickItem(string name)
+        {
             ExpandCollapsePattern pat = (ExpandCollapsePattern)Element.GetCurrentPattern(ExpandCollapsePattern.Pattern);
             pat.Expand();
 
             var item = Element.FindFirst(TreeScope.Descendants, new PropertyCondition(AutomationElement.NameProperty, name));
-            if (item == null) {
+            if (item == null)
+            {
                 throw new ElementNotAvailableException(name + " is not in the combobox");
             }
 
@@ -59,15 +67,18 @@ namespace TestUtilities.UI {
             Mouse.Click();
         }
 
-        public string GetSelectedItemName() {
+        public string GetSelectedItemName()
+        {
             var selection = Element.GetSelectionPattern().Current.GetSelection();
-            if (selection == null || selection.Length == 0) {
+            if (selection == null || selection.Length == 0)
+            {
                 return null;
             }
             return selection[0].Current.Name;
         }
 
-        public string GetEnteredText() {
+        public string GetEnteredText()
+        {
             return GetValue();
         }
     }

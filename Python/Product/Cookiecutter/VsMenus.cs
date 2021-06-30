@@ -15,7 +15,6 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Diagnostics.CodeAnalysis;
 
 namespace Microsoft.CookiecutterTools {
     /// <summary>

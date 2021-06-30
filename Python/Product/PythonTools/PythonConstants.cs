@@ -136,13 +136,13 @@ namespace Microsoft.PythonTools {
         public const string UnitTestPatternSetting = "UnitTestPattern";
         public const string DefaultUnitTestPattern = "test*.py";
 
-        public static readonly Regex DefaultTestFileNameRegex = 
+        public static readonly Regex DefaultTestFileNameRegex =
             new Regex(@"((^test.*)|(^.*_test))\.(py|txt)$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        public static readonly Regex TestFileExtensionRegex = 
+        public static readonly Regex TestFileExtensionRegex =
             new Regex(@".*\.(py|txt)$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         public static readonly HashSet<string> PyTestFrameworkConfigFiles =
-            new HashSet<string>(StringComparer.OrdinalIgnoreCase) {"pytest.ini", "setup.cfg", "tox.ini"};
+            new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "pytest.ini", "setup.cfg", "tox.ini" };
 
         /// <summary>
         /// Specifies port to which to open web browser on launch.

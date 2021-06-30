@@ -14,14 +14,6 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Diagnostics;
-using System.Windows;
-using System.Windows.Automation.Peers;
-using System.Windows.Automation.Provider;
-using System.Windows.Controls;
-using System.Windows.Data;
-
 namespace Microsoft.CookiecutterTools.View {
     //public sealed class LiveTextBlock : TextBlock {
     //    public LiveTextBlock() {

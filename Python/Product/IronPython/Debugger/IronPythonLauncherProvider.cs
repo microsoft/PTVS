@@ -28,7 +28,7 @@ namespace Microsoft.IronPythonTools.Debugger {
         private readonly IServiceProvider _serviceProvider;
 
         [ImportingConstructor]
-        public IronPythonLauncherProvider([Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider) {
+        public IronPythonLauncherProvider([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider) {
             _serviceProvider = serviceProvider;
             _pyService = (PythonToolsService)serviceProvider.GetService(typeof(PythonToolsService));
         }

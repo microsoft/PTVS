@@ -30,7 +30,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
         private readonly CancellationTokenSource _cancelAll = new CancellationTokenSource();
 
-        private static readonly KeyValuePair<string, string>[] UnbufferedEnv = new[] { 
+        private static readonly KeyValuePair<string, string>[] UnbufferedEnv = new[] {
             new KeyValuePair<string, string>("PYTHONUNBUFFERED", "1")
         };
 

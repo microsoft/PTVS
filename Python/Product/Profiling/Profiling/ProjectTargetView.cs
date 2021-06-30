@@ -15,7 +15,6 @@
 // permissions and limitations under the License.
 
 using System;
-using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.PythonTools.Profiling {
     /// <summary>
@@ -24,7 +23,7 @@ namespace Microsoft.PythonTools.Profiling {
     class ProjectTargetView {
         readonly string _name;
         readonly Guid _guid;
-        
+
         /// <summary>
         /// Create a ProjectTargetView with values from an EnvDTE.Project.
         /// </summary>
@@ -88,4 +87,4 @@ namespace Microsoft.PythonTools.Profiling {
     }
 }
 
- 
+

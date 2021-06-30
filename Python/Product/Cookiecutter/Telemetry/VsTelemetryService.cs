@@ -26,7 +26,7 @@ namespace Microsoft.CookiecutterTools.Telemetry {
 
         public VsTelemetryService()
             : base(VsTelemetryService.EventNamePrefixString, VsTelemetryService.PropertyNamePrefixString, VsTelemetryRecorder.Current) {
-            }
+        }
 
         public static TelemetryServiceBase Current => _instance.Value;
 

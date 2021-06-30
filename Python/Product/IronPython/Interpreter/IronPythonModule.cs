@@ -15,7 +15,6 @@
 // permissions and limitations under the License.
 
 using System.Collections.Generic;
-using IronPython.Runtime;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.IronPythonTools.Interpreter {
@@ -41,7 +40,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
                     var ri = RemoteInterpreter;
                     _name = ri != null ? ri.GetModuleName(Value) : string.Empty;
                 }
-                return _name; 
+                return _name;
             }
         }
 

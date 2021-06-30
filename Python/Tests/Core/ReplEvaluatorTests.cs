@@ -18,18 +18,14 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.PythonTools;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.VisualStudioTools;
 using TestUtilities;
-using TestUtilities.Mocks;
 using TestUtilities.Python;
 
 namespace PythonToolsTests {
@@ -75,9 +71,9 @@ namespace PythonToolsTests {
                         Thread.Sleep(1000);
 
                         evaluator.AbortExecution();
-                    }, 
-                    false, 
-                    20000, 
+                    },
+                    false,
+                    20000,
                     "KeyboardInterrupt"
                 );
             }
@@ -118,9 +114,9 @@ namespace PythonToolsTests {
                 // blocked as it's hogging the event loop.
                 AutoResetEvent are = new AutoResetEvent(false);
                 ThreadPool.QueueUserWorkItem(async (x) => {
-                        await evaluator.ExecuteText("globals()['my_new_value'] = 123");
-                        are.Set();
-                    }
+                    await evaluator.ExecuteText("globals()['my_new_value'] = 123");
+                    are.Set();
+                }
                 );
                 are.WaitOne(10000);
                 var names = evaluator.GetMemberNames("");
@@ -134,7 +130,7 @@ namespace PythonToolsTests {
             // http://pytools.codeplex.com/workitem/606
 
             var testCases = new[] {
-                new { 
+                new {
                     Code = @"def f():
     pass
 

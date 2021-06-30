@@ -258,9 +258,9 @@ namespace Microsoft.PythonTools.BuildTasks {
 #if !BUILDTASKS_CORE
         private ExportProvider GetExportProvider() {
             return InterpreterCatalog.CreateContainer(
-                new CatalogLog(_log), 
-                typeof(MsBuildProjectContextProvider), 
-                typeof(IInterpreterRegistryService), 
+                new CatalogLog(_log),
+                typeof(MsBuildProjectContextProvider),
+                typeof(IInterpreterRegistryService),
                 typeof(IInterpreterOptionsService)
             );
         }

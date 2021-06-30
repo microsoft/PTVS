@@ -14,12 +14,15 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.VisualStudioTools.Project {
+namespace Microsoft.VisualStudioTools.Project
+{
     /// <summary>
     /// Represents a node which has a filename on disk, implemented by folder and file nodes.
     /// </summary>
-    interface IDiskBasedNode {
-        string Url {
+    interface IDiskBasedNode
+    {
+        string Url
+        {
             get;
         }
 

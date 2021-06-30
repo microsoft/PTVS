@@ -16,8 +16,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
 
 namespace Microsoft.PythonTools.Interpreter {
     public class VisualStudioInterpreterConfiguration : InterpreterConfiguration, IEquatable<VisualStudioInterpreterConfiguration> {
@@ -33,7 +31,7 @@ namespace Microsoft.PythonTools.Interpreter {
         /// The UI behavior of the interpreter.
         /// </summary>
         public InterpreterUIMode UIMode { get; }
-        
+
         /// <summary>
         /// Reconstructs an interpreter configuration from a dictionary.
         /// </summary>

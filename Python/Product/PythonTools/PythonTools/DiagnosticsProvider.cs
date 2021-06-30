@@ -43,7 +43,7 @@ namespace Microsoft.PythonTools {
             "CommandLineArguments",
             "InterpreterPath"
         };
-        
+
         private static readonly IEnumerable<string> InterestingProjectProperties = new[] {
             "ClusterRunEnvironment",
             "ClusterPublishBeforeRun",

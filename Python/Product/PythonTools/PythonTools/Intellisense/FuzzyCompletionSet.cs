@@ -61,8 +61,8 @@ namespace Microsoft.PythonTools.Intellisense {
         /// automation name for the icon.</param>
         public DynamicallyVisibleCompletion(string displayText, string insertionText, string description, ImageSource iconSource, string iconAutomationText)
             : base(displayText, insertionText, description, iconSource, iconAutomationText) { }
-        
-        
+
+
         /// <summary>
         /// Initializes a new instance with the specified text, description and
         /// a lazily initialized icon.
@@ -88,7 +88,7 @@ namespace Microsoft.PythonTools.Intellisense {
         /// user.
         /// </summary>
         internal bool Visible {
-            get { 
+            get {
                 return _visible;
             }
             set {
@@ -326,7 +326,7 @@ namespace Microsoft.PythonTools.Intellisense {
             if (_completions == null) {
                 return;
             }
-            
+
             var text = ApplicableTo.GetText(ApplicableTo.TextBuffer.CurrentSnapshot);
 
             Completion bestMatch = _previousSelection;
@@ -385,7 +385,7 @@ namespace Microsoft.PythonTools.Intellisense {
             if (_completions == null) {
                 return false;
             }
-            
+
             var text = ApplicableTo.GetText(ApplicableTo.TextBuffer.CurrentSnapshot);
 
             Completion bestMatch = null;

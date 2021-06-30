@@ -21,7 +21,6 @@ using System.IO;
 using System.Reflection;
 using System.Windows;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.Win32;
 
 namespace Microsoft.PythonTools.Profiling {

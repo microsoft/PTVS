@@ -14,25 +14,28 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Threading;
 using System.Windows.Automation;
 using System.Windows.Input;
 
-namespace TestUtilities.UI {
-    public class SaveDialog : AutomationDialog {
+namespace TestUtilities.UI
+{
+    public class SaveDialog : AutomationDialog
+    {
         public SaveDialog(VisualStudioApp app, AutomationElement element)
-            : base(app, element) {
+            : base(app, element)
+        {
         }
 
-        public static SaveDialog FromDte(VisualStudioApp app) {
+        public static SaveDialog FromDte(VisualStudioApp app)
+        {
             return new SaveDialog(
                 app,
                 AutomationElement.FromHandle(app.OpenDialogWithDteExecuteCommand("File.SaveSelectedItemsAs"))
             );
         }
 
-        public void Save() {
+        public void Save()
+        {
             WaitForInputIdle();
             // The Save button on this dialog is broken and so UIA cannot invoke
             // it (though somehow Inspect is able to...). We use the keyboard
@@ -40,20 +43,25 @@ namespace TestUtilities.UI {
             WaitForClosed(DefaultTimeout, () => Keyboard.PressAndRelease(Key.S, Key.LeftAlt));
         }
 
-        public override void OK() {
+        public override void OK()
+        {
             Save();
         }
 
-        public string FileName { 
-            get {
+        public string FileName
+        {
+            get
+            {
                 return GetFilenameEditBox().GetValuePattern().Current.Value;
             }
-            set {
+            set
+            {
                 GetFilenameEditBox().GetValuePattern().SetValue(value);
             }
         }
 
-        private AutomationElement GetFilenameEditBox() {
+        private AutomationElement GetFilenameEditBox()
+        {
             return FindByAutomationId("FileNameControlHost");
         }
     }

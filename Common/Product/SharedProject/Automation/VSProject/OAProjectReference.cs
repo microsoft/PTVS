@@ -14,12 +14,10 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Diagnostics.CodeAnalysis;
-using System.Runtime.InteropServices;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
+using System;
+using System.Runtime.InteropServices;
 using VSLangProj;
 
 namespace Microsoft.VisualStudioTools.Project.Automation
@@ -35,7 +33,8 @@ namespace Microsoft.VisualStudioTools.Project.Automation
         {
         }
 
-        internal new ProjectReferenceNode BaseReferenceNode {
+        internal new ProjectReferenceNode BaseReferenceNode
+        {
             get { return (ProjectReferenceNode)base.BaseReferenceNode; }
         }
 
@@ -59,9 +58,12 @@ namespace Microsoft.VisualStudioTools.Project.Automation
         {
             get
             {
-                try {
+                try
+                {
                     return BaseReferenceNode.ReferencedProjectOutputPath;
-                } catch (COMException) {
+                }
+                catch (COMException)
+                {
                     return string.Empty;
                 }
             }

@@ -15,7 +15,6 @@
 // permissions and limitations under the License.
 
 using System.ComponentModel.Composition;
-using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Utilities;
 
 namespace Microsoft.PythonTools {

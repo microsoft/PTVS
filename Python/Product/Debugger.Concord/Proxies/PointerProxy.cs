@@ -16,7 +16,6 @@
 
 using System;
 using System.Diagnostics;
-using Microsoft.VisualStudio.Debugger;
 
 namespace Microsoft.PythonTools.Debugger.Concord.Proxies {
     [DebuggerDisplay("& {Read()}")]
@@ -58,7 +57,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies {
             Write((ulong)value);
         }
 
-        public PointerProxy<TProxy> ReinterpretCast<TProxy>(bool polymorphic = true) 
+        public PointerProxy<TProxy> ReinterpretCast<TProxy>(bool polymorphic = true)
             where TProxy : IDataProxy {
             return new PointerProxy<TProxy>(Process, Address, polymorphic);
         }

@@ -17,15 +17,14 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using Microsoft.VisualStudio.PlatformUI;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.VisualStudio.PlatformUI;
 
 namespace Microsoft.PythonTools.Environments {
     sealed class AddCondaEnvironmentView : EnvironmentViewBase {
@@ -420,7 +419,7 @@ namespace Microsoft.PythonTools.Environments {
             set { SetValue(EnvFileContentsProperty, value); }
         }
 
-        public string ErrorMessage{
+        public string ErrorMessage {
             get { return (string)GetValue(ErrorMessageProperty); }
             set { SetValue(ErrorMessageProperty, value); }
         }

@@ -15,7 +15,6 @@
 // permissions and limitations under the License.
 
 using System;
-using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;

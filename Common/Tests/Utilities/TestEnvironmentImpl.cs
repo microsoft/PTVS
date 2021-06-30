@@ -19,8 +19,10 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace TestUtilities {
-    public class TestEnvironmentImpl {
+namespace TestUtilities
+{
+    public class TestEnvironmentImpl
+    {
         protected internal static TestEnvironmentImpl Instance { get; protected set; }
 
         public static void TestInitialize(int secondsTimeout = 10) => Instance?.BeforeTestRun(secondsTimeout);
@@ -30,37 +32,46 @@ namespace TestUtilities {
         private readonly AssemblyLoader _assemblyLoader = new AssemblyLoader();
         private readonly string _binPath = typeof(TestEnvironmentImpl).Assembly.GetAssemblyDirectory();
 
-        public TestEnvironmentImpl AddAssemblyResolvePaths(params string[] paths) {
+        public TestEnvironmentImpl AddAssemblyResolvePaths(params string[] paths)
+        {
             _assemblyLoader.AddPaths(paths.Where(n => !string.IsNullOrEmpty(n)).ToArray());
             return this;
         }
 
-        public TestEnvironmentImpl AddVsResolvePaths() 
+        public TestEnvironmentImpl AddVsResolvePaths()
             => AddAssemblyResolvePaths(_binPath, VisualStudioPath.CommonExtensions, VisualStudioPath.PrivateAssemblies, VisualStudioPath.PublicAssemblies);
 
-        public bool TryAddTaskToWait(Task task) {
+        public bool TryAddTaskToWait(Task task)
+        {
             var taskObserver = _taskObserver.Value;
-            if (taskObserver == null) {
+            if (taskObserver == null)
+            {
                 return false;
             }
             taskObserver.Add(task);
             return true;
         }
-        
-        private void BeforeTestRun(int secondsTimeout) {
+
+        private void BeforeTestRun(int secondsTimeout)
+        {
             AssertListener.Initialize();
-            if (_taskObserver.Value != null) {
+            if (_taskObserver.Value != null)
+            {
                 throw new InvalidOperationException("AsyncLocal<TaskObserver> reentrancy");
             }
 
             _taskObserver.Value = new TaskObserver(secondsTimeout);
         }
 
-        private void AfterTestRun() {
-            try {
+        private void AfterTestRun()
+        {
+            try
+            {
                 _taskObserver.Value?.WaitForObservedTask();
                 AssertListener.ThrowUnhandled();
-            } finally {
+            }
+            finally
+            {
                 _taskObserver.Value = null;
             }
         }

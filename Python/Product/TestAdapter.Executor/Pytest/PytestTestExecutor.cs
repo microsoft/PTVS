@@ -26,7 +26,6 @@ using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.TestAdapter.Config;
 using Microsoft.PythonTools.TestAdapter.Pytest;
 using Microsoft.PythonTools.TestAdapter.Services;
-using Microsoft.PythonTools.TestAdapter.Utils;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
@@ -66,7 +65,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 
             _cancelRequested.Reset();
 
-            var sourceToProjSettings = RunSettingsUtil.GetSourceToProjSettings(runContext.RunSettings, filterType:TestFrameworkType.Pytest);
+            var sourceToProjSettings = RunSettingsUtil.GetSourceToProjSettings(runContext.RunSettings, filterType: TestFrameworkType.Pytest);
             var testCollection = new TestCollection();
             foreach (var testGroup in sources.GroupBy(x => sourceToProjSettings[x])) {
                 var settings = testGroup.Key;
@@ -106,7 +105,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             IRunContext runContext,
             IFrameworkHandle frameworkHandle
         ) {
-            var sourceToProjSettings = RunSettingsUtil.GetSourceToProjSettings(runContext.RunSettings, filterType:TestFrameworkType.Pytest);
+            var sourceToProjSettings = RunSettingsUtil.GetSourceToProjSettings(runContext.RunSettings, filterType: TestFrameworkType.Pytest);
 
             foreach (var testGroup in tests.GroupBy(t => sourceToProjSettings.TryGetValue(t.CodeFilePath ?? String.Empty, out PythonProjectSettings proj) ? proj : null)) {
                 if (testGroup.Key == null) {
@@ -141,7 +140,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             ) {
                 executor.Run(testGroup, _cancelRequested);
             }
-            
+
             var testResults = ParseResults(testConfig.ResultsXmlPath, testGroup, frameworkHandle);
 
             foreach (var result in testResults) {
@@ -182,7 +181,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             IFrameworkHandle frameworkHandle
         ) {
             var xmlTestResultNodes = doc.CreateNavigator().SelectDescendants("testcase", "", false);
-         
+
             foreach (XPathNavigator pytestResultNode in xmlTestResultNodes) {
                 if (_cancelRequested.WaitOne(0)) {
                     break;

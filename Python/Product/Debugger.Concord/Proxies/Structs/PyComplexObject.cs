@@ -16,7 +16,6 @@
 
 using System.Diagnostics;
 using System.Numerics;
-using Microsoft.VisualStudio.Debugger;
 
 namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
     internal class PyComplexObject : PyObject {

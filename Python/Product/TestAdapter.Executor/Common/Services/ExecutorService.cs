@@ -23,9 +23,6 @@ using System.Net;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Threading;
-using System.Xml;
-using System.Xml.XPath;
-using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.TestAdapter.Config;
 using Microsoft.PythonTools.TestAdapter.Utils;
@@ -73,9 +70,9 @@ namespace Microsoft.PythonTools.TestAdapter.Services {
         }
 
         internal ExecutorService(
-            ITestConfiguration config, 
-            PythonProjectSettings projectSettings, 
-            IFrameworkHandle frameworkHandle, 
+            ITestConfiguration config,
+            PythonProjectSettings projectSettings,
+            IFrameworkHandle frameworkHandle,
             IRunContext runContext
         ) {
             _testConfig = config ?? throw new ArgumentNullException(nameof(config));

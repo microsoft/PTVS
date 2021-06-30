@@ -19,11 +19,6 @@ using System.IO;
 using System.Linq;
 using Microsoft.PythonTools.Debugger.Concord.Proxies;
 using Microsoft.PythonTools.Debugger.Concord.Proxies.Structs;
-using Microsoft.PythonTools.Infrastructure;
-using Microsoft.VisualStudio.Debugger;
-using Microsoft.VisualStudio.Debugger.CustomRuntimes;
-using Microsoft.VisualStudio.Debugger.Evaluation;
-using Microsoft.VisualStudio.Debugger.Symbols;
 
 namespace Microsoft.PythonTools.Debugger.Concord {
     internal class ModuleManager : DkmDataItem {

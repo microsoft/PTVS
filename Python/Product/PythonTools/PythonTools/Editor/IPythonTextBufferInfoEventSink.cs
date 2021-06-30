@@ -17,7 +17,6 @@
 using System;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Intellisense;
-using Microsoft.VisualStudio.Text;
 
 namespace Microsoft.PythonTools.Editor {
     /// <summary>

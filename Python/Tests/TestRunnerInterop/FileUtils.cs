@@ -215,7 +215,7 @@ namespace TestRunnerInterop {
             public FileDeleter(string path) {
                 _path = path;
             }
-            
+
             public void Dispose() {
                 for (int retries = 10; retries > 0; --retries) {
                     try {

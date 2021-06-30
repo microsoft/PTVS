@@ -18,8 +18,6 @@ using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.Serialization;
-using Microsoft.VisualStudio.Debugger;
-using Microsoft.VisualStudio.Debugger.ComponentInterfaces;
 
 namespace Microsoft.PythonTools.Debugger.Concord {
     // TODO: remove VS 2010 workaround by merging LocalComponent and LocalStackWalkingComponent together.
@@ -35,8 +33,7 @@ namespace Microsoft.PythonTools.Debugger.Concord {
     public class LocalStackWalkingComponent :
         ComponentBase,
         IDkmModuleInstanceLoadNotification,
-        IDkmRuntimeInstanceLoadNotification
-    {
+        IDkmRuntimeInstanceLoadNotification {
 
         public LocalStackWalkingComponent()
             : base(Guids.LocalStackWalkingComponentGuid) {

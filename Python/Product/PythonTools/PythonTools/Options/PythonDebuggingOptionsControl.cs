@@ -13,10 +13,10 @@
 //
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
-using Microsoft.PythonTools.Debugger;
 using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
+using Microsoft.PythonTools.Debugger;
 
 namespace Microsoft.PythonTools.Options {
     public partial class PythonDebuggingOptionsControl : UserControl {

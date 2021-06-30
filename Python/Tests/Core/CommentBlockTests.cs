@@ -14,8 +14,6 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Threading.Tasks;
-using System.Windows.Input;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Editor.Core;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -74,7 +72,7 @@ print 'goodbye'
             });
 
             Assert.AreEqual(@"print 'hello'
-#print 'goodbye'", 
+#print 'goodbye'",
                  view.GetText());
 
             editorTestToolset.UIThread.Invoke(() => {

@@ -18,8 +18,6 @@ using System;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.VisualStudioTools {
     /// <summary>
@@ -190,7 +188,7 @@ namespace Microsoft.VisualStudioTools {
             if (self is MockUIThreadBase || self.InvokeRequired) {
                 return;
             }
-            
+
             Debug.Fail(
                 message ?? string.Format("Invalid cross-thread call from thread {0}", Thread.CurrentThread.ManagedThreadId),
                 new StackTrace().ToString()

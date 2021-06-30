@@ -24,7 +24,6 @@ using System.Threading.Tasks;
 using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
-using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.InteractiveWindow.Commands;
@@ -38,8 +37,7 @@ namespace Microsoft.PythonTools.Repl {
     [ContentType(PythonCoreConstants.ContentType)]
     [ContentType(PredefinedInteractiveCommandsContentTypes.InteractiveCommandContentTypeName)]
     partial class PythonInteractiveEvaluator :
-        PythonCommonInteractiveEvaluator
-    {
+        PythonCommonInteractiveEvaluator {
         protected CommandProcessorThread _thread;
         private bool _isDisposed;
 
@@ -244,7 +242,7 @@ namespace Microsoft.PythonTools.Repl {
                 } catch (Exception ex) when (!ex.IsCriticalException()) {
                     Debug.Fail(ex.ToString());
                 }
-                
+
                 return result;
             }
 

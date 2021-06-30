@@ -181,7 +181,7 @@ namespace Microsoft.PythonTools.Django.Intellisense {
         }
 
         #endregion
-        
+
 
         #region IDisposable Members
 

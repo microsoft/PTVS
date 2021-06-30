@@ -31,13 +31,11 @@ using EnvDTE;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Language.Intellisense;
-using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Tagging;
-using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudioTools;
 using pythontools::Microsoft.PythonTools;
 using pythontools::Microsoft.PythonTools.Editor;
@@ -242,7 +240,7 @@ namespace PythonToolsUITests {
                 ((UIElement)doc.TextView).Focus();
             }));
             doc.WaitForAnalysisAtCaretAsync().WaitAndUnwrapExceptions();
-            
+
             Keyboard.Type("f");
             System.Threading.Thread.Sleep(500);
             Keyboard.Type("(");

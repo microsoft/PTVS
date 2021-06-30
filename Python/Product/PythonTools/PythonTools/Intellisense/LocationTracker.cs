@@ -19,7 +19,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Microsoft.PythonTools.Editor.Core;
-using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Text;
 
@@ -202,7 +201,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         while (asLengths.Count <= lineNo) {
                             asLengths.Add(new NewLineLocation(0, NewLineKind.None));
                         }
-                        
+
                         if (c.OldLength > 0) {
                             var line = asLengths[lineNo];
                             // Deletion may span lines, so combine them until we can delete

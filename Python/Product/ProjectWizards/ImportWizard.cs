@@ -26,9 +26,7 @@ using System.IO;
 using System.Windows.Forms;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TemplateWizard;
-using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.ProjectWizards {
     public sealed class ImportWizard : IWizard {

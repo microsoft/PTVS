@@ -14,8 +14,8 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Common = Microsoft.PythonTools.Infrastructure;
 using Analysis = Microsoft.PythonTools.Analysis.Infrastructure;
+using Common = Microsoft.PythonTools.Infrastructure;
 
 namespace TestUtilities.Python {
     public sealed class MSTestEnvironment : TestEnvironmentImpl, Common.ITestEnvironment, Analysis.ITestEnvironment {

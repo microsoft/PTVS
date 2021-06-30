@@ -17,7 +17,6 @@
 using System;
 using System.Diagnostics;
 using System.Numerics;
-using Microsoft.VisualStudio.Debugger;
 
 namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
     internal class PyLongObject : PyVarObject {
@@ -48,7 +47,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
 
             var absValue = BigInteger.Abs(value);
             long numDigits = 0;
-            for (var t = absValue; t != 0; ) {
+            for (var t = absValue; t != 0;) {
                 ++numDigits;
                 t >>= bitsInDigit;
             }
@@ -88,7 +87,7 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             long ob_size = this.ob_size.Read();
             if (ob_size == 0) {
                 return 0;
-            } 
+            }
             long count = Math.Abs(ob_size);
 
             // Read and parse digits in reverse, starting from the most significant ones.

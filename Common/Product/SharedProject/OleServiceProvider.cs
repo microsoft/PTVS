@@ -14,33 +14,38 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using Microsoft.VisualStudio;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using Microsoft.VisualStudio;
 using IOleServiceProvider = Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
 
-namespace Microsoft.VisualStudioTools.Project {
+namespace Microsoft.VisualStudioTools.Project
+{
     // This class is No longer used by project system, retained for backwards for languages
     // which have already shipped this public type.
 #if SHAREDPROJECT_OLESERVICEPROVIDER    
-    public class OleServiceProvider : IOleServiceProvider, IDisposable {
+    public class OleServiceProvider : IOleServiceProvider, IDisposable
+    {
         #region Public Types
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1034:NestedTypesShouldNotBeVisible")]
         public delegate object ServiceCreatorCallback(Type serviceType);
         #endregion
 
         #region Private Types
-        private class ServiceData : IDisposable {
+        private class ServiceData : IDisposable
+        {
             private Type serviceType;
             private object instance;
             private ServiceCreatorCallback creator;
             private bool shouldDispose;
-            public ServiceData(Type serviceType, object instance, ServiceCreatorCallback callback, bool shouldDispose) {
+            public ServiceData(Type serviceType, object instance, ServiceCreatorCallback callback, bool shouldDispose)
+            {
                 Utilities.ArgumentNotNull("serviceType", serviceType);
 
-                if ((null == instance) && (null == callback)) {
+                if ((null == instance) && (null == callback))
+                {
                     throw new ArgumentNullException("instance");
                 }
 
@@ -50,9 +55,12 @@ namespace Microsoft.VisualStudioTools.Project {
                 this.shouldDispose = shouldDispose;
             }
 
-            public object ServiceInstance {
-                get {
-                    if (null == instance) {
+            public object ServiceInstance
+            {
+                get
+                {
+                    if (null == instance)
+                    {
                         Debug.Assert(serviceType != null);
                         instance = creator(serviceType);
                     }
@@ -60,14 +68,18 @@ namespace Microsoft.VisualStudioTools.Project {
                 }
             }
 
-            public Guid Guid {
+            public Guid Guid
+            {
                 get { return serviceType.GUID; }
             }
 
-            public void Dispose() {
-                if ((shouldDispose) && (null != instance)) {
+            public void Dispose()
+            {
+                if ((shouldDispose) && (null != instance))
+                {
                     IDisposable disp = instance as IDisposable;
-                    if (null != disp) {
+                    if (null != disp)
+                    {
                         disp.Dispose();
                     }
                     instance = null;
@@ -89,42 +101,54 @@ namespace Microsoft.VisualStudioTools.Project {
         #endregion
 
         #region ctors
-        public OleServiceProvider() {
+        public OleServiceProvider()
+        {
         }
         #endregion
 
         #region IOleServiceProvider Members
 
-        public int QueryService(ref Guid guidService, ref Guid riid, out IntPtr ppvObject) {
+        public int QueryService(ref Guid guidService, ref Guid riid, out IntPtr ppvObject)
+        {
             ppvObject = (IntPtr)0;
             int hr = VSConstants.S_OK;
 
             ServiceData serviceInstance = null;
 
-            if (services != null && services.ContainsKey(guidService)) {
+            if (services != null && services.ContainsKey(guidService))
+            {
                 serviceInstance = services[guidService];
             }
 
-            if (serviceInstance == null) {
+            if (serviceInstance == null)
+            {
                 return VSConstants.E_NOINTERFACE;
             }
 
             // Now check to see if the user asked for an IID other than
             // IUnknown.  If so, we must do another QI.
             //
-            if (riid.Equals(NativeMethods.IID_IUnknown)) {
+            if (riid.Equals(NativeMethods.IID_IUnknown))
+            {
                 object inst = serviceInstance.ServiceInstance;
-                if (inst == null) {
+                if (inst == null)
+                {
                     return VSConstants.E_NOINTERFACE;
                 }
                 ppvObject = Marshal.GetIUnknownForObject(serviceInstance.ServiceInstance);
-            } else {
+            }
+            else
+            {
                 IntPtr pUnk = IntPtr.Zero;
-                try {
+                try
+                {
                     pUnk = Marshal.GetIUnknownForObject(serviceInstance.ServiceInstance);
                     hr = Marshal.QueryInterface(pUnk, ref riid, out ppvObject);
-                } finally {
-                    if (pUnk != IntPtr.Zero) {
+                }
+                finally
+                {
+                    if (pUnk != IntPtr.Zero)
+                    {
                         Marshal.Release(pUnk);
                     }
                 }
@@ -140,7 +164,8 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <summary>
         /// The IDispose interface Dispose method for disposing the object determinastically.
         /// </summary>
-        public void Dispose() {
+        public void Dispose()
+        {
             Dispose(true);
             GC.SuppressFinalize(this);
         }
@@ -155,7 +180,8 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <param name="shouldDisposeServiceInstance">true if the Dipose of the service provider is allowed to dispose the sevice instance.</param>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Reliability", "CA2000:Dispose objects before losing scope",
             Justification = "The services created here will be disposed in the Dispose method of this type.")]
-        public void AddService(Type serviceType, object serviceInstance, bool shouldDisposeServiceInstance) {
+        public void AddService(Type serviceType, object serviceInstance, bool shouldDisposeServiceInstance)
+        {
             // Create the description of this service. Note that we don't do any validation
             // of the parameter here because the constructor of ServiceData will do it for us.
             ServiceData service = new ServiceData(serviceType, serviceInstance, null, shouldDisposeServiceInstance);
@@ -166,7 +192,8 @@ namespace Microsoft.VisualStudioTools.Project {
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Reliability", "CA2000:Dispose objects before losing scope",
             Justification = "The services created here will be disposed in the Dispose method of this type.")]
-        public void AddService(Type serviceType, ServiceCreatorCallback callback, bool shouldDisposeServiceInstance) {
+        public void AddService(Type serviceType, ServiceCreatorCallback callback, bool shouldDisposeServiceInstance)
+        {
             // Create the description of this service. Note that we don't do any validation
             // of the parameter here because the constructor of ServiceData will do it for us.
             ServiceData service = new ServiceData(serviceType, null, callback, shouldDisposeServiceInstance);
@@ -175,14 +202,17 @@ namespace Microsoft.VisualStudioTools.Project {
             AddService(service);
         }
 
-        private void AddService(ServiceData data) {
+        private void AddService(ServiceData data)
+        {
             // Make sure that the collection of services is created.
-            if (null == services) {
+            if (null == services)
+            {
                 services = new Dictionary<Guid, ServiceData>();
             }
 
             // Disallow the addition of duplicate services.
-            if (services.ContainsKey(data.Guid)) {
+            if (services.ContainsKey(data.Guid))
+            {
                 throw new InvalidOperationException();
             }
 
@@ -192,10 +222,12 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <devdoc>
         /// Removes the given service type from the service container.
         /// </devdoc>
-        public void RemoveService(Type serviceType) {
+        public void RemoveService(Type serviceType)
+        {
             Utilities.ArgumentNotNull("serviceType", serviceType);
 
-            if (services.ContainsKey(serviceType.GUID)) {
+            if (services.ContainsKey(serviceType.GUID))
+            {
                 services.Remove(serviceType.GUID);
             }
         }
@@ -205,15 +237,21 @@ namespace Microsoft.VisualStudioTools.Project {
         /// The method that does the cleanup.
         /// </summary>
         /// <param name="disposing"></param>
-        protected virtual void Dispose(bool disposing) {
+        protected virtual void Dispose(bool disposing)
+        {
             // Everybody can go here.
-            if (!this.isDisposed) {
+            if (!this.isDisposed)
+            {
                 // Synchronize calls to the Dispose simulteniously.
-                lock (Mutex) {
-                    if (disposing) {
+                lock (Mutex)
+                {
+                    if (disposing)
+                    {
                         // Remove all our services
-                        if (services != null) {
-                            foreach (ServiceData data in services.Values) {
+                        if (services != null)
+                        {
+                            foreach (ServiceData data in services.Values)
+                            {
                                 data.Dispose();
                             }
                             services.Clear();

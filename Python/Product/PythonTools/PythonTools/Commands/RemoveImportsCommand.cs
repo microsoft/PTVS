@@ -16,9 +16,7 @@
 
 using System;
 using System.Diagnostics;
-using Microsoft.PythonTools.Editor.Core;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudioTools;
 using Task = System.Threading.Tasks.Task;
@@ -30,7 +28,7 @@ namespace Microsoft.PythonTools.Commands {
     class RemoveImportsCommand : Command {
         private readonly System.IServiceProvider _serviceProvider;
         private readonly bool _allScopes;
-        
+
         public RemoveImportsCommand(System.IServiceProvider serviceProvider, bool allScopes) {
             _serviceProvider = serviceProvider;
             _allScopes = allScopes;

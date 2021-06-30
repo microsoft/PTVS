@@ -74,12 +74,12 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
         public static string GetFile(string filename, Assembly assembly = null) {
             var path = TryGetFile(filename, assembly);
 
-//#if DEBUG
-//            if (string.IsNullOrEmpty(path)) {
-//                Debugger.Launch();
-//                path =  TryGetFile(filename);
-//            }
-//#endif
+            //#if DEBUG
+            //            if (string.IsNullOrEmpty(path)) {
+            //                Debugger.Launch();
+            //                path =  TryGetFile(filename);
+            //            }
+            //#endif
 
             if (string.IsNullOrEmpty(path)) {
                 throw new InvalidOperationException(

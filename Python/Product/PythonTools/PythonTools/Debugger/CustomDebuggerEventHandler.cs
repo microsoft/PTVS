@@ -19,7 +19,6 @@ using System.ComponentModel.Design;
 using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Text;
-using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio;
@@ -29,7 +28,7 @@ namespace Microsoft.PythonTools.Debugger {
     [Guid(Guids.CustomDebuggerEventHandlerId)]
     class CustomDebuggerEventHandler : IVsCustomDebuggerEventHandler110 {
         private readonly IServiceProvider _serviceProvider;
-        
+
         public CustomDebuggerEventHandler(IServiceProvider serviceProvider) {
             _serviceProvider = serviceProvider;
         }
@@ -68,7 +67,7 @@ namespace Microsoft.PythonTools.Debugger {
 
             if (dialog.SelectedButton == openSymbolSettings) {
                 var cmdId = new CommandID(VSConstants.GUID_VSStandardCommandSet97, VSConstants.cmdidToolsOptions);
-                _serviceProvider.GlobalInvoke(cmdId,  "1F5E080F-CBD2-459C-8267-39fd83032166");
+                _serviceProvider.GlobalInvoke(cmdId, "1F5E080F-CBD2-459C-8267-39fd83032166");
             } else if (dialog.SelectedButton == downloadSymbols) {
                 PythonToolsPackage.OpenWebBrowser(
                     _serviceProvider,

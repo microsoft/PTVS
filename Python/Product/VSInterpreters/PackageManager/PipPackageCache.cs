@@ -117,7 +117,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 return;
             }
             _isDisposed = true;
-            
+
             if (disposing) {
                 lock (_knownCachesLock) {
                     if (--_userCount <= 0) {
