@@ -1,21 +1,43 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <DirectedGraph DataVirtualized="True" Layout="Sugiyama" ZoomLevel="-1" xmlns="http://schemas.microsoft.com/vs/2009/dgml">
   <Nodes>
-    <Node Id="(@1)" Category="CodeSchema_Assembly" Bounds="-118.828333333333,-145.5,141.863333333333,25" DelayedChildNodesState="NotFetched" DelayedCrossGroupLinksState="NotFetched" FilePath="$(eef0ad4a-3101-4519-84b2-949ca037da69.OutputPath)" Group="Collapsed" Label="VsPyProfX86.dll" />
-    <Node Id="(@10)" Bounds="-270.675,184.500342857137,322.863333333333,25" DelayedChildNodesState="NotFetched" DelayedCrossGroupLinksState="NotFetched" ErrorLevel="Error" FilePath="$(d1bbfb94-72ad-47c5-990a-d61ca37174b3.OutputPath)" Group="Collapsed" Label="Microsoft.PythonTools.Debugger.VCLauncher.dll" />
-    <Node Id="(@11)" Bounds="42.6183333333333,129.500242857137,321.946666666667,25" DelayedChildNodesState="NotFetched" DelayedCrossGroupLinksState="NotFetched" ErrorLevel="Error" FilePath="$(012293b1-168a-4c48-a678-db8361b50ba7.OutputPath)" Group="Collapsed" Label="Microsoft.PythonTools.IronPython.Interpreter.dll" />
-    <Node Id="(@12)" Bounds="-275.175,74.5001428571368,269.953333333333,25" DelayedChildNodesState="NotFetched" DelayedCrossGroupLinksState="NotFetched" ErrorLevel="Error" FilePath="$(31f224b1-68da-4524-9a1c-95f22492775b.OutputPath)" Group="Collapsed" Label="Microsoft.IronPythonTools.Resolver.dll" />
-    <Node Id="(@13)" Bounds="-275.175,129.500242857137,287.793333333333,25" DelayedChildNodesState="NotFetched" DelayedCrossGroupLinksState="NotFetched" ErrorLevel="Error" FilePath="$(74d0775f-2d1e-4685-9bd4-0658f496f8dc.OutputPath)" Group="Collapsed" Label="Microsoft.PythonTools.Django.Analysis.dll" />
-    <Node Id="(@14)" Bounds="-274.675,-90.5001571428632,232.186666666667,25" DelayedChildNodesState="NotFetched" DelayedCrossGroupLinksState="NotFetched" ErrorLevel="Error" FilePath="$(376840cf-9f60-4225-8b08-e1d168b6717a.OutputPath)" Group="Collapsed" Label="Microsoft.CookiecutterTools.dll" />
-    <Node Id="(@2)" Bounds="-274.675,19.5000428571368,260.353333333333,25" DelayedChildNodesState="NotFetched" DelayedCrossGroupLinksState="NotFetched" ErrorLevel="Error" FilePath="$(b487d472-fb87-42b4-9688-3421940457e4.OutputPath)" Group="Collapsed" Label="Microsoft.PythonTools.Miniconda.dll" />
-    <Node Id="(@3)" Bounds="4.01833333333337,-35.5000571428632,254.736666666667,25" DelayedChildNodesState="NotFetched" DelayedCrossGroupLinksState="NotFetched" ErrorLevel="Error" FilePath="$(4065a3c8-0e5e-42ac-9d94-509aa90c90e9.OutputPath)" Group="Collapsed" Label="Microsoft.PythonTools.LiveShare.dll" />
-    <Node Id="(@4)" Bounds="24.7783333333334,74.5001428571368,285.693333333333,25" DelayedChildNodesState="NotFetched" DelayedCrossGroupLinksState="NotFetched" ErrorLevel="Error" FilePath="$(46dbb052-6adb-44cc-882a-96930ee4a400.OutputPath)" Group="Collapsed" Label="Microsoft.PythonTools.BuildTasks.Core.dll" />
-    <Node Id="(@5)" Category="CodeSchema_Assembly" Bounds="-270.675,-145.5,121.846666666667,25" DelayedChildNodesState="NotFetched" DelayedCrossGroupLinksState="NotFetched" FilePath="$(6ec75eda-17ac-453e-ba34-cb6796c4319b.OutputPath)" Group="Collapsed" Label="VsPyProf.dll" />
-    <Node Id="(@6)" Bounds="-274.675,-35.5000571428632,248.693333333333,25" DelayedChildNodesState="NotFetched" DelayedCrossGroupLinksState="NotFetched" ErrorLevel="Error" FilePath="$(c42b194e-3333-45e8-bb26-d69d1a51ef0b.OutputPath)" Group="Collapsed" Label="Microsoft.PythonTools.Profiling.dll" />
-    <Node Id="(@7)" Bounds="53.0350000000001,-145.500257142863,223.646666666667,25" DelayedChildNodesState="NotFetched" DelayedCrossGroupLinksState="NotFetched" ErrorLevel="Error" FilePath="$(c2399412-5322-4193-af67-42a2082e81ec.OutputPath)" Group="Collapsed" Label="Microsoft.PythonTools.Wsl.dll" />
-    <Node Id="(@8)" Bounds="15.6783333333334,19.5000428571368,262.826666666667,25" DelayedChildNodesState="NotFetched" DelayedCrossGroupLinksState="NotFetched" ErrorLevel="Error" FilePath="$(5ae43c93-8ef6-4d57-bc10-511035ef56c5.OutputPath)" Group="Collapsed" Label="Microsoft.PythonTools.IronPython.dll" />
-    <Node Id="(@9)" Bounds="-12.4883333333333,-90.5001571428632,242.75,25" DelayedChildNodesState="NotFetched" DelayedCrossGroupLinksState="NotFetched" ErrorLevel="Error" FilePath="$(639f1efb-5a8b-4f8b-bf49-bc73f244d38d.OutputPath)" Group="Collapsed" Label="Microsoft.PythonTools.Django.dll" />
-    <Node Id="Product{A2CF2591-7E17-4028-BA90-0E90C60636A3}" Category="CodeMap_SolutionFolder" Bounds="-295.175,-185.500357142863,679.74,415.0008" Group="Expanded" Label="Product" />
+    <Node Id="(@1)" Bounds="171.846666666667,39.9997428571368,150.863333333333,25" DelayedChildNodesState="NotFetched" DelayedCrossGroupLinksState="NotFetched" ErrorLevel="Error" FilePath="$(eef0ad4a-3101-4519-84b2-949ca037da69.OutputPath)" Group="Collapsed" Label="VsPyProfX86.dll" />
+    <Node Id="(@10)" Category="CodeSchema_Assembly" Bounds="20,370,314.863333333333,25" DelayedChildNodesState="NotFetched" DelayedCrossGroupLinksState="NotFetched" FilePath="$(d1bbfb94-72ad-47c5-990a-d61ca37174b3.OutputPath)" Group="Collapsed" Label="Microsoft.PythonTools.Debugger.VCLauncher.dll">
+      <Category Ref="CodeMap_VsixProject" />
+      <Category Ref="CodeMap_WpfProject" />
+    </Node>
+    <Node Id="(@11)" Category="CodeSchema_Assembly" Bounds="328.793333333333,315,313.946666666667,25" DelayedChildNodesState="NotFetched" DelayedCrossGroupLinksState="NotFetched" FilePath="$(012293b1-168a-4c48-a678-db8361b50ba7.OutputPath)" Group="Collapsed" Label="Microsoft.PythonTools.IronPython.Interpreter.dll">
+      <Category Ref="CodeMap_VsixProject" />
+    </Node>
+    <Node Id="(@12)" Category="CodeSchema_Assembly" Bounds="20,260,260.953333333333,25" DelayedChildNodesState="NotFetched" DelayedCrossGroupLinksState="NotFetched" FilePath="$(31f224b1-68da-4524-9a1c-95f22492775b.OutputPath)" Group="Collapsed" Label="Microsoft.IronPythonTools.Resolver.dll" />
+    <Node Id="(@13)" Category="CodeSchema_Assembly" Bounds="20,315,278.793333333333,25" DelayedChildNodesState="NotFetched" DelayedCrossGroupLinksState="NotFetched" FilePath="$(74d0775f-2d1e-4685-9bd4-0658f496f8dc.OutputPath)" Group="Collapsed" Label="Microsoft.PythonTools.Django.Analysis.dll" />
+    <Node Id="(@14)" Category="CodeSchema_Assembly" Bounds="20,95,224.186666666667,25" DelayedChildNodesState="NotFetched" DelayedCrossGroupLinksState="NotFetched" FilePath="$(376840cf-9f60-4225-8b08-e1d168b6717a.OutputPath)" Group="Collapsed" Label="Microsoft.CookiecutterTools.dll">
+      <Category Ref="CodeMap_VsixProject" />
+      <Category Ref="CodeMap_WpfProject" />
+    </Node>
+    <Node Id="(@2)" Category="CodeSchema_Assembly" Bounds="20,205,252.353333333333,25" DelayedChildNodesState="NotFetched" DelayedCrossGroupLinksState="NotFetched" FilePath="$(b487d472-fb87-42b4-9688-3421940457e4.OutputPath)" Group="Collapsed" Label="Microsoft.PythonTools.Miniconda.dll">
+      <Category Ref="CodeMap_VsixProject" />
+      <Category Ref="CodeMap_WpfProject" />
+    </Node>
+    <Node Id="(@3)" Category="CodeSchema_Assembly" Bounds="294.693333333333,149.999942857137,246.736666666667,25" DelayedChildNodesState="NotFetched" DelayedCrossGroupLinksState="NotFetched" FilePath="$(4065a3c8-0e5e-42ac-9d94-509aa90c90e9.OutputPath)" Group="Collapsed" Label="Microsoft.PythonTools.LiveShare.dll">
+      <Category Ref="CodeMap_VsixProject" />
+      <Category Ref="CodeMap_WpfProject" />
+    </Node>
+    <Node Id="(@4)" Category="CodeSchema_Assembly" Bounds="310.953333333333,260,276.693333333333,25" DelayedChildNodesState="NotFetched" DelayedCrossGroupLinksState="NotFetched" FilePath="$(46dbb052-6adb-44cc-882a-96930ee4a400.OutputPath)" Group="Collapsed" Label="Microsoft.PythonTools.BuildTasks.Core.dll" />
+    <Node Id="(@5)" Bounds="10.9999999999999,39.9997428571368,130.846666666667,25" DelayedChildNodesState="NotFetched" DelayedCrossGroupLinksState="NotFetched" ErrorLevel="Error" FilePath="$(6ec75eda-17ac-453e-ba34-cb6796c4319b.OutputPath)" Group="Collapsed" Label="VsPyProf.dll" />
+    <Node Id="(@6)" Bounds="16,149.999942857137,248.693333333333,25" DelayedChildNodesState="NotFetched" DelayedCrossGroupLinksState="NotFetched" ErrorLevel="Error" FilePath="$(c42b194e-3333-45e8-bb26-d69d1a51ef0b.OutputPath)" Group="Collapsed" Label="Microsoft.PythonTools.Profiling.dll" />
+    <Node Id="(@7)" Category="CodeSchema_Assembly" Bounds="352.71,39.9997428571368,215.646666666667,25" DelayedChildNodesState="NotFetched" DelayedCrossGroupLinksState="NotFetched" FilePath="$(c2399412-5322-4193-af67-42a2082e81ec.OutputPath)" Group="Collapsed" Label="Microsoft.PythonTools.Wsl.dll">
+      <Category Ref="CodeMap_VsixProject" />
+      <Category Ref="CodeMap_WpfProject" />
+    </Node>
+    <Node Id="(@8)" Category="CodeSchema_Assembly" Bounds="302.353333333333,205,254.826666666667,25" DelayedChildNodesState="NotFetched" DelayedCrossGroupLinksState="NotFetched" FilePath="$(5ae43c93-8ef6-4d57-bc10-511035ef56c5.OutputPath)" Group="Collapsed" Label="Microsoft.PythonTools.IronPython.dll">
+      <Category Ref="CodeMap_VsixProject" />
+    </Node>
+    <Node Id="(@9)" Category="CodeSchema_Assembly" Bounds="274.186666666667,95,234.75,25" DelayedChildNodesState="NotFetched" DelayedCrossGroupLinksState="NotFetched" FilePath="$(639f1efb-5a8b-4f8b-bf49-bc73f244d38d.OutputPath)" Group="Collapsed" Label="Microsoft.PythonTools.Django.dll">
+      <Category Ref="CodeMap_VsixProject" />
+      <Category Ref="CodeMap_WpfProject" />
+    </Node>
+    <Node Id="Product{A2CF2591-7E17-4028-BA90-0E90C60636A3}" Category="CodeMap_SolutionFolder" Bounds="-9.00000000000006,-0.000357142863236959,671.74,415.0008" Group="Expanded" Label="Product" />
   </Nodes>
   <Links>
     <Link Source="Product{A2CF2591-7E17-4028-BA90-0E90C60636A3}" Target="(@1)" Category="Contains" FetchingParent="Product{A2CF2591-7E17-4028-BA90-0E90C60636A3}" />
@@ -35,6 +57,8 @@
   </Links>
   <Categories>
     <Category Id="CodeMap_SolutionFolder" Label="Solution Folder" CanBeDataDriven="True" IsProviderRoot="False" NavigationActionLabel="Solution Folder" />
+    <Category Id="CodeMap_VsixProject" Label="VSIX Project" CanBeDataDriven="True" IsProviderRoot="False" NavigationActionLabel="VSIX Projects" />
+    <Category Id="CodeMap_WpfProject" Label="WPF Project" CanBeDataDriven="True" IsProviderRoot="False" NavigationActionLabel="WPF Projects" />
     <Category Id="CodeSchema_Assembly" Label="Assembly" BasedOn="File" CanBeDataDriven="True" DefaultAction="Microsoft.Contains" Icon="CodeSchema_Assembly" NavigationActionLabel="Assemblies" />
     <Category Id="Contains" Label="Contains" Description="Whether the source of the link contains the target object" CanBeDataDriven="False" CanLinkedNodesBeDataDriven="True" IncomingActionLabel="Contained By" IsContainment="True" OutgoingActionLabel="Contains" />
     <Category Id="File" Label="File" CanBeDataDriven="True" DefaultAction="Microsoft.Contains" Icon="File" NavigationActionLabel="Files" />
@@ -309,33 +333,33 @@
     </Style>
   </Styles>
   <Paths>
-    <Path Id="012293b1-168a-4c48-a678-db8361b50ba7.OutputPath" Value="C:\Users\peezo\source\repos\PeezoSlug\PTVS\BuildOutput\PTVS110.0\raw\binaries\Microsoft.PythonTools.IronPython.Interpreter.dll" />
-    <Path Id="012293b1-168a-4c48-a678-db8361b50ba7.OutputPathUri" Value="file:///C:/Users/peezo/source/repos/PeezoSlug/PTVS/BuildOutput/PTVS110.0/raw/binaries/Microsoft.PythonTools.IronPython.Interpreter.dll" />
-    <Path Id="31f224b1-68da-4524-9a1c-95f22492775b.OutputPath" Value="C:\Users\peezo\source\repos\PeezoSlug\PTVS\BuildOutput\PTVS110.0\raw\binaries\Microsoft.IronPythonTools.Resolver.dll" />
-    <Path Id="31f224b1-68da-4524-9a1c-95f22492775b.OutputPathUri" Value="file:///C:/Users/peezo/source/repos/PeezoSlug/PTVS/BuildOutput/PTVS110.0/raw/binaries/Microsoft.IronPythonTools.Resolver.dll" />
-    <Path Id="376840cf-9f60-4225-8b08-e1d168b6717a.OutputPath" Value="C:\Users\peezo\source\repos\PeezoSlug\PTVS\BuildOutput\PTVS110.0\raw\binaries\Microsoft.CookiecutterTools.dll" />
-    <Path Id="376840cf-9f60-4225-8b08-e1d168b6717a.OutputPathUri" Value="file:///C:/Users/peezo/source/repos/PeezoSlug/PTVS/BuildOutput/PTVS110.0/raw/binaries/Microsoft.CookiecutterTools.dll" />
-    <Path Id="4065a3c8-0e5e-42ac-9d94-509aa90c90e9.OutputPath" Value="C:\Users\peezo\source\repos\PeezoSlug\PTVS\BuildOutput\PTVS110.0\raw\binaries\Microsoft.PythonTools.LiveShare.dll" />
-    <Path Id="4065a3c8-0e5e-42ac-9d94-509aa90c90e9.OutputPathUri" Value="file:///C:/Users/peezo/source/repos/PeezoSlug/PTVS/BuildOutput/PTVS110.0/raw/binaries/Microsoft.PythonTools.LiveShare.dll" />
-    <Path Id="46dbb052-6adb-44cc-882a-96930ee4a400.OutputPath" Value="C:\Users\peezo\source\repos\PeezoSlug\PTVS\BuildOutput\PTVS110.0\raw\binaries\Microsoft.PythonTools.BuildTasks.Core.dll" />
-    <Path Id="46dbb052-6adb-44cc-882a-96930ee4a400.OutputPathUri" Value="file:///C:/Users/peezo/source/repos/PeezoSlug/PTVS/BuildOutput/PTVS110.0/raw/binaries/Microsoft.PythonTools.BuildTasks.Core.dll" />
-    <Path Id="5ae43c93-8ef6-4d57-bc10-511035ef56c5.OutputPath" Value="C:\Users\peezo\source\repos\PeezoSlug\PTVS\BuildOutput\PTVS110.0\raw\binaries\Microsoft.PythonTools.IronPython.dll" />
-    <Path Id="5ae43c93-8ef6-4d57-bc10-511035ef56c5.OutputPathUri" Value="file:///C:/Users/peezo/source/repos/PeezoSlug/PTVS/BuildOutput/PTVS110.0/raw/binaries/Microsoft.PythonTools.IronPython.dll" />
-    <Path Id="639f1efb-5a8b-4f8b-bf49-bc73f244d38d.OutputPath" Value="C:\Users\peezo\source\repos\PeezoSlug\PTVS\BuildOutput\PTVS110.0\raw\binaries\Microsoft.PythonTools.Django.dll" />
-    <Path Id="639f1efb-5a8b-4f8b-bf49-bc73f244d38d.OutputPathUri" Value="file:///C:/Users/peezo/source/repos/PeezoSlug/PTVS/BuildOutput/PTVS110.0/raw/binaries/Microsoft.PythonTools.Django.dll" />
-    <Path Id="6ec75eda-17ac-453e-ba34-cb6796c4319b.OutputPath" Value="C:\Users\peezo\source\repos\PeezoSlug\PTVS\BuildOutput\PTVS110.0\raw\binaries\\VsPyProf.dll" />
-    <Path Id="6ec75eda-17ac-453e-ba34-cb6796c4319b.OutputPathUri" Value="file:///C:/Users/peezo/source/repos/PeezoSlug/PTVS/BuildOutput/PTVS110.0/raw/binaries//VsPyProf.dll" />
-    <Path Id="74d0775f-2d1e-4685-9bd4-0658f496f8dc.OutputPath" Value="C:\Users\peezo\source\repos\PeezoSlug\PTVS\BuildOutput\PTVS110.0\raw\binaries\Microsoft.PythonTools.Django.Analysis.dll" />
-    <Path Id="74d0775f-2d1e-4685-9bd4-0658f496f8dc.OutputPathUri" Value="file:///C:/Users/peezo/source/repos/PeezoSlug/PTVS/BuildOutput/PTVS110.0/raw/binaries/Microsoft.PythonTools.Django.Analysis.dll" />
-    <Path Id="b487d472-fb87-42b4-9688-3421940457e4.OutputPath" Value="C:\Users\peezo\source\repos\PeezoSlug\PTVS\BuildOutput\PTVS110.0\raw\binaries\Microsoft.PythonTools.Miniconda.dll" />
-    <Path Id="b487d472-fb87-42b4-9688-3421940457e4.OutputPathUri" Value="file:///C:/Users/peezo/source/repos/PeezoSlug/PTVS/BuildOutput/PTVS110.0/raw/binaries/Microsoft.PythonTools.Miniconda.dll" />
-    <Path Id="c2399412-5322-4193-af67-42a2082e81ec.OutputPath" Value="C:\Users\peezo\source\repos\PeezoSlug\PTVS\BuildOutput\PTVS110.0\raw\binaries\Microsoft.PythonTools.Wsl.dll" />
-    <Path Id="c2399412-5322-4193-af67-42a2082e81ec.OutputPathUri" Value="file:///C:/Users/peezo/source/repos/PeezoSlug/PTVS/BuildOutput/PTVS110.0/raw/binaries/Microsoft.PythonTools.Wsl.dll" />
+    <Path Id="012293b1-168a-4c48-a678-db8361b50ba7.OutputPath" Value="C:\Users\peezo\source\repos\PeezoSlug\PTVS\BuildOutput\Release10.0\raw\binaries\Microsoft.PythonTools.IronPython.Interpreter.dll" />
+    <Path Id="012293b1-168a-4c48-a678-db8361b50ba7.OutputPathUri" Value="file:///C:/Users/peezo/source/repos/PeezoSlug/PTVS/BuildOutput/Release10.0/raw/binaries/Microsoft.PythonTools.IronPython.Interpreter.dll" />
+    <Path Id="31f224b1-68da-4524-9a1c-95f22492775b.OutputPath" Value="C:\Users\peezo\source\repos\PeezoSlug\PTVS\BuildOutput\Release10.0\raw\binaries\Microsoft.IronPythonTools.Resolver.dll" />
+    <Path Id="31f224b1-68da-4524-9a1c-95f22492775b.OutputPathUri" Value="file:///C:/Users/peezo/source/repos/PeezoSlug/PTVS/BuildOutput/Release10.0/raw/binaries/Microsoft.IronPythonTools.Resolver.dll" />
+    <Path Id="376840cf-9f60-4225-8b08-e1d168b6717a.OutputPath" Value="C:\Users\peezo\source\repos\PeezoSlug\PTVS\BuildOutput\Release10.0\raw\binaries\Microsoft.CookiecutterTools.dll" />
+    <Path Id="376840cf-9f60-4225-8b08-e1d168b6717a.OutputPathUri" Value="file:///C:/Users/peezo/source/repos/PeezoSlug/PTVS/BuildOutput/Release10.0/raw/binaries/Microsoft.CookiecutterTools.dll" />
+    <Path Id="4065a3c8-0e5e-42ac-9d94-509aa90c90e9.OutputPath" Value="C:\Users\peezo\source\repos\PeezoSlug\PTVS\BuildOutput\Release10.0\raw\binaries\Microsoft.PythonTools.LiveShare.dll" />
+    <Path Id="4065a3c8-0e5e-42ac-9d94-509aa90c90e9.OutputPathUri" Value="file:///C:/Users/peezo/source/repos/PeezoSlug/PTVS/BuildOutput/Release10.0/raw/binaries/Microsoft.PythonTools.LiveShare.dll" />
+    <Path Id="46dbb052-6adb-44cc-882a-96930ee4a400.OutputPath" Value="C:\Users\peezo\source\repos\PeezoSlug\PTVS\BuildOutput\Release10.0\raw\binaries\Microsoft.PythonTools.BuildTasks.Core.dll" />
+    <Path Id="46dbb052-6adb-44cc-882a-96930ee4a400.OutputPathUri" Value="file:///C:/Users/peezo/source/repos/PeezoSlug/PTVS/BuildOutput/Release10.0/raw/binaries/Microsoft.PythonTools.BuildTasks.Core.dll" />
+    <Path Id="5ae43c93-8ef6-4d57-bc10-511035ef56c5.OutputPath" Value="C:\Users\peezo\source\repos\PeezoSlug\PTVS\BuildOutput\Release10.0\raw\binaries\Microsoft.PythonTools.IronPython.dll" />
+    <Path Id="5ae43c93-8ef6-4d57-bc10-511035ef56c5.OutputPathUri" Value="file:///C:/Users/peezo/source/repos/PeezoSlug/PTVS/BuildOutput/Release10.0/raw/binaries/Microsoft.PythonTools.IronPython.dll" />
+    <Path Id="639f1efb-5a8b-4f8b-bf49-bc73f244d38d.OutputPath" Value="C:\Users\peezo\source\repos\PeezoSlug\PTVS\BuildOutput\Release10.0\raw\binaries\Microsoft.PythonTools.Django.dll" />
+    <Path Id="639f1efb-5a8b-4f8b-bf49-bc73f244d38d.OutputPathUri" Value="file:///C:/Users/peezo/source/repos/PeezoSlug/PTVS/BuildOutput/Release10.0/raw/binaries/Microsoft.PythonTools.Django.dll" />
+    <Path Id="6ec75eda-17ac-453e-ba34-cb6796c4319b.OutputPath" Value="C:\Users\peezo\source\repos\PeezoSlug\PTVS\BuildOutput\PTVS110.0\raw\binaries\VsPyProf.dll" />
+    <Path Id="6ec75eda-17ac-453e-ba34-cb6796c4319b.OutputPathUri" Value="file:///C:/Users/peezo/source/repos/PeezoSlug/PTVS/BuildOutput/PTVS110.0/raw/binaries/VsPyProf.dll" />
+    <Path Id="74d0775f-2d1e-4685-9bd4-0658f496f8dc.OutputPath" Value="C:\Users\peezo\source\repos\PeezoSlug\PTVS\BuildOutput\Release10.0\raw\binaries\Microsoft.PythonTools.Django.Analysis.dll" />
+    <Path Id="74d0775f-2d1e-4685-9bd4-0658f496f8dc.OutputPathUri" Value="file:///C:/Users/peezo/source/repos/PeezoSlug/PTVS/BuildOutput/Release10.0/raw/binaries/Microsoft.PythonTools.Django.Analysis.dll" />
+    <Path Id="b487d472-fb87-42b4-9688-3421940457e4.OutputPath" Value="C:\Users\peezo\source\repos\PeezoSlug\PTVS\BuildOutput\Release10.0\raw\binaries\Microsoft.PythonTools.Miniconda.dll" />
+    <Path Id="b487d472-fb87-42b4-9688-3421940457e4.OutputPathUri" Value="file:///C:/Users/peezo/source/repos/PeezoSlug/PTVS/BuildOutput/Release10.0/raw/binaries/Microsoft.PythonTools.Miniconda.dll" />
+    <Path Id="c2399412-5322-4193-af67-42a2082e81ec.OutputPath" Value="C:\Users\peezo\source\repos\PeezoSlug\PTVS\BuildOutput\Release10.0\raw\binaries\Microsoft.PythonTools.Wsl.dll" />
+    <Path Id="c2399412-5322-4193-af67-42a2082e81ec.OutputPathUri" Value="file:///C:/Users/peezo/source/repos/PeezoSlug/PTVS/BuildOutput/Release10.0/raw/binaries/Microsoft.PythonTools.Wsl.dll" />
     <Path Id="c42b194e-3333-45e8-bb26-d69d1a51ef0b.OutputPath" Value="C:\Users\peezo\source\repos\PeezoSlug\PTVS\BuildOutput\PTVS110.0\raw\binaries\Microsoft.PythonTools.Profiling.dll" />
     <Path Id="c42b194e-3333-45e8-bb26-d69d1a51ef0b.OutputPathUri" Value="file:///C:/Users/peezo/source/repos/PeezoSlug/PTVS/BuildOutput/PTVS110.0/raw/binaries/Microsoft.PythonTools.Profiling.dll" />
-    <Path Id="d1bbfb94-72ad-47c5-990a-d61ca37174b3.OutputPath" Value="C:\Users\peezo\source\repos\PeezoSlug\PTVS\BuildOutput\PTVS110.0\raw\binaries\Microsoft.PythonTools.Debugger.VCLauncher.dll" />
-    <Path Id="d1bbfb94-72ad-47c5-990a-d61ca37174b3.OutputPathUri" Value="file:///C:/Users/peezo/source/repos/PeezoSlug/PTVS/BuildOutput/PTVS110.0/raw/binaries/Microsoft.PythonTools.Debugger.VCLauncher.dll" />
-    <Path Id="eef0ad4a-3101-4519-84b2-949ca037da69.OutputPath" Value="C:\Users\peezo\source\repos\PeezoSlug\PTVS\BuildOutput\PTVS110.0\raw\binaries\\VsPyProfX86.dll" />
-    <Path Id="eef0ad4a-3101-4519-84b2-949ca037da69.OutputPathUri" Value="file:///C:/Users/peezo/source/repos/PeezoSlug/PTVS/BuildOutput/PTVS110.0/raw/binaries//VsPyProfX86.dll" />
+    <Path Id="d1bbfb94-72ad-47c5-990a-d61ca37174b3.OutputPath" Value="C:\Users\peezo\source\repos\PeezoSlug\PTVS\BuildOutput\Release10.0\raw\binaries\Microsoft.PythonTools.Debugger.VCLauncher.dll" />
+    <Path Id="d1bbfb94-72ad-47c5-990a-d61ca37174b3.OutputPathUri" Value="file:///C:/Users/peezo/source/repos/PeezoSlug/PTVS/BuildOutput/Release10.0/raw/binaries/Microsoft.PythonTools.Debugger.VCLauncher.dll" />
+    <Path Id="eef0ad4a-3101-4519-84b2-949ca037da69.OutputPath" Value="C:\Users\peezo\source\repos\PeezoSlug\PTVS\BuildOutput\PTVS110.0\raw\binaries\VsPyProfX86.dll" />
+    <Path Id="eef0ad4a-3101-4519-84b2-949ca037da69.OutputPathUri" Value="file:///C:/Users/peezo/source/repos/PeezoSlug/PTVS/BuildOutput/PTVS110.0/raw/binaries/VsPyProfX86.dll" />
   </Paths>
 </DirectedGraph>
