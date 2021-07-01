@@ -14,13 +14,12 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using Microsoft.PythonTools.Intellisense;
 
-namespace Microsoft.PythonTools.Repl {
-    interface IPythonInteractiveIntellisense {
+namespace Microsoft.PythonTools.Repl
+{
+    interface IPythonInteractiveIntellisense
+    {
         bool LiveCompletionsOnly { get; }
         IEnumerable<KeyValuePair<string, string>> GetAvailableScopesAndPaths();
         CompletionResult[] GetMemberNames(string text);

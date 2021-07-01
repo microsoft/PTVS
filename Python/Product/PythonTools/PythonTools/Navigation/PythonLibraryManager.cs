@@ -14,24 +14,22 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Navigation;
 using Microsoft.VisualStudioTools.Project;
 
-namespace Microsoft.PythonTools.Navigation {
+namespace Microsoft.PythonTools.Navigation
+{
 
     /// <summary>
     /// This interface defines the service that finds Python files inside a hierarchy
     /// and builds the informations to expose to the class view or object browser.
     /// </summary>
     [Guid(PythonConstants.LibraryManagerServiceGuid)]
-    internal interface IPythonLibraryManager : ILibraryManager {
+    internal interface IPythonLibraryManager : ILibraryManager
+    {
     }
 
     /// <summary>
@@ -40,23 +38,30 @@ namespace Microsoft.PythonTools.Navigation {
     /// hierarchy.
     /// </summary>
     [Guid(PythonConstants.LibraryManagerGuid)]
-    internal class PythonLibraryManager : LibraryManager, IPythonLibraryManager {
+    internal class PythonLibraryManager : LibraryManager, IPythonLibraryManager
+    {
         private readonly Dictionary<PythonProjectNode, AnalysisCompleteHandler> _handlers;
 
         public PythonLibraryManager(CommonPackage/*!*/ package)
-            : base(package) {
+            : base(package)
+        {
             _handlers = new Dictionary<PythonProjectNode, AnalysisCompleteHandler>();
         }
 
-        public override LibraryNode CreateFileLibraryNode(LibraryNode parent, HierarchyNode hierarchy, string name, string filename) {
+        public override LibraryNode CreateFileLibraryNode(LibraryNode parent, HierarchyNode hierarchy, string name, string filename)
+        {
             return new PythonFileLibraryNode(parent, hierarchy, hierarchy.Caption, filename);
         }
 
-        public override void RegisterHierarchy(IVsHierarchy hierarchy) {
+        public override void RegisterHierarchy(IVsHierarchy hierarchy)
+        {
             var project = hierarchy.GetProject()?.GetPythonProject();
-            if (project != null) {
-                lock (_handlers) {
-                    if (!_handlers.ContainsKey(project)) {
+            if (project != null)
+            {
+                lock (_handlers)
+                {
+                    if (!_handlers.ContainsKey(project))
+                    {
                         _handlers[project] = new AnalysisCompleteHandler(this, project);
                     }
                 }
@@ -65,12 +70,16 @@ namespace Microsoft.PythonTools.Navigation {
             base.RegisterHierarchy(hierarchy);
         }
 
-        public override void UnregisterHierarchy(IVsHierarchy hierarchy) {
+        public override void UnregisterHierarchy(IVsHierarchy hierarchy)
+        {
             var project = hierarchy.GetProject()?.GetPythonProject();
-            if (project != null) {
-                lock (_handlers) {
+            if (project != null)
+            {
+                lock (_handlers)
+                {
                     AnalysisCompleteHandler handler;
-                    if (_handlers.TryGetValue(project, out handler)) {
+                    if (_handlers.TryGetValue(project, out handler))
+                    {
                         _handlers.Remove(project);
                         handler.Dispose();
                     }
@@ -80,21 +89,26 @@ namespace Microsoft.PythonTools.Navigation {
             base.UnregisterHierarchy(hierarchy);
         }
 
-        protected override void OnNewFile(LibraryTask task) {
-            if (IsNonMemberItem(task.ModuleID.Hierarchy, task.ModuleID.ItemID)) {
+        protected override void OnNewFile(LibraryTask task)
+        {
+            if (IsNonMemberItem(task.ModuleID.Hierarchy, task.ModuleID.ItemID))
+            {
                 return;
             }
 
             var project = task.ModuleID.Hierarchy
                     .GetProject()?
                     .GetPythonProject();
-            if (project == null) {
+            if (project == null)
+            {
                 return;
             }
 
             AnalysisCompleteHandler handler;
-            lock (_handlers) {
-                if (!_handlers.TryGetValue(project, out handler)) {
+            lock (_handlers)
+            {
+                if (!_handlers.TryGetValue(project, out handler))
+                {
                     _handlers[project] = handler = new AnalysisCompleteHandler(this, project);
                 }
             }
@@ -102,55 +116,70 @@ namespace Microsoft.PythonTools.Navigation {
             handler.AddTask(task);
         }
 
-        sealed class AnalysisCompleteHandler : IDisposable {
+        sealed class AnalysisCompleteHandler : IDisposable
+        {
             public readonly PythonProjectNode Project;
             private readonly PythonLibraryManager _owner;
             private readonly Dictionary<string, LibraryTask> _tasks;
             private VsProjectAnalyzer _analyzer;
 
-            public AnalysisCompleteHandler(PythonLibraryManager owner, PythonProjectNode project) {
+            public AnalysisCompleteHandler(PythonLibraryManager owner, PythonProjectNode project)
+            {
                 Project = project ?? throw new ArgumentNullException(nameof(project));
                 _owner = owner ?? throw new ArgumentNullException(nameof(owner));
                 _tasks = new Dictionary<string, LibraryTask>(StringComparer.OrdinalIgnoreCase);
                 Project.ProjectAnalyzerChanging += Project_ProjectAnalyzerChanging;
                 _analyzer = Project.TryGetAnalyzer();
-                if (_analyzer != null) {
+                if (_analyzer != null)
+                {
                     _analyzer.AnalysisComplete += Analyzer_AnalysisComplete;
                 }
             }
 
-            public void AddTask(LibraryTask task) {
-                lock (_tasks) {
+            public void AddTask(LibraryTask task)
+            {
+                lock (_tasks)
+                {
                     _tasks[task.FileName] = task;
                 }
             }
 
-            public void Dispose() {
-                lock (this) {
+            public void Dispose()
+            {
+                lock (this)
+                {
                     Project.ProjectAnalyzerChanging -= Project_ProjectAnalyzerChanging;
-                    if (_analyzer != null) {
+                    if (_analyzer != null)
+                    {
                         _analyzer.AnalysisComplete -= Analyzer_AnalysisComplete;
                     }
                 }
             }
 
-            private void Project_ProjectAnalyzerChanging(object sender, AnalyzerChangingEventArgs e) {
-                lock (this) {
-                    if (_analyzer != null) {
+            private void Project_ProjectAnalyzerChanging(object sender, AnalyzerChangingEventArgs e)
+            {
+                lock (this)
+                {
+                    if (_analyzer != null)
+                    {
                         Debug.Assert(_analyzer == e.Old, "Changing from wrong analyzer");
                         _analyzer.AnalysisComplete -= Analyzer_AnalysisComplete;
                     }
                     _analyzer = e.New as VsProjectAnalyzer;
-                    if (_analyzer != null) {
+                    if (_analyzer != null)
+                    {
                         _analyzer.AnalysisComplete += Analyzer_AnalysisComplete;
                     }
                 }
             }
 
-            public void Analyzer_AnalysisComplete(object sender, Projects.AnalysisCompleteEventArgs e) {
+            public void Analyzer_AnalysisComplete(object sender, Projects.AnalysisCompleteEventArgs e)
+            {
                 LibraryTask task;
-                lock (_tasks) {
-                    if (!_tasks.TryGetValue(e.Path, out task)) {
+                lock (_tasks)
+                {
+                    if (!_tasks.TryGetValue(e.Path, out task))
+                    {
                         return;
                     }
                 }

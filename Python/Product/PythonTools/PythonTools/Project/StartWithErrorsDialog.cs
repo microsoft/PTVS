@@ -14,33 +14,36 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.ComponentModel;
-using System.Drawing;
-using System.Windows.Forms;
-
-namespace Microsoft.PythonTools.Project {
-    public partial class StartWithErrorsDialog : Form {
+namespace Microsoft.PythonTools.Project
+{
+    public partial class StartWithErrorsDialog : Form
+    {
         internal PythonToolsService PythonService { get; }
 
-        public StartWithErrorsDialog(PythonToolsService pyService) {
+        public StartWithErrorsDialog(PythonToolsService pyService)
+        {
             PythonService = pyService;
             InitializeComponent();
             _icon.Image = SystemIcons.Warning.ToBitmap();
         }
 
-        protected override void OnClosing(CancelEventArgs e) {
-            if (_dontShowAgainCheckbox.Checked) {
+        protected override void OnClosing(CancelEventArgs e)
+        {
+            if (_dontShowAgainCheckbox.Checked)
+            {
                 PythonService.DebuggerOptions.PromptBeforeRunningWithBuildError = false;
                 PythonService.DebuggerOptions.Save();
             }
         }
 
-        private void YesButtonClick(object sender, System.EventArgs e) {
+        private void YesButtonClick(object sender, System.EventArgs e)
+        {
             DialogResult = System.Windows.Forms.DialogResult.Yes;
             Close();
         }
 
-        private void NoButtonClick(object sender, System.EventArgs e) {
+        private void NoButtonClick(object sender, System.EventArgs e)
+        {
             this.DialogResult = System.Windows.Forms.DialogResult.No;
             Close();
         }

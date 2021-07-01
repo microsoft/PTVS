@@ -14,16 +14,15 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using Microsoft.Build.Execution;
-using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudioTools.Project;
 
-namespace Microsoft.PythonTools.Project {
+namespace Microsoft.PythonTools.Project
+{
     /// <summary>
     /// Provides an interface for loading/saving of options for the project.
     /// </summary>
-    public interface IPythonProject {
+    public interface IPythonProject
+    {
         /// <summary>
         /// Gets a property for the project.  Users can get/set their own properties, also these properties
         /// are available:
@@ -60,14 +59,16 @@ namespace Microsoft.PythonTools.Project {
         /// <summary>
         /// Gets the directory which the project lives in.
         /// </summary>
-        string ProjectDirectory {
+        string ProjectDirectory
+        {
             get;
         }
 
         /// <summary>
         /// Gets the name of the project.
         /// </summary>
-        string ProjectName {
+        string ProjectName
+        {
             get;
         }
 

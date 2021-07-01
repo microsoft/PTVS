@@ -14,32 +14,36 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-
-namespace Microsoft.PythonTools.Options {
-    public sealed class DiagnosticsOptions {
+namespace Microsoft.PythonTools.Options
+{
+    public sealed class DiagnosticsOptions
+    {
         private readonly PythonToolsService _service;
 
         private const string Category = "Diagnostics";
 
         private const string IncludeAnalysisLogsSetting = "IncludeAnalysisLogs";
 
-        internal DiagnosticsOptions(PythonToolsService service) {
+        internal DiagnosticsOptions(PythonToolsService service)
+        {
             _service = service;
             Load();
         }
 
-        public void Load() {
+        public void Load()
+        {
             IncludeAnalysisLogs = _service.LoadBool(IncludeAnalysisLogsSetting, Category) ?? true;
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
-        public void Save() {
+        public void Save()
+        {
             _service.SaveBool(IncludeAnalysisLogsSetting, Category, IncludeAnalysisLogs);
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
-        public void Reset() {
+        public void Reset()
+        {
             IncludeAnalysisLogs = true;
             Changed?.Invoke(this, EventArgs.Empty);
         }
@@ -50,7 +54,8 @@ namespace Microsoft.PythonTools.Options {
         /// True to pause at the end of execution when an error occurs. Default
         /// is true.
         /// </summary>
-        public bool IncludeAnalysisLogs {
+        public bool IncludeAnalysisLogs
+        {
             get;
             set;
         }

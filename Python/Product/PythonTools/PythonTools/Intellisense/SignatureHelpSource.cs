@@ -14,25 +14,26 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Linq;
-using Microsoft.VisualStudio.Language.Intellisense;
-using Microsoft.VisualStudio.Text;
-
-namespace Microsoft.PythonTools.Intellisense {
-    internal class SignatureHelpSource : ISignatureHelpSource {
+namespace Microsoft.PythonTools.Intellisense
+{
+    internal class SignatureHelpSource : ISignatureHelpSource
+    {
         private readonly ITextBuffer _textBuffer;
         private readonly SignatureHelpSourceProvider _provider;
 
-        public SignatureHelpSource(SignatureHelpSourceProvider provider, ITextBuffer textBuffer) {
+        public SignatureHelpSource(SignatureHelpSourceProvider provider, ITextBuffer textBuffer)
+        {
             _textBuffer = textBuffer;
             _provider = provider;
         }
 
-        public ISignature GetBestMatch(ISignatureHelpSession session) {
+        public ISignature GetBestMatch(ISignatureHelpSession session)
+        {
             return null;
         }
 
-        public void AugmentSignatureHelpSession(ISignatureHelpSession session, System.Collections.Generic.IList<ISignature> signatures) {
+        public void AugmentSignatureHelpSession(ISignatureHelpSession session, System.Collections.Generic.IList<ISignature> signatures)
+        {
             var span = session.GetApplicableSpan(_textBuffer);
 
             var sigs = _provider._serviceProvider.GetPythonToolsService().GetSignatures(
@@ -40,16 +41,19 @@ namespace Microsoft.PythonTools.Intellisense {
                 _textBuffer.CurrentSnapshot,
                 span
             );
-            if (sigs != null) {
+            if (sigs != null)
+            {
                 ISignature curSig = sigs.Signatures
                      .OrderBy(s => s.Parameters.Count)
                      .FirstOrDefault(s => sigs.ParameterIndex < s.Parameters.Count);
 
-                foreach (var sig in sigs.Signatures) {
+                foreach (var sig in sigs.Signatures)
+                {
                     signatures.Add(sig);
                 }
 
-                if (curSig != null) {
+                if (curSig != null)
+                {
                     // save the current sig so we don't need to recalculate it (we can't set it until
                     // the signatures are added by our caller).
                     session.Properties?.AddProperty(typeof(PythonSignature), curSig);
@@ -57,7 +61,8 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        public void Dispose() {
+        public void Dispose()
+        {
         }
     }
 }

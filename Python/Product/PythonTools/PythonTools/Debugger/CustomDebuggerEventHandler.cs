@@ -14,27 +14,22 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.ComponentModel.Design;
-using System.Globalization;
-using System.Runtime.InteropServices;
-using System.Text;
-using Microsoft.PythonTools.Debugger.DebugEngine;
-using Microsoft.PythonTools.Infrastructure;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Debugger.Interop;
-
-namespace Microsoft.PythonTools.Debugger {
+namespace Microsoft.PythonTools.Debugger
+{
     [Guid(Guids.CustomDebuggerEventHandlerId)]
-    class CustomDebuggerEventHandler : IVsCustomDebuggerEventHandler110 {
+    class CustomDebuggerEventHandler : IVsCustomDebuggerEventHandler110
+    {
         private readonly IServiceProvider _serviceProvider;
 
-        public CustomDebuggerEventHandler(IServiceProvider serviceProvider) {
+        public CustomDebuggerEventHandler(IServiceProvider serviceProvider)
+        {
             _serviceProvider = serviceProvider;
         }
 
-        public int OnCustomDebugEvent(ref Guid ProcessId, VsComponentMessage message) {
-            switch ((VsPackageMessage)message.MessageCode) {
+        public int OnCustomDebugEvent(ref Guid ProcessId, VsComponentMessage message)
+        {
+            switch ((VsPackageMessage)message.MessageCode)
+            {
                 case VsPackageMessage.WarnAboutPythonSymbols:
                     WarnAboutPythonSymbols((string)message.Parameter1);
                     return VSConstants.S_OK;
@@ -50,7 +45,8 @@ namespace Microsoft.PythonTools.Debugger {
             }
         }
 
-        private void WarnAboutPythonSymbols(string moduleName) {
+        private void WarnAboutPythonSymbols(string moduleName)
+        {
             var dialog = new TaskDialog(_serviceProvider);
 
             var openSymbolSettings = new TaskDialogButton(Strings.MixedModeDebugSymbolsRequiredOpenSymbolSettings);
@@ -65,10 +61,13 @@ namespace Microsoft.PythonTools.Debugger {
 
             dialog.ShowModal();
 
-            if (dialog.SelectedButton == openSymbolSettings) {
+            if (dialog.SelectedButton == openSymbolSettings)
+            {
                 var cmdId = new CommandID(VSConstants.GUID_VSStandardCommandSet97, VSConstants.cmdidToolsOptions);
                 _serviceProvider.GlobalInvoke(cmdId, "1F5E080F-CBD2-459C-8267-39fd83032166");
-            } else if (dialog.SelectedButton == downloadSymbols) {
+            }
+            else if (dialog.SelectedButton == downloadSymbols)
+            {
                 PythonToolsPackage.OpenWebBrowser(
                     _serviceProvider,
                     string.Format("https://go.microsoft.com/fwlink/?LinkId=308954&clcid=0x{0:X}", CultureInfo.CurrentCulture.LCID)
@@ -85,27 +84,34 @@ namespace Microsoft.PythonTools.Debugger {
         //    MessageBox.Show(content, "PGO Is Not Supported", MessageBoxButton.OK, MessageBoxImage.Error);
         //}
 
-        private void SetDebugOptions(IDebugEngine2 engine) {
+        private void SetDebugOptions(IDebugEngine2 engine)
+        {
             var pyService = _serviceProvider.GetPythonToolsService();
 
             var options = new StringBuilder();
             options.Append(AD7Engine.StopOnEntry + "=True");
-            if (pyService.DebuggerOptions.WaitOnAbnormalExit) {
+            if (pyService.DebuggerOptions.WaitOnAbnormalExit)
+            {
                 options.Append(";" + AD7Engine.WaitOnAbnormalExitSetting + "=True");
             }
-            if (pyService.DebuggerOptions.WaitOnNormalExit) {
+            if (pyService.DebuggerOptions.WaitOnNormalExit)
+            {
                 options.Append(";" + AD7Engine.WaitOnNormalExitSetting + "=True");
             }
-            if (pyService.DebuggerOptions.TeeStandardOutput) {
+            if (pyService.DebuggerOptions.TeeStandardOutput)
+            {
                 options.Append(";" + AD7Engine.RedirectOutputSetting + "=True");
             }
-            if (pyService.DebuggerOptions.BreakOnSystemExitZero) {
+            if (pyService.DebuggerOptions.BreakOnSystemExitZero)
+            {
                 options.Append(";" + AD7Engine.BreakSystemExitZero + "=True");
             }
-            if (pyService.DebuggerOptions.DebugStdLib) {
+            if (pyService.DebuggerOptions.DebugStdLib)
+            {
                 options.Append(";" + AD7Engine.DebugStdLib + "=True");
             }
-            if (pyService.DebuggerOptions.ShowFunctionReturnValue) {
+            if (pyService.DebuggerOptions.ShowFunctionReturnValue)
+            {
                 options.Append(";" + AD7Engine.ShowReturnValue + "=True");
             }
 

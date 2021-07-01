@@ -14,8 +14,6 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using MSBuild = Microsoft.Build.Evaluation;
 
 namespace Microsoft.VisualStudioTools.Project

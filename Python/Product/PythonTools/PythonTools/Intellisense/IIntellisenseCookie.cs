@@ -15,8 +15,10 @@
 // permissions and limitations under the License.
 
 
-namespace Microsoft.PythonTools.Intellisense {
-    public interface IIntellisenseCookie {
+namespace Microsoft.PythonTools.Intellisense
+{
+    public interface IIntellisenseCookie
+    {
         string GetLine(int lineNo);
     }
 }

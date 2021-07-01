@@ -14,15 +14,16 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Runtime.InteropServices;
 using Microsoft.VisualStudioTools.Project.Automation;
-using VSLangProj;
 
-namespace Microsoft.PythonTools.Project.Automation {
+namespace Microsoft.PythonTools.Project.Automation
+{
     [ComVisible(true)]
-    public class OADeprecatedReference : OAReferenceBase {
+    public class OADeprecatedReference : OAReferenceBase
+    {
         internal OADeprecatedReference(DeprecatedReferenceNode deprecatedReferenceNode) :
-            base(deprecatedReferenceNode) {
+            base(deprecatedReferenceNode)
+        {
         }
 
         private DeprecatedReferenceNode Node => (DeprecatedReferenceNode)BaseReferenceNode;
@@ -33,8 +34,10 @@ namespace Microsoft.PythonTools.Project.Automation {
 
         public override prjReferenceType Type => prjReferenceType.prjReferenceTypeAssembly;
 
-        public override bool CopyLocal {
-            get {
+        public override bool CopyLocal
+        {
+            get
+            {
                 return false;
             }
             set { }

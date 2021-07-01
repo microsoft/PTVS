@@ -14,55 +14,51 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.Composition;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.PythonTools.Editor;
-using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Refactoring;
-using Microsoft.VisualStudio.Imaging.Interop;
-using Microsoft.VisualStudio.Language.Intellisense;
-using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Text.Editor;
-using Microsoft.VisualStudio.Utilities;
 using Task = System.Threading.Tasks.Task;
 
-namespace Microsoft.PythonTools.Intellisense {
+namespace Microsoft.PythonTools.Intellisense
+{
     [Export(typeof(ISuggestedActionsSourceProvider))]
     [Name("Python Extract Method Suggested Action")]
     [ContentType(PythonCoreConstants.ContentType)]
     [TextViewRole(PredefinedTextViewRoles.Analyzable)]
     [TextViewRole(PredefinedTextViewRoles.Editable)]
-    class ExtractMethodSuggestedActionSourceProvider : ISuggestedActionsSourceProvider {
+    class ExtractMethodSuggestedActionSourceProvider : ISuggestedActionsSourceProvider
+    {
         private readonly PythonEditorServices _services;
 
         [ImportingConstructor]
-        public ExtractMethodSuggestedActionSourceProvider([Import] PythonEditorServices services) {
+        public ExtractMethodSuggestedActionSourceProvider([Import] PythonEditorServices services)
+        {
             _services = services;
         }
 
-        public ISuggestedActionsSource CreateSuggestedActionsSource(ITextView textView, ITextBuffer textBuffer) {
+        public ISuggestedActionsSource CreateSuggestedActionsSource(ITextView textView, ITextBuffer textBuffer)
+        {
             return new ExtractMethodSuggestedActionSource(this, textView);
         }
 
-        class ExtractMethodSuggestedActionSource : ISuggestedActionsSource {
+        class ExtractMethodSuggestedActionSource : ISuggestedActionsSource
+        {
             private readonly ITextView _view;
             private readonly ExtractMethodSuggestedActionSourceProvider _parent;
             private bool? _canExtract;
             private static readonly Guid _telemetryId = new Guid("{0D887D91-1E11-4DC3-92F5-79A5182004C3}");
 
-            public ExtractMethodSuggestedActionSource(ExtractMethodSuggestedActionSourceProvider parent, ITextView view) {
+            public ExtractMethodSuggestedActionSource(ExtractMethodSuggestedActionSourceProvider parent, ITextView view)
+            {
                 _view = view;
                 _parent = parent;
                 _view.Selection.SelectionChanged += Selection_SelectionChanged;
             }
 
-            private void Selection_SelectionChanged(object sender, EventArgs e) {
+            private void Selection_SelectionChanged(object sender, EventArgs e)
+            {
                 var newValue = Refactoring.MethodExtractor.CanExtract(_view);
-                if (newValue != _canExtract) {
+                if (newValue != _canExtract)
+                {
                     _canExtract = newValue;
                     SuggestedActionsChanged?.Invoke(this, EventArgs.Empty);
                 }
@@ -70,12 +66,15 @@ namespace Microsoft.PythonTools.Intellisense {
 
             public event EventHandler<EventArgs> SuggestedActionsChanged;
 
-            public void Dispose() {
+            public void Dispose()
+            {
                 _view.Selection.SelectionChanged -= Selection_SelectionChanged;
             }
 
-            public IEnumerable<SuggestedActionSet> GetSuggestedActions(ISuggestedActionCategorySet requestedActionCategories, SnapshotSpan range, CancellationToken cancellationToken) {
-                if (Refactoring.MethodExtractor.CanExtract(_view) == true) {
+            public IEnumerable<SuggestedActionSet> GetSuggestedActions(ISuggestedActionCategorySet requestedActionCategories, SnapshotSpan range, CancellationToken cancellationToken)
+            {
+                if (Refactoring.MethodExtractor.CanExtract(_view) == true)
+                {
                     return new SuggestedActionSet[] {
                     new SuggestedActionSet(
                         PredefinedSuggestedActionCategoryNames.Refactoring,
@@ -88,75 +87,96 @@ namespace Microsoft.PythonTools.Intellisense {
                 return Enumerable.Empty<SuggestedActionSet>();
             }
 
-            public Task<bool> HasSuggestedActionsAsync(ISuggestedActionCategorySet requestedActionCategories, SnapshotSpan range, CancellationToken cancellationToken) {
-                if (Refactoring.MethodExtractor.CanExtract(_view) == true) {
+            public Task<bool> HasSuggestedActionsAsync(ISuggestedActionCategorySet requestedActionCategories, SnapshotSpan range, CancellationToken cancellationToken)
+            {
+                if (Refactoring.MethodExtractor.CanExtract(_view) == true)
+                {
                     return Task.FromResult(true);
                 }
 
                 return Task.FromResult(false);
             }
 
-            public bool TryGetTelemetryId(out Guid telemetryId) {
+            public bool TryGetTelemetryId(out Guid telemetryId)
+            {
                 telemetryId = _telemetryId;
                 return true;
             }
 
-            class SuggestedAction : ISuggestedAction {
+            class SuggestedAction : ISuggestedAction
+            {
                 private readonly ExtractMethodSuggestedActionSourceProvider _parent;
                 private readonly ITextView _view;
 
-                public SuggestedAction(ExtractMethodSuggestedActionSourceProvider parent, ITextView view) {
+                public SuggestedAction(ExtractMethodSuggestedActionSourceProvider parent, ITextView view)
+                {
                     _parent = parent;
                     _view = view;
                 }
 
-                public string DisplayText {
-                    get {
+                public string DisplayText
+                {
+                    get
+                    {
                         return Strings.ExtractMethod;
                     }
                 }
 
-                public bool HasActionSets {
-                    get {
+                public bool HasActionSets
+                {
+                    get
+                    {
                         return false;
                     }
                 }
 
-                public bool HasPreview {
-                    get {
+                public bool HasPreview
+                {
+                    get
+                    {
                         return true;
                     }
                 }
 
-                public string IconAutomationText {
-                    get {
+                public string IconAutomationText
+                {
+                    get
+                    {
                         return null;
                     }
                 }
 
-                public ImageMoniker IconMoniker {
-                    get {
+                public ImageMoniker IconMoniker
+                {
+                    get
+                    {
                         return default(ImageMoniker);
                     }
                 }
 
-                public string InputGestureText {
-                    get {
+                public string InputGestureText
+                {
+                    get
+                    {
                         return null;
                     }
                 }
 
-                public void Dispose() {
+                public void Dispose()
+                {
                 }
 
-                public Task<IEnumerable<SuggestedActionSet>> GetActionSetsAsync(CancellationToken cancellationToken) {
+                public Task<IEnumerable<SuggestedActionSet>> GetActionSetsAsync(CancellationToken cancellationToken)
+                {
                     return Task.FromResult(Enumerable.Empty<SuggestedActionSet>());
                 }
 
-                public async Task<object> GetPreviewAsync(CancellationToken cancellationToken) {
+                public async Task<object> GetPreviewAsync(CancellationToken cancellationToken)
+                {
                     var bi = _parent._services.GetBufferInfo(_view.TextBuffer);
                     var entry = bi?.AnalysisEntry;
-                    if (entry == null) {
+                    if (entry == null)
+                    {
                         return null;
                     }
 
@@ -167,7 +187,8 @@ namespace Microsoft.PythonTools.Intellisense {
                         null,
                         null
                     );
-                    if (extractInfo == null) {
+                    if (extractInfo == null)
+                    {
                         return null;
                     }
 
@@ -179,7 +200,8 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
 
 
-                public void Invoke(CancellationToken cancellationToken) {
+                public void Invoke(CancellationToken cancellationToken)
+                {
                     new Refactoring.MethodExtractor(
                         _parent._services,
                         _view
@@ -188,7 +210,8 @@ namespace Microsoft.PythonTools.Intellisense {
                     ).DoNotWait();
                 }
 
-                public bool TryGetTelemetryId(out Guid telemetryId) {
+                public bool TryGetTelemetryId(out Guid telemetryId)
+                {
                     telemetryId = _telemetryId;
                     return true;
                 }

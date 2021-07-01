@@ -14,22 +14,20 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Diagnostics;
-using System.IO;
-using System.Windows.Controls;
-using System.Windows.Data;
-using Microsoft.PythonTools.Infrastructure;
-
-namespace Microsoft.PythonTools.Project.ImportWizard {
+namespace Microsoft.PythonTools.Project.ImportWizard
+{
     /// <summary>
     /// Interaction logic for FileSourcePage.xaml
     /// </summary>
-    internal partial class FileSourcePage : Page {
-        public FileSourcePage() {
+    internal partial class FileSourcePage : Page
+    {
+        public FileSourcePage()
+        {
             InitializeComponent();
         }
 
-        private async void SourcePathTextBox_SourceUpdated(object sender, DataTransferEventArgs e) {
+        private async void SourcePathTextBox_SourceUpdated(object sender, DataTransferEventArgs e)
+        {
             Debug.Assert(DataContext is ImportSettings);
             var settings = (ImportSettings)DataContext;
             SourcePathDoesNotExist.Visibility =

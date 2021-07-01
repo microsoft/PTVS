@@ -14,21 +14,19 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using Microsoft.VisualStudio.Language.Intellisense;
-using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
-
-namespace Microsoft.PythonTools.Intellisense {
-    static class CompletionSessionExtensions {
+namespace Microsoft.PythonTools.Intellisense
+{
+    static class CompletionSessionExtensions
+    {
         private const string CompleteWord = nameof(CompleteWord);
         private const string TriggerChar = nameof(TriggerChar);
 
-        public static CompletionOptions GetOptions(this ICompletionSession session, IServiceProvider serviceProvider) {
+        public static CompletionOptions GetOptions(this ICompletionSession session, IServiceProvider serviceProvider)
+        {
             var pyService = serviceProvider.GetPythonToolsService();
 
-            var options = new CompletionOptions {
+            var options = new CompletionOptions
+            {
                 ConvertTabsToSpaces = session.TextView.Options.IsConvertTabsToSpacesEnabled(),
                 IndentSize = session.TextView.Options.GetIndentSize(),
                 TabSize = session.TextView.Options.GetTabSize(),
@@ -56,16 +54,19 @@ namespace Microsoft.PythonTools.Intellisense {
             => session.Properties.TryGetProperty(TriggerChar, out char c) ? c : '\0';
     }
 
-    class CompletionSource : ICompletionSource {
+    class CompletionSource : ICompletionSource
+    {
         private readonly ITextBuffer _textBuffer;
         private readonly CompletionSourceProvider _provider;
 
-        public CompletionSource(CompletionSourceProvider provider, ITextBuffer textBuffer) {
+        public CompletionSource(CompletionSourceProvider provider, ITextBuffer textBuffer)
+        {
             _textBuffer = textBuffer;
             _provider = provider;
         }
 
-        public void AugmentCompletionSession(ICompletionSession session, IList<CompletionSet> completionSets) {
+        public void AugmentCompletionSession(ICompletionSession session, IList<CompletionSet> completionSets)
+        {
             var textBuffer = _textBuffer;
             var triggerPoint = session.GetTriggerPoint(textBuffer);
             var provider = _provider._pyService.GetCompletions(
@@ -77,12 +78,14 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var completions = provider.GetCompletions(_provider._glyphService);
 
-            if (completions != null && completions.Completions.Count > 0) {
+            if (completions != null && completions.Completions.Count > 0)
+            {
                 completionSets.Add(completions);
             }
         }
 
-        public void Dispose() {
+        public void Dispose()
+        {
         }
     }
 }

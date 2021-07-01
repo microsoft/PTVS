@@ -14,18 +14,18 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Text.RegularExpressions;
-using System.Windows.Forms;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 
-namespace Microsoft.PythonTools.Project {
-    public partial class DefaultPythonLauncherOptions : UserControl, IPythonLauncherOptions {
+namespace Microsoft.PythonTools.Project
+{
+    public partial class DefaultPythonLauncherOptions : UserControl, IPythonLauncherOptions
+    {
         private readonly IPythonProject _properties;
         private bool _loadingSettings;
 
-        public DefaultPythonLauncherOptions(IPythonProject properties) {
+        public DefaultPythonLauncherOptions(IPythonProject properties)
+        {
             _properties = properties;
             InitializeComponent();
 
@@ -35,7 +35,8 @@ namespace Microsoft.PythonTools.Project {
 
         #region ILauncherOptionsControl Members
 
-        public void SaveSettings() {
+        public void SaveSettings()
+        {
             _properties.SetProperty(PythonConstants.SearchPathSetting, SearchPaths);
             _properties.SetProperty(CommonConstants.CommandLineArguments, Arguments);
             _properties.SetProperty(PythonConstants.InterpreterPathSetting, InterpreterPath);
@@ -45,7 +46,8 @@ namespace Microsoft.PythonTools.Project {
             RaiseIsSaved();
         }
 
-        public void LoadSettings() {
+        public void LoadSettings()
+        {
             _loadingSettings = true;
             SearchPaths = _properties.GetUnevaluatedProperty(PythonConstants.SearchPathSetting);
             InterpreterPath = _properties.GetUnevaluatedProperty(PythonConstants.InterpreterPathSetting);
@@ -60,8 +62,10 @@ namespace Microsoft.PythonTools.Project {
             _loadingSettings = false;
         }
 
-        public void ReloadSetting(string settingName) {
-            switch (settingName) {
+        public void ReloadSetting(string settingName)
+        {
+            switch (settingName)
+            {
                 case PythonConstants.SearchPathSetting:
                     SearchPaths = _properties.GetUnevaluatedProperty(PythonConstants.SearchPathSetting);
                     break;
@@ -73,85 +77,104 @@ namespace Microsoft.PythonTools.Project {
 
         public event EventHandler<DirtyChangedEventArgs> DirtyChanged;
 
-        Control IPythonLauncherOptions.Control {
+        Control IPythonLauncherOptions.Control
+        {
             get { return this; }
         }
 
         #endregion
 
-        public string SearchPaths {
+        public string SearchPaths
+        {
             get { return _searchPaths.Text; }
             set { _searchPaths.Text = value; }
         }
 
-        public string Arguments {
+        public string Arguments
+        {
             get { return _arguments.Text; }
             set { _arguments.Text = value; }
         }
 
-        public string InterpreterPath {
+        public string InterpreterPath
+        {
             get { return _interpreterPath.Text; }
             set { _interpreterPath.Text = value; }
         }
 
-        public string InterpreterArguments {
+        public string InterpreterArguments
+        {
             get { return _interpArgs.Text; }
             set { _interpArgs.Text = value; }
         }
 
         private static Regex lfToCrLfRegex = new Regex(@"(?<!\r)\n");
 
-        public string Environment {
+        public string Environment
+        {
             get { return _envVars.Text; }
-            set {
+            set
+            {
                 // TextBox requires \r\n for line separators, but XML can have either \n or \r\n, and we should treat those equally.
                 // (It will always have \r\n when we write it out, but users can edit it by other means.)
                 _envVars.Text = lfToCrLfRegex.Replace(value ?? String.Empty, "\r\n");
             }
         }
 
-        public bool EnableNativeCodeDebugging {
+        public bool EnableNativeCodeDebugging
+        {
             get { return _mixedMode.Checked; }
             set { _mixedMode.Checked = value; }
         }
 
-        private void RaiseIsDirty() {
-            if (!_loadingSettings) {
+        private void RaiseIsDirty()
+        {
+            if (!_loadingSettings)
+            {
                 var isDirty = DirtyChanged;
-                if (isDirty != null) {
+                if (isDirty != null)
+                {
                     DirtyChanged(this, DirtyChangedEventArgs.DirtyValue);
                 }
             }
         }
 
-        private void RaiseIsSaved() {
+        private void RaiseIsSaved()
+        {
             var isDirty = DirtyChanged;
-            if (isDirty != null) {
+            if (isDirty != null)
+            {
                 DirtyChanged(this, DirtyChangedEventArgs.SavedValue);
             }
         }
 
-        private void SearchPathsTextChanged(object sender, EventArgs e) {
+        private void SearchPathsTextChanged(object sender, EventArgs e)
+        {
             RaiseIsDirty();
         }
 
-        private void ArgumentsTextChanged(object sender, EventArgs e) {
+        private void ArgumentsTextChanged(object sender, EventArgs e)
+        {
             RaiseIsDirty();
         }
 
-        private void InterpreterPathTextChanged(object sender, EventArgs e) {
+        private void InterpreterPathTextChanged(object sender, EventArgs e)
+        {
             RaiseIsDirty();
         }
 
-        private void InterpreterArgumentsTextChanged(object sender, EventArgs e) {
+        private void InterpreterArgumentsTextChanged(object sender, EventArgs e)
+        {
             RaiseIsDirty();
         }
 
-        private void _mixedMode_CheckedChanged(object sender, EventArgs e) {
+        private void _mixedMode_CheckedChanged(object sender, EventArgs e)
+        {
             RaiseIsDirty();
         }
 
-        private void _envVars_TextChanged(object sender, EventArgs e) {
+        private void _envVars_TextChanged(object sender, EventArgs e)
+        {
             RaiseIsDirty();
         }
     }

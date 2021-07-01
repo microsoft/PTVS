@@ -14,17 +14,15 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
 using Microsoft.PythonTools.Editor.Core;
-using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Text.Editor;
-using Microsoft.VisualStudio.Text.Tagging;
 
-namespace Microsoft.PythonTools.Editor {
+namespace Microsoft.PythonTools.Editor
+{
     /// <summary>
     /// Provides highlighting of matching braces in a text view.
     /// </summary>
-    class BraceMatcher {
+    class BraceMatcher
+    {
         private readonly ITextView _textView;
         private readonly PythonEditorServices _editorServices;
         private ITextBuffer _markedBuffer;
@@ -34,7 +32,8 @@ namespace Microsoft.PythonTools.Editor {
         /// Starts watching the provided text view for brace matching.  When new braces are inserted
         /// in the text or when the cursor moves to a brace the matching braces are highlighted.
         /// </summary>
-        public static void WatchBraceHighlights(PythonEditorServices editorServices, ITextView view) {
+        public static void WatchBraceHighlights(PythonEditorServices editorServices, ITextView view)
+        {
             var matcher = new BraceMatcher(editorServices, view);
 
             // position changed only fires when the caret is explicitly moved, not from normal text edits,
@@ -44,83 +43,104 @@ namespace Microsoft.PythonTools.Editor {
             view.Closed += matcher.TextViewClosed;
         }
 
-        public BraceMatcher(PythonEditorServices editorServices, ITextView view) {
+        public BraceMatcher(PythonEditorServices editorServices, ITextView view)
+        {
             _textView = view;
             _editorServices = editorServices;
         }
 
-        private void TextViewClosed(object sender, EventArgs e) {
+        private void TextViewClosed(object sender, EventArgs e)
+        {
             _textView.Caret.PositionChanged -= CaretPositionChanged;
             _textView.TextBuffer.Changed -= TextBufferChanged;
             _textView.Closed -= TextViewClosed;
         }
 
-        private void CaretPositionChanged(object sender, CaretPositionChangedEventArgs e) {
+        private void CaretPositionChanged(object sender, CaretPositionChangedEventArgs e)
+        {
             RemoveExistingHighlights();
 
             UpdateBraceMatching(e.NewPosition.BufferPosition.Position);
         }
 
-        private void TextBufferChanged(object sender, TextContentChangedEventArgs changed) {
+        private void TextBufferChanged(object sender, TextContentChangedEventArgs changed)
+        {
             RemoveExistingHighlights();
 
-            if (changed.Changes.Count == 1) {
+            if (changed.Changes.Count == 1)
+            {
                 var newText = changed.Changes[0].NewText;
-                if (newText == ")" || newText == "}" || newText == "]") {
+                if (newText == ")" || newText == "}" || newText == "]")
+                {
                     UpdateBraceMatching(changed.Changes[0].NewPosition + 1);
                 }
             }
         }
 
-        private bool HasTags {
-            get {
+        private bool HasTags
+        {
+            get
+            {
                 return _markedBuffer != null;
             }
         }
 
-        private void RemoveExistingHighlights() {
-            if (HasTags) {
+        private void RemoveExistingHighlights()
+        {
+            if (HasTags)
+            {
                 RemoveExistingHighlights(_markedBuffer);
                 _markedBuffer = null;
             }
         }
 
-        private void UpdateBraceMatching(int pos) {
-            if (pos != 0) {
+        private void UpdateBraceMatching(int pos)
+        {
+            if (pos != 0)
+            {
                 var prevCharText = _textView.TextBuffer.CurrentSnapshot.GetText(pos - 1, 1);
-                if (prevCharText == ")" || prevCharText == "]" || prevCharText == "}") {
-                    if (HighlightBrace(GetBraceKind(prevCharText), pos, -1)) {
+                if (prevCharText == ")" || prevCharText == "]" || prevCharText == "}")
+                {
+                    if (HighlightBrace(GetBraceKind(prevCharText), pos, -1))
+                    {
                         return;
                     }
                 }
             }
 
-            if (pos != _textView.TextBuffer.CurrentSnapshot.Length) {
+            if (pos != _textView.TextBuffer.CurrentSnapshot.Length)
+            {
                 var nextCharText = _textView.TextBuffer.CurrentSnapshot.GetText(pos, 1);
-                if (nextCharText == "(" || nextCharText == "[" || nextCharText == "{") {
+                if (nextCharText == "(" || nextCharText == "[" || nextCharText == "{")
+                {
                     HighlightBrace(GetBraceKind(nextCharText), pos + 1, 1);
                 }
             }
         }
 
-        private void RemoveExistingHighlights(ITextBuffer buffer) {
-            if (HasTags) {
+        private void RemoveExistingHighlights(ITextBuffer buffer)
+        {
+            if (HasTags)
+            {
                 GetTextMarker(buffer).RemoveTagSpans(x => true);
             }
         }
 
-        private SimpleTagger<TextMarkerTag> GetTextMarker(ITextBuffer buffer) {
+        private SimpleTagger<TextMarkerTag> GetTextMarker(ITextBuffer buffer)
+        {
             return _editorServices.TextMarkerProviderFactory.GetTextMarkerTagger(buffer);
         }
 
-        private bool HighlightBrace(BraceKind brace, int position, int direction) {
+        private bool HighlightBrace(BraceKind brace, int position, int direction)
+        {
             var pt = _textView.BufferGraph.MapDownToInsertionPoint(
                 new SnapshotPoint(_textView.TextBuffer.CurrentSnapshot, position),
                 PointTrackingMode.Positive,
                 EditorExtensions.IsPythonContent
             );
 
-            if (pt == null) {
+            if (pt == null)
+            {
                 return false;
             }
 
@@ -128,9 +148,11 @@ namespace Microsoft.PythonTools.Editor {
 
         }
 
-        private bool HighlightBrace(BraceKind brace, SnapshotPoint position, int direction) {
+        private bool HighlightBrace(BraceKind brace, SnapshotPoint position, int direction)
+        {
             var buffer = _editorServices.GetBufferInfo(position.Snapshot.TextBuffer);
-            if (buffer == null) {
+            if (buffer == null)
+            {
                 return false;
             }
 
@@ -138,31 +160,42 @@ namespace Microsoft.PythonTools.Editor {
             var span = new SnapshotSpan(snapshot, position.Position - 1, 1);
             var originalSpan = span;
 
-            if (!(buffer.GetTokenAtPoint(position)?.Trigger ?? Parsing.TokenTriggers.None).HasFlag(Parsing.TokenTriggers.MatchBraces)) {
+            if (!(buffer.GetTokenAtPoint(position)?.Trigger ?? Parsing.TokenTriggers.None).HasFlag(Parsing.TokenTriggers.MatchBraces))
+            {
                 return false;
             }
 
             int depth = 0;
-            foreach (var token in (direction > 0 ? buffer.GetTokensForwardFromPoint(position) : buffer.GetTokensInReverseFromPoint(position - 1))) {
-                if (!token.Trigger.HasFlag(Parsing.TokenTriggers.MatchBraces)) {
+            foreach (var token in (direction > 0 ? buffer.GetTokensForwardFromPoint(position) : buffer.GetTokensInReverseFromPoint(position - 1)))
+            {
+                if (!token.Trigger.HasFlag(Parsing.TokenTriggers.MatchBraces))
+                {
                     continue;
                 }
 
                 var tspan = token.ToSnapshotSpan(snapshot);
                 var txt = tspan.GetText();
-                try {
-                    if (IsSameBraceKind(txt, brace)) {
-                        if (txt.IsCloseGrouping()) {
+                try
+                {
+                    if (IsSameBraceKind(txt, brace))
+                    {
+                        if (txt.IsCloseGrouping())
+                        {
                             depth -= direction;
-                        } else {
+                        }
+                        else
+                        {
                             depth += direction;
                         }
                     }
-                } catch (InvalidOperationException) {
+                }
+                catch (InvalidOperationException)
+                {
                     return false;
                 }
 
-                if (depth == 0) {
+                if (depth == 0)
+                {
                     RemoveExistingHighlights();
                     _markedBuffer = snapshot.TextBuffer;
 
@@ -177,21 +210,26 @@ namespace Microsoft.PythonTools.Editor {
             return false;
         }
 
-        private enum BraceKind {
+        private enum BraceKind
+        {
             Bracket,
             Paren,
             Brace
         }
 
-        private static bool IsSameBraceKind(string brace, BraceKind kind) {
+        private static bool IsSameBraceKind(string brace, BraceKind kind)
+        {
             return GetBraceKind(brace) == kind;
         }
 
-        private static BraceKind GetBraceKind(string brace) {
-            if (string.IsNullOrEmpty(brace)) {
+        private static BraceKind GetBraceKind(string brace)
+        {
+            if (string.IsNullOrEmpty(brace))
+            {
                 throw new InvalidOperationException();
             }
-            switch (brace[0]) {
+            switch (brace[0])
+            {
                 case '[':
                 case ']': return BraceKind.Bracket;
                 case '(':

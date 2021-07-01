@@ -14,10 +14,8 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Runtime.InteropServices;
-
-namespace Microsoft.VisualStudio.Azure {
+namespace Microsoft.VisualStudio.Azure
+{
     /// <summary>
     /// An interface that an implementation of <see cref="T:Microsoft.VisualStudio.Shell.Interop.IVsHierarchy"/> for a project
     /// can optionally implement to receive notifications from an Azure project that adds it as a role.
@@ -29,7 +27,8 @@ namespace Microsoft.VisualStudio.Azure {
     [ComImport]
     [ComVisible(true)]
     [Guid("14A1D483-5615-4D1B-AB1A-BF404FDE31F7")]
-    internal interface IAzureRoleProject {
+    internal interface IAzureRoleProject
+    {
         /// <summary>
         /// Called on an instance of <see cref="T:Microsoft.VisualStudio.Shell.Interop.IVsHierarchy"/> for the project when
         /// that project is added as a role to an Azure project. 

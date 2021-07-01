@@ -14,36 +14,43 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.ComponentModel;
-
-namespace Microsoft.PythonTools.Project {
+namespace Microsoft.PythonTools.Project
+{
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Property | AttributeTargets.Field, Inherited = false, AllowMultiple = false)]
-    internal sealed class SRDisplayNameAttribute : DisplayNameAttribute {
+    internal sealed class SRDisplayNameAttribute : DisplayNameAttribute
+    {
         private readonly string _name;
 
-        public SRDisplayNameAttribute(string name) {
+        public SRDisplayNameAttribute(string name)
+        {
             _name = name;
         }
 
-        public override string DisplayName {
-            get {
+        public override string DisplayName
+        {
+            get
+            {
                 return Strings.ResourceManager.GetString(_name, Strings.Culture) ?? VisualStudioTools.Project.SR.GetString(_name);
             }
         }
     }
 
     [AttributeUsage(AttributeTargets.All)]
-    internal sealed class SRDescriptionAttribute : DescriptionAttribute {
+    internal sealed class SRDescriptionAttribute : DescriptionAttribute
+    {
         private bool _replaced;
 
         public SRDescriptionAttribute(string description)
-            : base(description) {
+            : base(description)
+        {
         }
 
-        public override string Description {
-            get {
-                if (!_replaced) {
+        public override string Description
+        {
+            get
+            {
+                if (!_replaced)
+                {
                     _replaced = true;
                     DescriptionValue = Strings.ResourceManager.GetString(base.Description, Strings.Culture) ??
                         VisualStudioTools.Project.SR.GetString(base.Description);
@@ -54,12 +61,15 @@ namespace Microsoft.PythonTools.Project {
     }
 
     [AttributeUsage(AttributeTargets.All)]
-    internal sealed class SRCategoryAttribute : CategoryAttribute {
+    internal sealed class SRCategoryAttribute : CategoryAttribute
+    {
         public SRCategoryAttribute(string category)
-            : base(category) {
+            : base(category)
+        {
         }
 
-        protected override string GetLocalizedString(string value) {
+        protected override string GetLocalizedString(string value)
+        {
             return Strings.ResourceManager.GetString(value, Strings.Culture) ?? VisualStudioTools.Project.SR.GetString(value);
         }
     }

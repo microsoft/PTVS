@@ -14,19 +14,17 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using Microsoft.Build.Construction;
-using Microsoft.PythonTools.Infrastructure;
-
-namespace Microsoft.PythonTools.Project.ImportWizard {
-    abstract class ProjectCustomization {
-        public abstract string DisplayName {
+namespace Microsoft.PythonTools.Project.ImportWizard
+{
+    abstract class ProjectCustomization
+    {
+        public abstract string DisplayName
+        {
             get;
         }
 
-        public override string ToString() {
+        public override string ToString()
+        {
             return DisplayName;
         }
 
@@ -36,38 +34,47 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
             Dictionary<string, ProjectPropertyGroupElement> groups
         );
 
-        protected static void AddOrSetProperty(ProjectRootElement project, string name, string value) {
+        protected static void AddOrSetProperty(ProjectRootElement project, string name, string value)
+        {
             bool anySet = false;
-            foreach (var prop in project.Properties.Where(p => p.Name == name)) {
+            foreach (var prop in project.Properties.Where(p => p.Name == name))
+            {
                 prop.Value = value;
                 anySet = true;
             }
 
-            if (!anySet) {
+            if (!anySet)
+            {
                 project.AddProperty(name, value);
             }
         }
 
-        protected static void AddOrSetProperty(ProjectPropertyGroupElement group, string name, string value) {
+        protected static void AddOrSetProperty(ProjectPropertyGroupElement group, string name, string value)
+        {
             bool anySet = false;
-            foreach (var prop in group.Properties.Where(p => p.Name == name)) {
+            foreach (var prop in group.Properties.Where(p => p.Name == name))
+            {
                 prop.Value = value;
                 anySet = true;
             }
 
-            if (!anySet) {
+            if (!anySet)
+            {
                 group.AddProperty(name, value);
             }
         }
     }
 
-    class DefaultProjectCustomization : ProjectCustomization {
+    class DefaultProjectCustomization : ProjectCustomization
+    {
         public static readonly ProjectCustomization Instance = new DefaultProjectCustomization();
 
         private DefaultProjectCustomization() { }
 
-        public override string DisplayName {
-            get {
+        public override string DisplayName
+        {
+            get
+            {
                 return Strings.ImportWizardDefaultProjectCustomization;
             }
         }
@@ -76,18 +83,22 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
             string sourcePath,
             ProjectRootElement project,
             Dictionary<string, ProjectPropertyGroupElement> groups
-        ) {
+        )
+        {
             project.AddImport(@"$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets");
         }
     }
 
-    class BottleProjectCustomization : ProjectCustomization {
+    class BottleProjectCustomization : ProjectCustomization
+    {
         public static readonly ProjectCustomization Instance = new BottleProjectCustomization();
 
         private BottleProjectCustomization() { }
 
-        public override string DisplayName {
-            get {
+        public override string DisplayName
+        {
+            get
+            {
                 return Strings.ImportWizardBottleProjectCustomization;
             }
         }
@@ -96,9 +107,11 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
             string sourcePath,
             ProjectRootElement project,
             Dictionary<string, ProjectPropertyGroupElement> groups
-        ) {
+        )
+        {
             ProjectPropertyGroupElement globals;
-            if (!groups.TryGetValue("Globals", out globals)) {
+            if (!groups.TryGetValue("Globals", out globals))
+            {
                 globals = project.AddPropertyGroup();
             }
 
@@ -114,13 +127,16 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
         }
     }
 
-    class DjangoProjectCustomization : ProjectCustomization {
+    class DjangoProjectCustomization : ProjectCustomization
+    {
         public static readonly ProjectCustomization Instance = new DjangoProjectCustomization();
 
         private DjangoProjectCustomization() { }
 
-        public override string DisplayName {
-            get {
+        public override string DisplayName
+        {
+            get
+            {
                 return Strings.ImportWizardDjangoProjectCustomization;
             }
         }
@@ -129,9 +145,11 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
             string sourcePath,
             ProjectRootElement project,
             Dictionary<string, ProjectPropertyGroupElement> groups
-        ) {
+        )
+        {
             ProjectPropertyGroupElement globals;
-            if (!groups.TryGetValue("Globals", out globals)) {
+            if (!groups.TryGetValue("Globals", out globals))
+            {
                 globals = project.AddPropertyGroup();
             }
 
@@ -141,7 +159,8 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
             AddOrSetProperty(globals, "WebBrowserUrl", "http://localhost");
 
             var settingsFilePath = PathUtils.FindFile(sourcePath, "settings.py", depthLimit: 1);
-            if (File.Exists(settingsFilePath)) {
+            if (File.Exists(settingsFilePath))
+            {
                 var packageName = PathUtils.GetLastDirectoryName(settingsFilePath);
                 AddOrSetProperty(globals, "DjangoSettingsModule", "{0}.settings".FormatInvariant(packageName));
             }
@@ -152,13 +171,16 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
         }
     }
 
-    class FlaskProjectCustomization : ProjectCustomization {
+    class FlaskProjectCustomization : ProjectCustomization
+    {
         public static readonly ProjectCustomization Instance = new FlaskProjectCustomization();
 
         private FlaskProjectCustomization() { }
 
-        public override string DisplayName {
-            get {
+        public override string DisplayName
+        {
+            get
+            {
                 return Strings.ImportWizardFlaskProjectCustomization;
             }
         }
@@ -167,9 +189,11 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
             string sourcePath,
             ProjectRootElement project,
             Dictionary<string, ProjectPropertyGroupElement> groups
-        ) {
+        )
+        {
             ProjectPropertyGroupElement globals;
-            if (!groups.TryGetValue("Globals", out globals)) {
+            if (!groups.TryGetValue("Globals", out globals))
+            {
                 globals = project.AddPropertyGroup();
             }
 
@@ -184,13 +208,16 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
         }
     }
 
-    class GenericWebProjectCustomization : ProjectCustomization {
+    class GenericWebProjectCustomization : ProjectCustomization
+    {
         public static readonly ProjectCustomization Instance = new GenericWebProjectCustomization();
 
         private GenericWebProjectCustomization() { }
 
-        public override string DisplayName {
-            get {
+        public override string DisplayName
+        {
+            get
+            {
                 return Strings.ImportWizardGenericWebProjectCustomization;
             }
         }
@@ -199,9 +226,11 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
             string sourcePath,
             ProjectRootElement project,
             Dictionary<string, ProjectPropertyGroupElement> groups
-        ) {
+        )
+        {
             ProjectPropertyGroupElement globals;
-            if (!groups.TryGetValue("Globals", out globals)) {
+            if (!groups.TryGetValue("Globals", out globals))
+            {
                 globals = project.AddPropertyGroup();
             }
 
@@ -214,7 +243,8 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
             GenericWebProjectCustomization.AddWebProjectExtensions(project);
         }
 
-        internal static void AddWebProjectExtensions(ProjectRootElement project) {
+        internal static void AddWebProjectExtensions(ProjectRootElement project)
+        {
             // Adding this section prevents IIS Express required error message
             var projExt = project.CreateProjectExtensionsElement();
             project.AppendChild(projExt);

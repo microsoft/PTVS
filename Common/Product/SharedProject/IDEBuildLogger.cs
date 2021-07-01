@@ -14,21 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Settings;
-using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Settings;
 using Microsoft.VisualStudioTools.Infrastructure;
-using System;
-using System.Collections.Concurrent;
-using System.Diagnostics;
-using System.Globalization;
-using System.Text;
-using System.Threading;
-using System.Windows.Forms.Design;
-using System.Windows.Threading;
 using IOleServiceProvider = Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
 
 namespace Microsoft.VisualStudioTools.Project

@@ -14,11 +14,13 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Intellisense {
+namespace Microsoft.PythonTools.Intellisense
+{
     /// <summary>
     /// Corresponds to IDBMP_REFACTOR_IMAGES bitmap defined in SharedCmdDef.vsct 
     /// </summary>
-    enum RefactoringIconKind {
+    enum RefactoringIconKind
+    {
         ExtractMethod,
         EncapsulateField,
         ExtractInterface,

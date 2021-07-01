@@ -14,32 +14,36 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-
-namespace Microsoft.PythonTools.Options {
-    public sealed class CondaOptions {
+namespace Microsoft.PythonTools.Options
+{
+    public sealed class CondaOptions
+    {
         private readonly PythonToolsService _service;
 
         private const string Category = "Conda";
 
         private const string CustomCondaExecutablePathSetting = "CustomCondaExecutablePath";
 
-        internal CondaOptions(PythonToolsService service) {
+        internal CondaOptions(PythonToolsService service)
+        {
             _service = service;
             Load();
         }
 
-        public void Load() {
+        public void Load()
+        {
             CustomCondaExecutablePath = _service.LoadString(CustomCondaExecutablePathSetting, Category) ?? "";
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
-        public void Save() {
+        public void Save()
+        {
             _service.SaveString(CustomCondaExecutablePathSetting, Category, CustomCondaExecutablePath);
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
-        public void Reset() {
+        public void Reset()
+        {
             CustomCondaExecutablePath = string.Empty;
             Changed?.Invoke(this, EventArgs.Empty);
         }
@@ -49,7 +53,8 @@ namespace Microsoft.PythonTools.Options {
         /// <summary>
         /// Path to the conda executable to use to manage conda environments.
         /// </summary>
-        public string CustomCondaExecutablePath {
+        public string CustomCondaExecutablePath
+        {
             get;
             set;
         }

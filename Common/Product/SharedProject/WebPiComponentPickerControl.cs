@@ -14,17 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudioTools.Infrastructure;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.Windows.Forms;
-using System.Xml;
-using System.Xml.XPath;
 using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.VisualStudioTools.Project

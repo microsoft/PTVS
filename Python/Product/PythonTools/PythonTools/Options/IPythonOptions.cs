@@ -14,72 +14,82 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Runtime.InteropServices;
-using Microsoft.PythonTools.Parsing;
-
-namespace Microsoft.PythonTools.Options {
+namespace Microsoft.PythonTools.Options
+{
     // TODO: We should switch to a scheme which takes strings / returns object for options so they're extensible w/o reving the interface
     [Guid("BACA2500-5EA7-4075-8D02-647EAC0BC6E3")]
-    public interface IPythonOptions {
+    public interface IPythonOptions
+    {
         IPythonIntellisenseOptions Intellisense { get; }
 
         IPythonInteractiveOptions Interactive { get; }
 
-        bool PromptBeforeRunningWithBuildErrorSetting {
+        bool PromptBeforeRunningWithBuildErrorSetting
+        {
             get;
             set;
         }
 
-        bool AutoAnalyzeStandardLibrary {
+        bool AutoAnalyzeStandardLibrary
+        {
             get;
             set;
         }
 
-        Severity IndentationInconsistencySeverity {
+        Severity IndentationInconsistencySeverity
+        {
             get;
             set;
         }
 
-        bool TeeStandardOutput {
+        bool TeeStandardOutput
+        {
             get;
             set;
         }
 
-        bool WaitOnAbnormalExit {
+        bool WaitOnAbnormalExit
+        {
             get;
             set;
         }
 
-        bool WaitOnNormalExit {
+        bool WaitOnNormalExit
+        {
             get;
             set;
         }
     }
 
     [Guid("0AC0FBE6-C711-46DB-9856-0DD169E1EB9E")]
-    public interface IPythonOptions2 : IPythonOptions {
-        bool UseLegacyDebugger {
+    public interface IPythonOptions2 : IPythonOptions
+    {
+        bool UseLegacyDebugger
+        {
             get;
             set;
         }
     }
 
     [Guid("E02D8200-D02B-4437-B9D3-A3AE883B9C37")]
-    public interface IPythonOptions3 : IPythonOptions2 {
-        bool PromptForEnvCreate {
+    public interface IPythonOptions3 : IPythonOptions2
+    {
+        bool PromptForEnvCreate
+        {
             get;
             set;
         }
 
-        bool PromptForPackageInstallation {
+        bool PromptForPackageInstallation
+        {
             get;
             set;
         }
     }
 
     [Guid("77179244-BBD7-4AA2-B27B-F2CCC679953A")]
-    public interface IPythonIntellisenseOptions {
+    public interface IPythonIntellisenseOptions
+    {
         bool AddNewLineAtEndOfFullyTypedWord { get; set; }
         bool EnterCommitsCompletion { get; set; }
         bool UseMemberIntersection { get; set; }
@@ -88,18 +98,22 @@ namespace Microsoft.PythonTools.Options {
     }
 
     [Guid("28214322-2EEC-4750-8D87-EF76714757CE")]
-    public interface IPythonInteractiveOptions {
-        bool UseSmartHistory {
+    public interface IPythonInteractiveOptions
+    {
+        bool UseSmartHistory
+        {
             get;
             set;
         }
 
-        string CompletionMode {
+        string CompletionMode
+        {
             get;
             set;
         }
 
-        string StartupScripts {
+        string StartupScripts
+        {
             get;
             set;
         }

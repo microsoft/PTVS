@@ -14,23 +14,25 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Windows.Forms;
-using Microsoft.PythonTools.Parsing;
-
-namespace Microsoft.PythonTools.Options {
-    public partial class PythonGeneralOptionsControl : UserControl {
+namespace Microsoft.PythonTools.Options
+{
+    public partial class PythonGeneralOptionsControl : UserControl
+    {
         private const int ErrorIndex = 0;
         private const int WarningIndex = 1;
         private const int DontIndex = 2;
 
-        public PythonGeneralOptionsControl() {
+        public PythonGeneralOptionsControl()
+        {
             InitializeComponent();
         }
 
-        internal Severity IndentationInconsistencySeverity {
-            get {
-                switch (_indentationInconsistentCombo.SelectedIndex) {
+        internal Severity IndentationInconsistencySeverity
+        {
+            get
+            {
+                switch (_indentationInconsistentCombo.SelectedIndex)
+                {
                     case ErrorIndex:
                         return Severity.Error;
                     case WarningIndex:
@@ -41,8 +43,10 @@ namespace Microsoft.PythonTools.Options {
                         return Severity.Ignore;
                 }
             }
-            set {
-                switch (value) {
+            set
+            {
+                switch (value)
+                {
                     case Severity.Error:
                         _indentationInconsistentCombo.SelectedIndex = ErrorIndex;
                         break;
@@ -56,7 +60,8 @@ namespace Microsoft.PythonTools.Options {
             }
         }
 
-        internal void SyncControlWithPageSettings(PythonToolsService pyService) {
+        internal void SyncControlWithPageSettings(PythonToolsService pyService)
+        {
             _showOutputWindowForVirtualEnvCreate.Checked = pyService.GeneralOptions.ShowOutputWindowForVirtualEnvCreate;
             _showOutputWindowForPackageInstallation.Checked = pyService.GeneralOptions.ShowOutputWindowForPackageInstallation;
             _promptForEnvCreate.Checked = pyService.GeneralOptions.PromptForEnvCreate;
@@ -70,7 +75,8 @@ namespace Microsoft.PythonTools.Options {
             IndentationInconsistencySeverity = pyService.GeneralOptions.IndentationInconsistencySeverity;
         }
 
-        internal void SyncPageWithControlSettings(PythonToolsService pyService) {
+        internal void SyncPageWithControlSettings(PythonToolsService pyService)
+        {
             pyService.GeneralOptions.ShowOutputWindowForVirtualEnvCreate = _showOutputWindowForVirtualEnvCreate.Checked;
             pyService.GeneralOptions.ShowOutputWindowForPackageInstallation = _showOutputWindowForPackageInstallation.Checked;
             pyService.GeneralOptions.PromptForEnvCreate = _promptForEnvCreate.Checked;
@@ -84,7 +90,8 @@ namespace Microsoft.PythonTools.Options {
             pyService.GeneralOptions.ClearGlobalPythonPath = _clearGlobalPythonPath.Checked;
         }
 
-        private void _resetSuppressDialog_Click(object sender, EventArgs e) {
+        private void _resetSuppressDialog_Click(object sender, EventArgs e)
+        {
             System.Diagnostics.Debug.Assert(ResetSuppressDialog != null, "No listener for ResetSuppressDialog event");
             ResetSuppressDialog?.Invoke(this, EventArgs.Empty);
         }

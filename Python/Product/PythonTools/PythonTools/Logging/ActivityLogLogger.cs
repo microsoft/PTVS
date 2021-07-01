@@ -14,19 +14,18 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.ComponentModel.Composition;
-using Microsoft.PythonTools.Infrastructure;
-using Microsoft.VisualStudio.Shell;
-
-namespace Microsoft.PythonTools.Logging {
+namespace Microsoft.PythonTools.Logging
+{
     /// <summary>
     /// Write errors and failures to the activity log.
     /// </summary>
     [Export(typeof(IPythonToolsLogger))]
-    class ActivityLogLogger : IPythonToolsLogger {
-        public void LogEvent(PythonLogEvent logEvent, object argument) {
-            switch (logEvent) {
+    class ActivityLogLogger : IPythonToolsLogger
+    {
+        public void LogEvent(PythonLogEvent logEvent, object argument)
+        {
+            switch (logEvent)
+            {
                 case PythonLogEvent.AnalysisExitedAbnormally:
                 case PythonLogEvent.AnalysisOperationFailed:
                     ActivityLog.TryLogError("Python", "[{0}] {1}: {2}".FormatInvariant(DateTime.Now, logEvent, argument as string ?? ""));
@@ -34,7 +33,8 @@ namespace Microsoft.PythonTools.Logging {
             }
         }
 
-        public void LogFault(Exception ex, string description, bool dumpProcess) {
+        public void LogFault(Exception ex, string description, bool dumpProcess)
+        {
             ActivityLog.TryLogError("Python", ex.ToString());
         }
     }

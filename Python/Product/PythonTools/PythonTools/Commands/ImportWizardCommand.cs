@@ -14,22 +14,19 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.IO;
-using System.Windows;
-using Microsoft.PythonTools.Infrastructure;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudioTools;
 
-namespace Microsoft.PythonTools.Commands {
+namespace Microsoft.PythonTools.Commands
+{
     /// <summary>
     /// Provides the command to import a project from existing code.
     /// </summary>
-    class ImportWizardCommand : Command {
+    class ImportWizardCommand : Command
+    {
         private readonly IServiceProvider _serviceProvider;
 
-        public ImportWizardCommand(IServiceProvider serviceProvider) {
+        public ImportWizardCommand(IServiceProvider serviceProvider)
+        {
             _serviceProvider = serviceProvider;
         }
 
@@ -37,10 +34,13 @@ namespace Microsoft.PythonTools.Commands {
             IVsStatusbar statusBar,
             Microsoft.PythonTools.Project.ImportWizard.ImportWizard dlg,
             bool addToExistingSolution
-        ) {
-            try {
+        )
+        {
+            try
+            {
                 var path = await dlg.ImportSettings.CreateRequestedProjectAsync();
-                if (File.Exists(path)) {
+                if (File.Exists(path))
+                {
                     object outRef = null, pathRef = ProcessOutput.QuoteSingleArgument(path);
                     _serviceProvider.GetDTE().Commands.Raise(
                         VSConstants.GUID_VSStandardCommandSet97.ToString("B"),
@@ -53,16 +53,21 @@ namespace Microsoft.PythonTools.Commands {
                     statusBar.SetText("");
                     return;
                 }
-            } catch (UnauthorizedAccessException) {
+            }
+            catch (UnauthorizedAccessException)
+            {
                 MessageBox.Show(Strings.ErrorImportWizardUnauthorizedAccess, Strings.ProductTitle);
-            } catch (Exception ex) {
+            }
+            catch (Exception ex)
+            {
                 ActivityLog.LogError(Strings.ProductTitle, ex.ToString());
                 MessageBox.Show(Strings.ErrorImportWizardException.FormatUI(ex.GetType().Name), Strings.ProductTitle);
             }
             statusBar.SetText(Strings.StatusImportWizardError);
         }
 
-        public override void DoCommand(object sender, EventArgs args) {
+        public override void DoCommand(object sender, EventArgs args)
+        {
             var statusBar = (IVsStatusbar)_serviceProvider.GetService(typeof(SVsStatusbar));
             statusBar.SetText(Strings.StatusImportWizardStarting);
 
@@ -70,14 +75,18 @@ namespace Microsoft.PythonTools.Commands {
             bool addToExistingSolution = false;
 
             var oleArgs = args as OleMenuCmdEventArgs;
-            if (oleArgs != null) {
+            if (oleArgs != null)
+            {
                 string projectArgs = oleArgs.InValue as string;
-                if (projectArgs != null) {
+                if (projectArgs != null)
+                {
                     var argItems = projectArgs.Split('|');
-                    if (argItems.Length == 3) {
+                    if (argItems.Length == 3)
+                    {
                         bool.TryParse(argItems[2], out addToExistingSolution);
                     }
-                    if (argItems.Length >= 2) {
+                    if (argItems.Length >= 2)
+                    {
                         initialProjectPath = PathUtils.GetAvailableFilename(
                             argItems[1],
                             argItems[0],
@@ -94,14 +103,18 @@ namespace Microsoft.PythonTools.Commands {
                 initialProjectPath
             );
 
-            if (dlg.ShowModal() ?? false) {
+            if (dlg.ShowModal() ?? false)
+            {
                 CreateProjectAndHandleErrors(statusBar, dlg, addToExistingSolution);
-            } else {
+            }
+            else
+            {
                 statusBar.SetText("");
             }
         }
 
-        public override int CommandId {
+        public override int CommandId
+        {
             get { return (int)PkgCmdIDList.cmdidImportWizard; }
         }
     }

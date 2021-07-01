@@ -14,47 +14,23 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.ComponentModel;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Drawing;
-using System.Globalization;
-using System.IO;
-using System.Runtime.InteropServices;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-using System.Windows.Forms.Design;
-using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Commands;
-using Microsoft.PythonTools.Common.Infrastructure;
 using Microsoft.PythonTools.Debugger;
-using Microsoft.PythonTools.Debugger.DebugEngine;
-using Microsoft.PythonTools.Debugger.Remote;
-using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Infrastructure.Commands;
 using Microsoft.PythonTools.Intellisense;
-using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.InterpreterList;
 using Microsoft.PythonTools.Logging;
 using Microsoft.PythonTools.Navigation;
 using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Project;
 using Microsoft.PythonTools.Repl;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Editor;
-using Microsoft.VisualStudio.InteractiveWindow.Shell;
 using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Threading;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Navigation;
 using Microsoft.VisualStudioTools.Project;
 using Task = System.Threading.Tasks.Task;
 
-namespace Microsoft.PythonTools {
+namespace Microsoft.PythonTools
+{
     /// <summary>
     /// This is the class that implements the package exposed by this assembly.
     ///
@@ -176,7 +152,8 @@ namespace Microsoft.PythonTools {
     [ProvideBraceCompletion(PythonCoreConstants.ContentType)]
     [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable",
         Justification = "Object is owned by VS and cannot be disposed")]
-    internal sealed class PythonToolsPackage : CommonPackage, IVsComponentSelectorProvider, IPythonToolsToolWindowService {
+    internal sealed class PythonToolsPackage : CommonPackage, IVsComponentSelectorProvider, IPythonToolsToolWindowService
+    {
         private PythonAutomation _autoObject;
         private PackageContainer _packageContainer;
         private DisposableBag _disposables;
@@ -189,7 +166,8 @@ namespace Microsoft.PythonTools {
         /// not sited yet inside Visual Studio environment. The place to do all the other 
         /// initialization is the Initialize method.
         /// </summary>
-        public PythonToolsPackage() {
+        public PythonToolsPackage()
+        {
             _disposables = new DisposableBag(GetType().Name, "Package is disposed");
 
             Trace.WriteLine(string.Format(CultureInfo.CurrentCulture, "Entering constructor for: {0}", this.ToString()));
@@ -214,10 +192,12 @@ namespace Microsoft.PythonTools {
 #endif
         }
 
-        protected override void Dispose(bool disposing) {
+        protected override void Dispose(bool disposing)
+        {
             base.Dispose(disposing);
 
-            if (disposing) {
+            if (disposing)
+            {
                 _disposables.TryDispose();
             }
         }
@@ -228,22 +208,28 @@ namespace Microsoft.PythonTools {
         protected override Task<object> InitializeToolWindowAsync(Type toolWindowType, int id, CancellationToken cancellationToken)
             => toolWindowType == typeof(InterpreterListToolWindow) ? Task.FromResult<object>(this) : base.InitializeToolWindowAsync(toolWindowType, id, cancellationToken);
 
-        protected override int CreateToolWindow(ref Guid toolWindowType, int id) {
+        protected override int CreateToolWindow(ref Guid toolWindowType, int id)
+        {
             // We can't move initialization of PythonInteractiveWindow into AsyncToolWindowFactory 
             // because Package.ShowToolWindow doesn't call IVsAsyncToolWindowFactory.CreateToolWindow
             // which makes it impossible to fully override tool window creation
-            if (toolWindowType == GuidList.guidPythonInteractiveWindowGuid) {
+            if (toolWindowType == GuidList.guidPythonInteractiveWindowGuid)
+            {
                 var pyService = this.GetPythonToolsService();
                 var category = SelectableReplEvaluator.GetSettingsCategory(id.ToString());
                 string replId;
-                try {
+                try
+                {
                     replId = pyService.LoadString("Id", category);
-                } catch (Exception ex) when (!ex.IsCriticalException()) {
+                }
+                catch (Exception ex) when (!ex.IsCriticalException())
+                {
                     Debug.Fail("Could not load settings for interactive window.", ex.ToString());
                     replId = null;
                 }
 
-                if (string.IsNullOrEmpty(replId)) {
+                if (string.IsNullOrEmpty(replId))
+                {
                     pyService.DeleteCategory(category);
                     return VSConstants.S_OK;
                 }
@@ -255,23 +241,28 @@ namespace Microsoft.PythonTools {
             return base.CreateToolWindow(ref toolWindowType, id);
         }
 
-        protected override int QueryClose(out bool canClose) {
+        protected override int QueryClose(out bool canClose)
+        {
             var res = base.QueryClose(out canClose);
 
-            if (canClose) {
+            if (canClose)
+            {
                 var pyService = this.GetPythonToolsService();
                 pyService.EnvironmentSwitcherManager.IsClosing = true;
             }
 
             return res;
         }
-        internal static void NavigateTo(System.IServiceProvider serviceProvider, string filename, Guid docViewGuidType, int line, int col) {
-            if (File.Exists(filename)) {
+        internal static void NavigateTo(System.IServiceProvider serviceProvider, string filename, Guid docViewGuidType, int line, int col)
+        {
+            if (File.Exists(filename))
+            {
                 VsUtilities.NavigateTo(serviceProvider, filename, docViewGuidType, line, col);
             }
         }
 
-        internal static void NavigateTo(System.IServiceProvider serviceProvider, string filename, Guid docViewGuidType, int pos) {
+        internal static void NavigateTo(System.IServiceProvider serviceProvider, string filename, Guid docViewGuidType, int pos)
+        {
             IVsTextView viewAdapter;
             IVsWindowFrame pWindowFrame;
             VsUtilities.OpenDocument(serviceProvider, filename, out viewAdapter, out pWindowFrame);
@@ -286,7 +277,8 @@ namespace Microsoft.PythonTools {
             viewAdapter.CenterLines(line, 1);
         }
 
-        internal static ITextBuffer GetBufferForDocument(System.IServiceProvider serviceProvider, string filename) {
+        internal static ITextBuffer GetBufferForDocument(System.IServiceProvider serviceProvider, string filename)
+        {
             IVsTextView viewAdapter;
             IVsWindowFrame frame;
             VsUtilities.OpenDocument(serviceProvider, filename, out viewAdapter, out frame);
@@ -299,16 +291,20 @@ namespace Microsoft.PythonTools {
             return adapter.GetDocumentBuffer(lines);
         }
 
-        internal static IProjectLauncher GetLauncher(IServiceProvider serviceProvider, IPythonProject project) {
+        internal static IProjectLauncher GetLauncher(IServiceProvider serviceProvider, IPythonProject project)
+        {
             var launchProvider = serviceProvider.GetUIThread().Invoke<string>(() => project.GetProperty(PythonConstants.LaunchProvider));
 
             IPythonLauncherProvider defaultLaunchProvider = null;
-            foreach (var launcher in serviceProvider.GetComponentModel().GetExtensions<IPythonLauncherProvider>()) {
-                if (launcher.Name == launchProvider) {
+            foreach (var launcher in serviceProvider.GetComponentModel().GetExtensions<IPythonLauncherProvider>())
+            {
+                if (launcher.Name == launchProvider)
+                {
                     return serviceProvider.GetUIThread().Invoke<IProjectLauncher>(() => launcher.CreateLauncher(project));
                 }
 
-                if (launcher.Name == DefaultLauncherProvider.DefaultLauncherName) {
+                if (launcher.Name == DefaultLauncherProvider.DefaultLauncherName)
+                {
                     defaultLaunchProvider = launcher;
                 }
             }
@@ -320,41 +316,56 @@ namespace Microsoft.PythonTools {
                 null;
         }
 
-        internal static bool LaunchFile(IServiceProvider provider, string filename, bool debug, bool saveDirtyFiles) {
+        internal static bool LaunchFile(IServiceProvider provider, string filename, bool debug, bool saveDirtyFiles)
+        {
             bool isLaunchFileOpen = true;
             var project = (IPythonProject)provider.GetProjectFromOpenFile(filename);
 
-            if (project == null) {
+            if (project == null)
+            {
                 project = (IPythonProject)provider.GetProjectContainingFile(filename);
 
-                if (project == null) {
+                if (project == null)
+                {
                     project = new DefaultPythonProject(provider, filename);
-                } else {
+                }
+                else
+                {
                     isLaunchFileOpen = false;
                 }
             }
 
-            try {
+            try
+            {
                 var starter = GetLauncher(provider, project);
-                if (starter == null) {
+                if (starter == null)
+                {
                     Debug.Fail("Failed to get project launcher");
                     return false;
                 }
 
-                if (saveDirtyFiles) {
-                    if (!SaveDirtyFiles(provider, isLaunchFileOpen, ref filename)) {
+                if (saveDirtyFiles)
+                {
+                    if (!SaveDirtyFiles(provider, isLaunchFileOpen, ref filename))
+                    {
                         return false;
                     }
 
                 }
 
                 starter.LaunchFile(filename, debug);
-            } catch (MissingInterpreterException ex) {
+            }
+            catch (MissingInterpreterException ex)
+            {
                 var interpreterRegistry = provider.GetComponentModel().GetService<IInterpreterRegistryService>();
-                if (project.GetInterpreterFactory() == interpreterRegistry.NoInterpretersValue) {
+                if (project.GetInterpreterFactory() == interpreterRegistry.NoInterpretersValue)
+                {
                     OpenNoInterpretersHelpPage(provider, ex.HelpPage);
-                } else {
-                    var td = new TaskDialog(provider) {
+                }
+                else
+                {
+                    var td = new TaskDialog(provider)
+                    {
                         Title = Strings.ProductTitle,
                         MainInstruction = Strings.FailedToLaunchDebugger,
                         Content = ex.Message
@@ -363,13 +374,19 @@ namespace Microsoft.PythonTools {
                     td.ShowModal();
                 }
                 return false;
-            } catch (NoInterpretersException ex) {
+            }
+            catch (NoInterpretersException ex)
+            {
                 OpenNoInterpretersHelpPage(provider, ex.HelpPage);
                 return false;
-            } catch (NoStartupFileException ex) {
+            }
+            catch (NoStartupFileException ex)
+            {
                 MessageBox.Show(ex.Message, Strings.ProductTitle, MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return false;
-            } catch (IOException ex) {
+            }
+            catch (IOException ex)
+            {
                 MessageBox.Show(ex.Message, Strings.ProductTitle, MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return false;
             }
@@ -377,11 +394,13 @@ namespace Microsoft.PythonTools {
             return true;
         }
 
-        private static bool SaveDirtyFiles(IServiceProvider provider, bool isLaunchFileOpen, ref string fileName) {
+        private static bool SaveDirtyFiles(IServiceProvider provider, bool isLaunchFileOpen, ref string fileName)
+        {
             var rdt = provider.GetService(typeof(SVsRunningDocumentTable)) as IVsRunningDocumentTable;
             var rdt4 = provider.GetService(typeof(SVsRunningDocumentTable)) as IVsRunningDocumentTable4;
 
-            if (rdt != null && rdt4 != null) {
+            if (rdt != null && rdt4 != null)
+            {
                 // The save operation may move the file, so adjust filename 
                 // to the new location if necessary. 
                 var launchFileCookie = isLaunchFileOpen ? rdt4.GetDocumentCookie(fileName) : VSConstants.VSCOOKIE_NIL;
@@ -390,14 +409,17 @@ namespace Microsoft.PythonTools {
                 // when VS settings include prompt for save on build
                 var saveOpt = (uint)__VSRDTSAVEOPTIONS.RDTSAVEOPT_SaveIfDirty;
                 var hr = rdt.SaveDocuments(saveOpt, null, VSConstants.VSITEMID_NIL, VSConstants.VSCOOKIE_NIL);
-                if (hr == VSConstants.E_ABORT) {
+                if (hr == VSConstants.E_ABORT)
+                {
                     return false;
 
                 }
 
-                if (launchFileCookie != VSConstants.VSCOOKIE_NIL) {
+                if (launchFileCookie != VSConstants.VSCOOKIE_NIL)
+                {
                     var launchFileMoniker = rdt4.GetDocumentMoniker(launchFileCookie);
-                    if (!string.IsNullOrEmpty(launchFileMoniker)) {
+                    if (!string.IsNullOrEmpty(launchFileMoniker))
+                    {
                         fileName = launchFileMoniker;
                     }
                 }
@@ -405,33 +427,42 @@ namespace Microsoft.PythonTools {
             return true;
         }
 
-        async Task<ToolWindowPane> IPythonToolsToolWindowService.GetWindowPaneAsync(Type windowType, bool create) {
+        async Task<ToolWindowPane> IPythonToolsToolWindowService.GetWindowPaneAsync(Type windowType, bool create)
+        {
             await JoinableTaskFactory.SwitchToMainThreadAsync(DisposalToken);
             return await FindWindowPaneAsync(windowType, 0, create, DisposalToken) as ToolWindowPane;
         }
 
-        async Task IPythonToolsToolWindowService.ShowWindowPaneAsync(Type windowType, bool focus) {
+        async Task IPythonToolsToolWindowService.ShowWindowPaneAsync(Type windowType, bool focus)
+        {
             await JoinableTaskFactory.SwitchToMainThreadAsync(DisposalToken);
             var toolWindow = await ShowToolWindowAsync(windowType, 0, true, DisposalToken);
-            if (focus && toolWindow.Content is System.Windows.UIElement content) {
+            if (focus && toolWindow.Content is System.Windows.UIElement content)
+            {
                 content.Focus();
             }
         }
 
-        internal static void OpenNoInterpretersHelpPage(IServiceProvider serviceProvider, string page = null) {
+        internal static void OpenNoInterpretersHelpPage(IServiceProvider serviceProvider, string page = null)
+        {
             OpenVsWebBrowser(serviceProvider, page ?? PythonToolsInstallPath.GetFile("NoInterpreters.html"));
         }
 
-        public static string InterpreterHelpUrl {
-            get {
+        public static string InterpreterHelpUrl
+        {
+            get
+            {
                 return string.Format("https://go.microsoft.com/fwlink/?LinkId=299429&clcid=0x{0:X}",
                     CultureInfo.CurrentCulture.LCID);
             }
         }
 
-        protected override object GetAutomationObject(string name) {
-            if (name == "VsPython") {
-                if (_autoObject == null) {
+        protected override object GetAutomationObject(string name)
+        {
+            if (name == "VsPython")
+            {
+                if (_autoObject == null)
+                {
                     _autoObject = new PythonAutomation(this);
                 }
                 return _autoObject;
@@ -440,20 +471,23 @@ namespace Microsoft.PythonTools {
             return base.GetAutomationObject(name);
         }
 
-        public override bool IsRecognizedFile(string filename) {
+        public override bool IsRecognizedFile(string filename)
+        {
             return ModulePath.IsPythonSourceFile(filename);
         }
 
         public override Type GetLibraryManagerType() => typeof(IPythonLibraryManager);
 
-        internal override LibraryManager CreateLibraryManager() {
+        internal override LibraryManager CreateLibraryManager()
+        {
             return new PythonLibraryManager(this);
         }
 
         /////////////////////////////////////////////////////////////////////////////
         // Overriden Package Implementation
 
-        protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress) {
+        protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
+        {
             Trace.WriteLine("Entering InitializeAsync() of: {0}".FormatUI(this));
 
             await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
@@ -520,20 +554,25 @@ namespace Microsoft.PythonTools {
             Trace.WriteLine("Leaving Initialize() of: {0}".FormatUI(this));
         }
 
-        public EnvDTE.DTE DTE {
-            get {
+        public EnvDTE.DTE DTE
+        {
+            get
+            {
                 return (EnvDTE.DTE)GetService(typeof(EnvDTE.DTE));
             }
         }
 
         #region IVsComponentSelectorProvider Members
 
-        public int GetComponentSelectorPage(ref Guid rguidPage, VSPROPSHEETPAGE[] ppage) {
-            if (rguidPage == typeof(WebPiComponentPickerControl).GUID) {
+        public int GetComponentSelectorPage(ref Guid rguidPage, VSPROPSHEETPAGE[] ppage)
+        {
+            if (rguidPage == typeof(WebPiComponentPickerControl).GUID)
+            {
                 var page = new VSPROPSHEETPAGE();
                 page.dwSize = (uint)Marshal.SizeOf(typeof(VSPROPSHEETPAGE));
                 var pickerPage = new WebPiComponentPickerControl();
-                if (_packageContainer == null) {
+                if (_packageContainer == null)
+                {
                     _packageContainer = new PackageContainer(this);
                 }
                 _packageContainer.Add(pickerPage);
@@ -549,7 +588,8 @@ namespace Microsoft.PythonTools {
         ///     This class derives from container to provide a service provider
         ///     connection to the package.
         /// </devdoc>
-        private sealed class PackageContainer : Container {
+        private sealed class PackageContainer : Container
+        {
             private IUIService _uis;
             private AmbientProperties _ambientProperties;
 
@@ -558,7 +598,8 @@ namespace Microsoft.PythonTools {
             /// <devdoc>
             ///     Creates a new container using the given service provider.
             /// </devdoc>
-            internal PackageContainer(System.IServiceProvider provider) {
+            internal PackageContainer(System.IServiceProvider provider)
+            {
                 _provider = provider;
             }
 
@@ -566,19 +607,26 @@ namespace Microsoft.PythonTools {
             ///     Override to GetService so we can route requests
             ///     to the package's service provider.
             /// </devdoc>
-            protected override object GetService(Type serviceType) {
-                if (serviceType == null) {
+            protected override object GetService(Type serviceType)
+            {
+                if (serviceType == null)
+                {
                     throw new ArgumentNullException("serviceType");
                 }
-                if (_provider != null) {
-                    if (serviceType.IsEquivalentTo(typeof(AmbientProperties))) {
-                        if (_uis == null) {
+                if (_provider != null)
+                {
+                    if (serviceType.IsEquivalentTo(typeof(AmbientProperties)))
+                    {
+                        if (_uis == null)
+                        {
                             _uis = (IUIService)_provider.GetService(typeof(IUIService));
                         }
-                        if (_ambientProperties == null) {
+                        if (_ambientProperties == null)
+                        {
                             _ambientProperties = new AmbientProperties();
                         }
-                        if (_uis != null) {
+                        if (_uis != null)
+                        {
                             // update the _ambientProperties in case the styles have changed
                             // since last time.
                             _ambientProperties.Font = (Font)_uis.Styles["DialogFont"];
@@ -587,7 +635,8 @@ namespace Microsoft.PythonTools {
                     }
                     object service = _provider.GetService(serviceType);
 
-                    if (service != null) {
+                    if (service != null)
+                    {
                         return service;
                     }
                 }

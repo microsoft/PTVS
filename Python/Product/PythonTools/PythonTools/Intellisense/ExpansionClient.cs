@@ -14,21 +14,13 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Xml.Linq;
 using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Editor.Core;
-using Microsoft.PythonTools.Infrastructure;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Text.Editor;
-using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
 
-namespace Microsoft.PythonTools.Intellisense {
-    class ExpansionClient : IVsExpansionClient {
+namespace Microsoft.PythonTools.Intellisense
+{
+    class ExpansionClient : IVsExpansionClient
+    {
         private readonly PythonEditorServices _services;
         private readonly IVsTextLines _lines;
         private readonly IVsExpansion _expansion;
@@ -42,41 +34,49 @@ namespace Microsoft.PythonTools.Intellisense {
         public const string SurroundsWithStatement = "SurroundsWithStatement";
         public const string Expansion = "Expansion";
 
-        public ExpansionClient(ITextView textView, PythonEditorServices services) {
+        public ExpansionClient(ITextView textView, PythonEditorServices services)
+        {
             _textView = textView;
             _services = services;
             _view = _services.EditorAdaptersFactoryService.GetViewAdapter(_textView);
             _lines = (IVsTextLines)_services.EditorAdaptersFactoryService.GetBufferAdapter(_textView.TextBuffer);
             _expansion = _lines as IVsExpansion;
-            if (_expansion == null) {
+            if (_expansion == null)
+            {
                 throw new ArgumentException("TextBuffer does not support expansions");
             }
         }
 
-        public bool InSession {
-            get {
+        public bool InSession
+        {
+            get
+            {
                 return _session != null;
             }
         }
 
-        public int EndExpansion() {
+        public int EndExpansion()
+        {
             _session = null;
             _sessionEnded = true;
             _selectionStart = _selectionEnd = null;
             return VSConstants.S_OK;
         }
 
-        private static int TryGetXmlNodes(IVsExpansionSession session, out XElement header, out XElement snippet) {
+        private static int TryGetXmlNodes(IVsExpansionSession session, out XElement header, out XElement snippet)
+        {
             MSXML.IXMLDOMNode headerNode, snippetNode;
             int hr;
             header = null;
             snippet = null;
 
-            if (ErrorHandler.Failed(hr = session.GetHeaderNode(null, out headerNode))) {
+            if (ErrorHandler.Failed(hr = session.GetHeaderNode(null, out headerNode)))
+            {
                 return hr;
             }
 
-            if (ErrorHandler.Failed(hr = session.GetSnippetNode(null, out snippetNode))) {
+            if (ErrorHandler.Failed(hr = session.GetSnippetNode(null, out snippetNode)))
+            {
                 return hr;
             }
 
@@ -86,11 +86,13 @@ namespace Microsoft.PythonTools.Intellisense {
             return VSConstants.S_OK;
         }
 
-        public int FormatSpan(IVsTextLines pBuffer, TextSpan[] ts) {
+        public int FormatSpan(IVsTextLines pBuffer, TextSpan[] ts)
+        {
             XElement header, snippet;
 
             int hr = TryGetXmlNodes(_session, out header, out snippet);
-            if (ErrorHandler.Failed(hr)) {
+            if (ErrorHandler.Failed(hr))
+            {
                 return hr;
             }
 
@@ -133,8 +135,10 @@ namespace Microsoft.PythonTools.Intellisense {
             var insertTrackingPoint = _textView.TextBuffer.CurrentSnapshot.CreateTrackingPoint(startPosition, PointTrackingMode.Positive);
 
             TextSpan? endSpan = null;
-            using (var edit = _textView.TextBuffer.CreateEdit()) {
-                if (surroundsWith || surroundsWithStatement) {
+            using (var edit = _textView.TextBuffer.CreateEdit())
+            {
+                if (surroundsWith || surroundsWithStatement)
+                {
                     // this is super annoyning...  Most languages can do a surround with and $selected$ can be
                     // an empty string and everything's the same.  But in Python we can't just have something like
                     // "while True: " without a pass statement.  So if we start off with an empty selection we
@@ -149,9 +153,11 @@ namespace Microsoft.PythonTools.Intellisense {
                     // Also, the text has \n, but the inserted text has been replaced with the appropriate newline
                     // character for the buffer.
                     var templateText = codeText.Replace("\n", _textView.Options.GetNewLineCharacter());
-                    foreach (var decl in declList) {
+                    foreach (var decl in declList)
+                    {
                         string defaultValue;
-                        if (ErrorHandler.Succeeded(_session.GetFieldValue(decl, out defaultValue))) {
+                        if (ErrorHandler.Succeeded(_session.GetFieldValue(decl, out defaultValue)))
+                        {
                             templateText = templateText.Replace("$" + decl + "$", defaultValue);
                         }
                     }
@@ -159,7 +165,8 @@ namespace Microsoft.PythonTools.Intellisense {
 
                     // we can finally figure out where the selected text began witin the original template...
                     int selectedIndex = templateText.IndexOfOrdinal("$selected$", ignoreCase: true);
-                    if (selectedIndex != -1) {
+                    if (selectedIndex != -1)
+                    {
                         var selection = _textView.Selection;
 
                         // now we need to get the indentation of the $selected$ element within the template,
@@ -168,7 +175,8 @@ namespace Microsoft.PythonTools.Intellisense {
 
                         var start = _selectionStart.GetPosition(_textView.TextBuffer.CurrentSnapshot);
                         var end = _selectionEnd.GetPosition(_textView.TextBuffer.CurrentSnapshot);
-                        if (end < start) {
+                        if (end < start)
+                        {
                             // we didn't actually have a selction, and our negative tracking pushed us
                             // back to the start of the buffer...
                             end = start;
@@ -176,7 +184,8 @@ namespace Microsoft.PythonTools.Intellisense {
                         var selectedSpan = Span.FromBounds(start, end);
 
                         if (surroundsWithStatement &&
-                            String.IsNullOrWhiteSpace(_textView.TextBuffer.CurrentSnapshot.GetText(selectedSpan))) {
+                            String.IsNullOrWhiteSpace(_textView.TextBuffer.CurrentSnapshot.GetText(selectedSpan)))
+                        {
                             // we require a statement here and the user hasn't selected any code to surround,
                             // so we insert a pass statement (and we'll select it after the completion is done)
                             edit.Replace(new Span(startPosition + selectedIndex, end - start), "pass");
@@ -185,7 +194,8 @@ namespace Microsoft.PythonTools.Intellisense {
                             // In that case we need to inject an extra new line.
                             var endLine = _textView.TextBuffer.CurrentSnapshot.GetLineFromPosition(end);
                             var endText = endLine.GetText().Substring(end - endLine.Start);
-                            if (!String.IsNullOrWhiteSpace(endText)) {
+                            if (!String.IsNullOrWhiteSpace(endText))
+                            {
                                 edit.Insert(end, _textView.Options.GetNewLineCharacter());
                             }
 
@@ -193,7 +203,8 @@ namespace Microsoft.PythonTools.Intellisense {
                             // continue typing over it...
                             var startLine = _textView.TextBuffer.CurrentSnapshot.GetLineFromPosition(startPosition + selectedIndex);
                             _selectEndSpan = true;
-                            endSpan = new TextSpan() {
+                            endSpan = new TextSpan()
+                            {
                                 iStartLine = startLine.LineNumber,
                                 iEndLine = startLine.LineNumber,
                                 iStartIndex = baseIndentation.Length + indentation.Length,
@@ -216,7 +227,8 @@ namespace Microsoft.PythonTools.Intellisense {
                 edit.Apply();
             }
 
-            if (endSpan != null) {
+            if (endSpan != null)
+            {
                 _session.SetEndSpan(endSpan.Value);
             }
 
@@ -229,42 +241,53 @@ namespace Microsoft.PythonTools.Intellisense {
             return hr;
         }
 
-        private void AddMissingImports(List<string> importList, SnapshotPoint point) {
-            if (importList.Count == 0) {
+        private void AddMissingImports(List<string> importList, SnapshotPoint point)
+        {
+            if (importList.Count == 0)
+            {
                 return;
             }
 
             var bi = _services.GetBufferInfo(_textView.TextBuffer);
             var entry = bi?.AnalysisEntry;
-            if (entry == null) {
+            if (entry == null)
+            {
                 return;
             }
 
             SourceLocation loc;
-            try {
+            try
+            {
                 loc = point.ToSourceLocation();
-            } catch (ArgumentException ex) {
+            }
+            catch (ArgumentException ex)
+            {
                 Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
                 return;
             }
 
-            foreach (var import in importList) {
+            foreach (var import in importList)
+            {
                 var isMissing = entry.Analyzer.WaitForRequest(
                     entry.Analyzer.IsMissingImportAsync(entry, import, loc),
                     "ExpansionClient.IsMissingImportAsync",
                     false
                 );
 
-                if (isMissing) {
+                if (isMissing)
+                {
                     VsProjectAnalyzer.AddImport(_textView.TextBuffer, null, import);
                 }
             }
         }
 
-        private static string GetTemplateSelectionIndentation(string templateText, int selectedIndex) {
+        private static string GetTemplateSelectionIndentation(string templateText, int selectedIndex)
+        {
             string indentation = "";
-            for (int i = selectedIndex - 1; i >= 0; i--) {
-                if (templateText[i] != '\t' && templateText[i] != ' ') {
+            for (int i = selectedIndex - 1; i >= 0; i--)
+            {
+                if (templateText[i] != '\t' && templateText[i] != ' ')
+                {
                     indentation = templateText.Substring(i + 1, selectedIndex - i - 1);
                     break;
                 }
@@ -272,11 +295,14 @@ namespace Microsoft.PythonTools.Intellisense {
             return indentation;
         }
 
-        private string GetBaseIndentation(TextSpan[] ts) {
+        private string GetBaseIndentation(TextSpan[] ts)
+        {
             var indentationLine = _textView.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(ts[0].iStartLine).GetText();
             string baseIndentation = indentationLine;
-            for (int i = 0; i < indentationLine.Length; i++) {
-                if (indentationLine[i] != ' ' && indentationLine[i] != '\t') {
+            for (int i = 0; i < indentationLine.Length; i++)
+            {
+                if (indentationLine[i] != ' ' && indentationLine[i] != '\t')
+                {
                     baseIndentation = indentationLine.Substring(0, i);
                     break;
                 }
@@ -284,39 +310,47 @@ namespace Microsoft.PythonTools.Intellisense {
             return baseIndentation;
         }
 
-        private void IndentSpan(ITextEdit edit, string indentation, int startLine, int endLine) {
+        private void IndentSpan(ITextEdit edit, string indentation, int startLine, int endLine)
+        {
             var snapshot = _textView.TextBuffer.CurrentSnapshot;
-            for (int i = startLine; i <= endLine; i++) {
+            for (int i = startLine; i <= endLine; i++)
+            {
                 var curline = snapshot.GetLineFromLineNumber(i);
                 edit.Insert(curline.Start, indentation);
             }
         }
 
-        public int GetExpansionFunction(MSXML.IXMLDOMNode xmlFunctionNode, string bstrFieldName, out IVsExpansionFunction pFunc) {
+        public int GetExpansionFunction(MSXML.IXMLDOMNode xmlFunctionNode, string bstrFieldName, out IVsExpansionFunction pFunc)
+        {
             pFunc = null;
             return VSConstants.S_OK;
         }
 
-        public int IsValidKind(IVsTextLines pBuffer, TextSpan[] ts, string bstrKind, out int pfIsValidKind) {
+        public int IsValidKind(IVsTextLines pBuffer, TextSpan[] ts, string bstrKind, out int pfIsValidKind)
+        {
             pfIsValidKind = 1;
             return VSConstants.S_OK;
         }
 
-        public int IsValidType(IVsTextLines pBuffer, TextSpan[] ts, string[] rgTypes, int iCountTypes, out int pfIsValidType) {
+        public int IsValidType(IVsTextLines pBuffer, TextSpan[] ts, string[] rgTypes, int iCountTypes, out int pfIsValidType)
+        {
             pfIsValidType = 1;
             return VSConstants.S_OK;
         }
 
-        public int OnAfterInsertion(IVsExpansionSession pSession) {
+        public int OnAfterInsertion(IVsExpansionSession pSession)
+        {
             return VSConstants.S_OK;
         }
 
-        public int OnBeforeInsertion(IVsExpansionSession pSession) {
+        public int OnBeforeInsertion(IVsExpansionSession pSession)
+        {
             _session = pSession;
             return VSConstants.S_OK;
         }
 
-        public int OnItemChosen(string pszTitle, string pszPath) {
+        public int OnItemChosen(string pszTitle, string pszPath)
+        {
             int caretLine, caretColumn;
             GetCaretPosition(out caretLine, out caretColumn);
 
@@ -324,8 +358,10 @@ namespace Microsoft.PythonTools.Intellisense {
             return InsertNamedExpansion(pszTitle, pszPath, textSpan);
         }
 
-        public int InsertNamedExpansion(string pszTitle, string pszPath, TextSpan textSpan) {
-            if (_session != null) {
+        public int InsertNamedExpansion(string pszTitle, string pszPath, TextSpan textSpan)
+        {
+            if (_session != null)
+            {
                 // if the user starts an expansion session while one is in progress
                 // then abort the current expansion session
                 _session.EndCurrentExpansion(1);
@@ -349,26 +385,33 @@ namespace Microsoft.PythonTools.Intellisense {
                 out _session
             );
 
-            if (ErrorHandler.Succeeded(hr)) {
-                if (_sessionEnded) {
+            if (ErrorHandler.Succeeded(hr))
+            {
+                if (_sessionEnded)
+                {
                     _session = null;
                 }
             }
             return hr;
         }
 
-        public int NextField() {
+        public int NextField()
+        {
             return _session.GoToNextExpansionField(0);
         }
 
-        public int PreviousField() {
+        public int PreviousField()
+        {
             return _session.GoToPreviousExpansionField();
         }
 
-        public int EndCurrentExpansion(bool leaveCaret) {
-            if (_selectEndSpan) {
+        public int EndCurrentExpansion(bool leaveCaret)
+        {
+            if (_selectEndSpan)
+            {
                 TextSpan[] endSpan = new TextSpan[1];
-                if (ErrorHandler.Succeeded(_session.GetEndSpan(endSpan))) {
+                if (ErrorHandler.Succeeded(_session.GetEndSpan(endSpan)))
+                {
                     var snapshot = _textView.TextBuffer.CurrentSnapshot;
                     var startLine = snapshot.GetLineFromLineNumber(endSpan[0].iStartLine);
                     var span = new Span(startLine.Start + endSpan[0].iStartIndex, 4);
@@ -380,18 +423,21 @@ namespace Microsoft.PythonTools.Intellisense {
             return _session.EndCurrentExpansion(leaveCaret ? 1 : 0);
         }
 
-        public int PositionCaretForEditing(IVsTextLines pBuffer, TextSpan[] ts) {
+        public int PositionCaretForEditing(IVsTextLines pBuffer, TextSpan[] ts)
+        {
             return VSConstants.S_OK;
         }
 
-        private void GetCaretPosition(out int caretLine, out int caretColumn) {
+        private void GetCaretPosition(out int caretLine, out int caretColumn)
+        {
             ErrorHandler.ThrowOnFailure(_view.GetCaretPos(out caretLine, out caretColumn));
 
             // Handle virtual space
             int lineLength;
             ErrorHandler.ThrowOnFailure(_lines.GetLengthOfLine(caretLine, out lineLength));
 
-            if (caretColumn > lineLength) {
+            if (caretColumn > lineLength)
+            {
                 caretColumn = lineLength;
             }
         }

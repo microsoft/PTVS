@@ -14,8 +14,10 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Project {
-    enum PythonProjectImageName {
+namespace Microsoft.PythonTools.Project
+{
+    enum PythonProjectImageName
+    {
         File = 0,
         Project = 1,
         SearchPathContainer,

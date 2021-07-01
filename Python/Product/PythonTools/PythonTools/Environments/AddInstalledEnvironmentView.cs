@@ -14,20 +14,10 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.ObjectModel;
-using System.Diagnostics;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Logging;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Shell.Interop;
-
-namespace Microsoft.PythonTools.Environments {
-    sealed class AddInstalledEnvironmentView : EnvironmentViewBase {
+namespace Microsoft.PythonTools.Environments
+{
+    sealed class AddInstalledEnvironmentView : EnvironmentViewBase
+    {
         private readonly IPythonToolsLogger _logger;
         private readonly IVsSetupCompositionService _setupService;
         private readonly IVsTrackProjectRetargeting2 _retargeting;
@@ -36,7 +26,8 @@ namespace Microsoft.PythonTools.Environments {
             IServiceProvider serviceProvider,
             ProjectView[] projects,
             ProjectView selectedProject
-        ) : base(serviceProvider, projects, selectedProject) {
+        ) : base(serviceProvider, projects, selectedProject)
+        {
             _logger = Site.GetService(typeof(IPythonToolsLogger)) as IPythonToolsLogger;
             PageName = Strings.AddInstalledEnvironmentTabHeader;
             AcceptCaption = Strings.AddInstalledEnvironmentInstallButton;
@@ -56,12 +47,14 @@ namespace Microsoft.PythonTools.Environments {
             ));
 
             AvailablePackages = new ObservableCollection<object>(packages.Where(p => !p.Installed));
-            if (!AvailablePackages.Any()) {
+            if (!AvailablePackages.Any())
+            {
                 AvailablePackages.Add(new SetupPackageNoneView(Strings.AddInstalledEnvironmentNoneAvailable));
             }
 
             InstalledPackages = new ObservableCollection<object>(packages.Where(p => p.Installed));
-            if (!InstalledPackages.Any()) {
+            if (!InstalledPackages.Any())
+            {
                 InstalledPackages.Add(new SetupPackageNoneView(Strings.AddInstalledEnvironmentNone));
             }
 
@@ -72,12 +65,15 @@ namespace Microsoft.PythonTools.Environments {
 
         public ObservableCollection<object> AvailablePackages { get; }
 
-        private void RefreshAcceptButton() {
+        private void RefreshAcceptButton()
+        {
             IsAcceptEnabled = AvailablePackages?.OfType<SetupPackageView>().Any(p => p.IsChecked) ?? false;
         }
 
-        private static IVsSetupPackageInfo[] GetPackages(IVsSetupCompositionService setupService) {
-            if (setupService != null) {
+        private static IVsSetupPackageInfo[] GetPackages(IVsSetupCompositionService setupService)
+        {
+            if (setupService != null)
+            {
                 // Get the count
                 setupService.GetSetupPackagesInfo(0, null, out uint count);
 
@@ -87,39 +83,50 @@ namespace Microsoft.PythonTools.Environments {
 
                 // Extra safety in case count changed between the 2 calls
                 return buffer.Take((int)Math.Min(actual, count)).ToArray();
-            } else {
+            }
+            else
+            {
                 return new IVsSetupPackageInfo[0];
             }
         }
 
-        public override Task ApplyAsync() {
+        public override Task ApplyAsync()
+        {
             _logger?.LogEvent(PythonLogEvent.InstallEnv, null);
 
             var ids = AvailablePackages.OfType<SetupPackageView>().Where(p => p.IsChecked).Select(p => p.PackageId).ToArray();
-            if (ids.Length > 0) {
+            if (ids.Length > 0)
+            {
                 IVsProjectAcquisitionSetupDriver driver;
                 if (_retargeting != null &&
                     ErrorHandler.Succeeded(_retargeting.GetSetupDriver(VSConstants.SetupDrivers.SetupDriver_VS, out driver)) &&
-                    driver != null) {
+                    driver != null)
+                {
                     var task = driver.Install(ids);
-                    if (task != null) {
+                    if (task != null)
+                    {
                         task.Start();
                     }
                 }
-            } else {
+            }
+            else
+            {
                 Debug.Fail("Accept button should have been disabled");
             }
 
             return Task.CompletedTask;
         }
 
-        public override string ToString() {
+        public override string ToString()
+        {
             return Strings.AddInstalledEnvironmentTabHeader;
         }
     }
 
-    sealed class SetupPackageView : DependencyObject {
-        public SetupPackageView(string packageId, string title, bool installed, Action isCheckedChanged) {
+    sealed class SetupPackageView : DependencyObject
+    {
+        public SetupPackageView(string packageId, string title, bool installed, Action isCheckedChanged)
+        {
             PackageId = packageId;
             Title = title;
             Installed = installed;
@@ -129,7 +136,8 @@ namespace Microsoft.PythonTools.Environments {
         public static readonly DependencyProperty IsSelectedProperty =
             DependencyProperty.Register(nameof(IsChecked), typeof(bool), typeof(SetupPackageView), new PropertyMetadata(false, IsChecked_Changed));
 
-        public bool IsChecked {
+        public bool IsChecked
+        {
             get { return (bool)GetValue(IsSelectedProperty); }
             set { SetValue(IsSelectedProperty, value); }
         }
@@ -142,36 +150,46 @@ namespace Microsoft.PythonTools.Environments {
 
         private Action IsCheckedChanged { get; }
 
-        private static void IsChecked_Changed(DependencyObject d, DependencyPropertyChangedEventArgs e) {
+        private static void IsChecked_Changed(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
             ((SetupPackageView)d).IsCheckedChanged?.Invoke();
         }
 
-        public override string ToString() {
+        public override string ToString()
+        {
             return Title;
         }
     }
 
-    sealed class SetupPackageNoneView : DependencyObject {
-        public SetupPackageNoneView(string text) {
+    sealed class SetupPackageNoneView : DependencyObject
+    {
+        public SetupPackageNoneView(string text)
+        {
             Text = text;
         }
 
         public string Text { get; set; }
 
-        public override string ToString() {
+        public override string ToString()
+        {
             return Text;
         }
     }
 
-    sealed class SetupPackageTemplateSelector : DataTemplateSelector {
+    sealed class SetupPackageTemplateSelector : DataTemplateSelector
+    {
         public DataTemplate PackageView { get; set; }
 
         public DataTemplate NoneView { get; set; }
 
-        public override DataTemplate SelectTemplate(object item, DependencyObject container) {
-            if (item is SetupPackageView) {
+        public override DataTemplate SelectTemplate(object item, DependencyObject container)
+        {
+            if (item is SetupPackageView)
+            {
                 return PackageView;
-            } else if (item is SetupPackageNoneView) {
+            }
+            else if (item is SetupPackageNoneView)
+            {
                 return NoneView;
             }
 

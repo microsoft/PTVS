@@ -14,14 +14,13 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Threading.Tasks;
-using System.Windows.Input;
-
-namespace Microsoft.PythonTools.Project {
+namespace Microsoft.PythonTools.Project
+{
     /// <summary>
     /// Defines a command that also has an ExecuteAsync method.
     /// </summary>
-    public interface IAsyncCommand : ICommand {
+    public interface IAsyncCommand : ICommand
+    {
         /// <summary>
         /// Defines the method to be called when the command is invoked
         /// asynchronously.

@@ -14,19 +14,16 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Windows;
-using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
-using Microsoft.VisualStudio.Language.Intellisense;
-using Microsoft.VisualStudio.Text;
 
-namespace Microsoft.PythonTools.Navigation.Navigable {
-    class NavigableSymbol : INavigableSymbol {
+namespace Microsoft.PythonTools.Navigation.Navigable
+{
+    class NavigableSymbol : INavigableSymbol
+    {
         private readonly IServiceProvider _serviceProvider;
 
-        public NavigableSymbol(IServiceProvider serviceProvider, AnalysisVariable variable, SnapshotSpan span) {
+        public NavigableSymbol(IServiceProvider serviceProvider, AnalysisVariable variable, SnapshotSpan span)
+        {
             _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
             Variable = variable ?? throw new ArgumentNullException(nameof(variable));
             SymbolSpan = span;
@@ -40,8 +37,10 @@ namespace Microsoft.PythonTools.Navigation.Navigable {
         public IEnumerable<INavigableRelationship> Relationships =>
             new List<INavigableRelationship>() { PredefinedNavigableRelationships.Definition };
 
-        public void Navigate(INavigableRelationship relationship) {
-            try {
+        public void Navigate(INavigableRelationship relationship)
+        {
+            try
+            {
                 PythonToolsPackage.NavigateTo(
                     _serviceProvider,
                     Variable.Location.FilePath,
@@ -49,7 +48,9 @@ namespace Microsoft.PythonTools.Navigation.Navigable {
                     Variable.Location.StartLine - 1,
                     Variable.Location.StartColumn - 1
                 );
-            } catch (Exception ex) when (!ex.IsCriticalException()) {
+            }
+            catch (Exception ex) when (!ex.IsCriticalException())
+            {
                 MessageBox.Show(Strings.CannotGoToDefn_Name.FormatUI(SymbolSpan.GetText()), Strings.ProductTitle);
             }
         }

@@ -14,12 +14,6 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using EnvDTE;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Shell;
-using System;
-using System.IO;
-using System.Runtime.InteropServices;
 using VSConstants = Microsoft.VisualStudio.VSConstants;
 
 namespace Microsoft.VisualStudioTools.Project.Automation

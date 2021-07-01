@@ -14,9 +14,6 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 
 // If you get compiler errors CS0579, "Duplicate '<attributename>' attribute", check your 
 // Properties\AssemblyInfo.cs file and remove any lines duplicating the ones below.
@@ -27,7 +24,8 @@ using System.Runtime.InteropServices;
 #endif
 [assembly: AssemblyFileVersion(AssemblyVersionInfo.Version)]
 
-class AssemblyVersionInfo {
+class AssemblyVersionInfo
+{
 #if DEV15
     public const string VSMajorVersion = "15";
     public const string VSName = "2017";

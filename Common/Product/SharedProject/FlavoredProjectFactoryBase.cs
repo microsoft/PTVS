@@ -16,13 +16,6 @@
 
 namespace Microsoft.VisualStudioTools.Project
 {
-    using Microsoft.VisualStudio;
-    using Microsoft.VisualStudio.Shell;
-    using Microsoft.VisualStudio.Shell.Flavor;
-    using System;
-    using System.Diagnostics;
-    using System.Runtime.InteropServices;
-
     /// <include file='doc\FlavoredProjectFactoryBase.uex' path='docs/doc[@for="FlavoredProjectFactoryBase"]/*' />
     /// <devdoc>
     /// The project factory for the project flavor.

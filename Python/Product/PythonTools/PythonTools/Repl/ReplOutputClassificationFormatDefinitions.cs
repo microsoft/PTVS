@@ -14,20 +14,17 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.ComponentModel.Composition;
-using System.Windows.Media;
-using Microsoft.VisualStudio.Language.StandardClassification;
-using Microsoft.VisualStudio.Text.Classification;
-using Microsoft.VisualStudio.Utilities;
 
 // TODO: Localization - How to localize the different classification names
 
-namespace Microsoft.PythonTools.Repl {
+namespace Microsoft.PythonTools.Repl
+{
     [Export(typeof(EditorFormatDefinition))]
     [ClassificationType(ClassificationTypeNames = Name)]
     [Name(Name)]
     [UserVisible(true)]
-    internal class InteractiveBlackFormatDefinition : ClassificationFormatDefinition {
+    internal class InteractiveBlackFormatDefinition : ClassificationFormatDefinition
+    {
         public const string Name = "Python Interactive - Black";
 
         [Export]
@@ -35,7 +32,8 @@ namespace Microsoft.PythonTools.Repl {
         [BaseDefinition(PredefinedClassificationTypeNames.NaturalLanguage)]
         internal static ClassificationTypeDefinition Definition = null; // Set via MEF
 
-        public InteractiveBlackFormatDefinition() {
+        public InteractiveBlackFormatDefinition()
+        {
             DisplayName = Strings.PythonInteractive_Black;
             ForegroundColor = Colors.Black;
         }
@@ -45,7 +43,8 @@ namespace Microsoft.PythonTools.Repl {
     [ClassificationType(ClassificationTypeNames = Name)]
     [Name(Name)]
     [UserVisible(true)]
-    internal class InteractiveDarkRedFormatDefinition : ClassificationFormatDefinition {
+    internal class InteractiveDarkRedFormatDefinition : ClassificationFormatDefinition
+    {
         public const string Name = "Python Interactive - DarkRed";
 
         [Export]
@@ -53,7 +52,8 @@ namespace Microsoft.PythonTools.Repl {
         [BaseDefinition(PredefinedClassificationTypeNames.NaturalLanguage)]
         internal static ClassificationTypeDefinition Definition = null; // Set via MEF
 
-        public InteractiveDarkRedFormatDefinition() {
+        public InteractiveDarkRedFormatDefinition()
+        {
             DisplayName = Strings.PythonInteractive_DarkRed;
             ForegroundColor = Color.FromRgb(0x7f, 0, 0);
         }
@@ -63,7 +63,8 @@ namespace Microsoft.PythonTools.Repl {
     [ClassificationType(ClassificationTypeNames = Name)]
     [Name(Name)]
     [UserVisible(true)]
-    internal class InteractiveDarkGreenFormatDefinition : ClassificationFormatDefinition {
+    internal class InteractiveDarkGreenFormatDefinition : ClassificationFormatDefinition
+    {
         public const string Name = "Python Interactive - DarkGreen";
 
         [Export]
@@ -71,7 +72,8 @@ namespace Microsoft.PythonTools.Repl {
         [BaseDefinition(PredefinedClassificationTypeNames.NaturalLanguage)]
         internal static ClassificationTypeDefinition Definition = null; // Set via MEF
 
-        public InteractiveDarkGreenFormatDefinition() {
+        public InteractiveDarkGreenFormatDefinition()
+        {
             DisplayName = Strings.PythonInteractive_DarkGreen;
             ForegroundColor = Color.FromRgb(0x00, 0x7f, 0);
         }
@@ -81,7 +83,8 @@ namespace Microsoft.PythonTools.Repl {
     [ClassificationType(ClassificationTypeNames = Name)]
     [Name(Name)]
     [UserVisible(true)]
-    internal class InteractiveDarkYellowFormatDefinition : ClassificationFormatDefinition {
+    internal class InteractiveDarkYellowFormatDefinition : ClassificationFormatDefinition
+    {
         public const string Name = "Python Interactive - DarkYellow";
 
         [Export]
@@ -89,7 +92,8 @@ namespace Microsoft.PythonTools.Repl {
         [BaseDefinition(PredefinedClassificationTypeNames.NaturalLanguage)]
         internal static ClassificationTypeDefinition Definition = null; // Set via MEF
 
-        public InteractiveDarkYellowFormatDefinition() {
+        public InteractiveDarkYellowFormatDefinition()
+        {
             DisplayName = Strings.PythonInteractive_DarkYellow;
             ForegroundColor = Color.FromRgb(0x7f, 0x7f, 0);
         }
@@ -99,7 +103,8 @@ namespace Microsoft.PythonTools.Repl {
     [ClassificationType(ClassificationTypeNames = Name)]
     [Name(Name)]
     [UserVisible(true)]
-    internal class InteractiveDarkBlueFormatDefinition : ClassificationFormatDefinition {
+    internal class InteractiveDarkBlueFormatDefinition : ClassificationFormatDefinition
+    {
         public const string Name = "Python Interactive - DarkBlue";
 
         [Export]
@@ -107,7 +112,8 @@ namespace Microsoft.PythonTools.Repl {
         [BaseDefinition(PredefinedClassificationTypeNames.NaturalLanguage)]
         internal static ClassificationTypeDefinition Definition = null; // Set via MEF
 
-        public InteractiveDarkBlueFormatDefinition() {
+        public InteractiveDarkBlueFormatDefinition()
+        {
             DisplayName = Strings.PythonInteractive_DarkBlue;
             ForegroundColor = Color.FromRgb(0x00, 0x00, 0x7f);
         }
@@ -117,14 +123,16 @@ namespace Microsoft.PythonTools.Repl {
     [ClassificationType(ClassificationTypeNames = Name)]
     [Name(Name)]
     [UserVisible(true)]
-    internal class InteractiveDarkMagentaFormatDefinition : ClassificationFormatDefinition {
+    internal class InteractiveDarkMagentaFormatDefinition : ClassificationFormatDefinition
+    {
         public const string Name = "Python Interactive - DarkMagenta";
         [Export]
         [Name(Name)]
         [BaseDefinition(PredefinedClassificationTypeNames.NaturalLanguage)]
         internal static ClassificationTypeDefinition Definition = null; // Set via MEF
 
-        public InteractiveDarkMagentaFormatDefinition() {
+        public InteractiveDarkMagentaFormatDefinition()
+        {
             DisplayName = Strings.PythonInteractive_DarkMagenta;
             ForegroundColor = Color.FromRgb(0x7f, 0x00, 0x7f);
         }
@@ -134,14 +142,16 @@ namespace Microsoft.PythonTools.Repl {
     [ClassificationType(ClassificationTypeNames = Name)]
     [Name(Name)]
     [UserVisible(true)]
-    internal class InteractiveDarkCyanFormatDefinition : ClassificationFormatDefinition {
+    internal class InteractiveDarkCyanFormatDefinition : ClassificationFormatDefinition
+    {
         public const string Name = "Python Interactive - DarkCyan";
         [Export]
         [Name(Name)]
         [BaseDefinition(PredefinedClassificationTypeNames.NaturalLanguage)]
         internal static ClassificationTypeDefinition Definition = null; // Set via MEF
 
-        public InteractiveDarkCyanFormatDefinition() {
+        public InteractiveDarkCyanFormatDefinition()
+        {
             DisplayName = Strings.PythonInteractive_DarkCyan;
             ForegroundColor = Color.FromRgb(0x00, 0x7f, 0x7f);
         }
@@ -151,13 +161,15 @@ namespace Microsoft.PythonTools.Repl {
     [ClassificationType(ClassificationTypeNames = Name)]
     [Name(Name)]
     [UserVisible(true)]
-    internal class InteractiveGrayFormatDefinition : ClassificationFormatDefinition {
+    internal class InteractiveGrayFormatDefinition : ClassificationFormatDefinition
+    {
         public const string Name = "Python Interactive - Gray";
         [Export]
         [Name(Name)]
         [BaseDefinition(PredefinedClassificationTypeNames.NaturalLanguage)]
         internal static ClassificationTypeDefinition Definition = null; // Set via MEF
-        public InteractiveGrayFormatDefinition() {
+        public InteractiveGrayFormatDefinition()
+        {
             DisplayName = Strings.PythonInteractive_Gray;
             ForegroundColor = Color.FromRgb(0xC0, 0xC0, 0xC0);
         }
@@ -167,14 +179,16 @@ namespace Microsoft.PythonTools.Repl {
     [ClassificationType(ClassificationTypeNames = Name)]
     [Name(Name)]
     [UserVisible(true)]
-    internal class InteractiveDarkGrayFormatDefinition : ClassificationFormatDefinition {
+    internal class InteractiveDarkGrayFormatDefinition : ClassificationFormatDefinition
+    {
         public const string Name = "Python Interactive - DarkGray";
         [Export]
         [Name(Name)]
         [BaseDefinition(PredefinedClassificationTypeNames.NaturalLanguage)]
         internal static ClassificationTypeDefinition Definition = null; // Set via MEF
 
-        public InteractiveDarkGrayFormatDefinition() {
+        public InteractiveDarkGrayFormatDefinition()
+        {
             DisplayName = Strings.PythonInteractive_DarkGray;
             ForegroundColor = Color.FromRgb(0x7f, 0x7f, 0x7f);
         }
@@ -184,14 +198,16 @@ namespace Microsoft.PythonTools.Repl {
     [ClassificationType(ClassificationTypeNames = Name)]
     [Name(Name)]
     [UserVisible(true)]
-    internal class InteractiveRedFormatDefinition : ClassificationFormatDefinition {
+    internal class InteractiveRedFormatDefinition : ClassificationFormatDefinition
+    {
         public const string Name = "Python Interactive - Red";
         [Export]
         [Name(Name)]
         [BaseDefinition(PredefinedClassificationTypeNames.NaturalLanguage)]
         internal static ClassificationTypeDefinition Definition = null; // Set via MEF
 
-        public InteractiveRedFormatDefinition() {
+        public InteractiveRedFormatDefinition()
+        {
             DisplayName = Strings.PythonInteractive_Red;
             ForegroundColor = Color.FromRgb(0xff, 0, 0);
         }
@@ -201,14 +217,16 @@ namespace Microsoft.PythonTools.Repl {
     [ClassificationType(ClassificationTypeNames = Name)]
     [Name(Name)]
     [UserVisible(true)]
-    internal class InteractiveGreenFormatDefinition : ClassificationFormatDefinition {
+    internal class InteractiveGreenFormatDefinition : ClassificationFormatDefinition
+    {
         public const string Name = "Python Interactive - Green";
         [Export]
         [Name(Name)]
         [BaseDefinition(PredefinedClassificationTypeNames.NaturalLanguage)]
         internal static ClassificationTypeDefinition Definition = null; // Set via MEF
 
-        public InteractiveGreenFormatDefinition() {
+        public InteractiveGreenFormatDefinition()
+        {
             DisplayName = Strings.PythonInteractive_Green;
             ForegroundColor = Color.FromRgb(0x00, 0xff, 0);
         }
@@ -218,14 +236,16 @@ namespace Microsoft.PythonTools.Repl {
     [ClassificationType(ClassificationTypeNames = Name)]
     [Name(Name)]
     [UserVisible(true)]
-    internal class InteractiveYellowFormatDefinition : ClassificationFormatDefinition {
+    internal class InteractiveYellowFormatDefinition : ClassificationFormatDefinition
+    {
         public const string Name = "Python Interactive - Yellow";
         [Export]
         [Name(Name)]
         [BaseDefinition(PredefinedClassificationTypeNames.NaturalLanguage)]
         internal static ClassificationTypeDefinition Definition = null; // Set via MEF
 
-        public InteractiveYellowFormatDefinition() {
+        public InteractiveYellowFormatDefinition()
+        {
             DisplayName = Strings.PythonInteractive_Yellow;
             ForegroundColor = Color.FromRgb(0xff, 0xff, 0);
         }
@@ -236,14 +256,16 @@ namespace Microsoft.PythonTools.Repl {
     [Name(Name)]
     [UserVisible(true)]
     [Order(After = Priority.Default, Before = Priority.High)]
-    internal class InteractiveBlueFormatDefinition : ClassificationFormatDefinition {
+    internal class InteractiveBlueFormatDefinition : ClassificationFormatDefinition
+    {
         public const string Name = "Python Interactive - Blue";
         [Export]
         [Name(Name)]
         [BaseDefinition(PredefinedClassificationTypeNames.NaturalLanguage)]
         internal static ClassificationTypeDefinition Definition = null; // Set via MEF
 
-        public InteractiveBlueFormatDefinition() {
+        public InteractiveBlueFormatDefinition()
+        {
             DisplayName = Strings.PythonInteractive_Blue;
             ForegroundColor = Color.FromRgb(0x00, 0x00, 0xff);
         }
@@ -253,14 +275,16 @@ namespace Microsoft.PythonTools.Repl {
     [ClassificationType(ClassificationTypeNames = Name)]
     [Name(Name)]
     [UserVisible(true)]
-    internal class InteractiveMagentaFormatDefinition : ClassificationFormatDefinition {
+    internal class InteractiveMagentaFormatDefinition : ClassificationFormatDefinition
+    {
         public const string Name = "Python Interactive - Magenta";
         [Export]
         [Name(Name)]
         [BaseDefinition(PredefinedClassificationTypeNames.NaturalLanguage)]
         internal static ClassificationTypeDefinition Definition = null; // Set via MEF
 
-        public InteractiveMagentaFormatDefinition() {
+        public InteractiveMagentaFormatDefinition()
+        {
             DisplayName = Strings.PythonInteractive_Magenta;
             ForegroundColor = Color.FromRgb(0xff, 0x00, 0xff);
         }
@@ -270,14 +294,16 @@ namespace Microsoft.PythonTools.Repl {
     [ClassificationType(ClassificationTypeNames = Name)]
     [Name(Name)]
     [UserVisible(true)]
-    internal class InteractiveCyanFormatDefinition : ClassificationFormatDefinition {
+    internal class InteractiveCyanFormatDefinition : ClassificationFormatDefinition
+    {
         public const string Name = "Python Interactive - Cyan";
         [Export]
         [Name(Name)]
         [BaseDefinition(PredefinedClassificationTypeNames.NaturalLanguage)]
         internal static ClassificationTypeDefinition Definition = null; // Set via MEF
 
-        public InteractiveCyanFormatDefinition() {
+        public InteractiveCyanFormatDefinition()
+        {
             DisplayName = Strings.PythonInteractive_Cyan;
             ForegroundColor = Color.FromRgb(0x00, 0xff, 0xff);
         }
@@ -287,14 +313,16 @@ namespace Microsoft.PythonTools.Repl {
     [ClassificationType(ClassificationTypeNames = Name)]
     [Name(Name)]
     [UserVisible(true)]
-    internal class InteractiveWhiteFormatDefinition : ClassificationFormatDefinition {
+    internal class InteractiveWhiteFormatDefinition : ClassificationFormatDefinition
+    {
         public const string Name = "Python Interactive - White";
         [Export]
         [Name(Name)]
         [BaseDefinition(PredefinedClassificationTypeNames.NaturalLanguage)]
         internal static ClassificationTypeDefinition Definition = null; // Set via MEF
 
-        public InteractiveWhiteFormatDefinition() {
+        public InteractiveWhiteFormatDefinition()
+        {
             DisplayName = Strings.PythonInteractive_White;
             ForegroundColor = Color.FromRgb(0xff, 0xff, 0xff);
         }

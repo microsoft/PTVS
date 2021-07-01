@@ -14,36 +14,33 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Diagnostics;
-using System.IO;
-using System.Net;
-using System.Net.Sockets;
-using System.Threading.Tasks;
-using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Logging;
-using Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces;
-
-namespace Microsoft.PythonTools.Debugger {
-    internal sealed class DebugAdapterRemoteProcess : ITargetHostProcess, IDisposable {
+namespace Microsoft.PythonTools.Debugger
+{
+    internal sealed class DebugAdapterRemoteProcess : ITargetHostProcess, IDisposable
+    {
         private const int _debuggerConnectionTimeout = 20000; // 20 seconds
         private DebugRemoteAdapterProcessStream _stream;
         private bool _debuggerConnected = false;
 
         private DebugAdapterRemoteProcess() { }
 
-        public static ITargetHostProcess Attach(DebugAttachInfo debugAttachInfo) {
+        public static ITargetHostProcess Attach(DebugAttachInfo debugAttachInfo)
+        {
             var attachedProcess = new DebugAdapterRemoteProcess();
             return attachedProcess.ConnectSocket(debugAttachInfo.RemoteUri) ? attachedProcess : null;
         }
 
-        private bool ConnectSocket(Uri uri) {
+        private bool ConnectSocket(Uri uri)
+        {
             _debuggerConnected = false;
             var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.IP);
             EndPoint endpoint;
-            if (uri.IsLoopback) {
+            if (uri.IsLoopback)
+            {
                 endpoint = new IPEndPoint(IPAddress.Loopback, uri.Port);
-            } else {
+            }
+            else
+            {
                 endpoint = new DnsEndPoint(uri.Host, uri.Port);
             }
 
@@ -53,32 +50,41 @@ namespace Microsoft.PythonTools.Debugger {
             VisualStudio.Shell.ThreadHelper.JoinableTaskFactory.Run(() => Task.WhenAny(
                     Task.Factory.FromAsync(socket.BeginConnect, socket.EndConnect, endpoint, null),
                     Task.Delay(_debuggerConnectionTimeout)));
-            try {
-                if (socket.Connected) {
+            try
+            {
+                if (socket.Connected)
+                {
                     _debuggerConnected = true;
                     _stream = new DebugRemoteAdapterProcessStream(new NetworkStream(socket, ownsSocket: true));
                     _stream.Disconnected += OnDisconnected;
                     _stream.Initialized += OnInitialized;
                     _stream.LegacyDebugger += OnLegacyDebugger;
-                } else {
+                }
+                else
+                {
                     Debug.WriteLine("Timed out waiting for debugger to connect.", nameof(DebugAdapterRemoteProcess));
                     logger?.LogEvent(PythonLogEvent.DebugAdapterConnectionTimeout, "Attach");
                 }
-            } catch (AggregateException ex) {
+            }
+            catch (AggregateException ex)
+            {
                 Debug.WriteLine("Error waiting for debugger to connect {0}".FormatInvariant(ex.InnerException ?? ex), nameof(DebugAdapterRemoteProcess));
             }
 
             return _debuggerConnected;
         }
 
-        private void OnDisconnected(object sender, EventArgs e) {
-            if (_stream != null) {
+        private void OnDisconnected(object sender, EventArgs e)
+        {
+            if (_stream != null)
+            {
                 _stream.Dispose();
             }
             Exited?.Invoke(this, null);
         }
 
-        private void OnInitialized(object sender, EventArgs e) {
+        private void OnInitialized(object sender, EventArgs e)
+        {
             CustomDebugAdapterProtocolExtension.SendRequest(
                 new DebugPyVersionRequest(),
                 DebugPyVersionHelper.VerifyDebugPyVersion,
@@ -98,14 +104,18 @@ namespace Microsoft.PythonTools.Debugger {
         public event EventHandler Exited;
         public event DataReceivedEventHandler ErrorDataReceived;
 
-        public void Dispose() {
-            if (_stream != null) {
+        public void Dispose()
+        {
+            if (_stream != null)
+            {
                 _stream.Dispose();
             }
         }
 
-        public void Terminate() {
-            if (_stream != null) {
+        public void Terminate()
+        {
+            if (_stream != null)
+            {
                 _stream.Dispose();
             }
             ErrorDataReceived?.Invoke(this, null);

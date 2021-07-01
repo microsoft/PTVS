@@ -14,17 +14,13 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Diagnostics;
-using System.Net;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Windows.Forms;
 using Microsoft.VisualStudioTools.Project;
 
-namespace Microsoft.PythonTools {
+namespace Microsoft.PythonToolz
+{
 
-    internal sealed class VsCredentials {
+    internal sealed class VsCredentials
+    {
         // Integrated windows authentication methods
         private static readonly string[] windowsIntegratedAuthenticationMethods = new string[] {
                 "NTLM",
@@ -47,46 +43,54 @@ namespace Microsoft.PythonTools {
         /// DialogResult.OK = if Successfully prompted user for credentials.
         /// DialogResult.Cancel = if user cancelled the prompt dialog.
         /// </returns>
-        internal static DialogResult PromptForCredentials(IServiceProvider serviceProvider, Uri targetUri, string[] authenticationTypes, string realm, out NetworkCredential credential) {
+        internal static DialogResult PromptForCredentials(IServiceProvider serviceProvider, Uri targetUri, string[] authenticationTypes, string realm, out NetworkCredential credential)
+        {
             Utilities.ArgumentNotNull("targetUri", targetUri);
             Utilities.ArgumentNotNull("authenticationTypes", authenticationTypes);
             Utilities.ArgumentNotNull("realm", realm);
 
-            Microsoft.VisualStudio.Shell.Interop.IVsUIShell uiShell = null;
+            VisualStudio.Shell.Interop.IVsUIShell uiShell = null;
             DialogResult dr = DialogResult.Cancel;
             credential = null;
             string username;
             string password;
             bool isWindowsAuthentication = IsWindowAuthentication(authenticationTypes);
 
-            try {
+            try
+            {
                 IntPtr hwndOwner = IntPtr.Zero;
 
                 // Put the shell into a modal state
-                uiShell = serviceProvider.GetService(typeof(Microsoft.VisualStudio.Shell.Interop.SVsUIShell)) as Microsoft.VisualStudio.Shell.Interop.IVsUIShell;
-                if (uiShell != null) {
+                uiShell = serviceProvider.GetService(typeof(VisualStudio.Shell.Interop.SVsUIShell)) as VisualStudio.Shell.Interop.IVsUIShell;
+                if (uiShell != null)
+                {
                     int hr = uiShell.EnableModeless(0 /*false*/);
-                    Debug.Assert(Microsoft.VisualStudio.ErrorHandler.Succeeded(hr), "Error calling IVsUIShell.EnableModeless");
+                    Debug.Assert(VisualStudio.ErrorHandler.Succeeded(hr), "Error calling IVsUIShell.EnableModeless");
 
                     hr = uiShell.GetDialogOwnerHwnd(out hwndOwner);
-                    Debug.Assert(Microsoft.VisualStudio.ErrorHandler.Succeeded(hr), "Error calling IVsUIShell.GetDialogOwnerHwnd");
+                    Debug.Assert(VisualStudio.ErrorHandler.Succeeded(hr), "Error calling IVsUIShell.GetDialogOwnerHwnd");
                 }
 
                 // Show the OS credential dialog.
                 dr = ShowOSCredentialDialog(hwndOwner, targetUri, isWindowsAuthentication, realm, out username, out password);
-            } finally {
-                if (uiShell != null) {
+            }
+            finally
+            {
+                if (uiShell != null)
+                {
                     //If we were able to put the shell into a modal state earlier, now make it modeless
                     int hr = uiShell.EnableModeless(1 /*true*/);
-                    Debug.Assert(Microsoft.VisualStudio.ErrorHandler.Succeeded(hr), "Error calling IVsUIShell.EnableModeless");
+                    Debug.Assert(VisualStudio.ErrorHandler.Succeeded(hr), "Error calling IVsUIShell.EnableModeless");
                 }
             }
 
             // Create the NetworkCredential object.
-            if (dr == DialogResult.OK && !String.IsNullOrEmpty(username) && (password != null)) {
+            if (dr == DialogResult.OK && !String.IsNullOrEmpty(username) && password != null)
+            {
                 string domain;
                 string user;
-                if (!isWindowsAuthentication || !ParseUsername(username, out user, out domain)) {
+                if (!isWindowsAuthentication || !ParseUsername(username, out user, out domain))
+                {
                     user = username;
                     domain = String.Empty;
                 }
@@ -111,12 +115,17 @@ namespace Microsoft.PythonTools {
         /// <param name="authenticationTypes"></param>
         /// <return></return>
         /// <remarks></remarks>
-        private static bool IsWindowAuthentication(string[] authenticationTypes) {
+        private static bool IsWindowAuthentication(string[] authenticationTypes)
+        {
 
-            foreach (string authenticationType in authenticationTypes) {
-                if (authenticationType != null) {
-                    foreach (string windowsAuthenticationMethod in windowsIntegratedAuthenticationMethods) {
-                        if (String.Equals(authenticationType, windowsAuthenticationMethod, StringComparison.OrdinalIgnoreCase)) {
+            foreach (string authenticationType in authenticationTypes)
+            {
+                if (authenticationType != null)
+                {
+                    foreach (string windowsAuthenticationMethod in windowsIntegratedAuthenticationMethods)
+                    {
+                        if (String.Equals(authenticationType, windowsAuthenticationMethod, StringComparison.OrdinalIgnoreCase))
+                        {
                             return true;
                         }
                     }
@@ -141,7 +150,8 @@ namespace Microsoft.PythonTools {
         /// DialogResult.OK = if Successfully prompted user for credentials.
         /// DialogResult.Cancel = if user cancelled the prompt dialog.
         /// </returns>
-        private static DialogResult ShowOSCredentialDialog(IntPtr hwdOwner, Uri targetUri, bool isWindowsAuthentication, string realm, out string userName, out string password) {
+        private static DialogResult ShowOSCredentialDialog(IntPtr hwdOwner, Uri targetUri, bool isWindowsAuthentication, string realm, out string userName, out string password)
+        {
             DialogResult retValue = DialogResult.Cancel;
             userName = string.Empty;
             password = string.Empty;
@@ -171,7 +181,8 @@ namespace Microsoft.PythonTools {
                                                 CredUI.CREDUI_FLAGS.SHOW_SAVE_CHECK_BOX |
                                                 CredUI.CREDUI_FLAGS.EXCLUDE_CERTIFICATES;
 
-            if (isWindowsAuthentication) {
+            if (isWindowsAuthentication)
+            {
                 flags |= CredUI.CREDUI_FLAGS.COMPLETE_USERNAME;
             }
 
@@ -195,12 +206,15 @@ namespace Microsoft.PythonTools {
                 flags);
 
 
-            if (result == CredUI.CredUIReturnCodes.NO_ERROR) {
+            if (result == CredUI.CredUIReturnCodes.NO_ERROR)
+            {
                 userName = user.ToString();
                 password = pwd.ToString();
 
                 retValue = DialogResult.OK;
-            } else {
+            }
+            else
+            {
                 Debug.Assert(result == CredUI.CredUIReturnCodes.ERROR_CANCELLED);
                 retValue = DialogResult.Cancel;
             }
@@ -216,13 +230,18 @@ namespace Microsoft.PythonTools {
         /// <param name="password">password retrieved from user/registry.</param>
         /// <param name="domain"></param>
         /// <returns></returns>
-        private static NetworkCredential CreateCredentials(string username, string password, string domain) {
+        private static NetworkCredential CreateCredentials(string username, string password, string domain)
+        {
             NetworkCredential cred = null;
 
-            if ((!string.IsNullOrEmpty(username)) && (password != null)) {
-                if (string.IsNullOrEmpty(domain)) {
+            if (!string.IsNullOrEmpty(username) && password != null)
+            {
+                if (string.IsNullOrEmpty(domain))
+                {
                     cred = new NetworkCredential(username, password);
-                } else {
+                }
+                else
+                {
                     cred = new NetworkCredential(username, password, domain);
                 }
             }
@@ -237,11 +256,13 @@ namespace Microsoft.PythonTools {
         /// <param name="user">The user part of the username.</param>
         /// <param name="domain">The domain part of the username.</param>
         /// <returns>Returns true if it successfully parsed the username.</returns>
-        private static bool ParseUsername(string username, out string user, out string domain) {
+        private static bool ParseUsername(string username, out string user, out string domain)
+        {
             user = string.Empty;
             domain = string.Empty;
 
-            if (string.IsNullOrEmpty(username)) {
+            if (string.IsNullOrEmpty(username))
+            {
                 return false;
             }
 
@@ -256,9 +277,10 @@ namespace Microsoft.PythonTools {
                                                     strDomain,
                                                     CredUI.CREDUI_MAX_DOMAIN_TARGET_LENGTH);
 
-            successfullyParsed = (result == CredUI.CredUIReturnCodes.NO_ERROR);
+            successfullyParsed = result == CredUI.CredUIReturnCodes.NO_ERROR;
 
-            if (successfullyParsed) {
+            if (successfullyParsed)
+            {
                 user = strUser.ToString();
                 domain = strDomain.ToString();
             }

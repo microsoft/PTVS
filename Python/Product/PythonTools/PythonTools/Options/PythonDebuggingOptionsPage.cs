@@ -14,23 +14,27 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Runtime.InteropServices;
-
-namespace Microsoft.PythonTools.Options {
+namespace Microsoft.PythonTools.Options
+{
     [ComVisible(true)]
-    public class PythonDebuggingOptionsPage : PythonDialogPage {
+    public class PythonDebuggingOptionsPage : PythonDialogPage
+    {
         private PythonDebuggingOptionsControl _window;
         private bool debugOptionsChangedRegistered = false;
 
-        public PythonDebuggingOptionsPage() {
+        public PythonDebuggingOptionsPage()
+        {
         }
 
 
 
         // replace the default UI of the dialog page w/ our own UI.
-        protected override System.Windows.Forms.IWin32Window Window {
-            get {
-                if (_window == null) {
+        protected override System.Windows.Forms.IWin32Window Window
+        {
+            get
+            {
+                if (_window == null)
+                {
                     _window = new PythonDebuggingOptionsControl();
                     LoadSettingsFromStorage();
                 }
@@ -43,33 +47,40 @@ namespace Microsoft.PythonTools.Options {
         /// a call to <see cref="SaveSettingsToStorage"/> to commit the new
         /// values.
         /// </summary>
-        public override void ResetSettings() {
+        public override void ResetSettings()
+        {
             PyService.DebuggerOptions.Reset();
         }
 
-        public override void LoadSettingsFromStorage() {
+        public override void LoadSettingsFromStorage()
+        {
             PyService.DebuggerOptions.Load();
 
             // Synchronize UI with backing properties.
-            if (_window != null) {
+            if (_window != null)
+            {
                 _window.SyncControlWithPageSettings(PyService);
             }
-            if (!debugOptionsChangedRegistered) {
+            if (!debugOptionsChangedRegistered)
+            {
                 PyService.DebuggerOptions.Changed += OnDebugOptionsChanged;
                 debugOptionsChangedRegistered = true;
             }
         }
 
-        public override void SaveSettingsToStorage() {
+        public override void SaveSettingsToStorage()
+        {
             // Synchronize backing properties with UI.
-            if (_window != null) {
+            if (_window != null)
+            {
                 _window.SyncPageWithControlSettings(PyService);
             }
 
             PyService.DebuggerOptions.Save();
         }
 
-        private void OnDebugOptionsChanged(object sender, System.EventArgs e) {
+        private void OnDebugOptionsChanged(object sender, System.EventArgs e)
+        {
             _window?.SyncControlWithPageSettings(PyService);
         }
     }

@@ -14,18 +14,10 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Collections.Generic;
-using System.ComponentModel.Composition;
-using System.Windows.Media;
 using Microsoft.PythonTools.Editor;
-using Microsoft.PythonTools.Parsing;
-using Microsoft.VisualStudio.Language.StandardClassification;
-using Microsoft.VisualStudio.LanguageServer.Client;
-using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Text.Classification;
-using Microsoft.VisualStudio.Utilities;
 
-namespace Microsoft.PythonTools {
+namespace Microsoft.PythonTools
+{
     /// <summary>
     /// Implements classification of text by using a ScriptEngine which supports the
     /// TokenCategorizer service.
@@ -36,7 +28,8 @@ namespace Microsoft.PythonTools {
     /// </summary>
     [Export(typeof(IClassifierProvider)), ContentType(PythonCoreConstants.ContentType)]
     [Export(typeof(PythonClassifierProvider))]
-    internal class PythonClassifierProvider : IClassifierProvider {
+    internal class PythonClassifierProvider : IClassifierProvider
+    {
         private Dictionary<TokenCategory, IClassificationType> _categoryMap;
         private IClassificationType _comment;
         private IClassificationType _stringLiteral;
@@ -49,7 +42,8 @@ namespace Microsoft.PythonTools {
         private readonly IContentType _type;
 
         [ImportingConstructor]
-        public PythonClassifierProvider(PythonEditorServices services) {
+        public PythonClassifierProvider(PythonEditorServices services)
+        {
             _services = services;
             _type = _services.ContentTypeRegistryService.GetContentType(PythonCoreConstants.ContentType);
         }
@@ -87,12 +81,15 @@ namespace Microsoft.PythonTools {
 
         #region IDlrClassifierProvider
 
-        public IClassifier GetClassifier(ITextBuffer buffer) {
-            if (_categoryMap == null) {
+        public IClassifier GetClassifier(ITextBuffer buffer)
+        {
+            if (_categoryMap == null)
+            {
                 _categoryMap = FillCategoryMap(_services.ClassificationTypeRegistryService);
             }
 
-            if (buffer.ContentType.IsOfType(CodeRemoteContentDefinition.CodeRemoteContentTypeName)) {
+            if (buffer.ContentType.IsOfType(CodeRemoteContentDefinition.CodeRemoteContentTypeName))
+            {
                 return null;
             }
 
@@ -100,45 +97,55 @@ namespace Microsoft.PythonTools {
                 .GetOrCreateSink(typeof(PythonClassifier), _ => new PythonClassifier(this));
         }
 
-        public virtual IContentType ContentType {
+        public virtual IContentType ContentType
+        {
             get { return _type; }
         }
 
-        public IClassificationType Comment {
+        public IClassificationType Comment
+        {
             get { return _comment; }
         }
 
-        public IClassificationType StringLiteral {
+        public IClassificationType StringLiteral
+        {
             get { return _stringLiteral; }
         }
 
-        public IClassificationType Keyword {
+        public IClassificationType Keyword
+        {
             get { return _keyword; }
         }
 
-        public IClassificationType Operator {
+        public IClassificationType Operator
+        {
             get { return _operator; }
         }
 
-        public IClassificationType GroupingClassification {
+        public IClassificationType GroupingClassification
+        {
             get { return _groupingClassification; }
         }
 
-        public IClassificationType DotClassification {
+        public IClassificationType DotClassification
+        {
             get { return _dotClassification; }
         }
 
-        public IClassificationType CommaClassification {
+        public IClassificationType CommaClassification
+        {
             get { return _commaClassification; }
         }
 
         #endregion
 
-        internal Dictionary<TokenCategory, IClassificationType> CategoryMap {
+        internal Dictionary<TokenCategory, IClassificationType> CategoryMap
+        {
             get { return _categoryMap; }
         }
 
-        private Dictionary<TokenCategory, IClassificationType> FillCategoryMap(IClassificationTypeRegistryService registry) {
+        private Dictionary<TokenCategory, IClassificationType> FillCategoryMap(IClassificationTypeRegistryService registry)
+        {
             var categoryMap = new Dictionary<TokenCategory, IClassificationType>();
 
             categoryMap[TokenCategory.DocComment] = _comment = registry.GetClassificationType(PythonPredefinedClassificationTypeNames.Documentation);
@@ -172,8 +179,10 @@ namespace Microsoft.PythonTools {
     [Name(PythonPredefinedClassificationTypeNames.Operator)]
     [UserVisible(true)]
     [Order(After = LanguagePriority.NaturalLanguage, Before = LanguagePriority.FormalLanguage)]
-    internal sealed class OperatorFormat : ClassificationFormatDefinition {
-        public OperatorFormat() {
+    internal sealed class OperatorFormat : ClassificationFormatDefinition
+    {
+        public OperatorFormat()
+        {
             DisplayName = Strings.OperatorClassificationType;
             // Matches "Operator"
             ForegroundColor = Colors.Black;
@@ -185,8 +194,10 @@ namespace Microsoft.PythonTools {
     [Name(PythonPredefinedClassificationTypeNames.Grouping)]
     [UserVisible(true)]
     [Order(After = LanguagePriority.NaturalLanguage, Before = LanguagePriority.FormalLanguage)]
-    internal sealed class GroupingFormat : ClassificationFormatDefinition {
-        public GroupingFormat() {
+    internal sealed class GroupingFormat : ClassificationFormatDefinition
+    {
+        public GroupingFormat()
+        {
             DisplayName = Strings.GroupingClassificationType;
             // Matches "Operator"
             ForegroundColor = Colors.Black;
@@ -198,8 +209,10 @@ namespace Microsoft.PythonTools {
     [Name(PythonPredefinedClassificationTypeNames.Comma)]
     [UserVisible(true)]
     [Order(After = LanguagePriority.NaturalLanguage, Before = LanguagePriority.FormalLanguage)]
-    internal sealed class CommaFormat : ClassificationFormatDefinition {
-        public CommaFormat() {
+    internal sealed class CommaFormat : ClassificationFormatDefinition
+    {
+        public CommaFormat()
+        {
             DisplayName = Strings.CommaClassificationType;
             // Matches "Operator"
             ForegroundColor = Colors.Black;
@@ -211,8 +224,10 @@ namespace Microsoft.PythonTools {
     [Name(PythonPredefinedClassificationTypeNames.Dot)]
     [UserVisible(true)]
     [Order(After = LanguagePriority.NaturalLanguage, Before = LanguagePriority.FormalLanguage)]
-    internal sealed class DotFormat : ClassificationFormatDefinition {
-        public DotFormat() {
+    internal sealed class DotFormat : ClassificationFormatDefinition
+    {
+        public DotFormat()
+        {
             DisplayName = Strings.DotClassificationType;
             // Matches "Operator"
             ForegroundColor = Colors.Black;
@@ -224,8 +239,10 @@ namespace Microsoft.PythonTools {
     [Name(PythonPredefinedClassificationTypeNames.Builtin)]
     [UserVisible(true)]
     [Order(After = LanguagePriority.NaturalLanguage, Before = LanguagePriority.FormalLanguage)]
-    internal sealed class BuiltinFormat : ClassificationFormatDefinition {
-        public BuiltinFormat() {
+    internal sealed class BuiltinFormat : ClassificationFormatDefinition
+    {
+        public BuiltinFormat()
+        {
             DisplayName = Strings.BuiltinClassificationType;
             // Matches "Keyword"
             ForegroundColor = Colors.Blue;

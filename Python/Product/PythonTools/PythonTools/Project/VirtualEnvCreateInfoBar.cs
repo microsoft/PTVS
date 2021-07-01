@@ -14,22 +14,16 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.IO;
 using Microsoft.PythonTools.Environments;
-using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Logging;
-using Microsoft.VisualStudio.Imaging;
-using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
 using Task = System.Threading.Tasks.Task;
 
-namespace Microsoft.PythonTools.Project {
-    internal abstract class VirtualEnvCreateInfoBar : PythonInfoBar {
+namespace Microsoft.PythonTools.Project
+{
+    internal abstract class VirtualEnvCreateInfoBar : PythonInfoBar
+    {
         public VirtualEnvCreateInfoBar(IServiceProvider site)
-            : base(site) {
+            : base(site)
+        {
         }
 
         protected string RequirementsTxtPath { get; set; }
@@ -45,7 +39,8 @@ namespace Microsoft.PythonTools.Project {
 
         protected abstract void Suppress();
 
-        protected void ShowInfoBar() {
+        protected void ShowInfoBar()
+        {
             var messages = new List<IVsInfoBarTextSpan>();
             var actions = new List<InfoBarActionItem>();
 
@@ -59,7 +54,8 @@ namespace Microsoft.PythonTools.Project {
 
             Logger?.LogEvent(
                 PythonLogEvent.VirtualEnvCreateInfoBar,
-                new VirtualEnvCreateInfoBarInfo() {
+                new VirtualEnvCreateInfoBarInfo()
+                {
                     Action = VirtualEnvCreateInfoBarActions.Prompt,
                     Context = Context,
                 }
@@ -68,10 +64,12 @@ namespace Microsoft.PythonTools.Project {
             Create(new InfoBarModel(messages, actions, KnownMonikers.StatusInformation, isCloseButtonVisible: true));
         }
 
-        private void Ignore() {
+        private void Ignore()
+        {
             Logger?.LogEvent(
                 PythonLogEvent.VirtualEnvCreateInfoBar,
-                new VirtualEnvCreateInfoBarInfo() {
+                new VirtualEnvCreateInfoBarInfo()
+                {
                     Action = VirtualEnvCreateInfoBarActions.Ignore,
                     Context = Context,
                 }
@@ -80,10 +78,12 @@ namespace Microsoft.PythonTools.Project {
             Close();
         }
 
-        private void CreateEnvironment() {
+        private void CreateEnvironment()
+        {
             Logger?.LogEvent(
                 PythonLogEvent.VirtualEnvCreateInfoBar,
-                new VirtualEnvCreateInfoBarInfo() {
+                new VirtualEnvCreateInfoBarInfo()
+                {
                     Action = VirtualEnvCreateInfoBarActions.Create,
                     Context = Context,
                 }
@@ -93,18 +93,22 @@ namespace Microsoft.PythonTools.Project {
         }
     }
 
-    internal sealed class VirtualEnvCreateProjectInfoBar : VirtualEnvCreateInfoBar {
+    internal sealed class VirtualEnvCreateProjectInfoBar : VirtualEnvCreateInfoBar
+    {
         public VirtualEnvCreateProjectInfoBar(IServiceProvider site, PythonProjectNode projectNode)
-            : base(site) {
+            : base(site)
+        {
             Project = projectNode ?? throw new ArgumentNullException(nameof(projectNode));
         }
 
         private PythonProjectNode Project { get; }
 
-        public override async Task CheckAsync() {
+        public override async Task CheckAsync()
+        {
             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-            if (IsCreated || IsGloballySuppressed) {
+            if (IsCreated || IsGloballySuppressed)
+            {
                 return;
             }
 
@@ -112,22 +116,26 @@ namespace Microsoft.PythonTools.Project {
             Caption = Project.Caption;
             Context = InfoBarContexts.Project;
 
-            if (Project.GetProjectProperty(PythonConstants.SuppressEnvironmentCreationPrompt).IsTrue()) {
+            if (Project.GetProjectProperty(PythonConstants.SuppressEnvironmentCreationPrompt).IsTrue())
+            {
                 return;
             }
 
-            if (!File.Exists(RequirementsTxtPath)) {
+            if (!File.Exists(RequirementsTxtPath))
+            {
                 return;
             }
 
-            if (!Project.IsActiveInterpreterGlobalDefault) {
+            if (!Project.IsActiveInterpreterGlobalDefault)
+            {
                 return;
             }
 
             ShowInfoBar();
         }
 
-        protected override void ShowAddEnvironmentDialog() {
+        protected override void ShowAddEnvironmentDialog()
+        {
             AddEnvironmentDialog.ShowAddVirtualEnvironmentDialogAsync(
                 Site,
                 Project,
@@ -138,23 +146,28 @@ namespace Microsoft.PythonTools.Project {
             ).HandleAllExceptions(Site, typeof(VirtualEnvCreateInfoBar)).DoNotWait();
         }
 
-        protected override void Suppress() {
+        protected override void Suppress()
+        {
             Project.SetProjectProperty(PythonConstants.SuppressEnvironmentCreationPrompt, true.ToString());
         }
     }
 
-    internal sealed class VirtualEnvCreateWorkspaceInfoBar : VirtualEnvCreateInfoBar {
+    internal sealed class VirtualEnvCreateWorkspaceInfoBar : VirtualEnvCreateInfoBar
+    {
         public VirtualEnvCreateWorkspaceInfoBar(IServiceProvider site, IPythonWorkspaceContext workspace)
-            : base(site) {
+            : base(site)
+        {
             Workspace = workspace ?? throw new ArgumentNullException(nameof(workspace));
         }
 
         private IPythonWorkspaceContext Workspace { get; }
 
-        public override async Task CheckAsync() {
+        public override async Task CheckAsync()
+        {
             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-            if (IsCreated || IsGloballySuppressed) {
+            if (IsCreated || IsGloballySuppressed)
+            {
                 return;
             }
 
@@ -162,22 +175,26 @@ namespace Microsoft.PythonTools.Project {
             Caption = Workspace.WorkspaceName;
             Context = InfoBarContexts.Workspace;
 
-            if (Workspace.GetBoolProperty(PythonConstants.SuppressEnvironmentCreationPrompt) == true) {
+            if (Workspace.GetBoolProperty(PythonConstants.SuppressEnvironmentCreationPrompt) == true)
+            {
                 return;
             }
 
-            if (!File.Exists(RequirementsTxtPath)) {
+            if (!File.Exists(RequirementsTxtPath))
+            {
                 return;
             }
 
-            if (!Workspace.IsCurrentFactoryDefault) {
+            if (!Workspace.IsCurrentFactoryDefault)
+            {
                 return;
             }
 
             ShowInfoBar();
         }
 
-        protected override void ShowAddEnvironmentDialog() {
+        protected override void ShowAddEnvironmentDialog()
+        {
             AddEnvironmentDialog.ShowAddVirtualEnvironmentDialogAsync(
                 Site,
                 null,
@@ -188,7 +205,8 @@ namespace Microsoft.PythonTools.Project {
             ).HandleAllExceptions(Site, typeof(VirtualEnvCreateInfoBar)).DoNotWait();
         }
 
-        protected override void Suppress() {
+        protected override void Suppress()
+        {
             Workspace.SetPropertyAsync(PythonConstants.SuppressEnvironmentCreationPrompt, true)
                 .HandleAllExceptions(Site, typeof(VirtualEnvCreateWorkspaceInfoBar))
                 .DoNotWait();

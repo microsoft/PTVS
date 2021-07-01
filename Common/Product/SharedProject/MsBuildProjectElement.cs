@@ -15,12 +15,6 @@
 // permissions and limitations under the License.
 
 
-using Microsoft.Build.Evaluation;
-using Microsoft.VisualStudio;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
 using MSBuild = Microsoft.Build.Evaluation;
 
 namespace Microsoft.VisualStudioTools.Project

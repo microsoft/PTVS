@@ -14,33 +14,28 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Editor;
-using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
-using Microsoft.PythonTools.Parsing;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Language.StandardClassification;
-using Microsoft.VisualStudio.Text.Editor;
-using Microsoft.VisualStudioTools;
 
-namespace Microsoft.PythonTools.Refactoring {
-    class VariableRenamer {
+namespace Microsoft.PythonTools.Refactoring
+{
+    class VariableRenamer
+    {
         private readonly ITextView _view;
         private readonly IServiceProvider _serviceProvider;
         private readonly UIThreadBase _uiThread;
 
-        public VariableRenamer(ITextView textView, IServiceProvider serviceProvider) {
+        public VariableRenamer(ITextView textView, IServiceProvider serviceProvider)
+        {
             _view = textView;
             _serviceProvider = serviceProvider;
             _uiThread = _serviceProvider.GetUIThread();
         }
 
-        public async Task RenameVariable(IRenameVariableInput input, IVsPreviewChangesService previewChanges) {
-            if (IsModuleName(input)) {
+        public async Task RenameVariable(IRenameVariableInput input, IVsPreviewChangesService previewChanges)
+        {
+            if (IsModuleName(input))
+            {
                 input.CannotRename(Strings.RenameVariable_CannotRenameModuleName);
                 return;
             }
@@ -48,12 +43,14 @@ namespace Microsoft.PythonTools.Refactoring {
             var caret = _view.GetPythonCaret();
             var entry = _view.GetAnalysisAtCaret(_serviceProvider);
             var buffer = entry?.TryGetBufferParser()?.DefaultBufferInfo ?? PythonTextBufferInfo.TryGetForBuffer(_view.TextBuffer);
-            if (caret == null || entry == null || buffer == null) {
+            if (caret == null || entry == null || buffer == null)
+            {
                 input.CannotRename(Strings.RenameVariable_UnableGetAnalysisCurrentTextView);
                 return;
             }
             var analysis = await entry.Analyzer.AnalyzeExpressionAsync(entry, caret.Value, ExpressionAtPointPurpose.Rename);
-            if (analysis == null || string.IsNullOrEmpty(analysis.Expression) || !(analysis.Variables?.Any() ?? false)) {
+            if (analysis == null || string.IsNullOrEmpty(analysis.Expression) || !(analysis.Variables?.Any() ?? false))
+            {
                 input.CannotRename(Strings.RenameVariable_UnableGetExpressionAnalysis);
                 return;
             }
@@ -62,35 +59,44 @@ namespace Microsoft.PythonTools.Refactoring {
             var originalName = analysis.Variables
                 .Where(r => r.Type == VariableType.Definition)
                 .Where(r => r.Location.DocumentUri == buffer.DocumentUri && buffer.LocationTracker.CanTranslateFrom(r.Version ?? -1))
-                .Select(r => {
+                .Select(r =>
+                {
                     var snapshot = buffer.CurrentSnapshot;
-                    try {
+                    try
+                    {
                         return buffer.LocationTracker.Translate(r.Location.Span, r.Version ?? -1, snapshot).GetText();
-                    } catch (ArgumentException) {
+                    }
+                    catch (ArgumentException)
+                    {
                         return null;
                     }
                 })
                 .Where(n => !string.IsNullOrEmpty(n))
                 .FirstOrDefault() ?? analysis.Expression;
 
-            if (analysis.PrivatePrefix != null && originalName != null && originalName.StartsWithOrdinal(analysis.PrivatePrefix)) {
+            if (analysis.PrivatePrefix != null && originalName != null && originalName.StartsWithOrdinal(analysis.PrivatePrefix))
+            {
                 originalName = originalName.Substring(analysis.PrivatePrefix.Length + 1);
                 privatePrefix = analysis.PrivatePrefix;
             }
 
-            if (originalName != null && _view.Selection.IsActive && !_view.Selection.IsEmpty) {
+            if (originalName != null && _view.Selection.IsActive && !_view.Selection.IsEmpty)
+            {
                 if (_view.Selection.Start.Position < analysis.Span.GetStartPoint(_view.TextBuffer.CurrentSnapshot) ||
-                    _view.Selection.End.Position > analysis.Span.GetEndPoint(_view.TextBuffer.CurrentSnapshot)) {
+                    _view.Selection.End.Position > analysis.Span.GetEndPoint(_view.TextBuffer.CurrentSnapshot))
+                {
                     originalName = null;
                 }
             }
 
-            if (originalName == null) {
+            if (originalName == null)
+            {
                 input.CannotRename(Strings.RenameVariable_SelectSymbol);
                 return;
             }
 
-            if (!analysis.Variables.Any(v => v.Type == VariableType.Definition || v.Type == VariableType.Reference)) {
+            if (!analysis.Variables.Any(v => v.Type == VariableType.Definition || v.Type == VariableType.Reference))
+            {
                 input.CannotRename(Strings.RenameVariable_NoInformationAvailableForVariable.FormatUI(originalName));
                 return;
             }
@@ -98,22 +104,28 @@ namespace Microsoft.PythonTools.Refactoring {
             PythonLanguageVersion languageVersion = PythonLanguageVersion.None;
             var analyzer = _view.GetAnalyzerAtCaret(_serviceProvider);
             var factory = analyzer != null ? analyzer.InterpreterFactory : null;
-            if (factory != null) {
+            if (factory != null)
+            {
                 languageVersion = factory.Configuration.Version.ToLanguageVersion();
             }
 
             var info = input.GetRenameInfo(originalName, languageVersion);
-            if (info != null) {
+            if (info != null)
+            {
                 var engine = new PreviewChangesEngine(_serviceProvider, input, analysis.Expression, info, originalName, privatePrefix, _view.GetAnalyzerAtCaret(_serviceProvider), analysis.Variables);
-                if (info.Preview) {
+                if (info.Preview)
+                {
                     previewChanges.PreviewChanges(engine);
-                } else {
+                }
+                else
+                {
                     ErrorHandler.ThrowOnFailure(engine.ApplyChanges());
                 }
             }
         }
 
-        private bool IsModuleName(IRenameVariableInput input) {
+        private bool IsModuleName(IRenameVariableInput input)
+        {
             // make sure we're in 
             var span = _view.GetCaretSpan();
             var buffer = span.TextBuffer;
@@ -122,41 +134,61 @@ namespace Microsoft.PythonTools.Refactoring {
 
             bool sawImport = false, sawFrom = false, sawName = false;
             var walker = ReverseExpressionParser.ReverseClassificationSpanEnumerator(classifier, span.GetEndPoint(snapshot));
-            while (walker.MoveNext()) {
+            while (walker.MoveNext())
+            {
                 var current = walker.Current;
-                if (current == null) {
+                if (current == null)
+                {
                     // new-line
                     break;
                 }
 
                 var text = current.Span.GetText();
-                if (current.ClassificationType.IsOfType(PredefinedClassificationTypeNames.Identifier)) {
+                if (current.ClassificationType.IsOfType(PredefinedClassificationTypeNames.Identifier))
+                {
                     // identifiers are ok
                     sawName = true;
-                } else if (current.ClassificationType == classifier.Provider.DotClassification ||
-                    current.ClassificationType == classifier.Provider.CommaClassification) {
+                }
+                else if (current.ClassificationType == classifier.Provider.DotClassification ||
+                  current.ClassificationType == classifier.Provider.CommaClassification)
+                {
                     // dots and commas are ok
-                } else if (current.ClassificationType == classifier.Provider.GroupingClassification) {
-                    if (text != "(" && text != ")") {
+                }
+                else if (current.ClassificationType == classifier.Provider.GroupingClassification)
+                {
+                    if (text != "(" && text != ")")
+                    {
                         // list/dict groupings are not ok
                         break;
                     }
-                } else if (current.ClassificationType.IsOfType(PredefinedClassificationTypeNames.Keyword)) {
-                    if (text == "import") {
+                }
+                else if (current.ClassificationType.IsOfType(PredefinedClassificationTypeNames.Keyword))
+                {
+                    if (text == "import")
+                    {
                         sawImport = true;
-                    } else if (text == "from") {
+                    }
+                    else if (text == "from")
+                    {
                         sawFrom = true;
                         break;
-                    } else if (text == "as") {
-                        if (sawName) {
+                    }
+                    else if (text == "as")
+                    {
+                        if (sawName)
+                        {
                             // import fob as oar
                             // from fob import oar as baz
                             break;
                         }
-                    } else {
+                    }
+                    else
+                    {
                         break;
                     }
-                } else {
+                }
+                else
+                {
                     break;
                 }
             }

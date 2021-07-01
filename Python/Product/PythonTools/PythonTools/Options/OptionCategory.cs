@@ -14,20 +14,21 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
 using Microsoft.PythonTools.Parsing;
-using static Microsoft.PythonTools.Strings;
 
-namespace Microsoft.PythonTools.Options {
+namespace Microsoft.PythonTools.Options
+{
     /// <summary>
     /// Represents a category of options.  Currently only used for formatting options.
     /// </summary>
-    class OptionCategory {
+    class OptionCategory
+    {
         public readonly string Description;
         public readonly OptionInfo[] Options;
-        private static Dictionary<CodeFormattingCategory, List<OptionInfo>> _cachedOptions = new Dictionary<CodeFormattingCategory, List<OptionInfo>>() {
-            [CodeFormattingCategory.NewLines] = new List<OptionInfo> {
+        private static Dictionary<CodeFormattingCategory, List<OptionInfo>> _cachedOptions = new Dictionary<CodeFormattingCategory, List<OptionInfo>>()
+        {
+            [CodeFormattingCategory.NewLines] = new List<OptionInfo>
+            {
                 //new IntegerOptionInfo(LinesBetweenLevelDeclarationsShort, nameof(CodeFormattingOptions.LinesBetweenLevelDeclarations), LinesBetweenLevelDeclarationsLong, "# Specifies the number of lines which would appear between top-level classes and functions", 2),
                 //new IntegerOptionInfo(LinesBetweenMethodsInClassShort, nameof(CodeFormattingOptions.LinesBetweenMethodsInClass), LinesBetweenMethodsInClassLong, "# Specifies the number of lines between methods in classes", 1),
                 //new BooleanOptionInfo(RemoveExtraLinesBetweenMethodsShort, nameof(CodeFormattingOptions.RemoveExtraLinesBetweenMethods), RemoveExtraLinesBetweenMethodsLong, "class C:\r\n    def f(): pass\r\n\r\n    def g(): pass", "class C:\r\n    def f(): pass\r\n\r\n\r\n    def g(): pass", false),
@@ -71,15 +72,20 @@ namespace Microsoft.PythonTools.Options {
             },
         };
 
-        public OptionCategory(string description, params OptionInfo[] options) {
+        public OptionCategory(string description, params OptionInfo[] options)
+        {
             Description = description;
             Options = options;
         }
 
-        public static OptionInfo GetOption(string key) {
-            foreach (var options in _cachedOptions.Values) {
-                foreach (var option in options) {
-                    if (string.Equals(option.Key, key, StringComparison.Ordinal)) {
+        public static OptionInfo GetOption(string key)
+        {
+            foreach (var options in _cachedOptions.Values)
+            {
+                foreach (var option in options)
+                {
+                    if (string.Equals(option.Key, key, StringComparison.Ordinal))
+                    {
                         return option;
                     }
                 }

@@ -110,10 +110,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Common\Common.csproj">
-      <Project>{b3db0521-d9e3-4f48-9e2e-e5ecae886049}</Project>
-      <Name>Microsoft.PythonTools.Common</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Debugger\Debugger.csproj">
       <Project>{decc7971-fa58-4db0-9561-bffadd393bbd}</Project>
       <Name>Microsoft.PythonTools.Debugger</Name>

@@ -14,13 +14,12 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Threading.Tasks;
-using Microsoft.VisualStudio.Shell;
 using Task = System.Threading.Tasks.Task;
 
-namespace Microsoft {
-    interface IPythonToolsToolWindowService {
+namespace Microsoft
+{
+    interface IPythonToolsToolWindowService
+    {
         Task ShowWindowPaneAsync(Type windowType, bool focus);
         Task<ToolWindowPane> GetWindowPaneAsync(Type windowType, bool create);
     }

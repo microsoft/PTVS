@@ -14,13 +14,12 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.IO;
 using Microsoft.PythonTools.Intellisense;
-using Microsoft.VisualStudio.Text;
 
-namespace Microsoft.PythonTools {
-    internal partial class SnapshotSpanSourceCodeReader : TextReader, ISnapshotTextReader {
+namespace Microsoft.PythonTools
+{
+    internal partial class SnapshotSpanSourceCodeReader : TextReader, ISnapshotTextReader
+    {
         private readonly SnapshotSpan _span;
         private ITextSnapshot _snapshot;
         private int _position;
@@ -28,7 +27,8 @@ namespace Microsoft.PythonTools {
         private Span? _bufferSpan;
         private const int BufferSize = 1024;
 
-        internal SnapshotSpanSourceCodeReader(SnapshotSpan span) {
+        internal SnapshotSpanSourceCodeReader(SnapshotSpan span)
+        {
             _span = span;
             _snapshot = span.Snapshot;
             _position = span.Start.Position;
@@ -36,30 +36,38 @@ namespace Microsoft.PythonTools {
 
         #region TextReader
 
-        public override void Close() {
+        public override void Close()
+        {
             Dispose(true);
         }
 
-        protected override void Dispose(bool disposing) {
+        protected override void Dispose(bool disposing)
+        {
             _snapshot = null;
             _position = 0;
             base.Dispose(disposing);
         }
 
-        public override int Peek() {
+        public override int Peek()
+        {
             CheckDisposed();
-            if (_position == End) {
+            if (_position == End)
+            {
                 return -1;
             }
             return _snapshot[_position];
         }
 
-        public override int Read() {
+        public override int Read()
+        {
             CheckDisposed();
 
-            if (_position == End) {
+            if (_position == End)
+            {
                 return -1;
-            } else if (_bufferSpan == null || !(_position >= _bufferSpan.Value.Start && _position < _bufferSpan.Value.End)) {
+            }
+            else if (_bufferSpan == null || !(_position >= _bufferSpan.Value.Start && _position < _bufferSpan.Value.End))
+            {
                 int bufferLength = Math.Min(BufferSize, _snapshot.Length - _position);
                 _buffer = _snapshot.GetText(_position, bufferLength);
                 _bufferSpan = new Span(_position, bufferLength);
@@ -68,9 +76,11 @@ namespace Microsoft.PythonTools {
             return _buffer[_position++ - _bufferSpan.Value.Start];
         }
 
-        public override int Read(char[] buffer, int index, int count) {
+        public override int Read(char[] buffer, int index, int count)
+        {
             int length = End - _position;
-            if (length > 0) {
+            if (length > 0)
+            {
                 length = System.Math.Min(length, count);
                 _snapshot.CopyTo(_position, buffer, index, length);
                 _position += length;
@@ -78,10 +88,12 @@ namespace Microsoft.PythonTools {
             return length;
         }
 
-        public override string ReadLine() {
+        public override string ReadLine()
+        {
             CheckDisposed();
 
-            if (_position == _snapshot.Length) {
+            if (_position == _snapshot.Length)
+            {
                 return null;
             }
 
@@ -91,7 +103,8 @@ namespace Microsoft.PythonTools {
             return line.GetText();
         }
 
-        public override string ReadToEnd() {
+        public override string ReadToEnd()
+        {
             CheckDisposed();
             int length = End - _position;
             var text = _snapshot.GetText(_position, length);
@@ -101,28 +114,34 @@ namespace Microsoft.PythonTools {
 
         #endregion
 
-        internal int Position {
+        internal int Position
+        {
             get { return _position; }
         }
 
-        internal void Reset() {
+        internal void Reset()
+        {
             CheckDisposed();
             _position = _span.Start.Position;
         }
 
-        private void CheckDisposed() {
-            if (_snapshot == null) {
+        private void CheckDisposed()
+        {
+            if (_snapshot == null)
+            {
                 throw new ObjectDisposedException("This SnapshotSpanSourceCodeReader has been closed");
             }
         }
 
-        private int End {
+        private int End
+        {
             get { return _span.End.Position; }
         }
 
         #region ISnapshotTextReader Members
 
-        public ITextSnapshot Snapshot {
+        public ITextSnapshot Snapshot
+        {
             get { return _snapshot; }
         }
 

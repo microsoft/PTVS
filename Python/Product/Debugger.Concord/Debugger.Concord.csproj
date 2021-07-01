@@ -177,15 +177,6 @@
     <Content Include="PythonDkm.natvis" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Common\Common.csproj">
-      <Project>{b3db0521-d9e3-4f48-9e2e-e5ecae886049}</Project>
-      <Name>Microsoft.PythonTools.Common</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Attacher\Attacher.csproj">
-      <Project>{666A22BB-0CB5-4C08-A20F-E17450DA6573}</Project>
-      <Name>Microsoft.PythonTools.Attacher</Name>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </ProjectReference>
     <ProjectReference2 Include="..\DebuggerHelper\DebuggerHelper.vcxproj" />
     <ProjectReference2 Include="..\DebuggerHelper\DebuggerHelperX86.vcxproj" />
   </ItemGroup>

@@ -14,15 +14,10 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-
-namespace Microsoft.PythonTools.Repl {
-    internal class ResizingAdorner : Adorner {
+namespace Microsoft.PythonTools.Repl
+{
+    internal class ResizingAdorner : Adorner
+    {
         private readonly VisualCollection _visualChildren;
         private readonly FrameworkElement _bottomRight;
 
@@ -32,14 +27,16 @@ namespace Microsoft.PythonTools.Repl {
         private Size _desiredSize;
 
         public ResizingAdorner(UIElement adornedElement, Size originalSize)
-            : base(adornedElement) {
+            : base(adornedElement)
+        {
             _visualChildren = new VisualCollection(this);
             _originalSize = _desiredSize = originalSize;
             Width = Height = double.NaN;
             _bottomRight = BuildAdornerCorner(Cursors.SizeNWSE);
         }
 
-        private FrameworkElement BuildAdornerCorner(Cursor cursor) {
+        private FrameworkElement BuildAdornerCorner(Cursor cursor)
+        {
             var thumb = new Border();
             // TODO: this thumb should be styled to look like a dotted triangle, 
             // similar to the one you can see on the bottom right corner of 
@@ -58,8 +55,10 @@ namespace Microsoft.PythonTools.Repl {
             return thumb;
         }
 
-        private void Thumb_MouseDown(object sender, MouseButtonEventArgs e) {
-            if (e.ChangedButton != MouseButton.Left) {
+        private void Thumb_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ChangedButton != MouseButton.Left)
+            {
                 return;
             }
 
@@ -68,15 +67,18 @@ namespace Microsoft.PythonTools.Repl {
             _bottomRight.CaptureMouse();
 
             var evt = ResizeStarted;
-            if (evt != null) {
+            if (evt != null)
+            {
                 evt(this, e);
             }
 
             e.Handled = true;
         }
 
-        private void Thumb_MouseMove(object sender, MouseEventArgs e) {
-            if (!_bottomRight.IsMouseCaptured) {
+        private void Thumb_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (!_bottomRight.IsMouseCaptured)
+            {
                 return;
             }
 
@@ -90,10 +92,12 @@ namespace Microsoft.PythonTools.Repl {
                 Math.Max(newHeight, 0)
             );
 
-            if (_desiredSize != desiredSize) {
+            if (_desiredSize != desiredSize)
+            {
                 _desiredSize = desiredSize;
                 var evt = DesiredSizeChanged;
-                if (evt != null) {
+                if (evt != null)
+                {
                     evt(this, new DesiredSizeChangedEventArgs(desiredSize));
                 }
             }
@@ -101,8 +105,10 @@ namespace Microsoft.PythonTools.Repl {
             e.Handled = true;
         }
 
-        private void Thumb_MouseUp(object sender, MouseButtonEventArgs e) {
-            if (e.ChangedButton != MouseButton.Left) {
+        private void Thumb_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ChangedButton != MouseButton.Left)
+            {
                 return;
             }
 
@@ -110,18 +116,22 @@ namespace Microsoft.PythonTools.Repl {
             _bottomRight.ReleaseMouseCapture();
 
             var evt = ResizeCompleted;
-            if (evt != null) {
+            if (evt != null)
+            {
                 evt(this, e);
             }
 
             e.Handled = true;
         }
 
-        protected override Size MeasureOverride(Size constraint) {
-            if (_desiredSize.Width < 0) {
+        protected override Size MeasureOverride(Size constraint)
+        {
+            if (_desiredSize.Width < 0)
+            {
                 _desiredSize.Width = 0;
             }
-            if (_desiredSize.Height < 0) {
+            if (_desiredSize.Height < 0)
+            {
                 _desiredSize.Height = 0;
             }
 
@@ -133,16 +143,19 @@ namespace Microsoft.PythonTools.Repl {
             return size;
         }
 
-        protected override Size ArrangeOverride(Size finalSize) {
+        protected override Size ArrangeOverride(Size finalSize)
+        {
             _bottomRight.Arrange(new Rect(new Point(), finalSize));
             return finalSize;
         }
 
-        protected override int VisualChildrenCount {
+        protected override int VisualChildrenCount
+        {
             get { return _visualChildren.Count; }
         }
 
-        protected override Visual GetVisualChild(int index) {
+        protected override Visual GetVisualChild(int index)
+        {
             return _visualChildren[index];
         }
 
@@ -151,15 +164,19 @@ namespace Microsoft.PythonTools.Repl {
         public event EventHandler<DesiredSizeChangedEventArgs> DesiredSizeChanged;
     }
 
-    class DesiredSizeChangedEventArgs : EventArgs {
+    class DesiredSizeChangedEventArgs : EventArgs
+    {
         private readonly Size _size;
 
-        public DesiredSizeChangedEventArgs(Size size) {
+        public DesiredSizeChangedEventArgs(Size size)
+        {
             _size = size;
         }
 
-        public Size Size {
-            get {
+        public Size Size
+        {
+            get
+            {
                 return _size;
             }
         }

@@ -15,9 +15,6 @@
 // permissions and limitations under the License.
 
 using Microsoft.VisualStudioTools.Project;
-using System;
-using System.Collections.Generic;
-using System.Globalization;
 using ErrorHandler = Microsoft.VisualStudio.ErrorHandler;
 
 namespace Microsoft.VisualStudioTools.Navigation

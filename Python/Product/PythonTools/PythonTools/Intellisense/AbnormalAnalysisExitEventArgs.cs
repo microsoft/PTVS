@@ -14,12 +14,15 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Intellisense {
-    internal sealed class AbnormalAnalysisExitEventArgs {
+namespace Microsoft.PythonTools.Intellisense
+{
+    internal sealed class AbnormalAnalysisExitEventArgs
+    {
         public readonly string StdErr;
         public readonly int ExitCode;
 
-        public AbnormalAnalysisExitEventArgs(string stdOut, int exitCode) {
+        public AbnormalAnalysisExitEventArgs(string stdOut, int exitCode)
+        {
             StdErr = stdOut;
             ExitCode = exitCode;
         }

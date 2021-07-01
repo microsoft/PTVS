@@ -14,13 +14,14 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-
-namespace Microsoft.PythonTools.Intellisense {
-    class EntryEventArgs : EventArgs {
+namespace Microsoft.PythonTools.Intellisense
+{
+    class EntryEventArgs : EventArgs
+    {
         public readonly AnalysisEntry Entry;
 
-        public EntryEventArgs(AnalysisEntry entry) {
+        public EntryEventArgs(AnalysisEntry entry)
+        {
             Entry = entry;
         }
     }

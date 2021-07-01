@@ -16,11 +16,6 @@
 
 using Microsoft.VisualStudioTools.Infrastructure;
 using Microsoft.VisualStudioTools.Project.Automation;
-using System;
-using System.ComponentModel;
-using System.Diagnostics;
-using System.IO;
-using System.Runtime.InteropServices;
 
 namespace Microsoft.VisualStudioTools.Project
 {

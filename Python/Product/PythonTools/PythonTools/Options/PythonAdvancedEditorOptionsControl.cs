@@ -14,15 +14,17 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Windows.Forms;
-
-namespace Microsoft.PythonTools.Options {
-    public partial class PythonAdvancedEditorOptionsControl : UserControl {
-        public PythonAdvancedEditorOptionsControl() {
+namespace Microsoft.PythonTools.Options
+{
+    public partial class PythonAdvancedEditorOptionsControl : UserControl
+    {
+        public PythonAdvancedEditorOptionsControl()
+        {
             InitializeComponent();
         }
 
-        internal void SyncControlWithPageSettings(PythonToolsService pyService) {
+        internal void SyncControlWithPageSettings(PythonToolsService pyService)
+        {
             _enterCommits.Checked = pyService.AdvancedOptions.EnterCommitsIntellisense;
             _intersectMembers.Checked = pyService.AdvancedOptions.IntersectMembers;
             _filterCompletions.Checked = pyService.AdvancedOptions.FilterCompletions;
@@ -34,7 +36,8 @@ namespace Microsoft.PythonTools.Options {
             _autoListIdentifiers.Checked = pyService.AdvancedOptions.AutoListIdentifiers;
         }
 
-        internal void SyncPageWithControlSettings(PythonToolsService pyService) {
+        internal void SyncPageWithControlSettings(PythonToolsService pyService)
+        {
             pyService.AdvancedOptions.EnterCommitsIntellisense = _enterCommits.Checked;
             pyService.AdvancedOptions.IntersectMembers = _intersectMembers.Checked;
             pyService.AdvancedOptions.FilterCompletions = _filterCompletions.Checked;

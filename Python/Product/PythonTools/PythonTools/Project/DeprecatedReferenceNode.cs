@@ -14,22 +14,22 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.ComponentModel;
-using System.Runtime.InteropServices;
-using Microsoft.VisualStudio.Imaging;
-using Microsoft.VisualStudio.Imaging.Interop;
 using Microsoft.VisualStudioTools.Project;
 
-namespace Microsoft.PythonTools.Project {
-    sealed class DeprecatedReferenceNode : ReferenceNode {
+namespace Microsoft.PythonTools.Project
+{
+    sealed class DeprecatedReferenceNode : ReferenceNode
+    {
         private readonly string _caption, _message;
 
-        public DeprecatedReferenceNode(ProjectNode root, string name, string message) : base(root) {
+        public DeprecatedReferenceNode(ProjectNode root, string name, string message) : base(root)
+        {
             _caption = name;
             _message = message;
         }
 
-        public DeprecatedReferenceNode(ProjectNode root, ProjectElement element, string name, string message) : base(root, element) {
+        public DeprecatedReferenceNode(ProjectNode root, ProjectElement element, string name, string message) : base(root, element)
+        {
             _caption = name;
             _message = message;
         }
@@ -43,8 +43,10 @@ namespace Microsoft.PythonTools.Project {
     }
 
     [ComVisible(true)]
-    public sealed class DeprecatedReferenceNodeProperties : NodeProperties {
-        internal DeprecatedReferenceNodeProperties(DeprecatedReferenceNode node) : base(node) {
+    public sealed class DeprecatedReferenceNodeProperties : NodeProperties
+    {
+        internal DeprecatedReferenceNodeProperties(DeprecatedReferenceNode node) : base(node)
+        {
         }
 
         public override string GetClassName() => SR.GetString(SR.ReferenceProperties);

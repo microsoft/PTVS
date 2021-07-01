@@ -14,36 +14,41 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.ComponentModel.Design;
-using System.Linq;
-
-namespace Microsoft.PythonTools.Logging {
+namespace Microsoft.PythonTools.Logging
+{
     /// <summary>
     /// Main entry point for logging events.  A single instance of this logger is created
     /// by our package and can be used to dispatch log events to all installed loggers.
     /// </summary>
-    class PythonToolsLogger : IPythonToolsLogger {
+    class PythonToolsLogger : IPythonToolsLogger
+    {
         private readonly IPythonToolsLogger[] _loggers;
 
-        public PythonToolsLogger(IPythonToolsLogger[] loggers) {
+        public PythonToolsLogger(IPythonToolsLogger[] loggers)
+        {
             _loggers = loggers;
         }
 
-        public void LogEvent(PythonLogEvent logEvent, object data = null) {
-            foreach (var logger in _loggers) {
+        public void LogEvent(PythonLogEvent logEvent, object data = null)
+        {
+            foreach (var logger in _loggers)
+            {
                 logger.LogEvent(logEvent, data);
             }
         }
 
-        public void LogFault(Exception ex, string description, bool dumpProcess) {
-            foreach (var logger in _loggers) {
+        public void LogFault(Exception ex, string description, bool dumpProcess)
+        {
+            foreach (var logger in _loggers)
+            {
                 logger.LogFault(ex, description, dumpProcess);
             }
         }
 
-        internal static object CreateService(IServiceContainer container, Type serviceType) {
-            if (serviceType.IsEquivalentTo(typeof(IPythonToolsLogger))) {
+        internal static object CreateService(IServiceContainer container, Type serviceType)
+        {
+            if (serviceType.IsEquivalentTo(typeof(IPythonToolsLogger)))
+            {
                 var model = container.GetComponentModel();
                 return new PythonToolsLogger(model.GetExtensions<IPythonToolsLogger>().ToArray());
             }

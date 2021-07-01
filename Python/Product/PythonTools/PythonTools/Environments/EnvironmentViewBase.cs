@@ -14,24 +14,17 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Data;
-using Microsoft.PythonTools.Interpreter;
-
-namespace Microsoft.PythonTools.Environments {
-    abstract class EnvironmentViewBase : DependencyObject, INotifyDataErrorInfo, IDisposable {
+namespace Microsoft.PythonTools.Environments
+{
+    abstract class EnvironmentViewBase : DependencyObject, INotifyDataErrorInfo, IDisposable
+    {
         private readonly Dictionary<string, List<string>> _errors = new Dictionary<string, List<string>>();
         private bool _ignoreSelectedProjectChanged;
 
-        public EnvironmentViewBase(IServiceProvider serviceProvider, ProjectView[] projects, ProjectView selectedProject) {
-            if (projects == null) {
+        public EnvironmentViewBase(IServiceProvider serviceProvider, ProjectView[] projects, ProjectView selectedProject)
+        {
+            if (projects == null)
+            {
                 throw new ArgumentNullException(nameof(projects));
             }
 
@@ -96,120 +89,148 @@ namespace Microsoft.PythonTools.Environments {
 
         public ListCollectionView ProjectsView { get; }
 
-        public string PageName {
+        public string PageName
+        {
             get { return (string)GetValue(PageNameProperty); }
             set { SetValue(PageNameProperty, value); }
         }
 
-        public string AcceptCaption {
+        public string AcceptCaption
+        {
             get { return (string)GetValue(AcceptCaptionProperty); }
             set { SetValue(AcceptCaptionProperty, value); }
         }
 
-        public string AcceptAutomationName {
+        public string AcceptAutomationName
+        {
             get { return (string)GetValue(AcceptAutomationNameProperty); }
             set { SetValue(AcceptAutomationNameProperty, value); }
         }
 
-        public bool IsAcceptEnabled {
+        public bool IsAcceptEnabled
+        {
             get { return (bool)GetValue(IsAcceptEnabledProperty); }
             set { SetValue(IsAcceptEnabledProperty, value); }
         }
 
-        public bool IsAcceptShieldVisible {
+        public bool IsAcceptShieldVisible
+        {
             get { return (bool)GetValue(IsAcceptShieldVisibleProperty); }
             set { SetValue(IsAcceptShieldVisibleProperty, value); }
         }
 
-        public ProjectView SelectedProject {
+        public ProjectView SelectedProject
+        {
             get { return (ProjectView)GetValue(SelectedProjectProperty); }
             set { SetValue(SelectedProjectProperty, value); }
         }
 
-        public ObservableCollection<ProjectView> Projects {
+        public ObservableCollection<ProjectView> Projects
+        {
             get { return (ObservableCollection<ProjectView>)GetValue(ProjectsProperty); }
             private set { SetValue(ProjectsPropertyKey, value); }
         }
 
-        public bool SetAsCurrent {
+        public bool SetAsCurrent
+        {
             get { return (bool)GetValue(SetAsCurrentProperty); }
             set { SetValue(SetAsCurrentProperty, value); }
         }
 
-        public bool SetAsDefault {
+        public bool SetAsDefault
+        {
             get { return (bool)GetValue(SetAsDefaultProperty); }
             set { SetValue(SetAsDefaultProperty, value); }
         }
 
-        public bool ViewInEnvironmentWindow {
+        public bool ViewInEnvironmentWindow
+        {
             get { return (bool)GetValue(ViewInEnvironmentWindowProperty); }
             set { SetValue(ViewInEnvironmentWindowProperty, value); }
         }
 
         public bool HasErrors => _errors.Any(kv => kv.Value.Count > 0);
 
-        public IEnumerable GetErrors(string propertyName) {
-            if (string.IsNullOrEmpty(propertyName)) {
+        public IEnumerable GetErrors(string propertyName)
+        {
+            if (string.IsNullOrEmpty(propertyName))
+            {
                 return null;
             }
 
-            if (_errors.TryGetValue(propertyName, out List<string> val)) {
+            if (_errors.TryGetValue(propertyName, out List<string> val))
+            {
                 return val;
             }
 
             return null;
         }
 
-        protected void SetError(string propertyName, string msg, bool notify = true) {
+        protected void SetError(string propertyName, string msg, bool notify = true)
+        {
             _errors[propertyName] = new List<string>(Enumerable.Repeat(msg, 1));
-            if (notify) {
+            if (notify)
+            {
                 ErrorsChanged?.Invoke(this, new DataErrorsChangedEventArgs(propertyName));
             }
         }
 
-        protected void ClearErrors(string propertyName, bool notify = true) {
+        protected void ClearErrors(string propertyName, bool notify = true)
+        {
             _errors.Remove(propertyName);
-            if (notify) {
+            if (notify)
+            {
                 ErrorsChanged?.Invoke(this, new DataErrorsChangedEventArgs(propertyName));
             }
         }
 
-        protected void AddError(string propertyName, string msg, bool notify = true) {
+        protected void AddError(string propertyName, string msg, bool notify = true)
+        {
             List<string> errors;
-            if (!_errors.TryGetValue(propertyName, out errors)) {
+            if (!_errors.TryGetValue(propertyName, out errors))
+            {
                 errors = new List<string>();
                 _errors[propertyName] = errors;
             }
             errors.Add(msg);
-            if (notify) {
+            if (notify)
+            {
                 ErrorsChanged?.Invoke(this, new DataErrorsChangedEventArgs(propertyName));
             }
         }
 
-        private static void SelectedProject_Changed(DependencyObject d, DependencyPropertyChangedEventArgs e) {
+        private static void SelectedProject_Changed(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
             var view = d as EnvironmentViewBase;
-            if (view != null && !view._ignoreSelectedProjectChanged) {
+            if (view != null && !view._ignoreSelectedProjectChanged)
+            {
                 view.ResetProjectDependentProperties();
             }
         }
 
         public abstract Task ApplyAsync();
 
-        public virtual IEnumerable<string> GetAllErrors() {
-            foreach (var kv in _errors) {
-                foreach (var error in kv.Value) {
+        public virtual IEnumerable<string> GetAllErrors()
+        {
+            foreach (var kv in _errors)
+            {
+                foreach (var error in kv.Value)
+                {
                     yield return error;
                 }
             }
         }
 
-        protected virtual void ResetProjectDependentProperties() {
+        protected virtual void ResetProjectDependentProperties()
+        {
         }
 
-        protected virtual void Dispose(bool disposing) {
+        protected virtual void Dispose(bool disposing)
+        {
         }
 
-        public void Dispose() {
+        public void Dispose()
+        {
             Dispose(true);
         }
     }

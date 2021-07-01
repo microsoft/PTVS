@@ -14,81 +14,97 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.IO;
-using System.Threading.Tasks;
-using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Options;
 
-namespace Microsoft.PythonTools.Project {
-    class VsPackageManagerUI : IPackageManagerUI {
+namespace Microsoft.PythonTools.Project
+{
+    class VsPackageManagerUI : IPackageManagerUI
+    {
         private readonly IServiceProvider _site;
         private readonly Redirector _outputWindow;
         private readonly GeneralOptions _options;
         private readonly bool _alwaysElevate;
 
-        public VsPackageManagerUI(IServiceProvider provider, bool alwaysElevate = false) {
+        public VsPackageManagerUI(IServiceProvider provider, bool alwaysElevate = false)
+        {
             _site = provider;
             _outputWindow = OutputWindowRedirector.GetGeneral(provider);
             _options = provider.GetPythonToolsService().GeneralOptions;
             _alwaysElevate = alwaysElevate;
         }
 
-        public void OnErrorTextReceived(IPackageManager sender, string text) {
+        public void OnErrorTextReceived(IPackageManager sender, string text)
+        {
             _outputWindow.WriteErrorLine(text.TrimEndNewline());
         }
 
-        public void OnOperationFinished(IPackageManager sender, string operation, bool success) {
-            if (_options.ShowOutputWindowForPackageInstallation) {
+        public void OnOperationFinished(IPackageManager sender, string operation, bool success)
+        {
+            if (_options.ShowOutputWindowForPackageInstallation)
+            {
                 _outputWindow.ShowAndActivate();
             }
         }
 
-        public void OnOperationStarted(IPackageManager sender, string operation) {
-            if (_options.ShowOutputWindowForPackageInstallation) {
+        public void OnOperationStarted(IPackageManager sender, string operation)
+        {
+            if (_options.ShowOutputWindowForPackageInstallation)
+            {
                 _outputWindow.ShowAndActivate();
             }
         }
 
-        public void OnOutputTextReceived(IPackageManager sender, string text) {
+        public void OnOutputTextReceived(IPackageManager sender, string text)
+        {
             _outputWindow.WriteLine(text.TrimEndNewline());
         }
 
-        public async Task<bool> ShouldElevateAsync(IPackageManager sender, string operation) {
-            if (_alwaysElevate) {
+        public async Task<bool> ShouldElevateAsync(IPackageManager sender, string operation)
+        {
+            if (_alwaysElevate)
+            {
                 return true;
             }
 
             return ShouldElevate(_site, sender.Factory.Configuration, operation);
         }
 
-        public static bool ShouldElevate(IServiceProvider site, InterpreterConfiguration config, string operation) {
+        public static bool ShouldElevate(IServiceProvider site, InterpreterConfiguration config, string operation)
+        {
             var opts = site.GetPythonToolsService().GeneralOptions;
-            if (opts.ElevatePip) {
+            if (opts.ElevatePip)
+            {
                 return true;
             }
 
-            try {
+            try
+            {
                 // Create a test file and delete it immediately to ensure we can do it.
                 // If this fails, prompt the user to see whether they want to elevate.
                 var testFile = PathUtils.GetAvailableFilename(config.GetPrefixPath(), "access-test", ".txt");
                 using (new FileStream(testFile, FileMode.CreateNew, FileAccess.Write, FileShare.Delete, 4096, FileOptions.DeleteOnClose)) { }
                 return false;
-            } catch (IOException) {
-            } catch (UnauthorizedAccessException) {
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
             }
 
-            var td = new TaskDialog(site) {
+            var td = new TaskDialog(site)
+            {
                 Title = Strings.ProductTitle,
                 MainInstruction = Strings.ElevateForInstallPackage_MainInstruction,
                 AllowCancellation = true,
             };
-            var elevate = new TaskDialogButton(Strings.ElevateForInstallPackage_Elevate, Strings.ElevateForInstallPackage_Elevate_Note) {
+            var elevate = new TaskDialogButton(Strings.ElevateForInstallPackage_Elevate, Strings.ElevateForInstallPackage_Elevate_Note)
+            {
                 ElevationRequired = true
             };
             var noElevate = new TaskDialogButton(Strings.ElevateForInstallPackage_DoNotElevate, Strings.ElevateForInstallPackage_DoNotElevate_Note);
-            var elevateAlways = new TaskDialogButton(Strings.ElevateForInstallPackage_ElevateAlways, Strings.ElevateForInstallPackage_ElevateAlways_Note) {
+            var elevateAlways = new TaskDialogButton(Strings.ElevateForInstallPackage_ElevateAlways, Strings.ElevateForInstallPackage_ElevateAlways_Note)
+            {
                 ElevationRequired = true
             };
             td.Buttons.Add(elevate);
@@ -96,15 +112,18 @@ namespace Microsoft.PythonTools.Project {
             td.Buttons.Add(elevateAlways);
             td.Buttons.Add(TaskDialogButton.Cancel);
             var sel = td.ShowModal();
-            if (sel == TaskDialogButton.Cancel) {
+            if (sel == TaskDialogButton.Cancel)
+            {
                 throw new OperationCanceledException();
             }
 
-            if (sel == noElevate) {
+            if (sel == noElevate)
+            {
                 return false;
             }
 
-            if (sel == elevateAlways) {
+            if (sel == elevateAlways)
+            {
                 opts.ElevatePip = true;
                 opts.Save();
             }

@@ -165,10 +165,6 @@
     <Compile Include="WorkspaceTestHelper.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Product\BuildTasks\BuildTasks.csproj">
-      <Project>{89d51398-a003-44ba-b1b2-cfc6f8396d7e}</Project>
-      <Name>BuildTasks</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\Product\Debugger\Debugger.csproj">
       <Project>{DECC7971-FA58-4DB0-9561-BFFADD393BBD}</Project>
       <Name>Debugger</Name>
@@ -201,10 +197,6 @@
     <ProjectReference Include="..\Utilities.Python\TestUtilities.Python.csproj">
       <Project>{62641b47-1abb-4638-a3d5-2a834d089667}</Project>
       <Name>TestUtilities.Python</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Product\Common\Common.csproj">
-      <Project>{b3db0521-d9e3-4f48-9e2e-e5ecae886049}</Project>
-      <Name>Common</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Product\EnvironmentsList\EnvironmentsList.csproj">
       <Project>{b20e082b-4d3c-457d-b2bd-60420b434573}</Project>

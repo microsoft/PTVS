@@ -14,23 +14,23 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.PythonTools.Environments;
-using Microsoft.PythonTools.Infrastructure.Commands;
 
-namespace Microsoft.PythonTools.Commands {
-    class AddEnvironmentCommand : IAsyncCommand {
+namespace Microsoft.PythonTools.Commands
+{
+    class AddEnvironmentCommand : IAsyncCommand
+    {
         private readonly IServiceProvider _serviceProvider;
         private readonly AddEnvironmentDialog.PageKind _page;
         private readonly EnvironmentSwitcherManager _envSwitchMgr;
 
         public AddEnvironmentCommand(IServiceProvider serviceProvider)
-            : this(serviceProvider, AddEnvironmentDialog.PageKind.VirtualEnvironment) {
+            : this(serviceProvider, AddEnvironmentDialog.PageKind.VirtualEnvironment)
+        {
         }
 
-        public AddEnvironmentCommand(IServiceProvider serviceProvider, AddEnvironmentDialog.PageKind page) {
+        public AddEnvironmentCommand(IServiceProvider serviceProvider, AddEnvironmentDialog.PageKind page)
+        {
             _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
             _page = page;
             _envSwitchMgr = serviceProvider.GetPythonToolsService().EnvironmentSwitcherManager;
@@ -38,14 +38,17 @@ namespace Microsoft.PythonTools.Commands {
 
         public CommandStatus Status => CommandStatus.SupportedAndEnabled;
 
-        public Task InvokeAsync() {
+        public Task InvokeAsync()
+        {
             return AddEnvironmentAsync(_envSwitchMgr, _serviceProvider, _page);
         }
 
-        public static Task AddEnvironmentAsync(EnvironmentSwitcherManager envSwitchMgr, IServiceProvider serviceProvider, AddEnvironmentDialog.PageKind page) {
+        public static Task AddEnvironmentAsync(EnvironmentSwitcherManager envSwitchMgr, IServiceProvider serviceProvider, AddEnvironmentDialog.PageKind page)
+        {
             var workspace = (envSwitchMgr.Context as EnvironmentSwitcherWorkspaceContext)?.Workspace;
             var project = (envSwitchMgr.Context as EnvironmentSwitcherProjectContext)?.Project;
-            if (workspace == null && project == null) {
+            if (workspace == null && project == null)
+            {
                 var sln = (IVsSolution)serviceProvider.GetService(typeof(SVsSolution));
                 project = sln?.EnumerateLoadedPythonProjects().FirstOrDefault();
             }

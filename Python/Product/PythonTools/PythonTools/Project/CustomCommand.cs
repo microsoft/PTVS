@@ -14,32 +14,13 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Threading;
-using Microsoft.Build.Construction;
-using Microsoft.Build.Execution;
-using Microsoft.Build.Framework;
-using Microsoft.Build.Logging;
-using Microsoft.PythonTools.BuildTasks;
-using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Repl;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
 using Task = System.Threading.Tasks.Task;
 
-namespace Microsoft.PythonTools.Project {
-    sealed class CustomCommand : IAsyncCommand, IDisposable {
+namespace Microsoft.PythonTools.Project
+{
+    sealed class CustomCommand : IAsyncCommand, IDisposable
+    {
         private readonly PythonProjectNode _project;
         private readonly string _target;
         private readonly string _label;
@@ -65,19 +46,23 @@ namespace Microsoft.PythonTools.Project {
             PythonProjectNode project,
             string target,
             string label
-        ) {
+        )
+        {
             _project = project;
             _target = target;
             _label = string.IsNullOrWhiteSpace(label) ? target : label;
 
             var match = _customCommandLabelRegex.Match(label);
-            if (match.Success) {
+            if (match.Success)
+            {
                 DisplayLabel = LoadResourceFromAssembly(
                     match.Groups["assembly"].Value,
                     match.Groups["namespace"].Value,
                     match.Groups["key"].Value
                 );
-            } else {
+            }
+            else
+            {
                 DisplayLabel = _label;
             }
             DisplayLabel = PerformSubstitutions(project, DisplayLabel);
@@ -94,23 +79,29 @@ namespace Microsoft.PythonTools.Project {
             _errorListProvider = new ErrorListProvider(_project.Site);
         }
 
-        public void Dispose() {
-            if (!_isDisposed) {
+        public void Dispose()
+        {
+            if (!_isDisposed)
+            {
                 _isDisposed = true;
 
-                if (!string.IsNullOrEmpty(Verb) && AlternateCmdId > 0) {
+                if (!string.IsNullOrEmpty(Verb) && AlternateCmdId > 0)
+                {
                     RemoveNamedCommand(ServiceProvider.GlobalProvider, Verb);
                 }
 
-                if (_errorListProvider != null) {
+                if (_errorListProvider != null)
+                {
                     _errorListProvider.Dispose();
                 }
             }
         }
 
-        private static uint AddNamedCommand(IServiceProvider provider, string name, string tooltipText = null) {
+        private static uint AddNamedCommand(IServiceProvider provider, string name, string tooltipText = null)
+        {
             var commands = provider.GetService(typeof(SVsProfferCommands)) as IVsProfferCommands3;
-            if (commands == null) {
+            if (commands == null)
+            {
                 return 0;
             }
 
@@ -134,26 +125,35 @@ namespace Microsoft.PythonTools.Project {
             return cmdId;
         }
 
-        private static void RemoveNamedCommand(IServiceProvider provider, string name) {
+        private static void RemoveNamedCommand(IServiceProvider provider, string name)
+        {
             var commands = provider.GetService(typeof(SVsProfferCommands)) as IVsProfferCommands3;
-            if (commands != null) {
+            if (commands != null)
+            {
                 ErrorHandler.ThrowOnFailure(commands.RemoveNamedCommand(name));
             }
         }
 
-        private static string PerformSubstitutions(IPythonProject project, string label) {
-            return Regex.Replace(label, @"\{(?<key>\w+)\}", m => {
+        private static string PerformSubstitutions(IPythonProject project, string label)
+        {
+            return Regex.Replace(label, @"\{(?<key>\w+)\}", m =>
+            {
                 var key = m.Groups["key"].Value;
-                if ("projectname".Equals(key, StringComparison.OrdinalIgnoreCase)) {
+                if ("projectname".Equals(key, StringComparison.OrdinalIgnoreCase))
+                {
                     return Path.ChangeExtension(project.ProjectFile, null);
-                } else if ("projectfile".Equals(key, StringComparison.OrdinalIgnoreCase)) {
+                }
+                else if ("projectfile".Equals(key, StringComparison.OrdinalIgnoreCase))
+                {
                     return project.ProjectFile;
                 }
 
                 var instance = project.GetMSBuildProjectInstance();
-                if (instance != null) {
+                if (instance != null)
+                {
                     var value = instance.GetPropertyValue(key);
-                    if (!string.IsNullOrEmpty(value)) {
+                    if (!string.IsNullOrEmpty(value))
+                    {
                         return value;
                     }
                 }
@@ -162,11 +162,14 @@ namespace Microsoft.PythonTools.Project {
             });
         }
 
-        private static string LoadResourceFromAssembly(string assembly, string ns, string key) {
-            try {
+        private static string LoadResourceFromAssembly(string assembly, string ns, string key)
+        {
+            try
+            {
                 var asmName = new System.Reflection.AssemblyName(assembly);
                 System.Reflection.Assembly asm = null;
-                if (asmName.FullName == asmName.Name) {
+                if (asmName.FullName == asmName.Name)
+                {
                     // A partial name was provided. If there is an assembly with
                     // matching name in the current AppDomain, assume that is
                     // the intended one.
@@ -176,7 +179,9 @@ namespace Microsoft.PythonTools.Project {
                 asm = asm ?? System.Reflection.Assembly.Load(asmName);
                 var rm = new System.Resources.ResourceManager(ns, asm);
                 return rm.GetString(key, CultureInfo.CurrentUICulture) ?? key;
-            } catch (Exception ex) {
+            }
+            catch (Exception ex)
+            {
                 ActivityLog.LogError(Strings.ProductTitle, Strings.FailedToReadResource.FormatUI(assembly, ns, key, ex));
                 return key;
             }
@@ -185,12 +190,16 @@ namespace Microsoft.PythonTools.Project {
         public static IEnumerable<CustomCommand> GetCommands(
             Microsoft.Build.Evaluation.Project project,
             PythonProjectNode projectNode
-        ) {
+        )
+        {
             var commandNames = project.GetPropertyValue(PythonCommands);
-            if (!string.IsNullOrEmpty(commandNames)) {
-                foreach (var name in commandNames.Split(';').Select(s => s.Trim()).Where(n => !string.IsNullOrEmpty(n)).Distinct()) {
+            if (!string.IsNullOrEmpty(commandNames))
+            {
+                foreach (var name in commandNames.Split(';').Select(s => s.Trim()).Where(n => !string.IsNullOrEmpty(n)).Distinct())
+                {
                     ProjectTargetInstance targetInstance;
-                    if (!project.Targets.TryGetValue(name, out targetInstance)) {
+                    if (!project.Targets.TryGetValue(name, out targetInstance))
+                    {
                         continue;
                     }
 
@@ -200,12 +209,14 @@ namespace Microsoft.PythonTools.Project {
                         // loaded in the current collection; otherwise, null.
                         ProjectRootElement.TryOpen(targetInstance.Location.File, project.ProjectCollection);
 
-                    if (targetXml == null) {
+                    if (targetXml == null)
+                    {
                         continue;
                     }
 
                     var target = targetXml.Targets.FirstOrDefault(t => name.Equals(t.Name, StringComparison.OrdinalIgnoreCase));
-                    if (target != null) {
+                    if (target != null)
+                    {
                         yield return new CustomCommand(projectNode, target.Name, target.Label);
                     }
                 }
@@ -215,11 +226,13 @@ namespace Microsoft.PythonTools.Project {
         public static string GetCommandsDisplayLabel(
             Microsoft.Build.Evaluation.Project project,
             IPythonProject projectNode
-        ) {
+        )
+        {
             var label = project.GetPropertyValue("PythonCommandsDisplayLabel") ?? string.Empty;
 
             var match = _customCommandLabelRegex.Match(label);
-            if (match.Success) {
+            if (match.Success)
+            {
                 label = LoadResourceFromAssembly(
                     match.Groups["assembly"].Value,
                     match.Groups["namespace"].Value,
@@ -227,7 +240,8 @@ namespace Microsoft.PythonTools.Project {
                 );
             }
 
-            if (string.IsNullOrEmpty(label)) {
+            if (string.IsNullOrEmpty(label))
+            {
                 return Strings.PythonMenuLabel;
             }
 
@@ -238,16 +252,20 @@ namespace Microsoft.PythonTools.Project {
         public string Label { get { return _label; } }
         public string DisplayLabel { get; private set; }
 
-        public string DisplayLabelWithoutAccessKeys {
-            get {
+        public string DisplayLabelWithoutAccessKeys
+        {
+            get
+            {
                 // Changes "My &Command" into "My Command" while ensuring that
                 // "C1 && C2" becomes "C1 & C2"
                 return Regex.Replace(DisplayLabel, "&(.)", "$1");
             }
         }
 
-        public bool CanExecute(object parameter) {
-            if (!_canExecute) {
+        public bool CanExecute(object parameter)
+        {
+            if (!_canExecute)
+            {
                 return false;
             }
 
@@ -257,7 +275,8 @@ namespace Microsoft.PythonTools.Project {
 
         public event EventHandler CanExecuteChanged;
 
-        public void Execute(object parameter) {
+        public void Execute(object parameter)
+        {
             var task = ExecuteAsync(parameter);
             var nestedFrame = new DispatcherFrame();
             task.ContinueWith(_ => nestedFrame.Continue = false);
@@ -265,19 +284,25 @@ namespace Microsoft.PythonTools.Project {
             task.Wait();
         }
 
-        public Task ExecuteAsync(object parameter) {
+        public Task ExecuteAsync(object parameter)
+        {
             var task = ExecuteWorker((parameter as PythonProjectNode) ?? _project);
 
             // Ensure the exception is observed.
             // The caller can check task.Exception to do their own reporting.
-            task.ContinueWith(t => {
-                try {
+            task.ContinueWith(t =>
+            {
+                try
+                {
                     t.Wait();
-                } catch (AggregateException ex) {
+                }
+                catch (AggregateException ex)
+                {
                     var exception = ex.InnerException;
                     if (exception is NoInterpretersException ||
                         exception is MissingInterpreterException ||
-                        exception is TaskCanceledException) {
+                        exception is TaskCanceledException)
+                    {
                         // No need to log this exception or disable the command.
                         return;
                     }
@@ -286,7 +311,8 @@ namespace Microsoft.PythonTools.Project {
                     // reloaded.
                     _canExecute = false;
                     var evt = CanExecuteChanged;
-                    if (evt != null) {
+                    if (evt != null)
+                    {
                         evt(this, EventArgs.Empty);
                     }
 
@@ -298,7 +324,8 @@ namespace Microsoft.PythonTools.Project {
             return task;
         }
 
-        private class ErrorListRedirector : Redirector {
+        private class ErrorListRedirector : Redirector
+        {
             private const string
                 MessageGroupKey = "message",
                 CodeGroupKey = "code",
@@ -312,7 +339,8 @@ namespace Microsoft.PythonTools.Project {
             private readonly Regex _errorRegex, _warningRegex, _messageRegex;
             private readonly IServiceProvider _serviceProvider;
 
-            public ErrorListRedirector(IServiceProvider serviceProvider, IVsHierarchy hierarchy, string workingDirectory, ErrorListProvider errorListProvider, Regex errorRegex, Regex warningRegex, Regex messageRegex) {
+            public ErrorListRedirector(IServiceProvider serviceProvider, IVsHierarchy hierarchy, string workingDirectory, ErrorListProvider errorListProvider, Regex errorRegex, Regex warningRegex, Regex messageRegex)
+            {
                 _serviceProvider = serviceProvider;
                 _hierarchy = hierarchy;
                 _workingDirectory = workingDirectory;
@@ -322,22 +350,28 @@ namespace Microsoft.PythonTools.Project {
                 _messageRegex = messageRegex;
             }
 
-            public override void WriteErrorLine(string s) {
+            public override void WriteErrorLine(string s)
+            {
                 WriteLine(s);
             }
 
-            public override void WriteLine(string s) {
+            public override void WriteLine(string s)
+            {
                 var errorCategory = TaskErrorCategory.Error;
-                foreach (var regex in new[] { _errorRegex, _warningRegex, _messageRegex }) {
-                    if (regex != null) {
+                foreach (var regex in new[] { _errorRegex, _warningRegex, _messageRegex })
+                {
+                    if (regex != null)
+                    {
                         var m = regex.Match(s);
-                        if (m.Success) {
+                        if (m.Success)
+                        {
                             int line, column;
                             int.TryParse(m.Groups[LineGroupKey].ToString(), out line);
                             int.TryParse(m.Groups[ColumnGroupKey].ToString(), out column);
                             string document = m.Groups[FileNameGroupKey].ToString();
 
-                            var task = new ErrorTask {
+                            var task = new ErrorTask
+                            {
                                 Document = document,
                                 HierarchyItem = _hierarchy,
                                 Line = line - 1,
@@ -350,48 +384,69 @@ namespace Microsoft.PythonTools.Project {
                         }
                     }
 
-                    if (errorCategory == TaskErrorCategory.Error) {
+                    if (errorCategory == TaskErrorCategory.Error)
+                    {
                         errorCategory = TaskErrorCategory.Warning;
-                    } else {
+                    }
+                    else
+                    {
                         errorCategory = TaskErrorCategory.Message;
                     }
 
                 }
             }
 
-            public override void Show() {
-                try {
+            public override void Show()
+            {
+                try
+                {
                     _errorListProvider.Show();
-                } catch (Exception ex) when (!ex.IsCriticalException()) {
+                }
+                catch (Exception ex) when (!ex.IsCriticalException())
+                {
                     Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
                 }
             }
 
-            public override void ShowAndActivate() {
-                try {
+            public override void ShowAndActivate()
+            {
+                try
+                {
                     _errorListProvider.Show();
                     _errorListProvider.BringToFront();
-                } catch (Exception ex) when (!ex.IsCriticalException()) {
+                }
+                catch (Exception ex) when (!ex.IsCriticalException())
+                {
                     Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
                 }
             }
 
-            private void OnNavigate(object sender, EventArgs e) {
+            private void OnNavigate(object sender, EventArgs e)
+            {
                 var task = sender as ErrorTask;
-                if (task != null) {
+                if (task != null)
+                {
                     string document;
-                    try {
+                    try
+                    {
                         document = PathUtils.GetAbsoluteFilePath(_workingDirectory, task.Document);
-                    } catch (ArgumentException) {
+                    }
+                    catch (ArgumentException)
+                    {
                         // If it's not a valid path, then it's not a navigable error item.
                         return;
                     }
-                    try {
+                    try
+                    {
                         PythonToolsPackage.NavigateTo(_serviceProvider, document, Guid.Empty, task.Line, task.Column < 0 ? 0 : task.Column);
-                    } catch (FileNotFoundException ex) {
+                    }
+                    catch (FileNotFoundException ex)
+                    {
                         // Happens when file was deleted from the project.
                         MessageBox.Show(ex.Message, Strings.ProductTitle, MessageBoxButton.OK, MessageBoxImage.Error);
-                    } catch (ArgumentException) {
+                    }
+                    catch (ArgumentException)
+                    {
                         // Happens when file was deleted from disk but not from project.
                         // A descriptive message was already shown to the user, so don't show another.
                     }
@@ -399,7 +454,8 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        private async Task ExecuteWorker(PythonProjectNode project) {
+        private async Task ExecuteWorker(PythonProjectNode project)
+        {
             _errorListProvider.Tasks.Clear();
 
             var interpFactory = project.GetInterpreterFactoryOrThrow();
@@ -408,22 +464,27 @@ namespace Microsoft.PythonTools.Project {
             var packagesToInstall = new List<string>();
             var interpreterOpts = _project.Site.GetComponentModel().GetService<IInterpreterOptionsService>();
             var pm = interpreterOpts?.GetPackageManagers(interpFactory).FirstOrDefault();
-            if (pm != null) {
-                foreach (var pkg in startInfo.RequiredPackages) {
-                    if (!(await pm.GetInstalledPackageAsync(PackageSpec.FromRequirement(pkg), CancellationToken.None)).IsValid) {
+            if (pm != null)
+            {
+                foreach (var pkg in startInfo.RequiredPackages)
+                {
+                    if (!(await pm.GetInstalledPackageAsync(PackageSpec.FromRequirement(pkg), CancellationToken.None)).IsValid)
+                    {
                         packagesToInstall.Add(pkg);
                     }
                 }
             }
 
-            if (packagesToInstall.Any()) {
+            if (packagesToInstall.Any())
+            {
                 var installMissingButton = new TaskDialogButton(
                     Strings.CustomCommandPrerequisitesInstallMissing,
                     Strings.CustomCommandPrerequisitesInstallMissingSubtext + "\r\n\r\n" + string.Join("\r\n", packagesToInstall));
                 var runAnywayButton = new TaskDialogButton(Strings.CustomCommandPrerequisitesRunAnyway);
                 var doNotRunButton = new TaskDialogButton(Strings.CustomCommandPrerequisitesDoNotRun);
 
-                var taskDialog = new TaskDialog(project.Site) {
+                var taskDialog = new TaskDialog(project.Site)
+                {
                     Title = Strings.ProductTitle,
                     MainInstruction = Strings.CustomCommandPrerequisitesInstruction,
                     Content = Strings.CustomCommandPrerequisitesContent.FormatUI(DisplayLabelWithoutAccessKeys),
@@ -432,22 +493,31 @@ namespace Microsoft.PythonTools.Project {
                 };
 
                 var selectedButton = taskDialog.ShowModal();
-                if (selectedButton == installMissingButton) {
+                if (selectedButton == installMissingButton)
+                {
                     var ui = new VsPackageManagerUI(project.Site);
-                    if (!pm.IsReady) {
+                    if (!pm.IsReady)
+                    {
                         await pm.PrepareAsync(ui, CancellationToken.None);
                     }
                     await pm.InstallAsync(PackageSpec.FromArguments(string.Join(" ", packagesToInstall)), ui, CancellationToken.None);
-                } else if (selectedButton == runAnywayButton) {
-                } else {
+                }
+                else if (selectedButton == runAnywayButton)
+                {
+                }
+                else
+                {
                     throw new TaskCanceledException();
                 }
             }
 
-            if (startInfo.TargetType == PythonCommandTask.TargetTypePip) {
-                if (startInfo.ExecuteInOutput && pm != null) {
+            if (startInfo.TargetType == PythonCommandTask.TargetTypePip)
+            {
+                if (startInfo.ExecuteInOutput && pm != null)
+                {
                     var ui = new VsPackageManagerUI(project.Site);
-                    if (!pm.IsReady) {
+                    if (!pm.IsReady)
+                    {
                         await pm.PrepareAsync(ui, CancellationToken.None);
                     }
                     await pm.InstallAsync(
@@ -464,17 +534,22 @@ namespace Microsoft.PythonTools.Project {
                 startInfo.Filename = "pip";
             }
 
-            if (startInfo.ExecuteInRepl) {
-                if (await RunInRepl(project, startInfo)) {
+            if (startInfo.ExecuteInRepl)
+            {
+                if (await RunInRepl(project, startInfo))
+                {
                     return;
                 }
             }
 
             startInfo.AdjustArgumentsForProcessStartInfo(GetInterpreterPath(project, false));
 
-            if (startInfo.ExecuteInOutput) {
+            if (startInfo.ExecuteInOutput)
+            {
                 RunInOutput(project, startInfo);
-            } else {
+            }
+            else
+            {
                 RunInConsole(project, startInfo);
             }
         }
@@ -488,18 +563,22 @@ namespace Microsoft.PythonTools.Project {
         }
 #endif
 
-        class StringLogger : Microsoft.Build.Logging.ConsoleLogger {
+        class StringLogger : Microsoft.Build.Logging.ConsoleLogger
+        {
             public readonly List<string> Lines = new List<string>();
 
             public StringLogger()
-                : base(Build.Framework.LoggerVerbosity.Normal) {
+                : base(Build.Framework.LoggerVerbosity.Normal)
+            {
                 WriteHandler = Lines.Add;
             }
         }
 
-        internal static IDictionary<string, TargetResult> BuildTarget(IPythonProject project, string target) {
+        internal static IDictionary<string, TargetResult> BuildTarget(IPythonProject project, string target)
+        {
             var config = project.GetMSBuildProjectInstance();
-            if (config == null) {
+            if (config == null)
+            {
                 throw new ArgumentException(Strings.ProjectDoesNotSupportedMSBuild, nameof(project));
             }
 
@@ -512,14 +591,16 @@ namespace Microsoft.PythonTools.Project {
             var loggers = new ILogger[] { logger };
 #endif
 
-            if (!config.Build(new[] { target }, loggers, Enumerable.Empty<ForwardingLoggerRecord>(), out outputs)) {
+            if (!config.Build(new[] { target }, loggers, Enumerable.Empty<ForwardingLoggerRecord>(), out outputs))
+            {
                 var outputWindow = OutputWindowRedirector.Get(
                     project.Site,
                     VSConstants.OutputWindowPaneGuid.BuildOutputPane_guid,
                     "Build"
                 );
                 outputWindow.WriteErrorLine(Strings.ErrorBuildingCustomCommand.FormatUI(target));
-                foreach (var line in logger.Lines) {
+                foreach (var line in logger.Lines)
+                {
                     outputWindow.WriteErrorLine(line.TrimEnd('\r', '\n'));
                 }
                 throw new InvalidOperationException(Strings.ErrorBuildingCustomCommand.FormatUI(target));
@@ -528,7 +609,8 @@ namespace Microsoft.PythonTools.Project {
             return outputs;
         }
 
-        public CommandStartInfo GetStartInfo(IPythonProject project) {
+        public CommandStartInfo GetStartInfo(IPythonProject project)
+        {
             var outputs = BuildTarget(project, _target);
             var config = project.GetLaunchConfigurationOrThrow();
 
@@ -539,11 +621,13 @@ namespace Microsoft.PythonTools.Project {
                     !string.IsNullOrEmpty(i.GetMetadata(CreatePythonCommandItem.TargetTypeKey))
                 );
 
-            if (item == null) {
+            if (item == null)
+            {
                 throw new InvalidOperationException(Strings.ErrorBuildingCustomCommand.FormatUI(_target));
             }
 
-            var startInfo = new CommandStartInfo(config.Interpreter) {
+            var startInfo = new CommandStartInfo(config.Interpreter)
+            {
                 Filename = item.ItemSpec,
                 Arguments = item.GetMetadata(CreatePythonCommandItem.ArgumentsKey),
                 WorkingDirectory = item.GetMetadata(CreatePythonCommandItem.WorkingDirectoryKey),
@@ -562,23 +646,29 @@ namespace Microsoft.PythonTools.Project {
                 "Path", config.Interpreter.PathEnvironmentVariable
             );
 
-            try {
+            try
+            {
                 startInfo.WorkingDirectory = PathUtils.GetAbsoluteFilePath(project.ProjectHome, startInfo.WorkingDirectory);
-            } catch (ArgumentException) {
+            }
+            catch (ArgumentException)
+            {
             }
 
             string errorRegex = item.GetMetadata(CreatePythonCommandItem.ErrorRegexKey);
-            if (!string.IsNullOrEmpty(errorRegex)) {
+            if (!string.IsNullOrEmpty(errorRegex))
+            {
                 startInfo.ErrorRegex = new Regex(errorRegex);
             }
 
             string warningRegex = item.GetMetadata(CreatePythonCommandItem.WarningRegexKey);
-            if (!string.IsNullOrEmpty(warningRegex)) {
+            if (!string.IsNullOrEmpty(warningRegex))
+            {
                 startInfo.WarningRegex = new Regex(warningRegex);
             }
 
             string messageRegex = item.GetMetadata(CreatePythonCommandItem.MessageRegexKey);
-            if (!string.IsNullOrEmpty(messageRegex)) {
+            if (!string.IsNullOrEmpty(messageRegex))
+            {
                 startInfo.MessageRegex = new Regex(messageRegex);
             }
 
@@ -590,7 +680,8 @@ namespace Microsoft.PythonTools.Project {
             return startInfo;
         }
 
-        internal static string GetInterpreterPath(PythonProjectNode project, bool isWindows) {
+        internal static string GetInterpreterPath(PythonProjectNode project, bool isWindows)
+        {
             var factory = project.GetInterpreterFactoryOrThrow();
 
             return isWindows ?
@@ -598,16 +689,21 @@ namespace Microsoft.PythonTools.Project {
                 factory.Configuration.InterpreterPath;
         }
 
-        private async Task<bool> RunInRepl(IPythonProject project, CommandStartInfo startInfo) {
+        private async Task<bool> RunInRepl(IPythonProject project, CommandStartInfo startInfo)
+        {
             var executeIn = string.IsNullOrEmpty(startInfo.ExecuteIn) ? CreatePythonCommandItem.ExecuteInRepl : startInfo.ExecuteIn;
             bool resetRepl = executeIn.StartsWithOrdinal("R");
 
             var replTitle = executeIn.Substring(4).TrimStart(' ', ':');
-            if (string.IsNullOrEmpty(replTitle)) {
+            if (string.IsNullOrEmpty(replTitle))
+            {
                 replTitle = Strings.CustomCommandReplTitle.FormatUI(DisplayLabelWithoutAccessKeys);
-            } else {
+            }
+            else
+            {
                 var match = _customCommandLabelRegex.Match(replTitle);
-                if (match.Success) {
+                if (match.Success)
+                {
                     replTitle = LoadResourceFromAssembly(
                         match.Groups["assembly"].Value,
                         match.Groups["namespace"].Value,
@@ -625,7 +721,8 @@ namespace Microsoft.PythonTools.Project {
 
             var model = _project.Site.GetComponentModel();
             var replProvider = model.GetService<InteractiveWindowProvider>();
-            if (replProvider == null) {
+            if (replProvider == null)
+            {
                 return false;
             }
 
@@ -637,8 +734,10 @@ namespace Microsoft.PythonTools.Project {
 
             var interactive = replWindow.InteractiveWindow;
             var pyEvaluator = replWindow.InteractiveWindow.Evaluator as PythonInteractiveEvaluator;
-            if (pyEvaluator == null) {
-                if (created && replFrame != null) {
+            if (pyEvaluator == null)
+            {
+                if (created && replFrame != null)
+                {
                     // We created the window, but it isn't valid, so we'll close
                     // it again immediately.
                     replFrame.CloseFrame((uint)__FRAMECLOSE.FRAMECLOSE_NoSave);
@@ -647,12 +746,14 @@ namespace Microsoft.PythonTools.Project {
                 return false;
             }
 
-            if (pyEvaluator.IsExecuting) {
+            if (pyEvaluator.IsExecuting)
+            {
                 throw new InvalidOperationException(Strings.ErrorCommandAlreadyRunning);
             }
 
             pyEvaluator.ProjectMoniker = _project.GetMkDocument();
-            pyEvaluator.Configuration = new LaunchConfiguration(startInfo.Interpreter) {
+            pyEvaluator.Configuration = new LaunchConfiguration(startInfo.Interpreter)
+            {
                 WorkingDirectory = startInfo.WorkingDirectory,
                 Environment = startInfo.EnvironmentVariables.ToDictionary(kv => kv.Key, kv => kv.Value)
             };
@@ -664,39 +765,54 @@ namespace Microsoft.PythonTools.Project {
 
             var result = await pyEvaluator.ResetAsync(false, quiet: true);
 
-            if (result.IsSuccessful) {
-                try {
+            if (result.IsSuccessful)
+            {
+                try
+                {
                     var filename = startInfo.Filename;
                     var arguments = startInfo.Arguments ?? string.Empty;
 
-                    if (startInfo.IsScript) {
+                    if (startInfo.IsScript)
+                    {
                         interactive.WriteLine(Strings.CustomCommandExecutingScript.FormatUI(Path.GetFileName(filename), arguments));
                         Debug.WriteLine("Executing {0} {1}", filename, arguments);
                         await pyEvaluator.ExecuteFileAsync(filename, arguments);
-                    } else if (startInfo.IsModule) {
+                    }
+                    else if (startInfo.IsModule)
+                    {
                         interactive.WriteLine(Strings.CustomCommandExecutingModule.FormatUI(filename, arguments));
                         Debug.WriteLine("Executing -m {0} {1}", filename, arguments);
                         await pyEvaluator.ExecuteModuleAsync(filename, arguments);
-                    } else if (startInfo.IsCode) {
+                    }
+                    else if (startInfo.IsCode)
+                    {
                         Debug.WriteLine("Executing -c \"{0}\"", filename, arguments);
                         await pyEvaluator.ExecuteCodeAsync(filename);
-                    } else {
+                    }
+                    else
+                    {
                         interactive.WriteLine(Strings.CustomCommandExecutingOther.FormatUI(Path.GetFileName(filename), arguments));
                         Debug.WriteLine("Executing {0} {1}", filename, arguments);
                         await pyEvaluator.ExecuteProcessAsync(filename, arguments);
                     }
 
-                    if (resetRepl) {
+                    if (resetRepl)
+                    {
                         // We really close the backend, rather than resetting.
                         pyEvaluator.Dispose();
                     }
-                } catch (OperationCanceledException) {
+                }
+                catch (OperationCanceledException)
+                {
                     // Swallow OperationCanceledException, it is normal for async operation to be cancelled
                     ActivityLog.LogInformation(Strings.ProductTitle, Strings.CustomCommandCanceled.FormatUI(_label));
-                } catch (Exception ex) {
+                }
+                catch (Exception ex)
+                {
                     ActivityLog.LogError(Strings.ProductTitle, Strings.ErrorRunningCustomCommand.FormatUI(_label, ex));
                     var outWindow = OutputWindowRedirector.GetGeneral(project.Site);
-                    if (outWindow != null) {
+                    if (outWindow != null)
+                    {
                         outWindow.WriteErrorLine(Strings.ErrorRunningCustomCommand.FormatUI(_label, ex));
                         outWindow.Show();
                     }
@@ -707,9 +823,11 @@ namespace Microsoft.PythonTools.Project {
             return false;
         }
 
-        private async void RunInOutput(IPythonProject project, CommandStartInfo startInfo) {
+        private async void RunInOutput(IPythonProject project, CommandStartInfo startInfo)
+        {
             Redirector redirector = OutputWindowRedirector.GetGeneral(project.Site);
-            if (startInfo.ErrorRegex != null || startInfo.WarningRegex != null || startInfo.MessageRegex != null) {
+            if (startInfo.ErrorRegex != null || startInfo.WarningRegex != null || startInfo.MessageRegex != null)
+            {
                 redirector = new TeeRedirector(redirector, new ErrorListRedirector(_project.Site, project as IVsHierarchy, startInfo.WorkingDirectory, _errorListProvider, startInfo.ErrorRegex, startInfo.WarningRegex, startInfo.MessageRegex));
             }
             redirector.ShowAndActivate();
@@ -722,12 +840,14 @@ namespace Microsoft.PythonTools.Project {
                 false,
                 redirector,
                 quoteArgs: false
-            )) {
+            ))
+            {
                 await process;
             }
         }
 
-        private async void RunInConsole(IPythonProject project, CommandStartInfo startInfo) {
+        private async void RunInConsole(IPythonProject project, CommandStartInfo startInfo)
+        {
             using (var process = ProcessOutput.Run(
                 startInfo.Filename,
                 new[] { startInfo.Arguments },
@@ -736,13 +856,15 @@ namespace Microsoft.PythonTools.Project {
                 true,
                 null,
                 quoteArgs: false
-            )) {
+            ))
+            {
                 await process;
             }
         }
     }
 
-    class CommandStartInfo {
+    class CommandStartInfo
+    {
         public readonly InterpreterConfiguration Interpreter;
         public string Filename;
         public string Arguments;
@@ -753,83 +875,112 @@ namespace Microsoft.PythonTools.Project {
         public Regex ErrorRegex, WarningRegex, MessageRegex;
         public string[] RequiredPackages;
 
-        public CommandStartInfo(InterpreterConfiguration interpreter) {
+        public CommandStartInfo(InterpreterConfiguration interpreter)
+        {
             Interpreter = interpreter;
         }
 
-        public void AddArgumentAtStart(string argument) {
-            if (string.IsNullOrEmpty(Arguments)) {
+        public void AddArgumentAtStart(string argument)
+        {
+            if (string.IsNullOrEmpty(Arguments))
+            {
                 Arguments = ProcessOutput.QuoteSingleArgument(argument);
-            } else {
+            }
+            else
+            {
                 Arguments = ProcessOutput.QuoteSingleArgument(argument) + " " + Arguments;
             }
         }
 
-        public void AddArgumentAtEnd(string argument) {
-            if (string.IsNullOrEmpty(Arguments)) {
+        public void AddArgumentAtEnd(string argument)
+        {
+            if (string.IsNullOrEmpty(Arguments))
+            {
                 Arguments = ProcessOutput.QuoteSingleArgument(argument);
-            } else {
+            }
+            else
+            {
                 Arguments += " " + ProcessOutput.QuoteSingleArgument(argument);
             }
         }
 
-        public bool ExecuteInRepl {
-            get {
+        public bool ExecuteInRepl
+        {
+            get
+            {
                 return !string.IsNullOrEmpty(ExecuteIn) &&
                     ExecuteIn.StartsWithOrdinal(CreatePythonCommandItem.ExecuteInRepl, ignoreCase: true);
             }
         }
 
-        public bool ExecuteInOutput {
-            get {
+        public bool ExecuteInOutput
+        {
+            get
+            {
                 return CreatePythonCommandItem.ExecuteInOutput.Equals(ExecuteIn, StringComparison.OrdinalIgnoreCase);
             }
         }
 
-        public bool ExecuteInConsole {
-            get {
+        public bool ExecuteInConsole
+        {
+            get
+            {
                 return PythonCommandTask.ExecuteInConsole.Equals(ExecuteIn, StringComparison.OrdinalIgnoreCase);
             }
         }
 
-        public bool ExecuteInConsoleAndPause {
-            get {
+        public bool ExecuteInConsoleAndPause
+        {
+            get
+            {
                 return PythonCommandTask.ExecuteInConsolePause.Equals(ExecuteIn, StringComparison.OrdinalIgnoreCase);
             }
         }
 
-        public bool ExecuteHidden {
-            get {
+        public bool ExecuteHidden
+        {
+            get
+            {
                 return PythonCommandTask.ExecuteInNone.Equals(ExecuteIn, StringComparison.OrdinalIgnoreCase);
             }
         }
 
-        public bool IsScript {
-            get {
+        public bool IsScript
+        {
+            get
+            {
                 return PythonCommandTask.TargetTypeScript.Equals(TargetType, StringComparison.OrdinalIgnoreCase);
             }
         }
 
-        public bool IsModule {
-            get {
+        public bool IsModule
+        {
+            get
+            {
                 return PythonCommandTask.TargetTypeModule.Equals(TargetType, StringComparison.OrdinalIgnoreCase);
             }
         }
 
-        public bool IsCode {
-            get {
+        public bool IsCode
+        {
+            get
+            {
                 return PythonCommandTask.TargetTypeCode.Equals(TargetType, StringComparison.OrdinalIgnoreCase);
             }
         }
 
-        public bool IsExecuable {
-            get {
+        public bool IsExecuable
+        {
+            get
+            {
                 return PythonCommandTask.TargetTypeExecutable.Equals(TargetType, StringComparison.OrdinalIgnoreCase);
             }
         }
 
-        public bool IsPip {
-            get {
+        public bool IsPip
+        {
+            get
+            {
                 return PythonCommandTask.TargetTypePip.Equals(TargetType, StringComparison.OrdinalIgnoreCase);
             }
         }
@@ -857,16 +1008,21 @@ namespace Microsoft.PythonTools.Project {
             string interpreterPath,
             bool handleConsoleAndPause = true,
             bool inheritGlobalEnvironmentVariables = true
-        ) {
-            if (inheritGlobalEnvironmentVariables) {
+        )
+        {
+            if (inheritGlobalEnvironmentVariables)
+            {
                 var env = new Dictionary<string, string>();
                 var globalEnv = Environment.GetEnvironmentVariables();
-                foreach (var key in globalEnv.Keys) {
+                foreach (var key in globalEnv.Keys)
+                {
                     env[key.ToString()] = globalEnv[key].ToString();
                 }
 
-                if (EnvironmentVariables != null) {
-                    foreach (var entry in EnvironmentVariables) {
+                if (EnvironmentVariables != null)
+                {
+                    foreach (var entry in EnvironmentVariables)
+                    {
                         env[entry.Key] = entry.Value;
                     }
                 }
@@ -874,24 +1030,33 @@ namespace Microsoft.PythonTools.Project {
                 EnvironmentVariables = env;
             }
 
-            if (IsScript) {
+            if (IsScript)
+            {
                 AddArgumentAtStart(Filename);
                 Filename = interpreterPath;
-            } else if (IsModule) {
+            }
+            else if (IsModule)
+            {
                 AddArgumentAtStart(Filename);
                 AddArgumentAtStart("-m");
                 Filename = interpreterPath;
-            } else if (IsCode) {
+            }
+            else if (IsCode)
+            {
                 AddArgumentAtStart(Filename.Replace("\r\n", "\n"));
                 AddArgumentAtStart("-c");
                 Filename = interpreterPath;
             }
             TargetType = PythonCommandTask.TargetTypeExecutable;
 
-            if (ExecuteInRepl) {
+            if (ExecuteInRepl)
+            {
                 ExecuteIn = CreatePythonCommandItem.ExecuteInOutput;
-            } else if (ExecuteInConsole) {
-                if (handleConsoleAndPause) {
+            }
+            else if (ExecuteInConsole)
+            {
+                if (handleConsoleAndPause)
+                {
                     Arguments = string.Format(
                         "/C \"{0}{1}{2}\" & if errorlevel 1 pause",
                         ProcessOutput.QuoteSingleArgument(Filename),
@@ -901,8 +1066,11 @@ namespace Microsoft.PythonTools.Project {
                     Filename = Path.Combine(Environment.SystemDirectory, "cmd.exe");
                     ExecuteIn = PythonCommandTask.ExecuteInConsole;
                 }
-            } else if (ExecuteInConsoleAndPause) {
-                if (handleConsoleAndPause) {
+            }
+            else if (ExecuteInConsoleAndPause)
+            {
+                if (handleConsoleAndPause)
+                {
                     Arguments = string.Format(
                         "/C \"{0}{1}{2}\" & pause",
                         ProcessOutput.QuoteSingleArgument(Filename),
@@ -914,22 +1082,27 @@ namespace Microsoft.PythonTools.Project {
                 }
             }
 
-            if (EnvironmentVariables != null && !string.IsNullOrEmpty(Arguments)) {
-                Arguments = Regex.Replace(Arguments, @"%(\w+)%", m => {
+            if (EnvironmentVariables != null && !string.IsNullOrEmpty(Arguments))
+            {
+                Arguments = Regex.Replace(Arguments, @"%(\w+)%", m =>
+                {
                     string envVar;
                     return EnvironmentVariables.TryGetValue(m.Groups[1].Value, out envVar) ? envVar : string.Empty;
                 });
             }
         }
 
-        private static string ChooseFirst(string x, string y) {
-            if (string.IsNullOrEmpty(x)) {
+        private static string ChooseFirst(string x, string y)
+        {
+            if (string.IsNullOrEmpty(x))
+            {
                 return y ?? string.Empty;
             }
             return x;
         }
 
-        internal void AddPropertiesAfter(LaunchConfiguration config) {
+        internal void AddPropertiesAfter(LaunchConfiguration config)
+        {
             AddArgumentAtEnd(config.ScriptArguments);
             WorkingDirectory = ChooseFirst(WorkingDirectory, config.WorkingDirectory);
 

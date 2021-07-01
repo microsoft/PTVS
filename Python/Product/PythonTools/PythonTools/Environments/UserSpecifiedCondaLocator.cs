@@ -14,13 +14,8 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.ComponentModel.Composition;
-using Microsoft.PythonTools.Interpreter;
-using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudioTools;
-
-namespace Microsoft.PythonTools.Environments {
+namespace Microsoft.PythonTools.Environments
+{
     /// <summary>
     /// Conda locator that returns the path to the conda executable
     /// specified by the user in tools/options/python/conda page.
@@ -29,18 +24,22 @@ namespace Microsoft.PythonTools.Environments {
     /// </summary>
     [Export(typeof(ICondaLocator))]
     [ExportMetadata("Priority", 100)]
-    sealed class UserSpecifiedCondaLocator : ICondaLocator {
+    sealed class UserSpecifiedCondaLocator : ICondaLocator
+    {
         private readonly IServiceProvider _site;
 
         [ImportingConstructor]
         public UserSpecifiedCondaLocator(
             [Import(typeof(SVsServiceProvider), AllowDefault = true)] IServiceProvider site = null
-        ) {
+        )
+        {
             _site = site;
         }
 
-        public string CondaExecutablePath {
-            get {
+        public string CondaExecutablePath
+        {
+            get
+            {
                 return _site?.GetUIThread().Invoke(() =>
                     _site?.GetPythonToolsService()?.CondaOptions.CustomCondaExecutablePath
                 );

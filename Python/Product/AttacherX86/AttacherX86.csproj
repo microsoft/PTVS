@@ -98,12 +98,6 @@
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="PyAttacherX86.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Attacher\Attacher.csproj">
-      <Project>{666A22BB-0CB5-4C08-A20F-E17450DA6573}</Project>
-      <Name>Attacher</Name>
-    </ProjectReference>
-  </ItemGroup>
   <Import Project="..\ProjectAfter.settings" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

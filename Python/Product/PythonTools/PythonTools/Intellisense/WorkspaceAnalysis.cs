@@ -14,18 +14,12 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.Composition;
-using System.Threading.Tasks;
-using Microsoft.PythonTools.Interpreter;
-using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudioTools;
-
-namespace Microsoft.PythonTools.Intellisense {
+namespace Microsoft.PythonTools.Intellisense
+{
     [Export(typeof(WorkspaceAnalysis))]
     [PartCreationPolicy(CreationPolicy.Shared)]
-    internal class WorkspaceAnalysis : IDisposable {
+    internal class WorkspaceAnalysis : IDisposable
+    {
         private readonly IPythonWorkspaceContextProvider _pythonWorkspaceService;
         private readonly IInterpreterOptionsService _optionsService;
         private readonly IServiceProvider _site;
@@ -36,7 +30,8 @@ namespace Microsoft.PythonTools.Intellisense {
             [Import] IPythonWorkspaceContextProvider pythonWorkspaceService,
             [Import] IInterpreterOptionsService optionsService,
             [Import(typeof(SVsServiceProvider), AllowDefault = true)] IServiceProvider site = null
-        ) {
+        )
+        {
             _pythonWorkspaceService = pythonWorkspaceService;
             _optionsService = optionsService;
             _site = site;
@@ -47,38 +42,46 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public string WorkspaceName => _pythonWorkspaceService.Workspace?.WorkspaceName;
 
-        public void Dispose() {
+        public void Dispose()
+        {
             _pythonWorkspaceService.WorkspaceClosing -= OnWorkspaceClosing;
         }
 
-        public VsProjectAnalyzer TryGetWorkspaceAnalyzer() {
+        public VsProjectAnalyzer TryGetWorkspaceAnalyzer()
+        {
             _site.MustBeCalledFromUIThread();
 
             var workspace = _pythonWorkspaceService.Workspace;
-            if (workspace == null) {
+            if (workspace == null)
+            {
                 return null;
             }
 
-            if (_analyzers.TryGetValue(workspace, out WorkspaceAnalyzer analyzer)) {
+            if (_analyzers.TryGetValue(workspace, out WorkspaceAnalyzer analyzer))
+            {
                 return analyzer.Analyzer;
             }
 
             return null;
         }
 
-        public async Task<VsProjectAnalyzer> GetAnalyzerAsync() {
+        public async Task<VsProjectAnalyzer> GetAnalyzerAsync()
+        {
             _site.MustBeCalledFromUIThread();
 
             var workspace = _pythonWorkspaceService.Workspace;
-            if (workspace == null) {
+            if (workspace == null)
+            {
                 return null;
             }
 
-            if (_analyzers.TryGetValue(workspace, out WorkspaceAnalyzer analyzer)) {
+            if (_analyzers.TryGetValue(workspace, out WorkspaceAnalyzer analyzer))
+            {
                 return analyzer.Analyzer;
             }
 
-            if (workspace.CurrentFactory != null) {
+            if (workspace.CurrentFactory != null)
+            {
                 analyzer = new WorkspaceAnalyzer(workspace, _optionsService, _site);
                 await analyzer.InitializeAsync();
                 _analyzers[workspace] = analyzer;
@@ -88,16 +91,20 @@ namespace Microsoft.PythonTools.Intellisense {
             return null;
         }
 
-        private void OnWorkspaceClosing(object sender, PythonWorkspaceContextEventArgs e) {
-            _site.GetUIThread().Invoke(() => {
+        private void OnWorkspaceClosing(object sender, PythonWorkspaceContextEventArgs e)
+        {
+            _site.GetUIThread().Invoke(() =>
+            {
                 CloseAnalyzer(e.Workspace);
             });
         }
 
-        private void CloseAnalyzer(IPythonWorkspaceContext workspace) {
+        private void CloseAnalyzer(IPythonWorkspaceContext workspace)
+        {
             _site.MustBeCalledFromUIThread();
 
-            if (_analyzers.TryGetValue(workspace, out WorkspaceAnalyzer analyzer)) {
+            if (_analyzers.TryGetValue(workspace, out WorkspaceAnalyzer analyzer))
+            {
                 _analyzers.Remove(workspace);
                 analyzer.Dispose();
             }

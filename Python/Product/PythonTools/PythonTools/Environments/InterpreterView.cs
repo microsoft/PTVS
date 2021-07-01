@@ -14,16 +14,12 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Windows;
-using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Project;
 
-namespace Microsoft.PythonTools.Environments {
-    sealed class InterpreterView : DependencyObject {
+namespace Microsoft.PythonTools.Environments
+{
+    sealed class InterpreterView : DependencyObject
+    {
         public static readonly IEqualityComparer<InterpreterView> EqualityComparer = new InterpreterViewComparer();
         public static readonly IComparer<InterpreterView> Comparer = (IComparer<InterpreterView>)EqualityComparer;
 
@@ -32,8 +28,10 @@ namespace Microsoft.PythonTools.Environments {
             PythonProjectNode project,
             bool onlyGlobalEnvironments = false,
             InterpreterFilter excludeInterpreters = InterpreterFilter.None
-        ) {
-            if (serviceProvider == null) {
+        )
+        {
+            if (serviceProvider == null)
+            {
                 throw new ArgumentNullException(nameof(serviceProvider));
             }
 
@@ -46,11 +44,13 @@ namespace Microsoft.PythonTools.Environments {
                 .ThenBy(c => c.Version)
                 .Select(c => new InterpreterView(c.Id, c.Description, c.InterpreterPath, c.Version.ToString(), c.ArchitectureString, project));
 
-            if (onlyGlobalEnvironments) {
+            if (onlyGlobalEnvironments)
+            {
                 res = res.Where(v => string.IsNullOrEmpty(knownProviders.GetProperty(v.Id, "ProjectMoniker") as string));
             }
 
-            if (project != null) {
+            if (project != null)
+            {
                 res = res.Concat(project.InvalidInterpreterIds
                     .Select(i => new InterpreterView(i, FormatInvalidId(i), string.Empty, string.Empty, string.Empty, project))
                     .OrderBy(v => v.Name));
@@ -59,20 +59,25 @@ namespace Microsoft.PythonTools.Environments {
             return res;
         }
 
-        internal static bool ExcludeInterpreter(InterpreterConfiguration config, InterpreterFilter excludeInterpreters = InterpreterFilter.None) {
-            if (excludeInterpreters == InterpreterFilter.None) {
+        internal static bool ExcludeInterpreter(InterpreterConfiguration config, InterpreterFilter excludeInterpreters = InterpreterFilter.None)
+        {
+            if (excludeInterpreters == InterpreterFilter.None)
+            {
                 return false;
             }
 
-            if (excludeInterpreters.HasFlag(InterpreterFilter.ExcludeVirtualEnv) && VirtualEnv.IsPythonVirtualEnv(config.GetPrefixPath())) {
+            if (excludeInterpreters.HasFlag(InterpreterFilter.ExcludeVirtualEnv) && VirtualEnv.IsPythonVirtualEnv(config.GetPrefixPath()))
+            {
                 return true;
             }
 
-            if (excludeInterpreters.HasFlag(InterpreterFilter.ExcludeCondaEnv) && CondaUtils.IsCondaEnvironment(config.GetPrefixPath())) {
+            if (excludeInterpreters.HasFlag(InterpreterFilter.ExcludeCondaEnv) && CondaUtils.IsCondaEnvironment(config.GetPrefixPath()))
+            {
                 return true;
             }
 
-            if (excludeInterpreters.HasFlag(InterpreterFilter.ExcludeIronpython) && config.IsIronPython()) {
+            if (excludeInterpreters.HasFlag(InterpreterFilter.ExcludeIronpython) && config.IsIronPython())
+            {
                 return true;
             }
 
@@ -80,7 +85,8 @@ namespace Microsoft.PythonTools.Environments {
         }
 
         [Flags]
-        internal enum InterpreterFilter {
+        internal enum InterpreterFilter
+        {
             None = 0,
             ExcludeVirtualEnv = 1,
             ExcludeCondaEnv = 2,
@@ -88,10 +94,13 @@ namespace Microsoft.PythonTools.Environments {
             ExcludeAll = ~None
         }
 
-        private static string FormatInvalidId(string id) {
+        private static string FormatInvalidId(string id)
+        {
             string company, tag;
-            if (CPythonInterpreterFactoryConstants.TryParseInterpreterId(id, out company, out tag)) {
-                if (company == PythonRegistrySearch.PythonCoreCompany) {
+            if (CPythonInterpreterFactoryConstants.TryParseInterpreterId(id, out company, out tag))
+            {
+                if (company == PythonRegistrySearch.PythonCoreCompany)
+                {
                     company = "Python";
                 }
                 return "{0} {1}".FormatUI(company, tag);
@@ -106,7 +115,8 @@ namespace Microsoft.PythonTools.Environments {
             string languageVersion,
             string architecture,
             PythonProjectNode project
-        ) {
+        )
+        {
             Id = id;
             Name = name;
             InterpreterPath = interpreterPath;
@@ -125,28 +135,38 @@ namespace Microsoft.PythonTools.Environments {
 
         public PythonProjectNode Project { get; }
 
-        public string Name {
+        public string Name
+        {
             get { return (string)SafeGetValue(NameProperty); }
             private set { SafeSetValue(NamePropertyKey, value); }
         }
 
-        public string InterpreterPath {
+        public string InterpreterPath
+        {
             get { return (string)SafeGetValue(InterpreterPathProperty); }
             private set { SafeSetValue(InterpreterPathPropertyKey, value); }
         }
 
-        private object SafeGetValue(DependencyProperty property) {
-            if (Dispatcher.CheckAccess()) {
+        private object SafeGetValue(DependencyProperty property)
+        {
+            if (Dispatcher.CheckAccess())
+            {
                 return GetValue(property);
-            } else {
+            }
+            else
+            {
                 return Dispatcher.Invoke((Func<object>)(() => GetValue(property)));
             }
         }
 
-        private void SafeSetValue(DependencyPropertyKey property, object value) {
-            if (Dispatcher.CheckAccess()) {
+        private void SafeSetValue(DependencyPropertyKey property, object value)
+        {
+            if (Dispatcher.CheckAccess())
+            {
                 SetValue(property, value);
-            } else {
+            }
+            else
+            {
                 Dispatcher.BeginInvoke((Action)(() => SetValue(property, value)));
             }
         }
@@ -157,16 +177,20 @@ namespace Microsoft.PythonTools.Environments {
         private static readonly DependencyPropertyKey InterpreterPathPropertyKey = DependencyProperty.RegisterReadOnly(nameof(InterpreterPath), typeof(string), typeof(InterpreterView), new PropertyMetadata());
         public static readonly DependencyProperty InterpreterPathProperty = InterpreterPathPropertyKey.DependencyProperty;
 
-        private sealed class InterpreterViewComparer : IEqualityComparer<InterpreterView>, IComparer<InterpreterView> {
-            public bool Equals(InterpreterView x, InterpreterView y) {
+        private sealed class InterpreterViewComparer : IEqualityComparer<InterpreterView>, IComparer<InterpreterView>
+        {
+            public bool Equals(InterpreterView x, InterpreterView y)
+            {
                 return x?.Id == y?.Id;
             }
 
-            public int GetHashCode(InterpreterView obj) {
+            public int GetHashCode(InterpreterView obj)
+            {
                 return obj.Id.GetHashCode();
             }
 
-            public int Compare(InterpreterView x, InterpreterView y) {
+            public int Compare(InterpreterView x, InterpreterView y)
+            {
                 return StringComparer.CurrentCultureIgnoreCase.Compare(
                     x?.Name ?? "",
                     y?.Name ?? ""

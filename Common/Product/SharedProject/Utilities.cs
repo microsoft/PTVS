@@ -15,18 +15,6 @@
 // permissions and limitations under the License.
 
 
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Shell;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Drawing;
-using System.IO;
-using System.Runtime.InteropServices;
-using System.Security.Permissions;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Windows.Forms;
 using IServiceProvider = System.IServiceProvider;
 using MSBuild = Microsoft.Build.Evaluation;
 

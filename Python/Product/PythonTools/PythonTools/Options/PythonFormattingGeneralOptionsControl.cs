@@ -14,19 +14,22 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Windows.Forms;
-
-namespace Microsoft.PythonTools.Options {
-    public partial class PythonFormattingGeneralOptionsControl : UserControl {
-        public PythonFormattingGeneralOptionsControl() {
+namespace Microsoft.PythonTools.Options
+{
+    public partial class PythonFormattingGeneralOptionsControl : UserControl
+    {
+        public PythonFormattingGeneralOptionsControl()
+        {
             InitializeComponent();
         }
 
-        internal void SyncControlWithPageSettings(PythonToolsService pyService) {
+        internal void SyncControlWithPageSettings(PythonToolsService pyService)
+        {
             _pasteRemovesReplPrompts.Checked = pyService.AdvancedOptions.PasteRemovesReplPrompts;
         }
 
-        internal void SyncPageWithControlSettings(PythonToolsService pyService) {
+        internal void SyncPageWithControlSettings(PythonToolsService pyService)
+        {
             pyService.AdvancedOptions.PasteRemovesReplPrompts = _pasteRemovesReplPrompts.Checked;
         }
     }

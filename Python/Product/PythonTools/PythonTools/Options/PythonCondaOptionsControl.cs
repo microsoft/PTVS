@@ -14,32 +14,37 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Windows.Forms;
-
-namespace Microsoft.PythonTools.Options {
-    public partial class PythonCondaOptionsControl : UserControl {
+namespace Microsoft.PythonTools.Options
+{
+    public partial class PythonCondaOptionsControl : UserControl
+    {
         private readonly IServiceProvider _serviceProvider;
 
-        private PythonCondaOptionsControl() : this(null) {
+        private PythonCondaOptionsControl() : this(null)
+        {
         }
 
-        public PythonCondaOptionsControl(IServiceProvider serviceProvider) {
+        public PythonCondaOptionsControl(IServiceProvider serviceProvider)
+        {
             _serviceProvider = serviceProvider;
             InitializeComponent();
         }
 
-        internal void SyncControlWithPageSettings(PythonToolsService pyService) {
+        internal void SyncControlWithPageSettings(PythonToolsService pyService)
+        {
             _condaPathTextBox.Text = pyService.CondaOptions.CustomCondaExecutablePath ?? string.Empty;
         }
 
-        internal void SyncPageWithControlSettings(PythonToolsService pyService) {
+        internal void SyncPageWithControlSettings(PythonToolsService pyService)
+        {
             pyService.CondaOptions.CustomCondaExecutablePath = _condaPathTextBox.Text;
         }
 
-        private void condaPathButton_Click(object sender, System.EventArgs e) {
+        private void condaPathButton_Click(object sender, System.EventArgs e)
+        {
             var newPath = _serviceProvider.BrowseForFileOpen(Handle, Strings.CondaExecutableFilter, _condaPathTextBox.Text);
-            if (!string.IsNullOrEmpty(newPath)) {
+            if (!string.IsNullOrEmpty(newPath))
+            {
                 _condaPathTextBox.Text = newPath;
             }
         }

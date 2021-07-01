@@ -14,11 +14,6 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Reflection;
-using System.Resources;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 
 [assembly: AssemblyTitle("Visual Studio - Python language support")]
 [assembly: AssemblyDescription("Provides Python support within Visual Studio.")]

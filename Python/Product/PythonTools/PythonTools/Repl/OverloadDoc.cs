@@ -14,14 +14,15 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.PythonTools.Analysis;
-
-namespace Microsoft.PythonTools.Repl {
-    class OverloadDoc {
+namespace Microsoft.PythonTools.Repl
+{
+    class OverloadDoc
+    {
         private readonly string _doc;
         private readonly ParameterResult[] _params;
 
-        public OverloadDoc(string doc, ParameterResult[] parameters) {
+        public OverloadDoc(string doc, ParameterResult[] parameters)
+        {
             _doc = doc;
             _params = parameters;
         }

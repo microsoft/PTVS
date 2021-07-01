@@ -14,25 +14,16 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Windows.Forms;
-using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Project;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.ComponentModelHost;
-using Microsoft.VisualStudio.Editor;
-using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudioTools.Project;
 
-namespace Microsoft.PythonTools.Refactoring {
+namespace Microsoft.PythonTools.Refactoring
+{
     /// <summary>
     /// Represents all of the changes to a single file in the refactor preview window.
     /// </summary>
-    class FilePreviewItem : IPreviewItem {
+    class FilePreviewItem : IPreviewItem
+    {
         public readonly string Filename;
         private readonly string _tempFileName;
         public readonly List<IPreviewItem> Items = new List<IPreviewItem>();
@@ -44,65 +35,84 @@ namespace Microsoft.PythonTools.Refactoring {
 
         internal static readonly ImageList _imageList = Utilities.GetImageList(typeof(PythonProjectNode).Assembly.GetManifestResourceStream(PythonConstants.ProjectImageList));
 
-        public FilePreviewItem(PreviewChangesEngine engine, string file) {
+        public FilePreviewItem(PreviewChangesEngine engine, string file)
+        {
             Filename = file;
             _engine = engine;
-            do {
+            do
+            {
                 _tempFileName = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName()) + ".py";
             } while (File.Exists(_tempFileName));
         }
 
-        public PreviewChangesEngine Engine {
-            get {
+        public PreviewChangesEngine Engine
+        {
+            get
+            {
                 return _engine;
             }
         }
 
-        public ushort Glyph {
+        public ushort Glyph
+        {
             get { return (ushort)CommonImageName.File; }
         }
 
-        public IntPtr ImageList {
+        public IntPtr ImageList
+        {
             get { return _imageList.Handle; }
         }
 
-        public bool IsExpandable {
+        public bool IsExpandable
+        {
             get { return true; }
         }
 
-        public PreviewList Children {
-            get {
-                if (_list == null) {
+        public PreviewList Children
+        {
+            get
+            {
+                if (_list == null)
+                {
                     _list = new PreviewList(Items.ToArray());
                 }
                 return _list;
             }
         }
 
-        public string GetText(VisualStudio.Shell.Interop.VSTREETEXTOPTIONS options) {
+        public string GetText(VisualStudio.Shell.Interop.VSTREETEXTOPTIONS options)
+        {
             return Path.GetFileName(Filename);
         }
 
-        public _VSTREESTATECHANGEREFRESH ToggleState() {
+        public _VSTREESTATECHANGEREFRESH ToggleState()
+        {
             _toggling = true;
-            try {
-                switch (CheckState) {
+            try
+            {
+                switch (CheckState)
+                {
                     case __PREVIEWCHANGESITEMCHECKSTATE.PCCS_Checked:
-                        foreach (var item in Items) {
+                        foreach (var item in Items)
+                        {
                             item.ToggleState();
                         }
                         break;
                     case __PREVIEWCHANGESITEMCHECKSTATE.PCCS_Unchecked:
                     case __PREVIEWCHANGESITEMCHECKSTATE.PCCS_PartiallyChecked:
-                        foreach (var item in Items) {
-                            if (item.CheckState == __PREVIEWCHANGESITEMCHECKSTATE.PCCS_Unchecked) {
+                        foreach (var item in Items)
+                        {
+                            if (item.CheckState == __PREVIEWCHANGESITEMCHECKSTATE.PCCS_Unchecked)
+                            {
                                 item.ToggleState();
                             }
                         }
                         break;
 
                 }
-            } finally {
+            }
+            finally
+            {
                 _toggling = false;
             }
 
@@ -111,13 +121,19 @@ namespace Microsoft.PythonTools.Refactoring {
             return _VSTREESTATECHANGEREFRESH.TSCR_CURRENT | _VSTREESTATECHANGEREFRESH.TSCR_CHILDREN;
         }
 
-        public __PREVIEWCHANGESITEMCHECKSTATE CheckState {
-            get {
+        public __PREVIEWCHANGESITEMCHECKSTATE CheckState
+        {
+            get
+            {
                 __PREVIEWCHANGESITEMCHECKSTATE res = __PREVIEWCHANGESITEMCHECKSTATE.PCCS_None;
-                foreach (var child in Items) {
-                    if (res == __PREVIEWCHANGESITEMCHECKSTATE.PCCS_None) {
+                foreach (var child in Items)
+                {
+                    if (res == __PREVIEWCHANGESITEMCHECKSTATE.PCCS_None)
+                    {
                         res = child.CheckState;
-                    } else if (res != child.CheckState) {
+                    }
+                    else if (res != child.CheckState)
+                    {
                         res = __PREVIEWCHANGESITEMCHECKSTATE.PCCS_PartiallyChecked;
                         break;
                     }
@@ -126,7 +142,8 @@ namespace Microsoft.PythonTools.Refactoring {
             }
         }
 
-        public void DisplayPreview(IVsTextView view) {
+        public void DisplayPreview(IVsTextView view)
+        {
             EnsureTempFile();
 
             // transfer the analyzer to the underlying buffer so we tokenize with the correct version of the language
@@ -137,22 +154,28 @@ namespace Microsoft.PythonTools.Refactoring {
             view.SetBuffer(_buffer);
         }
 
-        public void Close(VSTREECLOSEACTIONS vSTREECLOSEACTIONS) {
-            if (_tempFileName != null && File.Exists(_tempFileName)) {
+        public void Close(VSTREECLOSEACTIONS vSTREECLOSEACTIONS)
+        {
+            if (_tempFileName != null && File.Exists(_tempFileName))
+            {
                 File.Delete(_tempFileName);
             }
 
             _list.OnClose(new[] { vSTREECLOSEACTIONS });
         }
 
-        public Span? Selection {
-            get {
+        public Span? Selection
+        {
+            get
+            {
                 return null;
             }
         }
 
-        private void EnsureTempFile() {
-            if (_buffer == null) {
+        private void EnsureTempFile()
+        {
+            if (_buffer == null)
+            {
                 CreateTempFile();
 
                 var invisbleFileManager = (IVsInvisibleEditorManager)_engine._serviceProvider.GetService(typeof(SVsInvisibleEditorManager));
@@ -162,10 +185,14 @@ namespace Microsoft.PythonTools.Refactoring {
                 IntPtr buffer;
                 var guid = typeof(IVsTextLines).GUID;
                 ErrorHandler.ThrowOnFailure(editor.GetDocData(0, ref guid, out buffer));
-                try {
+                try
+                {
                     _buffer = Marshal.GetObjectForIUnknown(buffer) as IVsTextLines;
-                } finally {
-                    if (buffer != IntPtr.Zero) {
+                }
+                finally
+                {
+                    if (buffer != IntPtr.Zero)
+                    {
                         Marshal.Release(buffer);
                     }
                 }
@@ -174,8 +201,10 @@ namespace Microsoft.PythonTools.Refactoring {
             }
         }
 
-        internal void UpdateTempFile() {
-            if (!_toggling) {
+        internal void UpdateTempFile()
+        {
+            if (!_toggling)
+            {
                 // TODO: This could be much more efficent then re-generating the file every time, we could instead
                 // update the existing buffer and markers.
                 ClearMarkers();
@@ -186,75 +215,91 @@ namespace Microsoft.PythonTools.Refactoring {
             }
         }
 
-        interface IFileUpdater {
+        interface IFileUpdater
+        {
             void Replace(int lineNo, int column, int lengthToDelete, string newText);
             void Log(string message);
             void Save();
         }
 
-        class TempFileUpdater : IFileUpdater {
+        class TempFileUpdater : IFileUpdater
+        {
             private readonly string _tempFile;
             private readonly string[] _lines;
 
-            public TempFileUpdater(string tempFile, ITextBuffer buffer) {
+            public TempFileUpdater(string tempFile, ITextBuffer buffer)
+            {
                 _tempFile = tempFile;
 
                 _lines = buffer.CurrentSnapshot.Lines.Select(x => x.GetText()).ToArray();
             }
 
-            public void Replace(int lineNo, int column, int lengthToDelete, string newText) {
+            public void Replace(int lineNo, int column, int lengthToDelete, string newText)
+            {
                 var oldLine = _lines[lineNo];
                 string newLine = oldLine.Remove(column, lengthToDelete);
                 newLine = newLine.Insert(column, newText);
                 _lines[lineNo] = newLine;
             }
 
-            public void Save() {
+            public void Save()
+            {
                 File.WriteAllLines(_tempFile, _lines);
             }
 
 
-            public void Log(string message) {
+            public void Log(string message)
+            {
             }
         }
 
-        class BufferUpdater : IFileUpdater {
+        class BufferUpdater : IFileUpdater
+        {
             private readonly ITextBuffer _buffer;
             private PreviewChangesEngine _engine;
 
-            public BufferUpdater(ITextBuffer buffer, PreviewChangesEngine engine) {
+            public BufferUpdater(ITextBuffer buffer, PreviewChangesEngine engine)
+            {
                 _buffer = buffer;
                 _engine = engine;
             }
 
-            public void Replace(int lineNo, int column, int lengthToDelete, string newText) {
+            public void Replace(int lineNo, int column, int lengthToDelete, string newText)
+            {
                 var line = _buffer.CurrentSnapshot.GetLineFromLineNumber(lineNo);
                 _buffer.Replace(new Span(line.Start + column, lengthToDelete), newText);
             }
 
-            public void Save() {
+            public void Save()
+            {
             }
 
 
-            public void Log(string message) {
+            public void Log(string message)
+            {
                 _engine._input.OutputLog(message);
             }
         }
 
-        internal void UpdateBuffer(ITextBuffer buffer) {
+        internal void UpdateBuffer(ITextBuffer buffer)
+        {
             UpdateFile(new BufferUpdater(buffer, _engine));
         }
 
-        private void CreateTempFile() {
+        private void CreateTempFile()
+        {
             IFileUpdater updater = new TempFileUpdater(_tempFileName, _engine._input.GetBufferForDocument(Filename));
 
             UpdateFile(updater);
         }
 
-        private void UpdateFile(IFileUpdater updater) {
-            for (int i = Items.Count - 1; i >= 0; i--) {
+        private void UpdateFile(IFileUpdater updater)
+        {
+            for (int i = Items.Count - 1; i >= 0; i--)
+            {
                 LocationPreviewItem item = (LocationPreviewItem)Items[i];
-                if (item.CheckState == __PREVIEWCHANGESITEMCHECKSTATE.PCCS_Checked) {
+                if (item.CheckState == __PREVIEWCHANGESITEMCHECKSTATE.PCCS_Checked)
+                {
                     // change is applied
                     updater.Replace(item.Line - 1, item.Column - 1, item.Length, Engine.Request.Name);
 
@@ -265,27 +310,35 @@ namespace Microsoft.PythonTools.Refactoring {
             updater.Save();
         }
 
-        private void ClearMarkers() {
-            foreach (var marker in _markers) {
+        private void ClearMarkers()
+        {
+            foreach (var marker in _markers)
+            {
                 ErrorHandler.ThrowOnFailure(marker.Invalidate());
             }
             _markers.Clear();
         }
 
-        private void ReloadBuffer() {
-            if (_buffer != null) {
+        private void ReloadBuffer()
+        {
+            if (_buffer != null)
+            {
                 _buffer.Reload(1);
 
                 AddMarkers();
             }
         }
 
-        private void AddMarkers() {
+        private void AddMarkers()
+        {
             int curLine = -1, columnDelta = 0;
-            foreach (LocationPreviewItem item in Items) {
+            foreach (LocationPreviewItem item in Items)
+            {
 
-                if (item.CheckState == __PREVIEWCHANGESITEMCHECKSTATE.PCCS_Checked) {
-                    if (item.Line != curLine) {
+                if (item.CheckState == __PREVIEWCHANGESITEMCHECKSTATE.PCCS_Checked)
+                {
+                    if (item.Line != curLine)
+                    {
                         columnDelta = 0;
                     }
                     curLine = item.Line;

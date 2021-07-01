@@ -14,14 +14,15 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Windows.Controls;
-
-namespace Microsoft.PythonTools.Project.ImportWizard {
+namespace Microsoft.PythonTools.Project.ImportWizard
+{
     /// <summary>
     /// Interaction logic for InterpreterPage.xaml
     /// </summary>
-    internal partial class InterpreterPage : Page {
-        public InterpreterPage() {
+    internal partial class InterpreterPage : Page
+    {
+        public InterpreterPage()
+        {
             InitializeComponent();
         }
     }

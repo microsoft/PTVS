@@ -25,12 +25,6 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using System.Runtime.Shell.Interop;
 */
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Shell;
-using System;
-using System.IO;
-using System.Runtime.InteropServices;
-using System.Windows.Forms;
 
 namespace Microsoft.VisualStudioTools
 {

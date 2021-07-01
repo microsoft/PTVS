@@ -14,18 +14,16 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.PythonTools.Editor;
-using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Options;
 
-namespace Microsoft.PythonTools.Intellisense {
+namespace Microsoft.PythonTools.Intellisense
+{
     /// <summary>
     /// Common base for squiggles providers that operate on a text buffer
     /// </summary>
-    abstract class BufferAnalysisSquiggleProviderBase<T> : IPythonTextBufferInfoEventSink {
+    abstract class BufferAnalysisSquiggleProviderBase<T> : IPythonTextBufferInfoEventSink
+    {
         // Allows test cases to skip checking user options
         internal static bool _alwaysCreateSquiggle;
 
@@ -40,7 +38,8 @@ namespace Microsoft.PythonTools.Intellisense {
             IServiceProvider serviceProvider,
             TaskProvider taskProvider,
             Func<GeneralOptions, bool> getSetting,
-            PythonTextBufferInfoEvents[] triggerEvents) {
+            PythonTextBufferInfoEvents[] triggerEvents)
+        {
 
             Services = serviceProvider.GetComponentModel().GetService<PythonEditorServices>();
             TaskProvider = taskProvider ?? throw new ArgumentNullException(nameof(taskProvider));
@@ -49,21 +48,26 @@ namespace Microsoft.PythonTools.Intellisense {
             _triggerEvents = triggerEvents;
 
             var options = Services.Python?.GeneralOptions;
-            if (options != null) {
+            if (options != null)
+            {
                 Enabled = _getSetting(options);
                 options.Changed += GeneralOptions_Changed;
             }
         }
 
-        private void GeneralOptions_Changed(object sender, EventArgs e) {
-            if (sender is GeneralOptions options) {
+        private void GeneralOptions_Changed(object sender, EventArgs e)
+        {
+            if (sender is GeneralOptions options)
+            {
                 Enabled = _getSetting(options);
             }
         }
 
-        public void AddBuffer(PythonTextBufferInfo buffer) {
+        public void AddBuffer(PythonTextBufferInfo buffer)
+        {
             buffer.AddSink(typeof(T), this);
-            if (buffer.AnalysisEntry?.IsAnalyzed == true) {
+            if (buffer.AnalysisEntry?.IsAnalyzed == true)
+            {
                 OnNewAnalysis(buffer, buffer.AnalysisEntry)
                     .HandleAllExceptions(Services.Site, GetType())
                     .DoNotWait();
@@ -72,8 +76,10 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public void RemoveBuffer(PythonTextBufferInfo buffer) => buffer.RemoveSink(typeof(T));
 
-        async Task IPythonTextBufferInfoEventSink.PythonTextBufferEventAsync(PythonTextBufferInfo sender, PythonTextBufferInfoEventArgs e) {
-            if (_triggerEvents.Contains(e.Event)) {
+        async Task IPythonTextBufferInfoEventSink.PythonTextBufferEventAsync(PythonTextBufferInfo sender, PythonTextBufferInfoEventArgs e)
+        {
+            if (_triggerEvents.Contains(e.Event))
+            {
                 await OnNewAnalysis(sender, e.AnalysisEntry);
             }
         }

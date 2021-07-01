@@ -14,8 +14,10 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.CodeCoverage {
-    class CoverageLineInfo {
+namespace Microsoft.PythonTools.CodeCoverage
+{
+    class CoverageLineInfo
+    {
         public bool Covered;
         public int ColumnStart = int.MaxValue, ColumnEnd = int.MinValue;
     }

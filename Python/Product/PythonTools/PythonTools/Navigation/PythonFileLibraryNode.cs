@@ -14,32 +14,30 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Microsoft.PythonTools.Analysis;
-using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Language;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudioTools.Navigation;
 using Microsoft.VisualStudioTools.Project;
 
-namespace Microsoft.PythonTools.Navigation {
-    class PythonFileLibraryNode : LibraryNode {
+namespace Microsoft.PythonTools.Navigation
+{
+    class PythonFileLibraryNode : LibraryNode
+    {
         private readonly HierarchyNode _hierarchy;
         public PythonFileLibraryNode(LibraryNode parent, HierarchyNode hierarchy, string name, string filename)
-            : base(parent, name, filename, LibraryNodeType.Namespaces, children: new PythonFileChildren((FileNode)hierarchy)) {
+            : base(parent, name, filename, LibraryNodeType.Namespaces, children: new PythonFileChildren((FileNode)hierarchy))
+        {
             _hierarchy = hierarchy;
 
             ((PythonFileChildren)Children)._parent = this;
         }
 
 
-        public override VSTREEDISPLAYDATA DisplayData {
-            get {
+        public override VSTREEDISPLAYDATA DisplayData
+        {
+            get
+            {
                 var res = new VSTREEDISPLAYDATA();
 
                 // Use the default Module icon for modules
@@ -49,9 +47,12 @@ namespace Microsoft.PythonTools.Navigation {
             }
         }
 
-        public override string Name {
-            get {
-                if (DuplicatedByName) {
+        public override string Name
+        {
+            get
+            {
+                if (DuplicatedByName)
+                {
                     StringBuilder sb = new StringBuilder(_hierarchy.Caption);
                     sb.Append(" (");
                     sb.Append(_hierarchy.ProjectMgr.Caption);
@@ -65,20 +66,25 @@ namespace Microsoft.PythonTools.Navigation {
             }
         }
 
-        public override uint CategoryField(LIB_CATEGORY category) {
-            switch (category) {
+        public override uint CategoryField(LIB_CATEGORY category)
+        {
+            switch (category)
+            {
                 case LIB_CATEGORY.LC_NODETYPE:
                     return (uint)_LIBCAT_NODETYPE.LCNT_HIERARCHY;
             }
             return base.CategoryField(category);
         }
 
-        public override IVsSimpleObjectList2 DoSearch(VSOBSEARCHCRITERIA2 criteria) {
+        public override IVsSimpleObjectList2 DoSearch(VSOBSEARCHCRITERIA2 criteria)
+        {
             var node = _hierarchy as PythonFileNode;
-            if (node != null) {
+            if (node != null)
+            {
                 var analysis = node.TryGetAnalysisEntry();
 
-                if (analysis != null) {
+                if (analysis != null)
+                {
                     string expr = criteria.szName.Substring(criteria.szName.LastIndexOf(':') + 1);
                     var exprAnalysis = analysis.Analyzer.WaitForRequest(analysis.Analyzer.AnalyzeExpressionAsync(
                         analysis,
@@ -86,7 +92,8 @@ namespace Microsoft.PythonTools.Navigation {
                         new SourceLocation(1, 1)
                     ), "PythonFileLibraryNode.DoSearch");
 
-                    if (exprAnalysis != null) {
+                    if (exprAnalysis != null)
+                    {
                         return EditFilter.GetFindRefLocations(analysis.Analyzer, _hierarchy.ProjectMgr.Site, expr, exprAnalysis.Variables);
                     }
                 }
@@ -96,20 +103,25 @@ namespace Microsoft.PythonTools.Navigation {
         }
     }
 
-    abstract class ObjectBrowserChildren : IList<LibraryNode> {
+    abstract class ObjectBrowserChildren : IList<LibraryNode>
+    {
         private LibraryNode[] _children;
         protected readonly FileNode _hierarchy;
         internal LibraryNode _parent;
 
-        public ObjectBrowserChildren(FileNode hierarchy) {
+        public ObjectBrowserChildren(FileNode hierarchy)
+        {
             _hierarchy = hierarchy;
         }
 
-        public void EnsureChildren() {
-            if (_children == null) {
+        public void EnsureChildren()
+        {
+            if (_children == null)
+            {
                 IEnumerable<CompletionResult> members = GetChildren();
                 List<LibraryNode> children = new List<LibraryNode>();
-                foreach (var member in members.MaybeEnumerate()) {
+                foreach (var member in members.MaybeEnumerate())
+                {
                     var memberChildren = new MemberChildren(_hierarchy, GetName(member.Name));
                     var node = new PythonLibraryNode(
                         _parent,
@@ -128,82 +140,103 @@ namespace Microsoft.PythonTools.Navigation {
         protected abstract IEnumerable<CompletionResult> GetChildren();
         protected abstract string GetName(string member);
 
-        public LibraryNode this[int index] {
-            get {
+        public LibraryNode this[int index]
+        {
+            get
+            {
                 EnsureChildren();
                 return _children[index];
             }
 
-            set {
+            set
+            {
                 throw new NotImplementedException();
             }
         }
 
-        public int Count {
-            get {
+        public int Count
+        {
+            get
+            {
                 EnsureChildren();
                 return _children.Length;
             }
         }
 
-        public bool IsReadOnly {
-            get {
+        public bool IsReadOnly
+        {
+            get
+            {
                 return true;
             }
         }
 
-        public void Add(LibraryNode item) {
+        public void Add(LibraryNode item)
+        {
             throw new NotImplementedException();
         }
 
-        public void Clear() {
+        public void Clear()
+        {
             throw new NotImplementedException();
         }
 
-        public bool Contains(LibraryNode item) {
+        public bool Contains(LibraryNode item)
+        {
             EnsureChildren();
             return _children.Contains(item);
         }
 
-        public void CopyTo(LibraryNode[] array, int arrayIndex) {
+        public void CopyTo(LibraryNode[] array, int arrayIndex)
+        {
             EnsureChildren();
             _children.CopyTo(array, arrayIndex);
         }
 
-        public IEnumerator<LibraryNode> GetEnumerator() {
+        public IEnumerator<LibraryNode> GetEnumerator()
+        {
             EnsureChildren();
             return ((IEnumerable<LibraryNode>)_children).GetEnumerator();
         }
 
-        public int IndexOf(LibraryNode item) {
+        public int IndexOf(LibraryNode item)
+        {
             EnsureChildren();
             return Array.IndexOf(_children, item);
         }
 
-        public void Insert(int index, LibraryNode item) {
+        public void Insert(int index, LibraryNode item)
+        {
             throw new NotImplementedException();
         }
 
-        public bool Remove(LibraryNode item) {
+        public bool Remove(LibraryNode item)
+        {
             throw new NotImplementedException();
         }
 
-        public void RemoveAt(int index) {
+        public void RemoveAt(int index)
+        {
             throw new NotImplementedException();
         }
 
-        IEnumerator IEnumerable.GetEnumerator() {
+        IEnumerator IEnumerable.GetEnumerator()
+        {
             return _children.GetEnumerator();
         }
     }
 
-    class PythonFileChildren : ObjectBrowserChildren {
-        public PythonFileChildren(FileNode hierarchy) : base(hierarchy) {
+    class PythonFileChildren : ObjectBrowserChildren
+    {
+        public PythonFileChildren(FileNode hierarchy) : base(hierarchy)
+        {
         }
 
-        protected override IEnumerable<CompletionResult> GetChildren() {
+        protected override IEnumerable<CompletionResult> GetChildren()
+        {
             var analysis = (_hierarchy as PythonFileNode)?.TryGetAnalysisEntry();
-            if (analysis == null) {
+            if (analysis == null)
+            {
                 return Enumerable.Empty<CompletionResult>();
             }
             var members = analysis.Analyzer.WaitForRequest(analysis.Analyzer.GetAllAvailableMembersAsync(
@@ -214,21 +247,26 @@ namespace Microsoft.PythonTools.Navigation {
             return members;
         }
 
-        protected override string GetName(string member) {
+        protected override string GetName(string member)
+        {
             return member;
         }
     }
 
-    class MemberChildren : ObjectBrowserChildren {
+    class MemberChildren : ObjectBrowserChildren
+    {
         private readonly string _member;
 
-        public MemberChildren(FileNode hierarchy, string member) : base(hierarchy) {
+        public MemberChildren(FileNode hierarchy, string member) : base(hierarchy)
+        {
             _member = member;
         }
 
-        protected override IEnumerable<CompletionResult> GetChildren() {
+        protected override IEnumerable<CompletionResult> GetChildren()
+        {
             var analysis = (_hierarchy as PythonFileNode)?.TryGetAnalysisEntry();
-            if (analysis == null) {
+            if (analysis == null)
+            {
                 return Enumerable.Empty<CompletionResult>();
             }
             var members = analysis.Analyzer.WaitForRequest(analysis.Analyzer.GetMembersAsync(
@@ -241,7 +279,8 @@ namespace Microsoft.PythonTools.Navigation {
             return members;
         }
 
-        protected override string GetName(string member) {
+        protected override string GetName(string member)
+        {
             return _member + "." + member;
         }
     }

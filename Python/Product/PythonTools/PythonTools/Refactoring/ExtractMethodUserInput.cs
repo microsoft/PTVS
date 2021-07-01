@@ -14,18 +14,19 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Windows;
-
-namespace Microsoft.PythonTools.Refactoring {
-    class ExtractMethodUserInput : IExtractMethodInput {
+namespace Microsoft.PythonTools.Refactoring
+{
+    class ExtractMethodUserInput : IExtractMethodInput
+    {
         private readonly IServiceProvider _serviceProvider;
 
-        public ExtractMethodUserInput(IServiceProvider serviceProvider) {
+        public ExtractMethodUserInput(IServiceProvider serviceProvider)
+        {
             _serviceProvider = serviceProvider;
         }
 
-        public bool ShouldExpandSelection() {
+        public bool ShouldExpandSelection()
+        {
             var res = MessageBox.Show(Strings.ExtractMethod_ShouldExpandSelection,
                         Strings.ExtractMethod_ShouldExpandSelectionTitle,
                         MessageBoxButton.YesNo
@@ -35,19 +36,22 @@ namespace Microsoft.PythonTools.Refactoring {
         }
 
 
-        public ExtractMethodRequest GetExtractionInfo(ExtractedMethodCreator previewer) {
+        public ExtractMethodRequest GetExtractionInfo(ExtractedMethodCreator previewer)
+        {
             var requestView = new ExtractMethodRequestView(_serviceProvider, previewer);
             var dialog = new ExtractMethodDialog(requestView);
 
             bool res = dialog.ShowModal() ?? false;
-            if (res) {
+            if (res)
+            {
                 return requestView.GetRequest();
             }
 
             return null;
         }
 
-        public void CannotExtract(string reason) {
+        public void CannotExtract(string reason)
+        {
             MessageBox.Show(reason, Strings.ExtractMethod_CannotExtractMethod, MessageBoxButton.OK);
         }
     }

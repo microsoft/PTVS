@@ -14,27 +14,19 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.Design;
-using System.Linq;
-using System.Runtime.InteropServices;
-using Microsoft.PythonTools.Infrastructure;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Flavor;
-using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools;
 using IServiceProvider = System.IServiceProvider;
 
-namespace Microsoft.PythonTools.Project.Web {
+namespace Microsoft.PythonTools.Project.Web
+{
     [Guid("742BB562-7AEE-4FC7-8CD2-48D66C8CC435")]
     partial class PythonWebProject :
         FlavoredProjectBase,
         IOleCommandTarget,
         IVsProjectFlavorCfgProvider,
         IVsProject,
-        IVsFilterAddProjectItemDlg {
+        IVsFilterAddProjectItemDlg
+    {
         private readonly IServiceProvider _site;
         internal IVsProject _innerProject;
         internal IVsProject3 _innerProject3;
@@ -45,7 +37,8 @@ namespace Microsoft.PythonTools.Project.Web {
         private static readonly Guid PublishCmdGuid = new Guid("{1496a755-94de-11d0-8c3f-00c04fc2aae2}");
         private static readonly int PublishCmdid = 2006;
 
-        public PythonWebProject(IServiceProvider site) {
+        public PythonWebProject(IServiceProvider site)
+        {
             _site = site;
         }
 
@@ -55,18 +48,24 @@ namespace Microsoft.PythonTools.Project.Web {
         /// Do the initialization here (such as loading flavor specific
         /// information from the project)
         /// </summary>
-        protected override void InitializeForOuter(string fileName, string location, string name, uint flags, ref Guid guidProject, out bool cancel) {
+        protected override void InitializeForOuter(string fileName, string location, string name, uint flags, ref Guid guidProject, out bool cancel)
+        {
             base.InitializeForOuter(fileName, location, name, flags, ref guidProject, out cancel);
 
             var proj = _innerVsHierarchy.GetProject();
 
-            if (proj != null) {
-                try {
+            if (proj != null)
+            {
+                try
+                {
                     dynamic webAppExtender = proj.get_Extender("WebApplication");
-                    if (webAppExtender != null) {
+                    if (webAppExtender != null)
+                    {
                         webAppExtender.StartWebServerOnDebug = false;
                     }
-                } catch (COMException) {
+                }
+                catch (COMException)
+                {
                     // extender doesn't exist...
                 }
             }
@@ -74,9 +73,12 @@ namespace Microsoft.PythonTools.Project.Web {
 
         #endregion
 
-        protected override int QueryStatusCommand(uint itemid, ref Guid pguidCmdGroup, uint cCmds, VisualStudio.OLE.Interop.OLECMD[] prgCmds, IntPtr pCmdText) {
-            if (pguidCmdGroup == GuidList.guidOfficeSharePointCmdSet) {
-                for (int i = 0; i < prgCmds.Length; i++) {
+        protected override int QueryStatusCommand(uint itemid, ref Guid pguidCmdGroup, uint cCmds, VisualStudio.OLE.Interop.OLECMD[] prgCmds, IntPtr pCmdText)
+        {
+            if (pguidCmdGroup == GuidList.guidOfficeSharePointCmdSet)
+            {
+                for (int i = 0; i < prgCmds.Length; i++)
+                {
                     // Report it as supported so that it's not routed any
                     // further, but disable it and make it invisible.
                     prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_SUPPORTED | OLECMDF.OLECMDF_INVISIBLE);
@@ -88,7 +90,8 @@ namespace Microsoft.PythonTools.Project.Web {
         }
 
 
-        protected override void SetInnerProject(IntPtr innerIUnknown) {
+        protected override void SetInnerProject(IntPtr innerIUnknown)
+        {
             var inner = Marshal.GetObjectForIUnknown(innerIUnknown);
 
             // The reason why we keep a reference to those is that doing a QI after being
@@ -98,7 +101,8 @@ namespace Microsoft.PythonTools.Project.Web {
             _innerProject3 = inner as IVsProject3;
             _innerVsHierarchy = inner as IVsHierarchy;
 
-            if (serviceProvider == null) {
+            if (serviceProvider == null)
+            {
                 serviceProvider = _site;
             }
 
@@ -111,37 +115,45 @@ namespace Microsoft.PythonTools.Project.Web {
             // call it directory.
             // (This must run after we called base.SetInnerProject)
             _menuService = (IOleCommandTarget)((IServiceProvider)this).GetService(typeof(IMenuCommandService));
-            if (_menuService == null) {
+            if (_menuService == null)
+            {
                 throw new InvalidOperationException("Cannot initialize Web project");
             }
         }
 
-        protected override int GetProperty(uint itemId, int propId, out object property) {
-            switch ((__VSHPROPID2)propId) {
-                case __VSHPROPID2.VSHPROPID_CfgPropertyPagesCLSIDList: {
-                    var res = base.GetProperty(itemId, propId, out property);
-                    if (ErrorHandler.Succeeded(res)) {
-                        var guids = GetGuidsFromList(property as string);
-                        guids.RemoveAll(g => CfgSpecificPropertyPagesToRemove.Contains(g));
-                        guids.AddRange(CfgSpecificPropertyPagesToAdd);
-                        property = MakeListFromGuids(guids);
+        protected override int GetProperty(uint itemId, int propId, out object property)
+        {
+            switch ((__VSHPROPID2)propId)
+            {
+                case __VSHPROPID2.VSHPROPID_CfgPropertyPagesCLSIDList:
+                    {
+                        var res = base.GetProperty(itemId, propId, out property);
+                        if (ErrorHandler.Succeeded(res))
+                        {
+                            var guids = GetGuidsFromList(property as string);
+                            guids.RemoveAll(g => CfgSpecificPropertyPagesToRemove.Contains(g));
+                            guids.AddRange(CfgSpecificPropertyPagesToAdd);
+                            property = MakeListFromGuids(guids);
+                        }
+                        return res;
                     }
-                    return res;
-                }
-                case __VSHPROPID2.VSHPROPID_PropertyPagesCLSIDList: {
-                    var res = base.GetProperty(itemId, propId, out property);
-                    if (ErrorHandler.Succeeded(res)) {
-                        var guids = GetGuidsFromList(property as string);
-                        guids.RemoveAll(g => PropertyPagesToRemove.Contains(g));
-                        guids.AddRange(PropertyPagesToAdd);
-                        property = MakeListFromGuids(guids);
+                case __VSHPROPID2.VSHPROPID_PropertyPagesCLSIDList:
+                    {
+                        var res = base.GetProperty(itemId, propId, out property);
+                        if (ErrorHandler.Succeeded(res))
+                        {
+                            var guids = GetGuidsFromList(property as string);
+                            guids.RemoveAll(g => PropertyPagesToRemove.Contains(g));
+                            guids.AddRange(PropertyPagesToAdd);
+                            property = MakeListFromGuids(guids);
+                        }
+                        return res;
                     }
-                    return res;
-                }
             }
 
             var id8 = (__VSHPROPID8)propId;
-            switch (id8) {
+            switch (id8)
+            {
                 case __VSHPROPID8.VSHPROPID_SupportsIconMonikers:
                     property = true;
                     return VSConstants.S_OK;
@@ -168,8 +180,10 @@ namespace Microsoft.PythonTools.Project.Web {
             new Guid("{9AB2347D-948D-4CD2-8DBE-F15F0EF78ED3}"),   // Package/Publish SQL 
         };
 
-        private static List<Guid> GetGuidsFromList(string guidList) {
-            if (string.IsNullOrEmpty(guidList)) {
+        private static List<Guid> GetGuidsFromList(string guidList)
+        {
+            if (string.IsNullOrEmpty(guidList))
+            {
                 return new List<Guid>();
             }
 
@@ -181,29 +195,37 @@ namespace Microsoft.PythonTools.Project.Web {
                 .ToList();
         }
 
-        private static string MakeListFromGuids(IEnumerable<Guid> guidList) {
+        private static string MakeListFromGuids(IEnumerable<Guid> guidList)
+        {
             return string.Join(";", guidList.Select(g => g.ToString("B")));
         }
 
-        int IOleCommandTarget.Exec(ref Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
-            if (pguidCmdGroup == GuidList.guidWebPackgeCmdId) {
-                if (nCmdID == 0x101 /*  EnablePublishToWindowsAzureMenuItem*/) {
+        int IOleCommandTarget.Exec(ref Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut)
+        {
+            if (pguidCmdGroup == GuidList.guidWebPackgeCmdId)
+            {
+                if (nCmdID == 0x101 /*  EnablePublishToWindowsAzureMenuItem*/)
+                {
                     var shell = (IVsShell)((IServiceProvider)this).GetService(typeof(SVsShell));
                     var webPublishPackageGuid = GuidList.guidWebPackageGuid;
                     IVsPackage package;
 
                     int res = shell.LoadPackage(ref webPublishPackageGuid, out package);
-                    if (!ErrorHandler.Succeeded(res)) {
+                    if (!ErrorHandler.Succeeded(res))
+                    {
                         return res;
                     }
 
                     var cmdTarget = package as IOleCommandTarget;
-                    if (cmdTarget != null) {
+                    if (cmdTarget != null)
+                    {
                         res = cmdTarget.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
-                        if (ErrorHandler.Succeeded(res)) {
+                        if (ErrorHandler.Succeeded(res))
+                        {
                             // TODO: Check flag to see if we were notified
                             // about being added as a web role.
-                            if (!AddWebRoleSupportFiles()) {
+                            if (!AddWebRoleSupportFiles())
+                            {
                                 VsShellUtilities.ShowMessageBox(
                                     this,
                                     Strings.AddWebRoleSupportFiles,
@@ -217,12 +239,17 @@ namespace Microsoft.PythonTools.Project.Web {
                         return res;
                     }
                 }
-            } else if (pguidCmdGroup == PublishCmdGuid) {
-                if (nCmdID == PublishCmdid) {
+            }
+            else if (pguidCmdGroup == PublishCmdGuid)
+            {
+                if (nCmdID == PublishCmdid)
+                {
                     // Approximately duplicated in DjangoProject
                     var opts = _site.GetPythonToolsService().SuppressDialogOptions;
-                    if (string.IsNullOrEmpty(opts.PublishToAzure30)) {
-                        var td = new TaskDialog(_site) {
+                    if (string.IsNullOrEmpty(opts.PublishToAzure30))
+                    {
+                        var td = new TaskDialog(_site)
+                        {
                             Title = Strings.ProductTitle,
                             MainInstruction = Strings.PublishToAzure30,
                             Content = Strings.PublishToAzure30Message,
@@ -233,11 +260,13 @@ namespace Microsoft.PythonTools.Project.Web {
                         };
                         td.Buttons.Add(TaskDialogButton.OK);
                         td.Buttons.Add(TaskDialogButton.Cancel);
-                        if (td.ShowModal() == TaskDialogButton.Cancel) {
+                        if (td.ShowModal() == TaskDialogButton.Cancel)
+                        {
                             return VSConstants.S_OK;
                         }
 
-                        if (td.SelectedVerified) {
+                        if (td.SelectedVerified)
+                        {
                             opts.PublishToAzure30 = "true";
                             opts.Save();
                         }
@@ -248,12 +277,14 @@ namespace Microsoft.PythonTools.Project.Web {
             return _menuService.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
         }
 
-        private bool AddWebRoleSupportFiles() {
+        private bool AddWebRoleSupportFiles()
+        {
             var uiShell = (IVsUIShell)((IServiceProvider)this).GetService(typeof(SVsUIShell));
             var emptyGuid = Guid.Empty;
             var result = new[] { VSADDRESULT.ADDRESULT_Failure };
             IntPtr dlgOwner;
-            if (ErrorHandler.Failed(uiShell.GetDialogOwnerHwnd(out dlgOwner))) {
+            if (ErrorHandler.Failed(uiShell.GetDialogOwnerHwnd(out dlgOwner)))
+            {
                 dlgOwner = IntPtr.Zero;
             }
 
@@ -277,18 +308,26 @@ namespace Microsoft.PythonTools.Project.Web {
             )) && result[0] == VSADDRESULT.ADDRESULT_Success;
         }
 
-        int IOleCommandTarget.QueryStatus(ref Guid pguidCmdGroup, uint cCmds, OLECMD[] prgCmds, IntPtr pCmdText) {
-            if (pguidCmdGroup == GuidList.guidEureka) {
-                for (int i = 0; i < prgCmds.Length; i++) {
-                    switch (prgCmds[i].cmdID) {
+        int IOleCommandTarget.QueryStatus(ref Guid pguidCmdGroup, uint cCmds, OLECMD[] prgCmds, IntPtr pCmdText)
+        {
+            if (pguidCmdGroup == GuidList.guidEureka)
+            {
+                for (int i = 0; i < prgCmds.Length; i++)
+                {
+                    switch (prgCmds[i].cmdID)
+                    {
                         case 0x102: // View in Web Page Inspector from Eureka web tools
                             prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_INVISIBLE | OLECMDF.OLECMDF_SUPPORTED | OLECMDF.OLECMDF_ENABLED);
                             return VSConstants.S_OK;
                     }
                 }
-            } else if (pguidCmdGroup == GuidList.guidVenusCmdId) {
-                for (int i = 0; i < prgCmds.Length; i++) {
-                    switch (prgCmds[i].cmdID) {
+            }
+            else if (pguidCmdGroup == GuidList.guidVenusCmdId)
+            {
+                for (int i = 0; i < prgCmds.Length; i++)
+                {
+                    switch (prgCmds[i].cmdID)
+                    {
                         case 0x034: /* add app assembly folder */
                         case 0x035: /* add app code folder */
                         case 0x036: /* add global resources */
@@ -304,26 +343,38 @@ namespace Microsoft.PythonTools.Project.Web {
                             return VSConstants.S_OK;
                     }
                 }
-            } else if (pguidCmdGroup == GuidList.guidWebAppCmdId) {
-                for (int i = 0; i < prgCmds.Length; i++) {
-                    switch (prgCmds[i].cmdID) {
+            }
+            else if (pguidCmdGroup == GuidList.guidWebAppCmdId)
+            {
+                for (int i = 0; i < prgCmds.Length; i++)
+                {
+                    switch (prgCmds[i].cmdID)
+                    {
                         case 0x06A: /* check accessibility */
                             prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_INVISIBLE | OLECMDF.OLECMDF_SUPPORTED | OLECMDF.OLECMDF_DEFHIDEONCTXTMENU | OLECMDF.OLECMDF_ENABLED);
                             return VSConstants.S_OK;
                     }
                 }
-            } else if (pguidCmdGroup == VSConstants.VSStd2K) {
-                for (int i = 0; i < prgCmds.Length; i++) {
-                    switch ((VSConstants.VSStd2KCmdID)prgCmds[i].cmdID) {
+            }
+            else if (pguidCmdGroup == VSConstants.VSStd2K)
+            {
+                for (int i = 0; i < prgCmds.Length; i++)
+                {
+                    switch ((VSConstants.VSStd2KCmdID)prgCmds[i].cmdID)
+                    {
                         case VSConstants.VSStd2KCmdID.SETASSTARTPAGE:
                         case VSConstants.VSStd2KCmdID.CHECK_ACCESSIBILITY:
                             prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_INVISIBLE | OLECMDF.OLECMDF_SUPPORTED | OLECMDF.OLECMDF_DEFHIDEONCTXTMENU | OLECMDF.OLECMDF_ENABLED);
                             return VSConstants.S_OK;
                     }
                 }
-            } else if (pguidCmdGroup == VSConstants.GUID_VSStandardCommandSet97) {
-                for (int i = 0; i < prgCmds.Length; i++) {
-                    switch ((VSConstants.VSStd97CmdID)prgCmds[i].cmdID) {
+            }
+            else if (pguidCmdGroup == VSConstants.GUID_VSStandardCommandSet97)
+            {
+                for (int i = 0; i < prgCmds.Length; i++)
+                {
+                    switch ((VSConstants.VSStd97CmdID)prgCmds[i].cmdID)
+                    {
                         case VSConstants.VSStd97CmdID.PreviewInBrowser:
                         case VSConstants.VSStd97CmdID.BrowseWith:
                             prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_INVISIBLE | OLECMDF.OLECMDF_SUPPORTED | OLECMDF.OLECMDF_DEFHIDEONCTXTMENU | OLECMDF.OLECMDF_ENABLED);
@@ -337,7 +388,8 @@ namespace Microsoft.PythonTools.Project.Web {
 
         #region IVsProjectFlavorCfgProvider Members
 
-        public int CreateProjectFlavorCfg(IVsCfg pBaseProjectCfg, out IVsProjectFlavorCfg ppFlavorCfg) {
+        public int CreateProjectFlavorCfg(IVsCfg pBaseProjectCfg, out IVsProjectFlavorCfg ppFlavorCfg)
+        {
             // We're flavored with a Web Application project and our normal
             // project...  But we don't want the web application project to
             // influence our config as that alters our debug launch story.  We
@@ -359,27 +411,33 @@ namespace Microsoft.PythonTools.Project.Web {
 
         #region IVsProject Members
 
-        int IVsProject.AddItem(uint itemidLoc, VSADDITEMOPERATION dwAddItemOperation, string pszItemName, uint cFilesToOpen, string[] rgpszFilesToOpen, IntPtr hwndDlgOwner, VSADDRESULT[] pResult) {
+        int IVsProject.AddItem(uint itemidLoc, VSADDITEMOPERATION dwAddItemOperation, string pszItemName, uint cFilesToOpen, string[] rgpszFilesToOpen, IntPtr hwndDlgOwner, VSADDRESULT[] pResult)
+        {
             return _innerProject.AddItem(itemidLoc, dwAddItemOperation, pszItemName, cFilesToOpen, rgpszFilesToOpen, hwndDlgOwner, pResult);
         }
 
-        int IVsProject.GenerateUniqueItemName(uint itemidLoc, string pszExt, string pszSuggestedRoot, out string pbstrItemName) {
+        int IVsProject.GenerateUniqueItemName(uint itemidLoc, string pszExt, string pszSuggestedRoot, out string pbstrItemName)
+        {
             return _innerProject.GenerateUniqueItemName(itemidLoc, pszExt, pszSuggestedRoot, out pbstrItemName);
         }
 
-        int IVsProject.GetItemContext(uint itemid, out VisualStudio.OLE.Interop.IServiceProvider ppSP) {
+        int IVsProject.GetItemContext(uint itemid, out VisualStudio.OLE.Interop.IServiceProvider ppSP)
+        {
             return _innerProject.GetItemContext(itemid, out ppSP);
         }
 
-        int IVsProject.GetMkDocument(uint itemid, out string pbstrMkDocument) {
+        int IVsProject.GetMkDocument(uint itemid, out string pbstrMkDocument)
+        {
             return _innerProject.GetMkDocument(itemid, out pbstrMkDocument);
         }
 
-        int IVsProject.IsDocumentInProject(string pszMkDocument, out int pfFound, VSDOCUMENTPRIORITY[] pdwPriority, out uint pitemid) {
+        int IVsProject.IsDocumentInProject(string pszMkDocument, out int pfFound, VSDOCUMENTPRIORITY[] pdwPriority, out uint pitemid)
+        {
             return _innerProject.IsDocumentInProject(pszMkDocument, out pfFound, pdwPriority, out pitemid);
         }
 
-        int IVsProject.OpenItem(uint itemid, ref Guid rguidLogicalView, IntPtr punkDocDataExisting, out IVsWindowFrame ppWindowFrame) {
+        int IVsProject.OpenItem(uint itemid, ref Guid rguidLogicalView, IntPtr punkDocDataExisting, out IVsWindowFrame ppWindowFrame)
+        {
             return _innerProject.OpenItem(itemid, rguidLogicalView, punkDocDataExisting, out ppWindowFrame);
         }
 
@@ -387,22 +445,26 @@ namespace Microsoft.PythonTools.Project.Web {
 
         #region IVsFilterAddProjectItemDlg Members
 
-        int IVsFilterAddProjectItemDlg.FilterListItemByLocalizedName(ref Guid rguidProjectItemTemplates, string pszLocalizedName, out int pfFilter) {
+        int IVsFilterAddProjectItemDlg.FilterListItemByLocalizedName(ref Guid rguidProjectItemTemplates, string pszLocalizedName, out int pfFilter)
+        {
             pfFilter = 0;
             return VSConstants.S_OK;
         }
 
-        int IVsFilterAddProjectItemDlg.FilterListItemByTemplateFile(ref Guid rguidProjectItemTemplates, string pszTemplateFile, out int pfFilter) {
+        int IVsFilterAddProjectItemDlg.FilterListItemByTemplateFile(ref Guid rguidProjectItemTemplates, string pszTemplateFile, out int pfFilter)
+        {
             pfFilter = 0;
             return VSConstants.S_OK;
         }
 
-        int IVsFilterAddProjectItemDlg.FilterTreeItemByLocalizedName(ref Guid rguidProjectItemTemplates, string pszLocalizedName, out int pfFilter) {
+        int IVsFilterAddProjectItemDlg.FilterTreeItemByLocalizedName(ref Guid rguidProjectItemTemplates, string pszLocalizedName, out int pfFilter)
+        {
             pfFilter = 0;
             return VSConstants.S_OK;
         }
 
-        int IVsFilterAddProjectItemDlg.FilterTreeItemByTemplateDir(ref Guid rguidProjectItemTemplates, string pszTemplateDir, out int pfFilter) {
+        int IVsFilterAddProjectItemDlg.FilterTreeItemByTemplateDir(ref Guid rguidProjectItemTemplates, string pszTemplateDir, out int pfFilter)
+        {
             // https://pytools.codeplex.com/workitem/1313
             // ASP.NET will filter some things out, including .css files, which we don't want it to do.
             // So we shut that down by not forwarding this to any inner projects, which is fine, because

@@ -14,31 +14,34 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.Composition;
-using System.Linq;
-using Microsoft.PythonTools.Interpreter;
 using MSBuild = Microsoft.Build.Evaluation;
 
-namespace Microsoft.PythonTools.Project {
+namespace Microsoft.PythonTools.Project
+{
 
     [Export(typeof(IProjectContextProvider))]
     [Export(typeof(VsProjectContextProvider))]
     [PartCreationPolicy(CreationPolicy.Shared)]
-    sealed class VsProjectContextProvider : IProjectContextProvider {
+    sealed class VsProjectContextProvider : IProjectContextProvider
+    {
         private readonly Dictionary<PythonProjectNode, MSBuild.Project> _projects = new Dictionary<PythonProjectNode, MSBuild.Project>();
         private readonly Dictionary<string, object> _createdFactories = new Dictionary<string, object>();
 
         [ImportingConstructor]
-        public VsProjectContextProvider() {
+        public VsProjectContextProvider()
+        {
         }
 
-        public void UpdateProject(PythonProjectNode node, MSBuild.Project project) {
-            lock (_projects) {
-                if (project == null) {
+        public void UpdateProject(PythonProjectNode node, MSBuild.Project project)
+        {
+            lock (_projects)
+            {
+                if (project == null)
+                {
                     _projects.Remove(node);
-                } else if (!_projects.ContainsKey(node) || _projects[node] != project) {
+                }
+                else if (!_projects.ContainsKey(node) || _projects[node] != project)
+                {
                     _projects[node] = project;
                 }
             }
@@ -48,26 +51,34 @@ namespace Microsoft.PythonTools.Project {
             ProjectsChanaged?.Invoke(this, EventArgs.Empty);
         }
 
-        public void InterpreterLoaded(object context, InterpreterConfiguration configuration) {
-            lock (_createdFactories) {
+        public void InterpreterLoaded(object context, InterpreterConfiguration configuration)
+        {
+            lock (_createdFactories)
+            {
                 _createdFactories[configuration.Id] = context;
             }
         }
 
-        public void InterpreterUnloaded(object context, InterpreterConfiguration configuration) {
-            lock (_createdFactories) {
+        public void InterpreterUnloaded(object context, InterpreterConfiguration configuration)
+        {
+            lock (_createdFactories)
+            {
                 _createdFactories.Remove(configuration.Id);
             }
         }
 
-        public bool IsProjectSpecific(InterpreterConfiguration configuration) {
-            lock (_createdFactories) {
+        public bool IsProjectSpecific(InterpreterConfiguration configuration)
+        {
+            lock (_createdFactories)
+            {
                 return _createdFactories.ContainsKey(configuration.Id);
             }
         }
 
-        public bool IsProjectSpecific(string id) {
-            lock (_createdFactories) {
+        public bool IsProjectSpecific(string id)
+        {
+            lock (_createdFactories)
+            {
                 return _createdFactories.ContainsKey(id);
             }
         }
@@ -75,13 +86,17 @@ namespace Microsoft.PythonTools.Project {
         public event EventHandler ProjectsChanaged;
         public event EventHandler<ProjectChangedEventArgs> ProjectChanged;
 
-        public void OnProjectChanged(object project) {
+        public void OnProjectChanged(object project)
+        {
             ProjectChanged?.Invoke(this, new ProjectChangedEventArgs(project));
         }
 
-        public IEnumerable<object> Projects {
-            get {
-                lock (_projects) {
+        public IEnumerable<object> Projects
+        {
+            get
+            {
+                lock (_projects)
+                {
                     return _projects.Values.ToArray();
                 }
             }

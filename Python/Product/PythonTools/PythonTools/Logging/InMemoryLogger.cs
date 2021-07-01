@@ -14,20 +14,15 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.Composition;
-using System.Linq;
-using System.Text;
-using Microsoft.PythonTools.Infrastructure;
-
-namespace Microsoft.PythonTools.Logging {
+namespace Microsoft.PythonTools.Logging
+{
     /// <summary>
     /// Keeps track of logged events and makes them available for display in the diagnostics window.
     /// </summary>
     [Export(typeof(IPythonToolsLogger))]
     [Export(typeof(InMemoryLogger))]
-    class InMemoryLogger : IPythonToolsLogger {
+    class InMemoryLogger : IPythonToolsLogger
+    {
         private int _installedInterpreters, _installedV2, _installedV3;
         private int _debugLaunchCount, _normalLaunchCount;
         private int _debugAdapterLaunchTimeoutCount;
@@ -40,14 +35,19 @@ namespace Microsoft.PythonTools.Logging {
 
         #region IPythonToolsLogger Members
 
-        public void LogEvent(PythonLogEvent logEvent, object argument) {
+        public void LogEvent(PythonLogEvent logEvent, object argument)
+        {
             var dictArgument = argument as IDictionary<string, object>;
 
-            switch (logEvent) {
+            switch (logEvent)
+            {
                 case PythonLogEvent.Launch:
-                    if (((LaunchInfo)argument).IsDebug) {
+                    if (((LaunchInfo)argument).IsDebug)
+                    {
                         _debugLaunchCount++;
-                    } else {
+                    }
+                    else
+                    {
                         _normalLaunchCount++;
                     }
                     break;
@@ -57,12 +57,14 @@ namespace Microsoft.PythonTools.Logging {
                     _installedV3 = (int)dictArgument["3x"];
                     break;
                 case PythonLogEvent.PythonPackage:
-                    lock (_seenPackages) {
+                    lock (_seenPackages)
+                    {
                         _seenPackages.Add(argument as PackageInfo);
                     }
                     break;
                 case PythonLogEvent.AnalysisCompleted:
-                    lock (_analysisInfo) {
+                    lock (_analysisInfo)
+                    {
                         _analysisInfo.Add(argument as AnalysisInfo);
                     }
                     break;
@@ -70,26 +72,34 @@ namespace Microsoft.PythonTools.Logging {
                 case PythonLogEvent.AnalysisOperationCancelled:
                 case PythonLogEvent.AnalysisOperationFailed:
                 case PythonLogEvent.AnalysisWarning:
-                    lock (_analysisAbnormalities) {
+                    lock (_analysisAbnormalities)
+                    {
                         _analysisAbnormalities.Add("[{0}] {1}: {2}".FormatInvariant(DateTime.Now, logEvent, argument as string ?? ""));
                     }
                     break;
                 case PythonLogEvent.AnalysisRequestTiming:
-                    lock (_analysisTiming) {
+                    lock (_analysisTiming)
+                    {
                         var a = (AnalysisTimingInfo)argument;
-                        if (_analysisTiming.ContainsKey(a.RequestName)) {
+                        if (_analysisTiming.ContainsKey(a.RequestName))
+                        {
                             var t = _analysisTiming[a.RequestName];
                             _analysisTiming[a.RequestName] = Tuple.Create(t.Item1 + 1, Math.Max(t.Item2, a.Milliseconds), t.Item3 + a.Milliseconds, t.Item4 + (a.Timeout ? 1 : 0));
-                        } else {
+                        }
+                        else
+                        {
                             _analysisTiming[a.RequestName] = Tuple.Create(1, a.Milliseconds, (long)a.Milliseconds, a.Timeout ? 1 : 0);
                         }
                     }
                     break;
                 case PythonLogEvent.AnalysisRequestSummary:
-                    lock (_analysisCount) {
+                    lock (_analysisCount)
+                    {
                         var a = (Dictionary<string, object>)argument;
-                        foreach (var kv in a) {
-                            if (kv.Value is long l) {
+                        foreach (var kv in a)
+                        {
+                            if (kv.Value is long l)
+                            {
                                 long existing;
                                 _analysisCount.TryGetValue(kv.Key, out existing);
                                 _analysisCount[kv.Key] = existing + l;
@@ -98,32 +108,41 @@ namespace Microsoft.PythonTools.Logging {
                     }
                     break;
                 case PythonLogEvent.GetExpressionAtPoint:
-                    lock (_analysisTiming) {
+                    lock (_analysisTiming)
+                    {
                         var a = (GetExpressionAtPointInfo)argument;
-                        if (_analysisTiming.ContainsKey("GetExpressionAtPoint")) {
+                        if (_analysisTiming.ContainsKey("GetExpressionAtPoint"))
+                        {
                             var t = _analysisTiming["GetExpressionAtPoint"];
                             _analysisTiming["GetExpressionAtPoint"] = Tuple.Create(t.Item1 + 1, Math.Max(t.Item2, a.Milliseconds), t.Item3 + a.Milliseconds, t.Item4 + (a.Success ? 0 : 1));
-                        } else {
+                        }
+                        else
+                        {
                             _analysisTiming["GetExpressionAtPoint"] = Tuple.Create(1, a.Milliseconds, (long)a.Milliseconds, a.Success ? 0 : 1);
                         }
                     }
                     break;
                 case PythonLogEvent.DebugAdapterConnectionTimeout:
-                    if ((string)argument == "Launch") {
+                    if ((string)argument == "Launch")
+                    {
                         _debugAdapterLaunchTimeoutCount++;
-                    } else {
+                    }
+                    else
+                    {
                         _debugAdapterAttachTimeoutCount++;
                     }
                     break;
             }
         }
 
-        public void LogFault(Exception ex, string description, bool dumpProcess) {
+        public void LogFault(Exception ex, string description, bool dumpProcess)
+        {
         }
 
         #endregion
 
-        public override string ToString() {
+        public override string ToString()
+        {
             StringBuilder res = new StringBuilder();
             res.AppendLine("Installed Interpreters: " + _installedInterpreters);
             res.AppendLine("    v2.x: " + _installedV2);
@@ -134,11 +153,15 @@ namespace Microsoft.PythonTools.Logging {
             res.AppendLine("Debug Adapter Attach Timeouts: " + _debugAdapterAttachTimeoutCount);
             res.AppendLine();
 
-            lock (_seenPackages) {
-                if (_seenPackages.Any(p => p != null)) {
+            lock (_seenPackages)
+            {
+                if (_seenPackages.Any(p => p != null))
+                {
                     res.AppendLine("Seen Packages:");
-                    foreach (var package in _seenPackages) {
-                        if (package != null) {
+                    foreach (var package in _seenPackages)
+                    {
+                        if (package != null)
+                        {
                             res.AppendLine("    " + package.Name);
                         }
                     }
@@ -146,35 +169,47 @@ namespace Microsoft.PythonTools.Logging {
                 }
             }
 
-            lock (_analysisInfo) {
-                if (_analysisInfo.Any(a => a != null)) {
+            lock (_analysisInfo)
+            {
+                if (_analysisInfo.Any(a => a != null))
+                {
                     res.AppendLine("Completion DB analyses:");
-                    foreach (var analysis in _analysisInfo) {
-                        if (analysis != null) {
+                    foreach (var analysis in _analysisInfo)
+                    {
+                        if (analysis != null)
+                        {
                             res.AppendLine("    {0} - {1}s".FormatInvariant(analysis.InterpreterId, analysis.AnalysisSeconds));
                         }
                     }
                 }
             }
 
-            lock (_analysisAbnormalities) {
-                if (_analysisAbnormalities.Any()) {
+            lock (_analysisAbnormalities)
+            {
+                if (_analysisAbnormalities.Any())
+                {
                     res.AppendFormat("Analysis abnormalities ({0}):", _analysisAbnormalities.Count);
                     res.AppendLine();
-                    foreach (var abnormalExit in _analysisAbnormalities) {
+                    foreach (var abnormalExit in _analysisAbnormalities)
+                    {
                         res.AppendLine(abnormalExit);
                     }
                     res.AppendLine();
                 }
             }
 
-            lock (_analysisTiming) {
-                lock (_analysisCount) {
-                    if (_analysisTiming.Any()) {
+            lock (_analysisTiming)
+            {
+                lock (_analysisCount)
+                {
+                    if (_analysisTiming.Any())
+                    {
                         res.AppendLine("Analysis timing:");
-                        foreach (var kv in _analysisTiming.OrderBy(kv => kv.Key)) {
+                        foreach (var kv in _analysisTiming.OrderBy(kv => kv.Key))
+                        {
                             long count;
-                            if (!_analysisCount.TryGetValue(kv.Key, out count)) {
+                            if (!_analysisCount.TryGetValue(kv.Key, out count))
+                            {
                                 count = kv.Value.Item1;
                             }
 

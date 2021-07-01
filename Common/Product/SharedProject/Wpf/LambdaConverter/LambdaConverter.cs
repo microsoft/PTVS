@@ -14,13 +14,6 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Diagnostics;
-using System.Globalization;
-using System.Linq;
-using System.Windows;
-using System.Windows.Data;
-
 namespace Microsoft.VisualStudioTools.Wpf
 {
     public class LambdaConverter : IValueConverter, IMultiValueConverter

@@ -14,25 +14,15 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.PythonTools.Editor;
-using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Logging;
 using Microsoft.PythonTools.Project;
-using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudioTools;
 using Task = System.Threading.Tasks.Task;
 
-namespace Microsoft.PythonTools.Intellisense {
-    internal class WorkspaceAnalyzer : IDisposable {
+namespace Microsoft.PythonTools.Intellisense
+{
+    internal class WorkspaceAnalyzer : IDisposable
+    {
         private readonly IPythonWorkspaceContext _pythonWorkspace;
         private readonly IInterpreterOptionsService _optionsService;
         private readonly IServiceProvider _site;
@@ -57,7 +47,8 @@ namespace Microsoft.PythonTools.Intellisense {
             IPythonWorkspaceContext pythonWorkspace,
             IInterpreterOptionsService optionsService,
             IServiceProvider site
-        ) {
+        )
+        {
             _pythonWorkspace = pythonWorkspace ?? throw new ArgumentNullException(nameof(pythonWorkspace));
             _optionsService = optionsService ?? throw new ArgumentNullException(nameof(optionsService));
             _site = site ?? throw new ArgumentNullException(nameof(site));
@@ -76,7 +67,8 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public VsProjectAnalyzer Analyzer => _analyzer;
 
-        public void Dispose() {
+        public void Dispose()
+        {
             _site.MustBeCalledFromUIThread();
 
             _deferredModulesChangeNotification.Dispose();
@@ -86,10 +78,12 @@ namespace Microsoft.PythonTools.Intellisense {
             _pythonWorkspace.ActiveInterpreterChanged -= OnActiveInterpreterChanged;
             _pythonWorkspace.SearchPathsSettingChanged -= OnSearchPathsChanged;
 
-            if (_analyzer != null) {
+            if (_analyzer != null)
+            {
                 _analyzer.ClearAllTasks();
 
-                if (_analyzer.RemoveUser()) {
+                if (_analyzer.RemoveUser())
+                {
                     _analyzer.AbnormalAnalysisExit -= OnAnalysisProcessExited;
                     _analyzer.Dispose();
                 }
@@ -104,34 +98,40 @@ namespace Microsoft.PythonTools.Intellisense {
             watcher?.Dispose();
         }
 
-        public async Task InitializeAsync() {
+        public async Task InitializeAsync()
+        {
             SubscribePackageManagers();
             await ReanalyzeAsync();
         }
 
-        private void SubscribePackageManagers() {
+        private void SubscribePackageManagers()
+        {
             _site.MustBeCalledFromUIThread();
 
             _activePackageManagers = _optionsService.GetPackageManagers(_pythonWorkspace.CurrentFactory).ToArray();
-            foreach (var pm in _activePackageManagers) {
+            foreach (var pm in _activePackageManagers)
+            {
                 pm.InstalledFilesChanged += OnInstalledFilesChanged;
                 pm.EnableNotifications();
             }
         }
 
-        private void UnsubscribePackageManagers() {
+        private void UnsubscribePackageManagers()
+        {
             _site.MustBeCalledFromUIThread();
 
             var oldPms = _activePackageManagers;
             _activePackageManagers = null;
 
-            foreach (var pm in oldPms.MaybeEnumerate()) {
+            foreach (var pm in oldPms.MaybeEnumerate())
+            {
                 pm.DisableNotifications();
                 pm.InstalledFilesChanged -= OnInstalledFilesChanged;
             }
         }
 
-        private async Task<VsProjectAnalyzer> CreateAnalyzerAsync(IPythonInterpreterFactory factory, string location) {
+        private async Task<VsProjectAnalyzer> CreateAnalyzerAsync(IPythonInterpreterFactory factory, string location)
+        {
             _site.MustBeCalledFromUIThread();
 
             var pythonServices = _site.GetPythonToolsService();
@@ -147,48 +147,65 @@ namespace Microsoft.PythonTools.Intellisense {
             return res;
         }
 
-        private async Task UpdateAnalyzerSearchPathsAsync(VsProjectAnalyzer analyzer) {
+        private async Task UpdateAnalyzerSearchPathsAsync(VsProjectAnalyzer analyzer)
+        {
             _site.MustBeCalledFromUIThread();
 
             var workspace = _pythonWorkspace;
             analyzer = analyzer ?? _analyzer;
-            if (workspace != null && analyzer != null) {
+            if (workspace != null && analyzer != null)
+            {
                 await analyzer.SetSearchPathsAsync(workspace.GetAbsoluteSearchPaths());
             }
         }
 
-        private void OnWorkspaceFileDeleted(object sender, FileSystemEventArgs e) {
+        private void OnWorkspaceFileDeleted(object sender, FileSystemEventArgs e)
+        {
             var entry = _analyzer?.GetAnalysisEntryFromPath(e.FullPath);
-            if (entry != null) {
-                lock (_pendingChanges) {
+            if (entry != null)
+            {
+                lock (_pendingChanges)
+                {
                     _pendingDeletes.Add(entry);
-                    try {
+                    try
+                    {
                         _deferredWorkspaceFileChangeNotification.Change(500, Timeout.Infinite);
-                    } catch (ObjectDisposedException) {
+                    }
+                    catch (ObjectDisposedException)
+                    {
                     }
                 }
             }
         }
 
-        private void OnWorkspaceFileChanged(object sender, FileSystemEventArgs e) {
+        private void OnWorkspaceFileChanged(object sender, FileSystemEventArgs e)
+        {
             var entry = _analyzer?.GetAnalysisEntryFromPath(e.FullPath);
-            if (entry != null) {
-                lock (_pendingChanges) {
+            if (entry != null)
+            {
+                lock (_pendingChanges)
+                {
                     _pendingChanges.Add(entry);
-                    try {
+                    try
+                    {
                         _deferredWorkspaceFileChangeNotification.Change(500, Timeout.Infinite);
-                    } catch (ObjectDisposedException) {
+                    }
+                    catch (ObjectDisposedException)
+                    {
                     }
                 }
             }
         }
 
-        private void OnDeferredWorkspaceFileChanged(object state) {
+        private void OnDeferredWorkspaceFileChanged(object state)
+        {
             var analyzer = _analyzer;
             Uri[] changed, deleted;
 
-            lock (_pendingChanges) {
-                if (analyzer == null) {
+            lock (_pendingChanges)
+            {
+                if (analyzer == null)
+                {
                     return;
                 }
                 changed = _pendingChanges.Concat(_pendingDeletes.Where(e => File.Exists(e.Path))).Select(e => e.DocumentUri).ToArray();
@@ -202,22 +219,28 @@ namespace Microsoft.PythonTools.Intellisense {
                 .DoNotWait();
         }
 
-        private void OnDeferredModulesChanged(object state) {
-            _site.GetUIThread().InvokeTask(async () => {
-                if (_analyzer != null) {
+        private void OnDeferredModulesChanged(object state)
+        {
+            _site.GetUIThread().InvokeTask(async () =>
+            {
+                if (_analyzer != null)
+                {
                     await _analyzer.NotifyModulesChangedAsync().ConfigureAwait(false);
                 }
             }).HandleAllExceptions(_site).DoNotWait();
         }
 
-        private async Task ReanalyzeAsync() {
+        private async Task ReanalyzeAsync()
+        {
             var factory = _pythonWorkspace.CurrentFactory;
-            await _site.GetUIThread().InvokeTask(async () => {
+            await _site.GetUIThread().InvokeTask(async () =>
+            {
                 await ReanalyzeWorkspaceAsync(factory);
             });
         }
 
-        private async Task ReanalyzeWorkspaceAsync(IPythonInterpreterFactory factory) {
+        private async Task ReanalyzeWorkspaceAsync(IPythonInterpreterFactory factory)
+        {
             _site.MustBeCalledFromUIThread();
 
 #if DEBUG
@@ -228,38 +251,52 @@ namespace Microsoft.PythonTools.Intellisense {
 #endif
         }
 
-        private async Task ReanalyzeWorkspaceHelperAsync(IPythonInterpreterFactory factory, Redirector log) {
+        private async Task ReanalyzeWorkspaceHelperAsync(IPythonInterpreterFactory factory, Redirector log)
+        {
             _site.MustBeCalledFromUIThread();
 
-            try {
-                if (!_recreatingAnalyzer.Wait(0)) {
+            try
+            {
+                if (!_recreatingAnalyzer.Wait(0))
+                {
                     // Someone else is recreating, so wait for them to finish and return
                     log?.WriteLine("Waiting for existing call");
                     await _recreatingAnalyzer.WaitAsync();
-                    try {
+                    try
+                    {
                         log?.WriteLine("Existing call complete");
-                    } catch {
+                    }
+                    catch
+                    {
                         _recreatingAnalyzer.Release();
                         throw;
                     }
-                    if (_analyzer?.InterpreterFactory == factory) {
+                    if (_analyzer?.InterpreterFactory == factory)
+                    {
                         _recreatingAnalyzer.Release();
                         return;
                     }
                 }
-            } catch (ObjectDisposedException) {
+            }
+            catch (ObjectDisposedException)
+            {
                 return;
             }
 
             IVsStatusbar statusBar = null;
             bool statusBarConfigured = false;
-            try {
-                if ((statusBar = _site.GetService(typeof(SVsStatusbar)) as IVsStatusbar) != null) {
+            try
+            {
+                if ((statusBar = _site.GetService(typeof(SVsStatusbar)) as IVsStatusbar) != null)
+                {
                     statusBar.SetText(Strings.AnalyzingProject);
-                    try {
+                    try
+                    {
                         object index = (short)0;
                         statusBar.Animation(1, ref index);
-                    } catch (ArgumentNullException) {
+                    }
+                    catch (ArgumentNullException)
+                    {
                         // Issue in status bar implementation
                         // https://github.com/Microsoft/PTVS/issues/3064
                         // Silently suppress since animation is not critical.
@@ -269,7 +306,8 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
 
                 var oldWatcher = _workspaceFileWatcher;
-                _workspaceFileWatcher = new FileWatcher(_pythonWorkspace.Location) {
+                _workspaceFileWatcher = new FileWatcher(_pythonWorkspace.Location)
+                {
                     EnableRaisingEvents = true,
                     IncludeSubdirectories = true,
                     NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite
@@ -287,15 +325,18 @@ namespace Microsoft.PythonTools.Intellisense {
 
                 var oldAnalyzer = Interlocked.Exchange(ref _analyzer, analyzer);
 
-                if (oldAnalyzer != null) {
-                    if (analyzer != null) {
+                if (oldAnalyzer != null)
+                {
+                    if (analyzer != null)
+                    {
                         int beforeCount = analyzer.Files.Count();
                         log?.WriteLine($"Transferring from old analyzer {oldAnalyzer}, which has {oldAnalyzer.Files.Count()} files");
                         await analyzer.TransferFromOldAnalyzer(oldAnalyzer);
                         log?.WriteLine($"Tranferred {analyzer.Files.Count() - beforeCount} files");
                         log?.WriteLine($"Old analyzer now has {oldAnalyzer.Files.Count()} files");
                     }
-                    if (oldAnalyzer.RemoveUser()) {
+                    if (oldAnalyzer.RemoveUser())
+                    {
                         log?.WriteLine("Disposing old analyzer");
                         oldAnalyzer.Dispose();
                     }
@@ -303,22 +344,29 @@ namespace Microsoft.PythonTools.Intellisense {
 
                 var files = new List<string>();
                 var pythonServices = _site.GetPythonToolsService();
-                foreach (var existing in pythonServices.GetActiveSharedAnalyzers().Select(kv => kv.Value).Where(v => !v.IsDisposed)) {
-                    foreach (var kv in existing.LoadedFiles) {
+                foreach (var existing in pythonServices.GetActiveSharedAnalyzers().Select(kv => kv.Value).Where(v => !v.IsDisposed))
+                {
+                    foreach (var kv in existing.LoadedFiles)
+                    {
                         files.Add(kv.Key);
                         log?.WriteLine($"Unloading {kv.Key} from default analyzer");
-                        foreach (var b in (kv.Value.TryGetBufferParser()?.AllBuffers).MaybeEnumerate()) {
+                        foreach (var b in (kv.Value.TryGetBufferParser()?.AllBuffers).MaybeEnumerate())
+                        {
                             PythonTextBufferInfo.MarkForReplacement(b);
                         }
-                        try {
+                        try
+                        {
                             await existing.UnloadFileAsync(kv.Value);
-                        } catch (ObjectDisposedException) {
+                        }
+                        catch (ObjectDisposedException)
+                        {
                             break;
                         }
                     }
                 }
 
-                if (analyzer != null) {
+                if (analyzer != null)
+                {
                     // Set search paths first, as it will save full reanalysis later
                     log?.WriteLine("Setting search paths");
                     await analyzer.SetSearchPathsAsync(_pythonWorkspace.GetAbsoluteSearchPaths());
@@ -329,32 +377,47 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
 
                 WorkspaceAnalyzerChanged?.Invoke(this, EventArgs.Empty);
-            } catch (ObjectDisposedException) {
+            }
+            catch (ObjectDisposedException)
+            {
                 // Raced with disposal
-            } catch (Exception ex) {
+            }
+            catch (Exception ex)
+            {
                 log?.WriteErrorLine(ex.ToString());
                 throw;
-            } finally {
-                try {
-                    if (statusBar != null && statusBarConfigured) {
+            }
+            finally
+            {
+                try
+                {
+                    if (statusBar != null && statusBarConfigured)
+                    {
                         statusBar.FreezeOutput(0);
                         object index = (short)0;
                         statusBar.Animation(0, ref index);
                         statusBar.Clear();
                     }
-                } finally {
-                    try {
+                }
+                finally
+                {
+                    try
+                    {
                         _recreatingAnalyzer.Release();
-                    } catch (ObjectDisposedException) {
+                    }
+                    catch (ObjectDisposedException)
+                    {
                     }
                 }
             }
         }
 
-        private void OnAnalysisProcessExited(object sender, AbnormalAnalysisExitEventArgs e) {
+        private void OnAnalysisProcessExited(object sender, AbnormalAnalysisExitEventArgs e)
+        {
             _analyzerAbnormalExitCount++;
 
-            if (_logger == null) {
+            if (_logger == null)
+            {
                 return;
             }
 
@@ -369,32 +432,42 @@ namespace Microsoft.PythonTools.Intellisense {
                 msg.ToString()
             );
 
-            if (_analyzerAbnormalExitCount < 5) {
+            if (_analyzerAbnormalExitCount < 5)
+            {
                 // Start a new analyzer
                 ReanalyzeAsync().HandleAllExceptions(_site).DoNotWait();
             }
         }
 
-        private void OnInstalledFilesChanged(object sender, EventArgs e) {
-            try {
+        private void OnInstalledFilesChanged(object sender, EventArgs e)
+        {
+            try
+            {
                 _deferredModulesChangeNotification.Change(500, Timeout.Infinite);
-            } catch (ObjectDisposedException) {
+            }
+            catch (ObjectDisposedException)
+            {
             }
         }
 
-        private void OnSearchPathsChanged(object sender, EventArgs e) {
-            _site.GetUIThread().InvokeTask(async () => {
+        private void OnSearchPathsChanged(object sender, EventArgs e)
+        {
+            _site.GetUIThread().InvokeTask(async () =>
+            {
                 await UpdateAnalyzerSearchPathsAsync(_analyzer);
             }).HandleAllExceptions(_site).DoNotWait();
         }
 
-        private void OnActiveInterpreterChanged(object sender, EventArgs e) {
-            _site.GetUIThread().InvokeTask(async () => {
+        private void OnActiveInterpreterChanged(object sender, EventArgs e)
+        {
+            _site.GetUIThread().InvokeTask(async () =>
+            {
                 await OnActiveInterpreterChangedAsync();
             }).HandleAllExceptions(_site).DoNotWait();
         }
 
-        private async Task OnActiveInterpreterChangedAsync() {
+        private async Task OnActiveInterpreterChangedAsync()
+        {
             UnsubscribePackageManagers();
             await ReanalyzeAsync();
             SubscribePackageManagers();

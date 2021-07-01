@@ -14,12 +14,12 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Windows.Forms;
 using Microsoft.VisualStudioTools.Project;
 
-namespace Microsoft.PythonTools.Project {
-    public interface IPythonLauncherOptions {
+namespace Microsoft.PythonTools.Project
+{
+    public interface IPythonLauncherOptions
+    {
         /// <summary>
         /// Saves the current launcher options to storage.
         /// </summary>
@@ -44,7 +44,8 @@ namespace Microsoft.PythonTools.Project {
         /// <summary>
         /// Gets a win forms control which allow editing of the options.
         /// </summary>
-        Control Control {
+        Control Control
+        {
             get;
         }
     }

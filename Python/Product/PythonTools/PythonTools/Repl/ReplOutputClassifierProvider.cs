@@ -14,24 +14,19 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.Composition;
-using Microsoft.VisualStudio.InteractiveWindow;
-using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Text.Classification;
-using Microsoft.VisualStudio.Utilities;
-
-namespace Microsoft.PythonTools.Repl {
+namespace Microsoft.PythonTools.Repl
+{
     /// <summary>
     /// Provides the classifier for our repl error output buffer.
     /// </summary>
     [Export(typeof(IClassifierProvider)), ContentType(PredefinedInteractiveContentTypes.InteractiveOutputContentTypeName)]
-    class ReplOutputClassifierProvider : IClassifierProvider {
+    class ReplOutputClassifierProvider : IClassifierProvider
+    {
         internal readonly Dictionary<ConsoleColor, IClassificationType> _classTypes = new Dictionary<ConsoleColor, IClassificationType>();
 
         [ImportingConstructor]
-        public ReplOutputClassifierProvider(IClassificationTypeRegistryService classificationService) {
+        public ReplOutputClassifierProvider(IClassificationTypeRegistryService classificationService)
+        {
             _classTypes[ConsoleColor.Black] = classificationService.GetClassificationType(InteractiveBlackFormatDefinition.Name);
             _classTypes[ConsoleColor.DarkBlue] = classificationService.GetClassificationType(InteractiveDarkBlueFormatDefinition.Name);
             _classTypes[ConsoleColor.DarkGreen] = classificationService.GetClassificationType(InteractiveDarkGreenFormatDefinition.Name);
@@ -50,7 +45,8 @@ namespace Microsoft.PythonTools.Repl {
             _classTypes[ConsoleColor.White] = classificationService.GetClassificationType(InteractiveWhiteFormatDefinition.Name);
         }
 
-        public IClassifier GetClassifier(ITextBuffer textBuffer) {
+        public IClassifier GetClassifier(ITextBuffer textBuffer)
+        {
             return new ReplOutputClassifier(this, textBuffer);
         }
     }

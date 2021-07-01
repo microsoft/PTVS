@@ -14,11 +14,12 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Windows.Controls;
-
-namespace Microsoft.PythonTools.Project {
-    public partial class PythonTestPropertyPageView : UserControl {
-        public PythonTestPropertyPageView() {
+namespace Microsoft.PythonTools.Project
+{
+    public partial class PythonTestPropertyPageView : UserControl
+    {
+        public PythonTestPropertyPageView()
+        {
             InitializeComponent();
         }
     }

@@ -1,8 +1,9 @@
-using Microsoft.PythonTools.Analysis;
-
-namespace Microsoft.PythonTools.Intellisense {
-    internal class AnalysisVariable {
-        public AnalysisVariable(VariableType type, LocationInfo location, int? version = null) {
+namespace Microsoft.PythonTools.Intellisense
+{
+    internal class AnalysisVariable
+    {
+        public AnalysisVariable(VariableType type, LocationInfo location, int? version = null)
+        {
             Location = location;
             Type = type;
             Version = version;

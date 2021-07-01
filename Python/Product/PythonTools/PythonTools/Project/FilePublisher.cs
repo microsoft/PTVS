@@ -14,42 +14,42 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.ComponentModel.Composition;
-using System.Diagnostics;
-using System.IO;
-using System.Net;
-using System.Runtime.InteropServices;
-using System.Windows.Forms;
-using Microsoft.PythonTools.Infrastructure;
-using Microsoft.VisualStudio.Shell;
+using Microsoft.PythonToolz;
 using Microsoft.VisualStudioTools.Project;
 
-namespace Microsoft.PythonTools.Project {
+namespace Microsoft.PythonTools.Project
+{
     /// <summary>
     /// Publishes files to a file share
     /// </summary>
     [Export(typeof(IProjectPublisher))]
-    class FilePublisher : IProjectPublisher {
+    class FilePublisher : IProjectPublisher
+    {
         private readonly IServiceProvider _serviceProvider;
 
         [ImportingConstructor]
-        public FilePublisher([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider) {
+        public FilePublisher([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider)
+        {
             _serviceProvider = serviceProvider;
         }
 
         #region IProjectPublisher Members
 
-        public void PublishFiles(IPublishProject project, Uri destination) {
+        public void PublishFiles(IPublishProject project, Uri destination)
+        {
             var files = project.Files;
 
-            for (int i = 0; i < files.Count; i++) {
+            for (int i = 0; i < files.Count; i++)
+            {
                 var item = files[i];
 
-                try {
+                try
+                {
                     // try copying without impersonating first...
                     CopyOneFile(destination, item);
-                } catch (UnauthorizedAccessException) {
+                }
+                catch (UnauthorizedAccessException)
+                {
                     var resource = new VisualStudioTools.Project.NativeMethods._NETRESOURCE();
                     resource.dwType = VisualStudioTools.Project.NativeMethods.RESOURCETYPE_DISK;
                     resource.lpRemoteName = Path.GetPathRoot(destination.LocalPath);
@@ -60,7 +60,8 @@ namespace Microsoft.PythonTools.Project {
                         destination,
                         new[] { "NTLM" }, "", out creds);
 
-                    if (res != DialogResult.OK) {
+                    if (res != DialogResult.OK)
+                    {
                         throw;
                     }
 
@@ -72,7 +73,8 @@ namespace Microsoft.PythonTools.Project {
                         0
                     );
 
-                    if (netAddRes != 0) {
+                    if (netAddRes != 0)
+                    {
                         string msg = Marshal.GetExceptionForHR((int)(((uint)0x80070000) | netAddRes)).Message;
                         throw new Exception(Strings.FilePublisherIncorrectUsernameOrPassword.FormatUI(msg));
                     }
@@ -85,13 +87,16 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        private static void CopyOneFile(Uri destination, IPublishFile item) {
+        private static void CopyOneFile(Uri destination, IPublishFile item)
+        {
             var destFile = PathUtils.GetAbsoluteFilePath(destination.LocalPath, item.DestinationFile);
             Debug.WriteLine("CopyingOneFile: " + destFile);
             string destDir = Path.GetDirectoryName(destFile);
-            if (!Directory.Exists(destDir)) {
+            if (!Directory.Exists(destDir))
+            {
                 // don't create a file share (\\fob\oar)
-                if (!Path.IsPathRooted(destDir) || Path.GetPathRoot(destDir) != destDir) {
+                if (!Path.IsPathRooted(destDir) || Path.GetPathRoot(destDir) != destDir)
+                {
                     Directory.CreateDirectory(destDir);
                     Debug.WriteLine("Created dir: " + destDir);
                 }
@@ -101,15 +106,21 @@ namespace Microsoft.PythonTools.Project {
             Debug.WriteLine("Copied file: " + destFile);
 
             // Attempt to remove read-only attribute from the destination file.
-            try {
+            try
+            {
                 var attr = File.GetAttributes(destFile);
 
-                if (attr.HasFlag(FileAttributes.ReadOnly)) {
+                if (attr.HasFlag(FileAttributes.ReadOnly))
+                {
                     File.SetAttributes(destFile, attr & ~FileAttributes.ReadOnly);
                     Debug.WriteLine("Removed read-only attribute.");
                 }
-            } catch (IOException) {
-            } catch (UnauthorizedAccessException) {
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
             }
         }
 

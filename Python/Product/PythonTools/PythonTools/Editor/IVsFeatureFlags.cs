@@ -14,9 +14,8 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Runtime.InteropServices;
-
-namespace Microsoft.Internal.VisualStudio.Shell.Interop {
+namespace Microsoft.Internal.VisualStudio.Shell.Interop
+{
     [ComImport]
     [Guid("78A67F33-22CF-426C-8C90-B6E18FD35E0F")]
     [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
@@ -27,7 +26,8 @@ namespace Microsoft.Internal.VisualStudio.Shell.Interop {
     [Guid("AD44B8B9-B646-4B18-8847-150695AEC480")]
     [InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
     [TypeIdentifier]
-    public interface IVsFeatureFlags {
+    public interface IVsFeatureFlags
+    {
         bool IsFeatureEnabled(string name, bool defaultValue);
     }
 }

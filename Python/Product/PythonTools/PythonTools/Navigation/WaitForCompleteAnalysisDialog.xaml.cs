@@ -14,57 +14,70 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Threading;
-using System.Windows;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudioTools;
 
-namespace Microsoft.PythonTools.Navigation {
+namespace Microsoft.PythonTools.Navigation
+{
     /// <summary>
     /// Interaction logic for WaitForCompleteAnalysisDialog.xaml
     /// </summary>
-    partial class WaitForCompleteAnalysisDialog : DialogWindowVersioningWorkaround {
+    partial class WaitForCompleteAnalysisDialog : DialogWindowVersioningWorkaround
+    {
         private VsProjectAnalyzer _analyzer;
 
-        public WaitForCompleteAnalysisDialog(VsProjectAnalyzer analyzer) {
+        public WaitForCompleteAnalysisDialog(VsProjectAnalyzer analyzer)
+        {
             _analyzer = analyzer;
             InitializeComponent();
 
             new Thread(AnalysisComplete).Start();
         }
 
-        private void _cancelButton_Click(object sender, RoutedEventArgs e) {
+        private void _cancelButton_Click(object sender, RoutedEventArgs e)
+        {
             this.DialogResult = false;
             this.Close();
         }
 
-        private void AnalysisComplete() {
+        private void AnalysisComplete()
+        {
             _analyzer.WaitForCompleteAnalysis(UpdateItemsRemaining);
         }
 
-        private bool UpdateItemsRemaining(int itemsLeft) {
-            if (itemsLeft == 0) {
-                try {
-                    Dispatcher.Invoke((Action)(() => {
+        private bool UpdateItemsRemaining(int itemsLeft)
+        {
+            if (itemsLeft == 0)
+            {
+                try
+                {
+                    Dispatcher.Invoke((Action)(() =>
+                    {
                         this.DialogResult = true;
                         this.Close();
                     }));
-                } catch (OperationCanceledException) {
+                }
+                catch (OperationCanceledException)
+                {
                     // Should only occur if the dialog is closed already, so nothing left to do
                 }
                 return false;
             }
 
             bool? dialogResult = null;
-            try {
-                Dispatcher.Invoke((Action)(() => {
+            try
+            {
+                Dispatcher.Invoke((Action)(() =>
+                {
                     dialogResult = DialogResult;
-                    if (dialogResult == null) {
+                    if (dialogResult == null)
+                    {
                         _progress.Maximum = itemsLeft;
                     }
                 }));
-            } catch (OperationCanceledException) {
+            }
+            catch (OperationCanceledException)
+            {
             }
 
             return dialogResult == null;

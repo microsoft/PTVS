@@ -14,36 +14,35 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
 using Microsoft.PythonTools.Editor;
-using Microsoft.PythonTools.Parsing;
-using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Text.Tagging;
 
-namespace Microsoft.PythonTools {
+namespace Microsoft.PythonTools
+{
     [DebuggerDisplay("{GetDebugView(),nq}")]
-    internal struct LineTokenization : ITag {
+    internal struct LineTokenization : ITag
+    {
         public readonly LineToken[] Tokens;
         public readonly object State;
         public readonly ITrackingSpan Line;
 
-        public LineTokenization(IEnumerable<TokenInfo> tokens, object state, ITextSnapshotLine line) {
+        public LineTokenization(IEnumerable<TokenInfo> tokens, object state, ITextSnapshotLine line)
+        {
             Tokens = tokens.Select(t => new LineToken(t, line.EndIncludingLineBreak)).ToArray();
             State = state;
             Line = line.Snapshot.CreateTrackingSpan(line.ExtentIncludingLineBreak, SpanTrackingMode.EdgeNegative);
         }
 
-        internal string GetDebugView() {
+        internal string GetDebugView()
+        {
             var sb = new StringBuilder();
-            if (State != null) {
+            if (State != null)
+            {
                 sb.Append(State != null ? "S " : "  ");
             }
-            if (Tokens != null) {
-                for (var i = 0; i < Tokens.Length; i++) {
+            if (Tokens != null)
+            {
+                for (var i = 0; i < Tokens.Length; i++)
+                {
                     sb.Append('[');
                     sb.Append(Tokens[i].Category);
                     sb.Append(']');
@@ -53,18 +52,25 @@ namespace Microsoft.PythonTools {
         }
     }
 
-    internal struct LineToken {
-        public LineToken(TokenInfo token, int lineLength) {
+    internal struct LineToken
+    {
+        public LineToken(TokenInfo token, int lineLength)
+        {
             Category = token.Category;
             Trigger = token.Trigger;
             Column = token.SourceSpan.Start.Column - 1;
-            if (token.SourceSpan.Start.Line == token.SourceSpan.End.Line) {
+            if (token.SourceSpan.Start.Line == token.SourceSpan.End.Line)
+            {
                 // Token on the same line is easy
                 Length = token.SourceSpan.End.Column - token.SourceSpan.Start.Column;
-            } else if (token.SourceSpan.End.Line == token.SourceSpan.Start.Line + 1 && token.SourceSpan.End.Column == 1) {
+            }
+            else if (token.SourceSpan.End.Line == token.SourceSpan.Start.Line + 1 && token.SourceSpan.End.Column == 1)
+            {
                 // Token ending at the start of the next line is a known special case
                 Length = lineLength - Column;
-            } else {
+            }
+            else
+            {
                 // Tokens spanning lines should not be added to a LineTokenization
                 throw new ArgumentException("Cannot cache multiline token");
             }
@@ -82,9 +88,12 @@ namespace Microsoft.PythonTools {
         public int Length;
     }
 
-    struct TrackingTokenInfo {
-        internal TrackingTokenInfo(LineToken token, int lineNumber, ITrackingSpan lineSpan) {
-            if (lineNumber < 0) {
+    struct TrackingTokenInfo
+    {
+        internal TrackingTokenInfo(LineToken token, int lineNumber, ITrackingSpan lineSpan)
+        {
+            if (lineNumber < 0)
+            {
                 throw new ArgumentOutOfRangeException(nameof(lineNumber));
             }
             LineToken = token;
@@ -105,7 +114,8 @@ namespace Microsoft.PythonTools {
         /// </summary>
         /// <param name="location"></param>
         /// <returns></returns>
-        public bool Contains(SourceLocation location) {
+        public bool Contains(SourceLocation location)
+        {
             var col = location.Column - 1;
             return location.Line - 1 == LineNumber &&
                 (col >= LineToken.Column && col <= LineToken.Column + LineToken.Length);
@@ -114,36 +124,43 @@ namespace Microsoft.PythonTools {
         /// <summary>
         /// Returns true if the location is on the same line and at either end of this token.
         /// </summary>
-        public bool IsAdjacent(SourceLocation location) {
+        public bool IsAdjacent(SourceLocation location)
+        {
             var col = location.Column - 1;
             return location.Line - 1 == LineNumber &&
                 (col == LineToken.Column || col == LineToken.Column + LineToken.Length);
         }
 
-        public bool IsAtStart(SourceLocation location) {
+        public bool IsAtStart(SourceLocation location)
+        {
             return location.Line - 1 == LineNumber && location.Column - 1 == LineToken.Column;
         }
 
-        public bool IsAtEnd(SourceLocation location) {
+        public bool IsAtEnd(SourceLocation location)
+        {
             return location.Line - 1 == LineNumber && location.Column - 1 == LineToken.Column + LineToken.Length;
         }
 
-        public TokenInfo ToTokenInfo() {
-            return new TokenInfo {
+        public TokenInfo ToTokenInfo()
+        {
+            return new TokenInfo
+            {
                 Category = Category,
                 Trigger = Trigger,
                 SourceSpan = ToSourceSpan()
             };
         }
 
-        public SourceSpan ToSourceSpan() {
+        public SourceSpan ToSourceSpan()
+        {
             return new SourceSpan(
                 new SourceLocation(LineNumber + 1, LineToken.Column + 1),
                 new SourceLocation(LineNumber + 1, LineToken.Column + LineToken.Length + 1)
             );
         }
 
-        public SnapshotSpan ToSnapshotSpan(ITextSnapshot snapshot) {
+        public SnapshotSpan ToSnapshotSpan(ITextSnapshot snapshot)
+        {
             // Note that this assumes the content of the line has not changed
             // since the tokenization was created. Lines can move up and down
             // within the file, and this will handle it correctly, but when a
@@ -166,7 +183,8 @@ namespace Microsoft.PythonTools {
     /// to the text buffer snapshot. If text buffer is updated, 
     /// tokenization snapshot continues using buffer snapshot it was
     /// created on.</remarks>
-    internal interface ILineTokenizationSnapshot : IDisposable {
+    internal interface ILineTokenizationSnapshot : IDisposable
+    {
         /// <summary>
         /// Gets the tokenization for the specified line.
         /// </summary>
@@ -175,7 +193,8 @@ namespace Microsoft.PythonTools {
         LineTokenization GetLineTokenization(ITextSnapshotLine line, Lazy<Tokenizer> lazyTokenizer);
     }
 
-    internal class TokenCache {
+    internal class TokenCache
+    {
         private readonly object _lock = new object();
         private LineTokenizationMap _map = new LineTokenizationMap();
 
@@ -187,8 +206,10 @@ namespace Microsoft.PythonTools {
         /// in relation to the text buffer snapshot.
         /// </summary>
         /// <returns></returns>
-        internal ILineTokenizationSnapshot GetSnapshot() {
-            lock (_lock) {
+        internal ILineTokenizationSnapshot GetSnapshot()
+        {
+            lock (_lock)
+            {
                 _useCount++;
                 return new LineTokenizationSnapshot(this, _map);
             }
@@ -197,10 +218,14 @@ namespace Microsoft.PythonTools {
         /// <summary>
         /// Releases tokenization snapshot
         /// </summary>
-        internal void Release(LineTokenizationMap map) {
-            lock (_lock) {
-                if (_map == map) {
-                    if (_useCount == 0) {
+        internal void Release(LineTokenizationMap map)
+        {
+            lock (_lock)
+            {
+                if (_map == map)
+                {
+                    if (_useCount == 0)
+                    {
                         throw new InvalidOperationException("Line tokenization map is not in use");
                     }
                     _useCount--;
@@ -208,16 +233,21 @@ namespace Microsoft.PythonTools {
             }
         }
 
-        internal void Clear() {
-            lock (_lock) {
+        internal void Clear()
+        {
+            lock (_lock)
+            {
                 _map = new LineTokenizationMap();
             }
         }
 
-        internal void Update(TextContentChangedEventArgs e, Lazy<Tokenizer> lazyTokenizer) {
-            lock (_lock) {
+        internal void Update(TextContentChangedEventArgs e, Lazy<Tokenizer> lazyTokenizer)
+        {
+            lock (_lock)
+            {
                 // Copy on write. No need to copy if no one is using the map.
-                if (_useCount > 0) {
+                if (_useCount > 0)
+                {
                     _map = _map.Clone();
                     _useCount = 0;
                 }
@@ -225,11 +255,13 @@ namespace Microsoft.PythonTools {
             }
         }
 
-        internal class LineTokenizationSnapshot : ILineTokenizationSnapshot {
+        internal class LineTokenizationSnapshot : ILineTokenizationSnapshot
+        {
             private readonly TokenCache _cache;
             private readonly LineTokenizationMap _map;
 
-            internal LineTokenizationSnapshot(TokenCache cache, LineTokenizationMap map) {
+            internal LineTokenizationSnapshot(TokenCache cache, LineTokenizationMap map)
+            {
                 _cache = cache;
                 _map = map;
             }
@@ -239,20 +271,25 @@ namespace Microsoft.PythonTools {
                 => _map.GetLineTokenization(line, lazyTokenizer);
         }
 
-        internal class LineTokenizationMap {
+        internal class LineTokenizationMap
+        {
             private readonly object _lock = new object();
             private LineTokenization[] _map;
 
             internal LineTokenizationMap() { }
 
-            private LineTokenizationMap(LineTokenization[] map) {
+            private LineTokenizationMap(LineTokenization[] map)
+            {
                 _map = map;
             }
 
-            internal LineTokenizationMap Clone() {
-                lock (_lock) {
+            internal LineTokenizationMap Clone()
+            {
+                lock (_lock)
+                {
                     LineTokenization[] map = null;
-                    if (_map != null) {
+                    if (_map != null)
+                    {
                         map = new LineTokenization[_map.Length];
                         Array.Copy(map, _map, map.Length);
                     }
@@ -260,17 +297,21 @@ namespace Microsoft.PythonTools {
                 }
             }
 
-            internal LineTokenization GetLineTokenization(ITextSnapshotLine line, Lazy<Tokenizer> lazyTokenizer) {
+            internal LineTokenization GetLineTokenization(ITextSnapshotLine line, Lazy<Tokenizer> lazyTokenizer)
+            {
                 var lineNumber = line.LineNumber;
 
-                lock (_lock) {
+                lock (_lock)
+                {
                     EnsureCapacity(line.Snapshot.LineCount);
                     var start = IndexOfPreviousTokenization(lineNumber + 1, 0, out var lineTok);
 
-                    while (++start <= lineNumber) {
+                    while (++start <= lineNumber)
+                    {
                         var state = lineTok.State;
 
-                        if (!TryGetTokenization(start, out lineTok)) {
+                        if (!TryGetTokenization(start, out lineTok))
+                        {
                             _map[start] = lineTok = lazyTokenizer.Value.TokenizeLine(line.Snapshot.GetLineFromLineNumber(start), state);
                         }
                     }
@@ -278,16 +319,22 @@ namespace Microsoft.PythonTools {
                 }
             }
 
-            internal void Update(TextContentChangedEventArgs e, Lazy<Tokenizer> lazyTokenizer) {
+            internal void Update(TextContentChangedEventArgs e, Lazy<Tokenizer> lazyTokenizer)
+            {
                 var snapshot = e.After;
-                lock (_lock) {
+                lock (_lock)
+                {
                     EnsureCapacity(snapshot.LineCount);
 
-                    foreach (var change in e.Changes) {
+                    foreach (var change in e.Changes)
+                    {
                         var line = snapshot.GetLineNumberFromPosition(change.NewPosition) + 1;
-                        if (change.LineCountDelta > 0) {
+                        if (change.LineCountDelta > 0)
+                        {
                             InsertLines(line, change.LineCountDelta);
-                        } else if (change.LineCountDelta < 0) {
+                        }
+                        else if (change.LineCountDelta < 0)
+                        {
                             DeleteLines(line, Math.Min(-change.LineCountDelta, _map.Length - line));
                         }
 
@@ -296,7 +343,8 @@ namespace Microsoft.PythonTools {
                 }
             }
 
-            private void ApplyChanges(SnapshotSpan span, Lazy<Tokenizer> lazyTokenizer) {
+            private void ApplyChanges(SnapshotSpan span, Lazy<Tokenizer> lazyTokenizer)
+            {
                 var firstLine = span.Start.GetContainingLine().LineNumber;
                 var lastLine = span.End.GetContainingLine().LineNumber;
 
@@ -305,7 +353,8 @@ namespace Microsoft.PythonTools {
                 // find the closest line preceding firstLine for which we know tokenizer state
                 firstLine = IndexOfPreviousTokenization(firstLine, 0, out var lineTokenization) + 1;
 
-                for (var lineNo = firstLine; lineNo < span.Snapshot.LineCount; ++lineNo) {
+                for (var lineNo = firstLine; lineNo < span.Snapshot.LineCount; ++lineNo)
+                {
                     var line = span.Snapshot.GetLineFromLineNumber(lineNo);
 
                     var beforeState = lineTokenization.State;
@@ -314,7 +363,8 @@ namespace Microsoft.PythonTools {
 
                     // stop if we visited all affected lines and the current line has no tokenization state
                     // or its previous state is the same as the new state.
-                    if (lineNo > lastLine && (beforeState == null || beforeState.Equals(afterState))) {
+                    if (lineNo > lastLine && (beforeState == null || beforeState.Equals(afterState)))
+                    {
                         break;
                     }
                 }
@@ -324,10 +374,13 @@ namespace Microsoft.PythonTools {
             /// Looks for the first cached tokenization preceding the given line.
             /// Returns the line we have a tokenization for or minLine - 1 if there is none.
             /// </summary>
-            private int IndexOfPreviousTokenization(int line, int minLine, out LineTokenization tokenization) {
+            private int IndexOfPreviousTokenization(int line, int minLine, out LineTokenization tokenization)
+            {
                 line--;
-                while (line >= minLine) {
-                    if (_map[line].Tokens != null) {
+                while (line >= minLine)
+                {
+                    if (_map[line].Tokens != null)
+                    {
                         tokenization = _map[line];
                         return line;
                     }
@@ -337,46 +390,57 @@ namespace Microsoft.PythonTools {
                 return minLine - 1;
             }
 
-            private bool TryGetTokenization(int line, out LineTokenization tokenization) {
+            private bool TryGetTokenization(int line, out LineTokenization tokenization)
+            {
                 tokenization = _map[line];
-                if (tokenization.Tokens != null) {
+                if (tokenization.Tokens != null)
+                {
                     return true;
                 }
                 tokenization = default(LineTokenization);
                 return false;
             }
 
-            private void EnsureCapacity(int capacity) {
-                if (_map == null) {
+            private void EnsureCapacity(int capacity)
+            {
+                if (_map == null)
+                {
                     _map = new LineTokenization[capacity];
                     return;
                 }
 
-                if (capacity > _map.Length) {
+                if (capacity > _map.Length)
+                {
                     Array.Resize(ref _map, Math.Max(capacity, (_map.Length + 1) * 2));
                 }
             }
 
             [Conditional("DEBUG")]
-            private void AssertCapacity(int capacity) {
+            private void AssertCapacity(int capacity)
+            {
                 Debug.Assert(_map != null);
                 Debug.Assert(_map.Length > capacity);
             }
 
-            private void DeleteLines(int index, int count) {
-                if (index > _map.Length - count) {
+            private void DeleteLines(int index, int count)
+            {
+                if (index > _map.Length - count)
+                {
                     throw new ArgumentOutOfRangeException(nameof(index), "Must be 'count' less than the size of the cache");
                 }
 
                 Array.Copy(_map, index + count, _map, index, _map.Length - index - count);
-                for (var i = 0; i < count; i++) {
+                for (var i = 0; i < count; i++)
+                {
                     _map[_map.Length - i - 1] = default(LineTokenization);
                 }
             }
 
-            private void InsertLines(int index, int count) {
+            private void InsertLines(int index, int count)
+            {
                 Array.Copy(_map, index, _map, index + count, _map.Length - index - count);
-                for (var i = 0; i < count; i++) {
+                for (var i = 0; i < count; i++)
+                {
                     _map[index + i] = default(LineTokenization);
                 }
             }

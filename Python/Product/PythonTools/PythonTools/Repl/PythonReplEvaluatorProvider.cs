@@ -14,21 +14,14 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.Composition;
-using System.Diagnostics;
-using System.Linq;
-using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Project;
-using Microsoft.VisualStudio.InteractiveWindow;
-using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudioTools;
 
-namespace Microsoft.PythonTools.Repl {
+namespace Microsoft.PythonTools.Repl
+{
     [Export(typeof(IInteractiveEvaluatorProvider))]
-    sealed class PythonReplEvaluatorProvider : IInteractiveEvaluatorProvider, IDisposable {
+    sealed class PythonReplEvaluatorProvider : IInteractiveEvaluatorProvider, IDisposable
+    {
         private readonly IInterpreterRegistryService _interpreterService;
         private readonly IPythonWorkspaceContextProvider _workspaceContextProvider;
         private readonly IServiceProvider _serviceProvider;
@@ -42,7 +35,8 @@ namespace Microsoft.PythonTools.Repl {
             [Import] IInterpreterRegistryService interpreterService,
             [Import] IPythonWorkspaceContextProvider workspaceContextProvider,
             [Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider
-        ) {
+        )
+        {
             Debug.Assert(interpreterService != null);
             _interpreterService = interpreterService;
             _workspaceContextProvider = workspaceContextProvider;
@@ -59,19 +53,23 @@ namespace Microsoft.PythonTools.Repl {
             _workspaceContextProvider.WorkspaceInitialized += OnWorkspaceChanged;
         }
 
-        private void OnWorkspaceChanged(object sender, PythonWorkspaceContextEventArgs e) {
+        private void OnWorkspaceChanged(object sender, PythonWorkspaceContextEventArgs e)
+        {
             EvaluatorsChanged?.Invoke(this, EventArgs.Empty);
         }
 
-        private void SolutionChanged(object sender, EventArgs e) {
+        private void SolutionChanged(object sender, EventArgs e)
+        {
             EvaluatorsChanged?.Invoke(this, EventArgs.Empty);
         }
 
-        private void ProjectChanged(object sender, ProjectEventArgs e) {
+        private void ProjectChanged(object sender, ProjectEventArgs e)
+        {
             EvaluatorsChanged?.Invoke(this, EventArgs.Empty);
         }
 
-        public void Dispose() {
+        public void Dispose()
+        {
             _solutionEvents.Dispose();
             _workspaceContextProvider.WorkspaceClosed -= OnWorkspaceChanged;
             _workspaceContextProvider.WorkspaceInitialized -= OnWorkspaceChanged;
@@ -79,10 +77,12 @@ namespace Microsoft.PythonTools.Repl {
 
         public event EventHandler EvaluatorsChanged;
 
-        public IEnumerable<KeyValuePair<string, string>> GetEvaluators() {
+        public IEnumerable<KeyValuePair<string, string>> GetEvaluators()
+        {
             _serviceProvider.MustBeCalledFromUIThread();
 
-            foreach (var interpreter in _interpreterService.Configurations.Where(PythonInterpreterFactoryExtensions.IsRunnable)) {
+            foreach (var interpreter in _interpreterService.Configurations.Where(PythonInterpreterFactoryExtensions.IsRunnable))
+            {
                 yield return new KeyValuePair<string, string>(
                     interpreter.Description,
                     GetEvaluatorId(interpreter)
@@ -90,9 +90,12 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             var solution = _serviceProvider.GetService(typeof(SVsSolution)) as IVsSolution;
-            if (solution != null) {
-                foreach (var project in solution.EnumerateLoadedPythonProjects()) {
-                    if (project.IsClosed || project.IsClosing) {
+            if (solution != null)
+            {
+                foreach (var project in solution.EnumerateLoadedPythonProjects())
+                {
+                    if (project.IsClosed || project.IsClosing)
+                    {
                         continue;
                     }
                     yield return new KeyValuePair<string, string>(
@@ -103,7 +106,8 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             var workspace = _workspaceContextProvider.Workspace;
-            if (workspace != null) {
+            if (workspace != null)
+            {
                 yield return new KeyValuePair<string, string>(
                     Strings.ReplWorkspaceCaption.FormatUI(workspace.WorkspaceName),
                     GetEvaluatorId(workspace)
@@ -111,7 +115,8 @@ namespace Microsoft.PythonTools.Repl {
             }
         }
 
-        internal static string GetEvaluatorId(InterpreterConfiguration config) {
+        internal static string GetEvaluatorId(InterpreterConfiguration config)
+        {
             return "{0};env;{1};{2}".FormatInvariant(
                 _prefix,
                 config.Description,
@@ -119,7 +124,8 @@ namespace Microsoft.PythonTools.Repl {
             );
         }
 
-        internal static string GetEvaluatorId(PythonProjectNode project) {
+        internal static string GetEvaluatorId(PythonProjectNode project)
+        {
             return "{0};project;{1};{2}".FormatInvariant(
                 _prefix,
                 project.Caption,
@@ -127,7 +133,8 @@ namespace Microsoft.PythonTools.Repl {
             );
         }
 
-        internal static string GetEvaluatorId(IPythonWorkspaceContext workspace) {
+        internal static string GetEvaluatorId(IPythonWorkspaceContext workspace)
+        {
             return "{0};workspace;{1};{2}".FormatInvariant(
                 _prefix,
                 workspace.WorkspaceName,
@@ -135,43 +142,52 @@ namespace Microsoft.PythonTools.Repl {
             );
         }
 
-        internal static string GetTemporaryId(string key, InterpreterConfiguration config) {
+        internal static string GetTemporaryId(string key, InterpreterConfiguration config)
+        {
             return GetEvaluatorId(config) + ";" + key;
         }
 
 
-        public IInteractiveEvaluator GetEvaluator(string evaluatorId) {
-            if (string.IsNullOrEmpty(evaluatorId)) {
+        public IInteractiveEvaluator GetEvaluator(string evaluatorId)
+        {
+            if (string.IsNullOrEmpty(evaluatorId))
+            {
                 return null;
             }
 
             // Max out at 10 splits to protect against malicious IDs
             var bits = evaluatorId.Split(new[] { ';' }, 10);
 
-            if (bits.Length < 2 || !bits[0].Equals(_prefix, StringComparison.OrdinalIgnoreCase)) {
+            if (bits.Length < 2 || !bits[0].Equals(_prefix, StringComparison.OrdinalIgnoreCase))
+            {
                 return null;
             }
 
-            if (bits[1].Equals("env", StringComparison.OrdinalIgnoreCase)) {
+            if (bits[1].Equals("env", StringComparison.OrdinalIgnoreCase))
+            {
                 return GetEnvironmentEvaluator(bits.Skip(2).ToArray());
             }
 
-            if (bits[1].Equals("project", StringComparison.OrdinalIgnoreCase)) {
+            if (bits[1].Equals("project", StringComparison.OrdinalIgnoreCase))
+            {
                 return GetProjectEvaluator(bits.Skip(2).ToArray());
             }
 
-            if (bits[1].Equals("workspace", StringComparison.OrdinalIgnoreCase)) {
+            if (bits[1].Equals("workspace", StringComparison.OrdinalIgnoreCase))
+            {
                 return GetWorkspaceEvaluator(bits.Skip(2).ToArray());
             }
             return null;
         }
 
-        private IInteractiveEvaluator GetEnvironmentEvaluator(IReadOnlyList<string> args) {
+        private IInteractiveEvaluator GetEnvironmentEvaluator(IReadOnlyList<string> args)
+        {
             _serviceProvider.MustBeCalledFromUIThread();
 
             var config = _interpreterService.FindConfiguration(args.ElementAtOrDefault(1));
 
-            var eval = new PythonInteractiveEvaluator(_serviceProvider) {
+            var eval = new PythonInteractiveEvaluator(_serviceProvider)
+            {
                 DisplayName = args.ElementAtOrDefault(0),
                 Configuration = new LaunchConfiguration(config)
             };
@@ -181,12 +197,14 @@ namespace Microsoft.PythonTools.Repl {
             return eval;
         }
 
-        private IInteractiveEvaluator GetProjectEvaluator(IReadOnlyList<string> args) {
+        private IInteractiveEvaluator GetProjectEvaluator(IReadOnlyList<string> args)
+        {
             _serviceProvider.MustBeCalledFromUIThread();
 
             var project = args.ElementAtOrDefault(1);
 
-            var eval = new PythonInteractiveEvaluator(_serviceProvider) {
+            var eval = new PythonInteractiveEvaluator(_serviceProvider)
+            {
                 DisplayName = args.ElementAtOrDefault(0),
                 ProjectMoniker = project
             };
@@ -196,12 +214,14 @@ namespace Microsoft.PythonTools.Repl {
             return eval;
         }
 
-        private IInteractiveEvaluator GetWorkspaceEvaluator(IReadOnlyList<string> args) {
+        private IInteractiveEvaluator GetWorkspaceEvaluator(IReadOnlyList<string> args)
+        {
             _serviceProvider.MustBeCalledFromUIThread();
 
             var workspace = args.ElementAtOrDefault(1);
 
-            var eval = new PythonInteractiveEvaluator(_serviceProvider) {
+            var eval = new PythonInteractiveEvaluator(_serviceProvider)
+            {
                 DisplayName = args.ElementAtOrDefault(0),
                 WorkspaceMoniker = workspace
             };

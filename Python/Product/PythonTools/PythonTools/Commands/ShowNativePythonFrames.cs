@@ -14,28 +14,33 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using Microsoft.VisualStudio.Shell;
-
-namespace Microsoft.PythonTools.Commands {
+namespace Microsoft.PythonTools.Commands
+{
     using DebuggerOptions = Microsoft.PythonTools.Debugger.Concord.DebuggerOptions;
 
-    internal class ShowNativePythonFrames : DkmDebuggerCommand {
+    internal class ShowNativePythonFrames : DkmDebuggerCommand
+    {
         public ShowNativePythonFrames(IServiceProvider serviceProvider)
-            : base(serviceProvider) {
+            : base(serviceProvider)
+        {
         }
 
-        public override int CommandId {
+        public override int CommandId
+        {
             get { return (int)PkgCmdIDList.cmdidShowNativePythonFrames; }
         }
 
-        protected override bool IsPythonDeveloperCommand {
+        protected override bool IsPythonDeveloperCommand
+        {
             get { return true; }
         }
 
-        public override EventHandler BeforeQueryStatus {
-            get {
-                return (sender, args) => {
+        public override EventHandler BeforeQueryStatus
+        {
+            get
+            {
+                return (sender, args) =>
+                {
                     base.BeforeQueryStatus(sender, args);
                     var cmd = (OleMenuCommand)sender;
                     cmd.Checked = DebuggerOptions.ShowNativePythonFrames;
@@ -43,7 +48,8 @@ namespace Microsoft.PythonTools.Commands {
             }
         }
 
-        public override void DoCommand(object sender, EventArgs args) {
+        public override void DoCommand(object sender, EventArgs args)
+        {
             DebuggerOptions.ShowNativePythonFrames = !DebuggerOptions.ShowNativePythonFrames;
 
             // A hackish way to force debugger to refresh its views, so that our CallStackFilter is requeried and can use the new option value.

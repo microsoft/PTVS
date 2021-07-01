@@ -14,18 +14,16 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Threading.Tasks;
-using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Project;
 
-namespace Microsoft.PythonTools.Environments {
-    sealed class EnvironmentSwitcherProjectContext : IEnvironmentSwitcherContext {
+namespace Microsoft.PythonTools.Environments
+{
+    sealed class EnvironmentSwitcherProjectContext : IEnvironmentSwitcherContext
+    {
         private readonly PythonProjectNode _project;
 
-        public EnvironmentSwitcherProjectContext(PythonProjectNode project) {
+        public EnvironmentSwitcherProjectContext(PythonProjectNode project)
+        {
             _project = project ?? throw new ArgumentNullException(nameof(project));
             _project.ActiveInterpreterChanged += OnSettingsChanged;
             _project.InterpreterFactoriesChanged += OnSettingsChanged;
@@ -39,17 +37,20 @@ namespace Microsoft.PythonTools.Environments {
 
         public event EventHandler EnvironmentsChanged;
 
-        public Task ChangeFactoryAsync(IPythonInterpreterFactory factory) {
+        public Task ChangeFactoryAsync(IPythonInterpreterFactory factory)
+        {
             Project.SetInterpreterFactory(factory);
             return Task.CompletedTask;
         }
 
-        private void OnSettingsChanged(object sender, EventArgs e) {
+        private void OnSettingsChanged(object sender, EventArgs e)
+        {
             Debug.Assert(sender == Project);
             EnvironmentsChanged?.Invoke(this, EventArgs.Empty);
         }
 
-        public void Dispose() {
+        public void Dispose()
+        {
             Project.ActiveInterpreterChanged -= OnSettingsChanged;
             Project.InterpreterFactoriesChanged -= OnSettingsChanged;
         }

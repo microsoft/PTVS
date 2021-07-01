@@ -15,10 +15,7 @@
 // permissions and limitations under the License.
 
 
-using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudioTools.Project;
-using System;
-using System.Globalization;
 
 namespace Microsoft.VisualStudioTools
 {

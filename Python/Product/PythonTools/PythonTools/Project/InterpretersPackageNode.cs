@@ -14,31 +14,20 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text.RegularExpressions;
-using System.Threading;
-using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Interpreter;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Imaging;
-using Microsoft.VisualStudio.Imaging.Interop;
-using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudioTools.Project;
 using NativeMethods = Microsoft.VisualStudioTools.Project.NativeMethods;
 using OleConstants = Microsoft.VisualStudio.OLE.Interop.Constants;
 using VsCommands = Microsoft.VisualStudio.VSConstants.VSStd97CmdID;
 using VsMenus = Microsoft.VisualStudioTools.Project.VsMenus;
 
-namespace Microsoft.PythonTools.Project {
+namespace Microsoft.PythonTools.Project
+{
     /// <summary>
     /// Represents a package installed in a virtual env as a node in the Solution Explorer.
     /// </summary>
     [ComVisible(true)]
-    internal class InterpretersPackageNode : HierarchyNode {
+    internal class InterpretersPackageNode : HierarchyNode
+    {
         private static readonly Regex PipFreezeRegex = new Regex(
             "^(?<name>[^=]+)==(?<version>.+)$",
             RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase
@@ -51,56 +40,72 @@ namespace Microsoft.PythonTools.Project {
         private readonly string _packageName;
 
         public InterpretersPackageNode(PythonProjectNode project, PackageSpec spec)
-            : base(project, new VirtualProjectElement(project)) {
+            : base(project, new VirtualProjectElement(project))
+        {
             ExcludeNodeFromScc = true;
             _package = spec.Clone();
             _packageName = spec.FullSpec;
-            if (spec.ExactVersion.IsEmpty) {
+            if (spec.ExactVersion.IsEmpty)
+            {
                 _caption = spec.Name;
                 _canUninstall = false;
-            } else {
+            }
+            else
+            {
                 _caption = string.Format("{0} ({1})", spec.Name, spec.ExactVersion);
                 _canUninstall = !CannotUninstall.Contains(spec.Name);
             }
         }
 
-        public override int MenuCommandId {
+        public override int MenuCommandId
+        {
             get { return PythonConstants.EnvironmentPackageMenuId; }
         }
 
-        public override Guid MenuGroupId {
+        public override Guid MenuGroupId
+        {
             get { return GuidList.guidPythonToolsCmdSet; }
         }
 
-        public override string Url {
+        public override string Url
+        {
             get { return _packageName; }
         }
 
-        public override Guid ItemTypeGuid {
+        public override Guid ItemTypeGuid
+        {
             get { return PythonConstants.InterpretersPackageItemTypeGuid; }
         }
 
-        public new PythonProjectNode ProjectMgr {
-            get {
+        public new PythonProjectNode ProjectMgr
+        {
+            get
+            {
                 return (PythonProjectNode)base.ProjectMgr;
             }
         }
 
-        internal override bool CanDeleteItem(__VSDELETEITEMOPERATION deleteOperation) {
+        internal override bool CanDeleteItem(__VSDELETEITEMOPERATION deleteOperation)
+        {
             return _canUninstall && deleteOperation == __VSDELETEITEMOPERATION.DELITEMOP_RemoveFromProject;
         }
 
-        protected internal override void ShowDeleteMessage(IList<HierarchyNode> nodes, __VSDELETEITEMOPERATION action, out bool cancel, out bool useStandardDialog) {
+        protected internal override void ShowDeleteMessage(IList<HierarchyNode> nodes, __VSDELETEITEMOPERATION action, out bool cancel, out bool useStandardDialog)
+        {
             if (nodes.All(n => n is InterpretersPackageNode) &&
-                nodes.Cast<InterpretersPackageNode>().All(n => n.Parent == Parent)) {
+                nodes.Cast<InterpretersPackageNode>().All(n => n.Parent == Parent))
+            {
                 string message;
-                if (nodes.Count == 1) {
+                if (nodes.Count == 1)
+                {
                     message = Strings.UninstallPackage.FormatUI(
                         Caption,
                         Parent._factory.Configuration.Description,
                         Parent._factory.Configuration.GetPrefixPath()
                     );
-                } else {
+                }
+                else
+                {
                     message = Strings.UninstallPackages.FormatUI(
                         string.Join(Environment.NewLine, nodes.Select(n => n.Caption)),
                         Parent._factory.Configuration.Description,
@@ -116,13 +121,16 @@ namespace Microsoft.PythonTools.Project {
                     OLEMSGBUTTON.OLEMSGBUTTON_OKCANCEL,
                     OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST
                 ) != NativeMethods.IDOK;
-            } else {
+            }
+            else
+            {
                 useStandardDialog = false;
                 cancel = true;
             }
         }
 
-        public override bool Remove(bool removeFromStorage) {
+        public override bool Remove(bool removeFromStorage)
+        {
             RemoveAsync()
                 .SilenceException<OperationCanceledException>()
                 .HandleAllExceptions(ProjectMgr.Site, GetType())
@@ -130,9 +138,11 @@ namespace Microsoft.PythonTools.Project {
             return true;
         }
 
-        private async System.Threading.Tasks.Task RemoveAsync() {
+        private async System.Threading.Tasks.Task RemoveAsync()
+        {
             var pm = Parent._packageManager;
-            if (pm == null) {
+            if (pm == null)
+            {
                 Debug.Fail("Should not be able to remove a package without a package manager");
                 return;
             }
@@ -140,7 +150,8 @@ namespace Microsoft.PythonTools.Project {
             var provider = ProjectMgr.Site;
             var statusBar = (IVsStatusbar)provider.GetService(typeof(SVsStatusbar));
 
-            try {
+            try
+            {
                 statusBar.SetText(Strings.PackageUninstallingSeeOutputWindow.FormatUI(_packageName));
 
                 bool success = await pm.UninstallAsync(
@@ -151,14 +162,20 @@ namespace Microsoft.PythonTools.Project {
                 statusBar.SetText((success ? Strings.PackageUninstallSucceeded : Strings.PackageUninstallFailed).FormatUI(
                     _packageName
                 ));
-            } catch (OperationCanceledException) {
-            } catch (Exception ex) when (!ex.IsCriticalException()) {
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            catch (Exception ex) when (!ex.IsCriticalException())
+            {
                 statusBar.SetText(Strings.PackageUninstallFailed.FormatUI(_packageName));
             }
         }
 
-        public new InterpretersNode Parent {
-            get {
+        public new InterpretersNode Parent
+        {
+            get
+            {
                 return (InterpretersNode)base.Parent;
             }
         }
@@ -166,8 +183,10 @@ namespace Microsoft.PythonTools.Project {
         /// <summary>
         /// Show the name of the package.
         /// </summary>
-        public override string Caption {
-            get {
+        public override string Caption
+        {
+            get
+            {
                 return _caption;
             }
         }
@@ -175,41 +194,50 @@ namespace Microsoft.PythonTools.Project {
         /// <summary>
         /// Disable inline editing of Caption of a package node
         /// </summary>
-        public override string GetEditLabel() {
+        public override string GetEditLabel()
+        {
             return null;
         }
 
-        protected override bool SupportsIconMonikers {
+        protected override bool SupportsIconMonikers
+        {
             get { return true; }
         }
 
-        protected override ImageMoniker GetIconMoniker(bool open) {
+        protected override ImageMoniker GetIconMoniker(bool open)
+        {
             return KnownMonikers.PythonPackage;
         }
 
         /// <summary>
         /// Package node cannot be dragged.
         /// </summary>
-        protected internal override string PrepareSelectedNodesForClipBoard() {
+        protected internal override string PrepareSelectedNodesForClipBoard()
+        {
             return null;
         }
 
         /// <summary>
         /// Package node cannot be excluded.
         /// </summary>
-        internal override int ExcludeFromProject() {
+        internal override int ExcludeFromProject()
+        {
             return (int)OleConstants.OLECMDERR_E_NOTSUPPORTED;
         }
 
-        internal override int QueryStatusOnNode(Guid cmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result) {
-            if (cmdGroup == VsMenus.guidStandardCommandSet97) {
-                switch ((VsCommands)cmd) {
+        internal override int QueryStatusOnNode(Guid cmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result)
+        {
+            if (cmdGroup == VsMenus.guidStandardCommandSet97)
+            {
+                switch ((VsCommands)cmd)
+                {
                     case VsCommands.Copy:
                     case VsCommands.Cut:
                         result |= QueryStatusResult.SUPPORTED | QueryStatusResult.INVISIBLE;
                         return VSConstants.S_OK;
                     case VsCommands.Delete:
-                        if (!_canUninstall) {
+                        if (!_canUninstall)
+                        {
                             // If we can't uninstall the package, still show the
                             // item but disable it. Otherwise, let the default
                             // query handle it, which will display "Remove".
@@ -226,17 +254,21 @@ namespace Microsoft.PythonTools.Project {
         /// Defines whether this node is valid node for painting the package icon.
         /// </summary>
         /// <returns></returns>
-        protected override bool CanShowDefaultIcon() {
+        protected override bool CanShowDefaultIcon()
+        {
             return true;
         }
 
-        public override bool CanAddFiles {
-            get {
+        public override bool CanAddFiles
+        {
+            get
+            {
                 return false;
             }
         }
 
-        protected override NodeProperties CreatePropertiesObject() {
+        protected override NodeProperties CreatePropertiesObject()
+        {
             return new InterpretersPackageNodeProperties(this);
         }
     }

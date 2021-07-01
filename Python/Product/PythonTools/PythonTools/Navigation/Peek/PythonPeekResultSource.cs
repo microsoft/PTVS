@@ -14,32 +14,30 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using Microsoft.PythonTools.Analysis;
-using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
-using Microsoft.VisualStudio.Imaging.Interop;
-using Microsoft.VisualStudio.Language.Intellisense;
 
-namespace Microsoft.PythonTools.Navigation.Peek {
-    internal sealed class PythonPeekResultSource : IPeekResultSource {
+namespace Microsoft.PythonTools.Navigation.Peek
+{
+    internal sealed class PythonPeekResultSource : IPeekResultSource
+    {
         private readonly IPeekResultFactory _peekResultFactory;
         private readonly AnalysisVariable[] _variables;
 
-        public PythonPeekResultSource(IPeekResultFactory peekResultFactory, AnalysisVariable[] variables) {
+        public PythonPeekResultSource(IPeekResultFactory peekResultFactory, AnalysisVariable[] variables)
+        {
             _peekResultFactory = peekResultFactory ?? throw new ArgumentNullException(nameof(peekResultFactory));
             _variables = variables ?? throw new ArgumentNullException(nameof(variables));
         }
 
-        public void FindResults(string relationshipName, IPeekResultCollection resultCollection, CancellationToken cancellationToken, IFindPeekResultsCallback callback) {
-            if (resultCollection == null) {
+        public void FindResults(string relationshipName, IPeekResultCollection resultCollection, CancellationToken cancellationToken, IFindPeekResultsCallback callback)
+        {
+            if (resultCollection == null)
+            {
                 throw new ArgumentNullException(nameof(resultCollection));
             }
 
-            if (!string.Equals(relationshipName, PredefinedPeekRelationships.Definitions.Name, StringComparison.OrdinalIgnoreCase)) {
+            if (!string.Equals(relationshipName, PredefinedPeekRelationships.Definitions.Name, StringComparison.OrdinalIgnoreCase))
+            {
                 return;
             }
 
@@ -51,40 +49,50 @@ namespace Microsoft.PythonTools.Navigation.Peek {
             var valueAndDefs = new List<IDocumentPeekResult>();
             var defOnly = new List<IDocumentPeekResult>();
 
-            foreach (var g in grouped) {
+            foreach (var g in grouped)
+            {
                 bool anyValues = false;
-                foreach (var value in g.Where(v => v.Type == VariableType.Value)) {
+                foreach (var value in g.Where(v => v.Type == VariableType.Value))
+                {
                     var def = g.FirstOrDefault(v => v.Type == VariableType.Value && LocationContains(value.Location, v.Location))?.Location ??
                         new LocationInfo(value.Location.FilePath, value.Location.DocumentUri, value.Location.StartLine, value.Location.StartColumn);
                     valueAndDefs.Add(CreateResult(g.Key, def, value.Location));
                     anyValues = true;
                 }
-                if (!anyValues) {
-                    foreach (var def in g.Where(v => v.Type == VariableType.Definition)) {
+                if (!anyValues)
+                {
+                    foreach (var def in g.Where(v => v.Type == VariableType.Definition))
+                    {
                         defOnly.Add(CreateResult(g.Key, def.Location));
                     }
                 }
             }
 
-            foreach (var v in valueAndDefs.Concat(defOnly)) {
+            foreach (var v in valueAndDefs.Concat(defOnly))
+            {
                 resultCollection.Add(v);
             }
         }
 
-        private static bool LocationContains(LocationInfo outer, LocationInfo inner) {
-            if (inner.StartLine < outer.StartLine || inner.EndLine > outer.EndLine) {
+        private static bool LocationContains(LocationInfo outer, LocationInfo inner)
+        {
+            if (inner.StartLine < outer.StartLine || inner.EndLine > outer.EndLine)
+            {
                 return false;
             }
-            if (inner.StartLine == outer.StartLine && inner.StartColumn < outer.StartColumn) {
+            if (inner.StartLine == outer.StartLine && inner.StartColumn < outer.StartColumn)
+            {
                 return false;
             }
-            if (inner.EndLine == outer.EndLine && inner.EndColumn > outer.EndColumn) {
+            if (inner.EndLine == outer.EndLine && inner.EndColumn > outer.EndColumn)
+            {
                 return false;
             }
             return true;
         }
 
-        private IDocumentPeekResult CreateResult(string filePath, LocationInfo definition, LocationInfo value = null) {
+        private IDocumentPeekResult CreateResult(string filePath, LocationInfo definition, LocationInfo value = null)
+        {
             var fileName = PathUtils.GetFileOrDirectoryName(filePath);
 
             var displayInfo = new PeekResultDisplayInfo2(

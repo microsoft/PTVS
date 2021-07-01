@@ -14,14 +14,13 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Xml.Serialization;
-using Microsoft.PythonTools.Interpreter;
-
-namespace Microsoft.PythonTools {
+namespace Microsoft.PythonTools
+{
     /// <summary>
     /// Provides a view model for the PythonInterpreter class.
     /// </summary>
-    class PythonInterpreterView {
+    class PythonInterpreterView
+    {
         readonly string _name;
         readonly string _id;
         readonly string _path;
@@ -29,7 +28,8 @@ namespace Microsoft.PythonTools {
         /// <summary>
         /// Create a PythonInterpreterView with values from an IPythonInterpreterFactory.
         /// </summary>
-        public PythonInterpreterView(InterpreterConfiguration config) {
+        public PythonInterpreterView(InterpreterConfiguration config)
+        {
             _name = config.Description;
             _id = config.Id;
             _path = config.InterpreterPath;
@@ -38,7 +38,8 @@ namespace Microsoft.PythonTools {
         /// <summary>
         /// Create a PythonInterpreterView with values from a PythonInterpreter.
         /// </summary>
-        public PythonInterpreterView(PythonInterpreter interpreter) {
+        public PythonInterpreterView(PythonInterpreter interpreter)
+        {
             _name = null;
             _id = interpreter.Id;
             _path = null;
@@ -46,7 +47,8 @@ namespace Microsoft.PythonTools {
         /// <summary>
         /// Create a PythonInterpreterView with values from parameters.
         /// </summary>
-        public PythonInterpreterView(string name, string id, string path) {
+        public PythonInterpreterView(string name, string id, string path)
+        {
             _name = name;
             _id = id;
             _path = path;
@@ -56,8 +58,10 @@ namespace Microsoft.PythonTools {
         /// Returns a PythonInterpreter with the values from the model view.
         /// </summary>
         /// <returns></returns>
-        public PythonInterpreter GetInterpreter() {
-            return new PythonInterpreter {
+        public PythonInterpreter GetInterpreter()
+        {
+            return new PythonInterpreter
+            {
                 Id = Id
             };
         }
@@ -65,8 +69,10 @@ namespace Microsoft.PythonTools {
         /// <summary>
         /// The display name of the interpreter, if available.
         /// </summary>
-        public string Name {
-            get {
+        public string Name
+        {
+            get
+            {
                 return _name;
             }
         }
@@ -74,8 +80,10 @@ namespace Microsoft.PythonTools {
         /// <summary>
         /// The Guid identifying the interpreter.
         /// </summary>
-        public string Id {
-            get {
+        public string Id
+        {
+            get
+            {
                 return _id;
             }
         }
@@ -83,54 +91,70 @@ namespace Microsoft.PythonTools {
         /// <summary>
         /// The path to the interpreter, if available.
         /// </summary>
-        public string Path {
-            get {
+        public string Path
+        {
+            get
+            {
                 return _path;
             }
         }
 
-        public override string ToString() {
+        public override string ToString()
+        {
             return Name;
         }
 
-        public override bool Equals(object obj) {
+        public override bool Equals(object obj)
+        {
             var other = obj as PythonInterpreterView;
-            if (other == null) {
+            if (other == null)
+            {
                 return false;
-            } else {
+            }
+            else
+            {
                 return Id.Equals(other.Id);
             }
         }
 
-        public override int GetHashCode() {
+        public override int GetHashCode()
+        {
             return Id.GetHashCode();
         }
     }
 
-    sealed class PythonInterpreter {
+    sealed class PythonInterpreter
+    {
         [XmlElement("Id")]
-        public string Id {
+        public string Id
+        {
             get;
             set;
         }
 
         [XmlElement("Version")]
-        public string Version {
+        public string Version
+        {
             get;
             set;
         }
 
-        internal PythonInterpreter Clone() {
+        internal PythonInterpreter Clone()
+        {
             var res = new PythonInterpreter();
 
             res.Id = Id;
             return res;
         }
 
-        internal static bool IsSame(PythonInterpreter self, PythonInterpreter other) {
-            if (self == null) {
+        internal static bool IsSame(PythonInterpreter self, PythonInterpreter other)
+        {
+            if (self == null)
+            {
                 return other == null;
-            } else if (other != null) {
+            }
+            else if (other != null)
+            {
                 return self.Id == other.Id;
             }
             return false;

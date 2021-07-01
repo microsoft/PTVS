@@ -14,12 +14,11 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using Microsoft.VisualStudio.Shell;
-
-namespace Microsoft.VisualStudioTools {
+namespace Microsoft.VisualStudioTools
+{
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
-    class ProvideDebugAdapterAttribute : RegistrationAttribute {
+    class ProvideDebugAdapterAttribute : RegistrationAttribute
+    {
         private readonly string _debugAdapterHostCLSID = "{DAB324E9-7B35-454C-ACA8-F6BB0D5C8673}";
         private readonly string _name;
         private readonly string _engineId;
@@ -30,7 +29,8 @@ namespace Microsoft.VisualStudioTools {
         private readonly Type _adapterLauncherType;
         private readonly Type _customProtocolType;
 
-        public ProvideDebugAdapterAttribute(string name, string engineId, string adapterLauncherCLSID, string customProtocolExtensionCLSID, string languageName, string languageId, Type adapterLauncherType, Type customProtocolType) {
+        public ProvideDebugAdapterAttribute(string name, string engineId, string adapterLauncherCLSID, string customProtocolExtensionCLSID, string languageName, string languageId, Type adapterLauncherType, Type customProtocolType)
+        {
             _name = name;
             _engineId = engineId;
             _adapterLauncherCLSID = adapterLauncherCLSID;
@@ -41,7 +41,8 @@ namespace Microsoft.VisualStudioTools {
             _customProtocolType = customProtocolType;
         }
 
-        public override void Register(RegistrationContext context) {
+        public override void Register(RegistrationContext context)
+        {
             var engineKey = context.CreateKey("AD7Metrics\\Engine\\" + _engineId);
 
 
@@ -163,7 +164,8 @@ namespace Microsoft.VisualStudioTools {
             customProtocolKey.SetValue("CodeBase", $@"$PackageFolder$\{customProtocolAssembly}.dll");
         }
 
-        public override void Unregister(RegistrationContext context) {
+        public override void Unregister(RegistrationContext context)
+        {
         }
     }
 }

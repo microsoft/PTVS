@@ -14,13 +14,14 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.VisualStudio.Language.NavigateTo.Interfaces;
-
-namespace Microsoft.PythonTools.Navigation.NavigateTo {
-    internal class PythonNavigateToItemDisplayFactory : INavigateToItemDisplayFactory {
+namespace Microsoft.PythonTools.Navigation.NavigateTo
+{
+    internal class PythonNavigateToItemDisplayFactory : INavigateToItemDisplayFactory
+    {
         public static readonly PythonNavigateToItemDisplayFactory Instance = new PythonNavigateToItemDisplayFactory();
 
-        public INavigateToItemDisplay CreateItemDisplay(NavigateToItem item) {
+        public INavigateToItemDisplay CreateItemDisplay(NavigateToItem item)
+        {
             return new PythonNavigateToItemDisplay(item);
         }
     }

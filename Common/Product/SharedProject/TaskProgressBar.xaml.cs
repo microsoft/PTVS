@@ -14,12 +14,6 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Threading;
-
 namespace Microsoft.VisualStudioTools.Project
 {
     /// <summary>

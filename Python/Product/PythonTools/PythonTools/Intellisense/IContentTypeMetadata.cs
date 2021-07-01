@@ -14,13 +14,13 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Collections.Generic;
-
-namespace Microsoft.PythonTools.Intellisense {
+namespace Microsoft.PythonTools.Intellisense
+{
     /// <summary>
     /// New in 1.1
     /// </summary>
-    public interface IContentTypeMetadata {
+    public interface IContentTypeMetadata
+    {
         IEnumerable<string> ContentTypes { get; }
     }
 }

@@ -14,31 +14,31 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Collections.Generic;
-using System.ComponentModel.Composition;
-using System.Threading.Tasks;
-using Microsoft.PythonTools.Infrastructure;
-using Microsoft.VisualStudio.InteractiveWindow;
-using Microsoft.VisualStudio.InteractiveWindow.Commands;
-using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Text.Classification;
-using Microsoft.VisualStudio.Utilities;
-
-namespace Microsoft.PythonTools.Repl {
+namespace Microsoft.PythonTools.Repl
+{
     [Export(typeof(IInteractiveWindowCommand))]
     [InteractiveWindowRole("Debug")]
     [ContentType(PythonCoreConstants.ContentType)]
-    class DebugReplFrameCommand : IInteractiveWindowCommand {
-        public Task<ExecutionResult> Execute(IInteractiveWindow window, string arguments) {
+    class DebugReplFrameCommand : IInteractiveWindowCommand
+    {
+        public Task<ExecutionResult> Execute(IInteractiveWindow window, string arguments)
+        {
             var eval = window.GetPythonDebugReplEvaluator();
-            if (eval != null) {
-                if (string.IsNullOrEmpty(arguments)) {
+            if (eval != null)
+            {
+                if (string.IsNullOrEmpty(arguments))
+                {
                     eval.DisplayActiveFrame();
-                } else {
+                }
+                else
+                {
                     int id;
-                    if (int.TryParse(arguments, out id)) {
+                    if (int.TryParse(arguments, out id))
+                    {
                         eval.ChangeActiveFrame(id);
-                    } else {
+                    }
+                    else
+                    {
                         window.WriteError(Strings.DebugReplFrameCommandInvalidArguments.FormatUI(arguments));
                     }
                 }
@@ -46,38 +46,49 @@ namespace Microsoft.PythonTools.Repl {
             return ExecutionResult.Succeeded;
         }
 
-        public string Description {
+        public string Description
+        {
             get { return Strings.DebugReplFrameCommandDescription; }
         }
 
-        public string Command {
+        public string Command
+        {
             get { return "frame"; }
         }
 
-        public IEnumerable<ClassificationSpan> ClassifyArguments(ITextSnapshot snapshot, Span argumentsSpan, Span spanToClassify) {
+        public IEnumerable<ClassificationSpan> ClassifyArguments(ITextSnapshot snapshot, Span argumentsSpan, Span spanToClassify)
+        {
             yield break;
         }
 
-        public string CommandLine {
-            get {
+        public string CommandLine
+        {
+            get
+            {
                 return "";
             }
         }
 
-        public IEnumerable<string> DetailedDescription {
-            get {
+        public IEnumerable<string> DetailedDescription
+        {
+            get
+            {
                 yield return Description;
             }
         }
 
-        public IEnumerable<KeyValuePair<string, string>> ParametersDescription {
-            get {
+        public IEnumerable<KeyValuePair<string, string>> ParametersDescription
+        {
+            get
+            {
                 yield break;
             }
         }
 
-        public IEnumerable<string> Names {
-            get {
+        public IEnumerable<string> Names
+        {
+            get
+            {
                 yield return Command;
             }
         }

@@ -14,31 +14,29 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Editor.Core;
-using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Parsing;
-using Microsoft.VisualStudio.Text;
 
-namespace Microsoft.PythonTools.Intellisense {
+namespace Microsoft.PythonTools.Intellisense
+{
     /// <summary>
     /// Provides squiggles and warning when file encoding does not match
     /// encoding specified in the Python '# -*- coding: ENCODING -*-'
     /// </summary>
-    sealed class InvalidEncodingSquiggleProvider : BufferAnalysisSquiggleProviderBase<InvalidEncodingSquiggleProvider> {
+    sealed class InvalidEncodingSquiggleProvider : BufferAnalysisSquiggleProviderBase<InvalidEncodingSquiggleProvider>
+    {
         public InvalidEncodingSquiggleProvider(IServiceProvider serviceProvider, TaskProvider taskProvider) :
             base(serviceProvider,
                 taskProvider,
                 o => o.InvalidEncodingWarning,
-                new[] { PythonTextBufferInfoEvents.TextContentChangedLowPriority, PythonTextBufferInfoEvents.NewAnalysis, PythonTextBufferInfoEvents.DocumentEncodingChanged }) {
+                new[] { PythonTextBufferInfoEvents.TextContentChangedLowPriority, PythonTextBufferInfoEvents.NewAnalysis, PythonTextBufferInfoEvents.DocumentEncodingChanged })
+        {
         }
 
-        protected override async Task OnNewAnalysis(PythonTextBufferInfo bi, AnalysisEntry entry) {
-            if (!Enabled && !_alwaysCreateSquiggle || bi?.Document == null || bi.Buffer?.Properties == null) {
+        protected override async Task OnNewAnalysis(PythonTextBufferInfo bi, AnalysisEntry entry)
+        {
+            if (!Enabled && !_alwaysCreateSquiggle || bi?.Document == null || bi.Buffer?.Properties == null)
+            {
                 TaskProvider.Clear(bi.Filename, VsProjectAnalyzer.InvalidEncodingMoniker);
                 return;
             }
@@ -46,16 +44,21 @@ namespace Microsoft.PythonTools.Intellisense {
             var snapshot = bi.CurrentSnapshot;
 
             var message = CheckEncoding(snapshot, bi.Document.Encoding, out var magicEncodingName, out var magicEncodingIndex);
-            if (message != null) {
+            if (message != null)
+            {
                 if (!bi.Buffer.Properties.TryGetProperty<string>(VsProjectAnalyzer.InvalidEncodingMoniker, out var prevMessage)
-                    || prevMessage != message) {
+                    || prevMessage != message)
+                {
 
                     bi.Buffer.Properties[VsProjectAnalyzer.InvalidEncodingMoniker] = message;
                     SourceSpan span;
-                    if (string.IsNullOrEmpty(magicEncodingName)) {
+                    if (string.IsNullOrEmpty(magicEncodingName))
+                    {
                         var pt = new SnapshotPoint(snapshot, magicEncodingIndex).ToSourceLocation();
                         span = new SourceSpan(pt, new SourceLocation(pt.Line, int.MaxValue));
-                    } else {
+                    }
+                    else
+                    {
                         span = new SnapshotSpan(snapshot, magicEncodingIndex, magicEncodingName.Length).ToSourceSpan();
                     }
 
@@ -76,30 +79,41 @@ namespace Microsoft.PythonTools.Intellisense {
                             )
                         });
                 }
-            } else {
+            }
+            else
+            {
                 TaskProvider.Clear(bi.Filename, VsProjectAnalyzer.InvalidEncodingMoniker);
                 bi.Buffer.Properties.RemoveProperty(VsProjectAnalyzer.InvalidEncodingMoniker);
             }
         }
 
-        internal static string CheckEncoding(ITextSnapshot snapshot, Encoding documentEncoding, out string magicEncodingName, out int magicEncodingIndex) {
+        internal static string CheckEncoding(ITextSnapshot snapshot, Encoding documentEncoding, out string magicEncodingName, out int magicEncodingIndex)
+        {
             var chunk = snapshot.GetText(new Span(0, Math.Min(snapshot.Length, 512)));
             Parser.GetEncodingFromMagicDesignator(chunk, out var encoding, out magicEncodingName, out magicEncodingIndex);
 
             string message = null;
-            if (encoding != null) {
+            if (encoding != null)
+            {
                 // Encoding is specified and is a valid name. 
                 // Check if it matches encoding set on the document text buffer. 
-                if (encoding.EncodingName != documentEncoding.EncodingName) {
+                if (encoding.EncodingName != documentEncoding.EncodingName)
+                {
                     message = Strings.WarningEncodingMismatch.FormatUI(documentEncoding.EncodingName, magicEncodingName);
                 }
-            } else {
-                if (!string.IsNullOrEmpty(magicEncodingName)) {
+            }
+            else
+            {
+                if (!string.IsNullOrEmpty(magicEncodingName))
+                {
                     // Encoding is specified but not recognized as a valid name
                     message = Strings.WarningInvalidEncoding.FormatUI(magicEncodingName);
-                } else {
+                }
+                else
+                {
                     // Encoding is not specified. Python assumes UTF-8 so we need to verify it.
-                    if (Encoding.UTF8.EncodingName != documentEncoding.EncodingName) {
+                    if (Encoding.UTF8.EncodingName != documentEncoding.EncodingName)
+                    {
                         message = Strings.WarningEncodingDifferentFromDefault.FormatUI(documentEncoding.EncodingName);
                     }
                 }

@@ -14,25 +14,28 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using Microsoft.VisualStudio.Shell;
-
-
-namespace Microsoft.PythonTools.Commands {
+namespace Microsoft.PythonTools.Commands
+{
     using DebuggerOptions = Microsoft.PythonTools.Debugger.Concord.DebuggerOptions;
 
-    internal class ShowPythonViewCommand : DkmDebuggerCommand {
+    internal class ShowPythonViewCommand : DkmDebuggerCommand
+    {
         public ShowPythonViewCommand(IServiceProvider serviceProvider)
-            : base(serviceProvider) {
+            : base(serviceProvider)
+        {
         }
 
-        public override int CommandId {
+        public override int CommandId
+        {
             get { return (int)PkgCmdIDList.cmdidShowPythonView; }
         }
 
-        public override EventHandler BeforeQueryStatus {
-            get {
-                return (sender, args) => {
+        public override EventHandler BeforeQueryStatus
+        {
+            get
+            {
+                return (sender, args) =>
+                {
                     base.BeforeQueryStatus(sender, args);
                     var cmd = (OleMenuCommand)sender;
                     cmd.Checked = DebuggerOptions.ShowPythonViewNodes;
@@ -40,7 +43,8 @@ namespace Microsoft.PythonTools.Commands {
             }
         }
 
-        public override void DoCommand(object sender, EventArgs args) {
+        public override void DoCommand(object sender, EventArgs args)
+        {
             DebuggerOptions.ShowPythonViewNodes = !DebuggerOptions.ShowPythonViewNodes;
 
             // A hackish way to force debugger to refresh its views, so that our EE is requeried and can use the new option value.

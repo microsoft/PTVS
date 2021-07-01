@@ -14,16 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.ComponentModelHost;
-using Microsoft.VisualStudio.Editor;
-using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudioTools.Project;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.Design;
-using System.Diagnostics.Contracts;
-using System.Runtime.InteropServices;
 
 namespace Microsoft.VisualStudioTools.Navigation
 {

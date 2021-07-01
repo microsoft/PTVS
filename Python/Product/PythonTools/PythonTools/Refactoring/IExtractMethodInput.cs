@@ -14,12 +14,14 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Refactoring {
+namespace Microsoft.PythonTools.Refactoring
+{
     /// <summary>
     /// Provides inputs/UI to the extract method refactoring.  Enables driving of the refactoring programmatically
     /// or via UI.
     /// </summary>
-    interface IExtractMethodInput {
+    interface IExtractMethodInput
+    {
         /// <summary>
         /// Returns true if the user wants us to expand the selection to cover an entire expression.
         /// </summary>

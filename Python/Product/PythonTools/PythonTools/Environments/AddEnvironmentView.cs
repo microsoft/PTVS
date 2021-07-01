@@ -14,16 +14,14 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Windows;
-using System.Windows.Data;
-
-namespace Microsoft.PythonTools.Environments {
-    sealed class AddEnvironmentView : DependencyObject, IDisposable {
-        public AddEnvironmentView(IEnumerable<EnvironmentViewBase> pages, EnvironmentViewBase selected) {
-            if (pages == null) {
+namespace Microsoft.PythonTools.Environments
+{
+    sealed class AddEnvironmentView : DependencyObject, IDisposable
+    {
+        public AddEnvironmentView(IEnumerable<EnvironmentViewBase> pages, EnvironmentViewBase selected)
+        {
+            if (pages == null)
+            {
                 throw new ArgumentNullException(nameof(pages));
             }
 
@@ -36,8 +34,10 @@ namespace Microsoft.PythonTools.Environments {
 
         public ListCollectionView PagesView { get; }
 
-        public void Dispose() {
-            foreach (var view in Pages) {
+        public void Dispose()
+        {
+            foreach (var view in Pages)
+            {
                 view.Dispose();
             }
         }

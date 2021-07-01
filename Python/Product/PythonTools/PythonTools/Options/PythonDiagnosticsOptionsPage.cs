@@ -14,23 +14,20 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Diagnostics;
-using System.IO;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Windows.Forms;
-using Microsoft.PythonTools.Infrastructure;
-
-namespace Microsoft.PythonTools.Options {
+namespace Microsoft.PythonTools.Options
+{
     [ComVisible(true)]
-    public class PythonDiagnosticsOptionsPage : PythonDialogPage {
+    public class PythonDiagnosticsOptionsPage : PythonDialogPage
+    {
         private PythonDiagnosticsOptionsControl _window;
 
         // replace the default UI of the dialog page w/ our own UI.
-        protected override IWin32Window Window {
-            get {
-                if (_window == null) {
+        protected override IWin32Window Window
+        {
+            get
+            {
+                if (_window == null)
+                {
                     _window = new PythonDiagnosticsOptionsControl();
                     _window.CopyToClipboard += CopyToClipboard;
                     _window.SaveToFile += SaveToFile;
@@ -45,46 +42,58 @@ namespace Microsoft.PythonTools.Options {
         /// a call to <see cref="SaveSettingsToStorage"/> to commit the new
         /// values.
         /// </summary>
-        public override void ResetSettings() {
+        public override void ResetSettings()
+        {
             PyService.DiagnosticsOptions.Reset();
         }
 
-        public override void LoadSettingsFromStorage() {
+        public override void LoadSettingsFromStorage()
+        {
             PyService.DiagnosticsOptions.Load();
 
             // Synchronize UI with backing properties.
             _window?.SyncControlWithPageSettings(PyService);
         }
 
-        public override void SaveSettingsToStorage() {
+        public override void SaveSettingsToStorage()
+        {
             // Synchronize backing properties with UI.
             _window?.SyncPageWithControlSettings(PyService);
 
             PyService.DiagnosticsOptions.Save();
         }
 
-        private void CopyToClipboard(bool includeAnalysisLogs) {
+        private void CopyToClipboard(bool includeAnalysisLogs)
+        {
             Cursor.Current = Cursors.WaitCursor;
-            try {
-                using (var log = new StringWriter()) {
+            try
+            {
+                using (var log = new StringWriter())
+                {
                     PyService.GetDiagnosticsLog(log, includeAnalysisLogs);
                     Clipboard.SetText(log.ToString(), TextDataFormat.Text);
                 }
-            } finally {
+            }
+            finally
+            {
                 Cursor.Current = Cursors.Arrow;
             }
 
             MessageBox.Show(Strings.DiagnosticsLogCopiedToClipboard, Strings.ProductTitle);
         }
 
-        private void SaveToFile(bool includeAnalysisLogs) {
+        private void SaveToFile(bool includeAnalysisLogs)
+        {
             string initialPath = null;
-            try {
+            try
+            {
                 initialPath = PathUtils.GetAbsoluteFilePath(
                     Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
                     Strings.DiagnosticsWindow_DefaultFileName.FormatUI(DateTime.Now)
                 );
-            } catch (Exception ex) when (!ex.IsCriticalException()) {
+            }
+            catch (Exception ex) when (!ex.IsCriticalException())
+            {
                 Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
             }
 
@@ -94,16 +103,21 @@ namespace Microsoft.PythonTools.Options {
                 initialPath
             );
 
-            if (string.IsNullOrEmpty(path)) {
+            if (string.IsNullOrEmpty(path))
+            {
                 return;
             }
 
             Cursor.Current = Cursors.WaitCursor;
-            try {
-                try {
+            try
+            {
+                try
+                {
                     TaskDialog.CallWithRetry(
-                        _ => {
-                            using (var log = new StreamWriter(path, false, new UTF8Encoding(false))) {
+                        _ =>
+                        {
+                            using (var log = new StreamWriter(path, false, new UTF8Encoding(false)))
+                            {
                                 PyService.GetDiagnosticsLog(log, includeAnalysisLogs);
                             }
                         },
@@ -115,15 +129,20 @@ namespace Microsoft.PythonTools.Options {
                         Strings.Cancel
                     );
 
-                    if (File.Exists(path)) {
+                    if (File.Exists(path))
+                    {
                         Process.Start(
                             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "explorer.exe"),
                             "/select," + ProcessOutput.QuoteSingleArgument(path)
                         )?.Dispose();
                     }
-                } catch (OperationCanceledException) {
                 }
-            } finally {
+                catch (OperationCanceledException)
+                {
+                }
+            }
+            finally
+            {
                 Cursor.Current = Cursors.Arrow;
             }
         }

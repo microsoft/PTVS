@@ -14,8 +14,6 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-
 namespace Microsoft.VisualStudioTools.Project
 {
     public sealed class DirtyChangedEventArgs : EventArgs

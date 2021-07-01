@@ -14,19 +14,14 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.ComponentModel.Composition;
-using System.IO;
-using System.Text;
-using Microsoft.PythonTools.Parsing;
-using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Utilities;
-
-namespace Microsoft.PythonTools.Project {
+namespace Microsoft.PythonTools.Project
+{
     [ContentType(PythonCoreConstants.ContentType)]
     [Export(typeof(IEncodingDetector))]
     [Order(Before = "XmlEncodingDetector")]
     [Name("PythonEncodingDetector")]
-    class PythonEncodingDetector : IEncodingDetector {
+    class PythonEncodingDetector : IEncodingDetector
+    {
         public Encoding GetStreamEncoding(Stream stream) => Parser.GetEncodingFromStream(stream) ?? Parser.DefaultEncoding;
     }
 }

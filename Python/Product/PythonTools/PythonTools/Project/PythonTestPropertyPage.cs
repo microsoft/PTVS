@@ -14,56 +14,64 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Diagnostics.CodeAnalysis;
-using System.Runtime.InteropServices;
-using System.Windows.Forms;
 using Microsoft.VisualStudioTools.Project;
 
-namespace Microsoft.PythonTools.Project {
+namespace Microsoft.PythonTools.Project
+{
     [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable",
         Justification = "object is owned by VS")]
     [Guid(PythonConstants.TestPropertyPageGuid)]
-    public sealed class PythonTestPropertyPage : CommonPropertyPage {
+    public sealed class PythonTestPropertyPage : CommonPropertyPage
+    {
         private readonly PythonTestPropertyPageViewModel _viewModel;
         private readonly PythonTestPropertyPageHostControl _control;
 
-        public PythonTestPropertyPage() {
+        public PythonTestPropertyPage()
+        {
             _viewModel = new PythonTestPropertyPageViewModel();
             _viewModel.PropertyChanged += OnPropertyChanged;
             _control = new PythonTestPropertyPageHostControl();
             _control.HostedControl.DataContext = _viewModel;
         }
 
-        protected override void Dispose(bool disposing) {
+        protected override void Dispose(bool disposing)
+        {
             base.Dispose(disposing);
-            if (disposing) {
+            if (disposing)
+            {
                 _viewModel.PropertyChanged -= OnPropertyChanged;
             }
         }
 
-        private void OnPropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e) {
-            if (!Loading) {
+        private void OnPropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (!Loading)
+            {
                 IsDirty = true;
             }
         }
 
-        public override Control Control {
+        public override Control Control
+        {
             get { return _control; }
         }
 
-        public override void Apply() {
+        public override void Apply()
+        {
             Project.SetProjectProperty(PythonConstants.TestFrameworkSetting, _viewModel.SelectedFramework);
             Project.SetProjectProperty(PythonConstants.UnitTestPatternSetting, _viewModel.UnitTestPattern);
             Project.SetProjectProperty(PythonConstants.UnitTestRootDirectorySetting, _viewModel.UnitTestRootDirectory);
             IsDirty = false;
         }
 
-        public override void LoadSettings() {
+        public override void LoadSettings()
+        {
             Loading = true;
-            try {
+            try
+            {
                 string framework = Project.GetProjectProperty(PythonConstants.TestFrameworkSetting, false);
-                if (!Enum.TryParse(framework, ignoreCase: true, out TestFrameworkType parsedFramework)) {
+                if (!Enum.TryParse(framework, ignoreCase: true, out TestFrameworkType parsedFramework))
+                {
                     parsedFramework = TestFrameworkType.None;
                 }
                 _viewModel.SelectedFramework = parsedFramework.ToString().ToLowerInvariant();
@@ -77,12 +85,15 @@ namespace Microsoft.PythonTools.Project {
                 _viewModel.UnitTestPattern = string.IsNullOrEmpty(pattern)
                     ? PythonConstants.DefaultUnitTestPattern
                     : pattern;
-            } finally {
+            }
+            finally
+            {
                 Loading = false;
             }
         }
 
-        public override string Name {
+        public override string Name
+        {
             get { return Strings.PythonTestPropertyPageLabel; }
         }
     }

@@ -14,23 +14,26 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.ComponentModel.Composition;
-using Microsoft.VisualStudio.Text.BraceCompletion;
-
-namespace Microsoft.PythonTools.Editor.BraceCompletion {
+namespace Microsoft.PythonTools.Editor.BraceCompletion
+{
     [Export(typeof(IBraceCompletionContext))]
-    internal class BraceCompletionContext : IBraceCompletionContext {
-        public bool AllowOverType(IBraceCompletionSession session) {
+    internal class BraceCompletionContext : IBraceCompletionContext
+    {
+        public bool AllowOverType(IBraceCompletionSession session)
+        {
             return true;
         }
 
-        public void Finish(IBraceCompletionSession session) {
+        public void Finish(IBraceCompletionSession session)
+        {
         }
 
-        public void OnReturn(IBraceCompletionSession session) {
+        public void OnReturn(IBraceCompletionSession session)
+        {
         }
 
-        public void Start(IBraceCompletionSession session) {
+        public void Start(IBraceCompletionSession session)
+        {
         }
     }
 }

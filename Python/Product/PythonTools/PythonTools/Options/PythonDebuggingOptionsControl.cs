@@ -13,24 +13,25 @@
 //
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
-using System;
-using System.Collections.Generic;
-using System.Windows.Forms;
-using Microsoft.PythonTools.Debugger;
 
-namespace Microsoft.PythonTools.Options {
-    public partial class PythonDebuggingOptionsControl : UserControl {
-        public PythonDebuggingOptionsControl() {
+namespace Microsoft.PythonTools.Options
+{
+    public partial class PythonDebuggingOptionsControl : UserControl
+    {
+        public PythonDebuggingOptionsControl()
+        {
             InitializeComponent();
 
             // set allowed values for the variable presentation options
             var varPresComboBoxes = new List<ComboBox> { _showVariablesClassComboBox, _showVariablesFunctionComboBox, _showVariablesProtectedComboBox, _showVariablesSpecialComboBox };
-            foreach (var varPresComboBox in varPresComboBoxes) {
+            foreach (var varPresComboBox in varPresComboBoxes)
+            {
                 varPresComboBox.DataSource = Enum.GetValues(typeof(PresentationMode));
             }
         }
 
-        internal void SyncControlWithPageSettings(PythonToolsService pyService) {
+        internal void SyncControlWithPageSettings(PythonToolsService pyService)
+        {
             _promptOnBuildError.Checked = pyService.DebuggerOptions.PromptBeforeRunningWithBuildError;
             _waitOnAbnormalExit.Checked = pyService.DebuggerOptions.WaitOnAbnormalExit;
             _waitOnNormalExit.Checked = pyService.DebuggerOptions.WaitOnNormalExit;
@@ -47,7 +48,8 @@ namespace Microsoft.PythonTools.Options {
             _showVariablesSpecialComboBox.SelectedItem = pyService.DebuggerOptions.VariablePresentationForSpecial;
         }
 
-        internal void SyncPageWithControlSettings(PythonToolsService pyService) {
+        internal void SyncPageWithControlSettings(PythonToolsService pyService)
+        {
             pyService.DebuggerOptions.PromptBeforeRunningWithBuildError = _promptOnBuildError.Checked;
             pyService.DebuggerOptions.WaitOnAbnormalExit = _waitOnAbnormalExit.Checked;
             pyService.DebuggerOptions.WaitOnNormalExit = _waitOnNormalExit.Checked;

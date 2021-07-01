@@ -14,15 +14,14 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using Microsoft.PythonTools.Projects;
-
-namespace Microsoft.PythonTools.Project {
+namespace Microsoft.PythonTools.Project
+{
     /// <summary>
     /// Data for the <see cref="IPythonProject.ProjectAnalyzerChanging"/> event
     /// specifying the previous and new analyzer.
     /// </summary>
-    public sealed class AnalyzerChangingEventArgs : EventArgs {
+    public sealed class AnalyzerChangingEventArgs : EventArgs
+    {
         /// <summary>
         /// The previous analyzer, if any.
         /// </summary>
@@ -33,7 +32,8 @@ namespace Microsoft.PythonTools.Project {
         /// </summary>
         public ProjectAnalyzer New { get; }
 
-        public AnalyzerChangingEventArgs(ProjectAnalyzer oldAnalyzer, ProjectAnalyzer newAnalyzer) {
+        public AnalyzerChangingEventArgs(ProjectAnalyzer oldAnalyzer, ProjectAnalyzer newAnalyzer)
+        {
             Old = oldAnalyzer;
             New = newAnalyzer;
         }

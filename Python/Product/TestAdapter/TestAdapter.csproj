@@ -143,10 +143,6 @@
     <Compile Include="TestContainerDiscovererWorkspace.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Common\Common.csproj">
-      <Project>{b3db0521-d9e3-4f48-9e2e-e5ecae886049}</Project>
-      <Name>Microsoft.PythonTools.Common</Name>
-    </ProjectReference>
     <ProjectReference Include="..\TestAdapter.Executor\TestAdapter.Executor.csproj">
       <Project>{44e8bb56-c38e-49a8-8bc1-7af40d0ac725}</Project>
       <Name>TestAdapter.Executor</Name>

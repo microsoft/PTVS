@@ -39,16 +39,13 @@
     <DeployExtension>false</DeployExtension>
     <DefineConstants>$(DefineConstants);$(SignedSym);SHAREDPROJECT_OLESERVICEPROVIDER</DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\BuildTasks\BuildTasks.csproj">
-      <Project>{89d51398-a003-44ba-b1b2-cfc6f8396d7e}</Project>
-      <Name>Microsoft.PythonTools.BuildTasks</Name>
-      <IncludeInVSIX>True</IncludeInVSIX>
-    </ProjectReference>
     <ProjectReference Include="..\Debugger\Debugger.csproj">
       <Project>{DECC7971-FA58-4DB0-9561-BFFADD393BBD}</Project>
       <Name>Microsoft.PythonTools.Debugger</Name>
@@ -65,28 +62,12 @@
       <IncludeInVSIX>True</IncludeInVSIX>
       <Private>False</Private>
     </ProjectReference>
-    <ProjectReference Include="..\RunElevated\RunElevated.csproj">
-      <Project>{4e18d41e-5e73-461f-9289-f6709257171a}</Project>
-      <Name>Microsoft.PythonTools.RunElevated</Name>
-      <IncludeInVSIX>True</IncludeInVSIX>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
     <ProjectReference Include="..\VSInterpreters\VSInterpreters.csproj">
       <Project>{815db0cd-c0dd-4997-b43c-abee4dbeffe7}</Project>
       <Name>Microsoft.PythonTools.VSInterpreters</Name>
       <IncludeInVSIX>True</IncludeInVSIX>
     </ProjectReference>
-    <ProjectReference Include="..\Attacher\Attacher.csproj">
-      <Project>{666A22BB-0CB5-4C08-A20F-E17450DA6573}</Project>
-      <Name>Attacher</Name>
-      <IncludeInVSIX>True</IncludeInVSIX>
-    </ProjectReference>
     <ProjectReference2 Include="..\AttacherX86\AttacherX86.csproj" />
-    <ProjectReference Include="..\Common\Common.csproj">
-      <Project>{b3db0521-d9e3-4f48-9e2e-e5ecae886049}</Project>
-      <Name>Microsoft.PythonTools.Common</Name>
-      <IncludeInVSIX>True</IncludeInVSIX>
-    </ProjectReference>
     <ProjectReference Include="..\VSCommon\VSCommon.csproj">
       <Project>{A52AC77F-6DF9-4387-BB08-8DED3FD95A0F}</Project>
       <Name>Microsoft.PythonTools.VSCommon</Name>
@@ -1017,12 +998,12 @@
       <IncludeInVSIX>true</IncludeInVSIX>
       <VSIXSubPath>ptvsd</VSIXSubPath>
     </Content>
-    <Content Include="..\Icons\Dev$(VSTarget)\PythonProject.ico">
+    <Content Include="..\Icons\Dev10.0\PythonProject.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <VSIXSubPath>.</VSIXSubPath>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="..\Icons\Dev$(VSTarget)\PythonProjectBig.ico">
+    <Content Include="..\Icons\Dev10.0\PythonProjectBig.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <VSIXSubPath>.</VSIXSubPath>
       <IncludeInVSIX>true</IncludeInVSIX>
@@ -1043,11 +1024,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="..\Icons\Dev$(VSTarget)\PythonFile.ico">
-      <IncludeInVSIX>true</IncludeInVSIX>
-      <VSIXSubPath>.</VSIXSubPath>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="NewFileItems\NewPythonItems.vsdir">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
@@ -1062,7 +1038,7 @@
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <EmbeddedResource Include="..\Icons\Dev$(VSTarget)\PythonImageList.png" />
+    <EmbeddedResource Include="..\Icons\Dev10.0\PythonImageList.png" />
     <EmbeddedResource Include="Legacy\ObsoleteResources.resx">
       <ManifestResourceName>Microsoft.VisualStudioTools.SharedProject</ManifestResourceName>
       <SubType>Designer</SubType>

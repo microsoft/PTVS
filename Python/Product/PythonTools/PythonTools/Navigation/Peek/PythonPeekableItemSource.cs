@@ -14,70 +14,78 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Navigation.Navigable;
-using Microsoft.VisualStudio.Language.Intellisense;
-using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Text;
 
-namespace Microsoft.PythonTools.Navigation.Peek {
-    internal sealed class PythonPeekableItemSource : IPeekableItemSource {
+namespace Microsoft.PythonTools.Navigation.Peek
+{
+    internal sealed class PythonPeekableItemSource : IPeekableItemSource
+    {
         private readonly IServiceProvider _serviceProvider;
         private readonly IPeekResultFactory _peekResultFactory;
         private readonly ITextBuffer _textBuffer;
         private readonly PythonEditorServices _editorServices;
 
-        public PythonPeekableItemSource(IServiceProvider serviceProvider, IPeekResultFactory peekResultFactory, ITextBuffer textBuffer) {
+        public PythonPeekableItemSource(IServiceProvider serviceProvider, IPeekResultFactory peekResultFactory, ITextBuffer textBuffer)
+        {
             _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
             _peekResultFactory = peekResultFactory ?? throw new ArgumentNullException(nameof(peekResultFactory));
             _textBuffer = textBuffer ?? throw new ArgumentNullException(nameof(textBuffer));
             _editorServices = serviceProvider.GetEditorServices();
         }
 
-        public void AugmentPeekSession(IPeekSession session, IList<IPeekableItem> peekableItems) {
-            if (session == null) {
+        public void AugmentPeekSession(IPeekSession session, IList<IPeekableItem> peekableItems)
+        {
+            if (session == null)
+            {
                 throw new ArgumentNullException(nameof(session));
             }
 
-            if (peekableItems == null) {
+            if (peekableItems == null)
+            {
                 throw new ArgumentNullException(nameof(peekableItems));
             }
 
-            if (!string.Equals(session.RelationshipName, PredefinedPeekRelationships.Definitions.Name, StringComparison.OrdinalIgnoreCase)) {
+            if (!string.Equals(session.RelationshipName, PredefinedPeekRelationships.Definitions.Name, StringComparison.OrdinalIgnoreCase))
+            {
                 return;
             }
 
             var triggerPoint = session.GetTriggerPoint(_textBuffer.CurrentSnapshot);
-            if (!triggerPoint.HasValue) {
+            if (!triggerPoint.HasValue)
+            {
                 return;
             }
 
-            ThreadHelper.JoinableTaskFactory.Run(async () => {
+            ThreadHelper.JoinableTaskFactory.Run(async () =>
+            {
                 var item = await GetPeekableItemAsync(_peekResultFactory, _textBuffer, triggerPoint.Value);
-                if (item != null) {
+                if (item != null)
+                {
                     peekableItems.Add(item);
                 }
             });
         }
 
-        private async Task<IPeekableItem> GetPeekableItemAsync(IPeekResultFactory peekResultFactory, ITextBuffer buffer, SnapshotPoint pt) {
+        private async Task<IPeekableItem> GetPeekableItemAsync(IPeekResultFactory peekResultFactory, ITextBuffer buffer, SnapshotPoint pt)
+        {
             var entry = buffer.TryGetAnalysisEntry();
-            if (entry == null) {
+            if (entry == null)
+            {
                 return null;
             }
 
             var result = await NavigableSymbolSource.GetDefinitionLocationsAsync(entry, pt).ConfigureAwait(false);
-            if (result.Length > 0) {
+            if (result.Length > 0)
+            {
                 return new PythonPeekableItem(peekResultFactory, result);
             }
 
             return null;
         }
 
-        public void Dispose() {
+        public void Dispose()
+        {
         }
     }
 }

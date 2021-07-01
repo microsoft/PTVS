@@ -14,141 +14,166 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Windows.Media;
-using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Editor;
-using Microsoft.VisualStudio.Imaging.Interop;
-using Microsoft.VisualStudio.Language.Intellisense;
-using Microsoft.VisualStudio.Text;
 
-namespace Microsoft.PythonTools.Intellisense {
-    class PythonSuggestedImportAction : ISuggestedAction, IComparable<PythonSuggestedImportAction> {
+namespace Microsoft.PythonTools.Intellisense
+{
+    class PythonSuggestedImportAction : ISuggestedAction, IComparable<PythonSuggestedImportAction>
+    {
         private readonly PythonSuggestedActionsSource _source;
         private readonly string _name;
         private readonly string _fromModule;
         private readonly ITextBuffer _buffer;
 
         private static readonly Guid _telemetryId = new Guid("{7E850DC8-FC71-415C-B0D2-428372EC9B93}");
-        public PythonSuggestedImportAction(PythonSuggestedActionsSource source, ITextBuffer buffer, ExportedMemberInfo import) {
+        public PythonSuggestedImportAction(PythonSuggestedActionsSource source, ITextBuffer buffer, ExportedMemberInfo import)
+        {
             _source = source;
             _fromModule = import.FromName;
             _name = import.ImportName;
             _buffer = buffer;
         }
 
-        public IEnumerable<SuggestedActionSet> ActionSets {
-            get {
+        public IEnumerable<SuggestedActionSet> ActionSets
+        {
+            get
+            {
                 return Enumerable.Empty<SuggestedActionSet>();
             }
         }
 
-        public Task<IEnumerable<SuggestedActionSet>> GetActionSetsAsync(CancellationToken cancellationToken) {
+        public Task<IEnumerable<SuggestedActionSet>> GetActionSetsAsync(CancellationToken cancellationToken)
+        {
             return Task.FromResult(ActionSets);
         }
 
-        public bool HasActionSets {
+        public bool HasActionSets
+        {
             get { return false; }
         }
 
-        public string DisplayText {
-            get {
+        public string DisplayText
+        {
+            get
+            {
                 return MakeImportCode(_fromModule, _name)
                     .Replace("_", "__");
             }
         }
 
-        private static string MakeImportCode(string fromModule, string name) {
-            if (string.IsNullOrEmpty(fromModule)) {
+        private static string MakeImportCode(string fromModule, string name)
+        {
+            if (string.IsNullOrEmpty(fromModule))
+            {
                 return string.Format("import {0}", name);
-            } else {
+            }
+            else
+            {
                 return string.Format("from {0} import {1}", fromModule, name);
             }
         }
 
-        public string IconAutomationText {
-            get {
+        public string IconAutomationText
+        {
+            get
+            {
                 return null;
             }
         }
 
-        public ImageMoniker IconMoniker {
-            get {
+        public ImageMoniker IconMoniker
+        {
+            get
+            {
                 return default(ImageMoniker);
             }
         }
 
-        public ImageSource IconSource {
-            get {
+        public ImageSource IconSource
+        {
+            get
+            {
                 // TODO: Convert from IconMoniker
                 return null;
             }
         }
 
-        public string InputGestureText {
-            get {
+        public string InputGestureText
+        {
+            get
+            {
                 return null;
             }
         }
 
         public void Dispose() { }
 
-        public object GetPreview(CancellationToken cancellationToken) {
+        public object GetPreview(CancellationToken cancellationToken)
+        {
             return null;
         }
 
-        public Task<object> GetPreviewAsync(CancellationToken cancellationToken) {
+        public Task<object> GetPreviewAsync(CancellationToken cancellationToken)
+        {
             return Task.FromResult<object>(null);
         }
 
-        public bool HasPreview {
+        public bool HasPreview
+        {
             get { return false; }
         }
 
-        public void Invoke(CancellationToken cancellationToken) {
+        public void Invoke(CancellationToken cancellationToken)
+        {
             Debug.Assert(!string.IsNullOrEmpty(_name));
 
             var entry = _buffer.TryGetAnalysisEntry();
-            if (entry == null) {
+            if (entry == null)
+            {
                 return;
             }
 
             VsProjectAnalyzer.AddImport(_buffer, _fromModule, _name);
         }
 
-        public bool TryGetTelemetryId(out Guid telemetryId) {
+        public bool TryGetTelemetryId(out Guid telemetryId)
+        {
             telemetryId = _telemetryId;
             return false;
         }
 
-        public override bool Equals(object obj) {
+        public override bool Equals(object obj)
+        {
             var other = obj as PythonSuggestedImportAction;
-            if (other == null) {
+            if (other == null)
+            {
                 return false;
             }
             return DisplayText.Equals(other.DisplayText);
         }
 
-        public override int GetHashCode() {
+        public override int GetHashCode()
+        {
             return DisplayText.GetHashCode();
         }
 
-        public int CompareTo(PythonSuggestedImportAction other) {
-            if (other == null) {
+        public int CompareTo(PythonSuggestedImportAction other)
+        {
+            if (other == null)
+            {
                 return -1;
             }
 
             // Sort from ... import before import ...
-            if (!string.IsNullOrEmpty(_fromModule)) {
-                if (string.IsNullOrEmpty(other._fromModule)) {
+            if (!string.IsNullOrEmpty(_fromModule))
+            {
+                if (string.IsNullOrEmpty(other._fromModule))
+                {
                     return -1;
                 }
-            } else if (!string.IsNullOrEmpty(other._fromModule)) {
+            }
+            else if (!string.IsNullOrEmpty(other._fromModule))
+            {
                 return 1;
             }
 
@@ -159,19 +184,22 @@ namespace Microsoft.PythonTools.Intellisense {
             var dotCount1 = key1.Count(c => c == '.');
             var dotCount2 = key2.Count(c => c == '.');
             int r = dotCount1.CompareTo(dotCount2);
-            if (r != 0) {
+            if (r != 0)
+            {
                 return r;
             }
 
             // Shorter name sorts first
             r = key1.Length.CompareTo(key2.Length);
-            if (r != 0) {
+            if (r != 0)
+            {
                 return r;
             }
 
             // Keys sort alphabetically
             r = string.Compare(key1, key2, StringComparison.CurrentCultureIgnoreCase);
-            if (r != 0) {
+            if (r != 0)
+            {
                 return r;
             }
 

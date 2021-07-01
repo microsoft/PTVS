@@ -14,17 +14,15 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using Microsoft.PythonTools.Parsing.Ast;
-
-namespace Microsoft.PythonTools.CodeCoverage {
+namespace Microsoft.PythonTools.CodeCoverage
+{
     /// <summary>
     /// Maps line hit information into exact source code locations for 
     /// highlighting in the editor.
     /// </summary>
 
-    class CoverageMapper : PythonWalker {
+    class CoverageMapper : PythonWalker
+    {
         /// <summary>
         /// Tracks coverage information for the gloal scope
         /// </summary>
@@ -37,7 +35,8 @@ namespace Microsoft.PythonTools.CodeCoverage {
         private readonly HashSet<int> _hits;
         private bool? _blockCovered;
 
-        public CoverageMapper(PythonAst ast, string filename, HashSet<int> hits) {
+        public CoverageMapper(PythonAst ast, string filename, HashSet<int> hits)
+        {
             _ast = ast;
             _filename = filename;
             GlobalScope = new CoverageScope(ast);
@@ -46,24 +45,31 @@ namespace Microsoft.PythonTools.CodeCoverage {
             _hits = hits;
         }
 
-        public bool IsCovered(int line) {
+        public bool IsCovered(int line)
+        {
             return _hits.Contains(line);
         }
 
-        public CoverageScope CurScope {
-            get {
+        public CoverageScope CurScope
+        {
+            get
+            {
                 return CurScopes[CurScopes.Count - 1];
             }
         }
 
-        public string ModuleName {
-            get {
+        public string ModuleName
+        {
+            get
+            {
                 return Analysis.ModulePath.FromFullPath(_filename).ModuleName;
             }
         }
 
-        private bool UpdateLineInfo(Node node, bool inheritCoverage = false) {
-            if (node == null) {
+        private bool UpdateLineInfo(Node node, bool inheritCoverage = false)
+        {
+            if (node == null)
+            {
                 return false;
             }
 
@@ -71,27 +77,35 @@ namespace Microsoft.PythonTools.CodeCoverage {
             var end = node.GetEnd(_ast);
             bool covered;
             bool multiline = false;
-            if (start.Line != end.Line) {
+            if (start.Line != end.Line)
+            {
                 multiline = true;
                 // multi line statement, just figure out if we hit anywhere in it,
                 // and if so update our coverage state.  We'll continue to descend
                 // and mark the individual items that make up the multiple lines.
                 bool isCovered = false;
-                for (int i = start.Line; i <= end.Line; i++) {
+                for (int i = start.Line; i <= end.Line; i++)
+                {
                     isCovered |= IsCovered(i);
                 }
 
                 covered = isCovered;
-            } else {
+            }
+            else
+            {
                 // single line statement
                 covered = MarkCoverage(inheritCoverage, start, end, IsCovered(start.Line));
             }
 
-            if (_blockCovered == null) {
+            if (_blockCovered == null)
+            {
                 _blockCovered = covered;
-                if (covered) {
+                if (covered)
+                {
                     ReportCovered();
-                } else {
+                }
+                else
+                {
                     ReportNotCovered();
                 }
             }
@@ -99,11 +113,13 @@ namespace Microsoft.PythonTools.CodeCoverage {
             return multiline;
         }
 
-        private bool MarkCoverage(bool inheritCoverage, SourceLocation start, SourceLocation end, bool isCovered) {
+        private bool MarkCoverage(bool inheritCoverage, SourceLocation start, SourceLocation end, bool isCovered)
+        {
             bool covered;
             int line = start.Line;
             CoverageLineInfo info;
-            if (!CurScope.Lines.TryGetValue(line, out info)) {
+            if (!CurScope.Lines.TryGetValue(line, out info))
+            {
                 CurScope.Lines[line] = info = new CoverageLineInfo();
             }
 
@@ -113,23 +129,27 @@ namespace Microsoft.PythonTools.CodeCoverage {
             return covered;
         }
 
-        private void ReportCovered() {
+        private void ReportCovered()
+        {
             CurScope.BlocksCovered++;
         }
 
-        private void ReportNotCovered() {
+        private void ReportNotCovered()
+        {
             CurScope.BlocksNotCovered++;
         }
 
         #region Scope statements
 
-        private CoverageScope WalkScope(ScopeStatement node) {
+        private CoverageScope WalkScope(ScopeStatement node)
+        {
             var prevScope = CurScope;
             var newScope = new CoverageScope(node);
             CurScopes.Add(newScope);
             var wasCovered = _blockCovered;
             _blockCovered = null;
-            if (node.Body != null) {
+            if (node.Body != null)
+            {
                 node.Body.Walk(this);
             }
 
@@ -138,19 +158,22 @@ namespace Microsoft.PythonTools.CodeCoverage {
             return newScope;
         }
 
-        public override bool Walk(FunctionDefinition node) {
+        public override bool Walk(FunctionDefinition node)
+        {
             var newScope = WalkScope(node);
             CurScope.Children.Add(newScope);
 
             return false;
         }
 
-        public override bool Walk(ClassDefinition node) {
+        public override bool Walk(ClassDefinition node)
+        {
             Classes.Add(WalkScope(node));
             return false;
         }
 
-        public void AddBlock() {
+        public void AddBlock()
+        {
             _blockCovered = null;
         }
 
@@ -158,19 +181,25 @@ namespace Microsoft.PythonTools.CodeCoverage {
 
         #region Flow Control Statements
 
-        public override bool Walk(IfStatement node) {
-            foreach (var test in node.Tests) {
+        public override bool Walk(IfStatement node)
+        {
+            foreach (var test in node.Tests)
+            {
                 UpdateLineInfo(test.Test);
                 AddBlock();
 
-                if (test.Body != null) {
+                if (test.Body != null)
+                {
                     test.Body.Walk(this);
-                } else {
+                }
+                else
+                {
                     ReportNotCovered();
                 }
             }
 
-            if (node.ElseStatement != null) {
+            if (node.ElseStatement != null)
+            {
                 AddBlock();
                 node.ElseStatement.Walk(this);
             }
@@ -180,15 +209,18 @@ namespace Microsoft.PythonTools.CodeCoverage {
             return false;
         }
 
-        public override bool Walk(WhileStatement node) {
+        public override bool Walk(WhileStatement node)
+        {
             UpdateLineInfo(node.Test);
             AddBlock();
 
-            if (node.Body != null) {
+            if (node.Body != null)
+            {
                 node.Body.Walk(this);
             }
 
-            if (node.ElseStatement != null) {
+            if (node.ElseStatement != null)
+            {
                 AddBlock();
                 node.ElseStatement.Walk(this);
             }
@@ -198,15 +230,18 @@ namespace Microsoft.PythonTools.CodeCoverage {
             return false;
         }
 
-        public override bool Walk(ForStatement node) {
+        public override bool Walk(ForStatement node)
+        {
             UpdateLineInfo(node.List);
             AddBlock();
 
-            if (node.Body != null) {
+            if (node.Body != null)
+            {
                 node.Body.Walk(this);
             }
 
-            if (node.Else != null) {
+            if (node.Else != null)
+            {
                 AddBlock();
                 node.Else.Walk(this);
             }
@@ -216,28 +251,32 @@ namespace Microsoft.PythonTools.CodeCoverage {
             return false;
         }
 
-        public override bool Walk(RaiseStatement node) {
+        public override bool Walk(RaiseStatement node)
+        {
             UpdateLineInfo(node);
             AddBlock();
 
             return false;
         }
 
-        public override bool Walk(ReturnStatement node) {
+        public override bool Walk(ReturnStatement node)
+        {
             UpdateLineInfo(node);
             AddBlock();
 
             return false;
         }
 
-        public override bool Walk(BreakStatement node) {
+        public override bool Walk(BreakStatement node)
+        {
             UpdateLineInfo(node);
             AddBlock();
 
             return false;
         }
 
-        public override bool Walk(ContinueStatement node) {
+        public override bool Walk(ContinueStatement node)
+        {
             UpdateLineInfo(node);
             AddBlock();
 
@@ -248,86 +287,100 @@ namespace Microsoft.PythonTools.CodeCoverage {
 
         #region Simple statements 
 
-        public override bool Walk(DelStatement node) {
+        public override bool Walk(DelStatement node)
+        {
             UpdateLineInfo(node);
 
             return base.Walk(node);
         }
 
 
-        public override bool Walk(AssertStatement node) {
+        public override bool Walk(AssertStatement node)
+        {
             UpdateLineInfo(node);
 
             return base.Walk(node);
         }
 
-        public override bool Walk(AssignmentStatement node) {
+        public override bool Walk(AssignmentStatement node)
+        {
             UpdateLineInfo(node);
 
             return base.Walk(node);
         }
 
-        public override bool Walk(AugmentedAssignStatement node) {
+        public override bool Walk(AugmentedAssignStatement node)
+        {
             UpdateLineInfo(node);
 
             return base.Walk(node);
         }
-        public override bool Walk(EmptyStatement node) {
+        public override bool Walk(EmptyStatement node)
+        {
             UpdateLineInfo(node, true);
 
             return base.Walk(node);
         }
 
-        public override bool Walk(ExecStatement node) {
+        public override bool Walk(ExecStatement node)
+        {
             UpdateLineInfo(node);
 
             return base.Walk(node);
         }
 
-        public override bool Walk(ExpressionStatement node) {
+        public override bool Walk(ExpressionStatement node)
+        {
             UpdateLineInfo(node);
 
             return base.Walk(node);
         }
 
-        public override bool Walk(FromImportStatement node) {
+        public override bool Walk(FromImportStatement node)
+        {
             UpdateLineInfo(node);
 
             return base.Walk(node);
         }
 
-        public override bool Walk(GlobalStatement node) {
+        public override bool Walk(GlobalStatement node)
+        {
             UpdateLineInfo(node, true);
 
             return base.Walk(node);
         }
 
 
-        public override bool Walk(ImportStatement node) {
+        public override bool Walk(ImportStatement node)
+        {
             UpdateLineInfo(node);
 
             return base.Walk(node);
         }
 
-        public override bool Walk(NonlocalStatement node) {
+        public override bool Walk(NonlocalStatement node)
+        {
             UpdateLineInfo(node);
 
             return base.Walk(node);
         }
 
-        public override bool Walk(PrintStatement node) {
+        public override bool Walk(PrintStatement node)
+        {
             UpdateLineInfo(node);
 
             return base.Walk(node);
         }
 
-        public override bool Walk(TryStatement node) {
+        public override bool Walk(TryStatement node)
+        {
             UpdateLineInfo(node);
 
             return base.Walk(node);
         }
 
-        public override bool Walk(WithStatement node) {
+        public override bool Walk(WithStatement node)
+        {
             UpdateLineInfo(node);
 
             return base.Walk(node);
@@ -337,72 +390,90 @@ namespace Microsoft.PythonTools.CodeCoverage {
 
         #region Expressions
 
-        public override bool Walk(NameExpression node) {
+        public override bool Walk(NameExpression node)
+        {
             return UpdateLineInfo(node, true);
         }
 
-        public override bool Walk(ConstantExpression node) {
+        public override bool Walk(ConstantExpression node)
+        {
             return UpdateLineInfo(node, true);
         }
 
-        public override bool Walk(BinaryExpression node) {
+        public override bool Walk(BinaryExpression node)
+        {
             return UpdateLineInfo(node, true);
         }
 
-        public override bool Walk(DictionaryExpression node) {
+        public override bool Walk(DictionaryExpression node)
+        {
             return UpdateLineInfo(node, true);
         }
 
-        public override bool Walk(ListExpression node) {
+        public override bool Walk(ListExpression node)
+        {
             return UpdateLineInfo(node, true);
         }
 
-        public override bool Walk(ParenthesisExpression node) {
+        public override bool Walk(ParenthesisExpression node)
+        {
             return UpdateLineInfo(node, true);
         }
 
-        public override bool Walk(CallExpression node) {
+        public override bool Walk(CallExpression node)
+        {
             return UpdateLineInfo(node, true);
         }
 
-        public override bool Walk(AndExpression node) {
+        public override bool Walk(AndExpression node)
+        {
             return UpdateLineInfo(node, true);
         }
 
-        public override bool Walk(AwaitExpression node) {
+        public override bool Walk(AwaitExpression node)
+        {
             return UpdateLineInfo(node, true);
         }
 
-        public override bool Walk(BackQuoteExpression node) {
+        public override bool Walk(BackQuoteExpression node)
+        {
             return UpdateLineInfo(node, true);
         }
 
-        public override bool Walk(ComprehensionFor node) {
+        public override bool Walk(ComprehensionFor node)
+        {
             return UpdateLineInfo(node, true);
         }
 
-        public override bool Walk(ComprehensionIf node) {
+        public override bool Walk(ComprehensionIf node)
+        {
             return UpdateLineInfo(node, true);
         }
 
-        public override bool Walk(ConditionalExpression node) {
+        public override bool Walk(ConditionalExpression node)
+        {
             return UpdateLineInfo(node, true);
         }
 
-        public override bool Walk(DictionaryComprehension node) {
+        public override bool Walk(DictionaryComprehension node)
+        {
             return UpdateLineInfo(node, true);
         }
 
-        public override bool Walk(GeneratorExpression node) {
+        public override bool Walk(GeneratorExpression node)
+        {
             return UpdateLineInfo(node, true);
         }
 
-        public override bool Walk(IndexExpression node) {
+        public override bool Walk(IndexExpression node)
+        {
             return UpdateLineInfo(node, true);
         }
 
-        public override bool Walk(MemberExpression node) {
-            if (UpdateLineInfo(node, true)) {
+        public override bool Walk(MemberExpression node)
+        {
+            if (UpdateLineInfo(node, true))
+            {
                 // make sure we get the name marked as well if we have a multiline
                 // name expression...
                 var nameSpan = node.GetNameSpan(_ast);
@@ -417,43 +488,53 @@ namespace Microsoft.PythonTools.CodeCoverage {
             return false;
         }
 
-        public override bool Walk(OrExpression node) {
+        public override bool Walk(OrExpression node)
+        {
             return UpdateLineInfo(node, true);
         }
 
-        public override bool Walk(TupleExpression node) {
+        public override bool Walk(TupleExpression node)
+        {
             return UpdateLineInfo(node, true);
         }
 
-        public override bool Walk(SliceExpression node) {
+        public override bool Walk(SliceExpression node)
+        {
             return UpdateLineInfo(node, true);
         }
 
-        public override bool Walk(SetExpression node) {
+        public override bool Walk(SetExpression node)
+        {
             return UpdateLineInfo(node, true);
         }
 
-        public override bool Walk(UnaryExpression node) {
+        public override bool Walk(UnaryExpression node)
+        {
             return UpdateLineInfo(node, true);
         }
 
-        public override bool Walk(SetComprehension node) {
+        public override bool Walk(SetComprehension node)
+        {
             return UpdateLineInfo(node, true);
         }
 
-        public override bool Walk(YieldExpression node) {
+        public override bool Walk(YieldExpression node)
+        {
             return UpdateLineInfo(node, true);
         }
 
-        public override bool Walk(YieldFromExpression node) {
+        public override bool Walk(YieldFromExpression node)
+        {
             return UpdateLineInfo(node, true);
         }
 
-        public override bool Walk(LambdaExpression node) {
+        public override bool Walk(LambdaExpression node)
+        {
             return UpdateLineInfo(node, true);
         }
 
-        public override bool Walk(ListComprehension node) {
+        public override bool Walk(ListComprehension node)
+        {
             return UpdateLineInfo(node, true);
         }
 

@@ -14,25 +14,22 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.PythonTools.Infrastructure;
-using Microsoft.VisualStudio;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 
-namespace Microsoft.PythonTools.Project {
-    sealed class PythonProjectReferenceNode : ProjectReferenceNode {
-        public static PythonProjectReferenceNode Create(ProjectNode root, ProjectElement element) {
+namespace Microsoft.PythonTools.Project
+{
+    sealed class PythonProjectReferenceNode : ProjectReferenceNode
+    {
+        public static PythonProjectReferenceNode Create(ProjectNode root, ProjectElement element)
+        {
             var node = new PythonProjectReferenceNode(root, element);
             node.Initialize();
             return node;
         }
 
-        public static PythonProjectReferenceNode Create(ProjectNode root, string referencedProjectName, string projectPath, string projectReference) {
+        public static PythonProjectReferenceNode Create(ProjectNode root, string referencedProjectName, string projectPath, string projectReference)
+        {
             var node = new PythonProjectReferenceNode(root, referencedProjectName, projectPath, projectReference);
             node.Initialize();
             return node;
@@ -44,7 +41,8 @@ namespace Microsoft.PythonTools.Project {
         private PythonProjectReferenceNode(ProjectNode project, string referencedProjectName, string projectPath, string projectReference)
             : base(project, referencedProjectName, projectPath, projectReference) { }
 
-        private void Initialize() {
+        private void Initialize()
+        {
             var solutionEvents = ProjectMgr.Site.GetSolutionEvents();
             solutionEvents.ActiveSolutionConfigurationChanged += EventListener_AfterActiveSolutionConfigurationChange;
             solutionEvents.BuildCompleted += EventListener_BuildCompleted;
@@ -56,8 +54,10 @@ namespace Microsoft.PythonTools.Project {
             UpdateSearchPathAsync().DoNotWait();
         }
 
-        private void Invalidate() {
-            if (ProjectMgr.IsClosing) {
+        private void Invalidate()
+        {
+            if (ProjectMgr.IsClosing)
+            {
                 return;
             }
             ProjectMgr.OnInvalidateItems(Parent);
@@ -65,70 +65,88 @@ namespace Microsoft.PythonTools.Project {
             UpdateSearchPathAsync().DoNotWait();
         }
 
-        private async Task UpdateSearchPathAsync() {
+        private async Task UpdateSearchPathAsync()
+        {
             var searchPath = ReferencedProjectObject?.GetPythonProject()?.ProjectHome;
-            if (string.IsNullOrEmpty(searchPath)) {
+            if (string.IsNullOrEmpty(searchPath))
+            {
                 searchPath = await GetOutputPathAsync();
             }
 
             (ProjectMgr as PythonProjectNode)?.OnInvalidateSearchPath(searchPath, this);
         }
 
-        private async Task<string> GetOutputPathAsync(int retries = 10) {
-            while (true) {
+        private async Task<string> GetOutputPathAsync(int retries = 10)
+        {
+            while (true)
+            {
                 await Task.Delay(50);
-                try {
+                try
+                {
                     return PathUtils.GetParent(ReferencedProjectOutputPath);
-                } catch (Exception ex) when (!ex.IsCriticalException()) {
+                }
+                catch (Exception ex) when (!ex.IsCriticalException())
+                {
                     Debug.WriteLine(ex.ToUnhandledExceptionMessage(GetType()));
                 }
 
-                if (--retries < 0) {
+                if (--retries < 0)
+                {
                     Debug.Fail("failed to get output path");
                     return null;
                 }
             }
         }
 
-        internal override string ReferencedProjectOutputPath {
-            get {
+        internal override string ReferencedProjectOutputPath
+        {
+            get
+            {
                 var outputs = ReferencedProjectBuildOutputs.ToArray();
                 return outputs.FirstOrDefault(o => ".pyd".Equals(Path.GetExtension(o), StringComparison.OrdinalIgnoreCase)) ??
                     outputs.FirstOrDefault();
             }
         }
 
-        private void EventListener_BuildCompleted(object sender, EventArgs e) {
+        private void EventListener_BuildCompleted(object sender, EventArgs e)
+        {
             Invalidate();
         }
 
-        private void EventListener_ProjectLoaded(object sender, ProjectEventArgs e) {
+        private void EventListener_ProjectLoaded(object sender, ProjectEventArgs e)
+        {
             Guid proj;
             if (ErrorHandler.Succeeded(((IVsHierarchy)e.Project).GetGuidProperty(
                 (uint)VSConstants.VSITEMID.Root,
                 (int)__VSHPROPID.VSHPROPID_ProjectIDGuid,
                 out proj
-            )) && ReferencedProjectGuid == proj) {
+            )) && ReferencedProjectGuid == proj)
+            {
                 Invalidate();
             }
         }
 
-        private void EventListener_AfterActiveSolutionConfigurationChange(object sender, EventArgs e) {
+        private void EventListener_AfterActiveSolutionConfigurationChange(object sender, EventArgs e)
+        {
             Invalidate();
         }
 
-        public override bool Remove(bool removeFromStorage) {
-            if (base.Remove(removeFromStorage)) {
+        public override bool Remove(bool removeFromStorage)
+        {
+            if (base.Remove(removeFromStorage))
+            {
                 (ProjectMgr as PythonProjectNode)?.OnInvalidateSearchPath(null, this);
                 return true;
             }
             return false;
         }
 
-        protected override void Dispose(bool disposing) {
+        protected override void Dispose(bool disposing)
+        {
             base.Dispose(disposing);
 
-            if (disposing) {
+            if (disposing)
+            {
                 var solutionEvents = ProjectMgr.Site.GetSolutionEvents();
                 solutionEvents.ActiveSolutionConfigurationChanged -= EventListener_AfterActiveSolutionConfigurationChange;
                 solutionEvents.BuildCompleted -= EventListener_BuildCompleted;

@@ -14,45 +14,44 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Threading.Tasks;
-using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Interpreter;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Editor;
-
-namespace Microsoft.PythonTools.Intellisense {
-    class ExpansionCompletionSource {
+namespace Microsoft.PythonTools.Intellisense
+{
+    class ExpansionCompletionSource
+    {
         private readonly IServiceProvider _serviceProvider;
         private readonly Task<IEnumerable<CompletionResult>> _snippets;
 
-        public ExpansionCompletionSource(IServiceProvider serviceProvider) {
+        public ExpansionCompletionSource(IServiceProvider serviceProvider)
+        {
             _serviceProvider = serviceProvider;
             _snippets = GetAvailableSnippets();
         }
 
         public Task<IEnumerable<CompletionResult>> GetCompletionsAsync() => _snippets;
 
-        private async Task<IEnumerable<CompletionResult>> GetAvailableSnippets() {
+        private async Task<IEnumerable<CompletionResult>> GetAvailableSnippets()
+        {
             var textMgr = _serviceProvider.GetService(typeof(SVsTextManager)) as IVsTextManager2;
             IVsExpansionManager vsmgr;
             IExpansionManager mgr;
             if (textMgr == null || ErrorHandler.Failed(textMgr.GetExpansionManager(out vsmgr)) ||
-                (mgr = vsmgr as IExpansionManager) == null) {
+                (mgr = vsmgr as IExpansionManager) == null)
+            {
                 return null;
             }
 
-            try {
+            try
+            {
                 var enumerator = await mgr.EnumerateExpansionsAsync(GuidList.guidPythonLanguageServiceGuid, 1, null, 0, 0, 0);
-                if (enumerator == null) {
+                if (enumerator == null)
+                {
                     return null;
                 }
 
                 var res = new List<CompletionResult>();
 
-                foreach (var e in COMEnumerable.ToList<VsExpansion>(enumerator.Next)) {
+                foreach (var e in COMEnumerable.ToList<VsExpansion>(enumerator.Next))
+                {
                     res.Add(new CompletionResult(
                         e.shortcut,
                         e.shortcut,
@@ -64,7 +63,9 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
 
                 return res;
-            } catch (Exception ex) {
+            }
+            catch (Exception ex)
+            {
                 Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
                 return null;
             }

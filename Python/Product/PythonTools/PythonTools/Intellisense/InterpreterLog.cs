@@ -14,22 +14,21 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.ComponentModel.Composition;
-using Microsoft.PythonTools.Interpreter;
-using Microsoft.VisualStudio.Shell;
-
-namespace Microsoft.PythonTools.Intellisense {
+namespace Microsoft.PythonTools.Intellisense
+{
     [Export(typeof(IInterpreterLog))]
-    class InterpreterLog : IInterpreterLog {
+    class InterpreterLog : IInterpreterLog
+    {
         private readonly IVsActivityLog _activityLog;
 
         [ImportingConstructor]
-        public InterpreterLog([Import(typeof(SVsServiceProvider))] IServiceProvider provider) {
+        public InterpreterLog([Import(typeof(SVsServiceProvider))] IServiceProvider provider)
+        {
             _activityLog = (IVsActivityLog)provider.GetService(typeof(SVsActivityLog));
         }
 
-        public void Log(string msg) {
+        public void Log(string msg)
+        {
             _activityLog.LogEntry(
                 (uint)__ACTIVITYLOG_ENTRYTYPE.ALE_ERROR,
                 "Python Tools", // TODO: Localization - use ProductTitle for this?

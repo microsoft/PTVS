@@ -14,11 +14,10 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using Microsoft.VisualStudio.Text;
-
-namespace Microsoft.PythonTools.Intellisense {
-    class NavigationInfo {
+namespace Microsoft.PythonTools.Intellisense
+{
+    class NavigationInfo
+    {
         public readonly string Name;
         public readonly SnapshotSpan Span;
         public readonly NavigationInfo[] Children;
@@ -26,7 +25,8 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public static readonly NavigationInfo Empty = new NavigationInfo(null, NavigationKind.None, new SnapshotSpan(), Array.Empty<NavigationInfo>());
 
-        public NavigationInfo(string name, NavigationKind kind, SnapshotSpan span, NavigationInfo[] children) {
+        public NavigationInfo(string name, NavigationKind kind, SnapshotSpan span, NavigationInfo[] children)
+        {
             Name = name;
             Kind = kind;
             Span = span;
@@ -34,7 +34,8 @@ namespace Microsoft.PythonTools.Intellisense {
         }
     }
 
-    enum NavigationKind {
+    enum NavigationKind
+    {
         None,
         Class,
         Function,

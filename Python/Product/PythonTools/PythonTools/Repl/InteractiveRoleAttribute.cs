@@ -14,15 +14,17 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-
-namespace Microsoft.PythonTools.Repl {
+namespace Microsoft.PythonTools.Repl
+{
     [AttributeUsage(AttributeTargets.All, AllowMultiple = true)]
-    sealed class InteractiveWindowRoleAttribute : Attribute {
+    sealed class InteractiveWindowRoleAttribute : Attribute
+    {
         private readonly string _name;
 
-        public InteractiveWindowRoleAttribute(string name) {
-            if (name.Contains(",")) {
+        public InteractiveWindowRoleAttribute(string name)
+        {
+            if (name.Contains(","))
+            {
                 throw new ArgumentException("ReplRoleAttribute name cannot contain any commas. " +
                     "Apply multiple attributes if you want to support multiple roles.", "name");
             }
@@ -30,7 +32,8 @@ namespace Microsoft.PythonTools.Repl {
             _name = name;
         }
 
-        public string Name {
+        public string Name
+        {
             get { return _name; }
         }
     }

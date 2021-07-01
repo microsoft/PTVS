@@ -14,25 +14,30 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudioTools;
 
-namespace Microsoft.PythonTools.Commands {
-    class ViewAllEnvironmentsCommand : Command {
+namespace Microsoft.PythonTools.Commands
+{
+    class ViewAllEnvironmentsCommand : Command
+    {
         private readonly IServiceProvider _serviceProvider;
 
-        public ViewAllEnvironmentsCommand(IServiceProvider serviceProvider) {
+        public ViewAllEnvironmentsCommand(IServiceProvider serviceProvider)
+        {
             _serviceProvider = serviceProvider ?? throw new ArgumentNullException();
         }
 
-        public override void DoCommand(object sender, EventArgs args) {
+        public override void DoCommand(object sender, EventArgs args)
+        {
             _serviceProvider.ShowInterpreterList();
         }
 
-        public override EventHandler BeforeQueryStatus {
-            get {
-                return (sender, args) => {
+        public override EventHandler BeforeQueryStatus
+        {
+            get
+            {
+                return (sender, args) =>
+                {
                     ((OleMenuCommand)sender).Visible = false;
                     ((OleMenuCommand)sender).Supported = true;
                     ((OleMenuCommand)sender).Enabled = true;
@@ -40,7 +45,8 @@ namespace Microsoft.PythonTools.Commands {
             }
         }
 
-        public override int CommandId {
+        public override int CommandId
+        {
             get { return (int)PythonConstants.ViewAllEnvironments; }
         }
     }

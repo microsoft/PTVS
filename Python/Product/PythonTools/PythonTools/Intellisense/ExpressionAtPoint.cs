@@ -14,18 +14,20 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.VisualStudio.Text;
 using AP = Microsoft.PythonTools.Intellisense.AnalysisProtocol;
 
-namespace Microsoft.PythonTools.Intellisense {
-    internal class ExpressionAtPoint {
+namespace Microsoft.PythonTools.Intellisense
+{
+    internal class ExpressionAtPoint
+    {
         public readonly string Text;
         public readonly AnalysisEntry Entry;
         public readonly ITrackingSpan Span;
         public readonly SourceSpan SourceSpan;
         public SourceLocation Location => SourceSpan.Start;
 
-        public ExpressionAtPoint(AnalysisEntry entry, string text, ITrackingSpan span, SourceSpan sourceSpan) {
+        public ExpressionAtPoint(AnalysisEntry entry, string text, ITrackingSpan span, SourceSpan sourceSpan)
+        {
             Entry = entry;
             Text = text;
             Span = span;
@@ -33,7 +35,8 @@ namespace Microsoft.PythonTools.Intellisense {
         }
     }
 
-    internal enum ExpressionAtPointPurpose : int {
+    internal enum ExpressionAtPointPurpose : int
+    {
         Hover = AP.ExpressionAtPointPurpose.Hover,
         Evaluate = AP.ExpressionAtPointPurpose.Evaluate,
         EvaluateMembers = AP.ExpressionAtPointPurpose.EvaluateMembers,

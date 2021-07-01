@@ -14,21 +14,23 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Windows;
-using System.Windows.Input;
-
-namespace Microsoft.PythonTools.Wpf {
-    abstract class ModernDialog : Window {
-        protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e) {
+namespace Microsoft.PythonTools.Wpf
+{
+    abstract class ModernDialog : Window
+    {
+        protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
+        {
             base.OnMouseLeftButtonDown(e);
             DragMove();
         }
 
-        protected void CloseButton_Click(object sender, RoutedEventArgs e) {
+        protected void CloseButton_Click(object sender, RoutedEventArgs e)
+        {
             CloseWindow(false);
         }
 
-        public virtual void CloseWindow(bool dialogResult) {
+        public virtual void CloseWindow(bool dialogResult)
+        {
             DialogResult = dialogResult;
             Close();
         }

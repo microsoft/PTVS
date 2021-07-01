@@ -14,14 +14,6 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using EnvDTE;
-using Microsoft.VisualStudio;
-using System;
-using System.Diagnostics;
-using System.Globalization;
-using System.IO;
-using System.Runtime.InteropServices;
-
 namespace Microsoft.VisualStudioTools.Project.Automation
 {
     /// <summary>

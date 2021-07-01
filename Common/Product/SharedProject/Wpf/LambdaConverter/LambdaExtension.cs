@@ -36,7 +36,6 @@ using System;
 using System.ComponentModel;
 using System.Globalization;
 */
-using System.Windows.Markup;
 /* Unmerged change from project 'EnvironmentsList'
 Before:
 using System.Globalization;
@@ -45,7 +44,6 @@ After:
 using System.Windows.Markup;
 using System.Xaml;
 */
-
 
 namespace Microsoft.VisualStudioTools.Wpf
 {

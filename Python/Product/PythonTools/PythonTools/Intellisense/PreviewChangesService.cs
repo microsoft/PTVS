@@ -14,35 +14,35 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.ComponentModel.Composition;
 using Microsoft.PythonTools.Editor;
-using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Text.Differencing;
-using Microsoft.VisualStudio.Text.Editor;
 
-namespace Microsoft.PythonTools.Intellisense {
+namespace Microsoft.PythonTools.Intellisense
+{
     /// <summary>
     /// Creates a preview window for showing the difference that will occur when changes are 
     /// applied.
     /// </summary>
     [Export(typeof(PreviewChangesService))]
-    class PreviewChangesService {
+    class PreviewChangesService
+    {
         private readonly IWpfDifferenceViewerFactoryService _diffFactory;
         private readonly IDifferenceBufferFactoryService _diffBufferFactory;
         private readonly ITextBufferFactoryService _bufferFactory;
         private readonly ITextViewRoleSet _previewRoleSet;
 
         [ImportingConstructor]
-        public PreviewChangesService(IWpfDifferenceViewerFactoryService diffFactory, IDifferenceBufferFactoryService diffBufferFactory, ITextBufferFactoryService bufferFactory, ITextEditorFactoryService textEditorFactoryService) {
+        public PreviewChangesService(IWpfDifferenceViewerFactoryService diffFactory, IDifferenceBufferFactoryService diffBufferFactory, ITextBufferFactoryService bufferFactory, ITextEditorFactoryService textEditorFactoryService)
+        {
             _diffFactory = diffFactory;
             _diffBufferFactory = diffBufferFactory;
             _bufferFactory = bufferFactory;
             _previewRoleSet = textEditorFactoryService.CreateTextViewRoleSet(PredefinedTextViewRoles.Analyzable);
         }
 
-        public object CreateDiffView(AnalysisProtocol.ChangeInfo[] changes, PythonTextBufferInfo buffer, int atVersion) {
-            if (changes == null || buffer == null || !buffer.LocationTracker.CanTranslateFrom(atVersion)) {
+        public object CreateDiffView(AnalysisProtocol.ChangeInfo[] changes, PythonTextBufferInfo buffer, int atVersion)
+        {
+            if (changes == null || buffer == null || !buffer.LocationTracker.CanTranslateFrom(atVersion))
+            {
                 return null;
             }
 
@@ -51,7 +51,8 @@ namespace Microsoft.PythonTools.Intellisense {
             // Create a copy of the left hand buffer (we're going to remove all of the
             // content we don't care about from it).
             var leftBuffer = _bufferFactory.CreateTextBuffer(buffer.Buffer.ContentType);
-            using (var edit = leftBuffer.CreateEdit()) {
+            using (var edit = leftBuffer.CreateEdit())
+            {
                 edit.Insert(0, snapshot.GetText());
                 edit.Apply();
             }
@@ -59,7 +60,8 @@ namespace Microsoft.PythonTools.Intellisense {
             // create a buffer for the right hand side, copy the original buffer
             // into it, and then apply the changes.
             var rightBuffer = _bufferFactory.CreateTextBuffer(buffer.Buffer.ContentType);
-            using (var edit = rightBuffer.CreateEdit()) {
+            using (var edit = rightBuffer.CreateEdit())
+            {
                 edit.Insert(0, snapshot.GetText());
                 edit.Apply();
             }
@@ -70,12 +72,14 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var textChanges = startingVersion.Version.Changes;
             int minPos = startingVersion.Length, maxPos = 0;
-            foreach (var change in textChanges) {
+            foreach (var change in textChanges)
+            {
                 minPos = Math.Min(change.OldPosition, minPos);
                 maxPos = Math.Max(change.OldPosition, maxPos);
             }
 
-            if (minPos == startingVersion.Length && maxPos == 0) {
+            if (minPos == startingVersion.Length && maxPos == 0)
+            {
                 // no changes?  that's weird...
                 return null;
             }
@@ -92,7 +96,8 @@ namespace Microsoft.PythonTools.Intellisense {
             diffView.InlineHost.GetTextViewMargin("deltadifferenceViewerOverview").VisualElement.Visibility = System.Windows.Visibility.Collapsed;
 
             // Reduce the size of the buffer once it's ready
-            diffView.DifferenceBuffer.SnapshotDifferenceChanged += (sender, args) => {
+            diffView.DifferenceBuffer.SnapshotDifferenceChanged += (sender, args) =>
+            {
                 diffView.InlineView.DisplayTextLineContainingBufferPosition(
                     new SnapshotPoint(diffView.DifferenceBuffer.CurrentInlineBufferSnapshot, 0),
                     0.0, ViewRelativePosition.Top, double.MaxValue, double.MaxValue
@@ -109,15 +114,18 @@ namespace Microsoft.PythonTools.Intellisense {
             return diffView.VisualElement;
         }
 
-        private static void MinimizeBuffers(ITextBuffer leftBuffer, ITextBuffer rightBuffer, ITextSnapshot startingVersion, int minPos, int maxPos) {
+        private static void MinimizeBuffers(ITextBuffer leftBuffer, ITextBuffer rightBuffer, ITextSnapshot startingVersion, int minPos, int maxPos)
+        {
             // Remove the unchanged content from both buffers
-            using (var edit = leftBuffer.CreateEdit()) {
+            using (var edit = leftBuffer.CreateEdit())
+            {
                 edit.Delete(0, minPos);
                 edit.Delete(Span.FromBounds(maxPos, startingVersion.Length));
                 edit.Apply();
             }
 
-            using (var edit = rightBuffer.CreateEdit()) {
+            using (var edit = rightBuffer.CreateEdit())
+            {
                 edit.Delete(
                     0,
                     Tracking.TrackPositionForwardInTime(

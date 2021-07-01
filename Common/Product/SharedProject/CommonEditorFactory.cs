@@ -14,10 +14,6 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.VisualStudio.Shell;
-using System;
-using System.Diagnostics.CodeAnalysis;
-using System.Runtime.InteropServices;
 using ErrorHandler = Microsoft.VisualStudio.ErrorHandler;
 using IOleServiceProvider = Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
 using VSConstants = Microsoft.VisualStudio.VSConstants;

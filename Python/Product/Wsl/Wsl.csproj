@@ -175,22 +175,13 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="..\Icons\Dev$(VSTarget)\PythonProjectBig.ico">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-      <VSIXSubPath>.</VSIXSubPath>
-    </Content>
-    <Content Include="..\Icons\Dev$(VSTarget)\PythonProject.ico">
+    <Content Include="..\Icons\Dev10.0\PythonProject.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
       <VSIXSubPath>.</VSIXSubPath>
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Common\Common.csproj">
-      <Project>{b3db0521-d9e3-4f48-9e2e-e5ecae886049}</Project>
-      <Name>Common</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Debugger\Debugger.csproj">
       <Project>{decc7971-fa58-4db0-9561-bffadd393bbd}</Project>
       <Name>Debugger</Name>
