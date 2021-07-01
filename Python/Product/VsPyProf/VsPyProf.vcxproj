@@ -22,6 +22,7 @@
     <ProjectGuid>{6EC75EDA-17AC-453E-BA34-CB6796C4319B}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>VsPyProf</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0.19041.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Choose>
     <When Condition=" '$(VisualStudioVersion)'=='15.0'  Or '$(TargetVisualStudioVersion)'=='VS150' ">
