@@ -29,18 +29,20 @@
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{3814D9DB-10E6-4478-BD98-6C5840612AF8}</ProjectGuid>
-    <OutputType>Library</OutputType>
+    <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Microsoft.PythonTools.ProjectWizards</RootNamespace>
     <AssemblyName>Microsoft.PythonTools.ProjectWizards</AssemblyName>
     <FileAlignment>512</FileAlignment>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'PTVS1|AnyCPU'">
     <OutputPath>bin\PTVS1\</OutputPath>
-    <DefineConstants>TRACE;;USE_PYTHON_TESTDATA;DEV10</DefineConstants>
+    <DefineConstants>DEBUG;TRACE;;USE_PYTHON_TESTDATA;DEV10</DefineConstants>
     <Optimize>true</Optimize>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <NoWarn>436;1998</NoWarn>
@@ -48,7 +50,13 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
     <LangVersion>7.3</LangVersion>
     <ErrorReport>prompt</ErrorReport>
-    <CodeAnalysisRuleSet>C:\Users\peezo\source\repos\PeezoSlug\PTVS\\Build\xTVS.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSet>CppCoreCheckRules.ruleset</CodeAnalysisRuleSet>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DocumentationFile>bin\PTVS1\Microsoft.PythonTools.ProjectWizards.xml</DocumentationFile>
+    <CodeAnalysisIgnoreGeneratedCode>true</CodeAnalysisIgnoreGeneratedCode>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject />
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="envdte, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
@@ -75,8 +83,10 @@
     </Reference>
     <Reference Include="Microsoft.VisualStudio.TemplateWizardInterface, Version=16.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -113,6 +123,9 @@
       <Project>{a52ac77f-6df9-4387-bb08-8ded3fd95a0f}</Project>
       <Name>Microsoft.PythonTools.VSCommon</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
   </ItemGroup>
   <Import Project="..\ProjectAfter.settings" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
