@@ -18,7 +18,6 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
-using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Debugger {
     static class Extensions {

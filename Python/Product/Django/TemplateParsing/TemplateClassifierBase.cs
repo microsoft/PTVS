@@ -14,17 +14,15 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Text.Classification;
-
-namespace Microsoft.PythonTools.Django.TemplateParsing {
-    internal abstract class TemplateClassifierBase : IClassifier {
+namespace Microsoft.PythonTools.Django.TemplateParsing
+{
+    internal abstract class TemplateClassifierBase : IClassifier
+    {
         protected readonly ITextBuffer _textBuffer;
         protected readonly TemplateClassifierProviderBase _classifierProvider;
 
-        protected TemplateClassifierBase(TemplateClassifierProviderBase provider, ITextBuffer textBuffer) {
+        protected TemplateClassifierBase(TemplateClassifierProviderBase provider, ITextBuffer textBuffer)
+        {
             _textBuffer = textBuffer;
             _classifierProvider = provider;
         }
@@ -35,8 +33,10 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
 
         public abstract IList<ClassificationSpan> GetClassificationSpans(SnapshotSpan span);
 
-        protected void ClassifyTemplateBody(ITextSnapshot snapshot, List<ClassificationSpan> spans, TemplateRegion region, int prefixLength, int suffixLength) {
-            switch (region.Kind) {
+        protected void ClassifyTemplateBody(ITextSnapshot snapshot, List<ClassificationSpan> spans, TemplateRegion region, int prefixLength, int suffixLength)
+        {
+            switch (region.Kind)
+            {
                 case TemplateTokenKind.Comment:
                     spans.Add(
                         new ClassificationSpan(
@@ -51,19 +51,25 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                 case TemplateTokenKind.Variable:
                     var filterInfo = DjangoVariable.Parse(region.Text);
 
-                    if (filterInfo != null) {
-                        foreach (var curSpan in filterInfo.GetSpans()) {
+                    if (filterInfo != null)
+                    {
+                        foreach (var curSpan in filterInfo.GetSpans())
+                        {
                             spans.Add(ToClassificationSpan(curSpan, snapshot, region.Start));
                         }
                     }
                     break;
                 case TemplateTokenKind.Block:
                     var blockInfo = region.Block ?? DjangoBlock.Parse(region.Text);
-                    if (blockInfo != null) {
-                        foreach (var curSpan in blockInfo.GetSpans()) {
+                    if (blockInfo != null)
+                    {
+                        foreach (var curSpan in blockInfo.GetSpans())
+                        {
                             spans.Add(ToClassificationSpan(curSpan, snapshot, region.Start));
                         }
-                    } else if (region.Text.Length > (prefixLength + suffixLength)) {    // unterminated block at end of file
+                    }
+                    else if (region.Text.Length > (prefixLength + suffixLength))
+                    {    // unterminated block at end of file
                         spans.Add(
                             new ClassificationSpan(
                                 new SnapshotSpan(
@@ -78,7 +84,8 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
             }
         }
 
-        protected ClassificationSpan ToClassificationSpan(BlockClassification curSpan, ITextSnapshot snapshot, int start) {
+        protected ClassificationSpan ToClassificationSpan(BlockClassification curSpan, ITextSnapshot snapshot, int start)
+        {
             return new ClassificationSpan(
                 new SnapshotSpan(
                     snapshot,
@@ -91,8 +98,10 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
             );
         }
 
-        protected IClassificationType GetClassification(Classification classification) {
-            switch (classification) {
+        protected IClassificationType GetClassification(Classification classification)
+        {
+            switch (classification)
+            {
                 case Classification.None: return _classifierProvider._classType;
                 case Classification.Keyword: return _classifierProvider._keywordType;
                 case Classification.ExcludedCode: return _classifierProvider._excludedCode;

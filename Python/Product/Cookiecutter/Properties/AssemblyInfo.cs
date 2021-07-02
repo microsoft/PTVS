@@ -14,12 +14,6 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Reflection;
-using System.Resources;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using Microsoft.VisualStudio.Shell;
 
 [assembly: AssemblyTitle("Visual Studio - Cookiecutter integration")]
 [assembly: AssemblyDescription("Provides tools for finding, instantiating and customizing Cookiecutter templates.")]

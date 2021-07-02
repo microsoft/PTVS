@@ -14,14 +14,15 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Collections.Generic;
-
-namespace Microsoft.CookiecutterTools.Model {
-    class TemplateEnumerationResult {
+namespace Microsoft.CookiecutterTools.Model
+{
+    class TemplateEnumerationResult
+    {
         public IList<Template> Templates { get; }
         public string ContinuationToken { get; }
 
-        public TemplateEnumerationResult(IList<Template> templates, string continuationToken = null) {
+        public TemplateEnumerationResult(IList<Template> templates, string continuationToken = null)
+        {
             Templates = templates;
             ContinuationToken = continuationToken;
         }

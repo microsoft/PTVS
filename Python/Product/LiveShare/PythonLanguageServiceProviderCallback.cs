@@ -24,7 +24,6 @@ using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio.LanguageServer.Protocol;
 using Microsoft.VisualStudio.LiveShare.LanguageServices;
 using Microsoft.VisualStudio.Threading;
-using Microsoft.VisualStudioTools;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using LS = Microsoft.VisualStudio.LiveShare.LanguageServices;

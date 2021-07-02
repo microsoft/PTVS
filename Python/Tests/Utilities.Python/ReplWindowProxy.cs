@@ -28,8 +28,6 @@ using Microsoft.PythonTools;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Parsing;
-using Microsoft.PythonTools.Project;
-using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.InteractiveWindow.Shell;

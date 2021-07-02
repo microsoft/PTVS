@@ -15,11 +15,8 @@
 // permissions and limitations under the License.
 
 using System.Windows.Automation;
-using Microsoft.PythonTools;
 using Microsoft.PythonTools.Project;
-using Microsoft.PythonTools.Project.Web;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.VisualStudioTools;
 
 namespace TestUtilities.UI.Python {
     class PythonProjectDebugProperties : AutomationWrapper {

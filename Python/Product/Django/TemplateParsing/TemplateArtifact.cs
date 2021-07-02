@@ -14,12 +14,10 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Microsoft.PythonTools.Django.Intellisense;
 
-namespace Microsoft.PythonTools.Django.TemplateParsing {
+namespace Microsoft.PythonTools.Django.TemplateParsing
+{
     /// <summary>
     /// A single Django template construct, such as <c>{{ var }}</c> or <c>{% endcomment %}</c>.
     /// </summary>
@@ -30,7 +28,8 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
     /// the string that corresponds to the artifact. The artifact knows its position, but does not store references to the text
     /// buffer from which it was created, and so it does not know its current text.
     /// </remarks>
-    internal abstract class TemplateArtifact : Artifact {
+    internal abstract class TemplateArtifact : Artifact
+    {
         /// <summary>
         /// The text of the artifact. This is <c>null</c> if the artifact was changed since the last parse request,
         /// which means that it does not know its text anymore.
@@ -39,24 +38,28 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
 
         /// <param name="isClosed">Whether the artifact has a closing separator, or is terminated by EOF.</param>
         public TemplateArtifact(ArtifactTreatAs t, ITextRange range, bool isClosed) :
-            base(t, range, 2, (isClosed ? 2 : 0), DjangoPredefinedClassificationTypeNames.TemplateTag, wellFormed: isClosed) {
+            base(t, range, 2, (isClosed ? 2 : 0), DjangoPredefinedClassificationTypeNames.TemplateTag, wellFormed: isClosed)
+        {
         }
 
         /// <summary>
         /// Indicates whether the parse data associated with this artifact is up to date, or <see cref="Parse"/>
         /// should be called before querying for it.
         /// </summary>
-        public bool IsUpToDate {
+        public bool IsUpToDate
+        {
             get { return _text != null; }
         }
 
         public abstract TemplateTokenKind TokenKind { get; }
 
-        public override bool IsEndInclusive {
+        public override bool IsEndInclusive
+        {
             get { return false; }
         }
 
-        public override bool IsStartInclusive {
+        public override bool IsStartInclusive
+        {
             get { return false; }
         }
 
@@ -68,8 +71,10 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
         /// <remarks>
         /// Calls <see cref="Reparse"/> if the parse data needs to be updated.
         /// </remarks>
-        public void Parse(string text) {
-            if (_text != text) {
+        public void Parse(string text)
+        {
+            if (_text != text)
+            {
                 _text = text;
                 Reparse(text);
             }
@@ -85,18 +90,22 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
         /// </summary>
         public abstract IEnumerable<BlockClassification> GetClassifications();
 
-        public override void Shift(int offset) {
+        public override void Shift(int offset)
+        {
             base.Shift(offset);
             _text = null;
         }
 
-        public override void Expand(int startOffset, int endOffset) {
+        public override void Expand(int startOffset, int endOffset)
+        {
             base.Expand(startOffset, endOffset);
             _text = null;
         }
 
-        public static TemplateArtifact Create(TemplateTokenKind kind, ITextRange range, bool isClosed) {
-            switch (kind) {
+        public static TemplateArtifact Create(TemplateTokenKind kind, ITextRange range, bool isClosed)
+        {
+            switch (kind)
+            {
                 case TemplateTokenKind.Block:
                     return new TemplateBlockArtifact(range, isClosed);
                 case TemplateTokenKind.Variable:
@@ -112,12 +121,15 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
     /// <summary>
     /// An artifact representing a Django block, e.g. <c>{% endcomment %}</c>.
     /// </summary>
-    internal class TemplateBlockArtifact : TemplateArtifact {
+    internal class TemplateBlockArtifact : TemplateArtifact
+    {
         public TemplateBlockArtifact(ITextRange range, bool isClosed)
-            : base(ArtifactTreatAs.Code, range, isClosed) {
+            : base(ArtifactTreatAs.Code, range, isClosed)
+        {
         }
 
-        public override TemplateTokenKind TokenKind {
+        public override TemplateTokenKind TokenKind
+        {
             get { return TemplateTokenKind.Block; }
         }
 
@@ -129,11 +141,13 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
         /// </remarks>
         public DjangoBlock Block { get; private set; }
 
-        protected override void Reparse(string text) {
+        protected override void Reparse(string text)
+        {
             Block = DjangoBlock.Parse(text, trim: true);
         }
 
-        public override IEnumerable<BlockClassification> GetClassifications() {
+        public override IEnumerable<BlockClassification> GetClassifications()
+        {
             return Block != null ? Block.GetSpans() : Enumerable.Empty<BlockClassification>();
         }
     }
@@ -141,12 +155,15 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
     /// <summary>
     /// An artifact representing a Django variable, e.g. <c>{{ content }}</c>.
     /// </summary>
-    internal class TemplateVariableArtifact : TemplateArtifact {
+    internal class TemplateVariableArtifact : TemplateArtifact
+    {
         public TemplateVariableArtifact(ITextRange range, bool isClosed)
-            : base(ArtifactTreatAs.Code, range, isClosed) {
+            : base(ArtifactTreatAs.Code, range, isClosed)
+        {
         }
 
-        public override TemplateTokenKind TokenKind {
+        public override TemplateTokenKind TokenKind
+        {
             get { return TemplateTokenKind.Variable; }
         }
 
@@ -158,11 +175,13 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
         /// </remarks>
         public DjangoVariable Variable { get; private set; }
 
-        protected override void Reparse(string text) {
+        protected override void Reparse(string text)
+        {
             Variable = DjangoVariable.Parse(text);
         }
 
-        public override IEnumerable<BlockClassification> GetClassifications() {
+        public override IEnumerable<BlockClassification> GetClassifications()
+        {
             return Variable != null ? Variable.GetSpans() : Enumerable.Empty<BlockClassification>();
         }
     }
@@ -170,19 +189,24 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
     /// <summary>
     /// An artifact representing a Django comment.
     /// </summary>
-    internal class TemplateCommentArtifact : TemplateArtifact {
+    internal class TemplateCommentArtifact : TemplateArtifact
+    {
         public TemplateCommentArtifact(ITextRange range, bool isClosed)
-            : base(ArtifactTreatAs.Comment, range, isClosed) {
+            : base(ArtifactTreatAs.Comment, range, isClosed)
+        {
         }
 
-        public override TemplateTokenKind TokenKind {
+        public override TemplateTokenKind TokenKind
+        {
             get { return TemplateTokenKind.Comment; }
         }
 
-        protected override void Reparse(string text) {
+        protected override void Reparse(string text)
+        {
         }
 
-        public override IEnumerable<BlockClassification> GetClassifications() {
+        public override IEnumerable<BlockClassification> GetClassifications()
+        {
             // HTML editor will automatically classify the entire artifact as "HTML comment" based on the values of
             // <see cref="TemplateArtifactProcessor.LeftCommentSeparator"/> and <see cref="TemplateArtifactProcessor.RightCommentSeparator"/>,
             // so nothing to do here.

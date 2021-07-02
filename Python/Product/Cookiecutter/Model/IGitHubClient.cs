@@ -14,18 +14,18 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Threading.Tasks;
-using Newtonsoft.Json;
-
-namespace Microsoft.CookiecutterTools.Model {
-    interface IGitHubClient {
+namespace Microsoft.CookiecutterTools.Model
+{
+    interface IGitHubClient
+    {
         Task<GitHubRepoSearchResult> SearchRepositoriesAsync(string requestUrl);
         Task<GitHubRepoSearchResult> StartSearchRepositoriesAsync(string[] terms);
         Task<GitHubRepoSearchItem> GetRepositoryDetails(string owner, string name);
         Task<bool> FileExistsAsync(GitHubRepoSearchItem repo, string filePath);
     }
 
-    struct GitHubRepoSearchResult {
+    struct GitHubRepoSearchResult
+    {
         [JsonProperty("total_count")]
         public int TotalCount;
 
@@ -38,7 +38,8 @@ namespace Microsoft.CookiecutterTools.Model {
         public GitHubPaginationLinks Links;
     }
 
-    struct GitHubRepoSearchItem {
+    struct GitHubRepoSearchItem
+    {
         [JsonProperty("id")]
         public int Id;
 
@@ -64,7 +65,8 @@ namespace Microsoft.CookiecutterTools.Model {
         public GitHubRepoOwner Owner;
     }
 
-    struct GitHubRepoOwner {
+    struct GitHubRepoOwner
+    {
         [JsonProperty("id")]
         public int Id;
 
@@ -75,7 +77,8 @@ namespace Microsoft.CookiecutterTools.Model {
         public string AvatarUrl;
     }
 
-    struct GitHubPaginationLinks {
+    struct GitHubPaginationLinks
+    {
         public string Next;
         public string Prev;
         public string First;

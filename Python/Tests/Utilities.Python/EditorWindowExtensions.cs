@@ -16,7 +16,6 @@
 
 using System.Threading.Tasks;
 using Microsoft.PythonTools;
-using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TestUtilities.UI.Python {

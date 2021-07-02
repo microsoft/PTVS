@@ -17,7 +17,6 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio;
 
 namespace Microsoft.PythonTools.Debugger.DebugEngine {

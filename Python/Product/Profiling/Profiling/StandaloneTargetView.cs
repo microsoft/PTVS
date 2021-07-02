@@ -14,20 +14,13 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using Microsoft.PythonTools.Interpreter;
-
-namespace Microsoft.PythonTools.Profiling {
+namespace Microsoft.PythonTools.Profiling
+{
     /// <summary>
     /// Provides a view model for the StandaloneTarget class.
     /// </summary>
-    sealed class StandaloneTargetView : INotifyPropertyChanged {
+    sealed class StandaloneTargetView : INotifyPropertyChanged
+    {
         private readonly ReadOnlyCollection<PythonInterpreterView> _availableInterpreters;
         private readonly PythonInterpreterView _customInterpreter;
 
@@ -40,7 +33,8 @@ namespace Microsoft.PythonTools.Profiling {
 
         private bool _isValid;
 
-        public StandaloneTargetView(IServiceProvider serviceProvider) {
+        public StandaloneTargetView(IServiceProvider serviceProvider)
+        {
             var componentService = serviceProvider.GetComponentModel();
 
             var interpreterProviders = componentService.DefaultExportProvider.GetExports<IPythonInterpreterFactoryProvider, Dictionary<string, object>>();
@@ -70,7 +64,8 @@ namespace Microsoft.PythonTools.Profiling {
 
             PropertyChanged += new PropertyChangedEventHandler(StandaloneTargetView_PropertyChanged);
 
-            if (IsAnyAvailableInterpreters) {
+            if (IsAnyAvailableInterpreters)
+            {
                 var defaultId = interpreterOptions.DefaultInterpreterId;
                 Interpreter = AvailableInterpreters.FirstOrDefault(v => v.Id == defaultId);
             }
@@ -80,19 +75,27 @@ namespace Microsoft.PythonTools.Profiling {
         /// Create a StandaloneTargetView with values taken from a template.
         /// </summary>
         public StandaloneTargetView(StandaloneTarget template)
-            : this(PythonProfilingPackage.Instance, template) {
+            : this(PythonProfilingPackage.Instance, template)
+        {
         }
 
         public StandaloneTargetView(IServiceProvider serviceProvider, StandaloneTarget template)
-            : this(serviceProvider) {
-            if (template.PythonInterpreter != null) {
-                if (IsAnyAvailableInterpreters) {
+            : this(serviceProvider)
+        {
+            if (template.PythonInterpreter != null)
+            {
+                if (IsAnyAvailableInterpreters)
+                {
                     Interpreter = AvailableInterpreters
                         .FirstOrDefault(v => v.Id == template.PythonInterpreter.Id);
-                } else {
+                }
+                else
+                {
                     Interpreter = _customInterpreter;
                 }
-            } else {
+            }
+            else
+            {
                 InterpreterPath = template.InterpreterPath;
             }
             ScriptPath = template.Script;
@@ -104,16 +107,21 @@ namespace Microsoft.PythonTools.Profiling {
         /// Returns a StandaloneTarget with values taken from the view model.
         /// </summary>
         /// <returns></returns>
-        public StandaloneTarget GetTarget() {
-            if (IsValid) {
-                return new StandaloneTarget {
+        public StandaloneTarget GetTarget()
+        {
+            if (IsValid)
+            {
+                return new StandaloneTarget
+                {
                     PythonInterpreter = CanSpecifyInterpreterPath ? null : Interpreter.GetInterpreter(),
                     InterpreterPath = CanSpecifyInterpreterPath ? InterpreterPath : null,
                     Script = ScriptPath ?? string.Empty,
                     WorkingDirectory = WorkingDirectory ?? string.Empty,
                     Arguments = Arguments ?? string.Empty
                 };
-            } else {
+            }
+            else
+            {
                 return null;
             }
         }
@@ -121,8 +129,10 @@ namespace Microsoft.PythonTools.Profiling {
         /// <summary>
         /// The interpreters that may be selected.
         /// </summary>
-        public ReadOnlyCollection<PythonInterpreterView> AvailableInterpreters {
-            get {
+        public ReadOnlyCollection<PythonInterpreterView> AvailableInterpreters
+        {
+            get
+            {
                 return _availableInterpreters;
             }
         }
@@ -130,8 +140,10 @@ namespace Microsoft.PythonTools.Profiling {
         /// <summary>
         /// True if AvailableInterpreters has at least one item.
         /// </summary>
-        public bool IsAnyAvailableInterpreters {
-            get {
+        public bool IsAnyAvailableInterpreters
+        {
+            get
+            {
                 return _availableInterpreters.Count > 0;
             }
         }
@@ -140,12 +152,16 @@ namespace Microsoft.PythonTools.Profiling {
         /// The currently selected Python interpreter. Setting this to null will select a
         /// custom interpreter.
         /// </summary>
-        public PythonInterpreterView Interpreter {
-            get {
+        public PythonInterpreterView Interpreter
+        {
+            get
+            {
                 return _interpreter;
             }
-            set {
-                if (_interpreter != value) {
+            set
+            {
+                if (_interpreter != value)
+                {
                     _interpreter = value ?? _customInterpreter;
                     OnPropertyChanged("Interpreter");
                     CanSpecifyInterpreterPath = (_interpreter == _customInterpreter);
@@ -157,12 +173,16 @@ namespace Microsoft.PythonTools.Profiling {
         /// The current interpreter path. This can be set regardless of the value of
         /// CanSpecifyInterpreterPath.
         /// </summary>
-        public string InterpreterPath {
-            get {
+        public string InterpreterPath
+        {
+            get
+            {
                 return _interpreterPath;
             }
-            set {
-                if (_interpreterPath != value) {
+            set
+            {
+                if (_interpreterPath != value)
+                {
                     _interpreterPath = value;
                     OnPropertyChanged("InterpreterPath");
                 }
@@ -172,12 +192,16 @@ namespace Microsoft.PythonTools.Profiling {
         /// <summary>
         /// True if InterpreterPath is valid; false if it will be ignored.
         /// </summary>
-        public bool CanSpecifyInterpreterPath {
-            get {
+        public bool CanSpecifyInterpreterPath
+        {
+            get
+            {
                 return _canSpecifyInterpreterPath;
             }
-            private set {
-                if (_canSpecifyInterpreterPath != value) {
+            private set
+            {
+                if (_canSpecifyInterpreterPath != value)
+                {
                     _canSpecifyInterpreterPath = value;
                     OnPropertyChanged("CanSpecifyInterpreterPath");
                 }
@@ -187,12 +211,16 @@ namespace Microsoft.PythonTools.Profiling {
         /// <summary>
         /// The current script path.
         /// </summary>
-        public string ScriptPath {
-            get {
+        public string ScriptPath
+        {
+            get
+            {
                 return _scriptPath;
             }
-            set {
-                if (_scriptPath != value) {
+            set
+            {
+                if (_scriptPath != value)
+                {
                     _scriptPath = value;
                     OnPropertyChanged("ScriptPath");
                     //if (string.IsNullOrEmpty(WorkingDirectory)) {
@@ -205,12 +233,16 @@ namespace Microsoft.PythonTools.Profiling {
         /// <summary>
         /// The current working directory.
         /// </summary>
-        public string WorkingDirectory {
-            get {
+        public string WorkingDirectory
+        {
+            get
+            {
                 return _workingDirectory;
             }
-            set {
-                if (_workingDirectory != value) {
+            set
+            {
+                if (_workingDirectory != value)
+                {
                     _workingDirectory = value;
                     OnPropertyChanged("WorkingDirectory");
                 }
@@ -220,12 +252,16 @@ namespace Microsoft.PythonTools.Profiling {
         /// <summary>
         /// The current set of arguments to pass to the script.
         /// </summary>
-        public string Arguments {
-            get {
+        public string Arguments
+        {
+            get
+            {
                 return _arguments;
             }
-            set {
-                if (_arguments != value) {
+            set
+            {
+                if (_arguments != value)
+                {
                     _arguments = value;
                     OnPropertyChanged("Arguments");
                 }
@@ -235,10 +271,12 @@ namespace Microsoft.PythonTools.Profiling {
         /// <summary>
         /// Receives our own property change events to update IsValid.
         /// </summary>
-        void StandaloneTargetView_PropertyChanged(object sender, PropertyChangedEventArgs e) {
+        void StandaloneTargetView_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
             Debug.Assert(sender == this);
 
-            if (e.PropertyName != "IsValid") {
+            if (e.PropertyName != "IsValid")
+            {
                 IsValid = File.Exists(ScriptPath) &&
                     Directory.Exists(WorkingDirectory) &&
                     (CanSpecifyInterpreterPath == false || File.Exists(InterpreterPath));
@@ -248,21 +286,27 @@ namespace Microsoft.PythonTools.Profiling {
         /// <summary>
         /// True if the settings are valid and all paths exist; otherwise, false.
         /// </summary>
-        public bool IsValid {
-            get {
+        public bool IsValid
+        {
+            get
+            {
                 return _isValid;
             }
-            private set {
-                if (_isValid != value) {
+            private set
+            {
+                if (_isValid != value)
+                {
                     _isValid = value;
                     OnPropertyChanged("IsValid");
                 }
             }
         }
 
-        private void OnPropertyChanged(string propertyName) {
+        private void OnPropertyChanged(string propertyName)
+        {
             var evt = PropertyChanged;
-            if (evt != null) {
+            if (evt != null)
+            {
                 evt(this, new PropertyChangedEventArgs(propertyName));
             }
         }

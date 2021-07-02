@@ -14,14 +14,14 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.ComponentModel.Composition;
-using Microsoft.VisualStudio.Utilities;
-
-namespace Microsoft.PythonTools.Django.TemplateParsing {
+namespace Microsoft.PythonTools.Django.TemplateParsing
+{
     [Export(typeof(IContentTypeHandlerProvider))]
     [ContentType(TemplateHtmlContentType.ContentTypeName)]
-    internal class TemplateContentTypeHandlerProvider : IContentTypeHandlerProvider {
-        public IContentTypeHandler GetContentTypeHandler() {
+    internal class TemplateContentTypeHandlerProvider : IContentTypeHandlerProvider
+    {
+        public IContentTypeHandler GetContentTypeHandler()
+        {
             return new TemplateContentTypeHandler();
         }
     }

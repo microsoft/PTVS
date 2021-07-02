@@ -29,7 +29,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.UI.Python;
 using util::TestUtilities.UI;
-using static pythontools::Microsoft.PythonTools.Extensions;
 using Keyboard = util::TestUtilities.UI.Keyboard;
 using MessageBoxButton = TestUtilities.MessageBoxButton;
 using Mouse = util::TestUtilities.UI.Mouse;

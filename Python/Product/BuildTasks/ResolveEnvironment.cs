@@ -23,7 +23,6 @@ using System.Text.RegularExpressions;
 using Microsoft.Build.Evaluation;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.BuildTasks {

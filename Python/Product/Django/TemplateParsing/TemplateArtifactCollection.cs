@@ -14,17 +14,15 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using Microsoft.PythonTools.Infrastructure;
-
-namespace Microsoft.PythonTools.Django.TemplateParsing {
+namespace Microsoft.PythonTools.Django.TemplateParsing
+{
     /// <summary>
     /// A collection of <see cref="TemplateArtifact"/> objects for a given text input.
     /// </summary>
-    internal class TemplateArtifactCollection : ArtifactCollection {
-        private class SeparatorsInfo : ISensitiveFragmentSeparatorsInfo {
+    internal class TemplateArtifactCollection : ArtifactCollection
+    {
+        private class SeparatorsInfo : ISensitiveFragmentSeparatorsInfo
+        {
             public string LeftSeparator { get; set; }
             public string RightSeparator { get; set; }
         }
@@ -36,7 +34,8 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
         };
 
         public TemplateArtifactCollection()
-            : base(new TemplateArtifactProcessor()) {
+            : base(new TemplateArtifactProcessor())
+        {
             LeftSeparator = RightSeparator = "";
         }
 
@@ -44,18 +43,22 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
 
         public string RightSeparator { get; private set; }
 
-        public override bool IsDestructiveChange(int start, int oldLength, int newLength, ITextProvider oldText, ITextProvider newText) {
+        public override bool IsDestructiveChange(int start, int oldLength, int newLength, ITextProvider oldText, ITextProvider newText)
+        {
             // Get list of items overlapping the change. Note that items haven't been
             // shifted yet and hence their positions match the old text snapshot.
             var itemsInRange = ItemsInRange(new TextRange(start, oldLength));
 
             // Is crosses item boundaries, it is destructive
-            if (itemsInRange.Count > 1 || (itemsInRange.Count == 1 && (!itemsInRange[0].Contains(start) || !itemsInRange[0].Contains(start + oldLength)))) {
+            if (itemsInRange.Count > 1 || (itemsInRange.Count == 1 && (!itemsInRange[0].Contains(start) || !itemsInRange[0].Contains(start + oldLength))))
+            {
                 return true;
             }
 
-            foreach (var separatorInfo in _separatorInfos) {
-                if (IsADestructiveChangeForSeparator(separatorInfo, itemsInRange, start, oldLength, newLength, oldText, newText)) {
+            foreach (var separatorInfo in _separatorInfos)
+            {
+                if (IsADestructiveChangeForSeparator(separatorInfo, itemsInRange, start, oldLength, newLength, oldText, newText))
+                {
                     return true;
                 }
             }
@@ -71,8 +74,10 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
             int newLength,
             ITextProvider oldText,
             ITextProvider newText
-        ) {
-            if (separatorInfo == null || (separatorInfo.LeftSeparator.Length == 0 && separatorInfo.RightSeparator.Length == 0)) {
+        )
+        {
+            if (separatorInfo == null || (separatorInfo.LeftSeparator.Length == 0 && separatorInfo.RightSeparator.Length == 0))
+            {
                 return false;
             }
 
@@ -86,9 +91,11 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
             var item = firstTwoItems.FirstOrDefault();
 
             // If no items are affected, change is unsafe only if new region contains left side separators.
-            if (item == null) {
+            if (item == null)
+            {
                 // Simple optimization for whitespace insertion
-                if (oldLength == 0 && string.IsNullOrWhiteSpace(newText.GetText(start, newLength))) {
+                if (oldLength == 0 && string.IsNullOrWhiteSpace(newText.GetText(start, newLength)))
+                {
                     return false;
                 }
 
@@ -100,9 +107,11 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
             }
 
             // Is change completely inside an existing item?
-            if (firstTwoItems.Count == 1 && (item.Contains(start) && item.Contains(start + oldLength))) {
+            if (firstTwoItems.Count == 1 && (item.Contains(start) && item.Contains(start + oldLength)))
+            {
                 // Check that change does not affect item left separator
-                if (TextRange.Contains(item.Start, leftSeparator.Length, start)) {
+                if (TextRange.Contains(item.Start, leftSeparator.Length, start))
+                {
                     return true;
                 }
 
@@ -113,10 +122,13 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                 // deleting text right before %} or }} does not make change destructive.
 
                 var htmlToken = item as IHtmlToken;
-                if (htmlToken == null || htmlToken.IsWellFormed) {
+                if (htmlToken == null || htmlToken.IsWellFormed)
+                {
                     int rightSeparatorStart = item.End - rightSeparator.Length;
-                    if (start + oldLength > rightSeparatorStart) {
-                        if (TextRange.Intersect(rightSeparatorStart, rightSeparator.Length, start, oldLength)) {
+                    if (start + oldLength > rightSeparatorStart)
+                    {
+                        if (TextRange.Intersect(rightSeparatorStart, rightSeparator.Length, start, oldLength))
+                        {
                             return true;
                         }
                     }
@@ -124,10 +136,13 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
 
                 // Touching left separator is destructive too, like when changing {{ to {{@
                 // Check that change does not affect item left separator (whitespace is fine)
-                if (item.Start + leftSeparator.Length == start) {
-                    if (oldLength == 0) {
+                if (item.Start + leftSeparator.Length == start)
+                {
+                    if (oldLength == 0)
+                    {
                         string text = newText.GetText(start, newLength);
-                        if (String.IsNullOrWhiteSpace(text)) {
+                        if (String.IsNullOrWhiteSpace(text))
+                        {
                             return false;
                         }
                     }
@@ -141,7 +156,8 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                 int fragmentEnd = item.End + changeLength;
                 fragmentEnd = Math.Min(fragmentEnd, start + newLength + separatorInfo.RightSeparator.Length - 1);
 
-                if (newText.IndexOf(separatorInfo.RightSeparator, fragmentStart, fragmentEnd - fragmentStart, true) >= 0) {
+                if (newText.IndexOf(separatorInfo.RightSeparator, fragmentStart, fragmentEnd - fragmentStart, true) >= 0)
+                {
                     return true;
                 }
 

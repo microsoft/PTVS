@@ -23,8 +23,6 @@ using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.PythonTools.Debugger.Remote;
-using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;

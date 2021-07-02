@@ -15,8 +15,10 @@
 // permissions and limitations under the License.
 
 
-namespace Microsoft.PythonTools.Profiling {
-    enum TreeViewIconIndex {
+namespace Microsoft.PythonTools.Profiling
+{
+    enum TreeViewIconIndex
+    {
         GreenNotebook,
         GreenPropertyNotebook,
         EmptyApp,

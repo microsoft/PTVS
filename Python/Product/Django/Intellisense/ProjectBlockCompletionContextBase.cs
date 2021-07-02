@@ -14,35 +14,38 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Collections.Generic;
-using System.Linq;
-using Microsoft.PythonTools.Django.Analysis;
 using Microsoft.PythonTools.Django.TemplateParsing;
-using Microsoft.PythonTools.Intellisense;
-using Microsoft.PythonTools.Interpreter;
 
-namespace Microsoft.PythonTools.Django.Intellisense {
-    internal class ProjectBlockCompletionContextBase : IDjangoCompletionContext {
+namespace Microsoft.PythonTools.Django.Intellisense
+{
+    internal class ProjectBlockCompletionContextBase : IDjangoCompletionContext
+    {
         private readonly VsProjectAnalyzer _analyzer;
         private readonly string _filename;
         private HashSet<string> _loopVars;
 
-        public ProjectBlockCompletionContextBase(VsProjectAnalyzer analyzer, string filename) {
+        public ProjectBlockCompletionContextBase(VsProjectAnalyzer analyzer, string filename)
+        {
             _analyzer = analyzer;
             _filename = filename;
         }
 
-        protected void AddLoopVariable(string name) {
-            if (_loopVars == null) {
+        protected void AddLoopVariable(string name)
+        {
+            if (_loopVars == null)
+            {
                 _loopVars = new HashSet<string>();
             }
             _loopVars.Add(name);
         }
 
-        public string[] Variables {
-            get {
+        public string[] Variables
+        {
+            get
+            {
                 var res = _analyzer.GetVariableNames(_filename);
-                if (_loopVars != null) {
+                if (_loopVars != null)
+                {
                     HashSet<string> tmp = new HashSet<string>(res);
 
                     tmp.UnionWith(_loopVars);
@@ -52,19 +55,24 @@ namespace Microsoft.PythonTools.Django.Intellisense {
             }
         }
 
-        public Dictionary<string, TagInfo> Filters {
-            get {
+        public Dictionary<string, TagInfo> Filters
+        {
+            get
+            {
                 return _analyzer.GetFilters();
             }
         }
 
-        public DjangoUrl[] Urls {
-            get {
+        public DjangoUrl[] Urls
+        {
+            get
+            {
                 return _analyzer.GetUrls();
             }
         }
 
-        public Dictionary<string, PythonMemberType> GetMembers(string name) {
+        public Dictionary<string, PythonMemberType> GetMembers(string name)
+        {
             return _analyzer.GetMembers(_filename, name);
         }
     }

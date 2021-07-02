@@ -14,11 +14,10 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using Microsoft.VisualStudio.Imaging.Interop;
-
-namespace Microsoft.CookiecutterTools.Resources {
-    static class ImageMonikers {
+namespace Microsoft.CookiecutterTools.Resources
+{
+    static class ImageMonikers
+    {
         public static readonly Guid Guid = new Guid("{50EDF200-5C99-4968-ABC0-CF1A2C490F00}");
         public static readonly ImageMoniker Cancel = new ImageMoniker { Guid = Guid, Id = 1 };
         public static readonly ImageMoniker Cookiecutter = new ImageMoniker { Guid = Guid, Id = 2 };

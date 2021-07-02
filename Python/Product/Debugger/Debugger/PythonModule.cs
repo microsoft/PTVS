@@ -15,7 +15,6 @@
 // permissions and limitations under the License.
 
 using System.IO;
-using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Debugger {
     class PythonModule {

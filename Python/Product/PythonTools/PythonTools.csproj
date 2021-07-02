@@ -776,36 +776,6 @@
     <None Include="Theme\Repl\light.vstheme" />
     <None Include="Theme\Repl\additionalcontrast.vstheme" />
     <None Include="Theme\Repl\make_theme_pkgdef.py" />
-    <Content Include="C:\Users\peezo\source\repos\PeezoSlug\PTVS\packages\\Microsoft.VisualStudio.Python.LanguageServer\lib\vs16\BuiltinScraper.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-      <VSIXSubPath>.</VSIXSubPath>
-    </Content>
-    <Content Include="C:\Users\peezo\source\repos\PeezoSlug\PTVS\packages\\Microsoft.VisualStudio.Python.LanguageServer\lib\vs16\ExtensionScraper.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-      <VSIXSubPath>.</VSIXSubPath>
-    </Content>
-    <Content Include="C:\Users\peezo\source\repos\PeezoSlug\PTVS\packages\\Microsoft.VisualStudio.Python.LanguageServer\lib\vs16\IronPythonScraper.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-      <VSIXSubPath>.</VSIXSubPath>
-    </Content>
-    <Content Include="C:\Users\peezo\source\repos\PeezoSlug\PTVS\packages\\Microsoft.VisualStudio.Python.LanguageServer\lib\vs16\PythonScraper.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-      <VSIXSubPath>.</VSIXSubPath>
-    </Content>
-    <Content Include="C:\Users\peezo\source\repos\PeezoSlug\PTVS\packages\\Microsoft.VisualStudio.Python.LanguageServer\lib\vs16\get_search_paths.py">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-      <VSIXSubPath>.</VSIXSubPath>
-    </Content>
-    <Content Include="C:\Users\peezo\source\repos\PeezoSlug\PTVS\packages\\Microsoft.VisualStudio.Python.LanguageServer\lib\vs16\typing-stub.pyi">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-      <VSIXSubPath>.</VSIXSubPath>
-    </Content>
     <Content Include="NoInterpreters.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
@@ -982,16 +952,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
       <VSIXSubPath>ptvsd</VSIXSubPath>
-    </Content>
-    <Content Include="..\Icons\Dev10.0\PythonProject.ico">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <VSIXSubPath>.</VSIXSubPath>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <Content Include="..\Icons\Dev10.0\PythonProjectBig.ico">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <VSIXSubPath>.</VSIXSubPath>
-      <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <Content Include="NewFileItems\class.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

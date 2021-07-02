@@ -14,13 +14,13 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-
-namespace Microsoft.PythonTools.Django {
+namespace Microsoft.PythonTools.Django
+{
     /// <summary>
     /// Defines menu commands guids and menu command id's
     /// </summary>
-    class VsMenus {
+    class VsMenus
+    {
         public static Guid guidSHLMainMenu = new Guid(0xd309f791, 0x903f, 0x11d0, 0x9e, 0xfc, 0x00, 0xa0, 0xc9, 0x11, 0x00, 0x4f);
 
         public static Guid guidVsUIHierarchyWindowCmds = new Guid("60481700-078B-11D1-AAF8-00A0C9055A90");

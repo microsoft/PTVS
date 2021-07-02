@@ -14,18 +14,13 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Diagnostics;
-using System.Linq;
-
-namespace Microsoft.PythonTools.Profiling {
+namespace Microsoft.PythonTools.Profiling
+{
     /// <summary>
     /// Provides a view model for the ProfilingTarget class.
     /// </summary>
-    sealed class ProfilingTargetView : INotifyPropertyChanged {
+    sealed class ProfilingTargetView : INotifyPropertyChanged
+    {
         private readonly ReadOnlyCollection<ProjectTargetView> _availableProjects;
 
         private ProjectTargetView _project;
@@ -41,11 +36,13 @@ namespace Microsoft.PythonTools.Profiling {
         /// <summary>
         /// Create a ProfilingTargetView with default values.
         /// </summary>
-        public ProfilingTargetView(IServiceProvider serviceProvider) {
+        public ProfilingTargetView(IServiceProvider serviceProvider)
+        {
             var solution = serviceProvider.GetService(typeof(SVsSolution)) as IVsSolution;
 
             var availableProjects = new List<ProjectTargetView>();
-            foreach (var project in solution.EnumerateLoadedProjects()) {
+            foreach (var project in solution.EnumerateLoadedProjects())
+            {
                 availableProjects.Add(new ProjectTargetView((IVsHierarchy)project));
             }
             _availableProjects = new ReadOnlyCollection<ProjectTargetView>(availableProjects);
@@ -71,10 +68,13 @@ namespace Microsoft.PythonTools.Profiling {
             var startupProject = PythonProfilingPackage.GetStartupProjectGuid(serviceProvider);
             Project = AvailableProjects.FirstOrDefault(p => p.Guid == startupProject) ??
                 AvailableProjects.FirstOrDefault();
-            if (Project != null) {
+            if (Project != null)
+            {
                 IsStandaloneSelected = false;
                 IsProjectSelected = true;
-            } else {
+            }
+            else
+            {
                 IsProjectSelected = false;
                 IsStandaloneSelected = true;
             }
@@ -85,12 +85,16 @@ namespace Microsoft.PythonTools.Profiling {
         /// Create a ProfilingTargetView with values taken from a template.
         /// </summary>
         public ProfilingTargetView(IServiceProvider serviceProvider, ProfilingTarget template)
-            : this(serviceProvider) {
-            if (template.ProjectTarget != null) {
+            : this(serviceProvider)
+        {
+            if (template.ProjectTarget != null)
+            {
                 Project = new ProjectTargetView(template.ProjectTarget);
                 IsStandaloneSelected = false;
                 IsProjectSelected = true;
-            } else if (template.StandaloneTarget != null) {
+            }
+            else if (template.StandaloneTarget != null)
+            {
                 Standalone = new StandaloneTargetView(serviceProvider, template.StandaloneTarget);
                 IsProjectSelected = false;
                 IsStandaloneSelected = true;
@@ -101,21 +105,28 @@ namespace Microsoft.PythonTools.Profiling {
         /// <summary>
         /// Returns a ProfilingTarget with the values set from the view model.
         /// </summary>
-        public ProfilingTarget GetTarget() {
-            if (IsValid) {
-                return new ProfilingTarget {
+        public ProfilingTarget GetTarget()
+        {
+            if (IsValid)
+            {
+                return new ProfilingTarget
+                {
                     ProjectTarget = IsProjectSelected ? Project.GetTarget() : null,
                     StandaloneTarget = IsStandaloneSelected ? Standalone.GetTarget() : null,
                     UseVTune = _useVTune
                 };
-            } else {
+            }
+            else
+            {
                 return null;
             }
         }
 
 
-        public ReadOnlyCollection<ProjectTargetView> AvailableProjects {
-            get {
+        public ReadOnlyCollection<ProjectTargetView> AvailableProjects
+        {
+            get
+            {
                 return _availableProjects;
             }
         }
@@ -123,8 +134,10 @@ namespace Microsoft.PythonTools.Profiling {
         /// <summary>
         /// True if AvailableProjects has at least one item.
         /// </summary>
-        public bool IsAnyAvailableProjects {
-            get {
+        public bool IsAnyAvailableProjects
+        {
+            get
+            {
                 return _availableProjects.Count > 0;
             }
         }
@@ -132,12 +145,16 @@ namespace Microsoft.PythonTools.Profiling {
         /// <summary>
         /// A view of the details of the current project.
         /// </summary>
-        public ProjectTargetView Project {
-            get {
+        public ProjectTargetView Project
+        {
+            get
+            {
                 return _project;
             }
-            set {
-                if (_project != value) {
+            set
+            {
+                if (_project != value)
+                {
                     _project = value;
                     OnPropertyChanged("Project");
                 }
@@ -147,12 +164,16 @@ namespace Microsoft.PythonTools.Profiling {
         /// <summary>
         /// True if a project is the currently selected target; otherwise, false.
         /// </summary>
-        public bool IsProjectSelected {
-            get {
+        public bool IsProjectSelected
+        {
+            get
+            {
                 return _isProjectSelected;
             }
-            set {
-                if (_isProjectSelected != value) {
+            set
+            {
+                if (_isProjectSelected != value)
+                {
                     _isProjectSelected = value;
                     OnPropertyChanged("IsProjectSelected");
                 }
@@ -162,17 +183,23 @@ namespace Microsoft.PythonTools.Profiling {
         /// <summary>
         /// A view of the details of the current standalone script.
         /// </summary>
-        public StandaloneTargetView Standalone {
-            get {
+        public StandaloneTargetView Standalone
+        {
+            get
+            {
                 return _standalone;
             }
-            set {
-                if (_standalone != value) {
-                    if (_standalone != null) {
+            set
+            {
+                if (_standalone != value)
+                {
+                    if (_standalone != null)
+                    {
                         _standalone.PropertyChanged -= Standalone_PropertyChanged;
                     }
                     _standalone = value;
-                    if (_standalone != null) {
+                    if (_standalone != null)
+                    {
                         _standalone.PropertyChanged += Standalone_PropertyChanged;
                     }
 
@@ -184,12 +211,16 @@ namespace Microsoft.PythonTools.Profiling {
         /// <summary>
         /// True if a standalone script is the currently selected target; otherwise, false.
         /// </summary>
-        public bool IsStandaloneSelected {
-            get {
+        public bool IsStandaloneSelected
+        {
+            get
+            {
                 return _isStandaloneSelected;
             }
-            set {
-                if (_isStandaloneSelected != value) {
+            set
+            {
+                if (_isStandaloneSelected != value)
+                {
                     _isStandaloneSelected = value;
                     OnPropertyChanged("IsStandaloneSelected");
                 }
@@ -198,9 +229,11 @@ namespace Microsoft.PythonTools.Profiling {
 
         /// <summary>
         /// </summary>
-        public bool UseVTune {
+        public bool UseVTune
+        {
             get { return _useVTune; }
-            set {
+            set
+            {
                 _useVTune = value;
                 OnPropertyChanged("UseVTune");
             }
@@ -209,24 +242,28 @@ namespace Microsoft.PythonTools.Profiling {
         /// <summary>
         /// Whether a VTune installation is available in this machine.
         /// </summary>
-        public bool IsVTuneAvailable {
+        public bool IsVTuneAvailable
+        {
             get { return _isVTuneAvailable; }
         }
 
         /// <summary>
         /// Whether "ExternalProfilerDriver" has been compiled in this build of PTVS
         /// </summary>
-        public bool IsExternalProfilerEnabled {
+        public bool IsExternalProfilerEnabled
+        {
             get { return _isExternalProfilerEnabled; }
         }
 
         /// <summary>
         /// Receives our own property change events to update IsValid.
         /// </summary>
-        void ProfilingTargetView_PropertyChanged(object sender, PropertyChangedEventArgs e) {
+        void ProfilingTargetView_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
             Debug.Assert(sender == this);
 
-            if (e.PropertyName != "IsValid") {
+            if (e.PropertyName != "IsValid")
+            {
                 IsValid = (IsProjectSelected != IsStandaloneSelected) &&
                     (IsProjectSelected ?
                         Project != null :
@@ -237,7 +274,8 @@ namespace Microsoft.PythonTools.Profiling {
         /// <summary>
         /// Propagate property change events from Standalone.
         /// </summary>
-        void Standalone_PropertyChanged(object sender, PropertyChangedEventArgs e) {
+        void Standalone_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
             Debug.Assert(Standalone == sender);
             OnPropertyChanged("Standalone");
         }
@@ -246,27 +284,35 @@ namespace Microsoft.PythonTools.Profiling {
         /// <summary>
         /// True if all settings are valid; otherwise, false.
         /// </summary>
-        public bool IsValid {
-            get {
+        public bool IsValid
+        {
+            get
+            {
                 return _isValid;
             }
-            private set {
-                if (_isValid != value) {
+            private set
+            {
+                if (_isValid != value)
+                {
                     _isValid = value;
                     OnPropertyChanged("IsValid");
                 }
             }
         }
 
-        public string StartText {
-            get {
+        public string StartText
+        {
+            get
+            {
                 return _startText;
             }
         }
 
-        private void OnPropertyChanged(string propertyName) {
+        private void OnPropertyChanged(string propertyName)
+        {
             var evt = PropertyChanged;
-            if (evt != null) {
+            if (evt != null)
+            {
                 evt(this, new PropertyChangedEventArgs(propertyName));
             }
         }

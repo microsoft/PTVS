@@ -14,37 +14,41 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-
-namespace Microsoft.CookiecutterTools.Telemetry {
+namespace Microsoft.CookiecutterTools.Telemetry
+{
     /// <summary>
     /// Represents telemetry operations in cookiecutter.
     /// </summary>
-    internal sealed class CookiecutterTelemetry : ICookiecutterTelemetry {
+    internal sealed class CookiecutterTelemetry : ICookiecutterTelemetry
+    {
         public static ICookiecutterTelemetry Current { get; set; }
 
         /// <summary>
         /// Area names show up as part of telemetry event names like:
         ///   VS/CookiecutterTools/[area]/[event]
         /// </summary>
-        internal static class TelemetryArea {
+        internal static class TelemetryArea
+        {
             public const string Prereqs = "Prereqs";
             public const string Search = "Search";
             public const string Template = "Template";
         }
 
-        internal class PrereqsEvents {
+        internal class PrereqsEvents
+        {
             public const string Python = "Python";
             public const string Install = "Install";
         }
 
-        internal class SearchEvents {
+        internal class SearchEvents
+        {
             public const string Load = "Load";
             public const string More = "More";
             public const string CheckUpdate = "CheckUpdate";
         }
 
-        internal class TemplateEvents {
+        internal class TemplateEvents
+        {
             public const string Clone = "Clone";
             public const string Load = "Load";
             public const string Run = "Run";
@@ -53,19 +57,23 @@ namespace Microsoft.CookiecutterTools.Telemetry {
             public const string AddToProject = "AddToProject";
         }
 
-        public static void Initialize(ITelemetryService service = null) {
-            if (Current == null) {
+        public static void Initialize(ITelemetryService service = null)
+        {
+            if (Current == null)
+            {
                 Current = new CookiecutterTelemetry(service);
             }
         }
 
-        public CookiecutterTelemetry(ITelemetryService service = null) {
+        public CookiecutterTelemetry(ITelemetryService service = null)
+        {
             TelemetryService = service ?? VsTelemetryService.Current;
         }
 
         public ITelemetryService TelemetryService { get; }
 
-        public void Dispose() {
+        public void Dispose()
+        {
             var disp = TelemetryService as IDisposable;
             disp?.Dispose();
         }

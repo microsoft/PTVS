@@ -14,14 +14,14 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Windows;
-
-namespace Microsoft.CookiecutterTools.View {
-    class PointEventArgs : EventArgs {
+namespace Microsoft.CookiecutterTools.View
+{
+    class PointEventArgs : EventArgs
+    {
         public Point Point { get; }
 
-        public PointEventArgs(Point point) {
+        public PointEventArgs(Point point)
+        {
             Point = point;
         }
     }

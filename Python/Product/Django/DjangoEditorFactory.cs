@@ -14,14 +14,14 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Runtime.InteropServices;
-
-namespace Microsoft.PythonTools.Django {
+namespace Microsoft.PythonTools.Django
+{
     [Guid(GuidList.guidDjangoEditorFactoryString)]
-    public class DjangoEditorFactory : WebEditorFactory {
+    public class DjangoEditorFactory : WebEditorFactory
+    {
         public DjangoEditorFactory(DjangoPackage package)
-            : base(package, GuidList.guidDjangoEditorFactory, typeof(DjangoLanguageInfo).GUID) {
+            : base(package, GuidList.guidDjangoEditorFactory, typeof(DjangoLanguageInfo).GUID)
+        {
         }
     }
 }

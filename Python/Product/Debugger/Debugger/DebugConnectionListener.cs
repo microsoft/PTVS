@@ -21,7 +21,6 @@ using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
-using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using LDP = Microsoft.PythonTools.Debugger.LegacyDebuggerProtocol;

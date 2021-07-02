@@ -19,7 +19,6 @@ using System.Threading;
 using System.Windows;
 using System.Windows.Automation;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.VisualStudioTools;
 
 namespace TestUtilities.UI {
     public class PythonTestExplorer : AutomationWrapper {

@@ -14,14 +14,14 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Windows.Forms;
-
-namespace Microsoft.PythonTools.Django.Project {
-    public partial class DjangoPropertyPageControl : UserControl {
+namespace Microsoft.PythonTools.Django.Project
+{
+    public partial class DjangoPropertyPageControl : UserControl
+    {
         private readonly DjangoPropertyPage _properties;
 
-        private DjangoPropertyPageControl() {
+        private DjangoPropertyPageControl()
+        {
             InitializeComponent();
 
             _toolTip.SetToolTip(_settingsModule, Resources.DjangoSettingsModuleHelp);
@@ -32,22 +32,27 @@ namespace Microsoft.PythonTools.Django.Project {
         }
 
         internal DjangoPropertyPageControl(DjangoPropertyPage properties)
-            : this() {
+            : this()
+        {
             _properties = properties;
         }
 
-        public string SettingsModule {
+        public string SettingsModule
+        {
             get { return _settingsModule.Text; }
             set { _settingsModule.Text = value; }
         }
 
-        public string StaticUriPattern {
+        public string StaticUriPattern
+        {
             get { return _staticUri.Text; }
             set { _staticUri.Text = value; }
         }
 
-        private void Setting_TextChanged(object sender, EventArgs e) {
-            if (_properties != null) {
+        private void Setting_TextChanged(object sender, EventArgs e)
+        {
+            if (_properties != null)
+            {
                 _properties.IsDirty = true;
             }
         }

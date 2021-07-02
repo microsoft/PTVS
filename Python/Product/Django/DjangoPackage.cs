@@ -14,18 +14,10 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.ComponentModel.Design;
-using System.Diagnostics;
-using System.Globalization;
-using System.Runtime.InteropServices;
-using EnvDTE90a;
-using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.PythonTools.Django.Project;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Shell;
 
-namespace Microsoft.PythonTools.Django {
+namespace Microsoft.PythonTools.Django
+{
     /// <summary>
     /// This is the class that implements the package exposed by this assembly.
     ///
@@ -57,7 +49,8 @@ namespace Microsoft.PythonTools.Django {
     [ProvideObject(typeof(DjangoPropertyPage))]
     [ProvideProjectFactory(typeof(DjangoProjectFactory), "Django/Python", "", "pyproj", "pyproj", ".\\NullPath", LanguageVsTemplate = "Python")]
     [ProvideLanguageTemplates("{349C5851-65DF-11DA-9384-00065B846F21}", "Python", GuidList.guidDjangoPkgString, "Web", "Python Application Project Templates", "{888888a0-9f3d-457c-b088-3a5042f75d52}", ".py", "Python", "{9AF89C0F-85F6-4A20-9023-5D15D912F3B1}")]
-    public sealed class DjangoPackage : Package {
+    public sealed class DjangoPackage : Package
+    {
         internal const string DjangoTemplateLanguageId = "{918E5764-7026-4D57-918D-19D86AD73AC4}";
         internal const string DjangoExpressionEvaluatorGuid = "64F20547-C246-487F-83A6-587BC54BAB2F";
         internal static Guid DjangoTemplateLanguageGuid = new Guid(DjangoTemplateLanguageId);
@@ -70,7 +63,8 @@ namespace Microsoft.PythonTools.Django {
         /// not sited yet inside Visual Studio environment. The place to do all the other 
         /// initialization is the Initialize method.
         /// </summary>
-        public DjangoPackage() {
+        public DjangoPackage()
+        {
             Trace.WriteLine(string.Format(CultureInfo.CurrentCulture, "Entering constructor for: {0}", this.ToString()));
             Instance = this;
         }
@@ -83,7 +77,8 @@ namespace Microsoft.PythonTools.Django {
         /// Initialization of the package; this method is called right after the package is sited, so this is the place
         /// where you can put all the initilaization code that rely on services provided by VisualStudio.
         /// </summary>
-        protected override void Initialize() {
+        protected override void Initialize()
+        {
             Trace.WriteLine(string.Format(CultureInfo.CurrentCulture, "Entering Initialize() of: {0}", this.ToString()));
             base.Initialize();
 
@@ -98,7 +93,8 @@ namespace Microsoft.PythonTools.Django {
 
             // Add our command handlers for menu (commands must exist in the .vsct file)
             OleMenuCommandService mcs = GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
-            if (null != mcs) {
+            if (null != mcs)
+            {
                 // Create the command for the menu item.
                 CommandID menuCommandID = new CommandID(GuidList.guidDjangoCmdSet, (int)PkgCmdIDList.cmdidGotoTemplateSource);
                 MenuCommand menuItem = new MenuCommand(GotoTemplateSourceCode, menuCommandID);
@@ -106,7 +102,8 @@ namespace Microsoft.PythonTools.Django {
             }
         }
 
-        private void GotoTemplateSourceCode(object sender, EventArgs args) {
+        private void GotoTemplateSourceCode(object sender, EventArgs args)
+        {
             var dte = (EnvDTE.DTE)GetService(typeof(EnvDTE.DTE));
 
             var curFrame = (StackFrame2)dte.Debugger.CurrentStackFrame;
@@ -118,7 +115,8 @@ namespace Microsoft.PythonTools.Django {
             var processId = process.Process.ProcessID;
 
             var mappingDoc = AD7Engine.GetCodeMappingDocument(processId, threadId, (int)(frameId - 1));
-            if (mappingDoc != null) {
+            if (mappingDoc != null)
+            {
                 var debugger = (IVsDebugger2)GetService(typeof(IVsDebugger));
                 IVsTextView view;
                 ErrorHandler.ThrowOnFailure(debugger.ShowSource(mappingDoc, 1, 1, 1, 0, out view));
@@ -127,13 +125,15 @@ namespace Microsoft.PythonTools.Django {
 
         #endregion
 
-        internal static DjangoProject GetProject(IServiceProvider serviceProvider, string filename) {
+        internal static DjangoProject GetProject(IServiceProvider serviceProvider, string filename)
+        {
             IVsHierarchy hierarchy;
             IVsRunningDocumentTable rdt = serviceProvider.GetService(typeof(SVsRunningDocumentTable)) as IVsRunningDocumentTable;
             uint itemid;
             IntPtr docData = IntPtr.Zero;
             uint cookie;
-            try {
+            try
+            {
                 int hr = rdt.FindAndLockDocument((uint)_VSRDTFLAGS.RDT_ReadLock,
                     filename,
                     out hierarchy,
@@ -141,16 +141,21 @@ namespace Microsoft.PythonTools.Django {
                     out docData,
                     out cookie);
 
-                if (ErrorHandler.Succeeded(hr)) {
+                if (ErrorHandler.Succeeded(hr))
+                {
                     rdt.UnlockDocument((uint)_VSRDTFLAGS.RDT_ReadLock, cookie);
                 }
                 var res = hierarchy as IDjangoProject;
-                if (res != null) {
+                if (res != null)
+                {
                     return res.GetDjangoProject().Project;
                 }
                 return null;
-            } finally {
-                if (docData != IntPtr.Zero) {
+            }
+            finally
+            {
+                if (docData != IntPtr.Zero)
+                {
                     Marshal.Release(docData);
                 }
             }

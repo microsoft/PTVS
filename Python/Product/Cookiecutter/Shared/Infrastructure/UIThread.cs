@@ -14,27 +14,27 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Runtime.InteropServices;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.VisualStudio.Threading;
 using Task = System.Threading.Tasks.Task;
 
-namespace Microsoft.CookiecutterTools.Infrastructure {
-    class UIThread : UIThreadBase {
+namespace Microsoft.CookiecutterTools.Infrastructure
+{
+    class UIThread : UIThreadBase
+    {
         private readonly JoinableTaskFactory _joinableTaskFactory;
         private readonly JoinableTaskContext _joinableTaskContext;
 
-        public UIThread(JoinableTaskFactory joinableTaskFactory) {
+        public UIThread(JoinableTaskFactory joinableTaskFactory)
+        {
             _joinableTaskFactory = joinableTaskFactory;
             _joinableTaskContext = joinableTaskFactory.Context;
         }
 
         public override bool InvokeRequired => !_joinableTaskContext.IsOnMainThread;
 
-        public override void MustBeCalledFromUIThreadOrThrow() {
-            if (InvokeRequired) {
+        public override void MustBeCalledFromUIThreadOrThrow()
+        {
+            if (InvokeRequired)
+            {
                 const int RPC_E_WRONG_THREAD = unchecked((int)0x8001010E);
                 throw new COMException("Invalid cross-thread call", RPC_E_WRONG_THREAD);
             }
@@ -47,11 +47,16 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
         /// <remarks>
         /// If called from the UI thread, the action is executed synchronously.
         /// </remarks>
-        public override void Invoke(Action action) {
-            if (_joinableTaskContext.IsOnMainThread) {
+        public override void Invoke(Action action)
+        {
+            if (_joinableTaskContext.IsOnMainThread)
+            {
                 action();
-            } else {
-                _joinableTaskFactory.Run(async () => {
+            }
+            else
+            {
+                _joinableTaskFactory.Run(async () =>
+                {
                     await _joinableTaskFactory.SwitchToMainThreadAsync();
                     action();
                 });
@@ -66,12 +71,15 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
         /// If called from the UI thread, the function is evaluated 
         /// synchronously.
         /// </remarks>
-        public override T Invoke<T>(Func<T> func) {
-            if (_joinableTaskContext.IsOnMainThread) {
+        public override T Invoke<T>(Func<T> func)
+        {
+            if (_joinableTaskContext.IsOnMainThread)
+            {
                 return func();
             }
 
-            return _joinableTaskFactory.Run(async () => {
+            return _joinableTaskFactory.Run(async () =>
+            {
                 await _joinableTaskFactory.SwitchToMainThreadAsync();
                 return func();
             });
@@ -85,13 +93,16 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
         /// <remarks>
         /// If called from the UI thread, the action is executed synchronously.
         /// </remarks>
-        public override Task InvokeAsync(Action action) {
-            if (_joinableTaskContext.IsOnMainThread) {
+        public override Task InvokeAsync(Action action)
+        {
+            if (_joinableTaskContext.IsOnMainThread)
+            {
                 // Action is run synchronously, but we still return the task.
                 return Wrap(action);
             }
 
-            return _joinableTaskFactory.RunAsync(async () => {
+            return _joinableTaskFactory.RunAsync(async () =>
+            {
                 await _joinableTaskFactory.SwitchToMainThreadAsync();
                 action();
             }).Task;
@@ -105,13 +116,16 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
         /// If called from the UI thread, the function is evaluated 
         /// synchronously.
         /// </remarks>
-        public override Task<T> InvokeAsync<T>(Func<T> func) {
-            if (_joinableTaskContext.IsOnMainThread) {
+        public override Task<T> InvokeAsync<T>(Func<T> func)
+        {
+            if (_joinableTaskContext.IsOnMainThread)
+            {
                 // Function is run synchronously, but we still return the task.
                 return Wrap(func);
             }
 
-            return _joinableTaskFactory.RunAsync(async () => {
+            return _joinableTaskFactory.RunAsync(async () =>
+            {
                 await _joinableTaskFactory.SwitchToMainThreadAsync();
                 return func();
             }).Task;
@@ -124,20 +138,24 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
         /// <remarks>
         /// If called from the UI thread, the action is executed synchronously.
         /// </remarks>
-        public override Task InvokeAsync(Action action, CancellationToken cancellationToken) {
-            if (!cancellationToken.CanBeCanceled) {
+        public override Task InvokeAsync(Action action, CancellationToken cancellationToken)
+        {
+            if (!cancellationToken.CanBeCanceled)
+            {
                 // ReSharper disable once MethodSupportsCancellation
                 return InvokeAsync(action);
             }
 
             cancellationToken.ThrowIfCancellationRequested();
 
-            if (_joinableTaskContext.IsOnMainThread) {
+            if (_joinableTaskContext.IsOnMainThread)
+            {
                 // Action is run synchronously, but we still return the task.
                 return Wrap(action);
             }
 
-            return RunAsyncOnMainThread<object>(_joinableTaskFactory, () => {
+            return RunAsyncOnMainThread<object>(_joinableTaskFactory, () =>
+            {
                 action();
                 return null;
             }, cancellationToken);
@@ -151,15 +169,18 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
         /// If called from the UI thread, the function is evaluated 
         /// synchronously.
         /// </remarks>
-        public override Task<T> InvokeAsync<T>(Func<T> func, CancellationToken cancellationToken) {
-            if (!cancellationToken.CanBeCanceled) {
+        public override Task<T> InvokeAsync<T>(Func<T> func, CancellationToken cancellationToken)
+        {
+            if (!cancellationToken.CanBeCanceled)
+            {
                 // ReSharper disable once MethodSupportsCancellation
                 return InvokeAsync(func);
             }
 
             cancellationToken.ThrowIfCancellationRequested();
 
-            if (_joinableTaskContext.IsOnMainThread) {
+            if (_joinableTaskContext.IsOnMainThread)
+            {
                 // Action is run synchronously, but we still return the task.
                 return Wrap(func);
             }
@@ -176,9 +197,12 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
         /// If called from the UI thread, the function is evaluated 
         /// synchronously.
         /// </remarks>
-        public override Task InvokeTask(Func<Task> func) {
-            if (InvokeRequired) {
-                return _joinableTaskFactory.RunAsync(async () => {
+        public override Task InvokeTask(Func<Task> func)
+        {
+            if (InvokeRequired)
+            {
+                return _joinableTaskFactory.RunAsync(async () =>
+                {
                     await _joinableTaskFactory.SwitchToMainThreadAsync();
                     await func();
                 }).Task;
@@ -197,9 +221,12 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
         /// If called from the UI thread, the function is evaluated 
         /// synchronously.
         /// </remarks>
-        public override Task<T> InvokeTask<T>(Func<Task<T>> func) {
-            if (InvokeRequired) {
-                return _joinableTaskFactory.RunAsync(async () => {
+        public override Task<T> InvokeTask<T>(Func<Task<T>> func)
+        {
+            if (InvokeRequired)
+            {
+                return _joinableTaskFactory.RunAsync(async () =>
+                {
                     await _joinableTaskFactory.SwitchToMainThreadAsync();
                     return await func();
                 }).Task;
@@ -211,38 +238,57 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
 
         #region Helper Functions
 
-        private static Task Wrap(Action action) {
-            try {
+        private static Task Wrap(Action action)
+        {
+            try
+            {
                 action();
                 return Task.CompletedTask;
-            } catch (OperationCanceledException oce) {
+            }
+            catch (OperationCanceledException oce)
+            {
                 return Task.FromCanceled(oce.CancellationToken);
-            } catch (Exception ex) {
+            }
+            catch (Exception ex)
+            {
                 return Task.FromException(ex);
             }
         }
 
-        private static Task<T> Wrap<T>(Func<T> func) {
-            try {
+        private static Task<T> Wrap<T>(Func<T> func)
+        {
+            try
+            {
                 return Task.FromResult(func());
-            } catch (OperationCanceledException oce) {
+            }
+            catch (OperationCanceledException oce)
+            {
                 return Task.FromCanceled<T>(oce.CancellationToken);
-            } catch (Exception ex) {
+            }
+            catch (Exception ex)
+            {
                 return Task.FromException<T>(ex);
             }
         }
 
-        private static Task<T> RunAsyncOnMainThread<T>(JoinableTaskFactory joinableTaskFactory, Func<T> func, CancellationToken cancellationToken) {
+        private static Task<T> RunAsyncOnMainThread<T>(JoinableTaskFactory joinableTaskFactory, Func<T> func, CancellationToken cancellationToken)
+        {
             var tcs = new TaskCompletionSource<T>();
             tcs.RegisterForCancellation(cancellationToken).UnregisterOnCompletion(tcs.Task);
 
-            joinableTaskFactory.RunAsync(async () => {
-                try {
+            joinableTaskFactory.RunAsync(async () =>
+            {
+                try
+                {
                     await joinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
                     tcs.TrySetResult(func());
-                } catch (OperationCanceledException oce) {
+                }
+                catch (OperationCanceledException oce)
+                {
                     tcs.TrySetCanceled(oce.CancellationToken);
-                } catch (Exception ex) {
+                }
+                catch (Exception ex)
+                {
                     tcs.TrySetException(ex);
                 }
             });

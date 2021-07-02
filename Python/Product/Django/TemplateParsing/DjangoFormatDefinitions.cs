@@ -14,21 +14,19 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.ComponentModel.Composition;
-using System.Windows.Media;
 using Microsoft.PythonTools.Django.Intellisense;
-using Microsoft.VisualStudio.Language.StandardClassification;
-using Microsoft.VisualStudio.Text.Classification;
-using Microsoft.VisualStudio.Utilities;
 
-namespace Microsoft.PythonTools.Django.TemplateParsing {
+namespace Microsoft.PythonTools.Django.TemplateParsing
+{
     [Export(typeof(EditorFormatDefinition))]
     [ClassificationType(ClassificationTypeNames = DjangoPredefinedClassificationTypeNames.TemplateTag)]
     [Name(DjangoPredefinedClassificationTypeNames.TemplateTag)]
     [UserVisible(true)]
     [Order(After = LanguagePriority.NaturalLanguage, Before = LanguagePriority.FormalLanguage)]
-    internal sealed class OperatorFormat : ClassificationFormatDefinition {
-        public OperatorFormat() {
+    internal sealed class OperatorFormat : ClassificationFormatDefinition
+    {
+        public OperatorFormat()
+        {
             DisplayName = Resources.DjangoTemplateTag;
             ForegroundColor = Color.FromRgb(0x00, 0x80, 0x80);
         }

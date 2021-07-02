@@ -14,17 +14,17 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Runtime.InteropServices;
-
-namespace Microsoft.CookiecutterTools.Infrastructure {
-    static partial class NativeMethods {
+namespace Microsoft.CookiecutterTools.Infrastructure
+{
+    static partial class NativeMethods
+    {
         public const int OLECMDERR_E_NOTSUPPORTED = unchecked((int)0x80040100);
         public const int OLECMDERR_E_CANCELED = -2147221245;
         public const int OLECMDERR_E_UNKNOWNGROUP = unchecked((int)0x80040104);
 
 #pragma warning disable 0649
-        struct _OLECMDTEXT {
+        struct _OLECMDTEXT
+        {
             public uint cmdtextf;
             public uint cwActual;
             public uint cwBuf;
@@ -32,33 +32,45 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
         }
 #pragma warning restore 0649
 
-        public struct OLECMDTEXT {
+        public struct OLECMDTEXT
+        {
             private readonly IntPtr _ptr;
             private _OLECMDTEXT _value;
 
-            public OLECMDTEXT(IntPtr ptr) {
+            public OLECMDTEXT(IntPtr ptr)
+            {
                 _ptr = ptr;
-                if (_ptr != IntPtr.Zero) {
+                if (_ptr != IntPtr.Zero)
+                {
                     _value = Marshal.PtrToStructure<_OLECMDTEXT>(_ptr);
-                } else {
+                }
+                else
+                {
                     _value = default(_OLECMDTEXT);
                 }
             }
 
-            private void Write() {
+            private void Write()
+            {
                 Marshal.PtrToStructure(_ptr, _value);
             }
 
-            public string Text {
-                get {
-                    if (_ptr == IntPtr.Zero || _value.rgwz == IntPtr.Zero) {
+            public string Text
+            {
+                get
+                {
+                    if (_ptr == IntPtr.Zero || _value.rgwz == IntPtr.Zero)
+                    {
                         return null;
                     }
                     return Marshal.PtrToStringUni(_value.rgwz, (int)_value.cwActual - 1);
                 }
-                set {
-                    if (_ptr == IntPtr.Zero || _value.rgwz == IntPtr.Zero) {
-                        if (!string.IsNullOrEmpty(value)) {
+                set
+                {
+                    if (_ptr == IntPtr.Zero || _value.rgwz == IntPtr.Zero)
+                    {
+                        if (!string.IsNullOrEmpty(value))
+                        {
                             throw new ArgumentException("Can only set Text when it is initially set");
                         }
                         return;
@@ -74,15 +86,18 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
                 }
             }
 
-            public bool IsName {
+            public bool IsName
+            {
                 get { return _ptr != IntPtr.Zero && (_value.cmdtextf & (uint)OLECMDTEXTF.OLECMDTEXTF_NAME) != 0; }
             }
 
-            public bool IsStatus {
+            public bool IsStatus
+            {
                 get { return _ptr != IntPtr.Zero && (_value.cmdtextf & (uint)OLECMDTEXTF.OLECMDTEXTF_STATUS) != 0; }
             }
 
-            enum OLECMDTEXTF {
+            enum OLECMDTEXTF
+            {
                 /// <summary>No flag</summary>
                 OLECMDTEXTF_NONE = 0,
                 /// <summary>The name of the command is required.</summary>

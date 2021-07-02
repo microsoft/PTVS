@@ -23,7 +23,6 @@ using EnvDTE90;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.VisualStudioTools;
 using TestUtilities.UI;
 using SD = System.Diagnostics;
 

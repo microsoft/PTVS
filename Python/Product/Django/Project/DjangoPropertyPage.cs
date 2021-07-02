@@ -14,52 +14,59 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Runtime.InteropServices;
-using System.Windows.Forms;
-using Microsoft.VisualStudioTools.Project;
-
-namespace Microsoft.PythonTools.Django.Project {
+namespace Microsoft.PythonTools.Django.Project
+{
     [Guid(GuidList.guidDjangoPropertyPageString)]
-    class DjangoPropertyPage : CommonPropertyPage {
+    class DjangoPropertyPage : CommonPropertyPage
+    {
         private readonly DjangoPropertyPageControl _control;
 
         public const string SettingModulesSetting = "DjangoSettingsModule";
         public const string StaticUriPatternSetting = "StaticUriPattern";
 
-        public DjangoPropertyPage() {
+        public DjangoPropertyPage()
+        {
             _control = new DjangoPropertyPageControl(this);
         }
 
-        protected override void Dispose(bool disposing) {
-            if (disposing) {
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
                 _control.Dispose();
             }
             base.Dispose(disposing);
         }
 
-        public override Control Control {
+        public override Control Control
+        {
             get { return _control; }
         }
 
-        public override void Apply() {
+        public override void Apply()
+        {
             SetProjectProperty(SettingModulesSetting, _control.SettingsModule);
             SetProjectProperty(StaticUriPatternSetting, _control.StaticUriPattern);
             IsDirty = false;
         }
 
-        public override void LoadSettings() {
+        public override void LoadSettings()
+        {
             Loading = true;
-            try {
+            try
+            {
                 _control.SettingsModule = GetProjectProperty(SettingModulesSetting);
                 _control.StaticUriPattern = GetProjectProperty(StaticUriPatternSetting);
                 IsDirty = false;
-            } finally {
+            }
+            finally
+            {
                 Loading = false;
             }
         }
 
-        public override string Name {
+        public override string Name
+        {
             get { return Resources.DjangoPropertyPageTitle; }
         }
     }

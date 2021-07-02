@@ -21,16 +21,13 @@ using System.Linq;
 using System.Windows.Automation;
 using EnvDTE;
 using Microsoft.PythonTools;
-using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Options;
-using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.InteractiveWindow.Shell;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.VisualStudioTools;
 using TestUtilities.Python;
 using Thread = System.Threading.Thread;
 

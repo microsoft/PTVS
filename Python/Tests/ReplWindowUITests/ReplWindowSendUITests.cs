@@ -19,8 +19,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;

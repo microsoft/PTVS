@@ -14,29 +14,20 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Diagnostics;
-using System.Globalization;
-using System.IO;
-using System.Runtime.InteropServices;
-using System.Security.Permissions;
-using System.Windows;
-using System.Xml;
-using Microsoft.PythonTools.Infrastructure;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Shell;
-
-namespace Microsoft.PythonTools.Profiling {
+namespace Microsoft.PythonTools.Profiling
+{
     /// <summary>
     /// Factory for creating our editor object. Extends from the IVsEditoryFactory interface
     /// </summary>
     [Guid(GuidList.guidEditorFactoryString)]
-    sealed class ProfilingSessionEditorFactory : IVsEditorFactory, IDisposable {
+    sealed class ProfilingSessionEditorFactory : IVsEditorFactory, IDisposable
+    {
         private readonly PythonProfilingPackage _editorPackage;
         private ServiceProvider _vsServiceProvider;
 
 
-        public ProfilingSessionEditorFactory(PythonProfilingPackage package) {
+        public ProfilingSessionEditorFactory(PythonProfilingPackage package)
+        {
             Trace.WriteLine(string.Format(CultureInfo.CurrentCulture, "Entering {0} constructor", this.ToString()));
 
             _editorPackage = package;
@@ -47,8 +38,10 @@ namespace Microsoft.PythonTools.Profiling {
         /// also need to implement IDisposable to make sure that the ServiceProvider's
         /// Dispose method gets called.
         /// </summary>
-        public void Dispose() {
-            if (_vsServiceProvider != null) {
+        public void Dispose()
+        {
+            if (_vsServiceProvider != null)
+            {
                 _vsServiceProvider.Dispose();
             }
         }
@@ -61,12 +54,14 @@ namespace Microsoft.PythonTools.Profiling {
         /// <param name="psp">pointer to the service provider. Can be used to obtain instances of other interfaces
         /// </param>
         /// <returns></returns>
-        public int SetSite(Microsoft.VisualStudio.OLE.Interop.IServiceProvider psp) {
+        public int SetSite(Microsoft.VisualStudio.OLE.Interop.IServiceProvider psp)
+        {
             _vsServiceProvider = new ServiceProvider(psp);
             return VSConstants.S_OK;
         }
 
-        public object GetService(Type serviceType) {
+        public object GetService(Type serviceType)
+        {
             return _vsServiceProvider.GetService(serviceType);
         }
 
@@ -99,7 +94,8 @@ namespace Microsoft.PythonTools.Profiling {
         //                    {...LOGVIEWID_Debugging...} = s ''
         //                    {...LOGVIEWID_Designer...} = s 'Form'
         //
-        public int MapLogicalView(ref Guid rguidLogicalView, out string pbstrPhysicalView) {
+        public int MapLogicalView(ref Guid rguidLogicalView, out string pbstrPhysicalView)
+        {
             pbstrPhysicalView = null;    // initialize out parameter
 
             // we support only a single physical view
@@ -109,7 +105,8 @@ namespace Microsoft.PythonTools.Profiling {
                 return VSConstants.E_NOTIMPL;   // you must return E_NOTIMPL for any unrecognized rguidLogicalView values
         }
 
-        public int Close() {
+        public int Close()
+        {
             return VSConstants.S_OK;
         }
 
@@ -156,7 +153,8 @@ namespace Microsoft.PythonTools.Profiling {
                         out System.IntPtr ppunkDocData,
                         out string pbstrEditorCaption,
                         out Guid pguidCmdUI,
-                        out int pgrfCDW) {
+                        out int pgrfCDW)
+        {
             Trace.WriteLine(string.Format(CultureInfo.CurrentCulture, "Entering {0} CreateEditorInstace()", this.ToString()));
 
             // Initialize to null
@@ -167,10 +165,12 @@ namespace Microsoft.PythonTools.Profiling {
             pbstrEditorCaption = null;
 
             // Validate inputs
-            if ((grfCreateDoc & (VSConstants.CEF_OPENFILE | VSConstants.CEF_SILENT)) == 0) {
+            if ((grfCreateDoc & (VSConstants.CEF_OPENFILE | VSConstants.CEF_SILENT)) == 0)
+            {
                 return VSConstants.E_INVALIDARG;
             }
-            if (punkDocDataExisting != IntPtr.Zero) {
+            if (punkDocDataExisting != IntPtr.Zero)
+            {
                 return VSConstants.VS_E_INCOMPATIBLEDOCDATA;
             }
 
@@ -178,16 +178,22 @@ namespace Microsoft.PythonTools.Profiling {
             var perfWin = _editorPackage.JoinableTaskFactory.Run(() => _editorPackage.ShowPerformanceExplorerAsync());
 
             ProfilingTarget target;
-            try {
+            try
+            {
                 var settings = new XmlReaderSettings { XmlResolver = null };
                 using (var fs = new FileStream(pszMkDocument, FileMode.Open))
-                using (var reader = XmlReader.Create(fs, settings)) {
+                using (var reader = XmlReader.Create(fs, settings))
+                {
                     target = (ProfilingTarget)ProfilingTarget.Serializer.Deserialize(reader);
                 }
-            } catch (IOException e) {
+            }
+            catch (IOException e)
+            {
                 MessageBox.Show(Strings.FailedToOpenPerformanceSessionFile.FormatUI(pszMkDocument, e.Message), Strings.ProductTitle);
                 return VSConstants.E_FAIL;
-            } catch (InvalidOperationException e) {
+            }
+            catch (InvalidOperationException e)
+            {
                 MessageBox.Show(Strings.FailedToReadPerformanceSession.FormatUI(pszMkDocument, e.Message), Strings.ProductTitle);
                 return VSConstants.E_FAIL;
             }

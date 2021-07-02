@@ -14,23 +14,27 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Collections.Generic;
-
-namespace Microsoft.PythonTools.Django.TemplateParsing {
-    internal class TemplateBlockHandler : ArtifactBasedBlockHandler {
+namespace Microsoft.PythonTools.Django.TemplateParsing
+{
+    internal class TemplateBlockHandler : ArtifactBasedBlockHandler
+    {
         private readonly List<TemplateArtifact> _trackedArtifacts = new List<TemplateArtifact>();
 
         public TemplateBlockHandler(HtmlEditorTree editorTree)
-            : base(editorTree, ContentTypeManager.GetContentType(TemplateHtmlContentType.ContentTypeName)) {
+            : base(editorTree, ContentTypeManager.GetContentType(TemplateHtmlContentType.ContentTypeName))
+        {
         }
 
-        protected override BufferGenerator CreateBufferGenerator() {
+        protected override BufferGenerator CreateBufferGenerator()
+        {
             return new TemplateBufferGenerator(EditorTree, LanguageBlocks);
         }
 
-        protected override void OnUpdateCompleted(object sender, HtmlTreeUpdatedEventArgs e) {
+        protected override void OnUpdateCompleted(object sender, HtmlTreeUpdatedEventArgs e)
+        {
             base.OnUpdateCompleted(sender, e);
-            if (e.FullParse) {
+            if (e.FullParse)
+            {
                 UpdateBuffer(force: true);
             }
         }

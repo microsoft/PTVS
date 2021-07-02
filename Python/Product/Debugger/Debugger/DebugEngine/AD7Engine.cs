@@ -24,7 +24,6 @@ using System.Threading;
 using System.Web;
 using System.Windows.Forms;
 using Microsoft.PythonTools.Debugger.Remote;
-using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Debugger.Interop;

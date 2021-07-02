@@ -15,8 +15,6 @@
 // permissions and limitations under the License.
 
 using System;
-using Microsoft.PythonTools.Intellisense;
-using Microsoft.PythonTools.Project;
 
 namespace TestUtilities.UI.Python {
     static class PythonProjectExtensions {

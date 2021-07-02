@@ -14,63 +14,70 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.IO;
-using System.Linq;
-using System.Xml.Serialization;
-
-namespace Microsoft.PythonTools.Profiling {
+namespace Microsoft.PythonTools.Profiling
+{
     // XmlSerializer requires these types to be public
     [Serializable]
-    public sealed class ProfilingTarget {
+    public sealed class ProfilingTarget
+    {
         internal static XmlSerializer Serializer = new XmlSerializer(typeof(ProfilingTarget));
 
         [XmlElement("ProjectTarget")]
-        public ProjectTarget ProjectTarget {
+        public ProjectTarget ProjectTarget
+        {
             get;
             set;
         }
 
         [XmlElement("StandaloneTarget")]
-        public StandaloneTarget StandaloneTarget {
+        public StandaloneTarget StandaloneTarget
+        {
             get;
             set;
         }
 
         [XmlElement("Reports")]
-        public Reports Reports {
+        public Reports Reports
+        {
             get;
             set;
         }
 
         [XmlElement()]
-        public bool UseVTune {
+        public bool UseVTune
+        {
             get;
             set;
         }
 
-        internal string GetProfilingName(IServiceProvider serviceProvider, out bool save) {
+        internal string GetProfilingName(IServiceProvider serviceProvider, out bool save)
+        {
             string baseName = null;
-            if (ProjectTarget != null) {
-                if (!String.IsNullOrEmpty(ProjectTarget.FriendlyName)) {
+            if (ProjectTarget != null)
+            {
+                if (!String.IsNullOrEmpty(ProjectTarget.FriendlyName))
+                {
                     baseName = ProjectTarget.FriendlyName;
                 }
-            } else if (StandaloneTarget != null) {
-                if (!String.IsNullOrEmpty(StandaloneTarget.Script)) {
+            }
+            else if (StandaloneTarget != null)
+            {
+                if (!String.IsNullOrEmpty(StandaloneTarget.Script))
+                {
                     baseName = Path.GetFileNameWithoutExtension(StandaloneTarget.Script);
                 }
             }
 
-            if (baseName == null) {
+            if (baseName == null)
+            {
                 baseName = Strings.PerformanceBaseFileName;
             }
 
             baseName = baseName + ".pyperf";
 
             var dte = (EnvDTE.DTE)serviceProvider.GetService(typeof(EnvDTE.DTE));
-            if (dte.Solution.IsOpen && !String.IsNullOrEmpty(dte.Solution.FullName)) {
+            if (dte.Solution.IsOpen && !String.IsNullOrEmpty(dte.Solution.FullName))
+            {
                 save = true;
                 return Path.Combine(Path.GetDirectoryName(dte.Solution.FullName), baseName);
             }
@@ -79,17 +86,21 @@ namespace Microsoft.PythonTools.Profiling {
             return baseName;
         }
 
-        internal ProfilingTarget Clone() {
+        internal ProfilingTarget Clone()
+        {
             var res = new ProfilingTarget();
-            if (ProjectTarget != null) {
+            if (ProjectTarget != null)
+            {
                 res.ProjectTarget = ProjectTarget.Clone();
             }
 
-            if (StandaloneTarget != null) {
+            if (StandaloneTarget != null)
+            {
                 res.StandaloneTarget = StandaloneTarget.Clone();
             }
 
-            if (Reports != null) {
+            if (Reports != null)
+            {
                 res.Reports = Reports.Clone();
             }
 
@@ -98,10 +109,14 @@ namespace Microsoft.PythonTools.Profiling {
             return res;
         }
 
-        internal static bool IsSame(ProfilingTarget self, ProfilingTarget other) {
-            if (self == null) {
+        internal static bool IsSame(ProfilingTarget self, ProfilingTarget other)
+        {
+            if (self == null)
+            {
                 return other == null;
-            } else if (other != null) {
+            }
+            else if (other != null)
+            {
                 return ProjectTarget.IsSame(self.ProjectTarget, other.ProjectTarget) &&
                     StandaloneTarget.IsSame(self.StandaloneTarget, other.StandaloneTarget);
             }
@@ -111,30 +126,38 @@ namespace Microsoft.PythonTools.Profiling {
     }
 
     [Serializable]
-    public sealed class ProjectTarget {
+    public sealed class ProjectTarget
+    {
         [XmlElement("TargetProject")]
-        public Guid TargetProject {
+        public Guid TargetProject
+        {
             get;
             set;
         }
 
         [XmlElement("FriendlyName")]
-        public string FriendlyName {
+        public string FriendlyName
+        {
             get;
             set;
         }
 
-        internal ProjectTarget Clone() {
+        internal ProjectTarget Clone()
+        {
             var res = new ProjectTarget();
             res.TargetProject = TargetProject;
             res.FriendlyName = FriendlyName;
             return res;
         }
 
-        internal static bool IsSame(ProjectTarget self, ProjectTarget other) {
-            if (self == null) {
+        internal static bool IsSame(ProjectTarget self, ProjectTarget other)
+        {
+            if (self == null)
+            {
                 return other == null;
-            } else if (other != null) {
+            }
+            else if (other != null)
+            {
                 return self.TargetProject == other.TargetProject;
             }
             return false;
@@ -142,40 +165,48 @@ namespace Microsoft.PythonTools.Profiling {
     }
 
     [Serializable]
-    public sealed class StandaloneTarget {
+    public sealed class StandaloneTarget
+    {
         [XmlElement(ElementName = "PythonInterpreter")]
-        public PythonInterpreter PythonInterpreter {
+        public PythonInterpreter PythonInterpreter
+        {
             get;
             set;
         }
 
         [XmlElement(ElementName = "InterpreterPath")]
-        public string InterpreterPath {
+        public string InterpreterPath
+        {
             get;
             set;
         }
 
         [XmlElement("WorkingDirectory")]
-        public string WorkingDirectory {
+        public string WorkingDirectory
+        {
             get;
             set;
         }
 
         [XmlElement("Script")]
-        public string Script {
+        public string Script
+        {
             get;
             set;
         }
 
         [XmlElement("Arguments")]
-        public string Arguments {
+        public string Arguments
+        {
             get;
             set;
         }
 
-        internal StandaloneTarget Clone() {
+        internal StandaloneTarget Clone()
+        {
             var res = new StandaloneTarget();
-            if (PythonInterpreter != null) {
+            if (PythonInterpreter != null)
+            {
                 res.PythonInterpreter = PythonInterpreter.Clone();
             }
 
@@ -187,10 +218,14 @@ namespace Microsoft.PythonTools.Profiling {
 
         }
 
-        internal static bool IsSame(StandaloneTarget self, StandaloneTarget other) {
-            if (self == null) {
+        internal static bool IsSame(StandaloneTarget self, StandaloneTarget other)
+        {
+            if (self == null)
+            {
                 return other == null;
-            } else if (other != null) {
+            }
+            else if (other != null)
+            {
                 return PythonInterpreter.IsSame(self.PythonInterpreter, other.PythonInterpreter) &&
                     self.InterpreterPath == other.InterpreterPath &&
                     self.WorkingDirectory == other.WorkingDirectory &&
@@ -201,61 +236,78 @@ namespace Microsoft.PythonTools.Profiling {
         }
     }
 
-    public sealed class PythonInterpreter {
+    public sealed class PythonInterpreter
+    {
         [XmlElement("Id")]
-        public string Id {
+        public string Id
+        {
             get;
             set;
         }
 
-        internal PythonInterpreter Clone() {
+        internal PythonInterpreter Clone()
+        {
             var res = new PythonInterpreter();
 
             res.Id = Id;
             return res;
         }
 
-        internal static bool IsSame(PythonInterpreter self, PythonInterpreter other) {
-            if (self == null) {
+        internal static bool IsSame(PythonInterpreter self, PythonInterpreter other)
+        {
+            if (self == null)
+            {
                 return other == null;
-            } else if (other != null) {
+            }
+            else if (other != null)
+            {
                 return self.Id == other.Id;
             }
             return false;
         }
     }
 
-    public sealed class Reports {
+    public sealed class Reports
+    {
         public Reports() { }
 
-        public Reports(Profiling.Report[] reports) {
+        public Reports(Profiling.Report[] reports)
+        {
             Report = reports;
         }
 
         [SuppressMessage("Microsoft.Performance", "CA1819:PropertiesShouldNotReturnArrays")]
         [XmlElement("Report")]
-        public Report[] Report {
-            get {
+        public Report[] Report
+        {
+            get
+            {
                 return AllReports.Values.ToArray();
             }
-            set {
+            set
+            {
                 AllReports = new SortedDictionary<uint, Report>();
-                for (uint i = 0; i < value.Length; i++) {
+                for (uint i = 0; i < value.Length; i++)
+                {
                     AllReports[i + SessionNode.StartingReportId] = value[i];
                 }
             }
         }
 
-        internal SortedDictionary<uint, Report> AllReports {
+        internal SortedDictionary<uint, Report> AllReports
+        {
             get;
             set;
         }
 
-        internal Reports Clone() {
+        internal Reports Clone()
+        {
             var res = new Reports();
-            if (Report != null) {
+            if (Report != null)
+            {
                 res.Report = new Report[Report.Length];
-                for (int i = 0; i < res.Report.Length; i++) {
+                for (int i = 0; i < res.Report.Length; i++)
+                {
                     res.Report[i] = Report[i].Clone();
                 }
             }
@@ -263,19 +315,23 @@ namespace Microsoft.PythonTools.Profiling {
         }
     }
 
-    public sealed class Report {
+    public sealed class Report
+    {
         public Report() { }
-        public Report(string filename) {
+        public Report(string filename)
+        {
             Filename = filename;
         }
 
         [XmlElement("Filename")]
-        public string Filename {
+        public string Filename
+        {
             get;
             set;
         }
 
-        internal Report Clone() {
+        internal Report Clone()
+        {
             var res = new Report();
             res.Filename = Filename;
             return res;

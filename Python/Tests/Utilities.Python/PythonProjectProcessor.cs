@@ -15,8 +15,6 @@
 // permissions and limitations under the License.
 
 using System.ComponentModel.Composition;
-using Microsoft.PythonTools;
-using Microsoft.PythonTools.Infrastructure;
 using TestUtilities.SharedProject;
 using MSBuild = Microsoft.Build.Evaluation;
 

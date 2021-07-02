@@ -20,7 +20,6 @@ using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading;
 using EnvDTE;
-using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.SharedProject;

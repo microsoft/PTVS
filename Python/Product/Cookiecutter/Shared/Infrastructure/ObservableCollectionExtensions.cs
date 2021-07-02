@@ -14,47 +14,56 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-
-namespace Microsoft.CookiecutterTools.Infrastructure {
-    public static class ObservableCollectionExtensions {
+namespace Microsoft.CookiecutterTools.Infrastructure
+{
+    public static class ObservableCollectionExtensions
+    {
         public static void Merge<T>(
             this ObservableCollection<T> left,
             IEnumerable<T> right,
             IEqualityComparer<T> compareId,
             IComparer<T> compareSortKey
-        ) {
+        )
+        {
             var toAdd = new SortedList<T, T>(compareSortKey);
             var toRemove = new Dictionary<T, int>(compareId);
             var alsoRemove = new List<int>();
             int index = 0;
-            foreach (var item in left) {
-                if (toRemove.ContainsKey(item)) {
+            foreach (var item in left)
+            {
+                if (toRemove.ContainsKey(item))
+                {
                     alsoRemove.Add(index);
-                } else {
+                }
+                else
+                {
                     toRemove[item] = index;
                 }
                 index += 1;
             }
 
-            foreach (var r in right.OrderBy(k => k, compareSortKey)) {
-                if (toRemove.TryGetValue(r, out index)) {
+            foreach (var r in right.OrderBy(k => k, compareSortKey))
+            {
+                if (toRemove.TryGetValue(r, out index))
+                {
                     toRemove.Remove(r);
-                } else {
+                }
+                else
+                {
                     toAdd[r] = r;
                 }
             }
 
-            foreach (var removeAt in toRemove.Values.Concat(alsoRemove).OrderByDescending(i => i)) {
+            foreach (var removeAt in toRemove.Values.Concat(alsoRemove).OrderByDescending(i => i))
+            {
                 left.RemoveAt(removeAt);
             }
 
             index = 0;
-            foreach (var item in toAdd.Values) {
-                while (index < left.Count && compareSortKey.Compare(left[index], item) <= 0) {
+            foreach (var item in toAdd.Values)
+            {
+                while (index < left.Count && compareSortKey.Compare(left[index], item) <= 0)
+                {
                     index += 1;
                 }
                 left.Insert(index, item);
@@ -69,37 +78,49 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
             Func<TRight, TLeft> project,
             IEqualityComparer<TKey> compareId,
             IComparer<TKey> compareSortKey
-        ) {
+        )
+        {
             var toAdd = new SortedList<TKey, TRight>(compareSortKey);
             var toRemove = new Dictionary<TKey, int>(compareId);
             var alsoRemove = new List<int>();
             int index = 0;
-            foreach (var item in left) {
+            foreach (var item in left)
+            {
                 var key = getLeftKey(item);
-                if (toRemove.ContainsKey(key)) {
+                if (toRemove.ContainsKey(key))
+                {
                     alsoRemove.Add(index);
-                } else {
+                }
+                else
+                {
                     toRemove[key] = index;
                 }
                 index += 1;
             }
 
-            foreach (var r in right.OrderBy(getRightKey, compareSortKey)) {
+            foreach (var r in right.OrderBy(getRightKey, compareSortKey))
+            {
                 var key = getRightKey(r);
-                if (toRemove.TryGetValue(key, out index)) {
+                if (toRemove.TryGetValue(key, out index))
+                {
                     toRemove.Remove(key);
-                } else {
+                }
+                else
+                {
                     toAdd[key] = r;
                 }
             }
 
-            foreach (var removeAt in toRemove.Values.Concat(alsoRemove).OrderByDescending(i => i)) {
+            foreach (var removeAt in toRemove.Values.Concat(alsoRemove).OrderByDescending(i => i))
+            {
                 left.RemoveAt(removeAt);
             }
 
             index = 0;
-            foreach (var item in toAdd.Values) {
-                while (index < left.Count && compareSortKey.Compare(getLeftKey(left[index]), getRightKey(item)) <= 0) {
+            foreach (var item in toAdd.Values)
+            {
+                while (index < left.Count && compareSortKey.Compare(getLeftKey(left[index]), getRightKey(item)) <= 0)
+                {
                     index += 1;
                 }
                 left.Insert(index, project(item));

@@ -14,22 +14,20 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.ComponentModel.Composition;
 using Microsoft.PythonTools.Django.Intellisense;
-using Microsoft.VisualStudio.Language.StandardClassification;
-using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Text.Classification;
-using Microsoft.VisualStudio.Utilities;
 
-namespace Microsoft.PythonTools.Django.TemplateParsing {
-    internal abstract class TemplateClassifierProviderBase : IClassifierProvider {
+namespace Microsoft.PythonTools.Django.TemplateParsing
+{
+    internal abstract class TemplateClassifierProviderBase : IClassifierProvider
+    {
         private readonly IContentType _contentType;
 
         internal readonly IClassificationType _classType, _templateClassType, _commentClassType,
                                               _identifierType, _literalType, _numberType, _dot,
                                               _keywordType, _excludedCode;
 
-        protected TemplateClassifierProviderBase(string contentTypeName, IContentTypeRegistryService contentTypeRegistryService, IClassificationTypeRegistryService classificationRegistry) {
+        protected TemplateClassifierProviderBase(string contentTypeName, IContentTypeRegistryService contentTypeRegistryService, IClassificationTypeRegistryService classificationRegistry)
+        {
             _contentType = contentTypeRegistryService.GetContentType(contentTypeName);
             _classType = classificationRegistry.GetClassificationType(PredefinedClassificationTypeNames.Operator);
             _templateClassType = classificationRegistry.GetClassificationType(DjangoPredefinedClassificationTypeNames.TemplateTag);
@@ -44,10 +42,12 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
 
         #region IClassifierProvider Members
 
-        public IClassifier GetClassifier(ITextBuffer textBuffer) {
+        public IClassifier GetClassifier(ITextBuffer textBuffer)
+        {
             TemplateClassifier res;
             if (!textBuffer.Properties.TryGetProperty<TemplateClassifier>(typeof(TemplateClassifier), out res) &&
-                textBuffer.ContentType.IsOfType(_contentType.TypeName)) {
+                textBuffer.ContentType.IsOfType(_contentType.TypeName))
+            {
                 res = new TemplateClassifier(this, textBuffer);
                 textBuffer.Properties.AddProperty(typeof(TemplateClassifier), res);
             }

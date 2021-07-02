@@ -14,37 +14,39 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.IO;
-using System.Runtime.InteropServices;
-using System.Security.Principal;
-
-namespace Microsoft.CookiecutterTools.Infrastructure {
-    public static class ShellUtils {
-        public static void DeleteDirectory(string path) {
+namespace Microsoft.CookiecutterTools.Infrastructure
+{
+    public static class ShellUtils
+    {
+        public static void DeleteDirectory(string path)
+        {
             NativeMethods.RecursivelyDeleteDirectory(path, silent: true);
         }
 
         /// <summary>
         /// Unmanaged API wrappers.
         /// </summary>
-        static class NativeMethods {
+        static class NativeMethods
+        {
             /// <summary>
             /// Recursively deletes a directory using the shell API which can 
             /// handle long file names
             /// </summary>
             /// <param name="dir"></param>
-            public static void RecursivelyDeleteDirectory(string dir, bool silent = false) {
+            public static void RecursivelyDeleteDirectory(string dir, bool silent = false)
+            {
                 SHFILEOPSTRUCT fileOp = new SHFILEOPSTRUCT();
                 fileOp.pFrom = dir + '\0';  // pFrom must be double null terminated
                 fileOp.wFunc = FO_Func.FO_DELETE;
                 fileOp.fFlags = FILEOP_FLAGS_ENUM.FOF_NOCONFIRMATION |
                     FILEOP_FLAGS_ENUM.FOF_NOERRORUI;
-                if (silent) {
+                if (silent)
+                {
                     fileOp.fFlags |= FILEOP_FLAGS_ENUM.FOF_SILENT;
                 }
                 int res = SHFileOperation(ref fileOp);
-                if (res != 0) {
+                if (res != 0)
+                {
                     throw new IOException("Failed to delete dir " + res);
                 }
             }
@@ -54,7 +56,8 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
 
 
             [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode, Pack = 2)]
-            struct SHFILEOPSTRUCT {
+            struct SHFILEOPSTRUCT
+            {
                 public IntPtr hwnd;
                 public FO_Func wFunc;
                 [MarshalAs(UnmanagedType.LPWStr)]
@@ -71,7 +74,8 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
             }
 
             [Flags]
-            private enum FILEOP_FLAGS_ENUM : ushort {
+            private enum FILEOP_FLAGS_ENUM : ushort
+            {
                 FOF_MULTIDESTFILES = 0x0001,
                 FOF_CONFIRMMOUSE = 0x0002,
                 FOF_SILENT = 0x0004,  // don't create progress/report
@@ -91,7 +95,8 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
                 FOF_NORECURSEREPARSE = 0x8000,  // treat reparse points as objects, not containers
             }
 
-            public enum FO_Func : uint {
+            public enum FO_Func : uint
+            {
                 FO_MOVE = 0x0001,
                 FO_COPY = 0x0002,
                 FO_DELETE = 0x0003,
@@ -119,7 +124,8 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
             [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
             internal static extern bool CreateSymbolicLink(string lpSymlinkFileName, string lpTargetFileName, SymbolicLink dwFlags);
 
-            internal enum SymbolicLink {
+            internal enum SymbolicLink
+            {
                 File = 0,
                 Directory = 1
             }
@@ -130,30 +136,43 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
             /// </summary>
             /// <param name="symlinkPath">Path to the symbolic link you wish to create.</param>
             /// <param name="targetPath">Path to the file/directory that the symbolic link should be pointing to.</param>
-            public static void CreateSymbolicLink(string symlinkPath, string targetPath) {
+            public static void CreateSymbolicLink(string symlinkPath, string targetPath)
+            {
                 // Pre-checks.
-                if (!(new WindowsPrincipal(WindowsIdentity.GetCurrent()).IsInRole(WindowsBuiltInRole.Administrator))) {
+                if (!(new WindowsPrincipal(WindowsIdentity.GetCurrent()).IsInRole(WindowsBuiltInRole.Administrator)))
+                {
                     throw new UnauthorizedAccessException("Process must be run in elevated permissions in order to create symbolic link.");
-                } else if (Directory.Exists(symlinkPath) || File.Exists(symlinkPath)) {
+                }
+                else if (Directory.Exists(symlinkPath) || File.Exists(symlinkPath))
+                {
                     throw new IOException("Path Already Exists.  We cannot create a symbolic link here");
                 }
 
                 // Create the correct symbolic link.
                 bool result;
-                if (File.Exists(targetPath)) {
+                if (File.Exists(targetPath))
+                {
                     result = CreateSymbolicLink(symlinkPath, targetPath, NativeMethods.SymbolicLink.File);
-                } else if (Directory.Exists(targetPath)) {
+                }
+                else if (Directory.Exists(targetPath))
+                {
                     result = CreateSymbolicLink(symlinkPath, targetPath, NativeMethods.SymbolicLink.Directory);
-                } else {
+                }
+                else
+                {
                     throw new FileNotFoundException("Target File/Directory was not found.  Cannot make a symbolic link.");
                 }
 
                 // Validate that we created a symbolic link.
                 // If we failed and the symlink doesn't exist throw an exception here.
-                if (!result) {
-                    if (!Directory.Exists(symlinkPath) && !File.Exists(symlinkPath)) {
+                if (!result)
+                {
+                    if (!Directory.Exists(symlinkPath) && !File.Exists(symlinkPath))
+                    {
                         throw new FileNotFoundException("Unable to find symbolic link after creation.");
-                    } else {
+                    }
+                    else
+                    {
                         Marshal.ThrowExceptionForHR(Marshal.GetHRForLastWin32Error());
                     }
                 }

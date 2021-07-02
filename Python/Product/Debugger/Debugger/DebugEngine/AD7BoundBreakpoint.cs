@@ -17,7 +17,6 @@
 using System.Diagnostics;
 using System.Threading;
 using Microsoft.PythonTools.Debugger.Remote;
-using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio;
 
 namespace Microsoft.PythonTools.Debugger.DebugEngine {

@@ -14,16 +14,18 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
 using Microsoft.CookiecutterTools.Infrastructure;
 
-namespace Microsoft.CookiecutterTools.Model {
+namespace Microsoft.CookiecutterTools.Model
+{
     [Serializable]
-    class ProcessException : Exception {
+    class ProcessException : Exception
+    {
         public ProcessOutputResult Result { get; }
 
         public ProcessException(ProcessOutputResult result) :
-            base(Strings.ProcessExitCodeMessage.FormatUI(result.ExeFileName, result.ExitCode)) {
+            base(Strings.ProcessExitCodeMessage.FormatUI(result.ExeFileName, result.ExitCode))
+        {
             Result = result;
         }
     }

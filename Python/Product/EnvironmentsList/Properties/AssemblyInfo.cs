@@ -14,10 +14,6 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Windows;
 
 [assembly: AssemblyTitle("Visual Studio - Python environments list")]
 [assembly: AssemblyDescription("Provides a tool window for listing and managing multiple Python environments.")]

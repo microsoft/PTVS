@@ -14,11 +14,10 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Threading;
-using System.Threading.Tasks;
-
-namespace Microsoft.CookiecutterTools.Model {
-    interface ITemplateSource {
+namespace Microsoft.CookiecutterTools.Model
+{
+    interface ITemplateSource
+    {
         Task<TemplateEnumerationResult> GetTemplatesAsync(string filter, string continuationToken, CancellationToken cancellationToken);
     }
 }

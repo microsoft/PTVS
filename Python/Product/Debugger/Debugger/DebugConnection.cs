@@ -21,7 +21,6 @@ using System.IO;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Ipc.Json;
 using LDP = Microsoft.PythonTools.Debugger.LegacyDebuggerProtocol;
 

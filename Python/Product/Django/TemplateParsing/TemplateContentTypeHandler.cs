@@ -14,14 +14,18 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Django.TemplateParsing {
-    internal class TemplateContentTypeHandler : HtmlServerCodeContentTypeHandler {
-        public override void Init(HtmlEditorTree editorTree) {
+namespace Microsoft.PythonTools.Django.TemplateParsing
+{
+    internal class TemplateContentTypeHandler : HtmlServerCodeContentTypeHandler
+    {
+        public override void Init(HtmlEditorTree editorTree)
+        {
             base.Init(editorTree);
             ContainedLanguageBlockHandler = new TemplateBlockHandler(editorTree);
         }
 
-        public override ArtifactCollection CreateArtifactCollection() {
+        public override ArtifactCollection CreateArtifactCollection()
+        {
             return new TemplateArtifactCollection();
         }
     }

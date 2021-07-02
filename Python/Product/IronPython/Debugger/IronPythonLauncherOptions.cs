@@ -16,7 +16,6 @@
 
 using System;
 using System.Windows.Forms;
-using Microsoft.PythonTools;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudioTools.Project;
 

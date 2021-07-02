@@ -14,25 +14,31 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Collections.Generic;
-using System.Reflection;
-
-namespace Microsoft.CookiecutterTools.Telemetry {
-    internal static class DictionaryExtension {
-        public static IDictionary<string, object> FromAnonymousObject(object data) {
+namespace Microsoft.CookiecutterTools.Telemetry
+{
+    internal static class DictionaryExtension
+    {
+        public static IDictionary<string, object> FromAnonymousObject(object data)
+        {
             IDictionary<string, object> dict;
-            if (data != null) {
+            if (data != null)
+            {
                 dict = data as IDictionary<string, object>;
-                if (dict == null) {
+                if (dict == null)
+                {
                     var attr = BindingFlags.Public | BindingFlags.Instance;
                     dict = new Dictionary<string, object>();
-                    foreach (var property in data.GetType().GetProperties(attr)) {
-                        if (property.CanRead) {
+                    foreach (var property in data.GetType().GetProperties(attr))
+                    {
+                        if (property.CanRead)
+                        {
                             dict.Add(property.Name, property.GetValue(data, null));
                         }
                     }
                 }
-            } else {
+            }
+            else
+            {
                 dict = new Dictionary<string, object>();
             }
             return dict;

@@ -14,13 +14,13 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-
-namespace Microsoft.CookiecutterTools.Telemetry {
+namespace Microsoft.CookiecutterTools.Telemetry
+{
     /// <summary>
     /// Application telemetry service. In Visual Studio maps to IVsTelemetrySession.
     /// </summary>
-    internal interface ITelemetryService {
+    internal interface ITelemetryService
+    {
         /// <summary>
         /// True of user opted in and telemetry is being collected
         /// </summary>

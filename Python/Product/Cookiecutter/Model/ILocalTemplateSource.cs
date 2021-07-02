@@ -14,10 +14,10 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Threading.Tasks;
-
-namespace Microsoft.CookiecutterTools.Model {
-    interface ILocalTemplateSource : ITemplateSource {
+namespace Microsoft.CookiecutterTools.Model
+{
+    interface ILocalTemplateSource : ITemplateSource
+    {
         Task DeleteTemplateAsync(string repoPath);
         Task<bool?> CheckForUpdateAsync(string repoPath);
         Task UpdateTemplateAsync(string repoPath);

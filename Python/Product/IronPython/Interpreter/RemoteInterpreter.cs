@@ -28,7 +28,6 @@ using IronPython.Modules;
 using IronPython.Runtime;
 using IronPython.Runtime.Operations;
 using IronPython.Runtime.Types;
-using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.Scripting;
 using Microsoft.Scripting.Actions;

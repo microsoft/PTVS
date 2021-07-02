@@ -14,21 +14,26 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.CookiecutterTools.Model {
-    class ReplacedFile {
+namespace Microsoft.CookiecutterTools.Model
+{
+    class ReplacedFile
+    {
         public string OriginalFilePath { get; }
         public string BackupFilePath { get; }
-        public ReplacedFile(string original, string backup) {
+        public ReplacedFile(string original, string backup)
+        {
             OriginalFilePath = original;
             BackupFilePath = backup;
         }
     }
 
-    class CreateFilesOperationResult {
+    class CreateFilesOperationResult
+    {
         public string[] FoldersCreated { get; }
         public string[] FilesCreated { get; }
         public ReplacedFile[] FilesReplaced { get; }
-        public CreateFilesOperationResult(string[] foldersCreated, string[] filesCreated, ReplacedFile[] filesReplaced) {
+        public CreateFilesOperationResult(string[] foldersCreated, string[] filesCreated, ReplacedFile[] filesReplaced)
+        {
             FoldersCreated = foldersCreated;
             FilesCreated = filesCreated;
             FilesReplaced = filesReplaced;

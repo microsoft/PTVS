@@ -14,15 +14,15 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-
-namespace Microsoft.CookiecutterTools.Infrastructure {
+namespace Microsoft.CookiecutterTools.Infrastructure
+{
     /// <summary>
     /// Base class for available commands.  To add a new command you must first update the .vsct file so that
     /// our commands are registered and available.  Then you need to subclass Command and at a new instance of
     /// the command in CommandTable.  PythonToolsPackage will then register the command on startup.
     /// </summary>
-    internal abstract class Command {
+    internal abstract class Command
+    {
         /// <summary>
         /// Provides the implementation of what should happen when the command is executed.
         /// 
@@ -37,7 +37,8 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
         /// if the command does not want to handle this message or the HRESULT that
         /// should be returned from the QueryStatus call.
         /// </summary>
-        public virtual int? EditFilterQueryStatus(ref OLECMD cmd, IntPtr pCmdText) {
+        public virtual int? EditFilterQueryStatus(ref OLECMD cmd, IntPtr pCmdText)
+        {
             return null;
         }
 
@@ -45,7 +46,8 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
         /// Provides the CommandId for this command which corresponds to the CommandId in the vsct file
         /// and PkgCmdId.cs.
         /// </summary>
-        public abstract int CommandId {
+        public abstract int CommandId
+        {
             get;
         }
 
@@ -54,8 +56,10 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
         /// is displayed.  This can enable, disable, or hide the menu command.  By default returns
         /// null.
         /// </summary>
-        public virtual EventHandler BeforeQueryStatus {
-            get {
+        public virtual EventHandler BeforeQueryStatus
+        {
+            get
+            {
                 return null;
             }
         }

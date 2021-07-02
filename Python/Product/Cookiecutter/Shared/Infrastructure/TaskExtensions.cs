@@ -14,55 +14,64 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Runtime.ExceptionServices;
-using System.Threading;
-using System.Threading.Tasks;
-
-namespace Microsoft.CookiecutterTools.Infrastructure {
-    public static class TaskExtensions {
+namespace Microsoft.CookiecutterTools.Infrastructure
+{
+    public static class TaskExtensions
+    {
         /// <summary>
         /// Suppresses warnings about unawaited tasks and rethrows task exceptions back to the callers synchronization context if it is possible
         /// </summary>
         /// <remarks>
         /// <see cref="OperationCanceledException"/> is always ignored.
         /// </remarks>
-        public static void DoNotWait(this Task task) {
-            if (task.IsCompleted) {
+        public static void DoNotWait(this Task task)
+        {
+            if (task.IsCompleted)
+            {
                 ReThrowTaskException(task);
                 return;
             }
 
             var synchronizationContext = SynchronizationContext.Current;
-            if (synchronizationContext != null && synchronizationContext.GetType() != typeof(SynchronizationContext)) {
+            if (synchronizationContext != null && synchronizationContext.GetType() != typeof(SynchronizationContext))
+            {
                 task.ContinueWith(DoNotWaitSynchronizationContextContinuation, synchronizationContext, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
-            } else {
+            }
+            else
+            {
                 task.ContinueWith(DoNotWaitThreadContinuation, TaskContinuationOptions.ExecuteSynchronously);
             }
         }
 
-        private static void ReThrowTaskException(object state) {
+        private static void ReThrowTaskException(object state)
+        {
             var task = (Task)state;
-            if (task.IsFaulted && task.Exception != null) {
+            if (task.IsFaulted && task.Exception != null)
+            {
                 var exception = task.Exception.InnerException;
                 ExceptionDispatchInfo.Capture(exception).Throw();
             }
         }
 
-        private static void DoNotWaitThreadContinuation(Task task) {
-            if (task.IsFaulted && task.Exception != null) {
+        private static void DoNotWaitThreadContinuation(Task task)
+        {
+            if (task.IsFaulted && task.Exception != null)
+            {
                 var exception = task.Exception.InnerException;
                 ThreadPool.QueueUserWorkItem(s => ((ExceptionDispatchInfo)s).Throw(), ExceptionDispatchInfo.Capture(exception));
             }
         }
 
-        private static void DoNotWaitSynchronizationContextContinuation(Task task, object state) {
+        private static void DoNotWaitSynchronizationContextContinuation(Task task, object state)
+        {
             var context = (SynchronizationContext)state;
             context.Post(ReThrowTaskException, task);
         }
 
-        public static T WaitOrDefault<T>(this Task<T> task, int milliseconds) {
-            if (task.Wait(milliseconds)) {
+        public static T WaitOrDefault<T>(this Task<T> task, int milliseconds)
+        {
+            if (task.Wait(milliseconds))
+            {
                 return task.Result;
             }
             return default(T);
@@ -73,7 +82,8 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
         /// will be raised without being wrapped in a
         /// <see cref="AggregateException"/>.
         /// </summary>
-        public static void WaitAndUnwrapExceptions(this Task task) {
+        public static void WaitAndUnwrapExceptions(this Task task)
+        {
             task.GetAwaiter().GetResult();
         }
 
@@ -82,7 +92,8 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
         /// will be raised without being wrapped in a
         /// <see cref="AggregateException"/>.
         /// </summary>
-        public static T WaitAndUnwrapExceptions<T>(this Task<T> task) {
+        public static T WaitAndUnwrapExceptions<T>(this Task<T> task)
+        {
             return task.GetAwaiter().GetResult();
         }
 
@@ -91,10 +102,14 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
         /// will be raised without being wrapped in a
         /// <see cref="AggregateException"/>.
         /// </summary>
-        public static T WaitAndUnwrapExceptions<T>(this Task<T> task, Func<T> onCancel) {
-            try {
+        public static T WaitAndUnwrapExceptions<T>(this Task<T> task, Func<T> onCancel)
+        {
+            try
+            {
                 return task.GetAwaiter().GetResult();
-            } catch (OperationCanceledException) {
+            }
+            catch (OperationCanceledException)
+            {
                 return onCancel();
             }
         }
@@ -102,11 +117,16 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
         /// <summary>
         /// Silently handles the specified exception.
         /// </summary>
-        public static Task SilenceException<T>(this Task task) where T : Exception {
-            return task.ContinueWith(t => {
-                try {
+        public static Task SilenceException<T>(this Task task) where T : Exception
+        {
+            return task.ContinueWith(t =>
+            {
+                try
+                {
                     t.Wait();
-                } catch (AggregateException ex) {
+                }
+                catch (AggregateException ex)
+                {
                     ex.Handle(e => e is T);
                 }
             });
@@ -115,47 +135,61 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
         /// <summary>
         /// Silently handles the specified exception.
         /// </summary>
-        public static Task<U> SilenceException<T, U>(this Task<U> task) where T : Exception {
-            return task.ContinueWith(t => {
-                try {
+        public static Task<U> SilenceException<T, U>(this Task<U> task) where T : Exception
+        {
+            return task.ContinueWith(t =>
+            {
+                try
+                {
                     return t.Result;
-                } catch (AggregateException ex) {
+                }
+                catch (AggregateException ex)
+                {
                     ex.Handle(e => e is T);
                     return default(U);
                 }
             });
         }
 
-        private sealed class SemaphoreLock : IDisposable {
+        private sealed class SemaphoreLock : IDisposable
+        {
             private SemaphoreSlim _semaphore;
 
-            public SemaphoreLock(SemaphoreSlim semaphore) {
+            public SemaphoreLock(SemaphoreSlim semaphore)
+            {
                 _semaphore = semaphore;
             }
 
-            public void Reset() {
+            public void Reset()
+            {
                 _semaphore = null;
             }
 
-            void IDisposable.Dispose() {
+            void IDisposable.Dispose()
+            {
                 _semaphore?.Release();
                 _semaphore = null;
                 GC.SuppressFinalize(this);
             }
 
-            ~SemaphoreLock() {
+            ~SemaphoreLock()
+            {
                 _semaphore?.Release();
             }
         }
 
-        public static async Task<IDisposable> LockAsync(this SemaphoreSlim semaphore, CancellationToken cancellationToken) {
+        public static async Task<IDisposable> LockAsync(this SemaphoreSlim semaphore, CancellationToken cancellationToken)
+        {
             var res = new SemaphoreLock(semaphore);
-            try {
+            try
+            {
                 await semaphore.WaitAsync(cancellationToken);
                 var res2 = res;
                 res = null;
                 return res2;
-            } finally {
+            }
+            finally
+            {
                 res?.Reset();
             }
         }

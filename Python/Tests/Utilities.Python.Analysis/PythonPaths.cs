@@ -20,7 +20,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using Microsoft.IronPythonTools.Interpreter;
-using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;

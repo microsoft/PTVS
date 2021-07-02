@@ -14,33 +14,38 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-
-namespace Microsoft.CookiecutterTools.ViewModel {
-    class CategorizedViewModel : TreeItemViewModel {
+namespace Microsoft.CookiecutterTools.ViewModel
+{
+    class CategorizedViewModel : TreeItemViewModel
+    {
         private string _displayName;
 
         /// <summary>
         /// Constructor for design view.
         /// </summary>
         public CategorizedViewModel() :
-            this(null) {
+            this(null)
+        {
         }
 
-        public CategorizedViewModel(string displayName) {
+        public CategorizedViewModel(string displayName)
+        {
             _displayName = displayName;
         }
 
         public bool Selectable => true;
 
-        public string DisplayName {
-            get {
+        public string DisplayName
+        {
+            get
+            {
                 return _displayName;
             }
 
-            set {
-                if (value != _displayName) {
+            set
+            {
+                if (value != _displayName)
+                {
                     _displayName = value;
                     OnPropertyChanged(new PropertyChangedEventArgs(nameof(DisplayName)));
                 }

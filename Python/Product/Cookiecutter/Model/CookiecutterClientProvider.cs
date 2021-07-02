@@ -14,28 +14,31 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.IO;
-using System.Linq;
 using Microsoft.CookiecutterTools.Infrastructure;
 using Microsoft.CookiecutterTools.Interpreters;
 
-namespace Microsoft.CookiecutterTools.Model {
-    static class CookiecutterClientProvider {
-        public static ICookiecutterClient Create(IServiceProvider provider, Redirector redirector) {
+namespace Microsoft.CookiecutterTools.Model
+{
+    static class CookiecutterClientProvider
+    {
+        public static ICookiecutterClient Create(IServiceProvider provider, Redirector redirector)
+        {
             var interpreter = FindCompatibleInterpreter();
-            if (interpreter != null) {
+            if (interpreter != null)
+            {
                 return new CookiecutterClient(provider, interpreter, redirector);
             }
 
             return null;
         }
 
-        public static bool IsCompatiblePythonAvailable() {
+        public static bool IsCompatiblePythonAvailable()
+        {
             return FindCompatibleInterpreter() != null;
         }
 
-        private static CookiecutterPythonInterpreter FindCompatibleInterpreter() {
+        private static CookiecutterPythonInterpreter FindCompatibleInterpreter()
+        {
             var interpreters = PythonRegistrySearch.PerformDefaultSearch();
             var all = interpreters
                 .Where(x => File.Exists(x.Configuration.InterpreterPath))

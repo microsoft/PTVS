@@ -14,12 +14,12 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Collections.Generic;
-using System.ComponentModel;
 using Microsoft.CookiecutterTools.Model;
 
-namespace Microsoft.CookiecutterTools.ViewModel {
-    class ContextItemViewModel : INotifyPropertyChanged {
+namespace Microsoft.CookiecutterTools.ViewModel
+{
+    class ContextItemViewModel : INotifyPropertyChanged
+    {
         private string _name;
         private string _selector;
         private string _label;
@@ -36,10 +36,12 @@ namespace Microsoft.CookiecutterTools.ViewModel {
         /// Constructor for design view.
         /// </summary>
         public ContextItemViewModel() :
-            this(string.Empty, Selectors.String, string.Empty, string.Empty, string.Empty, string.Empty, true, null) {
+            this(string.Empty, Selectors.String, string.Empty, string.Empty, string.Empty, string.Empty, true, null)
+        {
         }
 
-        public ContextItemViewModel(string name, string selector, string label, string description, string url, string defaultValue, bool visible = true, string[] items = null) {
+        public ContextItemViewModel(string name, string selector, string label, string description, string url, string defaultValue, bool visible = true, string[] items = null)
+        {
             _name = name;
             _selector = selector;
             _label = !string.IsNullOrEmpty(label) ? label : name;
@@ -49,121 +51,156 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             _default = defaultValue;
             _visible = visible;
             _items = new List<string>();
-            if (items != null && items.Length > 0) {
+            if (items != null && items.Length > 0)
+            {
                 _items.AddRange(items);
             }
 
             // These selectors don't have a way of showing the default value (watermark)
             // when no value is set (and there's no way to unset the value once it is set).
             // So we'll always start with the value set to default.
-            if (selector == Selectors.YesNo || selector == Selectors.List) {
+            if (selector == Selectors.YesNo || selector == Selectors.List)
+            {
                 _val = _default;
             }
         }
 
-        public string Name {
-            get {
+        public string Name
+        {
+            get
+            {
                 return _name;
             }
 
-            set {
+            set
+            {
                 _name = value;
             }
         }
 
-        public string Selector {
-            get {
+        public string Selector
+        {
+            get
+            {
                 return _selector;
             }
 
-            set {
-                if (value != _selector) {
+            set
+            {
+                if (value != _selector)
+                {
                     _selector = value;
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Selector)));
                 }
             }
         }
 
-        public string Label {
-            get {
+        public string Label
+        {
+            get
+            {
                 return _label;
             }
 
-            set {
-                if (value != _label) {
+            set
+            {
+                if (value != _label)
+                {
                     _label = value;
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Label)));
                 }
             }
         }
 
-        public string Description {
-            get {
+        public string Description
+        {
+            get
+            {
                 return _description;
             }
 
-            set {
-                if (value != _description) {
+            set
+            {
+                if (value != _description)
+                {
                     _description = value;
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Description)));
                 }
             }
         }
 
-        public string Url {
-            get {
+        public string Url
+        {
+            get
+            {
                 return _url ?? string.Empty;
             }
 
-            set {
-                if (value != _url) {
+            set
+            {
+                if (value != _url)
+                {
                     _url = value ?? string.Empty;
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Url)));
                 }
             }
         }
 
-        public string Val {
-            get {
+        public string Val
+        {
+            get
+            {
                 return _val;
             }
 
-            set {
-                if (value != _val) {
+            set
+            {
+                if (value != _val)
+                {
                     _val = value;
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Val)));
                 }
             }
         }
 
-        public string Default {
-            get {
+        public string Default
+        {
+            get
+            {
                 return _default;
             }
 
-            set {
-                if (value != _default) {
+            set
+            {
+                if (value != _default)
+                {
                     _default = value;
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Default)));
                 }
             }
         }
 
-        public bool Visible {
-            get {
+        public bool Visible
+        {
+            get
+            {
                 return _visible;
             }
 
-            set {
-                if (value != _visible) {
+            set
+            {
+                if (value != _visible)
+                {
                     _visible = value;
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Visible)));
                 }
             }
         }
 
-        public List<string> Items {
-            get {
+        public List<string> Items
+        {
+            get
+            {
                 return _items;
             }
         }

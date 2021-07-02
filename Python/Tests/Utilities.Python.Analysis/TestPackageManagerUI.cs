@@ -16,7 +16,6 @@
 
 using System.Diagnostics;
 using System.Threading.Tasks;
-using Microsoft.PythonTools.Interpreter;
 
 namespace TestUtilities.Python {
     public class TestPackageManagerUI : IPackageManagerUI {

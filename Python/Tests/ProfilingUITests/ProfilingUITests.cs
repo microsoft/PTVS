@@ -22,8 +22,6 @@ using System.Runtime.ExceptionServices;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Automation;
-using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Profiling;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Win32;
 using TestUtilities;

@@ -14,27 +14,16 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Net.Sockets;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-
-namespace Microsoft.CookiecutterTools.Infrastructure {
+namespace Microsoft.CookiecutterTools.Infrastructure
+{
     /// <summary>
     /// Base class that can receive output from <see cref="ProcessOutput"/>.
     /// 
     /// If this class implements <see cref="IDisposable"/>, it will be disposed
     /// when the <see cref="ProcessOutput"/> object is disposed.
     /// </summary>
-    abstract class Redirector {
+    abstract class Redirector
+    {
         /// <summary>
         /// Called when a line is written to standard output.
         /// </summary>
@@ -52,73 +41,92 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
         /// Called when output is written that should be brought to the user's
         /// attention. The default implementation does nothing.
         /// </summary>
-        public virtual void Show() {
+        public virtual void Show()
+        {
         }
 
         /// <summary>
         /// Called when output is written that should be brought to the user's
         /// immediate attention. The default implementation does nothing.
         /// </summary>
-        public virtual void ShowAndActivate() {
+        public virtual void ShowAndActivate()
+        {
         }
     }
 
-    sealed class TeeRedirector : Redirector, IDisposable {
+    sealed class TeeRedirector : Redirector, IDisposable
+    {
         private readonly Redirector[] _redirectors;
 
-        public TeeRedirector(params Redirector[] redirectors) {
+        public TeeRedirector(params Redirector[] redirectors)
+        {
             _redirectors = redirectors;
         }
 
-        public void Dispose() {
-            foreach (var redir in _redirectors.OfType<IDisposable>()) {
+        public void Dispose()
+        {
+            foreach (var redir in _redirectors.OfType<IDisposable>())
+            {
                 redir.Dispose();
             }
         }
 
-        public override void WriteLine(string line) {
-            foreach (var redir in _redirectors) {
+        public override void WriteLine(string line)
+        {
+            foreach (var redir in _redirectors)
+            {
                 redir.WriteLine(line);
             }
         }
 
-        public override void WriteErrorLine(string line) {
-            foreach (var redir in _redirectors) {
+        public override void WriteErrorLine(string line)
+        {
+            foreach (var redir in _redirectors)
+            {
                 redir.WriteErrorLine(line);
             }
         }
 
-        public override void Show() {
-            foreach (var redir in _redirectors) {
+        public override void Show()
+        {
+            foreach (var redir in _redirectors)
+            {
                 redir.Show();
             }
         }
 
-        public override void ShowAndActivate() {
-            foreach (var redir in _redirectors) {
+        public override void ShowAndActivate()
+        {
+            foreach (var redir in _redirectors)
+            {
                 redir.ShowAndActivate();
             }
         }
     }
 
-    sealed class ListRedirector : Redirector {
+    sealed class ListRedirector : Redirector
+    {
         private readonly List<string> _output, _error;
 
-        public ListRedirector(List<string> output, List<string> error = null) {
+        public ListRedirector(List<string> output, List<string> error = null)
+        {
             _output = output;
             _error = error ?? output;
         }
 
-        public override void WriteErrorLine(string line) {
+        public override void WriteErrorLine(string line)
+        {
             _error.Add(line);
         }
 
-        public override void WriteLine(string line) {
+        public override void WriteLine(string line)
+        {
             _output.Add(line);
         }
     }
 
-    sealed class StreamRedirector : Redirector {
+    sealed class StreamRedirector : Redirector
+    {
         private readonly StreamWriter _output, _error;
         private readonly string _outputPrefix, _errorPrefix;
 
@@ -127,26 +135,31 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
             StreamWriter error = null,
             string outputPrefix = null,
             string errorPrefix = null
-        ) {
+        )
+        {
             _output = output;
             _error = error ?? output;
             _outputPrefix = outputPrefix;
             _errorPrefix = errorPrefix;
         }
 
-        private static string WithPrefix(string prefix, string line) {
-            if (string.IsNullOrEmpty(prefix)) {
+        private static string WithPrefix(string prefix, string line)
+        {
+            if (string.IsNullOrEmpty(prefix))
+            {
                 return line;
             }
             return prefix + line;
         }
 
-        public override void WriteErrorLine(string line) {
+        public override void WriteErrorLine(string line)
+        {
             _error.WriteLine(WithPrefix(_errorPrefix, line));
             _error.Flush();
         }
 
-        public override void WriteLine(string line) {
+        public override void WriteLine(string line)
+        {
             _output.WriteLine(WithPrefix(_outputPrefix, line));
             _output.Flush();
         }
@@ -155,7 +168,8 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
     /// <summary>
     /// Represents a process and its captured output.
     /// </summary>
-    sealed class ProcessOutput : IDisposable {
+    sealed class ProcessOutput : IDisposable
+    {
         private readonly Process _process;
         private readonly string _arguments;
         private readonly List<string> _output, _error;
@@ -177,7 +191,8 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
         /// <param name="filename">Executable file to run.</param>
         /// <param name="arguments">Arguments to pass.</param>
         /// <returns>A <see cref="ProcessOutput"/> object.</returns>
-        public static ProcessOutput RunVisible(string filename, params string[] arguments) {
+        public static ProcessOutput RunVisible(string filename, params string[] arguments)
+        {
             return Run(filename, arguments, null, null, true, null);
         }
 
@@ -188,7 +203,8 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
         /// <param name="filename">Executable file to run.</param>
         /// <param name="arguments">Arguments to pass.</param>
         /// <returns>A <see cref="ProcessOutput"/> object.</returns>
-        public static ProcessOutput RunHiddenAndCapture(string filename, params string[] arguments) {
+        public static ProcessOutput RunHiddenAndCapture(string filename, params string[] arguments)
+        {
             return Run(filename, arguments, null, null, false, null);
         }
 
@@ -226,11 +242,14 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
             bool elevate = false,
             Encoding outputEncoding = null,
             Encoding errorEncoding = null
-        ) {
-            if (string.IsNullOrEmpty(filename)) {
+        )
+        {
+            if (string.IsNullOrEmpty(filename))
+            {
                 throw new ArgumentException("Filename required", "filename");
             }
-            if (elevate) {
+            if (elevate)
+            {
                 return RunElevated(
                     filename,
                     arguments,
@@ -245,10 +264,13 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
             }
 
             var psi = new ProcessStartInfo(filename);
-            if (quoteArgs) {
+            if (quoteArgs)
+            {
                 psi.Arguments = string.Join(" ",
                     arguments.Where(a => a != null).Select(QuoteSingleArgument));
-            } else {
+            }
+            else
+            {
                 psi.Arguments = string.Join(" ", arguments.Where(a => a != null));
             }
             psi.WorkingDirectory = workingDirectory;
@@ -259,8 +281,10 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
             psi.RedirectStandardInput = !visible;
             psi.StandardOutputEncoding = outputEncoding ?? psi.StandardOutputEncoding;
             psi.StandardErrorEncoding = errorEncoding ?? outputEncoding ?? psi.StandardErrorEncoding;
-            if (env != null) {
-                foreach (var kv in env) {
+            if (env != null)
+            {
+                foreach (var kv in env)
+                {
                     psi.EnvironmentVariables[kv.Key] = kv.Value;
                 }
             }
@@ -292,7 +316,8 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
             bool elevate = true,
             Encoding outputEncoding = null,
             Encoding errorEncoding = null
-        ) {
+        )
+        {
             var psi = new ProcessStartInfo(PythonToolsInstallPath.GetFile("Microsoft.PythonTools.RunElevated.exe", typeof(ProcessOutput).Assembly));
             psi.CreateNoWindow = true;
             psi.WindowStyle = ProcessWindowStyle.Hidden;
@@ -300,12 +325,15 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
             var utf8 = new UTF8Encoding(false);
             // Send args and env as base64 to avoid newline issues
             string args;
-            if (quoteArgs) {
+            if (quoteArgs)
+            {
                 args = string.Join("|", arguments
                     .Where(a => a != null)
                     .Select(a => Convert.ToBase64String(utf8.GetBytes(QuoteSingleArgument(a))))
                 );
-            } else {
+            }
+            else
+            {
                 args = string.Join("|", arguments
                     .Where(a => a != null)
                     .Select(a => Convert.ToBase64String(utf8.GetBytes(a)))
@@ -319,33 +347,49 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
             TcpListener listener = null;
             Task<TcpClient> clientTask = null;
 
-            try {
+            try
+            {
                 listener = SocketUtils.GetRandomPortListener(IPAddress.Loopback, out int port);
                 psi.Arguments = port.ToString();
                 clientTask = listener.AcceptTcpClientAsync();
-            } catch (Exception ex) {
+            }
+            catch (Exception ex)
+            {
                 listener?.Stop();
                 throw new InvalidOperationException(Strings.UnableToElevate, ex);
             }
 
             var process = new Process();
 
-            clientTask.ContinueWith(t => {
+            clientTask.ContinueWith(t =>
+            {
                 listener.Stop();
                 TcpClient client;
-                try {
+                try
+                {
                     client = t.Result;
-                } catch (AggregateException ae) {
-                    try {
+                }
+                catch (AggregateException ae)
+                {
+                    try
+                    {
                         process.Kill();
-                    } catch (InvalidOperationException) {
-                    } catch (Win32Exception) {
+                    }
+                    catch (InvalidOperationException)
+                    {
+                    }
+                    catch (Win32Exception)
+                    {
                     }
 
-                    if (redirector != null) {
-                        foreach (var ex in ae.InnerExceptions.DefaultIfEmpty(ae)) {
-                            using (var reader = new StringReader(ex.ToString())) {
-                                for (var line = reader.ReadLine(); line != null; line = reader.ReadLine()) {
+                    if (redirector != null)
+                    {
+                        foreach (var ex in ae.InnerExceptions.DefaultIfEmpty(ae))
+                        {
+                            using (var reader = new StringReader(ex.ToString()))
+                            {
+                                for (var line = reader.ReadLine(); line != null; line = reader.ReadLine())
+                                {
                                     redirector.WriteErrorLine(line);
                                 }
                             }
@@ -353,7 +397,8 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
                     }
                     return;
                 }
-                using (var writer = new StreamWriter(client.GetStream(), utf8, 4096, true)) {
+                using (var writer = new StreamWriter(client.GetStream(), utf8, 4096, true))
+                {
                     writer.WriteLine(filename);
                     writer.WriteLine(args);
                     writer.WriteLine(workingDirectory);
@@ -362,21 +407,34 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
                     writer.WriteLine(errorEncoding?.WebName ?? "");
                 }
 
-                if (redirector != null) {
+                if (redirector != null)
+                {
                     var reader = new StreamReader(client.GetStream(), utf8, false, 4096, true);
-                    Task.Run(() => {
-                        try {
-                            for (var line = reader.ReadLine(); line != null; line = reader.ReadLine()) {
-                                if (line.StartsWithOrdinal("OUT:")) {
+                    Task.Run(() =>
+                    {
+                        try
+                        {
+                            for (var line = reader.ReadLine(); line != null; line = reader.ReadLine())
+                            {
+                                if (line.StartsWithOrdinal("OUT:"))
+                                {
                                     redirector.WriteLine(line.Substring(4));
-                                } else if (line.StartsWithOrdinal("ERR:")) {
+                                }
+                                else if (line.StartsWithOrdinal("ERR:"))
+                                {
                                     redirector.WriteErrorLine(line.Substring(4));
-                                } else {
+                                }
+                                else
+                                {
                                     redirector.WriteLine(line);
                                 }
                             }
-                        } catch (IOException) {
-                        } catch (ObjectDisposedException) {
+                        }
+                        catch (IOException)
+                        {
+                        }
+                        catch (ObjectDisposedException)
+                        {
                         }
                     });
                 }
@@ -387,83 +445,109 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
             return new ProcessOutput(process, redirector);
         }
 
-        internal static IEnumerable<string> SplitLines(string source) {
+        internal static IEnumerable<string> SplitLines(string source)
+        {
             int start = 0;
             int end = source.IndexOfAny(EolChars);
-            while (end >= start) {
+            while (end >= start)
+            {
                 yield return source.Substring(start, end - start);
                 start = end + 1;
-                if (source[start - 1] == '\r' && start < source.Length && source[start] == '\n') {
+                if (source[start - 1] == '\r' && start < source.Length && source[start] == '\n')
+                {
                     start += 1;
                 }
 
-                if (start < source.Length) {
+                if (start < source.Length)
+                {
                     end = source.IndexOfAny(EolChars, start);
-                } else {
+                }
+                else
+                {
                     end = -1;
                 }
             }
-            if (start <= 0) {
+            if (start <= 0)
+            {
                 yield return source;
-            } else if (start < source.Length) {
+            }
+            else if (start < source.Length)
+            {
                 yield return source.Substring(start);
             }
         }
 
-        public static string QuoteSingleArgument(string arg) {
-            if (string.IsNullOrEmpty(arg)) {
+        public static string QuoteSingleArgument(string arg)
+        {
+            if (string.IsNullOrEmpty(arg))
+            {
                 return "\"\"";
             }
-            if (arg.IndexOfAny(_needToBeQuoted) < 0) {
+            if (arg.IndexOfAny(_needToBeQuoted) < 0)
+            {
                 return arg;
             }
 
-            if (arg.StartsWithOrdinal("\"") && arg.EndsWithOrdinal("\"")) {
+            if (arg.StartsWithOrdinal("\"") && arg.EndsWithOrdinal("\""))
+            {
                 bool inQuote = false;
                 int consecutiveBackslashes = 0;
-                foreach (var c in arg) {
-                    if (c == '"') {
-                        if (consecutiveBackslashes % 2 == 0) {
+                foreach (var c in arg)
+                {
+                    if (c == '"')
+                    {
+                        if (consecutiveBackslashes % 2 == 0)
+                        {
                             inQuote = !inQuote;
                         }
                     }
 
-                    if (c == '\\') {
+                    if (c == '\\')
+                    {
                         consecutiveBackslashes += 1;
-                    } else {
+                    }
+                    else
+                    {
                         consecutiveBackslashes = 0;
                     }
                 }
-                if (!inQuote) {
+                if (!inQuote)
+                {
                     return arg;
                 }
             }
 
             var newArg = arg.Replace("\"", "\\\"");
-            if (newArg.EndsWithOrdinal("\\")) {
+            if (newArg.EndsWithOrdinal("\\"))
+            {
                 newArg += "\\";
             }
             return "\"" + newArg + "\"";
         }
 
-        private ProcessOutput(Process process, Redirector redirector) {
+        private ProcessOutput(Process process, Redirector redirector)
+        {
             _arguments = QuoteSingleArgument(process.StartInfo.FileName) + " " + process.StartInfo.Arguments;
             _redirector = redirector;
-            if (_redirector == null) {
+            if (_redirector == null)
+            {
                 _output = new List<string>();
                 _error = new List<string>();
                 _redirector = new ListRedirector(_output, _error);
             }
 
             _process = process;
-            if (_process.StartInfo.RedirectStandardOutput) {
+            if (_process.StartInfo.RedirectStandardOutput)
+            {
                 _process.OutputDataReceived += OnOutputDataReceived;
             }
-            if (_process.StartInfo.RedirectStandardError) {
+            if (_process.StartInfo.RedirectStandardError)
+            {
                 _process.ErrorDataReceived += OnErrorDataReceived;
             }
 
-            if (!_process.StartInfo.RedirectStandardOutput && !_process.StartInfo.RedirectStandardError) {
+            if (!_process.StartInfo.RedirectStandardOutput && !_process.StartInfo.RedirectStandardError)
+            {
                 // If we are receiving output events, we signal that the process
                 // has exited when one of them receives null. Otherwise, we have
                 // to listen for the Exited event.
@@ -473,85 +557,118 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
             }
             _process.EnableRaisingEvents = true;
 
-            try {
+            try
+            {
                 _process.Start();
-            } catch (Win32Exception ex) {
+            }
+            catch (Win32Exception ex)
+            {
                 _redirector.WriteErrorLine(ex.Message);
                 _process = null;
-            } catch (Exception ex) when (!ex.IsCriticalException()) {
-                foreach (var line in SplitLines(ex.ToString())) {
+            }
+            catch (Exception ex) when (!ex.IsCriticalException())
+            {
+                foreach (var line in SplitLines(ex.ToString()))
+                {
                     _redirector.WriteErrorLine(line);
                 }
                 _process = null;
             }
 
-            if (_process != null) {
-                if (_process.StartInfo.RedirectStandardOutput) {
+            if (_process != null)
+            {
+                if (_process.StartInfo.RedirectStandardOutput)
+                {
                     _process.BeginOutputReadLine();
                 }
-                if (_process.StartInfo.RedirectStandardError) {
+                if (_process.StartInfo.RedirectStandardError)
+                {
                     _process.BeginErrorReadLine();
                 }
 
-                if (_process.StartInfo.RedirectStandardInput) {
+                if (_process.StartInfo.RedirectStandardInput)
+                {
                     // Close standard input so that we don't get stuck trying to read input from the user.
-                    try {
+                    try
+                    {
                         _process.StandardInput.Close();
-                    } catch (InvalidOperationException) {
+                    }
+                    catch (InvalidOperationException)
+                    {
                         // StandardInput not available
                     }
                 }
             }
         }
 
-        private void OnOutputDataReceived(object sender, DataReceivedEventArgs e) {
-            if (_isDisposed) {
+        private void OnOutputDataReceived(object sender, DataReceivedEventArgs e)
+        {
+            if (_isDisposed)
+            {
                 return;
             }
 
-            if (e.Data == null) {
+            if (e.Data == null)
+            {
                 bool shouldExit;
-                lock (_seenNullLock) {
+                lock (_seenNullLock)
+                {
                     _seenNullInOutput = true;
                     shouldExit = _seenNullInError || !_process.StartInfo.RedirectStandardError;
                 }
-                if (shouldExit) {
+                if (shouldExit)
+                {
                     OnExited(_process, EventArgs.Empty);
                 }
-            } else if (!string.IsNullOrEmpty(e.Data)) {
-                foreach (var line in SplitLines(e.Data)) {
-                    if (_redirector != null) {
+            }
+            else if (!string.IsNullOrEmpty(e.Data))
+            {
+                foreach (var line in SplitLines(e.Data))
+                {
+                    if (_redirector != null)
+                    {
                         _redirector.WriteLine(line);
                     }
                 }
             }
         }
 
-        private void OnErrorDataReceived(object sender, DataReceivedEventArgs e) {
-            if (_isDisposed) {
+        private void OnErrorDataReceived(object sender, DataReceivedEventArgs e)
+        {
+            if (_isDisposed)
+            {
                 return;
             }
 
-            if (e.Data == null) {
+            if (e.Data == null)
+            {
                 bool shouldExit;
-                lock (_seenNullLock) {
+                lock (_seenNullLock)
+                {
                     _seenNullInError = true;
                     shouldExit = _seenNullInOutput || !_process.StartInfo.RedirectStandardOutput;
                 }
-                if (shouldExit) {
+                if (shouldExit)
+                {
                     OnExited(_process, EventArgs.Empty);
                 }
-            } else if (!string.IsNullOrEmpty(e.Data)) {
-                foreach (var line in SplitLines(e.Data)) {
-                    if (_redirector != null) {
+            }
+            else if (!string.IsNullOrEmpty(e.Data))
+            {
+                foreach (var line in SplitLines(e.Data))
+                {
+                    if (_redirector != null)
+                    {
                         _redirector.WriteErrorLine(line);
                     }
                 }
             }
         }
 
-        public int? ProcessId {
-            get {
+        public int? ProcessId
+        {
+            get
+            {
                 return _process != null ? _process.Id : (int?)null;
             }
         }
@@ -559,8 +676,10 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
         /// <summary>
         /// The arguments that were originally passed, including the filename.
         /// </summary>
-        public string Arguments {
-            get {
+        public string Arguments
+        {
+            get
+            {
                 return _arguments;
             }
         }
@@ -568,8 +687,10 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
         /// <summary>
         /// True if the process started. False if an error occurred.
         /// </summary>
-        public bool IsStarted {
-            get {
+        public bool IsStarted
+        {
+            get
+            {
                 return _process != null;
             }
         }
@@ -578,9 +699,12 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
         /// The exit code or null if the process never started or has not
         /// exited.
         /// </summary>
-        public int? ExitCode {
-            get {
-                if (_process == null || !_process.HasExited) {
+        public int? ExitCode
+        {
+            get
+            {
+                if (_process == null || !_process.HasExited)
+                {
                     return null;
                 }
                 return _process.ExitCode;
@@ -590,25 +714,40 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
         /// <summary>
         /// Gets or sets the priority class of the process.
         /// </summary>
-        public ProcessPriorityClass PriorityClass {
-            get {
-                if (_process != null && !_process.HasExited) {
-                    try {
+        public ProcessPriorityClass PriorityClass
+        {
+            get
+            {
+                if (_process != null && !_process.HasExited)
+                {
+                    try
+                    {
                         return _process.PriorityClass;
-                    } catch (Win32Exception) {
-                    } catch (InvalidOperationException) {
+                    }
+                    catch (Win32Exception)
+                    {
+                    }
+                    catch (InvalidOperationException)
+                    {
                         // Return Normal if we've raced with the process
                         // exiting.
                     }
                 }
                 return ProcessPriorityClass.Normal;
             }
-            set {
-                if (_process != null && !_process.HasExited) {
-                    try {
+            set
+            {
+                if (_process != null && !_process.HasExited)
+                {
+                    try
+                    {
                         _process.PriorityClass = value;
-                    } catch (Win32Exception) {
-                    } catch (InvalidOperationException) {
+                    }
+                    catch (Win32Exception)
+                    {
+                    }
+                    catch (InvalidOperationException)
+                    {
                         // Silently fail if we've raced with the process
                         // exiting.
                     }
@@ -619,34 +758,49 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
         /// <summary>
         /// The redirector that was originally passed.
         /// </summary>
-        public Redirector Redirector {
+        public Redirector Redirector
+        {
             get { return _redirector; }
         }
 
-        private void FlushAndCloseOutput() {
-            if (_process == null) {
+        private void FlushAndCloseOutput()
+        {
+            if (_process == null)
+            {
                 return;
             }
 
-            if (_process.StartInfo.RedirectStandardOutput) {
-                try {
+            if (_process.StartInfo.RedirectStandardOutput)
+            {
+                try
+                {
                     _process.CancelOutputRead();
-                } catch (InvalidOperationException) {
+                }
+                catch (InvalidOperationException)
+                {
                     // Reader has already been cancelled
                 }
             }
-            if (_process.StartInfo.RedirectStandardError) {
-                try {
+            if (_process.StartInfo.RedirectStandardError)
+            {
+                try
+                {
                     _process.CancelErrorRead();
-                } catch (InvalidOperationException) {
+                }
+                catch (InvalidOperationException)
+                {
                     // Reader has already been cancelled
                 }
             }
 
-            if (_waitHandleEvent != null) {
-                try {
+            if (_waitHandleEvent != null)
+            {
+                try
+                {
                     _waitHandleEvent.Set();
-                } catch (ObjectDisposedException) {
+                }
+                catch (ObjectDisposedException)
+                {
                 }
             }
         }
@@ -655,8 +809,10 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
         /// The lines of text sent to standard output. These do not include
         /// newline characters.
         /// </summary>
-        public IEnumerable<string> StandardOutputLines {
-            get {
+        public IEnumerable<string> StandardOutputLines
+        {
+            get
+            {
                 return _output;
             }
         }
@@ -665,8 +821,10 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
         /// The lines of text sent to standard error. These do not include
         /// newline characters.
         /// </summary>
-        public IEnumerable<string> StandardErrorLines {
-            get {
+        public IEnumerable<string> StandardErrorLines
+        {
+            get
+            {
                 return _error;
             }
         }
@@ -674,12 +832,16 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
         /// <summary>
         /// A handle that can be waited on. It triggers when the process exits.
         /// </summary>
-        public WaitHandle WaitHandle {
-            get {
-                if (_process == null) {
+        public WaitHandle WaitHandle
+        {
+            get
+            {
+                if (_process == null)
+                {
                     return null;
                 }
-                if (_waitHandleEvent == null) {
+                if (_waitHandleEvent == null)
+                {
                     _waitHandleEvent = new ManualResetEvent(_haveRaisedExitedEvent);
                 }
                 return _waitHandleEvent;
@@ -689,8 +851,10 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
         /// <summary>
         /// Waits until the process exits.
         /// </summary>
-        public void Wait() {
-            if (_process != null) {
+        public void Wait()
+        {
+            if (_process != null)
+            {
                 _process.WaitForExit();
                 // Should have already been called, in which case this is a no-op
                 OnExited(this, EventArgs.Empty);
@@ -704,10 +868,13 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
         /// <returns>
         /// True if the process exited before the timeout expired.
         /// </returns>
-        public bool Wait(TimeSpan timeout) {
-            if (_process != null) {
+        public bool Wait(TimeSpan timeout)
+        {
+            if (_process != null)
+            {
                 bool exited = _process.WaitForExit((int)timeout.TotalMilliseconds);
-                if (exited) {
+                if (exited)
+                {
                     // Should have already been called, in which case this is a no-op
                     OnExited(this, EventArgs.Empty);
                 }
@@ -719,23 +886,34 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
         /// <summary>
         /// Enables using 'await' on this object.
         /// </summary>
-        public TaskAwaiter<int> GetAwaiter() {
-            if (_awaiter == null) {
-                if (_process == null) {
+        public TaskAwaiter<int> GetAwaiter()
+        {
+            if (_awaiter == null)
+            {
+                if (_process == null)
+                {
                     var tcs = new TaskCompletionSource<int>();
                     tcs.SetCanceled();
                     _awaiter = tcs.Task;
-                } else if (_process.HasExited) {
+                }
+                else if (_process.HasExited)
+                {
                     // Should have already been called, in which case this is a no-op
                     OnExited(this, EventArgs.Empty);
                     var tcs = new TaskCompletionSource<int>();
                     tcs.SetResult(_process.ExitCode);
                     _awaiter = tcs.Task;
-                } else {
-                    _awaiter = Task.Run(() => {
-                        try {
+                }
+                else
+                {
+                    _awaiter = Task.Run(() =>
+                    {
+                        try
+                        {
                             Wait();
-                        } catch (Win32Exception) {
+                        }
+                        catch (Win32Exception)
+                        {
                             throw new OperationCanceledException();
                         }
                         return _process.ExitCode;
@@ -749,8 +927,10 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
         /// <summary>
         /// Immediately stops the process.
         /// </summary>
-        public void Kill() {
-            if (_process != null && !_process.HasExited) {
+        public void Kill()
+        {
+            if (_process != null && !_process.HasExited)
+            {
                 _process.Kill();
                 // Should have already been called, in which case this is a no-op
                 OnExited(this, EventArgs.Empty);
@@ -762,14 +942,17 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
         /// </summary>
         public event EventHandler Exited;
 
-        private void OnExited(object sender, EventArgs e) {
-            if (_isDisposed || _haveRaisedExitedEvent) {
+        private void OnExited(object sender, EventArgs e)
+        {
+            if (_isDisposed || _haveRaisedExitedEvent)
+            {
                 return;
             }
             _haveRaisedExitedEvent = true;
             FlushAndCloseOutput();
             var evt = Exited;
-            if (evt != null) {
+            if (evt != null)
+            {
                 evt(this, e);
             }
         }
@@ -777,23 +960,30 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
         /// <summary>
         /// Called to dispose of unmanaged resources.
         /// </summary>
-        public void Dispose() {
-            if (!_isDisposed) {
+        public void Dispose()
+        {
+            if (!_isDisposed)
+            {
                 _isDisposed = true;
-                if (_process != null) {
-                    if (_process.StartInfo.RedirectStandardOutput) {
+                if (_process != null)
+                {
+                    if (_process.StartInfo.RedirectStandardOutput)
+                    {
                         _process.OutputDataReceived -= OnOutputDataReceived;
                     }
-                    if (_process.StartInfo.RedirectStandardError) {
+                    if (_process.StartInfo.RedirectStandardError)
+                    {
                         _process.ErrorDataReceived -= OnErrorDataReceived;
                     }
                     _process.Dispose();
                 }
                 var disp = _redirector as IDisposable;
-                if (disp != null) {
+                if (disp != null)
+                {
                     disp.Dispose();
                 }
-                if (_waitHandleEvent != null) {
+                if (_waitHandleEvent != null)
+                {
                     _waitHandleEvent.Set();
                     _waitHandleEvent.Dispose();
                 }

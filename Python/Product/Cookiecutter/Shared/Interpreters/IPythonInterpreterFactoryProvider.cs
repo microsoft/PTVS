@@ -14,15 +14,14 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-
-namespace Microsoft.CookiecutterTools.Interpreters {
+namespace Microsoft.CookiecutterTools.Interpreters
+{
     /// <summary>
     /// Provides a source of Python interpreters.  This enables a single implementation
     /// to dynamically lookup the installed Python versions and provide multiple interpreters.
     /// </summary>
-    public interface IPythonInterpreterFactoryProvider {
+    public interface IPythonInterpreterFactoryProvider
+    {
         /// <summary>
         /// Raised when the result of calling <see cref="GetInterpreterConfigurations"/> may have changed.
         /// </summary>

@@ -14,14 +14,15 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Windows.Controls;
-
-namespace Microsoft.CookiecutterTools.View {
+namespace Microsoft.CookiecutterTools.View
+{
     /// <summary>
     /// Interaction logic for LoadingPage.xaml
     /// </summary>
-    internal partial class LoadingPage : Page {
-        public LoadingPage() {
+    internal partial class LoadingPage : Page
+    {
+        public LoadingPage()
+        {
             InitializeComponent();
         }
     }

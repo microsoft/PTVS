@@ -14,24 +14,13 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.ComponentModel.Design;
-using System.Diagnostics;
-using System.IO;
-using System.Runtime.InteropServices;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Windows;
 using Microsoft.CookiecutterTools.Infrastructure;
 using Microsoft.CookiecutterTools.Model;
 using Microsoft.CookiecutterTools.Telemetry;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudio.Threading;
 using Task = System.Threading.Tasks.Task;
 
-namespace Microsoft.CookiecutterTools {
+namespace Microsoft.CookiecutterTools
+{
     /// <summary>
     /// This is the class that implements the package exposed by this assembly.
     ///
@@ -54,7 +43,8 @@ namespace Microsoft.CookiecutterTools {
     [ProvideOptionPage(typeof(CookiecutterOptionPage), "Cookiecutter", "General", 113, 114, true)]
     [ProvideProfile(typeof(CookiecutterOptionPage), "Cookiecutter", "General", 113, 114, isToolsOptionPage: true, DescriptionResourceID = 115)]
     [Guid(PackageGuids.guidCookiecutterPkgString)]
-    public sealed class CookiecutterPackage : AsyncPackage, IOleCommandTarget {
+    public sealed class CookiecutterPackage : AsyncPackage, IOleCommandTarget
+    {
         internal static CookiecutterPackage Instance;
 
         //private readonly 
@@ -67,7 +57,8 @@ namespace Microsoft.CookiecutterTools {
         /// not sited yet inside Visual Studio environment. The place to do all the other 
         /// initialization is the Initialize method.
         /// </summary>
-        public CookiecutterPackage() {
+        public CookiecutterPackage()
+        {
             Trace.WriteLine("Entering constructor for: {0}".FormatInvariant(this));
             Instance = this;
         }
@@ -80,13 +71,15 @@ namespace Microsoft.CookiecutterTools {
         /// Initialization of the package; this method is called right after the package is sited, so this is the place
         /// where you can put all the initilaization code that rely on services provided by VisualStudio.
         /// </summary>
-        protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress) {
+        protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
+        {
             Trace.WriteLine("Entering {0}.InitializeAsync()".FormatInvariant(this));
 
             await base.InitializeAsync(cancellationToken, progress);
             await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
 
-            if (GetService(typeof(UIThreadBase)) == null) {
+            if (GetService(typeof(UIThreadBase)) == null)
+            {
                 ((IServiceContainer)this).AddService(typeof(UIThreadBase), new UIThread(JoinableTaskFactory), true);
             }
 
@@ -102,7 +95,8 @@ namespace Microsoft.CookiecutterTools {
         protected override Task<object> InitializeToolWindowAsync(Type toolWindowType, int id, CancellationToken cancellationToken)
             => toolWindowType == typeof(CookiecutterToolWindow) ? Task.FromResult<object>(this) : base.InitializeToolWindowAsync(toolWindowType, id, cancellationToken);
 
-        protected override void Dispose(bool disposing) {
+        protected override void Dispose(bool disposing)
+        {
             CookiecutterTelemetry.Current.Dispose();
             base.Dispose(disposing);
         }
@@ -111,14 +105,17 @@ namespace Microsoft.CookiecutterTools {
 
         #region IOleCommandTarget
 
-        int IOleCommandTarget.Exec(ref Guid commandGroup, uint commandId, uint commandExecOpt, IntPtr variantIn, IntPtr variantOut) {
-            if (commandGroup != PackageGuids.guidCookiecutterCmdSet) {
+        int IOleCommandTarget.Exec(ref Guid commandGroup, uint commandId, uint commandExecOpt, IntPtr variantIn, IntPtr variantOut)
+        {
+            if (commandGroup != PackageGuids.guidCookiecutterCmdSet)
+            {
                 return VSConstants.E_FAIL;
             }
 
             // Commands that support parameters cannot be implemented via IMenuCommandService
             var hr = VSConstants.S_OK;
-            switch (commandId) {
+            switch (commandId)
+            {
                 case PackageIds.cmdidViewExternalWebBrowser:
                     hr = ViewExternalBrowser(variantIn, variantOut, commandExecOpt);
                     break;
@@ -142,9 +139,12 @@ namespace Microsoft.CookiecutterTools {
             return hr;
         }
 
-        int IOleCommandTarget.QueryStatus(ref Guid commandGroup, uint commandsCount, OLECMD[] commands, IntPtr pCmdText) {
-            if (commandGroup == PackageGuids.guidCookiecutterCmdSet && commandsCount == 1) {
-                switch (commands[0].cmdID) {
+        int IOleCommandTarget.QueryStatus(ref Guid commandGroup, uint commandsCount, OLECMD[] commands, IntPtr pCmdText)
+        {
+            if (commandGroup == PackageGuids.guidCookiecutterCmdSet && commandsCount == 1)
+            {
+                switch (commands[0].cmdID)
+                {
                     case PackageIds.cmdidAddFromCookiecutter:
                         commands[0].cmdf = DTE.Debugger.CurrentMode == EnvDTE.dbgDebugMode.dbgDesignMode &&
                                            _projectSystem.GetSelectedFolderProjectLocation() != null
@@ -162,8 +162,10 @@ namespace Microsoft.CookiecutterTools {
 
         #endregion 
 
-        private string GetStringArgument(IntPtr variantIn) {
-            if (variantIn == IntPtr.Zero) {
+        private string GetStringArgument(IntPtr variantIn)
+        {
+            if (variantIn == IntPtr.Zero)
+            {
                 return null;
             }
 
@@ -174,12 +176,16 @@ namespace Microsoft.CookiecutterTools {
         /// <summary>
         /// Used to determine if the shell is querying for the parameter list of our command.
         /// </summary>
-        private static bool IsQueryParameterList(IntPtr variantIn, IntPtr variantOut, uint nCmdexecopt) {
+        private static bool IsQueryParameterList(IntPtr variantIn, IntPtr variantOut, uint nCmdexecopt)
+        {
             ushort lo = (ushort)(nCmdexecopt & (uint)0xffff);
             ushort hi = (ushort)(nCmdexecopt >> 16);
-            if (lo == (ushort)OLECMDEXECOPT.OLECMDEXECOPT_SHOWHELP) {
-                if (hi == VsMenus.VSCmdOptQueryParameterList) {
-                    if (variantOut != IntPtr.Zero) {
+            if (lo == (ushort)OLECMDEXECOPT.OLECMDEXECOPT_SHOWHELP)
+            {
+                if (hi == VsMenus.VSCmdOptQueryParameterList)
+                {
+                    if (variantOut != IntPtr.Zero)
+                    {
                         return true;
                     }
                 }
@@ -188,14 +194,16 @@ namespace Microsoft.CookiecutterTools {
             return false;
         }
 
-        public static T GetGlobalService<S, T>() where T : class {
+        public static T GetGlobalService<S, T>() where T : class
+        {
             object service = Package.GetGlobalService(typeof(S));
             return service as T;
         }
 
         public EnvDTE80.DTE2 DTE => GetGlobalService<EnvDTE.DTE, EnvDTE80.DTE2>();
 
-        internal static void ShowContextMenu(CommandID commandId, int x, int y, IOleCommandTarget commandTarget) {
+        internal static void ShowContextMenu(CommandID commandId, int x, int y, IOleCommandTarget commandTarget)
+        {
             var shell = CookiecutterPackage.GetGlobalService(typeof(SVsUIShell)) as IVsUIShell;
             var pts = new POINTS[1];
             pts[0].x = (short)x;
@@ -203,23 +211,28 @@ namespace Microsoft.CookiecutterTools {
             shell.ShowContextMenu(0, commandId.Guid, commandId.ID, pts, commandTarget);
         }
 
-        internal async Task<T> ShowWindowPaneAsync<T>(bool focus) where T : ToolWindowPane {
+        internal async Task<T> ShowWindowPaneAsync<T>(bool focus) where T : ToolWindowPane
+        {
             await JoinableTaskFactory.SwitchToMainThreadAsync(DisposalToken);
             var toolWindow = await ShowToolWindowAsync(typeof(T), 0, true, DisposalToken);
-            if (focus && toolWindow.Content is UIElement content) {
+            if (focus && toolWindow.Content is UIElement content)
+            {
                 content.Focus();
             }
 
             return (T)toolWindow;
         }
 
-        internal async Task NewCookiecutterSessionAsync(CookiecutterSessionStartInfo ssi = null) {
+        internal async Task NewCookiecutterSessionAsync(CookiecutterSessionStartInfo ssi = null)
+        {
             var pane = await ShowWindowPaneAsync<CookiecutterToolWindow>(true);
             pane.NewSession(ssi);
         }
 
-        private int ViewExternalBrowser(IntPtr variantIn, IntPtr variantOut, uint commandExecOpt) {
-            if (IsQueryParameterList(variantIn, variantOut, commandExecOpt)) {
+        private int ViewExternalBrowser(IntPtr variantIn, IntPtr variantOut, uint commandExecOpt)
+        {
+            if (IsQueryParameterList(variantIn, variantOut, commandExecOpt))
+            {
                 Marshal.GetNativeVariantForObject("url", variantOut);
                 return VSConstants.S_OK;
             }
@@ -227,16 +240,22 @@ namespace Microsoft.CookiecutterTools {
             var name = GetStringArgument(variantIn) ?? "";
             var uri = name.Trim('"');
 
-            if (File.Exists(uri)) {
+            if (File.Exists(uri))
+            {
                 var ext = Path.GetExtension(uri);
                 if (string.Compare(ext, ".htm", StringComparison.CurrentCultureIgnoreCase) == 0 ||
-                    string.Compare(ext, ".html", StringComparison.CurrentCultureIgnoreCase) == 0) {
+                    string.Compare(ext, ".html", StringComparison.CurrentCultureIgnoreCase) == 0)
+                {
                     Process.Start(uri)?.Dispose();
                 }
-            } else {
+            }
+            else
+            {
                 Uri u;
-                if (Uri.TryCreate(uri, UriKind.Absolute, out u)) {
-                    if (u.Scheme == Uri.UriSchemeHttp || u.Scheme == Uri.UriSchemeHttps) {
+                if (Uri.TryCreate(uri, UriKind.Absolute, out u))
+                {
+                    if (u.Scheme == Uri.UriSchemeHttp || u.Scheme == Uri.UriSchemeHttps)
+                    {
                         Process.Start(uri)?.Dispose();
                     }
                 }
@@ -245,15 +264,18 @@ namespace Microsoft.CookiecutterTools {
             return VSConstants.S_OK;
         }
 
-        private int NewProjectFromTemplate(IntPtr variantIn, IntPtr variantOut, uint commandExecOpt) {
-            if (IsQueryParameterList(variantIn, variantOut, commandExecOpt)) {
+        private int NewProjectFromTemplate(IntPtr variantIn, IntPtr variantOut, uint commandExecOpt)
+        {
+            if (IsQueryParameterList(variantIn, variantOut, commandExecOpt))
+            {
                 Marshal.GetNativeVariantForObject("url", variantOut);
                 return VSConstants.S_OK;
             }
 
             var name = GetStringArgument(variantIn) ?? "";
             var args = name.Split('|');
-            if (args.Length != 3) {
+            if (args.Length != 3)
+            {
                 return VSConstants.E_FAIL;
             }
 
@@ -271,33 +293,41 @@ namespace Microsoft.CookiecutterTools {
             return VSConstants.S_OK;
         }
 
-        internal string RecommendedFeed {
-            get {
+        internal string RecommendedFeed
+        {
+            get
+            {
                 var page = (CookiecutterOptionPage)GetDialogPage(typeof(CookiecutterOptionPage));
                 return page.FeedUrl;
             }
         }
 
-        internal bool ShowHelp {
-            get {
+        internal bool ShowHelp
+        {
+            get
+            {
                 var page = (CookiecutterOptionPage)GetDialogPage(typeof(CookiecutterOptionPage));
                 return page.ShowHelp;
             }
 
-            set {
+            set
+            {
                 var page = (CookiecutterOptionPage)GetDialogPage(typeof(CookiecutterOptionPage));
                 page.ShowHelp = value;
                 page.SaveSettingsToStorage();
             }
         }
 
-        internal bool CheckForTemplateUpdate {
-            get {
+        internal bool CheckForTemplateUpdate
+        {
+            get
+            {
                 var page = (CookiecutterOptionPage)GetDialogPage(typeof(CookiecutterOptionPage));
                 return page.CheckForTemplateUpdate;
             }
 
-            set {
+            set
+            {
                 var page = (CookiecutterOptionPage)GetDialogPage(typeof(CookiecutterOptionPage));
                 page.CheckForTemplateUpdate = value;
                 page.SaveSettingsToStorage();

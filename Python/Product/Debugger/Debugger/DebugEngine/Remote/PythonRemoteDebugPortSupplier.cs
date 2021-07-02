@@ -21,7 +21,6 @@ using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.PythonTools.Debugger.Transports;
-using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio;
 
 namespace Microsoft.PythonTools.Debugger.Remote {

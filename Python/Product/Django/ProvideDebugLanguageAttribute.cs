@@ -14,20 +14,22 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.VisualStudio.Shell;
-
-namespace Microsoft.PythonTools.Django {
-    class ProvideDebugLanguageAttribute : RegistrationAttribute {
+namespace Microsoft.PythonTools.Django
+{
+    class ProvideDebugLanguageAttribute : RegistrationAttribute
+    {
         private readonly string _languageGuid, _languageName, _engineGuid, _eeGuid;
 
-        public ProvideDebugLanguageAttribute(string languageName, string languageGuid, string eeGuid, string debugEngineGuid) {
+        public ProvideDebugLanguageAttribute(string languageName, string languageGuid, string eeGuid, string debugEngineGuid)
+        {
             _languageName = languageName;
             _languageGuid = languageGuid;
             _eeGuid = eeGuid;
             _engineGuid = debugEngineGuid;
         }
 
-        public override void Register(RegistrationContext context) {
+        public override void Register(RegistrationContext context)
+        {
             var langSvcKey = context.CreateKey("Languages\\Language Services\\" + _languageName + "\\Debugger Languages\\" + _languageGuid);
             langSvcKey.SetValue("", _languageName);
             // 994... is the vendor ID (Microsoft)
@@ -40,7 +42,8 @@ namespace Microsoft.PythonTools.Django {
             engineKey.SetValue("0", _engineGuid);
         }
 
-        public override void Unregister(RegistrationContext context) {
+        public override void Unregister(RegistrationContext context)
+        {
         }
     }
 }

@@ -14,28 +14,32 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Linq;
 using Microsoft.PythonTools.Django.TemplateParsing;
-using Microsoft.PythonTools.Intellisense;
-using Microsoft.VisualStudio.Text;
 
-namespace Microsoft.PythonTools.Django.Intellisense {
-    internal class ProjectBlockCompletionContext : ProjectBlockCompletionContextBase {
+namespace Microsoft.PythonTools.Django.Intellisense
+{
+    internal class ProjectBlockCompletionContext : ProjectBlockCompletionContextBase
+    {
         public ProjectBlockCompletionContext(VsProjectAnalyzer analyzer, ITextBuffer buffer)
-            : base(analyzer, buffer.GetFileName()) {
+            : base(analyzer, buffer.GetFileName())
+        {
 
             var doc = HtmlEditorDocument.TryFromTextBuffer(buffer);
-            if (doc == null) {
+            if (doc == null)
+            {
                 return;
             }
 
             var artifacts = doc.HtmlEditorTree.ArtifactCollection;
-            foreach (var artifact in artifacts.OfType<TemplateBlockArtifact>()) {
+            foreach (var artifact in artifacts.OfType<TemplateBlockArtifact>())
+            {
                 var artifactText = doc.HtmlEditorTree.ParseTree.Text.GetText(artifact.InnerRange.Start, artifact.InnerRange.Length);
                 artifact.Parse(artifactText);
-                if (artifact.Block != null) {
+                if (artifact.Block != null)
+                {
                     var varNames = artifact.Block.GetVariables();
-                    foreach (var varName in varNames) {
+                    foreach (var varName in varNames)
+                    {
                         AddLoopVariable(varName);
                     }
                 }

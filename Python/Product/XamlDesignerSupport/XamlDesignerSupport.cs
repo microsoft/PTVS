@@ -17,7 +17,6 @@
 using System;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
-using Microsoft.PythonTools.Infrastructure;
 using Microsoft.Windows.Design.Host;
 
 namespace Microsoft.PythonTools.XamlDesignerSupport {

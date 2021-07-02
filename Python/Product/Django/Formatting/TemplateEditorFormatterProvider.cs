@@ -14,18 +14,19 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.ComponentModel.Composition;
-using Microsoft.VisualStudio.Utilities;
-
-namespace Microsoft.PythonTools.Django.Formatting {
+namespace Microsoft.PythonTools.Django.Formatting
+{
     [Export(typeof(IEditorFormatterProvider))]
     [ContentType(TemplateHtmlContentType.ContentTypeName)]
-    internal class TemplateEditorFormatterProvider : IEditorFormatterProvider {
-        public IEditorFormatter CreateFormatter() {
+    internal class TemplateEditorFormatterProvider : IEditorFormatterProvider
+    {
+        public IEditorFormatter CreateFormatter()
+        {
             return null;
         }
 
-        public IEditorRangeFormatter CreateRangeFormatter() {
+        public IEditorRangeFormatter CreateRangeFormatter()
+        {
             return null;
         }
     }

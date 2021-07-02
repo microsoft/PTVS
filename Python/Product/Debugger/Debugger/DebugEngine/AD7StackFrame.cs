@@ -17,7 +17,6 @@
 using System;
 using System.IO;
 using System.Linq;
-using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio;
 
 namespace Microsoft.PythonTools.Debugger.DebugEngine {

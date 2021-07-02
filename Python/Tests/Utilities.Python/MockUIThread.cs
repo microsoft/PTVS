@@ -17,8 +17,6 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.PythonTools.Infrastructure;
-using Microsoft.VisualStudioTools;
 
 namespace TestUtilities.Mocks {
     class MockUIThread : MockUIThreadBase {

@@ -21,7 +21,6 @@ using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Ipc.Json;
 using LDP = Microsoft.PythonTools.Debugger.LegacyDebuggerProtocol;
 

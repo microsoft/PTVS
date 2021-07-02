@@ -23,7 +23,6 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.AccessControl;
 using System.Threading;
-using Microsoft.PythonTools.Infrastructure;
 using Microsoft.Win32;
 
 namespace Microsoft.PythonTools {

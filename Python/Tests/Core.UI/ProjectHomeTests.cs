@@ -20,7 +20,6 @@ using System.Linq;
 using System.Windows.Input;
 using EnvDTE;
 using EnvDTE80;
-using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools.Project.Automation;
 using TestUtilities;

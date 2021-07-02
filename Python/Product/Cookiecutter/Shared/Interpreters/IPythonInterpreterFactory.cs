@@ -14,7 +14,8 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.CookiecutterTools.Interpreters {
+namespace Microsoft.CookiecutterTools.Interpreters
+{
     /// <summary>
     /// Provides a factory for creating IPythonInterpreters for a specific
     /// Python implementation.
@@ -26,11 +27,13 @@ namespace Microsoft.CookiecutterTools.Interpreters {
     /// It also contains a method for creating an interpreter. This allows for
     /// stateful interpreters that participate in analysis or track other state.
     /// </summary>
-    public interface IPythonInterpreterFactory {
+    public interface IPythonInterpreterFactory
+    {
         /// <summary>
         /// Configuration settings for the interpreter.
         /// </summary>
-        InterpreterConfiguration Configuration {
+        InterpreterConfiguration Configuration
+        {
             get;
         }
     }

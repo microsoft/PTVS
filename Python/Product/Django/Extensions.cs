@@ -14,18 +14,17 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using Microsoft.PythonTools.Project;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudioTools.Project.Automation;
-
-namespace Microsoft.PythonTools.Django {
-    static class Extensions {
-        internal static IPythonProject GetPythonProject(this EnvDTE.Project project) {
+namespace Microsoft.PythonTools.Django
+{
+    static class Extensions
+    {
+        internal static IPythonProject GetPythonProject(this EnvDTE.Project project)
+        {
             return project.GetCommonProject() as IPythonProject;
         }
 
-        internal static EnvDTE.Project GetProject(this IVsHierarchy hierarchy) {
+        internal static EnvDTE.Project GetProject(this IVsHierarchy hierarchy)
+        {
             object project;
 
             ErrorHandler.ThrowOnFailure(
@@ -39,20 +38,25 @@ namespace Microsoft.PythonTools.Django {
             return (project as EnvDTE.Project);
         }
 
-        internal static object GetCommonProject(this EnvDTE.Project project) {
+        internal static object GetCommonProject(this EnvDTE.Project project)
+        {
             OAProject oaProj = project as OAProject;
-            if (oaProj != null) {
+            if (oaProj != null)
+            {
                 var common = oaProj.Project;
-                if (common != null) {
+                if (common != null)
+                {
                     return common;
                 }
             }
             return null;
         }
 
-        internal static Guid GetItemType(this VSITEMSELECTION vsItemSelection) {
+        internal static Guid GetItemType(this VSITEMSELECTION vsItemSelection)
+        {
             Guid typeGuid;
-            try {
+            try
+            {
                 ErrorHandler.ThrowOnFailure(
                     vsItemSelection.pHier.GetGuidProperty(
                         vsItemSelection.itemid,
@@ -60,20 +64,25 @@ namespace Microsoft.PythonTools.Django {
                         out typeGuid
                     )
                 );
-            } catch (System.Runtime.InteropServices.COMException) {
+            }
+            catch (System.Runtime.InteropServices.COMException)
+            {
                 return Guid.Empty;
             }
             return typeGuid;
         }
 
-        internal static bool IsFolder(this VSITEMSELECTION item) {
+        internal static bool IsFolder(this VSITEMSELECTION item)
+        {
             return item.GetItemType() == VSConstants.GUID_ItemType_PhysicalFolder ||
                 item.itemid == VSConstants.VSITEMID_ROOT;
         }
 
-        internal static bool IsNonMemberItem(this VSITEMSELECTION item) {
+        internal static bool IsNonMemberItem(this VSITEMSELECTION item)
+        {
             object obj;
-            try {
+            try
+            {
                 ErrorHandler.ThrowOnFailure(
                     item.pHier.GetProperty(
                         item.itemid,
@@ -81,23 +90,28 @@ namespace Microsoft.PythonTools.Django {
                         out obj
                     )
                 );
-            } catch (System.Runtime.InteropServices.COMException) {
+            }
+            catch (System.Runtime.InteropServices.COMException)
+            {
                 return false;
             }
             return (obj as bool?) ?? false;
         }
 
-        internal static string Name(this VSITEMSELECTION item) {
+        internal static string Name(this VSITEMSELECTION item)
+        {
             return item.pHier.GetItemName(item.itemid);
         }
 
-        internal static string GetItemName(this IVsHierarchy hier, uint itemid) {
+        internal static string GetItemName(this IVsHierarchy hier, uint itemid)
+        {
             object name;
             ErrorHandler.ThrowOnFailure(hier.GetProperty(itemid, (int)__VSHPROPID.VSHPROPID_Name, out name));
             return (string)name;
         }
 
-        internal static VSITEMSELECTION GetParent(this VSITEMSELECTION vsItemSelection) {
+        internal static VSITEMSELECTION GetParent(this VSITEMSELECTION vsItemSelection)
+        {
             object parent;
             ErrorHandler.ThrowOnFailure(
                 vsItemSelection.pHier.GetProperty(
@@ -109,9 +123,12 @@ namespace Microsoft.PythonTools.Django {
 
             var res = new VSITEMSELECTION();
             var i = parent as int?;
-            if (i.HasValue) {
+            if (i.HasValue)
+            {
                 res.itemid = (uint)i.GetValueOrDefault();
-            } else {
+            }
+            else
+            {
                 var ip = parent as IntPtr?;
                 res.itemid = (uint)ip.GetValueOrDefault().ToInt32();
             }
@@ -120,9 +137,11 @@ namespace Microsoft.PythonTools.Django {
             return res;
         }
 
-        internal static VSITEMSELECTION GetParentFolder(this VSITEMSELECTION vsItemSelection) {
+        internal static VSITEMSELECTION GetParentFolder(this VSITEMSELECTION vsItemSelection)
+        {
             var parent = vsItemSelection.GetParent();
-            while (!parent.IsFolder()) {
+            while (!parent.IsFolder())
+            {
                 parent = parent.GetParent();
             }
             return parent;

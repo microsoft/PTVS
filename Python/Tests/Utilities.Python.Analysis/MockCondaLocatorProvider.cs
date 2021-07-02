@@ -15,7 +15,6 @@
 // permissions and limitations under the License.
 
 using System;
-using Microsoft.PythonTools.Interpreter;
 
 namespace TestUtilities.Python {
     public class MockCondaLocatorProvider : ICondaLocatorProvider {

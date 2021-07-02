@@ -20,14 +20,11 @@ using System.ComponentModel.Design;
 using System.Linq;
 using System.Reflection;
 using Microsoft.PythonTools;
-using Microsoft.PythonTools.Editor;
-using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Options;
 using Microsoft.VisualStudio.InteractiveWindow.Commands;
 using Microsoft.VisualStudio.Text.Adornments;
 using Microsoft.VisualStudio.Utilities;
-using Microsoft.VisualStudioTools;
 using TestUtilities.Mocks;
 
 namespace TestUtilities.Python {

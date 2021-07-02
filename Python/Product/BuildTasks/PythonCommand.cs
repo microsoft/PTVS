@@ -21,7 +21,6 @@ using System.Linq;
 using System.Text;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.BuildTasks {
     /// <summary>

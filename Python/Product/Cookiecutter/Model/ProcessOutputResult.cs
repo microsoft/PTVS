@@ -14,8 +14,10 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.CookiecutterTools.Model {
-    struct ProcessOutputResult {
+namespace Microsoft.CookiecutterTools.Model
+{
+    struct ProcessOutputResult
+    {
         public string ExeFileName;
         public int? ExitCode;
         public string[] StandardOutputLines;

@@ -16,8 +16,6 @@
 
 using System.IO;
 using Microsoft.PythonTools;
-using Microsoft.PythonTools.Editor;
-using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Options;
 using Microsoft.VisualStudio.Composition;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -25,7 +23,6 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Threading;
 using Microsoft.VisualStudio.Utilities;
-using Microsoft.VisualStudioTools;
 using TestUtilities.Mocks;
 
 namespace TestUtilities.Python {

@@ -14,16 +14,17 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-
-namespace Microsoft.CookiecutterTools.Interpreters {
+namespace Microsoft.CookiecutterTools.Interpreters
+{
     public abstract class InterpreterArchitecture :
         IFormattable,
         IComparable<InterpreterArchitecture>,
-        IEquatable<InterpreterArchitecture> {
+        IEquatable<InterpreterArchitecture>
+    {
         protected abstract bool Equals(string value);
 
-        public virtual string ToString(string format, IFormatProvider formatProvider, string defaultString) {
+        public virtual string ToString(string format, IFormatProvider formatProvider, string defaultString)
+        {
             return defaultString;
         }
 
@@ -35,20 +36,26 @@ namespace Microsoft.CookiecutterTools.Interpreters {
         public string ToString(string format) => ToString(format, null, "");
         public string ToString(string format, IFormatProvider formatProvider) => ToString(format, formatProvider, "");
 
-        public string ToPEP514() {
+        public string ToPEP514()
+        {
             return ToString("PEP514", null);
         }
 
-        public static bool TryParse(string value, out InterpreterArchitecture arch) {
+        public static bool TryParse(string value, out InterpreterArchitecture arch)
+        {
             arch = Unknown;
-            if (string.IsNullOrEmpty(value)) {
+            if (string.IsNullOrEmpty(value))
+            {
                 return false;
             }
 
-            if (x86.Equals(value)) {
+            if (x86.Equals(value))
+            {
                 arch = x86;
                 return true;
-            } else if (x64.Equals(value)) {
+            }
+            else if (x64.Equals(value))
+            {
                 arch = x64;
                 return true;
             }
@@ -56,23 +63,28 @@ namespace Microsoft.CookiecutterTools.Interpreters {
             return false;
         }
 
-        public static InterpreterArchitecture TryParse(string value) {
+        public static InterpreterArchitecture TryParse(string value)
+        {
             InterpreterArchitecture result;
-            if (!TryParse(value, out result)) {
+            if (!TryParse(value, out result))
+            {
                 return Unknown;
             }
             return result;
         }
 
-        public static InterpreterArchitecture Parse(string value) {
+        public static InterpreterArchitecture Parse(string value)
+        {
             InterpreterArchitecture result;
-            if (!TryParse(value, out result)) {
+            if (!TryParse(value, out result))
+            {
                 throw new FormatException();
             }
             return result;
         }
 
-        public int CompareTo(InterpreterArchitecture other) {
+        public int CompareTo(InterpreterArchitecture other)
+        {
             // We implement the full comparison here rather than delegating to
             // subclasses so that we have some way to handle extra
             // architectures being injected while ensuring that the
@@ -84,23 +96,29 @@ namespace Microsoft.CookiecutterTools.Interpreters {
             //      anything else sorted by type name
             //      Unknown
 
-            if (GetType().IsEquivalentTo(other.GetType())) {
+            if (GetType().IsEquivalentTo(other.GetType()))
+            {
                 return 0;
             }
 
-            if (this is X86Architecture) {
+            if (this is X86Architecture)
+            {
                 return -1;
             }
-            if (this is X64Architecture) {
-                if (other is X86Architecture) {
+            if (this is X64Architecture)
+            {
+                if (other is X86Architecture)
+                {
                     return 1;
                 }
                 return -1;
             }
-            if (this is UnknownArchitecture) {
+            if (this is UnknownArchitecture)
+            {
                 return 1;
             }
-            if (other is UnknownArchitecture) {
+            if (other is UnknownArchitecture)
+            {
                 return -1;
             }
 
@@ -115,16 +133,20 @@ namespace Microsoft.CookiecutterTools.Interpreters {
         public bool Equals(InterpreterArchitecture other) => other != null && GetType().IsEquivalentTo(other.GetType());
         public override int GetHashCode() => GetType().GetHashCode();
 
-        private sealed class UnknownArchitecture : InterpreterArchitecture {
+        private sealed class UnknownArchitecture : InterpreterArchitecture
+        {
             public UnknownArchitecture() { }
             protected override bool Equals(string value) => false;
         }
 
-        private sealed class X86Architecture : InterpreterArchitecture {
+        private sealed class X86Architecture : InterpreterArchitecture
+        {
             public X86Architecture() { }
 
-            public override string ToString(string format, IFormatProvider formatProvider, string defaultString) {
-                switch (format ?? "") {
+            public override string ToString(string format, IFormatProvider formatProvider, string defaultString)
+            {
+                switch (format ?? "")
+                {
                     case "PEP514":
                         return "32bit";
                     case "()":
@@ -144,8 +166,10 @@ namespace Microsoft.CookiecutterTools.Interpreters {
                 }
             }
 
-            protected override bool Equals(string value) {
-                switch (value.ToLowerInvariant().Trim()) {
+            protected override bool Equals(string value)
+            {
+                switch (value.ToLowerInvariant().Trim())
+                {
                     case "32bit":
                     case "32-bit":
                     case "(32-bit)":
@@ -156,11 +180,14 @@ namespace Microsoft.CookiecutterTools.Interpreters {
             }
         }
 
-        private sealed class X64Architecture : InterpreterArchitecture {
+        private sealed class X64Architecture : InterpreterArchitecture
+        {
             public X64Architecture() { }
 
-            public override string ToString(string format, IFormatProvider formatProvider, string defaultString) {
-                switch (format ?? "") {
+            public override string ToString(string format, IFormatProvider formatProvider, string defaultString)
+            {
+                switch (format ?? "")
+                {
                     case "PEP514":
                         return "64bit";
                     case "()":
@@ -180,8 +207,10 @@ namespace Microsoft.CookiecutterTools.Interpreters {
                 }
             }
 
-            protected override bool Equals(string value) {
-                switch (value.ToLowerInvariant().Trim()) {
+            protected override bool Equals(string value)
+            {
+                switch (value.ToLowerInvariant().Trim())
+                {
                     case "64bit":
                     case "64-bit":
                     case "(64-bit)":

@@ -14,17 +14,16 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Runtime.InteropServices;
-using Microsoft.VisualStudio.Shell.Flavor;
-
-namespace Microsoft.PythonTools.Django.Project {
+namespace Microsoft.PythonTools.Django.Project
+{
     [Guid(DjangoProjectGuid)]
-    public class DjangoProjectFactory : FlavoredProjectFactoryBase {
+    public class DjangoProjectFactory : FlavoredProjectFactoryBase
+    {
         internal const string DjangoProjectGuid = "5F0BE9CA-D677-4A4D-8806-6076C0FAAD37";
         private readonly DjangoPackage _package;
 
-        public DjangoProjectFactory(DjangoPackage package) {
+        public DjangoProjectFactory(DjangoPackage package)
+        {
             _package = package;
         }
 

@@ -25,7 +25,8 @@ namespace Microsoft.VisualStudioTools
         private readonly long _start, _minReportTime;
         private readonly string _description;
 
-        private static Stopwatch MakeStopwatch() {
+        private static Stopwatch MakeStopwatch()
+        {
             var res = new Stopwatch();
             res.Start();
             return res;
@@ -54,7 +55,8 @@ namespace Microsoft.VisualStudioTools
         {
 #if DEBUG
             var elapsed = _timer.ElapsedMilliseconds - _start;
-            if (elapsed >= _minReportTime) {
+            if (elapsed >= _minReportTime)
+            {
                 Debug.WriteLine(String.Format("{0}: {1}ms elapsed", _description, elapsed));
             }
 #endif

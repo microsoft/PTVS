@@ -14,17 +14,15 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Globalization;
-using System.Runtime.CompilerServices;
-using System.Threading;
-
-namespace Microsoft.CookiecutterTools.Infrastructure {
-    public static class ExceptionExtensions {
+namespace Microsoft.CookiecutterTools.Infrastructure
+{
+    public static class ExceptionExtensions
+    {
         /// <summary>
         /// Returns true if an exception should not be handled by logging code.
         /// </summary>
-        public static bool IsCriticalException(this Exception ex) {
+        public static bool IsCriticalException(this Exception ex)
+        {
             return ex is StackOverflowException ||
                 ex is OutOfMemoryException ||
                 ex is ThreadAbortException ||
@@ -38,10 +36,14 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
             [CallerFilePath] string callerFile = null,
             [CallerLineNumber] int callerLineNumber = 0,
             [CallerMemberName] string callerName = null
-        ) {
-            if (string.IsNullOrEmpty(callerName)) {
+        )
+        {
+            if (string.IsNullOrEmpty(callerName))
+            {
                 callerName = callerType != null ? callerType.FullName : string.Empty;
-            } else if (callerType != null) {
+            }
+            else if (callerType != null)
+            {
                 callerName = callerType.FullName + "." + callerName;
             }
 
@@ -61,7 +63,8 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
     /// An exception that should not be silently handled and logged.
     /// </summary>
     [Serializable]
-    public class CriticalException : Exception {
+    public class CriticalException : Exception
+    {
         public CriticalException() { }
         public CriticalException(string message) : base(message) { }
         public CriticalException(string message, Exception inner) : base(message, inner) { }
