@@ -12,5 +12,6 @@
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="VsPyProf.h" />
+    <ClInclude Include="..\..\..\..\..\..\..\..\..\Program Files\Microsoft Visual Studio\2022\Preview\VC\Tools\MSVC\14.29.30130\include\xpolymorphic_allocator.h" />
   </ItemGroup>
 </Project>

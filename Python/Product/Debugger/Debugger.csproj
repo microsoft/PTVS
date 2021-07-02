@@ -54,6 +54,18 @@
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>C:\Users\peezo\source\repos\PeezoSlug\PTVS\\Build\xTVS.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <PlatformTarget>x64</PlatformTarget>
+    <OutputPath>bin\x64\Debug\</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <PlatformTarget>x64</PlatformTarget>
+    <OutputPath>bin\x64\Release\</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'PTVS1|x64'">
+    <PlatformTarget>x64</PlatformTarget>
+    <OutputPath>bin\x64\PTVS1\</OutputPath>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="envdte, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="envdte80, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
@@ -175,16 +187,6 @@
     <Compile Include="Guids.cs" />
     <Compile Include="DebugPyVersion.cs" />
     <Compile Include="VsPackageMessage.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\VSCommon\VSCommon.csproj">
-      <Project>{a52ac77f-6df9-4387-bb08-8ded3fd95a0f}</Project>
-      <Name>VSCommon</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\VSInterpreters\VSInterpreters.csproj">
-      <Project>{815db0cd-c0dd-4997-b43c-abee4dbeffe7}</Project>
-      <Name>VSInterpreters</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="..\ProjectAfter.settings" />
   <Target Name="_IncludeDebugPy" BeforeTargets="AssignTargetPaths;GetVSIXSourceItems">

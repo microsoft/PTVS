@@ -130,6 +130,7 @@
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\..\..\..\..\..\..\Program Files\Microsoft Visual Studio\2022\Preview\VC\Tools\MSVC\14.29.30130\include\xpolymorphic_allocator.h" />
     <ClInclude Include="python.h" />
     <ClInclude Include="PythonApi.h" />
     <ClInclude Include="stdafx.h" />
@@ -140,6 +141,18 @@
     <ClCompile Include="dllmain.cpp">
       <CompileAsManaged>false</CompileAsManaged>
       <PrecompiledHeader />
+      <EnableFiberSafeOptimizations Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</EnableFiberSafeOptimizations>
+      <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Release|x64'">StackFrameRuntimeCheck</BasicRuntimeChecks>
+      <EnableEnhancedInstructionSet Condition="'$(Configuration)|$(Platform)'=='Release|x64'">StreamingSIMDExtensions</EnableEnhancedInstructionSet>
+      <FloatingPointModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Fast</FloatingPointModel>
+      <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Release|x64'">stdcpp14</LanguageStandard>
+      <LanguageStandard_C Condition="'$(Configuration)|$(Platform)'=='Release|x64'">stdc11</LanguageStandard_C>
+      <EnableModules Condition="'$(Configuration)|$(Platform)'=='Release|x64'">yes</EnableModules>
+      <GenerateSourceDependencies Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</GenerateSourceDependencies>
+      <CallingConvention Condition="'$(Configuration)|$(Platform)'=='Release|x64'">FastCall</CallingConvention>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">CompileAsC</CompileAs>
+      <DeploymentContent>true</DeploymentContent>
+      <FileType>CppClass</FileType>
     </ClCompile>
     <ClCompile Include="PythonApi.cpp" />
     <ClCompile Include="stdafx.cpp">

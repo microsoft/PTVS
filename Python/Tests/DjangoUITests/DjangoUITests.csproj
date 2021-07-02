@@ -59,6 +59,18 @@
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>C:\Users\peezo\source\repos\PeezoSlug\PTVS\\Build\xTVS.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <PlatformTarget>x64</PlatformTarget>
+    <OutputPath>bin\x64\Debug\</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <PlatformTarget>x64</PlatformTarget>
+    <OutputPath>bin\x64\Release\</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'PTVS1|x64'">
+    <PlatformTarget>x64</PlatformTarget>
+    <OutputPath>bin\x64\PTVS1\</OutputPath>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="envdte, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <EmbedInteropTypes>False</EmbedInteropTypes>
@@ -121,10 +133,6 @@
       <Project>{639f1efb-5a8b-4f8b-bf49-bc73f244d38d}</Project>
       <Name>Django</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Product\VSInterpreters\VSInterpreters.csproj">
-      <Project>{815db0cd-c0dd-4997-b43c-abee4dbeffe7}</Project>
-      <Name>VSInterpreters</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\Product\PythonTools\PythonTools.csproj">
       <Project>{FA7BE5F5-E04F-4613-B7AC-70CE10D1BB68}</Project>
       <Name>PythonTools</Name>
@@ -149,10 +157,6 @@
     <ProjectReference Include="..\Utilities.Python\TestUtilities.Python.csproj">
       <Project>{62641B47-1ABB-4638-A3D5-2A834D089667}</Project>
       <Name>TestUtilities.Python</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Product\VSCommon\VSCommon.csproj">
-      <Project>{A52AC77F-6DF9-4387-BB08-8DED3FD95A0F}</Project>
-      <Name>VSCommon</Name>
     </ProjectReference>
     <ProjectReference Include="..\TestRunnerInterop\TestRunnerInterop.csproj">
       <Project>{3e8c485b-905a-4dbc-b059-161ccb1ad591}</Project>

@@ -50,14 +50,22 @@
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>C:\Users\peezo\source\repos\PeezoSlug\PTVS\\Build\xTVS.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <PlatformTarget>x64</PlatformTarget>
+    <OutputPath>bin\x64\Debug\</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <PlatformTarget>x64</PlatformTarget>
+    <OutputPath>bin\x64\Release\</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'PTVS1|x64'">
+    <PlatformTarget>x64</PlatformTarget>
+    <OutputPath>bin\x64\PTVS1\</OutputPath>
+  </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\IronPythonResolver\IronPythonResolver.csproj">
       <Project>{31F224B1-68DA-4524-9A1C-95F22492775B}</Project>
       <Name>IronPythonResolver</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\VSInterpreters\VSInterpreters.csproj">
-      <Project>{815db0cd-c0dd-4997-b43c-abee4dbeffe7}</Project>
-      <Name>Microsoft.PythonTools.VSInterpreters</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
