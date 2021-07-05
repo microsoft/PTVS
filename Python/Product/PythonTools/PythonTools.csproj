@@ -1154,6 +1154,7 @@
     <Optimize>true</Optimize>
     <DocumentationFile>..\..\..\BuildOutput\Debug10.0\raw\binaries\Microsoft.PythonTools.xml</DocumentationFile>
     <RegisterForComInterop>true</RegisterForComInterop>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
     <PlatformTarget>x64</PlatformTarget>
