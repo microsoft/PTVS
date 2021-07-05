@@ -66,7 +66,9 @@ namespace TestRunnerInterop {
         [SuppressMessage("Microsoft.Design", "CA1060:MovePInvokesToNativeMethodsClass")]
         [DllImport("ole32.dll")]
 #pragma warning disable CS0246 // The type or namespace name 'IBindCtx' could not be found (are you missing a using directive or an assembly reference?)
+#pragma warning disable CS0246 // The type or namespace name 'IBindCtx' could not be found (are you missing a using directive or an assembly reference?)
         private static extern int CreateBindCtx(uint reserved, out IBindCtx ppbc);
+#pragma warning restore CS0246 // The type or namespace name 'IBindCtx' could not be found (are you missing a using directive or an assembly reference?)
 #pragma warning restore CS0246 // The type or namespace name 'IBindCtx' could not be found (are you missing a using directive or an assembly reference?)
 
         public DTE GetDTE() {

@@ -39,7 +39,9 @@ namespace TestUtilities
         /// <returns></returns>
         [DllImport("ole32.dll")]
 #pragma warning disable CS0246 // The type or namespace name 'IRunningObjectTable' could not be found (are you missing a using directive or an assembly reference?)
+#pragma warning disable CS0246 // The type or namespace name 'IRunningObjectTable' could not be found (are you missing a using directive or an assembly reference?)
         public static extern int GetRunningObjectTable(int reserved, out IRunningObjectTable prot);
+#pragma warning restore CS0246 // The type or namespace name 'IRunningObjectTable' could not be found (are you missing a using directive or an assembly reference?)
 #pragma warning restore CS0246 // The type or namespace name 'IRunningObjectTable' could not be found (are you missing a using directive or an assembly reference?)
 
         /// <summary>
@@ -56,7 +58,9 @@ namespace TestUtilities
         /// <returns>HRESULT</returns>
         [DllImport("ole32.dll")]
 #pragma warning disable CS0246 // The type or namespace name 'IBindCtx' could not be found (are you missing a using directive or an assembly reference?)
+#pragma warning disable CS0246 // The type or namespace name 'IBindCtx' could not be found (are you missing a using directive or an assembly reference?)
         public static extern int CreateBindCtx(int reserved, out IBindCtx ppbc);
+#pragma warning restore CS0246 // The type or namespace name 'IBindCtx' could not be found (are you missing a using directive or an assembly reference?)
 #pragma warning restore CS0246 // The type or namespace name 'IBindCtx' could not be found (are you missing a using directive or an assembly reference?)
 
         /// <summary>
@@ -67,7 +71,11 @@ namespace TestUtilities
         [DllImport("ole32.dll")]
 #pragma warning disable CS0246 // The type or namespace name 'IMessageFilter' could not be found (are you missing a using directive or an assembly reference?)
 #pragma warning disable CS0246 // The type or namespace name 'IMessageFilter' could not be found (are you missing a using directive or an assembly reference?)
+#pragma warning disable CS0246 // The type or namespace name 'IMessageFilter' could not be found (are you missing a using directive or an assembly reference?)
+#pragma warning disable CS0246 // The type or namespace name 'IMessageFilter' could not be found (are you missing a using directive or an assembly reference?)
         public static extern int CoRegisterMessageFilter(IMessageFilter lpMessageFilter, out IMessageFilter lplpMessageFilter);
+#pragma warning restore CS0246 // The type or namespace name 'IMessageFilter' could not be found (are you missing a using directive or an assembly reference?)
+#pragma warning restore CS0246 // The type or namespace name 'IMessageFilter' could not be found (are you missing a using directive or an assembly reference?)
 #pragma warning restore CS0246 // The type or namespace name 'IMessageFilter' could not be found (are you missing a using directive or an assembly reference?)
 #pragma warning restore CS0246 // The type or namespace name 'IMessageFilter' could not be found (are you missing a using directive or an assembly reference?)
 

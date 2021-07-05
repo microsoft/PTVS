@@ -89,7 +89,9 @@ namespace TestUtilities
         void WaitForMode(dbgDebugMode dbgDebugMode);
 
 #pragma warning disable CS0246 // The type or namespace name 'IVsTaskItem' could not be found (are you missing a using directive or an assembly reference?)
+#pragma warning disable CS0246 // The type or namespace name 'IVsTaskItem' could not be found (are you missing a using directive or an assembly reference?)
         List<IVsTaskItem> WaitForErrorListItems(int expectedCount);
+#pragma warning restore CS0246 // The type or namespace name 'IVsTaskItem' could not be found (are you missing a using directive or an assembly reference?)
 #pragma warning restore CS0246 // The type or namespace name 'IVsTaskItem' could not be found (are you missing a using directive or an assembly reference?)
 
         DTE Dte { get; }

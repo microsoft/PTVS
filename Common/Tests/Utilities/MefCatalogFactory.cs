@@ -96,10 +96,14 @@ Please use {nameof(AssemblyLoader)}.{nameof(AssemblyLoader.EnsureLoaded)} to pre
 
         [MefV1.Export(typeof(MockServiceProvider))]
 #pragma warning disable CS0246 // The type or namespace name 'SVsServiceProvider' could not be found (are you missing a using directive or an assembly reference?)
+#pragma warning disable CS0246 // The type or namespace name 'SVsServiceProvider' could not be found (are you missing a using directive or an assembly reference?)
         [MefV1.Export(typeof(SVsServiceProvider))]
 #pragma warning restore CS0246 // The type or namespace name 'SVsServiceProvider' could not be found (are you missing a using directive or an assembly reference?)
+#pragma warning restore CS0246 // The type or namespace name 'SVsServiceProvider' could not be found (are you missing a using directive or an assembly reference?)
+#pragma warning disable CS0246 // The type or namespace name 'SVsServiceProvider' could not be found (are you missing a using directive or an assembly reference?)
 #pragma warning disable CS0246 // The type or namespace name 'SVsServiceProvider' could not be found (are you missing a using directive or an assembly reference?)
         private class ServiceProvider : MockServiceProvider, SVsServiceProvider
+#pragma warning restore CS0246 // The type or namespace name 'SVsServiceProvider' could not be found (are you missing a using directive or an assembly reference?)
 #pragma warning restore CS0246 // The type or namespace name 'SVsServiceProvider' could not be found (are you missing a using directive or an assembly reference?)
         {
             [MefV1.ImportingConstructor]
