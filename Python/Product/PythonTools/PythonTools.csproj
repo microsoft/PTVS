@@ -1138,7 +1138,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'PTVS1|AnyCPU'">
     <OutputPath>bin\PTVS1\</OutputPath>
     <DefineConstants>TRACE;;USE_PYTHON_TESTDATA;DEV10;;SHAREDPROJECT_OLESERVICEPROVIDER</DefineConstants>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
     <Optimize>true</Optimize>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <NoWarn>436;1998</NoWarn>
