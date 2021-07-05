@@ -14,28 +14,23 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Django.TemplateParsing
-{
+namespace Microsoft.PythonTools.Django.TemplateParsing {
     /// <summary>
     /// Provides context for returning the available variables/filters in a template file.
     /// 
     /// This is implemented as an interface so we can mock it out for the purposes of our tests
     /// and not need to do a fully analysis of the Django library.
     /// </summary>
-    interface IDjangoCompletionContext
-    {
-        string[] Variables
-        {
+    interface IDjangoCompletionContext {
+        string[] Variables {
             get;
         }
 
-        Dictionary<string, TagInfo> Filters
-        {
+        Dictionary<string, TagInfo> Filters {
             get;
         }
 
-        DjangoUrl[] Urls
-        {
+        DjangoUrl[] Urls {
             get;
         }
 

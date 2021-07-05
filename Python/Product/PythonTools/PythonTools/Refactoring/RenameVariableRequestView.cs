@@ -14,13 +14,11 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Refactoring
-{
+namespace Microsoft.PythonTools.Refactoring {
     /// <summary>
     /// Provides a view model for the RenameVariableRequest class.
     /// </summary>
-    sealed class RenameVariableRequestView : INotifyPropertyChanged
-    {
+    sealed class RenameVariableRequestView : INotifyPropertyChanged {
         private readonly string _originalName;
         private readonly PythonLanguageVersion _languageVersion;
 
@@ -34,8 +32,7 @@ namespace Microsoft.PythonTools.Refactoring
         /// <summary>
         /// Create a RenameVariableRequestView with default values.
         /// </summary>
-        public RenameVariableRequestView(string originalName, PythonLanguageVersion languageVersion)
-        {
+        public RenameVariableRequestView(string originalName, PythonLanguageVersion languageVersion) {
             _originalName = originalName;
             _languageVersion = languageVersion;
             //_name = null;
@@ -54,8 +51,7 @@ namespace Microsoft.PythonTools.Refactoring
             PythonLanguageVersion languageVersion,
             RenameVariableRequest template
         )
-            : this(originalName, languageVersion)
-        {
+            : this(originalName, languageVersion) {
             // Access properties rather than underlying variables to ensure dependent properties
             // are also updated.
             Name = template.Name;
@@ -64,14 +60,10 @@ namespace Microsoft.PythonTools.Refactoring
         /// <summary>
         /// Returns a RenameVariableRequest with the values set from the view model.
         /// </summary>
-        public RenameVariableRequest GetRequest()
-        {
-            if (IsValid)
-            {
+        public RenameVariableRequest GetRequest() {
+            if (IsValid) {
                 return new RenameVariableRequest(Name, PreviewChanges, SearchInComments, SearchInStrings);
-            }
-            else
-            {
+            } else {
                 return null;
             }
         }
@@ -79,16 +71,12 @@ namespace Microsoft.PythonTools.Refactoring
         /// <summary>
         /// The new name for the variable.
         /// </summary>
-        public string Name
-        {
-            get
-            {
+        public string Name {
+            get {
                 return _name;
             }
-            set
-            {
-                if (_name != value)
-                {
+            set {
+                if (_name != value) {
                     _name = value;
                     OnPropertyChanged("Name");
                     IsValid = !_originalName.Equals(_name) && ExtractMethodRequestView.IsValidPythonIdentifier(_name, _languageVersion);
@@ -99,16 +87,12 @@ namespace Microsoft.PythonTools.Refactoring
         /// <summary>
         /// True if the name is a valid Python name; otherwise, false.
         /// </summary>
-        public bool IsValid
-        {
-            get
-            {
+        public bool IsValid {
+            get {
                 return _isValid;
             }
-            private set
-            {
-                if (_isValid != value)
-                {
+            private set {
+                if (_isValid != value) {
                     _isValid = value;
                     OnPropertyChanged("IsValid");
                 }
@@ -118,16 +102,12 @@ namespace Microsoft.PythonTools.Refactoring
         /// <summary>
         /// True to show a list of changes before they are made; false to make changes without confirmation.
         /// </summary>
-        public bool PreviewChanges
-        {
-            get
-            {
+        public bool PreviewChanges {
+            get {
                 return _previewChanges;
             }
-            set
-            {
-                if (_previewChanges != value)
-                {
+            set {
+                if (_previewChanges != value) {
                     _previewChanges = value;
                     OnPropertyChanged("PreviewChanges");
                 }
@@ -137,16 +117,12 @@ namespace Microsoft.PythonTools.Refactoring
         /// <summary>
         /// True to change references in comments; false to ignore comments.
         /// </summary>
-        public bool SearchInComments
-        {
-            get
-            {
+        public bool SearchInComments {
+            get {
                 return _searchInComments;
             }
-            set
-            {
-                if (_searchInComments != value)
-                {
+            set {
+                if (_searchInComments != value) {
                     _searchInComments = value;
                     OnPropertyChanged("SearchInComments");
                 }
@@ -156,27 +132,21 @@ namespace Microsoft.PythonTools.Refactoring
         /// <summary>
         /// True to change references in strings; false to ignore strings.
         /// </summary>
-        public bool SearchInStrings
-        {
-            get
-            {
+        public bool SearchInStrings {
+            get {
                 return _searchInStrings;
             }
-            set
-            {
-                if (_searchInStrings != value)
-                {
+            set {
+                if (_searchInStrings != value) {
                     _searchInStrings = value;
                     OnPropertyChanged("SearchInStrings");
                 }
             }
         }
 
-        private void OnPropertyChanged(string propertyName)
-        {
+        private void OnPropertyChanged(string propertyName) {
             var evt = PropertyChanged;
-            if (evt != null)
-            {
+            if (evt != null) {
                 evt(this, new PropertyChangedEventArgs(propertyName));
             }
         }

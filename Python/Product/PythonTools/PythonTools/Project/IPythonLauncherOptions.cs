@@ -16,10 +16,8 @@
 
 using Microsoft.VisualStudioTools.Project;
 
-namespace Microsoft.PythonTools.Project
-{
-    public interface IPythonLauncherOptions
-    {
+namespace Microsoft.PythonTools.Project {
+    public interface IPythonLauncherOptions {
         /// <summary>
         /// Saves the current launcher options to storage.
         /// </summary>
@@ -44,8 +42,7 @@ namespace Microsoft.PythonTools.Project
         /// <summary>
         /// Gets a win forms control which allow editing of the options.
         /// </summary>
-        Control Control
-        {
+        Control Control {
             get;
         }
     }

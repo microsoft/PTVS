@@ -14,28 +14,23 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Intellisense
-{
-    public sealed class UriEqualityComparer : IEqualityComparer<Uri>
-    {
+namespace Microsoft.PythonTools.Intellisense {
+    public sealed class UriEqualityComparer : IEqualityComparer<Uri> {
         private readonly UriComponents _components;
 
         public static readonly IEqualityComparer<Uri> Default = new UriEqualityComparer(UriComponents.SchemeAndServer | UriComponents.PathAndQuery);
         public static readonly IEqualityComparer<Uri> IncludeFragment = new UriEqualityComparer(UriComponents.SchemeAndServer | UriComponents.PathAndQuery | UriComponents.Fragment);
 
-        public UriEqualityComparer(UriComponents components)
-        {
+        public UriEqualityComparer(UriComponents components) {
             _components = components;
         }
 
-        public bool Equals(Uri x, Uri y)
-        {
+        public bool Equals(Uri x, Uri y) {
             return x?.GetComponents(_components, UriFormat.Unescaped) ==
                 y?.GetComponents(_components, UriFormat.Unescaped);
         }
 
-        public int GetHashCode(Uri obj)
-        {
+        public int GetHashCode(Uri obj) {
             return obj?.GetComponents(_components, UriFormat.Unescaped).GetHashCode() ?? 0;
         }
     }

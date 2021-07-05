@@ -16,61 +16,48 @@
 
 using Microsoft.VisualStudioTools.Project;
 
-namespace Microsoft.PythonTools.Project
-{
+namespace Microsoft.PythonTools.Project {
     [Export(typeof(IPythonLauncherProvider))]
-    class DefaultLauncherProvider : IPythonLauncherProvider
-    {
+    class DefaultLauncherProvider : IPythonLauncherProvider {
         private readonly IServiceProvider _serviceProvider;
         private readonly PythonToolsService _pyService;
         internal const string DefaultLauncherName = "Standard Python launcher";
 
         [ImportingConstructor]
-        public DefaultLauncherProvider([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider)
-        {
+        public DefaultLauncherProvider([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider) {
             _serviceProvider = serviceProvider;
             _pyService = serviceProvider.GetPythonToolsService();
         }
 
-        public IPythonLauncherOptions GetLauncherOptions(IPythonProject properties)
-        {
+        public IPythonLauncherOptions GetLauncherOptions(IPythonProject properties) {
             return new DefaultPythonLauncherOptions(properties);
         }
 
-        public string Name
-        {
-            get
-            {
+        public string Name {
+            get {
                 return DefaultLauncherName;
             }
         }
 
-        public string LocalizedName
-        {
-            get
-            {
+        public string LocalizedName {
+            get {
                 return Strings.DefaultLauncherName;
             }
         }
 
-        public string Description
-        {
-            get
-            {
+        public string Description {
+            get {
                 return Strings.DefaultLauncherDescription;
             }
         }
 
-        public int SortPriority
-        {
-            get
-            {
+        public int SortPriority {
+            get {
                 return 0;
             }
         }
 
-        public IProjectLauncher CreateLauncher(IPythonProject project)
-        {
+        public IProjectLauncher CreateLauncher(IPythonProject project) {
             return new DefaultPythonLauncher(_serviceProvider, project.GetLaunchConfigurationOrThrow());
         }
     }

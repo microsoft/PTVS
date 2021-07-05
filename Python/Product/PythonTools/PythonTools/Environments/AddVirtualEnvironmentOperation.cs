@@ -17,10 +17,8 @@
 using Microsoft.PythonTools.InterpreterList;
 using Microsoft.PythonTools.Project;
 
-namespace Microsoft.PythonTools.Environments
-{
-    sealed class AddVirtualEnvironmentOperation
-    {
+namespace Microsoft.PythonTools.Environments {
+    sealed class AddVirtualEnvironmentOperation {
         private readonly IServiceProvider _site;
         private readonly PythonProjectNode _project;
         private readonly IPythonWorkspaceContext _workspace;
@@ -55,8 +53,7 @@ namespace Microsoft.PythonTools.Environments
             bool setAsDefault,
             bool viewInEnvWindow,
             Redirector output = null
-        )
-        {
+        ) {
             _site = site ?? throw new ArgumentNullException(nameof(site));
             _project = project;
             _workspace = workspace;
@@ -77,18 +74,15 @@ namespace Microsoft.PythonTools.Environments
             _logger = _site.GetService(typeof(IPythonToolsLogger)) as IPythonToolsLogger;
         }
 
-        public async Task RunAsync()
-        {
+        public async Task RunAsync() {
             var outputWindow = OutputWindowRedirector.GetGeneral(_site);
             var taskHandler = _statusCenter.PreRegister(
-                new TaskHandlerOptions()
-                {
+                new TaskHandlerOptions() {
                     ActionsAfterCompletion = CompletionActions.RetainAndNotifyOnFaulted | CompletionActions.RetainAndNotifyOnRanToCompletion,
                     Title = Strings.VirtualEnvStatusCenterCreateTitle.FormatUI(PathUtils.GetFileOrDirectoryName(_virtualEnvPath)),
                     DisplayTaskDetails = (t) => { outputWindow.ShowAndActivate(); }
                 },
-                new TaskProgressData()
-                {
+                new TaskProgressData() {
                     CanBeCanceled = false,
                     ProgressText = Strings.VirtualEnvStatusCenterCreateProgressPreparing,
                     PercentComplete = null,
@@ -100,15 +94,13 @@ namespace Microsoft.PythonTools.Environments
             _site.ShowTaskStatusCenter();
         }
 
-        private async Task CreateVirtualEnvironmentAsync(ITaskHandler taskHandler)
-        {
+        private async Task CreateVirtualEnvironmentAsync(ITaskHandler taskHandler) {
             IPythonInterpreterFactory factory = null;
 
             bool failed = true;
             var baseInterp = _registry.FindInterpreter(_baseInterpreter);
 
-            try
-            {
+            try {
                 factory = await VirtualEnv.CreateAndAddFactory(
                     _site,
                     _registry,
@@ -122,46 +114,36 @@ namespace Microsoft.PythonTools.Environments
                     _useVEnv
                 );
 
-                if (factory != null)
-                {
-                    if (_installReqs && File.Exists(_reqsPath))
-                    {
+                if (factory != null) {
+                    if (_installReqs && File.Exists(_reqsPath)) {
                         await InstallPackagesAsync(taskHandler, factory);
                     }
 
-                    await _site.GetUIThread().InvokeTask(async () =>
-                    {
+                    await _site.GetUIThread().InvokeTask(async () => {
                         // Note that for a workspace, VirtualEnv.CreateAndAddFactory
                         // takes care of updating PythonSettings.json, as that is
                         // required in order to obtain the factory. So no need to do
                         // anything here for workspace.
-                        if (_project != null)
-                        {
+                        if (_project != null) {
                             _project.AddInterpreter(factory.Configuration.Id);
-                            if (_setAsCurrent)
-                            {
+                            if (_setAsCurrent) {
                                 _project.SetInterpreterFactory(factory);
                             }
                         }
 
-                        if (_setAsDefault && _options != null)
-                        {
+                        if (_setAsDefault && _options != null) {
                             _options.DefaultInterpreter = factory;
                         }
 
-                        if (_viewInEnvWindow)
-                        {
+                        if (_viewInEnvWindow) {
                             await InterpreterListToolWindow.OpenAtAsync(_site, factory);
                         }
                     });
                 }
 
                 failed = false;
-            }
-            finally
-            {
-                _logger?.LogEvent(PythonLogEvent.CreateVirtualEnv, new CreateVirtualEnvInfo()
-                {
+            } finally {
+                _logger?.LogEvent(PythonLogEvent.CreateVirtualEnv, new CreateVirtualEnvInfo() {
                     Failed = failed,
                     InstallRequirements = _installReqs,
                     UseVEnv = _useVEnv,
@@ -174,31 +156,25 @@ namespace Microsoft.PythonTools.Environments
                 });
             }
 
-            taskHandler?.Progress.Report(new TaskProgressData()
-            {
+            taskHandler?.Progress.Report(new TaskProgressData() {
                 CanBeCanceled = false,
                 ProgressText = Strings.VirtualEnvStatusCenterCreateProgressCompleted,
                 PercentComplete = 100,
             });
         }
 
-        private async Task InstallPackagesAsync(ITaskHandler taskHandler, IPythonInterpreterFactory factory)
-        {
-            taskHandler?.Progress.Report(new TaskProgressData()
-            {
+        private async Task InstallPackagesAsync(ITaskHandler taskHandler, IPythonInterpreterFactory factory) {
+            taskHandler?.Progress.Report(new TaskProgressData() {
                 CanBeCanceled = false,
                 ProgressText = Strings.VirtualEnvStatusCenterCreateProgressInstallingPackages,
                 PercentComplete = null,
             });
 
             var pm = _options?.GetPackageManagers(factory).FirstOrDefault(p => p.UniqueKey == "pip");
-            if (pm != null)
-            {
+            if (pm != null) {
                 var operation = new InstallPackagesOperation(_site, pm, _reqsPath, _output);
                 await operation.InstallPackagesAsync();
-            }
-            else
-            {
+            } else {
                 throw new ApplicationException(Strings.PackageManagementNotSupported_Package.FormatUI(PathUtils.GetFileOrDirectoryName(_reqsPath)));
             }
         }

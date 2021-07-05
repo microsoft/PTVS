@@ -23,7 +23,6 @@ using System.Text.RegularExpressions;
 using System.Windows.Automation;
 using System.Windows.Input;
 using EnvDTE;
-using Microsoft.PythonTools;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;

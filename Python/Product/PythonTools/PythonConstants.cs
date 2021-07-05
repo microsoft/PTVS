@@ -14,17 +14,14 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools
-{
-    public enum TestFrameworkType
-    {
+namespace Microsoft.PythonTools {
+    public enum TestFrameworkType {
         None = 0,
         Pytest = 1,
         UnitTest = 2
     }
 
-    static class PythonConstants
-    {
+    static class PythonConstants {
         //Language name
         public const string LanguageName = "Python";
         internal const string TextEditorSettingsRegistryKey = LanguageName;

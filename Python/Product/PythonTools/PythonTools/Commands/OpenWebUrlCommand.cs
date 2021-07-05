@@ -16,13 +16,11 @@
 
 using Microsoft.VisualStudioTools;
 
-namespace Microsoft.PythonTools.Commands
-{
+namespace Microsoft.PythonTools.Commands {
     /// <summary>
     /// Provides the command for opening an arbitrary URL when selected.
     /// </summary>
-    internal sealed class OpenWebUrlCommand : Command
-    {
+    internal sealed class OpenWebUrlCommand : Command {
         private readonly IServiceProvider _serviceProvider;
         private readonly string _url;
 
@@ -30,15 +28,13 @@ namespace Microsoft.PythonTools.Commands
             IServiceProvider serviceProvider,
             string url,
             uint commandId
-        )
-        {
+        ) {
             _serviceProvider = serviceProvider;
             _url = url;
             CommandId = (int)commandId;
         }
 
-        public override void DoCommand(object sender, EventArgs args)
-        {
+        public override void DoCommand(object sender, EventArgs args) {
             CommonPackage.OpenWebBrowser(_serviceProvider, _url);
         }
 

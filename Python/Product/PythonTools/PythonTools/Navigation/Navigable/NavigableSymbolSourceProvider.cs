@@ -14,13 +14,11 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Navigation.Navigable
-{
+namespace Microsoft.PythonTools.Navigation.Navigable {
     [Export(typeof(INavigableSymbolSourceProvider))]
     [Name(nameof(NavigableSymbolSourceProvider))]
     [ContentType(PythonCoreConstants.ContentType)]
-    class NavigableSymbolSourceProvider : INavigableSymbolSourceProvider
-    {
+    class NavigableSymbolSourceProvider : INavigableSymbolSourceProvider {
         private readonly IServiceProvider _serviceProvider;
         private readonly IClassifierAggregatorService _classifierFactory;
         private readonly ITextStructureNavigatorSelectorService _navigatorService;
@@ -30,15 +28,13 @@ namespace Microsoft.PythonTools.Navigation.Navigable
             [Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider,
             IClassifierAggregatorService classifierFactory,
             ITextStructureNavigatorSelectorService navigatorService
-        )
-        {
+        ) {
             _serviceProvider = serviceProvider;
             _classifierFactory = classifierFactory;
             _navigatorService = navigatorService;
         }
 
-        public INavigableSymbolSource TryCreateNavigableSymbolSource(ITextView textView, ITextBuffer buffer)
-        {
+        public INavigableSymbolSource TryCreateNavigableSymbolSource(ITextView textView, ITextBuffer buffer) {
             return buffer.Properties.GetOrCreateSingletonProperty<INavigableSymbolSource>(
                 () => new NavigableSymbolSource(
                     _serviceProvider,

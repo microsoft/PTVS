@@ -19,24 +19,19 @@ using Microsoft.PythonTools.Language;
 using Microsoft.PythonTools.Repl;
 using IOleCommandTarget = Microsoft.VisualStudio.OLE.Interop.IOleCommandTarget;
 
-namespace Microsoft.PythonTools.Editor
-{
+namespace Microsoft.PythonTools.Editor {
     [Export(typeof(IVsInteractiveWindowOleCommandTargetProvider))]
     [ContentType(PythonCoreConstants.ContentType)]
-    class ReplWindowCreationListener : IVsInteractiveWindowOleCommandTargetProvider
-    {
+    class ReplWindowCreationListener : IVsInteractiveWindowOleCommandTargetProvider {
         private readonly PythonEditorServices _editorServices;
 
         [ImportingConstructor]
-        public ReplWindowCreationListener([Import] PythonEditorServices editorServices)
-        {
+        public ReplWindowCreationListener([Import] PythonEditorServices editorServices) {
             _editorServices = editorServices;
         }
 
-        public IOleCommandTarget GetCommandTarget(IWpfTextView textView, IOleCommandTarget nextTarget)
-        {
-            if (textView.TextBuffer.ContentType.IsOfType(CodeRemoteContentDefinition.CodeRemoteContentTypeName))
-            {
+        public IOleCommandTarget GetCommandTarget(IWpfTextView textView, IOleCommandTarget nextTarget) {
+            if (textView.TextBuffer.ContentType.IsOfType(CodeRemoteContentDefinition.CodeRemoteContentTypeName)) {
                 // We want default handling when this is a remote buffer
                 return null;
             }
@@ -52,8 +47,7 @@ namespace Microsoft.PythonTools.Editor
 
             var editFilter = EditFilter.GetOrCreate(_editorServices, textView, controller);
 
-            if (window == null)
-            {
+            if (window == null) {
                 return editFilter;
             }
 

@@ -17,11 +17,8 @@
 using System;
 using System.Diagnostics;
 using System.IO;
-using Microsoft.PythonTools;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.IronPythonTools.Debugger {
     class IronPythonLauncher : IProjectLauncher {

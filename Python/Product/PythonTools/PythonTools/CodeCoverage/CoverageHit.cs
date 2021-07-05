@@ -15,10 +15,8 @@
 // permissions and limitations under the License.
 
 
-namespace Microsoft.PythonTools.CodeCoverage
-{
-    class CoverageHit
-    {
+namespace Microsoft.PythonTools.CodeCoverage {
+    class CoverageHit {
         /// <summary>
         /// The 1 based line number
         /// </summary>

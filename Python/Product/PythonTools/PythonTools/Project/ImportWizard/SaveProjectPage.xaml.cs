@@ -14,15 +14,12 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Project.ImportWizard
-{
+namespace Microsoft.PythonTools.Project.ImportWizard {
     /// <summary>
     /// Interaction logic for SaveProjectPage.xaml
     /// </summary>
-    internal partial class SaveProjectPage : Page
-    {
-        public SaveProjectPage()
-        {
+    internal partial class SaveProjectPage : Page {
+        public SaveProjectPage() {
             InitializeComponent();
         }
     }

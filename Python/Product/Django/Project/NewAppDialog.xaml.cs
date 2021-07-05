@@ -14,20 +14,17 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Django.Project
-{
+namespace Microsoft.PythonTools.Django.Project {
     /// <summary>
     /// Interaction logic for NewAppDialog.xaml
     /// </summary>
-    partial class NewAppDialog : DialogWindowVersioningWorkaround
-    {
+    partial class NewAppDialog : DialogWindowVersioningWorkaround {
         private readonly NewAppDialogViewModel _viewModel;
 
         public static readonly object BackgroundKey = VsBrushes.WindowKey;
         public static readonly object ForegroundKey = VsBrushes.WindowTextKey;
 
-        public NewAppDialog()
-        {
+        public NewAppDialog() {
             InitializeComponent();
 
             DataContext = _viewModel = new NewAppDialogViewModel();
@@ -35,22 +32,18 @@ namespace Microsoft.PythonTools.Django.Project
             _newAppName.Focus();
         }
 
-        internal NewAppDialogViewModel ViewModel
-        {
-            get
-            {
+        internal NewAppDialogViewModel ViewModel {
+            get {
                 return _viewModel;
             }
         }
 
-        private void _ok_Click(object sender, RoutedEventArgs e)
-        {
+        private void _ok_Click(object sender, RoutedEventArgs e) {
             DialogResult = true;
             Close();
         }
 
-        private void _cancel_Click(object sender, RoutedEventArgs e)
-        {
+        private void _cancel_Click(object sender, RoutedEventArgs e) {
             DialogResult = false;
             Close();
         }

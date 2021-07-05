@@ -14,21 +14,18 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Intellisense
-{
+namespace Microsoft.PythonTools.Intellisense {
     /// <summary>
     /// Represents information about an analyzed expression.  This is returned from 
     /// AnalyzeExpression which is defined as an extension method in <see cref="Microsoft.PythonTools.Intellisense.PythonAnalysisExtensions"/>
     /// </summary>
-    sealed class ExpressionAnalysis
-    {
+    sealed class ExpressionAnalysis {
         private readonly string _expr;
         private readonly ITrackingSpan _span;
         private readonly AnalysisVariable[] _variables;
         private readonly string _privatePrefix;
 
-        internal ExpressionAnalysis(string text, ITrackingSpan span, AnalysisVariable[] variables, string privatePrefix)
-        {
+        internal ExpressionAnalysis(string text, ITrackingSpan span, AnalysisVariable[] variables, string privatePrefix) {
             _span = span;
             _expr = text;
             _variables = variables;

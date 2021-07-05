@@ -14,26 +14,21 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Profiling
-{
-    sealed class ProfiledProcess : IDisposable
-    {
+namespace Microsoft.PythonTools.Profiling {
+    sealed class ProfiledProcess : IDisposable {
         private readonly string _exe, _args, _dir;
         private readonly ProcessorArchitecture _arch;
         private readonly Process _process;
         private readonly PythonToolsService _pyService;
 
-        public ProfiledProcess(PythonToolsService pyService, string exe, string args, string dir, Dictionary<string, string> envVars)
-        {
+        public ProfiledProcess(PythonToolsService pyService, string exe, string args, string dir, Dictionary<string, string> envVars) {
             var arch = NativeMethods.GetBinaryType(exe);
-            if (arch != ProcessorArchitecture.X86 && arch != ProcessorArchitecture.Amd64)
-            {
+            if (arch != ProcessorArchitecture.X86 && arch != ProcessorArchitecture.Amd64) {
                 throw new InvalidOperationException(Strings.UnsupportedArchitecture.FormatUI(arch));
             }
 
             dir = PathUtils.TrimEndSeparator(dir);
-            if (string.IsNullOrEmpty(dir))
-            {
+            if (string.IsNullOrEmpty(dir)) {
                 dir = ".";
             }
 
@@ -55,12 +50,10 @@ namespace Microsoft.PythonTools.Profiling
             );
 
             processInfo = new ProcessStartInfo(_exe, arguments);
-            if (_pyService.DebuggerOptions.WaitOnNormalExit)
-            {
+            if (_pyService.DebuggerOptions.WaitOnNormalExit) {
                 processInfo.EnvironmentVariables["VSPYPROF_WAIT_ON_NORMAL_EXIT"] = "1";
             }
-            if (_pyService.DebuggerOptions.WaitOnAbnormalExit)
-            {
+            if (_pyService.DebuggerOptions.WaitOnAbnormalExit) {
                 processInfo.EnvironmentVariables["VSPYPROF_WAIT_ON_ABNORMAL_EXIT"] = "1";
             }
 
@@ -69,10 +62,8 @@ namespace Microsoft.PythonTools.Profiling
             processInfo.RedirectStandardOutput = false;
             processInfo.WorkingDirectory = _dir;
 
-            if (envVars != null)
-            {
-                foreach (var keyValue in envVars)
-                {
+            if (envVars != null) {
+                foreach (var keyValue in envVars) {
                     processInfo.EnvironmentVariables[keyValue.Key] = keyValue.Value;
                 }
             }
@@ -81,30 +72,23 @@ namespace Microsoft.PythonTools.Profiling
             _process.StartInfo = processInfo;
         }
 
-        public void Dispose()
-        {
+        public void Dispose() {
             _process.Dispose();
         }
 
-        public void StartProfiling(string filename)
-        {
+        public void StartProfiling(string filename) {
             StartPerfMon(filename);
 
             _process.EnableRaisingEvents = true;
-            _process.Exited += (sender, args) =>
-            {
-                try
-                {
+            _process.Exited += (sender, args) => {
+                try {
                     // Exited event is fired on a random thread pool thread, we need to handle exceptions.
                     StopPerfMon();
-                }
-                catch (InvalidOperationException e)
-                {
+                } catch (InvalidOperationException e) {
                     MessageBox.Show(Strings.UnableToStopPerfMon.FormatUI(e.Message), Strings.ProductTitle);
                 }
                 var procExited = ProcessExited;
-                if (procExited != null)
-                {
+                if (procExited != null) {
                     procExited(this, EventArgs.Empty);
                 }
             };
@@ -114,14 +98,12 @@ namespace Microsoft.PythonTools.Profiling
 
         public event EventHandler ProcessExited;
 
-        private void StartPerfMon(string filename)
-        {
+        private void StartPerfMon(string filename) {
             string perfToolsPath = GetPerfToolsPath();
 
             string perfMonPath = Path.Combine(perfToolsPath, "VSPerfMon.exe");
 
-            if (!File.Exists(perfMonPath))
-            {
+            if (!File.Exists(perfMonPath)) {
                 throw new InvalidOperationException(Strings.CannotLocatePerformanceTools);
             }
 
@@ -133,11 +115,9 @@ namespace Microsoft.PythonTools.Profiling
             Process.Start(psi).Dispose();
 
             string perfCmdPath = Path.Combine(perfToolsPath, "VSPerfCmd.exe");
-            using (var p = ProcessOutput.RunHiddenAndCapture(perfCmdPath, "/waitstart"))
-            {
+            using (var p = ProcessOutput.RunHiddenAndCapture(perfCmdPath, "/waitstart")) {
                 p.Wait();
-                if (p.ExitCode != 0)
-                {
+                if (p.ExitCode != 0) {
                     throw new InvalidOperationException(Strings.StartPerfCmdError.FormatUI(
                         string.Join(Environment.NewLine, p.StandardOutputLines),
                         string.Join(Environment.NewLine, p.StandardErrorLines)
@@ -146,17 +126,14 @@ namespace Microsoft.PythonTools.Profiling
             }
         }
 
-        private void StopPerfMon()
-        {
+        private void StopPerfMon() {
             string perfToolsPath = GetPerfToolsPath();
 
             string perfMonPath = Path.Combine(perfToolsPath, "VSPerfCmd.exe");
 
-            using (var p = ProcessOutput.RunHiddenAndCapture(perfMonPath, "/shutdown"))
-            {
+            using (var p = ProcessOutput.RunHiddenAndCapture(perfMonPath, "/shutdown")) {
                 p.Wait();
-                if (p.ExitCode != 0)
-                {
+                if (p.ExitCode != 0) {
                     throw new InvalidOperationException(Strings.StopPerfMonError.FormatUI(
                         string.Join(Environment.NewLine, p.StandardOutputLines),
                         string.Join(Environment.NewLine, p.StandardErrorLines)
@@ -165,46 +142,35 @@ namespace Microsoft.PythonTools.Profiling
             }
         }
 
-        private string GetPerfToolsPath()
-        {
-            using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32))
-            {
-                if (baseKey == null)
-                {
+        private string GetPerfToolsPath() {
+            using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32)) {
+                if (baseKey == null) {
                     throw new InvalidOperationException(Strings.CannotOpenSystemRegistry);
                 }
 
-                using (var key = baseKey.OpenSubKey(@"Software\Microsoft\VisualStudio\VSPerf"))
-                {
+                using (var key = baseKey.OpenSubKey(@"Software\Microsoft\VisualStudio\VSPerf")) {
 #if DEV16
                     var path = key?.GetValue("CollectionToolsDir2019") as string;
 #else
                     var path = key?.GetValue("CollectionToolsDir") as string;
 #endif
-                    if (!string.IsNullOrEmpty(path))
-                    {
-                        if (_arch == ProcessorArchitecture.Amd64)
-                        {
+                    if (!string.IsNullOrEmpty(path)) {
+                        if (_arch == ProcessorArchitecture.Amd64) {
                             path = PathUtils.GetAbsoluteDirectoryPath(path, "x64");
                         }
-                        if (Directory.Exists(path))
-                        {
+                        if (Directory.Exists(path)) {
                             return path;
                         }
                     }
                 }
 
-                using (var key = baseKey.OpenSubKey(@"SOFTWARE\Microsoft\VisualStudio\RemoteTools\{0}\DiagnosticsHub".FormatInvariant(AssemblyVersionInfo.VSVersion)))
-                {
+                using (var key = baseKey.OpenSubKey(@"SOFTWARE\Microsoft\VisualStudio\RemoteTools\{0}\DiagnosticsHub".FormatInvariant(AssemblyVersionInfo.VSVersion))) {
                     var path = PathUtils.GetParent(key?.GetValue("VSPerfPath") as string);
-                    if (!string.IsNullOrEmpty(path))
-                    {
-                        if (_arch == ProcessorArchitecture.Amd64)
-                        {
+                    if (!string.IsNullOrEmpty(path)) {
+                        if (_arch == ProcessorArchitecture.Amd64) {
                             path = PathUtils.GetAbsoluteDirectoryPath(path, "x64");
                         }
-                        if (Directory.Exists(path))
-                        {
+                        if (Directory.Exists(path)) {
                             return path;
                         }
                     }
@@ -214,35 +180,27 @@ namespace Microsoft.PythonTools.Profiling
             Debug.Fail("Registry search for Perfomance Tools failed - falling back on old path");
 
             string shFolder;
-            if (!_pyService.Site.TryGetShellProperty(__VSSPROPID.VSSPROPID_InstallDirectory, out shFolder))
-            {
+            if (!_pyService.Site.TryGetShellProperty(__VSSPROPID.VSSPROPID_InstallDirectory, out shFolder)) {
                 throw new InvalidOperationException(Strings.CannotFindShellFolder);
             }
 
-            try
-            {
+            try {
                 shFolder = Path.GetDirectoryName(Path.GetDirectoryName(shFolder));
-            }
-            catch (ArgumentException)
-            {
+            } catch (ArgumentException) {
                 throw new InvalidOperationException(Strings.CannotFindShellFolder);
             }
 
             string perfToolsPath;
-            if (_arch == ProcessorArchitecture.Amd64)
-            {
+            if (_arch == ProcessorArchitecture.Amd64) {
                 perfToolsPath = @"Team Tools\Performance Tools\x64";
-            }
-            else
-            {
+            } else {
                 perfToolsPath = @"Team Tools\Performance Tools\";
             }
             perfToolsPath = Path.Combine(shFolder, perfToolsPath);
             return perfToolsPath;
         }
 
-        internal void StopProfiling()
-        {
+        internal void StopProfiling() {
             _process.Kill();
         }
     }

@@ -21,7 +21,6 @@ using System.Windows.Input;
 using EnvDTE;
 using EnvDTE80;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.VisualStudioTools.Project.Automation;
 using TestUtilities;
 using TestUtilities.UI;
 using Mouse = TestUtilities.UI.Mouse;

@@ -16,10 +16,7 @@
 
 using System;
 using System.ComponentModel.Composition;
-using Microsoft.PythonTools;
-using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.IronPythonTools.Debugger {
     [Export(typeof(IPythonLauncherProvider))]

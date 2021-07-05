@@ -14,17 +14,14 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Environments
-{
-    sealed class EnvironmentSwitcherFileContext : IEnvironmentSwitcherContext
-    {
+namespace Microsoft.PythonTools.Environments {
+    sealed class EnvironmentSwitcherFileContext : IEnvironmentSwitcherContext {
         private readonly IServiceProvider _serviceProvider;
         private readonly IInterpreterOptionsService _optionsService;
         private readonly IInterpreterRegistryService _registryService;
         private readonly string _filePath;
 
-        public EnvironmentSwitcherFileContext(IServiceProvider serviceProvider, string filePath)
-        {
+        public EnvironmentSwitcherFileContext(IServiceProvider serviceProvider, string filePath) {
             _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
             _optionsService = serviceProvider.GetComponentModel().GetService<IInterpreterOptionsService>();
             _registryService = serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>();
@@ -39,8 +36,7 @@ namespace Microsoft.PythonTools.Environments
         public event EventHandler EnvironmentsChanged;
 #pragma warning restore CS0067
 
-        public Task ChangeFactoryAsync(IPythonInterpreterFactory factory)
-        {
+        public Task ChangeFactoryAsync(IPythonInterpreterFactory factory) {
             // For now, we are changing the default interpreter
             // We may want to make it specific to the _filePath instead
             // https://github.com/Microsoft/PTVS/issues/4856
@@ -48,8 +44,7 @@ namespace Microsoft.PythonTools.Environments
             return Task.CompletedTask;
         }
 
-        public void Dispose()
-        {
+        public void Dispose() {
         }
     }
 }

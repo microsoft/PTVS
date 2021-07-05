@@ -16,71 +16,50 @@
 
 using Microsoft.VisualStudioTools;
 
-namespace Microsoft.PythonTools.Commands
-{
-    internal abstract class DkmDebuggerCommand : Command
-    {
+namespace Microsoft.PythonTools.Commands {
+    internal abstract class DkmDebuggerCommand : Command {
         private const string BaseRegistryKey = @"Software\Microsoft\PythonTools\Debugger";
         private const string PythonDeveloperRegistryValue = "PythonDeveloper";
         internal readonly IServiceProvider _serviceProvider;
 
-        public DkmDebuggerCommand(IServiceProvider serviceProvider)
-        {
+        public DkmDebuggerCommand(IServiceProvider serviceProvider) {
             _serviceProvider = serviceProvider;
         }
 
-        protected virtual bool IsPythonDeveloperCommand
-        {
+        protected virtual bool IsPythonDeveloperCommand {
             get { return false; }
         }
 
-        public override EventHandler BeforeQueryStatus
-        {
-            get
-            {
-                return (sender, args) =>
-                {
+        public override EventHandler BeforeQueryStatus {
+            get {
+                return (sender, args) => {
                     var cmd = (OleMenuCommand)sender;
                     cmd.Visible = false;
 
-                    if (IsPythonDeveloperCommand)
-                    {
-                        using (var key = Registry.CurrentUser.OpenSubKey(BaseRegistryKey, false))
-                        {
+                    if (IsPythonDeveloperCommand) {
+                        using (var key = Registry.CurrentUser.OpenSubKey(BaseRegistryKey, false)) {
                             var value = key?.GetValue(PythonDeveloperRegistryValue);
-                            if (value == null)
-                            {
+                            if (value == null) {
                                 return;
-                            }
-                            else if (value is int)
-                            {
-                                if ((int)value == 0)
-                                {
+                            } else if (value is int) {
+                                if ((int)value == 0) {
                                     return;
                                 }
-                            }
-                            else if (!(value as string ?? "").IsTrue())
-                            {
+                            } else if (!(value as string ?? "").IsTrue()) {
                                 return;
-                            }
-                            else
-                            {
+                            } else {
                                 return;
                             }
                         }
                     }
 
                     DkmEngineSettings engineSettings = null;
-                    try
-                    {
+                    try {
                         engineSettings = DkmEngineSettings.FindSettings(DkmEngineId.NativeEng);
-                    }
-                    catch (ObjectDisposedException)
-                    {
+                    } catch (ObjectDisposedException) {
                     }
 
-                    if (engineSettings == null)
-                    {
+                    if (engineSettings == null) {
                         // Native debugger is not loaded at all, so this is either pure Python debugging or something else entirely.
                         return;
                     }

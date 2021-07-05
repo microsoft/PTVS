@@ -14,10 +14,8 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Django.Intellisense
-{
-    internal class TemplateCompletionController : CompletionController
-    {
+namespace Microsoft.PythonTools.Django.Intellisense {
+    internal class TemplateCompletionController : CompletionController {
         private readonly PythonToolsService _pyService;
 
         public TemplateCompletionController(
@@ -27,36 +25,29 @@ namespace Microsoft.PythonTools.Django.Intellisense
             ICompletionBroker completionBroker,
             IAsyncQuickInfoBroker quickInfoBroker,
             ISignatureHelpBroker signatureBroker) :
-            base(textView, subjectBuffers, completionBroker, quickInfoBroker, signatureBroker)
-        {
+            base(textView, subjectBuffers, completionBroker, quickInfoBroker, signatureBroker) {
             _pyService = pyService;
         }
 
-        public override bool IsTriggerChar(char typedCharacter)
-        {
+        public override bool IsTriggerChar(char typedCharacter) {
             const string triggerChars = " |.";
             return _pyService.AdvancedOptions.AutoListMembers && !HasActiveCompletionSession && triggerChars.IndexOf(typedCharacter) >= 0;
         }
 
-        public override bool IsCommitChar(char typedCharacter)
-        {
-            if (!HasActiveCompletionSession)
-            {
+        public override bool IsCommitChar(char typedCharacter) {
+            if (!HasActiveCompletionSession) {
                 return false;
             }
 
-            if (typedCharacter == '\n' || typedCharacter == '\t')
-            {
+            if (typedCharacter == '\n' || typedCharacter == '\t') {
                 return true;
             }
 
             return _pyService.AdvancedOptions.CompletionCommittedBy.IndexOf(typedCharacter) > 0;
         }
 
-        protected override bool IsRetriggerChar(ICompletionSession session, char typedCharacter)
-        {
-            if (typedCharacter == ' ')
-            {
+        protected override bool IsRetriggerChar(ICompletionSession session, char typedCharacter) {
+            if (typedCharacter == ' ') {
                 return true;
             }
 

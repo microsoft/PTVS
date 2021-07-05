@@ -14,8 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.CookiecutterTools.View
-{
+namespace Microsoft.CookiecutterTools.View {
     //public sealed class LiveTextBlock : TextBlock {
     //    public LiveTextBlock() {
     //        // Bind LiveText to the Text property.

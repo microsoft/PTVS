@@ -14,18 +14,15 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Refactoring
-{
+namespace Microsoft.PythonTools.Refactoring {
     /// <summary>
     /// Encapsulates all of the possible knobs which can be flipped when renaming a variable.
     /// </summary>
-    class RenameVariableRequest
-    {
+    class RenameVariableRequest {
         public readonly string Name;
         public readonly bool Preview, SearchInComments, SearchInStrings;
 
-        public RenameVariableRequest(string name, bool preview, bool searchInComments, bool searchInStrings)
-        {
+        public RenameVariableRequest(string name, bool preview, bool searchInComments, bool searchInStrings) {
             Name = name;
             Preview = preview;
             SearchInComments = searchInComments;

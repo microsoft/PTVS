@@ -15,7 +15,6 @@
 // permissions and limitations under the License.
 
 using System.Threading.Tasks;
-using Microsoft.PythonTools;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TestUtilities.UI.Python {

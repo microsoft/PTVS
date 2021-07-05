@@ -14,28 +14,23 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Repl
-{
+namespace Microsoft.PythonTools.Repl {
     /// <summary>
     /// Classifies regions for REPL error output spans.  These are always classified as errors.
     /// </summary>
-    class ReplOutputClassifier : IClassifier
-    {
+    class ReplOutputClassifier : IClassifier {
         private readonly ReplOutputClassifierProvider _provider;
         internal static object ColorKey = new object();
         private readonly ITextBuffer _buffer;
 
-        public ReplOutputClassifier(ReplOutputClassifierProvider provider, ITextBuffer buffer)
-        {
+        public ReplOutputClassifier(ReplOutputClassifierProvider provider, ITextBuffer buffer) {
             _provider = provider;
             _buffer = buffer;
             _buffer.Changed += _buffer_Changed;
         }
 
-        private void _buffer_Changed(object sender, TextContentChangedEventArgs e)
-        {
-            if (e.After.Length == 0)
-            {
+        private void _buffer_Changed(object sender, TextContentChangedEventArgs e) {
+            if (e.After.Length == 0) {
                 // screen was cleared, remove color mappings...
                 _buffer.Properties[ColorKey] = new List<ColoredSpan>();
             }
@@ -43,42 +38,34 @@ namespace Microsoft.PythonTools.Repl
 
         #region IClassifier Members
 
-        public event EventHandler<ClassificationChangedEventArgs> ClassificationChanged
-        {
+        public event EventHandler<ClassificationChangedEventArgs> ClassificationChanged {
             add { }
             remove { }
         }
 
-        public IList<ClassificationSpan> GetClassificationSpans(SnapshotSpan span)
-        {
+        public IList<ClassificationSpan> GetClassificationSpans(SnapshotSpan span) {
             List<ColoredSpan> coloredSpans;
-            if (!_buffer.Properties.TryGetProperty(ColorKey, out coloredSpans))
-            {
+            if (!_buffer.Properties.TryGetProperty(ColorKey, out coloredSpans)) {
                 return new ClassificationSpan[0];
             }
 
             List<ClassificationSpan> classifications = new List<ClassificationSpan>();
 
             int startIndex = coloredSpans.BinarySearch(new ColoredSpan(span, ConsoleColor.White), SpanStartComparer.Instance);
-            if (startIndex < 0)
-            {
+            if (startIndex < 0) {
                 startIndex = ~startIndex - 1;
-                if (startIndex < 0)
-                {
+                if (startIndex < 0) {
                     startIndex = 0;
                 }
             }
 
             int spanEnd = span.End.Position;
-            for (int i = startIndex; i < coloredSpans.Count && coloredSpans[i].Span.Start < spanEnd; i++)
-            {
+            for (int i = startIndex; i < coloredSpans.Count && coloredSpans[i].Span.Start < spanEnd; i++) {
                 IClassificationType type;
                 if (coloredSpans[i].Color != null &&
-                    _provider._classTypes.TryGetValue(coloredSpans[i].Color.Value, out type))
-                {
+                    _provider._classTypes.TryGetValue(coloredSpans[i].Color.Value, out type)) {
                     var overlap = span.Overlap(coloredSpans[i].Span);
-                    if (overlap != null)
-                    {
+                    if (overlap != null) {
                         classifications.Add(new ClassificationSpan(overlap.Value, type));
                     }
                 }
@@ -87,12 +74,10 @@ namespace Microsoft.PythonTools.Repl
             return classifications;
         }
 
-        private sealed class SpanStartComparer : IComparer<ColoredSpan>
-        {
+        private sealed class SpanStartComparer : IComparer<ColoredSpan> {
             internal static SpanStartComparer Instance = new SpanStartComparer();
 
-            public int Compare(ColoredSpan x, ColoredSpan y)
-            {
+            public int Compare(ColoredSpan x, ColoredSpan y) {
                 return x.Span.Start - y.Span.Start;
             }
         }
@@ -100,13 +85,11 @@ namespace Microsoft.PythonTools.Repl
         #endregion
     }
 
-    internal sealed class ColoredSpan
-    {
+    internal sealed class ColoredSpan {
         public readonly Span Span;
         public readonly ConsoleColor? Color;
 
-        public ColoredSpan(Span span, ConsoleColor? color)
-        {
+        public ColoredSpan(Span span, ConsoleColor? color) {
             Span = span;
             Color = color;
         }

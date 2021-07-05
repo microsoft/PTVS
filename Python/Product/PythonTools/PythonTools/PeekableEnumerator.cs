@@ -14,25 +14,21 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools
-{
+namespace Microsoft.PythonTools {
     /// <summary>
     /// An enumerator that allows one item either side of the current element to
     /// be previewed.
     /// </summary>
-    sealed class PeekableEnumerator<T> : IEnumerator<T>
-    {
+    sealed class PeekableEnumerator<T> : IEnumerator<T> {
         private readonly IEnumerable<T> _enumerable;
         private IEnumerator<T> _enumerator;
 
-        public PeekableEnumerator(IEnumerable<T> enumerable)
-        {
+        public PeekableEnumerator(IEnumerable<T> enumerable) {
             _enumerable = enumerable;
             Reset();
         }
 
-        public void Reset()
-        {
+        public void Reset() {
             _enumerator = _enumerable.GetEnumerator();
 
             HasPrevious = false;
@@ -53,18 +49,15 @@ namespace Microsoft.PythonTools
         public bool HasCurrent { get; private set; }
         public bool HasNext { get; private set; }
 
-        public void Dispose()
-        {
+        public void Dispose() {
             _enumerator.Dispose();
         }
 
-        object System.Collections.IEnumerator.Current
-        {
+        object System.Collections.IEnumerator.Current {
             get { return (object)Current; }
         }
 
-        public bool MoveNext()
-        {
+        public bool MoveNext() {
             HasPrevious = HasCurrent;
             Previous = Current;
 

@@ -14,15 +14,12 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Options
-{
-    class OptionsTreeView : TreeView
-    {
+namespace Microsoft.PythonTools.Options {
+    class OptionsTreeView : TreeView {
         private static ImageList _imageList;
         internal const int TransparentIndex = 0;
 
-        public OptionsTreeView()
-        {
+        public OptionsTreeView() {
             InitializeImageList();
 
             DrawMode = TreeViewDrawMode.OwnerDrawText;
@@ -32,22 +29,18 @@ namespace Microsoft.PythonTools.Options
             VsShellUtilities.ApplyTreeViewThemeStyles(this);
         }
 
-        protected override void OnGotFocus(EventArgs e)
-        {
+        protected override void OnGotFocus(EventArgs e) {
         }
 
-        private void InitializeImageList()
-        {
-            if (_imageList == null)
-            {
+        private void InitializeImageList() {
+            if (_imageList == null) {
                 _imageList = new ImageList();
 
                 Bitmap bmp = new Bitmap(16, 16);
 
                 // transparent image is the image we use for owner drawn icons
                 _imageList.TransparentColor = Color.Magenta;
-                using (var g = Graphics.FromImage(bmp))
-                {
+                using (var g = Graphics.FromImage(bmp)) {
                     g.FillRectangle(Brushes.Magenta, new Rectangle(0, 0, 16, 16));
                 }
                 _imageList.Images.Add(bmp);
@@ -56,64 +49,47 @@ namespace Microsoft.PythonTools.Options
             StateImageList = _imageList;
         }
 
-        protected override void OnMouseUp(MouseEventArgs e)
-        {
+        protected override void OnMouseUp(MouseEventArgs e) {
             var node = GetNodeAt(e.Location);
-            if (node == null)
-            {
+            if (node == null) {
                 return;
             }
 
             OptionSettingNode settingsNode = node as OptionSettingNode;
-            if (settingsNode != null)
-            {
-                if (settingsNode == SelectedNode)
-                {
+            if (settingsNode != null) {
+                if (settingsNode == SelectedNode) {
                     ToggleSetting(settingsNode);
-                }
-                else
-                {
+                } else {
                     SelectedNode = settingsNode;
                 }
             }
         }
 
-        private void ToggleSetting(OptionSettingNode settingsNode)
-        {
+        private void ToggleSetting(OptionSettingNode settingsNode) {
             settingsNode.ToggleSetting();
             InvalidateNodeIcon(settingsNode);
             OnAfterCheck(new TreeViewEventArgs(settingsNode));
         }
 
-        private void InvalidateNodeIcon(TreeNode node)
-        {
+        private void InvalidateNodeIcon(TreeNode node) {
             this.Invalidate(
                 ((OptionNode)node).IconBounds
             );
         }
 
-        protected override void OnKeyPress(KeyPressEventArgs e)
-        {
-            if (e.KeyChar == ' ')
-            {
+        protected override void OnKeyPress(KeyPressEventArgs e) {
+            if (e.KeyChar == ' ') {
                 // toggling an option
                 var node = SelectedNode as OptionSettingNode;
-                if (node != null)
-                {
+                if (node != null) {
                     ToggleSetting(node);
                     e.Handled = true;
-                }
-                else
-                {
+                } else {
                     var folder = SelectedNode as OptionFolderNode;
-                    if (folder != null)
-                    {
-                        if (folder.IsExpanded)
-                        {
+                    if (folder != null) {
+                        if (folder.IsExpanded) {
                             folder.Collapse();
-                        }
-                        else
-                        {
+                        } else {
                             folder.Expand();
                         }
                         e.Handled = true;
@@ -122,22 +98,18 @@ namespace Microsoft.PythonTools.Options
             }
         }
 
-        protected override void OnDrawNode(DrawTreeNodeEventArgs e)
-        {
+        protected override void OnDrawNode(DrawTreeNodeEventArgs e) {
             OptionSettingNode setting = e.Node as OptionSettingNode;
-            if (setting != null)
-            {
+            if (setting != null) {
                 setting.DrawNode(e);
             }
             e.DrawDefault = true;
             base.OnDrawNode(e);
         }
 
-        protected override void OnAfterExpand(TreeViewEventArgs e)
-        {
+        protected override void OnAfterExpand(TreeViewEventArgs e) {
             OptionFolderNode node = e.Node as OptionFolderNode;
-            if (node != null)
-            {
+            if (node != null) {
                 InvalidateNodeIcon(node);
                 node.WasExpanded = true;
                 return;
@@ -145,11 +117,9 @@ namespace Microsoft.PythonTools.Options
             base.OnAfterExpand(e);
         }
 
-        protected override void OnAfterCollapse(TreeViewEventArgs e)
-        {
+        protected override void OnAfterCollapse(TreeViewEventArgs e) {
             OptionFolderNode node = e.Node as OptionFolderNode;
-            if (node != null)
-            {
+            if (node != null) {
                 InvalidateNodeIcon(node);
                 node.WasExpanded = false;
                 return;
@@ -157,61 +127,49 @@ namespace Microsoft.PythonTools.Options
             base.OnAfterCollapse(e);
         }
 
-        protected override AccessibleObject CreateAccessibilityInstance()
-        {
+        protected override AccessibleObject CreateAccessibilityInstance() {
             return new TreeAccessibleObject(this);
         }
 
         // Taken from C#
-        internal class TreeAccessibleObject : Control.ControlAccessibleObject
-        {
+        internal class TreeAccessibleObject : Control.ControlAccessibleObject {
             private readonly OptionsTreeView _tree;
 
             public TreeAccessibleObject(OptionsTreeView tree)
-                : base(tree)
-            {
+                : base(tree) {
                 _tree = tree;
             }
 
-            public override AccessibleObject GetChild(int index)
-            {
+            public override AccessibleObject GetChild(int index) {
                 return ((OptionNode)FindTreeNode(index)).AccessibleObject;
             }
 
-            public override int GetChildCount()
-            {
+            public override int GetChildCount() {
                 return _tree.GetNodeCount(true);
             }
 
-            public override AccessibleObject HitTest(int x, int y)
-            {
+            public override AccessibleObject HitTest(int x, int y) {
                 return ((OptionNode)_tree.GetNodeAt(x, y)).AccessibleObject;
             }
 
-            public override AccessibleObject GetFocused()
-            {
+            public override AccessibleObject GetFocused() {
                 return ((OptionNode)_tree.SelectedNode).AccessibleObject;
             }
 
-            public override AccessibleObject GetSelected()
-            {
+            public override AccessibleObject GetSelected() {
                 return ((OptionNode)_tree.SelectedNode).AccessibleObject;
             }
 
-            public override void Select(AccessibleSelection flags)
-            {
+            public override void Select(AccessibleSelection flags) {
                 _tree.Select();
             }
 
-            public override System.Drawing.Rectangle Bounds
-            {
+            public override System.Drawing.Rectangle Bounds {
                 get { return _tree.RectangleToScreen(_tree.Bounds); }
             }
 
-            public override AccessibleObject Navigate(AccessibleNavigation navdir)
-            {
-                switch (navdir)
-                {
+            public override AccessibleObject Navigate(AccessibleNavigation navdir) {
+                switch (navdir) {
                     case AccessibleNavigation.FirstChild:
                     case AccessibleNavigation.Down:
                         return GetChild(0);
@@ -236,24 +194,19 @@ namespace Microsoft.PythonTools.Options
                 }
             }
 
-            private TreeNode FindTreeNode(int index)
-            {
+            private TreeNode FindTreeNode(int index) {
                 // Note this only handles 2 levels in the tree,
                 // but that's because until we have more, we won't
                 // know what index order the index will come in.
-                foreach (TreeNode outerNode in _tree.Nodes)
-                {
-                    if (index == 0)
-                    {
+                foreach (TreeNode outerNode in _tree.Nodes) {
+                    if (index == 0) {
                         return outerNode;
                     }
                     --index;
-                    for (int i = outerNode.Nodes.Count - 1; i >= 0; --i)
-                    {
+                    for (int i = outerNode.Nodes.Count - 1; i >= 0; --i) {
                         TreeNode innerNode = outerNode.Nodes[i];
                         System.Diagnostics.Debug.Assert(innerNode.Nodes.Count == 0, "We don't handle tree's nested this deep");
-                        if (index == 0)
-                        {
+                        if (index == 0) {
                             return innerNode;
                         }
                         --index;
@@ -265,25 +218,19 @@ namespace Microsoft.PythonTools.Options
         }
     }
 
-    abstract class OptionNode : TreeNode
-    {
+    abstract class OptionNode : TreeNode {
         public OptionNode(string text)
-            : base(text)
-        {
+            : base(text) {
         }
 
-        public virtual AccessibleObject AccessibleObject
-        {
-            get
-            {
+        public virtual AccessibleObject AccessibleObject {
+            get {
                 return new TreeNodeAccessibleObject(this);
             }
         }
 
-        public Rectangle IconBounds
-        {
-            get
-            {
+        public Rectangle IconBounds {
+            get {
                 return new Rectangle(
                     Bounds.Left - 21,
                     Bounds.Top,
@@ -294,72 +241,56 @@ namespace Microsoft.PythonTools.Options
         }
 
         // Taken from C#
-        internal class TreeNodeAccessibleObject : Control.ControlAccessibleObject
-        {
+        internal class TreeNodeAccessibleObject : Control.ControlAccessibleObject {
             private readonly OptionNode _node;
 
             public TreeNodeAccessibleObject(OptionNode node)
-                : base(node.TreeView)
-            {
+                : base(node.TreeView) {
                 _node = node;
             }
 
-            public override string Value
-            {
+            public override string Value {
                 get { return null; }
             }
 
-            public override string DefaultAction
-            {
-                get
-                {
-                    if (_node.IsExpanded)
-                    {
+            public override string DefaultAction {
+                get {
+                    if (_node.IsExpanded) {
                         return "Collapse";
-                    }
-                    else
-                    {
+                    } else {
                         return "Expand";
                     }
                 }
             }
 
-            public override void DoDefaultAction()
-            {
+            public override void DoDefaultAction() {
                 _node.Toggle();
             }
 
-            public override System.Drawing.Rectangle Bounds
-            {
+            public override System.Drawing.Rectangle Bounds {
                 get { return _node.TreeView.RectangleToScreen(_node.Bounds); }
             }
 
-            public override string Name
-            {
+            public override string Name {
                 get { return _node.Text; }
                 set { _node.Text = value; }
             }
 
-            public override int GetChildCount()
-            {
+            public override int GetChildCount() {
                 return 0;
             }
 
-            public override AccessibleObject GetChild(int index)
-            {
+            public override AccessibleObject GetChild(int index) {
                 System.Diagnostics.Debug.Assert(false, "Nodes have no children, only the treeview does");
                 return null;
             }
 
-            public override AccessibleObject Parent
-            {
+            public override AccessibleObject Parent {
                 get { return _node.TreeView.AccessibilityObject; }
             }
 
-            public override AccessibleObject Navigate(AccessibleNavigation navdir)
-            {
-                switch (navdir)
-                {
+            public override AccessibleObject Navigate(AccessibleNavigation navdir) {
+                switch (navdir) {
                     case AccessibleNavigation.Down:
                     case AccessibleNavigation.FirstChild:
                     case AccessibleNavigation.LastChild:
@@ -368,8 +299,7 @@ namespace Microsoft.PythonTools.Options
 
                     case AccessibleNavigation.Left:
                     case AccessibleNavigation.Previous:
-                        if (Index == 0)
-                        {
+                        if (Index == 0) {
                             return null;
                         }
                         return _node.TreeView.AccessibilityObject.GetChild(Index - 1);
@@ -377,8 +307,7 @@ namespace Microsoft.PythonTools.Options
                     case AccessibleNavigation.Next:
                     case AccessibleNavigation.Right:
                         int count = _node.TreeView.AccessibilityObject.GetChildCount();
-                        if (Index == count - 1)
-                        {
+                        if (Index == count - 1) {
                             return null;
                         }
                         return _node.TreeView.AccessibilityObject.GetChild(Index + 1);
@@ -392,24 +321,17 @@ namespace Microsoft.PythonTools.Options
                 }
             }
 
-            public override AccessibleStates State
-            {
-                get
-                {
+            public override AccessibleStates State {
+                get {
                     AccessibleStates ret = AccessibleStates.Selectable | AccessibleStates.Focusable;
-                    if (_node.IsSelected)
-                    {
+                    if (_node.IsSelected) {
                         ret |= AccessibleStates.Focused;
                         ret |= AccessibleStates.Selected;
                     }
-                    if (_node.Nodes.Count != 0)
-                    {
-                        if (_node.IsExpanded)
-                        {
+                    if (_node.Nodes.Count != 0) {
+                        if (_node.IsExpanded) {
                             ret |= AccessibleStates.Expanded;
-                        }
-                        else
-                        {
+                        } else {
                             ret |= AccessibleStates.Collapsed;
                         }
                     }
@@ -417,43 +339,33 @@ namespace Microsoft.PythonTools.Options
                 }
             }
 
-            public override void Select(AccessibleSelection flags)
-            {
+            public override void Select(AccessibleSelection flags) {
                 _node.TreeView.SelectedNode = _node;
             }
 
-            public override AccessibleObject GetFocused()
-            {
+            public override AccessibleObject GetFocused() {
                 return ((OptionNode)_node.TreeView.SelectedNode).AccessibleObject;
             }
 
-            public override AccessibleObject GetSelected()
-            {
+            public override AccessibleObject GetSelected() {
                 return ((OptionNode)_node.TreeView.SelectedNode).AccessibleObject;
             }
 
-            public override AccessibleObject HitTest(int x, int y)
-            {
+            public override AccessibleObject HitTest(int x, int y) {
                 return ((OptionNode)_node.TreeView.GetNodeAt(x, y)).AccessibleObject;
             }
 
-            public int Index
-            {
-                get
-                {
+            public int Index {
+                get {
                     int index = 0;
-                    foreach (TreeNode outerNode in _node.TreeView.Nodes)
-                    {
-                        if (_node == outerNode)
-                        {
+                    foreach (TreeNode outerNode in _node.TreeView.Nodes) {
+                        if (_node == outerNode) {
                             return index;
                         }
                         index++;
-                        for (int i = outerNode.Nodes.Count - 1; i >= 0; --i)
-                        {
+                        for (int i = outerNode.Nodes.Count - 1; i >= 0; --i) {
                             TreeNode innerNode = outerNode.Nodes[i];
-                            if (_node == innerNode)
-                            {
+                            if (_node == innerNode) {
                                 return index;
                             }
                             index++;
@@ -466,123 +378,96 @@ namespace Microsoft.PythonTools.Options
         }
     }
 
-    class OptionFolderNode : OptionNode
-    {
+    class OptionFolderNode : OptionNode {
         public bool WasExpanded = true;
 
         public OptionFolderNode(string name)
             : base(name) { }
     }
 
-    abstract class OptionSettingNode : OptionNode
-    {
+    abstract class OptionSettingNode : OptionNode {
         public OptionSettingNode(string text)
-            : base(text)
-        {
+            : base(text) {
             StateImageIndex = SelectedImageIndex = ImageIndex = OptionsTreeView.TransparentIndex;
         }
 
-        internal abstract object SettingValue
-        {
+        internal abstract object SettingValue {
             get;
             set;
         }
 
-        internal virtual void DrawNode(DrawTreeNodeEventArgs e)
-        {
+        internal virtual void DrawNode(DrawTreeNodeEventArgs e) {
             e.Graphics.FillRectangle(SystemBrushes.ControlLightLight, IconBounds);
         }
 
-        internal virtual void ToggleSetting()
-        {
+        internal virtual void ToggleSetting() {
         }
 
-        internal virtual void Connected()
-        {
+        internal virtual void Connected() {
         }
     }
 
-    class BooleanCheckBoxNode : OptionSettingNode
-    {
+    class BooleanCheckBoxNode : OptionSettingNode {
         private bool _state;
 
         public BooleanCheckBoxNode(string text)
-            : base(text)
-        {
+            : base(text) {
         }
 
-        internal override object SettingValue
-        {
-            get
-            {
+        internal override object SettingValue {
+            get {
                 return _state;
             }
-            set
-            {
-                if (value is bool)
-                {
+            set {
+                if (value is bool) {
                     _state = (bool)value;
-                }
-                else
-                {
+                } else {
                     throw new InvalidOperationException();
                 }
             }
         }
 
-        public override AccessibleObject AccessibleObject
-        {
+        public override AccessibleObject AccessibleObject {
             get { return new BooleanAccessibleObject(this); }
         }
 
-        public class BooleanAccessibleObject : TreeNodeAccessibleObject
-        {
+        public class BooleanAccessibleObject : TreeNodeAccessibleObject {
             private readonly BooleanCheckBoxNode _option;
 
             public BooleanAccessibleObject(BooleanCheckBoxNode option)
-                : base(option)
-            {
+                : base(option) {
                 _option = option;
             }
 
-            public override string DefaultAction
-            {
-                get
-                {
+            public override string DefaultAction {
+                get {
                     return _option._state ? "Uncheck" : "Check";
                 }
             }
 
-            public override void DoDefaultAction()
-            {
+            public override void DoDefaultAction() {
                 _option.ToggleSetting();
             }
 
-            public override AccessibleStates State
-            {
-                get
-                {
+            public override AccessibleStates State {
+                get {
                     return _option._state ? AccessibleStates.Checked : base.State;
                 }
             }
 
-            public override AccessibleRole Role
-            {
+            public override AccessibleRole Role {
                 get { return AccessibleRole.CheckButton; }
             }
         }
 
-        internal override void ToggleSetting()
-        {
-            switch (_state)
-            {
+        internal override void ToggleSetting() {
+            switch (_state) {
                 case false: _state = true; break;
                 case true: _state = false; break;
             }
         }
 
-        internal override void DrawNode(DrawTreeNodeEventArgs e)
-        {
+        internal override void DrawNode(DrawTreeNodeEventArgs e) {
             var optNode = (OptionNode)e.Node;
             CheckBoxRenderer.DrawCheckBox(
                 e.Graphics,
@@ -594,55 +479,41 @@ namespace Microsoft.PythonTools.Options
         }
     }
 
-    class TriStateCheckBoxNode : OptionSettingNode
-    {
+    class TriStateCheckBoxNode : OptionSettingNode {
         private bool? _state;
 
         public TriStateCheckBoxNode(string text)
-            : base(text)
-        {
+            : base(text) {
         }
 
-        internal override object SettingValue
-        {
-            get
-            {
+        internal override object SettingValue {
+            get {
                 return _state;
             }
-            set
-            {
-                if (value == null || value is bool)
-                {
+            set {
+                if (value == null || value is bool) {
                     _state = (bool?)value;
-                }
-                else
-                {
+                } else {
                     throw new InvalidOperationException();
                 }
             }
         }
 
-        public override AccessibleObject AccessibleObject
-        {
+        public override AccessibleObject AccessibleObject {
             get { return new TriStateAccessibleObject(this); }
         }
 
-        public class TriStateAccessibleObject : TreeNodeAccessibleObject
-        {
+        public class TriStateAccessibleObject : TreeNodeAccessibleObject {
             private readonly TriStateCheckBoxNode _option;
 
             public TriStateAccessibleObject(TriStateCheckBoxNode option)
-                : base(option)
-            {
+                : base(option) {
                 _option = option;
             }
 
-            public override string DefaultAction
-            {
-                get
-                {
-                    switch (_option._state)
-                    {
+            public override string DefaultAction {
+                get {
+                    switch (_option._state) {
                         case null: return "Check";
                         case true: return "Uncheck";
                         default: return "Mixed";
@@ -650,17 +521,13 @@ namespace Microsoft.PythonTools.Options
                 }
             }
 
-            public override void DoDefaultAction()
-            {
+            public override void DoDefaultAction() {
                 _option.ToggleSetting();
             }
 
-            public override AccessibleStates State
-            {
-                get
-                {
-                    switch (_option._state)
-                    {
+            public override AccessibleStates State {
+                get {
+                    switch (_option._state) {
                         case null: return AccessibleStates.Mixed;
                         case true: return AccessibleStates.Checked;
                         default: return base.State;
@@ -668,24 +535,20 @@ namespace Microsoft.PythonTools.Options
                 }
             }
 
-            public override AccessibleRole Role
-            {
+            public override AccessibleRole Role {
                 get { return AccessibleRole.CheckButton; }
             }
         }
 
-        internal override void ToggleSetting()
-        {
-            switch (_state)
-            {
+        internal override void ToggleSetting() {
+            switch (_state) {
                 case false: _state = null; break;
                 case true: _state = false; break;
                 case null: _state = true; break;
             }
         }
 
-        internal override void DrawNode(DrawTreeNodeEventArgs e)
-        {
+        internal override void DrawNode(DrawTreeNodeEventArgs e) {
             var optNode = (OptionNode)e.Node;
             CheckBoxRenderer.DrawCheckBox(
                 e.Graphics,
@@ -699,110 +562,88 @@ namespace Microsoft.PythonTools.Options
         }
     }
 
-    sealed class IntegerNode : OptionSettingNode, IDisposable
-    {
+    sealed class IntegerNode : OptionSettingNode, IDisposable {
         private int _value;
         private readonly TextBox _textBox;
 
         public IntegerNode(string text)
-            : base(text)
-        {
+            : base(text) {
             _textBox = new TextBox();
             _textBox.TextChanged += TextChanged;
             _textBox.GotFocus += TextBoxGotFocus;
         }
 
-        public void Dispose()
-        {
+        public void Dispose() {
             _textBox.Dispose();
         }
 
-        private void TextBoxGotFocus(object sender, EventArgs e)
-        {
+        private void TextBoxGotFocus(object sender, EventArgs e) {
             TreeView.SelectedNode = this;
         }
 
-        private void TextChanged(object sender, EventArgs e)
-        {
+        private void TextChanged(object sender, EventArgs e) {
             uint value;
-            if (UInt32.TryParse(_textBox.Text, out value))
-            {
+            if (UInt32.TryParse(_textBox.Text, out value)) {
                 _value = (int)value;
             }
         }
 
-        internal override void Connected()
-        {
+        internal override void Connected() {
             _textBox.Font = TreeView.Font;
             TreeView.Controls.Add(_textBox);
             TreeView.Invalidated += TreeViewInvalidated;
         }
 
-        private void TreeViewInvalidated(object sender, InvalidateEventArgs e)
-        {
-            if (IsVisible)
-            {
+        private void TreeViewInvalidated(object sender, InvalidateEventArgs e) {
+            if (IsVisible) {
                 _textBox.Show();
                 _textBox.Top = Bounds.Top;
                 _textBox.Left = Bounds.Right;
                 _textBox.Height = Bounds.Height - 4;
                 _textBox.Width = 40;
-            }
-            else
-            {
+            } else {
                 _textBox.Hide();
             }
         }
 
-        internal override object SettingValue
-        {
-            get
-            {
+        internal override object SettingValue {
+            get {
                 return _value;
             }
-            set
-            {
+            set {
                 _value = (int)value;
                 _textBox.Text = _value.ToString();
             }
         }
 
-        internal string Value
-        {
-            get
-            {
+        internal string Value {
+            get {
                 return _textBox.Text;
             }
 
         }
 
         // taken from C#
-        class IntegerAccessibleObject : TreeNodeAccessibleObject
-        {
+        class IntegerAccessibleObject : TreeNodeAccessibleObject {
             private readonly IntegerNode _option;
 
             public IntegerAccessibleObject(IntegerNode option)
-                : base(option)
-            {
+                : base(option) {
                 _option = option;
             }
 
-            public override AccessibleRole Role
-            {
+            public override AccessibleRole Role {
                 get { return AccessibleRole.Text; }
             }
 
-            public override string Value
-            {
+            public override string Value {
                 get { return _option.Value; }
                 set { _option._value = (int)uint.Parse(value); }
             }
         }
 
-        public override System.Windows.Forms.AccessibleObject AccessibleObject
-        {
-            get
-            {
+        public override System.Windows.Forms.AccessibleObject AccessibleObject {
+            get {
                 return new IntegerAccessibleObject(this);
             }
         }

@@ -35,8 +35,6 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Tagging;
-using pythontools::Microsoft.PythonTools;
-using pythontools::Microsoft.PythonTools.Editor;
 using TestUtilities;
 using TestUtilities.UI.Python;
 using util::TestUtilities.UI;

@@ -16,10 +16,8 @@
 
 using Microsoft.VisualStudioTools.Project;
 
-namespace Microsoft.PythonTools.Project.Web
-{
-    public partial class PythonWebLauncherOptions : UserControl, IPythonLauncherOptions
-    {
+namespace Microsoft.PythonTools.Project.Web {
+    public partial class PythonWebLauncherOptions : UserControl, IPythonLauncherOptions {
         private readonly Dictionary<string, TextBox> _textBoxMap;
         private readonly Dictionary<string, TextBox> _textBoxWebMap;
         private readonly Dictionary<string, ComboBox> _comboBoxMap;
@@ -28,8 +26,7 @@ namespace Microsoft.PythonTools.Project.Web
         private bool _loadingSettings;
         public const string DjangoSettingsModuleProperty = "DjangoSettingsModule";
 
-        public PythonWebLauncherOptions()
-        {
+        public PythonWebLauncherOptions() {
             InitializeComponent();
 
             _textBoxMap = new Dictionary<string, TextBox> {
@@ -64,63 +61,48 @@ namespace Microsoft.PythonTools.Project.Web
         }
 
         public PythonWebLauncherOptions(IPythonProject properties)
-            : this()
-        {
+            : this() {
             _properties = properties;
         }
 
         #region ILauncherOptions Members
 
-        public void SaveSettings()
-        {
-            foreach (var propTextBox in _textBoxMap)
-            {
+        public void SaveSettings() {
+            foreach (var propTextBox in _textBoxMap) {
                 _properties.SetProperty(propTextBox.Key, propTextBox.Value.Text);
             }
-            foreach (var propTextBox in _textBoxWebMap)
-            {
+            foreach (var propTextBox in _textBoxWebMap) {
                 _properties.SetOrAddPropertyAfter(propTextBox.Key, propTextBox.Value.Text, DjangoSettingsModuleProperty);
             }
-            foreach (var propComboBox in _comboBoxMap)
-            {
+            foreach (var propComboBox in _comboBoxMap) {
                 var value = propComboBox.Value.SelectedItem as string;
-                if (value != null)
-                {
+                if (value != null) {
                     _properties.SetOrAddPropertyAfter(propComboBox.Key, value, DjangoSettingsModuleProperty);
                 }
             }
             RaiseIsSaved();
         }
 
-        public void LoadSettings()
-        {
+        public void LoadSettings() {
             _loadingSettings = true;
             var textBoxMaps = _textBoxMap.Union(_textBoxWebMap);
-            foreach (var propTextBox in textBoxMaps)
-            {
+            foreach (var propTextBox in textBoxMaps) {
                 propTextBox.Value.Text = GetUnevaluatedProperty(propTextBox.Key);
             }
-            foreach (var propComboBox in _comboBoxMap)
-            {
+            foreach (var propComboBox in _comboBoxMap) {
                 int index = propComboBox.Value.FindString(_properties.GetUnevaluatedProperty(propComboBox.Key));
                 propComboBox.Value.SelectedIndex = index >= 0 ? index : 0;
             }
             _loadingSettings = false;
         }
 
-        public void ReloadSetting(string settingName)
-        {
+        public void ReloadSetting(string settingName) {
             var textBoxMaps = _textBoxMap.Union(_textBoxWebMap);
-            if (_textBoxMap.TryGetValue(settingName, out TextBox textBox))
-            {
+            if (_textBoxMap.TryGetValue(settingName, out TextBox textBox)) {
                 textBox.Text = GetUnevaluatedProperty(settingName);
-            }
-            else if (_textBoxWebMap.TryGetValue(settingName, out textBox))
-            {
+            } else if (_textBoxWebMap.TryGetValue(settingName, out textBox)) {
                 textBox.Text = GetUnevaluatedProperty(settingName);
-            }
-            else if (_comboBoxMap.TryGetValue(settingName, out ComboBox comboBox))
-            {
+            } else if (_comboBoxMap.TryGetValue(settingName, out ComboBox comboBox)) {
                 int index = comboBox.FindString(_properties.GetUnevaluatedProperty(settingName));
                 comboBox.SelectedIndex = index >= 0 ? index : 0;
             }
@@ -128,18 +110,15 @@ namespace Microsoft.PythonTools.Project.Web
 
         public event EventHandler<DirtyChangedEventArgs> DirtyChanged;
 
-        Control IPythonLauncherOptions.Control
-        {
+        Control IPythonLauncherOptions.Control {
             get { return this; }
         }
 
         #endregion
 
-        private string GetUnevaluatedProperty(string settingName)
-        {
+        private string GetUnevaluatedProperty(string settingName) {
             string value = _properties.GetUnevaluatedProperty(settingName);
-            if (_multilineProps.Contains(settingName))
-            {
+            if (_multilineProps.Contains(settingName)) {
                 value = FixLineEndings(value);
             }
             return value;
@@ -147,41 +126,32 @@ namespace Microsoft.PythonTools.Project.Web
 
         private static Regex lfToCrLfRegex = new Regex(@"(?<!\r)\n");
 
-        private static string FixLineEndings(string value)
-        {
+        private static string FixLineEndings(string value) {
             // TextBox requires \r\n for line separators, but XML can have either \n or \r\n, and we should treat those equally.
             // (It will always have \r\n when we write it out, but users can edit it by other means.)
             return lfToCrLfRegex.Replace(value ?? String.Empty, "\r\n");
         }
 
-        private void RaiseIsSaved()
-        {
+        private void RaiseIsSaved() {
             var isDirty = DirtyChanged;
-            if (isDirty != null)
-            {
+            if (isDirty != null) {
                 DirtyChanged(this, DirtyChangedEventArgs.SavedValue);
             }
         }
 
-        private void Setting_TextChanged(object sender, EventArgs e)
-        {
-            if (!_loadingSettings)
-            {
+        private void Setting_TextChanged(object sender, EventArgs e) {
+            if (!_loadingSettings) {
                 var isDirty = DirtyChanged;
-                if (isDirty != null)
-                {
+                if (isDirty != null) {
                     DirtyChanged(this, DirtyChangedEventArgs.DirtyValue);
                 }
             }
         }
 
-        private void Setting_SelectedValueChanged(object sender, EventArgs e)
-        {
-            if (!_loadingSettings)
-            {
+        private void Setting_SelectedValueChanged(object sender, EventArgs e) {
+            if (!_loadingSettings) {
                 var isDirty = DirtyChanged;
-                if (isDirty != null)
-                {
+                if (isDirty != null) {
                     DirtyChanged(this, DirtyChangedEventArgs.DirtyValue);
                 }
             }

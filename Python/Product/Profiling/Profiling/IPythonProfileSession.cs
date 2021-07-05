@@ -14,18 +14,14 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Profiling
-{
+namespace Microsoft.PythonTools.Profiling {
     [Guid("20F87722-745A-48C7-B9D5-DD9B85F96B7F")]
-    public interface IPythonProfileSession
-    {
-        string Name
-        {
+    public interface IPythonProfileSession {
+        string Name {
             get;
         }
 
-        string Filename
-        {
+        string Filename {
             get;
         }
 
@@ -35,8 +31,7 @@ namespace Microsoft.PythonTools.Profiling
 
         void Launch(bool openReport = false);
 
-        bool IsSaved
-        {
+        bool IsSaved {
             get;
         }
     }

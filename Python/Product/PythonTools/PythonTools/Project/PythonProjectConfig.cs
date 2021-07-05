@@ -17,15 +17,12 @@
 using Microsoft.PythonTools.Debugger;
 using Microsoft.VisualStudioTools.Project;
 
-namespace Microsoft.PythonTools.Project
-{
-    class PythonProjectConfig : CommonProjectConfig
-    {
+namespace Microsoft.PythonTools.Project {
+    class PythonProjectConfig : CommonProjectConfig {
         private readonly PythonProjectNode _project;
 
         public PythonProjectConfig(PythonProjectNode project, string configuration)
-            : base(project, configuration)
-        {
+            : base(project, configuration) {
             _project = project;
         }
 
@@ -33,73 +30,49 @@ namespace Microsoft.PythonTools.Project
         /// The display name is a two part item
         /// first part is the config name, 2nd part is the platform name
         /// </summary>
-        public override int get_DisplayName(out string name)
-        {
-            if (!string.IsNullOrEmpty(PlatformName))
-            {
+        public override int get_DisplayName(out string name) {
+            if (!string.IsNullOrEmpty(PlatformName)) {
                 name = ConfigName + "|" + PlatformName;
                 return VSConstants.S_OK;
-            }
-            else
-            {
+            } else {
                 return base.get_DisplayName(out name);
             }
         }
 
-        public override int DebugLaunch(uint flags)
-        {
-            if (_project.ShouldWarnOnLaunch)
-            {
+        public override int DebugLaunch(uint flags) {
+            if (_project.ShouldWarnOnLaunch) {
                 var pyService = ProjectMgr.Site.GetPythonToolsService();
-                if (pyService.DebuggerOptions.PromptBeforeRunningWithBuildError)
-                {
+                if (pyService.DebuggerOptions.PromptBeforeRunningWithBuildError) {
                     var res = new StartWithErrorsDialog(pyService).ShowDialog();
-                    if (res == DialogResult.No)
-                    {
+                    if (res == DialogResult.No) {
                         return VSConstants.S_OK;
                     }
                 }
             }
 
             string errorMessage = null;
-            try
-            {
+            try {
                 return base.DebugLaunch(flags);
-            }
-            catch (MissingInterpreterException ex)
-            {
-                if (_project.ActiveInterpreter == _project.InterpreterRegistry.NoInterpretersValue)
-                {
+            } catch (MissingInterpreterException ex) {
+                if (_project.ActiveInterpreter == _project.InterpreterRegistry.NoInterpretersValue) {
                     PythonToolsPackage.OpenNoInterpretersHelpPage(ProjectMgr.Site, ex.HelpPage);
-                }
-                else
-                {
+                } else {
                     errorMessage = ex.Message;
                 }
-            }
-            catch (NoInterpretersException ex)
-            {
+            } catch (NoInterpretersException ex) {
                 PythonToolsPackage.OpenNoInterpretersHelpPage(ProjectMgr.Site, ex.HelpPage);
-            }
-            catch (IOException ex)
-            {
+            } catch (IOException ex) {
                 errorMessage = ex.Message;
-            }
-            catch (NoStartupFileException ex)
-            {
+            } catch (NoStartupFileException ex) {
                 errorMessage = ex.Message;
-            }
-            catch (ArgumentException ex)
-            {
+            } catch (ArgumentException ex) {
                 // Previously used to handle "No startup file" which now has its own exception.
                 // Keeping it in case some launchers started relying on us catching this.
                 errorMessage = ex.Message;
             }
 
-            if (!string.IsNullOrEmpty(errorMessage))
-            {
-                var td = new TaskDialog(ProjectMgr.Site)
-                {
+            if (!string.IsNullOrEmpty(errorMessage)) {
+                var td = new TaskDialog(ProjectMgr.Site) {
                     Title = Strings.ProductTitle,
                     MainInstruction = Strings.FailedToLaunchDebugger,
                     Content = errorMessage,

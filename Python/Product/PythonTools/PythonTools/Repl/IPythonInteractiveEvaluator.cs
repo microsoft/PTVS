@@ -14,8 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Repl
-{
+namespace Microsoft.PythonTools.Repl {
     /// <summary>
     /// The Python repl evaluator.  An instance of this can be acquired by creating a REPL window
     /// via PythonToolsPackage.CreatePythonRepl and getting the Evaluator from the resulting
@@ -24,8 +23,7 @@ namespace Microsoft.PythonTools.Repl
     /// This interface provides additional functionality for interacting with the Python REPL
     /// above and beyond the standard IReplEvaluator interface.
     /// </summary>
-    interface IPythonInteractiveEvaluator
-    {
+    interface IPythonInteractiveEvaluator {
         /// <summary>
         /// Executes the specified file in the REPL window.
         /// 

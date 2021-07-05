@@ -14,13 +14,11 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Intellisense
-{
+namespace Microsoft.PythonTools.Intellisense {
     /// <summary>
     /// Compares various types of completions.
     /// </summary>
-    class CompletionComparer : IEqualityComparer<CompletionResult>, IComparer<CompletionResult>, IComparer<Completion>, IComparer<string>
-    {
+    class CompletionComparer : IEqualityComparer<CompletionResult>, IComparer<CompletionResult>, IComparer<Completion>, IComparer<string> {
         /// <summary>
         /// A CompletionComparer that sorts names beginning with underscores to
         /// the end of the list.
@@ -38,32 +36,25 @@ namespace Microsoft.PythonTools.Intellisense
         /// <summary>
         /// Compares two strings.
         /// </summary>
-        public int Compare(string xName, string yName)
-        {
-            if (yName == null)
-            {
+        public int Compare(string xName, string yName) {
+            if (yName == null) {
                 return xName == null ? 0 : -1;
-            }
-            else if (xName == null)
-            {
+            } else if (xName == null) {
                 return yName == null ? 0 : 1;
             }
 
-            if (_sortUnderscoresLast)
-            {
+            if (_sortUnderscoresLast) {
                 bool xUnder = xName.StartsWithOrdinal("__") && xName.EndsWithOrdinal("__");
                 bool yUnder = yName.StartsWithOrdinal("__") && yName.EndsWithOrdinal("__");
 
-                if (xUnder != yUnder)
-                {
+                if (xUnder != yUnder) {
                     // The one that starts with an underscore comes later
                     return xUnder ? 1 : -1;
                 }
 
                 bool xSingleUnder = xName.StartsWithOrdinal("_");
                 bool ySingleUnder = yName.StartsWithOrdinal("_");
-                if (xSingleUnder != ySingleUnder)
-                {
+                if (xSingleUnder != ySingleUnder) {
                     // The one that starts with an underscore comes later
                     return xSingleUnder ? 1 : -1;
                 }
@@ -71,8 +62,7 @@ namespace Microsoft.PythonTools.Intellisense
             return String.Compare(xName, yName, StringComparison.CurrentCultureIgnoreCase);
         }
 
-        private CompletionComparer(bool sortUnderscoresLast)
-        {
+        private CompletionComparer(bool sortUnderscoresLast) {
             _sortUnderscoresLast = sortUnderscoresLast;
         }
 
@@ -80,8 +70,7 @@ namespace Microsoft.PythonTools.Intellisense
         /// Compares two instances of <see cref="Completion"/> using their
         /// displayed text.
         /// </summary>
-        public int Compare(Completion x, Completion y)
-        {
+        public int Compare(Completion x, Completion y) {
             return Compare(x.DisplayText, y.DisplayText);
         }
 
@@ -92,24 +81,21 @@ namespace Microsoft.PythonTools.Intellisense
         /// <param name="x"></param>
         /// <param name="y"></param>
         /// <returns></returns>
-        public int Compare(CompletionResult x, CompletionResult y)
-        {
+        public int Compare(CompletionResult x, CompletionResult y) {
             return Compare(x.Name, y.Name);
         }
 
         /// <summary>
         /// Compares two <see cref="CompletionResult"/> structures for equality.
         /// </summary>
-        public bool Equals(CompletionResult x, CompletionResult y)
-        {
+        public bool Equals(CompletionResult x, CompletionResult y) {
             return x.Name.Equals(y.Name);
         }
 
         /// <summary>
         /// Gets the hash code for a <see cref="CompletionResult"/> structure.
         /// </summary>
-        public int GetHashCode(CompletionResult obj)
-        {
+        public int GetHashCode(CompletionResult obj) {
             return obj.Name.GetHashCode();
         }
     }
@@ -118,17 +104,14 @@ namespace Microsoft.PythonTools.Intellisense
     /// A comparer for use with <see cref="Enumerable.Union{TSource}(IEnumerable{TSource}, IEnumerable{TSource}, IEqualityComparer{TSource})"/>
     /// to eliminate duplicate items with the same <see cref="CompletionResult.MergeKey"/>.
     /// </summary>
-    class CompletionMergeKeyComparer : IEqualityComparer<CompletionResult>
-    {
+    class CompletionMergeKeyComparer : IEqualityComparer<CompletionResult> {
         public static readonly CompletionMergeKeyComparer Instance = new CompletionMergeKeyComparer();
 
-        public bool Equals(CompletionResult x, CompletionResult y)
-        {
+        public bool Equals(CompletionResult x, CompletionResult y) {
             return x.MergeKey.Equals(y.MergeKey);
         }
 
-        public int GetHashCode(CompletionResult obj)
-        {
+        public int GetHashCode(CompletionResult obj) {
             return obj.MergeKey.GetHashCode();
         }
     }

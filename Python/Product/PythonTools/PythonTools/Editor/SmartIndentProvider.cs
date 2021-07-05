@@ -14,12 +14,10 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Editor
-{
+namespace Microsoft.PythonTools.Editor {
     [Export(typeof(ISmartIndentProvider))]
     [ContentType(PythonCoreConstants.ContentType)]
-    sealed class SmartIndentProvider : ISmartIndentProvider
-    {
+    sealed class SmartIndentProvider : ISmartIndentProvider {
         private readonly PythonToolsService _pyService;
         private readonly PythonEditorServices _editorServices;
 
@@ -27,42 +25,33 @@ namespace Microsoft.PythonTools.Editor
         internal SmartIndentProvider(
             [Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider,
             PythonEditorServices editorServices
-        )
-        {
+        ) {
             _pyService = serviceProvider.GetPythonToolsService();
             _editorServices = editorServices;
         }
 
-        private sealed class Indent : ISmartIndent
-        {
+        private sealed class Indent : ISmartIndent {
             private readonly ITextView _textView;
             private readonly SmartIndentProvider _provider;
 
-            public Indent(SmartIndentProvider provider, ITextView view)
-            {
+            public Indent(SmartIndentProvider provider, ITextView view) {
                 _provider = provider;
                 _textView = view;
             }
 
-            public int? GetDesiredIndentation(ITextSnapshotLine line)
-            {
-                if (_provider._pyService.LangPrefs.IndentMode == vsIndentStyle.vsIndentStyleSmart)
-                {
+            public int? GetDesiredIndentation(ITextSnapshotLine line) {
+                if (_provider._pyService.LangPrefs.IndentMode == vsIndentStyle.vsIndentStyleSmart) {
                     return AutoIndent.GetLineIndentation(_provider._editorServices.GetBufferInfo(line.Snapshot.TextBuffer), line, _textView);
-                }
-                else
-                {
+                } else {
                     return null;
                 }
             }
 
-            public void Dispose()
-            {
+            public void Dispose() {
             }
         }
 
-        public ISmartIndent CreateSmartIndent(ITextView textView)
-        {
+        public ISmartIndent CreateSmartIndent(ITextView textView) {
             return new Indent(this, textView);
         }
     }

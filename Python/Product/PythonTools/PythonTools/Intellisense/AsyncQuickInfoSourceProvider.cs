@@ -14,21 +14,17 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Intellisense
-{
+namespace Microsoft.PythonTools.Intellisense {
     [Export(typeof(IAsyncQuickInfoSourceProvider)), ContentType(PythonCoreConstants.ContentType), Order, Name("Python Quick Info Source")]
-    class QuickInfoSourceProvider : IAsyncQuickInfoSourceProvider
-    {
+    class QuickInfoSourceProvider : IAsyncQuickInfoSourceProvider {
         private readonly IServiceProvider _serviceProvider;
 
         [ImportingConstructor]
-        public QuickInfoSourceProvider([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider)
-        {
+        public QuickInfoSourceProvider([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider) {
             _serviceProvider = serviceProvider;
         }
 
-        public IAsyncQuickInfoSource TryCreateQuickInfoSource(ITextBuffer textBuffer)
-        {
+        public IAsyncQuickInfoSource TryCreateQuickInfoSource(ITextBuffer textBuffer) {
             return new AsyncQuickInfoSource(textBuffer);
         }
     }

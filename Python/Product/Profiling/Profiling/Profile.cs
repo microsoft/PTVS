@@ -15,14 +15,11 @@
 // permissions and limitations under the License.
 
 
-namespace Microsoft.PythonTools.Profiling
-{
-    class Profile
-    {
+namespace Microsoft.PythonTools.Profiling {
+    class Profile {
         public readonly string Name;
 
-        public Profile(string name)
-        {
+        public Profile(string name) {
             Name = name;
         }
     }

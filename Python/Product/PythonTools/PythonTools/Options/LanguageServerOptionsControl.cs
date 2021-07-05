@@ -14,72 +14,56 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Options
-{
-    public partial class LanguageServerOptionsControl : UserControl
-    {
+namespace Microsoft.PythonTools.Options {
+    public partial class LanguageServerOptionsControl : UserControl {
         private readonly IServiceProvider _serviceProvider;
         private readonly LanguageServerOptions _options;
         private bool _changing;
 
-        private LanguageServerOptionsControl() : this(null)
-        {
+        private LanguageServerOptionsControl() : this(null) {
         }
 
-        public LanguageServerOptionsControl(IServiceProvider serviceProvider)
-        {
+        public LanguageServerOptionsControl(IServiceProvider serviceProvider) {
             _serviceProvider = serviceProvider;
             _options = _serviceProvider?.GetPythonToolsService().LanguageServerOptions;
             InitializeComponent();
             UpdateSettings();
         }
 
-        internal async void UpdateSettings()
-        {
+        internal async void UpdateSettings() {
             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
             _changing = true;
-            try
-            {
+            try {
                 typeShedPathTextBox.Text = _options.TypeShedPath;
                 suppressTypeShedCheckbox.Checked = _options.SuppressTypeShed;
                 disableLanguageServerCheckbox.Checked = _options.ServerDisabled;
-            }
-            finally
-            {
+            } finally {
                 _changing = false;
             }
         }
 
-        private void TypeShedPath_TextChanged(object sender, EventArgs e)
-        {
-            if (!_changing)
-            {
+        private void TypeShedPath_TextChanged(object sender, EventArgs e) {
+            if (!_changing) {
                 _options.TypeShedPath = ((TextBox)sender).Text;
             }
         }
 
-        private void browseTypeShedPathButton_Click(object sender, EventArgs e)
-        {
+        private void browseTypeShedPathButton_Click(object sender, EventArgs e) {
             var newPath = _serviceProvider.BrowseForDirectory(Handle, _options.TypeShedPath);
-            if (!string.IsNullOrEmpty(newPath))
-            {
+            if (!string.IsNullOrEmpty(newPath)) {
                 typeShedPathTextBox.Text = newPath;
             }
         }
 
-        private void suppressTypeShedCheckbox_CheckedChanged(object sender, EventArgs e)
-        {
-            if (!_changing)
-            {
+        private void suppressTypeShedCheckbox_CheckedChanged(object sender, EventArgs e) {
+            if (!_changing) {
                 _options.SuppressTypeShed = suppressTypeShedCheckbox.Checked;
             }
         }
 
-        private void _enableLanguageServer_CheckedChanged(object sender, EventArgs e)
-        {
-            if (!_changing)
-            {
+        private void _enableLanguageServer_CheckedChanged(object sender, EventArgs e) {
+            if (!_changing) {
                 _options.ServerDisabled = disableLanguageServerCheckbox.Checked;
             }
         }

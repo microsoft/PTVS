@@ -17,22 +17,18 @@
 using Microsoft.PythonTools.Environments;
 using IServiceProvider = System.IServiceProvider;
 
-namespace Microsoft.PythonTools.Commands
-{
-    class CurrentEnvironmentListCommand : OleMenuCommand
-    {
+namespace Microsoft.PythonTools.Commands {
+    class CurrentEnvironmentListCommand : OleMenuCommand {
         private readonly IServiceProvider _serviceProvider;
         private readonly EnvironmentSwitcherManager _envSwitchMgr;
 
         public CurrentEnvironmentListCommand(IServiceProvider serviceProvider)
-            : base(null, new CommandID(GuidList.guidPythonToolsCmdSet, (int)PkgCmdIDList.comboIdCurrentEnvironmentList))
-        {
+            : base(null, new CommandID(GuidList.guidPythonToolsCmdSet, (int)PkgCmdIDList.comboIdCurrentEnvironmentList)) {
             _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
             _envSwitchMgr = serviceProvider.GetPythonToolsService().EnvironmentSwitcherManager;
         }
 
-        public override void Invoke(object inArg, IntPtr outArg, OLECMDEXECOPT options)
-        {
+        public override void Invoke(object inArg, IntPtr outArg, OLECMDEXECOPT options) {
             var envs = _envSwitchMgr.AllFactories
                 .Select(f => f.Configuration.Description)
                 .OrderBy(desc => desc)

@@ -14,13 +14,10 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Options
-{
-    class InterpreterPlaceholder : IPythonInterpreterFactory
-    {
+namespace Microsoft.PythonTools.Options {
+    class InterpreterPlaceholder : IPythonInterpreterFactory {
         public const string PlaceholderId = "Placeholder";
-        public InterpreterPlaceholder(string id, string description)
-        {
+        public InterpreterPlaceholder(string id, string description) {
             Configuration = new VisualStudioInterpreterConfiguration(
                 PlaceholderId + ";" + id.ToString(),
                 description,
@@ -38,8 +35,7 @@ namespace Microsoft.PythonTools.Options
 
         public Guid Id => Guid.Empty;
 
-        public IPythonInterpreter CreateInterpreter()
-        {
+        public IPythonInterpreter CreateInterpreter() {
             throw new NotSupportedException();
         }
 

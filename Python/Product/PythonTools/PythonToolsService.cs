@@ -22,14 +22,12 @@ using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudioTools;
 
-namespace Microsoft.PythonTools
-{
+namespace Microsoft.PythonTools {
 
     /// <summary>
     /// Provides services and state which need to be available to various PTVS components.
     /// </summary>
-    public sealed class PythonToolsService : IDisposable
-    {
+    public sealed class PythonToolsService : IDisposable {
         private readonly IServiceContainer _container;
         private readonly Lazy<LanguagePreferences> _langPrefs;
         private IPythonToolsOptionsService _optionsService;
@@ -55,17 +53,12 @@ namespace Microsoft.PythonTools
 
         private static readonly Dictionary<string, OptionInfo> _allFormattingOptions = new Dictionary<string, OptionInfo>();
 
-        public static object CreateService(IServiceContainer container, Type serviceType)
-        {
-            if (serviceType.IsEquivalentTo(typeof(PythonToolsService)))
-            {
+        public static object CreateService(IServiceContainer container, Type serviceType) {
+            if (serviceType.IsEquivalentTo(typeof(PythonToolsService))) {
                 // register our PythonToolsService which provides access to core PTVS functionality
-                try
-                {
+                try {
                     return new PythonToolsService(container);
-                }
-                catch (Exception ex) when (!ex.IsCriticalException())
-                {
+                } catch (Exception ex) when (!ex.IsCriticalException()) {
                     ex.ReportUnhandledException(container, typeof(PythonToolsService), allowUI: false);
                     throw;
                 }
@@ -73,8 +66,7 @@ namespace Microsoft.PythonTools
             return null;
         }
 
-        internal PythonToolsService(IServiceContainer container)
-        {
+        internal PythonToolsService(IServiceContainer container) {
             _container = container;
             _analyzers = new ConcurrentDictionary<string, VsProjectAnalyzer>();
 
@@ -105,8 +97,7 @@ namespace Microsoft.PythonTools
             EditorServices.SetPythonToolsService(this);
         }
 
-        private void OnIdleInitialization(object sender, ComponentManagerEventArgs e)
-        {
+        private void OnIdleInitialization(object sender, ComponentManagerEventArgs e) {
             Site.AssertShellIsInitialized();
 
             _idleManager.OnIdle -= OnIdleInitialization;
@@ -116,23 +107,19 @@ namespace Microsoft.PythonTools
             EnvironmentSwitcherManager.Initialize();
         }
 
-        public void Dispose()
-        {
-            if (_langPrefs.IsValueCreated)
-            {
+        public void Dispose() {
+            if (_langPrefs.IsValueCreated) {
                 _langPrefs.Value.Dispose();
             }
 
             _idleManager.Dispose();
 
-            foreach (var window in _codeWindowManagers.Values.ToArray())
-            {
+            foreach (var window in _codeWindowManagers.Values.ToArray()) {
                 window.RemoveAdornments();
             }
             _codeWindowManagers.Clear();
 
-            foreach (var kv in GetActiveSharedAnalyzers())
-            {
+            foreach (var kv in GetActiveSharedAnalyzers()) {
                 kv.Value.Dispose();
             }
 
@@ -140,13 +127,10 @@ namespace Microsoft.PythonTools
             WorkspaceInfoBarManager.Dispose();
         }
 
-        private void InitializeLogging()
-        {
-            try
-            {
+        private void InitializeLogging() {
+            try {
                 var registry = ComponentModel.GetService<IInterpreterRegistryService>();
-                if (registry != null)
-                {
+                if (registry != null) {
                     // not available in some test cases...
                     // log interesting stats on startup
                     var installed = registry.Configurations.Count();
@@ -165,17 +149,14 @@ namespace Microsoft.PythonTools
                 Logger.LogEvent(PythonLogEvent.Experiments, new Dictionary<string, object> {
                     { "UseVsCodeDebugger", !DebuggerOptions.UseLegacyDebugger }
                 });
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
             }
         }
 
         internal PythonEditorServices EditorServices { get; }
 
-        internal void GetDiagnosticsLog(TextWriter writer, bool includeAnalysisLogs)
-        {
+        internal void GetDiagnosticsLog(TextWriter writer, bool includeAnalysisLogs) {
             _diagnosticsProvider.WriteLog(writer, includeAnalysisLogs);
         }
 
@@ -188,10 +169,8 @@ namespace Microsoft.PythonTools
 
         internal WorkspaceInfoBarManager WorkspaceInfoBarManager { get; }
 
-        internal Task<VsProjectAnalyzer> CreateAnalyzerAsync(IPythonInterpreterFactory factory)
-        {
-            if (factory == null)
-            {
+        internal Task<VsProjectAnalyzer> CreateAnalyzerAsync(IPythonInterpreterFactory factory) {
+            if (factory == null) {
                 var configuration = new VisualStudioInterpreterConfiguration("AnalysisOnly|2.7", "Analysis Only 2.7", version: new Version(2, 7));
                 factory = InterpreterFactoryCreator.CreateInterpreterFactory(configuration);
             }
@@ -207,24 +186,20 @@ namespace Microsoft.PythonTools
         /// <see cref="VsProjectAnalyzer.RemoveUser"/> and if it returns
         /// <c>true</c>, call <see cref="VsProjectAnalyzer.Dispose"/>.</para>
         /// </summary>
-        internal async Task<VsProjectAnalyzer> GetSharedAnalyzerAsync(IPythonInterpreterFactory factory = null)
-        {
+        internal async Task<VsProjectAnalyzer> GetSharedAnalyzerAsync(IPythonInterpreterFactory factory = null) {
             var result = TryGetSharedAnalyzer(factory, out var id);
-            if (result != null)
-            {
+            if (result != null) {
                 return result;
             }
 
-            if (string.IsNullOrEmpty(id))
-            {
+            if (string.IsNullOrEmpty(id)) {
                 return null;
             }
 
             factory = factory ?? InterpreterRegistryService.FindInterpreter(id);
             result = await CreateAnalyzerAsync(factory);
             var realResult = _analyzers.GetOrAdd(id, result);
-            if (realResult != result && result.RemoveUser())
-            {
+            if (realResult != result && result.RemoveUser()) {
                 result.Dispose();
             }
             return realResult;
@@ -237,24 +212,18 @@ namespace Microsoft.PythonTools
         /// is responsible to call <see cref="VsProjectAnalyzer.RemoveUser"/>
         /// and if necessary, <see cref="VsProjectAnalyzer.Dispose"/>.
         /// </summary>
-        internal VsProjectAnalyzer TryGetSharedAnalyzer(IPythonInterpreterFactory factory, out string id, bool addUser = true)
-        {
+        internal VsProjectAnalyzer TryGetSharedAnalyzer(IPythonInterpreterFactory factory, out string id, bool addUser = true) {
             id = factory?.Configuration?.Id;
-            if (string.IsNullOrEmpty(id))
-            {
+            if (string.IsNullOrEmpty(id)) {
                 factory = _interpreterOptionsService.Value?.DefaultInterpreter;
                 id = _interpreterOptionsService.Value?.DefaultInterpreterId ?? string.Empty;
             }
 
-            if (_analyzers.TryGetValue(id, out var result))
-            {
-                try
-                {
+            if (_analyzers.TryGetValue(id, out var result)) {
+                try {
                     result.AddUser();
                     return result;
-                }
-                catch (ObjectDisposedException)
-                {
+                } catch (ObjectDisposedException) {
                     _analyzers.TryRemove(id, out _);
                 }
             }
@@ -262,33 +231,27 @@ namespace Microsoft.PythonTools
             return null;
         }
 
-        internal IEnumerable<KeyValuePair<string, VsProjectAnalyzer>> GetActiveSharedAnalyzers()
-        {
+        internal IEnumerable<KeyValuePair<string, VsProjectAnalyzer>> GetActiveSharedAnalyzers() {
             return _analyzers.ToArray();
         }
 
-        internal IEnumerable<KeyValuePair<string, VsProjectAnalyzer>> GetActiveAnalyzers()
-        {
-            foreach (var kv in GetActiveSharedAnalyzers())
-            {
+        internal IEnumerable<KeyValuePair<string, VsProjectAnalyzer>> GetActiveAnalyzers() {
+            foreach (var kv in GetActiveSharedAnalyzers()) {
                 var config = _interpreterRegistryService.Value.FindConfiguration(kv.Key);
                 yield return new KeyValuePair<string, VsProjectAnalyzer>(config?.Description ?? kv.Key, kv.Value);
             }
 
             var sln = (IVsSolution)Site.GetService(typeof(SVsSolution));
-            foreach (var proj in sln.EnumerateLoadedPythonProjects())
-            {
+            foreach (var proj in sln.EnumerateLoadedPythonProjects()) {
                 var analyzer = proj.TryGetAnalyzer();
-                if (analyzer != null)
-                {
+                if (analyzer != null) {
                     yield return new KeyValuePair<string, VsProjectAnalyzer>(proj.Caption, analyzer);
                 }
             }
 
             var workspaceAnalysis = _container.GetComponentModel().GetService<WorkspaceAnalysis>();
             var workspaceAnalyzer = workspaceAnalysis.TryGetWorkspaceAnalyzer();
-            if (workspaceAnalyzer != null)
-            {
+            if (workspaceAnalyzer != null) {
                 yield return new KeyValuePair<string, VsProjectAnalyzer>(workspaceAnalysis.WorkspaceName, workspaceAnalyzer);
             }
         }
@@ -301,43 +264,37 @@ namespace Microsoft.PythonTools
         internal PythonInteractiveOptions DebugInteractiveOptions => _debugInteractiveOptions.Value;
         public LanguageServerOptions LanguageServerOptions => _languageServerOptions.Value;
 
-        private AdvancedEditorOptions CreateAdvancedEditorOptions()
-        {
+        private AdvancedEditorOptions CreateAdvancedEditorOptions() {
             var opts = new AdvancedEditorOptions(this);
             opts.Load();
             return opts;
         }
 
-        private DebuggerOptions CreateDebuggerOptions()
-        {
+        private DebuggerOptions CreateDebuggerOptions() {
             var opts = new DebuggerOptions(this);
             opts.Load();
             return opts;
         }
 
-        private CondaOptions CreateCondaOptions()
-        {
+        private CondaOptions CreateCondaOptions() {
             var opts = new CondaOptions(this);
             opts.Load();
             return opts;
         }
 
-        private DiagnosticsOptions CreateDiagnosticsOptions()
-        {
+        private DiagnosticsOptions CreateDiagnosticsOptions() {
             var opts = new DiagnosticsOptions(this);
             opts.Load();
             return opts;
         }
 
-        private GeneralOptions CreateGeneralOptions()
-        {
+        private GeneralOptions CreateGeneralOptions() {
             var opts = new GeneralOptions(this);
             opts.Load();
             return opts;
         }
 
-        private LanguageServerOptions CreateLanguageServerOptions()
-        {
+        private LanguageServerOptions CreateLanguageServerOptions() {
             var opts = new LanguageServerOptions(this);
             opts.Load();
             return opts;
@@ -352,38 +309,26 @@ namespace Microsoft.PythonTools
         /// <summary>
         /// Gets a new CodeFormattinOptions object configured to the users current settings.
         /// </summary>
-        public CodeFormattingOptions GetCodeFormattingOptions()
-        {
-            if (_optionsFactory == null)
-            {
+        public CodeFormattingOptions GetCodeFormattingOptions() {
+            if (_optionsFactory == null) {
                 // create a factory which can create CodeFormattingOptions without tons of reflection
                 var initializers = new Dictionary<OptionInfo, Action<CodeFormattingOptions, object>>();
-                foreach (CodeFormattingCategory curCat in Enum.GetValues(typeof(CodeFormattingCategory)))
-                {
-                    if (curCat == CodeFormattingCategory.None)
-                    {
+                foreach (CodeFormattingCategory curCat in Enum.GetValues(typeof(CodeFormattingCategory))) {
+                    if (curCat == CodeFormattingCategory.None) {
                         continue;
                     }
 
                     var cat = OptionCategory.GetOptions(curCat);
-                    foreach (var option in cat)
-                    {
+                    foreach (var option in cat) {
                         var propInfo = typeof(CodeFormattingOptions).GetProperty(option.Key);
 
-                        if (propInfo.PropertyType == typeof(bool))
-                        {
+                        if (propInfo.PropertyType == typeof(bool)) {
                             initializers[option] = MakeFastSetter<bool>(propInfo);
-                        }
-                        else if (propInfo.PropertyType == typeof(bool?))
-                        {
+                        } else if (propInfo.PropertyType == typeof(bool?)) {
                             initializers[option] = MakeFastSetter<bool?>(propInfo);
-                        }
-                        else if (propInfo.PropertyType == typeof(int))
-                        {
+                        } else if (propInfo.PropertyType == typeof(int)) {
                             initializers[option] = MakeFastSetter<int>(propInfo);
-                        }
-                        else
-                        {
+                        } else {
                             throw new InvalidOperationException(String.Format("Unsupported formatting option type: {0}", propInfo.PropertyType.FullName));
                         }
                     }
@@ -395,19 +340,15 @@ namespace Microsoft.PythonTools
             return _optionsFactory();
         }
 
-        private static Action<CodeFormattingOptions, object> MakeFastSetter<T>(PropertyInfo propInfo)
-        {
+        private static Action<CodeFormattingOptions, object> MakeFastSetter<T>(PropertyInfo propInfo) {
             var fastSet = (Action<CodeFormattingOptions, T>)Delegate.CreateDelegate(typeof(Action<CodeFormattingOptions, T>), propInfo.GetSetMethod());
             return (options, value) => fastSet(options, (T)value);
         }
 
-        private Func<CodeFormattingOptions> CreateOptionsFactory(Dictionary<OptionInfo, Action<CodeFormattingOptions, object>> initializers)
-        {
-            return () =>
-            {
+        private Func<CodeFormattingOptions> CreateOptionsFactory(Dictionary<OptionInfo, Action<CodeFormattingOptions, object>> initializers) {
+            return () => {
                 var res = new CodeFormattingOptions();
-                foreach (var keyValue in initializers)
-                {
+                foreach (var keyValue in initializers) {
                     var option = keyValue.Key;
                     var fastSet = keyValue.Value;
 
@@ -423,12 +364,10 @@ namespace Microsoft.PythonTools
         /// </summary>
         /// <param name="name"></param>
         /// <param name="value"></param>
-        public void SetFormattingOption(string name, object value)
-        {
+        public void SetFormattingOption(string name, object value) {
             EnsureAllOptions();
             OptionInfo option;
-            if (!_allFormattingOptions.TryGetValue(name, out option))
-            {
+            if (!_allFormattingOptions.TryGetValue(name, out option)) {
                 throw new InvalidOperationException("Unknown option " + name);
             }
 
@@ -439,31 +378,24 @@ namespace Microsoft.PythonTools
         /// Gets the value for a formatting setting.  The name is one of the properties in
         /// CodeFormattingOptions.
         /// </summary>
-        public object GetFormattingOption(string name)
-        {
+        public object GetFormattingOption(string name) {
             EnsureAllOptions();
             OptionInfo option;
-            if (!_allFormattingOptions.TryGetValue(name, out option))
-            {
+            if (!_allFormattingOptions.TryGetValue(name, out option)) {
                 throw new InvalidOperationException("Unknown option " + name);
             }
             return option.DeserializeOptionValue(LoadString(name, _formattingCat));
         }
 
-        private static void EnsureAllOptions()
-        {
-            if (_allFormattingOptions.Count == 0)
-            {
-                foreach (CodeFormattingCategory curCat in Enum.GetValues(typeof(CodeFormattingCategory)))
-                {
-                    if (curCat == CodeFormattingCategory.None)
-                    {
+        private static void EnsureAllOptions() {
+            if (_allFormattingOptions.Count == 0) {
+                foreach (CodeFormattingCategory curCat in Enum.GetValues(typeof(CodeFormattingCategory))) {
+                    if (curCat == CodeFormattingCategory.None) {
                         continue;
                     }
 
                     var cat = OptionCategory.GetOptions(curCat);
-                    foreach (var optionInfo in cat)
-                    {
+                    foreach (var optionInfo in cat) {
                         _allFormattingOptions[optionInfo.Key] = optionInfo;
                     }
                 }
@@ -483,8 +415,7 @@ namespace Microsoft.PythonTools
         /// </summary>
         internal string InteractiveBackendOverride { get; set; }
 
-        private PythonInteractiveOptions CreateInteractiveOptions(string category)
-        {
+        private PythonInteractiveOptions CreateInteractiveOptions(string category) {
             var opts = new PythonInteractiveOptions(this, category);
             opts.Load();
             return opts;
@@ -492,10 +423,8 @@ namespace Microsoft.PythonTools
 
         #endregion
 
-        internal IComponentModel ComponentModel
-        {
-            get
-            {
+        internal IComponentModel ComponentModel {
+            get {
                 return (IComponentModel)_container.GetService(typeof(SComponentModel));
             }
         }
@@ -513,10 +442,8 @@ namespace Microsoft.PythonTools
         /// Should only be called from the UI thread, and you must not
         /// synchronously wait on the returned task.
         /// </remarks>
-        internal async Task<LanguagePreferences> GetLangPrefsAsync()
-        {
-            if (_langPrefs.IsValueCreated)
-            {
+        internal async Task<LanguagePreferences> GetLangPrefsAsync() {
+            if (_langPrefs.IsValueCreated) {
                 return _langPrefs.Value;
             }
             await _container.WaitForShellInitializedAsync();
@@ -525,100 +452,81 @@ namespace Microsoft.PythonTools
 
         #region Registry Persistance
 
-        internal void DeleteCategory(string category)
-        {
+        internal void DeleteCategory(string category) {
             _optionsService.DeleteCategory(category);
         }
 
-        internal void SaveBool(string name, string category, bool value)
-        {
+        internal void SaveBool(string name, string category, bool value) {
             SaveString(name, category, value.ToString());
         }
 
-        internal void SaveInt(string name, string category, int value)
-        {
+        internal void SaveInt(string name, string category, int value) {
             SaveString(name, category, value.ToString());
         }
 
-        internal void SaveString(string name, string category, string value)
-        {
+        internal void SaveString(string name, string category, string value) {
             _optionsService.SaveString(name, category, value);
         }
 
-        internal string LoadString(string name, string category)
-        {
+        internal string LoadString(string name, string category) {
             return _optionsService.LoadString(name, category);
         }
 
-        internal void SaveEnum<T>(string name, string category, T value) where T : struct
-        {
+        internal void SaveEnum<T>(string name, string category, T value) where T : struct {
             SaveString(name, category, value.ToString());
         }
 
-        internal void SaveDateTime(string name, string category, DateTime value)
-        {
+        internal void SaveDateTime(string name, string category, DateTime value) {
             SaveString(name, category, value.ToString(CultureInfo.InvariantCulture));
         }
 
-        internal int? LoadInt(string name, string category)
-        {
+        internal int? LoadInt(string name, string category) {
             string res = LoadString(name, category);
-            if (res == null)
-            {
+            if (res == null) {
                 return null;
             }
 
             int val;
-            if (int.TryParse(res, out val))
-            {
+            if (int.TryParse(res, out val)) {
                 return val;
             }
             return null;
         }
 
-        internal bool? LoadBool(string name, string category)
-        {
+        internal bool? LoadBool(string name, string category) {
             string res = LoadString(name, category);
-            if (res == null)
-            {
+            if (res == null) {
                 return null;
             }
 
             bool val;
-            if (bool.TryParse(res, out val))
-            {
+            if (bool.TryParse(res, out val)) {
                 return val;
             }
             return null;
         }
 
-        internal T? LoadEnum<T>(string name, string category) where T : struct
-        {
+        internal T? LoadEnum<T>(string name, string category) where T : struct {
             string res = LoadString(name, category);
-            if (res == null)
-            {
+            if (res == null) {
                 return null;
             }
 
             T enumRes;
-            if (Enum.TryParse<T>(res, out enumRes))
-            {
+            if (Enum.TryParse<T>(res, out enumRes)) {
                 return enumRes;
             }
             return null;
         }
 
-        internal DateTime? LoadDateTime(string name, string category)
-        {
+        internal DateTime? LoadDateTime(string name, string category) {
             string res = LoadString(name, category);
-            if (res == null)
-            {
+            if (res == null) {
                 return null;
             }
 
             DateTime dateRes;
-            if (DateTime.TryParse(res, CultureInfo.InvariantCulture, DateTimeStyles.None, out dateRes))
-            {
+            if (DateTime.TryParse(res, CultureInfo.InvariantCulture, DateTimeStyles.None, out dateRes)) {
                 return dateRes;
             }
             return null;
@@ -628,19 +536,14 @@ namespace Microsoft.PythonTools
 
         #region Idle processing
 
-        internal event EventHandler<ComponentManagerEventArgs> OnIdle
-        {
-            add
-            {
-                lock (_idleManager)
-                {
+        internal event EventHandler<ComponentManagerEventArgs> OnIdle {
+            add {
+                lock (_idleManager) {
                     _idleManager.OnIdle += value;
                 }
             }
-            remove
-            {
-                lock (_idleManager)
-                {
+            remove {
+                lock (_idleManager) {
                     _idleManager.OnIdle -= value;
                 }
             }
@@ -650,65 +553,54 @@ namespace Microsoft.PythonTools
 
         #region Language Preferences
 
-        internal LANGPREFERENCES2 GetLanguagePreferences()
-        {
+        internal LANGPREFERENCES2 GetLanguagePreferences() {
             var txtMgr = (IVsTextManager2)_container.GetService(typeof(SVsTextManager));
             var langPrefs = new[] { new LANGPREFERENCES2 { guidLang = GuidList.guidPythonLanguageServiceGuid } };
             ErrorHandler.ThrowOnFailure(txtMgr.GetUserPreferences2(null, null, langPrefs, null));
             return langPrefs[0];
         }
 
-        internal void SetLanguagePreferences(LANGPREFERENCES2 langPrefs)
-        {
+        internal void SetLanguagePreferences(LANGPREFERENCES2 langPrefs) {
             var txtMgr = (IVsTextManager2)_container.GetService(typeof(SVsTextManager));
             ErrorHandler.ThrowOnFailure(txtMgr.SetUserPreferences2(null, null, new[] { langPrefs }, null));
         }
 
-        internal IEnumerable<CodeWindowManager> CodeWindowManagers
-        {
-            get
-            {
+        internal IEnumerable<CodeWindowManager> CodeWindowManagers {
+            get {
                 return _codeWindowManagers.Values;
             }
         }
 
-        internal CodeWindowManager GetOrCreateCodeWindowManager(IVsCodeWindow window)
-        {
+        internal CodeWindowManager GetOrCreateCodeWindowManager(IVsCodeWindow window) {
             CodeWindowManager value;
-            if (!_codeWindowManagers.TryGetValue(window, out value))
-            {
+            if (!_codeWindowManagers.TryGetValue(window, out value)) {
                 _codeWindowManagers[window] = value = new CodeWindowManager(_container, window);
 
             }
             return value;
         }
 
-        internal void CodeWindowClosed(IVsCodeWindow window)
-        {
+        internal void CodeWindowClosed(IVsCodeWindow window) {
             _codeWindowManagers.Remove(window);
         }
         #endregion
 
         #region Intellisense
 
-        internal CompletionAnalysis GetCompletions(ICompletionSession session, ITextView view, ITextSnapshot snapshot, ITrackingPoint point)
-        {
-            if (IsSpaceCompletion(snapshot, point) && session.IsCompleteWordMode())
-            {
+        internal CompletionAnalysis GetCompletions(ICompletionSession session, ITextView view, ITextSnapshot snapshot, ITrackingPoint point) {
+            if (IsSpaceCompletion(snapshot, point) && session.IsCompleteWordMode()) {
                 // Cannot complete a word immediately after a space
                 session.ClearCompleteWordMode();
             }
 
             var bi = EditorServices.GetBufferInfo(snapshot.TextBuffer);
             var entry = bi?.AnalysisEntry;
-            if (entry == null)
-            {
+            if (entry == null) {
                 return CompletionAnalysis.EmptyCompletionContext;
             }
 
             var options = session.GetOptions(Site);
-            if (ReverseExpressionParser.IsInGrouping(snapshot, bi.GetTokensInReverseFromPoint(point.GetPoint(snapshot))))
-            {
+            if (ReverseExpressionParser.IsInGrouping(snapshot, bi.GetTokensInReverseFromPoint(point.GetPoint(snapshot)))) {
                 options = options.Clone();
                 options.IncludeStatementKeywords = false;
             }
@@ -723,30 +615,24 @@ namespace Microsoft.PythonTools
             );
         }
 
-        private static bool IsSpaceCompletion(ITextSnapshot snapshot, ITrackingPoint loc)
-        {
+        private static bool IsSpaceCompletion(ITextSnapshot snapshot, ITrackingPoint loc) {
             var pos = loc.GetPosition(snapshot);
-            if (pos > 0)
-            {
+            if (pos > 0) {
                 return snapshot.GetText(pos - 1, 1) == " ";
             }
             return false;
         }
 
-        internal SignatureAnalysis GetSignatures(ITextView view, ITextSnapshot snapshot, ITrackingSpan span)
-        {
+        internal SignatureAnalysis GetSignatures(ITextView view, ITextSnapshot snapshot, ITrackingSpan span) {
             var entry = snapshot.TextBuffer.TryGetAnalysisEntry();
-            if (entry == null)
-            {
+            if (entry == null) {
                 return new SignatureAnalysis("", 0, new ISignature[0]);
             }
             return entry.Analyzer.WaitForRequest(entry.Analyzer.GetSignaturesAsync(entry, view, snapshot, span), "GetSignatures");
         }
 
-        internal Task<IEnumerable<CompletionResult>> GetExpansionCompletionsAsync()
-        {
-            if (_expansionCompletions == null)
-            {
+        internal Task<IEnumerable<CompletionResult>> GetExpansionCompletionsAsync() {
+            if (_expansionCompletions == null) {
                 return Task.FromResult<IEnumerable<CompletionResult>>(null);
             }
             return _expansionCompletions.GetCompletionsAsync();
@@ -754,15 +640,12 @@ namespace Microsoft.PythonTools
 
         #endregion
 
-        internal Dictionary<string, string> GetFullEnvironment(LaunchConfiguration config)
-        {
+        internal Dictionary<string, string> GetFullEnvironment(LaunchConfiguration config) {
             return LaunchConfigurationUtils.GetFullEnvironment(config, _container);
         }
 
-        internal IEnumerable<string> GetGlobalPythonSearchPaths(InterpreterConfiguration interpreter)
-        {
-            if (!GeneralOptions.ClearGlobalPythonPath)
-            {
+        internal IEnumerable<string> GetGlobalPythonSearchPaths(InterpreterConfiguration interpreter) {
+            if (!GeneralOptions.ClearGlobalPythonPath) {
                 string pythonPath = Environment.GetEnvironmentVariable(interpreter.PathEnvironmentVariable) ?? string.Empty;
                 return pythonPath
                     .Split(Path.PathSeparator)

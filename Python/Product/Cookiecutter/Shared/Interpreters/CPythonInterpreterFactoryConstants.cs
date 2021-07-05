@@ -14,8 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.CookiecutterTools.Interpreters
-{
+namespace Microsoft.CookiecutterTools.Interpreters {
     /// <summary>
     /// Provides constants used to identify interpreters that are detected from
     /// the CPython registry settings.
@@ -23,8 +22,7 @@ namespace Microsoft.CookiecutterTools.Interpreters
     /// This class used by Microsoft.PythonTools.dll to register the
     /// interpreters.
     /// </summary>
-    public static class CPythonInterpreterFactoryConstants
-    {
+    public static class CPythonInterpreterFactoryConstants {
         public const string ConsoleExecutable = "python.exe";
         public const string WindowsExecutable = "pythonw.exe";
         public const string LibrarySubPath = "lib";
@@ -36,8 +34,7 @@ namespace Microsoft.CookiecutterTools.Interpreters
             TimeSpan.FromSeconds(1)
         );
 
-        public static string GetInterpreterId(string company, string tag)
-        {
+        public static string GetInterpreterId(string company, string tag) {
             return String.Join(
                 "|",
                 CPythonInterpreterFactoryProvider.FactoryProviderName,
@@ -46,22 +43,17 @@ namespace Microsoft.CookiecutterTools.Interpreters
             );
         }
 
-        public static bool TryParseInterpreterId(string id, out string company, out string tag)
-        {
+        public static bool TryParseInterpreterId(string id, out string company, out string tag) {
             tag = company = null;
-            try
-            {
+            try {
                 var m = IdParser.Match(id);
-                if (m.Success && m.Groups["provider"].Value == CPythonInterpreterFactoryProvider.FactoryProviderName)
-                {
+                if (m.Success && m.Groups["provider"].Value == CPythonInterpreterFactoryProvider.FactoryProviderName) {
                     tag = m.Groups["tag"].Value;
                     company = m.Groups["company"].Value;
                     return true;
                 }
                 return false;
-            }
-            catch (RegexMatchTimeoutException)
-            {
+            } catch (RegexMatchTimeoutException) {
                 return false;
             }
         }

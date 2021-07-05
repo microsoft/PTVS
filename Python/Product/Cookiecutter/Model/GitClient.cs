@@ -16,27 +16,22 @@
 
 using Microsoft.CookiecutterTools.Infrastructure;
 
-namespace Microsoft.CookiecutterTools.Model
-{
-    class GitClient : IGitClient
-    {
+namespace Microsoft.CookiecutterTools.Model {
+    class GitClient : IGitClient {
         private readonly string _gitExeFilePath;
         private readonly Redirector _redirector;
 
-        public GitClient(string gitExeFilePath, Redirector redirector)
-        {
+        public GitClient(string gitExeFilePath, Redirector redirector) {
             _gitExeFilePath = gitExeFilePath;
             _redirector = redirector;
         }
 
-        public async Task<string> CloneAsync(string repoUrl, string targetParentFolderPath)
-        {
+        public async Task<string> CloneAsync(string repoUrl, string targetParentFolderPath) {
             Directory.CreateDirectory(targetParentFolderPath);
 
             string localTemplateFolder = GetClonedFolder(repoUrl, targetParentFolderPath);
 
-            if (Directory.Exists(localTemplateFolder))
-            {
+            if (Directory.Exists(localTemplateFolder)) {
                 ShellUtils.DeleteDirectory(localTemplateFolder);
             }
 
@@ -45,47 +40,36 @@ namespace Microsoft.CookiecutterTools.Model
             var stdErr = new List<string>();
 
             Redirector redirector;
-            if (_redirector != null)
-            {
+            if (_redirector != null) {
                 redirector = new TeeRedirector(_redirector, new ListRedirector(stdOut, stdErr));
-            }
-            else
-            {
+            } else {
                 redirector = new ListRedirector(stdOut, stdErr);
             }
 
             var arguments = new string[] { "clone", repoUrl };
-            using (var output = ProcessOutput.Run(_gitExeFilePath, arguments, targetParentFolderPath, GetEnvironment(), false, redirector))
-            {
+            using (var output = ProcessOutput.Run(_gitExeFilePath, arguments, targetParentFolderPath, GetEnvironment(), false, redirector)) {
                 await output;
 
-                var r = new ProcessOutputResult()
-                {
+                var r = new ProcessOutputResult() {
                     ExeFileName = _gitExeFilePath,
                     ExitCode = output.ExitCode,
                     StandardOutputLines = stdOut.ToArray(),
                     StandardErrorLines = stdErr.ToArray(),
                 };
 
-                if (output.ExitCode < 0 || HasFatalError(stdErr))
-                {
-                    if (Directory.Exists(localTemplateFolder))
-                    {
+                if (output.ExitCode < 0 || HasFatalError(stdErr)) {
+                    if (Directory.Exists(localTemplateFolder)) {
                         // Don't leave a failed clone on disk
-                        try
-                        {
+                        try {
                             ShellUtils.DeleteDirectory(localTemplateFolder);
-                        }
-                        catch (Exception ex) when (!ex.IsCriticalException())
-                        {
+                        } catch (Exception ex) when (!ex.IsCriticalException()) {
                         }
                     }
 
                     throw new ProcessException(r);
                 }
 
-                if (!Directory.Exists(localTemplateFolder))
-                {
+                if (!Directory.Exists(localTemplateFolder)) {
                     throw new ProcessException(r);
                 }
 
@@ -93,17 +77,13 @@ namespace Microsoft.CookiecutterTools.Model
             }
         }
 
-        public async Task<string> GetRemoteOriginAsync(string repoFolderPath)
-        {
+        public async Task<string> GetRemoteOriginAsync(string repoFolderPath) {
             var arguments = new string[] { "remote", "-v" };
-            using (var output = ProcessOutput.Run(_gitExeFilePath, arguments, repoFolderPath, GetEnvironment(), false, null))
-            {
+            using (var output = ProcessOutput.Run(_gitExeFilePath, arguments, repoFolderPath, GetEnvironment(), false, null)) {
                 await output;
-                foreach (var remote in output.StandardOutputLines)
-                {
+                foreach (var remote in output.StandardOutputLines) {
                     string origin;
-                    if (ParseOrigin(remote, out origin))
-                    {
+                    if (ParseOrigin(remote, out origin)) {
                         return origin;
                     }
                 }
@@ -111,30 +91,22 @@ namespace Microsoft.CookiecutterTools.Model
             return null;
         }
 
-        public async Task<DateTime?> GetLastCommitDateAsync(string repoFolderPath, string branch)
-        {
+        public async Task<DateTime?> GetLastCommitDateAsync(string repoFolderPath, string branch) {
             var arguments = new List<string>() { "log", "-1", "--date=iso" };
-            if (!string.IsNullOrEmpty(branch))
-            {
+            if (!string.IsNullOrEmpty(branch)) {
                 arguments.Add(branch);
             }
 
-            using (var output = ProcessOutput.Run(_gitExeFilePath, arguments, repoFolderPath, GetEnvironment(), false, null))
-            {
+            using (var output = ProcessOutput.Run(_gitExeFilePath, arguments, repoFolderPath, GetEnvironment(), false, null)) {
                 await output;
-                foreach (var line in output.StandardOutputLines)
-                {
+                foreach (var line in output.StandardOutputLines) {
                     // Line with date starts with 'Date'. Example:
                     // Date:   2016-07-28 10:03:07 +0200
-                    if (line.StartsWithOrdinal("Date:"))
-                    {
-                        try
-                        {
+                    if (line.StartsWithOrdinal("Date:")) {
+                        try {
                             var text = line.Substring("Date:".Length);
                             return Convert.ToDateTime(text).ToUniversalTime();
-                        }
-                        catch (FormatException)
-                        {
+                        } catch (FormatException) {
                             return null;
                         }
                     }
@@ -143,16 +115,12 @@ namespace Microsoft.CookiecutterTools.Model
             return null;
         }
 
-        public async Task FetchAsync(string repoFolderPath)
-        {
+        public async Task FetchAsync(string repoFolderPath) {
             var arguments = new string[] { "fetch" };
-            using (var output = ProcessOutput.Run(_gitExeFilePath, arguments, repoFolderPath, GetEnvironment(), false, null))
-            {
+            using (var output = ProcessOutput.Run(_gitExeFilePath, arguments, repoFolderPath, GetEnvironment(), false, null)) {
                 await output;
-                if (output.ExitCode < 0 || HasFatalError(output.StandardErrorLines))
-                {
-                    throw new ProcessException(new ProcessOutputResult()
-                    {
+                if (output.ExitCode < 0 || HasFatalError(output.StandardErrorLines)) {
+                    throw new ProcessException(new ProcessOutputResult() {
                         ExeFileName = _gitExeFilePath,
                         ExitCode = output.ExitCode,
                         StandardErrorLines = output.StandardErrorLines.ToArray(),
@@ -162,15 +130,11 @@ namespace Microsoft.CookiecutterTools.Model
             }
         }
 
-        public async Task MergeAsync(string repoFolderPath)
-        {
+        public async Task MergeAsync(string repoFolderPath) {
             var arguments = new string[] { "merge" };
-            using (var output = ProcessOutput.Run(_gitExeFilePath, arguments, repoFolderPath, GetEnvironment(), false, _redirector))
-            {
-                if (await output < 0)
-                {
-                    throw new ProcessException(new ProcessOutputResult()
-                    {
+            using (var output = ProcessOutput.Run(_gitExeFilePath, arguments, repoFolderPath, GetEnvironment(), false, _redirector)) {
+                if (await output < 0) {
+                    throw new ProcessException(new ProcessOutputResult() {
                         ExeFileName = _gitExeFilePath,
                         ExitCode = output.ExitCode,
                     });
@@ -178,8 +142,7 @@ namespace Microsoft.CookiecutterTools.Model
             }
         }
 
-        private Dictionary<string, string> GetEnvironment()
-        {
+        private Dictionary<string, string> GetEnvironment() {
             var path =
                 Path.GetDirectoryName(_gitExeFilePath) + ";" +
                 Environment.GetEnvironmentVariable("PATH") ?? "";
@@ -191,21 +154,17 @@ namespace Microsoft.CookiecutterTools.Model
             };
         }
 
-        private static bool HasFatalError(IEnumerable<string> standardErrorLines)
-        {
+        private static bool HasFatalError(IEnumerable<string> standardErrorLines) {
             return standardErrorLines.Any(line => line.StartsWithOrdinal("fatal:", ignoreCase: true));
         }
 
-        private static string GetClonedFolder(string repoUrl, string targetParentFolderPath)
-        {
+        private static string GetClonedFolder(string repoUrl, string targetParentFolderPath) {
             string name;
-            if (!ParseRepoName(repoUrl, out name))
-            {
+            if (!ParseRepoName(repoUrl, out name)) {
                 throw new ArgumentOutOfRangeException(nameof(repoUrl));
             }
 
-            if (name.EndsWithOrdinal(".git", ignoreCase: true))
-            {
+            if (name.EndsWithOrdinal(".git", ignoreCase: true)) {
                 name = name.Substring(0, name.Length - 4);
             }
 
@@ -213,18 +172,14 @@ namespace Microsoft.CookiecutterTools.Model
             return localTemplateFolder;
         }
 
-        private bool ParseOrigin(string remote, out string url)
-        {
+        private bool ParseOrigin(string remote, out string url) {
             url = null;
 
-            if (remote.StartsWithOrdinal("origin"))
-            {
+            if (remote.StartsWithOrdinal("origin")) {
                 int start = remote.IndexOfOrdinal("https", ignoreCase: true);
-                if (start >= 0)
-                {
+                if (start >= 0) {
                     int end = remote.IndexOf(' ', start);
-                    if (end >= 0)
-                    {
+                    if (end >= 0) {
                         url = remote.Substring(start, end - start);
                         return true;
                     }
@@ -234,13 +189,11 @@ namespace Microsoft.CookiecutterTools.Model
             return false;
         }
 
-        private static bool ParseRepoName(string repoUrl, out string name)
-        {
+        private static bool ParseRepoName(string repoUrl, out string name) {
             name = null;
 
             int index = repoUrl.LastIndexOf('/');
-            if (index < 0)
-            {
+            if (index < 0) {
                 return false;
             }
 

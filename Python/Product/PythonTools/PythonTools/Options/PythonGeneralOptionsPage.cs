@@ -14,20 +14,15 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Options
-{
+namespace Microsoft.PythonTools.Options {
     [ComVisible(true)]
-    public class PythonGeneralOptionsPage : PythonDialogPage
-    {
+    public class PythonGeneralOptionsPage : PythonDialogPage {
         private PythonGeneralOptionsControl _window;
 
         // replace the default UI of the dialog page w/ our own UI.
-        protected override System.Windows.Forms.IWin32Window Window
-        {
-            get
-            {
-                if (_window == null)
-                {
+        protected override System.Windows.Forms.IWin32Window Window {
+            get {
+                if (_window == null) {
                     _window = new PythonGeneralOptionsControl();
                     _window.ResetSuppressDialog += ResetSuppressDialog;
                     LoadSettingsFromStorage();
@@ -36,8 +31,7 @@ namespace Microsoft.PythonTools.Options
             }
         }
 
-        private void ResetSuppressDialog(object sender, EventArgs e)
-        {
+        private void ResetSuppressDialog(object sender, EventArgs e) {
             PyService.SuppressDialogOptions.Reset();
             PyService.SuppressDialogOptions.Save();
         }
@@ -47,28 +41,23 @@ namespace Microsoft.PythonTools.Options
         /// a call to <see cref="SaveSettingsToStorage"/> to commit the new
         /// values.
         /// </summary>
-        public override void ResetSettings()
-        {
+        public override void ResetSettings() {
             PyService.GeneralOptions.Reset();
         }
 
-        public override void LoadSettingsFromStorage()
-        {
+        public override void LoadSettingsFromStorage() {
             // Load settings from storage.            
             PyService.GeneralOptions.Load();
 
             // Synchronize UI with backing properties.
-            if (_window != null)
-            {
+            if (_window != null) {
                 _window.SyncControlWithPageSettings(PyService);
             }
         }
 
-        public override void SaveSettingsToStorage()
-        {
+        public override void SaveSettingsToStorage() {
             // Synchronize backing properties with UI.
-            if (_window != null)
-            {
+            if (_window != null) {
                 _window.SyncPageWithControlSettings(PyService);
             }
 

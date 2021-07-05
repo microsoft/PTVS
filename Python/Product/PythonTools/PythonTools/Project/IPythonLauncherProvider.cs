@@ -17,10 +17,8 @@
 
 using Microsoft.VisualStudioTools.Project;
 
-namespace Microsoft.PythonTools.Project
-{
-    public interface IPythonLauncherProvider
-    {
+namespace Microsoft.PythonTools.Project {
+    public interface IPythonLauncherProvider {
 
         /// <summary>
         /// Gets the options for the provided launcher.
@@ -37,16 +35,14 @@ namespace Microsoft.PythonTools.Project
         /// sensitive name, use
         /// <see cref="IPythonLauncherProvider2.LocalizedName"/>.
         /// </remarks>
-        string Name
-        {
+        string Name {
             get;
         }
 
         /// <summary>
         /// Gets a longer description of the launcher.
         /// </summary>
-        string Description
-        {
+        string Description {
             get;
         }
 
@@ -55,8 +51,7 @@ namespace Microsoft.PythonTools.Project
         /// <summary>
         /// Gets the localized name of the launcher.
         /// </summary>
-        string LocalizedName
-        {
+        string LocalizedName {
             get;
         }
 
@@ -64,8 +59,7 @@ namespace Microsoft.PythonTools.Project
         /// Gets the sort priority of the launcher. Lower values sort earlier in
         /// user-visible lists.
         /// </summary>
-        int SortPriority
-        {
+        int SortPriority {
             get;
         }
     }

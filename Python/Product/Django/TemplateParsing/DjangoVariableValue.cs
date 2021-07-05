@@ -14,46 +14,38 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Django.TemplateParsing
-{
+namespace Microsoft.PythonTools.Django.TemplateParsing {
     /// <summary>
     /// Captures a Django value used in a variable expression.  The value can either be an expression (fob, fob.oar)
     /// with a kind of Variable, a string literal ('fob') of kind Constant, or a numeric value (10, 10.0, -5) of
     /// kind Constant.  
     /// </summary>
-    class DjangoVariableValue
-    {
+    class DjangoVariableValue {
         public readonly string Value;
         public readonly DjangoVariableKind Kind;
 
-        public DjangoVariableValue(string value, DjangoVariableKind kind)
-        {
+        public DjangoVariableValue(string value, DjangoVariableKind kind) {
             Value = value;
             Kind = kind;
         }
 
-        public IEnumerable<BlockClassification> GetSpans(int start)
-        {
+        public IEnumerable<BlockClassification> GetSpans(int start) {
             Classification? filterType = null;
-            switch (Kind)
-            {
+            switch (Kind) {
                 case DjangoVariableKind.Constant: filterType = Classification.Literal; break;
                 case DjangoVariableKind.Number: filterType = Classification.Number; break;
                 case DjangoVariableKind.Variable:
                     // variable can have dots in it...
 
-                    if (Value.IndexOf('.') != -1)
-                    {
+                    if (Value.IndexOf('.') != -1) {
                         var split = Value.Split('.');
-                        for (int i = 0; i < split.Length; i++)
-                        {
+                        for (int i = 0; i < split.Length; i++) {
                             yield return new BlockClassification(
                                 new Span(start, split[i].Length),
                                 Classification.Identifier
                             );
                             start += split[i].Length;
-                            if (i != split.Length - 1)
-                            {
+                            if (i != split.Length - 1) {
                                 yield return new BlockClassification(
                                     new Span(start, 1),
                                     Classification.Dot
@@ -61,9 +53,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing
                             }
                             start += 1;
                         }
-                    }
-                    else
-                    {
+                    } else {
                         filterType = Classification.Identifier;
                     }
                     break;
@@ -71,8 +61,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing
                     throw new InvalidOperationException();
             }
 
-            if (filterType != null)
-            {
+            if (filterType != null) {
                 yield return new BlockClassification(
                     new Span(start, Value.Length),
                     filterType.Value
@@ -81,8 +70,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing
         }
     }
 
-    enum DjangoVariableKind
-    {
+    enum DjangoVariableKind {
         None,
         Variable,
         Constant,

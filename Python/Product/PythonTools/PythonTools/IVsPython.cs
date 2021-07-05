@@ -14,14 +14,12 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools
-{
+namespace Microsoft.PythonTools {
     /// <summary>
     /// Provides an interface for interacting with Python Tools for Visual
     /// Studio via COM automation.
     /// </summary>
-    public interface IVsPython
-    {
+    public interface IVsPython {
         /// <summary>
         /// Opens the Python interactive window with given description.
         /// Equivalent to doing View->Other Windows and selecting the window

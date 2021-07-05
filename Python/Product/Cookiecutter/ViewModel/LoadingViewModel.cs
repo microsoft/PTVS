@@ -14,12 +14,9 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.CookiecutterTools.ViewModel
-{
-    class LoadingViewModel : TreeItemViewModel
-    {
-        public LoadingViewModel()
-        {
+namespace Microsoft.CookiecutterTools.ViewModel {
+    class LoadingViewModel : TreeItemViewModel {
+        public LoadingViewModel() {
         }
 
         public bool Selectable => false;

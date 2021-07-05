@@ -14,10 +14,8 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.EnvironmentsList
-{
-    sealed class PipExtensionProvider : IEnvironmentViewExtension, IPackageManagerUI, IDisposable
-    {
+namespace Microsoft.PythonTools.EnvironmentsList {
+    sealed class PipExtensionProvider : IEnvironmentViewExtension, IPackageManagerUI, IDisposable {
         private readonly IPythonInterpreterFactory _factory;
         internal readonly IPackageManager _packageManager;
         private FrameworkElement _wpfObject;
@@ -34,60 +32,48 @@ namespace Microsoft.PythonTools.EnvironmentsList
         public PipExtensionProvider(
             IPythonInterpreterFactory factory,
             IPackageManager packageManager
-        )
-        {
+        ) {
             _factory = factory;
             _packageManager = packageManager ?? throw new NotSupportedException();
             _packageManager.EnableNotifications();
         }
 
-        public void Dispose()
-        {
+        public void Dispose() {
             _cancelAll.Cancel();
             _cancelAll.Dispose();
         }
 
-        public int SortPriority
-        {
+        public int SortPriority {
             get { return -8; }
         }
 
-        public string LocalizedDisplayName
-        {
+        public string LocalizedDisplayName {
             get { return _packageManager.ExtensionDisplayName; }
         }
 
-        public string IndexName
-        {
+        public string IndexName {
             get { return _packageManager.IndexDisplayName; }
         }
 
-        public object HelpContent
-        {
+        public object HelpContent {
             get { return Resources.PipExtensionHelpContent; }
         }
 
-        public string HelpText
-        {
+        public string HelpText {
             get { return Resources.PipExtensionHelpContent; }
         }
 
-        public FrameworkElement WpfObject
-        {
-            get
-            {
-                if (_wpfObject == null)
-                {
+        public FrameworkElement WpfObject {
+            get {
+                if (_wpfObject == null) {
                     _wpfObject = new PipExtension(this);
                 }
                 return _wpfObject;
             }
         }
 
-        internal async Task<IList<PipPackageView>> GetInstalledPackagesAsync()
-        {
-            if (_packageManager == null)
-            {
+        internal async Task<IList<PipPackageView>> GetInstalledPackagesAsync() {
+            if (_packageManager == null) {
                 return Array.Empty<PipPackageView>();
             }
 
@@ -97,10 +83,8 @@ namespace Microsoft.PythonTools.EnvironmentsList
                 .ToArray();
         }
 
-        internal async Task<IList<PipPackageView>> GetAvailablePackagesAsync()
-        {
-            if (_packageManager == null)
-            {
+        internal async Task<IList<PipPackageView>> GetAvailablePackagesAsync() {
+            if (_packageManager == null) {
                 return Array.Empty<PipPackageView>();
             }
 
@@ -112,19 +96,14 @@ namespace Microsoft.PythonTools.EnvironmentsList
 
         internal bool? IsPipInstalled => _packageManager?.IsReady;
 
-        internal event EventHandler IsPipInstalledChanged
-        {
-            add
-            {
-                if (_packageManager != null)
-                {
+        internal event EventHandler IsPipInstalledChanged {
+            add {
+                if (_packageManager != null) {
                     _packageManager.IsReadyChanged += value;
                 }
             }
-            remove
-            {
-                if (_packageManager != null)
-                {
+            remove {
+                if (_packageManager != null) {
                     _packageManager.IsReadyChanged -= value;
                 }
             }
@@ -132,16 +111,13 @@ namespace Microsoft.PythonTools.EnvironmentsList
 
         public event EventHandler<QueryShouldElevateEventArgs> QueryShouldElevate;
 
-        public Task<bool> ShouldElevateAsync(IPackageManager sender, string operation)
-        {
+        public Task<bool> ShouldElevateAsync(IPackageManager sender, string operation) {
             var e = new QueryShouldElevateEventArgs(_factory);
             QueryShouldElevate?.Invoke(this, e);
-            if (e.ElevateAsync != null)
-            {
+            if (e.ElevateAsync != null) {
                 return e.ElevateAsync;
             }
-            if (e.Cancel)
-            {
+            if (e.Cancel) {
                 throw new OperationCanceledException();
             }
             return Task.FromResult(e.Elevate);
@@ -149,77 +125,65 @@ namespace Microsoft.PythonTools.EnvironmentsList
 
         public bool CanExecute => _packageManager != null;
 
-        private void AbortOnInvalidConfiguration()
-        {
-            if (_packageManager == null)
-            {
+        private void AbortOnInvalidConfiguration() {
+            if (_packageManager == null) {
                 throw new InvalidOperationException(Resources.MisconfiguredEnvironment);
             }
         }
 
-        public async Task InstallPip()
-        {
+        public async Task InstallPip() {
             AbortOnInvalidConfiguration();
             await _packageManager.PrepareAsync(this, _cancelAll.Token);
         }
 
 
-        public async Task InstallPackage(PackageSpec package)
-        {
+        public async Task InstallPackage(PackageSpec package) {
             AbortOnInvalidConfiguration();
             await _packageManager.InstallAsync(package, this, _cancelAll.Token);
         }
 
-        public async Task UninstallPackage(PackageSpec package)
-        {
+        public async Task UninstallPackage(PackageSpec package) {
             AbortOnInvalidConfiguration();
             await _packageManager.UninstallAsync(package, this, _cancelAll.Token);
         }
 
         public event EventHandler<OutputEventArgs> OutputTextReceived;
 
-        public void OnOutputTextReceived(IPackageManager sender, string text)
-        {
+        public void OnOutputTextReceived(IPackageManager sender, string text) {
             OutputTextReceived?.Invoke(this, new OutputEventArgs(text));
         }
 
         public event EventHandler<OutputEventArgs> ErrorTextReceived;
 
-        public void OnErrorTextReceived(IPackageManager sender, string text)
-        {
+        public void OnErrorTextReceived(IPackageManager sender, string text) {
             ErrorTextReceived?.Invoke(this, new OutputEventArgs(text));
         }
 
         public event EventHandler<OutputEventArgs> OperationStarted;
 
-        public void OnOperationStarted(IPackageManager sender, string operation)
-        {
+        public void OnOperationStarted(IPackageManager sender, string operation) {
             OperationStarted?.Invoke(this, new OutputEventArgs(operation));
         }
 
         public event EventHandler<OperationFinishedEventArgs> OperationFinished;
 
-        public void OnOperationFinished(IPackageManager sender, string operation, bool success)
-        {
+        public void OnOperationFinished(IPackageManager sender, string operation, bool success) {
             OperationFinished?.Invoke(this, new OperationFinishedEventArgs(operation, success));
         }
 
-        public event EventHandler InstalledPackagesChanged
-        {
+        public event EventHandler InstalledPackagesChanged {
             add { _packageManager.InstalledPackagesChanged += value; }
             remove { _packageManager.InstalledPackagesChanged -= value; }
         }
 
-        sealed class CallOnDispose : IDisposable
-        {
+        sealed class CallOnDispose : IDisposable {
             private readonly Action _action;
             public CallOnDispose(Action action) { _action = action; }
             public void Dispose() { _action(); }
         }
     }
 
-    public sealed class QueryShouldElevateEventArgs : EventArgs
-    {
+    public sealed class QueryShouldElevateEventArgs : EventArgs {
         /// <summary>
         /// On return, if this is true then the operation is aborted.
         /// </summary>
@@ -249,29 +213,24 @@ namespace Microsoft.PythonTools.EnvironmentsList
         /// </summary>
         public IPythonInterpreterFactory Factory { get; }
 
-        public QueryShouldElevateEventArgs(IPythonInterpreterFactory factory)
-        {
+        public QueryShouldElevateEventArgs(IPythonInterpreterFactory factory) {
             Factory = factory;
         }
     }
 
-    public sealed class OutputEventArgs : EventArgs
-    {
+    public sealed class OutputEventArgs : EventArgs {
         public string Data { get; }
 
-        public OutputEventArgs(string data)
-        {
+        public OutputEventArgs(string data) {
             Data = data;
         }
     }
 
-    public sealed class OperationFinishedEventArgs : EventArgs
-    {
+    public sealed class OperationFinishedEventArgs : EventArgs {
         public string Operation { get; }
         public bool Success { get; }
 
-        public OperationFinishedEventArgs(string operation, bool success)
-        {
+        public OperationFinishedEventArgs(string operation, bool success) {
             Operation = operation;
             Success = success;
         }

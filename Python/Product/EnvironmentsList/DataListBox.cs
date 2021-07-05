@@ -14,38 +14,29 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.EnvironmentsList
-{
-    sealed class DataListBox : ListBox
-    {
-        protected override AutomationPeer OnCreateAutomationPeer()
-        {
+namespace Microsoft.PythonTools.EnvironmentsList {
+    sealed class DataListBox : ListBox {
+        protected override AutomationPeer OnCreateAutomationPeer() {
             return new DataListBoxAutomationPeer(this);
         }
 
-        sealed class DataListBoxAutomationPeer : ListBoxAutomationPeer
-        {
+        sealed class DataListBoxAutomationPeer : ListBoxAutomationPeer {
             public DataListBoxAutomationPeer(ListBox owner) : base(owner) { }
 
-            protected override ItemAutomationPeer CreateItemAutomationPeer(object item)
-            {
+            protected override ItemAutomationPeer CreateItemAutomationPeer(object item) {
                 return new DataListBoxItemAutomationPeer(item, this);
             }
         }
 
-        sealed class DataListBoxItemAutomationPeer : ListBoxItemAutomationPeer
-        {
-            public DataListBoxItemAutomationPeer(object owner, SelectorAutomationPeer selectorAutomationPeer) : base(owner, selectorAutomationPeer)
-            {
+        sealed class DataListBoxItemAutomationPeer : ListBoxItemAutomationPeer {
+            public DataListBoxItemAutomationPeer(object owner, SelectorAutomationPeer selectorAutomationPeer) : base(owner, selectorAutomationPeer) {
             }
 
-            protected override string GetClassNameCore()
-            {
+            protected override string GetClassNameCore() {
                 return "DataListBoxItem";
             }
 
-            protected override AutomationControlType GetAutomationControlTypeCore()
-            {
+            protected override AutomationControlType GetAutomationControlTypeCore() {
                 return AutomationControlType.DataItem;
             }
         }

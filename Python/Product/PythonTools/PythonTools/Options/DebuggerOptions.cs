@@ -16,10 +16,8 @@
 
 using Microsoft.PythonTools.Debugger;
 
-namespace Microsoft.PythonTools.Options
-{
-    public sealed class DebuggerOptions
-    {
+namespace Microsoft.PythonTools.Options {
+    public sealed class DebuggerOptions {
         private readonly PythonToolsService _service;
 
         public event EventHandler Changed;
@@ -41,14 +39,12 @@ namespace Microsoft.PythonTools.Options
         private const string VariablePresentationForProtectedSetting = "VariablePresentationForProtected";
         private const string VariablePresentationForSpecialSetting = "VariablePresentationForSpecial";
 
-        internal DebuggerOptions(PythonToolsService service)
-        {
+        internal DebuggerOptions(PythonToolsService service) {
             _service = service;
             Load();
         }
 
-        public void Load()
-        {
+        public void Load() {
             PromptBeforeRunningWithBuildError = !(_service.LoadBool(DontPromptBeforeRunningWithBuildErrorSetting, Category) ?? false);
             WaitOnAbnormalExit = _service.LoadBool(WaitOnAbnormalExitSetting, Category) ?? true;
             WaitOnNormalExit = _service.LoadBool(WaitOnNormalExitSetting, Category) ?? true;
@@ -67,8 +63,7 @@ namespace Microsoft.PythonTools.Options
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
-        public void Save()
-        {
+        public void Save() {
             _service.SaveBool(DontPromptBeforeRunningWithBuildErrorSetting, Category, !PromptBeforeRunningWithBuildError);
             _service.SaveBool(WaitOnAbnormalExitSetting, Category, WaitOnAbnormalExit);
             _service.SaveBool(WaitOnNormalExitSetting, Category, WaitOnNormalExit);
@@ -87,8 +82,7 @@ namespace Microsoft.PythonTools.Options
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
-        public void Reset()
-        {
+        public void Reset() {
             PromptBeforeRunningWithBuildError = false;
             WaitOnAbnormalExit = true;
             WaitOnNormalExit = true;
@@ -111,8 +105,7 @@ namespace Microsoft.PythonTools.Options
         /// True to ask the user whether to run when their code contains errors.
         /// Default is false.
         /// </summary>
-        public bool PromptBeforeRunningWithBuildError
-        {
+        public bool PromptBeforeRunningWithBuildError {
             get;
             set;
         }
@@ -121,8 +114,7 @@ namespace Microsoft.PythonTools.Options
         /// True to copy standard output from a Python process into the Output
         /// window. Default is true.
         /// </summary>
-        public bool TeeStandardOutput
-        {
+        public bool TeeStandardOutput {
             get;
             set;
         }
@@ -131,8 +123,7 @@ namespace Microsoft.PythonTools.Options
         /// True to pause at the end of execution when an error occurs. Default
         /// is true.
         /// </summary>
-        public bool WaitOnAbnormalExit
-        {
+        public bool WaitOnAbnormalExit {
             get;
             set;
         }
@@ -141,8 +132,7 @@ namespace Microsoft.PythonTools.Options
         /// True to pause at the end of execution when completing successfully.
         /// Default is true.
         /// </summary>
-        public bool WaitOnNormalExit
-        {
+        public bool WaitOnNormalExit {
             get;
             set;
         }
@@ -153,8 +143,7 @@ namespace Microsoft.PythonTools.Options
         /// a SystemExit exception. Default is false.
         /// </summary>
         /// <remarks>New in 1.1</remarks>
-        public bool BreakOnSystemExitZero
-        {
+        public bool BreakOnSystemExitZero {
             get;
             set;
         }
@@ -164,8 +153,7 @@ namespace Microsoft.PythonTools.Options
         /// library. Default is false.
         /// </summary>
         /// <remarks>New in 1.1</remarks>
-        public bool DebugStdLib
-        {
+        public bool DebugStdLib {
             get;
             set;
         }
@@ -174,8 +162,7 @@ namespace Microsoft.PythonTools.Options
         /// Show the function return value in locals window
         /// Default is true
         /// </summary>
-        public bool ShowFunctionReturnValue
-        {
+        public bool ShowFunctionReturnValue {
             get;
             set;
         }
@@ -183,32 +170,27 @@ namespace Microsoft.PythonTools.Options
         /// <summary>
         /// True to use the legacy debugger. Default is false.
         /// </summary>
-        public bool UseLegacyDebugger
-        {
+        public bool UseLegacyDebugger {
             get;
             set;
         }
 
-        public PresentationMode VariablePresentationForClasses
-        {
+        public PresentationMode VariablePresentationForClasses {
             get;
             set;
         }
 
-        public PresentationMode VariablePresentationForFunctions
-        {
+        public PresentationMode VariablePresentationForFunctions {
             get;
             set;
         }
 
-        public PresentationMode VariablePresentationForProtected
-        {
+        public PresentationMode VariablePresentationForProtected {
             get;
             set;
         }
 
-        public PresentationMode VariablePresentationForSpecial
-        {
+        public PresentationMode VariablePresentationForSpecial {
             get;
             set;
         }

@@ -14,30 +14,24 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools
-{
+namespace Microsoft.PythonTools {
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
-    class ProvideFeatureFlagAttribute : RegistrationAttribute
-    {
+    class ProvideFeatureFlagAttribute : RegistrationAttribute {
         private readonly string _name;
         private readonly bool _defaultValue;
 
-        public ProvideFeatureFlagAttribute(string name, bool defaultValue)
-        {
+        public ProvideFeatureFlagAttribute(string name, bool defaultValue) {
             _name = name;
             _defaultValue = defaultValue;
         }
 
-        public override void Register(RegistrationContext context)
-        {
-            using (var engineKey = context.CreateKey("FeatureFlags\\" + _name.Replace('.', '\\')))
-            {
+        public override void Register(RegistrationContext context) {
+            using (var engineKey = context.CreateKey("FeatureFlags\\" + _name.Replace('.', '\\'))) {
                 engineKey.SetValue("Value", _defaultValue ? 1 : 0);
             }
         }
 
-        public override void Unregister(RegistrationContext context)
-        {
+        public override void Unregister(RegistrationContext context) {
         }
     }
 }

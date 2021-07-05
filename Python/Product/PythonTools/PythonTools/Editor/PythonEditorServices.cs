@@ -17,8 +17,7 @@
 using Microsoft.Internal.VisualStudio.Shell.Interop;
 using Microsoft.PythonTools.Intellisense;
 
-namespace Microsoft.PythonTools.Editor
-{
+namespace Microsoft.PythonTools.Editor {
     /// <summary>
     /// Provides centralized access to services used by the editor.
     /// </summary>
@@ -33,11 +32,9 @@ namespace Microsoft.PythonTools.Editor
     /// Otherwise, we may end up with circular imports in MEF composition.
     /// </remarks>
     [Export]
-    sealed class PythonEditorServices
-    {
+    sealed class PythonEditorServices {
         [ImportingConstructor]
-        public PythonEditorServices([Import(typeof(SVsServiceProvider))] IServiceProvider site)
-        {
+        public PythonEditorServices([Import(typeof(SVsServiceProvider))] IServiceProvider site) {
             Site = site;
             _componentModel = new Lazy<IComponentModel>(site.GetComponentModel);
             _errorTaskProvider = new Lazy<ErrorTaskProvider>(CreateTaskProvider<ErrorTaskProvider>);
@@ -53,17 +50,14 @@ namespace Microsoft.PythonTools.Editor
 
         private PythonToolsService _python;
 
-        internal void SetPythonToolsService(PythonToolsService service)
-        {
-            if (_python != null)
-            {
+        internal void SetPythonToolsService(PythonToolsService service) {
+            if (_python != null) {
                 throw new InvalidOperationException("Multiple services created");
             }
             _python = service;
         }
 
-        internal PythonToolsService TryGetPythonToolsService()
-        {
+        internal PythonToolsService TryGetPythonToolsService() {
             return _python = Site.GetUIThread().Invoke(() => Site.GetPythonToolsService());
         }
 
@@ -71,8 +65,7 @@ namespace Microsoft.PythonTools.Editor
 
         #endregion
 
-        public PythonTextBufferInfo GetBufferInfo(ITextBuffer textBuffer)
-        {
+        public PythonTextBufferInfo GetBufferInfo(ITextBuffer textBuffer) {
             return PythonTextBufferInfo.ForBuffer(this, textBuffer);
         }
 
@@ -153,24 +146,19 @@ namespace Microsoft.PythonTools.Editor
         public InvalidEncodingSquiggleProvider InvalidEncodingSquiggleProvider => _mismatchedEncodingSquiggleProvider.Value;
         public InvalidEncodingSquiggleProvider MaybeInvalidEncodingSquiggleProvider => _mismatchedEncodingSquiggleProvider.IsValueCreated ? _mismatchedEncodingSquiggleProvider.Value : null;
 
-        private T CreateTaskProvider<T>() where T : class
-        {
-            if (VsProjectAnalyzer.SuppressTaskProvider)
-            {
+        private T CreateTaskProvider<T>() where T : class {
+            if (VsProjectAnalyzer.SuppressTaskProvider) {
                 return null;
             }
             return (T)Site.GetService(typeof(T));
         }
 
-        private T CreateSquiggleProvider<T>() where T : class
-        {
-            if (VsProjectAnalyzer.SuppressTaskProvider)
-            {
+        private T CreateSquiggleProvider<T>() where T : class {
+            if (VsProjectAnalyzer.SuppressTaskProvider) {
                 return null;
             }
             var errorProvider = ErrorTaskProvider;
-            if (errorProvider == null)
-            {
+            if (errorProvider == null) {
                 return null;
             }
 

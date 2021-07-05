@@ -15,7 +15,6 @@
 // permissions and limitations under the License.
 
 using System;
-using Microsoft.PythonTools;
 
 namespace TestUtilities.Python {
 

@@ -16,12 +16,9 @@
 
 using Microsoft.CookiecutterTools.Infrastructure;
 
-namespace Microsoft.CookiecutterTools.Model
-{
-    class ContextItem
-    {
-        public ContextItem(string name, string selector, string defaultValue, string[] items = null)
-        {
+namespace Microsoft.CookiecutterTools.Model {
+    class ContextItem {
+        public ContextItem(string name, string selector, string defaultValue, string[] items = null) {
             Name = name;
             Selector = selector;
             DefaultValue = defaultValue;

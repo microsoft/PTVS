@@ -14,47 +14,36 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.CookiecutterTools.ViewModel
-{
-    class ErrorViewModel : TreeItemViewModel
-    {
+namespace Microsoft.CookiecutterTools.ViewModel {
+    class ErrorViewModel : TreeItemViewModel {
         private string _errorDescription;
         private string _errorDetails;
 
-        public ErrorViewModel()
-        {
+        public ErrorViewModel() {
         }
 
         public bool Selectable => false;
 
-        public string ErrorDescription
-        {
-            get
-            {
+        public string ErrorDescription {
+            get {
                 return _errorDescription;
             }
 
-            set
-            {
-                if (value != _errorDescription)
-                {
+            set {
+                if (value != _errorDescription) {
                     _errorDescription = value;
                     OnPropertyChanged(new PropertyChangedEventArgs(nameof(ErrorDescription)));
                 }
             }
         }
 
-        public string ErrorDetails
-        {
-            get
-            {
+        public string ErrorDetails {
+            get {
                 return _errorDetails;
             }
 
-            set
-            {
-                if (value != _errorDetails)
-                {
+            set {
+                if (value != _errorDetails) {
                     _errorDetails = value;
                     OnPropertyChanged(new PropertyChangedEventArgs(nameof(ErrorDetails)));
                 }

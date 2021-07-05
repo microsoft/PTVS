@@ -14,10 +14,8 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Options
-{
-    public sealed class GeneralOptions
-    {
+namespace Microsoft.PythonTools.Options {
+    public sealed class GeneralOptions {
         private readonly PythonToolsService _pyService;
         private Severity _indentationInconsistencySeverity;
 
@@ -43,13 +41,11 @@ namespace Microsoft.PythonTools.Options
         private const string DefaultSurveyNewsFeedUrl = "https://go.microsoft.com/fwlink/?LinkId=303967";
         private const string DefaultSurveyNewsIndexUrl = "https://go.microsoft.com/fwlink/?LinkId=309158";
 
-        internal GeneralOptions(PythonToolsService service)
-        {
+        internal GeneralOptions(PythonToolsService service) {
             _pyService = service;
         }
 
-        public void Load()
-        {
+        public void Load() {
             ShowOutputWindowForVirtualEnvCreate = _pyService.LoadBool(ShowOutputWindowForVirtualEnvCreateSetting, GeneralCategory) ?? true;
             ShowOutputWindowForPackageInstallation = _pyService.LoadBool(ShowOutputWindowForPackageInstallationSetting, GeneralCategory) ?? true;
             PromptForEnvCreate = _pyService.LoadBool(PromptForEnvCreateSetting, GeneralCategory) ?? true;
@@ -66,23 +62,17 @@ namespace Microsoft.PythonTools.Options
             IndentationInconsistencySeverity = _pyService.LoadEnum<Severity>(IndentationInconsistencySeveritySetting, AdvancedCategory) ?? Severity.Warning;
             UpdateSearchPathsWhenAddingLinkedFiles = _pyService.LoadBool(UpdateSearchPathsWhenAddingLinkedFilesSetting, AdvancedCategory) ?? true;
             var analysisLimit = _pyService.LoadString(CrossModuleAnalysisLimitSetting, AdvancedCategory);
-            if (analysisLimit == null)
-            {
+            if (analysisLimit == null) {
                 CrossModuleAnalysisLimit = 1300;    // default analysis limit
-            }
-            else if (analysisLimit == "-")
-            {
+            } else if (analysisLimit == "-") {
                 CrossModuleAnalysisLimit = null;
-            }
-            else
-            {
+            } else {
                 CrossModuleAnalysisLimit = Convert.ToInt32(analysisLimit);
             }
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
-        public void Save()
-        {
+        public void Save() {
             _pyService.SaveBool(ShowOutputWindowForVirtualEnvCreateSetting, GeneralCategory, ShowOutputWindowForVirtualEnvCreate);
             _pyService.SaveBool(ShowOutputWindowForPackageInstallationSetting, GeneralCategory, ShowOutputWindowForPackageInstallation);
             _pyService.SaveBool(PromptForEnvCreateSetting, GeneralCategory, PromptForEnvCreate);
@@ -95,19 +85,15 @@ namespace Microsoft.PythonTools.Options
             _pyService.SaveBool(AutoAnalysisSetting, AdvancedCategory, AutoAnalyzeStandardLibrary);
             _pyService.SaveBool(UpdateSearchPathsWhenAddingLinkedFilesSetting, AdvancedCategory, UpdateSearchPathsWhenAddingLinkedFiles);
             _pyService.SaveEnum(IndentationInconsistencySeveritySetting, AdvancedCategory, _indentationInconsistencySeverity);
-            if (CrossModuleAnalysisLimit != null)
-            {
+            if (CrossModuleAnalysisLimit != null) {
                 _pyService.SaveInt(CrossModuleAnalysisLimitSetting, AdvancedCategory, CrossModuleAnalysisLimit.Value);
-            }
-            else
-            {
+            } else {
                 _pyService.SaveString(CrossModuleAnalysisLimitSetting, AdvancedCategory, "-");
             }
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
-        public void Reset()
-        {
+        public void Reset() {
             ShowOutputWindowForVirtualEnvCreate = true;
             ShowOutputWindowForPackageInstallation = true;
             PromptForEnvCreate = true;
@@ -130,8 +116,7 @@ namespace Microsoft.PythonTools.Options
         /// True to start analyzing an environment when it is used and has no
         /// database. Default is true.
         /// </summary>
-        public bool AutoAnalyzeStandardLibrary
-        {
+        public bool AutoAnalyzeStandardLibrary {
             get;
             set;
         }
@@ -139,15 +124,12 @@ namespace Microsoft.PythonTools.Options
         /// <summary>
         /// The severity to apply to inconsistent indentation. Default is warn.
         /// </summary>
-        public Severity IndentationInconsistencySeverity
-        {
+        public Severity IndentationInconsistencySeverity {
             get { return _indentationInconsistencySeverity; }
-            set
-            {
+            set {
                 _indentationInconsistencySeverity = value;
                 var changed = IndentationInconsistencyChanged;
-                if (changed != null)
-                {
+                if (changed != null) {
                     changed(this, EventArgs.Empty);
                 }
             }
@@ -156,8 +138,7 @@ namespace Microsoft.PythonTools.Options
         /// <summary>
         /// Maximum number of calls between modules to analyze. Default is 1300.
         /// </summary>
-        public int? CrossModuleAnalysisLimit
-        {
+        public int? CrossModuleAnalysisLimit {
             get;
             set;
         }
@@ -167,8 +148,7 @@ namespace Microsoft.PythonTools.Options
         /// true.
         /// </summary>
         /// <remarks>New in 1.1</remarks>
-        public bool UpdateSearchPathsWhenAddingLinkedFiles
-        {
+        public bool UpdateSearchPathsWhenAddingLinkedFiles {
             get;
             set;
         }
@@ -179,8 +159,7 @@ namespace Microsoft.PythonTools.Options
         /// Show the output window for virtual environment creation.
         /// </summary>
         /// <remarks>New in 2.0</remarks>
-        public bool ShowOutputWindowForVirtualEnvCreate
-        {
+        public bool ShowOutputWindowForVirtualEnvCreate {
             get;
             set;
         }
@@ -189,8 +168,7 @@ namespace Microsoft.PythonTools.Options
         /// Show the output window for package installation.
         /// </summary>
         /// <remarks>New in 2.0</remarks>
-        public bool ShowOutputWindowForPackageInstallation
-        {
+        public bool ShowOutputWindowForPackageInstallation {
             get;
             set;
         }
@@ -199,8 +177,7 @@ namespace Microsoft.PythonTools.Options
         /// Show an info bar to propose creating an environment.
         /// </summary>
         /// <remarks>New in 2.0</remarks>
-        public bool PromptForEnvCreate
-        {
+        public bool PromptForEnvCreate {
             get;
             set;
         }
@@ -209,8 +186,7 @@ namespace Microsoft.PythonTools.Options
         /// Show an info bar to propose installing missing packages.
         /// </summary>
         /// <remarks>New in 2.0</remarks>
-        public bool PromptForPackageInstallation
-        {
+        public bool PromptForPackageInstallation {
             get;
             set;
         }
@@ -219,8 +195,7 @@ namespace Microsoft.PythonTools.Options
         /// Show an info bar to set up a testing framework
         /// </summary>
         /// <remarks>New in 2.0</remarks>
-        public bool PromptForTestFrameWorkInfoBar
-        {
+        public bool PromptForTestFrameWorkInfoBar {
             get;
             set;
         }
@@ -229,8 +204,7 @@ namespace Microsoft.PythonTools.Options
         /// Show an info bar if an unsupported Python version is in use
         /// </summary>
         /// <remarks>New in 2.0</remarks>
-        public bool PromptForPythonVersionNotSupported
-        {
+        public bool PromptForPythonVersionNotSupported {
             get;
             set;
         }
@@ -239,8 +213,7 @@ namespace Microsoft.PythonTools.Options
         /// True to always run pip elevated when installing or uninstalling
         /// packages.
         /// </summary>
-        public bool ElevatePip
-        {
+        public bool ElevatePip {
             get;
             set;
         }
@@ -249,8 +222,7 @@ namespace Microsoft.PythonTools.Options
         /// True to warn when a module is not resolved.
         /// </summary>
         /// <remarks>New in 2.1</remarks>
-        public bool UnresolvedImportWarning
-        {
+        public bool UnresolvedImportWarning {
             get;
             set;
         }
@@ -259,8 +231,7 @@ namespace Microsoft.PythonTools.Options
         /// True to mask global environment paths when launching projects.
         /// </summary>
         /// <remarks>New in 2.1</remarks>
-        public bool ClearGlobalPythonPath
-        {
+        public bool ClearGlobalPythonPath {
             get;
             set;
         }
@@ -270,8 +241,7 @@ namespace Microsoft.PythonTools.Options
         /// 'coding' designation in the beginning of the file.
         /// </summary>
         /// <remarks>New in 3.3</remarks>
-        public bool InvalidEncodingWarning
-        {
+        public bool InvalidEncodingWarning {
             get;
             set;
         }

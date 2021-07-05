@@ -14,10 +14,8 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Environments
-{
-    sealed class AddExistingEnvironmentView : EnvironmentViewBase
-    {
+namespace Microsoft.PythonTools.Environments {
+    sealed class AddExistingEnvironmentView : EnvironmentViewBase {
         private readonly IPythonToolsLogger _logger;
         private InterpreterView[] _allGlobalInterpreters;
 
@@ -25,8 +23,7 @@ namespace Microsoft.PythonTools.Environments
             IServiceProvider serviceProvider,
             ProjectView[] projects,
             ProjectView selectedProject
-        ) : base(serviceProvider, projects, selectedProject)
-        {
+        ) : base(serviceProvider, projects, selectedProject) {
             _logger = Site.GetService(typeof(IPythonToolsLogger)) as IPythonToolsLogger;
             _allGlobalInterpreters = InterpreterView.GetInterpreters(Site, null).ToArray();
             PageName = Strings.AddExistingEnvironmentTabHeader;
@@ -104,160 +101,131 @@ namespace Microsoft.PythonTools.Environments
         public static readonly DependencyProperty DescriptionProperty =
             DependencyProperty.Register(nameof(Description), typeof(string), typeof(AddExistingEnvironmentView), new PropertyMetadata("", Description_Changed));
 
-        public ObservableCollection<InterpreterView> Interpreters
-        {
+        public ObservableCollection<InterpreterView> Interpreters {
             get { return (ObservableCollection<InterpreterView>)GetValue(InterpretersProperty); }
             private set { SetValue(InterpretersProperty, value); }
         }
 
-        public InterpreterView SelectedInterpreter
-        {
+        public InterpreterView SelectedInterpreter {
             get { return (InterpreterView)GetValue(SelectedInterpreterProperty); }
             set { SetValue(SelectedInterpreterProperty, value); }
         }
 
-        public bool IsCustomPrefixPathValid
-        {
+        public bool IsCustomPrefixPathValid {
             get { return (bool)GetValue(IsCustomPrefixPathValidProperty); }
             set { SetValue(IsCustomPrefixPathValidProperty, value); }
         }
 
-        public bool IsCustomInterpreter
-        {
+        public bool IsCustomInterpreter {
             get { return (bool)GetValue(IsCustomInterpreterProperty); }
             set { SetValue(IsCustomInterpreterProperty, value); }
         }
 
-        public bool IsCustomNotVirtualEnv
-        {
+        public bool IsCustomNotVirtualEnv {
             get { return (bool)GetValue(IsCustomNotVirtualEnvProperty); }
             set { SetValue(IsCustomNotVirtualEnvProperty, value); }
         }
 
-        public bool IsCustomVirtualEnv
-        {
+        public bool IsCustomVirtualEnv {
             get { return (bool)GetValue(IsCustomVirtualEnvProperty); }
             set { SetValue(IsCustomVirtualEnvProperty, value); }
         }
 
-        public string PrefixPath
-        {
+        public string PrefixPath {
             get { return (string)GetValue(PrefixPathProperty); }
             set { SetValue(PrefixPathProperty, value); }
         }
 
-        public string Description
-        {
+        public string Description {
             get { return (string)GetValue(DescriptionProperty); }
             set { SetValue(DescriptionProperty, value); }
         }
 
-        public bool IsAutoDetectRunning
-        {
+        public bool IsAutoDetectRunning {
             get { return (bool)GetValue(IsAutoDetectRunningProperty); }
             set { SetValue(IsAutoDetectRunningProperty, value); }
         }
 
-        public bool RegisterCustomEnv
-        {
+        public bool RegisterCustomEnv {
             get { return (bool)GetValue(RegisterCustomEnvProperty); }
             set { SetValue(RegisterCustomEnvProperty, value); }
         }
 
-        public bool IsRegisterCustomEnvEnabled
-        {
+        public bool IsRegisterCustomEnvEnabled {
             get { return (bool)GetValue(IsRegisterCustomEnvEnabledProperty); }
             set { SetValue(IsRegisterCustomEnvEnabledProperty, value); }
         }
 
-        public string InterpreterPath
-        {
+        public string InterpreterPath {
             get { return (string)GetValue(InterpreterPathProperty); }
             set { SetValue(InterpreterPathProperty, value); }
         }
 
-        public string WindowsInterpreterPath
-        {
+        public string WindowsInterpreterPath {
             get { return (string)GetValue(WindowsInterpreterPathProperty); }
             set { SetValue(WindowsInterpreterPathProperty, value); }
         }
 
-        public string VersionName
-        {
+        public string VersionName {
             get { return (string)GetValue(VersionNameProperty); }
             set { SetValue(VersionNameProperty, value); }
         }
 
-        public string ArchitectureName
-        {
+        public string ArchitectureName {
             get { return (string)GetValue(ArchitectureNameProperty); }
             set { SetValue(ArchitectureNameProperty, value); }
         }
 
-        public string PathEnvironmentVariable
-        {
+        public string PathEnvironmentVariable {
             get { return (string)GetValue(PathEnvironmentVariableProperty); }
             set { SetValue(PathEnvironmentVariableProperty, value); }
         }
 
-        private static void PrefixPath_Changed(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
+        private static void PrefixPath_Changed(DependencyObject d, DependencyPropertyChangedEventArgs e) {
             ((AddExistingEnvironmentView)d).CustomEnvironmentPrefixPathChanged();
         }
 
-        private static void Description_Changed(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
+        private static void Description_Changed(DependencyObject d, DependencyPropertyChangedEventArgs e) {
             ((AddExistingEnvironmentView)d).CustomEnvironmentDetailsChanged();
         }
 
-        private static void InterpreterPath_Changed(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
+        private static void InterpreterPath_Changed(DependencyObject d, DependencyPropertyChangedEventArgs e) {
             ((AddExistingEnvironmentView)d).CustomEnvironmentDetailsChanged();
         }
 
-        private static void WindowsInterpreterPath_Changed(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
+        private static void WindowsInterpreterPath_Changed(DependencyObject d, DependencyPropertyChangedEventArgs e) {
             ((AddExistingEnvironmentView)d).CustomEnvironmentDetailsChanged();
         }
 
-        private static void VersionName_Changed(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
+        private static void VersionName_Changed(DependencyObject d, DependencyPropertyChangedEventArgs e) {
             ((AddExistingEnvironmentView)d).CustomEnvironmentDetailsChanged();
         }
 
-        private static void ArchitectureName_Changed(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
+        private static void ArchitectureName_Changed(DependencyObject d, DependencyPropertyChangedEventArgs e) {
             ((AddExistingEnvironmentView)d).CustomEnvironmentDetailsChanged();
         }
 
-        private static void SelectedInterpreter_Changed(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
+        private static void SelectedInterpreter_Changed(DependencyObject d, DependencyPropertyChangedEventArgs e) {
             ((AddExistingEnvironmentView)d).SelectedInterpreterChanged();
         }
 
-        private void SelectedInterpreterChanged()
-        {
+        private void SelectedInterpreterChanged() {
             IsCustomInterpreter = SelectedInterpreter == CustomInterpreter;
             PrefixPath = string.Empty;
             ValidateCustomData();
         }
 
-        private void CustomEnvironmentDetailsChanged()
-        {
+        private void CustomEnvironmentDetailsChanged() {
             ValidateCustomData();
         }
 
-        private void CustomEnvironmentPrefixPathChanged()
-        {
-            if (IsCustomInterpreter)
-            {
-                if (Directory.Exists(PrefixPath))
-                {
+        private void CustomEnvironmentPrefixPathChanged() {
+            if (IsCustomInterpreter) {
+                if (Directory.Exists(PrefixPath)) {
                     IsCustomPrefixPathValid = true;
 
                     var config = VirtualEnv.FindInterpreterConfiguration(null, PrefixPath, RegistryService);
-                    if (config != null && File.Exists(config.InterpreterPath))
-                    {
+                    if (config != null && File.Exists(config.InterpreterPath)) {
                         var baseInterp = _allGlobalInterpreters.FirstOrDefault(v => v.Id == config.Id);
 
                         IsRegisterCustomEnvEnabled = SelectedProject != null;
@@ -266,9 +234,7 @@ namespace Microsoft.PythonTools.Environments
                         IsCustomNotVirtualEnv = baseInterp == null;
 
                         SetCustomVariables(config);
-                    }
-                    else
-                    {
+                    } else {
                         IsRegisterCustomEnvEnabled = SelectedProject != null;
                         RegisterCustomEnv = true;
                         IsCustomNotVirtualEnv = true;
@@ -280,9 +246,7 @@ namespace Microsoft.PythonTools.Environments
                     }
 
                     ValidateCustomData();
-                }
-                else
-                {
+                } else {
                     IsRegisterCustomEnvEnabled = false;
                     RegisterCustomEnv = false;
                     IsCustomPrefixPathValid = false;
@@ -295,9 +259,7 @@ namespace Microsoft.PythonTools.Environments
 
                     ClearCustomVariables();
                 }
-            }
-            else
-            {
+            } else {
                 IsRegisterCustomEnvEnabled = false;
                 RegisterCustomEnv = false;
                 IsCustomPrefixPathValid = false;
@@ -309,74 +271,50 @@ namespace Microsoft.PythonTools.Environments
             }
         }
 
-        private void ValidateCustomData()
-        {
+        private void ValidateCustomData() {
             // For now, we enable but prompt when they click accept
             //IsAcceptEnabled = IsValidCustomData();
             IsAcceptEnabled = !IsAutoDetectRunning;
 
-            if (IsCustomInterpreter)
-            {
-                if (!Directory.Exists(PrefixPath))
-                {
+            if (IsCustomInterpreter) {
+                if (!Directory.Exists(PrefixPath)) {
                     SetError(nameof(PrefixPath), Strings.AddExistingEnvironmentPrefixPathFolderNotFound.FormatUI(PrefixPath ?? string.Empty));
-                }
-                else
-                {
+                } else {
                     ClearErrors(nameof(PrefixPath));
                 }
 
-                if (!File.Exists(InterpreterPath))
-                {
+                if (!File.Exists(InterpreterPath)) {
                     SetError(nameof(InterpreterPath), Strings.AddExistingEnvironmentInterpreterPathNotFound.FormatUI(InterpreterPath ?? string.Empty));
-                }
-                else
-                {
+                } else {
                     ClearErrors(nameof(InterpreterPath));
                 }
 
-                if (!string.IsNullOrEmpty(WindowsInterpreterPath) && !File.Exists(WindowsInterpreterPath))
-                {
+                if (!string.IsNullOrEmpty(WindowsInterpreterPath) && !File.Exists(WindowsInterpreterPath)) {
                     SetError(nameof(WindowsInterpreterPath), Strings.AddExistingEnvironmentWindowsInterpreterPathNotFound.FormatUI(WindowsInterpreterPath ?? string.Empty));
-                }
-                else
-                {
+                } else {
                     ClearErrors(nameof(WindowsInterpreterPath));
                 }
 
-                if (string.IsNullOrEmpty(Description))
-                {
+                if (string.IsNullOrEmpty(Description)) {
                     SetError(nameof(Description), Strings.AddEnvironmentDescriptionEmpty);
-                }
-                else if (Description.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
-                {
+                } else if (Description.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0) {
                     SetError(nameof(Description), Strings.AddEnvironmentDescriptionInvalid);
-                }
-                else
-                {
+                } else {
                     ClearErrors(nameof(Description));
                 }
 
-                if (string.IsNullOrEmpty(ArchitectureName))
-                {
+                if (string.IsNullOrEmpty(ArchitectureName)) {
                     SetError(nameof(ArchitectureName), Strings.AddExistingEnvironmentArchictureEmpty);
-                }
-                else
-                {
+                } else {
                     ClearErrors(nameof(ArchitectureName));
                 }
 
-                if (string.IsNullOrEmpty(VersionName))
-                {
+                if (string.IsNullOrEmpty(VersionName)) {
                     SetError(nameof(VersionName), Strings.AddExistingEnvironmentVersionEmpty);
-                }
-                else
-                {
+                } else {
                     ClearErrors(nameof(VersionName));
                 }
-            }
-            else
-            {
+            } else {
                 ClearErrors(nameof(PrefixPath));
                 ClearErrors(nameof(InterpreterPath));
                 ClearErrors(nameof(WindowsInterpreterPath));
@@ -386,8 +324,7 @@ namespace Microsoft.PythonTools.Environments
             }
         }
 
-        private bool IsValidCustomData()
-        {
+        private bool IsValidCustomData() {
             return !string.IsNullOrEmpty(Description) &&
                 Directory.Exists(PrefixPath) &&
                 File.Exists(InterpreterPath) &&
@@ -396,8 +333,7 @@ namespace Microsoft.PythonTools.Environments
                 !string.IsNullOrEmpty(VersionName);
         }
 
-        private void SetCustomVariables(InterpreterConfiguration config)
-        {
+        private void SetCustomVariables(InterpreterConfiguration config) {
             Description = config.Description;
             InterpreterPath = config.InterpreterPath;
             WindowsInterpreterPath = config.GetWindowsInterpreterPath();
@@ -406,8 +342,7 @@ namespace Microsoft.PythonTools.Environments
             PathEnvironmentVariable = config.PathEnvironmentVariable;
         }
 
-        private void ClearCustomVariables()
-        {
+        private void ClearCustomVariables() {
             Description = string.Empty;
             InterpreterPath = string.Empty;
             WindowsInterpreterPath = string.Empty;
@@ -416,44 +351,35 @@ namespace Microsoft.PythonTools.Environments
             PathEnvironmentVariable = string.Empty;
         }
 
-        private async Task AutoDetectFromCustomPrefixPathAsync()
-        {
+        private async Task AutoDetectFromCustomPrefixPathAsync() {
             // TODO: cancel previous auto detect if one is running (use same _working as in virtual env view)
-            if (IsAutoDetectRunning)
-            {
+            if (IsAutoDetectRunning) {
                 return;
             }
 
             IsAutoDetectRunning = true;
 
-            try
-            {
+            try {
                 await AutoDetectAsync(this);
-            }
-            finally
-            {
+            } finally {
                 IsAutoDetectRunning = false;
             }
 
             ValidateCustomData();
         }
 
-        private async Task<AddExistingEnvironmentView> AutoDetectAsync(AddExistingEnvironmentView view)
-        {
-            if (!Directory.Exists(view.PrefixPath))
-            {
+        private async Task<AddExistingEnvironmentView> AutoDetectAsync(AddExistingEnvironmentView view) {
+            if (!Directory.Exists(view.PrefixPath)) {
                 // If view.PrefixPath is not valid by this point, we can't find anything
                 // else, so abort without changes.
                 return view;
             }
 
-            if (string.IsNullOrEmpty(view.Description))
-            {
+            if (string.IsNullOrEmpty(view.Description)) {
                 view.Description = PathUtils.GetFileOrDirectoryName(view.PrefixPath);
             }
 
-            if (!File.Exists(view.InterpreterPath))
-            {
+            if (!File.Exists(view.InterpreterPath)) {
                 view.InterpreterPath = PathUtils.FindFile(
                     view.PrefixPath,
                     CPythonInterpreterFactoryConstants.ConsoleExecutable,
@@ -461,8 +387,7 @@ namespace Microsoft.PythonTools.Environments
                 );
             }
 
-            if (!File.Exists(view.WindowsInterpreterPath))
-            {
+            if (!File.Exists(view.WindowsInterpreterPath)) {
                 view.WindowsInterpreterPath = PathUtils.FindFile(
                     view.PrefixPath,
                     CPythonInterpreterFactoryConstants.WindowsExecutable,
@@ -470,27 +395,22 @@ namespace Microsoft.PythonTools.Environments
                 );
             }
 
-            if (File.Exists(view.InterpreterPath))
-            {
+            if (File.Exists(view.InterpreterPath)) {
                 using (var output = ProcessOutput.RunHiddenAndCapture(
                     view.InterpreterPath, "-c", "import sys; print('%s.%s' % (sys.version_info[0], sys.version_info[1])); print(sys.platform)"
-                ))
-                {
+                )) {
                     var exitCode = await output;
-                    if (exitCode == 0)
-                    {
+                    if (exitCode == 0) {
                         view.VersionName = output.StandardOutputLines.FirstOrDefault() ?? view.VersionName;
                     }
                 }
 
                 var arch = CPythonInterpreterFactoryProvider.ArchitectureFromExe(view.InterpreterPath);
-                if (arch != InterpreterArchitecture.Unknown)
-                {
+                if (arch != InterpreterArchitecture.Unknown) {
                     view.ArchitectureName = arch.ToString();
                 }
 
-                if (string.IsNullOrEmpty(view.PathEnvironmentVariable))
-                {
+                if (string.IsNullOrEmpty(view.PathEnvironmentVariable)) {
                     view.PathEnvironmentVariable = "PYTHONPATH";
                 }
             }
@@ -498,8 +418,7 @@ namespace Microsoft.PythonTools.Environments
             return view;
         }
 
-        protected override void ResetProjectDependentProperties()
-        {
+        protected override void ResetProjectDependentProperties() {
             // When there's no project, the only action that is viable is to register a custom environment.
             IEnumerable<InterpreterView> available = SelectedProject != null
                 ? InterpreterView.GetInterpreters(Site, SelectedProject?.Node).Where(view => SelectedProject.InterpreterIds.IndexOf(view.Id) < 0)
@@ -510,34 +429,23 @@ namespace Microsoft.PythonTools.Environments
 
             Interpreters = interpreters;
 
-            if (Interpreters.Count > 1)
-            {
+            if (Interpreters.Count > 1) {
                 SelectedInterpreter = (InterpreterView)Interpreters[1];
-            }
-            else
-            {
+            } else {
                 SelectedInterpreter = CustomInterpreter;
             }
         }
 
-        public async override Task ApplyAsync()
-        {
+        public async override Task ApplyAsync() {
             bool failed = false;
-            if (IsCustomInterpreter)
-            {
-                try
-                {
+            if (IsCustomInterpreter) {
+                try {
                     await ApplyCustomAsync();
-                }
-                catch (Exception ex) when (!ex.IsCriticalException())
-                {
+                } catch (Exception ex) when (!ex.IsCriticalException()) {
                     failed = true;
                     throw;
-                }
-                finally
-                {
-                    _logger?.LogEvent(PythonLogEvent.AddExistingEnv, new AddExistingEnvInfo()
-                    {
+                } finally {
+                    _logger?.LogEvent(PythonLogEvent.AddExistingEnv, new AddExistingEnvInfo() {
                         Failed = failed,
                         LanguageVersion = VersionName,
                         Architecture = ArchitectureName,
@@ -545,22 +453,14 @@ namespace Microsoft.PythonTools.Environments
                         Global = RegisterCustomEnv,
                     });
                 }
-            }
-            else
-            {
-                try
-                {
+            } else {
+                try {
                     await ApplyExistingAsync();
-                }
-                catch (Exception ex) when (!ex.IsCriticalException())
-                {
+                } catch (Exception ex) when (!ex.IsCriticalException()) {
                     failed = true;
                     throw;
-                }
-                finally
-                {
-                    _logger?.LogEvent(PythonLogEvent.AddExistingEnv, new AddExistingEnvInfo()
-                    {
+                } finally {
+                    _logger?.LogEvent(PythonLogEvent.AddExistingEnv, new AddExistingEnvInfo() {
                         Failed = failed,
                         LanguageVersion = SelectedInterpreter.LanguageVersion,
                         Architecture = SelectedInterpreter.Architecture,
@@ -569,15 +469,12 @@ namespace Microsoft.PythonTools.Environments
             }
         }
 
-        private async Task ApplyCustomAsync()
-        {
+        private async Task ApplyCustomAsync() {
             IPythonInterpreterFactory factory = null;
 
-            if (RegisterCustomEnv)
-            {
+            if (RegisterCustomEnv) {
                 Version version;
-                if (!Version.TryParse(VersionName, out version))
-                {
+                if (!Version.TryParse(VersionName, out version)) {
                     version = null;
                 }
 
@@ -592,20 +489,15 @@ namespace Microsoft.PythonTools.Environments
                     version,
                     Description
                 );
-            }
-            else
-            {
+            } else {
                 Debug.Assert(SelectedProject != null, "Project is null, UI should not have allowed this");
-                if (SelectedProject != null)
-                {
+                if (SelectedProject != null) {
                     Version version;
-                    if (!Version.TryParse(VersionName, out version))
-                    {
+                    if (!Version.TryParse(VersionName, out version)) {
                         version = null;
                     }
 
-                    if (SelectedProject.Node != null)
-                    {
+                    if (SelectedProject.Node != null) {
                         factory = SelectedProject.Node.AddMSBuildEnvironment(
                             RegistryService,
                             PrefixPath,
@@ -616,58 +508,43 @@ namespace Microsoft.PythonTools.Environments
                             InterpreterArchitecture.TryParse(ArchitectureName ?? ""),
                             Description
                         );
-                    }
-                    else if (SelectedProject.Workspace != null)
-                    {
+                    } else if (SelectedProject.Workspace != null) {
                         await SelectedProject.Workspace.SetInterpreterAsync(InterpreterPath);
                     }
                 }
             }
 
-            if (factory != null)
-            {
-                if (SelectedProject != null)
-                {
-                    if (SelectedProject.Node != null)
-                    {
+            if (factory != null) {
+                if (SelectedProject != null) {
+                    if (SelectedProject.Node != null) {
                         SelectedProject.Node.AddInterpreter(factory.Configuration.Id);
-                        if (SetAsCurrent)
-                        {
+                        if (SetAsCurrent) {
                             SelectedProject.Node.SetInterpreterFactory(factory);
                         }
-                    }
-                    else if (SelectedProject.Workspace != null)
-                    {
+                    } else if (SelectedProject.Workspace != null) {
                         await SelectedProject.Workspace.SetInterpreterFactoryAsync(factory);
                     }
                 }
 
-                if (SetAsDefault)
-                {
+                if (SetAsDefault) {
                     OptionsService.DefaultInterpreter = factory;
                 }
             }
         }
 
-        private async Task ApplyExistingAsync()
-        {
-            if (SelectedProject.Node != null)
-            {
+        private async Task ApplyExistingAsync() {
+            if (SelectedProject.Node != null) {
                 var ids = SelectedProject.InterpreterIds.Union(new string[] { SelectedInterpreter.Id }).ToArray();
                 SelectedProject?.Node.ChangeInterpreters(ids);
-            }
-            else if (SelectedProject.Workspace != null)
-            {
+            } else if (SelectedProject.Workspace != null) {
                 var factory = RegistryService.FindInterpreter(SelectedInterpreter.Id);
-                if (factory != null)
-                {
+                if (factory != null) {
                     await SelectedProject.Workspace.SetInterpreterFactoryAsync(factory);
                 }
             }
         }
 
-        public override string ToString()
-        {
+        public override string ToString() {
             return Strings.AddExistingEnvironmentTabHeader;
         }
     }

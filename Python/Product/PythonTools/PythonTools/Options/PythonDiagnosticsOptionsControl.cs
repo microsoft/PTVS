@@ -14,12 +14,9 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Options
-{
-    public partial class PythonDiagnosticsOptionsControl : UserControl
-    {
-        public PythonDiagnosticsOptionsControl()
-        {
+namespace Microsoft.PythonTools.Options {
+    public partial class PythonDiagnosticsOptionsControl : UserControl {
+        public PythonDiagnosticsOptionsControl() {
             InitializeComponent();
         }
 
@@ -27,8 +24,7 @@ namespace Microsoft.PythonTools.Options
 
         public Action<bool> SaveToFile;
 
-        private void _copyToClipboard_Click(object sender, EventArgs e)
-        {
+        private void _copyToClipboard_Click(object sender, EventArgs e) {
             // We pass in the live value of the include analysis logs option
             // because the value hasn't been applied to DiagnosticsOptions
             // instance (it's done when OK is clicked).
@@ -36,19 +32,16 @@ namespace Microsoft.PythonTools.Options
             CopyToClipboard?.Invoke(_includeAnalysisLogs.Checked);
         }
 
-        private void _saveToFile_Click(object sender, EventArgs e)
-        {
+        private void _saveToFile_Click(object sender, EventArgs e) {
             System.Diagnostics.Debug.Assert(SaveToFile != null, "No listener for SaveToFile event");
             SaveToFile?.Invoke(_includeAnalysisLogs.Checked);
         }
 
-        internal void SyncControlWithPageSettings(PythonToolsService pyService)
-        {
+        internal void SyncControlWithPageSettings(PythonToolsService pyService) {
             _includeAnalysisLogs.Checked = pyService.DiagnosticsOptions.IncludeAnalysisLogs;
         }
 
-        internal void SyncPageWithControlSettings(PythonToolsService pyService)
-        {
+        internal void SyncPageWithControlSettings(PythonToolsService pyService) {
             pyService.DiagnosticsOptions.IncludeAnalysisLogs = _includeAnalysisLogs.Checked;
         }
     }

@@ -18,39 +18,32 @@ using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Intellisense;
 using Task = System.Threading.Tasks.Task;
 
-namespace Microsoft.PythonTools.Repl
-{
+namespace Microsoft.PythonTools.Repl {
     [InteractiveWindowRole("Execution")]
     [InteractiveWindowRole("Reset")]
     [ContentType(PythonCoreConstants.ContentType)]
     [ContentType(PredefinedInteractiveCommandsContentTypes.InteractiveCommandContentTypeName)]
     partial class PythonInteractiveEvaluator :
-        PythonCommonInteractiveEvaluator
-    {
+        PythonCommonInteractiveEvaluator {
         protected CommandProcessorThread _thread;
         private bool _isDisposed;
 
         public PythonInteractiveEvaluator(IServiceProvider serviceProvider) :
-            base(serviceProvider)
-        {
+            base(serviceProvider) {
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2213:DisposableFieldsShouldBeDisposed", MessageId = "_analyzer")]
-        protected override void Dispose(bool disposing)
-        {
+        protected override void Dispose(bool disposing) {
             base.Dispose(disposing);
 
-            if (_isDisposed)
-            {
+            if (_isDisposed) {
                 return;
             }
             _isDisposed = true;
 
-            if (disposing)
-            {
+            if (disposing) {
                 var thread = Interlocked.Exchange(ref _thread, null);
-                if (thread != null)
-                {
+                if (thread != null) {
                     thread.Dispose();
                     WriteError(Strings.ReplExited);
                 }
@@ -61,26 +54,20 @@ namespace Microsoft.PythonTools.Repl
 
         public override bool IsExecuting => (_thread?.IsExecuting ?? false);
 
-        public override string CurrentScopeName
-        {
-            get
-            {
+        public override string CurrentScopeName {
+            get {
                 return (_thread?.IsConnected ?? false) ? _thread.CurrentScope : "<disconnected>";
             }
         }
 
-        public override string CurrentScopePath
-        {
-            get
-            {
+        public override string CurrentScopePath {
+            get {
                 return (_thread?.IsConnected ?? false) ? _thread.CurrentScopeFileName : null;
             }
         }
 
-        public override string CurrentWorkingDirectory
-        {
-            get
-            {
+        public override string CurrentWorkingDirectory {
+            get {
                 return (_thread?.IsConnected ?? false) ? _thread.CurrentWorkingDirectory : null;
             }
         }
@@ -88,107 +75,82 @@ namespace Microsoft.PythonTools.Repl
         internal override string PrimaryPrompt => _thread?.PrimaryPrompt ?? ">>> ";
         internal override string SecondaryPrompt => _thread?.SecondaryPrompt ?? "... ";
 
-        public override async Task<bool> GetSupportsMultipleStatementsAsync()
-        {
+        public override async Task<bool> GetSupportsMultipleStatementsAsync() {
             var thread = await EnsureConnectedAsync();
-            if (thread == null)
-            {
+            if (thread == null) {
                 return false;
             }
 
             return await thread.GetSupportsMultipleStatementsAsync();
         }
 
-        private async void Thread_AvailableScopesChanged(object sender, EventArgs e)
-        {
+        private async void Thread_AvailableScopesChanged(object sender, EventArgs e) {
             var availableScopes = (await ((CommandProcessorThread)sender).GetAvailableUserScopesAsync(10000))?.ToArray();
             SetAvailableScopes(availableScopes);
         }
 
-        public override IEnumerable<KeyValuePair<string, string>> GetAvailableScopesAndPaths()
-        {
+        public override IEnumerable<KeyValuePair<string, string>> GetAvailableScopesAndPaths() {
             var t = _thread?.GetAvailableScopesAndPathsAsync(1000);
-            if (t != null && t.Wait(1000) && t.Result != null)
-            {
+            if (t != null && t.Wait(1000) && t.Result != null) {
                 return t.Result;
             }
             return Enumerable.Empty<KeyValuePair<string, string>>();
         }
 
-        public override CompletionResult[] GetMemberNames(string text)
-        {
+        public override CompletionResult[] GetMemberNames(string text) {
             return _thread?.GetMemberNames(text) ?? new CompletionResult[0];
         }
 
-        public override OverloadDoc[] GetSignatureDocumentation(string text)
-        {
+        public override OverloadDoc[] GetSignatureDocumentation(string text) {
             return _thread?.GetSignatureDocumentation(text) ?? new OverloadDoc[0];
         }
 
-        public override void AbortExecution()
-        {
+        public override void AbortExecution() {
             _thread?.AbortCommand();
         }
 
-        private async Task<CommandProcessorThread> EnsureConnectedAsync()
-        {
+        private async Task<CommandProcessorThread> EnsureConnectedAsync() {
             var thread = Volatile.Read(ref _thread);
-            if (thread != null)
-            {
+            if (thread != null) {
                 return thread;
             }
 
-            return await _serviceProvider.GetUIThread().InvokeTask(async () =>
-            {
-                if (!UpdatePropertiesFromProjectMoniker().IsSuccessful)
-                {
+            return await _serviceProvider.GetUIThread().InvokeTask(async () => {
+                if (!UpdatePropertiesFromProjectMoniker().IsSuccessful) {
                     return null;
                 }
 
-                if (!UpdatePropertiesFromWorkspaceMoniker().IsSuccessful)
-                {
+                if (!UpdatePropertiesFromWorkspaceMoniker().IsSuccessful) {
                     return null;
                 }
 
                 var scriptsPath = ScriptsPath;
-                if (!Directory.Exists(scriptsPath) && Configuration?.Interpreter != null)
-                {
-                    try
-                    {
+                if (!Directory.Exists(scriptsPath) && Configuration?.Interpreter != null) {
+                    try {
                         scriptsPath = GetScriptsPath(_serviceProvider, Configuration.Interpreter.Description, Configuration.Interpreter);
-                    }
-                    catch (Exception ex) when (!ex.IsCriticalException())
-                    {
+                    } catch (Exception ex) when (!ex.IsCriticalException()) {
                         scriptsPath = null;
                     }
                 }
 
                 // Allow tests to control the backend without relying on the mode.txt file
                 string backendOverride = _serviceProvider.GetPythonToolsService().InteractiveBackendOverride;
-                if (!string.IsNullOrEmpty(backendOverride))
-                {
+                if (!string.IsNullOrEmpty(backendOverride)) {
                     BackendName = backendOverride;
-                }
-                else if (string.IsNullOrEmpty(BackendName) && !string.IsNullOrEmpty(scriptsPath))
-                {
+                } else if (string.IsNullOrEmpty(BackendName) && !string.IsNullOrEmpty(scriptsPath)) {
                     // If BackendName is already set, don't use the value in mode.txt
                     var modeFile = PathUtils.GetAbsoluteFilePath(scriptsPath, "mode.txt");
-                    if (File.Exists(modeFile))
-                    {
-                        try
-                        {
+                    if (File.Exists(modeFile)) {
+                        try {
                             BackendName = File.ReadAllLines(modeFile).FirstOrDefault(line =>
                                 !string.IsNullOrEmpty(line) && !line.TrimStart().StartsWithOrdinal("#")
                             );
-                        }
-                        catch (Exception ex) when (!ex.IsCriticalException())
-                        {
+                        } catch (Exception ex) when (!ex.IsCriticalException()) {
                             WriteError(Strings.ReplCannotReadFile.FormatUI(modeFile));
                         }
 
                         // Translate legacy backend names.
-                        switch (BackendName)
-                        {
+                        switch (BackendName) {
                             case "visualstudio_ipython_repl.IPythonBackend":
                                 BackendName = "ptvsd.repl.ipython.IPythonBackend";
                                 break;
@@ -196,31 +158,24 @@ namespace Microsoft.PythonTools.Repl
                                 BackendName = "ptvsd.repl.ipython.IPythonBackendWithoutPyLab";
                                 break;
                         }
-                    }
-                    else
-                    {
+                    } else {
                         BackendName = null;
                     }
                 }
 
-                try
-                {
+                try {
                     thread = await ConnectAsync(default(CancellationToken));
-                }
-                catch (OperationCanceledException)
-                {
+                } catch (OperationCanceledException) {
                     thread = null;
                 }
 
                 var newerThread = Interlocked.CompareExchange(ref _thread, thread, null);
-                if (newerThread != null)
-                {
+                if (newerThread != null) {
                     thread.Dispose();
                     return newerThread;
                 }
 
-                if (thread != null)
-                {
+                if (thread != null) {
                     await ExecuteStartupScripts(scriptsPath);
 
                     thread.AvailableScopesChanged += Thread_AvailableScopesChanged;
@@ -230,47 +185,35 @@ namespace Microsoft.PythonTools.Repl
             });
         }
 
-        protected override async Task ExecuteStartupScripts(string scriptsPath)
-        {
-            if (File.Exists(scriptsPath))
-            {
-                if (!(await ExecuteFileAsync(scriptsPath, null)))
-                {
+        protected override async Task ExecuteStartupScripts(string scriptsPath) {
+            if (File.Exists(scriptsPath)) {
+                if (!(await ExecuteFileAsync(scriptsPath, null))) {
                     WriteError("Error executing " + scriptsPath);
                 }
-            }
-            else if (Directory.Exists(scriptsPath))
-            {
-                foreach (var file in PathUtils.EnumerateFiles(scriptsPath, "*.py", recurse: false))
-                {
-                    if (!(await ExecuteFileAsync(file, null)))
-                    {
+            } else if (Directory.Exists(scriptsPath)) {
+                foreach (var file in PathUtils.EnumerateFiles(scriptsPath, "*.py", recurse: false)) {
+                    if (!(await ExecuteFileAsync(file, null))) {
                         WriteError("Error executing " + file);
                     }
                 }
             }
         }
 
-        public override async Task<ExecutionResult> ExecuteCodeAsync(string text)
-        {
+        public override async Task<ExecutionResult> ExecuteCodeAsync(string text) {
             var cmds = _commands;
-            if (cmds == null)
-            {
+            if (cmds == null) {
                 WriteError(Strings.ReplDisconnected);
                 return ExecutionResult.Failure;
             }
 
             var cmdRes = cmds.TryExecuteCommand();
-            if (cmdRes != null)
-            {
+            if (cmdRes != null) {
                 return await cmdRes;
             }
 
             ParseResult pr;
-            if (CanExecuteCode(text, out pr))
-            {
-                if (pr == ParseResult.Empty)
-                {
+            if (CanExecuteCode(text, out pr)) {
+                if (pr == ParseResult.Empty) {
                     // Actually execute "pass", so that we launch the
                     // interpreter but do not cause any other errors.
                     text = "pass";
@@ -278,16 +221,12 @@ namespace Microsoft.PythonTools.Repl
             }
 
             var thread = await EnsureConnectedAsync();
-            if (thread != null)
-            {
+            if (thread != null) {
                 ExecutionResult result = await thread.ExecuteText(text);
 
-                try
-                {
+                try {
                     await _serviceProvider.GetUIThread().InvokeTask(async () => await _serviceProvider.RefreshVariableViewsAsync());
-                }
-                catch (Exception ex) when (!ex.IsCriticalException())
-                {
+                } catch (Exception ex) when (!ex.IsCriticalException()) {
                     Debug.Fail(ex.ToString());
                 }
 
@@ -298,11 +237,9 @@ namespace Microsoft.PythonTools.Repl
             return ExecutionResult.Failure;
         }
 
-        public override async Task<bool> ExecuteFileAsync(string filename, string extraArgs)
-        {
+        public override async Task<bool> ExecuteFileAsync(string filename, string extraArgs) {
             var thread = await EnsureConnectedAsync();
-            if (thread != null)
-            {
+            if (thread != null) {
                 return await thread.ExecuteFile(filename, extraArgs, "script");
             }
 
@@ -310,11 +247,9 @@ namespace Microsoft.PythonTools.Repl
             return false;
         }
 
-        public override async Task<bool> ExecuteModuleAsync(string name, string extraArgs)
-        {
+        public override async Task<bool> ExecuteModuleAsync(string name, string extraArgs) {
             var thread = await EnsureConnectedAsync();
-            if (thread != null)
-            {
+            if (thread != null) {
                 return await thread.ExecuteFile(name, extraArgs, "module");
             }
 
@@ -322,11 +257,9 @@ namespace Microsoft.PythonTools.Repl
             return false;
         }
 
-        public override async Task<bool> ExecuteProcessAsync(string filename, string extraArgs)
-        {
+        public override async Task<bool> ExecuteProcessAsync(string filename, string extraArgs) {
             var thread = await EnsureConnectedAsync();
-            if (thread != null)
-            {
+            if (thread != null) {
                 return await thread.ExecuteFile(filename, extraArgs, "process");
             }
 
@@ -334,35 +267,28 @@ namespace Microsoft.PythonTools.Repl
             return false;
         }
 
-        public override void SetScope(string scopeName)
-        {
+        public override void SetScope(string scopeName) {
             _thread?.SetScope(scopeName);
         }
 
-        protected override async Task<ExecutionResult> ResetWorkerAsync(bool initialize, bool quiet)
-        {
+        protected override async Task<ExecutionResult> ResetWorkerAsync(bool initialize, bool quiet) {
             // suppress reporting "failed to launch repl" process
             var thread = Interlocked.Exchange(ref _thread, null);
-            if (thread == null)
-            {
-                if (!quiet)
-                {
+            if (thread == null) {
+                if (!quiet) {
                     WriteError(Strings.ReplNotStarted);
                 }
                 return ExecutionResult.Success;
             }
 
-            foreach (var buffer in CurrentWindow.TextView.BufferGraph.GetTextBuffers(b => b.ContentType.IsOfType(PythonCoreConstants.ContentType)))
-            {
+            foreach (var buffer in CurrentWindow.TextView.BufferGraph.GetTextBuffers(b => b.ContentType.IsOfType(PythonCoreConstants.ContentType))) {
                 var tb = PythonTextBufferInfo.TryGetForBuffer(buffer);
-                if (tb != null)
-                {
+                if (tb != null) {
                     tb.DoNotParse = true;
                 }
             }
 
-            if (!quiet)
-            {
+            if (!quiet) {
                 WriteOutput(Strings.ReplReset);
             }
 

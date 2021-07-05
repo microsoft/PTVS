@@ -14,10 +14,8 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.CookiecutterTools.Interpreters
-{
-    class PythonInterpreterInformation
-    {
+namespace Microsoft.CookiecutterTools.Interpreters {
+    class PythonInterpreterInformation {
         public readonly InterpreterConfiguration Configuration;
         public readonly string Vendor;
         public readonly string VendorUrl;
@@ -28,8 +26,7 @@ namespace Microsoft.CookiecutterTools.Interpreters
             string vendor,
             string vendorUrl,
             string supportUrl
-        )
-        {
+        ) {
             Configuration = configuration;
             Vendor = vendor;
             VendorUrl = vendorUrl;

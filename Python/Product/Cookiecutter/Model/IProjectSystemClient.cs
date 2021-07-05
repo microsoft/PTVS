@@ -14,10 +14,8 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.CookiecutterTools.Model
-{
-    interface IProjectSystemClient
-    {
+namespace Microsoft.CookiecutterTools.Model {
+    interface IProjectSystemClient {
         /// <summary>
         /// Returns information about the selected project node or folder node
         /// in solution explorer, or <c>null</c> if there is no selection or if the
@@ -56,8 +54,7 @@ namespace Microsoft.CookiecutterTools.Model
         event EventHandler SolutionOpenChanged;
     }
 
-    class ProjectLocation
-    {
+    class ProjectLocation {
         public string ProjectUniqueName { get; set; }
         public string ProjectKind { get; set; }
         public string FolderPath { get; set; }

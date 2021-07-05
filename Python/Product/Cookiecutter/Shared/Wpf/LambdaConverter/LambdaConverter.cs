@@ -14,60 +14,47 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.VisualStudioTools.Wpf
-{
-    public class LambdaConverter : IValueConverter, IMultiValueConverter
-    {
+namespace Microsoft.VisualStudioTools.Wpf {
+    public class LambdaConverter : IValueConverter, IMultiValueConverter {
         private readonly Func<object, object> lambda;
         private readonly Func<object[], object> multiLambda;
 
-        private LambdaConverter(Func<object, object> lambda)
-        {
+        private LambdaConverter(Func<object, object> lambda) {
             this.lambda = lambda;
-            this.multiLambda = (args) =>
-            {
+            this.multiLambda = (args) => {
                 Debug.Assert(args.Length == 1);
                 return lambda(args[0]);
             };
         }
 
-        private LambdaConverter(Func<object[], object> multiLambda)
-        {
+        private LambdaConverter(Func<object[], object> multiLambda) {
             this.multiLambda = multiLambda;
             this.lambda = (arg) => multiLambda(new[] { arg });
         }
 
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-        {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {
             return lambda(value);
         }
 
-        public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
-        {
+        public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture) {
             return multiLambda(values);
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        {
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) {
             throw new NotImplementedException();
         }
 
-        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
-        {
+        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture) {
             throw new NotImplementedException();
         }
 
-        public static LambdaConverter Create(Func<dynamic, object> lambda)
-        {
+        public static LambdaConverter Create(Func<dynamic, object> lambda) {
             return Create<dynamic>(lambda);
         }
 
-        public static LambdaConverter Create<T1>(Func<T1, object> lambda)
-        {
-            return new LambdaConverter(arg =>
-            {
-                if (arg == DependencyProperty.UnsetValue)
-                {
+        public static LambdaConverter Create<T1>(Func<T1, object> lambda) {
+            return new LambdaConverter(arg => {
+                if (arg == DependencyProperty.UnsetValue) {
                     return DependencyProperty.UnsetValue;
                 }
 
@@ -75,24 +62,19 @@ namespace Microsoft.VisualStudioTools.Wpf
             });
         }
 
-        public static LambdaConverter Create(Func<dynamic, dynamic, object> lambda)
-        {
+        public static LambdaConverter Create(Func<dynamic, dynamic, object> lambda) {
             return Create<dynamic, dynamic>(lambda);
         }
 
-        public static LambdaConverter Create<T1, T2>(Func<T1, T2, object> lambda)
-        {
+        public static LambdaConverter Create<T1, T2>(Func<T1, T2, object> lambda) {
             return new LambdaConverter(
-                (args) =>
-                {
+                (args) => {
                     Debug.Assert(args.Length == 2);
 
-                    if (args[0] == DependencyProperty.UnsetValue)
-                    {
+                    if (args[0] == DependencyProperty.UnsetValue) {
                         return DependencyProperty.UnsetValue;
                     }
-                    if (args[1] == DependencyProperty.UnsetValue)
-                    {
+                    if (args[1] == DependencyProperty.UnsetValue) {
                         return DependencyProperty.UnsetValue;
                     }
 
@@ -100,28 +82,22 @@ namespace Microsoft.VisualStudioTools.Wpf
                 });
         }
 
-        public static LambdaConverter Create(Func<dynamic, dynamic, dynamic, object> lambda)
-        {
+        public static LambdaConverter Create(Func<dynamic, dynamic, dynamic, object> lambda) {
             return Create<dynamic, dynamic, dynamic>(lambda);
         }
 
-        public static LambdaConverter Create<T1, T2, T3>(Func<T1, T2, T3, object> lambda)
-        {
+        public static LambdaConverter Create<T1, T2, T3>(Func<T1, T2, T3, object> lambda) {
             return new LambdaConverter(
-                (args) =>
-                {
+                (args) => {
                     Debug.Assert(args.Length == 3);
 
-                    if (args[0] == DependencyProperty.UnsetValue)
-                    {
+                    if (args[0] == DependencyProperty.UnsetValue) {
                         return DependencyProperty.UnsetValue;
                     }
-                    if (args[1] == DependencyProperty.UnsetValue)
-                    {
+                    if (args[1] == DependencyProperty.UnsetValue) {
                         return DependencyProperty.UnsetValue;
                     }
-                    if (args[2] == DependencyProperty.UnsetValue)
-                    {
+                    if (args[2] == DependencyProperty.UnsetValue) {
                         return DependencyProperty.UnsetValue;
                     }
 

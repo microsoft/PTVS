@@ -14,31 +14,25 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Refactoring
-{
+namespace Microsoft.PythonTools.Refactoring {
     /// <summary>
     /// Provides a common interface for our elements of the preview list.  Currently we break this into a top-level
     /// tree node for each file (FilePreviewItem) and a leaf node for each individual rename location (LocationPreviewItem).
     /// </summary>
-    interface IPreviewItem
-    {
-        ushort Glyph
-        {
+    interface IPreviewItem {
+        ushort Glyph {
             get;
         }
 
-        IntPtr ImageList
-        {
+        IntPtr ImageList {
             get;
         }
 
-        bool IsExpandable
-        {
+        bool IsExpandable {
             get;
         }
 
-        PreviewList Children
-        {
+        PreviewList Children {
             get;
         }
 
@@ -46,8 +40,7 @@ namespace Microsoft.PythonTools.Refactoring
 
         _VSTREESTATECHANGEREFRESH ToggleState();
 
-        __PREVIEWCHANGESITEMCHECKSTATE CheckState
-        {
+        __PREVIEWCHANGESITEMCHECKSTATE CheckState {
             get;
         }
 
@@ -55,8 +48,7 @@ namespace Microsoft.PythonTools.Refactoring
 
         void Close(VSTREECLOSEACTIONS vSTREECLOSEACTIONS);
 
-        Span? Selection
-        {
+        Span? Selection {
             get;
         }
     }

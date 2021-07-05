@@ -16,37 +16,30 @@
 
 using Microsoft.VisualStudioTools;
 
-namespace Microsoft.PythonTools.Environments
-{
-    public partial class AddVirtualEnvironmentControl : UserControl
-    {
+namespace Microsoft.PythonTools.Environments {
+    public partial class AddVirtualEnvironmentControl : UserControl {
         public static readonly ICommand WebChooseInterpreter = new RoutedCommand();
         public static readonly ICommand ChangeLocation = new RoutedCommand();
 
-        public AddVirtualEnvironmentControl()
-        {
+        public AddVirtualEnvironmentControl() {
             InitializeComponent();
         }
 
         private AddVirtualEnvironmentView View => (AddVirtualEnvironmentView)DataContext;
 
-        private void Browse_CanExecute(object sender, CanExecuteRoutedEventArgs e)
-        {
+        private void Browse_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
             Microsoft.VisualStudioTools.Wpf.Commands.CanExecute(null, sender, e);
         }
 
-        private void Browse_Executed(object sender, ExecutedRoutedEventArgs e)
-        {
+        private void Browse_Executed(object sender, ExecutedRoutedEventArgs e) {
             Microsoft.VisualStudioTools.Wpf.Commands.Executed(null, sender, e);
         }
 
-        private void ChangeLocation_CanExecute(object sender, CanExecuteRoutedEventArgs e)
-        {
+        private void ChangeLocation_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
             e.CanExecute = true;
         }
 
-        private void ChangeLocation_Executed(object sender, ExecutedRoutedEventArgs e)
-        {
+        private void ChangeLocation_Executed(object sender, ExecutedRoutedEventArgs e) {
             var view = ((AddVirtualEnvironmentControl)sender).View;
 
             Window window = null;
@@ -55,8 +48,7 @@ namespace Microsoft.PythonTools.Environments
                 window == null ? IntPtr.Zero : new WindowInteropHelper(window).Handle,
                 view.LocationPath
             );
-            if (path != null)
-            {
+            if (path != null) {
                 view.LocationPath = path;
             }
         }

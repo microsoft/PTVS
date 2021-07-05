@@ -14,13 +14,11 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.CookiecutterTools.Telemetry
-{
+namespace Microsoft.CookiecutterTools.Telemetry {
     /// <summary>
     /// Represent persistent telemetry log
     /// </summary>
-    internal interface ITelemetryLog
-    {
+    internal interface ITelemetryLog {
         /// <summary>
         /// Resets current session and clear telemetry log.
         /// </summary>

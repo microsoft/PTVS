@@ -14,11 +14,9 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.EnvironmentsList
-{
+namespace Microsoft.PythonTools.EnvironmentsList {
     [ValueConversion(typeof(string), typeof(string))]
-    sealed class FileNameEllipsisConverter : IValueConverter
-    {
+    sealed class FileNameEllipsisConverter : IValueConverter {
         private static readonly char[] PathSeparators = new[] {
             Path.DirectorySeparatorChar,
             Path.AltDirectorySeparatorChar
@@ -28,35 +26,27 @@ namespace Microsoft.PythonTools.EnvironmentsList
         public bool IncludeBody { get; set; }
         public bool IncludeTail { get; set; }
 
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-        {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {
             var path = value as string;
-            if (string.IsNullOrEmpty(path) || IncludeHead && IncludeBody && IncludeTail)
-            {
+            if (string.IsNullOrEmpty(path) || IncludeHead && IncludeBody && IncludeTail) {
                 return path;
             }
 
             var headSplit = path.IndexOfAny(PathSeparators) + 1;
-            if (headSplit == path.Length)
-            {
+            if (headSplit == path.Length) {
                 headSplit = -1;
             }
 
             var tailSplit = path.LastIndexOfAny(PathSeparators);
-            if (tailSplit == path.Length - 1)
-            {
-                if (path.Length > 1)
-                {
+            if (tailSplit == path.Length - 1) {
+                if (path.Length > 1) {
                     tailSplit = path.LastIndexOfAny(PathSeparators, tailSplit - 1);
-                }
-                else
-                {
+                } else {
                     tailSplit = 0;
                 }
             }
 
-            if (headSplit == tailSplit + 1)
-            {
+            if (headSplit == tailSplit + 1) {
                 headSplit -= 1;
             }
 
@@ -64,41 +54,31 @@ namespace Microsoft.PythonTools.EnvironmentsList
             var tail = (tailSplit > 0) ? path.Substring(tailSplit) : path;
 
             var body = string.Empty;
-            if (tailSplit > headSplit)
-            {
-                if (headSplit > 0)
-                {
+            if (tailSplit > headSplit) {
+                if (headSplit > 0) {
                     body = path.Substring(headSplit, tailSplit - headSplit);
-                }
-                else
-                {
+                } else {
                     body = path.Remove(tailSplit);
                 }
-            }
-            else if (tailSplit < headSplit)
-            {
+            } else if (tailSplit < headSplit) {
                 Debug.Assert(headSplit > 0);
                 body = path.Substring(Math.Max(headSplit, 0));
             }
 
             var result = string.Empty;
-            if (IncludeHead)
-            {
+            if (IncludeHead) {
                 result += head;
             }
-            if (IncludeBody)
-            {
+            if (IncludeBody) {
                 result += body;
             }
-            if (IncludeTail)
-            {
+            if (IncludeTail) {
                 result += tail;
             }
             return result;
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        {
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) {
             throw new NotImplementedException();
         }
     }

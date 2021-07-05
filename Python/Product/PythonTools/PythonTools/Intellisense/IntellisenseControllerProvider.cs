@@ -17,54 +17,45 @@
 using Microsoft.PythonTools.Editor;
 using IServiceProvider = System.IServiceProvider;
 
-namespace Microsoft.PythonTools.Intellisense
-{
+namespace Microsoft.PythonTools.Intellisense {
     [Export(typeof(IIntellisenseControllerProvider)), ContentType(PythonCoreConstants.ContentType), Order]
     [TextViewRole(PredefinedTextViewRoles.Analyzable)]
     [TextViewRole(PredefinedTextViewRoles.Editable)]
-    class IntellisenseControllerProvider : IIntellisenseControllerProvider
-    {
+    class IntellisenseControllerProvider : IIntellisenseControllerProvider {
         [Import]
         internal PythonEditorServices Services = null;
 
         readonly Dictionary<ITextView, Tuple<BufferParser, VsProjectAnalyzer>> _hookedCloseEvents =
             new Dictionary<ITextView, Tuple<BufferParser, VsProjectAnalyzer>>();
 
-        public IIntellisenseController TryCreateIntellisenseController(ITextView textView, IList<ITextBuffer> subjectBuffers)
-        {
-            if (textView.Roles.Contains("DEBUGVIEW"))
-            {
+        public IIntellisenseController TryCreateIntellisenseController(ITextView textView, IList<ITextBuffer> subjectBuffers) {
+            if (textView.Roles.Contains("DEBUGVIEW")) {
                 // TODO: Determine the context for this view and attach to the correct analyzer
                 return null;
             }
 
-            if (textView.TextBuffer.ContentType.IsOfType(CodeRemoteContentDefinition.CodeRemoteContentTypeName))
-            {
+            if (textView.TextBuffer.ContentType.IsOfType(CodeRemoteContentDefinition.CodeRemoteContentTypeName)) {
                 // We want default handling when this is a remote buffer
                 return null;
             }
 
-            if (Services.Python.LanguageServerOptions.ServerDisabled)
-            {
+            if (Services.Python.LanguageServerOptions.ServerDisabled) {
                 return null;
             }
 
             IntellisenseController controller;
-            if (!textView.Properties.TryGetProperty(typeof(IntellisenseController), out controller))
-            {
+            if (!textView.Properties.TryGetProperty(typeof(IntellisenseController), out controller)) {
                 controller = new IntellisenseController(this, textView);
             }
 
-            foreach (var subjectBuffer in subjectBuffers)
-            {
+            foreach (var subjectBuffer in subjectBuffers) {
                 controller.ConnectSubjectBuffer(subjectBuffer);
             }
 
             return controller;
         }
 
-        internal static IntellisenseController GetController(ITextView textView)
-        {
+        internal static IntellisenseController GetController(ITextView textView) {
             IntellisenseController controller;
             textView.Properties.TryGetProperty(typeof(IntellisenseController), out controller);
             return controller;
@@ -74,11 +65,9 @@ namespace Microsoft.PythonTools.Intellisense
             IServiceProvider serviceProvider,
             IComponentModel model,
             ITextView textView
-        )
-        {
+        ) {
             IntellisenseController controller;
-            if (!textView.Properties.TryGetProperty(typeof(IntellisenseController), out controller))
-            {
+            if (!textView.Properties.TryGetProperty(typeof(IntellisenseController), out controller)) {
                 var intellisenseControllerProvider = (
                    from export in model.DefaultExportProvider.GetExports<IIntellisenseControllerProvider, IContentTypeMetadata>()
                    from exportedContentType in export.Metadata.ContentTypes
@@ -101,24 +90,20 @@ namespace Microsoft.PythonTools.Intellisense
     [Export(typeof(IVsTextViewCreationListener))]
     [ContentType(PythonCoreConstants.ContentType)]
     [TextViewRole(PredefinedTextViewRoles.Editable)]
-    class TextViewCreationListener : IVsTextViewCreationListener
-    {
+    class TextViewCreationListener : IVsTextViewCreationListener {
         private readonly IVsEditorAdaptersFactoryService _adaptersFactory;
 
         [ImportingConstructor]
-        public TextViewCreationListener(IVsEditorAdaptersFactoryService adaptersFactory)
-        {
+        public TextViewCreationListener(IVsEditorAdaptersFactoryService adaptersFactory) {
             _adaptersFactory = adaptersFactory;
         }
 
         #region IVsTextViewCreationListener Members
 
-        public void VsTextViewCreated(IVsTextView textViewAdapter)
-        {
+        public void VsTextViewCreated(IVsTextView textViewAdapter) {
             var textView = _adaptersFactory.GetWpfTextView(textViewAdapter);
             IntellisenseController controller;
-            if (textView.Properties.TryGetProperty(typeof(IntellisenseController), out controller))
-            {
+            if (textView.Properties.TryGetProperty(typeof(IntellisenseController), out controller)) {
                 controller.AttachKeyboardFilter();
             }
             InitKeyBindings(textViewAdapter);
@@ -126,52 +111,41 @@ namespace Microsoft.PythonTools.Intellisense
 
         #endregion
 
-        public void InitKeyBindings(IVsTextView vsTextView)
-        {
+        public void InitKeyBindings(IVsTextView vsTextView) {
             var os = vsTextView as IObjectWithSite;
-            if (os == null)
-            {
+            if (os == null) {
                 return;
             }
 
             IntPtr unkSite = IntPtr.Zero;
             IntPtr unkFrame = IntPtr.Zero;
 
-            try
-            {
+            try {
                 os.GetSite(typeof(VisualStudio.OLE.Interop.IServiceProvider).GUID, out unkSite);
-                if (unkSite == IntPtr.Zero)
-                {
+                if (unkSite == IntPtr.Zero) {
                     return;
                 }
                 var sp = Marshal.GetObjectForIUnknown(unkSite) as VisualStudio.OLE.Interop.IServiceProvider;
-                if (sp == null)
-                {
+                if (sp == null) {
                     return;
                 }
 
                 sp.QueryService(typeof(SVsWindowFrame).GUID, typeof(IVsWindowFrame).GUID, out unkFrame);
-                if (unkFrame == IntPtr.Zero)
-                {
+                if (unkFrame == IntPtr.Zero) {
                     return;
                 }
 
                 var frame = Marshal.GetObjectForIUnknown(unkFrame) as IVsWindowFrame;
-                if (frame == null)
-                {
+                if (frame == null) {
                     return;
                 }
 
                 frame.SetGuidProperty((int)__VSFPROPID.VSFPROPID_InheritKeyBindings, VSConstants.GUID_TextEditorFactory);
-            }
-            finally
-            {
-                if (unkSite != IntPtr.Zero)
-                {
+            } finally {
+                if (unkSite != IntPtr.Zero) {
                     Marshal.Release(unkSite);
                 }
-                if (unkFrame != IntPtr.Zero)
-                {
+                if (unkFrame != IntPtr.Zero) {
                     Marshal.Release(unkFrame);
                 }
             }

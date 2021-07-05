@@ -14,10 +14,8 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.CookiecutterTools
-{
-    internal class SR
-    {
+namespace Microsoft.CookiecutterTools {
+    internal class SR {
         internal const string SettingsGeneralCategory = "Settings_General_Category";
         internal const string SettingsShowHelpName = "Settings_ShowHelp_Name";
         internal const string SettingsShowHelpDescription = "Settings_ShowHelp_Description";

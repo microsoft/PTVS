@@ -14,10 +14,8 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Editor
-{
-    internal static class ReplPromptHelpers
-    {
+namespace Microsoft.PythonTools.Editor {
+    internal static class ReplPromptHelpers {
         internal static readonly Regex PromptRegex = new Regex(
             @"^(
                 \>\>\>(\s|\s*$)
@@ -34,36 +32,28 @@ namespace Microsoft.PythonTools.Editor
         /// them in a single edit.
         /// </summary>
         /// <returns>True if any changes were made.</returns>
-        public static bool RemovePastedPrompts(ITextSnapshot before, ITextSnapshot after)
-        {
-            if (before == null)
-            {
+        public static bool RemovePastedPrompts(ITextSnapshot before, ITextSnapshot after) {
+            if (before == null) {
                 throw new ArgumentNullException(nameof(before));
             }
-            if (after == null)
-            {
+            if (after == null) {
                 throw new ArgumentNullException(nameof(after));
             }
-            if (before.TextBuffer != after.TextBuffer)
-            {
+            if (before.TextBuffer != after.TextBuffer) {
                 throw new ArgumentException("'before' and 'after' must belong to the same buffer");
             }
 
             bool changeMade = false;
 
-            using (var edit = after.TextBuffer.CreateEdit())
-            {
-                foreach (var change in EnumerateLineChanges(before.Version, after.Version))
-                {
+            using (var edit = after.TextBuffer.CreateEdit()) {
+                foreach (var change in EnumerateLineChanges(before.Version, after.Version)) {
                     int len = GetPromptLength(change.Value);
-                    if (len > 0)
-                    {
+                    if (len > 0) {
                         edit.Replace(new Span(change.Key.Start, len), "");
                         changeMade = true;
                     }
                 }
-                if (changeMade)
-                {
+                if (changeMade) {
                     edit.Apply();
                 }
             }
@@ -80,22 +70,17 @@ namespace Microsoft.PythonTools.Editor
         /// The newline to normalize to. If null or empty, newlines
         /// are not normalized.
         /// </param>
-        public static string RemovePrompts(string text, string newline)
-        {
-            if (string.IsNullOrEmpty(text))
-            {
+        public static string RemovePrompts(string text, string newline) {
+            if (string.IsNullOrEmpty(text)) {
                 return text;
             }
 
-            if (string.IsNullOrEmpty(newline))
-            {
+            if (string.IsNullOrEmpty(newline)) {
                 var lines = text.Split('\n')
                     .Select(l => l.Substring(GetPromptLength(l)));
 
                 return string.Join("\n", lines);
-            }
-            else
-            {
+            } else {
                 var lines = text.Split('\n')
                     .Select(l => l.LastOrDefault() != '\r' ? l : l.Remove(l.Length - 1))
                     .Select(l => l.Substring(GetPromptLength(l)));
@@ -106,29 +91,21 @@ namespace Microsoft.PythonTools.Editor
 
 
 
-        private static int GetPromptLength(string line)
-        {
+        private static int GetPromptLength(string line) {
             Match m;
-            try
-            {
+            try {
                 m = PromptRegex.Match(line);
-            }
-            catch (RegexMatchTimeoutException)
-            {
+            } catch (RegexMatchTimeoutException) {
                 return 0;
             }
             return m.Success ? m.Length : 0;
         }
 
-        private static IEnumerable<KeyValuePair<Span, string>> EnumerateLineChanges(ITextVersion v1, ITextVersion v2)
-        {
-            while (v1 != null && v1 != v2 && v1.VersionNumber < v2.VersionNumber)
-            {
-                foreach (var c in v1.Changes)
-                {
+        private static IEnumerable<KeyValuePair<Span, string>> EnumerateLineChanges(ITextVersion v1, ITextVersion v2) {
+            while (v1 != null && v1 != v2 && v1.VersionNumber < v2.VersionNumber) {
+                foreach (var c in v1.Changes) {
                     int start = 0, next = c.NewText.IndexOf('\n');
-                    while (next > start)
-                    {
+                    while (next > start) {
                         yield return new KeyValuePair<Span, string>(
                             new Span(c.NewPosition + start, next - start + 1),
                             c.NewText.Substring(start, next - start + 1)

@@ -16,36 +16,29 @@
 
 using Microsoft.CookiecutterTools.Infrastructure;
 
-namespace Microsoft.CookiecutterTools.Model
-{
-    class LocalTemplateSource : ILocalTemplateSource
-    {
+namespace Microsoft.CookiecutterTools.Model {
+    class LocalTemplateSource : ILocalTemplateSource {
         private readonly string _installedFolderPath;
         private readonly IGitClient _gitClient;
         private List<Template> _cache;
 
-        public LocalTemplateSource(string installedFolderPath, IGitClient gitClient)
-        {
+        public LocalTemplateSource(string installedFolderPath, IGitClient gitClient) {
             _installedFolderPath = installedFolderPath;
             _gitClient = gitClient;
         }
 
-        public async Task<TemplateEnumerationResult> GetTemplatesAsync(string filter, string continuationToken, CancellationToken cancellationToken)
-        {
-            if (_cache == null)
-            {
+        public async Task<TemplateEnumerationResult> GetTemplatesAsync(string filter, string continuationToken, CancellationToken cancellationToken) {
+            if (_cache == null) {
                 await BuildCacheAsync();
             }
 
             var keywords = SearchUtils.ParseKeywords(filter);
 
             var templates = new List<Template>();
-            foreach (var template in _cache)
-            {
+            foreach (var template in _cache) {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                if (SearchUtils.SearchMatches(keywords, template))
-                {
+                if (SearchUtils.SearchMatches(keywords, template)) {
                     templates.Add(template.Clone());
                 }
             }
@@ -53,10 +46,8 @@ namespace Microsoft.CookiecutterTools.Model
             return new TemplateEnumerationResult(templates.OrderBy(t => t.Name).ToList());
         }
 
-        public async Task DeleteTemplateAsync(string repoPath)
-        {
-            if (_cache == null)
-            {
+        public async Task DeleteTemplateAsync(string repoPath) {
+            if (_cache == null) {
                 await BuildCacheAsync();
             }
 
@@ -65,46 +56,36 @@ namespace Microsoft.CookiecutterTools.Model
             _cache.RemoveAll(t => PathUtils.IsSameDirectory(t.LocalFolderPath, repoPath));
         }
 
-        public async Task AddTemplateAsync(string repoPath)
-        {
-            if (_cache == null)
-            {
+        public async Task AddTemplateAsync(string repoPath) {
+            if (_cache == null) {
                 await BuildCacheAsync();
-            }
-            else
-            {
+            } else {
                 // We may already have it in the cache if user installs a template that's already local
                 _cache.RemoveAll(t => PathUtils.IsSameDirectory(t.LocalFolderPath, repoPath));
                 await AddFolderToCache(repoPath);
             }
         }
 
-        public async Task UpdateTemplateAsync(string repoPath)
-        {
-            if (_cache == null)
-            {
+        public async Task UpdateTemplateAsync(string repoPath) {
+            if (_cache == null) {
                 await BuildCacheAsync();
             }
 
             await _gitClient.MergeAsync(repoPath);
 
             var template = _cache.SingleOrDefault(t => PathUtils.IsSameDirectory(t.LocalFolderPath, repoPath));
-            if (template != null)
-            {
+            if (template != null) {
                 template.ClonedLastUpdate = await _gitClient.GetLastCommitDateAsync(template.LocalFolderPath);
             }
         }
 
-        public async Task<bool?> CheckForUpdateAsync(string repoPath)
-        {
-            if (_cache == null)
-            {
+        public async Task<bool?> CheckForUpdateAsync(string repoPath) {
+            if (_cache == null) {
                 await BuildCacheAsync();
             }
 
             var template = _cache.SingleOrDefault(t => t.RemoteUrl == repoPath);
-            if (template == null)
-            {
+            if (template == null) {
                 return null;
             }
 
@@ -113,31 +94,25 @@ namespace Microsoft.CookiecutterTools.Model
             template.ClonedLastUpdate = await _gitClient.GetLastCommitDateAsync(template.LocalFolderPath);
             template.RemoteLastUpdate = await _gitClient.GetLastCommitDateAsync(template.LocalFolderPath, "origin/master");
 
-            if (template.RemoteLastUpdate.HasValue && template.ClonedLastUpdate.HasValue)
-            {
+            if (template.RemoteLastUpdate.HasValue && template.ClonedLastUpdate.HasValue) {
                 var span = template.RemoteLastUpdate - template.ClonedLastUpdate;
             }
 
             return template.UpdateAvailable;
         }
 
-        private async Task BuildCacheAsync()
-        {
+        private async Task BuildCacheAsync() {
             _cache = new List<Template>();
 
-            if (Directory.Exists(_installedFolderPath))
-            {
-                foreach (var folder in PathUtils.EnumerateDirectories(_installedFolderPath, recurse: false, fullPaths: true))
-                {
+            if (Directory.Exists(_installedFolderPath)) {
+                foreach (var folder in PathUtils.EnumerateDirectories(_installedFolderPath, recurse: false, fullPaths: true)) {
                     await AddFolderToCache(folder);
                 }
             }
         }
 
-        private async Task AddFolderToCache(string repoPath)
-        {
-            var template = new Template()
-            {
+        private async Task AddFolderToCache(string repoPath) {
+            var template = new Template() {
                 LocalFolderPath = repoPath,
                 Name = PathUtils.GetFileOrDirectoryName(repoPath),
             };
@@ -147,11 +122,9 @@ namespace Microsoft.CookiecutterTools.Model
             _cache.Add(template);
         }
 
-        private async Task InitializeRemoteAsync(Template template)
-        {
+        private async Task InitializeRemoteAsync(Template template) {
             var origin = await _gitClient.GetRemoteOriginAsync(template.LocalFolderPath);
-            if (origin != null)
-            {
+            if (origin != null) {
                 template.RemoteUrl = origin;
             }
         }

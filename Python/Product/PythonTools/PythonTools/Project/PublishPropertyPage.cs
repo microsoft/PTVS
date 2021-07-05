@@ -17,46 +17,36 @@
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 
-namespace Microsoft.PythonTools.Project
-{
+namespace Microsoft.PythonTools.Project {
     [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable",
         Justification = "object is owned by VS")]
     [Guid(PythonConstants.PublishPropertyPageGuid)]
-    public sealed class PublishPropertyPage : CommonPropertyPage
-    {
+    public sealed class PublishPropertyPage : CommonPropertyPage {
         private readonly PublishPropertyControl _control;
 
-        public PublishPropertyPage()
-        {
+        public PublishPropertyPage() {
             _control = new PublishPropertyControl(this);
         }
 
-        public override Control Control
-        {
+        public override Control Control {
             get { return _control; }
         }
 
-        public override void Apply()
-        {
+        public override void Apply() {
             Project.SetProjectProperty(CommonConstants.PublishUrl, _control.PublishUrl);
             IsDirty = false;
         }
 
-        public override void LoadSettings()
-        {
+        public override void LoadSettings() {
             Loading = true;
-            try
-            {
+            try {
                 _control.LoadSettings();
-            }
-            finally
-            {
+            } finally {
                 Loading = false;
             }
         }
 
-        public override string Name
-        {
+        public override string Name {
             get { return Strings.PythonPublishPropertyPageLabel; }
         }
     }

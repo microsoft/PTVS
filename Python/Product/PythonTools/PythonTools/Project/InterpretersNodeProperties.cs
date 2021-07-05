@@ -16,21 +16,16 @@
 
 using Microsoft.VisualStudioTools.Project;
 
-namespace Microsoft.PythonTools.Project
-{
+namespace Microsoft.PythonTools.Project {
     [ComVisible(true)]
     [Guid(PythonConstants.InterpretersPropertiesGuid)]
-    public class InterpretersNodeProperties : NodeProperties
-    {
+    public class InterpretersNodeProperties : NodeProperties {
         [Browsable(false)]
         [AutomationBrowsable(false)]
-        protected IPythonInterpreterFactory Factory
-        {
-            get
-            {
+        protected IPythonInterpreterFactory Factory {
+            get {
                 var node = HierarchyNode as InterpretersNode;
-                if (node != null)
-                {
+                if (node != null) {
                     return node._factory;
                 }
                 return null;
@@ -43,10 +38,8 @@ namespace Microsoft.PythonTools.Project
         [SRDisplayName(SR.FolderName)]
         [SRDescription(SR.FolderNameDescription)]
         [AutomationBrowsable(false)]
-        public string FolderName
-        {
-            get
-            {
+        public string FolderName {
+            get {
                 return PathUtils.GetFileOrDirectoryName(this.HierarchyNode.Url);
             }
         }
@@ -55,10 +48,8 @@ namespace Microsoft.PythonTools.Project
         [SRDisplayName(SR.FullPath)]
         [SRDescription(SR.FullPathDescription)]
         [AutomationBrowsable(true)]
-        public string FullPath
-        {
-            get
-            {
+        public string FullPath {
+            get {
                 return this.HierarchyNode.Url;
             }
         }
@@ -84,8 +75,7 @@ namespace Microsoft.PythonTools.Project
         internal InterpretersNodeProperties(HierarchyNode node)
             : base(node) { }
 
-        public override string GetClassName()
-        {
+        public override string GetClassName() {
             return "Environment Properties";
         }
 

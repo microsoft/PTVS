@@ -14,23 +14,19 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Profiling
-{
+namespace Microsoft.PythonTools.Profiling {
     [Guid(WindowGuidString)]
-    class PerfToolWindow : ToolWindowPane
-    {
+    class PerfToolWindow : ToolWindowPane {
         internal const string WindowGuidString = "328AF5EC-350F-4A96-B847-90F38B18E9BF";
         internal static Guid WindowGuid = new Guid(WindowGuidString);
         private SessionsNode _sessions;
 
-        public PerfToolWindow(IServiceProvider services) : base(services)
-        {
+        public PerfToolWindow(IServiceProvider services) : base(services) {
             ToolClsid = GuidList.VsUIHierarchyWindow_guid;
             Caption = Strings.PerformanceToolWindowTitle;
         }
 
-        public override void OnToolWindowCreated()
-        {
+        public override void OnToolWindowCreated() {
             base.OnToolWindowCreated();
 
             var frame = (IVsWindowFrame)Frame;

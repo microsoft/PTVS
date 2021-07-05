@@ -15,15 +15,12 @@
 // permissions and limitations under the License.
 
 
-namespace Microsoft.PythonTools.Refactoring
-{
-    struct ExtractMethodResult
-    {
+namespace Microsoft.PythonTools.Refactoring {
+    struct ExtractMethodResult {
         public readonly string Method;
         public readonly string Call;
 
-        public ExtractMethodResult(string newMethod, string newCall)
-        {
+        public ExtractMethodResult(string newMethod, string newCall) {
             Method = newMethod;
             Call = newCall;
         }

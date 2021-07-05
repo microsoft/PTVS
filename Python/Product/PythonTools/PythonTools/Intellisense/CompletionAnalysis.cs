@@ -18,14 +18,12 @@ using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Editor.Core;
 using Microsoft.PythonTools.Repl;
 
-namespace Microsoft.PythonTools.Intellisense
-{
+namespace Microsoft.PythonTools.Intellisense {
     /// <summary>
     /// Provides various completion services after the text around the current location has been
     /// processed. The completion services are specific to the current context
     /// </summary>
-    internal class CompletionAnalysis
-    {
+    internal class CompletionAnalysis {
         internal const long TooMuchTime = 50;
         private static readonly Stopwatch _stopwatch = MakeStopWatch();
 
@@ -40,8 +38,7 @@ namespace Microsoft.PythonTools.Intellisense
 
         internal static CompletionAnalysis EmptyCompletionContext = new CompletionAnalysis(null, null, null, null, null, null);
 
-        internal CompletionAnalysis(PythonEditorServices services, ICompletionSession session, ITextView view, ITextSnapshot snapshot, ITrackingPoint point, CompletionOptions options)
-        {
+        internal CompletionAnalysis(PythonEditorServices services, ICompletionSession session, ITextView view, ITextSnapshot snapshot, ITrackingPoint point, CompletionOptions options) {
             _session = session;
             _view = view;
             _services = services;
@@ -51,10 +48,8 @@ namespace Microsoft.PythonTools.Intellisense
             _options = options == null ? new CompletionOptions() : options.Clone();
         }
 
-        public CompletionSet GetCompletions(IGlyphService glyphService)
-        {
-            if (_snapshot == null)
-            {
+        public CompletionSet GetCompletions(IGlyphService glyphService) {
+            if (_snapshot == null) {
                 return null;
             }
 
@@ -69,8 +64,7 @@ namespace Microsoft.PythonTools.Intellisense
             var analysis = bufferInfo?.AnalysisEntry;
             var analyzer = analysis?.Analyzer;
 
-            if (analyzer == null)
-            {
+            if (analyzer == null) {
                 return null;
             }
 
@@ -91,8 +85,7 @@ namespace Microsoft.PythonTools.Intellisense
                 triggerChar == '\0' ? null : triggerChar.ToString()
             ), "GetCompletions.GetMembers", null, pyReplEval?.Analyzer == null ? 1 : 5);
 
-            if (completions == null)
-            {
+            if (completions == null) {
                 return null;
             }
 
@@ -113,25 +106,19 @@ namespace Microsoft.PythonTools.Intellisense
                 null
             ));
 
-            if (pyReplEval?.Analyzer != null && (string.IsNullOrEmpty(completions._expr) || pyReplEval.Analyzer.ShouldEvaluateForCompletion(completions._expr)))
-            {
+            if (pyReplEval?.Analyzer != null && (string.IsNullOrEmpty(completions._expr) || pyReplEval.Analyzer.ShouldEvaluateForCompletion(completions._expr))) {
                 var replMembers = pyReplEval.GetMemberNames(completions._expr ?? "");
 
-                if (_services.Python.InteractiveOptions.LiveCompletionsOnly)
-                {
+                if (_services.Python.InteractiveOptions.LiveCompletionsOnly) {
                     members = replMembers ?? Array.Empty<CompletionResult>();
-                }
-                else if (replMembers != null)
-                {
+                } else if (replMembers != null) {
                     members = members.Union(replMembers, CompletionMergeKeyComparer.Instance);
                 }
             }
 
-            if (pyReplEval == null && (completions._allowSnippet ?? false))
-            {
+            if (pyReplEval == null && (completions._allowSnippet ?? false)) {
                 var expansions = analyzer.WaitForRequest(_services.Python?.GetExpansionCompletionsAsync(), "GetCompletions.GetExpansions", null, 5);
-                if (expansions != null)
-                {
+                if (expansions != null) {
                     // Expansions should come first, so that they replace our keyword
                     // completions with the more detailed snippets.
                     members = expansions.Union(members, CompletionMergeKeyComparer.Instance);
@@ -141,8 +128,7 @@ namespace Microsoft.PythonTools.Intellisense
 
             var end = _stopwatch.ElapsedMilliseconds;
 
-            if (/*Logging &&*/ (end - start) > TooMuchTime)
-            {
+            if (/*Logging &&*/ (end - start) > TooMuchTime) {
                 var memberArray = members.ToArray();
                 members = memberArray;
                 Trace.WriteLine($"{this} lookup time {end - start} for {memberArray.Length} members");
@@ -158,27 +144,23 @@ namespace Microsoft.PythonTools.Intellisense
                 _options,
                 CompletionComparer.UnderscoresLast,
                 matchInsertionText: true
-            )
-            {
+            ) {
                 CommitByDefault = completions._commitByDefault ?? true
             };
 
 
             end = _stopwatch.ElapsedMilliseconds;
 
-            if (/*Logging &&*/ (end - start) > TooMuchTime)
-            {
+            if (/*Logging &&*/ (end - start) > TooMuchTime) {
                 Trace.WriteLine($"{this} completion set time {end - start} total time {end - start}");
             }
 
             return result;
         }
 
-        internal DynamicallyVisibleCompletion PythonCompletion(IGlyphService service, CompletionResult memberResult)
-        {
+        internal DynamicallyVisibleCompletion PythonCompletion(IGlyphService service, CompletionResult memberResult) {
             var insert = memberResult.Completion;
-            if (insert.IndexOf('\t') >= 0 && _view.Options.IsConvertTabsToSpacesEnabled())
-            {
+            if (insert.IndexOf('\t') >= 0 && _view.Options.IsConvertTabsToSpacesEnabled()) {
                 insert = insert.Replace("\t", new string(' ', _view.Options.GetIndentSize()));
             }
 
@@ -190,8 +172,7 @@ namespace Microsoft.PythonTools.Intellisense
             );
         }
 
-        internal static DynamicallyVisibleCompletion PythonCompletion(IGlyphService service, string name, string tooltip, StandardGlyphGroup group)
-        {
+        internal static DynamicallyVisibleCompletion PythonCompletion(IGlyphService service, string name, string tooltip, StandardGlyphGroup group) {
             var icon = new IconDescription(group, StandardGlyphItem.GlyphItemPublic);
 
             var result = new DynamicallyVisibleCompletion(name,
@@ -203,8 +184,7 @@ namespace Microsoft.PythonTools.Intellisense
             return result;
         }
 
-        internal static DynamicallyVisibleCompletion PythonCompletion(IGlyphService service, string name, string completion, string tooltip, StandardGlyphGroup group)
-        {
+        internal static DynamicallyVisibleCompletion PythonCompletion(IGlyphService service, string name, string completion, string tooltip, StandardGlyphGroup group) {
             var icon = new IconDescription(group, StandardGlyphItem.GlyphItemPublic);
 
             var result = new DynamicallyVisibleCompletion(name,
@@ -216,17 +196,14 @@ namespace Microsoft.PythonTools.Intellisense
             return result;
         }
 
-        private static Stopwatch MakeStopWatch()
-        {
+        private static Stopwatch MakeStopWatch() {
             var res = new Stopwatch();
             res.Start();
             return res;
         }
 
-        public override string ToString()
-        {
-            if (_span == null)
-            {
+        public override string ToString() {
+            if (_span == null) {
                 return "CompletionContext.EmptyCompletionContext";
             }
             var snapSpan = _span.GetSpan(_textBuffer.CurrentSnapshot);

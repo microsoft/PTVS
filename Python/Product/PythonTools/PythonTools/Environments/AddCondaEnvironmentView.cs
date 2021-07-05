@@ -14,10 +14,8 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Environments
-{
-    sealed class AddCondaEnvironmentView : EnvironmentViewBase
-    {
+namespace Microsoft.PythonTools.Environments {
+    sealed class AddCondaEnvironmentView : EnvironmentViewBase {
         private readonly ICondaEnvironmentManager _condaMgr;
         private readonly Timer _updatePreviewTimer;
         private CancellationTokenSource _updatePreviewCancelTokenSource;
@@ -27,8 +25,7 @@ namespace Microsoft.PythonTools.Environments
             IServiceProvider serviceProvider,
             ProjectView[] projects,
             ProjectView selectedProject
-        ) : base(serviceProvider, projects, selectedProject)
-        {
+        ) : base(serviceProvider, projects, selectedProject) {
             _condaMgr = CondaEnvironmentManager.Create(Site);
             _updatePreviewTimer = new Timer(UpdatePreviewTimerCallback);
 
@@ -65,10 +62,8 @@ namespace Microsoft.PythonTools.Environments
 
         public bool IsCondaMissing { get; }
 
-        public IEnumerable<PackageSpec> PackagesSpecs
-        {
-            get
-            {
+        public IEnumerable<PackageSpec> PackagesSpecs {
+            get {
                 return (String.IsNullOrWhiteSpace(Packages) ? "Python" : Packages)
                     .Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)
                     .Select(p => new PackageSpec(null, fullSpec: p))
@@ -76,63 +71,53 @@ namespace Microsoft.PythonTools.Environments
             }
         }
 
-        public bool IsEnvFile
-        {
+        public bool IsEnvFile {
             get { return (bool)GetValue(IsEnvFileProperty); }
             set { SetValue(IsEnvFileProperty, value); }
         }
 
-        public bool IsPackages
-        {
+        public bool IsPackages {
             get { return (bool)GetValue(IsPackagesProperty); }
             set { SetValue(IsPackagesProperty, value); }
         }
 
-        public string EnvName
-        {
+        public string EnvName {
             get { return (string)GetValue(EnvNameProperty); }
             set { SetValue(EnvNameProperty, value); }
         }
 
-        public string SelectedEnvFilePath
-        {
+        public string SelectedEnvFilePath {
             get { return (string)GetValue(SelectedEnvFilePathProperty); }
             set { SetValue(SelectedEnvFilePathProperty, value); }
         }
 
-        public string Packages
-        {
+        public string Packages {
             get { return (string)GetValue(PackagesProperty); }
             set { SetValue(PackagesProperty, value); }
         }
 
-        public CondaEnvironmentPreview CondaPreview
-        {
+        public CondaEnvironmentPreview CondaPreview {
             get { return (CondaEnvironmentPreview)GetValue(CondaPreviewProperty); }
             set { SetValue(CondaPreviewProperty, value); }
         }
 
-        private static void EnvParameter_Changed(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
+        private static void EnvParameter_Changed(DependencyObject d, DependencyPropertyChangedEventArgs e) {
             ((AddCondaEnvironmentView)d).EnvParameterChanged();
         }
 
-        private static bool CondaEnvExists(IInterpreterRegistryService interpreterService, string prefixName)
-        {
+        private static bool CondaEnvExists(IInterpreterRegistryService interpreterService, string prefixName) {
             // Known shortcoming:
             // Interpreter service only tracks conda envs that have Python in them,
             // so our check here will report no conflicts for conda envs without Python.
             return interpreterService.Configurations.Where(c => HasPrefixName(c, prefixName)).Any();
         }
 
-        private static bool HasPrefixName(InterpreterConfiguration config, string name)
-        {
+        private static bool HasPrefixName(InterpreterConfiguration config, string name) {
             var current = PathUtils.GetFileOrDirectoryName(config.GetPrefixPath());
             return string.CompareOrdinal(current, name) == 0;
         }
 
-        private void EnvParameterChanged()
-        {
+        private void EnvParameterChanged() {
             var validFolder = !CondaEnvExists(RegistryService, EnvName);
 
             // For now, we enable but prompt when they click accept
@@ -142,46 +127,34 @@ namespace Microsoft.PythonTools.Environments
             //    IsAcceptEnabled = validFolder;
             //}
 
-            if (string.IsNullOrEmpty(EnvName.Trim()))
-            {
+            if (string.IsNullOrEmpty(EnvName.Trim())) {
                 SetError(nameof(EnvName), Strings.AddCondaEnvironmentNameEmpty);
-            }
-            else if (!validFolder)
-            {
+            } else if (!validFolder) {
                 SetError(nameof(EnvName), Strings.AddCondaEnvironmentNameInvalid.FormatUI(EnvName ?? string.Empty));
-            }
-            else
-            {
+            } else {
                 ClearErrors(nameof(EnvName));
             }
 
-            if (IsEnvFile && !File.Exists(SelectedEnvFilePath))
-            {
+            if (IsEnvFile && !File.Exists(SelectedEnvFilePath)) {
                 SetError(nameof(SelectedEnvFilePath), Strings.AddCondaEnvironmentFileInvalid.FormatUI(SelectedEnvFilePath ?? string.Empty));
-            }
-            else
-            {
+            } else {
                 ClearErrors(nameof(SelectedEnvFilePath));
             }
 
             TriggerDelayedPreview();
         }
 
-        protected override void ResetProjectDependentProperties()
-        {
+        protected override void ResetProjectDependentProperties() {
             _suppressPreview = true;
 
             SetAsCurrent = SetAsCurrent && SelectedProject != null;
             EnvName = GetDefaultEnvName();
             Packages = string.Empty;
             SelectedEnvFilePath = SelectedProject?.EnvironmentYmlPath;
-            if (!string.IsNullOrEmpty(SelectedEnvFilePath))
-            {
+            if (!string.IsNullOrEmpty(SelectedEnvFilePath)) {
                 IsPackages = false;
                 IsEnvFile = true;
-            }
-            else
-            {
+            } else {
                 IsPackages = true;
                 IsEnvFile = false;
             }
@@ -193,28 +166,21 @@ namespace Microsoft.PythonTools.Environments
             TriggerDelayedPreview();
         }
 
-        private string GetDefaultEnvName()
-        {
+        private string GetDefaultEnvName() {
             var existingName = SelectedProject?.MissingCondaEnvName;
-            if (!string.IsNullOrEmpty(existingName) && !CondaEnvExists(RegistryService, existingName))
-            {
+            if (!string.IsNullOrEmpty(existingName) && !CondaEnvExists(RegistryService, existingName)) {
                 return existingName;
-            }
-            else
-            {
+            } else {
                 string envName = "env";
-                for (int i = 1; CondaEnvExists(RegistryService, envName); ++i)
-                {
+                for (int i = 1; CondaEnvExists(RegistryService, envName); ++i) {
                     envName = "env" + i.ToString();
                 }
                 return envName;
             }
         }
 
-        public override async Task ApplyAsync()
-        {
-            if (_condaMgr == null)
-            {
+        public override async Task ApplyAsync() {
+            if (_condaMgr == null) {
                 return;
             }
 
@@ -234,44 +200,33 @@ namespace Microsoft.PythonTools.Environments
             await operation.RunAsync();
         }
 
-        private void TriggerDelayedPreview()
-        {
-            if (_suppressPreview)
-            {
+        private void TriggerDelayedPreview() {
+            if (_suppressPreview) {
                 return;
             }
 
-            try
-            {
+            try {
                 _updatePreviewTimer.Change(500, Timeout.Infinite);
-            }
-            catch (ObjectDisposedException)
-            {
+            } catch (ObjectDisposedException) {
             }
         }
 
-        private void UpdatePreviewTimerCallback(object state)
-        {
-            Dispatcher.Invoke(() =>
-            {
+        private void UpdatePreviewTimerCallback(object state) {
+            Dispatcher.Invoke(() => {
                 UpdatePreview();
             });
         }
 
-        private void UpdatePreview()
-        {
-            if (_suppressPreview)
-            {
+        private void UpdatePreview() {
+            if (_suppressPreview) {
                 return;
             }
 
-            if (_condaMgr == null)
-            {
+            if (_condaMgr == null) {
                 return;
             }
 
-            if (IsEnvFile && IsPackages)
-            {
+            if (IsEnvFile && IsPackages) {
                 // Temporary state while switching from one combo box to the other
                 // We'll get called again with only one of them set to true
                 return;
@@ -286,47 +241,32 @@ namespace Microsoft.PythonTools.Environments
             CondaPreview = p;
 
             var envName = EnvName ?? string.Empty;
-            if (IsEnvFile)
-            {
+            if (IsEnvFile) {
                 var envFilePath = SelectedEnvFilePath ?? string.Empty;
                 Task.Run(() => UpdatePreviewAsync(envName, envFilePath, _updatePreviewCancelTokenSource.Token)).HandleAllExceptions(Site, typeof(AddCondaEnvironmentView)).DoNotWait();
-            }
-            else if (IsPackages)
-            {
+            } else if (IsPackages) {
                 var specs = PackagesSpecs.ToArray();
                 Task.Run(() => UpdatePreviewAsync(envName, specs, _updatePreviewCancelTokenSource.Token)).HandleAllExceptions(Site, typeof(AddCondaEnvironmentView)).DoNotWait();
             }
         }
 
-        private async Task UpdatePreviewAsync(string envName, string envFilePath, CancellationToken ct)
-        {
-            try
-            {
+        private async Task UpdatePreviewAsync(string envName, string envFilePath, CancellationToken ct) {
+            try {
                 ct.ThrowIfCancellationRequested();
                 string result;
-                try
-                {
+                try {
                     result = File.ReadAllText(envFilePath);
-                }
-                catch (UnauthorizedAccessException ex)
-                {
+                } catch (UnauthorizedAccessException ex) {
                     result = ex.Message;
-                }
-                catch (ArgumentException ex)
-                {
+                } catch (ArgumentException ex) {
                     result = ex.Message;
-                }
-                catch (FileNotFoundException ex)
-                {
+                } catch (FileNotFoundException ex) {
                     result = ex.Message;
-                }
-                catch (IOException ex)
-                {
+                } catch (IOException ex) {
                     result = ex.Message;
                 }
                 ct.ThrowIfCancellationRequested();
-                Dispatcher.Invoke(() =>
-                {
+                Dispatcher.Invoke(() => {
                     var p = new CondaEnvironmentPreview();
                     p.Progress.IsProgressDisplayed = false;
                     p.IsEnvFile = result != null;
@@ -334,50 +274,38 @@ namespace Microsoft.PythonTools.Environments
                     p.EnvFileContents = result ?? "";
                     CondaPreview = p;
                 });
-            }
-            catch (OperationCanceledException)
-            {
+            } catch (OperationCanceledException) {
             }
         }
 
-        private async Task UpdatePreviewAsync(string envName, PackageSpec[] specs, CancellationToken ct)
-        {
-            if (specs.Length == 0)
-            {
-                Dispatcher.Invoke(() =>
-                {
-                    CondaPreview = new CondaEnvironmentPreview()
-                    {
+        private async Task UpdatePreviewAsync(string envName, PackageSpec[] specs, CancellationToken ct) {
+            if (specs.Length == 0) {
+                Dispatcher.Invoke(() => {
+                    CondaPreview = new CondaEnvironmentPreview() {
                         IsNoPackages = true
                     };
                 });
                 return;
             }
 
-            try
-            {
+            try {
                 ct.ThrowIfCancellationRequested();
                 var result = await _condaMgr.PreviewCreateAsync(envName, specs, ct);
                 ct.ThrowIfCancellationRequested();
                 var preview = result?.Actions?.LinkPackages;
                 var msg = result?.Message;
-                Dispatcher.Invoke(() =>
-                {
+                Dispatcher.Invoke(() => {
                     var p = new CondaEnvironmentPreview();
-                    if (preview != null)
-                    {
-                        foreach (var package in preview.MaybeEnumerate().OrderBy(pkg => pkg.Name))
-                        {
-                            p.Packages.Add(new CondaPackageView()
-                            {
+                    if (preview != null) {
+                        foreach (var package in preview.MaybeEnumerate().OrderBy(pkg => pkg.Name)) {
+                            p.Packages.Add(new CondaPackageView() {
                                 Name = package.Name.Trim(),
                                 Version = package.VersionText,
                             });
                         }
                     }
 
-                    if (result == null)
-                    {
+                    if (result == null) {
                         msg = Strings.AddCondaEnvironmentPreviewFailed;
                     }
                     p.HasPreviewError = !string.IsNullOrEmpty(msg);
@@ -388,21 +316,16 @@ namespace Microsoft.PythonTools.Environments
 
                     CondaPreview = p;
                 });
-            }
-            catch (OperationCanceledException)
-            {
+            } catch (OperationCanceledException) {
             }
         }
 
-        public override string ToString()
-        {
+        public override string ToString() {
             return Strings.AddCondaEnvironmentTabHeader;
         }
 
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
+        protected override void Dispose(bool disposing) {
+            if (disposing) {
                 _updatePreviewTimer.Dispose();
                 _updatePreviewCancelTokenSource?.Cancel();
             }
@@ -411,10 +334,8 @@ namespace Microsoft.PythonTools.Environments
         }
     }
 
-    sealed class CondaEnvironmentPreview : DependencyObject
-    {
-        public CondaEnvironmentPreview()
-        {
+    sealed class CondaEnvironmentPreview : DependencyObject {
+        public CondaEnvironmentPreview() {
             Packages = new ObservableCollection<CondaPackageView>();
             Progress = new ProgressControlViewModel();
             Progress.ProgressMessage = Strings.AddCondaEnvironmentPreviewInProgress;
@@ -451,77 +372,65 @@ namespace Microsoft.PythonTools.Environments
         public static readonly DependencyProperty ProgressProperty =
             DependencyProperty.Register(nameof(Progress), typeof(ProgressControlViewModel), typeof(CondaEnvironmentPreview));
 
-        public ObservableCollection<CondaPackageView> Packages
-        {
+        public ObservableCollection<CondaPackageView> Packages {
             get { return (ObservableCollection<CondaPackageView>)GetValue(PackagesProperty); }
             private set { SetValue(PackagesPropertyKey, value); }
         }
 
-        public bool IsNoPackages
-        {
+        public bool IsNoPackages {
             get { return (bool)GetValue(IsNoPackagesProperty); }
             set { SetValue(IsNoPackagesProperty, value); }
         }
 
-        public bool IsPackages
-        {
+        public bool IsPackages {
             get { return (bool)GetValue(IsPackagesProperty); }
             set { SetValue(IsPackagesProperty, value); }
         }
 
-        public bool HasPreviewError
-        {
+        public bool HasPreviewError {
             get { return (bool)GetValue(HasPreviewErrorProperty); }
             set { SetValue(HasPreviewErrorProperty, value); }
         }
 
-        public bool IsEnvFile
-        {
+        public bool IsEnvFile {
             get { return (bool)GetValue(IsEnvFileProperty); }
             set { SetValue(IsEnvFileProperty, value); }
         }
 
-        public bool IsNoEnvFile
-        {
+        public bool IsNoEnvFile {
             get { return (bool)GetValue(IsNoEnvFileProperty); }
             set { SetValue(IsNoEnvFileProperty, value); }
         }
 
-        public string EnvFileContents
-        {
+        public string EnvFileContents {
             get { return (string)GetValue(EnvFileContentsProperty); }
             set { SetValue(EnvFileContentsProperty, value); }
         }
 
-        public string ErrorMessage
-        {
+        public string ErrorMessage {
             get { return (string)GetValue(ErrorMessageProperty); }
             set { SetValue(ErrorMessageProperty, value); }
         }
 
-        public ProgressControlViewModel Progress
-        {
+        public ProgressControlViewModel Progress {
             get { return (ProgressControlViewModel)GetValue(ProgressProperty); }
             set { SetValue(ProgressProperty, value); }
         }
     }
 
-    sealed class CondaPackageView : DependencyObject
-    {
+    sealed class CondaPackageView : DependencyObject {
         public static readonly DependencyProperty NameProperty =
             DependencyProperty.Register(nameof(Name), typeof(string), typeof(CondaPackageView));
 
         public static readonly DependencyProperty VersionProperty =
             DependencyProperty.Register(nameof(Version), typeof(string), typeof(CondaPackageView));
 
-        public string Name
-        {
+        public string Name {
             get { return (string)GetValue(NameProperty); }
             set { SetValue(NameProperty, value); }
         }
 
-        public string Version
-        {
+        public string Version {
             get { return (string)GetValue(VersionProperty); }
             set { SetValue(VersionProperty, value); }
         }

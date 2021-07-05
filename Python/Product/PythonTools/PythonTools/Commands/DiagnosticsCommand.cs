@@ -17,36 +17,28 @@
 using Microsoft.PythonTools.Options;
 using Microsoft.VisualStudioTools;
 
-namespace Microsoft.PythonTools.Commands
-{
-    class DiagnosticsCommand : Command
-    {
+namespace Microsoft.PythonTools.Commands {
+    class DiagnosticsCommand : Command {
         private readonly IServiceProvider _provider;
 
-        public DiagnosticsCommand(IServiceProvider provider)
-        {
+        public DiagnosticsCommand(IServiceProvider provider) {
             _provider = provider;
         }
 
-        public override void DoCommand(object sender, EventArgs args)
-        {
+        public override void DoCommand(object sender, EventArgs args) {
             _provider.ShowOptionsPage(typeof(PythonDiagnosticsOptionsPage));
         }
 
-        public override EventHandler BeforeQueryStatus
-        {
-            get
-            {
-                return (sender, args) =>
-                {
+        public override EventHandler BeforeQueryStatus {
+            get {
+                return (sender, args) => {
                     ((OleMenuCommand)sender).Visible = false;
                     ((OleMenuCommand)sender).Supported = false;
                 };
             }
         }
 
-        public override int CommandId
-        {
+        public override int CommandId {
             get { return (int)PkgCmdIDList.cmdidDiagnostics; }
         }
     }

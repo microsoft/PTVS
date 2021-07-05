@@ -16,10 +16,8 @@
 
 using AP = Microsoft.PythonTools.Intellisense.AnalysisProtocol;
 
-namespace Microsoft.PythonTools.Intellisense
-{
-    internal class PythonSignature : ISignature
-    {
+namespace Microsoft.PythonTools.Intellisense {
+    internal class PythonSignature : ISignature {
         private readonly ITrackingSpan _span;
         private readonly string _documentation;
         private readonly AP.Signature _overload;
@@ -33,20 +31,16 @@ namespace Microsoft.PythonTools.Intellisense
         private string _initialParameterName;
         private IParameter _currentParameter;
 
-        public PythonSignature(VsProjectAnalyzer analyzer, ITrackingSpan span, AP.Signature overload, int paramIndex, string lastKeywordArg = null)
-        {
+        public PythonSignature(VsProjectAnalyzer analyzer, ITrackingSpan span, AP.Signature overload, int paramIndex, string lastKeywordArg = null) {
             _span = span;
             _overload = overload;
             _analyzer = analyzer;
 
             _listParamIndex = _dictParamIndex = int.MaxValue;
 
-            if (string.IsNullOrEmpty(lastKeywordArg))
-            {
+            if (string.IsNullOrEmpty(lastKeywordArg)) {
                 _initialParameterIndex = paramIndex;
-            }
-            else
-            {
+            } else {
                 _initialParameterIndex = int.MaxValue;
                 _initialParameterName = lastKeywordArg;
             }
@@ -54,10 +48,8 @@ namespace Microsoft.PythonTools.Intellisense
             _documentation = overload.doc;
         }
 
-        private void Initialize()
-        {
-            if (_content != null)
-            {
+        private void Initialize() {
+            if (_content != null) {
                 Debug.Assert(_ppContent != null && _parameters != null);
                 return;
             }
@@ -70,19 +62,16 @@ namespace Microsoft.PythonTools.Intellisense
             content.Append('(');
             ppContent.AppendLine("(");
             int start = content.Length, ppStart = ppContent.Length;
-            for (int i = 0; i < _overload.parameters.Length; i++)
-            {
+            for (int i = 0; i < _overload.parameters.Length; i++) {
                 ppContent.Append("    ");
                 ppStart = ppContent.Length;
 
                 var param = _overload.parameters[i];
-                if (param.optional)
-                {
+                if (param.optional) {
                     content.Append('[');
                     ppContent.Append('[');
                 }
-                if (i > 0)
-                {
+                if (i > 0) {
                     content.Append(", ");
                     start = content.Length;
                 }
@@ -94,16 +83,14 @@ namespace Microsoft.PythonTools.Intellisense
                 content.Append(name);
                 ppContent.Append(name);
 
-                if (!string.IsNullOrEmpty(param.type) && param.type != "object")
-                {
+                if (!string.IsNullOrEmpty(param.type) && param.type != "object") {
                     content.Append(": ");
                     content.Append(param.type);
                     ppContent.Append(": ");
                     ppContent.Append(param.type);
                 }
 
-                if (!String.IsNullOrWhiteSpace(param.defaultValue))
-                {
+                if (!String.IsNullOrWhiteSpace(param.defaultValue)) {
                     content.Append(" = ");
                     content.Append(param.defaultValue);
                     ppContent.Append(" = ");
@@ -113,8 +100,7 @@ namespace Microsoft.PythonTools.Intellisense
                 var paramSpan = new Span(start, content.Length - start);
                 var ppParamSpan = new Span(ppStart, ppContent.Length - ppStart);
 
-                if (param.optional)
-                {
+                if (param.optional) {
                     content.Append(']');
                     ppContent.Append(']');
                 }
@@ -129,13 +115,11 @@ namespace Microsoft.PythonTools.Intellisense
                     ppParamSpan
                 );
 
-                if (isDict && _dictParamIndex == int.MaxValue)
-                {
+                if (isDict && _dictParamIndex == int.MaxValue) {
                     _dictParamIndex = i;
                 }
 
-                if (isList && _listParamIndex == int.MaxValue)
-                {
+                if (isList && _listParamIndex == int.MaxValue) {
                     _listParamIndex = i;
                 }
             }
@@ -149,25 +133,19 @@ namespace Microsoft.PythonTools.Intellisense
             SelectBestParameter(_initialParameterIndex, _initialParameterName);
         }
 
-        internal int SelectBestParameter(int index, string name)
-        {
+        internal int SelectBestParameter(int index, string name) {
             Initialize();
 
-            if (!string.IsNullOrEmpty(name))
-            {
+            if (!string.IsNullOrEmpty(name)) {
                 index = _parameters.IndexOf(p => p.Name == name);
-                if (index < 0 || index > _dictParamIndex)
-                {
+                if (index < 0 || index > _dictParamIndex) {
                     index = _dictParamIndex;
                 }
-            }
-            else if (index > _listParamIndex)
-            {
+            } else if (index > _listParamIndex) {
                 index = _listParamIndex;
             }
 
-            if (index < 0 || index >= _parameters.Count)
-            {
+            if (index < 0 || index >= _parameters.Count) {
                 SetCurrentParameter(null);
                 return -1;
             }
@@ -175,39 +153,31 @@ namespace Microsoft.PythonTools.Intellisense
             return index;
         }
 
-        internal void ClearParameter()
-        {
+        internal void ClearParameter() {
             SetCurrentParameter(null);
         }
 
-        private void SetCurrentParameter(IParameter newValue)
-        {
-            if (newValue != _currentParameter)
-            {
+        private void SetCurrentParameter(IParameter newValue) {
+            if (newValue != _currentParameter) {
                 var old = _currentParameter;
                 _currentParameter = newValue;
                 CurrentParameterChanged?.Invoke(this, new CurrentParameterChangedEventArgs(old, newValue));
             }
         }
 
-        public ITrackingSpan ApplicableToSpan
-        {
+        public ITrackingSpan ApplicableToSpan {
             get { return _span; }
         }
 
-        public string Content
-        {
-            get
-            {
+        public string Content {
+            get {
                 Initialize();
                 return _content;
             }
         }
 
-        public IParameter CurrentParameter
-        {
-            get
-            {
+        public IParameter CurrentParameter {
+            get {
                 Initialize();
                 return _currentParameter;
             }
@@ -217,19 +187,15 @@ namespace Microsoft.PythonTools.Intellisense
 
         public string Documentation => _documentation.LimitLines(15, stopAtFirstBlankLine: true);
 
-        public ReadOnlyCollection<IParameter> Parameters
-        {
-            get
-            {
+        public ReadOnlyCollection<IParameter> Parameters {
+            get {
                 Initialize();
                 return _parameters;
             }
         }
 
-        public string PrettyPrintedContent
-        {
-            get
-            {
+        public string PrettyPrintedContent {
+            get {
                 Initialize();
                 return _ppContent;
             }

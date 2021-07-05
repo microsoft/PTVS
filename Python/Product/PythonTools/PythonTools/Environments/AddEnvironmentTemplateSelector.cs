@@ -14,10 +14,8 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Environments
-{
-    sealed class AddEnvironmentTemplateSelector : DataTemplateSelector
-    {
+namespace Microsoft.PythonTools.Environments {
+    sealed class AddEnvironmentTemplateSelector : DataTemplateSelector {
         public DataTemplate AddCondaEnvironment { get; set; }
 
         public DataTemplate AddExistingEnvironment { get; set; }
@@ -26,22 +24,14 @@ namespace Microsoft.PythonTools.Environments
 
         public DataTemplate AddInstalledEnvironment { get; set; }
 
-        public override DataTemplate SelectTemplate(object item, DependencyObject container)
-        {
-            if (item is AddCondaEnvironmentView)
-            {
+        public override DataTemplate SelectTemplate(object item, DependencyObject container) {
+            if (item is AddCondaEnvironmentView) {
                 return AddCondaEnvironment;
-            }
-            else if (item is AddExistingEnvironmentView)
-            {
+            } else if (item is AddExistingEnvironmentView) {
                 return AddExistingEnvironment;
-            }
-            else if (item is AddVirtualEnvironmentView)
-            {
+            } else if (item is AddVirtualEnvironmentView) {
                 return AddVirtualEnvironment;
-            }
-            else if (item is AddInstalledEnvironmentView)
-            {
+            } else if (item is AddInstalledEnvironmentView) {
                 return AddInstalledEnvironment;
             }
 

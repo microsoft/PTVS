@@ -14,17 +14,13 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.CookiecutterTools.Infrastructure
-{
-    internal static class TaskCompletionSourceExtensions
-    {
+namespace Microsoft.CookiecutterTools.Infrastructure {
+    internal static class TaskCompletionSourceExtensions {
         public static CancellationTokenRegistration RegisterForCancellation<T>(this TaskCompletionSource<T> taskCompletionSource, CancellationToken cancellationToken)
             => taskCompletionSource.RegisterForCancellation(-1, cancellationToken);
 
-        public static CancellationTokenRegistration RegisterForCancellation<T>(this TaskCompletionSource<T> taskCompletionSource, int millisecondsDelay, CancellationToken cancellationToken)
-        {
-            if (millisecondsDelay >= 0)
-            {
+        public static CancellationTokenRegistration RegisterForCancellation<T>(this TaskCompletionSource<T> taskCompletionSource, int millisecondsDelay, CancellationToken cancellationToken) {
+            if (millisecondsDelay >= 0) {
                 var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
                 cts.CancelAfter(millisecondsDelay);
                 cancellationToken = cts.Token;
@@ -34,21 +30,17 @@ namespace Microsoft.CookiecutterTools.Infrastructure
             return cancellationToken.Register(action.Invoke);
         }
 
-        private struct CancelOnTokenAction<T>
-        {
+        private struct CancelOnTokenAction<T> {
             private readonly TaskCompletionSource<T> _taskCompletionSource;
             private readonly CancellationToken _cancellationToken;
 
-            public CancelOnTokenAction(TaskCompletionSource<T> taskCompletionSource, CancellationToken cancellationToken)
-            {
+            public CancelOnTokenAction(TaskCompletionSource<T> taskCompletionSource, CancellationToken cancellationToken) {
                 _taskCompletionSource = taskCompletionSource;
                 _cancellationToken = cancellationToken;
             }
 
-            public void Invoke()
-            {
-                if (!_taskCompletionSource.Task.IsCompleted)
-                {
+            public void Invoke() {
+                if (!_taskCompletionSource.Task.IsCompleted) {
                     ThreadPool.QueueUserWorkItem(TryCancel);
                 }
             }

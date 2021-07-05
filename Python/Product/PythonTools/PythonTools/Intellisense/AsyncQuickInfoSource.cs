@@ -14,23 +14,18 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Intellisense
-{
-    internal class AsyncQuickInfoSource : IAsyncQuickInfoSource
-    {
+namespace Microsoft.PythonTools.Intellisense {
+    internal class AsyncQuickInfoSource : IAsyncQuickInfoSource {
         private readonly ITextBuffer _textBuffer;
         private volatile IAsyncQuickInfoSession _curSession;
 
-        public AsyncQuickInfoSource(ITextBuffer textBuffer)
-        {
+        public AsyncQuickInfoSource(ITextBuffer textBuffer) {
             _textBuffer = textBuffer;
         }
 
         #region IAsyncQuickInfoSource Members
-        public async Task<QuickInfoItem> GetQuickInfoItemAsync(IAsyncQuickInfoSession session, CancellationToken cancellationToken)
-        {
-            if (_curSession != null && _curSession.State != QuickInfoSessionState.Dismissed)
-            {
+        public async Task<QuickInfoItem> GetQuickInfoItemAsync(IAsyncQuickInfoSession session, CancellationToken cancellationToken) {
+            if (_curSession != null && _curSession.State != QuickInfoSessionState.Dismissed) {
                 await _curSession.DismissAsync();
                 _curSession = null;
             }

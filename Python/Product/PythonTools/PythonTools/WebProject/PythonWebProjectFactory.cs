@@ -14,20 +14,16 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Project.Web
-{
+namespace Microsoft.PythonTools.Project.Web {
     [Guid(PythonConstants.WebProjectFactoryGuid)]
-    internal class PythonWebProjectFactory : FlavoredProjectFactoryBase
-    {
+    internal class PythonWebProjectFactory : FlavoredProjectFactoryBase {
         private readonly IServiceProvider _site;
 
-        internal PythonWebProjectFactory(IServiceProvider site)
-        {
+        internal PythonWebProjectFactory(IServiceProvider site) {
             _site = site;
         }
 
-        protected override object PreCreateForOuter(IntPtr outerProjectIUnknown)
-        {
+        protected override object PreCreateForOuter(IntPtr outerProjectIUnknown) {
             return new PythonWebProject(_site);
         }
     }

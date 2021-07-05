@@ -14,17 +14,13 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Wpf
-{
-    public partial class ModernDialogHeaderControl : UserControl
-    {
-        public ModernDialogHeaderControl()
-        {
+namespace Microsoft.PythonTools.Wpf {
+    public partial class ModernDialogHeaderControl : UserControl {
+        public ModernDialogHeaderControl() {
             InitializeComponent();
         }
 
-        private void Close_Click(object sender, RoutedEventArgs e)
-        {
+        private void Close_Click(object sender, RoutedEventArgs e) {
             var ownerWindow = (ModernDialog)Window.GetWindow(this);
             ownerWindow.CloseWindow(false);
         }

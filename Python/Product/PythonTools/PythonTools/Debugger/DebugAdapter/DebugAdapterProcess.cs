@@ -14,10 +14,8 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Debugger
-{
-    internal sealed class DebugAdapterProcess
-    {
+namespace Microsoft.PythonTools.Debugger {
+    internal sealed class DebugAdapterProcess {
         private static readonly Regex UrlParserRegex = new Regex(".*(https?:\\/\\/\\S+:[0-9]+\\/?).*", RegexOptions.Compiled);
 
         private readonly IDebugAdapterHostContext _adapterHostContext;
@@ -27,17 +25,14 @@ namespace Microsoft.PythonTools.Debugger
         private ITargetHostProcess _targetHostProcess;
         private string _webBrowserUrl;
 
-        public DebugAdapterProcess(IDebugAdapterHostContext adapterHostContext, ITargetHostInterop targetInterop, string debuggerAdapterDirectory)
-        {
+        public DebugAdapterProcess(IDebugAdapterHostContext adapterHostContext, ITargetHostInterop targetInterop, string debuggerAdapterDirectory) {
             _adapterHostContext = adapterHostContext ?? throw new ArgumentNullException(nameof(adapterHostContext));
             _targetInterop = targetInterop ?? throw new ArgumentNullException(nameof(targetInterop));
             _debuggerAdapterDirectory = debuggerAdapterDirectory ?? throw new ArgumentNullException(nameof(debuggerAdapterDirectory));
         }
 
-        public ITargetHostProcess StartProcess(string pythonExePath, string webBrowserUrl)
-        {
-            if (string.IsNullOrEmpty(pythonExePath))
-            {
+        public ITargetHostProcess StartProcess(string pythonExePath, string webBrowserUrl) {
+            if (string.IsNullOrEmpty(pythonExePath)) {
                 MessageBox.Show(Strings.PythonInterpreterPathNullOrEmpty, Strings.ProductTitle, MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return null;
             }
@@ -45,21 +40,18 @@ namespace Microsoft.PythonTools.Debugger
             _webBrowserUrl = webBrowserUrl;
             _targetHostProcess = _targetInterop.ExecuteCommandAsync(pythonExePath, "\"" + _debuggerAdapterDirectory + "\"");
 
-            if (!string.IsNullOrEmpty(webBrowserUrl) && Uri.TryCreate(webBrowserUrl, UriKind.RelativeOrAbsolute, out _))
-            {
+            if (!string.IsNullOrEmpty(webBrowserUrl) && Uri.TryCreate(webBrowserUrl, UriKind.RelativeOrAbsolute, out _)) {
                 _adapterHostContext.Events.PreviewProtocolEvent += MonitorLaunchBrowserMessage;
             }
 
             return _targetHostProcess;
         }
 
-        private void MonitorLaunchBrowserMessage(object sender, PreviewProtocolEventEventArgs e)
-        {
+        private void MonitorLaunchBrowserMessage(object sender, PreviewProtocolEventEventArgs e) {
             if (e.Event.Type.Equals("output") &&
                 e.Event is OutputEvent message &&
                 UrlParserRegex.Matches(message.Output).Count == 1
-            )
-            {
+            ) {
                 var vsDebugger = (IVsDebugger2)VisualStudio.Shell.ServiceProvider.GlobalProvider.GetService(typeof(SVsShellDebugger));
 
                 var info = new VsDebugTargetInfo2();
@@ -71,14 +63,10 @@ namespace Microsoft.PythonTools.Debugger
                 IntPtr infoPtr = Marshal.AllocCoTaskMem(infoSize);
                 Marshal.StructureToPtr(info, infoPtr, false);
 
-                try
-                {
+                try {
                     vsDebugger.LaunchDebugTargets2(1, infoPtr);
-                }
-                finally
-                {
-                    if (infoPtr != IntPtr.Zero)
-                    {
+                } finally {
+                    if (infoPtr != IntPtr.Zero) {
                         Marshal.FreeCoTaskMem(infoPtr);
                     }
                 }

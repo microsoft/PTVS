@@ -14,22 +14,18 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Profiling
-{
+namespace Microsoft.PythonTools.Profiling {
     [ComVisible(true)]
-    sealed class ReportWrapper : IPythonPerformanceReport
-    {
+    sealed class ReportWrapper : IPythonPerformanceReport {
         private readonly Report _report;
 
-        internal ReportWrapper(Report report)
-        {
+        internal ReportWrapper(Report report) {
             _report = report;
         }
 
         #region IPythonPerformanceReport Members
 
-        public string Filename
-        {
+        public string Filename {
             get { return _report.Filename; }
         }
 

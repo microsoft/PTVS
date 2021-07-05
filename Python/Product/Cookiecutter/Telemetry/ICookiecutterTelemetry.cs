@@ -14,13 +14,11 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.CookiecutterTools.Telemetry
-{
+namespace Microsoft.CookiecutterTools.Telemetry {
     /// <summary>
     /// Represents telemetry operations in cookiecutter.
     /// </summary>
-    internal interface ICookiecutterTelemetry : IDisposable
-    {
+    internal interface ICookiecutterTelemetry : IDisposable {
         ITelemetryService TelemetryService { get; }
     }
 }

@@ -14,13 +14,10 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.VisualStudioTools.Wpf
-{
-    static class NativeMethods
-    {
+namespace Microsoft.VisualStudioTools.Wpf {
+    static class NativeMethods {
         [StructLayoutAttribute(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
-        public struct SHSTOCKICONINFO
-        {
+        public struct SHSTOCKICONINFO {
             public UInt32 cbSize;
             public IntPtr hIcon;
             public Int32 iSysIconIndex;

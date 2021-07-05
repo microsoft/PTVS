@@ -21,11 +21,9 @@ using Microsoft.CookiecutterTools.Resources;
 using Microsoft.CookiecutterTools.Telemetry;
 using Microsoft.CookiecutterTools.View;
 
-namespace Microsoft.CookiecutterTools
-{
+namespace Microsoft.CookiecutterTools {
     [Guid("AC207EBF-16F8-4AA4-A0A8-70AF37308FCD")]
-    sealed class CookiecutterToolWindow : ToolWindowPane, IVsInfoBarUIEvents
-    {
+    sealed class CookiecutterToolWindow : ToolWindowPane, IVsInfoBarUIEvents {
         private IVsUIShell _uiShell;
         private EnvDTE.DTE _dte;
 
@@ -39,31 +37,26 @@ namespace Microsoft.CookiecutterTools
         private readonly object _commandsLock = new object();
         private readonly Dictionary<Command, MenuCommand> _commands = new Dictionary<Command, MenuCommand>();
 
-        public CookiecutterToolWindow(IServiceProvider serviceProvider) : base(serviceProvider)
-        {
+        public CookiecutterToolWindow(IServiceProvider serviceProvider) : base(serviceProvider) {
             BitmapImageMoniker = ImageMonikers.Cookiecutter;
             Caption = Strings.ToolWindowCaption;
             ToolBar = new CommandID(PackageGuids.guidCookiecutterCmdSet, PackageIds.WindowToolBarId);
         }
 
-        protected override void Dispose(bool disposing)
-        {
-            if (_cookiecutterPage != null)
-            {
+        protected override void Dispose(bool disposing) {
+            if (_cookiecutterPage != null) {
                 _cookiecutterPage.ContextMenuRequested -= OnContextMenuRequested;
             }
 
             base.Dispose(disposing);
         }
 
-        protected override void OnCreate()
-        {
+        protected override void OnCreate() {
             base.OnCreate();
 
             // Show a loading page, delay initialization of the control until
             // VS has created all tool windows (we need the output window).
-            var presenter = new Frame()
-            {
+            var presenter = new Frame() {
                 NavigationUIVisibility = NavigationUIVisibility.Hidden,
                 Focusable = false,
                 IsTabStop = false,
@@ -75,23 +68,18 @@ namespace Microsoft.CookiecutterTools
             presenter.Dispatcher.InvokeAsync(InitializeContent, DispatcherPriority.ApplicationIdle);
         }
 
-        private void InitializeContent()
-        {
+        private void InitializeContent() {
             _uiShell = GetService(typeof(SVsUIShell)) as IVsUIShell;
             _dte = GetService(typeof(EnvDTE.DTE)) as EnvDTE.DTE;
             _infoBarFactory = GetService(typeof(SVsInfoBarUIFactory)) as IVsInfoBarUIFactory;
 
-            if (CookiecutterClientProvider.IsCompatiblePythonAvailable())
-            {
+            if (CookiecutterClientProvider.IsCompatiblePythonAvailable()) {
                 ShowCookiecutterPage();
-            }
-            else
-            {
+            } else {
                 ShowMissingDependenciesPage();
             }
 
-            if (CookiecutterPackage.Instance.ShowHelp)
-            {
+            if (CookiecutterPackage.Instance.ShowHelp) {
                 AddInfoBar();
             }
 
@@ -110,8 +98,7 @@ namespace Microsoft.CookiecutterTools
             }, VSConstants.GUID_VSStandardCommandSet97);
         }
 
-        private void ShowCookiecutterPage()
-        {
+        private void ShowCookiecutterPage() {
             Debug.Assert(_cookiecutterPage == null);
 
             var outputWindow = OutputWindowRedirector.GetGeneral(this);
@@ -120,8 +107,7 @@ namespace Microsoft.CookiecutterTools
             ReportPrereqsEvent(true);
 
             string feedUrl = CookiecutterPackage.Instance.RecommendedFeed;
-            if (string.IsNullOrEmpty(feedUrl))
-            {
+            if (string.IsNullOrEmpty(feedUrl)) {
                 feedUrl = UrlConstants.DefaultRecommendedFeed;
             }
 
@@ -151,19 +137,15 @@ namespace Microsoft.CookiecutterTools
             ((Frame)Content).Content = _cookiecutterPage;
         }
 
-        private void ShowMissingDependenciesPage()
-        {
+        private void ShowMissingDependenciesPage() {
             ReportPrereqsEvent(false);
 
             ((Frame)Content).Content = new MissingDependenciesPage();
         }
 
-        public void OnClosed(IVsInfoBarUIElement infoBarUIElement)
-        {
-            if (_infoBar != null)
-            {
-                if (_infoBarAdviseCookie != 0)
-                {
+        public void OnClosed(IVsInfoBarUIElement infoBarUIElement) {
+            if (_infoBar != null) {
+                if (_infoBarAdviseCookie != 0) {
                     _infoBar.Unadvise(_infoBarAdviseCookie);
                     _infoBarAdviseCookie = 0;
                 }
@@ -177,13 +159,11 @@ namespace Microsoft.CookiecutterTools
             }
         }
 
-        public void OnActionItemClicked(IVsInfoBarUIElement infoBarUIElement, IVsInfoBarActionItem actionItem)
-        {
+        public void OnActionItemClicked(IVsInfoBarUIElement infoBarUIElement, IVsInfoBarActionItem actionItem) {
             ((Action)actionItem.ActionContext)();
         }
 
-        private void AddInfoBar()
-        {
+        private void AddInfoBar() {
             Action showHelp = () => Process.Start(UrlConstants.HelpUrl);
 
             var messages = new List<IVsInfoBarTextSpan>();
@@ -198,20 +178,15 @@ namespace Microsoft.CookiecutterTools
             _infoBar.Advise(this, out _infoBarAdviseCookie);
         }
 
-        internal void RegisterCommands(IEnumerable<Command> commands, Guid cmdSet)
-        {
+        internal void RegisterCommands(IEnumerable<Command> commands, Guid cmdSet) {
             OleMenuCommandService mcs = GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
-            if (null != mcs)
-            {
-                lock (_commandsLock)
-                {
-                    foreach (var command in commands)
-                    {
+            if (null != mcs) {
+                lock (_commandsLock) {
+                    foreach (var command in commands) {
                         var beforeQueryStatus = command.BeforeQueryStatus;
                         CommandID toolwndCommandID = new CommandID(cmdSet, command.CommandId);
                         OleMenuCommand menuToolWin = new OleMenuCommand(command.DoCommand, toolwndCommandID);
-                        if (beforeQueryStatus != null)
-                        {
+                        if (beforeQueryStatus != null) {
                             menuToolWin.BeforeQueryStatus += beforeQueryStatus;
                         }
                         mcs.AddCommand(menuToolWin);
@@ -221,22 +196,16 @@ namespace Microsoft.CookiecutterTools
             }
         }
 
-        private void UpdateCommandUI()
-        {
+        private void UpdateCommandUI() {
             _uiShell.UpdateCommandUI(0);
         }
 
-        private void ExecuteCommand(string name, string args)
-        {
-            try
-            {
+        private void ExecuteCommand(string name, string args) {
+            try {
                 _dte.ExecuteCommand(name, args ?? string.Empty);
-            }
-            catch (Exception ex) when (!ex.IsCriticalException())
-            {
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
 #if !DEV15_OR_LATER
-                if (name == "File.OpenFolder")
-                {
+                if (name == "File.OpenFolder") {
                     OpenInWindowsExplorer(args.Trim('"'));
                     return;
                 }
@@ -246,10 +215,8 @@ namespace Microsoft.CookiecutterTools
             }
         }
 
-        internal void NavigateToGitHub(int commandId)
-        {
-            switch (commandId)
-            {
+        internal void NavigateToGitHub(int commandId) {
+            switch (commandId) {
                 case PackageIds.cmdidLinkGitHubHome:
                     _cookiecutterPage?.NavigateToGitHubHome();
                     break;
@@ -265,15 +232,12 @@ namespace Microsoft.CookiecutterTools
             }
         }
 
-        internal bool CanNavigateToGitHub()
-        {
+        internal bool CanNavigateToGitHub() {
             return _cookiecutterPage != null ? _cookiecutterPage.CanNavigateToGitHub() : false;
         }
 
-        internal void Home()
-        {
-            if (_cookiecutterPage == null && CookiecutterClientProvider.IsCompatiblePythonAvailable())
-            {
+        internal void Home() {
+            if (_cookiecutterPage == null && CookiecutterClientProvider.IsCompatiblePythonAvailable()) {
                 // User has installed a compatible python since we first initialized
                 ShowCookiecutterPage();
             }
@@ -281,54 +245,42 @@ namespace Microsoft.CookiecutterTools
             _cookiecutterPage?.Home();
         }
 
-        internal void DeleteSelection()
-        {
+        internal void DeleteSelection() {
             _cookiecutterPage?.DeleteSelection();
         }
 
-        internal bool CanDeleteSelection()
-        {
+        internal bool CanDeleteSelection() {
             return _cookiecutterPage != null ? _cookiecutterPage.CanDeleteSelection() : false;
         }
 
-        internal void RunSelection()
-        {
+        internal void RunSelection() {
             _cookiecutterPage?.RunSelection();
         }
 
-        internal bool CanRunSelection()
-        {
+        internal bool CanRunSelection() {
             return _cookiecutterPage != null ? _cookiecutterPage.CanRunSelection() : false;
         }
 
-        internal void CheckForUpdates()
-        {
+        internal void CheckForUpdates() {
             _cookiecutterPage?.CheckForUpdates();
         }
 
-        internal bool CanCheckForUpdates()
-        {
+        internal bool CanCheckForUpdates() {
             return _cookiecutterPage != null ? _cookiecutterPage.CanCheckForUpdates() : false;
         }
 
-        internal void UpdateSelection()
-        {
+        internal void UpdateSelection() {
             _cookiecutterPage?.UpdateSelection();
         }
 
-        internal bool CanUpdateSelection()
-        {
+        internal bool CanUpdateSelection() {
             return _cookiecutterPage != null ? _cookiecutterPage.CanUpdateSelection() : false;
         }
 
-        internal void NewSession(CookiecutterSessionStartInfo ssi)
-        {
-            if (_cookiecutterPage != null)
-            {
+        internal void NewSession(CookiecutterSessionStartInfo ssi) {
+            if (_cookiecutterPage != null) {
                 _cookiecutterPage.NewSession(ssi);
-            }
-            else
-            {
+            } else {
                 // This method may be called immediately after showing the tool
                 // window for the first time, which triggers a delayed initialization
                 // of the cookiecutter page on idle, causing the page to be temporarily null.
@@ -339,13 +291,11 @@ namespace Microsoft.CookiecutterTools
             }
         }
 
-        private void OnContextMenuRequested(object sender, PointEventArgs e)
-        {
+        private void OnContextMenuRequested(object sender, PointEventArgs e) {
             ShowContextMenu(e.Point);
         }
 
-        private void ShowContextMenu(Point point)
-        {
+        private void ShowContextMenu(Point point) {
             CookiecutterPackage.ShowContextMenu(
                 new CommandID(PackageGuids.guidCookiecutterCmdSet, PackageIds.ContextMenu),
                 (int)point.X,
@@ -354,14 +304,10 @@ namespace Microsoft.CookiecutterTools
             );
         }
 
-        private static void ReportPrereqsEvent(bool found)
-        {
-            try
-            {
+        private static void ReportPrereqsEvent(bool found) {
+            try {
                 CookiecutterTelemetry.Current.TelemetryService.ReportEvent(CookiecutterTelemetry.TelemetryArea.Prereqs, CookiecutterTelemetry.PrereqsEvents.Python, found.ToString());
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 Debug.Fail($"Error reporting event.\n{ex.Message}");
             }
         }

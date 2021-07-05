@@ -14,18 +14,14 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.CookiecutterTools.Model
-{
+namespace Microsoft.CookiecutterTools.Model {
     [Serializable]
-    class TemplateEnumerationException : Exception
-    {
-        public TemplateEnumerationException()
-        {
+    class TemplateEnumerationException : Exception {
+        public TemplateEnumerationException() {
         }
 
         public TemplateEnumerationException(string message, Exception innerException)
-            : base(message, innerException)
-        {
+            : base(message, innerException) {
         }
     }
 }

@@ -22,7 +22,6 @@ using System.Runtime.InteropServices;
 using EnvDTE;
 using EnvDTE90;
 using EnvDTE90a;
-using Microsoft.PythonTools;
 using TestUtilities;
 using TestUtilities.Python;
 using TestUtilities.UI;

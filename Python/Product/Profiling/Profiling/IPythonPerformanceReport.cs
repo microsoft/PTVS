@@ -14,13 +14,10 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Profiling
-{
+namespace Microsoft.PythonTools.Profiling {
     [Guid("042A8DBE-A800-40CF-8CE2-903E2746C109")]
-    public interface IPythonPerformanceReport
-    {
-        string Filename
-        {
+    public interface IPythonPerformanceReport {
+        string Filename {
             get;
         }
     }

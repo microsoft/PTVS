@@ -16,40 +16,32 @@
 
 using Microsoft.CookiecutterTools.Infrastructure;
 
-namespace Microsoft.CookiecutterTools.Model
-{
-    internal static class GitClientProvider
-    {
-        public static IGitClient Create(Redirector redirector, string commonIdeFolderPath)
-        {
+namespace Microsoft.CookiecutterTools.Model {
+    internal static class GitClientProvider {
+        public static IGitClient Create(Redirector redirector, string commonIdeFolderPath) {
             string gitExeFilePath = null;
 
             // Try to locate Team Explorer's git.exe using the running instance ide folder
-            if (!string.IsNullOrEmpty(commonIdeFolderPath))
-            {
+            if (!string.IsNullOrEmpty(commonIdeFolderPath)) {
                 gitExeFilePath = GetTeamExplorerGitFilePathFromIdeFolderPath(commonIdeFolderPath);
             }
 
             // Just use git.exe, and it will work if it's in PATH
             // If it's not, the error will be output in redirector at time of use
-            if (!File.Exists(gitExeFilePath))
-            {
+            if (!File.Exists(gitExeFilePath)) {
                 gitExeFilePath = GitExecutableName;
             }
 
             return new GitClient(gitExeFilePath, redirector);
         }
 
-        private static string GitExecutableName
-        {
-            get
-            {
+        private static string GitExecutableName {
+            get {
                 return "git.exe";
             }
         }
 
-        private static string GetTeamExplorerGitFilePathFromIdeFolderPath(string ideFolderPath)
-        {
+        private static string GetTeamExplorerGitFilePathFromIdeFolderPath(string ideFolderPath) {
             // git.exe is in a folder path with a symlink to the actual extension dir with random name
             var gitFolder = Path.Combine(ideFolderPath, @"CommonExtensions\Microsoft\TeamFoundation\Team Explorer\Git\mingw32\bin");
             var finalGitFolder = PathUtils.GetFinalPathName(gitFolder);

@@ -20,7 +20,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using EnvDTE;
-using Microsoft.PythonTools;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;

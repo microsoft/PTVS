@@ -14,12 +14,9 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Project
-{
-    public partial class PythonTestPropertyPageView : UserControl
-    {
-        public PythonTestPropertyPageView()
-        {
+namespace Microsoft.PythonTools.Project {
+    public partial class PythonTestPropertyPageView : UserControl {
+        public PythonTestPropertyPageView() {
             InitializeComponent();
         }
     }

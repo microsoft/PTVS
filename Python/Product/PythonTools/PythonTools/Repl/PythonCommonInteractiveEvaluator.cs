@@ -21,8 +21,7 @@ using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudioTools;
 using Task = System.Threading.Tasks.Task;
 
-namespace Microsoft.PythonTools.Repl
-{
+namespace Microsoft.PythonTools.Repl {
     [InteractiveWindowRole("Execution")]
     [InteractiveWindowRole("Reset")]
     [ContentType(PythonCoreConstants.ContentType)]
@@ -32,8 +31,7 @@ namespace Microsoft.PythonTools.Repl
         IPythonInteractiveEvaluator,
         IMultipleScopeEvaluator,
         IPythonInteractiveIntellisense,
-        IDisposable
-    {
+        IDisposable {
         protected readonly IServiceProvider _serviceProvider;
         private readonly StringBuilder _deferredOutput;
 
@@ -55,50 +53,42 @@ namespace Microsoft.PythonTools.Repl
 
         internal const string DoNotResetConfigurationLaunchOption = "DoNotResetConfiguration";
 
-        public PythonCommonInteractiveEvaluator(IServiceProvider serviceProvider)
-        {
+        public PythonCommonInteractiveEvaluator(IServiceProvider serviceProvider) {
             _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
             _deferredOutput = new StringBuilder();
             _documentUri = new Uri($"repl://{Guid.NewGuid()}/repl.py");
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2213:DisposableFieldsShouldBeDisposed", MessageId = "_analyzer")]
-        protected virtual void Dispose(bool disposing)
-        {
-            if (_isDisposed)
-            {
+        protected virtual void Dispose(bool disposing) {
+            if (_isDisposed) {
                 return;
             }
             _isDisposed = true;
 
-            if (_projectWithHookedEvents != null)
-            {
+            if (_projectWithHookedEvents != null) {
                 _projectWithHookedEvents.ActiveInterpreterChanged -= Project_ConfigurationChanged;
                 _projectWithHookedEvents._searchPaths.Changed -= Project_ConfigurationChanged;
                 _projectWithHookedEvents = null;
             }
 
-            if (_workspaceWithHookedEvents != null)
-            {
+            if (_workspaceWithHookedEvents != null) {
                 _workspaceWithHookedEvents.ActiveInterpreterChanged -= Workspace_ConfigurationChanged;
                 _workspaceWithHookedEvents.SearchPathsSettingChanged -= Workspace_ConfigurationChanged;
                 _workspaceWithHookedEvents = null;
             }
 
-            if (disposing)
-            {
+            if (disposing) {
                 _analyzer?.Dispose();
             }
         }
 
-        public void Dispose()
-        {
+        public void Dispose() {
             Dispose(true);
             GC.SuppressFinalize(this);
         }
 
-        ~PythonCommonInteractiveEvaluator()
-        {
+        ~PythonCommonInteractiveEvaluator() {
             Dispose(false);
         }
 
@@ -108,10 +98,8 @@ namespace Microsoft.PythonTools.Repl
         public LaunchConfiguration Configuration { get; set; }
         public string ScriptsPath { get; set; }
 
-        public PythonLanguageVersion LanguageVersion
-        {
-            get
-            {
+        public PythonLanguageVersion LanguageVersion {
+            get {
                 return Configuration?.Interpreter?.Version.ToLanguageVersion() ?? PythonLanguageVersion.None;
             }
         }
@@ -124,36 +112,30 @@ namespace Microsoft.PythonTools.Repl
 
         internal bool AssociatedWorkspaceHasChanged { get; set; }
 
-        private PythonProjectNode GetAssociatedPythonProject(InterpreterConfiguration interpreter = null)
-        {
+        private PythonProjectNode GetAssociatedPythonProject(InterpreterConfiguration interpreter = null) {
             _serviceProvider.GetUIThread().MustBeCalledFromUIThread();
 
             var moniker = ProjectMoniker;
-            if (interpreter == null)
-            {
+            if (interpreter == null) {
                 interpreter = Configuration?.Interpreter;
             }
 
-            if (string.IsNullOrEmpty(moniker) && interpreter != null)
-            {
+            if (string.IsNullOrEmpty(moniker) && interpreter != null) {
                 var interpreterService = _serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>();
                 moniker = interpreterService.GetProperty(interpreter.Id, "ProjectMoniker") as string;
             }
 
-            if (string.IsNullOrEmpty(moniker))
-            {
+            if (string.IsNullOrEmpty(moniker)) {
                 return null;
             }
 
             return _serviceProvider.GetProjectFromFile(moniker);
         }
 
-        private IPythonWorkspaceContext GetAssociatedPythonWorkspace(InterpreterConfiguration interpreter = null)
-        {
+        private IPythonWorkspaceContext GetAssociatedPythonWorkspace(InterpreterConfiguration interpreter = null) {
             _serviceProvider.GetUIThread().MustBeCalledFromUIThread();
 
-            if (string.IsNullOrEmpty(WorkspaceMoniker))
-            {
+            if (string.IsNullOrEmpty(WorkspaceMoniker)) {
                 return null;
             }
 
@@ -162,34 +144,26 @@ namespace Microsoft.PythonTools.Repl
 
         public virtual VsProjectAnalyzer Analyzer => _analyzer;
 
-        public virtual async Task<VsProjectAnalyzer> GetAnalyzerAsync()
-        {
-            if (_analyzer != null)
-            {
+        public virtual async Task<VsProjectAnalyzer> GetAnalyzerAsync() {
+            if (_analyzer != null) {
                 return _analyzer;
             }
 
             var config = Configuration;
             IPythonInterpreterFactory factory = null;
-            if (config?.Interpreter != null)
-            {
+            if (config?.Interpreter != null) {
                 var interpreterService = _serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>();
                 factory = interpreterService.FindInterpreter(config.Interpreter.Id);
             }
 
-            return await _serviceProvider.GetUIThread().InvokeTask(async () =>
-            {
+            return await _serviceProvider.GetUIThread().InvokeTask(async () => {
                 var a = _analyzer;
-                if (a != null)
-                {
+                if (a != null) {
                     return a;
                 }
-                if (factory == null)
-                {
+                if (factory == null) {
                     a = await _serviceProvider.GetPythonToolsService().GetSharedAnalyzerAsync();
-                }
-                else
-                {
+                } else {
                     a = await VsProjectAnalyzer.CreateForInteractiveAsync(
                         _serviceProvider.GetComponentModel().GetService<PythonEditorServices>(),
                         factory,
@@ -201,27 +175,19 @@ namespace Microsoft.PythonTools.Repl
                     var workspace = GetAssociatedPythonWorkspace(config.Interpreter);
                     var pyProject = GetAssociatedPythonProject(config.Interpreter);
 
-                    if (workspace != null)
-                    {
+                    if (workspace != null) {
                         sp = workspace.GetAbsoluteSearchPaths().ToArray();
-                    }
-                    else if (pyProject != null)
-                    {
+                    } else if (pyProject != null) {
                         sp = pyProject.GetSearchPaths();
-                    }
-                    else
-                    {
+                    } else {
                         var sln = _serviceProvider.GetService(typeof(SVsSolution)) as IVsSolution;
                         sp = sln?.EnumerateLoadedPythonProjects().SelectMany(p => p.GetSearchPaths()).ToArray();
                     }
                     await a.SetSearchPathsAsync(sp.MaybeEnumerate());
                 }
-                if (_analyzer != null)
-                {
+                if (_analyzer != null) {
                     a.Dispose();
-                }
-                else
-                {
+                } else {
                     _analyzer = a;
                 }
                 return _analyzer;
@@ -229,44 +195,32 @@ namespace Microsoft.PythonTools.Repl
         }
 
         public virtual Uri DocumentUri { get => _documentUri; protected set => _documentUri = value; }
-        public virtual Uri NextDocumentUri()
-        {
+        public virtual Uri NextDocumentUri() {
             var d = DocumentUri;
-            if (d != null)
-            {
+            if (d != null) {
                 return new Uri(d, $"#{++_nextDocumentIndex}");
             }
             return null;
         }
 
-        internal void WriteOutput(string text, bool addNewline = true)
-        {
+        internal void WriteOutput(string text, bool addNewline = true) {
             var wnd = CurrentWindow;
-            if (wnd == null)
-            {
-                lock (_deferredOutput)
-                {
+            if (wnd == null) {
+                lock (_deferredOutput) {
                     _deferredOutput.Append(text);
                 }
-            }
-            else
-            {
+            } else {
                 AppendTextWithEscapes(wnd, text, addNewline, isError: false);
             }
         }
 
-        internal void WriteError(string text, bool addNewline = true)
-        {
+        internal void WriteError(string text, bool addNewline = true) {
             var wnd = CurrentWindow;
-            if (wnd == null)
-            {
-                lock (_deferredOutput)
-                {
+            if (wnd == null) {
+                lock (_deferredOutput) {
                     _deferredOutput.Append(text);
                 }
-            }
-            else
-            {
+            } else {
                 AppendTextWithEscapes(wnd, text, addNewline, isError: true);
             }
         }
@@ -281,20 +235,15 @@ namespace Microsoft.PythonTools.Repl
 
         public abstract string CurrentWorkingDirectory { get; }
 
-        public IInteractiveWindow CurrentWindow
-        {
-            get
-            {
+        public IInteractiveWindow CurrentWindow {
+            get {
                 return _window;
             }
-            set
-            {
+            set {
                 _commands = null;
 
-                if (value != null)
-                {
-                    lock (_deferredOutput)
-                    {
+                if (value != null) {
+                    lock (_deferredOutput) {
                         AppendTextWithEscapes(value, _deferredOutput.ToString(), false, false);
                         _deferredOutput.Clear();
                     }
@@ -303,11 +252,8 @@ namespace Microsoft.PythonTools.Repl
                     _options.Changed += InteractiveOptions_Changed;
                     UseSmartHistoryKeys = _options.UseSmartHistory;
                     LiveCompletionsOnly = _options.LiveCompletionsOnly;
-                }
-                else
-                {
-                    if (_options != null)
-                    {
+                } else {
+                    if (_options != null) {
                         _options.Changed -= InteractiveOptions_Changed;
                         _options = null;
                     }
@@ -316,10 +262,8 @@ namespace Microsoft.PythonTools.Repl
             }
         }
 
-        private async void InteractiveOptions_Changed(object sender, EventArgs e)
-        {
-            if (!ReferenceEquals(sender, _options))
-            {
+        private async void InteractiveOptions_Changed(object sender, EventArgs e) {
+            if (!ReferenceEquals(sender, _options)) {
                 return;
             }
 
@@ -327,8 +271,7 @@ namespace Microsoft.PythonTools.Repl
             LiveCompletionsOnly = _options.LiveCompletionsOnly;
 
             var window = CurrentWindow;
-            if (window == null)
-            {
+            if (window == null) {
                 return;
             }
 
@@ -336,13 +279,10 @@ namespace Microsoft.PythonTools.Repl
             window.TextView.Options.SetOptionValue(InteractiveWindowOptions.SmartUpDown, UseSmartHistoryKeys);
         }
 
-        public bool EnableMultipleScopes
-        {
+        public bool EnableMultipleScopes {
             get { return _enableMultipleScopes; }
-            set
-            {
-                if (_enableMultipleScopes != value)
-                {
+            set {
+                if (_enableMultipleScopes != value) {
                     _enableMultipleScopes = value;
                     MultipleScopeSupportChanged?.Invoke(this, EventArgs.Empty);
                 }
@@ -354,8 +294,7 @@ namespace Microsoft.PythonTools.Repl
 
         public abstract Task<bool> GetSupportsMultipleStatementsAsync();
 
-        protected void SetAvailableScopes(string[] scopes)
-        {
+        protected void SetAvailableScopes(string[] scopes) {
             _availableScopes = scopes;
             AvailableScopesChanged?.Invoke(this, EventArgs.Empty);
         }
@@ -368,20 +307,16 @@ namespace Microsoft.PythonTools.Repl
 
         public abstract void AbortExecution();
 
-        public bool CanExecuteCode(string text)
-        {
+        public bool CanExecuteCode(string text) {
             return CanExecuteCode(text, out _);
         }
 
-        protected bool CanExecuteCode(string text, out ParseResult pr)
-        {
+        protected bool CanExecuteCode(string text, out ParseResult pr) {
             pr = ParseResult.Complete;
-            if (string.IsNullOrEmpty(text))
-            {
+            if (string.IsNullOrEmpty(text)) {
                 return true;
             }
-            if (string.IsNullOrWhiteSpace(text) && text.EndsWithOrdinal("\n"))
-            {
+            if (string.IsNullOrWhiteSpace(text) && text.EndsWithOrdinal("\n")) {
                 pr = ParseResult.Empty;
                 return true;
             }
@@ -389,12 +324,10 @@ namespace Microsoft.PythonTools.Repl
             var config = Configuration;
             var parser = Parser.CreateParser(new StringReader(text), LanguageVersion);
             parser.ParseInteractiveCode(out pr);
-            if (pr == ParseResult.IncompleteStatement || pr == ParseResult.Empty)
-            {
+            if (pr == ParseResult.IncompleteStatement || pr == ParseResult.Empty) {
                 return text.EndsWithOrdinal("\n");
             }
-            if (pr == ParseResult.IncompleteToken)
-            {
+            if (pr == ParseResult.IncompleteToken) {
                 return false;
             }
             return true;
@@ -402,22 +335,17 @@ namespace Microsoft.PythonTools.Repl
 
         protected abstract Task ExecuteStartupScripts(string scriptsPath);
 
-        internal Task<ExecutionResult> UpdatePropertiesFromProjectMonikerAsync()
-        {
+        internal Task<ExecutionResult> UpdatePropertiesFromProjectMonikerAsync() {
             return _serviceProvider.GetUIThread().InvokeAsync(UpdatePropertiesFromProjectMoniker);
         }
 
-        internal Task<ExecutionResult> UpdatePropertiesFromWorkspaceMonikerAsync()
-        {
+        internal Task<ExecutionResult> UpdatePropertiesFromWorkspaceMonikerAsync() {
             return _serviceProvider.GetUIThread().InvokeAsync(UpdatePropertiesFromWorkspaceMoniker);
         }
 
-        internal ExecutionResult UpdatePropertiesFromProjectMoniker()
-        {
-            try
-            {
-                if (_projectWithHookedEvents != null)
-                {
+        internal ExecutionResult UpdatePropertiesFromProjectMoniker() {
+            try {
+                if (_projectWithHookedEvents != null) {
                     _projectWithHookedEvents.ActiveInterpreterChanged -= Project_ConfigurationChanged;
                     _projectWithHookedEvents._searchPaths.Changed -= Project_ConfigurationChanged;
                     _projectWithHookedEvents = null;
@@ -425,22 +353,16 @@ namespace Microsoft.PythonTools.Repl
 
                 AssociatedProjectHasChanged = false;
                 var pyProj = GetAssociatedPythonProject();
-                if (pyProj == null)
-                {
+                if (pyProj == null) {
                     return ExecutionResult.Success;
                 }
 
-                if (Configuration?.GetLaunchOption(DoNotResetConfigurationLaunchOption) == null)
-                {
+                if (Configuration?.GetLaunchOption(DoNotResetConfigurationLaunchOption) == null) {
                     Configuration = pyProj.GetLaunchConfigurationOrThrow();
-                    if (Configuration?.Interpreter != null)
-                    {
-                        try
-                        {
+                    if (Configuration?.Interpreter != null) {
+                        try {
                             ScriptsPath = GetScriptsPath(_serviceProvider, Configuration.Interpreter.Description, Configuration.Interpreter);
-                        }
-                        catch (Exception ex) when (!ex.IsCriticalException())
-                        {
+                        } catch (Exception ex) when (!ex.IsCriticalException()) {
                             ScriptsPath = null;
                         }
                     }
@@ -451,32 +373,21 @@ namespace Microsoft.PythonTools.Repl
                 pyProj._searchPaths.Changed += Project_ConfigurationChanged;
 
                 return ExecutionResult.Success;
-            }
-            catch (NoInterpretersException)
-            {
+            } catch (NoInterpretersException) {
                 WriteError(Strings.NoInterpretersAvailable);
-            }
-            catch (MissingInterpreterException ex)
-            {
+            } catch (MissingInterpreterException ex) {
                 WriteError(ex.ToString());
-            }
-            catch (IOException ex)
-            {
+            } catch (IOException ex) {
                 WriteError(ex.ToString());
-            }
-            catch (Exception ex) when (!ex.IsCriticalException())
-            {
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
                 WriteError(ex.ToUnhandledExceptionMessage(GetType()));
             }
             return ExecutionResult.Failure;
         }
 
-        internal ExecutionResult UpdatePropertiesFromWorkspaceMoniker()
-        {
-            try
-            {
-                if (_workspaceWithHookedEvents != null)
-                {
+        internal ExecutionResult UpdatePropertiesFromWorkspaceMoniker() {
+            try {
+                if (_workspaceWithHookedEvents != null) {
                     _workspaceWithHookedEvents.ActiveInterpreterChanged -= Workspace_ConfigurationChanged;
                     _workspaceWithHookedEvents.SearchPathsSettingChanged -= Workspace_ConfigurationChanged;
                     _workspaceWithHookedEvents = null;
@@ -484,22 +395,16 @@ namespace Microsoft.PythonTools.Repl
 
                 AssociatedWorkspaceHasChanged = false;
                 var workspace = GetAssociatedPythonWorkspace();
-                if (workspace == null)
-                {
+                if (workspace == null) {
                     return ExecutionResult.Success;
                 }
 
-                if (Configuration?.GetLaunchOption(DoNotResetConfigurationLaunchOption) == null)
-                {
+                if (Configuration?.GetLaunchOption(DoNotResetConfigurationLaunchOption) == null) {
                     Configuration = GetWorkspaceLaunchConfigurationOrThrow(workspace);
-                    if (Configuration?.Interpreter != null)
-                    {
-                        try
-                        {
+                    if (Configuration?.Interpreter != null) {
+                        try {
                             ScriptsPath = GetScriptsPath(_serviceProvider, Configuration.Interpreter.Description, Configuration.Interpreter);
-                        }
-                        catch (Exception ex) when (!ex.IsCriticalException())
-                        {
+                        } catch (Exception ex) when (!ex.IsCriticalException()) {
                             ScriptsPath = null;
                         }
                     }
@@ -510,47 +415,34 @@ namespace Microsoft.PythonTools.Repl
                 workspace.SearchPathsSettingChanged += Workspace_ConfigurationChanged;
 
                 return ExecutionResult.Success;
-            }
-            catch (NoInterpretersException)
-            {
+            } catch (NoInterpretersException) {
                 WriteError(Strings.NoInterpretersAvailable);
-            }
-            catch (MissingInterpreterException ex)
-            {
+            } catch (MissingInterpreterException ex) {
                 WriteError(ex.ToString());
-            }
-            catch (IOException ex)
-            {
+            } catch (IOException ex) {
                 WriteError(ex.ToString());
-            }
-            catch (Exception ex) when (!ex.IsCriticalException())
-            {
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
                 WriteError(ex.ToUnhandledExceptionMessage(GetType()));
             }
             return ExecutionResult.Failure;
         }
 
-        internal static LaunchConfiguration GetWorkspaceLaunchConfigurationOrThrow(IPythonWorkspaceContext workspace)
-        {
+        internal static LaunchConfiguration GetWorkspaceLaunchConfigurationOrThrow(IPythonWorkspaceContext workspace) {
             var fact = GetWorkspaceInterpreterFactoryOrThrow(workspace);
-            var config = new LaunchConfiguration(fact.Configuration)
-            {
+            var config = new LaunchConfiguration(fact.Configuration) {
                 WorkingDirectory = workspace.Location,
                 SearchPaths = workspace.GetAbsoluteSearchPaths().ToList()
             };
             return config;
         }
 
-        private static IPythonInterpreterFactory GetWorkspaceInterpreterFactoryOrThrow(IPythonWorkspaceContext workspace)
-        {
+        private static IPythonInterpreterFactory GetWorkspaceInterpreterFactoryOrThrow(IPythonWorkspaceContext workspace) {
             var fact = workspace.CurrentFactory;
-            if (fact == null)
-            {
+            if (fact == null) {
                 throw new NoInterpretersException();
             }
 
-            if (!fact.Configuration.IsAvailable())
-            {
+            if (!fact.Configuration.IsAvailable()) {
                 throw new MissingInterpreterException(
                     Strings.MissingEnvironment.FormatUI(fact.Configuration.Description, fact.Configuration.Version)
                 );
@@ -559,13 +451,11 @@ namespace Microsoft.PythonTools.Repl
             return fact;
         }
 
-        private void Project_ConfigurationChanged(object sender, EventArgs e)
-        {
+        private void Project_ConfigurationChanged(object sender, EventArgs e) {
             var pyProj = _projectWithHookedEvents;
             _projectWithHookedEvents = null;
 
-            if (pyProj != null)
-            {
+            if (pyProj != null) {
                 Debug.Assert(pyProj == sender || pyProj._searchPaths == sender, "Unexpected project raised the event");
                 // Only warn once
                 pyProj.ActiveInterpreterChanged -= Project_ConfigurationChanged;
@@ -575,13 +465,11 @@ namespace Microsoft.PythonTools.Repl
             }
         }
 
-        private void Workspace_ConfigurationChanged(object sender, EventArgs e)
-        {
+        private void Workspace_ConfigurationChanged(object sender, EventArgs e) {
             var workspace = _workspaceWithHookedEvents;
             _workspaceWithHookedEvents = null;
 
-            if (workspace != null)
-            {
+            if (workspace != null) {
                 Debug.Assert(workspace == sender, "Unexpected workspace raised the event");
                 // Only warn once
                 workspace.ActiveInterpreterChanged -= Workspace_ConfigurationChanged;
@@ -596,69 +484,51 @@ namespace Microsoft.PythonTools.Repl
             string displayName,
             InterpreterConfiguration config,
             bool onlyIfExists = true
-        )
-        {
+        ) {
             provider.MustBeCalledFromUIThread();
 
             var root = provider.GetPythonToolsService().InteractiveOptions.Scripts;
-            if (Path.GetInvalidPathChars().Any(c => root.Contains(c)))
-            {
+            if (Path.GetInvalidPathChars().Any(c => root.Contains(c))) {
                 throw new DirectoryNotFoundException(root);
             }
 
-            if (string.IsNullOrEmpty(root))
-            {
-                try
-                {
-                    if (!provider.TryGetShellProperty((__VSSPROPID)__VSSPROPID2.VSSPROPID_VisualStudioDir, out root))
-                    {
+            if (string.IsNullOrEmpty(root)) {
+                try {
+                    if (!provider.TryGetShellProperty((__VSSPROPID)__VSSPROPID2.VSSPROPID_VisualStudioDir, out root)) {
                         root = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
                         root = PathUtils.GetAbsoluteDirectoryPath(root, "Visual Studio {0}".FormatInvariant(AssemblyVersionInfo.VSName));
                     }
 
                     root = PathUtils.GetAbsoluteDirectoryPath(root, "Python Scripts");
-                }
-                catch (ArgumentException argEx)
-                {
+                } catch (ArgumentException argEx) {
                     throw new DirectoryNotFoundException(root, argEx);
                 }
             }
 
             string candidate;
-            if (!string.IsNullOrEmpty(displayName))
-            {
-                foreach (var c in Path.GetInvalidFileNameChars())
-                {
+            if (!string.IsNullOrEmpty(displayName)) {
+                foreach (var c in Path.GetInvalidFileNameChars()) {
                     displayName = displayName.Replace(c, '_');
                 }
 
-                try
-                {
+                try {
                     candidate = PathUtils.GetAbsoluteDirectoryPath(root, displayName);
-                }
-                catch (ArgumentException argEx)
-                {
+                } catch (ArgumentException argEx) {
                     throw new DirectoryNotFoundException(root, argEx);
                 }
-                if (!onlyIfExists || Directory.Exists(candidate))
-                {
+                if (!onlyIfExists || Directory.Exists(candidate)) {
                     return candidate;
                 }
             }
 
             var version = config?.Version?.ToString();
-            if (!string.IsNullOrEmpty(version))
-            {
-                try
-                {
+            if (!string.IsNullOrEmpty(version)) {
+                try {
                     candidate = PathUtils.GetAbsoluteDirectoryPath(root, version);
-                }
-                catch (ArgumentException argEx)
-                {
+                } catch (ArgumentException argEx) {
                     throw new DirectoryNotFoundException(root, argEx);
                 }
-                if (!onlyIfExists || Directory.Exists(candidate))
-                {
+                if (!onlyIfExists || Directory.Exists(candidate)) {
                     return candidate;
                 }
             }
@@ -677,13 +547,11 @@ namespace Microsoft.PythonTools.Repl
         const string _splitRegexPattern = @"(?x)\s*,\s*(?=(?:[^""]*""[^""]*"")*[^""]*$)"; // http://regexhero.net/library/52/
         private static Regex _splitLineRegex = new Regex(_splitRegexPattern);
 
-        public string FormatClipboard()
-        {
+        public string FormatClipboard() {
             return FormatClipboard(_serviceProvider, CurrentWindow);
         }
 
-        internal static string FormatClipboard(IServiceProvider serviceProvider, IInteractiveWindow interactiveWindow)
-        {
+        internal static string FormatClipboard(IServiceProvider serviceProvider, IInteractiveWindow interactiveWindow) {
             // WPF and Windows Forms Clipboard behavior differs when it comes
             // to DataFormats.CommaSeparatedValue.
             // WPF will always return the data as a string, no matter how it
@@ -691,25 +559,20 @@ namespace Microsoft.PythonTools.Repl
             // Use WPF Clipboard fully qualified name to ensure we don't
             // accidentally end up using the wrong clipboard implementation
             // if this code is moved.
-            if (System.Windows.Clipboard.ContainsData(System.Windows.DataFormats.CommaSeparatedValue))
-            {
+            if (System.Windows.Clipboard.ContainsData(System.Windows.DataFormats.CommaSeparatedValue)) {
                 string data = System.Windows.Clipboard.GetData(System.Windows.DataFormats.CommaSeparatedValue) as string;
-                if (data != null)
-                {
+                if (data != null) {
                     string[] lines = data.Split(new[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
                     StringBuilder res = new StringBuilder();
                     res.AppendLine("[");
-                    foreach (var line in lines)
-                    {
+                    foreach (var line in lines) {
                         string[] items = _splitLineRegex.Split(line);
 
                         res.Append("  [");
-                        for (int i = 0; i < items.Length; i++)
-                        {
+                        for (int i = 0; i < items.Length; i++) {
                             res.Append(FormatItem(items[i]));
 
-                            if (i != items.Length - 1)
-                            {
+                            if (i != items.Length - 1) {
                                 res.Append(", ");
                             }
                         }
@@ -721,30 +584,25 @@ namespace Microsoft.PythonTools.Repl
             }
 
             var txt = System.Windows.Clipboard.GetText();
-            if (!serviceProvider.GetPythonToolsService().AdvancedOptions.PasteRemovesReplPrompts)
-            {
+            if (!serviceProvider.GetPythonToolsService().AdvancedOptions.PasteRemovesReplPrompts) {
                 return txt;
             }
 
             return ReplPromptHelpers.RemovePrompts(txt, interactiveWindow.TextView.Options.GetNewLineCharacter());
         }
 
-        private static string FormatItem(string item)
-        {
-            if (String.IsNullOrWhiteSpace(item))
-            {
+        private static string FormatItem(string item) {
+            if (String.IsNullOrWhiteSpace(item)) {
                 return "None";
             }
             double doubleVal;
             int intVal;
             if (Double.TryParse(item, out doubleVal) ||
-                Int32.TryParse(item, out intVal))
-            {
+                Int32.TryParse(item, out intVal)) {
                 return item;
             }
 
-            if (item[0] == '"' && item[item.Length - 1] == '"' && item.IndexOf(',') != -1)
-            {
+            if (item[0] == '"' && item[item.Length - 1] == '"' && item.IndexOf(',') != -1) {
                 // remove outer quotes, remove "" escaping
                 item = item.Substring(1, item.Length - 2).Replace("\"\"", "\"");
             }
@@ -753,21 +611,16 @@ namespace Microsoft.PythonTools.Repl
             return "'" + item.Replace("\\", "\\\\").Replace("'", "\\'") + "'";
         }
 
-        public IEnumerable<string> GetAvailableScopes()
-        {
+        public IEnumerable<string> GetAvailableScopes() {
             return _availableScopes ?? Enumerable.Empty<string>();
         }
 
         public abstract void SetScope(string scopeName);
 
-        public string GetPrompt()
-        {
-            if ((_window?.CurrentLanguageBuffer.CurrentSnapshot.LineCount ?? 1) > 1)
-            {
+        public string GetPrompt() {
+            if ((_window?.CurrentLanguageBuffer.CurrentSnapshot.LineCount ?? 1) > 1) {
                 return SecondaryPrompt;
-            }
-            else
-            {
+            } else {
                 return PrimaryPrompt;
             }
         }
@@ -775,10 +628,8 @@ namespace Microsoft.PythonTools.Repl
         internal abstract string PrimaryPrompt { get; }
         internal abstract string SecondaryPrompt { get; }
 
-        public virtual async Task<ExecutionResult> InitializeAsync()
-        {
-            if (_commands != null)
-            {
+        public virtual async Task<ExecutionResult> InitializeAsync() {
+            if (_commands != null) {
                 // Already initialized
                 return ExecutionResult.Success;
             }
@@ -792,8 +643,7 @@ namespace Microsoft.PythonTools.Repl
             WriteOutput(msg, addNewline: true);
 
             var langBuffer = _window.CurrentLanguageBuffer;
-            if (langBuffer != null)
-            {
+            if (langBuffer != null) {
                 // Reinitializing, and our new language buffer does not automatically
                 // get connected to the Intellisense controller. Let's fix that.
                 var controller = IntellisenseControllerProvider.GetController(_window.TextView);
@@ -806,15 +656,13 @@ namespace Microsoft.PythonTools.Repl
             return ExecutionResult.Success;
         }
 
-        public async Task<ExecutionResult> ResetAsync(bool initialize = true)
-        {
+        public async Task<ExecutionResult> ResetAsync(bool initialize = true) {
             await UpdatePropertiesFromProjectMonikerAsync();
             await UpdatePropertiesFromWorkspaceMonikerAsync();
             return await ResetWorkerAsync(initialize, false);
         }
 
-        public async Task<ExecutionResult> ResetAsync(bool initialize, bool quiet)
-        {
+        public async Task<ExecutionResult> ResetAsync(bool initialize, bool quiet) {
             await UpdatePropertiesFromProjectMonikerAsync();
             await UpdatePropertiesFromWorkspaceMonikerAsync();
             return await ResetWorkerAsync(initialize, quiet);
@@ -822,15 +670,12 @@ namespace Microsoft.PythonTools.Repl
 
         protected abstract Task<ExecutionResult> ResetWorkerAsync(bool initialize, bool quiet);
 
-        internal Task InvokeAsync(Action action)
-        {
+        internal Task InvokeAsync(Action action) {
             return _window.TextView.VisualElement.Dispatcher.InvokeAsync(action).Task;
         }
 
-        internal void WriteFrameworkElement(System.Windows.UIElement control, System.Windows.Size desiredSize)
-        {
-            if (_window == null)
-            {
+        internal void WriteFrameworkElement(System.Windows.UIElement control, System.Windows.Size desiredSize) {
+            if (_window == null) {
                 return;
             }
 
@@ -847,8 +692,7 @@ namespace Microsoft.PythonTools.Repl
             IServiceProvider serviceProvider,
             IInteractiveWindow window,
             IInteractiveEvaluator eval
-        )
-        {
+        ) {
             var model = serviceProvider.GetComponentModel();
             var cmdFactory = model.GetService<IInteractiveWindowCommandsFactory>();
             var cmds = model.GetExtensions<IInteractiveWindowCommand>();
@@ -874,14 +718,12 @@ namespace Microsoft.PythonTools.Repl
             IInteractiveWindowCommand command,
             string[] supportedRoles,
             IContentType[] supportedContentTypes
-        )
-        {
+        ) {
             var commandRoles = command.GetType().GetCustomAttributes(typeof(InteractiveWindowRoleAttribute), true).Select(r => ((InteractiveWindowRoleAttribute)r).Name).ToArray();
 
             // Commands with no roles are always applicable.
             // If a command specifies roles and none apply, exclude it
-            if (commandRoles.Any() && !commandRoles.Intersect(supportedRoles).Any())
-            {
+            if (commandRoles.Any() && !commandRoles.Intersect(supportedRoles).Any()) {
                 return false;
             }
 
@@ -892,8 +734,7 @@ namespace Microsoft.PythonTools.Repl
 
             // Commands with no content type are always applicable
             // If a commands specifies content types and none apply, exclude it
-            if (commandContentTypes.Any() && !commandContentTypes.Any(cct => supportedContentTypes.Any(sct => sct.IsOfType(cct))))
-            {
+            if (commandContentTypes.Any() && !commandContentTypes.Any(cct => supportedContentTypes.Any(sct => sct.IsOfType(cct)))) {
                 return false;
             }
 
@@ -907,8 +748,7 @@ namespace Microsoft.PythonTools.Repl
             string text,
             bool addNewLine,
             bool isError
-        )
-        {
+        ) {
             int start = 0, escape = text.IndexOfOrdinal("\x1b[");
             var colors = window.OutputBuffer.Properties.GetOrCreateSingletonProperty(
                 ReplOutputClassifier.ColorKey,
@@ -920,13 +760,11 @@ namespace Microsoft.PythonTools.Repl
             var write = isError ? (Func<string, Span>)window.WriteError : window.Write;
             int lastEscape = -1;
 
-            while (escape > lastEscape)
-            {
+            while (escape > lastEscape) {
                 lastEscape = escape;
 
                 span = write(text.Substring(start, escape - start));
-                if (span.Length > 0)
-                {
+                if (span.Length > 0) {
                     colors.Add(new ColoredSpan(span, color));
                 }
 
@@ -939,75 +777,55 @@ namespace Microsoft.PythonTools.Repl
             }
 
             var rest = text.Substring(start);
-            if (addNewLine)
-            {
+            if (addNewLine) {
                 rest += Environment.NewLine;
             }
 
             span = write(rest);
-            if (span.Length > 0)
-            {
+            if (span.Length > 0) {
                 colors.Add(new ColoredSpan(span, color));
             }
         }
 
-        private static ConsoleColor Change(ConsoleColor? from, ConsoleColor to)
-        {
+        private static ConsoleColor Change(ConsoleColor? from, ConsoleColor to) {
             return ((from ?? ConsoleColor.Black) & ConsoleColor.DarkGray) | to;
         }
 
-        private static ConsoleColor? GetColorFromEscape(string text, ref int start)
-        {
+        private static ConsoleColor? GetColorFromEscape(string text, ref int start) {
             // http://en.wikipedia.org/wiki/ANSI_escape_code
             // process any ansi color sequences...
             ConsoleColor? color = null;
             List<int> codes = new List<int>();
             int? value = 0;
 
-            while (start < text.Length)
-            {
-                if (text[start] >= '0' && text[start] <= '9')
-                {
+            while (start < text.Length) {
+                if (text[start] >= '0' && text[start] <= '9') {
                     // continue parsing the integer...
-                    if (value == null)
-                    {
+                    if (value == null) {
                         value = 0;
                     }
                     value = 10 * value.Value + (text[start] - '0');
-                }
-                else if (text[start] == ';')
-                {
-                    if (value != null)
-                    {
+                } else if (text[start] == ';') {
+                    if (value != null) {
                         codes.Add(value.Value);
                         value = null;
-                    }
-                    else
-                    {
+                    } else {
                         // CSI ; - invalid or CSI ### ;;, both invalid
                         break;
                     }
-                }
-                else if (text[start] == 'm')
-                {
+                } else if (text[start] == 'm') {
                     start += 1;
-                    if (value != null)
-                    {
+                    if (value != null) {
                         codes.Add(value.Value);
                     }
 
                     // parsed a valid code
-                    if (codes.Count == 0)
-                    {
+                    if (codes.Count == 0) {
                         // reset
                         color = null;
-                    }
-                    else
-                    {
-                        for (int j = 0; j < codes.Count; j++)
-                        {
-                            switch (codes[j])
-                            {
+                    } else {
+                        for (int j = 0; j < codes.Count; j++) {
+                            switch (codes[j]) {
                                 case 0: color = ConsoleColor.White; break;
                                 case 1: // bright/bold
                                     color |= ConsoleColor.DarkGray;
@@ -1069,9 +887,7 @@ namespace Microsoft.PythonTools.Repl
                         }
                     }
                     break;
-                }
-                else
-                {
+                } else {
                     // unknown char, invalid escape
                     break;
                 }
@@ -1083,13 +899,10 @@ namespace Microsoft.PythonTools.Repl
         #endregion
     }
 
-    internal static class PythonCommonInteractiveEvaluatorExtensions
-    {
-        public static PythonCommonInteractiveEvaluator GetPythonEvaluator(this IInteractiveWindow window)
-        {
+    internal static class PythonCommonInteractiveEvaluatorExtensions {
+        public static PythonCommonInteractiveEvaluator GetPythonEvaluator(this IInteractiveWindow window) {
             var pie = window?.Evaluator as PythonCommonInteractiveEvaluator;
-            if (pie != null)
-            {
+            if (pie != null) {
                 return pie;
             }
 
@@ -1097,11 +910,9 @@ namespace Microsoft.PythonTools.Repl
             return pie;
         }
 
-        public static async Task<bool> GetSupportsMultipleStatements(this IInteractiveWindow window)
-        {
+        public static async Task<bool> GetSupportsMultipleStatements(this IInteractiveWindow window) {
             var pie = window.GetPythonEvaluator();
-            if (pie == null)
-            {
+            if (pie == null) {
                 return false;
             }
             return await pie.GetSupportsMultipleStatementsAsync();

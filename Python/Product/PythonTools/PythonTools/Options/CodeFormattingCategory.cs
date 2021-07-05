@@ -14,10 +14,8 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Parsing
-{
-    internal enum CodeFormattingCategory
-    {
+namespace Microsoft.PythonTools.Parsing {
+    internal enum CodeFormattingCategory {
         None,
         /// <summary>
         /// The category applies to new line spacing between source elements.

@@ -14,10 +14,8 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Environments
-{
-    static class CustomEnv
-    {
+namespace Microsoft.PythonTools.Environments {
+    static class CustomEnv {
         public static async Task<IPythonInterpreterFactory> CreateCustomEnv(
             IInterpreterRegistryService registryService,
             IInterpreterOptionsService optionsService,
@@ -28,15 +26,12 @@ namespace Microsoft.PythonTools.Environments
             InterpreterArchitecture architecture,
             Version version,
             string description
-        )
-        {
-            if (registryService == null)
-            {
+        ) {
+            if (registryService == null) {
                 throw new ArgumentNullException(nameof(registryService));
             }
 
-            if (optionsService == null)
-            {
+            if (optionsService == null) {
                 throw new ArgumentNullException(nameof(optionsService));
             }
 

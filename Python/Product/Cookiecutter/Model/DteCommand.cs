@@ -14,12 +14,9 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.CookiecutterTools.Model
-{
-    class DteCommand
-    {
-        public DteCommand(string name, string args)
-        {
+namespace Microsoft.CookiecutterTools.Model {
+    class DteCommand {
+        public DteCommand(string name, string args) {
             Name = name;
             Args = args;
         }

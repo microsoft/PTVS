@@ -15,10 +15,8 @@
 // permissions and limitations under the License.
 
 
-namespace Microsoft.VisualStudioTools.Wpf
-{
-    public interface ILambdaConverterProvider
-    {
+namespace Microsoft.VisualStudioTools.Wpf {
+    public interface ILambdaConverterProvider {
         LambdaConverter GetConverterForLambda(string lambda);
     }
 }

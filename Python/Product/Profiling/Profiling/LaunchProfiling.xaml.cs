@@ -14,86 +14,71 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Profiling
-{
+namespace Microsoft.PythonTools.Profiling {
     /// <summary>
     /// Interaction logic for LaunchProfiling.xaml
     /// </summary>
-    public partial class LaunchProfiling : DialogWindowVersioningWorkaround
-    {
+    public partial class LaunchProfiling : DialogWindowVersioningWorkaround {
         readonly ProfilingTargetView _viewModel;
         private readonly IServiceProvider _serviceProvider;
 
-        internal LaunchProfiling(IServiceProvider serviceProvider, ProfilingTargetView viewModel)
-        {
+        internal LaunchProfiling(IServiceProvider serviceProvider, ProfilingTargetView viewModel) {
             _serviceProvider = serviceProvider;
             _viewModel = viewModel;
             DataContext = _viewModel;
             InitializeComponent();
         }
 
-        private void FindInterpreterClick(object sender, RoutedEventArgs e)
-        {
+        private void FindInterpreterClick(object sender, RoutedEventArgs e) {
             var standalone = _viewModel.Standalone;
-            if (standalone != null)
-            {
+            if (standalone != null) {
                 var path = _serviceProvider.BrowseForFileOpen(
                     new System.Windows.Interop.WindowInteropHelper(this).Handle,
                     Strings.ExecutableFilesFilter,
                     standalone.InterpreterPath
                 );
-                if (File.Exists(path))
-                {
+                if (File.Exists(path)) {
                     standalone.InterpreterPath = path;
                 }
             }
         }
 
-        private void FindScriptClick(object sender, RoutedEventArgs e)
-        {
+        private void FindScriptClick(object sender, RoutedEventArgs e) {
             var standalone = _viewModel.Standalone;
-            if (standalone != null)
-            {
+            if (standalone != null) {
                 var path = _serviceProvider.BrowseForFileOpen(
                     new System.Windows.Interop.WindowInteropHelper(this).Handle,
                     Strings.PythonFilesFilter,
                     standalone.ScriptPath
                 );
-                if (File.Exists(path))
-                {
+                if (File.Exists(path)) {
                     standalone.ScriptPath = path;
-                    if (!Directory.Exists(standalone.WorkingDirectory))
-                    {
+                    if (!Directory.Exists(standalone.WorkingDirectory)) {
                         standalone.WorkingDirectory = Path.GetDirectoryName(path);
                     }
                 }
             }
         }
 
-        private void FindWorkingDirectoryClick(object sender, RoutedEventArgs e)
-        {
+        private void FindWorkingDirectoryClick(object sender, RoutedEventArgs e) {
             var standalone = _viewModel.Standalone;
-            if (standalone != null)
-            {
+            if (standalone != null) {
                 var path = _serviceProvider.BrowseForDirectory(
                     new System.Windows.Interop.WindowInteropHelper(this).Handle,
                     standalone.WorkingDirectory
                 );
-                if (!string.IsNullOrEmpty(path))
-                {
+                if (!string.IsNullOrEmpty(path)) {
                     standalone.WorkingDirectory = path;
                 }
             }
         }
 
-        private void OkClick(object sender, RoutedEventArgs e)
-        {
+        private void OkClick(object sender, RoutedEventArgs e) {
             this.DialogResult = true;
             Close();
         }
 
-        private void CancelClick(object sender, RoutedEventArgs e)
-        {
+        private void CancelClick(object sender, RoutedEventArgs e) {
             this.DialogResult = false;
             Close();
         }

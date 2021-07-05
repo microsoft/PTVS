@@ -14,10 +14,8 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.VisualStudioTools.Wpf
-{
-    public static class Controls
-    {
+namespace Microsoft.VisualStudioTools.Wpf {
+    public static class Controls {
         private static readonly Guid EnvCategory = new Guid("624ed9c3-bdfd-41fa-96c3-7c824ea32e3d");
         private static readonly Guid TreeViewCategory = new Guid("92ecf08e-8b13-4cf4-99e9-ae2692382185");
 
@@ -126,28 +124,21 @@ namespace Microsoft.VisualStudioTools.Wpf
 
         public static readonly BitmapSource UacShield = CreateUacShield();
 
-        private static BitmapSource CreateUacShield()
-        {
-            if (Environment.OSVersion.Version.Major >= 6)
-            {
+        private static BitmapSource CreateUacShield() {
+            if (Environment.OSVersion.Version.Major >= 6) {
                 var sii = new NativeMethods.SHSTOCKICONINFO();
                 sii.cbSize = (UInt32)Marshal.SizeOf(typeof(NativeMethods.SHSTOCKICONINFO));
 
                 Marshal.ThrowExceptionForHR(NativeMethods.SHGetStockIconInfo(77, 0x0101, ref sii));
-                try
-                {
+                try {
                     return Imaging.CreateBitmapSourceFromHIcon(
                         sii.hIcon,
                         Int32Rect.Empty,
                         BitmapSizeOptions.FromEmptyOptions());
-                }
-                finally
-                {
+                } finally {
                     NativeMethods.DestroyIcon(sii.hIcon);
                 }
-            }
-            else
-            {
+            } else {
                 return Imaging.CreateBitmapSourceFromHIcon(
                     SystemIcons.Shield.Handle,
                     Int32Rect.Empty,

@@ -17,10 +17,8 @@
 using Microsoft.PythonTools.Options;
 using Microsoft.VisualStudioTools;
 
-namespace Microsoft.PythonTools.Project
-{
-    public partial class PythonGeneralPropertyPageControl : UserControl
-    {
+namespace Microsoft.PythonTools.Project {
+    public partial class PythonGeneralPropertyPageControl : UserControl {
         static readonly IPythonInterpreterFactory Separator =
             new InterpreterPlaceholder("", Strings.PythonGeneralPropertyPageControl_OtherInterpretersSeparator);
         static readonly IPythonInterpreterFactory GlobalDefault =
@@ -29,101 +27,78 @@ namespace Microsoft.PythonTools.Project
         private IInterpreterRegistryService _service;
         private readonly PythonGeneralPropertyPage _propPage;
 
-        internal PythonGeneralPropertyPageControl(PythonGeneralPropertyPage newPythonGeneralPropertyPage)
-        {
+        internal PythonGeneralPropertyPageControl(PythonGeneralPropertyPage newPythonGeneralPropertyPage) {
             InitializeComponent();
 
             _propPage = newPythonGeneralPropertyPage;
         }
 
-        internal void LoadSettings()
-        {
+        internal void LoadSettings() {
             _service = _propPage.Project.Site.GetComponentModel().GetService<IInterpreterRegistryService>();
 
             StartupFile = _propPage.Project.GetProjectProperty(CommonConstants.StartupFile, false);
             WorkingDirectory = _propPage.Project.GetProjectProperty(CommonConstants.WorkingDirectory, false);
-            if (string.IsNullOrEmpty(WorkingDirectory))
-            {
+            if (string.IsNullOrEmpty(WorkingDirectory)) {
                 WorkingDirectory = ".";
             }
             IsWindowsApplication = Convert.ToBoolean(_propPage.Project.GetProjectProperty(CommonConstants.IsWindowsApplication, false));
             OnInterpretersChanged();
 
-            if (_propPage.PythonProject.IsActiveInterpreterGlobalDefault)
-            {
+            if (_propPage.PythonProject.IsActiveInterpreterGlobalDefault) {
                 // ActiveInterpreter will never be null, so we need to check
                 // the property to find out if it's following the global
                 // default.
                 SetDefaultInterpreter(null);
-            }
-            else
-            {
+            } else {
                 SetDefaultInterpreter(_propPage.PythonProject.ActiveInterpreter);
             }
 
         }
 
-        private void InitializeInterpreters()
-        {
+        private void InitializeInterpreters() {
             _defaultInterpreter.BeginUpdate();
 
-            try
-            {
+            try {
                 var selection = _defaultInterpreter.SelectedItem;
                 _defaultInterpreter.Items.Clear();
                 var available = _propPage.PythonProject.InterpreterFactories.ToArray();
                 var globalInterpreters = _service.Interpreters.Where(f => f.IsUIVisible() && f.CanBeDefault()).ToList();
-                if (available != null && available.Length > 0)
-                {
-                    foreach (var interpreter in available)
-                    {
+                if (available != null && available.Length > 0) {
+                    foreach (var interpreter in available) {
                         _defaultInterpreter.Items.Add(interpreter);
                         globalInterpreters.Remove(interpreter);
                     }
 
-                    if (globalInterpreters.Any())
-                    {
+                    if (globalInterpreters.Any()) {
                         _defaultInterpreter.Items.Add(Separator);
-                        foreach (var interpreter in globalInterpreters)
-                        {
+                        foreach (var interpreter in globalInterpreters) {
                             _defaultInterpreter.Items.Add(interpreter);
                         }
                     }
-                }
-                else
-                {
+                } else {
                     _defaultInterpreter.Items.Add(GlobalDefault);
 
-                    foreach (var interpreter in globalInterpreters)
-                    {
+                    foreach (var interpreter in globalInterpreters) {
                         _defaultInterpreter.Items.Add(interpreter);
                     }
                 }
 
-                if (_propPage.PythonProject.IsActiveInterpreterGlobalDefault)
-                {
+                if (_propPage.PythonProject.IsActiveInterpreterGlobalDefault) {
                     // ActiveInterpreter will never be null, so we need to check
                     // the property to find out if it's following the global
                     // default.
                     SetDefaultInterpreter(null);
-                }
-                else if (selection != null)
-                {
+                } else if (selection != null) {
                     SetDefaultInterpreter((IPythonInterpreterFactory)selection);
-                }
-                else
-                {
+                } else {
                     SetDefaultInterpreter(_propPage.PythonProject.ActiveInterpreter);
                 }
-            }
-            finally
-            {
+            } finally {
                 _defaultInterpreter.EndUpdate();
             }
         }
 
-        internal void OnInterpretersChanged()
-        {
+        internal void OnInterpretersChanged() {
             _defaultInterpreter.SelectedIndexChanged -= Changed;
 
             InitializeInterpreters();
@@ -131,66 +106,50 @@ namespace Microsoft.PythonTools.Project
             _defaultInterpreter.SelectedIndexChanged += Changed;
         }
 
-        public string StartupFile
-        {
+        public string StartupFile {
             get { return _startupFile.Text; }
             set { _startupFile.Text = value; }
         }
 
-        public string WorkingDirectory
-        {
+        public string WorkingDirectory {
             get { return _workingDirectory.Text; }
             set { _workingDirectory.Text = value; }
         }
 
-        public bool IsWindowsApplication
-        {
+        public bool IsWindowsApplication {
             get { return _windowsApplication.Checked; }
             set { _windowsApplication.Checked = value; }
         }
 
-        public IPythonInterpreterFactory DefaultInterpreter
-        {
-            get
-            {
-                if (_defaultInterpreter.SelectedItem == GlobalDefault)
-                {
+        public IPythonInterpreterFactory DefaultInterpreter {
+            get {
+                if (_defaultInterpreter.SelectedItem == GlobalDefault) {
                     return null;
                 }
                 return _defaultInterpreter.SelectedItem as IPythonInterpreterFactory;
             }
         }
 
-        public void SetDefaultInterpreter(IPythonInterpreterFactory interpreter)
-        {
-            if (interpreter == null)
-            {
+        public void SetDefaultInterpreter(IPythonInterpreterFactory interpreter) {
+            if (interpreter == null) {
                 _defaultInterpreter.SelectedIndex = 0;
-            }
-            else
-            {
-                try
-                {
+            } else {
+                try {
                     _defaultInterpreter.SelectedItem = interpreter;
-                }
-                catch (IndexOutOfRangeException)
-                {
+                } catch (IndexOutOfRangeException) {
                     _defaultInterpreter.SelectedIndex = 0;
                 }
             }
         }
 
-        private void Changed(object sender, EventArgs e)
-        {
-            if (_defaultInterpreter.SelectedItem == Separator)
-            {
+        private void Changed(object sender, EventArgs e) {
+            if (_defaultInterpreter.SelectedItem == Separator) {
                 _defaultInterpreter.SelectedItem = _propPage.PythonProject.ActiveInterpreter;
             }
             _propPage.IsDirty = true;
         }
 
-        private void Interpreter_Format(object sender, ListControlConvertEventArgs e)
-        {
+        private void Interpreter_Format(object sender, ListControlConvertEventArgs e) {
             var factory = e.ListItem as IPythonInterpreterFactory;
 
             e.Value = factory?.Configuration?.Description ?? e.ListItem?.ToString() ?? "-";

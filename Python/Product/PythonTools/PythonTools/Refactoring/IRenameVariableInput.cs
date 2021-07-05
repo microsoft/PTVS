@@ -14,14 +14,12 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Refactoring
-{
+namespace Microsoft.PythonTools.Refactoring {
     /// <summary>
     /// Provides inputs/UI to the extract method refactoring.  Enables driving of the refactoring programmatically
     /// or via UI.
     /// </summary>
-    interface IRenameVariableInput
-    {
+    interface IRenameVariableInput {
         RenameVariableRequest GetRenameInfo(string originalName, PythonLanguageVersion languageVersion);
 
         void CannotRename(string message);

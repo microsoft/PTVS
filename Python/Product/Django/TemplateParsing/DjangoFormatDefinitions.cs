@@ -16,17 +16,14 @@
 
 using Microsoft.PythonTools.Django.Intellisense;
 
-namespace Microsoft.PythonTools.Django.TemplateParsing
-{
+namespace Microsoft.PythonTools.Django.TemplateParsing {
     [Export(typeof(EditorFormatDefinition))]
     [ClassificationType(ClassificationTypeNames = DjangoPredefinedClassificationTypeNames.TemplateTag)]
     [Name(DjangoPredefinedClassificationTypeNames.TemplateTag)]
     [UserVisible(true)]
     [Order(After = LanguagePriority.NaturalLanguage, Before = LanguagePriority.FormalLanguage)]
-    internal sealed class OperatorFormat : ClassificationFormatDefinition
-    {
-        public OperatorFormat()
-        {
+    internal sealed class OperatorFormat : ClassificationFormatDefinition {
+        public OperatorFormat() {
             DisplayName = Resources.DjangoTemplateTag;
             ForegroundColor = Color.FromRgb(0x00, 0x80, 0x80);
         }

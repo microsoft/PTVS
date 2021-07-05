@@ -19,16 +19,14 @@ using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 using Task = System.Threading.Tasks.Task;
 
-namespace Microsoft.PythonTools.Project.Web
-{
+namespace Microsoft.PythonTools.Project.Web {
     /// <summary>
     /// Web launcher.  This wraps the default launcher and provides it with a
     /// different IPythonProject which launches manage.py with the appropriate
     /// options.  Upon a successful launch we will then automatically load the
     /// appropriate page into the users web browser.
     /// </summary>
-    class PythonWebLauncher : IProjectLauncher
-    {
+    class PythonWebLauncher : IProjectLauncher {
         public const string RunWebServerCommand = "PythonRunWebServerCommand";
         public const string DebugWebServerCommand = "PythonDebugWebServerCommand";
 
@@ -51,8 +49,7 @@ namespace Microsoft.PythonTools.Project.Web
             LaunchConfiguration runConfig,
             LaunchConfiguration debugConfig,
             LaunchConfiguration defaultConfig
-        )
-        {
+        ) {
             _serviceProvider = serviceProvider;
             _pyService = _serviceProvider.GetPythonToolsService();
             _runConfig = runConfig;
@@ -62,17 +59,14 @@ namespace Microsoft.PythonTools.Project.Web
 
         #region IPythonLauncher Members
 
-        private static bool IsDebugging(IServiceProvider provider, IVsDebugger debugger)
-        {
-            return provider.GetUIThread().Invoke(() =>
-            {
+        private static bool IsDebugging(IServiceProvider provider, IVsDebugger debugger) {
+            return provider.GetUIThread().Invoke(() => {
                 var mode = new[] { DBGMODE.DBGMODE_Design };
                 return ErrorHandler.Succeeded(debugger.GetMode(mode)) && mode[0] != DBGMODE.DBGMODE_Design;
             });
         }
 
-        public int LaunchProject(bool debug)
-        {
+        public int LaunchProject(bool debug) {
             var config = debug ? _debugConfig : _runConfig;
 
             DebugLaunchHelper.RequireStartupFile(config);
@@ -82,45 +76,34 @@ namespace Microsoft.PythonTools.Project.Web
             GetFullUrl(_serviceProvider, config, out url, out port);
 
             var env = new Dictionary<string, string> { { "SERVER_PORT", port.ToString() } };
-            if (url != null)
-            {
+            if (url != null) {
                 env["SERVER_HOST"] = url.Host;
             }
 
             config.Environment = PathUtils.MergeEnvironments(env, config.Environment);
 
-            try
-            {
-                _serviceProvider.GetPythonToolsService().Logger?.LogEvent(Logging.PythonLogEvent.Launch, new Logging.LaunchInfo
-                {
+            try {
+                _serviceProvider.GetPythonToolsService().Logger?.LogEvent(Logging.PythonLogEvent.Launch, new Logging.LaunchInfo {
                     IsDebug = debug,
                     IsWeb = true,
                     Version = config.Interpreter?.Version.ToString() ?? ""
                 });
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
             }
 
-            if (debug)
-            {
-                if (url != null)
-                {
+            if (debug) {
+                if (url != null) {
                     config.LaunchOptions[PythonConstants.WebBrowserUrlSetting] = url.AbsoluteUri;
                 }
-                using (var dsi = DebugLaunchHelper.CreateDebugTargetInfo(_serviceProvider, config))
-                {
+                using (var dsi = DebugLaunchHelper.CreateDebugTargetInfo(_serviceProvider, config)) {
                     dsi.Launch();
                 }
-            }
-            else
-            {
+            } else {
                 var psi = DebugLaunchHelper.CreateProcessStartInfo(_serviceProvider, config);
 
                 var process = Process.Start(psi);
-                if (url != null && process != null)
-                {
+                if (url != null && process != null) {
                     StartBrowser(url.AbsoluteUri, () => process.HasExited)
                         .ContinueWith(t => { process.Close(); })
                         .HandleAllExceptions(_serviceProvider, GetType())
@@ -131,29 +114,23 @@ namespace Microsoft.PythonTools.Project.Web
             return VSConstants.S_OK;
         }
 
-        public int LaunchFile(string file, bool debug)
-        {
+        public int LaunchFile(string file, bool debug) {
             return new DefaultPythonLauncher(_serviceProvider, _defaultConfig).LaunchFile(file, debug);
         }
 
 
-        private Task StartBrowser(string url, Func<bool> shortCircuitPredicate)
-        {
+        private Task StartBrowser(string url, Func<bool> shortCircuitPredicate) {
             Uri uri;
-            if (!string.IsNullOrWhiteSpace(url) && Uri.TryCreate(url, UriKind.RelativeOrAbsolute, out uri))
-            {
+            if (!string.IsNullOrWhiteSpace(url) && Uri.TryCreate(url, UriKind.RelativeOrAbsolute, out uri)) {
                 var tcs = new TaskCompletionSource<object>();
 
                 OnPortOpenedHandler.CreateHandler(
                     uri.Port,
                     shortCircuitPredicate: shortCircuitPredicate,
-                    action: () =>
-                    {
-                        try
-                        {
+                    action: () => {
+                        try {
                             var web = _serviceProvider.GetService(typeof(SVsWebBrowsingService)) as IVsWebBrowsingService;
-                            if (web == null)
-                            {
+                            if (web == null) {
                                 CommonPackage.OpenWebBrowser(_serviceProvider, url);
                                 return;
                             }
@@ -165,13 +142,9 @@ namespace Microsoft.PythonTools.Project.Web
                                     url
                                 )
                             );
-                        }
-                        catch (Exception ex) when (!ex.IsCriticalException())
-                        {
+                        } catch (Exception ex) when (!ex.IsCriticalException()) {
                             tcs.SetException(ex);
-                        }
-                        finally
-                        {
+                        } finally {
                             tcs.TrySetResult(null);
                         }
                     }
@@ -186,58 +159,43 @@ namespace Microsoft.PythonTools.Project.Web
 
         #endregion
 
-        internal static void GetFullUrl(IServiceProvider provider, LaunchConfiguration config, out Uri uri, out int port)
-        {
+        internal static void GetFullUrl(IServiceProvider provider, LaunchConfiguration config, out Uri uri, out int port) {
             int p;
-            if (int.TryParse(config.GetLaunchOption(PythonConstants.WebBrowserPortSetting) ?? "", out p))
-            {
+            if (int.TryParse(config.GetLaunchOption(PythonConstants.WebBrowserPortSetting) ?? "", out p)) {
                 port = p;
-            }
-            else
-            {
+            } else {
                 SocketUtils.GetRandomPortListener(IPAddress.Loopback, out port).Stop();
                 p = -1;
             }
 
             var host = config.GetLaunchOption(PythonConstants.WebBrowserUrlSetting);
-            if (string.IsNullOrEmpty(host))
-            {
+            if (string.IsNullOrEmpty(host)) {
                 uri = null;
                 return;
             }
 
-            try
-            {
+            try {
                 UriBuilder builder;
-                if (Uri.TryCreate(host, UriKind.Absolute, out uri))
-                {
+                if (Uri.TryCreate(host, UriKind.Absolute, out uri)) {
                     builder = new UriBuilder(uri);
-                }
-                else
-                {
+                } else {
                     builder = new UriBuilder();
                     builder.Scheme = Uri.UriSchemeHttp;
                     builder.Host = "localhost";
                     builder.Path = host;
                 }
 
-                if (p >= 0)
-                {
+                if (p >= 0) {
                     builder.Port = p;
-                }
-                else if (builder.Port < 0 || (builder.Uri.IsDefaultPort && !host.Contains(":{0}".FormatInvariant(builder.Port))))
-                {
+                } else if (builder.Port < 0 || (builder.Uri.IsDefaultPort && !host.Contains(":{0}".FormatInvariant(builder.Port)))) {
                     SocketUtils.GetRandomPortListener(IPAddress.Loopback, out port).Stop();
                     builder.Port = port;
                 }
 
                 uri = builder.Uri;
                 port = uri.Port;
-            }
-            catch (UriFormatException)
-            {
-                if (provider == null)
-                {
+            } catch (UriFormatException) {
+                if (provider == null) {
                     throw;
                 }
                 var output = OutputWindowRedirector.GetGeneral(provider);

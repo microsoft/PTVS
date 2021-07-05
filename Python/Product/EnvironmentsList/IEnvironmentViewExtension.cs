@@ -14,10 +14,8 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.EnvironmentsList
-{
-    public interface IEnvironmentViewExtension
-    {
+namespace Microsoft.PythonTools.EnvironmentsList {
+    public interface IEnvironmentViewExtension {
         int SortPriority { get; }
 
         string LocalizedDisplayName { get; }

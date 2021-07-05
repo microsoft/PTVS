@@ -14,43 +14,32 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Environments
-{
-    public partial class AddExistingEnvironmentControl : UserControl
-    {
+namespace Microsoft.PythonTools.Environments {
+    public partial class AddExistingEnvironmentControl : UserControl {
         public static readonly ICommand UnselectInterpreter = new RoutedCommand();
 
-        public AddExistingEnvironmentControl()
-        {
+        public AddExistingEnvironmentControl() {
             InitializeComponent();
         }
 
-        private void Browse_CanExecute(object sender, CanExecuteRoutedEventArgs e)
-        {
+        private void Browse_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
             Microsoft.VisualStudioTools.Wpf.Commands.CanExecute(null, sender, e);
         }
 
-        private void Browse_Executed(object sender, ExecutedRoutedEventArgs e)
-        {
+        private void Browse_Executed(object sender, ExecutedRoutedEventArgs e) {
             Microsoft.VisualStudioTools.Wpf.Commands.Executed(null, sender, e);
         }
     }
 
-    class AddExistingEnvironmentTemplateSelector : DataTemplateSelector
-    {
-        public override DataTemplate SelectTemplate(object item, DependencyObject container)
-        {
+    class AddExistingEnvironmentTemplateSelector : DataTemplateSelector {
+        public override DataTemplate SelectTemplate(object item, DependencyObject container) {
             var element = container as FrameworkElement;
-            if (item is InterpreterView iv)
-            {
+            if (item is InterpreterView iv) {
                 var parent = GetAncestorOfType(container, typeof(ComboBox), typeof(ComboBoxItem));
                 string templateName;
-                if (parent is ComboBoxItem)
-                {
+                if (parent is ComboBoxItem) {
                     templateName = "InterpreterNameAndPrefixPathItemTemplate";
-                }
-                else
-                {
+                } else {
                     templateName = "InterpreterSelectedItemTemplate";
                 }
                 return element.FindResource(templateName) as DataTemplate;
@@ -58,13 +47,10 @@ namespace Microsoft.PythonTools.Environments
             return base.SelectTemplate(item, container);
         }
 
-        private static DependencyObject GetAncestorOfType(DependencyObject obj, params Type[] desiredTypes)
-        {
-            while (obj != null)
-            {
+        private static DependencyObject GetAncestorOfType(DependencyObject obj, params Type[] desiredTypes) {
+            while (obj != null) {
                 obj = VisualTreeHelper.GetParent(obj);
-                if (obj != null && desiredTypes.Any(t => t.IsAssignableFrom(obj.GetType())))
-                {
+                if (obj != null && desiredTypes.Any(t => t.IsAssignableFrom(obj.GetType()))) {
                     return obj;
                 }
             }

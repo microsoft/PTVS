@@ -16,10 +16,8 @@
 
 using Microsoft.PythonTools.Django.TemplateParsing.DjangoBlocks;
 
-namespace Microsoft.PythonTools.Django.TemplateParsing
-{
-    class DjangoBlock
-    {
+namespace Microsoft.PythonTools.Django.TemplateParsing {
+    class DjangoBlock {
         public readonly BlockParseInfo ParseInfo;
 
         private static readonly Dictionary<string, Func<BlockParseInfo, DjangoBlock>> _parsers = MakeBlockTable();
@@ -28,8 +26,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing
         /// <summary>
         /// Creates a new DjangoBlock capturing the start index of the block command (for, debug, etc...).
         /// </summary>
-        public DjangoBlock(BlockParseInfo parseInfo)
-        {
+        public DjangoBlock(BlockParseInfo parseInfo) {
             ParseInfo = parseInfo;
         }
 
@@ -37,23 +34,18 @@ namespace Microsoft.PythonTools.Django.TemplateParsing
         /// Parses the text and returns a DjangoBlock.  Returns null if the block is empty
         /// or consists entirely of whitespace.
         /// </summary>
-        public static DjangoBlock Parse(string text, bool trim = false)
-        {
+        public static DjangoBlock Parse(string text, bool trim = false) {
             int start = 0;
-            if (text.StartsWithOrdinal("{%"))
-            {
+            if (text.StartsWithOrdinal("{%")) {
                 text = DjangoVariable.GetTrimmedFilterText(text, ref start);
-                if (text == null)
-                {
+                if (text == null) {
                     return null;
                 }
             }
 
             int firstChar = 0;
-            for (int i = 0; i < text.Length; i++)
-            {
-                if (text[i] != ' ')
-                {
+            for (int i = 0; i < text.Length; i++) {
+                if (text[i] != ' ') {
                     firstChar = i;
                     break;
                 }
@@ -62,20 +54,16 @@ namespace Microsoft.PythonTools.Django.TemplateParsing
             int length = 0;
             for (int i = firstChar; i < text.Length && text[i] != ' '; i++, length++) ;
 
-            if (length > 0)
-            {
+            if (length > 0) {
                 string blockCmd = text.Substring(firstChar, length);
-                if (Char.IsLetterOrDigit(blockCmd[0]))
-                {
+                if (Char.IsLetterOrDigit(blockCmd[0])) {
                     string args = text.Substring(firstChar + length, text.Length - (firstChar + length));
-                    if (trim)
-                    {
+                    if (trim) {
                         args = args.TrimEnd();
                     }
 
                     Func<BlockParseInfo, DjangoBlock> parser;
-                    if (!_parsers.TryGetValue(blockCmd, out parser))
-                    {
+                    if (!_parsers.TryGetValue(blockCmd, out parser)) {
                         parser = DjangoUnknownBlock.Parse;
                     }
 
@@ -86,31 +74,24 @@ namespace Microsoft.PythonTools.Django.TemplateParsing
             return null;
         }
 
-        protected static DjangoVariable[] ParseVariables(string[] words, int wordStart, int maxVars = Int32.MaxValue)
-        {
+        protected static DjangoVariable[] ParseVariables(string[] words, int wordStart, int maxVars = Int32.MaxValue) {
             List<DjangoVariable> variables = new List<DjangoVariable>();
-            foreach (var word in words)
-            {
+            foreach (var word in words) {
                 bool hasNewline = false;
-                if (word.Contains('\r') || word.Contains('\n'))
-                {
+                if (word.Contains('\r') || word.Contains('\n')) {
                     hasNewline = true;
-                    if (word.Trim().Length == 0)
-                    {
+                    if (word.Trim().Length == 0) {
                         break;
                     }
                 }
-                if (!String.IsNullOrEmpty(word))
-                {
+                if (!String.IsNullOrEmpty(word)) {
                     variables.Add(DjangoVariable.Parse(word, wordStart));
-                    if (variables.Count == maxVars)
-                    {
+                    if (variables.Count == maxVars) {
                         break;
                     }
                 }
 
-                if (hasNewline)
-                {
+                if (hasNewline) {
                     break;
                 }
 
@@ -119,26 +100,20 @@ namespace Microsoft.PythonTools.Django.TemplateParsing
             return variables.ToArray();
         }
 
-        protected static IEnumerable<CompletionInfo> GetCompletions(IDjangoCompletionContext context, int position, DjangoVariable[] variables, int max = Int32.MaxValue)
-        {
-            for (int i = 0; i < variables.Length; i++)
-            {
+        protected static IEnumerable<CompletionInfo> GetCompletions(IDjangoCompletionContext context, int position, DjangoVariable[] variables, int max = Int32.MaxValue) {
+            for (int i = 0; i < variables.Length; i++) {
                 if (position >= variables[i].ExpressionStart &&
-                    (i == variables.Length - 1 || position < variables[i + 1].ExpressionStart))
-                {
+                    (i == variables.Length - 1 || position < variables[i + 1].ExpressionStart)) {
                     var res = variables[i].GetCompletions(context, position);
-                    if (res.Count() != 0)
-                    {
+                    if (res.Count() != 0) {
                         return res;
                     }
                 }
             }
 
-            if (variables.Length < max)
-            {
+            if (variables.Length < max) {
                 var vars = context.Variables;
-                if (vars != null)
-                {
+                if (vars != null) {
                     return CompletionInfo.ToCompletionInfo(vars, StandardGlyphGroup.GlyphGroupField);
                 }
             }
@@ -146,26 +121,22 @@ namespace Microsoft.PythonTools.Django.TemplateParsing
             return new CompletionInfo[0];
         }
 
-        public virtual IEnumerable<BlockClassification> GetSpans()
-        {
+        public virtual IEnumerable<BlockClassification> GetSpans() {
             yield return new BlockClassification(
                 new Span(ParseInfo.Start, ParseInfo.Command.Length),
                 Classification.Keyword
             );
         }
 
-        public virtual IEnumerable<CompletionInfo> GetCompletions(IDjangoCompletionContext context, int position)
-        {
+        public virtual IEnumerable<CompletionInfo> GetCompletions(IDjangoCompletionContext context, int position) {
             return CompletionInfo.ToCompletionInfo(context.Variables, StandardGlyphGroup.GlyphGroupField);
         }
 
-        public virtual IEnumerable<string> GetVariables()
-        {
+        public virtual IEnumerable<string> GetVariables() {
             return EmptyStrings;
         }
 
-        private static Dictionary<string, Func<BlockParseInfo, DjangoBlock>> MakeBlockTable()
-        {
+        private static Dictionary<string, Func<BlockParseInfo, DjangoBlock>> MakeBlockTable() {
             return new Dictionary<string, Func<BlockParseInfo, DjangoBlock>>() {
                 {"autoescape", DjangoAutoEscapeBlock.Parse},
                 {"comment", DjangoArgumentlessBlock.Parse},
@@ -192,20 +163,17 @@ namespace Microsoft.PythonTools.Django.TemplateParsing
         }
     }
 
-    struct BlockClassification
-    {
+    struct BlockClassification {
         public readonly Span Span;
         public readonly Classification Classification;
 
-        public BlockClassification(Span span, Classification classification)
-        {
+        public BlockClassification(Span span, Classification classification) {
             Span = span;
             Classification = classification;
         }
     }
 
-    enum Classification
-    {
+    enum Classification {
         None,
         Keyword,
         ExcludedCode,

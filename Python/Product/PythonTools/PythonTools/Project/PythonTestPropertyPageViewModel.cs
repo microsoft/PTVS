@@ -14,18 +14,15 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Project
-{
-    class PythonTestPropertyPageViewModel : INotifyPropertyChanged
-    {
+namespace Microsoft.PythonTools.Project {
+    class PythonTestPropertyPageViewModel : INotifyPropertyChanged {
         private string _selectedFramework;
         private string _unitTestRootDirectory;
         private string _unittestPattern;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public PythonTestPropertyPageViewModel()
-        {
+        public PythonTestPropertyPageViewModel() {
             Frameworks = new[] {
                 TestFrameworkType.None.ToString().ToLowerInvariant(),
                 TestFrameworkType.UnitTest.ToString().ToLowerInvariant(),
@@ -39,42 +36,33 @@ namespace Microsoft.PythonTools.Project
 
         public string[] Frameworks { get; }
 
-        public string SelectedFramework
-        {
+        public string SelectedFramework {
             get => _selectedFramework;
 
-            set
-            {
-                if (value != _selectedFramework)
-                {
+            set {
+                if (value != _selectedFramework) {
                     _selectedFramework = value;
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SelectedFramework)));
                 }
             }
         }
 
-        public string UnitTestRootDirectory
-        {
+        public string UnitTestRootDirectory {
             get => _unitTestRootDirectory;
 
-            set
-            {
-                if (value != _unitTestRootDirectory)
-                {
+            set {
+                if (value != _unitTestRootDirectory) {
                     _unitTestRootDirectory = value;
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(UnitTestRootDirectory)));
                 }
             }
         }
 
-        public string UnitTestPattern
-        {
+        public string UnitTestPattern {
             get => _unittestPattern;
 
-            set
-            {
-                if (value != _unittestPattern)
-                {
+            set {
+                if (value != _unittestPattern) {
                     _unittestPattern = value;
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(UnitTestPattern)));
                 }

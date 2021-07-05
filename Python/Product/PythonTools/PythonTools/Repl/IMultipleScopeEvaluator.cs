@@ -14,10 +14,8 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Repl
-{
-    interface IMultipleScopeEvaluator
-    {
+namespace Microsoft.PythonTools.Repl {
+    interface IMultipleScopeEvaluator {
         /// <summary>
         /// Sets the current scope to the given name.
         /// </summary>
@@ -52,8 +50,7 @@ namespace Microsoft.PythonTools.Repl
         /// <summary>
         /// Returns true if multiple scope support is currently enabled, false if not.
         /// </summary>
-        bool EnableMultipleScopes
-        {
+        bool EnableMultipleScopes {
             get;
         }
     }

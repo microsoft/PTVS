@@ -21,7 +21,6 @@ using System.Linq;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.Workspace;
 using Microsoft.VisualStudio.Workspace.Debug;
-using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Workspace {
     [ExportLaunchDebugTarget(

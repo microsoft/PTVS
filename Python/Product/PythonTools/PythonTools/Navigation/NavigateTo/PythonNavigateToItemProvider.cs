@@ -18,32 +18,27 @@ using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Intellisense;
 using AP = Microsoft.PythonTools.Intellisense.AnalysisProtocol;
 
-namespace Microsoft.PythonTools.Navigation.NavigateTo
-{
-    internal class PythonNavigateToItemProvider : INavigateToItemProvider
-    {
+namespace Microsoft.PythonTools.Navigation.NavigateTo {
+    internal class PythonNavigateToItemProvider : INavigateToItemProvider {
         private readonly PythonEditorServices _services;
         private readonly AnalyzerInfo[] _analyzers;
         private CancellationTokenSource _searchCts;
 
         // Used to propagate information to PythonNavigateToItemDisplay inside NavigateToItem.Tag.
-        internal class ItemTag
-        {
+        internal class ItemTag {
             public PythonEditorServices Services { get; set; }
             public AP.Completion Completion { get; set; }
             public string ProjectName { get; set; }
         }
 
-        private class AnalyzerInfo
-        {
+        private class AnalyzerInfo {
             public string ProjectName;
             public VsProjectAnalyzer Analyzer;
             public Task<AP.CompletionsResponse> Task;
             public AP.CompletionsResponse Result;
         }
 
-        public PythonNavigateToItemProvider(PythonEditorServices services)
-        {
+        public PythonNavigateToItemProvider(PythonEditorServices services) {
             _services = services;
             var solution = (IVsSolution)_services.Site.GetService(typeof(SVsSolution));
             _analyzers = _services.Python.GetActiveAnalyzers()
@@ -52,56 +47,40 @@ namespace Microsoft.PythonTools.Navigation.NavigateTo
                 .ToArray();
         }
 
-        public async void StartSearch(INavigateToCallback callback, string searchValue)
-        {
+        public async void StartSearch(INavigateToCallback callback, string searchValue) {
             CancellationTokenSource searchCts = null;
 
-            try
-            {
+            try {
                 searchCts = new CancellationTokenSource();
                 var oldCts = Interlocked.Exchange(ref _searchCts, searchCts);
-                try
-                {
+                try {
                     oldCts?.Cancel();
                     oldCts?.Dispose();
-                }
-                catch (ObjectDisposedException)
-                {
+                } catch (ObjectDisposedException) {
                 }
 
                 CancellationToken token;
-                try
-                {
+                try {
                     token = searchCts.Token;
-                }
-                catch (ObjectDisposedException)
-                {
+                } catch (ObjectDisposedException) {
                     // highly unlikely race, but easy enough to protect against
                     return;
                 }
 
                 await FindMatchesAsync(callback, searchValue, token);
-            }
-            catch (OperationCanceledException)
-            {
-            }
-            catch (Exception ex) when (!ex.IsCriticalException())
-            {
+            } catch (OperationCanceledException) {
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
                 ex.ReportUnhandledException(_services.Site, GetType());
-            }
-            finally
-            {
+            } finally {
                 callback.Done();
-                if (searchCts != null)
-                {
+                if (searchCts != null) {
                     Interlocked.CompareExchange(ref _searchCts, null, searchCts);
                     searchCts.Dispose();
                 }
             }
         }
 
-        private async Task FindMatchesAsync(INavigateToCallback callback, string searchValue, CancellationToken token)
-        {
+        private async Task FindMatchesAsync(INavigateToCallback callback, string searchValue, CancellationToken token) {
 #if USE_15_5
             foreach (var a in _analyzers) {
                 a.Task = null;
@@ -116,28 +95,23 @@ namespace Microsoft.PythonTools.Navigation.NavigateTo
             );
 
             var opts = GetMemberOptions.NoMemberRecursion | GetMemberOptions.IntersectMultipleResults | GetMemberOptions.DetailedInformation;
-            foreach (var a in _analyzers)
-            {
+            foreach (var a in _analyzers) {
                 a.Task = a.Analyzer.SendRequestAsync(new AP.GetAllMembersRequest { options = opts });
             }
-            foreach (var a in _analyzers)
-            {
+            foreach (var a in _analyzers) {
                 a.Result = await a.Task;
             }
             token.ThrowIfCancellationRequested();
 
             int progress = 0;
             int total = _analyzers.Sum(r => r.Result?.completions?.Length ?? 0);
-            foreach (var a in _analyzers)
-            {
+            foreach (var a in _analyzers) {
                 token.ThrowIfCancellationRequested();
-                if ((a.Result?.completions?.Length ?? 0) == 0)
-                {
+                if ((a.Result?.completions?.Length ?? 0) == 0) {
                     continue;
                 }
 
-                foreach (var res in FilterResults(a.ProjectName, a.Result.completions, matcher))
-                {
+                foreach (var res in FilterResults(a.ProjectName, a.Result.completions, matcher)) {
                     callback.AddItem(res);
                 }
 
@@ -150,18 +124,14 @@ namespace Microsoft.PythonTools.Navigation.NavigateTo
             string projectName,
             IEnumerable<AP.Completion> completions,
             IPatternMatcher matcher
-        )
-        {
-            foreach (var c in completions)
-            {
+        ) {
+            foreach (var c in completions) {
                 var match = matcher.TryMatch(c.name);
-                if (match == null)
-                {
+                if (match == null) {
                     continue;
                 }
 
-                var itemTag = new ItemTag
-                {
+                var itemTag = new ItemTag {
                     Services = _services,
                     Completion = c,
                     ProjectName = projectName
@@ -180,27 +150,19 @@ namespace Microsoft.PythonTools.Navigation.NavigateTo
         }
 #endif
 
-        public void StopSearch()
-        {
-            try
-            {
+        public void StopSearch() {
+            try {
                 Volatile.Read(ref _searchCts)?.Cancel();
-            }
-            catch (ObjectDisposedException)
-            {
+            } catch (ObjectDisposedException) {
             }
         }
 
-        public void Dispose()
-        {
+        public void Dispose() {
             var cts = Interlocked.Exchange(ref _searchCts, null);
-            try
-            {
+            try {
                 cts?.Cancel();
                 cts?.Dispose();
-            }
-            catch (ObjectDisposedException)
-            {
+            } catch (ObjectDisposedException) {
             }
         }
     }

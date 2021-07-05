@@ -18,7 +18,6 @@ using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Parsing;
 
 namespace TestUtilities.Python {

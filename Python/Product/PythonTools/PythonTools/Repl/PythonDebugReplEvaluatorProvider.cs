@@ -14,38 +14,31 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Repl
-{
+namespace Microsoft.PythonTools.Repl {
     [Export(typeof(IInteractiveEvaluatorProvider))]
-    class PythonDebugReplEvaluatorProvider : IInteractiveEvaluatorProvider
-    {
+    class PythonDebugReplEvaluatorProvider : IInteractiveEvaluatorProvider {
         private const string _debugReplGuid = "BA417560-5A78-46F1-B065-638D27E1CDD0";
         private readonly IServiceProvider _serviceProvider;
 
         public event EventHandler EvaluatorsChanged { add { } remove { } }
 
         [ImportingConstructor]
-        public PythonDebugReplEvaluatorProvider([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider)
-        {
+        public PythonDebugReplEvaluatorProvider([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider) {
             _serviceProvider = serviceProvider;
         }
 
-        public IInteractiveEvaluator GetEvaluator(string replId)
-        {
-            if (replId.StartsWithOrdinal(_debugReplGuid, ignoreCase: true))
-            {
+        public IInteractiveEvaluator GetEvaluator(string replId) {
+            if (replId.StartsWithOrdinal(_debugReplGuid, ignoreCase: true)) {
                 return new PythonDebugReplEvaluator(_serviceProvider);
             }
             return null;
         }
 
-        public IEnumerable<KeyValuePair<string, string>> GetEvaluators()
-        {
+        public IEnumerable<KeyValuePair<string, string>> GetEvaluators() {
             yield return new KeyValuePair<string, string>(Strings.DebugReplDisplayName, GetDebugReplId());
         }
 
-        internal static string GetDebugReplId()
-        {
+        internal static string GetDebugReplId() {
             return _debugReplGuid;
         }
     }

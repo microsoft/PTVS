@@ -14,35 +14,25 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Profiling
-{
+namespace Microsoft.PythonTools.Profiling {
     [ComVisible(true)]
-    public sealed class AutomationProfiling : IPythonProfiling
-    {
+    public sealed class AutomationProfiling : IPythonProfiling {
         private readonly SessionsNode _sessions;
 
-        internal AutomationProfiling(SessionsNode sessions)
-        {
+        internal AutomationProfiling(SessionsNode sessions) {
             _sessions = sessions;
         }
 
-        public IPythonProfileSession GetSession(object item)
-        {
-            if (item is int)
-            {
+        public IPythonProfileSession GetSession(object item) {
+            if (item is int) {
                 int id = (int)item - 1;
-                if (id >= 0 && id < _sessions.Sessions.Count)
-                {
+                if (id >= 0 && id < _sessions.Sessions.Count) {
                     return _sessions.Sessions[id].GetAutomationObject();
                 }
-            }
-            else if (item is string)
-            {
+            } else if (item is string) {
                 string name = (string)item;
-                foreach (var session in _sessions.Sessions)
-                {
-                    if (session.Name == name)
-                    {
+                foreach (var session in _sessions.Sessions) {
+                    if (session.Name == name) {
                         return session.GetAutomationObject();
                     }
                 }
@@ -50,8 +40,7 @@ namespace Microsoft.PythonTools.Profiling
             return null;
         }
 
-        public IPythonProfileSession LaunchProject(EnvDTE.Project projectToProfile, bool openReport)
-        {
+        public IPythonProfileSession LaunchProject(EnvDTE.Project projectToProfile, bool openReport) {
             var target = new ProfilingTarget();
             target.ProjectTarget = new ProjectTarget();
             target.ProjectTarget.TargetProject = new Guid(projectToProfile.Properties.Item("Guid").Value as string);
@@ -60,20 +49,16 @@ namespace Microsoft.PythonTools.Profiling
             return PythonProfilingPackage.Instance.ProfileTarget(target, openReport).GetAutomationObject();
         }
 
-        public IPythonProfileSession LaunchProcess(string interpreter, string script, string workingDir, string arguments, bool openReport)
-        {
+        public IPythonProfileSession LaunchProcess(string interpreter, string script, string workingDir, string arguments, bool openReport) {
             var target = new ProfilingTarget();
             target.StandaloneTarget = new StandaloneTarget();
             target.StandaloneTarget.WorkingDirectory = workingDir;
             target.StandaloneTarget.Script = script;
             target.StandaloneTarget.Arguments = arguments;
 
-            if (File.Exists(interpreter))
-            {
+            if (File.Exists(interpreter)) {
                 target.StandaloneTarget.InterpreterPath = interpreter;
-            }
-            else
-            {
+            } else {
                 target.StandaloneTarget.PythonInterpreter = new PythonInterpreter();
                 target.StandaloneTarget.PythonInterpreter.Id = interpreter;
             }
@@ -81,12 +66,9 @@ namespace Microsoft.PythonTools.Profiling
             return PythonProfilingPackage.Instance.ProfileTarget(target, openReport).GetAutomationObject();
         }
 
-        public void RemoveSession(IPythonProfileSession session, bool deleteFromDisk)
-        {
-            for (int i = 0; i < _sessions.Sessions.Count; i++)
-            {
-                if (session == _sessions.Sessions[i].GetAutomationObject())
-                {
+        public void RemoveSession(IPythonProfileSession session, bool deleteFromDisk) {
+            for (int i = 0; i < _sessions.Sessions.Count; i++) {
+                if (session == _sessions.Sessions[i].GetAutomationObject()) {
                     _sessions.DeleteItem(
                         (uint)(deleteFromDisk ? __VSDELETEITEMOPERATION.DELITEMOP_DeleteFromStorage : __VSDELETEITEMOPERATION.DELITEMOP_RemoveFromProject),
                         (uint)_sessions.Sessions[i].ItemId
@@ -97,8 +79,7 @@ namespace Microsoft.PythonTools.Profiling
             throw new InvalidOperationException(Strings.SessionAlreadyRemoved);
         }
 
-        public bool IsProfiling
-        {
+        public bool IsProfiling {
             get { return PythonProfilingPackage.Instance.IsProfiling; }
         }
 

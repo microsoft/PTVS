@@ -17,30 +17,25 @@
 using Microsoft.PythonTools.Environments;
 using Task = System.Threading.Tasks.Task;
 
-namespace Microsoft.PythonTools.Commands
-{
-    class SwitchToEnvironmentCommand : IAsyncCommandRange
-    {
+namespace Microsoft.PythonTools.Commands {
+    class SwitchToEnvironmentCommand : IAsyncCommandRange {
         private readonly IServiceProvider _serviceProvider;
         private readonly EnvironmentSwitcherManager _envSwitchMgr;
         private IPythonInterpreterFactory[] _allFactories;
         private IPythonInterpreterFactory _currentFactory;
 
-        public SwitchToEnvironmentCommand(IServiceProvider serviceProvider)
-        {
+        public SwitchToEnvironmentCommand(IServiceProvider serviceProvider) {
             _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
             _envSwitchMgr = serviceProvider.GetPythonToolsService().EnvironmentSwitcherManager;
         }
 
         public int MaxCount => 64; // 0x4090 - 0x4050
 
-        public CommandStatus GetStatus(int index)
-        {
+        public CommandStatus GetStatus(int index) {
             _allFactories = _envSwitchMgr.AllFactories.ToArray();
             _currentFactory = _envSwitchMgr.CurrentFactory;
 
-            if (index >= _allFactories.Length)
-            {
+            if (index >= _allFactories.Length) {
                 return CommandStatus.SupportedAndInvisible;
             }
 

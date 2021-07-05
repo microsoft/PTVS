@@ -14,10 +14,8 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Options
-{
-    public sealed class AdvancedEditorOptions
-    {
+namespace Microsoft.PythonTools.Options {
+    public sealed class AdvancedEditorOptions {
         private readonly PythonToolsService _service;
 
         private const string Category = "Advanced";
@@ -35,13 +33,11 @@ namespace Microsoft.PythonTools.Options
 
         private const string _defaultCompletionChars = ""; // "{}[]().,:;+-*/%&|^~=<>#@\\" in 16.0 preview 3 and earlier
 
-        internal AdvancedEditorOptions(PythonToolsService service)
-        {
+        internal AdvancedEditorOptions(PythonToolsService service) {
             _service = service;
         }
 
-        public void Load()
-        {
+        public void Load() {
             EnterCommitsIntellisense = _service.LoadBool(EnterCommitsSetting, Category) ?? true;
             IntersectMembers = _service.LoadBool(IntersectMembersSetting, Category) ?? false;
             AddNewLineAtEndOfFullyTypedWord = _service.LoadBool(NewLineAtEndOfWordSetting, Category) ?? false;
@@ -55,8 +51,7 @@ namespace Microsoft.PythonTools.Options
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
-        public void Save()
-        {
+        public void Save() {
             _service.SaveBool(EnterCommitsSetting, Category, EnterCommitsIntellisense);
             _service.SaveBool(IntersectMembersSetting, Category, IntersectMembers);
             _service.SaveBool(NewLineAtEndOfWordSetting, Category, AddNewLineAtEndOfFullyTypedWord);
@@ -70,8 +65,7 @@ namespace Microsoft.PythonTools.Options
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
-        public void Reset()
-        {
+        public void Reset() {
             EnterCommitsIntellisense = true;
             IntersectMembers = true;
             AddNewLineAtEndOfFullyTypedWord = false;
@@ -87,98 +81,80 @@ namespace Microsoft.PythonTools.Options
 
         public event EventHandler Changed;
 
-        public string CompletionCommittedBy
-        {
+        public string CompletionCommittedBy {
             get;
             set;
         }
 
-        public bool EnterCommitsIntellisense
-        {
+        public bool EnterCommitsIntellisense {
             get;
             set;
         }
 
-        public bool AddNewLineAtEndOfFullyTypedWord
-        {
+        public bool AddNewLineAtEndOfFullyTypedWord {
             get;
             set;
         }
 
-        public bool FilterCompletions
-        {
+        public bool FilterCompletions {
             get;
             set;
         }
 
-        public bool IntersectMembers
-        {
+        public bool IntersectMembers {
             get;
             set;
         }
 
-        public bool ColorNames
-        {
+        public bool ColorNames {
             get;
             set;
         }
 
-        public bool ColorNamesWithAnalysis
-        {
+        public bool ColorNamesWithAnalysis {
             get;
             set;
         }
 
-        public bool EnterOutliningModeOnOpen
-        {
+        public bool EnterOutliningModeOnOpen {
             get;
             set;
         }
 
-        public bool PasteRemovesReplPrompts
-        {
+        public bool PasteRemovesReplPrompts {
             get;
             set;
         }
 
-        public bool AutoListMembers
-        {
-            get
-            {
+        public bool AutoListMembers {
+            get {
                 return _service.LangPrefs.AutoListMembers;
             }
-            set
-            {
+            set {
                 var prefs = _service.GetLanguagePreferences();
                 var val = value ? 1u : 0u;
-                if (prefs.fAutoListMembers != val)
-                {
+                if (prefs.fAutoListMembers != val) {
                     prefs.fAutoListMembers = val;
                     _service.SetLanguagePreferences(prefs);
                 }
             }
         }
 
-        public bool HideAdvancedMembers
-        {
-            get
-            {
+        public bool HideAdvancedMembers {
+            get {
                 return _service.LangPrefs.HideAdvancedMembers;
             }
-            set
-            {
+            set {
                 var prefs = _service.GetLanguagePreferences();
                 var val = value ? 1u : 0u;
-                if (prefs.fHideAdvancedAutoListMembers != val)
-                {
+                if (prefs.fHideAdvancedAutoListMembers != val) {
                     prefs.fHideAdvancedAutoListMembers = val;
                     _service.SetLanguagePreferences(prefs);
                 }
             }
         }
 
-        public bool AutoListIdentifiers
-        {
+        public bool AutoListIdentifiers {
             get;
             set;
         }

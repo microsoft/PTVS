@@ -14,30 +14,23 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.CookiecutterTools.ViewModel
-{
-    class TreeItemViewModel : INotifyPropertyChanged
-    {
+namespace Microsoft.CookiecutterTools.ViewModel {
+    class TreeItemViewModel : INotifyPropertyChanged {
         private bool _isSelected;
 
         /// <summary>
         /// Constructor for design view.
         /// </summary>
-        public TreeItemViewModel()
-        {
+        public TreeItemViewModel() {
         }
 
-        public bool IsSelected
-        {
-            get
-            {
+        public bool IsSelected {
+            get {
                 return _isSelected;
             }
 
-            set
-            {
-                if (value != _isSelected)
-                {
+            set {
+                if (value != _isSelected) {
                     _isSelected = value;
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsSelected)));
                 }
@@ -49,8 +42,7 @@ namespace Microsoft.CookiecutterTools.ViewModel
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        protected void OnPropertyChanged(PropertyChangedEventArgs ea)
-        {
+        protected void OnPropertyChanged(PropertyChangedEventArgs ea) {
             PropertyChanged?.Invoke(this, ea);
         }
     }

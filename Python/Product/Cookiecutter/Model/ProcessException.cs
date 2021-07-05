@@ -16,16 +16,13 @@
 
 using Microsoft.CookiecutterTools.Infrastructure;
 
-namespace Microsoft.CookiecutterTools.Model
-{
+namespace Microsoft.CookiecutterTools.Model {
     [Serializable]
-    class ProcessException : Exception
-    {
+    class ProcessException : Exception {
         public ProcessOutputResult Result { get; }
 
         public ProcessException(ProcessOutputResult result) :
-            base(Strings.ProcessExitCodeMessage.FormatUI(result.ExeFileName, result.ExitCode))
-        {
+            base(Strings.ProcessExitCodeMessage.FormatUI(result.ExeFileName, result.ExitCode)) {
             Result = result;
         }
     }

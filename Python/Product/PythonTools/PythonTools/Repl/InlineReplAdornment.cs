@@ -14,17 +14,13 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Repl
-{
+namespace Microsoft.PythonTools.Repl {
     [Export(typeof(IViewTaggerProvider))]
     [TagType(typeof(IntraTextAdornmentTag))]
     [ContentType(PredefinedInteractiveContentTypes.InteractiveContentTypeName)]
-    internal class InlineReplAdornmentProvider : IViewTaggerProvider
-    {
-        public ITagger<T> CreateTagger<T>(ITextView textView, ITextBuffer buffer) where T : ITag
-        {
-            if (buffer == null || textView == null || typeof(T) != typeof(IntraTextAdornmentTag))
-            {
+    internal class InlineReplAdornmentProvider : IViewTaggerProvider {
+        public ITagger<T> CreateTagger<T>(ITextView textView, ITextBuffer buffer) where T : ITag {
+            if (buffer == null || textView == null || typeof(T) != typeof(IntraTextAdornmentTag)) {
                 return null;
             }
 
@@ -34,11 +30,9 @@ namespace Microsoft.PythonTools.Repl
             );
         }
 
-        internal static InlineReplAdornmentManager GetManager(ITextView view)
-        {
+        internal static InlineReplAdornmentManager GetManager(ITextView view) {
             InlineReplAdornmentManager result;
-            if (!view.Properties.TryGetProperty(typeof(InlineReplAdornmentManager), out result))
-            {
+            if (!view.Properties.TryGetProperty(typeof(InlineReplAdornmentManager), out result)) {
                 return null;
             }
             return result;

@@ -17,8 +17,7 @@
 using Microsoft.PythonTools.Editor;
 using Microsoft.VisualStudioTools.Project;
 
-namespace Microsoft.PythonTools.Navigation
-{
+namespace Microsoft.PythonTools.Navigation {
     /// <summary>
     /// Minimal language service.  Implemented directly rather than using the Managed Package
     /// Framework because we don't want to provide colorization services.  Instead we use the
@@ -27,24 +26,20 @@ namespace Microsoft.PythonTools.Navigation
     /// should be switched over to using our TextViewCreationListener instead).
     /// </summary>
     [Guid(GuidList.guidPythonLanguageService)]
-    internal sealed class PythonLanguageInfo : IVsLanguageInfo, IVsLanguageDebugInfo, IVsLanguageDebugInfo2
-    {
+    internal sealed class PythonLanguageInfo : IVsLanguageInfo, IVsLanguageDebugInfo, IVsLanguageDebugInfo2 {
         private readonly IServiceProvider _serviceProvider;
 
-        public PythonLanguageInfo(IServiceProvider serviceProvider)
-        {
+        public PythonLanguageInfo(IServiceProvider serviceProvider) {
             _serviceProvider = serviceProvider;
         }
 
-        public int GetCodeWindowManager(IVsCodeWindow pCodeWin, out IVsCodeWindowManager ppCodeWinMgr)
-        {
+        public int GetCodeWindowManager(IVsCodeWindow pCodeWin, out IVsCodeWindowManager ppCodeWinMgr) {
             var ptvsService = _serviceProvider.GetPythonToolsService();
             ppCodeWinMgr = ptvsService.GetOrCreateCodeWindowManager(pCodeWin);
             return VSConstants.S_OK;
         }
 
-        public int GetFileExtensions(out string pbstrExtensions)
-        {
+        public int GetFileExtensions(out string pbstrExtensions) {
             // This is the same extension the language service was
             // registered as supporting.
             pbstrExtensions = PythonConstants.SourceFileExtensions;
@@ -52,8 +47,7 @@ namespace Microsoft.PythonTools.Navigation
         }
 
 
-        public int GetLanguageName(out string bstrName)
-        {
+        public int GetLanguageName(out string bstrName) {
             // This is the same name the language service was registered with.
             bstrName = PythonConstants.LanguageName;
             return VSConstants.S_OK;
@@ -62,45 +56,37 @@ namespace Microsoft.PythonTools.Navigation
         /// <summary>
         /// GetColorizer is not implemented because we implement colorization using the new managed APIs.
         /// </summary>
-        public int GetColorizer(IVsTextLines pBuffer, out IVsColorizer ppColorizer)
-        {
+        public int GetColorizer(IVsTextLines pBuffer, out IVsColorizer ppColorizer) {
             ppColorizer = null;
             return VSConstants.E_FAIL;
         }
 
-        public IServiceProvider ServiceProvider
-        {
-            get
-            {
+        public IServiceProvider ServiceProvider {
+            get {
                 return _serviceProvider;
             }
         }
 
         #region IVsLanguageDebugInfo Members
 
-        public int GetLanguageID(IVsTextBuffer pBuffer, int iLine, int iCol, out Guid pguidLanguageID)
-        {
+        public int GetLanguageID(IVsTextBuffer pBuffer, int iLine, int iCol, out Guid pguidLanguageID) {
             pguidLanguageID = DebuggerConstants.guidLanguagePython;
             return VSConstants.S_OK;
         }
 
-        public int GetLocationOfName(string pszName, out string pbstrMkDoc, TextSpan[] pspanLocation)
-        {
+        public int GetLocationOfName(string pszName, out string pbstrMkDoc, TextSpan[] pspanLocation) {
             pbstrMkDoc = null;
             return VSConstants.E_FAIL;
         }
 
-        public int GetNameOfLocation(IVsTextBuffer pBuffer, int iLine, int iCol, out string pbstrName, out int piLineOffset)
-        {
+        public int GetNameOfLocation(IVsTextBuffer pBuffer, int iLine, int iCol, out string pbstrName, out int piLineOffset) {
             var model = _serviceProvider.GetService(typeof(SComponentModel)) as IComponentModel;
             var service = model.GetService<IVsEditorAdaptersFactoryService>();
             var buffer = service.GetDataBuffer(pBuffer);
             var entry = buffer.TryGetAnalysisEntry();
-            if (entry != null)
-            {
+            if (entry != null) {
                 var location = entry.Analyzer.WaitForRequest(entry.Analyzer.GetNameOfLocationAsync(entry, buffer, iLine, iCol), "PythonLanguageInfo.GetNameOfLocation");
-                if (location != null)
-                {
+                if (location != null) {
                     pbstrName = location.name;
                     piLineOffset = location.lineOffset;
 
@@ -120,31 +106,25 @@ namespace Microsoft.PythonTools.Navigation
         /// MSDN docs specify that <paramref name="iLine"/> and <paramref name="iCol"/> specify the beginning of the span,
         /// but they actually specify the end of it (going <paramref name="cLines"/> lines back).
         /// </remarks>
-        public int GetProximityExpressions(IVsTextBuffer pBuffer, int iLine, int iCol, int cLines, out IVsEnumBSTR ppEnum)
-        {
+        public int GetProximityExpressions(IVsTextBuffer pBuffer, int iLine, int iCol, int cLines, out IVsEnumBSTR ppEnum) {
             var model = _serviceProvider.GetService(typeof(SComponentModel)) as IComponentModel;
             var service = model.GetService<IVsEditorAdaptersFactoryService>();
             var buffer = service.GetDataBuffer(pBuffer);
             var entry = buffer.TryGetAnalysisEntry();
-            if (entry != null)
-            {
+            if (entry != null) {
                 var names = entry.Analyzer.WaitForRequest(entry.Analyzer.GetProximityExpressionsAsync(entry, buffer, iLine, iCol, cLines), "PythonLanguageInfo.GetProximityExpressions");
                 ppEnum = new EnumBSTR(names ?? Enumerable.Empty<string>());
-            }
-            else
-            {
+            } else {
                 ppEnum = new EnumBSTR(Enumerable.Empty<string>());
             }
             return VSConstants.S_OK;
         }
 
-        public int IsMappedLocation(IVsTextBuffer pBuffer, int iLine, int iCol)
-        {
+        public int IsMappedLocation(IVsTextBuffer pBuffer, int iLine, int iCol) {
             return VSConstants.E_FAIL;
         }
 
-        public int ResolveName(string pszName, uint dwFlags, out IVsEnumDebugName ppNames)
-        {
+        public int ResolveName(string pszName, uint dwFlags, out IVsEnumDebugName ppNames) {
             /*if((((RESOLVENAMEFLAGS)dwFlags) & RESOLVENAMEFLAGS.RNF_BREAKPOINT) != 0) {
                 // TODO: This should go through the project/analysis and see if we can
                 // resolve the names...
@@ -153,15 +133,12 @@ namespace Microsoft.PythonTools.Navigation
             return VSConstants.E_FAIL;
         }
 
-        public int ValidateBreakpointLocation(IVsTextBuffer pBuffer, int iLine, int iCol, TextSpan[] pCodeSpan)
-        {
+        public int ValidateBreakpointLocation(IVsTextBuffer pBuffer, int iLine, int iCol, TextSpan[] pCodeSpan) {
             int len;
-            if (!ErrorHandler.Succeeded(pBuffer.GetLengthOfLine(iLine, out len)))
-            {
+            if (!ErrorHandler.Succeeded(pBuffer.GetLengthOfLine(iLine, out len))) {
                 len = iCol;
             }
-            if (len <= 0)
-            {
+            if (len <= 0) {
                 return VSConstants.S_FALSE;
             }
             pCodeSpan[0].iStartLine = iLine;
@@ -171,19 +148,16 @@ namespace Microsoft.PythonTools.Navigation
             return VSConstants.S_OK;
         }
 
-        public int QueryCommonLanguageBlock(IVsTextBuffer pBuffer, int iLine, int iCol, uint dwFlag, out int pfInBlock)
-        {
+        public int QueryCommonLanguageBlock(IVsTextBuffer pBuffer, int iLine, int iCol, uint dwFlag, out int pfInBlock) {
             pfInBlock = 0;
             return VSConstants.E_NOTIMPL;
         }
 
-        public int ValidateInstructionpointLocation(IVsTextBuffer pBuffer, int iLine, int iCol, TextSpan[] pCodeSpan)
-        {
+        public int ValidateInstructionpointLocation(IVsTextBuffer pBuffer, int iLine, int iCol, TextSpan[] pCodeSpan) {
             return ValidateBreakpointLocation(pBuffer, iLine, iCol, pCodeSpan);
         }
 
-        public int QueryCatchLineSpan(IVsTextBuffer pBuffer, int iLine, int iCol, out int pfIsInCatch, TextSpan[] ptsCatchLine)
-        {
+        public int QueryCatchLineSpan(IVsTextBuffer pBuffer, int iLine, int iCol, out int pfIsInCatch, TextSpan[] ptsCatchLine) {
             pfIsInCatch = 0;
             return VSConstants.E_NOTIMPL;
         }

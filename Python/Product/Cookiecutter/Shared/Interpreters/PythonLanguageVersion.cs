@@ -16,15 +16,13 @@
 
 using Microsoft.CookiecutterTools.Infrastructure;
 
-namespace Microsoft.CookiecutterTools.Interpreters
-{
+namespace Microsoft.CookiecutterTools.Interpreters {
     /// <summary>
     /// Specifies the version of the Python language to be used for parsing.
     /// 
     /// Referred to from C++ in PyDebugAttach.cpp and python.h and must be kept in sync
     /// </summary>
-    public enum PythonLanguageVersion
-    {
+    public enum PythonLanguageVersion {
         None = 0,
         V24 = 0x0204,
         V25 = 0x0205,
@@ -40,41 +38,32 @@ namespace Microsoft.CookiecutterTools.Interpreters
         V37 = 0x0307
     }
 
-    public static class PythonLanguageVersionExtensions
-    {
-        public static bool Is2x(this PythonLanguageVersion version)
-        {
+    public static class PythonLanguageVersionExtensions {
+        public static bool Is2x(this PythonLanguageVersion version) {
             return (((int)version >> 8) & 0xff) == 2;
         }
 
-        public static bool Is3x(this PythonLanguageVersion version)
-        {
+        public static bool Is3x(this PythonLanguageVersion version) {
             return (((int)version >> 8) & 0xff) == 3;
         }
 
-        public static bool IsNone(this PythonLanguageVersion version)
-        {
+        public static bool IsNone(this PythonLanguageVersion version) {
             return version == PythonLanguageVersion.None;
         }
 
-        public static Version ToVersion(this PythonLanguageVersion version)
-        {
+        public static Version ToVersion(this PythonLanguageVersion version) {
             return new Version(((int)version) >> 8, ((int)version) & 0xff);
         }
 
-        public static PythonLanguageVersion ToLanguageVersion(this Version version)
-        {
-            switch (version.Major)
-            {
+        public static PythonLanguageVersion ToLanguageVersion(this Version version) {
+            switch (version.Major) {
                 case 0:
-                    switch (version.Minor)
-                    {
+                    switch (version.Minor) {
                         case 0: return PythonLanguageVersion.None;
                     }
                     break;
                 case 2:
-                    switch (version.Minor)
-                    {
+                    switch (version.Minor) {
                         case 4: return PythonLanguageVersion.V24;
                         case 5: return PythonLanguageVersion.V25;
                         case 6: return PythonLanguageVersion.V26;
@@ -82,8 +71,7 @@ namespace Microsoft.CookiecutterTools.Interpreters
                     }
                     break;
                 case 3:
-                    switch (version.Minor)
-                    {
+                    switch (version.Minor) {
                         case 0: return PythonLanguageVersion.V30;
                         case 1: return PythonLanguageVersion.V31;
                         case 2: return PythonLanguageVersion.V32;

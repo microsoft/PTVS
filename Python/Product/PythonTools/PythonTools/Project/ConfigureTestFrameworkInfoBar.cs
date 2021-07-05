@@ -17,8 +17,7 @@
 using OutputWindowRedirector = Microsoft.VisualStudioTools.Infrastructure.OutputWindowRedirector;
 using Task = System.Threading.Tasks.Task;
 
-namespace Microsoft.PythonTools.Project
-{
+namespace Microsoft.PythonTools.Project {
     /*
      * Bugs: 
      *      If an info bar is shown and then a user changes the configuration such that the info bar should not be shown,
@@ -28,24 +27,20 @@ namespace Microsoft.PythonTools.Project
      *
      *  https://github.com/microsoft/PTVS/issues/5495
      */
-    internal abstract class TestFrameworkInfoBar : PythonInfoBar
-    {
+    internal abstract class TestFrameworkInfoBar : PythonInfoBar {
         private TestFrameworkInfoBarData _infoBarData;
 
-        protected TestFrameworkInfoBar(IServiceProvider site) : base(site)
-        {
+        protected TestFrameworkInfoBar(IServiceProvider site) : base(site) {
 
         }
 
-        protected async Task CheckAsync(TestFrameworkInfoBarData frameworkInfoBarData)
-        {
+        protected async Task CheckAsync(TestFrameworkInfoBarData frameworkInfoBarData) {
             _infoBarData = frameworkInfoBarData;
             if (IsCreated ||
                 _infoBarData.IsGloballySuppressed ||
                 _infoBarData.InfoBarSuppressed ||
                 _infoBarData.TestFramework == TestFrameworkType.UnitTest
-            )
-            {
+            ) {
                 return;
             }
 
@@ -55,50 +50,34 @@ namespace Microsoft.PythonTools.Project
             string infoBarMessage;
             List<InfoBarHyperlink> acceptActionItems = new List<InfoBarHyperlink>();
 
-            if (isPytestEnabled)
-            {
-                if (!await IsPyTestInstalledAsync())
-                {
+            if (isPytestEnabled) {
+                if (!await IsPyTestInstalledAsync()) {
                     infoBarMessage = Strings.PyTestNotInstalled.FormatUI(_infoBarData.Caption, _infoBarData.ContextLocalized);
                     acceptActionItems.Add(new InfoBarHyperlink(Strings.PyTestInstallInfoBarAction, (Action)InstallPytestAction));
-                }
-                else
-                {
+                } else {
                     return;
                 }
 
-            }
-            else if (isValidPytestConfigFile)
-            {
-                if (await IsPyTestInstalledAsync())
-                {
+            } else if (isValidPytestConfigFile) {
+                if (await IsPyTestInstalledAsync()) {
                     infoBarMessage = Strings.PyTestInstalledConfigurationFileFound.FormatUI(_infoBarData.Caption, _infoBarData.ContextLocalized);
                     acceptActionItems.Add(new InfoBarHyperlink(Strings.PyTestEnableInfoBarAction, (Action)EnablePytestAction));
-                }
-                else
-                {
+                } else {
                     infoBarMessage = Strings.PyTestNotInstalledConfigurationFileFound.FormatUI(_infoBarData.Caption, _infoBarData.ContextLocalized);
                     acceptActionItems.Add(new InfoBarHyperlink(Strings.PyTestInstallAndEnableInfoBarAction, (Action)InstallAndEnablePytestAction));
                 }
 
-            }
-            else if (PythonTestFileFound((x) => PythonConstants.DefaultTestFileNameRegex.IsMatch(PathUtils.GetFileOrDirectoryName(x))))
-            {
+            } else if (PythonTestFileFound((x) => PythonConstants.DefaultTestFileNameRegex.IsMatch(PathUtils.GetFileOrDirectoryName(x)))) {
                 infoBarMessage = Strings.PythonTestFileDetected.FormatUI(_infoBarData.Caption, _infoBarData.ContextLocalized);
 
-                if (await IsPyTestInstalledAsync())
-                {
+                if (await IsPyTestInstalledAsync()) {
                     acceptActionItems.Add(new InfoBarHyperlink(Strings.PyTestEnableInfoBarAction, (Action)EnablePytestAction));
-                }
-                else
-                {
+                } else {
                     acceptActionItems.Add(new InfoBarHyperlink(Strings.PyTestInstallAndEnableInfoBarAction, (Action)InstallAndEnablePytestAction));
                 }
 
                 acceptActionItems.Add(new InfoBarHyperlink(Strings.UnitTestEnableInfoBarAction, (Action)EnableUnitTestAction));
-            }
-            else
-            {
+            } else {
                 return;
             }
 
@@ -106,8 +85,7 @@ namespace Microsoft.PythonTools.Project
         }
 
 
-        private void ShowInfoBar(string infoBarMessage, List<InfoBarHyperlink> acceptActionItems)
-        {
+        private void ShowInfoBar(string infoBarMessage, List<InfoBarHyperlink> acceptActionItems) {
             LogEvent(ConfigureTestFrameworkInfoBarActions.Prompt);
 
             acceptActionItems.Add(new InfoBarHyperlink(Strings.PythonTestFrameworkIgnoreInfoBarAction, (Action)IgnoreAction));
@@ -118,20 +96,17 @@ namespace Microsoft.PythonTools.Project
             );
         }
 
-        private async Task<bool> InstallPyTestAsync()
-        {
+        private async Task<bool> InstallPyTestAsync() {
             var packageManagers = _infoBarData.InterpreterOptionsService.GetPackageManagers(_infoBarData.InterpreterFactory);
 
-            foreach (var packageManager in packageManagers)
-            {
+            foreach (var packageManager in packageManagers) {
                 bool pytestInstalled = await packageManager.InstallAsync(
                     new PackageSpec("pytest"),
                     new VsPackageManagerUI(Site),
                     CancellationToken.None
                 );
 
-                if (pytestInstalled)
-                {
+                if (pytestInstalled) {
                     return true;
                 }
             }
@@ -139,8 +114,7 @@ namespace Microsoft.PythonTools.Project
             return false;
         }
 
-        private async Task<bool> IsPyTestInstalledAsync()
-        {
+        private async Task<bool> IsPyTestInstalledAsync() {
             var packageManagers = _infoBarData.InterpreterOptionsService.GetPackageManagers(_infoBarData.InterpreterFactory);
             var getPackageManagersTask = packageManagers.Select(
                 packageManager => packageManager.GetInstalledPackagesAsync(CancellationToken.None)
@@ -152,62 +126,52 @@ namespace Microsoft.PythonTools.Project
             );
         }
 
-        private void LogEvent(string action)
-        {
+        private void LogEvent(string action) {
             Logger?.LogEvent(
                 PythonLogEvent.ConfigureTestFrameworkInfoBar,
-                new ConfigureTestFrameworkInfoBarInfo()
-                {
+                new ConfigureTestFrameworkInfoBarInfo() {
                     Action = action,
                     Context = _infoBarData.Context,
                 }
             );
         }
 
-        private void InstallPytestAction()
-        {
+        private void InstallPytestAction() {
             InstallPytestActionAsync().HandleAllExceptions(Site, GetType()).DoNotWait();
         }
 
-        private async Task InstallPytestActionAsync()
-        {
+        private async Task InstallPytestActionAsync() {
             LogEvent(ConfigureTestFrameworkInfoBarActions.InstallPytest);
             Close();
 
             var result = await InstallPyTestAsync();
-            if (!result)
-            {
+            if (!result) {
                 var generalOutputWindow = OutputWindowRedirector.GetGeneral(Site);
                 generalOutputWindow.ShowAndActivate();
             }
 
         }
 
-        private void EnablePytestAction()
-        {
+        private void EnablePytestAction() {
             EnablePytestActionAsync().HandleAllExceptions(Site, GetType()).DoNotWait();
         }
 
-        private async Task EnablePytestActionAsync()
-        {
+        private async Task EnablePytestActionAsync() {
             LogEvent(ConfigureTestFrameworkInfoBarActions.EnablePytest);
             Close();
 
             await SetPropertyAsync(PythonConstants.TestFrameworkSetting, "Pytest");
         }
 
-        private void InstallAndEnablePytestAction()
-        {
+        private void InstallAndEnablePytestAction() {
             InstallAndEnablePytestActionAsync().HandleAllExceptions(Site, GetType()).DoNotWait();
         }
 
-        private async Task InstallAndEnablePytestActionAsync()
-        {
+        private async Task InstallAndEnablePytestActionAsync() {
             LogEvent(ConfigureTestFrameworkInfoBarActions.EnableAndInstallPytest);
             Close();
 
-            if (!await InstallPyTestAsync())
-            {
+            if (!await InstallPyTestAsync()) {
                 var generalOutputWindow = OutputWindowRedirector.GetGeneral(Site);
                 generalOutputWindow.ShowAndActivate();
             }
@@ -215,26 +179,22 @@ namespace Microsoft.PythonTools.Project
             await SetPropertyAsync(PythonConstants.TestFrameworkSetting, "Pytest");
         }
 
-        private void EnableUnitTestAction()
-        {
+        private void EnableUnitTestAction() {
             EnableUnitTestActionAsync().HandleAllExceptions(Site, GetType()).DoNotWait();
         }
 
-        private async Task EnableUnitTestActionAsync()
-        {
+        private async Task EnableUnitTestActionAsync() {
             LogEvent(ConfigureTestFrameworkInfoBarActions.EnableUnitTest);
             Close();
 
             await SetPropertyAsync(PythonConstants.TestFrameworkSetting, "unittest");
         }
 
-        private void IgnoreAction()
-        {
+        private void IgnoreAction() {
             IgnoreActionAsync().HandleAllExceptions(Site, GetType()).DoNotWait();
         }
 
-        private async Task IgnoreActionAsync()
-        {
+        private async Task IgnoreActionAsync() {
             LogEvent(ConfigureTestFrameworkInfoBarActions.Ignore);
             Close();
 
@@ -245,8 +205,7 @@ namespace Microsoft.PythonTools.Project
 
         protected abstract Task SetPropertyAsync(string propertyName, string propertyValue);
 
-        protected class TestFrameworkInfoBarData
-        {
+        protected class TestFrameworkInfoBarData {
             public IInterpreterOptionsService InterpreterOptionsService { get; set; }
             public IPythonInterpreterFactory InterpreterFactory { get; set; }
 
@@ -262,14 +221,12 @@ namespace Microsoft.PythonTools.Project
 
             public TestFrameworkType TestFramework { get; set; }
 
-            public static TestFrameworkType GetTestFramework(string propertyValue)
-            {
+            public static TestFrameworkType GetTestFramework(string propertyValue) {
                 if (Enum.TryParse(
                     propertyValue,
                     ignoreCase: true,
                     out TestFrameworkType parsedFramework)
-                )
-                {
+                ) {
                     return parsedFramework;
                 }
 
@@ -278,21 +235,17 @@ namespace Microsoft.PythonTools.Project
         }
     }
 
-    internal sealed class TestFrameworkProjectInfoBar : TestFrameworkInfoBar
-    {
+    internal sealed class TestFrameworkProjectInfoBar : TestFrameworkInfoBar {
         private PythonProjectNode Project { get; }
 
-        public TestFrameworkProjectInfoBar(IServiceProvider site, PythonProjectNode projectNode) : base(site)
-        {
+        public TestFrameworkProjectInfoBar(IServiceProvider site, PythonProjectNode projectNode) : base(site) {
             Project = projectNode ?? throw new ArgumentNullException(nameof(projectNode));
         }
 
-        public override async Task CheckAsync()
-        {
+        public override async Task CheckAsync() {
             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-            var infoBarData = new TestFrameworkInfoBarData
-            {
+            var infoBarData = new TestFrameworkInfoBarData {
                 InterpreterOptionsService = Site.GetPythonToolsService().InterpreterOptionsService,
                 InterpreterFactory = Project.ActiveInterpreter,
                 IsGloballySuppressed = !Site.GetPythonToolsService().GeneralOptions.PromptForTestFrameWorkInfoBar,
@@ -310,14 +263,12 @@ namespace Microsoft.PythonTools.Project
             await CheckAsync(infoBarData);
         }
 
-        protected override Task SetPropertyAsync(string propertyName, string propertyValue)
-        {
+        protected override Task SetPropertyAsync(string propertyName, string propertyValue) {
             Project.SetProjectProperty(propertyName, propertyValue);
             return Task.CompletedTask;
         }
 
-        protected override bool PythonTestFileFound(Predicate<string> fileFilter)
-        {
+        protected override bool PythonTestFileFound(Predicate<string> fileFilter) {
             return Project.AllVisibleDescendants
                 .Where(x => (x is PythonFileNode || x is PythonNonCodeFileNode))
                 .Select(f => f.Url)
@@ -327,21 +278,17 @@ namespace Microsoft.PythonTools.Project
         }
     }
 
-    internal sealed class TestFrameworkWorkspaceInfoBar : TestFrameworkInfoBar
-    {
+    internal sealed class TestFrameworkWorkspaceInfoBar : TestFrameworkInfoBar {
         private IPythonWorkspaceContext WorkspaceContext { get; }
 
-        public TestFrameworkWorkspaceInfoBar(IServiceProvider site, IPythonWorkspaceContext pythonWorkspaceContext) : base(site)
-        {
+        public TestFrameworkWorkspaceInfoBar(IServiceProvider site, IPythonWorkspaceContext pythonWorkspaceContext) : base(site) {
             WorkspaceContext = pythonWorkspaceContext ?? throw new ArgumentNullException(nameof(pythonWorkspaceContext));
         }
 
-        public override async Task CheckAsync()
-        {
+        public override async Task CheckAsync() {
             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-            var infoBarData = new TestFrameworkInfoBarData
-            {
+            var infoBarData = new TestFrameworkInfoBarData {
                 InterpreterOptionsService = Site.GetPythonToolsService().InterpreterOptionsService,
                 InterpreterFactory = WorkspaceContext.CurrentFactory,
                 IsGloballySuppressed = !Site.GetPythonToolsService().GeneralOptions.PromptForTestFrameWorkInfoBar,
@@ -357,21 +304,18 @@ namespace Microsoft.PythonTools.Project
             await CheckAsync(infoBarData);
         }
 
-        private string GetPyTestConfigFilePath()
-        {
+        private string GetPyTestConfigFilePath() {
             var fileName = PythonConstants.PyTestFrameworkConfigFiles
                 .FirstOrDefault(x => File.Exists(PathUtils.GetAbsoluteFilePath(WorkspaceContext.Location, x)));
 
             return string.IsNullOrEmpty(fileName) ? "" : Path.Combine(WorkspaceContext.Location, fileName);
         }
 
-        protected override async Task SetPropertyAsync(string propertyName, string propertyValue)
-        {
+        protected override async Task SetPropertyAsync(string propertyName, string propertyValue) {
             await WorkspaceContext.SetPropertyAsync(propertyName, propertyValue);
         }
 
-        protected override bool PythonTestFileFound(Predicate<string> fileFilter)
-        {
+        protected override bool PythonTestFileFound(Predicate<string> fileFilter) {
             return WorkspaceContext.EnumerateUserFiles(fileFilter).Any();
         }
     }

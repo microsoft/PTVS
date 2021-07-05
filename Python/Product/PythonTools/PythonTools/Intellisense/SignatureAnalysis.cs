@@ -14,17 +14,14 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Intellisense
-{
-    class SignatureAnalysis
-    {
+namespace Microsoft.PythonTools.Intellisense {
+    class SignatureAnalysis {
         private readonly string _text;
         private readonly int _paramIndex;
         private readonly ISignature[] _signatures;
         private readonly string _lastKeywordArgument;
 
-        internal SignatureAnalysis(string text, int paramIndex, IList<ISignature> signatures, string lastKeywordArgument = null)
-        {
+        internal SignatureAnalysis(string text, int paramIndex, IList<ISignature> signatures, string lastKeywordArgument = null) {
             _text = text;
             _paramIndex = paramIndex;
             _signatures = new ISignature[signatures.Count];
@@ -33,34 +30,26 @@ namespace Microsoft.PythonTools.Intellisense
             Array.Sort(_signatures, (x, y) => x.Parameters.Count - y.Parameters.Count);
         }
 
-        public string Text
-        {
-            get
-            {
+        public string Text {
+            get {
                 return _text;
             }
         }
 
-        public int ParameterIndex
-        {
-            get
-            {
+        public int ParameterIndex {
+            get {
                 return _paramIndex;
             }
         }
 
-        public string LastKeywordArgument
-        {
-            get
-            {
+        public string LastKeywordArgument {
+            get {
                 return _lastKeywordArgument;
             }
         }
 
-        public IList<ISignature> Signatures
-        {
-            get
-            {
+        public IList<ISignature> Signatures {
+            get {
                 return _signatures;
             }
         }

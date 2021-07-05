@@ -14,17 +14,14 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Django
-{
+namespace Microsoft.PythonTools.Django {
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = true)]
-    internal sealed class ProvideLanguageTemplatesAttribute : RegistrationAttribute
-    {
+    internal sealed class ProvideLanguageTemplatesAttribute : RegistrationAttribute {
         private readonly string _projectFactory, _languageName, _package, _languageGuid, _description, _templateGroup,
             _codeFileExtension, _templateFolder, _webProjectGuid;
 
         public ProvideLanguageTemplatesAttribute(string projectFactory, string languageName, string package,
-            string templateGroup, string description, string languageProjectGuid, string codeFileExtension, string templateFolder, string webProjectGuid)
-        {
+            string templateGroup, string description, string languageProjectGuid, string codeFileExtension, string templateFolder, string webProjectGuid) {
             _projectFactory = projectFactory;
             _languageName = languageName;
             _package = package;
@@ -44,34 +41,29 @@ namespace Microsoft.PythonTools.Django
         ///     This method is called both for registration and unregistration.  The difference is
         ///     that unregistering just uses a hive that reverses the changes applied to it.
         /// </devdoc>
-        public override void Register(RegistrationContext context)
-        {
+        public override void Register(RegistrationContext context) {
             string langTemplates = string.Format(CultureInfo.InvariantCulture, "Projects\\{0}\\LanguageTemplates", _projectFactory);
 
-            using (Key projectKey = context.CreateKey(langTemplates))
-            {
+            using (Key projectKey = context.CreateKey(langTemplates)) {
                 projectKey.SetValue(_languageGuid, _webProjectGuid);
             }
 
             var newProject = string.Format(CultureInfo.InvariantCulture, "Projects\\{0}", _webProjectGuid);
-            using (Key projectKey = context.CreateKey(newProject))
-            {
+            using (Key projectKey = context.CreateKey(newProject)) {
                 projectKey.SetValue(null, _description);
                 projectKey.SetValue(_package, _languageGuid);
                 projectKey.SetValue("Language(VsTemplate)", _languageName);
                 projectKey.SetValue("ShowOnlySpecifiedTemplates(VsTemplate)", 0);
                 projectKey.SetValue("TemplateGroupIDs(VsTemplate)", _templateGroup);
 
-                using (Key propKey = projectKey.CreateSubkey("WebApplicationProperties"))
-                {
+                using (Key propKey = projectKey.CreateSubkey("WebApplicationProperties")) {
                     propKey.SetValue("CodeFileExtension", _codeFileExtension);
                     propKey.SetValue("TemplateFolder", _templateFolder);
                 }
             }
         }
 
-        public override void Unregister(RegistrationContext context)
-        {
+        public override void Unregister(RegistrationContext context) {
         }
     }
 }

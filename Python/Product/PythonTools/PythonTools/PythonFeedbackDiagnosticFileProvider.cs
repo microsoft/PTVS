@@ -16,29 +16,24 @@
 
 using Task = System.Threading.Tasks.Task;
 
-namespace Microsoft.PythonTools
-{
+namespace Microsoft.PythonTools {
     [Export(typeof(IFeedbackDiagnosticFileProvider))]
-    public class PythonFeedbackDiagnosticFileProvider : IFeedbackDiagnosticFileProvider
-    {
+    public class PythonFeedbackDiagnosticFileProvider : IFeedbackDiagnosticFileProvider {
         private readonly IServiceProvider _serviceProvider;
 
         [ImportingConstructor]
-        public PythonFeedbackDiagnosticFileProvider([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider)
-        {
+        public PythonFeedbackDiagnosticFileProvider([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider) {
             _serviceProvider = serviceProvider;
         }
 
-        public IReadOnlyCollection<string> GetFiles()
-        {
+        public IReadOnlyCollection<string> GetFiles() {
             // A null UIThreadBase means the VS PythonTools package hasn't been initialized,
             // which means the user is not using Python, so we should not
             // write Python diagnostics file.
             // Note: we do not use the GetUIThread() extension method which
             // returns a mock UI thread instead of returning null.
             var uiThread = (UIThreadBase)_serviceProvider.GetService(typeof(UIThreadBase));
-            if (uiThread == null)
-            {
+            if (uiThread == null) {
                 return new string[0];
             }
 
@@ -55,28 +50,19 @@ namespace Microsoft.PythonTools
             return new string[] { filePath };
         }
 
-        private void GenerateFile(UIThreadBase uiThread, string filePath)
-        {
-            try
-            {
-                uiThread.Invoke(() =>
-                {
-                    using (var writer = new StreamWriter(filePath, false, Encoding.UTF8))
-                    {
-                        try
-                        {
+        private void GenerateFile(UIThreadBase uiThread, string filePath) {
+            try {
+                uiThread.Invoke(() => {
+                    using (var writer = new StreamWriter(filePath, false, Encoding.UTF8)) {
+                        try {
                             _serviceProvider.GetPythonToolsService().GetDiagnosticsLog(writer, false);
-                        }
-                        catch (Exception ex) when (!ex.IsCriticalException())
-                        {
+                        } catch (Exception ex) when (!ex.IsCriticalException()) {
                             // Append the error to the log we're writing
                             writer.WriteLine(ex.ToUnhandledExceptionMessage(GetType()));
                         }
                     }
                 });
-            }
-            catch (Exception ex) when (!ex.IsCriticalException())
-            {
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
             }
         }
     }

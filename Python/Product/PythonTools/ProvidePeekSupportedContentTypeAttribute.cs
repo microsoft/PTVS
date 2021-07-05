@@ -14,11 +14,9 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft
-{
+namespace Microsoft {
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = true)]
-    class ProvidePeekSupportedContentTypeAttribute : RegistrationAttribute
-    {
+    class ProvidePeekSupportedContentTypeAttribute : RegistrationAttribute {
         private readonly string _contentType, _mappedType;
 
         /// <summary>
@@ -29,22 +27,18 @@ namespace Microsoft
         ///  ".foboar"           -> ";"          .foboar files will use the normal editor factory & content type (but be forced to open as copy). 
         ///  ".foboar"           -> ""
         /// </summary>
-        public ProvidePeekSupportedContentTypeAttribute(string contentType, string mappedType)
-        {
+        public ProvidePeekSupportedContentTypeAttribute(string contentType, string mappedType) {
             _contentType = contentType;
             _mappedType = mappedType;
         }
 
-        public override void Register(RegistrationContext context)
-        {
-            using (Key key = context.CreateKey("Peek\\SupportedContentTypes"))
-            {
+        public override void Register(RegistrationContext context) {
+            using (Key key = context.CreateKey("Peek\\SupportedContentTypes")) {
                 key.SetValue(_contentType, _mappedType);
             }
         }
 
-        public override void Unregister(RegistrationContext context)
-        {
+        public override void Unregister(RegistrationContext context) {
         }
     }
 }

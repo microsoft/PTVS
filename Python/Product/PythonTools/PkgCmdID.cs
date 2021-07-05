@@ -17,10 +17,8 @@
 // PkgCmdID.cs
 // MUST match PkgCmdID.h
 
-namespace Microsoft.PythonTools
-{
-    static class PkgCmdIDList
-    {
+namespace Microsoft.PythonTools {
+    static class PkgCmdIDList {
         public const int EnvWindowToolbar = 0x200c;
 
         public const uint cmdidExecuteFileInRepl = 0x102;

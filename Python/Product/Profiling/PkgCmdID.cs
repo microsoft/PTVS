@@ -17,10 +17,8 @@
 // PkgCmdID.cs
 // MUST match PkgCmdID.h
 
-namespace Microsoft.PythonTools.Profiling
-{
-    static class PkgCmdIDList
-    {
+namespace Microsoft.PythonTools.Profiling {
+    static class PkgCmdIDList {
         public const uint cmdidStartPythonProfiling = 0x100;
         public const uint cmdidPerfExplorer = 0x101;
         public const uint cmdidAddPerfSession = 0x102;

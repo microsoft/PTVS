@@ -14,29 +14,23 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Django.Intellisense
-{
+namespace Microsoft.PythonTools.Django.Intellisense {
     [Export(typeof(ICompletionSourceProvider)), ContentType(TemplateTagContentType.ContentTypeName), Order, Name("DjangoCompletionSourceProvider")]
-    internal class DjangoCompletionSourceProvider : ICompletionSourceProvider
-    {
+    internal class DjangoCompletionSourceProvider : ICompletionSourceProvider {
         internal readonly IGlyphService _glyphService;
         internal readonly IServiceProvider _serviceProvider;
 
         [ImportingConstructor]
-        public DjangoCompletionSourceProvider([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider, IGlyphService glyphService)
-        {
+        public DjangoCompletionSourceProvider([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider, IGlyphService glyphService) {
             _serviceProvider = serviceProvider;
             _glyphService = glyphService;
         }
 
-        public ICompletionSource TryCreateCompletionSource(ITextBuffer textBuffer)
-        {
+        public ICompletionSource TryCreateCompletionSource(ITextBuffer textBuffer) {
             var filename = textBuffer.GetFileName();
-            if (filename != null)
-            {
+            if (filename != null) {
                 var project = DjangoPackage.GetProject(_serviceProvider, filename);
-                if (project != null)
-                {
+                if (project != null) {
                     return new DjangoCompletionSource(_glyphService, project.Analyzer, _serviceProvider, textBuffer);
                 }
             }

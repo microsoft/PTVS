@@ -17,10 +17,8 @@
 using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Intellisense;
 
-namespace Microsoft.PythonTools.Navigation.Navigable
-{
-    class NavigableSymbolSource : INavigableSymbolSource
-    {
+namespace Microsoft.PythonTools.Navigation.Navigable {
+    class NavigableSymbolSource : INavigableSymbolSource {
         private readonly IServiceProvider _serviceProvider;
         private readonly ITextBuffer _buffer;
         private readonly IClassifier _classifier;
@@ -34,46 +32,39 @@ namespace Microsoft.PythonTools.Navigation.Navigable
             PythonPredefinedClassificationTypeNames.Parameter,
         };
 
-        public NavigableSymbolSource(IServiceProvider serviceProvider, ITextBuffer buffer, IClassifier classifier, ITextStructureNavigator textNavigator)
-        {
+        public NavigableSymbolSource(IServiceProvider serviceProvider, ITextBuffer buffer, IClassifier classifier, ITextStructureNavigator textNavigator) {
             _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
             _buffer = buffer ?? throw new ArgumentNullException(nameof(buffer));
             _classifier = classifier ?? throw new ArgumentNullException(nameof(classifier));
             _textNavigator = textNavigator ?? throw new ArgumentNullException(nameof(textNavigator));
         }
 
-        public void Dispose()
-        {
+        public void Dispose() {
         }
 
-        public async Task<INavigableSymbol> GetNavigableSymbolAsync(SnapshotSpan triggerSpan, CancellationToken cancellationToken)
-        {
+        public async Task<INavigableSymbol> GetNavigableSymbolAsync(SnapshotSpan triggerSpan, CancellationToken cancellationToken) {
             Debug.Assert(triggerSpan.Length == 1);
 
             cancellationToken.ThrowIfCancellationRequested();
 
             var extent = _textNavigator.GetExtentOfWord(triggerSpan.Start);
-            if (!extent.IsSignificant)
-            {
+            if (!extent.IsSignificant) {
                 return null;
             }
 
             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
             var entry = _buffer.TryGetAnalysisEntry();
-            if (entry == null)
-            {
+            if (entry == null) {
                 return null;
             }
 
-            foreach (var token in _classifier.GetClassificationSpans(extent.Span))
-            {
+            foreach (var token in _classifier.GetClassificationSpans(extent.Span)) {
                 cancellationToken.ThrowIfCancellationRequested();
 
                 // Quickly eliminate anything that isn't the right classification.
                 var name = token.ClassificationType.Classification;
-                if (!_classifications.Any(c => name.Contains(c)))
-                {
+                if (!_classifications.Any(c => name.Contains(c))) {
                     continue;
                 }
 
@@ -85,8 +76,7 @@ namespace Microsoft.PythonTools.Navigation.Navigable
 
                 cancellationToken.ThrowIfCancellationRequested();
 
-                if (result.Any())
-                {
+                if (result.Any()) {
                     return new NavigableSymbol(_serviceProvider, result.First(), token.Span);
                 }
             }
@@ -94,16 +84,13 @@ namespace Microsoft.PythonTools.Navigation.Navigable
             return null;
         }
 
-        internal static async Task<AnalysisVariable[]> GetDefinitionLocationsAsync(AnalysisEntry entry, SnapshotPoint pt)
-        {
+        internal static async Task<AnalysisVariable[]> GetDefinitionLocationsAsync(AnalysisEntry entry, SnapshotPoint pt) {
             var list = new List<AnalysisVariable>();
 
             var result = await entry.Analyzer.AnalyzeExpressionAsync(entry, pt, ExpressionAtPointPurpose.FindDefinition).ConfigureAwait(false);
-            foreach (var variable in (result?.Variables).MaybeEnumerate())
-            {
+            foreach (var variable in (result?.Variables).MaybeEnumerate()) {
                 if ((variable.Type == VariableType.Definition || variable.Type == VariableType.Value) &&
-                    !string.IsNullOrEmpty(variable.Location.FilePath))
-                {
+                    !string.IsNullOrEmpty(variable.Location.FilePath)) {
                     list.Add(variable);
                 }
             }

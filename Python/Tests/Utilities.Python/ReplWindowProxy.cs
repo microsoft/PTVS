@@ -24,9 +24,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
-using Microsoft.PythonTools;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.InteractiveWindow;
@@ -38,7 +36,6 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Operations;
-using Microsoft.VisualStudioTools;
 
 namespace TestUtilities.UI.Python {
     public sealed class ReplWindowProxy : IDisposable {

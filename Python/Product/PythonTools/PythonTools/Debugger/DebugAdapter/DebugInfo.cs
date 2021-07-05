@@ -14,12 +14,10 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Debugger
-{
+namespace Microsoft.PythonTools.Debugger {
 
     [JsonObject(MemberSerialization.OptIn)]
-    internal abstract class DebugInfo
-    {
+    internal abstract class DebugInfo {
         [JsonProperty("stopOnEntry")]
         public bool? StopOnEntry { get; set; }
 
@@ -56,10 +54,8 @@ namespace Microsoft.PythonTools.Debugger
         [JsonProperty("variablePresentation")]
         public VariablePresentation VariablePresentation { get; set; }
 
-        public string GetJsonString()
-        {
-            var jsonSettings = new JsonSerializerSettings()
-            {
+        public string GetJsonString() {
+            var jsonSettings = new JsonSerializerSettings() {
                 TypeNameHandling = TypeNameHandling.None,
                 NullValueHandling = NullValueHandling.Ignore
             };
@@ -69,8 +65,7 @@ namespace Microsoft.PythonTools.Debugger
     }
 
     [JsonObject(MemberSerialization.OptIn)]
-    internal class DebugLaunchInfo : DebugInfo
-    {
+    internal class DebugLaunchInfo : DebugInfo {
         [JsonProperty("cwd")]
         public string CurrentWorkingDirectory { get; set; }
 
@@ -93,8 +88,7 @@ namespace Microsoft.PythonTools.Debugger
     }
 
     [JsonObject(MemberSerialization.OptIn)]
-    internal class DebugAttachInfo : DebugInfo
-    {
+    internal class DebugAttachInfo : DebugInfo {
         [JsonProperty("host")]
         public string Host { get; set; }
 
@@ -104,8 +98,7 @@ namespace Microsoft.PythonTools.Debugger
         public Uri RemoteUri { get; set; }
     }
 
-    public class PathRule
-    {
+    public class PathRule {
         [JsonProperty("path")]
         public string Path { get; set; }
 
@@ -113,8 +106,7 @@ namespace Microsoft.PythonTools.Debugger
         public bool? Include { get; set; }
     }
 
-    public class VariablePresentation
-    {
+    public class VariablePresentation {
 
         // default to group, which is the current vscode behavior
         public static PresentationMode DefaultPresentationMode = PresentationMode.Group;
@@ -131,8 +123,7 @@ namespace Microsoft.PythonTools.Debugger
         [JsonProperty("special")]
         public PresentationMode Special { get; set; }
 
-        public VariablePresentation()
-        {
+        public VariablePresentation() {
 
             Class = DefaultPresentationMode;
             Function = DefaultPresentationMode;

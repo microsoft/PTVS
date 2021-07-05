@@ -16,10 +16,8 @@
 
 using Task = System.Threading.Tasks.Task;
 
-namespace Microsoft
-{
-    interface IPythonToolsToolWindowService
-    {
+namespace Microsoft {
+    interface IPythonToolsToolWindowService {
         Task ShowWindowPaneAsync(Type windowType, bool focus);
         Task<ToolWindowPane> GetWindowPaneAsync(Type windowType, bool create);
     }

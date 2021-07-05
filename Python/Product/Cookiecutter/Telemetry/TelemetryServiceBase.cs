@@ -14,13 +14,11 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.CookiecutterTools.Telemetry
-{
+namespace Microsoft.CookiecutterTools.Telemetry {
     /// <summary>
     /// Base telemetry service implementation, common to production code and test cases.
     /// </summary>
-    internal abstract class TelemetryServiceBase : ITelemetryService, IDisposable
-    {
+    internal abstract class TelemetryServiceBase : ITelemetryService, IDisposable {
         public string EventNamePrefix { get; private set; }
         public string PropertyNamePrefix { get; private set; }
 
@@ -31,8 +29,7 @@ namespace Microsoft.CookiecutterTools.Telemetry
         /// </summary>
         public ITelemetryRecorder TelemetryRecorder { get; internal set; }
 
-        protected TelemetryServiceBase(string eventNamePrefix, string propertyNamePrefix, ITelemetryRecorder telemetryRecorder)
-        {
+        protected TelemetryServiceBase(string eventNamePrefix, string propertyNamePrefix, ITelemetryRecorder telemetryRecorder) {
             this.TelemetryRecorder = telemetryRecorder;
             this.EventNamePrefix = eventNamePrefix;
             this.PropertyNamePrefix = propertyNamePrefix;
@@ -42,18 +39,14 @@ namespace Microsoft.CookiecutterTools.Telemetry
         /// <summary>
         /// True of user opted in and telemetry is being collected
         /// </summary>
-        public bool IsEnabled
-        {
-            get
-            {
+        public bool IsEnabled {
+            get {
                 return this.TelemetryRecorder?.IsEnabled == true;
             }
         }
 
-        public bool CanCollectPrivateInformation
-        {
-            get
-            {
+        public bool CanCollectPrivateInformation {
+            get {
                 return (this.TelemetryRecorder?.IsEnabled == true && this.TelemetryRecorder?.CanCollectPrivateInformation == true);
             }
         }
@@ -67,36 +60,26 @@ namespace Microsoft.CookiecutterTools.Telemetry
         /// Either string/object dictionary or anonymous
         /// collection of string/object pairs.
         /// </param>
-        public void ReportEvent(string area, string eventName, object parameters = null)
-        {
-            if (string.IsNullOrEmpty(area))
-            {
+        public void ReportEvent(string area, string eventName, object parameters = null) {
+            if (string.IsNullOrEmpty(area)) {
                 throw new ArgumentException(nameof(area));
             }
 
-            if (string.IsNullOrEmpty(eventName))
-            {
+            if (string.IsNullOrEmpty(eventName)) {
                 throw new ArgumentException(nameof(eventName));
             }
 
             string completeEventName = MakeEventName(area, eventName);
-            if (parameters == null)
-            {
+            if (parameters == null) {
                 this.TelemetryRecorder.RecordEvent(completeEventName);
-            }
-            else if (parameters is string)
-            {
+            } else if (parameters is string) {
                 this.TelemetryRecorder.RecordEvent(completeEventName, parameters as string);
-            }
-            else
-            {
+            } else {
                 IDictionary<string, object> dict = DictionaryExtension.FromAnonymousObject(parameters);
                 IDictionary<string, object> dictWithPrefix = new Dictionary<string, object>();
 
-                foreach (KeyValuePair<string, object> kvp in dict)
-                {
-                    if (string.IsNullOrEmpty(kvp.Key))
-                    {
+                foreach (KeyValuePair<string, object> kvp in dict) {
+                    if (string.IsNullOrEmpty(kvp.Key)) {
                         throw new ArgumentException("parameterName");
                     }
 
@@ -106,23 +89,20 @@ namespace Microsoft.CookiecutterTools.Telemetry
             }
         }
 
-        public void ReportFault(Exception ex, string description, bool dumpProcess)
-        {
+        public void ReportFault(Exception ex, string description, bool dumpProcess) {
             var completeEventName = this.EventNamePrefix + "UnhandledException";
             this.TelemetryRecorder.RecordFault(completeEventName, ex, description, dumpProcess);
         }
 
         #endregion
 
-        private string MakeEventName(string area, string eventName)
-        {
+        private string MakeEventName(string area, string eventName) {
             return this.EventNamePrefix + area + "/" + eventName;
         }
 
         protected virtual void Dispose(bool disposing) { }
 
-        public void Dispose()
-        {
+        public void Dispose() {
             Dispose(true);
             TelemetryRecorder?.Dispose();
             TelemetryRecorder = null;

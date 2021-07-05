@@ -14,40 +14,31 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Django.TemplateParsing.DjangoBlocks
-{
-    class DjangoIfBlock : DjangoBlock
-    {
+namespace Microsoft.PythonTools.Django.TemplateParsing.DjangoBlocks {
+    class DjangoIfBlock : DjangoBlock {
         public readonly BlockClassification[] Args;
 
         public DjangoIfBlock(BlockParseInfo parseInfo, params BlockClassification[] args)
-            : base(parseInfo)
-        {
+            : base(parseInfo) {
             Args = args;
         }
 
-        public static DjangoBlock Parse(BlockParseInfo parseInfo)
-        {
+        public static DjangoBlock Parse(BlockParseInfo parseInfo) {
             var words = parseInfo.Args.Split(' ');
             List<BlockClassification> argClassifications = new List<BlockClassification>();
 
             int wordStart = parseInfo.Start + parseInfo.Command.Length;
-            foreach (var word in words)
-            {
+            foreach (var word in words) {
                 bool hasNewline = false;
-                if (word.Contains('\r') || word.Contains('\n'))
-                {
+                if (word.Contains('\r') || word.Contains('\n')) {
                     hasNewline = true;
-                    if (word.Trim().Length == 0)
-                    {
+                    if (word.Trim().Length == 0) {
                         break;
                     }
                 }
-                if (!String.IsNullOrEmpty(word))
-                {
+                if (!String.IsNullOrEmpty(word)) {
                     Classification curKind;
-                    switch (word)
-                    {
+                    switch (word) {
                         case "and":
                         case "or":
                         case "not":
@@ -66,8 +57,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing.DjangoBlocks
                     );
                 }
 
-                if (hasNewline)
-                {
+                if (hasNewline) {
                     break;
                 }
 
@@ -77,20 +67,16 @@ namespace Microsoft.PythonTools.Django.TemplateParsing.DjangoBlocks
             return new DjangoIfBlock(parseInfo, argClassifications.ToArray());
         }
 
-        public override IEnumerable<BlockClassification> GetSpans()
-        {
+        public override IEnumerable<BlockClassification> GetSpans() {
             yield return new BlockClassification(new Span(ParseInfo.Start, ParseInfo.Command.Length), Classification.Keyword);
-            foreach (var arg in Args)
-            {
+            foreach (var arg in Args) {
                 yield return arg;
             }
         }
 
-        public override IEnumerable<CompletionInfo> GetCompletions(IDjangoCompletionContext context, int position)
-        {
+        public override IEnumerable<CompletionInfo> GetCompletions(IDjangoCompletionContext context, int position) {
             // no argument yet, or the last argument was a keyword, then we are completing an identifier
-            if (Args.Length == 0 || Args.Last().Classification == Classification.Keyword || position <= Args.Last().Span.End)
-            {
+            if (Args.Length == 0 || Args.Last().Classification == Classification.Keyword || position <= Args.Last().Span.End) {
                 // get the variables
                 return Enumerable.Concat(
                     base.GetCompletions(context, position),
@@ -98,9 +84,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing.DjangoBlocks
                         new CompletionInfo("not", StandardGlyphGroup.GlyphKeyword)
                     }
                 );
-            }
-            else
-            {
+            } else {
                 // last word was an identifier, so we'll complete and/or
                 return new[] {
                     new CompletionInfo("and", StandardGlyphGroup.GlyphKeyword),

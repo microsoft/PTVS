@@ -16,17 +16,14 @@
 
 using Microsoft.VisualStudioTools;
 
-namespace Microsoft.PythonTools.Refactoring
-{
+namespace Microsoft.PythonTools.Refactoring {
     /// <summary>
     /// Interaction logic for ExtractMethodDialog.xaml
     /// </summary>
-    internal partial class ExtractMethodDialog : DialogWindowVersioningWorkaround
-    {
+    internal partial class ExtractMethodDialog : DialogWindowVersioningWorkaround {
         private bool _firstActivation;
 
-        public ExtractMethodDialog(ExtractMethodRequestView viewModel)
-        {
+        public ExtractMethodDialog(ExtractMethodRequestView viewModel) {
             DataContext = viewModel;
 
             InitializeComponent();
@@ -34,25 +31,21 @@ namespace Microsoft.PythonTools.Refactoring
             _firstActivation = true;
         }
 
-        protected override void OnActivated(System.EventArgs e)
-        {
+        protected override void OnActivated(System.EventArgs e) {
             base.OnActivated(e);
-            if (_firstActivation)
-            {
+            if (_firstActivation) {
                 _methodName.Focus();
                 _methodName.SelectAll();
                 _firstActivation = false;
             }
         }
 
-        private void OkClick(object sender, RoutedEventArgs e)
-        {
+        private void OkClick(object sender, RoutedEventArgs e) {
             this.DialogResult = true;
             Close();
         }
 
-        private void CancelClick(object sender, RoutedEventArgs e)
-        {
+        private void CancelClick(object sender, RoutedEventArgs e) {
             this.DialogResult = false;
             Close();
         }

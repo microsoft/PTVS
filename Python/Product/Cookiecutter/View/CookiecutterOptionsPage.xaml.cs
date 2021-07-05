@@ -19,51 +19,41 @@ using Microsoft.CookiecutterTools.Model;
 using Microsoft.CookiecutterTools.ViewModel;
 using WpfCommands = Microsoft.VisualStudioTools.Wpf.Commands;
 
-namespace Microsoft.CookiecutterTools.View
-{
+namespace Microsoft.CookiecutterTools.View {
     /// <summary>
     /// Interaction logic for CookiecutterOptionsPage.xaml
     /// </summary>
-    internal partial class CookiecutterOptionsPage : Page
-    {
-        public CookiecutterOptionsPage()
-        {
+    internal partial class CookiecutterOptionsPage : Page {
+        public CookiecutterOptionsPage() {
             InitializeComponent();
         }
 
         private CookiecutterViewModel ViewModel => (CookiecutterViewModel)DataContext;
 
-        private void Browse_CanExecute(object sender, CanExecuteRoutedEventArgs e)
-        {
+        private void Browse_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
             WpfCommands.CanExecute(null, sender, e);
         }
 
-        private void Browse_Executed(object sender, ExecutedRoutedEventArgs e)
-        {
+        private void Browse_Executed(object sender, ExecutedRoutedEventArgs e) {
             WpfCommands.Executed(null, sender, e);
         }
 
-        private void Home_CanExecute(object sender, CanExecuteRoutedEventArgs e)
-        {
+        private void Home_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
             e.CanExecute = ViewModel != null && ViewModel.CreatingStatus != OperationStatus.InProgress;
             e.Handled = true;
         }
 
-        private void Home_Executed(object sender, ExecutedRoutedEventArgs e)
-        {
+        private void Home_Executed(object sender, ExecutedRoutedEventArgs e) {
             ViewModel.Home();
         }
 
-        private void CreateFiles_CanExecute(object sender, CanExecuteRoutedEventArgs e)
-        {
+        private void CreateFiles_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
             e.CanExecute = ViewModel?.CanRunSelectedTemplate == true;
             e.Handled = true;
         }
 
-        private void CreateFiles_Executed(object sender, ExecutedRoutedEventArgs e)
-        {
-            if (!PathUtils.IsValidPath(ViewModel.OutputFolderPath))
-            {
+        private void CreateFiles_Executed(object sender, ExecutedRoutedEventArgs e) {
+            if (!PathUtils.IsValidPath(ViewModel.OutputFolderPath)) {
                 MessageBox.Show(Strings.InvalidOutputFolder, Strings.ProductTitle, MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
@@ -71,8 +61,7 @@ namespace Microsoft.CookiecutterTools.View
             ViewModel.CreateFilesAsync().HandleAllExceptions(null, GetType()).DoNotWait();
         }
 
-        private void OpenInBrowser_CanExecute(object sender, CanExecuteRoutedEventArgs e)
-        {
+        private void OpenInBrowser_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
             var url = (string)e.Parameter;
             Uri uri;
             e.CanExecute = Uri.TryCreate(url, UriKind.Absolute, out uri) &&
@@ -80,33 +69,25 @@ namespace Microsoft.CookiecutterTools.View
             e.Handled = true;
         }
 
-        private void OpenInBrowser_Executed(object sender, ExecutedRoutedEventArgs e)
-        {
+        private void OpenInBrowser_Executed(object sender, ExecutedRoutedEventArgs e) {
             var url = (string)e.Parameter;
             Process.Start(url)?.Dispose();
         }
     }
 
-    class TemplateContextItemTemplateSelector : DataTemplateSelector
-    {
-        public override DataTemplate SelectTemplate(object item, DependencyObject container)
-        {
+    class TemplateContextItemTemplateSelector : DataTemplateSelector {
+        public override DataTemplate SelectTemplate(object item, DependencyObject container) {
             var element = container as FrameworkElement;
             var p = item as ContextItemViewModel;
-            if (element != null && p != null)
-            {
+            if (element != null && p != null) {
                 string selector = p.Selector?.ToLowerInvariant()?.Truncate(30);
-                if (selector == null || !Regex.IsMatch(selector, "^[a-z]+$"))
-                {
+                if (selector == null || !Regex.IsMatch(selector, "^[a-z]+$")) {
                     selector = Selectors.String;
                 }
 
-                try
-                {
+                try {
                     return element.FindResource(selector + "Template") as DataTemplate;
-                }
-                catch (ResourceReferenceKeyNotFoundException)
-                {
+                } catch (ResourceReferenceKeyNotFoundException) {
                     return element.FindResource("stringTemplate") as DataTemplate;
                 }
             }

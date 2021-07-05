@@ -14,16 +14,13 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Debugger
-{
+namespace Microsoft.PythonTools.Debugger {
     [Serializable]
-    public class NoStartupFileException : Exception
-    {
+    public class NoStartupFileException : Exception {
         public NoStartupFileException() : base() { }
         public NoStartupFileException(string msg) : base(msg) { }
         public NoStartupFileException(string message, Exception innerException)
-            : base(message, innerException)
-        {
+            : base(message, innerException) {
         }
 
         protected NoStartupFileException(SerializationInfo info, StreamingContext context)

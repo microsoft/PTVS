@@ -14,15 +14,12 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.CookiecutterTools.Infrastructure
-{
-    static partial class NativeMethods
-    {
+namespace Microsoft.CookiecutterTools.Infrastructure {
+    static partial class NativeMethods {
         [DllImport("kernel32", EntryPoint = "GetBinaryTypeW", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Winapi)]
         private static extern bool _GetBinaryType(string lpApplicationName, out GetBinaryTypeResult lpBinaryType);
 
-        private enum GetBinaryTypeResult : uint
-        {
+        private enum GetBinaryTypeResult : uint {
             SCS_32BIT_BINARY = 0,
             SCS_DOS_BINARY = 1,
             SCS_WOW_BINARY = 2,
@@ -32,14 +29,11 @@ namespace Microsoft.CookiecutterTools.Infrastructure
             SCS_64BIT_BINARY = 6
         }
 
-        public static ProcessorArchitecture GetBinaryType(string path)
-        {
+        public static ProcessorArchitecture GetBinaryType(string path) {
             GetBinaryTypeResult result;
 
-            if (_GetBinaryType(path, out result))
-            {
-                switch (result)
-                {
+            if (_GetBinaryType(path, out result)) {
+                switch (result) {
                     case GetBinaryTypeResult.SCS_32BIT_BINARY:
                         return ProcessorArchitecture.X86;
                     case GetBinaryTypeResult.SCS_64BIT_BINARY:
@@ -80,28 +74,24 @@ namespace Microsoft.CookiecutterTools.Infrastructure
         );
 
         [Flags]
-        public enum FileDesiredAccess : uint
-        {
+        public enum FileDesiredAccess : uint {
             FILE_LIST_DIRECTORY = 1
         }
 
         [Flags]
-        public enum FileShareFlags : uint
-        {
+        public enum FileShareFlags : uint {
             FILE_SHARE_READ = 0x00000001,
             FILE_SHARE_WRITE = 0x00000002,
             FILE_SHARE_DELETE = 0x00000004
         }
 
         [Flags]
-        public enum FileCreationDisposition : uint
-        {
+        public enum FileCreationDisposition : uint {
             OPEN_EXISTING = 3
         }
 
         [Flags]
-        public enum FileFlagsAndAttributes : uint
-        {
+        public enum FileFlagsAndAttributes : uint {
             FILE_FLAG_BACKUP_SEMANTICS = 0x02000000
         }
 

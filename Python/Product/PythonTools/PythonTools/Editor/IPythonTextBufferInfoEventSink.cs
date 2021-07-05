@@ -16,8 +16,7 @@
 
 using Microsoft.PythonTools.Intellisense;
 
-namespace Microsoft.PythonTools.Editor
-{
+namespace Microsoft.PythonTools.Editor {
     /// <summary>
     /// Interface for classes that need to receive events from text buffers.
     /// </summary>
@@ -26,13 +25,11 @@ namespace Microsoft.PythonTools.Editor
     /// IntelliSense features that require using another base class.
     /// Implement no-op handlers by returning <see cref="Task.CompletedTask"/>.
     /// </remarks>
-    interface IPythonTextBufferInfoEventSink
-    {
+    interface IPythonTextBufferInfoEventSink {
         Task PythonTextBufferEventAsync(PythonTextBufferInfo sender, PythonTextBufferInfoEventArgs e);
     }
 
-    enum PythonTextBufferInfoEvents
-    {
+    enum PythonTextBufferInfoEvents {
         None = 0,
         NewAnalysisEntry,
         NewParseTree,
@@ -46,18 +43,15 @@ namespace Microsoft.PythonTools.Editor
         AnalyzerExpired,
     }
 
-    class PythonTextBufferInfoEventArgs : EventArgs
-    {
-        public PythonTextBufferInfoEventArgs(PythonTextBufferInfoEvents eventType)
-        {
+    class PythonTextBufferInfoEventArgs : EventArgs {
+        public PythonTextBufferInfoEventArgs(PythonTextBufferInfoEvents eventType) {
             Event = eventType;
         }
 
         public PythonTextBufferInfoEventArgs(
             PythonTextBufferInfoEvents eventType,
             AnalysisEntry entry
-        ) : this(eventType)
-        {
+        ) : this(eventType) {
             AnalysisEntry = entry;
         }
 
@@ -65,22 +59,18 @@ namespace Microsoft.PythonTools.Editor
         public AnalysisEntry AnalysisEntry { get; }
     }
 
-    class PythonTextBufferInfoNestedEventArgs : PythonTextBufferInfoEventArgs
-    {
+    class PythonTextBufferInfoNestedEventArgs : PythonTextBufferInfoEventArgs {
         public PythonTextBufferInfoNestedEventArgs(PythonTextBufferInfoEvents eventType, EventArgs e)
-            : base(eventType)
-        {
+            : base(eventType) {
             NestedEventArgs = e;
         }
 
         public EventArgs NestedEventArgs { get; }
     }
 
-    class PythonNewTextBufferInfoEventArgs : PythonTextBufferInfoEventArgs
-    {
+    class PythonNewTextBufferInfoEventArgs : PythonTextBufferInfoEventArgs {
         public PythonNewTextBufferInfoEventArgs(PythonTextBufferInfoEvents eventType, PythonTextBufferInfo newInfo)
-            : base(eventType)
-        {
+            : base(eventType) {
             NewTextBufferInfo = newInfo;
         }
 

@@ -16,13 +16,11 @@
 
 using Microsoft.PythonTools.Repl;
 
-namespace Microsoft.PythonTools.Options
-{
+namespace Microsoft.PythonTools.Options {
     /// <summary>
     /// Stores options related to the all interactive windows.
     /// </summary>
-    class PythonInteractiveOptions
-    {
+    class PythonInteractiveOptions {
         private bool _smartHistory, _liveCompletionsOnly;
         private ReplIntellisenseMode _completionMode;
         private string _scripts;
@@ -35,8 +33,7 @@ namespace Microsoft.PythonTools.Options
         private const string LiveCompletionsOnlySetting = "LiveCompletionsOnly";
         private const string ScriptsSetting = "Scripts";
 
-        internal PythonInteractiveOptions(PythonToolsService pyService, string category)
-        {
+        internal PythonInteractiveOptions(PythonToolsService pyService, string category) {
             _pyService = pyService;
             _category = category;
             _completionMode = ReplIntellisenseMode.DontEvaluateCalls;
@@ -45,32 +42,27 @@ namespace Microsoft.PythonTools.Options
             Load();
         }
 
-        internal ReplIntellisenseMode CompletionMode
-        {
+        internal ReplIntellisenseMode CompletionMode {
             get { return _completionMode; }
             set { _completionMode = value; }
         }
 
-        public bool UseSmartHistory
-        {
+        public bool UseSmartHistory {
             get { return _smartHistory; }
             set { _smartHistory = value; }
         }
 
-        public bool LiveCompletionsOnly
-        {
+        public bool LiveCompletionsOnly {
             get { return _liveCompletionsOnly; }
             set { _liveCompletionsOnly = value; }
         }
 
-        public string Scripts
-        {
+        public string Scripts {
             get { return _scripts; }
             set { _scripts = value ?? string.Empty; }
         }
 
-        public void Load()
-        {
+        public void Load() {
             CompletionMode = _pyService.LoadEnum<ReplIntellisenseMode>(CompletionModeSetting, _category) ?? ReplIntellisenseMode.DontEvaluateCalls;
             UseSmartHistory = _pyService.LoadBool(UseSmartHistorySetting, _category) ?? true;
             LiveCompletionsOnly = _pyService.LoadBool(LiveCompletionsOnlySetting, _category) ?? false;
@@ -78,8 +70,7 @@ namespace Microsoft.PythonTools.Options
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
-        public void Save()
-        {
+        public void Save() {
             _pyService.SaveEnum(CompletionModeSetting, _category, CompletionMode);
             _pyService.SaveBool(UseSmartHistorySetting, _category, UseSmartHistory);
             _pyService.SaveBool(LiveCompletionsOnlySetting, _category, LiveCompletionsOnly);
@@ -87,8 +78,7 @@ namespace Microsoft.PythonTools.Options
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
-        public void Reset()
-        {
+        public void Reset() {
             CompletionMode = ReplIntellisenseMode.DontEvaluateCalls;
             UseSmartHistory = true;
             LiveCompletionsOnly = false;

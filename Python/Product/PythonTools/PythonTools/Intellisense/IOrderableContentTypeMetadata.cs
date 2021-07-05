@@ -14,14 +14,12 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Intellisense
-{
+namespace Microsoft.PythonTools.Intellisense {
     /// <summary>
     /// Metadata which includes Ordering and Content Types
     /// 
     /// New in 1.1.
     /// </summary>
-    public interface IOrderableContentTypeMetadata : IContentTypeMetadata, IOrderable
-    {
+    public interface IOrderableContentTypeMetadata : IContentTypeMetadata, IOrderable {
     }
 }

@@ -14,10 +14,8 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.EnvironmentsList
-{
-    public partial class ToolWindow : UserControl
-    {
+namespace Microsoft.PythonTools.EnvironmentsList {
+    public partial class ToolWindow : UserControl {
         internal readonly ObservableCollection<EnvironmentView> _environments;
         internal readonly ObservableCollection<object> _extensions;
 
@@ -29,8 +27,7 @@ namespace Microsoft.PythonTools.EnvironmentsList
         public static readonly RoutedCommand UnhandledException = new RoutedCommand();
         private static readonly object[] EmptyObjectArray = new object[0];
 
-        public ToolWindow()
-        {
+        public ToolWindow() {
             _environments = new ObservableCollection<EnvironmentView>();
             _extensions = new ObservableCollection<object>();
             _environmentsView = new CollectionViewSource { Source = _environments };
@@ -43,13 +40,10 @@ namespace Microsoft.PythonTools.EnvironmentsList
             SizeChanged += ToolWindow_SizeChanged;
         }
 
-        private void EnvironmentsView_CurrentChanged(object sender, EventArgs e)
-        {
+        private void EnvironmentsView_CurrentChanged(object sender, EventArgs e) {
             var item = _environmentsView.View.CurrentItem as EnvironmentView;
-            if (item == null)
-            {
-                lock (_extensions)
-                {
+            if (item == null) {
+                lock (_extensions) {
                     _extensions.Clear();
                 }
                 return;
@@ -58,40 +52,29 @@ namespace Microsoft.PythonTools.EnvironmentsList
             var oldSelect = _extensionsView.View.CurrentItem?.GetType();
             var newSelect = oldSelect == null ? null :
                 item.Extensions?.FirstOrDefault(ext => ext != null && ext.GetType().IsEquivalentTo(oldSelect));
-            lock (_extensions)
-            {
+            lock (_extensions) {
                 _extensions.Clear();
-                foreach (var ext in item.Extensions.MaybeEnumerate())
-                {
+                foreach (var ext in item.Extensions.MaybeEnumerate()) {
                     _extensions.Add(ext);
                 }
-                if (newSelect != null)
-                {
+                if (newSelect != null) {
                     _extensionsView.View.MoveCurrentTo(newSelect);
-                }
-                else
-                {
+                } else {
                     _extensionsView.View.MoveCurrentToFirst();
                 }
             }
         }
 
-        public IServiceProvider Site
-        {
-            get
-            {
+        public IServiceProvider Site {
+            get {
                 return _site;
             }
-            set
-            {
+            set {
                 _site = value;
-                if (value != null)
-                {
+                if (value != null) {
                     var compModel = _site.GetService(typeof(SComponentModel)) as IComponentModel;
                     InitializeEnvironments(compModel.GetService<IInterpreterRegistryService>(), compModel.GetService<IInterpreterOptionsService>());
-                }
-                else
-                {
+                } else {
                     InitializeEnvironments(null, null);
                 }
             }
@@ -99,62 +82,45 @@ namespace Microsoft.PythonTools.EnvironmentsList
 
         internal IPythonToolsLogger TelemetryLogger { get; set; }
 
-        internal static async void SendUnhandledException(UIElement element, ExceptionDispatchInfo edi)
-        {
-            try
-            {
-                await element.Dispatcher.InvokeAsync(() =>
-                {
+        internal static async void SendUnhandledException(UIElement element, ExceptionDispatchInfo edi) {
+            try {
+                await element.Dispatcher.InvokeAsync(() => {
                     UnhandledException.Execute(edi, element);
                 });
-            }
-            catch (InvalidOperationException)
-            {
+            } catch (InvalidOperationException) {
                 UnhandledException.Execute(edi, element);
             }
         }
 
-        void ToolWindow_SizeChanged(object sender, SizeChangedEventArgs e)
-        {
-            if (!e.WidthChanged)
-            {
+        void ToolWindow_SizeChanged(object sender, SizeChangedEventArgs e) {
+            if (!e.WidthChanged) {
                 return;
             }
 
             UpdateLayout(e.NewSize.Width, e.NewSize.Height);
         }
 
-        void UpdateLayout(double width, double height)
-        {
-            if (double.IsNaN(width) || double.IsNaN(height))
-            {
+        void UpdateLayout(double width, double height) {
+            if (double.IsNaN(width) || double.IsNaN(height)) {
                 return;
             }
 
-            if (width < 500)
-            {
+            if (width < 500) {
                 SwitchToVerticalLayout();
-            }
-            else if (width >= 600)
-            {
+            } else if (width >= 600) {
                 SwitchToHorizontalLayout();
-            }
-            else if (VerticalLayout.Visibility != Visibility.Visible)
-            {
+            } else if (VerticalLayout.Visibility != Visibility.Visible) {
                 SwitchToVerticalLayout();
             }
         }
 
-        void SwitchToHorizontalLayout()
-        {
-            if (HorizontalLayout.Visibility == Visibility.Visible)
-            {
+        void SwitchToHorizontalLayout() {
+            if (HorizontalLayout.Visibility == Visibility.Visible) {
                 return;
             }
             VerticalLayout.Visibility = Visibility.Collapsed;
             BindingOperations.ClearBinding(ContentView_Vertical, ContentControl.ContentProperty);
-            BindingOperations.SetBinding(ContentView_Horizontal, ContentControl.ContentProperty, new Binding
-            {
+            BindingOperations.SetBinding(ContentView_Horizontal, ContentControl.ContentProperty, new Binding {
                 Path = new PropertyPath("CurrentItem.WpfObject"),
                 Source = Extensions
             });
@@ -162,16 +128,13 @@ namespace Microsoft.PythonTools.EnvironmentsList
             UpdateLayout();
         }
 
-        void SwitchToVerticalLayout()
-        {
-            if (VerticalLayout.Visibility == Visibility.Visible)
-            {
+        void SwitchToVerticalLayout() {
+            if (VerticalLayout.Visibility == Visibility.Visible) {
                 return;
             }
             HorizontalLayout.Visibility = Visibility.Collapsed;
             BindingOperations.ClearBinding(ContentView_Horizontal, ContentControl.ContentProperty);
-            BindingOperations.SetBinding(ContentView_Vertical, ContentControl.ContentProperty, new Binding
-            {
+            BindingOperations.SetBinding(ContentView_Vertical, ContentControl.ContentProperty, new Binding {
                 Path = new PropertyPath("CurrentItem.WpfObject"),
                 Source = Extensions
             });
@@ -182,32 +145,25 @@ namespace Microsoft.PythonTools.EnvironmentsList
         public ICollectionView Environments => _environmentsView.View;
         public ICollectionView Extensions => _extensionsView.View;
 
-        private void MakeGlobalDefault_CanExecute(object sender, CanExecuteRoutedEventArgs e)
-        {
+        private void MakeGlobalDefault_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
             var view = e.Parameter as EnvironmentView;
             e.CanExecute = view != null && !view.IsDefault && view.Factory.CanBeDefault();
         }
 
-        private void MakeGlobalDefault_Executed(object sender, ExecutedRoutedEventArgs e)
-        {
+        private void MakeGlobalDefault_Executed(object sender, ExecutedRoutedEventArgs e) {
             _options.DefaultInterpreter = ((EnvironmentView)e.Parameter).Factory;
         }
 
-        private void UpdateEnvironments(string select = null)
-        {
-            if (_options == null)
-            {
-                lock (_environments)
-                {
+        private void UpdateEnvironments(string select = null) {
+            if (_options == null) {
+                lock (_environments) {
                     _environments.Clear();
                 }
                 return;
             }
 
-            lock (_environments)
-            {
-                if (select == null)
-                {
+            lock (_environments) {
+                if (select == null) {
                     var selectView = _environmentsView.View.CurrentItem as EnvironmentView;
                     select = selectView?.Configuration?.Id;
                 }
@@ -218,8 +174,7 @@ namespace Microsoft.PythonTools.EnvironmentsList
                 // them into a view. The first time that happens, we insert a
                 // stub entry, and on the subsequent pass it will be removed.
                 bool anyMissing = true;
-                for (int retries = 3; retries > 0 && anyMissing; --retries)
-                {
+                for (int retries = 3; retries > 0 && anyMissing; --retries) {
                     var configs = _interpreters.Configurations.Where(f => f.IsUIVisible()).ToList();
 
                     anyMissing = false;
@@ -227,22 +182,16 @@ namespace Microsoft.PythonTools.EnvironmentsList
                         configs,
                         ev => ev.Configuration,
                         c => c,
-                        c =>
-                        {
+                        c => {
                             var fact = _interpreters.FindInterpreter(c.Id);
                             EnvironmentView view = null;
-                            try
-                            {
-                                if (fact != null)
-                                {
+                            try {
+                                if (fact != null) {
                                     view = new EnvironmentView(_options, _interpreters, fact, null);
                                 }
+                            } catch (ArgumentException) {
                             }
-                            catch (ArgumentException)
-                            {
-                            }
-                            if (view == null)
-                            {
+                            if (view == null) {
                                 view = EnvironmentView.CreateMissingEnvironmentView(c.Id + "+Missing", c.Description);
                                 anyMissing = true;
                             }
@@ -254,45 +203,36 @@ namespace Microsoft.PythonTools.EnvironmentsList
                     );
                 }
 
-                if (select != null)
-                {
+                if (select != null) {
                     var selectView = _environments.FirstOrDefault(v => v.Factory != null &&
                         v.Factory.Configuration.Id == select);
-                    if (selectView == null)
-                    {
+                    if (selectView == null) {
                         select = null;
-                    }
-                    else
-                    {
+                    } else {
                         _environmentsView.View.MoveCurrentTo(selectView);
                     }
                 }
-                if (select == null)
-                {
+                if (select == null) {
                     var defaultView = _environments.FirstOrDefault(v => v.IsDefault);
-                    if (defaultView != null && _environmentsView.View.CurrentItem == null)
-                    {
+                    if (defaultView != null && _environmentsView.View.CurrentItem == null) {
                         _environmentsView.View.MoveCurrentTo(defaultView);
                     }
                 }
             }
         }
 
-        private void FirstUpdateEnvironments()
-        {
+        private void FirstUpdateEnvironments() {
             UpdateEnvironments();
 
             UpdateLayout();
             UpdateLayout(ActualWidth, ActualHeight);
         }
 
-        private void OnViewCreated(EnvironmentView view)
-        {
+        private void OnViewCreated(EnvironmentView view) {
             ViewCreated?.Invoke(this, new EnvironmentViewEventArgs(view));
         }
 
-        internal void OnViewSelected(EnvironmentView view)
-        {
+        internal void OnViewSelected(EnvironmentView view) {
             ViewSelected?.Invoke(this, new EnvironmentViewEventArgs(view));
         }
 
@@ -301,96 +241,69 @@ namespace Microsoft.PythonTools.EnvironmentsList
 
         internal IInterpreterOptionsService OptionsService => _options;
 
-        public void InitializeEnvironments(IInterpreterRegistryService interpreters, IInterpreterOptionsService options, bool synchronous = false)
-        {
-            if (_interpreters != null)
-            {
+        public void InitializeEnvironments(IInterpreterRegistryService interpreters, IInterpreterOptionsService options, bool synchronous = false) {
+            if (_interpreters != null) {
                 _interpreters.InterpretersChanged -= Service_InterpretersChanged;
             }
             _interpreters = interpreters;
-            if (_interpreters != null)
-            {
+            if (_interpreters != null) {
                 _interpreters.InterpretersChanged += Service_InterpretersChanged;
             }
 
-            if (_options != null)
-            {
+            if (_options != null) {
                 _options.DefaultInterpreterChanged -= Service_DefaultInterpreterChanged;
             }
             _options = options;
-            if (_options != null)
-            {
+            if (_options != null) {
                 _options.DefaultInterpreterChanged += Service_DefaultInterpreterChanged;
             }
 
-            if (_interpreters != null && _options != null)
-            {
-                if (synchronous)
-                {
+            if (_interpreters != null && _options != null) {
+                if (synchronous) {
                     Dispatcher.Invoke(FirstUpdateEnvironments);
-                }
-                else
-                {
+                } else {
                     Dispatcher.InvokeAsync(FirstUpdateEnvironments).Task.DoNotWait();
                 }
             }
         }
 
-        private async void Service_InterpretersChanged(object sender, EventArgs e)
-        {
-            try
-            {
+        private async void Service_InterpretersChanged(object sender, EventArgs e) {
+            try {
                 await Dispatcher.InvokeAsync(() => UpdateEnvironments());
-            }
-            catch (OperationCanceledException)
-            {
+            } catch (OperationCanceledException) {
             }
         }
 
-        private async void Service_DefaultInterpreterChanged(object sender, EventArgs e)
-        {
+        private async void Service_DefaultInterpreterChanged(object sender, EventArgs e) {
             var newDefault = _options.DefaultInterpreter;
-            try
-            {
-                await Dispatcher.InvokeAsync(() =>
-                {
-                    lock (_environments)
-                    {
-                        foreach (var view in _environments)
-                        {
-                            if (view.Factory == newDefault)
-                            {
+            try {
+                await Dispatcher.InvokeAsync(() => {
+                    lock (_environments) {
+                        foreach (var view in _environments) {
+                            if (view.Factory == newDefault) {
                                 view.IsDefault = true;
-                            }
-                            else if (view.IsDefault == true)
-                            {
+                            } else if (view.IsDefault == true) {
                                 view.IsDefault = false;
                             }
                         }
                     }
                 });
-            }
-            catch (OperationCanceledException)
-            {
+            } catch (OperationCanceledException) {
             }
         }
 
-        private void ConfigurableViewAdded_CanExecute(object sender, CanExecuteRoutedEventArgs e)
-        {
+        private void ConfigurableViewAdded_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
             e.CanExecute = e.Parameter is string;
             e.Handled = true;
         }
 
-        private async void ConfigurableViewAdded_Executed(object sender, ExecutedRoutedEventArgs e)
-        {
+        private async void ConfigurableViewAdded_Executed(object sender, ExecutedRoutedEventArgs e) {
             var id = (string)e.Parameter;
             e.Handled = true;
 
-            for (int retries = 10; retries > 0; --retries)
-            {
+            for (int retries = 10; retries > 0; --retries) {
                 var env = _environments.FirstOrDefault(ev => ev.Factory?.Configuration?.Id == id);
-                if (env != null)
-                {
+                if (env != null) {
                     Environments.MoveCurrentTo(env);
                     return;
                 }
@@ -399,77 +312,61 @@ namespace Microsoft.PythonTools.EnvironmentsList
             Debug.Fail("Failed to switch to added environment");
         }
 
-        private void ConfigureEnvironment_CanExecute(object sender, CanExecuteRoutedEventArgs e)
-        {
+        private void ConfigureEnvironment_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
             e.CanExecute = (e.Parameter as EnvironmentView)?.IsConfigurable ?? false;
             e.Handled = true;
         }
 
-        private void ConfigureEnvironment_Executed(object sender, ExecutedRoutedEventArgs e)
-        {
+        private void ConfigureEnvironment_Executed(object sender, ExecutedRoutedEventArgs e) {
             e.Handled = true;
 
             var env = (EnvironmentView)e.Parameter;
-            if (Environments.CurrentItem != env)
-            {
+            if (Environments.CurrentItem != env) {
                 Environments.MoveCurrentTo(env);
-                if (Environments.CurrentItem != env)
-                {
+                if (Environments.CurrentItem != env) {
                     return;
                 }
             }
             var ext = env.Extensions.OfType<ConfigurationExtensionProvider>().FirstOrDefault();
-            if (ext != null)
-            {
+            if (ext != null) {
                 Extensions.MoveCurrentTo(ext);
             }
         }
 
-        private void EnvironmentsList_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
+        private void EnvironmentsList_SelectionChanged(object sender, SelectionChangedEventArgs e) {
             var list = sender as ListBox;
-            if (list != null && e.AddedItems.Count > 0)
-            {
+            if (list != null && e.AddedItems.Count > 0) {
                 list.ScrollIntoView(e.AddedItems[0]);
                 e.Handled = true;
             }
         }
 
-        private void OnlineHelpListItem_GotFocus(object sender, RoutedEventArgs e)
-        {
+        private void OnlineHelpListItem_GotFocus(object sender, RoutedEventArgs e) {
             for (var child = sender as DependencyObject;
                 child != null;
                 child = VisualTreeHelper.GetParent(child)
-            )
-            {
+            ) {
                 var lbi = child as ListBoxItem;
-                if (lbi != null)
-                {
+                if (lbi != null) {
                     lbi.IsSelected = true;
                     return;
                 }
             }
         }
 
-        private class InterpreterConfigurationComparer : IEqualityComparer<InterpreterConfiguration>, IComparer<InterpreterConfiguration>
-        {
+        private class InterpreterConfigurationComparer : IEqualityComparer<InterpreterConfiguration>, IComparer<InterpreterConfiguration> {
             public static readonly InterpreterConfigurationComparer Instance = new InterpreterConfigurationComparer();
 
             public bool Equals(InterpreterConfiguration x, InterpreterConfiguration y) => x == y;
             public int GetHashCode(InterpreterConfiguration obj) => obj.GetHashCode();
 
-            public int Compare(InterpreterConfiguration x, InterpreterConfiguration y)
-            {
-                if (object.ReferenceEquals(x, y))
-                {
+            public int Compare(InterpreterConfiguration x, InterpreterConfiguration y) {
+                if (object.ReferenceEquals(x, y)) {
                     return 0;
                 }
-                if (x == null)
-                {
+                if (x == null) {
                     return y == null ? 0 : 1;
-                }
-                else if (y == null)
-                {
+                } else if (y == null) {
                     return -1;
                 }
 
@@ -478,8 +375,7 @@ namespace Microsoft.PythonTools.EnvironmentsList
                     y.Description
                 );
 
-                if (result == 0)
-                {
+                if (result == 0) {
                     result = StringComparer.Ordinal.Compare(
                         x.Id,
                         y.Id
@@ -494,10 +390,8 @@ namespace Microsoft.PythonTools.EnvironmentsList
     /// <summary>
     /// Contains the newly created view.
     /// </summary>
-    public class EnvironmentViewEventArgs : EventArgs
-    {
-        public EnvironmentViewEventArgs(EnvironmentView view)
-        {
+    public class EnvironmentViewEventArgs : EventArgs {
+        public EnvironmentViewEventArgs(EnvironmentView view) {
             View = view;
         }
 

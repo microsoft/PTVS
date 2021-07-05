@@ -16,39 +16,32 @@
 
 using Microsoft.VisualStudioTools.Project;
 
-namespace Microsoft.PythonTools.Project
-{
-    class DefaultPythonProject : IPythonProject
-    {
+namespace Microsoft.PythonTools.Project {
+    class DefaultPythonProject : IPythonProject {
         private readonly IServiceProvider _serviceProvider;
         private readonly string _filePath;
 
         public event EventHandler<AnalyzerChangingEventArgs> ProjectAnalyzerChanging { add { } remove { } }
 
-        public DefaultPythonProject(IServiceProvider serviceProvider, string filePath)
-        {
+        public DefaultPythonProject(IServiceProvider serviceProvider, string filePath) {
             Utilities.ArgumentNotNullOrEmpty("filePath", filePath);
             _filePath = filePath;
             _serviceProvider = serviceProvider;
         }
 
-        public void SetProperty(string name, string value)
-        {
+        public void SetProperty(string name, string value) {
             Debug.Fail("Unexpected DefaultPythonProject.SetProperty() call");
         }
 
-        public Projects.ProjectAnalyzer GetProjectAnalyzer()
-        {
+        public Projects.ProjectAnalyzer GetProjectAnalyzer() {
             return _serviceProvider.GetPythonToolsService().TryGetSharedAnalyzer(null, out _, addUser: false);
         }
 
-        public IPythonInterpreterFactory GetInterpreterFactory()
-        {
+        public IPythonInterpreterFactory GetInterpreterFactory() {
             return _serviceProvider.GetComponentModel().GetService<IInterpreterOptionsService>().DefaultInterpreter;
         }
 
-        public bool Publish(PublishProjectOptions options)
-        {
+        public bool Publish(PublishProjectOptions options) {
             Debug.Fail("Unexpected DefaultPythonProject.Publish() call");
             return false;
         }

@@ -14,25 +14,21 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Intellisense
-{
+namespace Microsoft.PythonTools.Intellisense {
     [Export(typeof(ICompletionSourceProvider)), ContentType(PythonCoreConstants.ContentType), Order, Name("CompletionProvider")]
-    internal class CompletionSourceProvider : ICompletionSourceProvider
-    {
+    internal class CompletionSourceProvider : ICompletionSourceProvider {
         internal readonly IGlyphService _glyphService;
         internal readonly PythonToolsService _pyService;
         internal readonly IServiceProvider _serviceProvider;
 
         [ImportingConstructor]
-        public CompletionSourceProvider([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider, IGlyphService glyphService)
-        {
+        public CompletionSourceProvider([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider, IGlyphService glyphService) {
             _pyService = serviceProvider.GetPythonToolsService();
             _glyphService = glyphService;
             _serviceProvider = serviceProvider;
         }
 
-        public ICompletionSource TryCreateCompletionSource(ITextBuffer textBuffer)
-        {
+        public ICompletionSource TryCreateCompletionSource(ITextBuffer textBuffer) {
             return new CompletionSource(this, textBuffer);
         }
     }

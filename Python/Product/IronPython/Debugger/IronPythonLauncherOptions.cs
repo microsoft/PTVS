@@ -16,8 +16,6 @@
 
 using System;
 using System.Windows.Forms;
-using Microsoft.PythonTools.Project;
-using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.IronPythonTools.Debugger {
     public partial class IronPythonLauncherOptions : UserControl, IPythonLauncherOptions {

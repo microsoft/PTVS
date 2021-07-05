@@ -14,34 +14,27 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.CookiecutterTools.Model
-{
-    class FeedTemplateSource : ITemplateSource
-    {
+namespace Microsoft.CookiecutterTools.Model {
+    class FeedTemplateSource : ITemplateSource {
         private readonly Uri _feedLocation;
         private List<Template> _cache;
 
-        public FeedTemplateSource(Uri feedLocation)
-        {
+        public FeedTemplateSource(Uri feedLocation) {
             _feedLocation = feedLocation;
         }
 
-        public async Task<TemplateEnumerationResult> GetTemplatesAsync(string filter, string continuationToken, CancellationToken cancellationToken)
-        {
-            if (_cache == null)
-            {
+        public async Task<TemplateEnumerationResult> GetTemplatesAsync(string filter, string continuationToken, CancellationToken cancellationToken) {
+            if (_cache == null) {
                 await BuildCacheAsync();
             }
 
             var keywords = SearchUtils.ParseKeywords(filter);
 
             var templates = new List<Template>();
-            foreach (var template in _cache)
-            {
+            foreach (var template in _cache) {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                if (SearchUtils.SearchMatches(keywords, template))
-                {
+                if (SearchUtils.SearchMatches(keywords, template)) {
                     templates.Add(template.Clone());
                 }
             }
@@ -49,44 +42,34 @@ namespace Microsoft.CookiecutterTools.Model
             return new TemplateEnumerationResult(templates);
         }
 
-        public void InvalidateCache()
-        {
+        public void InvalidateCache() {
             _cache = null;
         }
 
-        private async Task BuildCacheAsync()
-        {
+        private async Task BuildCacheAsync() {
             _cache = new List<Template>();
 
-            try
-            {
+            try {
                 var client = new WebClient();
                 var feed = await client.DownloadStringTaskAsync(_feedLocation);
                 var feedUrls = feed.Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
 
-                foreach (var entry in feedUrls)
-                {
-                    var template = new Template()
-                    {
+                foreach (var entry in feedUrls) {
+                    var template = new Template() {
                         RemoteUrl = entry,
                     };
 
                     string owner;
                     string name;
-                    if (ParseUtils.ParseGitHubRepoOwnerAndName(entry, out owner, out name))
-                    {
+                    if (ParseUtils.ParseGitHubRepoOwnerAndName(entry, out owner, out name)) {
                         template.Name = owner + "/" + name;
-                    }
-                    else
-                    {
+                    } else {
                         template.Name = entry;
                     }
 
                     _cache.Add(template);
                 }
-            }
-            catch (WebException ex)
-            {
+            } catch (WebException ex) {
                 throw new TemplateEnumerationException(Strings.FeedLoadError, ex);
             }
         }

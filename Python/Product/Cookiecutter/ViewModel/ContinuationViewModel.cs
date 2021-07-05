@@ -14,17 +14,13 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.CookiecutterTools.ViewModel
-{
-    class ContinuationViewModel : TreeItemViewModel
-    {
+namespace Microsoft.CookiecutterTools.ViewModel {
+    class ContinuationViewModel : TreeItemViewModel {
         public ContinuationViewModel() :
-            this(null)
-        {
+            this(null) {
         }
 
-        public ContinuationViewModel(string continuationToken)
-        {
+        public ContinuationViewModel(string continuationToken) {
             ContinuationToken = continuationToken;
         }
 

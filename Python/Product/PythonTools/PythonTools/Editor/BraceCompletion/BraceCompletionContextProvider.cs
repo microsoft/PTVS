@@ -14,8 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Editor.BraceCompletion
-{
+namespace Microsoft.PythonTools.Editor.BraceCompletion {
     [Export(typeof(IBraceCompletionContextProvider))]
     [BracePair('(', ')')]
     [BracePair('[', ']')]
@@ -23,35 +22,27 @@ namespace Microsoft.PythonTools.Editor.BraceCompletion
     [BracePair('"', '"')]
     [BracePair('\'', '\'')]
     [ContentType(PythonCoreConstants.ContentType)]
-    internal sealed class BraceCompletionContextProvider : IBraceCompletionContextProvider
-    {
+    internal sealed class BraceCompletionContextProvider : IBraceCompletionContextProvider {
         [Import]
         internal PythonEditorServices EditorServices = null;
 
-        public bool TryCreateContext(ITextView textView, SnapshotPoint openingPoint, char openingBrace, char closingBrace, out IBraceCompletionContext context)
-        {
-            if (IsValidBraceCompletionContext(EditorServices.GetBufferInfo(openingPoint.Snapshot.TextBuffer), openingPoint))
-            {
+        public bool TryCreateContext(ITextView textView, SnapshotPoint openingPoint, char openingBrace, char closingBrace, out IBraceCompletionContext context) {
+            if (IsValidBraceCompletionContext(EditorServices.GetBufferInfo(openingPoint.Snapshot.TextBuffer), openingPoint)) {
                 context = new BraceCompletionContext();
                 return true;
-            }
-            else
-            {
+            } else {
                 context = null;
                 return false;
             }
         }
 
-        private static bool IsValidBraceCompletionContext(PythonTextBufferInfo buffer, SnapshotPoint openingPoint)
-        {
-            if (buffer == null)
-            {
+        private static bool IsValidBraceCompletionContext(PythonTextBufferInfo buffer, SnapshotPoint openingPoint) {
+            if (buffer == null) {
                 return false;
             }
 
             Debug.Assert(openingPoint.Position >= 0, "SnapshotPoint.Position should always be zero or positive.");
-            if (openingPoint.Position < 0)
-            {
+            if (openingPoint.Position < 0) {
                 return false;
             }
 

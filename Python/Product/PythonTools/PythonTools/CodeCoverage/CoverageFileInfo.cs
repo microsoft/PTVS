@@ -14,15 +14,12 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.CodeCoverage
-{
-    class CoverageFileInfo
-    {
+namespace Microsoft.PythonTools.CodeCoverage {
+    class CoverageFileInfo {
         public readonly string Filename;
         public readonly HashSet<int> Hits;
 
-        public CoverageFileInfo(string filename, HashSet<int> hits)
-        {
+        public CoverageFileInfo(string filename, HashSet<int> hits) {
             Filename = filename;
             Hits = hits;
         }

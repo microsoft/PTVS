@@ -103,6 +103,43 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
     <UseVSHostingProcess>false</UseVSHostingProcess>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'clump|x86'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x86\clump\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;;USE_PYTHON_TESTDATA;DEV10</DefineConstants>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <NoWarn>436;1998</NoWarn>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <LangVersion>7.3</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>C:\Users\peezo\source\repos\PeezoSlug\PTVS\\Build\xTVS.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'clump|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\clump\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;;USE_PYTHON_TESTDATA;DEV10</DefineConstants>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <NoWarn>436;1998</NoWarn>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <LangVersion>7.3</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>C:\Users\peezo\source\repos\PeezoSlug\PTVS\\Build\xTVS.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'clump|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x64\clump\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;;USE_PYTHON_TESTDATA;DEV10</DefineConstants>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <NoWarn>436;1998</NoWarn>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <LangVersion>7.3</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>C:\Users\peezo\source\repos\PeezoSlug\PTVS\\Build\xTVS.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="DiagnosticsHub.Packaging.Interop, Version=15.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>

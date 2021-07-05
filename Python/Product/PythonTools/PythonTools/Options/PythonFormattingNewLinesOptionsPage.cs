@@ -14,8 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Options
-{
+namespace Microsoft.PythonTools.Options {
     // TODO: Implement new line formatting, and then enable this.
     /*
     [ComVisible(true)]

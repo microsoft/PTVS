@@ -16,25 +16,21 @@
 
 using Microsoft.PythonTools.Editor;
 
-namespace Microsoft.PythonTools.Intellisense
-{
+namespace Microsoft.PythonTools.Intellisense {
     [Export(typeof(ISuggestedActionsSourceProvider))]
     [Name("Python Suggested Actions")]
     [ContentType(PythonCoreConstants.ContentType)]
     [TextViewRole(PredefinedTextViewRoles.Analyzable)]
     [TextViewRole(PredefinedTextViewRoles.Editable)]
-    class PythonSuggestedActionsSourceProvider : ISuggestedActionsSourceProvider
-    {
+    class PythonSuggestedActionsSourceProvider : ISuggestedActionsSourceProvider {
         [Import]
         internal PythonEditorServices _services = null;
 
         public ISuggestedActionsSource CreateSuggestedActionsSource(
             ITextView textView,
             ITextBuffer textBuffer
-        )
-        {
-            if (textView == null || textBuffer == null)
-            {
+        ) {
+            if (textView == null || textBuffer == null) {
                 return null;
             }
 

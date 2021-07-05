@@ -16,16 +16,13 @@
 
 using Microsoft.PythonTools.Django.TemplateParsing;
 
-namespace Microsoft.PythonTools.Django.Intellisense
-{
-    internal abstract class DjangoCompletionSourceBase : ICompletionSource
-    {
+namespace Microsoft.PythonTools.Django.Intellisense {
+    internal abstract class DjangoCompletionSourceBase : ICompletionSource {
         protected readonly IGlyphService _glyphService;
         protected readonly VsProjectAnalyzer _analyzer;
         protected readonly ITextBuffer _buffer;
 
-        protected DjangoCompletionSourceBase(IGlyphService glyphService, VsProjectAnalyzer analyzer, ITextBuffer textBuffer)
-        {
+        protected DjangoCompletionSourceBase(IGlyphService glyphService, VsProjectAnalyzer analyzer, ITextBuffer textBuffer) {
             _glyphService = glyphService;
             _analyzer = analyzer;
             _buffer = textBuffer;
@@ -39,35 +36,27 @@ namespace Microsoft.PythonTools.Django.Intellisense
         /// <param name="templateText">The text of the template tag which we are offering a completion in</param>
         /// <param name="templateStart">The offset in the buffer where the template starts</param>
         /// <param name="triggerPoint">The point in the buffer where the completion was triggered</param>
-        internal CompletionSet GetCompletionSet(CompletionOptions options, VsProjectAnalyzer analyzer, TemplateTokenKind kind, string templateText, int templateStart, SnapshotPoint triggerPoint, out ITrackingSpan applicableSpan)
-        {
+        internal CompletionSet GetCompletionSet(CompletionOptions options, VsProjectAnalyzer analyzer, TemplateTokenKind kind, string templateText, int templateStart, SnapshotPoint triggerPoint, out ITrackingSpan applicableSpan) {
             int position = triggerPoint.Position - templateStart;
             IEnumerable<CompletionInfo> tags;
             IDjangoCompletionContext context;
 
             applicableSpan = GetWordSpan(templateText, templateStart, triggerPoint);
 
-            switch (kind)
-            {
+            switch (kind) {
                 case TemplateTokenKind.Block:
                     var block = DjangoBlock.Parse(templateText);
-                    if (block != null)
-                    {
-                        if (position <= block.ParseInfo.Start + block.ParseInfo.Command.Length)
-                        {
+                    if (block != null) {
+                        if (position <= block.ParseInfo.Start + block.ParseInfo.Command.Length) {
                             // we are completing before the command
                             // TODO: Return a new set of tags?  Do nothing?  Do this based upon ctrl-space?
                             tags = FilterBlocks(CompletionInfo.ToCompletionInfo(analyzer.GetTags(), StandardGlyphGroup.GlyphKeyword), triggerPoint);
-                        }
-                        else
-                        {
+                        } else {
                             // we are in the arguments, let the block handle the completions
                             context = new ProjectBlockCompletionContext(analyzer, _buffer);
                             tags = block.GetCompletions(context, position);
                         }
-                    }
-                    else
-                    {
+                    } else {
                         // no tag entered yet, provide the known list of tags.
                         tags = FilterBlocks(CompletionInfo.ToCompletionInfo(analyzer.GetTags(), StandardGlyphGroup.GlyphKeyword), triggerPoint);
                     }
@@ -75,12 +64,9 @@ namespace Microsoft.PythonTools.Django.Intellisense
                 case TemplateTokenKind.Variable:
                     var variable = DjangoVariable.Parse(templateText);
                     context = new ProjectBlockCompletionContext(analyzer, _buffer);
-                    if (variable != null)
-                    {
+                    if (variable != null) {
                         tags = variable.GetCompletions(context, position);
-                    }
-                    else
-                    {
+                    } else {
                         // show variable names
                         tags = CompletionInfo.ToCompletionInfo(context.Variables, StandardGlyphGroup.GlyphGroupVariable);
                     }
@@ -107,24 +93,19 @@ namespace Microsoft.PythonTools.Django.Intellisense
                 CompletionComparer.UnderscoresLast);
         }
 
-        private ITrackingSpan GetWordSpan(string templateText, int templateStart, SnapshotPoint triggerPoint)
-        {
+        private ITrackingSpan GetWordSpan(string templateText, int templateStart, SnapshotPoint triggerPoint) {
             ITrackingSpan applicableSpan;
             int spanStart = triggerPoint.Position;
-            for (int i = triggerPoint.Position - templateStart - 1; i >= 0 && i < templateText.Length; --i, --spanStart)
-            {
+            for (int i = triggerPoint.Position - templateStart - 1; i >= 0 && i < templateText.Length; --i, --spanStart) {
                 char c = templateText[i];
-                if (!char.IsLetterOrDigit(c) && c != '_')
-                {
+                if (!char.IsLetterOrDigit(c) && c != '_') {
                     break;
                 }
             }
             int length = triggerPoint.Position - spanStart;
-            for (int i = triggerPoint.Position; i < triggerPoint.Snapshot.Length; i++)
-            {
+            for (int i = triggerPoint.Position; i < triggerPoint.Snapshot.Length; i++) {
                 char c = triggerPoint.Snapshot[i];
-                if (!char.IsLetterOrDigit(c) && c != '_')
-                {
+                if (!char.IsLetterOrDigit(c) && c != '_') {
                     break;
                 }
                 length++;
@@ -139,17 +120,13 @@ namespace Microsoft.PythonTools.Django.Intellisense
             return applicableSpan;
         }
 
-        internal static string StripDocumentation(string doc)
-        {
-            if (doc == null)
-            {
+        internal static string StripDocumentation(string doc) {
+            if (doc == null) {
                 return String.Empty;
             }
             StringBuilder result = new StringBuilder(doc.Length);
-            foreach (string line in doc.Split('\n'))
-            {
-                if (result.Length > 0)
-                {
+            foreach (string line in doc.Split('\n')) {
+                if (result.Length > 0) {
                     result.Append("\r\n");
                 }
                 result.Append(line.Trim());
@@ -159,33 +136,23 @@ namespace Microsoft.PythonTools.Django.Intellisense
 
         protected abstract IEnumerable<DjangoBlock> GetBlocks(IEnumerable<CompletionInfo> results, SnapshotPoint triggerPoint);
 
-        private IEnumerable<CompletionInfo> FilterBlocks(IEnumerable<CompletionInfo> results, SnapshotPoint triggerPoint)
-        {
+        private IEnumerable<CompletionInfo> FilterBlocks(IEnumerable<CompletionInfo> results, SnapshotPoint triggerPoint) {
             int depth = 0;
             HashSet<string> included = new HashSet<string>();
-            foreach (var block in GetBlocks(results, triggerPoint))
-            {
+            foreach (var block in GetBlocks(results, triggerPoint)) {
                 var cmd = block.ParseInfo.Command;
-                if (cmd == "elif")
-                {
-                    if (depth == 0)
-                    {
+                if (cmd == "elif") {
+                    if (depth == 0) {
                         included.Add("endif");
                     }
                     // otherwise elif both starts and ends a block, 
                     // so depth remains the same.
-                }
-                else if (DjangoAnalyzer._nestedEndTags.Contains(cmd))
-                {
+                } else if (DjangoAnalyzer._nestedEndTags.Contains(cmd)) {
                     depth++;
-                }
-                else if (DjangoAnalyzer._nestedStartTags.Contains(cmd))
-                {
-                    if (depth == 0)
-                    {
+                } else if (DjangoAnalyzer._nestedStartTags.Contains(cmd)) {
+                    if (depth == 0) {
                         included.Add(DjangoAnalyzer._nestedTags[cmd]);
-                        if (cmd == "if")
-                        {
+                        if (cmd == "if") {
                             included.Add("elif");
                         }
                     }
@@ -197,11 +164,9 @@ namespace Microsoft.PythonTools.Django.Intellisense
                 }
             }
 
-            foreach (var value in results)
-            {
+            foreach (var value in results) {
                 if (!(DjangoAnalyzer._nestedEndTags.Contains(value.DisplayText) || value.DisplayText == "elif") ||
-                    included.Contains(value.DisplayText))
-                {
+                    included.Contains(value.DisplayText)) {
                     yield return value;
                 }
             }
@@ -212,8 +177,7 @@ namespace Microsoft.PythonTools.Django.Intellisense
 
         #region IDisposable Members
 
-        public void Dispose()
-        {
+        public void Dispose() {
         }
 
         #endregion

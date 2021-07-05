@@ -14,13 +14,11 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.EnvironmentsList
-{
+namespace Microsoft.PythonTools.EnvironmentsList {
     /// <summary>
     /// Implemented by controls that know how to focus themselves.
     /// </summary>
-    public interface ICanFocus
-    {
+    public interface ICanFocus {
         void Focus();
     }
 }

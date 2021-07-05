@@ -14,44 +14,33 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Intellisense
-{
-    class FileCookie : IIntellisenseCookie
-    {
+namespace Microsoft.PythonTools.Intellisense {
+    class FileCookie : IIntellisenseCookie {
         private readonly string _path;
         private string[] _allLines;
 
-        public FileCookie(string path)
-        {
+        public FileCookie(string path) {
             _path = path;
         }
 
-        public string Path
-        {
-            get
-            {
+        public string Path {
+            get {
                 return _path;
             }
         }
 
         #region IFileCookie Members
 
-        public string GetLine(int lineNo)
-        {
-            if (_allLines == null)
-            {
-                try
-                {
+        public string GetLine(int lineNo) {
+            if (_allLines == null) {
+                try {
                     _allLines = File.ReadAllLines(Path);
-                }
-                catch (IOException)
-                {
+                } catch (IOException) {
                     _allLines = new string[0];
                 }
             }
 
-            if (lineNo - 1 < _allLines.Length)
-            {
+            if (lineNo - 1 < _allLines.Length) {
                 return _allLines[lineNo - 1];
             }
 
@@ -61,68 +50,49 @@ namespace Microsoft.PythonTools.Intellisense
         #endregion
     }
 
-    class ZipFileCookie : IIntellisenseCookie
-    {
+    class ZipFileCookie : IIntellisenseCookie {
         private readonly string _zipFileName;
         private readonly string _pathInZip;
         private List<string> _allLines;
 
-        public ZipFileCookie(string zipFileName, string pathInZip)
-        {
+        public ZipFileCookie(string zipFileName, string pathInZip) {
             _zipFileName = zipFileName;
             _pathInZip = pathInZip;
         }
 
-        public string Path
-        {
-            get
-            {
+        public string Path {
+            get {
                 return System.IO.Path.Combine(_zipFileName, _pathInZip);
             }
         }
 
-        private void Load()
-        {
+        private void Load() {
         }
 
         #region IFileCookie Members
 
-        public string GetLine(int lineNo)
-        {
-            if (_allLines == null)
-            {
+        public string GetLine(int lineNo) {
+            if (_allLines == null) {
                 _allLines = new List<string>();
-                try
-                {
-                    using (ZipArchive archive = ZipFile.Open(_zipFileName, ZipArchiveMode.Read))
-                    {
+                try {
+                    using (ZipArchive archive = ZipFile.Open(_zipFileName, ZipArchiveMode.Read)) {
                         var entry = archive.GetEntry(_pathInZip.Replace('\\', '/'));
-                        if (entry != null)
-                        {
-                            using (var reader = new StreamReader(entry.Open()))
-                            {
+                        if (entry != null) {
+                            using (var reader = new StreamReader(entry.Open())) {
                                 string line;
-                                while ((line = reader.ReadLine()) != null)
-                                {
+                                while ((line = reader.ReadLine()) != null) {
                                     _allLines.Add(line);
                                 }
                             }
                         }
                     }
-                }
-                catch (IOException)
-                {
-                }
-                catch (InvalidDataException)
-                {
-                }
-                catch (UnauthorizedAccessException)
-                {
+                } catch (IOException) {
+                } catch (InvalidDataException) {
+                } catch (UnauthorizedAccessException) {
                 }
             }
 
-            if (lineNo - 1 < _allLines.Count)
-            {
+            if (lineNo - 1 < _allLines.Count) {
                 return _allLines[lineNo - 1];
             }
 

@@ -14,12 +14,9 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.CookiecutterTools.Model
-{
-    class ParseUtils
-    {
-        public static bool ParseGitHubRepoOwnerAndName(string repoUrl, out string owner, out string name)
-        {
+namespace Microsoft.CookiecutterTools.Model {
+    class ParseUtils {
+        public static bool ParseGitHubRepoOwnerAndName(string repoUrl, out string owner, out string name) {
             var m = Regex.Match(repoUrl, @"http(s)?://github\.com/(?<owner>.+?)/(?<name>.+?)(/|#|\?|$)");
             owner = m.Groups["owner"].Value;
             name = m.Groups["name"].Value;

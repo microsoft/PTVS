@@ -17,10 +17,8 @@
 // Guids.cs
 // MUST match guids.h
 
-namespace Microsoft.PythonTools
-{
-    static class GuidList
-    {
+namespace Microsoft.PythonTools {
+    static class GuidList {
         public const string guidPythonToolsPkgString = "6dbd7c1e-1f1b-496d-ac7c-c55dae66c783";
         public const string guidPythonToolsCmdSetString = "bdfa79d2-2cd2-474a-a82a-ce8694116825";
         public const string guidPythonProjectString = "888888A0-9F3D-457C-B088-3A5042F75D52";

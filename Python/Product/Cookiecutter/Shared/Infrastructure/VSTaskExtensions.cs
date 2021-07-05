@@ -17,10 +17,8 @@
 using Microsoft.CookiecutterTools.Telemetry;
 using Task = System.Threading.Tasks.Task;
 
-namespace Microsoft.CookiecutterTools.Infrastructure
-{
-    public static class VSTaskExtensions
-    {
+namespace Microsoft.CookiecutterTools.Infrastructure {
+    public static class VSTaskExtensions {
         private static readonly HashSet<string> _displayedMessages = new HashSet<string>();
 
         /// <summary>
@@ -35,20 +33,16 @@ namespace Microsoft.CookiecutterTools.Infrastructure
             [CallerLineNumber] int callerLineNumber = 0,
             [CallerMemberName] string callerName = null,
             bool allowUI = true
-        )
-        {
+        ) {
             var message = ex.ToUnhandledExceptionMessage(callerType, callerFile, callerLineNumber, callerName);
             // Send the message to the trace listener in case there is
             // somebody out there listening.
             Trace.TraceError(message);
 
             string logFile;
-            try
-            {
+            try {
                 logFile = ActivityLog.LogFilePath;
-            }
-            catch (InvalidOperationException)
-            {
+            } catch (InvalidOperationException) {
                 logFile = null;
             }
 
@@ -57,50 +51,35 @@ namespace Microsoft.CookiecutterTools.Infrastructure
 
             // Log to Windows Event log. If this fails, there is nothing we can
             // do. In debug builds we have already asserted by this point.
-            try
-            {
+            try {
                 EventLog.WriteEntry(Strings.ProductTitle, message, EventLogEntryType.Error, 9999);
-            }
-            catch (ArgumentException)
-            {
+            } catch (ArgumentException) {
                 // Misconfigured source or the message is too long.
-            }
-            catch (SecurityException)
-            {
+            } catch (SecurityException) {
                 // Source does not exist and user cannot create it
-            }
-            catch (InvalidOperationException)
-            {
+            } catch (InvalidOperationException) {
                 // Unable to open the registry key for the log
-            }
-            catch (Win32Exception)
-            {
+            } catch (Win32Exception) {
                 // Unknown error prevented writing to the log
             }
 
-            try
-            {
+            try {
                 ActivityLog.LogError(Strings.ProductTitle, message);
-            }
-            catch (InvalidOperationException)
-            {
+            } catch (InvalidOperationException) {
                 // Activity Log is unavailable.
             }
 
             bool alreadySeen = true;
             var key = "{0}:{1}:{2}".FormatInvariant(callerFile, callerLineNumber, ex.GetType().Name);
-            lock (_displayedMessages)
-            {
-                if (_displayedMessages.Add(key))
-                {
+            lock (_displayedMessages) {
+                if (_displayedMessages.Add(key)) {
                     alreadySeen = false;
                 }
             }
 
             CookiecutterTelemetry.Current?.TelemetryService?.ReportFault(ex, null, !alreadySeen);
 
-            if (allowUI && !alreadySeen && !string.IsNullOrEmpty(logFile))
-            {
+            if (allowUI && !alreadySeen && !string.IsNullOrEmpty(logFile)) {
                 // First time we've seen this error, so let the user know
                 MessageBox.Show(Strings.SeeActivityLog.FormatUI(logFile), Strings.ProductTitle);
             }
@@ -119,8 +98,7 @@ namespace Microsoft.CookiecutterTools.Infrastructure
             [CallerLineNumber] int callerLineNumber = 0,
             [CallerMemberName] string callerName = null,
             bool allowUI = true
-        )
-        {
+        ) {
             return task.HandleAllExceptions(site, callerType, callerFile, callerLineNumber, callerName, allowUI)
                 .WaitAndUnwrapExceptions();
         }
@@ -140,19 +118,13 @@ namespace Microsoft.CookiecutterTools.Infrastructure
             [CallerLineNumber] int callerLineNumber = 0,
             [CallerMemberName] string callerName = null,
             bool allowUI = true
-        )
-        {
+        ) {
             var result = default(T);
-            try
-            {
+            try {
                 result = await task;
-            }
-            catch (Exception ex)
-            {
-                if (task.IsFaulted)
-                {
-                    if (ex.IsCriticalException())
-                    {
+            } catch (Exception ex) {
+                if (task.IsFaulted) {
+                    if (ex.IsCriticalException()) {
                         throw;
                     }
 
@@ -175,8 +147,7 @@ namespace Microsoft.CookiecutterTools.Infrastructure
             [CallerLineNumber] int callerLineNumber = 0,
             [CallerMemberName] string callerName = null,
             bool allowUI = true
-        )
-        {
+        ) {
             task.HandleAllExceptions(site, callerType, callerFile, callerLineNumber, callerName, allowUI)
                 .WaitAndUnwrapExceptions();
         }
@@ -195,18 +166,12 @@ namespace Microsoft.CookiecutterTools.Infrastructure
             [CallerLineNumber] int callerLineNumber = 0,
             [CallerMemberName] string callerName = null,
             bool allowUI = true
-        )
-        {
-            try
-            {
+        ) {
+            try {
                 await task;
-            }
-            catch (Exception ex)
-            {
-                if (task.IsFaulted)
-                {
-                    if (ex.IsCriticalException())
-                    {
+            } catch (Exception ex) {
+                if (task.IsFaulted) {
+                    if (ex.IsCriticalException()) {
                         throw;
                     }
 

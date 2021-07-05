@@ -15,10 +15,8 @@
 // permissions and limitations under the License.
 
 
-namespace Microsoft.PythonTools
-{
-    static class PythonPredefinedClassificationTypeNames
-    {
+namespace Microsoft.PythonTools {
+    static class PythonPredefinedClassificationTypeNames {
         /// <summary>
         /// Open grouping classification.  Used for (, [, {, ), ], and }...  A subtype of the Python
         /// operator grouping.

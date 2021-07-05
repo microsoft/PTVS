@@ -14,10 +14,8 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.CookiecutterTools.Model
-{
-    static class KnownValueSources
-    {
+namespace Microsoft.CookiecutterTools.Model {
+    static class KnownValueSources {
         public const string IsNewProject = "IsNewProject";
         public const string IsNewItem = "IsNewItem";
         public const string IsFromProjectWizard = "IsFromProjectWizard";

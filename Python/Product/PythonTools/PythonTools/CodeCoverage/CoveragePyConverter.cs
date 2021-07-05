@@ -14,25 +14,21 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.CodeCoverage
-{
+namespace Microsoft.PythonTools.CodeCoverage {
     /// <summary>
     /// Loads code coverage data from the XML format saved by coverage.py.
     /// </summary>
-    class CoveragePyConverter
-    {
+    class CoveragePyConverter {
         private readonly Stream _input;
         private readonly string _coverageXmlBasePath;
 
-        public CoveragePyConverter(string baseDir, Stream input)
-        {
+        public CoveragePyConverter(string baseDir, Stream input) {
             _coverageXmlBasePath = baseDir;
             _input = input;
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security.Xml", "CA3053:UseXmlSecureResolver")]
-        public CoverageFileInfo[] Parse()
-        {
+        public CoverageFileInfo[] Parse() {
             XmlDocument doc = new XmlDocument { XmlResolver = null };
             var settings = new XmlReaderSettings { XmlResolver = null };
             using (var reader = XmlReader.Create(_input, settings))
@@ -41,13 +37,11 @@ namespace Microsoft.PythonTools.CodeCoverage
 
             var root = doc.DocumentElement.CreateNavigator();
             string basePath = "";
-            foreach (XPathNavigator source in root.Select("/coverage/sources/source"))
-            {
+            foreach (XPathNavigator source in root.Select("/coverage/sources/source")) {
                 basePath = source.Value;
             }
 
-            foreach (XPathNavigator node in root.Select("/coverage/packages/package/classes/class/lines/line"))
-            {
+            foreach (XPathNavigator node in root.Select("/coverage/packages/package/classes/class/lines/line")) {
                 var hits = node.GetAttribute("hits", "");
                 var number = node.GetAttribute("number", "");
 
@@ -56,14 +50,12 @@ namespace Microsoft.PythonTools.CodeCoverage
                     hitsNo != 0 &&
                     Int32.TryParse(number, out lineNo) &&
                     node.MoveToParent() &&
-                    node.MoveToParent())
-                {
+                    node.MoveToParent()) {
 
                     var filename = GetFilename(basePath, node);
 
                     HashSet<int> lineHits;
-                    if (!data.TryGetValue(filename, out lineHits))
-                    {
+                    if (!data.TryGetValue(filename, out lineHits)) {
                         data[filename] = lineHits = new HashSet<int>();
                     }
 
@@ -75,13 +67,11 @@ namespace Microsoft.PythonTools.CodeCoverage
                 .ToArray();
         }
 
-        private string GetFilename(string basePath, XPathNavigator node)
-        {
+        private string GetFilename(string basePath, XPathNavigator node) {
             // Try and find the source relative to the coverage file first...
             var filename = node.GetAttribute("filename", "").Replace("/", "\\");
             string relativePath = Path.Combine(_coverageXmlBasePath, filename);
-            if (File.Exists(relativePath))
-            {
+            if (File.Exists(relativePath)) {
                 return relativePath;
             }
 

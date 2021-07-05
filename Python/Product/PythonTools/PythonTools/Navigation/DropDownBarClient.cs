@@ -18,8 +18,7 @@ using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudioTools.Project;
 
-namespace Microsoft.PythonTools.Navigation
-{
+namespace Microsoft.PythonTools.Navigation {
     /// <summary>
     /// Implements the navigation bar which appears above a source file in the editor.
     /// 
@@ -42,8 +41,7 @@ namespace Microsoft.PythonTools.Navigation
     /// being outside of a known element to being in a known element we also need to refresh 
     /// the drop down to remove grayed out elements.
     /// </summary>
-    class DropDownBarClient : IVsDropdownBarClient, IPythonTextBufferInfoEventSink
-    {
+    class DropDownBarClient : IVsDropdownBarClient, IPythonTextBufferInfoEventSink {
         private readonly Dispatcher _dispatcher;                        // current dispatcher so we can get back to our thread
         private readonly PythonEditorServices _services;
         private ITextView _textView;                                    // text view we're drop downs for
@@ -57,8 +55,7 @@ namespace Microsoft.PythonTools.Navigation
         private const int NavigationLevels = 2;
         private int[] _curSelection = new int[NavigationLevels];
 
-        public DropDownBarClient(IServiceProvider serviceProvider, ITextView textView)
-        {
+        public DropDownBarClient(IServiceProvider serviceProvider, ITextView textView) {
             Utilities.ArgumentNotNull(nameof(serviceProvider), serviceProvider);
             Utilities.ArgumentNotNull(nameof(textView), textView);
 
@@ -68,45 +65,36 @@ namespace Microsoft.PythonTools.Navigation
             _textView = textView;
             _dispatcher = Dispatcher.CurrentDispatcher;
             _textView.Caret.PositionChanged += CaretPositionChanged;
-            foreach (var tb in PythonTextBufferInfo.GetAllFromView(textView))
-            {
+            foreach (var tb in PythonTextBufferInfo.GetAllFromView(textView)) {
                 tb.AddSink(this, this);
             }
             textView.BufferGraph.GraphBuffersChanged += BufferGraph_GraphBuffersChanged;
-            for (int i = 0; i < NavigationLevels; i++)
-            {
+            for (int i = 0; i < NavigationLevels; i++) {
                 _curSelection[i] = -1;
             }
         }
 
-        private void BufferGraph_GraphBuffersChanged(object sender, VisualStudio.Text.Projection.GraphBuffersChangedEventArgs e)
-        {
-            foreach (var b in e.RemovedBuffers)
-            {
+        private void BufferGraph_GraphBuffersChanged(object sender, VisualStudio.Text.Projection.GraphBuffersChangedEventArgs e) {
+            foreach (var b in e.RemovedBuffers) {
                 PythonTextBufferInfo.TryGetForBuffer(b)?.RemoveSink(typeof(DropDownBarClient));
             }
-            foreach (var b in e.AddedBuffers)
-            {
+            foreach (var b in e.AddedBuffers) {
                 _services.GetBufferInfo(b).AddSink(typeof(DropDownBarClient), this);
             }
         }
 
-        internal int Register(IVsDropdownBarManager manager)
-        {
+        internal int Register(IVsDropdownBarManager manager) {
             IVsDropdownBar dropDownBar;
             int hr = manager.GetDropdownBar(out dropDownBar);
-            if (ErrorHandler.Succeeded(hr) && dropDownBar != null)
-            {
+            if (ErrorHandler.Succeeded(hr) && dropDownBar != null) {
                 hr = manager.RemoveDropdownBar();
-                if (!ErrorHandler.Succeeded(hr))
-                {
+                if (!ErrorHandler.Succeeded(hr)) {
                     return hr;
                 }
             }
 
             int res = manager.AddDropdownBar(2, this);
-            if (ErrorHandler.Succeeded(res))
-            {
+            if (ErrorHandler.Succeeded(res)) {
                 // A buffer may have multiple DropDownBarClients, given one may
                 // open multiple CodeWindows over a single buffer using
                 // Window/New Window
@@ -120,23 +108,19 @@ namespace Microsoft.PythonTools.Navigation
             return res;
         }
 
-        internal int Unregister(IVsDropdownBarManager manager)
-        {
+        internal int Unregister(IVsDropdownBarManager manager) {
             _textView.Caret.PositionChanged -= CaretPositionChanged;
 
             // A buffer may have multiple DropDownBarClients, given one may open multiple CodeWindows
             // over a single buffer using Window/New Window
             List<DropDownBarClient> clients;
-            if (_textView.Properties.TryGetProperty(typeof(DropDownBarClient), out clients))
-            {
+            if (_textView.Properties.TryGetProperty(typeof(DropDownBarClient), out clients)) {
                 clients.Remove(this);
-                if (clients.Count == 0)
-                {
+                if (clients.Count == 0) {
                     _textView.Properties.RemoveProperty(typeof(DropDownBarClient));
                 }
             }
-            foreach (var tb in PythonTextBufferInfo.GetAllFromView(_textView))
-            {
+            foreach (var tb in PythonTextBufferInfo.GetAllFromView(_textView)) {
                 tb.RemoveSink(this);
             }
 #if DEBUG
@@ -151,10 +135,8 @@ namespace Microsoft.PythonTools.Navigation
             return manager.RemoveDropdownBar();
         }
 
-        public void UpdateView(IWpfTextView textView)
-        {
-            if (_textView != textView)
-            {
+        public void UpdateView(IWpfTextView textView) {
+            if (_textView != textView) {
                 _textView.Caret.PositionChanged -= CaretPositionChanged;
                 _textView = textView;
                 _textView.Caret.PositionChanged += CaretPositionChanged;
@@ -172,15 +154,11 @@ namespace Microsoft.PythonTools.Navigation
         /// We always return the # of entries based off our entries list, the exact same image list, and
         /// we have VS query for text, image, and text attributes all the time.
         /// </summary>
-        public int GetComboAttributes(int iCombo, out uint pcEntries, out uint puEntryType, out IntPtr phImageList)
-        {
+        public int GetComboAttributes(int iCombo, out uint pcEntries, out uint puEntryType, out IntPtr phImageList) {
             var navigation = GetNavigation(iCombo);
-            if (navigation == null || navigation.Children == null)
-            {
+            if (navigation == null || navigation.Children == null) {
                 pcEntries = 0;
-            }
-            else
-            {
+            } else {
                 pcEntries = (uint)navigation.Children.Length;
             }
 
@@ -189,8 +167,7 @@ namespace Microsoft.PythonTools.Navigation
             return VSConstants.S_OK;
         }
 
-        public int GetComboTipText(int iCombo, out string pbstrText)
-        {
+        public int GetComboTipText(int iCombo, out string pbstrText) {
             pbstrText = null;
             return VSConstants.S_OK;
         }
@@ -202,17 +179,13 @@ namespace Microsoft.PythonTools.Navigation
         /// for the given combo box.  In that case we ensure the 1st item
         /// is selected and we gray out the 1st entry.
         /// </summary>
-        public int GetEntryAttributes(int iCombo, int iIndex, out uint pAttr)
-        {
+        public int GetEntryAttributes(int iCombo, int iIndex, out uint pAttr) {
             pAttr = (uint)DROPDOWNFONTATTR.FONTATTR_PLAIN;
 
-            lock (_navigationsLock)
-            {
-                if (iIndex == 0)
-                {
+            lock (_navigationsLock) {
+                if (iIndex == 0) {
                     var cur = GetCurrentNavigation(iCombo);
-                    if (cur == null)
-                    {
+                    if (cur == null) {
                         pAttr = (uint)DROPDOWNFONTATTR.FONTATTR_GRAY;
                     }
                 }
@@ -221,38 +194,31 @@ namespace Microsoft.PythonTools.Navigation
             return VSConstants.S_OK;
         }
 
-        private NavigationInfo GetNewNavigation(int depth, int index)
-        {
+        private NavigationInfo GetNewNavigation(int depth, int index) {
             var path = new int[depth + 1];
             Array.Copy(_curSelection, path, depth + 1);
             path[depth] = index;
             return GetNavigationInfo(path);
         }
 
-        private NavigationInfo GetCurrentNavigation(int depth)
-        {
+        private NavigationInfo GetCurrentNavigation(int depth) {
             var path = new int[depth + 1];
             Array.Copy(_curSelection, path, depth + 1);
             return GetNavigationInfo(path);
         }
 
-        private NavigationInfo GetNavigation(int depth)
-        {
+        private NavigationInfo GetNavigation(int depth) {
             var path = new int[depth];
             Array.Copy(_curSelection, path, depth);
             return GetNavigationInfo(path);
         }
 
-        private NavigationInfo GetNavigationInfo(params int[] path)
-        {
-            lock (_navigationsLock)
-            {
+        private NavigationInfo GetNavigationInfo(params int[] path) {
+            lock (_navigationsLock) {
                 var cur = _navigations;
-                for (int i = 0; i < path.Length && cur != null; i++)
-                {
+                for (int i = 0; i < path.Length && cur != null; i++) {
                     int p = path[i];
-                    if (p < 0 || p >= cur.Children.Length)
-                    {
+                    if (p < 0 || p >= cur.Children.Length) {
                         return null;
                     }
                     cur = cur.Children[p];
@@ -265,26 +231,22 @@ namespace Microsoft.PythonTools.Navigation
         /// Gets the image which is associated with the given index for the
         /// given combo box.
         /// </summary>
-        public int GetEntryImage(int iCombo, int iIndex, out int piImageIndex)
-        {
+        public int GetEntryImage(int iCombo, int iIndex, out int piImageIndex) {
             piImageIndex = 0;
 
             var curNav = GetNavigation(iCombo);
-            if (curNav != null && iIndex < curNav.Children.Length)
-            {
+            if (curNav != null && iIndex < curNav.Children.Length) {
                 var child = curNav.Children[iIndex];
 
                 ImageListOverlay overlay = ImageListOverlay.ImageListOverlayNone;
                 string name = child.Name;
                 if (name != null && name.StartsWithOrdinal("_") &&
-                    !(name.StartsWithOrdinal("__") && name.EndsWithOrdinal("__")))
-                {
+                    !(name.StartsWithOrdinal("__") && name.EndsWithOrdinal("__"))) {
                     overlay = ImageListOverlay.ImageListOverlayPrivate;
                 }
 
                 ImageListKind kind;
-                switch (child.Kind)
-                {
+                switch (child.Kind) {
                     case NavigationKind.Class: kind = ImageListKind.Class; break;
                     case NavigationKind.Function: kind = ImageListKind.Method; break;
                     case NavigationKind.ClassMethod: kind = ImageListKind.ClassMethod; break;
@@ -303,13 +265,11 @@ namespace Microsoft.PythonTools.Navigation
         /// Gets the text which is displayed for the given index for the
         /// given combo box.
         /// </summary>
-        public int GetEntryText(int iCombo, int iIndex, out string ppszText)
-        {
+        public int GetEntryText(int iCombo, int iIndex, out string ppszText) {
             ppszText = String.Empty;
 
             var curNav = GetNavigation(iCombo);
-            if (curNav != null && iIndex < curNav.Children.Length)
-            {
+            if (curNav != null && iIndex < curNav.Children.Length) {
                 var child = curNav.Children[iIndex];
                 ppszText = child.Name;
             }
@@ -317,8 +277,7 @@ namespace Microsoft.PythonTools.Navigation
             return VSConstants.S_OK;
         }
 
-        public int OnComboGetFocus(int iCombo)
-        {
+        public int OnComboGetFocus(int iCombo) {
             return VSConstants.S_OK;
         }
 
@@ -329,10 +288,8 @@ namespace Microsoft.PythonTools.Navigation
         /// the combo box so that the 1st item is no longer grayed out if
         /// the user was originally outside of valid selection.
         /// </summary>
-        public int OnItemChosen(int iCombo, int iIndex)
-        {
-            if (_dropDownBar == null)
-            {
+        public int OnItemChosen(int iCombo, int iIndex) {
+            if (_dropDownBar == null) {
                 return VSConstants.E_UNEXPECTED;
             }
 
@@ -340,10 +297,8 @@ namespace Microsoft.PythonTools.Navigation
             var newNavigation = GetNewNavigation(iCombo, iIndex);
             _curSelection[iCombo] = iIndex;
 
-            if (newNavigation != null)
-            {
-                if (oldIndex == -1)
-                {
+            if (newNavigation != null) {
+                if (oldIndex == -1) {
                     _dropDownBar.RefreshCombo(iCombo, iIndex);
                 }
                 CenterAndFocus(newNavigation.Span.Start);
@@ -352,8 +307,7 @@ namespace Microsoft.PythonTools.Navigation
             return VSConstants.S_OK;
         }
 
-        public int OnItemSelected(int iCombo, int iIndex)
-        {
+        public int OnItemSelected(int iCombo, int iIndex) {
             return VSConstants.S_OK;
         }
 
@@ -362,11 +316,9 @@ namespace Microsoft.PythonTools.Navigation
         /// on the drop down bar to force VS to refresh the combo box or change
         /// the current selection.
         /// </summary>
-        public int SetDropdownBar(IVsDropdownBar pDropdownBar)
-        {
+        public int SetDropdownBar(IVsDropdownBar pDropdownBar) {
             _dropDownBar = pDropdownBar;
-            if (_dropDownBar != null)
-            {
+            if (_dropDownBar != null) {
                 CaretPositionChanged(this, new CaretPositionChangedEventArgs(null, _textView.Caret.Position, _textView.Caret.Position));
             }
 
@@ -377,30 +329,23 @@ namespace Microsoft.PythonTools.Navigation
 
         #region Selection Synchronization
 
-        private void CaretPositionChanged(object sender, CaretPositionChangedEventArgs e)
-        {
+        private void CaretPositionChanged(object sender, CaretPositionChangedEventArgs e) {
             int newPosition = e.NewPosition.BufferPosition.Position;
 
             List<KeyValuePair<int, int>> changes = new List<KeyValuePair<int, int>>();
-            lock (_navigationsLock)
-            {
+            lock (_navigationsLock) {
                 var cur = _navigations;
-                for (int level = 0; level < _curSelection.Length; level++)
-                {
-                    if (cur == null)
-                    {
+                for (int level = 0; level < _curSelection.Length; level++) {
+                    if (cur == null) {
                         // no valid children, we'll invalidate these...
                         changes.Add(new KeyValuePair<int, int>(_curSelection[level], -1));
                         continue;
                     }
 
                     bool found = false;
-                    if (cur.Children != null)
-                    {
-                        for (int i = 0; i < cur.Children.Length; i++)
-                        {
-                            if (newPosition >= cur.Children[i].Span.Start && newPosition <= cur.Children[i].Span.End)
-                            {
+                    if (cur.Children != null) {
+                        for (int i = 0; i < cur.Children.Length; i++) {
+                            if (newPosition >= cur.Children[i].Span.Start && newPosition <= cur.Children[i].Span.End) {
                                 changes.Add(new KeyValuePair<int, int>(_curSelection[level], i));
                                 _curSelection[level] = i;
                                 cur = cur.Children[i];
@@ -410,8 +355,7 @@ namespace Microsoft.PythonTools.Navigation
                         }
                     }
 
-                    if (!found)
-                    {
+                    if (!found) {
                         // continue processing to update the subselections...
                         cur = null;
                         changes.Add(new KeyValuePair<int, int>(_curSelection[level], -1));
@@ -420,22 +364,17 @@ namespace Microsoft.PythonTools.Navigation
                 }
             }
 
-            for (int i = 0; i < changes.Count; i++)
-            {
+            for (int i = 0; i < changes.Count; i++) {
                 var change = changes[i];
                 var oldValue = change.Key;
                 var newValue = change.Value;
 
-                if (_dropDownBar != null && oldValue != newValue)
-                {
-                    if (oldValue == -1 || newValue == -1)
-                    {
+                if (_dropDownBar != null && oldValue != newValue) {
+                    if (oldValue == -1 || newValue == -1) {
                         // we've selected something new, we need to refresh the combo to
                         // to remove the grayed out entry
                         _dropDownBar.RefreshCombo(i, newValue);
-                    }
-                    else
-                    {
+                    } else {
                         // changing from one top-level to another, just update the selection
                         _dropDownBar.SetCurrentSelection(i, newValue);
                     }
@@ -457,8 +396,7 @@ namespace Microsoft.PythonTools.Navigation
         /// Most of these are unused as we're just using an image list shipped
         /// by the VS SDK.
         /// </summary>
-        enum ImageListKind
-        {
+        enum ImageListKind {
             Class,
             Unknown1,
             Unknown2,
@@ -493,8 +431,7 @@ namespace Microsoft.PythonTools.Navigation
         /// Most of these are unused as we're just using an image list shipped
         /// by the VS SDK.
         /// </summary>
-        enum ImageListOverlay
-        {
+        enum ImageListOverlay {
             ImageListOverlayNone,
             ImageListOverlayLetter,
             ImageListOverlayBlue,
@@ -506,25 +443,20 @@ namespace Microsoft.PythonTools.Navigation
         /// <summary>
         /// Turns an image list kind / overlay into the proper index in the image list.
         /// </summary>
-        private static int GetImageListIndex(ImageListKind kind, ImageListOverlay overlay)
-        {
+        private static int GetImageListIndex(ImageListKind kind, ImageListOverlay overlay) {
             return ((int)kind) * 6 + (int)overlay;
         }
 
         /// <summary>
         /// Reads our image list from our DLLs resource stream.
         /// </summary>
-        private IntPtr GetImageList()
-        {
-            if (_imageList == IntPtr.Zero)
-            {
+        private IntPtr GetImageList() {
+            if (_imageList == IntPtr.Zero) {
                 var shell = _serviceProvider.GetService(typeof(SVsShell)) as IVsShell;
-                if (shell != null)
-                {
+                if (shell != null) {
                     object obj;
                     var hr = shell.GetProperty((int)__VSSPROPID.VSSPROPID_ObjectMgrTypesImgList, out obj);
-                    if (ErrorHandler.Succeeded(hr) && obj != null)
-                    {
+                    if (ErrorHandler.Succeeded(hr) && obj != null) {
                         _imageList = (IntPtr)(int)obj;
                     }
                 }
@@ -541,8 +473,7 @@ namespace Microsoft.PythonTools.Navigation
         /// so that caret will be centered.  Finally moves focus to the text view so the user can 
         /// continue typing.
         /// </summary>
-        private void CenterAndFocus(int index)
-        {
+        private void CenterAndFocus(int index) {
             _textView.Caret.MoveTo(new SnapshotPoint(_textView.TextBuffer.CurrentSnapshot, index));
 
             _textView.ViewScroller.EnsureSpanVisible(
@@ -557,29 +488,23 @@ namespace Microsoft.PythonTools.Navigation
         /// Wired to parser event for when the parser has completed parsing a new tree and we need
         /// to update the navigation bar with the new data.
         /// </summary>
-        async Task IPythonTextBufferInfoEventSink.PythonTextBufferEventAsync(PythonTextBufferInfo sender, PythonTextBufferInfoEventArgs e)
-        {
-            if (e.Event == PythonTextBufferInfoEvents.NewParseTree)
-            {
+        async Task IPythonTextBufferInfoEventSink.PythonTextBufferEventAsync(PythonTextBufferInfo sender, PythonTextBufferInfoEventArgs e) {
+            if (e.Event == PythonTextBufferInfoEvents.NewParseTree) {
                 AnalysisEntry analysisEntry = e.AnalysisEntry;
                 await RefreshNavigationsFromAnalysisEntry(analysisEntry);
             }
         }
 
-        internal async Task RefreshNavigationsFromAnalysisEntry(AnalysisEntry analysisEntry)
-        {
+        internal async Task RefreshNavigationsFromAnalysisEntry(AnalysisEntry analysisEntry) {
             var dropDownBar = _dropDownBar;
-            if (dropDownBar == null)
-            {
+            if (dropDownBar == null) {
                 return;
             }
 
             var navigations = await _uiThread.InvokeTask(() => analysisEntry.Analyzer.GetNavigationsAsync(_textView.TextSnapshot));
-            lock (_navigationsLock)
-            {
+            lock (_navigationsLock) {
                 _navigations = navigations;
-                for (int i = 0; i < _curSelection.Length; i++)
-                {
+                for (int i = 0; i < _curSelection.Length; i++) {
                     _curSelection[i] = -1;
                 }
             }
@@ -593,12 +518,9 @@ namespace Microsoft.PythonTools.Navigation
                 )
             );
 
-            try
-            {
+            try {
                 await _dispatcher.BeginInvoke(callback, DispatcherPriority.Background);
-            }
-            catch (TaskCanceledException)
-            {
+            } catch (TaskCanceledException) {
             }
         }
 

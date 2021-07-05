@@ -14,12 +14,9 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Intellisense
-{
-    internal class PythonParameter : IParameter
-    {
-        public PythonParameter(ISignature signature, string name, string doc, Span locus, Span ppLocus)
-        {
+namespace Microsoft.PythonTools.Intellisense {
+    internal class PythonParameter : IParameter {
+        public PythonParameter(ISignature signature, string name, string doc, Span locus, Span ppLocus) {
             Signature = signature;
             Name = name;
             Locus = locus;

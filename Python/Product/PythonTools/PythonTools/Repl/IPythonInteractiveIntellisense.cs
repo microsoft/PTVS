@@ -16,10 +16,8 @@
 
 using Microsoft.PythonTools.Intellisense;
 
-namespace Microsoft.PythonTools.Repl
-{
-    interface IPythonInteractiveIntellisense
-    {
+namespace Microsoft.PythonTools.Repl {
+    interface IPythonInteractiveIntellisense {
         bool LiveCompletionsOnly { get; }
         IEnumerable<KeyValuePair<string, string>> GetAvailableScopesAndPaths();
         CompletionResult[] GetMemberNames(string text);

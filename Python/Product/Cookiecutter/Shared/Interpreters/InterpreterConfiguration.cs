@@ -14,10 +14,8 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.CookiecutterTools.Interpreters
-{
-    public sealed class InterpreterConfiguration
-    {
+namespace Microsoft.CookiecutterTools.Interpreters {
+    public sealed class InterpreterConfiguration {
         /// <summary>
         /// <para>Constructs a new interpreter configuration based on the
         /// provided values.</para>
@@ -34,8 +32,7 @@ namespace Microsoft.CookiecutterTools.Interpreters
             string pathVar = "",
             InterpreterArchitecture arch = default(InterpreterArchitecture),
             Version version = null
-        )
-        {
+        ) {
             Id = id;
             Description = description;
             PrefixPath = prefixPath;
@@ -91,11 +88,9 @@ namespace Microsoft.CookiecutterTools.Interpreters
         /// </summary>
         public Version Version { get; }
 
-        public override bool Equals(object obj)
-        {
+        public override bool Equals(object obj) {
             var other = obj as InterpreterConfiguration;
-            if (other == null)
-            {
+            if (other == null) {
                 return false;
             }
 
@@ -109,8 +104,7 @@ namespace Microsoft.CookiecutterTools.Interpreters
                 Version == other.Version;
         }
 
-        public override int GetHashCode()
-        {
+        public override int GetHashCode() {
             var cmp = StringComparer.OrdinalIgnoreCase;
             return cmp.GetHashCode(PrefixPath ?? "") ^
                 Id.GetHashCode() ^
@@ -121,8 +115,7 @@ namespace Microsoft.CookiecutterTools.Interpreters
                 Version.GetHashCode();
         }
 
-        public override string ToString()
-        {
+        public override string ToString() {
             return Description;
         }
     }

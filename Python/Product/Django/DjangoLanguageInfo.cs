@@ -14,8 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Django
-{
+namespace Microsoft.PythonTools.Django {
     /// <summary>
     /// Minimal language service.  Implemented directly rather than using the Managed Package
     /// Framework because we don't want to provide colorization services.  Instead we use the
@@ -24,25 +23,21 @@ namespace Microsoft.PythonTools.Django
     /// should be switched over to using our TextViewCreationListener instead).
     /// </summary>
     [Guid("77291DD5-511B-45C8-BD20-62618C39D692")]
-    internal sealed class DjangoLanguageInfo : IVsLanguageInfo, IVsLanguageDebugInfo
-    {
+    internal sealed class DjangoLanguageInfo : IVsLanguageInfo, IVsLanguageDebugInfo {
         private readonly IServiceProvider _serviceProvider;
         private readonly IComponentModel _componentModel;
 
-        public DjangoLanguageInfo(IServiceProvider serviceProvider)
-        {
+        public DjangoLanguageInfo(IServiceProvider serviceProvider) {
             _serviceProvider = serviceProvider;
             _componentModel = serviceProvider.GetService(typeof(SComponentModel)) as IComponentModel;
         }
 
-        public int GetCodeWindowManager(IVsCodeWindow pCodeWin, out IVsCodeWindowManager ppCodeWinMgr)
-        {
+        public int GetCodeWindowManager(IVsCodeWindow pCodeWin, out IVsCodeWindowManager ppCodeWinMgr) {
             ppCodeWinMgr = null;
             return VSConstants.E_FAIL;
         }
 
-        public int GetFileExtensions(out string pbstrExtensions)
-        {
+        public int GetFileExtensions(out string pbstrExtensions) {
             // This is the same extension the language service was
             // registered as supporting.
             pbstrExtensions = ".djt";
@@ -50,8 +45,7 @@ namespace Microsoft.PythonTools.Django
         }
 
 
-        public int GetLanguageName(out string bstrName)
-        {
+        public int GetLanguageName(out string bstrName) {
             // This is the same name the language service was registered with.
             bstrName = "Django Templates";
             return VSConstants.S_OK;
@@ -60,60 +54,50 @@ namespace Microsoft.PythonTools.Django
         /// <summary>
         /// GetColorizer is not implemented because we implement colorization using the new managed APIs.
         /// </summary>
-        public int GetColorizer(IVsTextLines pBuffer, out IVsColorizer ppColorizer)
-        {
+        public int GetColorizer(IVsTextLines pBuffer, out IVsColorizer ppColorizer) {
             ppColorizer = null;
             return VSConstants.E_FAIL;
         }
 
-        public IServiceProvider ServiceProvider
-        {
-            get
-            {
+        public IServiceProvider ServiceProvider {
+            get {
                 return _serviceProvider;
             }
         }
 
         #region IVsLanguageDebugInfo Members
 
-        public int GetLanguageID(IVsTextBuffer pBuffer, int iLine, int iCol, out Guid pguidLanguageID)
-        {
+        public int GetLanguageID(IVsTextBuffer pBuffer, int iLine, int iCol, out Guid pguidLanguageID) {
             pguidLanguageID = DjangoPackage.DjangoTemplateLanguageGuid;
             return VSConstants.S_OK;
         }
 
-        public int GetLocationOfName(string pszName, out string pbstrMkDoc, TextSpan[] pspanLocation)
-        {
+        public int GetLocationOfName(string pszName, out string pbstrMkDoc, TextSpan[] pspanLocation) {
             pbstrMkDoc = null;
             return VSConstants.E_FAIL;
         }
 
-        public int GetNameOfLocation(IVsTextBuffer pBuffer, int iLine, int iCol, out string pbstrName, out int piLineOffset)
-        {
+        public int GetNameOfLocation(IVsTextBuffer pBuffer, int iLine, int iCol, out string pbstrName, out int piLineOffset) {
             pbstrName = "";
             piLineOffset = iCol;
             return VSConstants.S_OK;
         }
 
-        public int GetProximityExpressions(IVsTextBuffer pBuffer, int iLine, int iCol, int cLines, out IVsEnumBSTR ppEnum)
-        {
+        public int GetProximityExpressions(IVsTextBuffer pBuffer, int iLine, int iCol, int cLines, out IVsEnumBSTR ppEnum) {
             ppEnum = null;
             return VSConstants.E_FAIL;
         }
 
-        public int IsMappedLocation(IVsTextBuffer pBuffer, int iLine, int iCol)
-        {
+        public int IsMappedLocation(IVsTextBuffer pBuffer, int iLine, int iCol) {
             return VSConstants.E_FAIL;
         }
 
-        public int ResolveName(string pszName, uint dwFlags, out IVsEnumDebugName ppNames)
-        {
+        public int ResolveName(string pszName, uint dwFlags, out IVsEnumDebugName ppNames) {
             ppNames = null;
             return VSConstants.E_FAIL;
         }
 
-        public int ValidateBreakpointLocation(IVsTextBuffer pBuffer, int iLine, int iCol, TextSpan[] pCodeSpan)
-        {
+        public int ValidateBreakpointLocation(IVsTextBuffer pBuffer, int iLine, int iCol, TextSpan[] pCodeSpan) {
             pCodeSpan[0].iStartLine = iLine;
             pCodeSpan[0].iEndLine = iLine;
             return VSConstants.S_OK;

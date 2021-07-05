@@ -14,8 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Django.Project
-{
+namespace Microsoft.PythonTools.Django.Project {
     /// <summary>
     /// Enables getting a DjangoProject from an aggregated project node.
     /// </summary>
@@ -24,8 +23,7 @@ namespace Microsoft.PythonTools.Django.Project
     /// </remarks>
     [ComVisible(true)]
     [Guid("3EF13AFC-56E2-4215-BA9A-65D80FB51F75")]
-    public interface IDjangoProject
-    {
+    public interface IDjangoProject {
         ProjectSmuggler GetDjangoProject();
     }
 }

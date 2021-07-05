@@ -14,16 +14,13 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Environments
-{
-    sealed class EnvironmentSwitcherWorkspaceContext : IEnvironmentSwitcherContext
-    {
+namespace Microsoft.PythonTools.Environments {
+    sealed class EnvironmentSwitcherWorkspaceContext : IEnvironmentSwitcherContext {
         private readonly IServiceProvider _serviceProvider;
         private readonly IInterpreterRegistryService _registryService;
         private readonly IPythonWorkspaceContext _pythonWorkspace;
 
-        public EnvironmentSwitcherWorkspaceContext(IServiceProvider serviceProvider, IPythonWorkspaceContext pythonWorkspace)
-        {
+        public EnvironmentSwitcherWorkspaceContext(IServiceProvider serviceProvider, IPythonWorkspaceContext pythonWorkspace) {
             _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
             _pythonWorkspace = pythonWorkspace ?? throw new ArgumentNullException(nameof(pythonWorkspace));
             _registryService = serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>();
@@ -38,18 +35,15 @@ namespace Microsoft.PythonTools.Environments
 
         public event EventHandler EnvironmentsChanged;
 
-        public async Task ChangeFactoryAsync(IPythonInterpreterFactory factory)
-        {
+        public async Task ChangeFactoryAsync(IPythonInterpreterFactory factory) {
             await _pythonWorkspace.SetInterpreterFactoryAsync(factory);
         }
 
-        private void OnActiveInterpreterChanged(object sender, EventArgs e)
-        {
+        private void OnActiveInterpreterChanged(object sender, EventArgs e) {
             EnvironmentsChanged?.Invoke(this, EventArgs.Empty);
         }
 
-        public void Dispose()
-        {
+        public void Dispose() {
             _pythonWorkspace.ActiveInterpreterChanged -= OnActiveInterpreterChanged;
         }
     }

@@ -16,16 +16,13 @@
 
 using Microsoft.VisualStudioTools.Project;
 
-namespace Microsoft.PythonTools.Project
-{
+namespace Microsoft.PythonTools.Project {
     [ComVisible(true)]
-    public class InterpretersContainerNodeContainerNodeProperties : NodeProperties
-    {
+    public class InterpretersContainerNodeContainerNodeProperties : NodeProperties {
         internal InterpretersContainerNodeContainerNodeProperties(HierarchyNode node)
             : base(node) { }
 
-        public override string GetClassName()
-        {
+        public override string GetClassName() {
             return InterpretersContainerNode.InterpretersNodeVirtualName;
         }
     }

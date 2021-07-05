@@ -17,7 +17,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.PythonTools.Options;
 
 namespace TestUtilities.Python {
     public sealed class MockPythonToolsOptionsService : IPythonToolsOptionsService {

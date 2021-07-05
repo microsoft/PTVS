@@ -14,15 +14,12 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Project.Web
-{
-    public partial class PythonWebPropertyPageControl : UserControl
-    {
+namespace Microsoft.PythonTools.Project.Web {
+    public partial class PythonWebPropertyPageControl : UserControl {
         private readonly PythonWebPropertyPage _properties;
         private readonly Timer _validateStaticPatternTimer;
 
-        private PythonWebPropertyPageControl()
-        {
+        private PythonWebPropertyPageControl() {
             InitializeComponent();
 
             _validateStaticPatternTimer = new Timer();
@@ -39,53 +36,42 @@ namespace Microsoft.PythonTools.Project.Web
             _toolTip.SetToolTip(_wsgiHandlerLabel, Strings.WsgiHandlerHelp);
         }
 
-        private void ValidateStaticPattern(object sender, EventArgs e)
-        {
+        private void ValidateStaticPattern(object sender, EventArgs e) {
             _validateStaticPatternTimer.Enabled = false;
 
-            try
-            {
+            try {
                 new Regex(_staticPattern.Text);
                 _errorProvider.SetError(_staticPattern, null);
-            }
-            catch (ArgumentException)
-            {
+            } catch (ArgumentException) {
                 _errorProvider.SetError(_staticPattern, Strings.StaticPatternError);
             }
         }
 
         internal PythonWebPropertyPageControl(PythonWebPropertyPage properties)
-            : this()
-        {
+            : this() {
             _properties = properties;
         }
 
-        public string StaticUriPattern
-        {
+        public string StaticUriPattern {
             get { return _staticPattern.Text; }
             set { _staticPattern.Text = value; }
         }
 
-        public string StaticUriRewrite
-        {
+        public string StaticUriRewrite {
             get { return _staticRewrite.Text; }
             set { _staticRewrite.Text = value; }
         }
 
-        public string WsgiHandler
-        {
+        public string WsgiHandler {
             get { return _wsgiHandler.Text; }
             set { _wsgiHandler.Text = value; }
         }
 
-        private void Setting_TextChanged(object sender, EventArgs e)
-        {
-            if (_properties != null)
-            {
+        private void Setting_TextChanged(object sender, EventArgs e) {
+            if (_properties != null) {
                 _properties.IsDirty = true;
             }
-            if (sender == _staticPattern)
-            {
+            if (sender == _staticPattern) {
                 _validateStaticPatternTimer.Enabled = false;
                 _validateStaticPatternTimer.Enabled = true;
             }

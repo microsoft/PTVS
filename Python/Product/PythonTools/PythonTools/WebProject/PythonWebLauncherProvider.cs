@@ -16,23 +16,19 @@
 
 using Microsoft.VisualStudioTools.Project;
 
-namespace Microsoft.PythonTools.Project.Web
-{
+namespace Microsoft.PythonTools.Project.Web {
     [Export(typeof(IPythonLauncherProvider))]
-    class PythonWebLauncherProvider : IPythonLauncherProvider
-    {
+    class PythonWebLauncherProvider : IPythonLauncherProvider {
         private readonly IServiceProvider _serviceProvider;
 
         private static readonly Regex SubstitutionPattern = new Regex(@"\{([\w_]+)\}");
 
         [ImportingConstructor]
-        public PythonWebLauncherProvider([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider)
-        {
+        public PythonWebLauncherProvider([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider) {
             _serviceProvider = serviceProvider;
         }
 
-        public IPythonLauncherOptions GetLauncherOptions(IPythonProject properties)
-        {
+        public IPythonLauncherOptions GetLauncherOptions(IPythonProject properties) {
             return new PythonWebLauncherOptions(properties);
         }
 
@@ -41,28 +37,21 @@ namespace Microsoft.PythonTools.Project.Web
         public string Description => Strings.PythonWebLauncherDescription;
         public int SortPriority => 100;
 
-        internal static string DoSubstitutions(LaunchConfiguration original, IPythonProject project, string str)
-        {
-            if (string.IsNullOrEmpty(str))
-            {
+        internal static string DoSubstitutions(LaunchConfiguration original, IPythonProject project, string str) {
+            if (string.IsNullOrEmpty(str)) {
                 return str;
             }
 
             return SubstitutionPattern.Replace(
                 str,
-                m =>
-                {
-                    switch (m.Groups[1].Value.ToLowerInvariant())
-                    {
+                m => {
+                    switch (m.Groups[1].Value.ToLowerInvariant()) {
                         case "startupfile":
                             return original.ScriptName;
                         case "startupmodule":
-                            try
-                            {
+                            try {
                                 return ModulePath.FromFullPath(original.ScriptName, project.ProjectHome).ModuleName;
-                            }
-                            catch (ArgumentException)
-                            {
+                            } catch (ArgumentException) {
                             }
                             break;
                     }
@@ -78,50 +67,35 @@ namespace Microsoft.PythonTools.Project.Web
             string targetTypeProperty,
             string argumentsProperty,
             string environmentProperty
-        )
-        {
+        ) {
             var target = DoSubstitutions(original, project, project.GetProperty(targetProperty));
-            if (string.IsNullOrEmpty(target))
-            {
+            if (string.IsNullOrEmpty(target)) {
                 target = original.ScriptName;
             }
 
             var targetType = project.GetProperty(targetTypeProperty);
-            if (string.IsNullOrEmpty(targetType))
-            {
+            if (string.IsNullOrEmpty(targetType)) {
                 targetType = PythonCommandTask.TargetTypeScript;
             }
 
             var config = original.Clone();
-            if (PythonCommandTask.TargetTypeModule.Equals(targetType, StringComparison.OrdinalIgnoreCase))
-            {
-                if (string.IsNullOrEmpty(config.InterpreterArguments))
-                {
+            if (PythonCommandTask.TargetTypeModule.Equals(targetType, StringComparison.OrdinalIgnoreCase)) {
+                if (string.IsNullOrEmpty(config.InterpreterArguments)) {
                     config.InterpreterArguments = "-m " + target;
-                }
-                else
-                {
+                } else {
                     config.InterpreterArguments = config.InterpreterArguments + " -m " + target;
                 }
-            }
-            else if (PythonCommandTask.TargetTypeExecutable.Equals(targetType, StringComparison.OrdinalIgnoreCase))
-            {
+            } else if (PythonCommandTask.TargetTypeExecutable.Equals(targetType, StringComparison.OrdinalIgnoreCase)) {
                 config.InterpreterPath = target;
-            }
-            else
-            {
+            } else {
                 config.ScriptName = target;
             }
 
             var args = DoSubstitutions(original, project, project.GetProperty(argumentsProperty));
-            if (!string.IsNullOrEmpty(args))
-            {
-                if (string.IsNullOrEmpty(config.ScriptArguments))
-                {
+            if (!string.IsNullOrEmpty(args)) {
+                if (string.IsNullOrEmpty(config.ScriptArguments)) {
                     config.ScriptArguments = args;
-                }
-                else
-                {
+                } else {
                     config.ScriptArguments = args + " " + config.ScriptArguments;
                 }
             }
@@ -132,8 +106,7 @@ namespace Microsoft.PythonTools.Project.Web
             return config;
         }
 
-        public IProjectLauncher CreateLauncher(IPythonProject project)
-        {
+        public IProjectLauncher CreateLauncher(IPythonProject project) {
             var defaultConfig = project.GetLaunchConfigurationOrThrow();
 
             var runConfig = GetMSBuildCommandConfig(
@@ -161,8 +134,7 @@ namespace Microsoft.PythonTools.Project.Web
             // TODO: Add generic breakpoint extension point
             // to avoid having to pass this property for Django and any future
             // extensions.
-            if (projectGuids.IndexOfOrdinal("5F0BE9CA-D677-4A4D-8806-6076C0FAAD37", ignoreCase: true) >= 0)
-            {
+            if (projectGuids.IndexOfOrdinal("5F0BE9CA-D677-4A4D-8806-6076C0FAAD37", ignoreCase: true) >= 0) {
                 debugConfig.LaunchOptions["DjangoDebug"] = "true";
                 defaultConfig.LaunchOptions["DjangoDebug"] = "true";
             }

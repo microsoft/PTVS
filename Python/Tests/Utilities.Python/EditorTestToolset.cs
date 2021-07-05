@@ -15,8 +15,6 @@
 // permissions and limitations under the License.
 
 using System.IO;
-using Microsoft.PythonTools;
-using Microsoft.PythonTools.Options;
 using Microsoft.VisualStudio.Composition;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;

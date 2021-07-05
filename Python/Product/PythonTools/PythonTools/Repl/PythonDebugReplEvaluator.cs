@@ -17,8 +17,7 @@
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Options;
 
-namespace Microsoft.PythonTools.Repl
-{
+namespace Microsoft.PythonTools.Repl {
     [InteractiveWindowRole("Debug")]
     [ContentType(PythonCoreConstants.ContentType)]
     [ContentType(PredefinedInteractiveCommandsContentTypes.InteractiveCommandContentTypeName)]
@@ -26,8 +25,7 @@ namespace Microsoft.PythonTools.Repl
         IInteractiveEvaluator,
         IPythonInteractiveEvaluator,
         IMultipleScopeEvaluator,
-        IPythonInteractiveIntellisense
-    {
+        IPythonInteractiveIntellisense {
         private PythonDebugProcessReplEvaluator _activeEvaluator;
         private readonly Dictionary<int, PythonDebugProcessReplEvaluator> _evaluators = new Dictionary<int, PythonDebugProcessReplEvaluator>(); // process id to evaluator
         private readonly Dictionary<int, Task> _attachingTasks = new Dictionary<int, Task>();
@@ -40,56 +38,44 @@ namespace Microsoft.PythonTools.Repl
         private static readonly string currentPrefix = Strings.DebugReplCurrentIndicator;
         private static readonly string notCurrentPrefix = Strings.DebugReplNotCurrentIndicator;
 
-        public PythonDebugReplEvaluator(IServiceProvider serviceProvider)
-        {
+        public PythonDebugReplEvaluator(IServiceProvider serviceProvider) {
             _serviceProvider = serviceProvider;
             _pyService = serviceProvider.GetPythonToolsService();
             AD7Engine.EngineAttached += new EventHandler<AD7EngineEventArgs>(OnEngineAttached);
             AD7Engine.EngineDetaching += new EventHandler<AD7EngineEventArgs>(OnEngineDetaching);
 
             var dte = _serviceProvider.GetDTE();
-            if (dte != null)
-            {
+            if (dte != null) {
                 // running outside of VS, make this work for tests.
                 _debuggerEvents = dte.Events.DebuggerEvents;
                 _debuggerEvents.OnEnterBreakMode += new EnvDTE._dispDebuggerEvents_OnEnterBreakModeEventHandler(OnEnterBreakMode);
             }
         }
 
-        internal PythonInteractiveOptions CurrentOptions
-        {
-            get
-            {
+        internal PythonInteractiveOptions CurrentOptions {
+            get {
                 return _pyService.DebugInteractiveOptions;
             }
         }
 
-        private bool IsInDebugBreakMode()
-        {
+        private bool IsInDebugBreakMode() {
             var dte = _serviceProvider.GetDTE();
-            if (dte == null)
-            {
+            if (dte == null) {
                 // running outside of VS, make this work for tests.
                 return true;
             }
             return dte.Debugger.CurrentMode == EnvDTE.dbgDebugMode.dbgBreakMode;
         }
 
-        private void OnReadyForInput()
-        {
+        private void OnReadyForInput() {
             OnReadyForInputAsync().HandleAllExceptions(_serviceProvider, GetType()).DoNotWait();
         }
 
-        private async Task OnReadyForInputAsync()
-        {
-            if (IsInDebugBreakMode())
-            {
-                foreach (var engine in AD7Engine.GetEngines())
-                {
-                    if (engine.Process != null)
-                    {
-                        if (!_evaluators.ContainsKey(engine.Process.Id))
-                        {
+        private async Task OnReadyForInputAsync() {
+            if (IsInDebugBreakMode()) {
+                foreach (var engine in AD7Engine.GetEngines()) {
+                    if (engine.Process != null) {
+                        if (!_evaluators.ContainsKey(engine.Process.Id)) {
                             await AttachProcessAsync(engine.Process, engine);
                         }
                     }
@@ -97,97 +83,74 @@ namespace Microsoft.PythonTools.Repl
             }
         }
 
-        private void OnEnterBreakMode(EnvDTE.dbgEventReason Reason, ref EnvDTE.dbgExecutionAction ExecutionAction)
-        {
+        private void OnEnterBreakMode(EnvDTE.dbgEventReason Reason, ref EnvDTE.dbgExecutionAction ExecutionAction) {
             int activeProcessId = _serviceProvider.GetDTE().Debugger.CurrentProcess.ProcessID;
             AD7Engine engine = AD7Engine.GetEngines().SingleOrDefault(target => target.Process != null && target.Process.Id == activeProcessId);
-            if (engine != null)
-            {
+            if (engine != null) {
                 long? activeThreadId = ((IThreadIdMapper)engine).GetPythonThreadId((uint)_serviceProvider.GetDTE().Debugger.CurrentThread.ID);
-                if (activeThreadId != null)
-                {
-                    AttachProcessAsync(engine.Process, engine).ContinueWith(t =>
-                    {
+                if (activeThreadId != null) {
+                    AttachProcessAsync(engine.Process, engine).ContinueWith(t => {
                         ChangeActiveThread(activeThreadId.Value, false);
                     }).HandleAllExceptions(_serviceProvider, GetType()).DoNotWait();
                 }
             }
         }
 
-        public void ActiveLanguageBufferChanged(ITextBuffer currentBuffer, ITextBuffer previousBuffer)
-        {
+        public void ActiveLanguageBufferChanged(ITextBuffer currentBuffer, ITextBuffer previousBuffer) {
         }
 
-        public bool CanExecuteCode(string text)
-        {
-            if (_commands.InCommand)
-            {
+        public bool CanExecuteCode(string text) {
+            if (_commands.InCommand) {
                 return true;
             }
-            if (_activeEvaluator != null)
-            {
+            if (_activeEvaluator != null) {
                 return _activeEvaluator.CanExecuteCode(text);
-            }
-            else if (CustomDebugAdapterProtocolExtension.CanUseExperimental())
-            {
+            } else if (CustomDebugAdapterProtocolExtension.CanUseExperimental()) {
                 return CanExecuteCodeExperimental(text);
             }
             return true;
         }
 
-        bool CanExecuteCodeExperimental(string text)
-        {
+        bool CanExecuteCodeExperimental(string text) {
             var pr = ParseResult.Complete;
-            if (string.IsNullOrEmpty(text))
-            {
+            if (string.IsNullOrEmpty(text)) {
                 return true;
             }
-            if (string.IsNullOrWhiteSpace(text) && text.EndsWithOrdinal("\n"))
-            {
+            if (string.IsNullOrWhiteSpace(text) && text.EndsWithOrdinal("\n")) {
                 pr = ParseResult.Empty;
                 return true;
             }
 
             var parser = Parser.CreateParser(new StringReader(text), PythonLanguageVersion.None);
             parser.ParseInteractiveCode(out pr);
-            if (pr == ParseResult.IncompleteStatement || pr == ParseResult.Empty)
-            {
+            if (pr == ParseResult.IncompleteStatement || pr == ParseResult.Empty) {
                 return text.EndsWithOrdinal("\n");
             }
-            if (pr == ParseResult.IncompleteToken)
-            {
+            if (pr == ParseResult.IncompleteToken) {
                 return false;
             }
             return true;
         }
 
-        public Task<ExecutionResult> ExecuteCodeAsync(string text)
-        {
+        public Task<ExecutionResult> ExecuteCodeAsync(string text) {
             var res = _commands.TryExecuteCommand();
-            if (res != null)
-            {
+            if (res != null) {
                 return res;
             }
 
-            if (!IsInDebugBreakMode())
-            {
+            if (!IsInDebugBreakMode()) {
                 NoExecutionIfNotStoppedInDebuggerError();
                 return ExecutionResult.Succeeded;
             }
 
-            if (_activeEvaluator != null)
-            {
+            if (_activeEvaluator != null) {
                 return _activeEvaluator.ExecuteCodeAsync(text);
-            }
-            else
-            {
-                if (CustomDebugAdapterProtocolExtension.CanUseExperimental())
-                {
+            } else {
+                if (CustomDebugAdapterProtocolExtension.CanUseExperimental()) {
                     var tid = _serviceProvider.GetDTE().Debugger.CurrentThread.ID;
                     (bool isSuccessful, string message) result = CustomDebugAdapterProtocolExtension.EvaluateReplRequest(text, tid);
 
-                    if (!result.isSuccessful)
-                    {
+                    if (!result.isSuccessful) {
                         CurrentWindow.WriteError(result.message);
                         return ExecutionResult.Failed;
                     }
@@ -199,57 +162,45 @@ namespace Microsoft.PythonTools.Repl
             return ExecutionResult.Succeeded;
         }
 
-        public async Task<bool> ExecuteFileAsync(string filename, string extraArgs)
-        {
-            if (!IsInDebugBreakMode())
-            {
+        public async Task<bool> ExecuteFileAsync(string filename, string extraArgs) {
+            if (!IsInDebugBreakMode()) {
                 NoExecutionIfNotStoppedInDebuggerError();
                 return true;
             }
 
-            if (CustomDebugAdapterProtocolExtension.CanUseExperimental())
-            {
+            if (CustomDebugAdapterProtocolExtension.CanUseExperimental()) {
                 NotSupported();
                 return true;
             }
 
             var t = _activeEvaluator?.ExecuteFileAsync(filename, extraArgs);
-            if (t != null)
-            {
+            if (t != null) {
                 return await t;
             }
             return true;
         }
 
-        public void AbortExecution()
-        {
+        public void AbortExecution() {
             CurrentWindow.WriteErrorLine(Strings.DebugReplAbortNotSupported);
         }
 
-        public Task<ExecutionResult> Reset()
-        {
+        public Task<ExecutionResult> Reset() {
             CurrentWindow.WriteErrorLine(Strings.DebugReplResetNotSupported);
             return ExecutionResult.Succeeded;
         }
 
-        public string FormatClipboard()
-        {
+        public string FormatClipboard() {
             return PythonCommonInteractiveEvaluator.FormatClipboard(_serviceProvider, CurrentWindow);
         }
 
-        public void Dispose()
-        {
+        public void Dispose() {
         }
 
-        public IEnumerable<string> GetAvailableScopes()
-        {
+        public IEnumerable<string> GetAvailableScopes() {
             string[] fixedScopes = new string[] { Strings.DebugReplCurrentFrameScope };
-            if (_activeEvaluator != null)
-            {
+            if (_activeEvaluator != null) {
                 return fixedScopes.Concat(_activeEvaluator.GetAvailableScopes());
-            }
-            else
-            {
+            } else {
                 return new string[0];
             }
         }
@@ -257,14 +208,10 @@ namespace Microsoft.PythonTools.Repl
         public event EventHandler<EventArgs> AvailableScopesChanged;
         public event EventHandler<EventArgs> MultipleScopeSupportChanged;
 
-        public void SetScope(string scopeName)
-        {
-            if (_activeEvaluator != null)
-            {
+        public void SetScope(string scopeName) {
+            if (_activeEvaluator != null) {
                 _activeEvaluator.SetScope(scopeName);
-            }
-            else
-            {
+            } else {
             }
         }
 
@@ -272,47 +219,34 @@ namespace Microsoft.PythonTools.Repl
         public string CurrentScopePath => _activeEvaluator?.CurrentScopePath ?? "";
         public bool EnableMultipleScopes => _activeEvaluator?.EnableMultipleScopes ?? false;
 
-        public bool LiveCompletionsOnly
-        {
+        public bool LiveCompletionsOnly {
             get { return CurrentOptions.LiveCompletionsOnly; }
         }
 
         public IInteractiveWindow CurrentWindow { get; set; }
 
         public VsProjectAnalyzer Analyzer => _activeEvaluator?.Analyzer;
-        public Task<VsProjectAnalyzer> GetAnalyzerAsync()
-        {
-            if (_activeEvaluator != null)
-            {
+        public Task<VsProjectAnalyzer> GetAnalyzerAsync() {
+            if (_activeEvaluator != null) {
                 return _activeEvaluator.GetAnalyzerAsync();
-            }
-            else if (CustomDebugAdapterProtocolExtension.CanUseExperimental())
-            {
+            } else if (CustomDebugAdapterProtocolExtension.CanUseExperimental()) {
                 var tid = _serviceProvider.GetDTE().Debugger.CurrentThread.ID;
                 var currentFrameFilename = CustomDebugAdapterProtocolExtension.GetCurrentFrameFilename(tid);
                 var project = _serviceProvider.GetProjectContainingFile(currentFrameFilename);
-                if (project != null)
-                {
+                if (project != null) {
                     return project.GetAnalyzerAsync();
                 }
             }
             return Task.FromResult<VsProjectAnalyzer>(null);
         }
 
-        public Uri DocumentUri
-        {
-            get
-            {
-                if (_activeEvaluator != null)
-                {
+        public Uri DocumentUri {
+            get {
+                if (_activeEvaluator != null) {
                     return _activeEvaluator.DocumentUri;
-                }
-                else if (_documentUri != null)
-                {
+                } else if (_documentUri != null) {
                     return _documentUri;
-                }
-                else
-                {
+                } else {
                     _documentUri = new Uri($"repl://{Guid.NewGuid()}/repl.py");
                     return _documentUri;
                 }
@@ -327,30 +261,23 @@ namespace Microsoft.PythonTools.Repl
 
         public string DisplayName => Strings.DebugReplDisplayName;
 
-        public IEnumerable<KeyValuePair<string, string>> GetAvailableScopesAndPaths()
-        {
-            if (_activeEvaluator != null)
-            {
+        public IEnumerable<KeyValuePair<string, string>> GetAvailableScopesAndPaths() {
+            if (_activeEvaluator != null) {
                 return _activeEvaluator.GetAvailableScopesAndPaths();
             }
 
             return Enumerable.Empty<KeyValuePair<string, string>>();
         }
 
-        public CompletionResult[] GetMemberNames(string text)
-        {
-            if (_activeEvaluator != null)
-            {
+        public CompletionResult[] GetMemberNames(string text) {
+            if (_activeEvaluator != null) {
                 return _activeEvaluator.GetMemberNames(text);
-            }
-            else if (CustomDebugAdapterProtocolExtension.CanUseExperimental())
-            {
+            } else if (CustomDebugAdapterProtocolExtension.CanUseExperimental()) {
                 var expression = string.Format(CultureInfo.InvariantCulture, "':'.join(dir({0}))", text ?? "");
                 var tid = _serviceProvider.GetDTE().Debugger.CurrentThread.ID;
                 (bool isSuccessful, string message) result = CustomDebugAdapterProtocolExtension.EvaluateReplRequest(text, tid);
 
-                if (result.isSuccessful)
-                {
+                if (result.isSuccessful) {
                     var completionResults = result.message
                                     .Split(':')
                                     .Where(r => !string.IsNullOrEmpty(r))
@@ -363,332 +290,220 @@ namespace Microsoft.PythonTools.Repl
             return new CompletionResult[0];
         }
 
-        public OverloadDoc[] GetSignatureDocumentation(string text)
-        {
-            if (_activeEvaluator != null)
-            {
+        public OverloadDoc[] GetSignatureDocumentation(string text) {
+            if (_activeEvaluator != null) {
                 return _activeEvaluator.GetSignatureDocumentation(text);
             }
 
             return new OverloadDoc[0];
         }
 
-        internal void StepOut()
-        {
-            if (_activeEvaluator != null)
-            {
+        internal void StepOut() {
+            if (_activeEvaluator != null) {
                 _activeEvaluator.StepOut();
                 CurrentWindow.TextView.VisualElement.Focus();
-            }
-            else if (CustomDebugAdapterProtocolExtension.CanUseExperimental())
-            {
+            } else if (CustomDebugAdapterProtocolExtension.CanUseExperimental()) {
                 _serviceProvider.GetDTE().Debugger.CurrentThread.Parent.StepOut();
                 CurrentWindow.TextView.VisualElement.Focus();
-            }
-            else
-            {
+            } else {
                 NoProcessError();
             }
         }
 
-        internal void StepInto()
-        {
-            if (_activeEvaluator != null)
-            {
+        internal void StepInto() {
+            if (_activeEvaluator != null) {
                 _activeEvaluator.StepInto();
                 CurrentWindow.TextView.VisualElement.Focus();
-            }
-            else if (CustomDebugAdapterProtocolExtension.CanUseExperimental())
-            {
+            } else if (CustomDebugAdapterProtocolExtension.CanUseExperimental()) {
                 _serviceProvider.GetDTE().Debugger.CurrentThread.Parent.StepInto();
                 CurrentWindow.TextView.VisualElement.Focus();
-            }
-            else
-            {
+            } else {
                 NoProcessError();
             }
         }
 
-        internal void StepOver()
-        {
-            if (_activeEvaluator != null)
-            {
+        internal void StepOver() {
+            if (_activeEvaluator != null) {
                 _activeEvaluator.StepOver();
                 CurrentWindow.TextView.VisualElement.Focus();
-            }
-            else if (CustomDebugAdapterProtocolExtension.CanUseExperimental())
-            {
+            } else if (CustomDebugAdapterProtocolExtension.CanUseExperimental()) {
                 _serviceProvider.GetDTE().Debugger.CurrentThread.Parent.StepOver();
                 CurrentWindow.TextView.VisualElement.Focus();
-            }
-            else
-            {
+            } else {
                 NoProcessError();
             }
         }
 
-        internal void Resume()
-        {
-            if (_activeEvaluator != null)
-            {
+        internal void Resume() {
+            if (_activeEvaluator != null) {
                 _activeEvaluator.Resume();
                 CurrentWindow.TextView.VisualElement.Focus();
-            }
-            else if (CustomDebugAdapterProtocolExtension.CanUseExperimental())
-            {
+            } else if (CustomDebugAdapterProtocolExtension.CanUseExperimental()) {
                 _serviceProvider.GetDTE().Debugger.CurrentThread.Parent.Go();
                 CurrentWindow.TextView.VisualElement.Focus();
-            }
-            else
-            {
+            } else {
                 NoProcessError();
             }
         }
 
-        internal void FrameUp()
-        {
-            if (_activeEvaluator != null)
-            {
+        internal void FrameUp() {
+            if (_activeEvaluator != null) {
                 _activeEvaluator.FrameUp();
-            }
-            else if (CustomDebugAdapterProtocolExtension.CanUseExperimental())
-            {
+            } else if (CustomDebugAdapterProtocolExtension.CanUseExperimental()) {
                 NotSupported();
-            }
-            else
-            {
+            } else {
                 NoProcessError();
             }
         }
 
-        internal void FrameDown()
-        {
-            if (_activeEvaluator != null)
-            {
+        internal void FrameDown() {
+            if (_activeEvaluator != null) {
                 _activeEvaluator.FrameDown();
-            }
-            else if (CustomDebugAdapterProtocolExtension.CanUseExperimental())
-            {
+            } else if (CustomDebugAdapterProtocolExtension.CanUseExperimental()) {
                 NotSupported();
-            }
-            else
-            {
+            } else {
                 NoProcessError();
             }
         }
 
-        internal void DisplayActiveProcess()
-        {
-            if (_activeEvaluator != null)
-            {
+        internal void DisplayActiveProcess() {
+            if (_activeEvaluator != null) {
                 _activeEvaluator.WriteOutput(_activeEvaluator.ProcessId.ToString());
-            }
-            else if (CustomDebugAdapterProtocolExtension.CanUseExperimental())
-            {
+            } else if (CustomDebugAdapterProtocolExtension.CanUseExperimental()) {
                 NotSupported();
-            }
-            else
-            {
+            } else {
                 CurrentWindow.WriteLine("None" + Environment.NewLine);
             }
         }
 
-        internal void DisplayActiveThread()
-        {
-            if (_activeEvaluator != null)
-            {
+        internal void DisplayActiveThread() {
+            if (_activeEvaluator != null) {
                 _activeEvaluator.WriteOutput(_activeEvaluator.ThreadId.ToString());
-            }
-            else if (CustomDebugAdapterProtocolExtension.CanUseExperimental())
-            {
+            } else if (CustomDebugAdapterProtocolExtension.CanUseExperimental()) {
                 NotSupported();
-            }
-            else
-            {
+            } else {
                 NoProcessError();
             }
         }
 
-        internal void DisplayActiveFrame()
-        {
-            if (_activeEvaluator != null)
-            {
+        internal void DisplayActiveFrame() {
+            if (_activeEvaluator != null) {
                 _activeEvaluator.WriteOutput(_activeEvaluator.FrameId.ToString());
-            }
-            else if (CustomDebugAdapterProtocolExtension.CanUseExperimental())
-            {
+            } else if (CustomDebugAdapterProtocolExtension.CanUseExperimental()) {
                 NotSupported();
-            }
-            else
-            {
+            } else {
                 NoProcessError();
             }
         }
 
-        internal void ChangeActiveProcess(int id, bool verbose)
-        {
-            if (_evaluators.Keys.Contains(id))
-            {
+        internal void ChangeActiveProcess(int id, bool verbose) {
+            if (_evaluators.Keys.Contains(id)) {
                 SwitchProcess(_evaluators[id].Process, verbose);
-            }
-            else if (CustomDebugAdapterProtocolExtension.CanUseExperimental())
-            {
+            } else if (CustomDebugAdapterProtocolExtension.CanUseExperimental()) {
                 NotSupported();
-            }
-            else
-            {
+            } else {
                 CurrentWindow.WriteErrorLine(Strings.DebugReplInvalidProcessId.FormatUI(id));
             }
         }
 
-        internal void ChangeActiveThread(long id, bool verbose)
-        {
-            if (_activeEvaluator != null)
-            {
+        internal void ChangeActiveThread(long id, bool verbose) {
+            if (_activeEvaluator != null) {
                 PythonThread thread = _activeEvaluator.GetThreads().SingleOrDefault(target => target.Id == id);
-                if (thread != null)
-                {
+                if (thread != null) {
                     _activeEvaluator.SwitchThread(thread, verbose);
-                }
-                else
-                {
+                } else {
                     CurrentWindow.WriteErrorLine(Strings.DebugReplInvalidThreadId.FormatUI(id));
                 }
-            }
-            else if (CustomDebugAdapterProtocolExtension.CanUseExperimental())
-            {
+            } else if (CustomDebugAdapterProtocolExtension.CanUseExperimental()) {
                 NotSupported();
-            }
-            else
-            {
+            } else {
                 NoProcessError();
             }
         }
 
-        internal void ChangeActiveFrame(int id)
-        {
-            if (_activeEvaluator != null)
-            {
+        internal void ChangeActiveFrame(int id) {
+            if (_activeEvaluator != null) {
                 PythonStackFrame frame = _activeEvaluator.GetFrames().SingleOrDefault(target => target.FrameId == id);
-                if (frame != null)
-                {
+                if (frame != null) {
                     _activeEvaluator.SwitchFrame(frame);
-                }
-                else
-                {
+                } else {
                     CurrentWindow.WriteErrorLine(Strings.DebugReplInvalidFrameId.FormatUI(id));
                 }
-            }
-            else if (CustomDebugAdapterProtocolExtension.CanUseExperimental())
-            {
+            } else if (CustomDebugAdapterProtocolExtension.CanUseExperimental()) {
                 NotSupported();
-            }
-            else
-            {
+            } else {
                 NoProcessError();
             }
         }
 
-        internal void DisplayProcesses()
-        {
-            if (_activeEvaluator != null)
-            {
-                foreach (var target in _evaluators.Values)
-                {
-                    if (target.Process != null)
-                    {
+        internal void DisplayProcesses() {
+            if (_activeEvaluator != null) {
+                foreach (var target in _evaluators.Values) {
+                    if (target.Process != null) {
                         _activeEvaluator.WriteOutput(Strings.DebugReplProcessesOutput.FormatUI(target.Process.Id, target.Process.LanguageVersion, target.Process.Id == _activeEvaluator.ProcessId ? currentPrefix : notCurrentPrefix));
                     }
                 }
-            }
-            else if (CustomDebugAdapterProtocolExtension.CanUseExperimental())
-            {
+            } else if (CustomDebugAdapterProtocolExtension.CanUseExperimental()) {
                 NotSupported();
             }
         }
 
-        internal void DisplayThreads()
-        {
-            if (_activeEvaluator != null)
-            {
-                foreach (var target in _activeEvaluator.GetThreads())
-                {
+        internal void DisplayThreads() {
+            if (_activeEvaluator != null) {
+                foreach (var target in _activeEvaluator.GetThreads()) {
                     _activeEvaluator.WriteOutput(Strings.DebugReplThreadsOutput.FormatUI(target.Id, target.Name, target.Id == _activeEvaluator.ThreadId ? currentPrefix : notCurrentPrefix));
                 }
-            }
-            else if (CustomDebugAdapterProtocolExtension.CanUseExperimental())
-            {
+            } else if (CustomDebugAdapterProtocolExtension.CanUseExperimental()) {
                 NotSupported();
-            }
-            else
-            {
+            } else {
                 NoProcessError();
             }
         }
 
-        internal void DisplayFrames()
-        {
-            if (_activeEvaluator != null)
-            {
-                foreach (var target in _activeEvaluator.GetFrames())
-                {
+        internal void DisplayFrames() {
+            if (_activeEvaluator != null) {
+                foreach (var target in _activeEvaluator.GetFrames()) {
                     _activeEvaluator.WriteOutput(Strings.DebugReplFramesOutput.FormatUI(target.FrameId, target.FunctionName, target.FrameId == _activeEvaluator.FrameId ? currentPrefix : notCurrentPrefix));
                 }
-            }
-            else if (CustomDebugAdapterProtocolExtension.CanUseExperimental())
-            {
+            } else if (CustomDebugAdapterProtocolExtension.CanUseExperimental()) {
                 NotSupported();
-            }
-            else
-            {
+            } else {
                 NoProcessError();
             }
         }
 
-        private void OnEngineAttached(object sender, AD7EngineEventArgs e)
-        {
-            _serviceProvider.GetUIThread().InvokeAsync(async () =>
-            {
+        private void OnEngineAttached(object sender, AD7EngineEventArgs e) {
+            _serviceProvider.GetUIThread().InvokeAsync(async () => {
                 await AttachProcessAsync(e.Engine.Process, e.Engine);
             }).HandleAllExceptions(_serviceProvider, GetType()).DoNotWait();
         }
 
-        private void OnEngineDetaching(object sender, AD7EngineEventArgs e)
-        {
-            _serviceProvider.GetUIThread().InvokeAsync(async () =>
-            {
+        private void OnEngineDetaching(object sender, AD7EngineEventArgs e) {
+            _serviceProvider.GetUIThread().InvokeAsync(async () => {
                 await DetachProcessAsync(e.Engine.Process);
             }).HandleAllExceptions(_serviceProvider, GetType()).DoNotWait();
         }
 
-        private void OnProcessExited(object sender, ProcessExitedEventArgs e)
-        {
-            _serviceProvider.GetUIThread().InvokeAsync(async () =>
-            {
+        private void OnProcessExited(object sender, ProcessExitedEventArgs e) {
+            _serviceProvider.GetUIThread().InvokeAsync(async () => {
                 await DetachProcessAsync((PythonProcess)sender);
             }).HandleAllExceptions(_serviceProvider, GetType()).DoNotWait();
         }
 
-        internal void SwitchProcess(PythonProcess process, bool verbose)
-        {
+        internal void SwitchProcess(PythonProcess process, bool verbose) {
             var newEvaluator = _evaluators[process.Id];
-            if (newEvaluator != _activeEvaluator)
-            {
+            if (newEvaluator != _activeEvaluator) {
                 _activeEvaluator = newEvaluator;
                 ActiveProcessChanged();
-                if (verbose)
-                {
+                if (verbose) {
                     CurrentWindow.WriteLine(Strings.DebugReplSwitchProcessOutput.FormatUI(process.Id));
                 }
-            }
-            else if (CustomDebugAdapterProtocolExtension.CanUseExperimental())
-            {
+            } else if (CustomDebugAdapterProtocolExtension.CanUseExperimental()) {
                 NotSupported();
             }
         }
 
-        internal async Task AttachProcessAsync(PythonProcess process, IThreadIdMapper threadIdMapper)
-        {
+        internal async Task AttachProcessAsync(PythonProcess process, IThreadIdMapper threadIdMapper) {
             // The fact that this is only called from UI thread is no guarantee
             // that there won't be more than one "instance" of this method in
             // progress at any time (though only one is executing while others are paused).
@@ -712,8 +527,7 @@ namespace Microsoft.PythonTools.Repl
             // code may try to use it before it's fully initialized.
             _serviceProvider.GetUIThread().MustBeCalledFromUIThread();
 
-            if (_evaluators.ContainsKey(process.Id))
-            {
+            if (_evaluators.ContainsKey(process.Id)) {
                 // Process is already attached, so just switch to it if needed
                 SwitchProcess(process, false);
                 return;
@@ -726,20 +540,16 @@ namespace Microsoft.PythonTools.Repl
             // await call to avoid race condition.
             Task attachingTask;
             TaskCompletionSource<object> attachingTcs = null;
-            if (_attachingTasks.TryGetValue(process.Id, out attachingTask))
-            {
+            if (_attachingTasks.TryGetValue(process.Id, out attachingTask)) {
                 await attachingTask;
                 return;
-            }
-            else
-            {
+            } else {
                 attachingTcs = new TaskCompletionSource<object>();
                 _attachingTasks.Add(process.Id, attachingTcs.Task);
             }
 
             process.ProcessExited += new EventHandler<ProcessExitedEventArgs>(OnProcessExited);
-            var evaluator = new PythonDebugProcessReplEvaluator(_serviceProvider, process, threadIdMapper)
-            {
+            var evaluator = new PythonDebugProcessReplEvaluator(_serviceProvider, process, threadIdMapper) {
                 CurrentWindow = CurrentWindow
             };
             evaluator.AvailableScopesChanged += new EventHandler<EventArgs>(evaluator_AvailableScopesChanged);
@@ -757,19 +567,16 @@ namespace Microsoft.PythonTools.Repl
             _attachingTasks.Remove(process.Id);
         }
 
-        internal async Task DetachProcessAsync(PythonProcess process)
-        {
+        internal async Task DetachProcessAsync(PythonProcess process) {
             _serviceProvider.GetUIThread().MustBeCalledFromUIThread();
 
             int id = process.Id;
             PythonDebugProcessReplEvaluator evaluator;
-            if (_evaluators.TryGetValue(id, out evaluator))
-            {
+            if (_evaluators.TryGetValue(id, out evaluator)) {
                 evaluator.AvailableScopesChanged -= new EventHandler<EventArgs>(evaluator_AvailableScopesChanged);
                 evaluator.MultipleScopeSupportChanged -= new EventHandler<EventArgs>(evaluator_MultipleScopeSupportChanged);
                 _evaluators.Remove(id);
-                if (_activeEvaluator == evaluator)
-                {
+                if (_activeEvaluator == evaluator) {
                     _activeEvaluator = null;
                 }
 
@@ -777,44 +584,36 @@ namespace Microsoft.PythonTools.Repl
             }
         }
 
-        private void evaluator_MultipleScopeSupportChanged(object sender, EventArgs e)
-        {
+        private void evaluator_MultipleScopeSupportChanged(object sender, EventArgs e) {
             MultipleScopeSupportChanged?.Invoke(this, EventArgs.Empty);
         }
 
-        private void evaluator_AvailableScopesChanged(object sender, EventArgs e)
-        {
+        private void evaluator_AvailableScopesChanged(object sender, EventArgs e) {
             AvailableScopesChanged?.Invoke(this, EventArgs.Empty);
         }
 
-        private void ActiveProcessChanged()
-        {
+        private void ActiveProcessChanged() {
             MultipleScopeSupportChanged?.Invoke(this, EventArgs.Empty);
             AvailableScopesChanged?.Invoke(this, EventArgs.Empty);
         }
 
-        private void NoProcessError()
-        {
+        private void NoProcessError() {
             CurrentWindow.WriteErrorLine(Strings.DebugReplNoProcessError);
         }
 
-        private void NotSupported()
-        {
+        private void NotSupported() {
             CurrentWindow.WriteError(Strings.DebugReplFeatureNotSupportedWithExperimentalDebugger);
         }
 
-        private void NoExecutionIfNotStoppedInDebuggerError()
-        {
+        private void NoExecutionIfNotStoppedInDebuggerError() {
             CurrentWindow.WriteErrorLine(Strings.DebugReplNoExecutionIfNotStoppedInDebuggerError);
         }
 
-        public Task<ExecutionResult> InitializeAsync()
-        {
+        public Task<ExecutionResult> InitializeAsync() {
             _commands = PythonInteractiveEvaluator.GetInteractiveCommands(_serviceProvider, CurrentWindow, this);
 
             var langBuffer = CurrentWindow.CurrentLanguageBuffer;
-            if (langBuffer != null)
-            {
+            if (langBuffer != null) {
                 // Reinitializing, and our new language buffer does not automatically
                 // get connected to the Intellisense controller. Let's fix that.
                 var controller = IntellisenseControllerProvider.GetController(CurrentWindow.TextView);
@@ -828,24 +627,19 @@ namespace Microsoft.PythonTools.Repl
             return ExecutionResult.Succeeded;
         }
 
-        public Task<ExecutionResult> ResetAsync(bool initialize = true)
-        {
+        public Task<ExecutionResult> ResetAsync(bool initialize = true) {
             return Reset();
         }
 
-        public string GetPrompt()
-        {
+        public string GetPrompt() {
             return _activeEvaluator?.GetPrompt();
         }
     }
 
-    internal static class PythonDebugReplEvaluatorExtensions
-    {
-        public static PythonDebugReplEvaluator GetPythonDebugReplEvaluator(this IInteractiveWindow window)
-        {
+    internal static class PythonDebugReplEvaluatorExtensions {
+        public static PythonDebugReplEvaluator GetPythonDebugReplEvaluator(this IInteractiveWindow window) {
             var eval = window?.Evaluator as PythonDebugReplEvaluator;
-            if (eval != null)
-            {
+            if (eval != null) {
                 return eval;
             }
 

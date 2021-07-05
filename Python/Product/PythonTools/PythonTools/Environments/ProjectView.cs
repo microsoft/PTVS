@@ -16,10 +16,8 @@
 
 using Microsoft.PythonTools.Project;
 
-namespace Microsoft.PythonTools.Environments
-{
-    sealed class ProjectView
-    {
+namespace Microsoft.PythonTools.Environments {
+    sealed class ProjectView {
         public PythonProjectNode Node { get; }
         public IPythonWorkspaceContext Workspace { get; }
         public string Name { get; set; }
@@ -30,8 +28,7 @@ namespace Microsoft.PythonTools.Environments
         public string EnvironmentYmlPath { get; set; }
         public string MissingCondaEnvName { get; set; }
 
-        public ProjectView(PythonProjectNode node)
-        {
+        public ProjectView(PythonProjectNode node) {
             Node = node ?? throw new ArgumentNullException(nameof(node));
             Name = node.Name;
             HomeFolder = node.ProjectHome;
@@ -41,19 +38,15 @@ namespace Microsoft.PythonTools.Environments
             EnvironmentYmlPath = node.GetEnvironmentYmlPath();
         }
 
-        public ProjectView(IPythonWorkspaceContext workspace)
-        {
+        public ProjectView(IPythonWorkspaceContext workspace) {
             Workspace = workspace ?? throw new ArgumentNullException(nameof(workspace));
             Name = workspace.WorkspaceName;
             HomeFolder = workspace.Location;
-            if (workspace.CurrentFactory != null)
-            {
+            if (workspace.CurrentFactory != null) {
                 var id = workspace.CurrentFactory.Configuration.Id;
                 InterpreterIds = new string[] { id };
                 ActiveInterpreterId = id;
-            }
-            else
-            {
+            } else {
                 InterpreterIds = new string[0];
                 ActiveInterpreterId = string.Empty;
             }

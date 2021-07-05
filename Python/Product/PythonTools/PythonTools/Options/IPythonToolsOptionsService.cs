@@ -14,10 +14,8 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Options
-{
-    public interface IPythonToolsOptionsService
-    {
+namespace Microsoft.PythonTools.Options {
+    public interface IPythonToolsOptionsService {
         void SaveString(string name, string category, string value);
         string LoadString(string name, string category);
         void DeleteCategory(string category);

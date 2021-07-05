@@ -16,14 +16,12 @@
 
 using Microsoft.PythonTools.Intellisense;
 
-namespace Microsoft.PythonTools.Refactoring
-{
+namespace Microsoft.PythonTools.Refactoring {
     /// <summary>
     /// Implements our preview changes engine.  Creates a list of all of the preview items based upon the analyzed expression
     /// and rename variable request.
     /// </summary>
-    class PreviewChangesEngine : IVsPreviewChangesEngine
-    {
+    class PreviewChangesEngine : IVsPreviewChangesEngine {
         private readonly string _expr;
         private readonly PreviewList _list;
         internal readonly IRenameVariableInput _input;
@@ -31,8 +29,7 @@ namespace Microsoft.PythonTools.Refactoring
         private readonly IEnumerable<AnalysisVariable> _variables;
         internal readonly IServiceProvider _serviceProvider;
 
-        public PreviewChangesEngine(IServiceProvider serviceProvider, IRenameVariableInput input, string expr, RenameVariableRequest request, string originalName, string privatePrefix, VsProjectAnalyzer analyzer, IEnumerable<AnalysisVariable> variables)
-        {
+        public PreviewChangesEngine(IServiceProvider serviceProvider, IRenameVariableInput input, string expr, RenameVariableRequest request, string originalName, string privatePrefix, VsProjectAnalyzer analyzer, IEnumerable<AnalysisVariable> variables) {
             _serviceProvider = serviceProvider;
             _expr = expr;
             _analyzer = analyzer;
@@ -44,48 +41,36 @@ namespace Microsoft.PythonTools.Refactoring
             _list = new PreviewList(CreatePreviewItems().ToArray());
         }
 
-        private List<FilePreviewItem> CreatePreviewItems()
-        {
+        private List<FilePreviewItem> CreatePreviewItems() {
             Dictionary<string, FilePreviewItem> files = new Dictionary<string, FilePreviewItem>();
             Dictionary<FilePreviewItem, HashSet<LocationInfo>> allItems = new Dictionary<FilePreviewItem, HashSet<LocationInfo>>();
 
-            foreach (var variable in _variables)
-            {
-                if (string.IsNullOrEmpty(variable.Location?.FilePath))
-                {
+            foreach (var variable in _variables) {
+                if (string.IsNullOrEmpty(variable.Location?.FilePath)) {
                     continue;
                 }
 
-                switch (variable.Type)
-                {
+                switch (variable.Type) {
                     case VariableType.Definition:
                     case VariableType.Reference:
                         string file = variable.Location.FilePath;
                         FilePreviewItem fileItem;
                         HashSet<LocationInfo> curLocations;
-                        if (!files.TryGetValue(file, out fileItem))
-                        {
+                        if (!files.TryGetValue(file, out fileItem)) {
                             files[file] = fileItem = new FilePreviewItem(this, file);
                             allItems[fileItem] = curLocations = new HashSet<LocationInfo>(LocationInfo.FullComparer);
-                        }
-                        else
-                        {
+                        } else {
                             curLocations = allItems[fileItem];
                         }
 
-                        if (!curLocations.Contains(variable.Location))
-                        {
-                            try
-                            {
+                        if (!curLocations.Contains(variable.Location)) {
+                            try {
                                 var item = LocationPreviewItem.Create(_analyzer, fileItem, variable.Location, variable.Type);
-                                if (item != null && item.Length > 0)
-                                {
+                                if (item != null && item.Length > 0) {
                                     fileItem.Items.Add(item);
                                     curLocations.Add(variable.Location);
                                 }
-                            }
-                            catch (Exception ex) when (!ex.IsCriticalException())
-                            {
+                            } catch (Exception ex) when (!ex.IsCriticalException()) {
                                 ex.ReportUnhandledException(_serviceProvider, GetType());
                             }
                         }
@@ -94,8 +79,7 @@ namespace Microsoft.PythonTools.Refactoring
             }
 
             List<FilePreviewItem> fileItems = new List<FilePreviewItem>(files.Values);
-            foreach (var fileItem in fileItems)
-            {
+            foreach (var fileItem in fileItems) {
                 fileItem.Items.Sort(LocationComparer);
             }
 
@@ -115,41 +99,33 @@ namespace Microsoft.PythonTools.Refactoring
 
         public RenameVariableRequest Request { get; }
 
-        private static int FileComparer(FilePreviewItem left, FilePreviewItem right)
-        {
+        private static int FileComparer(FilePreviewItem left, FilePreviewItem right) {
             return String.Compare(left.Filename, right.Filename, StringComparison.OrdinalIgnoreCase);
         }
 
-        private static int LocationComparer(IPreviewItem leftItem, IPreviewItem rightItem)
-        {
+        private static int LocationComparer(IPreviewItem leftItem, IPreviewItem rightItem) {
             var left = (LocationPreviewItem)leftItem;
             var right = (LocationPreviewItem)rightItem;
 
-            if (left.Line != right.Line)
-            {
+            if (left.Line != right.Line) {
                 return left.Line - right.Line;
             }
 
             return left.Column - right.Column;
         }
 
-        public int ApplyChanges()
-        {
+        public int ApplyChanges() {
             _input.ClearRefactorPane();
             _input.OutputLog(Strings.RefactorPreviewChangesRenaming.FormatUI(OriginalName, Request.Name));
 
             var undo = _input.BeginGlobalUndo();
-            try
-            {
-                foreach (FilePreviewItem changedFile in _list.Items)
-                {
+            try {
+                foreach (FilePreviewItem changedFile in _list.Items) {
                     var buffer = _input.GetBufferForDocument(changedFile.Filename);
 
                     changedFile.UpdateBuffer(buffer);
                 }
-            }
-            finally
-            {
+            } finally {
                 _input.EndGlobalUndo(undo);
             }
 
@@ -159,43 +135,36 @@ namespace Microsoft.PythonTools.Refactoring
         /// <summary>
         /// Gets the text of the OK button
         /// </summary>
-        public int GetConfirmation(out string pbstrConfirmation)
-        {
+        public int GetConfirmation(out string pbstrConfirmation) {
             pbstrConfirmation = Strings.RefactorPreviewChangesRenamingConfirmationButton;
             return VSConstants.S_OK;
         }
 
-        public int GetDescription(out string pbstrDescription)
-        {
+        public int GetDescription(out string pbstrDescription) {
             pbstrDescription = Strings.RefactorPreviewChangesRenamingDescription.FormatUI(_expr, Request.Name);
             return VSConstants.S_OK;
         }
 
-        public int GetHelpContext(out string pbstrHelpContext)
-        {
+        public int GetHelpContext(out string pbstrHelpContext) {
             throw new NotImplementedException();
         }
 
-        public int GetRootChangesList(out object ppIUnknownPreviewChangesList)
-        {
+        public int GetRootChangesList(out object ppIUnknownPreviewChangesList) {
             ppIUnknownPreviewChangesList = _list;
             return VSConstants.S_OK;
         }
 
-        public int GetTextViewDescription(out string pbstrTextViewDescription)
-        {
+        public int GetTextViewDescription(out string pbstrTextViewDescription) {
             pbstrTextViewDescription = Strings.RefactorPreviewChangesTextViewDescription;
             return VSConstants.S_OK;
         }
 
-        public int GetTitle(out string pbstrTitle)
-        {
+        public int GetTitle(out string pbstrTitle) {
             pbstrTitle = Strings.RefactorPreviewChangesRenameVariableTitle;
             return VSConstants.S_OK;
         }
 
-        public int GetWarning(out string pbstrWarning, out int ppcwlWarningLevel)
-        {
+        public int GetWarning(out string pbstrWarning, out int ppcwlWarningLevel) {
             pbstrWarning = null;
             ppcwlWarningLevel = 0;
             return VSConstants.S_OK;

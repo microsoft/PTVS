@@ -14,16 +14,14 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Profiling
-{
+namespace Microsoft.PythonTools.Profiling {
     /// <summary>
     /// Top level node for our UI Hierarchy which includes all of the various performance sessions.
     /// 
     /// We need one top-level node which we'll add the other nodes to.  We treat the other nodes
     /// as nested hierarchies.
     /// </summary>
-    class SessionsNode : BaseHierarchyNode, IVsHierarchyDeleteHandler
-    {
+    class SessionsNode : BaseHierarchyNode, IVsHierarchyDeleteHandler {
         private readonly List<SessionNode> _sessions = new List<SessionNode>();
         internal readonly EventSinkCollection _sessionsCollection = new EventSinkCollection();
         private readonly IServiceProvider _serviceProvider;
@@ -31,14 +29,12 @@ namespace Microsoft.PythonTools.Profiling
         internal uint _activeSession = VSConstants.VSITEMID_NIL;
         internal static ImageList _imageList = InitImageList();
 
-        internal SessionsNode(IServiceProvider serviceProvider, IVsUIHierarchyWindow window)
-        {
+        internal SessionsNode(IServiceProvider serviceProvider, IVsUIHierarchyWindow window) {
             _serviceProvider = serviceProvider;
             _window = window;
         }
 
-        internal SessionNode AddTarget(ProfilingTarget target, string filename, bool save)
-        {
+        internal SessionNode AddTarget(ProfilingTarget target, string filename, bool save) {
             Debug.Assert(filename.EndsWithOrdinal(".pyperf", ignoreCase: true));
 
             // ensure a unique name
@@ -46,18 +42,14 @@ namespace Microsoft.PythonTools.Profiling
             string tempBaseName = newBaseName;
             int append = 0;
             bool dupFound;
-            do
-            {
+            do {
                 dupFound = false;
-                for (int i = 0; i < _sessions.Count; i++)
-                {
-                    if (Path.GetFileNameWithoutExtension(_sessions[i].Filename) == newBaseName)
-                    {
+                for (int i = 0; i < _sessions.Count; i++) {
+                    if (Path.GetFileNameWithoutExtension(_sessions[i].Filename) == newBaseName) {
                         dupFound = true;
                     }
                 }
-                if (dupFound)
-                {
+                if (dupFound) {
                     append++;
                     newBaseName = tempBaseName + append;
                 }
@@ -66,25 +58,21 @@ namespace Microsoft.PythonTools.Profiling
             string newFilename = newBaseName + ".pyperf";
             // add directory name back if present...
             string dirName = Path.GetDirectoryName(filename);
-            if (!string.IsNullOrEmpty(dirName))
-            {
+            if (!string.IsNullOrEmpty(dirName)) {
                 newFilename = Path.Combine(dirName, newFilename);
             }
             filename = newFilename;
 
             // save to the unique item if desired (we save whenever we have an active solution as we have a place to put it)...
-            if (save)
-            {
-                using (var fs = new FileStream(filename, FileMode.Create))
-                {
+            if (save) {
+                using (var fs = new FileStream(filename, FileMode.Create)) {
                     ProfilingTarget.Serializer.Serialize(fs, target);
                 }
             }
 
             var node = OpenTarget(target, filename);
 
-            if (!save)
-            {
+            if (!save) {
                 node.MarkDirty();
                 node._neverSaved = true;
             }
@@ -92,23 +80,17 @@ namespace Microsoft.PythonTools.Profiling
             return node;
         }
 
-        internal SessionNode OpenTarget(ProfilingTarget target, string filename)
-        {
-            for (int i = 0; i < _sessions.Count; i++)
-            {
-                if (_sessions[i].Filename == filename)
-                {
+        internal SessionNode OpenTarget(ProfilingTarget target, string filename) {
+            for (int i = 0; i < _sessions.Count; i++) {
+                if (_sessions[i].Filename == filename) {
                     throw new InvalidOperationException(Strings.PerformanceSessionAlreadyOpen.FormatUI(filename));
                 }
             }
 
             uint prevSibl;
-            if (_sessions.Count > 0)
-            {
+            if (_sessions.Count > 0) {
                 prevSibl = _sessions[_sessions.Count - 1].ItemId;
-            }
-            else
-            {
+            } else {
                 prevSibl = VSConstants.VSITEMID_NIL;
             }
 
@@ -117,19 +99,16 @@ namespace Microsoft.PythonTools.Profiling
 
             OnItemAdded(VSConstants.VSITEMID_ROOT, prevSibl, node.ItemId);
 
-            if (_activeSession == VSConstants.VSITEMID_NIL)
-            {
+            if (_activeSession == VSConstants.VSITEMID_NIL) {
                 SetActiveSession(node);
             }
 
             return node;
         }
 
-        internal void SetActiveSession(SessionNode node)
-        {
+        internal void SetActiveSession(SessionNode node) {
             uint oldItem = _activeSession;
-            if (oldItem != VSConstants.VSITEMID_NIL)
-            {
+            if (oldItem != VSConstants.VSITEMID_NIL) {
                 _window.ExpandItem(this, _activeSession, EXPANDFLAGS.EXPF_UnBoldItem);
             }
 
@@ -140,13 +119,10 @@ namespace Microsoft.PythonTools.Profiling
 
         #region IVsUIHierarchy Members
 
-        public override int GetNestedHierarchy(uint itemid, ref Guid iidHierarchyNested, out IntPtr ppHierarchyNested, out uint pitemidNested)
-        {
+        public override int GetNestedHierarchy(uint itemid, ref Guid iidHierarchyNested, out IntPtr ppHierarchyNested, out uint pitemidNested) {
             var item = _sessionsCollection[itemid];
-            if (item != null)
-            {
-                if (iidHierarchyNested == typeof(IVsHierarchy).GUID || iidHierarchyNested == typeof(IVsUIHierarchy).GUID)
-                {
+            if (item != null) {
+                if (iidHierarchyNested == typeof(IVsHierarchy).GUID || iidHierarchyNested == typeof(IVsUIHierarchy).GUID) {
                     ppHierarchyNested = System.Runtime.InteropServices.Marshal.GetComInterfaceForObject(item, typeof(IVsUIHierarchy));
                     pitemidNested = VSConstants.VSITEMID_ROOT;
                     return VSConstants.S_OK;
@@ -156,20 +132,17 @@ namespace Microsoft.PythonTools.Profiling
             return base.GetNestedHierarchy(itemid, ref iidHierarchyNested, out ppHierarchyNested, out pitemidNested);
         }
 
-        public override int GetProperty(uint itemid, int propid, out object pvar)
-        {
+        public override int GetProperty(uint itemid, int propid, out object pvar) {
             // GetProperty is called many many times for this particular property
             pvar = null;
             var prop = (__VSHPROPID)propid;
-            switch (prop)
-            {
+            switch (prop) {
                 case __VSHPROPID.VSHPROPID_CmdUIGuid:
                     pvar = new Guid(GuidList.guidPythonProfilingPkgString);
                     break;
 
                 case __VSHPROPID.VSHPROPID_Parent:
-                    if (itemid != VSConstants.VSITEMID_ROOT)
-                    {
+                    if (itemid != VSConstants.VSITEMID_ROOT) {
                         pvar = VSConstants.VSITEMID_ROOT;
                     }
                     break;
@@ -183,10 +156,8 @@ namespace Microsoft.PythonTools.Profiling
 
                 case __VSHPROPID.VSHPROPID_NextSibling:
                     pvar = VSConstants.VSITEMID_NIL;
-                    for (int i = 0; i < _sessions.Count; i++)
-                    {
-                        if (_sessions[i].ItemId == itemid && i < _sessions.Count - 1)
-                        {
+                    for (int i = 0; i < _sessions.Count; i++) {
+                        if (_sessions[i].ItemId == itemid && i < _sessions.Count - 1) {
                             pvar = _sessions[i + 1].ItemId;
                         }
                     }
@@ -197,8 +168,7 @@ namespace Microsoft.PythonTools.Profiling
                     break;
 
                 case __VSHPROPID.VSHPROPID_ExpandByDefault:
-                    if (itemid == VSConstants.VSITEMID_ROOT)
-                    {
+                    if (itemid == VSConstants.VSITEMID_ROOT) {
                         pvar = true;
                     }
                     break;
@@ -210,31 +180,25 @@ namespace Microsoft.PythonTools.Profiling
 
                 case __VSHPROPID.VSHPROPID_IconIndex:
                 case __VSHPROPID.VSHPROPID_OpenFolderIconIndex:
-                    if (itemid == VSConstants.VSITEMID_ROOT)
-                    {
+                    if (itemid == VSConstants.VSITEMID_ROOT) {
                         pvar = 0;
-                    }
-                    else
-                    {
+                    } else {
                         pvar = (int)TreeViewIconIndex.PerformanceSession;
                     }
                     break;
                 case __VSHPROPID.VSHPROPID_SaveName:
-                    if (itemid != VSConstants.VSITEMID_ROOT)
-                    {
+                    if (itemid != VSConstants.VSITEMID_ROOT) {
                         pvar = GetItem(itemid).Filename;
                     }
                     break;
                 case __VSHPROPID.VSHPROPID_Caption:
-                    if (itemid != VSConstants.VSITEMID_ROOT)
-                    {
+                    if (itemid != VSConstants.VSITEMID_ROOT) {
                         pvar = GetItem(itemid).Caption;
                     }
                     break;
 
                 case __VSHPROPID.VSHPROPID_ParentHierarchy:
-                    if (_sessionsCollection[itemid] != null)
-                    {
+                    if (_sessionsCollection[itemid] != null) {
                         pvar = this as IVsHierarchy;
                     }
                     break;
@@ -250,13 +214,10 @@ namespace Microsoft.PythonTools.Profiling
 
         #region IVsHierarchyDeleteHandler Members
 
-        public int DeleteItem(uint dwDelItemOp, uint itemid)
-        {
+        public int DeleteItem(uint dwDelItemOp, uint itemid) {
             var item = GetItem(itemid);
-            if (item != null)
-            {
-                switch ((__VSDELETEITEMOPERATION)dwDelItemOp)
-                {
+            if (item != null) {
+                switch ((__VSDELETEITEMOPERATION)dwDelItemOp) {
                     case __VSDELETEITEMOPERATION.DELITEMOP_DeleteFromStorage:
                         File.Delete(item.Filename);
                         goto case __VSDELETEITEMOPERATION.DELITEMOP_RemoveFromProject;
@@ -270,14 +231,10 @@ namespace Microsoft.PythonTools.Profiling
                         break;
                 }
 
-                if (itemid == _activeSession)
-                {
-                    if (_sessions.Count > 0)
-                    {
+                if (itemid == _activeSession) {
+                    if (_sessions.Count > 0) {
                         SetActiveSession(_sessions[0]);
-                    }
-                    else
-                    {
+                    } else {
                         _activeSession = VSConstants.VSITEMID_NIL;
                     }
                 }
@@ -286,40 +243,33 @@ namespace Microsoft.PythonTools.Profiling
             return VSConstants.E_FAIL;
         }
 
-        public int QueryDeleteItem(uint dwDelItemOp, uint itemid, out int pfCanDelete)
-        {
+        public int QueryDeleteItem(uint dwDelItemOp, uint itemid, out int pfCanDelete) {
             pfCanDelete = 1;
             return VSConstants.S_OK;
         }
 
         #endregion
 
-        private static ImageList InitImageList()
-        {
+        private static ImageList InitImageList() {
             var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Microsoft.PythonTools.ProfilingTreeView.bmp");
             return Utilities.GetImageList(
                 stream
             );
         }
 
-        private SessionNode GetItem(uint itemid)
-        {
+        private SessionNode GetItem(uint itemid) {
             return (SessionNode)_sessionsCollection[itemid];
         }
 
 
-        internal void StartProfiling()
-        {
-            if (_activeSession != VSConstants.VSITEMID_NIL)
-            {
+        internal void StartProfiling() {
+            if (_activeSession != VSConstants.VSITEMID_NIL) {
                 GetItem(_activeSession).StartProfiling();
             }
         }
 
-        public List<SessionNode> Sessions
-        {
-            get
-            {
+        public List<SessionNode> Sessions {
+            get {
                 return _sessions;
             }
         }

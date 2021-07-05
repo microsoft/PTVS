@@ -17,10 +17,8 @@
 using Microsoft.CookiecutterTools.Infrastructure;
 using Microsoft.CookiecutterTools.Model;
 
-namespace Microsoft.CookiecutterTools.ViewModel
-{
-    class TemplateViewModel : TreeItemViewModel
-    {
+namespace Microsoft.CookiecutterTools.ViewModel {
+    class TemplateViewModel : TreeItemViewModel {
         private string _displayName;
         private string _remoteUrl;
         private string _ownerUrl;
@@ -32,8 +30,7 @@ namespace Microsoft.CookiecutterTools.ViewModel
         private bool _isSearchTerm;
         private bool _isUpdateAvailable;
 
-        public TemplateViewModel()
-        {
+        public TemplateViewModel() {
         }
 
         public override string ToString() => DisplayName;
@@ -46,10 +43,8 @@ namespace Microsoft.CookiecutterTools.ViewModel
 
         public string GitHubWikiUrl => RemoteUrl != null ? RemoteUrl + "/wiki" : null;
 
-        public bool HasDetails
-        {
-            get
-            {
+        public bool HasDetails {
+            get {
                 return !string.IsNullOrEmpty(Description) &&
                        !string.IsNullOrEmpty(AvatarUrl) &&
                        !string.IsNullOrEmpty(OwnerUrl);
@@ -59,12 +54,9 @@ namespace Microsoft.CookiecutterTools.ViewModel
         /// <summary>
         /// Repository name.
         /// </summary>
-        public string RepositoryName
-        {
-            get
-            {
-                if (string.IsNullOrEmpty(RemoteUrl))
-                {
+        public string RepositoryName {
+            get {
+                if (string.IsNullOrEmpty(RemoteUrl)) {
                     return string.Empty;
                 }
 
@@ -78,12 +70,9 @@ namespace Microsoft.CookiecutterTools.ViewModel
         /// <summary>
         /// Repository owner.
         /// </summary>
-        public string RepositoryOwner
-        {
-            get
-            {
-                if (string.IsNullOrEmpty(RemoteUrl))
-                {
+        public string RepositoryOwner {
+            get {
+                if (string.IsNullOrEmpty(RemoteUrl)) {
                     return string.Empty;
                 }
 
@@ -97,37 +86,29 @@ namespace Microsoft.CookiecutterTools.ViewModel
         /// <summary>
         /// Repository full name, ie. 'owner/name'.
         /// </summary>
-        public string RepositoryFullName
-        {
-            get
-            {
-                if (string.IsNullOrEmpty(RemoteUrl))
-                {
+        public string RepositoryFullName {
+            get {
+                if (string.IsNullOrEmpty(RemoteUrl)) {
                     return string.Empty;
                 }
 
                 string owner;
                 string name;
                 ParseUtils.ParseGitHubRepoOwnerAndName(RemoteUrl, out owner, out name);
-                if (!string.IsNullOrEmpty(owner) && !string.IsNullOrEmpty(name))
-                {
+                if (!string.IsNullOrEmpty(owner) && !string.IsNullOrEmpty(name)) {
                     return owner + '/' + name;
                 }
                 return string.Empty;
             }
         }
 
-        public string DisplayName
-        {
-            get
-            {
+        public string DisplayName {
+            get {
                 return _displayName;
             }
 
-            set
-            {
-                if (value != _displayName)
-                {
+            set {
+                if (value != _displayName) {
                     _displayName = value;
                     OnPropertyChanged(new PropertyChangedEventArgs(nameof(DisplayName)));
                     OnPropertyChanged(new PropertyChangedEventArgs(nameof(AutomationName)));
@@ -135,17 +116,13 @@ namespace Microsoft.CookiecutterTools.ViewModel
             }
         }
 
-        public string RemoteUrl
-        {
-            get
-            {
+        public string RemoteUrl {
+            get {
                 return _remoteUrl;
             }
 
-            set
-            {
-                if (value != _remoteUrl)
-                {
+            set {
+                if (value != _remoteUrl) {
                     _remoteUrl = value;
                     OnPropertyChanged(new PropertyChangedEventArgs(nameof(RemoteUrl)));
                 }
@@ -154,119 +131,91 @@ namespace Microsoft.CookiecutterTools.ViewModel
             }
         }
 
-        public string ClonedPath
-        {
-            get
-            {
+        public string ClonedPath {
+            get {
                 return _clonedPath;
             }
 
-            set
-            {
-                if (value != _clonedPath)
-                {
+            set {
+                if (value != _clonedPath) {
                     _clonedPath = value;
                     OnPropertyChanged(new PropertyChangedEventArgs(nameof(ClonedPath)));
                 }
             }
         }
 
-        public string Description
-        {
-            get
-            {
+        public string Description {
+            get {
                 return _description;
             }
 
-            set
-            {
-                if (value != _description)
-                {
+            set {
+                if (value != _description) {
                     _description = value;
                     OnPropertyChanged(new PropertyChangedEventArgs(nameof(Description)));
                 }
             }
         }
 
-        public string AvatarUrl
-        {
-            get
-            {
+        public string AvatarUrl {
+            get {
                 return _avatarUrl;
             }
 
-            set
-            {
-                if (value != _avatarUrl)
-                {
+            set {
+                if (value != _avatarUrl) {
                     _avatarUrl = value;
                     OnPropertyChanged(new PropertyChangedEventArgs(nameof(AvatarUrl)));
                 }
             }
         }
 
-        public string OwnerUrl
-        {
-            get
-            {
+        public string OwnerUrl {
+            get {
                 return _ownerUrl;
             }
 
-            set
-            {
-                if (value != _ownerUrl)
-                {
+            set {
+                if (value != _ownerUrl) {
                     _ownerUrl = value;
                     OnPropertyChanged(new PropertyChangedEventArgs(nameof(OwnerUrl)));
                 }
             }
         }
 
-        public string OwnerTooltip
-        {
-            get
-            {
+        public string OwnerTooltip {
+            get {
                 return _ownerTooltip;
             }
 
-            set
-            {
-                if (value != _ownerTooltip)
-                {
+            set {
+                if (value != _ownerTooltip) {
                     _ownerTooltip = value;
                     OnPropertyChanged(new PropertyChangedEventArgs(nameof(OwnerTooltip)));
                 }
             }
         }
 
-        public bool IsSearchTerm
-        {
-            get
-            {
+        public bool IsSearchTerm {
+            get {
                 return _isSearchTerm;
             }
 
-            set
-            {
-                if (value != _isSearchTerm)
-                {
+            set {
+                if (value != _isSearchTerm) {
                     _isSearchTerm = value;
                     OnPropertyChanged(new PropertyChangedEventArgs(nameof(IsSearchTerm)));
                 }
             }
         }
 
-        public bool IsUpdateAvailable
-        {
-            get
-            {
+        public bool IsUpdateAvailable {
+            get {
                 return _isUpdateAvailable;
             }
 
-            set
-            {
-                if (value != _isUpdateAvailable)
-                {
+            set {
+                if (value != _isUpdateAvailable) {
                     _isUpdateAvailable = value;
                     OnPropertyChanged(new PropertyChangedEventArgs(nameof(IsUpdateAvailable)));
                     OnPropertyChanged(new PropertyChangedEventArgs(nameof(AutomationHelpText)));
@@ -274,16 +223,12 @@ namespace Microsoft.CookiecutterTools.ViewModel
             }
         }
 
-        public string Category
-        {
-            get
-            {
+        public string Category {
+            get {
                 return _category;
             }
-            set
-            {
-                if (value != _category)
-                {
+            set {
+                if (value != _category) {
                     _category = value;
                     OnPropertyChanged(new PropertyChangedEventArgs(nameof(Category)));
                     OnPropertyChanged(new PropertyChangedEventArgs(nameof(AutomationHelpText)));
@@ -295,11 +240,9 @@ namespace Microsoft.CookiecutterTools.ViewModel
             (IsUpdateAvailable ? Strings.SearchPage_CategoryHelpTextUpdate : Strings.SearchPage_CategoryHelpTextNoUpdate)
                 .FormatUI(Category);
 
-        private void RefreshOwnerTooltip()
-        {
+        private void RefreshOwnerTooltip() {
             var owner = RepositoryOwner;
-            if (string.IsNullOrEmpty(owner))
-            {
+            if (string.IsNullOrEmpty(owner)) {
                 owner = Strings.SearchPage_Creator;
             }
 

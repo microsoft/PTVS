@@ -23,10 +23,8 @@ using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.PythonTools.Debugger.Remote;
-using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Wsl.Debugger {
     class WslPythonLauncher : IProjectLauncher {

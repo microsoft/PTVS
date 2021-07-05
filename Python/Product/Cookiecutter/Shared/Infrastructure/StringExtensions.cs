@@ -14,10 +14,8 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.CookiecutterTools.Infrastructure
-{
-    static class StringExtensions
-    {
+namespace Microsoft.CookiecutterTools.Infrastructure {
+    static class StringExtensions {
 #if DEBUG
         private static readonly Regex SubstitutionRegex = new Regex(
             @"\{(\d+)",
@@ -38,49 +36,41 @@ namespace Microsoft.CookiecutterTools.Infrastructure
         private static void ValidateFormatString(string str, int argCount) { }
 #endif
 
-        public static string FormatUI(this string str, object arg0)
-        {
+        public static string FormatUI(this string str, object arg0) {
             ValidateFormatString(str, 1);
             return string.Format(CultureInfo.CurrentCulture, str, arg0);
         }
 
-        public static string FormatUI(this string str, object arg0, object arg1)
-        {
+        public static string FormatUI(this string str, object arg0, object arg1) {
             ValidateFormatString(str, 2);
             return string.Format(CultureInfo.CurrentCulture, str, arg0, arg1);
         }
 
-        public static string FormatUI(this string str, params object[] args)
-        {
+        public static string FormatUI(this string str, params object[] args) {
             ValidateFormatString(str, args.Length);
             return string.Format(CultureInfo.CurrentCulture, str, args);
         }
 
-        public static string FormatInvariant(this string str, object arg0)
-        {
+        public static string FormatInvariant(this string str, object arg0) {
             ValidateFormatString(str, 1);
             return string.Format(CultureInfo.InvariantCulture, str, arg0);
         }
 
-        public static string FormatInvariant(this string str, object arg0, object arg1)
-        {
+        public static string FormatInvariant(this string str, object arg0, object arg1) {
             ValidateFormatString(str, 2);
             return string.Format(CultureInfo.InvariantCulture, str, arg0, arg1);
         }
 
-        public static string FormatInvariant(this string str, params object[] args)
-        {
+        public static string FormatInvariant(this string str, params object[] args) {
             ValidateFormatString(str, args.Length);
             return string.Format(CultureInfo.InvariantCulture, str, args);
         }
 
-        public static string IfNullOrEmpty(this string str, string fallback)
-        {
+        public static string IfNullOrEmpty(this string str, string fallback) {
             return string.IsNullOrEmpty(str) ? fallback : str;
         }
 
-        public static bool IsTrue(this string str)
-        {
+        public static bool IsTrue(this string str) {
             bool asBool;
             return !string.IsNullOrWhiteSpace(str) && (
                 str.Equals("1", StringComparison.Ordinal) ||
@@ -89,17 +79,13 @@ namespace Microsoft.CookiecutterTools.Infrastructure
             );
         }
 
-        public static string TrimEndNewline(this string str)
-        {
-            if (string.IsNullOrEmpty(str))
-            {
+        public static string TrimEndNewline(this string str) {
+            if (string.IsNullOrEmpty(str)) {
                 return string.Empty;
             }
 
-            if (str[str.Length - 1] == '\n')
-            {
-                if (str.Length >= 2 && str[str.Length - 2] == '\r')
-                {
+            if (str[str.Length - 1] == '\n') {
+                if (str.Length >= 2 && str[str.Length - 2] == '\r') {
                     return str.Remove(str.Length - 2);
                 }
                 return str.Remove(str.Length - 1);
@@ -107,33 +93,27 @@ namespace Microsoft.CookiecutterTools.Infrastructure
             return str;
         }
 
-        public static string Truncate(this string str, int length)
-        {
-            if (string.IsNullOrEmpty(str))
-            {
+        public static string Truncate(this string str, int length) {
+            if (string.IsNullOrEmpty(str)) {
                 return str;
             }
 
-            if (str.Length < length)
-            {
+            if (str.Length < length) {
                 return str;
             }
 
             return str.Substring(0, length);
         }
 
-        public static bool StartsWithOrdinal(this string s, string prefix, bool ignoreCase = false)
-        {
+        public static bool StartsWithOrdinal(this string s, string prefix, bool ignoreCase = false) {
             return s?.StartsWith(prefix, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal) ?? false;
         }
 
-        public static bool EndsWithOrdinal(this string s, string suffix, bool ignoreCase = false)
-        {
+        public static bool EndsWithOrdinal(this string s, string suffix, bool ignoreCase = false) {
             return s?.EndsWith(suffix, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal) ?? false;
         }
 
-        public static int IndexOfOrdinal(this string s, string value, int startIndex = 0, bool ignoreCase = false)
-        {
+        public static int IndexOfOrdinal(this string s, string value, int startIndex = 0, bool ignoreCase = false) {
             return s?.IndexOf(value, startIndex, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal) ?? -1;
         }
     }

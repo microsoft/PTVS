@@ -14,31 +14,26 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Navigation.Peek
-{
+namespace Microsoft.PythonTools.Navigation.Peek {
     [Export(typeof(IPeekableItemSourceProvider))]
     [ContentType(PythonCoreConstants.ContentType)]
     [Name(nameof(PythonPeekableItemSourceProvider))]
     [SupportsStandaloneFiles(true)]
     [SupportsPeekRelationship("IsDefinedBy")] // Value of PredefinedPeekRelationships.Definitions.Name
-    internal sealed class PythonPeekableItemSourceProvider : IPeekableItemSourceProvider
-    {
+    internal sealed class PythonPeekableItemSourceProvider : IPeekableItemSourceProvider {
         private readonly IPeekResultFactory _peekResultFactory;
         private readonly IServiceProvider _serviceProvider;
 
         [ImportingConstructor]
         public PythonPeekableItemSourceProvider(
             [Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider,
-            IPeekResultFactory peekResultFactory)
-        {
+            IPeekResultFactory peekResultFactory) {
             _serviceProvider = serviceProvider;
             _peekResultFactory = peekResultFactory;
         }
 
-        public IPeekableItemSource TryCreatePeekableItemSource(ITextBuffer textBuffer)
-        {
-            if (textBuffer == null)
-            {
+        public IPeekableItemSource TryCreatePeekableItemSource(ITextBuffer textBuffer) {
+            if (textBuffer == null) {
                 throw new ArgumentNullException(nameof(textBuffer));
             }
 

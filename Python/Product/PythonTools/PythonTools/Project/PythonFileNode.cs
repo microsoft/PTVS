@@ -18,21 +18,16 @@ using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 
-namespace Microsoft.PythonTools.Project
-{
+namespace Microsoft.PythonTools.Project {
 
-    internal class PythonFileNode : CommonFileNode
-    {
+    internal class PythonFileNode : CommonFileNode {
         internal PythonFileNode(CommonProjectNode root, ProjectElement e)
             : base(root, e) { }
 
-        public override string Caption
-        {
-            get
-            {
+        public override string Caption {
+            get {
                 var res = base.Caption;
-                if (res == "__init__.py" && Parent != null)
-                {
+                if (res == "__init__.py" && Parent != null) {
                     StringBuilder fullName = new StringBuilder(res);
                     fullName.Append(" (");
 
@@ -45,48 +40,37 @@ namespace Microsoft.PythonTools.Project
             }
         }
 
-        internal static void GetPackageName(HierarchyNode self, StringBuilder fullName)
-        {
+        internal static void GetPackageName(HierarchyNode self, StringBuilder fullName) {
             List<HierarchyNode> nodes = new List<HierarchyNode>();
             var curNode = self.Parent;
-            do
-            {
+            do {
                 nodes.Add(curNode);
                 curNode = curNode.Parent;
             } while (curNode != null && curNode.FindImmediateChildByName("__init__.py") != null);
 
-            for (int i = nodes.Count - 1; i >= 0; i--)
-            {
+            for (int i = nodes.Count - 1; i >= 0; i--) {
                 fullName.Append(GetNodeNameForPackage(nodes[i]));
-                if (i != 0)
-                {
+                if (i != 0) {
                     fullName.Append('.');
                 }
             }
         }
 
-        private static string GetNodeNameForPackage(HierarchyNode node)
-        {
+        private static string GetNodeNameForPackage(HierarchyNode node) {
             var project = node as ProjectNode;
-            if (project != null)
-            {
+            if (project != null) {
                 return PathUtils.GetFileOrDirectoryName(project.ProjectHome);
-            }
-            else
-            {
+            } else {
                 return node.Caption;
             }
         }
 
-        internal override int ExecCommandOnNode(Guid guidCmdGroup, uint cmd, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut)
-        {
+        internal override int ExecCommandOnNode(Guid guidCmdGroup, uint cmd, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
             Debug.Assert(this.ProjectMgr != null, "The Dynamic FileNode has no project manager");
             Utilities.CheckNotNull(this.ProjectMgr);
 
-            if (guidCmdGroup == GuidList.guidPythonToolsCmdSet)
-            {
-                switch (cmd)
-                {
+            if (guidCmdGroup == GuidList.guidPythonToolsCmdSet) {
+                switch (cmd) {
                     case CommonConstants.SetAsStartupFileCmdId:
                         // Set the StartupFile project property to the Url of this node
                         ProjectMgr.SetProjectProperty(
@@ -104,22 +88,17 @@ namespace Microsoft.PythonTools.Project
             return base.ExecCommandOnNode(guidCmdGroup, cmd, nCmdexecopt, pvaIn, pvaOut);
         }
 
-        internal override int QueryStatusOnNode(Guid guidCmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result)
-        {
-            if (guidCmdGroup == GuidList.guidPythonToolsCmdSet)
-            {
-                if (this.ProjectMgr.IsCodeFile(this.Url))
-                {
-                    switch (cmd)
-                    {
+        internal override int QueryStatusOnNode(Guid guidCmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result) {
+            if (guidCmdGroup == GuidList.guidPythonToolsCmdSet) {
+                if (this.ProjectMgr.IsCodeFile(this.Url)) {
+                    switch (cmd) {
                         case CommonConstants.SetAsStartupFileCmdId:
                             //We enable "Set as StartUp File" command only on current language code files, 
                             //the file is in project home dir and if the file is not the startup file already.
                             string startupFile = ((CommonProjectNode)ProjectMgr).GetStartupFile();
                             if (IsInProjectHome() &&
                                 !PathUtils.IsSamePath(startupFile, Url) &&
-                                !IsNonMemberItem)
-                            {
+                                !IsNonMemberItem) {
                                 result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
                             }
                             return VSConstants.S_OK;
@@ -133,13 +112,10 @@ namespace Microsoft.PythonTools.Project
             return base.QueryStatusOnNode(guidCmdGroup, cmd, pCmdText, ref result);
         }
 
-        private bool IsInProjectHome()
-        {
+        private bool IsInProjectHome() {
             HierarchyNode parent = this.Parent;
-            while (parent != null)
-            {
-                if (parent is CommonSearchPathNode)
-                {
+            while (parent != null) {
+                if (parent is CommonSearchPathNode) {
                     return false;
                 }
                 parent = parent.Parent;
@@ -147,52 +123,37 @@ namespace Microsoft.PythonTools.Project
             return true;
         }
 
-        private void TryDelete(string filename)
-        {
-            if (!File.Exists(filename))
-            {
+        private void TryDelete(string filename) {
+            if (!File.Exists(filename)) {
                 return;
             }
 
             var node = ((PythonProjectNode)ProjectMgr).FindNodeByFullPath(filename);
-            if (node != null)
-            {
-                if (node.IsNonMemberItem)
-                {
+            if (node != null) {
+                if (node.IsNonMemberItem) {
                     node.Remove(true);
                 }
                 return;
             }
 
-            try
-            {
+            try {
                 File.Delete(filename);
-            }
-            catch (IOException)
-            {
-            }
-            catch (UnauthorizedAccessException)
-            {
-            }
-            catch (SecurityException)
-            {
+            } catch (IOException) {
+            } catch (UnauthorizedAccessException) {
+            } catch (SecurityException) {
             }
         }
 
-        public override bool Remove(bool removeFromStorage)
-        {
+        public override bool Remove(bool removeFromStorage) {
             var analyzer = TryGetAnalyzer();
-            if (analyzer != null)
-            {
+            if (analyzer != null) {
                 var entry = analyzer.GetAnalysisEntryFromPath(Url);
-                if (entry != null)
-                {
+                if (entry != null) {
                     analyzer.UnloadFileAsync(entry).DoNotWait();
                 }
             }
 
-            if (Url.EndsWithOrdinal(PythonConstants.FileExtension, ignoreCase: true) && removeFromStorage)
-            {
+            if (Url.EndsWithOrdinal(PythonConstants.FileExtension, ignoreCase: true) && removeFromStorage) {
                 TryDelete(Url + "c");
                 TryDelete(Url + "o");
             }
@@ -200,10 +161,8 @@ namespace Microsoft.PythonTools.Project
             return base.Remove(removeFromStorage);
         }
 
-        public override string GetEditLabel()
-        {
-            if (IsLinkFile)
-            {
+        public override string GetEditLabel() {
+            if (IsLinkFile) {
                 // cannot rename link files
                 return null;
             }
@@ -211,73 +170,54 @@ namespace Microsoft.PythonTools.Project
             return base.Caption;
         }
 
-        public override string FileName
-        {
-            get
-            {
+        public override string FileName {
+            get {
                 return base.Caption;
             }
-            set
-            {
+            set {
                 base.FileName = value;
             }
         }
 
-        private VsProjectAnalyzer TryGetAnalyzer()
-        {
+        private VsProjectAnalyzer TryGetAnalyzer() {
             return ((PythonProjectNode)ProjectMgr).TryGetAnalyzer();
         }
 
-        public AnalysisEntry TryGetAnalysisEntry()
-        {
+        public AnalysisEntry TryGetAnalysisEntry() {
             return TryGetAnalyzer()?.GetAnalysisEntryFromPath(Url);
         }
 
-        private void TryRename(string oldFile, string newFile)
-        {
-            if (!File.Exists(oldFile) || File.Exists(newFile))
-            {
+        private void TryRename(string oldFile, string newFile) {
+            if (!File.Exists(oldFile) || File.Exists(newFile)) {
                 return;
             }
 
             var node = ((PythonProjectNode)ProjectMgr).FindNodeByFullPath(oldFile);
-            if (node != null && !node.IsNonMemberItem)
-            {
+            if (node != null && !node.IsNonMemberItem) {
                 return;
             }
 
-            try
-            {
+            try {
                 File.Move(oldFile, newFile);
-            }
-            catch (IOException)
-            {
-            }
-            catch (UnauthorizedAccessException)
-            {
-            }
-            catch (SecurityException)
-            {
+            } catch (IOException) {
+            } catch (UnauthorizedAccessException) {
+            } catch (SecurityException) {
             }
         }
 
-        internal override FileNode RenameFileNode(string oldFileName, string newFileName)
-        {
+        internal override FileNode RenameFileNode(string oldFileName, string newFileName) {
             var res = base.RenameFileNode(oldFileName, newFileName);
 
-            if (newFileName.EndsWithOrdinal(PythonConstants.FileExtension, ignoreCase: true))
-            {
+            if (newFileName.EndsWithOrdinal(PythonConstants.FileExtension, ignoreCase: true)) {
                 TryRename(oldFileName + "c", newFileName + "c");
                 TryRename(oldFileName + "o", newFileName + "o");
             }
 
-            if (res != null)
-            {
+            if (res != null) {
                 // Analyzer has not changed, but because the filename has we need to
                 // do a transfer.
                 var oldEntry = TryGetAnalyzer()?.GetAnalysisEntryFromPath(oldFileName);
-                if (oldEntry != null)
-                {
+                if (oldEntry != null) {
                     oldEntry.Analyzer.TransferFileFromOldAnalyzer(oldEntry, GetMkDocument())
                         .HandleAllExceptions(ProjectMgr.Site, GetType())
                         .DoNotWait();
@@ -286,22 +226,18 @@ namespace Microsoft.PythonTools.Project
             return res;
         }
 
-        internal override int IncludeInProject(bool includeChildren)
-        {
+        internal override int IncludeInProject(bool includeChildren) {
             var analyzer = TryGetAnalyzer();
             analyzer?.AnalyzeFileAsync(Url).DoNotWait();
 
             return base.IncludeInProject(includeChildren);
         }
 
-        internal override int ExcludeFromProject()
-        {
+        internal override int ExcludeFromProject() {
             var analyzer = TryGetAnalyzer();
-            if (analyzer != null)
-            {
+            if (analyzer != null) {
                 var analysis = analyzer.GetAnalysisEntryFromPath(Url);
-                if (analysis != null)
-                {
+                if (analysis != null) {
                     analyzer.UnloadFileAsync(analysis).DoNotWait();
                 }
             }
@@ -309,13 +245,11 @@ namespace Microsoft.PythonTools.Project
             return base.ExcludeFromProject();
         }
 
-        protected override ImageMoniker CodeFileIconMoniker
-        {
+        protected override ImageMoniker CodeFileIconMoniker {
             get { return KnownMonikers.PYFileNode; }
         }
 
-        protected override ImageMoniker StartupCodeFileIconMoniker
-        {
+        protected override ImageMoniker StartupCodeFileIconMoniker {
             get { return KnownMonikers.PYFileNode; }
         }
     }

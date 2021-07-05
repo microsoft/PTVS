@@ -19,8 +19,7 @@ using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 using MSBuild = Microsoft.Build.Evaluation;
 
-namespace Microsoft.PythonTools.Project
-{
+namespace Microsoft.PythonTools.Project {
     //Set the projectsTemplatesDirectory to a non-existant path to prevent VS from including the working directory as a valid template path
     [PackageRegistration(UseManagedResourcesOnly = true)]
     [ProvideProjectFactory(typeof(PythonProjectFactory), PythonConstants.LanguageName, "#127", "pyproj", "pyproj", ".\\NullPath", LanguageVsTemplate = PythonConstants.LanguageName)]
@@ -51,17 +50,14 @@ namespace Microsoft.PythonTools.Project
 
     [Guid(PythonConstants.ProjectSystemPackageGuid)]
     [DeveloperActivity("Python", typeof(PythonProjectPackage))]
-    public class PythonProjectPackage : CommonProjectPackage
-    {
-        protected override void Initialize()
-        {
+    public class PythonProjectPackage : CommonProjectPackage {
+        protected override void Initialize() {
             // The variable is inherited by MSBuild processes and is used to resolve test target
             // files.
             var installPath = PathUtils.GetParent(PythonToolsInstallPath.GetFile("Microsoft.PythonTools.dll", GetType().Assembly));
             string rootDir;
             if (!((IServiceProvider)this).TryGetShellProperty((__VSSPROPID)__VSSPROPID2.VSSPROPID_InstallRootDir, out rootDir) ||
-                !PathUtils.IsSubpathOf(rootDir, installPath))
-            {
+                !PathUtils.IsSubpathOf(rootDir, installPath)) {
                 MSBuild.ProjectCollection.GlobalProjectCollection.SetGlobalProperty("_PythonToolsPath", installPath);
                 Environment.SetEnvironmentVariable("_PythonToolsPath", installPath);
             }
@@ -70,18 +66,15 @@ namespace Microsoft.PythonTools.Project
             RegisterProjectFactory(new PythonWebProjectFactory(this));
         }
 
-        public override ProjectFactory CreateProjectFactory()
-        {
+        public override ProjectFactory CreateProjectFactory() {
             return new PythonProjectFactory(this);
         }
 
-        public override CommonEditorFactory CreateEditorFactory()
-        {
+        public override CommonEditorFactory CreateEditorFactory() {
             return new PythonEditorFactory(this);
         }
 
-        public override CommonEditorFactory CreateEditorFactoryPromptForEncoding()
-        {
+        public override CommonEditorFactory CreateEditorFactoryPromptForEncoding() {
             return new PythonEditorFactoryPromptForEncoding(this);
         }
 
@@ -90,8 +83,7 @@ namespace Microsoft.PythonTools.Project
         /// Help About dialog when this package is selected.
         /// </summary>
         /// <returns>The resource id corresponding to the icon to display on the Help About dialog</returns>
-        public override uint GetIconIdForAboutBox()
-        {
+        public override uint GetIconIdForAboutBox() {
             return PythonConstants.IconIdForAboutBox;
         }
         /// <summary>
@@ -99,16 +91,14 @@ namespace Microsoft.PythonTools.Project
         /// display on the splash screen for this package.
         /// </summary>
         /// <returns>The resource id corresponding to the bitmap to display on the splash screen</returns>
-        public override uint GetIconIdForSplashScreen()
-        {
+        public override uint GetIconIdForSplashScreen() {
             return PythonConstants.IconIfForSplashScreen;
         }
         /// <summary>
         /// This methods provides the product official name, it will be
         /// displayed in the help about dialog.
         /// </summary>
-        public override string GetProductName()
-        {
+        public override string GetProductName() {
             return PythonConstants.LanguageName;
         }
 
@@ -116,8 +106,7 @@ namespace Microsoft.PythonTools.Project
         /// This methods provides the product description, it will be
         /// displayed in the help about dialog.
         /// </summary>
-        public override string GetProductDescription()
-        {
+        public override string GetProductDescription() {
             return PythonConstants.LanguageName;
             //return Resources.ProductDescription;
         }
@@ -125,8 +114,7 @@ namespace Microsoft.PythonTools.Project
         /// This methods provides the product version, it will be
         /// displayed in the help about dialog.
         /// </summary>
-        public override string GetProductVersion()
-        {
+        public override string GetProductVersion() {
             return this.GetType().Assembly.GetName().Version.ToString();
         }
     }

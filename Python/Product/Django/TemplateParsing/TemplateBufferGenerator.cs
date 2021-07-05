@@ -14,13 +14,10 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Django.TemplateParsing
-{
-    internal class TemplateBufferGenerator : ArtifactBasedBufferGenerator
-    {
+namespace Microsoft.PythonTools.Django.TemplateParsing {
+    internal class TemplateBufferGenerator : ArtifactBasedBufferGenerator {
         public TemplateBufferGenerator(HtmlEditorTree editorTree, LanguageBlockCollection languageBlocks)
-            : base(editorTree, languageBlocks, ContentTypeManager.GetContentType(TemplateTagContentType.ContentTypeName))
-        {
+            : base(editorTree, languageBlocks, ContentTypeManager.GetContentType(TemplateTagContentType.ContentTypeName)) {
         }
     }
 }

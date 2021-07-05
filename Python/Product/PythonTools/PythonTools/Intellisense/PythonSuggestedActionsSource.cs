@@ -16,10 +16,8 @@
 
 using Microsoft.PythonTools.Editor;
 
-namespace Microsoft.PythonTools.Intellisense
-{
-    class PythonSuggestedActionsSource : ISuggestedActionsSource, IPythonTextBufferInfoEventSink
-    {
+namespace Microsoft.PythonTools.Intellisense {
+    class PythonSuggestedActionsSource : ISuggestedActionsSource, IPythonTextBufferInfoEventSink {
         internal readonly PythonEditorServices _services;
 
         private readonly object _currentLock = new object();
@@ -29,8 +27,7 @@ namespace Microsoft.PythonTools.Intellisense
 
         private static readonly Guid _telemetryId = new Guid("{9D2182D9-27BC-4143-9A93-B7D9C015D01B}");
 
-        public PythonSuggestedActionsSource(PythonEditorServices services)
-        {
+        public PythonSuggestedActionsSource(PythonEditorServices services) {
             _services = services;
             _uiThread = _services.Site.GetUIThread();
         }
@@ -39,38 +36,31 @@ namespace Microsoft.PythonTools.Intellisense
 
         public void Dispose() { }
 
-        public IEnumerable<SuggestedActionSet> GetSuggestedActions(ISuggestedActionCategorySet requestedActionCategories, SnapshotSpan range, CancellationToken cancellationToken)
-        {
-            lock (_currentLock)
-            {
-                if (_currentSpan == range)
-                {
+        public IEnumerable<SuggestedActionSet> GetSuggestedActions(ISuggestedActionCategorySet requestedActionCategories, SnapshotSpan range, CancellationToken cancellationToken) {
+            lock (_currentLock) {
+                if (_currentSpan == range) {
                     return _current;
                 }
             }
             return null;
         }
 
-        public async Task<bool> HasSuggestedActionsAsync(ISuggestedActionCategorySet requestedActionCategories, SnapshotSpan range, CancellationToken cancellationToken)
-        {
+        public async Task<bool> HasSuggestedActionsAsync(ISuggestedActionCategorySet requestedActionCategories, SnapshotSpan range, CancellationToken cancellationToken) {
             var textBuffer = range.Snapshot.TextBuffer;
             var bi = _services.GetBufferInfo(textBuffer);
             var entry = bi.AnalysisEntry;
-            if (entry == null)
-            {
+            if (entry == null) {
                 return false;
             }
 
-            if (entry != null)
-            {
+            if (entry != null) {
                 return false;
             }
 
             var needSuggestion = new List<SnapshotSpan>();
 
             var tokens = bi.GetTokens(range).Where(t => t.Category == TokenCategory.Identifier);
-            foreach (var t in tokens)
-            {
+            foreach (var t in tokens) {
                 var span = t.ToSnapshotSpan(range.Snapshot);
                 var isMissing = await entry.Analyzer.IsMissingImportAsync(
                     entry,
@@ -78,42 +68,36 @@ namespace Microsoft.PythonTools.Intellisense
                     t.ToSourceSpan().Start
                 );
 
-                if (isMissing)
-                {
+                if (isMissing) {
                     needSuggestion.Add(span);
                 }
             }
 
-            if (!needSuggestion.Any())
-            {
+            if (!needSuggestion.Any()) {
                 return false;
             }
 
 
             var suggestions = new List<SuggestedActionSet>();
 
-            foreach (var span in needSuggestion)
-            {
+            foreach (var span in needSuggestion) {
                 var available = await entry.Analyzer.FindNameInAllModulesAsync(span.GetText());
                 var actions = available.Select(s => new PythonSuggestedImportAction(this, textBuffer, s))
                     .OrderBy(k => k)
                     .Distinct()
                     .ToArray();
-                if (actions.Any())
-                {
+                if (actions.Any()) {
                     suggestions.Add(new SuggestedActionSet(PredefinedSuggestedActionCategoryNames.CodeFix, actions));
                 }
             }
 
-            if (!suggestions.Any())
-            {
+            if (!suggestions.Any()) {
                 return false;
             }
 
             cancellationToken.ThrowIfCancellationRequested();
 
-            lock (_currentLock)
-            {
+            lock (_currentLock) {
                 cancellationToken.ThrowIfCancellationRequested();
                 _current = suggestions;
                 _currentSpan = range;
@@ -122,16 +106,13 @@ namespace Microsoft.PythonTools.Intellisense
             return true;
         }
 
-        public bool TryGetTelemetryId(out Guid telemetryId)
-        {
+        public bool TryGetTelemetryId(out Guid telemetryId) {
             telemetryId = _telemetryId;
             return false;
         }
 
-        Task IPythonTextBufferInfoEventSink.PythonTextBufferEventAsync(PythonTextBufferInfo sender, PythonTextBufferInfoEventArgs e)
-        {
-            if (e.Event == PythonTextBufferInfoEvents.NewAnalysis)
-            {
+        Task IPythonTextBufferInfoEventSink.PythonTextBufferEventAsync(PythonTextBufferInfo sender, PythonTextBufferInfoEventArgs e) {
+            if (e.Event == PythonTextBufferInfoEvents.NewAnalysis) {
                 SuggestedActionsChanged?.Invoke(this, EventArgs.Empty);
             }
             return Task.CompletedTask;

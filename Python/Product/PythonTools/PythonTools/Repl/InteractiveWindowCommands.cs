@@ -14,50 +14,39 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Repl
-{
+namespace Microsoft.PythonTools.Repl {
     [Export(typeof(IInteractiveWindowCommand))]
     [ContentType(PythonCoreConstants.ContentType)]
-    class InteractiveCommentCommand : IInteractiveWindowCommand
-    {
+    class InteractiveCommentCommand : IInteractiveWindowCommand {
         private readonly IStandardClassificationService _registry;
 
         [ImportingConstructor]
-        public InteractiveCommentCommand(IStandardClassificationService registry)
-        {
+        public InteractiveCommentCommand(IStandardClassificationService registry) {
             _registry = registry;
         }
 
-        public string CommandLine
-        {
+        public string CommandLine {
             get { return "comment text"; }
         }
 
-        public string Description
-        {
-            get
-            {
+        public string Description {
+            get {
                 return Strings.ReplCommentCommandDescription;
             }
         }
 
-        public IEnumerable<string> DetailedDescription
-        {
+        public IEnumerable<string> DetailedDescription {
             get { yield break; }
         }
 
-        public IEnumerable<string> Names
-        {
-            get
-            {
+        public IEnumerable<string> Names {
+            get {
                 yield return "$";
             }
         }
 
-        public IEnumerable<KeyValuePair<string, string>> ParametersDescription
-        {
-            get
-            {
+        public IEnumerable<KeyValuePair<string, string>> ParametersDescription {
+            get {
                 yield break;
             }
         }
@@ -66,10 +55,8 @@ namespace Microsoft.PythonTools.Repl
             ITextSnapshot snapshot,
             Span argumentsSpan,
             Span spanToClassify
-        )
-        {
-            if (spanToClassify.Length > 0)
-            {
+        ) {
+            if (spanToClassify.Length > 0) {
                 yield return new ClassificationSpan(
                     new SnapshotSpan(snapshot, spanToClassify),
                     _registry.Comment
@@ -77,8 +64,7 @@ namespace Microsoft.PythonTools.Repl
             }
         }
 
-        public Task<ExecutionResult> Execute(IInteractiveWindow window, string arguments)
-        {
+        public Task<ExecutionResult> Execute(IInteractiveWindow window, string arguments) {
             return ExecutionResult.Succeeded;
         }
     }
@@ -86,52 +72,40 @@ namespace Microsoft.PythonTools.Repl
 
     [Export(typeof(IInteractiveWindowCommand))]
     [ContentType(PythonCoreConstants.ContentType)]
-    class InteractiveWaitCommand : IInteractiveWindowCommand
-    {
+    class InteractiveWaitCommand : IInteractiveWindowCommand {
         private readonly IStandardClassificationService _registry;
 
         [ImportingConstructor]
-        public InteractiveWaitCommand(IStandardClassificationService registry)
-        {
+        public InteractiveWaitCommand(IStandardClassificationService registry) {
             _registry = registry;
         }
 
-        public string CommandLine
-        {
-            get
-            {
+        public string CommandLine {
+            get {
                 return "timeout";
             }
         }
 
-        public string Description
-        {
-            get
-            {
+        public string Description {
+            get {
                 return Strings.ReplWaitCommandDescription;
             }
         }
 
-        public IEnumerable<string> DetailedDescription
-        {
-            get
-            {
+        public IEnumerable<string> DetailedDescription {
+            get {
                 yield break;
             }
         }
 
-        public IEnumerable<string> Names
-        {
-            get
-            {
+        public IEnumerable<string> Names {
+            get {
                 yield return "wait";
             }
         }
 
-        public IEnumerable<KeyValuePair<string, string>> ParametersDescription
-        {
-            get
-            {
+        public IEnumerable<KeyValuePair<string, string>> ParametersDescription {
+            get {
                 yield return new KeyValuePair<string, string>("timeout", Strings.ReplWaitCommandTimeoutParameterDescription);
             }
         }
@@ -140,12 +114,10 @@ namespace Microsoft.PythonTools.Repl
             ITextSnapshot snapshot,
             Span argumentsSpan,
             Span spanToClassify
-        )
-        {
+        ) {
             var arguments = snapshot.GetText(argumentsSpan);
             int timeout;
-            if (int.TryParse(arguments, out timeout))
-            {
+            if (int.TryParse(arguments, out timeout)) {
                 yield return new ClassificationSpan(
                     new SnapshotSpan(snapshot, argumentsSpan),
                     _registry.NumberLiteral
@@ -153,8 +125,7 @@ namespace Microsoft.PythonTools.Repl
             }
         }
 
-        public async Task<ExecutionResult> Execute(IInteractiveWindow window, string arguments)
-        {
+        public async Task<ExecutionResult> Execute(IInteractiveWindow window, string arguments) {
             await Task.Delay(int.Parse(arguments));
             return ExecutionResult.Success;
         }

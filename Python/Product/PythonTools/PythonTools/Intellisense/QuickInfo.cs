@@ -14,20 +14,17 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Intellisense
-{
+namespace Microsoft.PythonTools.Intellisense {
     /// <summary>
     /// Tracks our quick info response.  We kick off an async request
     /// to get the info and then attach it to the buffer.  We then
     /// trigger the session and this instance is retrieved.
     /// </summary>
-    internal sealed class QuickInfo
-    {
+    internal sealed class QuickInfo {
         public readonly string Text;
         public readonly ITrackingSpan Span;
 
-        public QuickInfo(string text, ITrackingSpan span)
-        {
+        public QuickInfo(string text, ITrackingSpan span) {
             Text = text;
             Span = span;
         }

@@ -14,70 +14,53 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Options
-{
-    class PythonToolsOptionsService : IPythonToolsOptionsService
-    {
+namespace Microsoft.PythonTools.Options {
+    class PythonToolsOptionsService : IPythonToolsOptionsService {
         private const string _optionsKey = "Options";
         private readonly WritableSettingsStore _settingsStore;
 
         public static object CreateService(IServiceContainer container, Type serviceType)
             => serviceType.IsEquivalentTo(typeof(IPythonToolsOptionsService)) ? new PythonToolsOptionsService(container) : null;
 
-        private PythonToolsOptionsService(IServiceProvider serviceProvider)
-        {
+        private PythonToolsOptionsService(IServiceProvider serviceProvider) {
             var settingsManager = SettingsManagerCreator.GetSettingsManager(serviceProvider);
             _settingsStore = settingsManager.GetWritableSettingsStore(SettingsScope.UserSettings);
         }
 
-        public void SaveString(string name, string category, string value)
-        {
+        public void SaveString(string name, string category, string value) {
             var path = GetCollectionPath(category);
-            if (value == null)
-            {
-                if (_settingsStore.CollectionExists(path))
-                {
+            if (value == null) {
+                if (_settingsStore.CollectionExists(path)) {
                     _settingsStore.DeleteProperty(path, name);
                 }
-            }
-            else
-            {
-                if (!_settingsStore.CollectionExists(path))
-                {
+            } else {
+                if (!_settingsStore.CollectionExists(path)) {
                     _settingsStore.CreateCollection(path);
                 }
                 _settingsStore.SetString(path, name, value);
             }
         }
 
-        private static string GetCollectionPath(string category)
-        {
+        private static string GetCollectionPath(string category) {
             return PythonCoreConstants.BaseRegistryKey + "\\" + _optionsKey + "\\" + category;
         }
 
-        public string LoadString(string name, string category)
-        {
+        public string LoadString(string name, string category) {
             var path = GetCollectionPath(category);
-            if (!_settingsStore.CollectionExists(path))
-            {
+            if (!_settingsStore.CollectionExists(path)) {
                 return null;
             }
-            if (!_settingsStore.PropertyExists(path, name))
-            {
+            if (!_settingsStore.PropertyExists(path, name)) {
                 return null;
             }
             return _settingsStore.GetString(path, name, "");
         }
 
-        public void DeleteCategory(string category)
-        {
+        public void DeleteCategory(string category) {
             var path = GetCollectionPath(category);
-            try
-            {
+            try {
                 _settingsStore.DeleteCollection(path);
-            }
-            catch (ArgumentException)
-            {
+            } catch (ArgumentException) {
                 // Documentation is a lie - raises ArgumentException if the
                 // collection does not exist.
             }

@@ -16,10 +16,8 @@
 
 using Microsoft.CookiecutterTools.Infrastructure;
 
-namespace Microsoft.CookiecutterTools.Model
-{
-    class CookiecutterClient : ICookiecutterClient
-    {
+namespace Microsoft.CookiecutterTools.Model {
+    class CookiecutterClient : ICookiecutterClient {
         private readonly IServiceProvider _provider;
         private readonly CookiecutterPythonInterpreter _interpreter;
         private readonly string _envFolderPath;
@@ -28,12 +26,9 @@ namespace Microsoft.CookiecutterTools.Model
 
         internal string DefaultBasePath { get; set; } = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
 
-        public bool CookiecutterInstalled
-        {
-            get
-            {
-                if (!File.Exists(_envInterpreterPath))
-                {
+        public bool CookiecutterInstalled {
+            get {
+                if (!File.Exists(_envInterpreterPath)) {
                     return false;
                 }
 
@@ -41,8 +36,7 @@ namespace Microsoft.CookiecutterTools.Model
             }
         }
 
-        public CookiecutterClient(IServiceProvider provider, CookiecutterPythonInterpreter interpreter, Redirector redirector)
-        {
+        public CookiecutterClient(IServiceProvider provider, CookiecutterPythonInterpreter interpreter, Redirector redirector) {
             _provider = provider;
             _interpreter = interpreter;
             var localAppDataFolderPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
@@ -51,42 +45,32 @@ namespace Microsoft.CookiecutterTools.Model
             _redirector = redirector;
         }
 
-        public async Task<bool> IsCookiecutterInstalled()
-        {
-            if (!File.Exists(_envInterpreterPath))
-            {
+        public async Task<bool> IsCookiecutterInstalled() {
+            if (!File.Exists(_envInterpreterPath)) {
                 return false;
             }
 
-            try
-            {
+            try {
                 var result = await RunCheckScript(_envInterpreterPath);
                 return result.StandardOutputLines.FirstOrDefault() == "ok";
-            }
-            catch (Exception e)
-            {
+            } catch (Exception e) {
                 Trace.WriteLine(e.Message);
                 return false;
             }
         }
 
-        public async Task CreateCookiecutterEnv()
-        {
+        public async Task CreateCookiecutterEnv() {
             // Create a virtual environment using the global interpreter
-            try
-            {
+            try {
                 await CreateVenv();
-            }
-            catch (ProcessException ex) when (ex.Result.ExitCode == 1)
-            {
+            } catch (ProcessException ex) when (ex.Result.ExitCode == 1) {
                 // Create fails on some Anaconda due to venv failing to install pip.
                 // Try again by installing pip ourselves.
                 await CreateVenvWithoutPipThenInstallPip();
             }
         }
 
-        private async Task CreateVenv()
-        {
+        private async Task CreateVenv() {
             RemoveExistingVenv();
 
             _redirector.WriteLine(Strings.InstallingCookiecutterCreateEnv.FormatUI(_envFolderPath));
@@ -101,8 +85,7 @@ namespace Microsoft.CookiecutterTools.Model
             await WaitForOutput(_interpreter.InterpreterExecutablePath, output);
         }
 
-        private async Task CreateVenvWithoutPipThenInstallPip()
-        {
+        private async Task CreateVenvWithoutPipThenInstallPip() {
             RemoveExistingVenv();
 
             _redirector.WriteLine(Strings.InstallingCookiecutterCreateEnvWithoutPip.FormatUI(_envFolderPath));
@@ -129,23 +112,17 @@ namespace Microsoft.CookiecutterTools.Model
             await WaitForOutput(_interpreter.InterpreterExecutablePath, output);
         }
 
-        private void RemoveExistingVenv()
-        {
-            if (Directory.Exists(_envFolderPath))
-            {
+        private void RemoveExistingVenv() {
+            if (Directory.Exists(_envFolderPath)) {
                 _redirector.WriteLine(Strings.InstallingCookiecutterDeleteEnv.FormatUI(_envFolderPath));
-                try
-                {
+                try {
                     Directory.Delete(_envFolderPath, true);
-                }
-                catch (DirectoryNotFoundException)
-                {
+                } catch (DirectoryNotFoundException) {
                 }
             }
         }
 
-        public async Task InstallPackage()
-        {
+        public async Task InstallPackage() {
             _redirector.WriteLine(Strings.InstallingCookiecutterInstallPackages.FormatUI(_envFolderPath));
             var output = ProcessOutput.Run(
                 _envInterpreterPath,
@@ -159,10 +136,8 @@ namespace Microsoft.CookiecutterTools.Model
             await WaitForOutput(_envInterpreterPath, output);
         }
 
-        public async Task<TemplateContext> LoadUnrenderedContextAsync(string localTemplateFolder, string userConfigFilePath)
-        {
-            if (localTemplateFolder == null)
-            {
+        public async Task<TemplateContext> LoadUnrenderedContextAsync(string localTemplateFolder, string userConfigFilePath) {
+            if (localTemplateFolder == null) {
                 throw new ArgumentNullException(nameof(localTemplateFolder));
             }
 
@@ -171,49 +146,35 @@ namespace Microsoft.CookiecutterTools.Model
             var result = await RunGenerateContextScript(_redirector, _envInterpreterPath, localTemplateFolder, userConfigFilePath);
             var contextJson = string.Join(Environment.NewLine, result.StandardOutputLines);
             var context = (JToken)JObject.Parse(contextJson).SelectToken("cookiecutter");
-            if (context != null)
-            {
+            if (context != null) {
                 JProperty vsExtrasProp = null;
 
-                foreach (JProperty prop in context)
-                {
+                foreach (JProperty prop in context) {
                     // Properties that start with underscore are for internal use,
                     // and cookiecutter doesn't prompt for them.
-                    if (!prop.Name.StartsWithOrdinal("_"))
-                    {
+                    if (!prop.Name.StartsWithOrdinal("_")) {
                         if (prop.Value.Type == JTokenType.String ||
                             prop.Value.Type == JTokenType.Integer ||
-                            prop.Value.Type == JTokenType.Float)
-                        {
+                            prop.Value.Type == JTokenType.Float) {
                             unrenderedContext.Items.Add(new ContextItem(prop.Name, Selectors.String, prop.Value.ToString()));
-                        }
-                        else if (prop.Value.Type == JTokenType.Array)
-                        {
+                        } else if (prop.Value.Type == JTokenType.Array) {
                             var elements = new List<string>();
                             JArray ar = prop.Value as JArray;
-                            foreach (JToken element in ar)
-                            {
+                            foreach (JToken element in ar) {
                                 elements.Add(element.ToString());
                             }
                             unrenderedContext.Items.Add(new ContextItem(prop.Name, Selectors.List, elements[0], elements.ToArray()));
-                        }
-                        else
-                        {
+                        } else {
                             throw new InvalidOperationException(Strings.CookiecutterClient_UnsupportedJsonElementTypeForPorperty.FormatUI(prop.Name));
                         }
-                    }
-                    else if (prop.Name == "_visual_studio")
-                    {
+                    } else if (prop.Name == "_visual_studio") {
                         vsExtrasProp = prop;
-                    }
-                    else if (prop.Name == "_visual_studio_post_cmds")
-                    {
+                    } else if (prop.Name == "_visual_studio_post_cmds") {
                         ReadCommands(unrenderedContext, prop);
                     }
                 }
 
-                if (vsExtrasProp != null)
-                {
+                if (vsExtrasProp != null) {
                     LoadVisualStudioSpecificContext(unrenderedContext.Items, vsExtrasProp);
                 }
             }
@@ -221,20 +182,16 @@ namespace Microsoft.CookiecutterTools.Model
             return unrenderedContext;
         }
 
-        public async Task<TemplateContext> LoadRenderedContextAsync(string localTemplateFolder, string userConfigFilePath, string contextPath, string outputFolderPath)
-        {
-            if (localTemplateFolder == null)
-            {
+        public async Task<TemplateContext> LoadRenderedContextAsync(string localTemplateFolder, string userConfigFilePath, string contextPath, string outputFolderPath) {
+            if (localTemplateFolder == null) {
                 throw new ArgumentNullException(nameof(localTemplateFolder));
             }
 
-            if (contextPath == null)
-            {
+            if (contextPath == null) {
                 throw new ArgumentNullException(nameof(contextPath));
             }
 
-            if (outputFolderPath == null)
-            {
+            if (outputFolderPath == null) {
                 throw new ArgumentNullException(nameof(outputFolderPath));
             }
 
@@ -243,37 +200,26 @@ namespace Microsoft.CookiecutterTools.Model
             var result = await RunRenderContextScript(_redirector, _envInterpreterPath, localTemplateFolder, userConfigFilePath, outputFolderPath, contextPath);
             var contextJson = string.Join(Environment.NewLine, result.StandardOutputLines);
             var context = (JToken)JObject.Parse(contextJson).SelectToken("cookiecutter");
-            if (context != null)
-            {
-                foreach (JProperty prop in context)
-                {
+            if (context != null) {
+                foreach (JProperty prop in context) {
                     // Properties that start with underscore are for internal use,
                     // and cookiecutter doesn't prompt for them.
-                    if (!prop.Name.StartsWithOrdinal("_"))
-                    {
+                    if (!prop.Name.StartsWithOrdinal("_")) {
                         if (prop.Value.Type == JTokenType.String ||
                             prop.Value.Type == JTokenType.Integer ||
-                            prop.Value.Type == JTokenType.Float)
-                        {
+                            prop.Value.Type == JTokenType.Float) {
                             renderedContext.Items.Add(new ContextItem(prop.Name, Selectors.String, prop.Value.ToString()));
-                        }
-                        else if (prop.Value.Type == JTokenType.Array)
-                        {
+                        } else if (prop.Value.Type == JTokenType.Array) {
                             var elements = new List<string>();
                             JArray ar = prop.Value as JArray;
-                            foreach (JToken element in ar)
-                            {
+                            foreach (JToken element in ar) {
                                 elements.Add(element.ToString());
                             }
                             renderedContext.Items.Add(new ContextItem(prop.Name, Selectors.List, elements[0], elements.ToArray()));
-                        }
-                        else
-                        {
+                        } else {
                             throw new InvalidOperationException(Strings.CookiecutterClient_UnsupportedJsonElementTypeForPorperty.FormatUI(prop.Name));
                         }
-                    }
-                    else if (prop.Name == "_visual_studio_post_cmds")
-                    {
+                    } else if (prop.Name == "_visual_studio_post_cmds") {
                         // List of commands to run after the folder is opened,
                         // or the files are added to the project.
                         // name and args are the values passed to DTE.ExecuteCommand
@@ -326,69 +272,51 @@ namespace Microsoft.CookiecutterTools.Model
             return renderedContext;
         }
 
-        private void ReadCommands(TemplateContext renderedContext, JProperty prop)
-        {
-            if (prop.Value.Type != JTokenType.Array)
-            {
+        private void ReadCommands(TemplateContext renderedContext, JProperty prop) {
+            if (prop.Value.Type != JTokenType.Array) {
                 WrongJsonType("_visual_studio_post_cmds", JTokenType.Array, prop.Type);
                 return;
             }
 
-            foreach (JToken element in (JArray)prop.Value)
-            {
-                if (element.Type != JTokenType.Object)
-                {
+            foreach (JToken element in (JArray)prop.Value) {
+                if (element.Type != JTokenType.Object) {
                     WrongJsonType("_visual_studio_post_cmds element", JTokenType.Object, element.Type);
                     continue;
                 }
 
                 var cmd = ReadCommand((JObject)element);
-                if (cmd != null)
-                {
+                if (cmd != null) {
                     renderedContext.Commands.Add(cmd);
                 }
             }
         }
 
-        private DteCommand ReadCommand(JObject itemObj)
-        {
+        private DteCommand ReadCommand(JObject itemObj) {
             string name = null;
             string args = null;
 
             var nameToken = itemObj.SelectToken("name");
-            if (nameToken != null)
-            {
-                if (nameToken.Type == JTokenType.String)
-                {
+            if (nameToken != null) {
+                if (nameToken.Type == JTokenType.String) {
                     name = nameToken.Value<string>();
-                }
-                else
-                {
+                } else {
                     WrongJsonType("name", JTokenType.String, nameToken.Type);
                     return null;
                 }
-            }
-            else
-            {
+            } else {
                 MissingProperty("_visual_studio_post_cmds", "name");
                 return null;
             }
 
             var argsToken = itemObj.SelectToken("args");
-            if (argsToken != null)
-            {
-                if (argsToken.Type == JTokenType.String)
-                {
+            if (argsToken != null) {
+                if (argsToken.Type == JTokenType.String) {
                     var argValues = new[] { argsToken.Value<string>() };
                     args = BuildArguments(argValues);
-                }
-                else if (argsToken.Type == JTokenType.Array)
-                {
+                } else if (argsToken.Type == JTokenType.Array) {
                     var argValues = ((JArray)argsToken).Values().Where(t => t.Type == JTokenType.String).Select(t => t.Value<string>());
                     args = BuildArguments(argValues);
-                }
-                else
-                {
+                } else {
                     WrongJsonType("args", JTokenType.Array, argsToken.Type);
                     return null;
                 }
@@ -397,20 +325,16 @@ namespace Microsoft.CookiecutterTools.Model
             return new DteCommand(name, args);
         }
 
-        public async Task<CreateFilesOperationResult> CreateFilesAsync(string localTemplateFolder, string userConfigFilePath, string contextFilePath, string outputFolderPath)
-        {
-            if (localTemplateFolder == null)
-            {
+        public async Task<CreateFilesOperationResult> CreateFilesAsync(string localTemplateFolder, string userConfigFilePath, string contextFilePath, string outputFolderPath) {
+            if (localTemplateFolder == null) {
                 throw new ArgumentNullException(nameof(localTemplateFolder));
             }
 
-            if (contextFilePath == null)
-            {
+            if (contextFilePath == null) {
                 throw new ArgumentNullException(nameof(contextFilePath));
             }
 
-            if (outputFolderPath == null)
-            {
+            if (outputFolderPath == null) {
                 throw new ArgumentNullException(nameof(outputFolderPath));
             }
 
@@ -421,33 +345,27 @@ namespace Microsoft.CookiecutterTools.Model
             return await MoveToDesiredFolderAsync(outputFolderPath, tempFolder);
         }
 
-        public Task<string> GetDefaultOutputFolderAsync(string shortName)
-        {
+        public Task<string> GetDefaultOutputFolderAsync(string shortName) {
             var shell = _provider?.GetService(typeof(SVsShell)) as IVsShell;
             object o;
             string vspp, baseName;
             if (shell != null &&
                 ErrorHandler.Succeeded(shell.GetProperty((int)__VSSPROPID.VSSPROPID_VisualStudioProjDir, out o)) &&
-                PathUtils.IsValidPath((vspp = o as string)))
-            {
+                PathUtils.IsValidPath((vspp = o as string))) {
                 baseName = vspp;
-            }
-            else
-            {
+            } else {
                 baseName = DefaultBasePath;
             }
 
             var candidate = PathUtils.GetAbsoluteDirectoryPath(baseName, shortName);
             int counter = 1;
-            while (Directory.Exists(candidate) || File.Exists(PathUtils.TrimEndSeparator(candidate)))
-            {
+            while (Directory.Exists(candidate) || File.Exists(PathUtils.TrimEndSeparator(candidate))) {
                 candidate = PathUtils.GetAbsoluteDirectoryPath(baseName, "{0}{1}".FormatInvariant(shortName, ++counter));
             }
             return Task.FromResult(candidate);
         }
 
-        private static string BuildArguments(IEnumerable<string> values)
-        {
+        private static string BuildArguments(IEnumerable<string> values) {
             // Examples of valid results:
             // "C:\My Folder\"
             // C:\MyFolder\MyFile.txt /e:"Source Code (text) Editor"
@@ -459,21 +377,16 @@ namespace Microsoft.CookiecutterTools.Model
             // C:\MyFolder\MyFile.txt /e:Source Code (text) Editor
             StringBuilder args = new StringBuilder();
             bool insertSpace = false;
-            foreach (var val in values)
-            {
-                if (insertSpace)
-                {
+            foreach (var val in values) {
+                if (insertSpace) {
                     args.Append(" ");
                 }
 
-                if (val.EndsWithOrdinal(":"))
-                {
+                if (val.EndsWithOrdinal(":")) {
                     args.Append(val);
                     // no space after a switch that takes a value
                     insertSpace = false;
-                }
-                else
-                {
+                } else {
                     args.Append(ProcessOutput.QuoteSingleArgument(val));
                     insertSpace = true;
                 }
@@ -482,8 +395,7 @@ namespace Microsoft.CookiecutterTools.Model
             return args.ToString();
         }
 
-        private void LoadVisualStudioSpecificContext(List<ContextItem> items, JProperty vsExtrasProp)
-        {
+        private void LoadVisualStudioSpecificContext(List<ContextItem> items, JProperty vsExtrasProp) {
             // This section reads additional metadata for Visual Studio.
             // All fields are optional, but if they are specified, they are validated.
             //
@@ -511,16 +423,12 @@ namespace Microsoft.CookiecutterTools.Model
             // - list
             // - yesno: generates 'y' or 'n'
             // - odbcConnection
-            if (vsExtrasProp.Value.Type == JTokenType.Object)
-            {
+            if (vsExtrasProp.Value.Type == JTokenType.Object) {
                 var vsExtrasObj = (JObject)vsExtrasProp.Value;
-                foreach (JProperty prop in vsExtrasObj.Properties())
-                {
+                foreach (JProperty prop in vsExtrasObj.Properties()) {
                     var item = items.SingleOrDefault(ctx => ctx.Name == prop.Name);
-                    if (item != null)
-                    {
-                        if (prop.Value.Type == JTokenType.Object)
-                        {
+                    if (item != null) {
+                        if (prop.Value.Type == JTokenType.Object) {
                             var itemObj = (JObject)prop.Value;
                             ReadLabel(item, itemObj);
                             ReadDescription(item, itemObj);
@@ -528,69 +436,48 @@ namespace Microsoft.CookiecutterTools.Model
                             ReadSelector(item, itemObj);
                             ReadVisible(item, itemObj);
                             ReadValueSource(item, itemObj);
-                        }
-                        else
-                        {
+                        } else {
                             WrongJsonType(prop.Name, JTokenType.Object, prop.Value.Type);
                         }
-                    }
-                    else
-                    {
+                    } else {
                         ReferenceNotFound(prop.Name);
                     }
                 }
-            }
-            else
-            {
+            } else {
                 WrongJsonType("_visual_studio", JTokenType.Object, vsExtrasProp.Value.Type);
             }
         }
 
-        private void ReadLabel(ContextItem item, JObject itemObj)
-        {
+        private void ReadLabel(ContextItem item, JObject itemObj) {
             var val = ReadString(itemObj, "label");
-            if (val != null)
-            {
+            if (val != null) {
                 item.Label = val;
             }
         }
 
-        private void ReadDescription(ContextItem item, JObject itemObj)
-        {
+        private void ReadDescription(ContextItem item, JObject itemObj) {
             var val = ReadString(itemObj, "description");
-            if (val != null)
-            {
+            if (val != null) {
                 item.Description = val;
             }
         }
 
-        private JToken ReadUrl(ContextItem item, JObject itemObj)
-        {
+        private JToken ReadUrl(ContextItem item, JObject itemObj) {
             var urlToken = itemObj.SelectToken("url");
-            if (urlToken != null)
-            {
-                if (urlToken.Type == JTokenType.String)
-                {
+            if (urlToken != null) {
+                if (urlToken.Type == JTokenType.String) {
                     var val = urlToken.Value<string>();
                     Uri uri;
-                    if (Uri.TryCreate(val, UriKind.Absolute, out uri))
-                    {
-                        if (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps)
-                        {
+                    if (Uri.TryCreate(val, UriKind.Absolute, out uri)) {
+                        if (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps) {
                             item.Url = val;
-                        }
-                        else
-                        {
+                        } else {
                             InvalidUrl(val);
                         }
-                    }
-                    else
-                    {
+                    } else {
                         InvalidUrl(val);
                     }
-                }
-                else
-                {
+                } else {
                     WrongJsonType("url", JTokenType.String, urlToken.Type);
                 }
             }
@@ -598,44 +485,33 @@ namespace Microsoft.CookiecutterTools.Model
             return urlToken;
         }
 
-        private void ReadSelector(ContextItem item, JObject itemObj)
-        {
+        private void ReadSelector(ContextItem item, JObject itemObj) {
             var val = ReadString(itemObj, "selector");
-            if (val != null)
-            {
+            if (val != null) {
                 item.Selector = val;
             }
         }
 
-        private void ReadValueSource(ContextItem item, JObject itemObj)
-        {
+        private void ReadValueSource(ContextItem item, JObject itemObj) {
             var val = ReadString(itemObj, "value_source");
-            if (val != null)
-            {
+            if (val != null) {
                 item.ValueSource = val;
             }
         }
 
-        private void ReadVisible(ContextItem item, JObject itemObj)
-        {
+        private void ReadVisible(ContextItem item, JObject itemObj) {
             var val = ReadBool(itemObj, "visible");
-            if (val != null)
-            {
+            if (val != null) {
                 item.Visible = val.Value;
             }
         }
 
-        private string ReadString(JObject itemObj, string fieldName)
-        {
+        private string ReadString(JObject itemObj, string fieldName) {
             var token = itemObj.SelectToken(fieldName);
-            if (token != null)
-            {
-                if (token.Type == JTokenType.String)
-                {
+            if (token != null) {
+                if (token.Type == JTokenType.String) {
                     return token.Value<string>();
-                }
-                else
-                {
+                } else {
                     WrongJsonType(fieldName, JTokenType.String, token.Type);
                 }
             }
@@ -643,17 +519,12 @@ namespace Microsoft.CookiecutterTools.Model
             return null;
         }
 
-        private bool? ReadBool(JObject itemObj, string fieldName)
-        {
+        private bool? ReadBool(JObject itemObj, string fieldName) {
             var token = itemObj.SelectToken(fieldName);
-            if (token != null)
-            {
-                if (token.Type == JTokenType.Boolean)
-                {
+            if (token != null) {
+                if (token.Type == JTokenType.Boolean) {
                     return token.Value<bool>();
-                }
-                else
-                {
+                } else {
                     WrongJsonType(fieldName, JTokenType.Boolean, token.Type);
                 }
             }
@@ -661,58 +532,48 @@ namespace Microsoft.CookiecutterTools.Model
             return null;
         }
 
-        private void InvalidUrl(string url)
-        {
+        private void InvalidUrl(string url) {
             _redirector.WriteErrorLine(Strings.CookiecutterClient_Invalidurl.FormatUI(url));
         }
 
-        private void WrongJsonType(string name, JTokenType expected, JTokenType actual)
-        {
+        private void WrongJsonType(string name, JTokenType expected, JTokenType actual) {
             _redirector.WriteErrorLine(Strings.CookiecutterClient_WrongJsonType.FormatUI(name, expected, actual));
         }
 
-        private void ReferenceNotFound(string name)
-        {
+        private void ReferenceNotFound(string name) {
             _redirector.WriteErrorLine(Strings.CookiecutterClient_ReferenceNotFound.FormatUI(name));
         }
 
-        private void MissingProperty(string objectName, string propertyName)
-        {
+        private void MissingProperty(string objectName, string propertyName) {
             _redirector.WriteErrorLine(Strings.CookiecutterClient_MissingProperty.FormatUI(propertyName, objectName));
         }
 
-        private static async Task<ProcessOutputResult> RunGenerateContextScript(Redirector redirector, string interpreterPath, string templateFolderPath, string userConfigFilePath)
-        {
+        private static async Task<ProcessOutputResult> RunGenerateContextScript(Redirector redirector, string interpreterPath, string templateFolderPath, string userConfigFilePath) {
             var scriptPath = PythonToolsInstallPath.GetFile("cookiecutter_load.py");
             return await RunPythonScript(redirector, interpreterPath, scriptPath, "\"{0}\" \"{1}\"".FormatInvariant(templateFolderPath, userConfigFilePath));
         }
 
-        private static async Task<ProcessOutputResult> RunRenderContextScript(Redirector redirector, string interpreterPath, string templateFolderPath, string userConfigFilePath, string outputFolderPath, string contextPath)
-        {
+        private static async Task<ProcessOutputResult> RunRenderContextScript(Redirector redirector, string interpreterPath, string templateFolderPath, string userConfigFilePath, string outputFolderPath, string contextPath) {
             var scriptPath = PythonToolsInstallPath.GetFile("cookiecutter_render.py");
             return await RunPythonScript(redirector, interpreterPath, scriptPath, "\"{0}\" \"{1}\" \"{2}\" \"{3}\"".FormatInvariant(templateFolderPath, userConfigFilePath, PathUtils.TrimEndSeparator(outputFolderPath), contextPath));
         }
 
-        private static async Task<ProcessOutputResult> RunCheckScript(string interpreterPath)
-        {
+        private static async Task<ProcessOutputResult> RunCheckScript(string interpreterPath) {
             var scriptPath = PythonToolsInstallPath.GetFile("cookiecutter_check.py");
             var output = ProcessOutput.RunHiddenAndCapture(interpreterPath, scriptPath);
             return await WaitForOutput(interpreterPath, output);
         }
 
-        private static async Task<ProcessOutputResult> RunRunScript(Redirector redirector, string interpreterPath, string templateFolderPath, string userConfigFilePath, string outputFolderPath, string contextPath)
-        {
+        private static async Task<ProcessOutputResult> RunRunScript(Redirector redirector, string interpreterPath, string templateFolderPath, string userConfigFilePath, string outputFolderPath, string contextPath) {
             var scriptPath = PythonToolsInstallPath.GetFile("cookiecutter_run.py");
             return await RunPythonScript(redirector, interpreterPath, scriptPath, GetRunArguments(templateFolderPath, userConfigFilePath, outputFolderPath, contextPath));
         }
 
-        private static string GetRunArguments(string templateFolderPath, string userConfigFilePath, string outputFolderPath, string contextFilePath)
-        {
+        private static string GetRunArguments(string templateFolderPath, string userConfigFilePath, string outputFolderPath, string contextFilePath) {
             return "\"{0}\" \"{1}\" \"{2}\" \"{3}\"".FormatInvariant(contextFilePath, templateFolderPath, outputFolderPath, userConfigFilePath);
         }
 
-        private static async Task<ProcessOutputResult> RunPythonScript(Redirector redirector, string interpreterPath, string script, string parameters)
-        {
+        private static async Task<ProcessOutputResult> RunPythonScript(Redirector redirector, string interpreterPath, string script, string parameters) {
             var outputLines = new List<string>();
             var errorLines = new List<string>();
 
@@ -730,14 +591,11 @@ namespace Microsoft.CookiecutterTools.Model
             return result;
         }
 
-        private static async Task<ProcessOutputResult> WaitForOutput(string interpreterPath, ProcessOutput output)
-        {
-            using (output)
-            {
+        private static async Task<ProcessOutputResult> WaitForOutput(string interpreterPath, ProcessOutput output) {
+            using (output) {
                 await output;
 
-                var r = new ProcessOutputResult()
-                {
+                var r = new ProcessOutputResult() {
                     ExeFileName = interpreterPath,
                     ExitCode = output.ExitCode,
                     StandardOutputLines = output.StandardOutputLines?.ToArray(),
@@ -745,8 +603,7 @@ namespace Microsoft.CookiecutterTools.Model
                 };
 
                 // All our python scripts will return 0 if successful
-                if (r.ExitCode != 0)
-                {
+                if (r.ExitCode != 0) {
                     throw new ProcessException(r);
                 }
 
@@ -754,73 +611,58 @@ namespace Microsoft.CookiecutterTools.Model
             }
         }
 
-        private async Task<CreateFilesOperationResult> MoveToDesiredFolderAsync(string desiredFolder, string tempFolder)
-        {
-            if (!Directory.Exists(desiredFolder))
-            {
+        private async Task<CreateFilesOperationResult> MoveToDesiredFolderAsync(string desiredFolder, string tempFolder) {
+            if (!Directory.Exists(desiredFolder)) {
                 Directory.CreateDirectory(desiredFolder);
             }
 
             // Cookiecutter templates generate into a single subfolder that doesn't have a fixed name
             string generatedFolder = tempFolder;
             var subfolders = Directory.GetDirectories(tempFolder);
-            if (subfolders.Length == 1)
-            {
+            if (subfolders.Length == 1) {
                 generatedFolder = subfolders[0];
-            }
-            else
-            {
+            } else {
                 throw new InvalidOperationException(Strings.CookiecutterClient_MoveToDesiredFolderTemplatedFolderNotFound);
             }
 
             var res = await MoveFilesAndFoldersAsync(generatedFolder, desiredFolder);
 
-            try
-            {
+            try {
                 Directory.Delete(tempFolder, true);
-            }
-            catch (IOException)
-            {
+            } catch (IOException) {
             }
 
             return res;
         }
 
-        private async Task<CreateFilesOperationResult> MoveFilesAndFoldersAsync(string generatedFolder, string targetFolderPath)
-        {
+        private async Task<CreateFilesOperationResult> MoveFilesAndFoldersAsync(string generatedFolder, string targetFolderPath) {
             List<string> createdFolders = new List<string>();
             List<string> createdFiles = new List<string>();
             List<ReplacedFile> replacedFiles = new List<ReplacedFile>();
 
             Directory.CreateDirectory(targetFolderPath);
 
-            foreach (var folderPath in PathUtils.EnumerateDirectories(generatedFolder, recurse: true, fullPaths: false))
-            {
+            foreach (var folderPath in PathUtils.EnumerateDirectories(generatedFolder, recurse: true, fullPaths: false)) {
                 createdFolders.Add(folderPath);
 
                 Directory.CreateDirectory(Path.Combine(targetFolderPath, folderPath));
             }
 
-            foreach (var filePath in PathUtils.EnumerateFiles(generatedFolder, recurse: true, fullPaths: false))
-            {
+            foreach (var filePath in PathUtils.EnumerateFiles(generatedFolder, recurse: true, fullPaths: false)) {
                 createdFiles.Add(filePath);
 
                 string targetFilePath = Path.Combine(targetFolderPath, filePath);
                 string generatedFilePath = Path.Combine(generatedFolder, filePath);
 
-                if (File.Exists(targetFilePath))
-                {
-                    if (!await AreFilesSameAsync(generatedFilePath, targetFilePath))
-                    {
+                if (File.Exists(targetFilePath)) {
+                    if (!await AreFilesSameAsync(generatedFilePath, targetFilePath)) {
                         // Need to backup the user's file before overwriting it
                         string backupFilePath = GetBackupFilePath(targetFilePath);
                         File.Move(targetFilePath, backupFilePath);
                         File.Move(generatedFilePath, targetFilePath);
                         replacedFiles.Add(new ReplacedFile(filePath, PathUtils.GetRelativeFilePath(targetFolderPath, backupFilePath)));
                     }
-                }
-                else
-                {
+                } else {
                     File.Move(generatedFilePath, targetFilePath);
                 }
             }
@@ -828,8 +670,7 @@ namespace Microsoft.CookiecutterTools.Model
             return new Model.CreateFilesOperationResult(createdFolders.ToArray(), createdFiles.ToArray(), replacedFiles.ToArray());
         }
 
-        private string GetBackupFilePath(string filePath)
-        {
+        private string GetBackupFilePath(string filePath) {
             return PathUtils.GetAvailableFilename(
                 Path.GetDirectoryName(filePath),
                 Path.GetFileNameWithoutExtension(filePath) + ".bak",
@@ -837,11 +678,9 @@ namespace Microsoft.CookiecutterTools.Model
             );
         }
 
-        internal static async Task<bool> AreFilesSameAsync(string file1Path, string file2Path)
-        {
+        internal static async Task<bool> AreFilesSameAsync(string file1Path, string file2Path) {
             var length = new FileInfo(file1Path).Length;
-            if (length != new FileInfo(file2Path).Length)
-            {
+            if (length != new FileInfo(file2Path).Length) {
                 return false;
             }
 
@@ -849,21 +688,17 @@ namespace Microsoft.CookiecutterTools.Model
             var buffer1 = new byte[bufferSize];
             var buffer2 = new byte[bufferSize];
             using (var stream1 = new FileStream(file1Path, FileMode.Open, FileAccess.Read))
-            using (var stream2 = new FileStream(file2Path, FileMode.Open, FileAccess.Read))
-            {
-                while (length > 0)
-                {
+            using (var stream2 = new FileStream(file2Path, FileMode.Open, FileAccess.Read)) {
+                while (length > 0) {
                     var actual1 = await stream1.ReadAsync(buffer1, 0, bufferSize);
                     var actual2 = await stream2.ReadAsync(buffer2, 0, bufferSize);
-                    if (actual1 != actual2)
-                    {
+                    if (actual1 != actual2) {
                         return false;
                     }
 
                     length -= actual1;
 
-                    if (!buffer1.SequenceEqual(buffer2))
-                    {
+                    if (!buffer1.SequenceEqual(buffer2)) {
                         return false;
                     }
                 }

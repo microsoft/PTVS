@@ -14,10 +14,8 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.CookiecutterTools.Model
-{
-    internal static class Selectors
-    {
+namespace Microsoft.CookiecutterTools.Model {
+    internal static class Selectors {
         public const string String = "string";
         public const string List = "list";
         public const string YesNo = "yesno";

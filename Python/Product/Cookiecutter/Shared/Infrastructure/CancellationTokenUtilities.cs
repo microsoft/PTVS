@@ -14,10 +14,8 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.CookiecutterTools.Infrastructure
-{
-    internal static class CancellationTokenUtilities
-    {
+namespace Microsoft.CookiecutterTools.Infrastructure {
+    internal static class CancellationTokenUtilities {
         public static void UnregisterOnCompletion(this CancellationTokenRegistration registration, Task task)
             => task.ContinueWith(UnregisterCancellationToken, registration, default(CancellationToken), TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
 

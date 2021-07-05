@@ -14,14 +14,12 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Logging
-{
+namespace Microsoft.PythonTools.Logging {
     /// <summary>
     /// Implements telemetry recording in Visual Studio environment
     /// </summary>
     [Export(typeof(IPythonToolsLogger))]
-    internal sealed class VsTelemetryLogger : IPythonToolsLogger
-    {
+    internal sealed class VsTelemetryLogger : IPythonToolsLogger {
         private readonly Lazy<TelemetrySession> _session = new Lazy<TelemetrySession>(() => TelemetryService.DefaultSession);
 
         private readonly HashSet<string> _seenPackages = new HashSet<string>();
@@ -29,36 +27,30 @@ namespace Microsoft.PythonTools.Logging
         private const string EventPrefix = "vs/python/";
         private const string PropertyPrefix = "VS.Python.";
 
-        public void LogEvent(PythonLogEvent logEvent, object argument)
-        {
+        public void LogEvent(PythonLogEvent logEvent, object argument) {
             var session = _session.Value;
             // No session is not a fatal error
-            if (session == null)
-            {
+            if (session == null) {
                 return;
             }
 
             // Never send events when users have not opted in.
-            if (!session.IsOptedIn)
-            {
+            if (!session.IsOptedIn) {
                 return;
             }
 
             // Certain events are not collected
-            switch (logEvent)
-            {
+            switch (logEvent) {
                 case PythonLogEvent.AnalysisWarning:
                 case PythonLogEvent.AnalysisOperationFailed:
                 case PythonLogEvent.AnalysisOperationCancelled:
                 case PythonLogEvent.AnalysisExitedAbnormally:
                     return;
                 case PythonLogEvent.PythonPackage:
-                    lock (_seenPackages)
-                    {
+                    lock (_seenPackages) {
                         var name = (argument as PackageInfo)?.Name;
                         // Don't send empty or repeated names
-                        if (string.IsNullOrEmpty(name) || !_seenPackages.Add(name))
-                        {
+                        if (string.IsNullOrEmpty(name) || !_seenPackages.Add(name)) {
                             return;
                         }
                     }
@@ -67,33 +59,26 @@ namespace Microsoft.PythonTools.Logging
 
             var evt = new TelemetryEvent(EventPrefix + logEvent.ToString());
             var props = PythonToolsLoggerData.AsDictionary(argument);
-            if (props != null)
-            {
-                foreach (var kv in props)
-                {
+            if (props != null) {
+                foreach (var kv in props) {
                     evt.Properties[PropertyPrefix + kv.Key] = kv.Value;
                 }
-            }
-            else if (argument != null)
-            {
+            } else if (argument != null) {
                 evt.Properties[PropertyPrefix + "Value"] = argument;
             }
 
             session.PostEvent(evt);
         }
 
-        public void LogFault(Exception ex, string description, bool dumpProcess)
-        {
+        public void LogFault(Exception ex, string description, bool dumpProcess) {
             var session = _session.Value;
             // No session is not a fatal error
-            if (session == null)
-            {
+            if (session == null) {
                 return;
             }
 
             // Never send events when users have not opted in.
-            if (!session.IsOptedIn)
-            {
+            if (!session.IsOptedIn) {
                 return;
             }
 
@@ -103,13 +88,10 @@ namespace Microsoft.PythonTools.Logging
                 ex
             );
 
-            if (dumpProcess)
-            {
+            if (dumpProcess) {
                 fault.AddProcessDump(Process.GetCurrentProcess().Id);
                 fault.IsIncludedInWatsonSample = true;
-            }
-            else
-            {
+            } else {
                 fault.IsIncludedInWatsonSample = false;
             }
 

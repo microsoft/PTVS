@@ -16,10 +16,8 @@
 
 using Microsoft.CookiecutterTools.Infrastructure;
 
-namespace Microsoft.CookiecutterTools.Model
-{
-    class ProjectSystemClient : IProjectSystemClient
-    {
+namespace Microsoft.CookiecutterTools.Model {
+    class ProjectSystemClient : IProjectSystemClient {
         private readonly EnvDTE80.DTE2 _dte;
         private readonly SolutionEvents _solutionEvents;
 
@@ -27,8 +25,7 @@ namespace Microsoft.CookiecutterTools.Model
             new Guid("cc5fd16d-436d-48ad-a40c-5a424c6e3e79"), // Azure Cloud Service
         };
 
-        public ProjectSystemClient(EnvDTE80.DTE2 dte)
-        {
+        public ProjectSystemClient(EnvDTE80.DTE2 dte) {
             _dte = dte;
             _solutionEvents = dte.Events.SolutionEvents;
             _solutionEvents.AfterClosing += OnSolutionChanged;
@@ -37,40 +34,31 @@ namespace Microsoft.CookiecutterTools.Model
 
         public event EventHandler SolutionOpenChanged;
 
-        public bool IsSolutionOpen
-        {
-            get
-            {
+        public bool IsSolutionOpen {
+            get {
                 return _dte.Solution.IsOpen;
             }
         }
 
-        public ProjectLocation GetSelectedFolderProjectLocation()
-        {
-            try
-            {
+        public ProjectLocation GetSelectedFolderProjectLocation() {
+            try {
                 var locations = GetSelectedItemPaths().ToArray();
-                if (locations.Length == 1)
-                {
+                if (locations.Length == 1) {
                     var p = locations[0];
                     return Directory.Exists(p.FolderPath) ? p : null;
                 }
-            }
-            catch (Exception e) when (!e.IsCriticalException())
-            {
+            } catch (Exception e) when (!e.IsCriticalException()) {
             }
 
             return null;
         }
 
-        public void AddToProject(ProjectLocation location, CreateFilesOperationResult creationResult)
-        {
+        public void AddToProject(ProjectLocation location, CreateFilesOperationResult creationResult) {
             string folderPath = location.FolderPath;
             string targetProjectUniqueName = location.ProjectUniqueName;
 
             var project = FindProject(targetProjectUniqueName);
-            if (project == null)
-            {
+            if (project == null) {
                 throw new ArgumentException(Strings.ProjectNotFound.FormatUI(targetProjectUniqueName), nameof(targetProjectUniqueName));
             }
 
@@ -79,80 +67,61 @@ namespace Microsoft.CookiecutterTools.Model
             // Remember which folder items we're adding, because we can't query them
             // in F# project system
             var folderItems = new Dictionary<string, EnvDTE.ProjectItems>();
-            try
-            {
-                foreach (var createdFolderPath in creationResult.FoldersCreated)
-                {
+            try {
+                foreach (var createdFolderPath in creationResult.FoldersCreated) {
                     var absoluteFilePath = Path.Combine(folderPath, createdFolderPath);
                     var folder = GetOrCreateFolderItem(parentItems, createdFolderPath);
                     folderItems[createdFolderPath] = folder;
                 }
-            }
-            catch (NotImplementedException)
-            {
+            } catch (NotImplementedException) {
                 // Some project types such as C++ don't support creating folders
             }
 
-            foreach (var createdFilePath in creationResult.FilesCreated)
-            {
+            foreach (var createdFilePath in creationResult.FilesCreated) {
                 var absoluteFilePath = Path.Combine(folderPath, createdFilePath);
                 EnvDTE.ProjectItems itemParent;
-                try
-                {
+                try {
                     itemParent = GetOrCreateFolderItem(parentItems, Path.GetDirectoryName(createdFilePath));
-                }
-                catch (NotImplementedException)
-                {
+                } catch (NotImplementedException) {
                     // Some project types such as C++ don't support creating folders
                     // so we'll add everything flat
                     itemParent = parentItems;
-                }
-                catch (ArgumentException)
-                {
+                } catch (ArgumentException) {
                     // Some project types such as F# don't return folders as ProjectItem
                     // so we can't find the folder we just created above. Attempting to
                     // create it generates a ArgumentException saying the folder already exists.
-                    if (!folderItems.TryGetValue(Path.GetDirectoryName(createdFilePath), out itemParent))
-                    {
+                    if (!folderItems.TryGetValue(Path.GetDirectoryName(createdFilePath), out itemParent)) {
                         itemParent = parentItems;
                     }
                 }
 
-                if (FindItemByName(itemParent, Path.GetFileName(createdFilePath)) == null)
-                {
+                if (FindItemByName(itemParent, Path.GetFileName(createdFilePath)) == null) {
                     itemParent.AddFromFile(absoluteFilePath);
                 }
             }
         }
 
-        public void AddToSolution(string projectFilePath)
-        {
+        public void AddToSolution(string projectFilePath) {
             _dte.Solution.AddFromFile(projectFilePath);
         }
 
-        private EnvDTE.Project FindProject(string projectUniqueName)
-        {
+        private EnvDTE.Project FindProject(string projectUniqueName) {
             var dte = _dte;
             var items = (Array)dte.ToolWindows.SolutionExplorer.SelectedItems;
-            foreach (var proj in dte.ActiveSolutionProjects)
-            {
+            foreach (var proj in dte.ActiveSolutionProjects) {
                 var p = proj as EnvDTE.Project;
-                if (p != null && p.UniqueName == projectUniqueName)
-                {
+                if (p != null && p.UniqueName == projectUniqueName) {
                     return p;
                 }
             }
             return null;
         }
 
-        private EnvDTE.ProjectItems GetOrCreateFolderItem(EnvDTE.ProjectItems parentItems, string folderPath)
-        {
+        private EnvDTE.ProjectItems GetOrCreateFolderItem(EnvDTE.ProjectItems parentItems, string folderPath) {
             var relativeFolderParts = folderPath.Split(new char[] { '\\', '/' }, StringSplitOptions.RemoveEmptyEntries);
-            foreach (string relativefolderPart in relativeFolderParts)
-            {
+            foreach (string relativefolderPart in relativeFolderParts) {
                 var folderItem = FindItemByName(parentItems, relativefolderPart);
-                if (folderItem == null)
-                {
+                if (folderItem == null) {
                     folderItem = parentItems.AddFolder(relativefolderPart);
                 }
                 parentItems = folderItem.ProjectItems;
@@ -161,33 +130,25 @@ namespace Microsoft.CookiecutterTools.Model
             return parentItems;
         }
 
-        private EnvDTE.ProjectItems GetTargetProjectItems(EnvDTE.Project p, string folderPath)
-        {
+        private EnvDTE.ProjectItems GetTargetProjectItems(EnvDTE.Project p, string folderPath) {
             var projectFolderPath = GetProjectFolder(p);
             var relativeParentFolder = PathUtils.GetRelativeDirectoryPath(projectFolderPath, folderPath);
             var relativeParentParts = relativeParentFolder.Split(new char[] { '\\', '/' }, StringSplitOptions.RemoveEmptyEntries);
             var parentItems = p.ProjectItems;
-            foreach (var relativeParentPart in relativeParentParts)
-            {
+            foreach (var relativeParentPart in relativeParentParts) {
                 var parentItem = FindItemByName(parentItems, relativeParentPart);
-                if (parentItem != null)
-                {
+                if (parentItem != null) {
                     parentItems = parentItem.ProjectItems;
-                }
-                else
-                {
+                } else {
                     return null;
                 }
             }
             return parentItems;
         }
 
-        private EnvDTE.ProjectItem FindItemByName(EnvDTE.ProjectItems projectItems, string name)
-        {
-            foreach (EnvDTE.ProjectItem item in projectItems)
-            {
-                if (item.Name == name)
-                {
+        private EnvDTE.ProjectItem FindItemByName(EnvDTE.ProjectItems projectItems, string name) {
+            foreach (EnvDTE.ProjectItem item in projectItems) {
+                if (item.Name == name) {
                     return item;
                 }
             }
@@ -195,18 +156,13 @@ namespace Microsoft.CookiecutterTools.Model
             return null;
         }
 
-        private IEnumerable<ProjectLocation> GetSelectedItemPaths()
-        {
+        private IEnumerable<ProjectLocation> GetSelectedItemPaths() {
             var items = (Array)_dte.ToolWindows.SolutionExplorer.SelectedItems;
-            foreach (EnvDTE.UIHierarchyItem selItem in items)
-            {
+            foreach (EnvDTE.UIHierarchyItem selItem in items) {
                 var item = selItem.Object as EnvDTE.ProjectItem;
-                if (item != null && item.Properties != null)
-                {
-                    if (IsProjectSupported(item.ContainingProject))
-                    {
-                        yield return new ProjectLocation()
-                        {
+                if (item != null && item.Properties != null) {
+                    if (IsProjectSupported(item.ContainingProject)) {
+                        yield return new ProjectLocation() {
                             FolderPath = item.Properties.Item("FullPath").Value.ToString(),
                             ProjectKind = item.ContainingProject.Kind,
                             ProjectUniqueName = item.ContainingProject.UniqueName,
@@ -215,13 +171,10 @@ namespace Microsoft.CookiecutterTools.Model
                 }
 
                 var proj = selItem.Object as EnvDTE.Project;
-                if (proj != null && IsProjectSupported(proj))
-                {
+                if (proj != null && IsProjectSupported(proj)) {
                     var projFolder = GetProjectFolder(proj);
-                    if (!string.IsNullOrEmpty(projFolder))
-                    {
-                        yield return new ProjectLocation()
-                        {
+                    if (!string.IsNullOrEmpty(projFolder)) {
+                        yield return new ProjectLocation() {
                             FolderPath = projFolder,
                             ProjectKind = proj.Kind,
                             ProjectUniqueName = proj.UniqueName,
@@ -231,13 +184,10 @@ namespace Microsoft.CookiecutterTools.Model
             }
         }
 
-        private static bool IsProjectSupported(EnvDTE.Project proj)
-        {
+        private static bool IsProjectSupported(EnvDTE.Project proj) {
             Guid guid;
-            if (Guid.TryParse(proj.Kind, out guid))
-            {
-                if (UnsupportedProjectKinds.Contains(guid))
-                {
+            if (Guid.TryParse(proj.Kind, out guid)) {
+                if (UnsupportedProjectKinds.Contains(guid)) {
                     return false;
                 }
             }
@@ -245,36 +195,26 @@ namespace Microsoft.CookiecutterTools.Model
             return true;
         }
 
-        private static string GetProjectFolder(EnvDTE.Project proj)
-        {
-            try
-            {
+        private static string GetProjectFolder(EnvDTE.Project proj) {
+            try {
                 // Python and C# projects
-                if (proj.Properties != null)
-                {
+                if (proj.Properties != null) {
                     return proj.Properties.Item("FullPath").Value.ToString();
                 }
-            }
-            catch (ArgumentException)
-            {
+            } catch (ArgumentException) {
                 // C++ project
-                try
-                {
-                    if (proj.Object != null)
-                    {
+                try {
+                    if (proj.Object != null) {
                         return proj.Object.ProjectDirectory;
                     }
-                }
-                catch (Exception)
-                {
+                } catch (Exception) {
                 }
             }
 
             return null;
         }
 
-        private void OnSolutionChanged()
-        {
+        private void OnSolutionChanged() {
             SolutionOpenChanged?.Invoke(this, EventArgs.Empty);
         }
     }

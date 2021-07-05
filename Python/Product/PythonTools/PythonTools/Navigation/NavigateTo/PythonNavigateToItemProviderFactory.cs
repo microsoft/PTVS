@@ -16,28 +16,22 @@
 
 using Microsoft.PythonTools.Editor;
 
-namespace Microsoft.PythonTools.Navigation.NavigateTo
-{
+namespace Microsoft.PythonTools.Navigation.NavigateTo {
     [Export(typeof(INavigateToItemProviderFactory))]
-    internal class PythonNavigateToItemProviderFactory : INavigateToItemProviderFactory
-    {
+    internal class PythonNavigateToItemProviderFactory : INavigateToItemProviderFactory {
         private readonly PythonEditorServices _services;
 
         [ImportingConstructor]
-        public PythonNavigateToItemProviderFactory(PythonEditorServices editorServices)
-        {
+        public PythonNavigateToItemProviderFactory(PythonEditorServices editorServices) {
             _services = editorServices;
         }
 
-        public bool TryCreateNavigateToItemProvider(IServiceProvider serviceProvider, out INavigateToItemProvider provider)
-        {
+        public bool TryCreateNavigateToItemProvider(IServiceProvider serviceProvider, out INavigateToItemProvider provider) {
             var shell = serviceProvider.GetShell();
             var guid = GuidList.guidPythonToolsPackage;
             IVsPackage pkg;
-            if (shell.IsPackageLoaded(ref guid, out pkg) == VSConstants.S_OK && pkg != null)
-            {
-                provider = serviceProvider.GetUIThread().Invoke(() =>
-                {
+            if (shell.IsPackageLoaded(ref guid, out pkg) == VSConstants.S_OK && pkg != null) {
+                provider = serviceProvider.GetUIThread().Invoke(() => {
                     return new PythonNavigateToItemProvider(_services);
                 });
                 return true;

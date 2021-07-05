@@ -17,10 +17,8 @@
 using Microsoft.VisualStudioTools;
 using Task = System.Threading.Tasks.Task;
 
-namespace Microsoft.PythonTools.Project
-{
-    internal abstract class PythonInfoBar : IVsInfoBarUIEvents, IDisposable
-    {
+namespace Microsoft.PythonTools.Project {
+    internal abstract class PythonInfoBar : IVsInfoBarUIEvents, IDisposable {
         private readonly IVsShell _shell;
         private readonly IVsInfoBarUIFactory _infoBarFactory;
         private readonly IdleManager _idleManager;
@@ -28,8 +26,7 @@ namespace Microsoft.PythonTools.Project
         private IVsInfoBarUIElement _infoBar;
         private InfoBarModel _infoBarModel;
 
-        protected PythonInfoBar(IServiceProvider site)
-        {
+        protected PythonInfoBar(IServiceProvider site) {
             Site = site ?? throw new ArgumentNullException(nameof(site));
             Logger = (IPythonToolsLogger)site.GetService(typeof(IPythonToolsLogger));
             _shell = (IVsShell)site.GetService(typeof(SVsShell));
@@ -45,27 +42,22 @@ namespace Microsoft.PythonTools.Project
 
         public abstract Task CheckAsync();
 
-        protected void Create(InfoBarModel model)
-        {
+        protected void Create(InfoBarModel model) {
             _infoBarModel = model;
             FinishCreate();
         }
 
-        protected void Close()
-        {
+        protected void Close() {
             _infoBar?.Close();
         }
 
-        protected void FinishCreate()
-        {
-            if (_infoBar != null)
-            {
+        protected void FinishCreate() {
+            if (_infoBar != null) {
                 Debug.Fail("Should not try to create info bar more than once.");
                 return;
             }
 
-            if (ErrorHandler.Failed(_shell.GetProperty((int)__VSSPROPID7.VSSPROPID_MainWindowInfoBarHost, out object infoBarHostObj)) || infoBarHostObj == null)
-            {
+            if (ErrorHandler.Failed(_shell.GetProperty((int)__VSSPROPID7.VSSPROPID_MainWindowInfoBarHost, out object infoBarHostObj)) || infoBarHostObj == null) {
                 // Main window is not ready yet, finish creating it later
                 _idleManager.OnIdle += OnIdle;
                 return;
@@ -80,25 +72,21 @@ namespace Microsoft.PythonTools.Project
             _adviseCookie = cookie;
         }
 
-        private void OnIdle(object sender, ComponentManagerEventArgs e)
-        {
+        private void OnIdle(object sender, ComponentManagerEventArgs e) {
             _idleManager.OnIdle -= OnIdle;
             FinishCreate();
         }
 
-        public void OnActionItemClicked(IVsInfoBarUIElement infoBarUIElement, IVsInfoBarActionItem actionItem)
-        {
+        public void OnActionItemClicked(IVsInfoBarUIElement infoBarUIElement, IVsInfoBarActionItem actionItem) {
             ((Action)actionItem.ActionContext)();
         }
 
-        public void OnClosed(IVsInfoBarUIElement infoBarUIElement)
-        {
+        public void OnClosed(IVsInfoBarUIElement infoBarUIElement) {
             infoBarUIElement.Unadvise(_adviseCookie);
             _infoBar = null;
         }
 
-        public void Dispose()
-        {
+        public void Dispose() {
             _infoBar?.Close();
             _idleManager.OnIdle -= OnIdle;
             _idleManager.Dispose();

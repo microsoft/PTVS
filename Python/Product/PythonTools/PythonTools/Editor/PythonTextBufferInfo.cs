@@ -17,38 +17,30 @@
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Repl;
 
-namespace Microsoft.PythonTools.Editor
-{
-    sealed class PythonTextBufferInfo
-    {
+namespace Microsoft.PythonTools.Editor {
+    sealed class PythonTextBufferInfo {
         private static readonly object PythonTextBufferInfoKey = new { Id = "PythonTextBufferInfo" };
 
-        public static PythonTextBufferInfo ForBuffer(PythonEditorServices services, ITextBuffer buffer)
-        {
+        public static PythonTextBufferInfo ForBuffer(PythonEditorServices services, ITextBuffer buffer) {
             var bi = (buffer ?? throw new ArgumentNullException(nameof(buffer))).Properties.GetOrCreateSingletonProperty(
                 PythonTextBufferInfoKey,
                 () => new PythonTextBufferInfo(services, buffer)
             );
-            if (bi._replace)
-            {
+            if (bi._replace) {
                 bi = bi.ReplaceBufferInfo();
             }
             return bi;
         }
 
-        public static PythonTextBufferInfo TryGetForBuffer(ITextBuffer buffer)
-        {
+        public static PythonTextBufferInfo TryGetForBuffer(ITextBuffer buffer) {
             PythonTextBufferInfo bi;
-            if (buffer == null)
-            {
+            if (buffer == null) {
                 return null;
             }
-            if (!buffer.Properties.TryGetProperty(PythonTextBufferInfoKey, out bi) || bi == null)
-            {
+            if (!buffer.Properties.TryGetProperty(PythonTextBufferInfoKey, out bi) || bi == null) {
                 return null;
             }
-            if (bi._replace)
-            {
+            if (bi._replace) {
                 bi = bi.ReplaceBufferInfo();
             }
             return bi;
@@ -58,18 +50,15 @@ namespace Microsoft.PythonTools.Editor
         /// Calling this function marks the buffer to be replaced next
         /// time it is retrieved.
         /// </summary>
-        public static void MarkForReplacement(ITextBuffer buffer)
-        {
+        public static void MarkForReplacement(ITextBuffer buffer) {
             var bi = TryGetForBuffer(buffer);
-            if (bi != null)
-            {
+            if (bi != null) {
                 bi._replace = true;
                 bi.TraceWithStack("MarkForReplacement");
             }
         }
 
-        public static IEnumerable<PythonTextBufferInfo> GetAllFromView(ITextView view)
-        {
+        public static IEnumerable<PythonTextBufferInfo> GetAllFromView(ITextView view) {
             return view.BufferGraph.GetTextBuffers(_ => true)
                 .Select(b => TryGetForBuffer(b))
                 .Where(b => b != null);
@@ -94,8 +83,7 @@ namespace Microsoft.PythonTools.Editor
 
         private readonly AnalysisLogWriter _traceLog;
 
-        private PythonTextBufferInfo(PythonEditorServices services, ITextBuffer buffer)
-        {
+        private PythonTextBufferInfo(PythonEditorServices services, ITextBuffer buffer) {
             Services = services;
             Buffer = buffer;
             _eventSinks = new ConcurrentDictionary<object, IPythonTextBufferInfoEventSink>();
@@ -105,8 +93,7 @@ namespace Microsoft.PythonTools.Editor
             _defaultLanguageVersion = PythonLanguageVersion.None;
 
             ITextDocument doc;
-            if (Buffer.Properties.TryGetProperty(typeof(ITextDocument), out doc))
-            {
+            if (Buffer.Properties.TryGetProperty(typeof(ITextDocument), out doc)) {
                 Document = doc;
                 Document.EncodingChanged += Document_EncodingChanged;
             }
@@ -114,8 +101,7 @@ namespace Microsoft.PythonTools.Editor
             Buffer.Changed += Buffer_TextContentChanged;
             Buffer.ChangedLowPriority += Buffer_TextContentChangedLowPriority;
 
-            if (Buffer is ITextBuffer2 buffer2)
-            {
+            if (Buffer is ITextBuffer2 buffer2) {
                 _hasChangedOnBackground = true;
                 buffer2.ChangedOnBackground += Buffer_TextContentChangedOnBackground;
             }
@@ -125,13 +111,11 @@ namespace Microsoft.PythonTools.Editor
             _traceLog = OpenTraceLog();
         }
 
-        private PythonTextBufferInfo ReplaceBufferInfo()
-        {
+        private PythonTextBufferInfo ReplaceBufferInfo() {
             TraceWithStack("ReplaceBufferInfo");
 
             var newInfo = new PythonTextBufferInfo(Services, Buffer);
-            foreach (var sink in _eventSinks)
-            {
+            foreach (var sink in _eventSinks) {
                 newInfo._eventSinks[sink.Key] = sink.Value;
             }
 
@@ -141,8 +125,7 @@ namespace Microsoft.PythonTools.Editor
             Buffer.Changed -= Buffer_TextContentChanged;
             Buffer.ChangedLowPriority -= Buffer_TextContentChangedLowPriority;
 
-            if (Buffer is ITextBuffer2 buffer2)
-            {
+            if (Buffer is ITextBuffer2 buffer2) {
                 buffer2.ChangedOnBackground -= Buffer_TextContentChangedOnBackground;
             }
 
@@ -155,61 +138,47 @@ namespace Microsoft.PythonTools.Editor
             return newInfo;
         }
 
-        private string GetOrCreateFilename()
-        {
+        private string GetOrCreateFilename() {
             string path;
-            if (Buffer.Properties.TryGetProperty(VsProjectAnalyzer._testFilename, out path))
-            {
+            if (Buffer.Properties.TryGetProperty(VsProjectAnalyzer._testFilename, out path)) {
                 return path;
             }
 
             var replEval = Buffer.GetInteractiveWindow()?.Evaluator as IPythonInteractiveIntellisense;
             var docUri = replEval?.DocumentUri;
-            if (docUri != null && docUri.IsFile)
-            {
+            if (docUri != null && docUri.IsFile) {
                 return docUri.LocalPath;
             }
 
-            if (Buffer.GetInteractiveWindow() != null)
-            {
+            if (Buffer.GetInteractiveWindow() != null) {
                 return null;
             }
 
             if (Buffer.Properties.TryGetProperty(typeof(ITextDocument), out ITextDocument doc) &&
-                !string.IsNullOrEmpty(path = doc.FilePath))
-            {
+                !string.IsNullOrEmpty(path = doc.FilePath)) {
                 return PathUtils.NormalizePath(path);
             }
 
             return null;
         }
 
-        private Uri GetOrCreateDocumentUri()
-        {
-            if (Buffer.Properties.TryGetProperty(VsProjectAnalyzer._testDocumentUri, out Uri uri))
-            {
+        private Uri GetOrCreateDocumentUri() {
+            if (Buffer.Properties.TryGetProperty(VsProjectAnalyzer._testDocumentUri, out Uri uri)) {
                 return uri;
             }
 
             var path = Filename;
-            if (!string.IsNullOrEmpty(path))
-            {
-                try
-                {
-                    if (Path.IsPathRooted(path))
-                    {
+            if (!string.IsNullOrEmpty(path)) {
+                try {
+                    if (Path.IsPathRooted(path)) {
                         return new Uri(path);
                     }
                     // Make an opaque identifier for this file
                     var ub = new UriBuilder("python://", Guid.NewGuid().ToString("N")) { Path = path };
                     return ub.Uri;
-                }
-                catch (ArgumentException ex)
-                {
+                } catch (ArgumentException ex) {
                     Debug.Fail("{0} is not a valid path.{1}{2}".FormatInvariant(path, Environment.NewLine, ex.ToUnhandledExceptionMessage(GetType())));
-                }
-                catch (UriFormatException ex)
-                {
+                } catch (UriFormatException ex) {
                     Debug.Fail("{0} is not a valid URI.{1}{2}".FormatInvariant(path, Environment.NewLine, ex.ToUnhandledExceptionMessage(GetType())));
                 }
                 return null;
@@ -233,56 +202,46 @@ namespace Microsoft.PythonTools.Editor
 
         #region Events
 
-        private void OnNewAnalysisEntry(AnalysisEntry entry)
-        {
+        private void OnNewAnalysisEntry(AnalysisEntry entry) {
             Trace("OnNewAnalysisEntry", entry?.Analyzer);
             ClearTokenCache();
             InvokeSinks(new PythonTextBufferInfoEventArgs(PythonTextBufferInfoEvents.NewAnalysisEntry, entry));
         }
 
-        private void AnalysisEntry_ParseComplete(object sender, EventArgs e)
-        {
+        private void AnalysisEntry_ParseComplete(object sender, EventArgs e) {
             Trace("ParseComplete");
             InvokeSinks(new PythonTextBufferInfoEventArgs(PythonTextBufferInfoEvents.NewParseTree, (AnalysisEntry)sender));
         }
 
-        private void AnalysisEntry_AnalysisComplete(object sender, EventArgs e)
-        {
+        private void AnalysisEntry_AnalysisComplete(object sender, EventArgs e) {
             Trace("AnalysisComplete");
             InvokeSinks(new PythonTextBufferInfoEventArgs(PythonTextBufferInfoEvents.NewAnalysis, (AnalysisEntry)sender));
         }
 
-        private void Buffer_TextContentChanged(object sender, TextContentChangedEventArgs e)
-        {
+        private void Buffer_TextContentChanged(object sender, TextContentChangedEventArgs e) {
             Trace("TextContentChanged");
-            if (!_hasChangedOnBackground)
-            {
+            if (!_hasChangedOnBackground) {
                 UpdateTokenCache(e);
             }
             InvokeSinks(new PythonTextBufferInfoNestedEventArgs(PythonTextBufferInfoEvents.TextContentChanged, e));
-            if (!_hasChangedOnBackground)
-            {
+            if (!_hasChangedOnBackground) {
                 InvokeSinks(new PythonTextBufferInfoNestedEventArgs(PythonTextBufferInfoEvents.TextContentChangedOnBackgroundThread, e));
             }
         }
 
-        private void Buffer_TextContentChangedLowPriority(object sender, TextContentChangedEventArgs e)
-        {
+        private void Buffer_TextContentChangedLowPriority(object sender, TextContentChangedEventArgs e) {
             Trace("TextContentChangedLowPriority");
             InvokeSinks(new PythonTextBufferInfoNestedEventArgs(PythonTextBufferInfoEvents.TextContentChangedLowPriority, e));
         }
 
-        private void Buffer_ContentTypeChanged(object sender, ContentTypeChangedEventArgs e)
-        {
+        private void Buffer_ContentTypeChanged(object sender, ContentTypeChangedEventArgs e) {
             Trace("ContentTypeChanged", e.BeforeContentType, e.AfterContentType);
             ClearTokenCache();
             InvokeSinks(new PythonTextBufferInfoNestedEventArgs(PythonTextBufferInfoEvents.ContentTypeChanged, e));
         }
 
-        private void Buffer_TextContentChangedOnBackground(object sender, TextContentChangedEventArgs e)
-        {
-            if (!_hasChangedOnBackground)
-            {
+        private void Buffer_TextContentChangedOnBackground(object sender, TextContentChangedEventArgs e) {
+            if (!_hasChangedOnBackground) {
                 Debug.Fail("Received TextContentChangedOnBackground unexpectedly");
                 return;
             }
@@ -290,8 +249,7 @@ namespace Microsoft.PythonTools.Editor
             InvokeSinks(new PythonTextBufferInfoNestedEventArgs(PythonTextBufferInfoEvents.TextContentChangedOnBackgroundThread, e));
         }
 
-        private void Document_EncodingChanged(object sender, EncodingChangedEventArgs e)
-        {
+        private void Document_EncodingChanged(object sender, EncodingChangedEventArgs e) {
             Trace("EncodingChanged", e.OldEncoding, e.NewEncoding);
             InvokeSinks(new PythonTextBufferInfoNestedEventArgs(PythonTextBufferInfoEvents.DocumentEncodingChanged, e));
         }
@@ -300,53 +258,43 @@ namespace Microsoft.PythonTools.Editor
 
         #region Sink management
 
-        public void AddSink(object key, IPythonTextBufferInfoEventSink sink)
-        {
-            if (!_eventSinks.TryAdd(key, sink))
-            {
-                if (_eventSinks[key] != sink)
-                {
+        public void AddSink(object key, IPythonTextBufferInfoEventSink sink) {
+            if (!_eventSinks.TryAdd(key, sink)) {
+                if (_eventSinks[key] != sink) {
                     throw new InvalidOperationException("cannot replace existing sink");
                 }
             }
             TraceWithStack("AddSink", key, sink.GetType().FullName);
         }
 
-        public T GetOrCreateSink<T>(object key, Func<PythonTextBufferInfo, T> creator) where T : class, IPythonTextBufferInfoEventSink
-        {
+        public T GetOrCreateSink<T>(object key, Func<PythonTextBufferInfo, T> creator) where T : class, IPythonTextBufferInfoEventSink {
             IPythonTextBufferInfoEventSink sink;
-            if (_eventSinks.TryGetValue(key, out sink))
-            {
+            if (_eventSinks.TryGetValue(key, out sink)) {
                 Trace("GetOrCreateSink", typeof(T).FullName, "get", sink.GetType().FullName);
                 return sink as T;
             }
             sink = creator(this);
             TraceWithStack("GetOrCreateSink", typeof(T).FullName, "create", sink.GetType().FullName);
-            if (!_eventSinks.TryAdd(key, sink))
-            {
+            if (!_eventSinks.TryAdd(key, sink)) {
                 sink = _eventSinks[key];
                 Trace("GetOrCreateSink", typeof(T).FullName, "lost create race", sink.GetType().FullName);
             }
             return sink as T;
         }
 
-        public IPythonTextBufferInfoEventSink TryGetSink(object key)
-        {
+        public IPythonTextBufferInfoEventSink TryGetSink(object key) {
             IPythonTextBufferInfoEventSink sink;
             return _eventSinks.TryGetValue(key, out sink) ? sink : null;
         }
 
-        public bool RemoveSink(object key)
-        {
+        public bool RemoveSink(object key) {
             Trace("RemoveSink", key, _eventSinks.ContainsKey(key));
 
             return _eventSinks.TryRemove(key, out _);
         }
 
-        private void InvokeSinks(PythonTextBufferInfoEventArgs e)
-        {
-            foreach (var sink in _eventSinks.Values)
-            {
+        private void InvokeSinks(PythonTextBufferInfoEventArgs e) {
+            foreach (var sink in _eventSinks.Values) {
                 sink.PythonTextBufferEventAsync(this, e)
                     .HandleAllExceptions(Services.Site, GetType())
                     .DoNotWait();
@@ -357,18 +305,14 @@ namespace Microsoft.PythonTools.Editor
 
         #region Analysis Info
 
-        public AnalysisEntry AnalysisEntry
-        {
-            get
-            {
+        public AnalysisEntry AnalysisEntry {
+            get {
                 var entry = Volatile.Read(ref _analysisEntry);
-                if (entry != null && (entry.Analyzer == null || !entry.Analyzer.IsActive))
-                {
+                if (entry != null && (entry.Analyzer == null || !entry.Analyzer.IsActive)) {
                     // Analyzer has closed, so clear it out from our info.
                     TraceWithStack("AnalyzerExpired", entry.Analyzer);
                     var previous = TrySetAnalysisEntry(null, entry);
-                    if (previous != entry)
-                    {
+                    if (previous != entry) {
                         // The entry has already been updated, so return the new one
                         return previous;
                     }
@@ -384,29 +328,23 @@ namespace Microsoft.PythonTools.Editor
         /// waits for a non-null entry to be set and returns it. If cancelled,
         /// return null.
         /// </summary>
-        public Task<AnalysisEntry> GetAnalysisEntryAsync(CancellationToken cancellationToken)
-        {
+        public Task<AnalysisEntry> GetAnalysisEntryAsync(CancellationToken cancellationToken) {
             var entry = AnalysisEntry;
-            if (entry != null)
-            {
+            if (entry != null) {
                 Trace("GetAnalysisEntryAsync", "completed synchronously");
                 return Task.FromResult(entry);
             }
             TraceWithStack("GetAnalysisEntryAsync", "waiting");
             var tcs = Volatile.Read(ref _waitingForEntry);
-            if (tcs != null)
-            {
+            if (tcs != null) {
                 return tcs.Task;
             }
             tcs = new TaskCompletionSource<AnalysisEntry>();
             tcs = Interlocked.CompareExchange(ref _waitingForEntry, tcs, null) ?? tcs;
             entry = AnalysisEntry;
-            if (entry != null)
-            {
+            if (entry != null) {
                 tcs.TrySetResult(entry);
-            }
-            else if (cancellationToken.CanBeCanceled)
-            {
+            } else if (cancellationToken.CanBeCanceled) {
                 cancellationToken.Register(() => tcs.TrySetResult(null));
             }
             return tcs.Task;
@@ -417,24 +355,20 @@ namespace Microsoft.PythonTools.Editor
         /// entry matches <paramref name="ifCurrent"/>. Returns the current analysis
         /// entry, regardless of whether it changed or not.
         /// </summary>
-        public AnalysisEntry TrySetAnalysisEntry(AnalysisEntry entry, AnalysisEntry ifCurrent)
-        {
+        public AnalysisEntry TrySetAnalysisEntry(AnalysisEntry entry, AnalysisEntry ifCurrent) {
             var previous = Interlocked.CompareExchange(ref _analysisEntry, entry, ifCurrent);
 
-            if (previous != ifCurrent)
-            {
+            if (previous != ifCurrent) {
                 TraceWithStack("FailedToSetAnalysisEntry", previous?.Analyzer, entry?.Analyzer, ifCurrent?.Analyzer);
                 return previous;
             }
 
-            if (previous != null)
-            {
+            if (previous != null) {
                 previous.AnalysisComplete -= AnalysisEntry_AnalysisComplete;
                 previous.ParseComplete -= AnalysisEntry_ParseComplete;
                 previous.Analyzer.BufferDetached(previous, Buffer);
             }
-            if (entry != null)
-            {
+            if (entry != null) {
                 entry.AnalysisComplete += AnalysisEntry_AnalysisComplete;
                 entry.ParseComplete += AnalysisEntry_ParseComplete;
 
@@ -447,13 +381,11 @@ namespace Microsoft.PythonTools.Editor
             return entry;
         }
 
-        public void ClearAnalysisEntry()
-        {
+        public void ClearAnalysisEntry() {
             var previous = Interlocked.Exchange(ref _analysisEntry, null);
             TraceWithStack("ClearAnalysisEntry", previous?.Analyzer);
 
-            if (previous != null)
-            {
+            if (previous != null) {
                 previous.AnalysisComplete -= AnalysisEntry_AnalysisComplete;
                 previous.ParseComplete -= AnalysisEntry_ParseComplete;
                 previous.Analyzer.BufferDetached(previous, Buffer);
@@ -468,35 +400,27 @@ namespace Microsoft.PythonTools.Editor
 
         public ITextSnapshot LastAnalysisSnapshot { get; private set; }
 
-        public ITextSnapshot LastSentSnapshot
-        {
-            get
-            {
-                lock (_lock)
-                {
+        public ITextSnapshot LastSentSnapshot {
+            get {
+                lock (_lock) {
                     return _lastSentSnapshot;
                 }
             }
         }
 
-        public void ClearSentSnapshot()
-        {
-            lock (_lock)
-            {
+        public void ClearSentSnapshot() {
+            lock (_lock) {
                 _lastSentSnapshot = null;
                 _expectAnalysis.Clear();
                 _expectParse.Clear();
             }
         }
 
-        public ITextSnapshot AddSentSnapshot(ITextSnapshot sent)
-        {
-            lock (_lock)
-            {
+        public ITextSnapshot AddSentSnapshot(ITextSnapshot sent) {
+            lock (_lock) {
                 var prevSent = _lastSentSnapshot;
                 Trace("AddSentSnapshot", prevSent?.Version?.VersionNumber, sent?.Version?.VersionNumber);
-                if (prevSent != null && prevSent.Version.VersionNumber > sent.Version.VersionNumber)
-                {
+                if (prevSent != null && prevSent.Version.VersionNumber > sent.Version.VersionNumber) {
                     return prevSent;
                 }
                 _lastSentSnapshot = sent;
@@ -506,14 +430,11 @@ namespace Microsoft.PythonTools.Editor
             }
         }
 
-        public bool UpdateLastReceivedParse(int version)
-        {
-            lock (_lock)
-            {
+        public bool UpdateLastReceivedParse(int version) {
+            lock (_lock) {
                 Trace("UpdateLastReceivedParse", version, _expectParse.ContainsKey(version) ? "expected" : "unexpected");
                 var toRemove = _expectParse.Keys.TakeWhile(k => k < version).ToArray();
-                foreach (var i in toRemove)
-                {
+                foreach (var i in toRemove) {
                     Debug.WriteLine($"Skipped parse for version {i}");
                     Trace("SkipParse", i);
                     _expectParse.Remove(i);
@@ -522,24 +443,19 @@ namespace Microsoft.PythonTools.Editor
             }
         }
 
-        public bool UpdateLastReceivedAnalysis(int version)
-        {
-            lock (_lock)
-            {
+        public bool UpdateLastReceivedAnalysis(int version) {
+            lock (_lock) {
                 Trace("UpdateLastReceivedAnalysis", version, _expectAnalysis.ContainsKey(version) ? "expected" : "unexpected");
 
                 var toRemove = _expectAnalysis.Keys.TakeWhile(k => k < version).ToArray();
-                foreach (var i in toRemove)
-                {
+                foreach (var i in toRemove) {
                     Debug.WriteLine($"Skipped analysis for version {i}");
                     Trace("SkipAnalysis", i);
                     _expectAnalysis.Remove(i);
                 }
-                if (_expectAnalysis.TryGetValue(version, out var snapshot))
-                {
+                if (_expectAnalysis.TryGetValue(version, out var snapshot)) {
                     _expectAnalysis.Remove(version);
-                    if (snapshot.Version.VersionNumber > (LastAnalysisSnapshot?.Version.VersionNumber ?? -1))
-                    {
+                    if (snapshot.Version.VersionNumber > (LastAnalysisSnapshot?.Version.VersionNumber ?? -1)) {
                         LastAnalysisSnapshot = snapshot;
                         _locationTracker.UpdateBaseSnapshot(snapshot);
                         return true;
@@ -554,8 +470,7 @@ namespace Microsoft.PythonTools.Editor
         /// <summary>
         /// Returns the first token containing or adjacent to the specified point.
         /// </summary>
-        public TrackingTokenInfo? GetTokenAtPoint(SnapshotPoint point)
-        {
+        public TrackingTokenInfo? GetTokenAtPoint(SnapshotPoint point) {
             return GetTrackingTokens(new SnapshotSpan(point, 0))
                 .Cast<TrackingTokenInfo?>()
                 .FirstOrDefault();
@@ -564,10 +479,8 @@ namespace Microsoft.PythonTools.Editor
         /// <summary>
         /// Returns tokens for the specified line.
         /// </summary>
-        public IEnumerable<TrackingTokenInfo> GetTokens(ITextSnapshotLine line)
-        {
-            using (var cacheSnapshot = _tokenCache.GetSnapshot())
-            {
+        public IEnumerable<TrackingTokenInfo> GetTokens(ITextSnapshotLine line) {
+            using (var cacheSnapshot = _tokenCache.GetSnapshot()) {
                 var lineTokenization = cacheSnapshot.GetLineTokenization(line, GetTokenizerLazy());
                 var lineNumber = line.LineNumber;
                 var lineSpan = line.Snapshot.CreateTrackingSpan(line.ExtentIncludingLineBreak, SpanTrackingMode.EdgeNegative);
@@ -575,8 +488,7 @@ namespace Microsoft.PythonTools.Editor
             }
         }
 
-        public IEnumerable<TrackingTokenInfo> GetTokens(SnapshotSpan span)
-        {
+        public IEnumerable<TrackingTokenInfo> GetTokens(SnapshotSpan span) {
             return GetTrackingTokens(span);
         }
 
@@ -584,23 +496,19 @@ namespace Microsoft.PythonTools.Editor
         /// Iterates forwards through tokens starting from the token at or
         /// adjacent to the specified point.
         /// </summary>
-        public IEnumerable<TrackingTokenInfo> GetTokensForwardFromPoint(SnapshotPoint point)
-        {
+        public IEnumerable<TrackingTokenInfo> GetTokensForwardFromPoint(SnapshotPoint point) {
             var line = point.GetContainingLine();
 
-            foreach (var token in GetTrackingTokens(new SnapshotSpan(point, line.End)))
-            {
+            foreach (var token in GetTrackingTokens(new SnapshotSpan(point, line.End))) {
                 yield return token;
             }
 
-            while (line.LineNumber < line.Snapshot.LineCount - 1)
-            {
+            while (line.LineNumber < line.Snapshot.LineCount - 1) {
                 line = line.Snapshot.GetLineFromLineNumber(line.LineNumber + 1);
                 // Use line.Extent because GetLineTokens endpoints are inclusive - we
                 // will get the line break token because it is adjacent, but no
                 // other repetitions.
-                foreach (var token in GetTrackingTokens(line.Extent))
-                {
+                foreach (var token in GetTrackingTokens(line.Extent)) {
                     yield return token;
                 }
             }
@@ -610,30 +518,25 @@ namespace Microsoft.PythonTools.Editor
         /// Iterates backwards through tokens starting from the token at or
         /// adjacent to the specified point.
         /// </summary>
-        public IEnumerable<TrackingTokenInfo> GetTokensInReverseFromPoint(SnapshotPoint point)
-        {
+        public IEnumerable<TrackingTokenInfo> GetTokensInReverseFromPoint(SnapshotPoint point) {
             var line = point.GetContainingLine();
 
-            foreach (var token in GetTrackingTokens(new SnapshotSpan(line.Start, point)).Reverse())
-            {
+            foreach (var token in GetTrackingTokens(new SnapshotSpan(line.Start, point)).Reverse()) {
                 yield return token;
             }
 
-            while (line.LineNumber > 0)
-            {
+            while (line.LineNumber > 0) {
                 line = line.Snapshot.GetLineFromLineNumber(line.LineNumber - 1);
                 // Use line.Extent because GetLineTokens endpoints are inclusive - we
                 // will get the line break token because it is adjacent, but no
                 // other repetitions.
-                foreach (var token in GetTrackingTokens(line.Extent).Reverse())
-                {
+                foreach (var token in GetTrackingTokens(line.Extent).Reverse()) {
                     yield return token;
                 }
             }
         }
 
-        internal IEnumerable<TrackingTokenInfo> GetTrackingTokens(SnapshotSpan span)
-        {
+        internal IEnumerable<TrackingTokenInfo> GetTrackingTokens(SnapshotSpan span) {
             int firstLine = span.Start.GetContainingLine().LineNumber;
             int lastLine = span.End.GetContainingLine().LineNumber;
 
@@ -641,21 +544,16 @@ namespace Microsoft.PythonTools.Editor
             int endCol = span.End - span.End.GetContainingLine().Start;
 
             // We need current state of the cache since it can change from a background thread
-            using (var cacheSnapshot = _tokenCache.GetSnapshot())
-            {
+            using (var cacheSnapshot = _tokenCache.GetSnapshot()) {
                 var tokenizerLazy = GetTokenizerLazy();
-                for (int line = firstLine; line <= lastLine; ++line)
-                {
+                for (int line = firstLine; line <= lastLine; ++line) {
                     var lineTokenization = cacheSnapshot.GetLineTokenization(span.Snapshot.GetLineFromLineNumber(line), tokenizerLazy);
 
-                    foreach (var token in lineTokenization.Tokens.MaybeEnumerate())
-                    {
-                        if (line == firstLine && token.Column + token.Length < startCol)
-                        {
+                    foreach (var token in lineTokenization.Tokens.MaybeEnumerate()) {
+                        if (line == firstLine && token.Column + token.Length < startCol) {
                             continue;
                         }
-                        if (line == lastLine && token.Column > endCol)
-                        {
+                        if (line == lastLine && token.Column > endCol) {
                             continue;
                         }
                         yield return new TrackingTokenInfo(token, line, lineTokenization.Line);
@@ -664,33 +562,23 @@ namespace Microsoft.PythonTools.Editor
             }
         }
 
-        public bool DoNotParse
-        {
+        public bool DoNotParse {
             get => Buffer.Properties.ContainsProperty(BufferParser.DoNotParse);
-            set
-            {
-                if (value)
-                {
+            set {
+                if (value) {
                     Buffer.Properties[BufferParser.DoNotParse] = BufferParser.DoNotParse;
-                }
-                else
-                {
+                } else {
                     Buffer.Properties.RemoveProperty(BufferParser.DoNotParse);
                 }
             }
         }
 
-        public bool ParseImmediately
-        {
+        public bool ParseImmediately {
             get => Buffer.Properties.ContainsProperty(BufferParser.ParseImmediately);
-            set
-            {
-                if (value)
-                {
+            set {
+                if (value) {
                     Buffer.Properties[BufferParser.ParseImmediately] = BufferParser.ParseImmediately;
-                }
-                else
-                {
+                } else {
                     Buffer.Properties.RemoveProperty(BufferParser.ParseImmediately);
                 }
             }
@@ -704,19 +592,16 @@ namespace Microsoft.PythonTools.Editor
 
         private void ClearTokenCache() => _tokenCache.Clear();
 
-        private void UpdateTokenCache(TextContentChangedEventArgs e)
-        {
+        private void UpdateTokenCache(TextContentChangedEventArgs e) {
             // NOTE: Runs on background thread
 
             var snapshot = e.After;
-            if (snapshot.TextBuffer != Buffer)
-            {
+            if (snapshot.TextBuffer != Buffer) {
                 Debug.Fail("Mismatched buffer");
                 return;
             }
 
-            if (snapshot.IsReplBufferWithCommand())
-            {
+            if (snapshot.IsReplBufferWithCommand()) {
                 return;
             }
 
@@ -728,22 +613,16 @@ namespace Microsoft.PythonTools.Editor
         #region Diagnostic Tracing
 
         private static readonly Lazy<bool> _shouldUseTraceLog = new Lazy<bool>(GetShouldUseTraceLog);
-        private static bool GetShouldUseTraceLog()
-        {
-            using (var root = Win32.Registry.CurrentUser.OpenSubKey(PythonCoreConstants.LoggingRegistrySubkey, false))
-            {
+        private static bool GetShouldUseTraceLog() {
+            using (var root = Win32.Registry.CurrentUser.OpenSubKey(PythonCoreConstants.LoggingRegistrySubkey, false)) {
                 var value = root?.GetValue("BufferInfo", null);
                 int? asInt = value as int?;
-                if (asInt.HasValue)
-                {
-                    if (asInt.GetValueOrDefault() == 0)
-                    {
+                if (asInt.HasValue) {
+                    if (asInt.GetValueOrDefault() == 0) {
                         // REG_DWORD but 0 means no logging
                         return false;
                     }
-                }
-                else if (string.IsNullOrEmpty(value as string))
-                {
+                } else if (string.IsNullOrEmpty(value as string)) {
                     // Empty string or no value means no logging
                     return false;
                 }
@@ -751,10 +630,8 @@ namespace Microsoft.PythonTools.Editor
             return true;
         }
 
-        private AnalysisLogWriter OpenTraceLog()
-        {
-            if (!_shouldUseTraceLog.Value)
-            {
+        private AnalysisLogWriter OpenTraceLog() {
+            if (!_shouldUseTraceLog.Value) {
                 return null;
             }
             return new AnalysisLogWriter(
@@ -765,15 +642,12 @@ namespace Microsoft.PythonTools.Editor
             );
         }
 
-        internal void Trace(string eventName, params object[] args)
-        {
+        internal void Trace(string eventName, params object[] args) {
             _traceLog?.Log(eventName, args);
         }
 
-        private void TraceWithStack(string eventName, params object[] args)
-        {
-            if (_traceLog != null)
-            {
+        private void TraceWithStack(string eventName, params object[] args) {
+            if (_traceLog != null) {
                 var stack = new StackTrace(1, true).ToString().Replace("\r\n", "").Replace("\n", "");
                 _traceLog.Log(eventName, args.Concat(Enumerable.Repeat(stack, 1)).ToArray());
                 _traceLog.Flush();
@@ -783,38 +657,31 @@ namespace Microsoft.PythonTools.Editor
         #endregion
     }
 
-    static class PythonTextBufferInfoExtensions
-    {
+    static class PythonTextBufferInfoExtensions {
         public static PythonTextBufferInfo TryGetInfo(this ITextBuffer buffer) => PythonTextBufferInfo.TryGetForBuffer(buffer);
 
         public static AnalysisEntry TryGetAnalysisEntry(this ITextBuffer buffer) => PythonTextBufferInfo.TryGetForBuffer(buffer)?.AnalysisEntry;
 
-        public static Task<AnalysisEntry> GetAnalysisEntryAsync(this ITextBuffer buffer, PythonEditorServices services = null, CancellationToken cancellationToken = default(CancellationToken))
-        {
+        public static Task<AnalysisEntry> GetAnalysisEntryAsync(this ITextBuffer buffer, PythonEditorServices services = null, CancellationToken cancellationToken = default(CancellationToken)) {
             var bi = services == null ? PythonTextBufferInfo.TryGetForBuffer(buffer) : services.GetBufferInfo(buffer);
-            if (bi != null)
-            {
+            if (bi != null) {
                 return bi.GetAnalysisEntryAsync(cancellationToken);
             }
             return Task.FromResult<AnalysisEntry>(null);
         }
 
-        public static AnalysisEntry TryGetAnalysisEntry(this ITextView view, IServiceProvider site)
-        {
+        public static AnalysisEntry TryGetAnalysisEntry(this ITextView view, IServiceProvider site) {
             var entry = view.TextBuffer.TryGetAnalysisEntry();
-            if (entry != null)
-            {
+            if (entry != null) {
                 return entry;
             }
 
             var diffViewer = site.GetComponentModel().GetService<IWpfDifferenceViewerFactoryService>();
             var viewer = diffViewer?.TryGetViewerForTextView(view);
-            if (viewer != null)
-            {
+            if (viewer != null) {
                 entry = viewer.DifferenceBuffer.RightBuffer.TryGetAnalysisEntry() ??
                     viewer.DifferenceBuffer.LeftBuffer.TryGetAnalysisEntry();
-                if (entry != null)
-                {
+                if (entry != null) {
                     return entry;
                 }
             }
@@ -822,29 +689,24 @@ namespace Microsoft.PythonTools.Editor
             return null;
         }
 
-        public static async Task<ProjectAnalyzer> FindAnalyzerAsync(this IServiceProvider site, ITextView view)
-        {
+        public static async Task<ProjectAnalyzer> FindAnalyzerAsync(this IServiceProvider site, ITextView view) {
             ProjectAnalyzer analyzer;
 
             var bi = view.TextBuffer.TryGetInfo();
-            if (bi != null && (analyzer = await FindAnalyzerAsync(site, bi)) != null)
-            {
+            if (bi != null && (analyzer = await FindAnalyzerAsync(site, bi)) != null) {
                 return analyzer;
             }
 
             site.MustBeCalledFromUIThread();
             var diffViewer = site.GetComponentModel().GetService<IWpfDifferenceViewerFactoryService>();
             var viewer = diffViewer?.TryGetViewerForTextView(view);
-            if (viewer != null)
-            {
+            if (viewer != null) {
                 bi = viewer.DifferenceBuffer.RightBuffer.TryGetInfo();
-                if (bi != null && (analyzer = await FindAnalyzerAsync(site, bi)) != null)
-                {
+                if (bi != null && (analyzer = await FindAnalyzerAsync(site, bi)) != null) {
                     return analyzer;
                 }
                 bi = viewer.DifferenceBuffer.LeftBuffer.TryGetInfo();
-                if (bi != null && (analyzer = await FindAnalyzerAsync(site, bi)) != null)
-                {
+                if (bi != null && (analyzer = await FindAnalyzerAsync(site, bi)) != null) {
                     return analyzer;
                 }
             }
@@ -852,63 +714,52 @@ namespace Microsoft.PythonTools.Editor
             return null;
         }
 
-        public static async Task<ProjectAnalyzer> FindAnalyzerAsync(this IServiceProvider site, PythonTextBufferInfo buffer)
-        {
+        public static async Task<ProjectAnalyzer> FindAnalyzerAsync(this IServiceProvider site, PythonTextBufferInfo buffer) {
             ProjectAnalyzer analyzer;
 
             // If we have an analyzer in Properties, we will use that
             // NOTE: This should only be used for tests.
-            if (buffer.Buffer.Properties.TryGetProperty(VsProjectAnalyzer._testAnalyzer, out analyzer))
-            {
+            if (buffer.Buffer.Properties.TryGetProperty(VsProjectAnalyzer._testAnalyzer, out analyzer)) {
                 return analyzer;
             }
 
             // If we have a REPL evaluator we'll use its analyzer
-            if (buffer.Buffer.GetInteractiveWindow()?.Evaluator is IPythonInteractiveIntellisense evaluator)
-            {
+            if (buffer.Buffer.GetInteractiveWindow()?.Evaluator is IPythonInteractiveIntellisense evaluator) {
                 return await evaluator.GetAnalyzerAsync();
             }
 
             // If the file is associated with a project, use its analyzer
-            analyzer = await site.GetUIThread().InvokeTask(() =>
-            {
+            analyzer = await site.GetUIThread().InvokeTask(() => {
                 var p = site.GetProjectFromFile(buffer.Filename);
-                if (p != null)
-                {
+                if (p != null) {
                     return p.GetAnalyzerAsync();
                 }
                 return Task.FromResult<VsProjectAnalyzer>(null);
             });
-            if (analyzer != null)
-            {
+            if (analyzer != null) {
                 return analyzer;
             }
 
             var workspaceAnalysis = site.GetComponentModel().GetService<WorkspaceAnalysis>();
             analyzer = await workspaceAnalysis.GetAnalyzerAsync();
-            if (analyzer != null)
-            {
+            if (analyzer != null) {
                 return analyzer;
             }
 
             return null;
         }
 
-        public static async Task<ProjectAnalyzer> FindAnalyzerAsync(this IServiceProvider site, string filename)
-        {
+        public static async Task<ProjectAnalyzer> FindAnalyzerAsync(this IServiceProvider site, string filename) {
             return (await FindAllAnalyzersForFile(site, filename, true)).FirstOrDefault() ??
                 (await site.GetPythonToolsService().GetSharedAnalyzerAsync());
         }
 
-        public static Task<IReadOnlyList<ProjectAnalyzer>> FindAllAnalyzersForFile(this IServiceProvider site, string filename)
-        {
+        public static Task<IReadOnlyList<ProjectAnalyzer>> FindAllAnalyzersForFile(this IServiceProvider site, string filename) {
             return FindAllAnalyzersForFile(site, filename, false);
         }
 
-        private static async Task<IReadOnlyList<ProjectAnalyzer>> FindAllAnalyzersForFile(this IServiceProvider site, string filename, bool firstOnly)
-        {
-            if (string.IsNullOrEmpty(filename))
-            {
+        private static async Task<IReadOnlyList<ProjectAnalyzer>> FindAllAnalyzersForFile(this IServiceProvider site, string filename, bool firstOnly) {
+            if (string.IsNullOrEmpty(filename)) {
                 throw new ArgumentNullException(nameof(filename));
             }
 
@@ -916,14 +767,11 @@ namespace Microsoft.PythonTools.Editor
 
             // If we have an open document, return that
             var buffer = site.GetTextBufferFromOpenFile(filename)?.TryGetInfo();
-            if (buffer != null)
-            {
+            if (buffer != null) {
                 var analyzer = await site.FindAnalyzerAsync(buffer);
-                if (analyzer != null)
-                {
+                if (analyzer != null) {
                     found.Add(analyzer);
-                    if (firstOnly)
-                    {
+                    if (firstOnly) {
                         return found.ToArray();
                     }
                 }
@@ -931,51 +779,37 @@ namespace Microsoft.PythonTools.Editor
 
             var workspaceAnalysis = site.GetComponentModel().GetService<WorkspaceAnalysis>();
             var workspaceAnalyzer = workspaceAnalysis.TryGetWorkspaceAnalyzer();
-            if (workspaceAnalyzer != null)
-            {
+            if (workspaceAnalyzer != null) {
                 found.Add(workspaceAnalyzer);
-                if (firstOnly)
-                {
+                if (firstOnly) {
                     return found.ToArray();
                 }
             }
 
             // Yield all loaded projects containing the file
             var sln = (IVsSolution)site.GetService(typeof(SVsSolution));
-            if (sln != null)
-            {
-                if (Path.IsPathRooted(filename))
-                {
-                    foreach (var project in sln.EnumerateLoadedPythonProjects())
-                    {
-                        if (project.FindNodeByFullPath(filename) != null)
-                        {
+            if (sln != null) {
+                if (Path.IsPathRooted(filename)) {
+                    foreach (var project in sln.EnumerateLoadedPythonProjects()) {
+                        if (project.FindNodeByFullPath(filename) != null) {
                             var analyzer = project.TryGetAnalyzer();
-                            if (analyzer != null)
-                            {
+                            if (analyzer != null) {
                                 found.Add(analyzer);
-                                if (firstOnly)
-                                {
+                                if (firstOnly) {
                                     return found.ToArray();
                                 }
                             }
                         }
                     }
-                }
-                else
-                {
+                } else {
                     var withSlash = "\\" + filename;
-                    foreach (var project in sln.EnumerateLoadedPythonProjects())
-                    {
+                    foreach (var project in sln.EnumerateLoadedPythonProjects()) {
                         if (project.AllVisibleDescendants.Any(n => n.Url.Equals(filename, StringComparison.OrdinalIgnoreCase) ||
-                            n.Url.EndsWithOrdinal(withSlash, ignoreCase: true)))
-                        {
+                            n.Url.EndsWithOrdinal(withSlash, ignoreCase: true))) {
                             var analyzer = project.TryGetAnalyzer();
-                            if (analyzer != null)
-                            {
+                            if (analyzer != null) {
                                 found.Add(analyzer);
-                                if (firstOnly)
-                                {
+                                if (firstOnly) {
                                     return found.ToArray();
                                 }
                             }

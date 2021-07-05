@@ -14,33 +14,25 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools
-{
+namespace Microsoft.PythonTools {
     [Serializable]
-    public class MissingInterpreterException : Exception
-    {
+    public class MissingInterpreterException : Exception {
         private readonly string _helpPage;
 
         public MissingInterpreterException(string message) : base(message) { }
         public MissingInterpreterException(string message, Exception inner) : base(message, inner) { }
 
         public MissingInterpreterException(string message, string helpPage)
-            : base(message)
-        {
+            : base(message) {
             _helpPage = helpPage;
         }
 
-        public override void GetObjectData(SerializationInfo info, StreamingContext context)
-        {
+        public override void GetObjectData(SerializationInfo info, StreamingContext context) {
             base.GetObjectData(info, context);
-            if (!string.IsNullOrEmpty(_helpPage))
-            {
-                try
-                {
+            if (!string.IsNullOrEmpty(_helpPage)) {
+                try {
                     info.AddValue("HelpPage", _helpPage);
-                }
-                catch (SerializationException)
-                {
+                } catch (SerializationException) {
                 }
             }
         }
@@ -48,14 +40,10 @@ namespace Microsoft.PythonTools
         public string HelpPage { get { return _helpPage; } }
 
         protected MissingInterpreterException(SerializationInfo info, StreamingContext context)
-            : base(info, context)
-        {
-            try
-            {
+            : base(info, context) {
+            try {
                 _helpPage = info.GetString("HelpPage");
-            }
-            catch (SerializationException)
-            {
+            } catch (SerializationException) {
             }
         }
     }

@@ -14,35 +14,27 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.CookiecutterTools.Infrastructure
-{
-    static class SocketUtils
-    {
+namespace Microsoft.CookiecutterTools.Infrastructure {
+    static class SocketUtils {
         private static readonly Random _freePortRandom = new Random();
 
-        public static TcpListener GetRandomPortListener(IPAddress address, out int port, int minimumPort = 49152, int maximumPort = 65536, bool randomStart = true)
-        {
+        public static TcpListener GetRandomPortListener(IPAddress address, out int port, int minimumPort = 49152, int maximumPort = 65536, bool randomStart = true) {
             ExceptionDispatchInfo edi = null;
             int range = maximumPort - minimumPort;
-            if (range <= 0)
-            {
+            if (range <= 0) {
                 throw new ArgumentException("maximumPort must be larger than minimumPort");
             }
 
             int start = randomStart ? _freePortRandom.Next(range) : 0;
-            for (int i = 0; i < range; ++i)
-            {
+            for (int i = 0; i < range; ++i) {
                 port = (i + start) % range + minimumPort;
                 Debug.Assert(port >= minimumPort && port <= maximumPort);
 
                 var listener = new TcpListener(address, port);
-                try
-                {
+                try {
                     listener.Start();
                     return listener;
-                }
-                catch (Exception ex)
-                {
+                } catch (Exception ex) {
                     edi = ExceptionDispatchInfo.Capture(ex);
                 }
             }

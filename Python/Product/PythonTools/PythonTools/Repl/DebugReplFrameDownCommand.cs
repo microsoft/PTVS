@@ -14,66 +14,51 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Repl
-{
+namespace Microsoft.PythonTools.Repl {
     [Export(typeof(IInteractiveWindowCommand))]
     [InteractiveWindowRole("Debug")]
     [ContentType(PythonCoreConstants.ContentType)]
-    class DebugReplFrameDownCommand : IInteractiveWindowCommand
-    {
-        public Task<ExecutionResult> Execute(IInteractiveWindow window, string arguments)
-        {
+    class DebugReplFrameDownCommand : IInteractiveWindowCommand {
+        public Task<ExecutionResult> Execute(IInteractiveWindow window, string arguments) {
             var eval = window.GetPythonDebugReplEvaluator();
-            if (eval != null)
-            {
+            if (eval != null) {
                 eval.FrameDown();
             }
             return ExecutionResult.Succeeded;
         }
 
-        public string Description
-        {
+        public string Description {
             get { return Strings.DebugReplFrameDownCommandDescription; }
         }
 
-        public string Command
-        {
+        public string Command {
             get { return "down"; }
         }
 
-        public IEnumerable<ClassificationSpan> ClassifyArguments(ITextSnapshot snapshot, Span argumentsSpan, Span spanToClassify)
-        {
+        public IEnumerable<ClassificationSpan> ClassifyArguments(ITextSnapshot snapshot, Span argumentsSpan, Span spanToClassify) {
             yield break;
         }
 
-        public string CommandLine
-        {
-            get
-            {
+        public string CommandLine {
+            get {
                 return "";
             }
         }
 
-        public IEnumerable<string> DetailedDescription
-        {
-            get
-            {
+        public IEnumerable<string> DetailedDescription {
+            get {
                 yield return Description;
             }
         }
 
-        public IEnumerable<KeyValuePair<string, string>> ParametersDescription
-        {
-            get
-            {
+        public IEnumerable<KeyValuePair<string, string>> ParametersDescription {
+            get {
                 yield break;
             }
         }
 
-        public IEnumerable<string> Names
-        {
-            get
-            {
+        public IEnumerable<string> Names {
+            get {
                 yield return Command;
                 yield return "d";
             }

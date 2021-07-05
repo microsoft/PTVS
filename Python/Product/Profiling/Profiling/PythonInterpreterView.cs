@@ -14,13 +14,11 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Profiling
-{
+namespace Microsoft.PythonTools.Profiling {
     /// <summary>
     /// Provides a view model for the PythonInterpreter class.
     /// </summary>
-    class PythonInterpreterView
-    {
+    class PythonInterpreterView {
         readonly string _name;
         readonly string _id;
         readonly string _path;
@@ -28,8 +26,7 @@ namespace Microsoft.PythonTools.Profiling
         /// <summary>
         /// Create a PythonInterpreterView with values from parameters.
         /// </summary>
-        public PythonInterpreterView(string name, string id, string path)
-        {
+        public PythonInterpreterView(string name, string id, string path) {
             _name = name;
             _id = id;
             _path = path;
@@ -39,10 +36,8 @@ namespace Microsoft.PythonTools.Profiling
         /// Returns a PythonInterpreter with the values from the model view.
         /// </summary>
         /// <returns></returns>
-        public PythonInterpreter GetInterpreter()
-        {
-            return new PythonInterpreter
-            {
+        public PythonInterpreter GetInterpreter() {
+            return new PythonInterpreter {
                 Id = Id
             };
         }
@@ -50,10 +45,8 @@ namespace Microsoft.PythonTools.Profiling
         /// <summary>
         /// The display name of the interpreter, if available.
         /// </summary>
-        public string Name
-        {
-            get
-            {
+        public string Name {
+            get {
                 return _name;
             }
         }
@@ -61,10 +54,8 @@ namespace Microsoft.PythonTools.Profiling
         /// <summary>
         /// The Guid identifying the interpreter.
         /// </summary>
-        public string Id
-        {
-            get
-            {
+        public string Id {
+            get {
                 return _id;
             }
         }
@@ -72,34 +63,26 @@ namespace Microsoft.PythonTools.Profiling
         /// <summary>
         /// The path to the interpreter, if available.
         /// </summary>
-        public string Path
-        {
-            get
-            {
+        public string Path {
+            get {
                 return _path;
             }
         }
 
-        public override string ToString()
-        {
+        public override string ToString() {
             return Name;
         }
 
-        public override bool Equals(object obj)
-        {
+        public override bool Equals(object obj) {
             var other = obj as PythonInterpreterView;
-            if (other == null)
-            {
+            if (other == null) {
                 return false;
-            }
-            else
-            {
+            } else {
                 return Id.Equals(other.Id);
             }
         }
 
-        public override int GetHashCode()
-        {
+        public override int GetHashCode() {
             return Id.GetHashCode();
         }
     }

@@ -16,15 +16,13 @@
 
 using Microsoft.PythonTools.Editor;
 
-namespace Microsoft.PythonTools.Intellisense
-{
+namespace Microsoft.PythonTools.Intellisense {
     /// <summary>
     /// Represents a file which is being analyzed.  Tracks the file ID in the out of proc analysis,
     /// the path to the file, the analyzer, and the buffer parser being used to track changes to edits
     /// amongst o
     /// </summary>
-    internal sealed class AnalysisEntry : IDisposable
-    {
+    internal sealed class AnalysisEntry : IDisposable {
         private readonly WeakReference<BufferParser> _bufferParser;
 
         public readonly bool IsTemporaryFile;
@@ -45,8 +43,7 @@ namespace Microsoft.PythonTools.Intellisense
             Uri documentUri,
             bool isTemporaryFile = false,
             bool suppressErrorList = false
-        )
-        {
+        ) {
             Analyzer = analyzer;
             Path = path;
             DocumentUri = documentUri ?? (!string.IsNullOrEmpty(path) ? new Uri(path) : null);
@@ -56,39 +53,31 @@ namespace Microsoft.PythonTools.Intellisense
             _bufferParser = new WeakReference<BufferParser>(null);
         }
 
-        public void Dispose()
-        {
+        public void Dispose() {
             BufferParser parser;
-            if (_bufferParser.TryGetTarget(out parser) && parser != null)
-            {
+            if (_bufferParser.TryGetTarget(out parser) && parser != null) {
                 parser.Dispose();
             }
         }
 
-        internal void OnAnalysisComplete()
-        {
+        internal void OnAnalysisComplete() {
             IsAnalyzed = true;
             AnalysisComplete?.Invoke(this, EventArgs.Empty);
         }
 
-        internal void OnParseComplete()
-        {
+        internal void OnParseComplete() {
             ParseComplete?.Invoke(this, EventArgs.Empty);
         }
 
-        internal BufferParser TryGetBufferParser()
-        {
+        internal BufferParser TryGetBufferParser() {
             BufferParser parser;
             return _bufferParser.TryGetTarget(out parser) ? parser : null;
         }
 
-        internal BufferParser GetOrCreateBufferParser(PythonEditorServices services)
-        {
+        internal BufferParser GetOrCreateBufferParser(PythonEditorServices services) {
             BufferParser parser;
-            if (!_bufferParser.TryGetTarget(out parser) || parser == null || parser.IsDisposed)
-            {
-                parser = new BufferParser(services, Analyzer, Path)
-                {
+            if (!_bufferParser.TryGetTarget(out parser) || parser == null || parser.IsDisposed) {
+                parser = new BufferParser(services, Analyzer, Path) {
                     IsTemporaryFile = IsTemporaryFile,
                     SuppressErrorList = SuppressErrorList
                 };
@@ -107,23 +96,17 @@ namespace Microsoft.PythonTools.Intellisense
 
         public Dictionary<object, object> Properties { get; }
 
-        public string GetLine(int line)
-        {
+        public string GetLine(int line) {
             return AnalysisCookie?.GetLine(line);
         }
 
-        public async Task EnsureCodeSyncedAsync(ITextBuffer buffer)
-        {
-            try
-            {
+        public async Task EnsureCodeSyncedAsync(ITextBuffer buffer) {
+            try {
                 var bufferParser = TryGetBufferParser();
-                if (bufferParser != null)
-                {
+                if (bufferParser != null) {
                     await bufferParser.EnsureCodeSyncedAsync(buffer);
                 }
-            }
-            catch (OperationCanceledException)
-            {
+            } catch (OperationCanceledException) {
             }
         }
     }

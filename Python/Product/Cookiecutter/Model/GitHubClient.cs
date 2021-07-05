@@ -14,17 +14,13 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.CookiecutterTools.Model
-{
-    class GitHubClient : IGitHubClient
-    {
+namespace Microsoft.CookiecutterTools.Model {
+    class GitHubClient : IGitHubClient {
         private const string UserAgent = "PythonToolsForVisualStudio/" + AssemblyVersionInfo.Version;
 
         // throws WebException (for example, with 403 forbidden) and JsonException
-        public async Task<GitHubRepoSearchResult> SearchRepositoriesAsync(string requestUrl)
-        {
-            if (requestUrl == null)
-            {
+        public async Task<GitHubRepoSearchResult> SearchRepositoriesAsync(string requestUrl) {
+            if (requestUrl == null) {
                 throw new ArgumentNullException(nameof(requestUrl));
             }
 
@@ -32,17 +28,14 @@ namespace Microsoft.CookiecutterTools.Model
             var json = await wc.DownloadStringTaskAsync(requestUrl);
             var link = wc.ResponseHeaders["Link"];
             var repoSearchResult = JsonConvert.DeserializeObject<GitHubRepoSearchResult>(json);
-            if (link != null)
-            {
+            if (link != null) {
                 repoSearchResult.Links = ParseLinkHeader(link);
             }
             return repoSearchResult;
         }
 
-        public async Task<GitHubRepoSearchResult> StartSearchRepositoriesAsync(string[] terms)
-        {
-            if (terms == null)
-            {
+        public async Task<GitHubRepoSearchResult> StartSearchRepositoriesAsync(string[] terms) {
+            if (terms == null) {
                 throw new ArgumentNullException(nameof(terms));
             }
 
@@ -51,15 +44,12 @@ namespace Microsoft.CookiecutterTools.Model
             return await SearchRepositoriesAsync(queryUrl);
         }
 
-        public async Task<GitHubRepoSearchItem> GetRepositoryDetails(string owner, string name)
-        {
-            if (owner == null)
-            {
+        public async Task<GitHubRepoSearchItem> GetRepositoryDetails(string owner, string name) {
+            if (owner == null) {
                 throw new ArgumentNullException(nameof(owner));
             }
 
-            if (name == null)
-            {
+            if (name == null) {
                 throw new ArgumentNullException(nameof(name));
             }
 
@@ -69,40 +59,32 @@ namespace Microsoft.CookiecutterTools.Model
             return JsonConvert.DeserializeObject<GitHubRepoSearchItem>(json);
         }
 
-        public async Task<bool> FileExistsAsync(GitHubRepoSearchItem repo, string filePath)
-        {
+        public async Task<bool> FileExistsAsync(GitHubRepoSearchItem repo, string filePath) {
             var wc = new WebClient();
             var url = Invariant($"https://raw.githubusercontent.com/{repo.FullName}/master/{filePath}");
-            try
-            {
+            try {
                 var json = await wc.DownloadDataTaskAsync(url);
                 return true;
-            }
-            catch (WebException)
-            {
+            } catch (WebException) {
                 return false;
             }
         }
 
-        private static WebClient CreateClient()
-        {
+        private static WebClient CreateClient() {
             var wc = new WebClient();
             wc.Encoding = Encoding.UTF8;
             wc.Headers.Add(HttpRequestHeader.UserAgent, UserAgent);
             return wc;
         }
 
-        private static GitHubPaginationLinks ParseLinkHeader(string val)
-        {
+        private static GitHubPaginationLinks ParseLinkHeader(string val) {
             var links = new GitHubPaginationLinks();
 
-            foreach (var link in val.Split(','))
-            {
+            foreach (var link in val.Split(',')) {
                 var parts = link.Split(';');
                 var rel = parts[1].Trim();
                 var url = parts[0].Trim().TrimStart('<').TrimEnd('>');
-                switch (rel)
-                {
+                switch (rel) {
                     case "rel=\"next\"":
                         links.Next = url;
                         break;

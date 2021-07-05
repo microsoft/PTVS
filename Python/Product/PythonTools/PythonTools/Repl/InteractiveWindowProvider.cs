@@ -14,12 +14,10 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Repl
-{
+namespace Microsoft.PythonTools.Repl {
     [Export(typeof(InteractiveWindowProvider))]
     [PartCreationPolicy(CreationPolicy.Shared)]
-    class InteractiveWindowProvider
-    {
+    class InteractiveWindowProvider {
         private readonly Dictionary<int, IVsInteractiveWindow> _windows = new Dictionary<int, IVsInteractiveWindow>();
         private int _nextId = 1;
 
@@ -45,34 +43,26 @@ namespace Microsoft.PythonTools.Repl
             [Import] IVsInteractiveWindowFactory factory,
             [ImportMany] IInteractiveEvaluatorProvider[] evaluators,
             [Import] IContentTypeRegistryService contentTypeService
-        )
-        {
+        ) {
             _serviceProvider = serviceProvider;
             _evaluators = evaluators;
             _windowFactory = factory;
             _pythonContentType = contentTypeService.GetContentType(PythonCoreConstants.ContentType);
         }
 
-        public IEnumerable<IVsInteractiveWindow> AllOpenWindows
-        {
-            get
-            {
-                lock (_windows)
-                {
+        public IEnumerable<IVsInteractiveWindow> AllOpenWindows {
+            get {
+                lock (_windows) {
                     return _windows.Values.ToArray();
                 }
             }
         }
 
-        private int GetNextId()
-        {
-            lock (_windows)
-            {
-                do
-                {
+        private int GetNextId() {
+            lock (_windows) {
+                do {
                     var curId = _nextId++;
-                    if (!_windows.ContainsKey(curId))
-                    {
+                    if (!_windows.ContainsKey(curId)) {
                         return curId;
                     }
                 } while (_nextId < int.MaxValue);
@@ -80,11 +70,9 @@ namespace Microsoft.PythonTools.Repl
             throw new InvalidOperationException(Strings.ReplWindowOutOfIds);
         }
 
-        private bool EnsureInterpretersAvailable()
-        {
+        private bool EnsureInterpretersAvailable() {
             var registry = _serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>();
-            if (registry.Configurations.Where(PythonInterpreterFactoryExtensions.IsRunnable).Any())
-            {
+            if (registry.Configurations.Where(PythonInterpreterFactoryExtensions.IsRunnable).Any()) {
                 return true;
             }
 
@@ -92,15 +80,12 @@ namespace Microsoft.PythonTools.Repl
             return false;
         }
 
-        public void OnWindowUsed(IVsInteractiveWindow window)
-        {
-            if (window == null)
-            {
+        public void OnWindowUsed(IVsInteractiveWindow window) {
+            if (window == null) {
                 throw new ArgumentNullException(nameof(window));
             }
 
-            lock (_windows)
-            {
+            lock (_windows) {
                 _lruWindows.Remove(window);
                 _lruWindows.Add(window);
             }
@@ -108,17 +93,13 @@ namespace Microsoft.PythonTools.Repl
 
         public IVsInteractiveWindow Open(string replId) => Open(replId, null);
 
-        public IVsInteractiveWindow Open(string replId, Func<IInteractiveEvaluator, bool> predicate)
-        {
+        public IVsInteractiveWindow Open(string replId, Func<IInteractiveEvaluator, bool> predicate) {
             EnsureInterpretersAvailable();
 
-            lock (_windows)
-            {
-                foreach (var window in _lruWindows.AsEnumerable().Reverse().Concat(_windows.Values))
-                {
+            lock (_windows) {
+                foreach (var window in _lruWindows.AsEnumerable().Reverse().Concat(_windows.Values)) {
                     var eval = window.InteractiveWindow?.Evaluator as SelectableReplEvaluator;
-                    if (eval?.CurrentEvaluator == replId && predicate?.Invoke(eval) != false)
-                    {
+                    if (eval?.CurrentEvaluator == replId && predicate?.Invoke(eval) != false) {
                         OnWindowUsed(window);
                         window.Show(true);
                         return window;
@@ -131,18 +112,14 @@ namespace Microsoft.PythonTools.Repl
 
         public IVsInteractiveWindow OpenOrCreate(string replId) => OpenOrCreate(replId, null);
 
-        public IVsInteractiveWindow OpenOrCreate(string replId, Func<IInteractiveEvaluator, bool> predicate)
-        {
+        public IVsInteractiveWindow OpenOrCreate(string replId, Func<IInteractiveEvaluator, bool> predicate) {
             EnsureInterpretersAvailable();
 
             IVsInteractiveWindow wnd;
-            lock (_windows)
-            {
-                foreach (var window in _lruWindows.AsEnumerable().Reverse().Concat(_windows.Values))
-                {
+            lock (_windows) {
+                foreach (var window in _lruWindows.AsEnumerable().Reverse().Concat(_windows.Values)) {
                     var eval = window.InteractiveWindow?.Evaluator as SelectableReplEvaluator;
-                    if (eval?.CurrentEvaluator == replId && predicate?.Invoke(eval) != false)
-                    {
+                    if (eval?.CurrentEvaluator == replId && predicate?.Invoke(eval) != false) {
                         OnWindowUsed(window);
                         window.Show(true);
                         return window;
@@ -155,12 +132,10 @@ namespace Microsoft.PythonTools.Repl
             return wnd;
         }
 
-        public IVsInteractiveWindow Create(string replId, int curId = -1)
-        {
+        public IVsInteractiveWindow Create(string replId, int curId = -1) {
             EnsureInterpretersAvailable();
 
-            if (curId < 0)
-            {
+            if (curId < 0) {
                 curId = GetNextId();
             }
 
@@ -174,16 +149,13 @@ namespace Microsoft.PythonTools.Repl
                 "PythonInteractive"
             );
 
-            lock (_windows)
-            {
+            lock (_windows) {
                 _windows[curId] = window;
                 _lruWindows.Add(window);
             }
 
-            window.InteractiveWindow.TextView.Closed += (s, e) =>
-            {
-                lock (_windows)
-                {
+            window.InteractiveWindow.TextView.Closed += (s, e) => {
+                lock (_windows) {
                     Debug.Assert(ReferenceEquals(_windows[curId], window));
                     _windows.Remove(curId);
                     _lruWindows.Remove(window);
@@ -193,24 +165,19 @@ namespace Microsoft.PythonTools.Repl
             return window;
         }
 
-        public IVsInteractiveWindow OpenOrCreateTemporary(string replId, string title)
-        {
+        public IVsInteractiveWindow OpenOrCreateTemporary(string replId, string title) {
             bool dummy;
             return OpenOrCreateTemporary(replId, title, out dummy);
         }
 
-        public IVsInteractiveWindow OpenOrCreateTemporary(string replId, string title, out bool wasCreated)
-        {
+        public IVsInteractiveWindow OpenOrCreateTemporary(string replId, string title, out bool wasCreated) {
             EnsureInterpretersAvailable();
 
             IVsInteractiveWindow wnd;
-            lock (_windows)
-            {
+            lock (_windows) {
                 int curId;
-                if (_temporaryWindows.TryGetValue(replId, out curId))
-                {
-                    if (_windows.TryGetValue(curId, out wnd))
-                    {
+                if (_temporaryWindows.TryGetValue(replId, out curId)) {
+                    if (_windows.TryGetValue(curId, out wnd)) {
                         wnd.Show(true);
                         wasCreated = false;
                         return wnd;
@@ -225,8 +192,7 @@ namespace Microsoft.PythonTools.Repl
             return wnd;
         }
 
-        public IVsInteractiveWindow CreateTemporary(string replId, string title)
-        {
+        public IVsInteractiveWindow CreateTemporary(string replId, string title) {
             EnsureInterpretersAvailable();
 
             int curId = GetNextId();
@@ -241,17 +207,14 @@ namespace Microsoft.PythonTools.Repl
                 replId
             );
 
-            lock (_windows)
-            {
+            lock (_windows) {
                 _windows[curId] = window;
                 _temporaryWindows[replId] = curId;
                 _lruWindows.Add(window);
             }
 
-            window.InteractiveWindow.TextView.Closed += (s, e) =>
-            {
-                lock (_windows)
-                {
+            window.InteractiveWindow.TextView.Closed += (s, e) => {
+                lock (_windows) {
                     Debug.Assert(ReferenceEquals(_windows[curId], window));
                     _windows.Remove(curId);
                     _temporaryWindows.Remove(replId);
@@ -270,14 +233,12 @@ namespace Microsoft.PythonTools.Repl
             string title,
             Guid languageServiceGuid,
             string replId
-        )
-        {
+        ) {
             var creationFlags =
                 __VSCREATETOOLWIN.CTW_fMultiInstance |
                 __VSCREATETOOLWIN.CTW_fActivateWithProject;
 
-            if (alwaysCreate)
-            {
+            if (alwaysCreate) {
                 creationFlags |= __VSCREATETOOLWIN.CTW_fForceCreate;
             }
 
@@ -306,15 +267,13 @@ namespace Microsoft.PythonTools.Repl
             replWindow.InteractiveWindow.Properties[VsInteractiveWindowId] = id;
             replWindow.InteractiveWindow.Properties[VsInteractiveWindowKey] = replWindow;
             var toolWindow = replWindow as ToolWindowPane;
-            if (toolWindow != null)
-            {
+            if (toolWindow != null) {
                 toolWindow.BitmapImageMoniker = KnownMonikers.PYInteractiveWindow;
             }
             replWindow.SetLanguage(GuidList.guidPythonLanguageServiceGuid, contentType);
 
             var selectEval = evaluator as SelectableReplEvaluator;
-            if (selectEval != null)
-            {
+            if (selectEval != null) {
                 selectEval.ProvideInteractiveWindowEvents(InteractiveWindowEvents.GetOrCreate(replWindow));
             }
 
@@ -323,29 +282,24 @@ namespace Microsoft.PythonTools.Repl
             return replWindow;
         }
 
-        internal static IVsInteractiveWindow GetVsInteractiveWindow(IInteractiveWindow window)
-        {
+        internal static IVsInteractiveWindow GetVsInteractiveWindow(IInteractiveWindow window) {
             IVsInteractiveWindow wnd = null;
             return (window?.Properties.TryGetProperty(VsInteractiveWindowKey, out wnd) ?? false) ? wnd : null;
         }
 
-        internal static int GetVsInteractiveWindowId(IInteractiveWindow window)
-        {
+        internal static int GetVsInteractiveWindowId(IInteractiveWindow window) {
             int id = -1;
             return (window?.Properties.TryGetProperty(VsInteractiveWindowId, out id) ?? false) ? id : -1;
         }
 
-        internal static void Close(object obj)
-        {
+        internal static void Close(object obj) {
             var frame = ((obj as ToolWindowPane)?.Frame as IVsWindowFrame);
             frame?.CloseFrame((uint)__FRAMECLOSE.FRAMECLOSE_NoSave);
         }
 
-        internal static void CloseIfEvaluatorMatches(object obj, string evalId)
-        {
+        internal static void CloseIfEvaluatorMatches(object obj, string evalId) {
             var eval = (obj as IVsInteractiveWindow)?.InteractiveWindow.Evaluator as SelectableReplEvaluator;
-            if (eval?.CurrentEvaluator == evalId)
-            {
+            if (eval?.CurrentEvaluator == evalId) {
                 Close(obj);
             }
         }

@@ -18,18 +18,15 @@ using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Editor.Core;
 using Microsoft.PythonTools.Intellisense;
 
-namespace Microsoft.PythonTools.Language
-{
-    sealed class TextViewFilter : IOleCommandTarget, IVsTextViewFilter
-    {
+namespace Microsoft.PythonTools.Language {
+    sealed class TextViewFilter : IOleCommandTarget, IVsTextViewFilter {
         private readonly PythonEditorServices _editorServices;
         private readonly IVsDebugger _debugger;
         private readonly IOleCommandTarget _next;
         private readonly IVsTextLines _vsTextLines;
         private readonly IWpfTextView _wpfTextView;
 
-        public TextViewFilter(PythonEditorServices editorServices, IVsTextView vsTextView)
-        {
+        public TextViewFilter(PythonEditorServices editorServices, IVsTextView vsTextView) {
             _editorServices = editorServices;
             _debugger = (IVsDebugger)_editorServices.Site.GetService(typeof(IVsDebugger));
 
@@ -44,22 +41,17 @@ namespace Microsoft.PythonTools.Language
         /// <summary>
         /// Called from VS when we should handle a command or pass it on.
         /// </summary>
-        public int Exec(ref Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut)
-        {
+        public int Exec(ref Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
             return _next.Exec(pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
         }
 
         /// <summary>
         /// Called from VS to see what commands we support.  
         /// </summary>
-        public int QueryStatus(ref Guid pguidCmdGroup, uint cCmds, OLECMD[] prgCmds, IntPtr pCmdText)
-        {
-            if (pguidCmdGroup == VSConstants.GUID_VSStandardCommandSet97)
-            {
-                for (int i = 0; i < cCmds; i++)
-                {
-                    switch ((VSConstants.VSStd97CmdID)prgCmds[i].cmdID)
-                    {
+        public int QueryStatus(ref Guid pguidCmdGroup, uint cCmds, OLECMD[] prgCmds, IntPtr pCmdText) {
+            if (pguidCmdGroup == VSConstants.GUID_VSStandardCommandSet97) {
+                for (int i = 0; i < cCmds; i++) {
+                    switch ((VSConstants.VSStd97CmdID)prgCmds[i].cmdID) {
                         case VSConstants.VSStd97CmdID.MarkerCmd0:
                         case VSConstants.VSStd97CmdID.MarkerCmd1:
                         case VSConstants.VSStd97CmdID.MarkerCmd2:
@@ -82,16 +74,13 @@ namespace Microsoft.PythonTools.Language
 
         #endregion
 
-        public int GetDataTipText(TextSpan[] pSpan, out string pbstrText)
-        {
-            if (!_wpfTextView.TextBuffer.ContentType.IsOfType(PythonCoreConstants.ContentType))
-            {
+        public int GetDataTipText(TextSpan[] pSpan, out string pbstrText) {
+            if (!_wpfTextView.TextBuffer.ContentType.IsOfType(PythonCoreConstants.ContentType)) {
                 pbstrText = null;
                 return VSConstants.E_NOTIMPL;
             }
 
-            if (pSpan.Length != 1)
-            {
+            if (pSpan.Length != 1) {
                 throw new ArgumentException("Array parameter should contain exactly one TextSpan", "pSpan");
             }
 
@@ -102,27 +91,21 @@ namespace Microsoft.PythonTools.Language
 
             var bi = PythonTextBufferInfo.TryGetForBuffer(snapshot.TextBuffer);
             var analyzer = bi?.AnalysisEntry?.Analyzer;
-            if (analyzer == null)
-            {
+            if (analyzer == null) {
                 pbstrText = null;
                 return VSConstants.E_FAIL;
             }
 
             SourceSpan? expr;
-            try
-            {
-                expr = _editorServices.Site.GetUIThread().InvokeTaskSync(async () =>
-                {
+            try {
+                expr = _editorServices.Site.GetUIThread().InvokeTaskSync(async () => {
                     return await analyzer.GetExpressionSpanAtPointAsync(bi, pt, ExpressionAtPointPurpose.Hover, TimeSpan.FromSeconds(1.0));
                 }, CancellationTokens.After1s);
-            }
-            catch (OperationCanceledException)
-            {
+            } catch (OperationCanceledException) {
                 expr = null;
             }
 
-            if (expr == null)
-            {
+            if (expr == null) {
                 pbstrText = null;
                 return VSConstants.E_ABORT;
             }
@@ -132,13 +115,11 @@ namespace Microsoft.PythonTools.Language
             return _debugger.GetDataTipValue(_vsTextLines, pSpan, span.GetText(), out pbstrText);
         }
 
-        public int GetPairExtents(int iLine, int iIndex, TextSpan[] pSpan)
-        {
+        public int GetPairExtents(int iLine, int iIndex, TextSpan[] pSpan) {
             return VSConstants.E_NOTIMPL;
         }
 
-        public int GetWordExtent(int iLine, int iIndex, uint dwFlags, TextSpan[] pSpan)
-        {
+        public int GetWordExtent(int iLine, int iIndex, uint dwFlags, TextSpan[] pSpan) {
             return VSConstants.E_NOTIMPL;
         }
     }

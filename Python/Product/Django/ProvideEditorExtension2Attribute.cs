@@ -14,8 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Django
-{
+namespace Microsoft.PythonTools.Django {
 
     /// <include file='doc\ProvideEditorExtensionAttribute.uex' path='docs/doc[@for="ProvideEditorExtensionAttribute"]' />
     /// <devdoc>
@@ -27,8 +26,7 @@ namespace Microsoft.PythonTools.Django
     /// a linked editor GUID can be supplied.
     /// </devdoc>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = true)]
-    internal sealed class ProvideEditorExtension2Attribute : RegistrationAttribute
-    {
+    internal sealed class ProvideEditorExtension2Attribute : RegistrationAttribute {
         private Guid _factory;
         private string _extension;
         private int _priority;
@@ -44,8 +42,7 @@ namespace Microsoft.PythonTools.Django
         /// <devdoc>
         ///     Creates a new attribute.
         /// </devdoc>
-        public ProvideEditorExtension2Attribute(object factoryType, string extension, int priority, params string[] extensions)
-        {
+        public ProvideEditorExtension2Attribute(object factoryType, string extension, int priority, params string[] extensions) {
             // figure out what type of object they passed in and get the GUID from it
             if (factoryType is string)
                 this._factory = new Guid((string)factoryType);
@@ -69,10 +66,8 @@ namespace Microsoft.PythonTools.Django
         /// <devdoc>
         ///     The file extension of the file.
         /// </devdoc>
-        public string Extension
-        {
-            get
-            {
+        public string Extension {
+            get {
                 return _extension;
             }
         }
@@ -81,10 +76,8 @@ namespace Microsoft.PythonTools.Django
         /// <devdoc>
         ///     The editor factory guid.
         /// </devdoc>
-        public Guid Factory
-        {
-            get
-            {
+        public Guid Factory {
+            get {
                 return _factory;
             }
         }
@@ -93,51 +86,43 @@ namespace Microsoft.PythonTools.Django
         /// <devdoc>
         ///     The priority of this extension registration.
         /// </devdoc>
-        public int Priority
-        {
-            get
-            {
+        public int Priority {
+            get {
                 return _priority;
             }
         }
 
         /// <include file='doc\ProvideEditorExtensionAttribute.uex' path='docs/doc[@for="ProvideEditorExtensionAttribute.ProjectGuid"]/*' />
-        public string ProjectGuid
-        {
+        public string ProjectGuid {
             set { _project = new System.Guid(value); }
             get { return _project.ToString(); }
         }
 
-        public string LinkedEditorGuid
-        {
+        public string LinkedEditorGuid {
             get { return _linkedEditorGuid.ToString(); }
             set { _linkedEditorGuid = new System.Guid(value); }
         }
 
         /// <include file='doc\ProvideEditorExtensionAttribute.uex' path='docs/doc[@for="ProvideEditorExtensionAttribute.EditorFactoryNotify"]/*' />
-        public bool EditorFactoryNotify
-        {
+        public bool EditorFactoryNotify {
             get { return this._editorFactoryNotify; }
             set { this._editorFactoryNotify = value; }
         }
 
         /// <include file='doc\ProvideEditorExtensionAttribute.uex' path='docs/doc[@for="ProvideEditorExtensionAttribute.TemplateDir"]/*' />
-        public string TemplateDir
-        {
+        public string TemplateDir {
             get { return _templateDir; }
             set { _templateDir = value; }
         }
 
         /// <include file='doc\ProvideEditorExtensionAttribute.uex' path='docs/doc[@for="ProvideEditorExtensionAttribute.NameResourceID"]/*' />
-        public int NameResourceID
-        {
+        public int NameResourceID {
             get { return _resId; }
             set { _resId = value; }
         }
 
         /// <include file='doc\ProvideEditorExtensionAttribute.uex' path='docs/doc[@for="ProvideEditorExtensionAttribute.DefaultName"]/*' />
-        public string DefaultName
-        {
+        public string DefaultName {
             get { return _editorName; }
             set { _editorName = value; }
         }
@@ -145,10 +130,8 @@ namespace Microsoft.PythonTools.Django
         /// <summary>
         ///        The reg key name of this extension.
         /// </summary>
-        private string RegKeyName
-        {
-            get
-            {
+        private string RegKeyName {
+            get {
                 return string.Format(CultureInfo.InvariantCulture, "Editors\\{0}", Factory.ToString("B"));
             }
         }
@@ -156,18 +139,15 @@ namespace Microsoft.PythonTools.Django
         /// <summary>
         ///        The reg key name of the project.
         /// </summary>
-        private string ProjectRegKeyName(RegistrationContext context)
-        {
+        private string ProjectRegKeyName(RegistrationContext context) {
             return string.Format(CultureInfo.InvariantCulture,
                                  "Projects\\{0}\\AddItemTemplates\\TemplateDirs\\{1}",
                                  _project.ToString("B"),
                                  context.ComponentType.GUID.ToString("B"));
         }
 
-        private string EditorFactoryNotifyKey
-        {
-            get
-            {
+        private string EditorFactoryNotifyKey {
+            get {
                 return string.Format(CultureInfo.InvariantCulture, "Projects\\{0}\\FileExtensions\\{1}",
                                      _project.ToString("B"),
                                      Extension);
@@ -183,35 +163,27 @@ namespace Microsoft.PythonTools.Django
         ///     This method is called both for registration and unregistration.  The difference is
         ///     that unregistering just uses a hive that reverses the changes applied to it.
         /// </devdoc>
-        public override void Register(RegistrationContext context)
-        {
-            using (Key editorKey = context.CreateKey(RegKeyName))
-            {
-                if (!string.IsNullOrEmpty(DefaultName))
-                {
+        public override void Register(RegistrationContext context) {
+            using (Key editorKey = context.CreateKey(RegKeyName)) {
+                if (!string.IsNullOrEmpty(DefaultName)) {
                     editorKey.SetValue(null, DefaultName);
                 }
                 if (0 != _resId)
                     editorKey.SetValue("DisplayName", "#" + _resId.ToString(CultureInfo.InvariantCulture));
-                if (_linkedEditorGuid != Guid.Empty)
-                {
+                if (_linkedEditorGuid != Guid.Empty) {
                     editorKey.SetValue("LinkedEditorGuid", _linkedEditorGuid.ToString("B"));
                 }
                 editorKey.SetValue("Package", context.ComponentType.GUID.ToString("B"));
             }
 
-            using (Key extensionKey = context.CreateKey(RegKeyName + "\\Extensions"))
-            {
+            using (Key extensionKey = context.CreateKey(RegKeyName + "\\Extensions")) {
                 extensionKey.SetValue(Extension.Substring(1), Priority);
 
-                if (_extensions != null && _extensions.Length > 0)
-                {
-                    foreach (var extension in _extensions)
-                    {
+                if (_extensions != null && _extensions.Length > 0) {
+                    foreach (var extension in _extensions) {
                         var extensionAndPri = extension.Split(':');
                         int pri;
-                        if (extensionAndPri.Length != 2 || !Int32.TryParse(extensionAndPri[1], out pri))
-                        {
+                        if (extensionAndPri.Length != 2 || !Int32.TryParse(extensionAndPri[1], out pri)) {
                             throw new InvalidOperationException("Expected extension:priority");
                         }
 
@@ -221,15 +193,12 @@ namespace Microsoft.PythonTools.Django
             }
 
             // Build the path of the registry key for the "Add file to project" entry
-            if (_project != Guid.Empty)
-            {
+            if (_project != Guid.Empty) {
                 string prjRegKey = ProjectRegKeyName(context) + "\\/1";
-                using (Key projectKey = context.CreateKey(prjRegKey))
-                {
+                using (Key projectKey = context.CreateKey(prjRegKey)) {
                     if (0 != _resId)
                         projectKey.SetValue("", "#" + _resId.ToString(CultureInfo.InvariantCulture));
-                    if (_templateDir.Length != 0)
-                    {
+                    if (_templateDir.Length != 0) {
                         Uri url = new Uri(context.ComponentType.Assembly.CodeBase);
                         string templates = url.LocalPath;
                         templates = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(templates), _templateDir);
@@ -241,16 +210,14 @@ namespace Microsoft.PythonTools.Django
             }
 
             // Register the EditorFactoryNotify
-            if (EditorFactoryNotify)
-            {
+            if (EditorFactoryNotify) {
                 // The IVsEditorFactoryNotify interface is called by the project system, so it doesn't make sense to
                 // register it if there is no project associated to this editor.
                 if (_project == Guid.Empty)
                     throw new ArgumentException("project");
 
                 // Create the registry key
-                using (Key edtFactoryNotifyKey = context.CreateKey(EditorFactoryNotifyKey))
-                {
+                using (Key edtFactoryNotifyKey = context.CreateKey(EditorFactoryNotifyKey)) {
                     edtFactoryNotifyKey.SetValue("EditorFactoryNotify", Factory.ToString("B"));
                 }
             }
@@ -261,11 +228,9 @@ namespace Microsoft.PythonTools.Django
         /// Unregister this editor.
         /// </devdoc>
         /// <param name="context"></param>
-        public override void Unregister(RegistrationContext context)
-        {
+        public override void Unregister(RegistrationContext context) {
             context.RemoveKey(RegKeyName);
-            if (_project != Guid.Empty)
-            {
+            if (_project != Guid.Empty) {
                 context.RemoveKey(ProjectRegKeyName(context));
                 if (EditorFactoryNotify)
                     context.RemoveKey(EditorFactoryNotifyKey);

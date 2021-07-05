@@ -16,12 +16,10 @@
 
 using Microsoft.VisualStudioTools.Project;
 
-namespace Microsoft.PythonTools.Project
-{
+namespace Microsoft.PythonTools.Project {
     [ComVisible(true)]
     [Guid(PythonConstants.InterpretersPackagePropertiesGuid)]
-    public class InterpretersPackageNodeProperties : NodeProperties
-    {
+    public class InterpretersPackageNodeProperties : NodeProperties {
         internal InterpretersPackageNodeProperties(HierarchyNode node)
             : base(node) { }
 
@@ -29,16 +27,13 @@ namespace Microsoft.PythonTools.Project
         [SRDisplayName("PackageFullName")]
         [SRDescription("PackageFullNameDescription")]
         [AutomationBrowsable(true)]
-        public string FullPath
-        {
-            get
-            {
+        public string FullPath {
+            get {
                 return this.HierarchyNode.Url;
             }
         }
 
-        public override string GetClassName()
-        {
+        public override string GetClassName() {
             return "Python Package Properties";
         }
     }

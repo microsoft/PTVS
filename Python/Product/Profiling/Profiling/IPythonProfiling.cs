@@ -14,11 +14,9 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Profiling
-{
+namespace Microsoft.PythonTools.Profiling {
     [Guid("C932B3FB-B9CF-4903-83CA-394E2E89C4A0")]
-    public interface IPythonProfiling
-    {
+    public interface IPythonProfiling {
         IPythonProfileSession GetSession(object item);
 
         /// <summary>
@@ -42,8 +40,7 @@ namespace Microsoft.PythonTools.Profiling
 
         void RemoveSession(IPythonProfileSession session, bool deleteFromDisk);
 
-        bool IsProfiling
-        {
+        bool IsProfiling {
             get;
         }
     }
