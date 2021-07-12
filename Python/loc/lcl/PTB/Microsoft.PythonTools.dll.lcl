@@ -71,7 +71,7 @@
         <Str Cat="Static Text">
           <Val><![CDATA[S&earch paths:]]></Val>
           <Tgt Cat="Static Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Caminhos de &pesquisa:]]></Val>
+            <Val><![CDATA[Caminhos de pesquisa:]]></Val>
           </Tgt>
         </Str>
         <Bin BinId="1">
@@ -83,7 +83,7 @@
         <Str Cat="Static Text">
           <Val><![CDATA[Types&hed paths:]]></Val>
           <Tgt Cat="Static Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[&Caminhos de typeshed:]]></Val>
+            <Val><![CDATA[Caminhos de typeshed:]]></Val>
           </Tgt>
         </Str>
         <Bin BinId="1">
