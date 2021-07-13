@@ -138,11 +138,4 @@
     <Compile Include="ProvideRawCodeBaseAttribute.cs" />
   </ItemGroup>
   <Import Project="..\ProjectAfter.settings" />
-  <!-- Temporary workaround for the interop DLL not being available in 15.5 -->
-  <Target Name="_IncludeVSCodeInterop" Condition="!$(ReleaseBuild) and $(DeployExtension)" BeforeTargets="BeforeBuild">
-    <ItemGroup>
-      <_InteropDll Include="$(DevEnvDir)Extensions\*\Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces.dll" />
-      <Content Include="..\..\References\Dev$(VSTarget)\Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces.dll;VSCodeInterop.pkgdef" Condition="@(_InteropDll) == ''" />
-    </ItemGroup>
-  </Target>
 </Project>
