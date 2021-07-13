@@ -111,17 +111,27 @@ namespace Microsoft.PythonTools.Project {
 
         private async Task<bool> InstallPyTestAsync() {
             var packageManagers = _infoBarData.InterpreterOptionsService.GetPackageManagers(_infoBarData.InterpreterFactory);
+            string failureMessage = null;
 
             foreach (var packageManager in packageManagers) {
-                bool pytestInstalled = await packageManager.InstallAsync(
-                    new PackageSpec("pytest"),
-                    new VsPackageManagerUI(Site),
-                    CancellationToken.None
-                );
+                try {
+                    bool pytestInstalled = await packageManager.InstallAsync(
+                        new PackageSpec("pytest"),
+                        new VsPackageManagerUI(Site),
+                        CancellationToken.None
+                    );
 
-                if (pytestInstalled) {
-                    return true;
+                    if (pytestInstalled) {
+                        return true;
+                    }
+                } catch (InvalidOperationException e) {
+                    failureMessage = e.Message;
                 }
+            }
+
+            if (!String.IsNullOrEmpty(failureMessage)) {
+                // Something couldn't be installed.
+                Create(new InfoBarModel(failureMessage));
             }
 
             return false;

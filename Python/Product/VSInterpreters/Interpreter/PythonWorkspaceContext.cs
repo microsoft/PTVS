@@ -205,16 +205,15 @@ namespace Microsoft.PythonTools.Interpreter {
                 .Where(x => !string.IsNullOrEmpty(x.InterpreterPath))
                 .Where(x => PathUtils.IsSubpathOf(_workspace.Location, x.InterpreterPath))
                 .ToList();
-            foreach (var file in Directory.EnumerateFiles(_workspace.Location).Where(x => predicate(x))) {
+            foreach (var file in EnumerateFilesSafe(_workspace.Location).Where(x => predicate(x))) {
                 yield return file;
             }
 
-            foreach (var topLevelDirectory in Directory.EnumerateDirectories(_workspace.Location)) {
+            foreach (var topLevelDirectory in EnumerateDirectoriesSafe(_workspace.Location)) {
                 if (!workspaceInterpreterConfigs.Any(x => PathUtils.IsSameDirectory(x.GetPrefixPath(), topLevelDirectory)) &&
                     !PathUtils.IsSameDirectory(topLevelDirectory, workspaceCacheDirPath)
                 ) {
-                    foreach (var file in Directory
-                                .EnumerateFiles(topLevelDirectory, "*", SearchOption.AllDirectories)
+                    foreach (var file in EnumerateFilesSafe(topLevelDirectory, "*", SearchOption.AllDirectories)
                                 .Where(x => predicate(x))
                     ) {
                         yield return file;
@@ -260,6 +259,30 @@ namespace Microsoft.PythonTools.Interpreter {
                 if (_factoryIsDefault == true) {
                     _factory = _optionsService.DefaultInterpreter;
                 }
+            }
+        }
+
+        private IEnumerable<string> EnumerateDirectoriesSafe(string location) {
+            try {
+                return EnumerateDirectoriesSafe(location);
+            } catch (SystemException) {
+                return Enumerable.Empty<string>();
+            }
+        }
+
+        private IEnumerable<string> EnumerateFilesSafe(string location) {
+            try {
+                return EnumerateFilesSafe(location);
+            } catch (SystemException) {
+                return Enumerable.Empty<string>();
+            }
+        }
+
+        private IEnumerable<string> EnumerateFilesSafe(string location, string pattern, SearchOption option) {
+            try {
+                return EnumerateFilesSafe(location, pattern, option);
+            } catch (SystemException) {
+                return Enumerable.Empty<string>();
             }
         }
 
