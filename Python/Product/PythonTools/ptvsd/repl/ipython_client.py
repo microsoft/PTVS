@@ -28,7 +28,10 @@ try:
 except:
     import _thread as thread    # Renamed as Py3k
 
-from base64 import decodestring
+try:
+    from base64 import decodestring
+except:
+    from base64 import decodebytes as decodestring # Deprecated in 3.9
 
 try:
     import IPython
@@ -185,7 +188,7 @@ class VsIOPubChannel(DefaultHandler, IOPubChannel):
             try:
                 if isinstance(output_xaml, str) and sys.version_info[0] >= 3:
                     output_xaml = output_xaml.encode('ascii')
-                self._vs_backend.write_xaml(decodestring(output_xaml))
+                self._vs_backend.write_xaml(str(decodestring(output_xaml)))
                 self._vs_backend.write_stdout('\n') 
                 return
             except:
@@ -196,7 +199,7 @@ class VsIOPubChannel(DefaultHandler, IOPubChannel):
             try:
                 if isinstance(output_png, str) and sys.version_info[0] >= 3:
                     output_png = output_png.encode('ascii')
-                self._vs_backend.write_png(decodestring(output_png))
+                self._vs_backend.write_png(str(decodestring(output_png)))
                 self._vs_backend.write_stdout('\n') 
                 return
             except:
