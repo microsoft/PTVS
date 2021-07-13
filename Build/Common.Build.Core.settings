@@ -29,7 +29,15 @@
     <VSTargetName Condition="'$(VSTarget)' == '12.0'">2013</VSTargetName>
     <VSTargetName Condition="'$(VSTarget)' == '11.0'">2012</VSTargetName>
     <VSTargetName Condition="'$(VSTarget)' == '10.0'">2010</VSTargetName>
-    
+
+    <VCTargetVersion Condition="'$(VSTarget)' == '17.0'">v170</VCTargetVersion>
+    <VCTargetVersion Condition="'$(VSTarget)' == '16.0'">v160</VCTargetVersion>
+    <VCTargetVersion Condition="'$(VSTarget)' == '15.0'">v150</VCTargetVersion>
+    <VCTargetVersion Condition="'$(VSTarget)' == '14.0'">v140</VCTargetVersion>
+    <VCTargetVersion Condition="'$(VSTarget)' == '12.0'">v120</VCTargetVersion>
+    <VCTargetVersion Condition="'$(VSTarget)' == '11.0'">v110</VCTargetVersion>
+    <VCTargetVersion Condition="'$(VSTarget)' == '10.0'">v100</VCTargetVersion>
+
     <BuildNumber Condition="'$(BuildNumber)' == ''">$(BUILD_BUILDNUMBER)</BuildNumber>
     <BuildNumber Condition="'$(BuildNumber)' == ''">1000.00</BuildNumber>
     <!--

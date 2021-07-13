@@ -146,27 +146,27 @@
       <VSIXSubPath>.</VSIXSubPath>
     </Content>
     <Content Include="VCTargets\Win32\ImportAfter\Microsoft.PythonTools.Debugger.VCDebugLauncher.targets">
-      <VSIXSubPath>Microsoft\VC\v160\Platforms\Win32\ImportAfter</VSIXSubPath>
+      <VSIXSubPath>Microsoft\VC\$(VCTargetVersion)\Platforms\Win32\ImportAfter</VSIXSubPath>
       <InstallRoot>MSBuild</InstallRoot>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
       <SubType>Designer</SubType>
     </Content>
     <Content Include="VCTargets\Win32\ImportBefore\Microsoft.PythonTools.Debugger.VCDebugLauncher.props">
-      <VSIXSubPath>Microsoft\VC\v160\Platforms\Win32\ImportBefore</VSIXSubPath>
+      <VSIXSubPath>Microsoft\VC\$(VCTargetVersion)\Platforms\Win32\ImportBefore</VSIXSubPath>
       <InstallRoot>MSBuild</InstallRoot>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <Content Include="VCTargets\x64\ImportAfter\Microsoft.PythonTools.Debugger.VCDebugLauncher.targets">
-      <VSIXSubPath>Microsoft\VC\v160\Platforms\x64\ImportAfter</VSIXSubPath>
+      <VSIXSubPath>Microsoft\VC\$(VCTargetVersion)\Platforms\x64\ImportAfter</VSIXSubPath>
       <InstallRoot>MSBuild</InstallRoot>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
       <SubType>Designer</SubType>
     </Content>
     <Content Include="VCTargets\x64\ImportBefore\Microsoft.PythonTools.Debugger.VCDebugLauncher.props">
-      <VSIXSubPath>Microsoft\VC\v160\Platforms\x64\ImportBefore</VSIXSubPath>
+      <VSIXSubPath>Microsoft\VC\$(VCTargetVersion)\Platforms\x64\ImportBefore</VSIXSubPath>
       <InstallRoot>MSBuild</InstallRoot>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
