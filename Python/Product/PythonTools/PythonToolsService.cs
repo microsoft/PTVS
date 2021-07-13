@@ -375,7 +375,7 @@ namespace Microsoft.PythonTools {
             => LaunchConfigurationUtils.GetFullEnvironment(config, _container, UIThread);
 
         internal IEnumerable<string> GetGlobalPythonSearchPaths(InterpreterConfiguration interpreter) {
-            if (!GeneralOptions.ClearGlobalPythonPath) {
+            if (!GeneralOptions.ClearGlobalPythonPath && interpreter != null) {
                 string pythonPath = Environment.GetEnvironmentVariable(interpreter.PathEnvironmentVariable) ?? string.Empty;
                 return pythonPath
                     .Split(Path.PathSeparator)
