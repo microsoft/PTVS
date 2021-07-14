@@ -363,8 +363,10 @@ namespace Microsoft.PythonTools.TestAdapter {
                         Info(proc.Arguments);
 
                         // Wait for process exit or connected. Connection might fail if 
-                        // there's an error in the launch script
-                        WaitHandle.WaitAny(new WaitHandle[] { _connected, proc.WaitHandle });
+                        // there's an error in the launch script. Process may also
+                        // signal exited while we haven't connected yet, so really wait
+                        // for the connection and then see if we connected or not.
+                        _connected.WaitOne(3000);
                         if (!_connectionActivated && proc.ExitCode != null) {
                             // Process has already exited without connecting
                             Error(Strings.Test_FailedToStartExited);
