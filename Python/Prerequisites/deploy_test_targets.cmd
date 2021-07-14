@@ -35,7 +35,7 @@ if not exist "%TARGET%" mkdir "%TARGET%"
 copy /Y "*.targets" "%TARGET%"
 popd
 
-set TARGET=%VSINSTALLDIR%\MSBuild\Microsoft\VC\v160\Platforms
+set TARGET=%VSINSTALLDIR%\MSBuild\Microsoft\VC\v170\Platforms
 pushd "%D%..\Product\VCDebugLauncher\VCTargets"
 echo.
 echo Copying:

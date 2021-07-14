@@ -167,6 +167,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             private readonly int _debugPort;
             private readonly ManualResetEvent _cancelRequested;
             private readonly ManualResetEvent _connected = new ManualResetEvent(false);
+            private bool _connectionActivated = false;
             private readonly AutoResetEvent _done = new AutoResetEvent(false);
             private Connection _connection;
             private readonly Socket _socket;
@@ -294,6 +295,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
 
             private void AcceptConnection(IAsyncResult iar) {
+                Info("Connected to socket");
                 Socket socket;
                 var socketSource = ((Socket)iar.AsyncState);
                 try {
@@ -306,7 +308,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                     Debug.WriteLine("DebugConnectionListener socket closed");
                     return;
                 }
-
+                _connectionActivated = true;
                 var stream = new NetworkStream(socket, ownsSocket: true);
                 _connection = new Connection(
                     new MemoryStream(),
@@ -319,6 +321,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 );
                 _connection.EventReceived += ConnectionReceivedEvent;
                 Task.Run(_connection.ProcessMessages).DoNotWait();
+                Info("Connection event fired");
                 _connected.Set();
             }
 
@@ -359,14 +362,13 @@ namespace Microsoft.PythonTools.TestAdapter {
                         Info("set " + pythonPath.Key + "=" + pythonPath.Value);
                         Info(proc.Arguments);
 
-                        // If there's an error in the launcher script,
-                        // it will terminate without connecting back.
-                        WaitHandle.WaitAny(new WaitHandle[] { _connected, proc.WaitHandle });
-                        bool processConnected = _connected.WaitOne(1);
-
-                        if (!processConnected && proc.ExitCode.HasValue) {
-                            // Process has already exited
-                            proc.Wait();
+                        // Wait for process exit or connected. Connection might fail if 
+                        // there's an error in the launch script. Process may also
+                        // signal exited while we haven't connected yet, so really wait
+                        // for the connection and then see if we connected or not.
+                        _connected.WaitOne(3000);
+                        if (!_connectionActivated && proc.ExitCode != null) {
+                            // Process has already exited without connecting
                             Error(Strings.Test_FailedToStartExited);
                             if (proc.StandardErrorLines.Any()) {
                                 foreach (var line in proc.StandardErrorLines) {
