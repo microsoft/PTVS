@@ -167,6 +167,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             private readonly int _debugPort;
             private readonly ManualResetEvent _cancelRequested;
             private readonly ManualResetEvent _connected = new ManualResetEvent(false);
+            private bool _connectionActivated = false;
             private readonly AutoResetEvent _done = new AutoResetEvent(false);
             private Connection _connection;
             private readonly Socket _socket;
@@ -319,6 +320,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 );
                 _connection.EventReceived += ConnectionReceivedEvent;
                 Task.Run(_connection.ProcessMessages).DoNotWait();
+                _connectionActivated = true;
                 _connected.Set();
             }
 
@@ -359,14 +361,11 @@ namespace Microsoft.PythonTools.TestAdapter {
                         Info("set " + pythonPath.Key + "=" + pythonPath.Value);
                         Info(proc.Arguments);
 
-                        // If there's an error in the launcher script,
-                        // it will terminate without connecting back.
+                        // Wait for process exit or connected. Connection might fail if 
+                        // there's an error in the launch script
                         WaitHandle.WaitAny(new WaitHandle[] { _connected, proc.WaitHandle });
-                        bool processConnected = _connected.WaitOne(1);
-
-                        if (!processConnected && proc.ExitCode.HasValue) {
-                            // Process has already exited
-                            proc.Wait();
+                        if (!_connectionActivated) {
+                            // Process has already exited without connecting
                             Error(Strings.Test_FailedToStartExited);
                             if (proc.StandardErrorLines.Any()) {
                                 foreach (var line in proc.StandardErrorLines) {
