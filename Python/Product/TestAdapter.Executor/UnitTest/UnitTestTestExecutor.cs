@@ -295,6 +295,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
 
             private void AcceptConnection(IAsyncResult iar) {
+                Info("Connected to socket");
                 Socket socket;
                 var socketSource = ((Socket)iar.AsyncState);
                 try {
@@ -307,7 +308,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                     Debug.WriteLine("DebugConnectionListener socket closed");
                     return;
                 }
-
+                _connectionActivated = true;
                 var stream = new NetworkStream(socket, ownsSocket: true);
                 _connection = new Connection(
                     new MemoryStream(),
@@ -320,7 +321,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 );
                 _connection.EventReceived += ConnectionReceivedEvent;
                 Task.Run(_connection.ProcessMessages).DoNotWait();
-                _connectionActivated = true;
+                Info("Connection event fired");
                 _connected.Set();
             }
 
@@ -364,7 +365,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                         // Wait for process exit or connected. Connection might fail if 
                         // there's an error in the launch script
                         WaitHandle.WaitAny(new WaitHandle[] { _connected, proc.WaitHandle });
-                        if (!_connectionActivated) {
+                        if (!_connectionActivated && proc.ExitCode != null) {
                             // Process has already exited without connecting
                             Error(Strings.Test_FailedToStartExited);
                             if (proc.StandardErrorLines.Any()) {
