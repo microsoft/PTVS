@@ -22,6 +22,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Web;
 using System.Windows.Forms;
+using Microsoft.PythonTools.Debugger.Remote;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.Debugger.DebugAdapterHost.Interfaces;
 using Microsoft.VisualStudio.Debugger.Interop;
@@ -172,7 +173,12 @@ namespace Microsoft.PythonTools.Debugger {
 
         private ITargetHostProcess LaunchAdapterForAttach(IAdapterLaunchInfo launchInfo, ITargetHostInterop targetInterop) {
             var debugAttachInfo = (DebugAttachInfo)_debugInfo;
-            if (launchInfo.LaunchLocation == LaunchLocation.Remote) {
+            launchInfo.DebugPort.GetPortSupplier(out var supplier);
+            Guid portSupplierGuid = Guid.Empty;
+            if (supplier != null) {
+                supplier.GetPortSupplierId(out portSupplierGuid);
+            }
+            if (portSupplierGuid == PythonRemoteDebugPortSupplier.PortSupplierGuid) {
                 // This is a remote attach scenario
                 return DebugAdapterAttachProcess.RemoteAttach(debugAttachInfo);
             } else {

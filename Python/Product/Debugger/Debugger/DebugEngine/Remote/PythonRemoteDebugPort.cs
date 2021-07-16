@@ -70,7 +70,8 @@ namespace Microsoft.PythonTools.Debugger.Remote {
         }
 
         public int GetProcess(AD_PROCESS_ID ProcessId, out IDebugProcess2 ppProcess) {
-            throw new NotImplementedException();
+            ppProcess = new PythonRemoteDebugProcess(this, (int)ProcessId.dwProcessId, "Python", "*", "*");
+            return VSConstants.S_OK;
         }
     }
 }

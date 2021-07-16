@@ -37,9 +37,11 @@ namespace Microsoft.PythonTools.Debugger {
 
         private DebugAdapterAttachProcess(Process debugPyProcess = null) {
             _debugPyProcess = debugPyProcess;
-            debugPyProcess.Exited += DebugPyProcess_Exited;
-            debugPyProcess.OutputDataReceived += DebugPyProcess_OutputDataReceived;
-            debugPyProcess.ErrorDataReceived += DebugPyProcess_OutputDataReceived;
+            if (_debugPyProcess != null) {
+                debugPyProcess.Exited += DebugPyProcess_Exited;
+                debugPyProcess.OutputDataReceived += DebugPyProcess_OutputDataReceived;
+                debugPyProcess.ErrorDataReceived += DebugPyProcess_OutputDataReceived;
+            }
         }
 
         private void DebugPyProcess_OutputDataReceived(object sender, DataReceivedEventArgs e) {
@@ -98,6 +100,7 @@ namespace Microsoft.PythonTools.Debugger {
             _debuggerConnected = false;
             Socket socket = null; 
             EndPoint endpoint;
+            Exception lastSocketException = null;
             if (uri.IsLoopback) {
                 endpoint = new IPEndPoint(IPAddress.Loopback, uri.Port);
             } else {
@@ -123,6 +126,7 @@ namespace Microsoft.PythonTools.Debugger {
                             await socket.ConnectAsync(endpoint);
                         } catch (Exception e) {
                             System.Diagnostics.Debug.WriteLine($"Socker error attaching: {e}");
+                            lastSocketException = e;
                             socket.Dispose();
                             socket = null;
                             await Task.Delay(1000);
@@ -140,6 +144,8 @@ namespace Microsoft.PythonTools.Debugger {
                     _stream.Initialized += OnInitialized;
                 } else if (task.Exception != null) {
                     Debug.WriteLine($"Error waiting for debugger to connect {task.Exception}");
+                } else if (lastSocketException != null) {
+                    Debug.WriteLine($"Error waiting for debugger to connect {lastSocketException}");
                 } else {
                     Debug.WriteLine("Timed out waiting for debugger to connect.", nameof(DebugAdapterAttachProcess));
                     logger?.LogEvent(PythonLogEvent.DebugAdapterConnectionTimeout, "Attach");
