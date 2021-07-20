@@ -70,11 +70,11 @@ namespace Microsoft.PythonTools.LanguageServerClient.FileWatcher {
 
         }
 
-        public void AddPatterns(VisualStudio.LanguageServer.Protocol.FileSystemWatcher[] patterns) {
+        public void AddPatterns(FileSystemWatcher[] patterns) {
             Array.ForEach(patterns, p => AddPattern(p));
         }
 
-        private void AddPattern(VisualStudio.LanguageServer.Protocol.FileSystemWatcher pattern) {
+        private void AddPattern(FileSystemWatcher pattern) {
             // Add to our matcher
             _matcher.AddInclude(pattern.GlobPattern);
 
