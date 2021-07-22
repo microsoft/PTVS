@@ -264,7 +264,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
         private IEnumerable<string> EnumerateDirectoriesSafe(string location) {
             try {
-                return EnumerateDirectoriesSafe(location);
+                return Directory.EnumerateDirectories(location);
             } catch (SystemException) {
                 return Enumerable.Empty<string>();
             }
@@ -272,7 +272,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
         private IEnumerable<string> EnumerateFilesSafe(string location) {
             try {
-                return EnumerateFilesSafe(location);
+                return Directory.EnumerateFiles(location);
             } catch (SystemException) {
                 return Enumerable.Empty<string>();
             }
@@ -280,7 +280,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
         private IEnumerable<string> EnumerateFilesSafe(string location, string pattern, SearchOption option) {
             try {
-                return EnumerateFilesSafe(location, pattern, option);
+                return Directory.EnumerateFiles(location, pattern, option);
             } catch (SystemException) {
                 return Enumerable.Empty<string>();
             }
