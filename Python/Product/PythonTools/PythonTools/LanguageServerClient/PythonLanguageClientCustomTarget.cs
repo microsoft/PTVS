@@ -29,6 +29,7 @@ using StreamJsonRpc;
 using Task = System.Threading.Tasks.Task;
 using Microsoft.VisualStudio.LanguageServer.Protocol;
 using Microsoft.PythonTools.LanguageServerClient.WorkspaceConfiguration;
+using Microsoft.PythonTools.LanguageServerClient.FileWatcher;
 
 namespace Microsoft.PythonTools.LanguageServerClient {
     internal class PythonLanguageClientCustomTarget {
