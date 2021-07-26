@@ -26,6 +26,7 @@ using Microsoft.Python.Core.Disposables;
 using Microsoft.PythonTools.Editor.Core;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.LanguageServerClient.FileWatcher;
 using Microsoft.PythonTools.LanguageServerClient.StreamHacking;
 using Microsoft.PythonTools.LanguageServerClient.WorkspaceFolderChanged;
 using Microsoft.PythonTools.Options;
@@ -114,6 +115,8 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         public object MiddleLayer => null;
         public object CustomMessageTarget { get; private set; }
         public bool IsInitialized { get; private set; }
+
+        public bool ShowNotificationOnInitializeFailed => true;
 
         public event AsyncEventHandler<EventArgs> StartAsync;
 #pragma warning disable CS0067
@@ -455,7 +458,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             OnWorkspaceOrSolutionOpened();
         }
 
-        private void WatchedFilesRegistered(object sender, LSP.DidChangeWatchedFilesRegistrationOptions e) {
+        private void WatchedFilesRegistered(object sender, DidChangeWatchedFilesRegistrationOptions e) {
             // Add the file globs to our listener. It will listen to the globs
             _fileListener?.AddPatterns(e.Watchers);
         }
@@ -577,6 +580,12 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                     }
                 });
             }
+        }
+
+        public async Task<InitializationFailureContext> OnServerInitializeFailedAsync(LanguageClientInitializationInfoBase initializationState) {
+            var results = new InitializationFailureContext();
+            results.FailureMessage = initializationState.InitializationException.Message;
+            return results;
         }
     }
 }
