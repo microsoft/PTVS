@@ -582,7 +582,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             }
         }
 
-        public async Task<InitializationFailureContext> OnServerInitializeFailedAsync(LanguageClientInitializationInfoBase initializationState) {
+        public async Task<InitializationFailureContext> OnServerInitializeFailedAsync(ILanguageClientInitializationInfo initializationState) {
             var results = new InitializationFailureContext();
             results.FailureMessage = initializationState.InitializationException.Message;
             return results;
