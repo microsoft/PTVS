@@ -445,7 +445,7 @@ The folder will be deleted from disk. This operation cannot be undone.</value>
     <value>(Standard Library)</value>
   </data>
   <data name="EnvironmentPathsExtensionEnableIPythonAutomationName" xml:space="preserve">
-    <value>Enable IPython interactive mode</value>
+    <value>Use IPython interactive mode</value>
   </data>
   <data name="EnvironmentPathsInterpreterPath" xml:space="preserve">
     <value>Interpreter path</value>

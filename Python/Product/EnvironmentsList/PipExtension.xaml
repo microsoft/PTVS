@@ -189,6 +189,7 @@
             <wpf:Lambda x:Key="Visibility">(bool b) => b ? Visibility.Visible : Visibility.Collapsed</wpf:Lambda>
             <wpf:Lambda x:Key="VisibilityIfAll"><![CDATA[(bool b, bool c) => b && c ? Visibility.Visible : Visibility.Collapsed]]></wpf:Lambda>
             <wpf:Lambda x:Key="VisibilityOrHidden">(bool b) => b ? Visibility.Visible : Visibility.Hidden</wpf:Lambda>
+            <wpf:Lambda x:Key="VisibilityOrHiddenReverse">(bool b) => b ? Visibility.Hidden : Visibility.Visible</wpf:Lambda>
             <wpf:Lambda x:Key="Hidden">(bool b) => b ? Visibility.Hidden : Visibility.Visible</wpf:Lambda>
             <wpf:Lambda x:Key="Collapsed">(bool b) => b ? Visibility.Collapsed : Visibility.Visible</wpf:Lambda>
 
@@ -226,6 +227,7 @@
                                     <Button Grid.Column="1"
                                             VerticalAlignment="Center"
                                             Focusable="False"
+                                            Visibility="{Binding Path=Text.IsEmpty, ElementName=SearchQueryText, Converter={StaticResource VisibilityOrHiddenReverse} }"
                                             Cursor="Hand"
                                             ToolTip="{x:Static l:Resources.PipExtensionClearSearchToolTip}"
                                             Command="ApplicationCommands.Delete"
@@ -237,7 +239,7 @@
                                                           Margin="3"
                                                           Stretch="Uniform"
                                                           HorizontalAlignment="Center" VerticalAlignment="Center"
-                                                          Stroke="{TemplateBinding BorderBrush}"
+                                                          Stroke="{TemplateBinding Foreground}"
                                                           StrokeThickness="2" />
                                                 </Border>
                                             </ControlTemplate>
