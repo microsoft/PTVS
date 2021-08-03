@@ -16,11 +16,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Windows;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Project;
+using Microsoft.PythonTools.Project.ImportWizard;
 
 namespace Microsoft.PythonTools.Environments {
     sealed class InterpreterView : DependencyObject {
@@ -115,7 +117,7 @@ namespace Microsoft.PythonTools.Environments {
             Project = project;
         }
 
-        public override string ToString() => Name;
+        public override string ToString() => string.Format(CultureInfo.InvariantCulture, "{0}\n{1}", Name, InterpreterPath);
 
         public string Id { get; }
 
