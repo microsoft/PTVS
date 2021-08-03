@@ -76,12 +76,16 @@ namespace Microsoft.PythonTools.TestAdapter {
             if (props == null) {
                 return null;
             }
-            var projHome = props.Item("ProjectHome");
-            if (projHome == null) {
+            try {
+                var projHome = props.Item("ProjectHome");
+                if (projHome == null) {
+                    return null;
+                }
+
+                return projHome.Value as string;
+            } catch {
                 return null;
             }
-
-            return projHome.Value as string;
         }
 
         public static IEnumerable<IVsProject> EnumerateLoadedProjects(this IVsSolution solution) {

@@ -31,7 +31,7 @@ namespace Microsoft.PythonTools.Logging {
                 Assumes.NotNull(serviceBroker);
 
                 // Setup logging using the log hub
-                using TraceConfiguration config = await TraceConfiguration.CreateTraceConfigurationInstanceAsync(serviceBroker);
+                using TraceConfiguration config = await TraceConfiguration.CreateTraceConfigurationInstanceAsync(serviceBroker, false);
                 SourceLevels sourceLevels = SourceLevels.Information | SourceLevels.ActivityTracing;
                 LoggerOptions logOptions = new(
                     requestedLoggingLevel: new LoggingLevelSettings(sourceLevels),
