@@ -26,12 +26,12 @@
                                 <l:UpgradeMessageConverter x:Key="UpgradeMessageConverter" />
                                 <l:UninstallMessageConverter x:Key="UninstallMessageConverter" />
                             </Grid.Resources>
-                            
+
                             <Control Grid.Column="0"
                                      Margin="4 2 2 2"
                                      Style="{StaticResource PythonPackageImage}"
                                      Focusable="False"/>
-                            
+
                             <Grid Grid.Column="1"
                                   Margin="2"
                                   HorizontalAlignment="Stretch"
@@ -115,7 +115,6 @@
                             </Button>
                         </Grid>
                     </DataTemplate>
-                    
                     <DataTemplate DataType="{x:Type l:InstallPackageView}">
                         <Button Name="InstallButton"
                                 HorizontalAlignment="Left"
@@ -175,7 +174,7 @@
                         CanExecute="Delete_CanExecute"
                         Executed="Delete_Executed" />
     </UserControl.CommandBindings>
-    
+
     <Grid x:Name="Subcontext">
         <Grid.RowDefinitions>
             <RowDefinition Height="auto" />
@@ -187,7 +186,9 @@
 
         <Grid.Resources>
             <wpf:Lambda x:Key="Visibility">(bool b) => b ? Visibility.Visible : Visibility.Collapsed</wpf:Lambda>
-            <wpf:Lambda x:Key="VisibilityIfAll"><![CDATA[(bool b, bool c) => b && c ? Visibility.Visible : Visibility.Collapsed]]></wpf:Lambda>
+            <wpf:Lambda x:Key="VisibilityIfAll">
+                <![CDATA[(bool b, bool c) => b && c ? Visibility.Visible : Visibility.Collapsed]]>
+            </wpf:Lambda>
             <wpf:Lambda x:Key="VisibilityOrHidden">(bool b) => b ? Visibility.Visible : Visibility.Hidden</wpf:Lambda>
             <wpf:Lambda x:Key="VisibilityOrHiddenReverse">(bool b) => b ? Visibility.Hidden : Visibility.Visible</wpf:Lambda>
             <wpf:Lambda x:Key="Hidden">(bool b) => b ? Visibility.Hidden : Visibility.Visible</wpf:Lambda>
@@ -265,6 +266,23 @@
                     </Setter.Value>
                 </Setter>
             </Style>
+            <Style x:Key="InstallablePackageItemStyle" TargetType="{x:Type ListBoxItem}">
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="{x:Type ListBoxItem}">
+                            <StackPanel Width="Auto">
+                                <!-- Remove border on ListBoxItem so we don't have any background behind the link text -->
+                                <Border Name="PackageBorder" Background="{TemplateBinding Background}" BorderThickness="0" BorderBrush="Transparent">
+                                    <ContentPresenter Content="{TemplateBinding Content}"/>
+                                </Border>
+                            </StackPanel>
+                        </ControlTemplate>
+
+                    </Setter.Value>
+
+                </Setter>
+
+            </Style>
         </Grid.Resources>
 
         <TextBox x:Name="SearchQueryText" Style="{StaticResource SearchBox}" />
@@ -332,7 +350,7 @@
                                 HorizontalAlignment="Stretch"
                                 PreviewMouseWheel="ForwardMouseWheel"
                                 Focusable="False"/>
-                <ListBox ItemsSource="{Binding InstallablePackages}" />
+                <ListBox ItemsSource="{Binding InstallablePackages}" ItemContainerStyle="{StaticResource InstallablePackageItemStyle}" />
             </StackPanel>
         </ScrollViewer>
     </Grid>
