@@ -178,7 +178,7 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
         }
 
         public virtual bool Resolved {
-            get { throw new NotImplementedException(); }
+            get { return false; }
         }
 
         public string RuntimeVersion {
