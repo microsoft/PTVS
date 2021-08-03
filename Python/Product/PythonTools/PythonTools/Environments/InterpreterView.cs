@@ -22,7 +22,6 @@ using System.Windows;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Project;
-using Microsoft.PythonTools.Project.ImportWizard;
 
 namespace Microsoft.PythonTools.Environments {
     sealed class InterpreterView : DependencyObject {
