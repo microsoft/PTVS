@@ -2489,7 +2489,8 @@ Expand selection to the full expression?</value>
     <value>Add packages</value>
   </data>
   <data name="AddCondaPackagesHelpText" xml:space="preserve">
-    <value>List of Conda packages to install when creating the Conda environment. Entries should be separated by spaces. Example: numpy pandas</value>
+    <value>List of Conda packages to install when creating the Conda environment.
+Entries should be separated by spaces. Example: numpy pandas</value>
   </data>
   <data name="AddEnvironmentSetAsDefaultLabel" xml:space="preserve">
     <value>Set as _default environment for new projects</value>
