@@ -105,8 +105,6 @@
                                 AutomationProperties.AutomationId="EnvName"
                                 AutomationProperties.IsRequiredForForm="True"
                                 AutomationProperties.LabeledBy="{Binding ElementName=EnvNameLabel}"/>
-                        </StackPanel>
-                        <StackPanel Grid.Column="2">
                             <!--Base interpreter-->
                             <Label
                                 x:Name="BaseInterpreterLabel"
@@ -217,8 +215,11 @@
 
                 <Label
                     Grid.Row="0"
-                    Content="{x:Static common:Strings.AddVirtualEnvironmentPreviewLabel}"
-                    Style="{StaticResource ModernLabel}"/>
+                    Style="{StaticResource ModernLabel}">
+                    <Label.Content>
+                        <AccessText TextWrapping="Wrap" Text="{x:Static common:Strings.AddVirtualEnvironmentPreviewLabel}"/>
+                    </Label.Content>
+                </Label>
 
                 <!-- Progress bar, wrap in a grid to avoid accessibility issues when not visible -->
                 <Grid Grid.Row="1" Visibility="{Binding Progress.IsProgressDisplayed, Converter={x:Static wpf:Converters.FalseIsCollapsed}}">

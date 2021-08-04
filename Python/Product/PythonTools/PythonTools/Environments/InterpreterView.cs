@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Windows;
 using Microsoft.PythonTools.Infrastructure;
@@ -115,7 +116,7 @@ namespace Microsoft.PythonTools.Environments {
             Project = project;
         }
 
-        public override string ToString() => Name;
+        public override string ToString() => string.Format(CultureInfo.InvariantCulture, "{0}\n{1}", Name, InterpreterPath);
 
         public string Id { get; }
 

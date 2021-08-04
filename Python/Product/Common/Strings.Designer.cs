@@ -224,7 +224,8 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to List of Conda packages to install when creating the Conda environment. Entries should be separated by spaces. Example: numpy pandas.
+        ///   Looks up a localized string similar to List of Conda packages to install when creating the Conda environment.
+        ///Entries should be separated by spaces. Example: numpy pandas.
         /// </summary>
         public static string AddCondaPackagesHelpText {
             get {

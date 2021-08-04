@@ -397,8 +397,11 @@
     <Style x:Key="NavigationButtonInList" BasedOn="{StaticResource NavigationButton}" TargetType="{x:Type Button}">
         <Style.Triggers>
             <DataTrigger Binding="{Binding IsSelected,RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
-                <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:Controls.HighlightTextKey}}" />
+                <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:Controls.HyperlinkKey}}" />
             </DataTrigger>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:Controls.HyperlinkHoverKey}}" />
+            </Trigger>
             <Trigger Property="IsEnabled" Value="False">
                 <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:Controls.GrayTextKey}}" />
             </Trigger>

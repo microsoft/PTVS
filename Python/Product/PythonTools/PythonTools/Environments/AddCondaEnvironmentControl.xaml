@@ -9,7 +9,7 @@
              xmlns:vsui="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.15.0"
              xmlns:common="clr-namespace:Microsoft.PythonTools;assembly=Microsoft.PythonTools.Common"
              mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="730">
+             d:DesignHeight="500" d:DesignWidth="730">
     <UserControl.CommandBindings>
         <CommandBinding
             Command="{x:Static wpf:Commands.BrowseOpenFile}"
@@ -267,8 +267,11 @@
 
                 <Label
                     Grid.Row="0"
-                    Content="{x:Static common:Strings.AddCondaEnvironmentPreviewLabel}"
-                    Style="{StaticResource ModernLabel}"/>
+                    Style="{StaticResource ModernLabel}">
+                    <Label.Content>
+                        <AccessText TextWrapping="Wrap" Text="{x:Static common:Strings.AddCondaEnvironmentPreviewLabel}"/>
+                    </Label.Content>
+                </Label>
 
                 <!-- Progress bar, wrap in a grid to avoid accessibility issues when not visible -->
                 <Grid Grid.Row="1" Visibility="{Binding CondaPreview.Progress.IsProgressDisplayed, Converter={x:Static wpf:Converters.FalseIsCollapsed}}">
