@@ -28,11 +28,58 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Project;
 using Microsoft.PythonTools.Wpf;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudioTools.Wpf;
 
 namespace Microsoft.PythonTools.Environments {
     internal partial class AddEnvironmentDialog : ModernDialog, IDisposable {
         public static readonly ICommand MoreInfo = new RoutedCommand();
         private bool _isStartupFocusSet;
+
+        public static readonly DependencyProperty IsLandscapeProperty = DependencyProperty.Register("IsLandscape", typeof(bool), typeof(AddEnvironmentDialog));
+        public static readonly DependencyProperty WindowWidthProperty = DependencyProperty.Register("WindowWidth", typeof(double), typeof(AddEnvironmentDialog));
+        public static readonly DependencyProperty MinimumWindowWidthProperty = DependencyProperty.Register("MinimumWindowWidth", typeof(double), typeof(AddEnvironmentDialog));
+        public static readonly DependencyProperty WindowHeightProperty = DependencyProperty.Register("WindowHeight", typeof(double), typeof(AddEnvironmentDialog));
+        public static readonly DependencyProperty MinimumWindowHeightProperty = DependencyProperty.Register("MinimumWindowHeight", typeof(double), typeof(AddEnvironmentDialog));
+        public bool IsLandscape {
+            get {
+                return (bool)GetValue(IsLandscapeProperty);
+            }
+            set {
+                SetValue(IsLandscapeProperty, value);
+            }
+        }
+        public double WindowWidth {
+            get {
+                return (double)GetValue(WindowWidthProperty);
+            }
+            set {
+                SetValue(WindowWidthProperty, value);
+            }
+        }
+        public double MinimumWindowWidth {
+            get {
+                return (double)GetValue(MinimumWindowWidthProperty);
+            }
+            set {
+                SetValue(MinimumWindowWidthProperty, value);
+            }
+        }
+        public double WindowHeight {
+            get {
+                return (double)GetValue(WindowHeightProperty);
+            }
+            set {
+                SetValue(WindowHeightProperty, value);
+            }
+        }
+        public double MinimumWindowHeight {
+            get {
+                return (double)GetValue(MinimumWindowHeightProperty);
+            }
+            set {
+                SetValue(MinimumWindowHeightProperty, value);
+            }
+        }
 
         public AddEnvironmentDialog(IEnumerable<EnvironmentViewBase> pages, EnvironmentViewBase selected) {
             if (pages == null) {
@@ -40,6 +87,11 @@ namespace Microsoft.PythonTools.Environments {
             }
 
             DataContext = new AddEnvironmentView(pages, selected);
+            IsLandscape = SystemParameters.PrimaryScreenWidth > SystemParameters.PrimaryScreenHeight;
+            WindowWidth = IsLandscape ? 1024 : 700;
+            WindowHeight = IsLandscape ? 700 : 1024;
+            MinimumWindowWidth = WindowWidth;
+            MinimumWindowHeight = WindowHeight;
             InitializeComponent();
         }
 
