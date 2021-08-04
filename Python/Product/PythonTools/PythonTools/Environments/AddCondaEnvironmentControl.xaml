@@ -66,7 +66,7 @@
                             </Setter.Value>
                         </Setter>
                     </Style>
-                    
+
                     <ContextMenu x:Key="SuggestedPackagesMenu" Style="{StaticResource ThemedContextMenu}">
                         <ContextMenu.Resources>
                             <Style x:Key="PackageItem" TargetType="MenuItem" BasedOn="{StaticResource ThemedMenuItem}">
@@ -113,6 +113,43 @@
                                 Executed="AddPackageNames_Executed" />
                         </ContextMenu.CommandBindings>
                     </ContextMenu>
+                    <Style x:Key="MainGridLandscape" TargetType="ItemsControl" >
+                        <Setter Property="ItemsPanel">
+                            <Setter.Value>
+                                <ItemsPanelTemplate>
+                                    <Grid Visibility="{Binding Path=IsCondaMissing, Converter={x:Static wpf:Converters.TrueIsHidden}}">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="514"/>
+                                            <ColumnDefinition Width="28"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition/>
+                                        </Grid.RowDefinitions>
+                                    </Grid>
+                                </ItemsPanelTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                    <Style x:Key="MainGridPortrait" TargetType="ItemsControl" >
+                        <Setter Property="ItemsPanel">
+                            <Setter.Value>
+                                <ItemsPanelTemplate>
+                                    <Grid Visibility="{Binding Path=IsCondaMissing, Converter={x:Static wpf:Converters.TrueIsHidden}}">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="*"/>
+                                        </Grid.RowDefinitions>
+                                    </Grid>
+                                </ItemsPanelTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                    <l:LandscapePortraitConverter x:Key="LandscapePortraitConverter" />
+
                 </ResourceDictionary>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
@@ -125,14 +162,12 @@
                 Text="{x:Static common:Strings.CondaNotFoundError}"
                 TextWrapping="Wrap"/>
         </Grid>
-        <Grid Visibility="{Binding Path=IsCondaMissing, Converter={x:Static wpf:Converters.TrueIsHidden}}">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="514"/>
-                <ColumnDefinition Width="28"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
+        <ItemsControl 
+            Style="{Binding 
+                RelativeSource={RelativeSource AncestorType=UserControl},
+                Converter={StaticResource LandscapePortraitConverter}, 
+                ConverterParameter=MainGridLandscape|MainGridPortrait}">
             <ScrollViewer
-                Grid.Column="0"
                 VerticalScrollBarVisibility="Auto">
 
                 <StackPanel>
@@ -191,15 +226,15 @@
                                 </Border>
                             </DataTemplate>
                         </GroupBox.HeaderTemplate>
-                    <StackPanel>
-                    <RadioButton
+                        <StackPanel>
+                            <RadioButton
                         Margin="16 6 0 3"
                         Content="{x:Static common:Strings.AddCondaEnvironmentFileRadioButton}"
                         IsChecked="{Binding Path=IsEnvFile}"
                         GroupName="SourceType"
                         AutomationProperties.AutomationId="EnvFileMode"/>
 
-                    <wpf:ConfigurationTextBoxWithHelp
+                            <wpf:ConfigurationTextBoxWithHelp
                         Margin="36 0 0 9"
                         IsEnabled="{Binding Path=IsEnvFile}"
                         Text="{Binding SelectedEnvFilePath,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged,ValidatesOnNotifyDataErrors=False}"
@@ -213,14 +248,14 @@
                         BrowseCommandParameter="{x:Static common:Strings.AddCondaEnvironmentFileBrowseFilter}"
                         BrowseAutomationName="{x:Static common:Strings.AddCondaEnvironmentFileBrowseButton}"/>
 
-                    <RadioButton
+                            <RadioButton
                         Margin="16 0 0 3"
                         Content="{x:Static common:Strings.AddCondaPackagesRadioButton}"
                         IsChecked="{Binding Path=IsPackages}"
                         GroupName="SourceType"
                         AutomationProperties.AutomationId="PackagesMode"/>
 
-                    <wpf:ConfigurationTextBoxWithHelp
+                            <wpf:ConfigurationTextBoxWithHelp
                         Margin="36 0 0 19"
                         IsEnabled="{Binding Path=IsPackages}"
                         Text="{Binding Packages,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
@@ -231,9 +266,9 @@
                         ToolTip="{x:Static common:Strings.AddCondaPackagesHelpText}"
                         AutomationProperties.Name="{x:Static common:Strings.AddCondaPackagesName}"
                         AutomationProperties.AutomationId="Packages"/>
-                    </StackPanel>
+                        </StackPanel>
                     </GroupBox>
-                    
+
                     <CheckBox
                         Margin="0 0 0 10"
                         IsChecked="{Binding Path=SetAsCurrent}"
@@ -259,7 +294,7 @@
             </ScrollViewer>
 
             <!--Preview-->
-            <Grid Grid.Column="2">
+            <Grid Grid.Column="2" Grid.Row="1">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
@@ -336,6 +371,6 @@
                     </StackPanel>
                 </ScrollViewer>
             </Grid>
-        </Grid>
+        </ItemsControl>
     </Grid>
 </UserControl>
