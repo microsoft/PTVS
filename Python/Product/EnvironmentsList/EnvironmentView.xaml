@@ -63,7 +63,8 @@
                             Command="{x:Static l:EnvironmentView.OpenInteractiveWindow}"
                             CommandParameter="{Binding}"
                             ToolTip="{x:Static l:Resources.EnvironmentViewInteractiveWindowTooltip}"
-                            AutomationProperties.Name="{x:Static l:Resources.EnvironmentViewInteractiveWindowAutomationName}">
+                            AutomationProperties.Name="{Binding LocalizedDisplayName,Mode=OneWay}"
+                            AutomationProperties.HelpText="{x:Static l:Resources.EnvironmentViewInteractiveWindowAutomationName}">
                         <Control Style="{StaticResource InteractiveWindowImage}" IsTabStop="False" />
                     </Button>
                 </Grid>
