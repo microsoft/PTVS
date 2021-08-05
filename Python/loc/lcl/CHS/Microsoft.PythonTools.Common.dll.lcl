@@ -180,12 +180,12 @@
       </Item>
       <Item ItemId=";AddCondaPackagesHelpText" ItemType="0" PsrId="211" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[List of Conda packages to install when creating the Conda environment. Entries should be separated by spaces. Example: numpy pandas]]></Val>
+          <Val><![CDATA[List of Conda packages to install when creating the Conda environment.]D;]A;Entries should be separated by spaces. Example: numpy pandas]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[创建 Conda 环境时要安装的 Conda 包的列表。应使用空格分隔各条目。示例: numpy pandas]]></Val>
+            <Val><![CDATA[创建 Conda 环境时要安装的 Conda 包的列表。]D;]A;应使用空格分隔条目。示例: numpy pandas]]></Val>
           </Tgt>
           <Prev Cat="Text">
-            <Val><![CDATA[List of Conda packages to install when creating the Conda environment. Entries should be separated by spaces.]]></Val>
+            <Val><![CDATA[List of Conda packages to install when creating the Conda environment. Entries should be separated by spaces. Example: numpy pandas]]></Val>
           </Prev>
         </Str>
         <Disp Icon="Str" />

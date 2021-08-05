@@ -13,7 +13,10 @@
     mc:Ignorable="d"
     Title="{x:Static common:Strings.AddEnvironmentTitle}"
     WindowStartupLocation="CenterOwner"
-    Height="676" MinHeight="676" Width="1024" MinWidth="1024"
+    Height="{Binding RelativeSource={RelativeSource Self}, Path=WindowHeight}" 
+    MinHeight="{Binding RelativeSource={RelativeSource Self}, Path=MinimumWindowHeight}" 
+    Width="{Binding RelativeSource={RelativeSource Self}, Path=WindowWidth}" 
+    MinWidth="{Binding RelativeSource={RelativeSource Self}, Path=MinimumWindowWidth}"
     Style="{DynamicResource ModernDialogStyle}">
 
     <ptwpf:ModernDialog.CommandBindings>
