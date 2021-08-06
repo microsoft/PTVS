@@ -130,7 +130,6 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 // Delay focus because it relies on visiblity and there seems to be a race condition
                 this.Dispatcher.BeginInvoke((Action)delegate
                 {
-                    Keyboard.Focus(element);
                     FrameworkElementAutomationPeer.FromElement(element)?.RaiseAutomationEvent(AutomationEvents.LiveRegionChanged);
                 }, DispatcherPriority.Render);
             }
