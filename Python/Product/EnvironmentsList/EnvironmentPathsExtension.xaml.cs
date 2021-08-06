@@ -18,8 +18,10 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Windows;
+using System.Windows.Automation.Peers;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Threading;
 
 namespace Microsoft.PythonTools.EnvironmentsList {
     sealed class EnvironmentPathsExtensionProvider : IEnvironmentViewExtension {
@@ -117,6 +119,21 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             }
 
             ev.IsIPythonModeEnabled = ev.IPythonModeEnabledGetter?.Invoke(ev) ?? false;
+        }
+
+        // Force narrator to re-trigger on the newly visible IsDefaultMessage
+        private void MakeDefaultButton_Click(object sender, RoutedEventArgs e) {
+            var button = sender as Button;
+            var parent = button?.Parent as FrameworkElement;
+            var element = parent?.FindName("IsDefaultMessage") as UIElement;
+            if (element != null) {
+                // Delay focus because it relies on visiblity and there seems to be a race condition
+                this.Dispatcher.BeginInvoke((Action)delegate
+                {
+                    Keyboard.Focus(element);
+                    FrameworkElementAutomationPeer.FromElement(element)?.RaiseAutomationEvent(AutomationEvents.LiveRegionChanged);
+                }, DispatcherPriority.Render);
+            }
         }
     }
 }
