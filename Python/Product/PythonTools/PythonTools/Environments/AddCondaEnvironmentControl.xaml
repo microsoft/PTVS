@@ -239,7 +239,7 @@
                         IsEnabled="{Binding Path=IsEnvFile}"
                         Text="{Binding SelectedEnvFilePath,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged,ValidatesOnNotifyDataErrors=False}"
                         Watermark="{x:Static common:Strings.AddCondaEnvironmentFileWatermark}"
-                        HelpText="{x:Static common:Strings.AddCondaEnvironmentFileHelp}"
+                        HelpText="{x:Static common:Strings.AddCondaEnvironmentFileWatermark}"
                         ToolTip="{x:Static common:Strings.AddCondaEnvironmentFileHelp}"
                         AutomationProperties.AutomationId="EnvFile"
                         AutomationProperties.Name="{x:Static common:Strings.AddCondaEnvironmentFileName}"
@@ -262,7 +262,7 @@
                         BrowseButtonStyle="{StaticResource BrowsePackagesButton}"
                         BrowseAutomationName="{x:Static common:Strings.AddCondaPackagesBrowseButton}"
                         Watermark="{x:Static common:Strings.AddCondaPackagesWatermark}"
-                        HelpText="{x:Static common:Strings.AddCondaPackagesHelpText}"
+                        HelpText="{x:Static common:Strings.AddCondaPackagesWatermark}"
                         ToolTip="{x:Static common:Strings.AddCondaPackagesHelpText}"
                         AutomationProperties.Name="{x:Static common:Strings.AddCondaPackagesName}"
                         AutomationProperties.AutomationId="Packages"/>
