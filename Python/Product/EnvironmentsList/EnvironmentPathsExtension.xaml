@@ -36,6 +36,7 @@
                                     HorizontalAlignment="Stretch"
                                     Command="{x:Static l:EnvironmentView.MakeGlobalDefault}"
                                     CommandParameter="{Binding}"
+                                    Click="MakeDefaultButton_Click"
                                     AutomationProperties.Name="{x:Static l:Resources.EnvironmentPathsExtensionMakeDefaultLabel}">
                                 <Grid Background="Transparent">
                                     <Grid.ColumnDefinitions>
@@ -55,7 +56,8 @@
                                    Visibility="Collapsed"
                                    Margin="6 9 6 6"
                                    Padding="0"
-                                   AutomationProperties.Name="{x:Static l:Resources.EnvironmentPathsExtensionIsDefaultLabel}">
+                                   AutomationProperties.Name="{x:Static l:Resources.EnvironmentPathsExtensionIsDefaultLabel}"
+                                   AutomationProperties.LiveSetting="Assertive">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="auto" />
