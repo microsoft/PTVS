@@ -1475,7 +1475,6 @@
     <ControlTemplate x:Key="SubmenuItemTemplateKey" TargetType="{x:Type MenuItem}">
         <Border x:Name="templateRoot"
             SnapsToDevicePixels="true"
-            Height="22"
             BorderThickness="{TemplateBinding BorderThickness}"
             Background="{TemplateBinding Background}"
             BorderBrush="{TemplateBinding BorderBrush}">
@@ -1560,7 +1559,6 @@
     <ControlTemplate x:Key="SubmenuHeaderTemplateKey" TargetType="{x:Type MenuItem}">
         <Border x:Name="templateRoot"
             SnapsToDevicePixels="true"
-            Height="22"
             BorderThickness="{TemplateBinding BorderThickness}"
             Background="{TemplateBinding Background}"
             BorderBrush="{TemplateBinding BorderBrush}">
