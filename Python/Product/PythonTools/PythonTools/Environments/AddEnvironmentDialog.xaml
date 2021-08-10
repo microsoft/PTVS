@@ -91,7 +91,7 @@
                          BorderThickness="0">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
-                                <Grid Height="24">
+                                <Grid MinHeight="24">
                                     <TextBlock Text="{Binding PageName, Mode=OneWay}" VerticalAlignment="Center"/>
                                 </Grid>
                             </DataTemplate>
