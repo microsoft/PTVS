@@ -34,7 +34,7 @@
                                    TextTrimming="CharacterEllipsis"
                                    FontWeight="Bold"
                                    Margin="0"
-                                   Visibility="Hidden" />
+                                   Visibility="Collapsed" />
                         <TextBlock x:Name="Name_IsNotDefault"
                                    Text="{Binding}"
                                    TextTrimming="CharacterEllipsis"

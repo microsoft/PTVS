@@ -34,6 +34,8 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             new KeyValuePair<string, string>("PYTHONUNBUFFERED", "1")
         };
 
+        public override string ToString() => this.LocalizedDisplayName;
+
         /// <summary>
         /// Creates a provider for managing packages through pip.
         /// </summary>
