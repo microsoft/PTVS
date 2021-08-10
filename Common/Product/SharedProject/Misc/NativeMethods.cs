@@ -399,6 +399,34 @@ namespace Microsoft.VisualStudioTools.Project {
         PSNRET_INVALID_NOCHANGEPAGE = 2,
         EM_SETCUEBANNER = 0x1501;
 
+        public const int VK_LBUTTON = 0x01;
+        public const int VK_RBUTTON = 0x02;
+        public const int VK_MBUTTON = 0x04;
+        public const int VK_XBUTTON1 = 0x05;
+        public const int VK_XBUTTON2 = 0x06;
+        public const int VK_TAB = 0x09;
+        public const int VK_SHIFT = 0x10;
+        public const int VK_CONTROL = 0x11;
+        public const int VK_MENU = 0x12;
+        public const int VK_SPACE = 0x20;
+        public const int VK_LSHIFT = 0xA0;
+        public const int VK_RSHIFT = 0xA1;
+        public const int VK_LCONTROL = 0xA2;
+        public const int VK_RCONTROL = 0xA3;
+        public const int VK_LMENU = 0xA4;
+        public const int VK_RMENU = 0xA5;
+        public const int VK_LWIN = 0x5B;
+        public const int VK_RWIN = 0x5C;
+        public const int VK_F1 = 0x70;
+        public const int VK_F2 = 0x71;
+        public const int VK_F3 = 0x72;
+        public const int VK_F4 = 0x73;
+        public const int VK_ESC = 0x1B;
+        public const int VK_RETURN = 0x0D;
+        public const int VK_ESCAPE = 0x1B;
+        public const int VK_DELETE = 0x2E;
+        public const int VK_DOWN = 0x28;
+
         public const int
         PSN_APPLY = ((0 - 200) - 2),
         PSN_KILLACTIVE = ((0 - 200) - 1),
