@@ -673,6 +673,7 @@
     <Compile Include="PkgCmdID.cs" />
     <Compile Include="PythonTools\WebProject\PythonWebPropertyPage.cs" />
     <Compile Include="PythonTools\Wpf\ModernStyles.cs" />
+    <Compile Include="PythonTools\Wpf\Utilities.cs" />
     <Compile Include="PythonTools\Wpf\VisualTreeExtensions.cs" />
     <Compile Include="VsCredentials.cs" />
     <Compile Include="PythonTools\Commands\UsePythonStepping.cs" />
