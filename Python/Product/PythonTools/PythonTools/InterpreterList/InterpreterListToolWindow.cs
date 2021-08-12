@@ -28,13 +28,13 @@ using System.Windows.Input;
 using System.Windows.Threading;
 using Microsoft.PythonTools.Commands;
 using Microsoft.PythonTools.Common;
-using Microsoft.PythonTools.Environments;
 using Microsoft.PythonTools.EnvironmentsList;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Infrastructure.Commands;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Project;
 using Microsoft.PythonTools.Repl;
+using Microsoft.PythonTools.Wpf;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Imaging;
@@ -61,6 +61,35 @@ namespace Microsoft.PythonTools.InterpreterList {
 
             _site = services;
             _cachedScriptPaths = new Dictionary<EnvironmentView, string>();
+        }
+
+        /// <summary>
+        /// PreProcessMessage override. 
+        /// </summary>
+        protected override bool PreProcessMessage(ref System.Windows.Forms.Message m) {
+            bool wasHandled = base.PreProcessMessage(ref m);
+            if (!wasHandled) {
+                if ((m.Msg == Microsoft.VisualStudioTools.Project.NativeMethods.WM_SYSKEYDOWN && (int)m.WParam == Microsoft.VisualStudioTools.Project.NativeMethods.VK_DOWN) ||
+                    (m.Msg == Microsoft.VisualStudioTools.Project.NativeMethods.WM_KEYDOWN &&
+                        ((int)m.WParam == Microsoft.VisualStudioTools.Project.NativeMethods.VK_ESCAPE ||
+                        (int)m.WParam == Microsoft.VisualStudioTools.Project.NativeMethods.VK_F2 || // F2 key
+                        (int)m.WParam == Microsoft.VisualStudioTools.Project.NativeMethods.VK_DELETE ||
+                        (int)m.WParam == Microsoft.VisualStudioTools.Project.NativeMethods.VK_TAB ||
+                        ((int)m.WParam == (int)System.Windows.Forms.Keys.C && (Keyboard.Modifiers & ModifierKeys.Control) != 0)))) // Cntrl-C 
+                {
+                    // By default, when ESC is pressed and a document is open in the editor, VS tool windows will respond
+                    // by switching focus to the document and the ESC keypress does not get propagated to the WPF handlers.
+                    // Override this behavior checking to see if WPF can handle the event here and letting VS take over if it can't.
+
+                    // Additionally, by default when TAB is pressed, VS will try to interpret this as the editor command to tab-in code
+                    // if editor commands are inherited. Let WPF get a first-pass at this to try to tab to the next focused item.
+
+                    var interopMsg = Utilities.ConvertToInteropMsg(m);
+                    wasHandled = System.Windows.Interop.ComponentDispatcher.RaiseThreadMessage(ref interopMsg);
+                }
+            }
+
+            return wasHandled;
         }
 
         protected override void OnCreate() {

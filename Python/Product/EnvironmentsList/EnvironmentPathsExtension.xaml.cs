@@ -51,6 +51,8 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 return _wpfObject;
             }
         }
+
+        public override string ToString() => this.LocalizedDisplayName;
     }
 
     public partial class EnvironmentPathsExtension : UserControl {
