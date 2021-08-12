@@ -133,13 +133,13 @@
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="_showOutputWindowForVirtualEnvCreate.Location" type="System.Drawing.Point, System.Drawing">
-    <value>11, 6</value>
+    <value>6, 3</value>
   </data>
   <data name="_showOutputWindowForVirtualEnvCreate.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>11, 6, 11, 6</value>
+    <value>6, 3, 6, 3</value>
   </data>
   <data name="_showOutputWindowForVirtualEnvCreate.Size" type="System.Drawing.Size, System.Drawing">
-    <value>564, 29</value>
+    <value>315, 17</value>
   </data>
   <data name="_showOutputWindowForVirtualEnvCreate.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -163,13 +163,13 @@
     <value>True</value>
   </data>
   <data name="_showOutputWindowForPackageInstallation.Location" type="System.Drawing.Point, System.Drawing">
-    <value>11, 47</value>
+    <value>6, 26</value>
   </data>
   <data name="_showOutputWindowForPackageInstallation.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>11, 6, 11, 6</value>
+    <value>6, 3, 6, 3</value>
   </data>
   <data name="_showOutputWindowForPackageInstallation.Size" type="System.Drawing.Size, System.Drawing">
-    <value>589, 29</value>
+    <value>328, 17</value>
   </data>
   <data name="_showOutputWindowForPackageInstallation.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -196,13 +196,13 @@
     <value>NoControl</value>
   </data>
   <data name="_promptForEnvCreate.Location" type="System.Drawing.Point, System.Drawing">
-    <value>11, 88</value>
+    <value>6, 49</value>
   </data>
   <data name="_promptForEnvCreate.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>11, 6, 11, 6</value>
+    <value>6, 3, 6, 3</value>
   </data>
   <data name="_promptForEnvCreate.Size" type="System.Drawing.Size, System.Drawing">
-    <value>420, 29</value>
+    <value>236, 17</value>
   </data>
   <data name="_promptForEnvCreate.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -229,13 +229,13 @@
     <value>NoControl</value>
   </data>
   <data name="_promptForPackageInstallation.Location" type="System.Drawing.Point, System.Drawing">
-    <value>11, 129</value>
+    <value>6, 72</value>
   </data>
   <data name="_promptForPackageInstallation.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>11, 6, 11, 6</value>
+    <value>6, 3, 6, 3</value>
   </data>
   <data name="_promptForPackageInstallation.Size" type="System.Drawing.Size, System.Drawing">
-    <value>383, 29</value>
+    <value>216, 17</value>
   </data>
   <data name="_promptForPackageInstallation.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -259,13 +259,13 @@
     <value>True</value>
   </data>
   <data name="_promptForPytestEnableAndInstall.Location" type="System.Drawing.Point, System.Drawing">
-    <value>11, 170</value>
+    <value>6, 95</value>
   </data>
   <data name="_promptForPytestEnableAndInstall.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>11, 6, 11, 6</value>
+    <value>6, 3, 6, 3</value>
   </data>
   <data name="_promptForPytestEnableAndInstall.Size" type="System.Drawing.Size, System.Drawing">
-    <value>455, 29</value>
+    <value>256, 17</value>
   </data>
   <data name="_promptForPytestEnableAndInstall.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -289,13 +289,13 @@
     <value>True</value>
   </data>
   <data name="_elevatePip.Location" type="System.Drawing.Point, System.Drawing">
-    <value>11, 211</value>
+    <value>6, 118</value>
   </data>
   <data name="_elevatePip.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>11, 6, 11, 6</value>
+    <value>6, 3, 6, 3</value>
   </data>
   <data name="_elevatePip.Size" type="System.Drawing.Size, System.Drawing">
-    <value>451, 29</value>
+    <value>248, 17</value>
   </data>
   <data name="_elevatePip.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -322,13 +322,13 @@
     <value>True</value>
   </data>
   <data name="_clearGlobalPythonPath.Location" type="System.Drawing.Point, System.Drawing">
-    <value>11, 252</value>
+    <value>6, 141</value>
   </data>
   <data name="_clearGlobalPythonPath.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>11, 6, 11, 6</value>
+    <value>6, 3, 6, 3</value>
   </data>
   <data name="_clearGlobalPythonPath.Size" type="System.Drawing.Size, System.Drawing">
-    <value>432, 29</value>
+    <value>238, 17</value>
   </data>
   <data name="_clearGlobalPythonPath.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
@@ -361,13 +361,10 @@
     <value>NoControl</value>
   </data>
   <data name="_resetSuppressDialog.Location" type="System.Drawing.Point, System.Drawing">
-    <value>180, 293</value>
-  </data>
-  <data name="_resetSuppressDialog.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>6, 6, 6, 6</value>
+    <value>96, 164</value>
   </data>
   <data name="_resetSuppressDialog.Size" type="System.Drawing.Size, System.Drawing">
-    <value>339, 35</value>
+    <value>189, 23</value>
   </data>
   <data name="_resetSuppressDialog.TabIndex" type="System.Int32, mscorlib">
     <value>12</value>
@@ -394,13 +391,13 @@
     <value>0, 0</value>
   </data>
   <data name="tableLayoutPanel3.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>6, 7, 6, 7</value>
+    <value>3, 4, 3, 4</value>
   </data>
   <data name="tableLayoutPanel3.RowCount" type="System.Int32, mscorlib">
     <value>14</value>
   </data>
   <data name="tableLayoutPanel3.Size" type="System.Drawing.Size, System.Drawing">
-    <value>699, 602</value>
+    <value>381, 326</value>
   </data>
   <data name="tableLayoutPanel3.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -418,19 +415,19 @@
     <value>0</value>
   </data>
   <data name="tableLayoutPanel3.LayoutSettings" type="System.Windows.Forms.TableLayoutSettings, System.Windows.Forms">
-    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="_showOutputWindowForVirtualEnvCreate" Row="0" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_showOutputWindowForPackageInstallation" Row="1" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_promptForEnvCreate" Row="2" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_promptForPackageInstallation" Row="3" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_promptForPytestEnableAndInstall" Row="4" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_elevatePip" Row="5" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_clearGlobalPythonPath" Row="6" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_resetSuppressDialog" Row="11" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;/Controls&gt;&lt;Columns Styles="AutoSize,0,Percent,100" /&gt;&lt;Rows Styles="AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,Absolute,59,Absolute,15,Absolute,37" /&gt;&lt;/TableLayoutSettings&gt;</value>
+    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="_showOutputWindowForVirtualEnvCreate" Row="0" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_showOutputWindowForPackageInstallation" Row="1" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_promptForEnvCreate" Row="2" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_promptForPackageInstallation" Row="3" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_promptForPytestEnableAndInstall" Row="4" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_elevatePip" Row="5" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_clearGlobalPythonPath" Row="6" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_resetSuppressDialog" Row="11" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;/Controls&gt;&lt;Columns Styles="AutoSize,0,Percent,100" /&gt;&lt;Rows Styles="AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,Absolute,32,Absolute,8,Absolute,20" /&gt;&lt;/TableLayoutSettings&gt;</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
-    <value>11, 24</value>
+    <value>6, 13</value>
   </data>
   <data name="$this.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>11, 15, 11, 15</value>
+    <value>6, 8, 6, 8</value>
   </data>
   <data name="$this.Size" type="System.Drawing.Size, System.Drawing">
-    <value>699, 602</value>
+    <value>381, 326</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>PythonGeneralOptionsControl</value>
