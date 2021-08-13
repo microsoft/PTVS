@@ -87,8 +87,8 @@ namespace Microsoft.PythonTools.Navigation.Navigable {
         internal async Task<NavigableSymbol[]> GetDefinitionLocationsAsync(SnapshotSpan span, CancellationToken cancellationToken) {
 
             var service = _serviceProvider.GetService(typeof(PythonToolsService)) as PythonToolsService;
-            if (service != null && service.LanguageClient != null) {
-                var result = await service.LanguageClient.InvokeTextDocumentDefinitionAsync(
+            if (service != null && service.GetLanguageClient() != null) {
+                var result = await service.GetLanguageClient().InvokeTextDocumentDefinitionAsync(
                     new LSP.TextDocumentPositionParams {
                         TextDocument = new LSP.TextDocumentIdentifier {
                             Uri = new System.Uri(_buffer.GetFilePath())

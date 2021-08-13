@@ -27,10 +27,12 @@ using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Environments;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.LanguageServerClient;
 using Microsoft.PythonTools.Logging;
 using Microsoft.PythonTools.Options;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
+using Microsoft.VisualStudio.LanguageServer.Client;
 using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudioTools;
 
@@ -57,6 +59,23 @@ namespace Microsoft.PythonTools {
         private readonly IdleManager _idleManager;
         private readonly DiagnosticsProvider _diagnosticsProvider;
         private readonly bool _forTests;
+
+        /// <summary>
+        /// The <see cref="ILanguageClientBroker.LoadAsync(ILanguageClientMetadata, ILanguageClient)"/> 
+        /// requires that we pass the <see cref="ILanguageClientMetadata"/> along with the language client instance.
+        /// The implementation of <see cref="ILanguageClientMetadata"/> is not public, so have to re-implement.
+        /// https://devdiv.visualstudio.com/DevDiv/_workitems/edit/1043922 tracking to remove this.
+        /// </summary>
+        private class LanguageClientMetadata : ILanguageClientMetadata {
+            public LanguageClientMetadata(string[] contentTypes, string clientName = null) {
+                this.ContentTypes = contentTypes;
+                this.ClientName = clientName;
+            }
+
+            public string ClientName { get; }
+
+            public IEnumerable<string> ContentTypes { get; }
+        }
 
         public static object CreateService(IServiceContainer container, Type serviceType) {
             if (serviceType.IsEquivalentTo(typeof(PythonToolsService))) {
@@ -161,7 +180,17 @@ namespace Microsoft.PythonTools {
 
         internal WorkspaceInfoBarManager WorkspaceInfoBarManager { get; }
 
-        internal LanguageServerClient.PythonLanguageClient LanguageClient { get; set; }
+        internal LanguageServerClient.PythonLanguageClient GetLanguageClient() {
+            var componentModel = Site.GetComponentModel();
+            var clientBroker = componentModel.GetService<ILanguageClientBroker>();
+            var client = componentModel.GetExtensions<ILanguageClient>().ToList().Where((c) => c is PythonLanguageClient).FirstOrDefault() as PythonLanguageClient;
+
+            // If not initialized yet, tell it to load
+            if (clientBroker != null && client != null && !client.Loaded) {
+                clientBroker.LoadAsync(new LanguageClientMetadata(new string[] { PythonCoreConstants.ContentType }), client).DoNotWait();
+            }
+            return client;
+        }
 
         #region Public API
 
