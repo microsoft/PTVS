@@ -304,7 +304,9 @@ namespace Microsoft.PythonTools.Repl {
                 selectEval.ProvideInteractiveWindowEvents(InteractiveWindowEvents.GetOrCreate(replWindow));
             }
 
-            _serviceProvider.GetUIThread().InvokeTaskSync(() => replWindow.InteractiveWindow.InitializeAsync(), CancellationToken.None);
+            // Start initializaing the window but we can't wait as some of the work requires
+            // the main thread.
+            replWindow.InteractiveWindow.InitializeAsync().DoNotWait();
 
             return replWindow;
         }
