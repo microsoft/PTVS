@@ -55,6 +55,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
     /// </remarks>
     [Export(typeof(ILanguageClient))]
     [ContentType(PythonCoreConstants.ContentType)]
+    [PartCreationPolicy(CreationPolicy.Shared)]
     internal sealed class PythonLanguageClient : ILanguageClient, ILanguageClientCustomMessage2, IDisposable {
         [Import(typeof(SVsServiceProvider))]
         public IServiceProvider Site;
