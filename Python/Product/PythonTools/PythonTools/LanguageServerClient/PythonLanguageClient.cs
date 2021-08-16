@@ -55,6 +55,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
     /// </remarks>
     [Export(typeof(ILanguageClient))]
     [ContentType(PythonCoreConstants.ContentType)]
+    [PartCreationPolicy(CreationPolicy.Shared)]
     internal sealed class PythonLanguageClient : ILanguageClient, ILanguageClientCustomMessage2, IDisposable {
         [Import(typeof(SVsServiceProvider))]
         public IServiceProvider Site;
@@ -97,6 +98,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         private FileWatcher.Listener _fileListener;
         private static TaskCompletionSource<int> _readyTcs = new System.Threading.Tasks.TaskCompletionSource<int>();
         private bool _modifiedInitialize = false;
+        private bool _loaded = false;
 
         public PythonLanguageClient() {
             _disposables = new DisposableBag(GetType().Name);
@@ -115,6 +117,7 @@ namespace Microsoft.PythonTools.LanguageServerClient {
         public object MiddleLayer => null;
         public object CustomMessageTarget { get; private set; }
         public bool IsInitialized { get; private set; }
+        public bool Loaded => this._loaded;
 
         public bool ShowNotificationOnInitializeFailed => true;
 
@@ -129,9 +132,8 @@ namespace Microsoft.PythonTools.LanguageServerClient {
                 return null;
             }
             await JoinableTaskContext.Factory.SwitchToMainThreadAsync();
-            Site.GetPythonToolsService().LanguageClient = this;
-
             CreateClientContexts();
+
 
             _analysisOptions = Site.GetPythonToolsService().AnalysisOptions;
             _advancedEditorOptions = Site.GetPythonToolsService().AdvancedEditorOptions;
@@ -166,6 +168,9 @@ namespace Microsoft.PythonTools.LanguageServerClient {
             // Force the package to load, since this is a MEF component,
             // there is no guarantee it has been loaded.
             Site.GetPythonToolsService();
+
+            // Indicate to python tools service we've loaded.
+            _loaded = true;
 
             // Client context cannot be created here since the is no workspace yet
             // and hence we don't know if this is workspace or a loose files case.
