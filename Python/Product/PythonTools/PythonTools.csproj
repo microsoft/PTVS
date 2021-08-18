@@ -249,6 +249,7 @@
     <Compile Include="PythonTools\Editor\Formatting\PythonFormatter.cs" />
     <Compile Include="PythonTools\Editor\Formatting\LspDiffTextEditFactory.cs" />
     <Compile Include="PythonTools\Environments\LandscapePortraitConverter.cs" />
+    <Compile Include="PythonTools\Environments\ScreenAdjustingConverter.cs" />
     <Compile Include="PythonTools\LanguageServerClient\CustomCancellationStrategy.cs" />
     <Compile Include="PythonTools\LanguageServerClient\FileWatcher\DidChangeWatchedFilesRegistrationOptions.cs" />
     <Compile Include="PythonTools\LanguageServerClient\FileWatcher\FileSystemWatcher.cs" />
