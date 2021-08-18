@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
+using Microsoft.PythonTools.Wpf;
 
 namespace Microsoft.PythonTools.Environments {
     /// <summary>
@@ -20,7 +21,7 @@ namespace Microsoft.PythonTools.Environments {
             if (parameter != null && userControl != null) {
                 var styles = parameter.ToString().Split('|');
                 if (styles.Length == 2) {
-                    var style = SystemParameters.PrimaryScreenWidth > SystemParameters.PrimaryScreenHeight ? styles[0] : styles[1];
+                    var style = Utilities.IsLandscape ? styles[0] : styles[1];
                     return userControl.Resources[style];
                 }
             }

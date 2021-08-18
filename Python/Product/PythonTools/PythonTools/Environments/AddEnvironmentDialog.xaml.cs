@@ -29,6 +29,7 @@ using Microsoft.PythonTools.Project;
 using Microsoft.PythonTools.Wpf;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools.Wpf;
+using Utilities = Microsoft.PythonTools.Wpf.Utilities;
 
 namespace Microsoft.PythonTools.Environments {
     internal partial class AddEnvironmentDialog : ModernDialog, IDisposable {
@@ -87,9 +88,11 @@ namespace Microsoft.PythonTools.Environments {
             }
 
             DataContext = new AddEnvironmentView(pages, selected);
-            IsLandscape = SystemParameters.PrimaryScreenWidth > SystemParameters.PrimaryScreenHeight;
-            WindowWidth = IsLandscape ? 1024 : 700;
-            WindowHeight = IsLandscape ? 700 : 1024;
+            IsLandscape = Utilities.IsLandscape;
+            var startWidth = Math.Min(SystemParameters.PrimaryScreenWidth, IsLandscape ? 1024 : 700);
+            var startHeight = Math.Min(SystemParameters.PrimaryScreenHeight, IsLandscape ? 700 : 1024);
+            WindowWidth = startWidth;
+            WindowHeight = startHeight;
             MinimumWindowWidth = WindowWidth;
             MinimumWindowHeight = WindowHeight;
             InitializeComponent();
