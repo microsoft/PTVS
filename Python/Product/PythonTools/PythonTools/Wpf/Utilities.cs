@@ -38,6 +38,6 @@ namespace Microsoft.PythonTools.Wpf {
         /// <remarks>
         /// Picks portrait mode if screen is too small as well (with assumption scrolling will be used)
         /// </remarks>
-        public static bool IsLandscape => SystemParameters.PrimaryScreenWidth > SystemParameters.PrimaryScreenHeight && SystemParameters.PrimaryScreenWidth > 800;
+        public static bool IsLandscape => (SystemParameters.PrimaryScreenWidth > SystemParameters.PrimaryScreenHeight) && (SystemParameters.PrimaryScreenWidth > 900);
     }
 }
