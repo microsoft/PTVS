@@ -72,6 +72,7 @@
                         </Setter>
                     </Style>
                     <l:LandscapePortraitConverter x:Key="LandscapePortraitConverter" />
+                    <l:ScreenAdjustingConverter x:Key="ScreenAdjustingConverter" />
 
                 </ResourceDictionary>
             </ResourceDictionary.MergedDictionaries>
@@ -85,16 +86,14 @@
                 Text="{x:Static common:Strings.AddVirtualEnvironmentWindow_NoInterpreterHelp}"
                 TextWrapping="Wrap"/>
         </Grid>
-
-        <ItemsControl 
-            Style="{Binding 
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <ItemsControl 
+                Style="{Binding 
                 RelativeSource={RelativeSource AncestorType=UserControl},
                 Converter={StaticResource LandscapePortraitConverter}, 
                 ConverterParameter=MainGridLandscape|MainGridPortrait}">
 
-            <!--Main options-->
-            <ScrollViewer
-                VerticalScrollBarVisibility="Auto">
+                <!--Main options-->
 
                 <StackPanel Orientation="Vertical">
                     <!--Project-->
@@ -108,7 +107,10 @@
                         x:Name="ProjectComboBox"
                         Margin="0 0 0 17"
                         MinHeight="29"
-                        Width="249"
+                        Width="{Binding 
+                            RelativeSource={RelativeSource Mode=Self},
+                            Converter={StaticResource ScreenAdjustingConverter}, 
+                            ConverterParameter=249}"
                         HorizontalAlignment="Left"
                         ItemsSource="{Binding Path=Projects}"
                         SelectedItem="{Binding Path=SelectedProject}"
@@ -135,7 +137,10 @@
                                 x:Name="EnvNameTextBox"
                                 Margin="0 0 0 17"
                                 MinHeight="29"
-                                Width="249"
+                                Width="{Binding 
+                                    RelativeSource={RelativeSource Mode=Self},
+                                    Converter={StaticResource ScreenAdjustingConverter}, 
+                                    ConverterParameter=249}"
                                 HorizontalAlignment="Left"
                                 Text="{Binding Path=VirtualEnvName,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged,ValidatesOnNotifyDataErrors=False}"
                                 AutomationProperties.AutomationId="EnvName"
@@ -153,7 +158,10 @@
                                 Grid.Row="8"
                                 Margin="0 0 0 17"
                                 MinHeight="29"
-                                Width="249"
+                                Width="{Binding 
+                                    RelativeSource={RelativeSource Mode=Self},
+                                    Converter={StaticResource ScreenAdjustingConverter}, 
+                                    ConverterParameter=249}"
                                 HorizontalAlignment="Left"
                                 AutomationProperties.AutomationId="BaseInterpreter"
                                 AutomationProperties.IsRequiredForForm="True"
@@ -240,80 +248,80 @@
                         AutomationProperties.Name="{x:Static common:Strings.AddVirtualEnvironmentDescriptionName}"
                         AutomationProperties.AutomationId="Description"/>
                 </StackPanel>
-            </ScrollViewer>
 
-            <!--Preview-->
-            <Grid Grid.Column="2" Grid.Row="1">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
+                <!--Preview-->
+                <Grid Grid.Column="2" Grid.Row="1">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
 
-                <Label
+                    <Label
                     Grid.Row="0"
                     Style="{StaticResource ModernLabel}">
-                    <Label.Content>
-                        <AccessText TextWrapping="Wrap" Text="{x:Static common:Strings.AddVirtualEnvironmentPreviewLabel}"/>
-                    </Label.Content>
-                </Label>
+                        <Label.Content>
+                            <AccessText TextWrapping="Wrap" Text="{x:Static common:Strings.AddVirtualEnvironmentPreviewLabel}"/>
+                        </Label.Content>
+                    </Label>
 
-                <!-- Progress bar, wrap in a grid to avoid accessibility issues when not visible -->
-                <Grid Grid.Row="1" Visibility="{Binding Progress.IsProgressDisplayed, Converter={x:Static wpf:Converters.FalseIsCollapsed}}">
-                    <vsui:ProgressControl
+                    <!-- Progress bar, wrap in a grid to avoid accessibility issues when not visible -->
+                    <Grid Grid.Row="1" Visibility="{Binding Progress.IsProgressDisplayed, Converter={x:Static wpf:Converters.FalseIsCollapsed}}">
+                        <vsui:ProgressControl
                         HorizontalAlignment="Center"
                         DataContext="{Binding Progress}"/>
-                </Grid>
+                    </Grid>
 
-                <!-- Preview results -->
-                <StackPanel
+                    <!-- Preview results -->
+                    <StackPanel
                     Grid.Row="1"
                     Visibility="{Binding Path=Progress.IsProgressDisplayed, Converter={x:Static wpf:Converters.TrueIsCollapsed}}">
 
-                    <StackPanel.Resources>
-                        <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
-                            <Setter Property="Margin" Value="0 0 0 7"/>
-                        </Style>
-                    </StackPanel.Resources>
+                        <StackPanel.Resources>
+                            <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+                                <Setter Property="Margin" Value="0 0 0 7"/>
+                            </Style>
+                        </StackPanel.Resources>
 
-                    <TextBlock
+                        <TextBlock
                         Text="{x:Static common:Strings.AddVirtualEnvironmentWindow_InstallPip}"
                         Visibility="{Binding Path=WillInstallPip, Converter={x:Static wpf:Converters.FalseIsCollapsed}}"/>
 
-                    <TextBlock
+                        <TextBlock
                         Text="{x:Static common:Strings.AddVirtualEnvironmentWindow_InstallVirtualEnv}"
                         Visibility="{Binding Path=WillInstallVirtualEnv, Converter={x:Static wpf:Converters.FalseIsCollapsed}}"/>
 
-                    <TextBlock Text="{x:Static common:Strings.AddVirtualEnvironmentWindow_CreateVirtualEnv}">
-                        <TextBlock.Visibility>
-                            <MultiBinding Converter="{x:Static wpf:Converters.AllIsNotCollapsed}">
-                                <Binding Path="UseVirtualEnv"/>
-                                <Binding Path="WillCreateVirtualEnv"/>
-                            </MultiBinding>
-                        </TextBlock.Visibility>
-                    </TextBlock>
+                        <TextBlock Text="{x:Static common:Strings.AddVirtualEnvironmentWindow_CreateVirtualEnv}">
+                            <TextBlock.Visibility>
+                                <MultiBinding Converter="{x:Static wpf:Converters.AllIsNotCollapsed}">
+                                    <Binding Path="UseVirtualEnv"/>
+                                    <Binding Path="WillCreateVirtualEnv"/>
+                                </MultiBinding>
+                            </TextBlock.Visibility>
+                        </TextBlock>
 
-                    <TextBlock Text="{x:Static common:Strings.AddVirtualEnvironmentWindow_CreateVEnv}">
-                        <TextBlock.Visibility>
-                            <MultiBinding Converter="{x:Static wpf:Converters.AllIsNotCollapsed}">
-                                <Binding Path="UseVEnv"/>
-                                <Binding Path="WillCreateVirtualEnv"/>
-                            </MultiBinding>
-                        </TextBlock.Visibility>
-                    </TextBlock>
+                        <TextBlock Text="{x:Static common:Strings.AddVirtualEnvironmentWindow_CreateVEnv}">
+                            <TextBlock.Visibility>
+                                <MultiBinding Converter="{x:Static wpf:Converters.AllIsNotCollapsed}">
+                                    <Binding Path="UseVEnv"/>
+                                    <Binding Path="WillCreateVirtualEnv"/>
+                                </MultiBinding>
+                            </TextBlock.Visibility>
+                        </TextBlock>
 
-                    <TextBlock
+                        <TextBlock
                         Text="{x:Static common:Strings.AddVirtualEnvironmentWindow_InstallPackages}"
                         Visibility="{Binding Path=WillInstallRequirementsTxt, Converter={x:Static wpf:Converters.FalseIsCollapsed}}"/>
 
-                    <TextBlock
+                        <TextBlock
                         Text="{x:Static common:Strings.AddVirtualEnvironmentWindow_RegisterGlobally}"
                         Visibility="{Binding Path=WillRegisterGlobally, Converter={x:Static wpf:Converters.FalseIsCollapsed}}"/>
 
-                    <TextBlock
+                        <TextBlock
                         Text="{x:Static common:Strings.AddVirtualEnvironmentWindow_CannotCreate}"
                         Visibility="{Binding CannotCreateVirtualEnv, Converter={x:Static wpf:Converters.FalseIsCollapsed}}"/>
-                </StackPanel>
-            </Grid>
-        </ItemsControl>
+                    </StackPanel>
+                </Grid>
+            </ItemsControl>
+        </ScrollViewer>
     </Grid>
 </UserControl>

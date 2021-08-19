@@ -14,6 +14,8 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System.Windows;
+
 namespace Microsoft.PythonTools.Wpf {
     internal static class Utilities {
         /// <summary>
@@ -29,5 +31,13 @@ namespace Microsoft.PythonTools.Wpf {
 
             return msg;
         }
+
+        /// <summary>
+        /// Determines if dialogs should display in landscape or portrait mode
+        /// </summary>
+        /// <remarks>
+        /// Picks portrait mode if screen is too small as well (with assumption scrolling will be used)
+        /// </remarks>
+        public static bool IsLandscape => (SystemParameters.PrimaryScreenWidth > SystemParameters.PrimaryScreenHeight) && (SystemParameters.PrimaryScreenWidth > 900);
     }
 }

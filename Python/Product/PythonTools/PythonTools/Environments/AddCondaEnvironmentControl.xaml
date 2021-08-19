@@ -149,6 +149,7 @@
                         </Setter>
                     </Style>
                     <l:LandscapePortraitConverter x:Key="LandscapePortraitConverter" />
+                    <l:ScreenAdjustingConverter x:Key="ScreenAdjustingConverter" />
 
                 </ResourceDictionary>
             </ResourceDictionary.MergedDictionaries>
@@ -162,13 +163,13 @@
                 Text="{x:Static common:Strings.CondaNotFoundError}"
                 TextWrapping="Wrap"/>
         </Grid>
-        <ItemsControl 
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+
+            <ItemsControl 
             Style="{Binding 
                 RelativeSource={RelativeSource AncestorType=UserControl},
                 Converter={StaticResource LandscapePortraitConverter}, 
                 ConverterParameter=MainGridLandscape|MainGridPortrait}">
-            <ScrollViewer
-                VerticalScrollBarVisibility="Auto">
 
                 <StackPanel>
                     <Label
@@ -181,7 +182,10 @@
                         x:Name="ProjectComboBox"
                         Margin="0 0 0 17"
                         MinHeight="29"
-                        Width="249"
+                        Width="{Binding 
+                            RelativeSource={RelativeSource Mode=Self},
+                            Converter={StaticResource ScreenAdjustingConverter}, 
+                            ConverterParameter=249}"
                         HorizontalAlignment="Left"
                         ItemsSource="{Binding Path=Projects}"
                         SelectedItem="{Binding Path=SelectedProject}"
@@ -200,7 +204,10 @@
                         x:Name="EnvNameTextBox"
                         Margin="0 0 0 17"
                         MinHeight="29"
-                        Width="249"
+                        Width="{Binding 
+                            RelativeSource={RelativeSource Mode=Self},
+                            Converter={StaticResource ScreenAdjustingConverter}, 
+                            ConverterParameter=249}"
                         HorizontalAlignment="Left"
                         Text="{Binding Path=EnvName,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged,ValidatesOnNotifyDataErrors=False}"
                         AutomationProperties.AutomationId="EnvName"
@@ -291,86 +298,86 @@
                         AutomationProperties.AutomationId="ViewInEnvironmentWindow"
                         AutomationProperties.Name="{x:Static common:Strings.AddEnvironmentViewInEnvWindowLabel}"/>
                 </StackPanel>
-            </ScrollViewer>
 
-            <!--Preview-->
-            <Grid Grid.Column="2" Grid.Row="1">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
+                <!--Preview-->
+                <Grid Grid.Column="2" Grid.Row="1">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
 
-                <Label
+                    <Label
                     Grid.Row="0"
                     Style="{StaticResource ModernLabel}">
-                    <Label.Content>
-                        <AccessText TextWrapping="Wrap" Text="{x:Static common:Strings.AddCondaEnvironmentPreviewLabel}"/>
-                    </Label.Content>
-                </Label>
+                        <Label.Content>
+                            <AccessText TextWrapping="Wrap" Text="{x:Static common:Strings.AddCondaEnvironmentPreviewLabel}"/>
+                        </Label.Content>
+                    </Label>
 
-                <!-- Progress bar, wrap in a grid to avoid accessibility issues when not visible -->
-                <Grid Grid.Row="1" Visibility="{Binding CondaPreview.Progress.IsProgressDisplayed, Converter={x:Static wpf:Converters.FalseIsCollapsed}}">
-                    <vsui:ProgressControl
+                    <!-- Progress bar, wrap in a grid to avoid accessibility issues when not visible -->
+                    <Grid Grid.Row="1" Visibility="{Binding CondaPreview.Progress.IsProgressDisplayed, Converter={x:Static wpf:Converters.FalseIsCollapsed}}">
+                        <vsui:ProgressControl
                         HorizontalAlignment="Center"
                         DataContext="{Binding CondaPreview.Progress}"/>
-                </Grid>
+                    </Grid>
 
-                <!-- Preview results -->
-                <ScrollViewer
+                    <!-- Preview results -->
+                    <ScrollViewer
                     Grid.Row="1"
                     AutomationProperties.AutomationId="PreviewResult"
                     VerticalScrollBarVisibility="Auto"
                     HorizontalScrollBarVisibility="Auto">
 
-                    <StackPanel>
-                        <TextBlock
+                        <StackPanel>
+                            <TextBlock
                             Name="NoPackagesMessage"
                             Text="{x:Static common:Strings.AddCondaEnvironmentPreviewNoPackages}"
                             Visibility="{Binding Path=CondaPreview.IsNoPackages, Converter={x:Static wpf:Converters.FalseIsCollapsed}}"/>
-                        <TextBlock
+                            <TextBlock
                             Name="EnvFileMissing"
                             Text="{x:Static common:Strings.AddCondaEnvironmentPreviewNoEnvFile}"
                             Visibility="{Binding Path=CondaPreview.IsNoEnvFile, Converter={x:Static wpf:Converters.FalseIsCollapsed}}"/>
-                        <TextBlock
+                            <TextBlock
                             Name="EnvFileMessage"
                             Text="{Binding Path=CondaPreview.EnvFileContents}"
                             Visibility="{Binding Path=CondaPreview.IsEnvFile, Converter={x:Static wpf:Converters.FalseIsCollapsed}}"/>
-                        <TextBlock
+                            <TextBlock
                             Name="ErrorMessage"
                             Text="{Binding Path=CondaPreview.ErrorMessage}"
                             Visibility="{Binding Path=CondaPreview.HasPreviewError, Converter={x:Static wpf:Converters.FalseIsCollapsed}}"/>
-                        <ItemsControl
+                            <ItemsControl
                             Name="PackagesList"
                             ItemsSource="{Binding Path=CondaPreview.Packages}"
                             Grid.IsSharedSizeScope="True"
                             Focusable="False"
                             Visibility="{Binding Path=CondaPreview.IsPackages, Converter={x:Static wpf:Converters.FalseIsCollapsed}}">
 
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition SharedSizeGroup="A" Width="Auto"/>
-                                            <ColumnDefinition Width="8"/>
-                                            <ColumnDefinition SharedSizeGroup="B" Width="Auto"/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition SharedSizeGroup="A" Width="Auto"/>
+                                                <ColumnDefinition Width="8"/>
+                                                <ColumnDefinition SharedSizeGroup="B" Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock
                                             Grid.Column="0"
                                             Margin="0 0 0 7"
                                             HorizontalAlignment="Left"
                                             Text="{Binding Name}"/>
-                                        <TextBlock
+                                            <TextBlock
                                             Grid.Column="2"
                                             Margin="0 0 0 7"
                                             HorizontalAlignment="Left"
                                             Text="{Binding Version}"/>
-                                    </Grid>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </StackPanel>
-                </ScrollViewer>
-            </Grid>
-        </ItemsControl>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </ItemsControl>
+        </ScrollViewer>
     </Grid>
 </UserControl>
