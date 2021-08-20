@@ -59,12 +59,13 @@ variables:
   # PTVS variable group
   # This contains variables shared between the PTVS "product" pipeline and the PTVS "policy" pipeline.
   
-  # It also contains an AzDO Personal Access Token (ArtifactServices.Symbol.PAT) that expires on 4/15/2021 
+  # It also contains an AzDO Personal Access Token (ArtifactServices.Symbol.PAT) that expires on 8/19/2022 
   # which is used to publish symbols to symweb.
   
   # If Visual Studio insertion PRs start failing the Symbol Check step, this token is most likely expired.
   # See https://www.1eswiki.com/wiki/Using_Azure_DevOps_Symbols for more information about how to create a new 
   # PAT and how to update the variable group.
+  # Variable group is defined here: https://devdiv.visualstudio.com/DevDiv/_library?itemType=VariableGroups&view=VariableGroupView&variableGroupId=334&path=PTVS
   - group: PTVS
 
 steps:
