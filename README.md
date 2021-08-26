@@ -1,6 +1,6 @@
 # Python tools for Visual Studio
 
-[![Build Status](https://devdiv.visualstudio.com/DevDiv/_apis/build/status/Python/PTVS-Build-Dev16?branchName=master)](https://devdiv.visualstudio.com/DevDiv/_build/latest?definitionId=14121&branchName=master)
+[![Build Status](https://devdiv.visualstudio.com/DevDiv/_apis/build/status/Python/PTVS-Build-Dev17?branchName=main)](https://devdiv.visualstudio.com/DevDiv/_build/latest?definitionId=14121&branchName=main)
 [![Join the chat at https://gitter.im/Microsoft/PTVS](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/Microsoft/PTVS?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 Python support for Visual Studio is developed and managed here.
