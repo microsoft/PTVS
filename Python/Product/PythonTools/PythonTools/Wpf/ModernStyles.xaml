@@ -1540,6 +1540,7 @@
             <Trigger Property="IsHighlighted" Value="True">
                 <Setter TargetName="templateRoot" Property="Background" Value="{DynamicResource {x:Static l:ModernStyles.MenuItemHighlightBackgroundBrushKey}}" />
                 <Setter TargetName="templateRoot" Property="BorderBrush" Value="{DynamicResource {x:Static l:ModernStyles.MenuItemHighlightBorderBrushKey}}" />
+                <Setter TargetName="templateRoot" Property="TextElement.Foreground" Value="{DynamicResource {x:Static vsui:CommonDocumentColors.ListItemTextSelectedBrushKey}}" />
             </Trigger>
             <Trigger Property="IsEnabled" Value="False">
                 <Setter TargetName="templateRoot" Property="TextElement.Foreground" Value="{DynamicResource {x:Static l:ModernStyles.MenuDisabledForegroundBrushKey}}" />
@@ -1665,6 +1666,7 @@
             <Trigger Property="IsHighlighted" Value="True">
                 <Setter TargetName="templateRoot" Property="Background" Value="{DynamicResource {x:Static l:ModernStyles.MenuItemHighlightBackgroundBrushKey}}" />
                 <Setter TargetName="templateRoot" Property="BorderBrush" Value="{DynamicResource {x:Static l:ModernStyles.MenuItemHighlightBorderBrushKey}}" />
+                <Setter TargetName="templateRoot" Property="TextElement.Foreground" Value="{DynamicResource {x:Static vsui:CommonDocumentColors.ListItemTextSelectedBrushKey}}" />
             </Trigger>
             <Trigger Property="IsEnabled" Value="False">
                 <Setter TargetName="templateRoot" Property="TextElement.Foreground" Value="{DynamicResource {x:Static l:ModernStyles.MenuDisabledForegroundBrushKey}}" />
