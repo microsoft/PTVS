@@ -86,7 +86,7 @@
                 Text="{x:Static common:Strings.AddVirtualEnvironmentWindow_NoInterpreterHelp}"
                 TextWrapping="Wrap"/>
         </Grid>
-        <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <ScrollViewer VerticalScrollBarVisibility="Auto" IsTabStop="True">
             <ItemsControl 
                 Style="{Binding 
                 RelativeSource={RelativeSource AncestorType=UserControl},

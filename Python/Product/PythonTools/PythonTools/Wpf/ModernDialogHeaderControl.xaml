@@ -7,6 +7,7 @@
              xmlns:imaging="clr-namespace:Microsoft.VisualStudio.Imaging;assembly=Microsoft.VisualStudio.Imaging"
              xmlns:common="clr-namespace:Microsoft.PythonTools;assembly=Microsoft.PythonTools.Common"
              xmlns:l="clr-namespace:Microsoft.PythonTools.Wpf"
+             xmlns:theming="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Imaging"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
@@ -36,6 +37,8 @@
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
+            <Setter Property="theming:ImageThemingUtilities.ImageBackgroundColor" 
+                    Value="{Binding Background,RelativeSource={RelativeSource Self},Converter={StaticResource BrushToColorConverter}}"/>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
                     <Setter Property="Background" Value="{DynamicResource {x:Static l:ModernStyles.WindowButtonHoverBrushKey}}"/>
