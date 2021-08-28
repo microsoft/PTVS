@@ -70,7 +70,8 @@ namespace Microsoft.PythonTools.Environments {
 
             var task = InstallPackagesAsync(taskHandler);
             taskHandler?.RegisterTask(task);
-            _site.ShowTaskStatusCenter();
+            // Disable showing the TaskStatusCenterCommand until it supports narrator
+            // _site.ShowTaskStatusCenter();
         }
 
         private async Task InstallPackagesAsync(ITaskHandler taskHandler) {
