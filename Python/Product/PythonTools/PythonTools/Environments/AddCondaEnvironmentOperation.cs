@@ -107,7 +107,8 @@ namespace Microsoft.PythonTools.Environments {
 
             var task = Task.Run(() => CreateCondaEnvironmentAsync(ui, taskHandler, taskHandler?.UserCancellation ?? CancellationToken.None));
             taskHandler.RegisterTask(task);
-            _site.ShowTaskStatusCenter();
+            // Disable showing the TaskStatusCenterCommand until it supports narrator
+            //_site.ShowTaskStatusCenter();
         }
 
         private async Task CreateCondaEnvironmentAsync(CondaUI ui, ITaskHandler taskHandler, CancellationToken ct) {
