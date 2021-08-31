@@ -11,20 +11,28 @@
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
-        <Style x:Key="HeaderButtonStyle" TargetType="Button">
-            <Setter Property="Height" Value="26"/>
-            <Setter Property="Width" Value="26"/>
-            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
-            <Setter Property="Background" Value="{DynamicResource {x:Static l:ModernStyles.WindowButtonBrushKey}}"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource {x:Static l:ModernStyles.WindowButtonBorderBrushKey}}"/>
-            <Setter Property="Template">
+        <!--From /src/Package.15.0/View/ToastHeader.xaml -->
+        <Style x:Uid="Style_1" x:Key="WindowHeaderButtonStyle" TargetType="Button">
+            <Setter x:Uid="Setter_1" Property="Height" Value="26" />
+            <Setter x:Uid="Setter_2" Property="Width" Value="26" />
+            <Setter x:Uid="Setter_4" Property="Background" Value="{DynamicResource {x:Static l:ModernStyles.WindowPanelBrushKey}}" />
+            <Setter x:Uid="Setter_5" Property="BorderBrush" Value="{DynamicResource {x:Static l:ModernStyles.WindowButtonBorderBrushKey}}" />
+            <Setter x:Uid="Setter_6" Property="Template">
                 <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border BorderBrush="{TemplateBinding BorderBrush}"
+                    <!--It is necessary to override the ControlTemplate because the default includes Triggers for IsMouseOver and IsPressed
+                        which set the Background and BorderBrush color.  This ControlTemplate is identical to the WPF default except that the 
+                        Triggers have been removed.-->
+                    <ControlTemplate x:Uid="ControlTemplate_1" TargetType="Button">
+                        <Border x:Uid="border"
+                                x:Name="border"
+                                BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}"
                                 Background="{TemplateBinding Background}"
+                                theming:ImageThemingUtilities.ImageBackgroundColor="{Binding Background, RelativeSource={RelativeSource Self}, Converter={StaticResource BrushToColorConverter}}"
                                 SnapsToDevicePixels="True">
-                            <ContentPresenter ContentTemplate="{TemplateBinding ContentTemplate}"
+                            <ContentPresenter x:Uid="contentPresenter"
+                                              x:Name="contentPresenter"
+                                              ContentTemplate="{TemplateBinding ContentTemplate}"
                                               Content="{TemplateBinding Content}"
                                               ContentStringFormat="{TemplateBinding ContentStringFormat}"
                                               Focusable="False"
@@ -40,16 +48,28 @@
             <Setter Property="theming:ImageThemingUtilities.ImageBackgroundColor" 
                     Value="{Binding Background,RelativeSource={RelativeSource Self},Converter={StaticResource BrushToColorConverter}}"/>
             <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="{DynamicResource {x:Static l:ModernStyles.WindowButtonHoverBrushKey}}"/>
-                    <Setter Property="BorderBrush" Value="{DynamicResource {x:Static l:ModernStyles.WindowButtonHoverBorderBrushKey}}"/>
+                <Trigger x:Uid="Trigger_1" Property="IsMouseOver" Value="True">
+                    <Setter x:Uid="Setter_12" Property="Background" Value="{DynamicResource {x:Static l:ModernStyles.WindowButtonHoverBrushKey}}" />
+                    <Setter x:Uid="Setter_13" Property="BorderBrush" Value="{DynamicResource {x:Static l:ModernStyles.WindowButtonHoverBorderBrushKey}}" />
                 </Trigger>
-                <Trigger Property="IsPressed" Value="True">
-                    <Setter Property="Background" Value="{DynamicResource {x:Static l:ModernStyles.WindowButtonDownBrushKey}}"/>
-                    <Setter Property="BorderBrush" Value="{DynamicResource {x:Static l:ModernStyles.WindowButtonDownBorderBrushKey}}"/>
+                <Trigger x:Uid="Trigger_2" Property="IsPressed" Value="True">
+                    <Setter x:Uid="Setter_7" Property="Background" Value="{DynamicResource {x:Static l:ModernStyles.WindowButtonDownBrushKey}}" />
+                    <Setter x:Uid="Setter_8" Property="BorderBrush" Value="{DynamicResource {x:Static l:ModernStyles.WindowButtonDownBorderBrushKey}}" />
                 </Trigger>
-                <Trigger Property="IsFocused" Value="True">
+            </Style.Triggers>
+        </Style>
+        <Style x:Uid="Style_2" x:Key="CloseButtonStyle" TargetType="Button" BasedOn="{StaticResource WindowHeaderButtonStyle}">
+            <Setter x:Uid="Setter_9" Property="Foreground" Value="{DynamicResource {x:Static l:ModernStyles.WindowButtonGlyphBrushKey}}" />
+            <Style.Triggers>
+                <Trigger x:Uid="Trigger_3" Property="IsMouseOver" Value="True">
+                    <Setter x:Uid="Setter_10" Property="Foreground" Value="{DynamicResource {x:Static l:ModernStyles.WindowButtonHoverGlyphBrushKey}}" />
+                </Trigger>
+                <Trigger x:Uid="Trigger_3" Property="IsFocused" Value="True">
                     <Setter Property="Background" Value="{DynamicResource {x:Static l:ModernStyles.WindowButtonHoverBrushKey}}"/>
+                    <Setter x:Uid="Setter_10" Property="Foreground" Value="{DynamicResource {x:Static l:ModernStyles.WindowButtonHoverGlyphBrushKey}}" />
+                </Trigger>
+                <Trigger x:Uid="Trigger_4" Property="IsPressed" Value="True">
+                    <Setter x:Uid="Setter_11" Property="Foreground" Value="{DynamicResource {x:Static l:ModernStyles.WindowButtonDownGlyphBrushKey}}" />
                 </Trigger>
             </Style.Triggers>
         </Style>
@@ -63,7 +83,7 @@
         <Button Grid.Column="1"
                 Margin="4 0 0 0"
                 HorizontalAlignment="Right"
-                Style="{StaticResource HeaderButtonStyle}"
+                Style="{StaticResource CloseButtonStyle}"
                 AutomationProperties.Name="{x:Static common:Strings.ModernDialogHeaderCloseButtonAutomationName}"
                 Click="Close_Click">
             <imaging:CrispImage Moniker="{x:Static catalog:KnownMonikers.Close}"
