@@ -326,7 +326,8 @@
                     Grid.Row="1"
                     AutomationProperties.AutomationId="PreviewResult"
                     VerticalScrollBarVisibility="Auto"
-                    HorizontalScrollBarVisibility="Auto">
+                    HorizontalScrollBarVisibility="Auto"
+                    IsTabStop="True">
 
                         <StackPanel>
                             <TextBlock

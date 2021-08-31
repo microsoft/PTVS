@@ -64,7 +64,7 @@ namespace Microsoft.PythonTools.Options {
                 changed = true;
             }
 
-            var typeCheckingMode = _service.LoadString(nameof(TypeCheckingMode), Category) ?? PylanceTypeCheckingMode.Basic;
+            var typeCheckingMode = _service.LoadString(nameof(TypeCheckingMode), Category) ?? PylanceTypeCheckingMode.Off;
             if (TypeCheckingMode != typeCheckingMode) {
                 TypeCheckingMode = typeCheckingMode;
                 changed = true;
