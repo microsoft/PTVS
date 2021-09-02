@@ -54,7 +54,7 @@
     <IsProductComponent>true</IsProductComponent>
     <ExtensionInstallationRoot>Extensions</ExtensionInstallationRoot>
     <ExtensionInstallationFolder>Microsoft\Python\VCDebugLauncher</ExtensionInstallationFolder>
-    <NoWarn>1762;0436;1998</NoWarn>
+    <NoWarn>$(NoWarn);1762;1998</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>

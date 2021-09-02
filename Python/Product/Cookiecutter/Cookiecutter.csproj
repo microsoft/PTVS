@@ -17,7 +17,7 @@
     <StartProgram>$(DevEnvDir)devenv.exe</StartProgram>
     <StartArguments>/rootSuffix Exp /Log</StartArguments>
     <DeployExtension>$(BuildingInsideVisualStudio)</DeployExtension>
-    <NoWarn>1762;0436</NoWarn>
+    <NoWarn>$(NoWarn);1762</NoWarn>
     <SetupProductArch>neutral</SetupProductArch>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
