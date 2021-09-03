@@ -1,7 +1,7 @@
 # This pipeline is used to build the PTVS product and installer.
 # A seperate release pipeline is used to create insertion PR's into Visual Studio.
 
-# build number format
+# build number format 
 name: $(date:yy)$(DayOfYear)$(rev:.r)
 
 # Trigger ci builds for commits into master and any release branches
