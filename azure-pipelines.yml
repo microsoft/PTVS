@@ -150,7 +150,7 @@ steps:
     msbuildVersion: $(MsBuildVersion)
     platform: $(Platform)
     configuration: $(BuildConfiguration)
-    msbuildArguments: '/p:VSTarget=$(VSTarget) /bl:$(Build.BinariesDirectory)\raw\logs\BuildProduct.binlog'
+    msbuildArguments: '/p:VSTarget=$(VSTarget) /bl:$(Build.SourcesDirectory)\logs\BuildProduct.binlog'
 
 # Build the tests
 - task: MSBuild@1
@@ -160,7 +160,7 @@ steps:
     msbuildVersion: $(MsBuildVersion)
     platform: $(Platform)
     configuration: $(BuildConfiguration)
-    msbuildArguments: '/p:VSTarget=$(VSTarget) /bl:$(Build.BinariesDirectory)\raw\logs\BuildTests.binlog'
+    msbuildArguments: '/p:VSTarget=$(VSTarget) /bl:$(Build.SourcesDirectory)\logs\BuildTests.binlog'
 
 # Build the installer
 - task: MSBuild@1
@@ -170,15 +170,23 @@ steps:
     msbuildVersion: $(MsBuildVersion)
     platform: $(Platform)
     configuration: $(BuildConfiguration)
-    msbuildArguments: '/p:SkipProduct=true /p:VSTarget=$(VSTarget) /bl:$(Build.BinariesDirectory)\raw\logs\BuildInstaller.binlog'
+    msbuildArguments: '/p:SkipProduct=true /p:VSTarget=$(VSTarget) /bl:$(Build.SourcesDirectory)\logs\BuildInstaller.binlog'
 
-# Publish buld artifact: raw
+# Publish build artifact: raw
 - task: PublishBuildArtifacts@1
   displayName: '[If build failed] Publish raw build artifact'
   inputs:
     PathtoPublish: '$(Build.BinariesDirectory)\raw'
     ArtifactName: raw
   condition: failed()
+
+# Publish build logs
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish Build Logs'
+  inputs:
+    PathtoPublish: '$(Build.SourcesDirectory)\logs'
+    ArtifactName: Logs
+  condition: succeededOrFailed()
 
 # Upload vsts drop
 - task: MicroBuildUploadVstsDropFolder@1
@@ -192,13 +200,6 @@ steps:
   continueOnError: true
 
 # copy some files around to prepare for publishing build artifacts
-- task: CopyFiles@2
-  displayName: 'Copy logs to staging/logs'
-  inputs:
-    SourceFolder: '$(Build.BinariesDirectory)/raw/logs'
-    TargetFolder: '$(Build.ArtifactStagingDirectory)/logs'
-    CleanTargetFolder: true
-
 - task: CopyFiles@2
   displayName: 'Copy source to staging/src'
   inputs:
