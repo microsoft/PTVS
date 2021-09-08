@@ -153,7 +153,7 @@ steps:
     msbuildVersion: $(MsBuildVersion)
     platform: $(Platform)
     configuration: $(BuildConfiguration)
-    msbuildArguments: '/p:VSTarget=$(VSTarget_Override)'
+    msbuildArguments: '/p:VSTarget=$(VSTarget_Override) /bl:$(Build.BinariesDirectory)\raw\logs\BuildProduct.binlog'
 
 # Build the tests
 - task: MSBuild@1
@@ -163,7 +163,7 @@ steps:
     msbuildVersion: $(MsBuildVersion)
     platform: $(Platform)
     configuration: $(BuildConfiguration)
-    msbuildArguments: '/p:VSTarget=$(VSTarget_Override)'
+    msbuildArguments: '/p:VSTarget=$(VSTarget_Override) /bl:$(Build.BinariesDirectory)\raw\logs\BuildTests.binlog'
 
 # Build the installer
 - task: MSBuild@1
@@ -173,7 +173,7 @@ steps:
     msbuildVersion: $(MsBuildVersion)
     platform: $(Platform)
     configuration: $(BuildConfiguration)
-    msbuildArguments: '/p:SkipProduct=true /p:VSTarget=$(VSTarget_Override)'
+    msbuildArguments: '/p:SkipProduct=true /p:VSTarget=$(VSTarget_Override) /bl:$(Build.BinariesDirectory)\raw\logs\BuildInstaller.binlog'
 
 # Publish buld artifact: raw
 - task: PublishBuildArtifacts@1
@@ -195,6 +195,13 @@ steps:
   continueOnError: true
 
 # copy some files around to prepare for publishing build artifacts
+- task: CopyFiles@2
+  displayName: 'Copy logs to staging/logs'
+  inputs:
+    SourceFolder: '$(Build.BinariesDirectory)/raw/logs'
+    TargetFolder: '$(Build.ArtifactStagingDirectory)/logs'
+    CleanTargetFolder: true
+    
 - task: CopyFiles@2
   displayName: 'Copy source to staging/src'
   inputs:
