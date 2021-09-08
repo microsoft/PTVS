@@ -325,11 +325,12 @@ steps:
     PathtoPublish: '$(Build.ArtifactStagingDirectory)/TestData.zip'
     ArtifactName: 'TestData'
 
+# Commenting this out for now as the microbuild outputs are empty and this is causing a build warning
 # Publish bootstrapper info
-- task: PublishBuildArtifacts@1
-  inputs:
-    PathtoPublish: $(Build.StagingDirectory)\MicroBuild\Output
-    ArtifactName: MicroBuildOutputs
-    ArtifactType: Container
-  displayName: 'Publish Artifact: MicroBuildOutputs'
-  condition: succeeded()
+#- task: PublishBuildArtifacts@1
+#  inputs:
+#    PathtoPublish: $(Build.StagingDirectory)\MicroBuild\Output
+#    ArtifactName: MicroBuildOutputs
+#    ArtifactType: Container
+#  displayName: 'Publish Artifact: MicroBuildOutputs'
+#  condition: succeeded()
