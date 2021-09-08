@@ -33,7 +33,7 @@ pool:
   name: VSEngSS-MicroBuild2022-1ES
   demands: 
   - msbuild
-  - VisualStudio_16.0
+  - VisualStudio_17.0
 
 # Build variables
 # None of these are settable at build queue time. To do that, remove the variable from this list,
