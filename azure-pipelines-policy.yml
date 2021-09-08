@@ -21,20 +21,18 @@ schedules:
 
 # The agent pool the build will run on
 pool:
-  name: VSEng-MicroBuildVS2019
+  name: VSEngSS-MicroBuild2022-1ES
   demands: 
   - msbuild
-  - VisualStudio_16.0
+  - VisualStudio_17.0
 
 variables:
   - name: CopyTestData
     value: false
-  - name: VSTarget_Override
-    value: 17.0
 
   # PTVS variable group
   # This contains variables shared between the PTVS "product" pipeline and the PTVS "policy" pipeline.
-  - group: PTVS
+  - group: PTVS-Dev17
 
 jobs:
 - job: Phase_1
@@ -64,7 +62,7 @@ jobs:
     displayName: 'Restore packages'
     inputs:
       scriptName: Build/PreBuild.ps1
-      arguments: '-vstarget $(VSTarget_Override)'
+      arguments: '-vstarget $(VSTarget)'
 
   # Clean the old swix outputs
   - task: DeleteFiles@1
@@ -87,7 +85,7 @@ jobs:
       msbuildVersion: $(MSBuildVersion)
       platform: $(Platform)
       configuration: $(BuildConfiguration)
-      msbuildArguments: '/p:VSTarget=$(VSTarget_Override)'
+      msbuildArguments: '/p:VSTarget=$(VSTarget)'
     continueOnError: true
 
   # Build the installer
@@ -98,7 +96,7 @@ jobs:
       msbuildVersion: $(MsBuildVersion)
       platform: $(Platform)
       configuration: $(BuildConfiguration)
-      msbuildArguments: '/p:SkipProduct=true /p:VSTarget=$(VSTarget_Override)'
+      msbuildArguments: '/p:SkipProduct=true /p:VSTarget=$(VSTarget)'
     continueOnError: true
 
   # Anti-Malware Scan of build sources and/or artifacts

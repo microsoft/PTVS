@@ -53,20 +53,17 @@ variables:
     value: false
   - name: TrackFileAccess
     value: false
-  - name: VSTarget_Override
-    value: 17.0
   
   # PTVS variable group
   # This contains variables shared between the PTVS "product" pipeline and the PTVS "policy" pipeline.
   
-  # It also contains an AzDO Personal Access Token (ArtifactServices.Symbol.PAT) that expires on 8/19/2022 
-  # which is used to publish symbols to symweb.
+  # It also contains an AzDO Personal Access Token (ArtifactServices.Symbol.PAT) which is used to publish symbols to symweb.
   
   # If Visual Studio insertion PRs start failing the Symbol Check step, this token is most likely expired.
   # See https://www.1eswiki.com/wiki/Using_Azure_DevOps_Symbols for more information about how to create a new 
   # PAT and how to update the variable group.
   # Variable group is defined here: https://devdiv.visualstudio.com/DevDiv/_library?itemType=VariableGroups&view=VariableGroupView&variableGroupId=334&path=PTVS
-  - group: PTVS
+  - group: PTVS-Dev17
 
 steps:
 
@@ -135,7 +132,7 @@ steps:
   displayName: 'Restore packages'
   inputs:
     scriptName: Build/PreBuild.ps1
-    arguments: '-vstarget $(VSTarget_Override)'
+    arguments: '-vstarget $(VSTarget)'
 
 # Clean the old swix outputs
 - task: DeleteFiles@1
@@ -153,7 +150,7 @@ steps:
     msbuildVersion: $(MsBuildVersion)
     platform: $(Platform)
     configuration: $(BuildConfiguration)
-    msbuildArguments: '/p:VSTarget=$(VSTarget_Override) /bl:$(Build.BinariesDirectory)\raw\logs\BuildProduct.binlog'
+    msbuildArguments: '/p:VSTarget=$(VSTarget) /bl:$(Build.BinariesDirectory)\raw\logs\BuildProduct.binlog'
 
 # Build the tests
 - task: MSBuild@1
@@ -163,7 +160,7 @@ steps:
     msbuildVersion: $(MsBuildVersion)
     platform: $(Platform)
     configuration: $(BuildConfiguration)
-    msbuildArguments: '/p:VSTarget=$(VSTarget_Override) /bl:$(Build.BinariesDirectory)\raw\logs\BuildTests.binlog'
+    msbuildArguments: '/p:VSTarget=$(VSTarget) /bl:$(Build.BinariesDirectory)\raw\logs\BuildTests.binlog'
 
 # Build the installer
 - task: MSBuild@1
@@ -173,7 +170,7 @@ steps:
     msbuildVersion: $(MsBuildVersion)
     platform: $(Platform)
     configuration: $(BuildConfiguration)
-    msbuildArguments: '/p:SkipProduct=true /p:VSTarget=$(VSTarget_Override) /bl:$(Build.BinariesDirectory)\raw\logs\BuildInstaller.binlog'
+    msbuildArguments: '/p:SkipProduct=true /p:VSTarget=$(VSTarget) /bl:$(Build.BinariesDirectory)\raw\logs\BuildInstaller.binlog'
 
 # Publish buld artifact: raw
 - task: PublishBuildArtifacts@1
