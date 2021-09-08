@@ -28,3 +28,4 @@ __pycache__/
 /Python/*.VC.opendb
 /Python/*.VC.db
 /node_modules/*
+*.binlog
