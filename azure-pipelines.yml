@@ -202,14 +202,7 @@ steps:
     AccessToken: '$(System.AccessToken)'
   continueOnError: true
 
-# copy some files around to prepare for publishing build artifacts
-- task: CopyFiles@2
-  displayName: 'Copy logs to staging/logs'
-  inputs:
-    SourceFolder: '$(Build.BinariesDirectory)/raw/logs'
-    TargetFolder: '$(Build.ArtifactStagingDirectory)/logs'
-    CleanTargetFolder: true
-    
+# copy some files around to prepare for publishing build artifacts 
 - task: CopyFiles@2
   displayName: 'Copy source to staging/src'
   inputs:
