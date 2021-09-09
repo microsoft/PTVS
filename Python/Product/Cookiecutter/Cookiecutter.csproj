@@ -17,7 +17,7 @@
     <StartProgram>$(DevEnvDir)devenv.exe</StartProgram>
     <StartArguments>/rootSuffix Exp /Log</StartArguments>
     <DeployExtension>$(BuildingInsideVisualStudio)</DeployExtension>
-    <NoWarn>1762;0436</NoWarn>
+    <NoWarn>$(NoWarn);1762</NoWarn>
     <SetupProductArch>neutral</SetupProductArch>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
@@ -74,9 +74,7 @@
     <Reference Include="System.Xml" />
     <Reference Include="UIAutomationProvider" />
     <Reference Include="UIAutomationTypes" />
-    <Reference Include="VSLangProj, Version=7.0.3300.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-      <EmbedInteropTypes>True</EmbedInteropTypes>
-    </Reference>
+    <Reference Include="VSLangProj" />
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
