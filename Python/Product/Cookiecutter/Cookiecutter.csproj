@@ -74,9 +74,7 @@
     <Reference Include="System.Xml" />
     <Reference Include="UIAutomationProvider" />
     <Reference Include="UIAutomationTypes" />
-    <Reference Include="VSLangProj">
-      <EmbedInteropTypes>True</EmbedInteropTypes>
-    </Reference>
+    <Reference Include="VSLangProj" />
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
