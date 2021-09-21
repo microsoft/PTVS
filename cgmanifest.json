@@ -3,7 +3,7 @@
         {
             "Component": {
                 "Type": "pip",
-                "pip": { "Name": "debugpy", "Version": "1.0.0rc2" }
+                "pip": { "Name": "debugpy", "Version": "1.2.0" }
             },
             "DevelopmentDependency": false
         }
