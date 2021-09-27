@@ -15,28 +15,22 @@
 // permissions and limitations under the License.
 
 extern alias pythontools;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using Microsoft.PythonTools;
-using Microsoft.PythonTools.Parsing;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.VisualStudio.Text;
-using pythontools::Microsoft.PythonTools.Editor;
-using pythontools::Microsoft.PythonTools.Intellisense;
-using TestUtilities;
-using TestUtilities.Mocks;
 
-namespace PythonToolsTests {
+namespace PythonToolsTests
+{
     [TestClass]
-    public class LocationTrackerTests {
-        List<ITextSnapshot> TestSnapshots {
-            get {
+    public class LocationTrackerTests
+    {
+        List<ITextSnapshot> TestSnapshots
+        {
+            get
+            {
                 var buffer = new MockTextBuffer("");
                 var result = new List<ITextSnapshot> { buffer.CurrentSnapshot };
 
                 // def f(x):
-                using (var edit = buffer.CreateEdit()) {
+                using (var edit = buffer.CreateEdit())
+                {
                     edit.Replace(0, 0, "def f(x):\n");
                     edit.Apply();
                 }
@@ -44,7 +38,8 @@ namespace PythonToolsTests {
 
                 // def f(x):
                 //     return x
-                using (var edit = buffer.CreateEdit()) {
+                using (var edit = buffer.CreateEdit())
+                {
                     edit.Insert(edit.Snapshot.Length, "    return x\n");
                     edit.Apply();
                 }
@@ -55,7 +50,8 @@ namespace PythonToolsTests {
                 //
                 // def f(x):
                 //     return x
-                using (var edit = buffer.CreateEdit()) {
+                using (var edit = buffer.CreateEdit())
+                {
                     edit.Insert(0, "def g(y):\n    return y * 2\n\n");
                     edit.Apply();
                 }
@@ -66,7 +62,8 @@ namespace PythonToolsTests {
                 //
                 // def f(x):
                 //     return
-                using (var edit = buffer.CreateEdit()) {
+                using (var edit = buffer.CreateEdit())
+                {
                     edit.Delete(edit.Snapshot.Length - 3, 3);
                     edit.Apply();
                 }
@@ -77,7 +74,8 @@ namespace PythonToolsTests {
                 //
                 // def f(x):
                 //     return g(x)
-                using (var edit = buffer.CreateEdit()) {
+                using (var edit = buffer.CreateEdit())
+                {
                     edit.Insert(edit.Snapshot.Length, "g(x)\n");
                     edit.Apply();
                 }
@@ -87,17 +85,21 @@ namespace PythonToolsTests {
             }
         }
 
-        private void AssertLines(PythonTextBufferInfo buffer, params int[] lengths) {
+        private void AssertLines(PythonTextBufferInfo buffer, params int[] lengths)
+        {
             AssertLines(
                 buffer.LocationTracker.GetLineLocations(buffer.Buffer.CurrentSnapshot.Version.VersionNumber),
                 lengths
             );
         }
 
-        private void AssertLines(NewLineLocation[] lines, params int[] lengths) {
+        private void AssertLines(NewLineLocation[] lines, params int[] lengths)
+        {
             int p = 0;
-            for (int i = 0; i < lines.Length || i < lengths.Length; ++i) {
-                if (i < lengths.Length) {
+            for (int i = 0; i < lines.Length || i < lengths.Length; ++i)
+            {
+                if (i < lengths.Length)
+                {
                     p += lengths[i];
                 }
 
@@ -108,14 +110,16 @@ namespace PythonToolsTests {
             Assert.AreEqual(lengths.Length, lines.Length);
 
             p = 0;
-            for (int i = 0; i < lines.Length; ++i) {
+            for (int i = 0; i < lines.Length; ++i)
+            {
                 p += lengths[i];
                 Assert.AreEqual(p, lines[i].EndIndex, $"Line {i + 1}");
             }
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void GetLineLocationsTest() {
+        public void GetLineLocationsTest()
+        {
             var t = new LocationTracker(TestSnapshots[0]);
 
             var lines = t.GetLineLocations(0);
@@ -138,7 +142,8 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void UpdateTrackerSnapshot() {
+        public void UpdateTrackerSnapshot()
+        {
             var snapshots = TestSnapshots;
 
             var t = new LocationTracker(snapshots[0]);
@@ -167,7 +172,8 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void BufferSync_Issue3570() {
+        public void BufferSync_Issue3570()
+        {
             // https://github.com/Microsoft/PTVS/issues/3570
 
             var buffer = new MockTextBuffer("line");
@@ -177,17 +183,20 @@ namespace PythonToolsTests {
 
             Assert.AreEqual(new SourceLocation(1, 5), bi.LocationTracker.GetSourceLocation(4, 0));
 
-            using (var e = buffer.CreateEdit()) {
+            using (var e = buffer.CreateEdit())
+            {
                 e.Insert(e.Snapshot.Length, "\r\n");
                 e.Apply();
             }
 
-            using (var e = buffer.CreateEdit()) {
+            using (var e = buffer.CreateEdit())
+            {
                 e.Insert(e.Snapshot.Length, "    c");
                 e.Apply();
             }
 
-            using (var e = buffer.CreateEdit()) {
+            using (var e = buffer.CreateEdit())
+            {
                 e.Insert(e.Snapshot.Length, "o");
                 e.Apply();
             }
@@ -200,7 +209,8 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void BufferSync_Issue3733() {
+        public void BufferSync_Issue3733()
+        {
             // https://github.com/Microsoft/PTVS/issues/3733
 
             var bigString = string.Join("\n", Enumerable.Repeat("content", 1000));
@@ -213,7 +223,8 @@ namespace PythonToolsTests {
 
             AssertLines(bi, 0);
 
-            using (var e = buffer.CreateEdit()) {
+            using (var e = buffer.CreateEdit())
+            {
                 e.Insert(e.Snapshot.Length, bigString);
                 e.Apply();
             }
@@ -221,13 +232,15 @@ namespace PythonToolsTests {
 
             int beforeVersion = bi.Buffer.CurrentSnapshot.Version.VersionNumber;
 
-            using (var e = buffer.CreateEdit()) {
+            using (var e = buffer.CreateEdit())
+            {
                 e.Replace(0, e.Snapshot.Length, "z");
                 e.Apply();
             }
             bi.LocationTracker.UpdateBaseSnapshot(buffer.CurrentSnapshot);
 
-            using (var e = buffer.CreateEdit()) {
+            using (var e = buffer.CreateEdit())
+            {
                 e.Insert(e.Snapshot.Length, bigString);
                 e.Apply();
             }
@@ -235,25 +248,29 @@ namespace PythonToolsTests {
 
             var before = bi.LocationTracker.GetLineLocations(beforeVersion);
             var after = bi.LocationTracker.GetLineLocations(bi.Buffer.CurrentSnapshot.Version.VersionNumber);
-            foreach (var t in before.Zip(after, Tuple.Create)) {
+            foreach (var t in before.Zip(after, Tuple.Create))
+            {
                 Assert.AreEqual(t.Item1.EndIndex, t.Item2.EndIndex - 1);
             }
         }
 
-        void CheckTranslate(LocationTracker tracker, int fromLine, int fromCol, int fromVersion, int toLine, int toCol, int toVersion, bool checkReverse = true) {
+        void CheckTranslate(LocationTracker tracker, int fromLine, int fromCol, int fromVersion, int toLine, int toCol, int toVersion, bool checkReverse = true)
+        {
             var from_ = new SourceLocation(fromLine, fromCol);
             var to_ = new SourceLocation(toLine, toCol);
 
             var actualTo = tracker.Translate(from_, fromVersion, toVersion);
             Assert.AreEqual(to_, actualTo, $"Translating {from_} from {fromVersion} to {toVersion}");
-            if (checkReverse && fromVersion != toVersion) {
+            if (checkReverse && fromVersion != toVersion)
+            {
                 var actualFrom = tracker.Translate(actualTo, toVersion, fromVersion);
                 Assert.AreEqual(from_, actualFrom, $"Reverse translating {actualTo} from {toVersion} to {fromVersion}");
             }
         }
 
         [TestMethod, Priority(UnitTestPriority.P0)]
-        public void TranslateLocations() {
+        public void TranslateLocations()
+        {
             var t = new LocationTracker(TestSnapshots[0]);
 
             // Translate forwards

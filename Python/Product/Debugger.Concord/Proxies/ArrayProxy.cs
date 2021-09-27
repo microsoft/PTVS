@@ -14,12 +14,8 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Diagnostics;
-
-namespace Microsoft.PythonTools.Debugger.Concord.Proxies {
+namespace Microsoft.PythonTools.Debugger.Concord.Proxies
+{
     /// <summary>
     /// A data proxy for an array of elements of indeterminate size.
     /// </summary>
@@ -29,30 +25,37 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies {
     /// passed to any code that expects a generic <see cref="IValueStore"/>.
     /// </remarks>
     internal struct ArrayProxy<TProxy> : IDataProxy, IEnumerable<TProxy>
-        where TProxy : IDataProxy {
+        where TProxy : IDataProxy
+    {
 
         public DkmProcess Process { get; private set; }
         public ulong Address { get; private set; }
 
         public ArrayProxy(DkmProcess process, ulong address)
-            : this() {
+            : this()
+        {
             Debug.Assert(process != null && address != 0);
             Process = process;
             Address = address;
         }
 
-        long IDataProxy.ObjectSize {
+        long IDataProxy.ObjectSize
+        {
             get { throw new NotSupportedException(); }
         }
 
-        object IValueStore.Read() {
+        object IValueStore.Read()
+        {
             throw new NotSupportedException();
         }
 
-        public TProxy this[long index] {
-            get {
+        public TProxy this[long index]
+        {
+            get
+            {
                 var result = DataProxy.Create<TProxy>(Process, Address);
-                if (index != 0) {
+                if (index != 0)
+                {
                     result = result.GetAdjacentProxy(index);
                 }
                 return result;
@@ -63,15 +66,18 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies {
         /// Enumerates elements in the array and returns a sequence of proxies for them. The returned sequence is lazy and unbounded,
         /// so the caller should either count the elements, or look for some sentinel value to know when to stop reading.
         /// </summary>
-        public IEnumerator<TProxy> GetEnumerator() {
+        public IEnumerator<TProxy> GetEnumerator()
+        {
             var element = this[0];
-            while (true) {
+            while (true)
+            {
                 yield return element;
                 element = element.GetAdjacentProxy(1);
             }
         }
 
-        IEnumerator IEnumerable.GetEnumerator() {
+        IEnumerator IEnumerable.GetEnumerator()
+        {
             return GetEnumerator();
         }
     }

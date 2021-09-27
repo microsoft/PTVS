@@ -14,18 +14,21 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-
-namespace Microsoft.PythonTools.Debugger {
-    class ProcessExitedEventArgs : EventArgs {
+namespace Microsoft.PythonTools.Debugger
+{
+    class ProcessExitedEventArgs : EventArgs
+    {
         private readonly int _exitCode;
 
-        public ProcessExitedEventArgs(int exitCode) {
+        public ProcessExitedEventArgs(int exitCode)
+        {
             _exitCode = exitCode;
         }
 
-        public int ExitCode {
-            get {
+        public int ExitCode
+        {
+            get
+            {
                 return _exitCode;
             }
         }

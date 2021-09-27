@@ -14,24 +14,26 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Diagnostics;
-
-namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
-    internal class PyFloatObject : PyObject {
-        private class Fields {
+namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
+{
+    internal class PyFloatObject : PyObject
+    {
+        private class Fields
+        {
             public StructField<DoubleProxy> ob_fval;
         }
 
         private readonly Fields _fields;
 
         public PyFloatObject(DkmProcess process, ulong address)
-            : base(process, address) {
+            : base(process, address)
+        {
             InitializeStruct(this, out _fields);
             CheckPyType<PyFloatObject>();
         }
 
-        public static PyFloatObject Create(DkmProcess process, double value) {
+        public static PyFloatObject Create(DkmProcess process, double value)
+        {
             var allocator = process.GetDataItem<PyObjectAllocator>();
             Debug.Assert(allocator != null);
 
@@ -40,15 +42,18 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             return result;
         }
 
-        private DoubleProxy ob_fval {
+        private DoubleProxy ob_fval
+        {
             get { return GetFieldProxy(_fields.ob_fval); }
         }
 
-        public Double ToDouble() {
+        public Double ToDouble()
+        {
             return ob_fval.Read();
         }
 
-        public override void Repr(ReprBuilder builder) {
+        public override void Repr(ReprBuilder builder)
+        {
             builder.AppendLiteral(ToDouble());
         }
     }

@@ -14,19 +14,11 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-using System.Threading.Tasks;
-using Microsoft.CookiecutterTools.Model;
-using Microsoft.CookiecutterTools.ViewModel;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using TestUtilities;
-
-namespace CookiecutterTests {
+namespace CookiecutterTests
+{
     [TestClass]
-    public class CookiecutterClientTests {
+    public class CookiecutterClientTests
+    {
         private const string GitHubTemplatePath = "https://github.com/audreyr/Cookiecutter-pypackage";
         private const string NoUserConfigFilePath = "";
 
@@ -85,25 +77,30 @@ namespace CookiecutterTests {
         };
 
         [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
+        public static void DoDeployment(TestContext context)
+        {
             AssertListener.Initialize();
         }
 
         [TestInitialize]
-        public void SetupTest() {
+        public void SetupTest()
+        {
             _client = CookiecutterClientProvider.Create(null, _redirector);
             Assert.IsNotNull(_client, "The system doesn't have any compatible Python interpreters.");
         }
 
-        private async Task EnsureCookiecutterInstalledAsync() {
-            if (!_client.CookiecutterInstalled) {
+        private async Task EnsureCookiecutterInstalledAsync()
+        {
+            if (!_client.CookiecutterInstalled)
+            {
                 await _client.CreateCookiecutterEnv();
                 await _client.InstallPackage();
             }
         }
 
         [TestMethod]
-        public async Task LoadContextNoUserConfig() {
+        public async Task LoadContextNoUserConfig()
+        {
             await EnsureCookiecutterInstalledAsync();
 
             var context = await _client.LoadUnrenderedContextAsync(LocalTemplatePath, NoUserConfigFilePath);
@@ -112,7 +109,8 @@ namespace CookiecutterTests {
         }
 
         [TestMethod]
-        public async Task LoadContextWithUserConfig() {
+        public async Task LoadContextWithUserConfig()
+        {
             await EnsureCookiecutterInstalledAsync();
 
             var context = await _client.LoadUnrenderedContextAsync(LocalTemplatePath, UserConfigFilePath);
@@ -121,7 +119,8 @@ namespace CookiecutterTests {
         }
 
         [TestMethod]
-        public async Task LoadContextForVSNoUserConfig() {
+        public async Task LoadContextForVSNoUserConfig()
+        {
             await EnsureCookiecutterInstalledAsync();
 
             var context = await _client.LoadUnrenderedContextAsync(LocalTemplateForVSPath, NoUserConfigFilePath);
@@ -130,7 +129,8 @@ namespace CookiecutterTests {
         }
 
         [TestMethod]
-        public async Task GenerateWithoutUserConfig() {
+        public async Task GenerateWithoutUserConfig()
+        {
             await EnsureCookiecutterInstalledAsync();
 
             Dictionary<string, string> actual = await GenerateFromLocalTemplate(NoUserConfigFilePath);
@@ -151,7 +151,8 @@ namespace CookiecutterTests {
         }
 
         [TestMethod]
-        public async Task GenerateWithUserConfig() {
+        public async Task GenerateWithUserConfig()
+        {
             await EnsureCookiecutterInstalledAsync();
 
             Dictionary<string, string> actual = await GenerateFromLocalTemplate(UserConfigFilePath);
@@ -172,7 +173,8 @@ namespace CookiecutterTests {
         }
 
         [TestMethod]
-        public async Task CompareFiles() {
+        public async Task CompareFiles()
+        {
             Random rnd = new Random();
             var original = new byte[32768 * 3 + 1024];
             rnd.NextBytes(original);
@@ -188,11 +190,13 @@ namespace CookiecutterTests {
             File.WriteAllBytes(largerPath, original);
             File.WriteAllBytes(modifiedPath, original);
 
-            using (var stream = new FileStream(largerPath, FileMode.Append, FileAccess.Write)) {
+            using (var stream = new FileStream(largerPath, FileMode.Append, FileAccess.Write))
+            {
                 stream.WriteByte(42);
             }
 
-            using (var stream = new FileStream(modifiedPath, FileMode.Open, FileAccess.Write)) {
+            using (var stream = new FileStream(modifiedPath, FileMode.Open, FileAccess.Write))
+            {
                 stream.Seek(32768 + 10, SeekOrigin.Begin);
                 stream.WriteByte(42);
             }
@@ -202,7 +206,8 @@ namespace CookiecutterTests {
             Assert.IsFalse(await CookiecutterClient.AreFilesSameAsync(originalPath, modifiedPath));
         }
 
-        private async Task<Dictionary<string, string>> GenerateFromLocalTemplate(string userConfigFilePath) {
+        private async Task<Dictionary<string, string>> GenerateFromLocalTemplate(string userConfigFilePath)
+        {
             var context = await _client.LoadUnrenderedContextAsync(LocalTemplatePath, userConfigFilePath);
 
             var output = TestData.GetTempPath();
@@ -210,7 +215,8 @@ namespace CookiecutterTests {
             var contextFilePath = Path.Combine(output, "context.json");
 
             var vm = new CookiecutterViewModel();
-            foreach (var item in context.Items) {
+            foreach (var item in context.Items)
+            {
                 vm.ContextItems.Add(new ContextItemViewModel(item.Name, item.Selector, item.Label, item.Description, item.Url, item.DefaultValue, item.Visible, item.Values));
             }
 
@@ -225,59 +231,72 @@ namespace CookiecutterTests {
             return ReadReport(reportFilePath);
         }
 
-        internal static Dictionary<string, string> ReadReport(string filePath) {
+        internal static Dictionary<string, string> ReadReport(string filePath)
+        {
             var dict = new Dictionary<string, string>();
             var report = File.ReadAllLines(filePath);
-            foreach (var line in report) {
+            foreach (var line in report)
+            {
                 var parts = line.Split(':');
                 dict.Add(parts[0], parts[1]);
             }
             return dict;
         }
 
-        class ContextItemComparer : IComparer {
-            public int Compare(object x, object y) {
-                if (x == y) {
+        class ContextItemComparer : IComparer
+        {
+            public int Compare(object x, object y)
+            {
+                if (x == y)
+                {
                     return 0;
                 }
 
                 var a = x as ContextItem;
                 var b = y as ContextItem;
 
-                if (a == null) {
+                if (a == null)
+                {
                     return -1;
                 }
 
-                if (b == null) {
+                if (b == null)
+                {
                     return -1;
                 }
 
                 int res;
                 res = a.Name.CompareTo(b.Name);
-                if (res != 0) {
+                if (res != 0)
+                {
                     return res;
                 }
 
                 res = a.DefaultValue.CompareTo(b.DefaultValue);
-                if (res != 0) {
+                if (res != 0)
+                {
                     return res;
                 }
 
                 res = a.Selector.CompareTo(b.Selector);
-                if (res != 0) {
+                if (res != 0)
+                {
                     return res;
                 }
 
                 res = SafeCompare(a.Description, b.Description);
-                if (res != 0) {
+                if (res != 0)
+                {
                     return res;
                 }
 
                 return 0;
             }
 
-            private int SafeCompare(IComparable a, IComparable b) {
-                if (a == null) {
+            private int SafeCompare(IComparable a, IComparable b)
+            {
+                if (a == null)
+                {
                     return b == null ? 0 : -1;
                 }
 

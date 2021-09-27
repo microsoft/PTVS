@@ -14,27 +14,14 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using Microsoft.PythonTools;
-using Microsoft.PythonTools.Editor;
-using Microsoft.PythonTools.Editor.Core;
-using Microsoft.PythonTools.Intellisense;
-using Microsoft.PythonTools.Parsing;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Text.Classification;
-using Microsoft.VisualStudio.Text.Tagging;
-using TestUtilities;
-using TestUtilities.Mocks;
-
-namespace PythonToolsTests {
+namespace PythonToolsTests
+{
     [TestClass]
-    public class EditorTests {
+    public class EditorTests
+    {
         [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
+        public static void DoDeployment(TestContext context)
+        {
             AssertListener.Initialize();
         }
 
@@ -42,7 +29,8 @@ namespace PythonToolsTests {
 
         #region Outlining Regions
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void OutlineRegions() {
+        public void OutlineRegions()
+        {
             string content = @"print('Hello World')
 #region
 if param: 
@@ -65,7 +53,8 @@ class someClass:
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void OutlineUnbalancedRegions() {
+        public void OutlineUnbalancedRegions()
+        {
             string content = @"#region
 #endregion
 #endregion
@@ -81,7 +70,8 @@ class someClass:
         #region Outlining Cells
 
         [TestMethod, Priority(UnitTestPriority.P0)]
-        public void OutlineCells() {
+        public void OutlineCells()
+        {
             string content = @"pass
 #%% cell 1
 pass
@@ -109,7 +99,8 @@ pass
         #region Outline Compound Statements
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void OutlineIf() {
+        public void OutlineIf()
+        {
             string content = @"if param:
     print('hello')
     print('world')
@@ -139,7 +130,8 @@ if param and \
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void OutlineWhile() {
+        public void OutlineWhile()
+        {
             string content = @"while b and c and d \
     and e \
     and f:
@@ -150,7 +142,8 @@ if param and \
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void OutlineFor() {
+        public void OutlineFor()
+        {
             string content = @"for x in [ 
     1,
     2,
@@ -176,7 +169,8 @@ for x in [1,2,3,4]:
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void OutlineTry() {
+        public void OutlineTry()
+        {
             string content = @"
 try: 
     print('try')
@@ -212,7 +206,8 @@ finally:
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void OutlineWith() {
+        public void OutlineWith()
+        {
             string content = @"with open('file.txt') as f:
     line = f.readline()
     line = line.strip()
@@ -223,7 +218,8 @@ finally:
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void OutlineFuncDef() {
+        public void OutlineFuncDef()
+        {
             string content = @"@decorator_stmt_made_up
 def f():
     print('f')
@@ -240,7 +236,8 @@ def f():
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void OutlineClassDef() {
+        public void OutlineClassDef()
+        {
             string content = @"class SomeClass:
     def this( self ):
         return self";
@@ -250,7 +247,8 @@ def f():
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void OutlineDecorated() {
+        public void OutlineDecorated()
+        {
             string content = @"
 @decorator_stmt(a,
                b,
@@ -265,7 +263,8 @@ def f():
         #region Outlining Statements
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void OutlineLists() {
+        public void OutlineLists()
+        {
             string content = @"a = [1,
      2,
      3]
@@ -287,7 +286,8 @@ def f():
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void OutlineTuple() {
+        public void OutlineTuple()
+        {
             string content = @"( 'value1', 
   'value2',
   'value3')";
@@ -297,7 +297,8 @@ def f():
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void OutlineDictionary() {
+        public void OutlineDictionary()
+        {
             string content = @"dict = {""hello"":""world"",
         ""hello"":""world"",""hello"":[1,
                                  2,3,4,
@@ -323,7 +324,8 @@ def f():
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void OutlineParenthesesExpression() {
+        public void OutlineParenthesesExpression()
+        {
             string content = @"
 (   'abc'
     'def'
@@ -336,7 +338,8 @@ def f():
         }
 
         [TestMethod, Priority(UnitTestPriority.P0)]
-        public void OutlineCallExpression() {
+        public void OutlineCallExpression()
+        {
             string content = @"function_call(arg1,
               arg2,
               arg3)";
@@ -346,7 +349,8 @@ def f():
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void OutlineFromImportStatement() {
+        public void OutlineFromImportStatement()
+        {
             string content = @"from sys import argv \
 as c, \
 path as p";
@@ -356,7 +360,8 @@ path as p";
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void OutlineSetExpression() {
+        public void OutlineSetExpression()
+        {
             string content = @"{1,
  2,
  3}";
@@ -366,7 +371,8 @@ path as p";
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void OutlineConstantExpression() {
+        public void OutlineConstantExpression()
+        {
             string content = @"'''this
 is
 a
@@ -377,7 +383,8 @@ string'''";
                 new ExpectedTag(7, 36, "\r\nis\r\na\r\nmultiline\r\nstring'''"));
         }
 
-        private void SnapshotOutlineTest(string fileContents, params ExpectedTag[] expected) {
+        private void SnapshotOutlineTest(string fileContents, params ExpectedTag[] expected)
+        {
             var snapshot = new MockTextSnapshot(new MockTextBuffer(fileContents), fileContents);
             var ast = Parser.CreateParser(new TextSnapshotToTextReader(snapshot), PythonLanguageVersion.V34).ParseFile();
             var walker = new OutliningWalker(ast);
@@ -393,14 +400,16 @@ string'''";
             VerifyTags(snapshot, tags, expected);
         }
 
-        private void SnapshotRegionTest(string fileContents, params ExpectedTag[] expected) {
+        private void SnapshotRegionTest(string fileContents, params ExpectedTag[] expected)
+        {
             var snapshot = new MockTextSnapshot(new MockTextBuffer(fileContents), fileContents);
             var ast = Parser.CreateParser(new TextSnapshotToTextReader(snapshot), PythonLanguageVersion.V34).ParseFile();
             var tags = OutliningTaggerProvider.OutliningTagger.ProcessRegionTags(snapshot, default(CancellationToken));
             VerifyTags(snapshot, tags, expected);
         }
 
-        private void SnapshotCellTest(string fileContents, params ExpectedTag[] expected) {
+        private void SnapshotCellTest(string fileContents, params ExpectedTag[] expected)
+        {
             var snapshot = new MockTextSnapshot(new MockTextBuffer(fileContents), fileContents);
             var ast = Parser.CreateParser(new TextSnapshotToTextReader(snapshot), PythonLanguageVersion.V34).ParseFile();
             var tags = OutliningTaggerProvider.OutliningTagger.ProcessCellTags(snapshot, default(CancellationToken));
@@ -412,7 +421,8 @@ string'''";
         #region REPL prompt removal
 
         [TestMethod, Priority(UnitTestPriority.P0)]
-        public void RemoveReplPrompts() {
+        public void RemoveReplPrompts()
+        {
             Assert.AreEqual("", ReplPromptHelpers.RemovePrompts("", null));
             Assert.AreEqual("", ReplPromptHelpers.RemovePrompts(">>>", null));
             Assert.AreEqual("", ReplPromptHelpers.RemovePrompts(">>> ", null));
@@ -468,11 +478,13 @@ In [3]: if True:
 
         #region Helpers
 
-        private void VerifyTags(ITextSnapshot snapshot, IEnumerable<ITagSpan<IOutliningRegionTag>> tags, params ExpectedTag[] expected) {
+        private void VerifyTags(ITextSnapshot snapshot, IEnumerable<ITagSpan<IOutliningRegionTag>> tags, params ExpectedTag[] expected)
+        {
             var ltags = new List<ITagSpan<IOutliningRegionTag>>(tags);
 
             // Print this out so we can easily update the tests if things change.
-            foreach (var tag in ltags) {
+            foreach (var tag in ltags)
+            {
                 int start = tag.Span.Start.Position;
                 int end = tag.Span.End.Position;
                 Console.WriteLine("new ExpectedTag({0}, {1}, \"{2}\"),",
@@ -485,7 +497,8 @@ In [3]: if True:
 
             Assert.AreEqual(expected.Length, ltags.Count);
 
-            for (int i = 0; i < ltags.Count; i++) {
+            for (int i = 0; i < ltags.Count; i++)
+            {
                 int start = ltags[i].Span.Start.Position;
                 int end = ltags[i].Span.End.Position;
                 Assert.AreEqual(expected[i].Start, start);
@@ -495,11 +508,13 @@ In [3]: if True:
             }
         }
 
-        private class ExpectedTag {
+        private class ExpectedTag
+        {
             public readonly int Start, End;
             public readonly string Text;
 
-            public ExpectedTag(int start, int end, string text) {
+            public ExpectedTag(int start, int end, string text)
+            {
                 Start = start;
                 End = end;
                 Text = text;

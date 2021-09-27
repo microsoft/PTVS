@@ -14,26 +14,31 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-
-namespace Microsoft.PythonTools.Debugger {
-    class ExceptionRaisedEventArgs : EventArgs {
+namespace Microsoft.PythonTools.Debugger
+{
+    class ExceptionRaisedEventArgs : EventArgs
+    {
         private readonly PythonException _exception;
         private readonly PythonThread _thread;
 
-        public ExceptionRaisedEventArgs(PythonThread thread, PythonException exception) {
+        public ExceptionRaisedEventArgs(PythonThread thread, PythonException exception)
+        {
             _thread = thread;
             _exception = exception;
         }
 
-        public PythonException Exception {
-            get {
+        public PythonException Exception
+        {
+            get
+            {
                 return _exception;
             }
         }
 
-        public PythonThread Thread {
-            get {
+        public PythonThread Thread
+        {
+            get
+            {
                 return _thread;
             }
         }

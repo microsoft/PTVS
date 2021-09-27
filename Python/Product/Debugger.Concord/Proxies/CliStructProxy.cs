@@ -14,47 +14,53 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-
-namespace Microsoft.PythonTools.Debugger.Concord.Proxies {
-    internal struct CliStructProxy<TStruct> : IWritableDataProxy<TStruct> {
+namespace Microsoft.PythonTools.Debugger.Concord.Proxies
+{
+    internal struct CliStructProxy<TStruct> : IWritableDataProxy<TStruct>
+    {
         public DkmProcess Process { get; private set; }
         public ulong Address { get; private set; }
 
         public CliStructProxy(DkmProcess process, ulong address)
-            : this() {
+            : this()
+        {
             Debug.Assert(process != null && address != 0);
             Process = process;
             Address = address;
         }
 
-        public long ObjectSize {
+        public long ObjectSize
+        {
             get { return Marshal.SizeOf(typeof(TStruct)); }
         }
 
-        public unsafe TStruct Read() {
+        public unsafe TStruct Read()
+        {
             var buf = new byte[ObjectSize];
             Process.ReadMemory(Address, DkmReadMemoryFlags.None, buf);
-            fixed (byte* p = buf) {
+            fixed (byte* p = buf)
+            {
                 return (TStruct)Marshal.PtrToStructure((IntPtr)p, typeof(TStruct));
             }
         }
 
-        object IValueStore.Read() {
+        object IValueStore.Read()
+        {
             return Read();
         }
 
-        public unsafe void Write(TStruct value) {
+        public unsafe void Write(TStruct value)
+        {
             var buf = new byte[ObjectSize];
-            fixed (byte* p = buf) {
+            fixed (byte* p = buf)
+            {
                 Marshal.StructureToPtr(value, (IntPtr)p, false);
             }
             Process.WriteMemory(Address, buf);
         }
 
-        void IWritableDataProxy.Write(object value) {
+        void IWritableDataProxy.Write(object value)
+        {
             Write((TStruct)value);
         }
     }

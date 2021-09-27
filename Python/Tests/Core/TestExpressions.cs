@@ -14,15 +14,14 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace AnalysisTests {
-    public static class TestExpressions {
-        public static IEnumerable<string> Snippets2x {
-            get {
+namespace AnalysisTests
+{
+    public static class TestExpressions
+    {
+        public static IEnumerable<string> Snippets2x
+        {
+            get
+            {
                 return Expressions.Concat(Statements2x);
             }
         }
@@ -81,13 +80,16 @@ namespace AnalysisTests {
 
         public static readonly string[] Statements3x = new[] { "nonlocal fob" };
 
-        public static string IndentCode(string code, string indentation) {
+        public static string IndentCode(string code, string indentation)
+        {
             StringBuilder res = new StringBuilder();
             var lines = code.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
-            for (int i = 0; i < lines.Length; i++) {
+            for (int i = 0; i < lines.Length; i++)
+            {
                 res.Append(indentation);
                 res.Append(lines[i]);
-                if (i != lines.Length - 1) {
+                if (i != lines.Length - 1)
+                {
                     res.Append("\r\n");
                 }
             }

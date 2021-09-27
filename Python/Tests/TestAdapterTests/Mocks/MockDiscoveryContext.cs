@@ -14,17 +14,19 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
-
-namespace TestAdapterTests.Mocks {
-    class MockDiscoveryContext : IDiscoveryContext {
+namespace TestAdapterTests.Mocks
+{
+    class MockDiscoveryContext : IDiscoveryContext
+    {
         private readonly IRunSettings _runSettings;
 
-        public MockDiscoveryContext(IRunSettings runSettings) {
+        public MockDiscoveryContext(IRunSettings runSettings)
+        {
             _runSettings = runSettings;
         }
 
-        public IRunSettings RunSettings {
+        public IRunSettings RunSettings
+        {
             get { return _runSettings; }
         }
     }

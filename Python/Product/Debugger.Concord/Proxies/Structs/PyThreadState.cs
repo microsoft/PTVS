@@ -14,14 +14,13 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Collections.Generic;
-using System.Linq;
-using Microsoft.PythonTools.Parsing;
-
-namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
+namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
+{
     [StructProxy(StructName = "_ts")]
-    internal class PyThreadState : StructProxy {
-        private class Fields {
+    internal class PyThreadState : StructProxy
+    {
+        private class Fields
+        {
             public StructField<PointerProxy<PyThreadState>> next;
             public StructField<PointerProxy<PyFrameObject>> frame;
             public StructField<Int32Proxy> use_tracing;
@@ -47,42 +46,52 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
         private readonly Fields _fields;
 
         public PyThreadState(DkmProcess process, ulong address)
-            : base(process, address) {
+            : base(process, address)
+        {
             InitializeStruct(this, out _fields);
         }
 
-        public static PyThreadState TryCreate(DkmProcess process, ulong address) {
-            if (address == 0) {
+        public static PyThreadState TryCreate(DkmProcess process, ulong address)
+        {
+            if (address == 0)
+            {
                 return null;
             }
             return new PyThreadState(process, address);
         }
 
-        public PointerProxy<PyThreadState> next {
+        public PointerProxy<PyThreadState> next
+        {
             get { return GetFieldProxy(_fields.next); }
         }
 
-        public PointerProxy<PyFrameObject> frame {
+        public PointerProxy<PyFrameObject> frame
+        {
             get { return GetFieldProxy(_fields.frame); }
         }
 
-        public Int32Proxy use_tracing {
+        public Int32Proxy use_tracing
+        {
             get { return GetFieldProxy(_fields.use_tracing); }
         }
 
-        public PointerProxy c_tracefunc {
+        public PointerProxy c_tracefunc
+        {
             get { return GetFieldProxy(_fields.c_tracefunc); }
         }
 
-        public PointerProxy<PyObject> curexc_type {
+        public PointerProxy<PyObject> curexc_type
+        {
             get { return GetFieldProxy(_fields.curexc_type); }
         }
 
-        public PointerProxy<PyObject> curexc_value {
+        public PointerProxy<PyObject> curexc_value
+        {
             get { return GetFieldProxy(_fields.curexc_value); }
         }
 
-        public PointerProxy<PyObject> curexc_traceback {
+        public PointerProxy<PyObject> curexc_traceback
+        {
             get { return GetFieldProxy(_fields.curexc_traceback); }
         }
 
@@ -99,11 +108,13 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             : GetFieldProxy(_fields.exc_state).exc_traceback;
 
 
-        public Int32Proxy thread_id {
+        public Int32Proxy thread_id
+        {
             get { return GetFieldProxy(_fields.thread_id); }
         }
 
-        public static IEnumerable<PyThreadState> GetThreadStates(DkmProcess process) {
+        public static IEnumerable<PyThreadState> GetThreadStates(DkmProcess process)
+        {
             return PyInterpreterState.GetInterpreterStates(process).SelectMany(interp => interp.GetThreadStates());
         }
 
@@ -111,15 +122,18 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
     }
 
     [StructProxy(MinVersion = PythonLanguageVersion.V37, StructName = "_PyErr_StackItem")]
-    class PyErr_StackItem : StructProxy {
-        private class Fields {
+    class PyErr_StackItem : StructProxy
+    {
+        private class Fields
+        {
             public StructField<PointerProxy<PyObject>> exc_type, exc_value, exc_traceback;
         }
 
         private readonly Fields _fields;
 
         public PyErr_StackItem(DkmProcess process, ulong address)
-            : base(process, address) {
+            : base(process, address)
+        {
             InitializeStruct(this, out _fields);
         }
 

@@ -14,12 +14,10 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-using Microsoft.VisualStudio.TestWindow.Extensibility;
-
-namespace TestAdapterTests {
-    class TestInfo {
+namespace TestAdapterTests
+{
+    class TestInfo
+    {
         public TestInfo(
             string displayName,
             string fullyQualifiedName,
@@ -31,7 +29,8 @@ namespace TestAdapterTests {
             string[] containedStdOut = null,
             StackFrame[] stackFrames = null,
             string pytestXmlClassName = null,
-            string pytestExecPathSuffix = null) {
+            string pytestExecPathSuffix = null)
+        {
             DisplayName = displayName;
             FullyQualifiedName = fullyQualifiedName;
             FilePath = filePath;

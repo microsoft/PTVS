@@ -14,12 +14,10 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Diagnostics;
-using Microsoft.Dia;
-
-namespace Microsoft.PythonTools.Debugger.Concord {
-    internal enum DiaLocationType : uint {
+namespace Microsoft.PythonTools.Debugger.Concord
+{
+    internal enum DiaLocationType : uint
+    {
         LocIsNull,
         LocIsStatic,
         LocIsTLS,
@@ -34,19 +32,27 @@ namespace Microsoft.PythonTools.Debugger.Concord {
         LocTypeMax
     }
 
-    internal static class DiaExtensions {
-        public static ComPtr<IDiaSymbol>[] GetSymbols(this IDiaSymbol symbol, SymTagEnum symTag, string name) {
+    internal static class DiaExtensions
+    {
+        public static ComPtr<IDiaSymbol>[] GetSymbols(this IDiaSymbol symbol, SymTagEnum symTag, string name)
+        {
             IDiaEnumSymbols enumSymbols;
             symbol.findChildren(symTag, name, 1, out enumSymbols);
-            using (ComPtr.Create(enumSymbols)) {
+            using (ComPtr.Create(enumSymbols))
+            {
                 int n = enumSymbols.count;
                 var result = new ComPtr<IDiaSymbol>[n];
-                try {
-                    for (int i = 0; i < n; ++i) {
+                try
+                {
+                    for (int i = 0; i < n; ++i)
+                    {
                         result[i] = ComPtr.Create(enumSymbols.Item((uint)i));
                     }
-                } catch {
-                    foreach (var item in result) {
+                }
+                catch
+                {
+                    foreach (var item in result)
+                    {
                         item.Dispose();
                     }
                     throw;
@@ -55,32 +61,44 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             }
         }
 
-        public static ComPtr<IDiaSymbol> GetSymbol(this IDiaSymbol symbol, SymTagEnum symTag, string name, Predicate<IDiaSymbol> filter = null) {
+        public static ComPtr<IDiaSymbol> GetSymbol(this IDiaSymbol symbol, SymTagEnum symTag, string name, Predicate<IDiaSymbol> filter = null)
+        {
             var result = new ComPtr<IDiaSymbol>();
 
             IDiaEnumSymbols enumSymbols;
             symbol.findChildren(symTag, name, 1, out enumSymbols);
-            using (ComPtr.Create(enumSymbols)) {
+            using (ComPtr.Create(enumSymbols))
+            {
                 int n = enumSymbols.count;
-                if (n == 0) {
+                if (n == 0)
+                {
                     Debug.Fail("Symbol '" + name + "' was not found.");
                     throw new ArgumentException();
                 }
 
-                try {
-                    for (int i = 0; i < n; ++i) {
-                        using (var item = ComPtr.Create(enumSymbols.Item((uint)i))) {
-                            if (filter == null || filter(item.Object)) {
-                                if (result.Object == null) {
+                try
+                {
+                    for (int i = 0; i < n; ++i)
+                    {
+                        using (var item = ComPtr.Create(enumSymbols.Item((uint)i)))
+                        {
+                            if (filter == null || filter(item.Object))
+                            {
+                                if (result.Object == null)
+                                {
                                     result = item.Detach();
-                                } else {
+                                }
+                                else
+                                {
                                     Debug.Fail("Found more than one symbol named '" + name + "' and matching the filter.");
                                     throw new ArgumentException();
                                 }
                             }
                         }
                     }
-                } catch {
+                }
+                catch
+                {
                     result.Dispose();
                     throw;
                 }
@@ -89,19 +107,25 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             return result;
         }
 
-        public static ComPtr<IDiaSymbol> GetTypeSymbol(this IDiaSymbol moduleSym, string name) {
+        public static ComPtr<IDiaSymbol> GetTypeSymbol(this IDiaSymbol moduleSym, string name)
+        {
             IDiaEnumSymbols enumSymbols = null;
             moduleSym.findChildren(SymTagEnum.SymTagUDT, name, 1, out enumSymbols);
-            using (ComPtr.Create(enumSymbols)) {
-                if (enumSymbols.count > 0) {
+            using (ComPtr.Create(enumSymbols))
+            {
+                if (enumSymbols.count > 0)
+                {
                     return ComPtr.Create(enumSymbols.Item(0));
                 }
             }
 
             moduleSym.findChildren(SymTagEnum.SymTagTypedef, name, 1, out enumSymbols);
-            using (ComPtr.Create(enumSymbols)) {
-                if (enumSymbols.count > 0) {
-                    using (var item = ComPtr.Create(enumSymbols.Item(0))) {
+            using (ComPtr.Create(enumSymbols))
+            {
+                if (enumSymbols.count > 0)
+                {
+                    using (var item = ComPtr.Create(enumSymbols.Item(0)))
+                    {
                         return ComPtr.Create(item.Object.type);
                     }
                 }
@@ -111,14 +135,18 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             }
         }
 
-        public static long GetFieldOffset(this IDiaSymbol structSym, string name) {
-            using (var fieldSym = structSym.GetSymbol(SymTagEnum.SymTagData, name)) {
+        public static long GetFieldOffset(this IDiaSymbol structSym, string name)
+        {
+            using (var fieldSym = structSym.GetSymbol(SymTagEnum.SymTagData, name))
+            {
                 return fieldSym.Object.offset;
             }
         }
 
-        public static DkmNativeInstructionAddress GetFunctionAddress(this IDiaSymbol moduleSym, string name, DkmNativeModuleInstance moduleInstance) {
-            using (var funSym = moduleSym.GetSymbol(SymTagEnum.SymTagFunction, name)) {
+        public static DkmNativeInstructionAddress GetFunctionAddress(this IDiaSymbol moduleSym, string name, DkmNativeModuleInstance moduleInstance)
+        {
+            using (var funSym = moduleSym.GetSymbol(SymTagEnum.SymTagFunction, name))
+            {
                 return DkmNativeInstructionAddress.Create(moduleInstance.Process.GetNativeRuntimeInstance(), moduleInstance, funSym.Object.relativeVirtualAddress, null);
             }
         }

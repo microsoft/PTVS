@@ -14,20 +14,25 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
-    internal class PyMethodDef : StructProxy {
-        private class Fields {
+namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
+{
+    internal class PyMethodDef : StructProxy
+    {
+        private class Fields
+        {
             public StructField<PointerProxy> ml_meth;
         }
 
         private readonly Fields _fields;
 
         public PyMethodDef(DkmProcess process, ulong address)
-            : base(process, address) {
+            : base(process, address)
+        {
             InitializeStruct(this, out _fields);
         }
 
-        public PointerProxy ml_meth {
+        public PointerProxy ml_meth
+        {
             get { return GetFieldProxy(_fields.ml_meth); }
         }
     }

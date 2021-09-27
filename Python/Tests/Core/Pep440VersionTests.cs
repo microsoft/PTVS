@@ -14,15 +14,11 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Linq;
-using Microsoft.PythonTools.Interpreter;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using TestUtilities;
-
-namespace PythonToolsTests {
+namespace PythonToolsTests
+{
     [TestClass]
-    public class Pep440VersionTests {
+    public class Pep440VersionTests
+    {
         // All of these versions should be parseable and appear in the correct
         // order. They do not have to be normalized.
         private static readonly string[] ExampleVersions = @"
@@ -79,8 +75,10 @@ v1.0rc1 == 1.0rc1 == 1.0c1 == 1.0_pre1 == 1.0preview-1
 ".Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
 
         [TestMethod, Priority(UnitTestPriority.P0)]
-        public void VersionParsing() {
-            foreach (var s in ExampleVersions) {
+        public void VersionParsing()
+        {
+            foreach (var s in ExampleVersions)
+            {
                 PackageVersion ver;
                 Assert.IsTrue(PackageVersion.TryParse(s, out ver), s);
                 Assert.AreEqual(s, ver.OriginalForm);
@@ -88,7 +86,8 @@ v1.0rc1 == 1.0rc1 == 1.0c1 == 1.0_pre1 == 1.0preview-1
         }
 
         [TestMethod, Priority(UnitTestPriority.P0)]
-        public void VersionOrdering() {
+        public void VersionOrdering()
+        {
             var versions = ExampleVersions.Select(PackageVersion.Parse).ToList();
             var rnd = new Random();
             var shuffled = versions
@@ -98,10 +97,12 @@ v1.0rc1 == 1.0rc1 == 1.0c1 == 1.0_pre1 == 1.0preview-1
                 .ToList();
             var reversed = versions.AsEnumerable().Reverse().ToList();
 
-            foreach (var src in new[] { shuffled, reversed }) {
+            foreach (var src in new[] { shuffled, reversed })
+            {
                 var sorted = src.OrderBy(v => v).ToList();
 
-                foreach (var p in versions.Zip(sorted, Tuple.Create<PackageVersion, PackageVersion>)) {
+                foreach (var p in versions.Zip(sorted, Tuple.Create<PackageVersion, PackageVersion>))
+                {
                     Console.WriteLine("{0} {1} {2}", p.Item1, p.Item1.Equals(p.Item2) ? "==" : "!=", p.Item2);
                 }
                 AssertUtil.ArrayEquals(versions, sorted);
@@ -109,21 +110,25 @@ v1.0rc1 == 1.0rc1 == 1.0c1 == 1.0_pre1 == 1.0preview-1
         }
 
         [TestMethod, Priority(UnitTestPriority.P0)]
-        public void VersionNormalization() {
-            foreach (var line in ExampleNormalizedVersions) {
+        public void VersionNormalization()
+        {
+            foreach (var line in ExampleNormalizedVersions)
+            {
                 var versions = line.Split(new[] { "==" }, StringSplitOptions.RemoveEmptyEntries)
                     .Select(PackageVersion.Parse)
                     .ToList();
 
                 Console.WriteLine(line);
-                foreach (var v in versions.Skip(1)) {
+                foreach (var v in versions.Skip(1))
+                {
                     Assert.AreEqual(versions[0].NormalizedForm, v.NormalizedForm, v.OriginalForm);
                 }
             }
         }
 
         [TestMethod, Priority(UnitTestPriority.P0)]
-        public void LocalVersionEquality() {
+        public void LocalVersionEquality()
+        {
             // Numeric sections of local versions are compared (but not
             // normalized!) as integers.
             AreVersionsEqual("1.0+1", "1.0+01");
@@ -132,7 +137,8 @@ v1.0rc1 == 1.0rc1 == 1.0c1 == 1.0_pre1 == 1.0preview-1
             AreVersionsNotEqual("1.0+a1", "1.0+a01");
         }
 
-        private static void AreVersionsEqual(string expected, string actual) {
+        private static void AreVersionsEqual(string expected, string actual)
+        {
             PackageVersion v1, v2;
             Assert.IsTrue(PackageVersion.TryParse(expected, out v1), expected);
             Assert.IsTrue(PackageVersion.TryParse(actual, out v2), actual);
@@ -144,7 +150,8 @@ v1.0rc1 == 1.0rc1 == 1.0c1 == 1.0_pre1 == 1.0preview-1
             );
         }
 
-        private static void AreVersionsNotEqual(string expected, string actual) {
+        private static void AreVersionsNotEqual(string expected, string actual)
+        {
             PackageVersion v1, v2;
             Assert.IsTrue(PackageVersion.TryParse(expected, out v1), expected);
             Assert.IsTrue(PackageVersion.TryParse(actual, out v2), actual);

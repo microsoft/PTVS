@@ -14,22 +14,23 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Net;
-using Microsoft.PythonTools.Infrastructure;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using TestUtilities;
-
-namespace PythonToolsTests {
+namespace PythonToolsTests
+{
     [TestClass]
-    public class SocketUtilsTests {
+    public class SocketUtilsTests
+    {
         [TestMethod, Priority(UnitTestPriority.P0)]
-        public void GetRandomPortListener() {
+        public void GetRandomPortListener()
+        {
             var listener = SocketUtils.GetRandomPortListener(IPAddress.Loopback, out int port);
-            try {
+            try
+            {
                 Assert.IsNotNull(listener);
                 Assert.AreEqual(port, ((IPEndPoint)listener.LocalEndpoint).Port);
                 Assert.IsTrue(port >= 49152 && port < 65536);
-            } finally {
+            }
+            finally
+            {
                 listener?.Stop();
             }
         }

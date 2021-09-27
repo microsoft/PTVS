@@ -14,24 +14,27 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
-
-namespace TestAdapterTests.Mocks {
-    class MockRunSettings : IRunSettings {
+namespace TestAdapterTests.Mocks
+{
+    class MockRunSettings : IRunSettings
+    {
         private readonly string _xml;
 
-        public MockRunSettings(string xml) {
+        public MockRunSettings(string xml)
+        {
             _xml = xml;
         }
 
-        public string SettingsXml {
-            get {
+        public string SettingsXml
+        {
+            get
+            {
                 return _xml;
             }
         }
 
-        public ISettingsProvider GetSettings(string settingsName) {
+        public ISettingsProvider GetSettings(string settingsName)
+        {
             throw new NotImplementedException();
         }
     }

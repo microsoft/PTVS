@@ -17,20 +17,6 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Runtime.ExceptionServices;
-using System.Security;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-
 namespace TestUtilities.Ben.Demystifier
 {
     public static class StringBuilderExtensions

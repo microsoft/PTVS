@@ -14,17 +14,20 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.PythonTools.Interpreter;
-
-namespace Microsoft.IronPythonTools.Interpreter {
-    class IronPythonBuiltinModule : IronPythonModule, IBuiltinPythonModule {
+namespace Microsoft.IronPythonTools.Interpreter
+{
+    class IronPythonBuiltinModule : IronPythonModule, IBuiltinPythonModule
+    {
 
         public IronPythonBuiltinModule(IronPythonInterpreter interpreter, ObjectIdentityHandle mod, string name)
-            : base(interpreter, mod, name) {
+            : base(interpreter, mod, name)
+        {
         }
 
-        public IMember GetAnyMember(string name) {
-            switch (name) {
+        public IMember GetAnyMember(string name)
+        {
+            switch (name)
+            {
                 case "NoneType": return Interpreter.GetBuiltinType(BuiltinTypeId.NoneType);
                 case "generator": return Interpreter.GetBuiltinType(BuiltinTypeId.Generator);
                 case "builtin_function": return Interpreter.GetBuiltinType(BuiltinTypeId.BuiltinFunction);

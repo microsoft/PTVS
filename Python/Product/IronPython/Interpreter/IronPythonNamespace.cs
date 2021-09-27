@@ -14,35 +14,39 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Collections.Generic;
-using System.Linq;
-using Microsoft.PythonTools.Interpreter;
-
-namespace Microsoft.IronPythonTools.Interpreter {
-    class IronPythonNamespace : PythonObject, IPythonModule {
+namespace Microsoft.IronPythonTools.Interpreter
+{
+    class IronPythonNamespace : PythonObject, IPythonModule
+    {
         public IronPythonNamespace(IronPythonInterpreter interpreter, ObjectIdentityHandle ns)
-            : base(interpreter, ns) {
+            : base(interpreter, ns)
+        {
         }
 
         #region IPythonModule Members
 
-        public string Name {
-            get {
+        public string Name
+        {
+            get
+            {
                 var ri = RemoteInterpreter;
                 return ri != null ? ri.GetNamespaceName(Value) : string.Empty;
             }
         }
 
-        public void Imported(IModuleContext context) {
+        public void Imported(IModuleContext context)
+        {
             ((IronPythonModuleContext)context).ShowClr = true;
         }
 
-        public IEnumerable<string> GetChildrenModules() {
+        public IEnumerable<string> GetChildrenModules()
+        {
             var ri = RemoteInterpreter;
             return ri != null ? ri.GetNamespaceChildren(Value) : Enumerable.Empty<string>();
         }
 
-        public string Documentation {
+        public string Documentation
+        {
             get { return string.Empty; }
         }
 

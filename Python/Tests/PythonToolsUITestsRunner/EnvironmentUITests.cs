@@ -14,12 +14,11 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using TestRunnerInterop;
-
-namespace PythonToolsUITestsRunner {
+namespace PythonToolsUITestsRunner
+{
     [TestClass]
-    public class EnvironmentUITests {
+    public class EnvironmentUITests
+    {
         #region UI test boilerplate
         public VsTestInvoker _vs => new VsTestInvoker(
             VsTestContext.Instance,
@@ -42,157 +41,183 @@ namespace PythonToolsUITestsRunner {
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void InstallUninstallPackage() {
+        public void InstallUninstallPackage()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.EnvironmentUITests.InstallUninstallPackage));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void CreateInstallRequirementsTxt() {
+        public void CreateInstallRequirementsTxt()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.EnvironmentUITests.CreateInstallRequirementsTxt));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void InstallGenerateRequirementsTxt() {
+        public void InstallGenerateRequirementsTxt()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.EnvironmentUITests.InstallGenerateRequirementsTxt));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void LoadVEnv() {
+        public void LoadVEnv()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.EnvironmentUITests.LoadVEnv));
         }
 
         [TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
-        public void ActivateVEnv() {
+        public void ActivateVEnv()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.EnvironmentUITests.ActivateVEnv));
         }
 
         [TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
-        public void RemoveVEnv() {
+        public void RemoveVEnv()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.EnvironmentUITests.RemoveVEnv));
         }
 
         [TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
-        public void DeleteVEnv() {
+        public void DeleteVEnv()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.EnvironmentUITests.DeleteVEnv));
         }
 
         [TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
-        public void DefaultBaseInterpreterSelection() {
+        public void DefaultBaseInterpreterSelection()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.EnvironmentUITests.DefaultBaseInterpreterSelection));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void ProjectCreateVEnv() {
+        public void ProjectCreateVEnv()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.EnvironmentUITests.ProjectCreateVEnv));
         }
 
         [TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
-        public void ProjectCreateCondaEnvFromPackages() {
+        public void ProjectCreateCondaEnvFromPackages()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.EnvironmentUITests.ProjectCreateCondaEnvFromPackages));
         }
 
         [TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
-        public void ProjectCreateCondaEnvFromEnvFile() {
+        public void ProjectCreateCondaEnvFromEnvFile()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.EnvironmentUITests.ProjectCreateCondaEnvFromEnvFile));
         }
 
         [TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
-        public void ProjectAddExistingVEnvLocal() {
+        public void ProjectAddExistingVEnvLocal()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.EnvironmentUITests.ProjectAddExistingVEnvLocal));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void ProjectAddCustomEnvLocal() {
+        public void ProjectAddCustomEnvLocal()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.EnvironmentUITests.ProjectAddCustomEnvLocal));
         }
 
         [TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
-        public void ProjectAddExistingEnv() {
+        public void ProjectAddExistingEnv()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.EnvironmentUITests.ProjectAddExistingEnv));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void WorkspaceCreateVEnv() {
+        public void WorkspaceCreateVEnv()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.EnvironmentUITests.WorkspaceCreateVEnv));
         }
 
         [TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
-        public void WorkspaceCreateCondaEnvFromEnvFile() {
+        public void WorkspaceCreateCondaEnvFromEnvFile()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.EnvironmentUITests.WorkspaceCreateCondaEnvFromEnvFile));
         }
 
         [TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
-        public void WorkspaceCreateCondaEnvFromPackages() {
+        public void WorkspaceCreateCondaEnvFromPackages()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.EnvironmentUITests.WorkspaceCreateCondaEnvFromPackages));
         }
 
         [TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
-        public void WorkspaceCreateCondaEnvFromNoPackages() {
+        public void WorkspaceCreateCondaEnvFromNoPackages()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.EnvironmentUITests.WorkspaceCreateCondaEnvFromNoPackages));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void WorkspaceAddCustomEnvLocal() {
+        public void WorkspaceAddCustomEnvLocal()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.EnvironmentUITests.WorkspaceAddCustomEnvLocal));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void WorkspaceAddExistingEnv() {
+        public void WorkspaceAddExistingEnv()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.EnvironmentUITests.WorkspaceAddExistingEnv));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void LaunchUnknownEnvironment() {
+        public void LaunchUnknownEnvironment()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.EnvironmentUITests.LaunchUnknownEnvironment));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void EnvironmentReplWorkingDirectory() {
+        public void EnvironmentReplWorkingDirectory()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.EnvironmentUITests.EnvironmentReplWorkingDirectory));
         }
 
         [TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
-        public void VirtualEnvironmentReplWorkingDirectory() {
+        public void VirtualEnvironmentReplWorkingDirectory()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.EnvironmentUITests.VirtualEnvironmentReplWorkingDirectory));
         }
 
         [TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
-        public void SwitcherSingleProject() {
+        public void SwitcherSingleProject()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.EnvironmentUITests.SwitcherSingleProject));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void SwitcherWorkspace() {
+        public void SwitcherWorkspace()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.EnvironmentUITests.SwitcherWorkspace));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void SwitcherNoProject() {
+        public void SwitcherNoProject()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.EnvironmentUITests.SwitcherNoProject));
         }
     }

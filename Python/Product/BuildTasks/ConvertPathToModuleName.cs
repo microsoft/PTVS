@@ -14,17 +14,13 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
-using Microsoft.PythonTools.Analysis;
-
-namespace Microsoft.PythonTools.BuildTasks {
+namespace Microsoft.PythonTools.BuildTasks
+{
     /// <summary>
     /// Converts filenames to Python module names.
     /// </summary>
-    public class ConvertPathToModuleName : Task {
+    public class ConvertPathToModuleName : Task
+    {
         /// <summary>
         /// The filenames to convert.
         /// </summary>
@@ -49,15 +45,21 @@ namespace Microsoft.PythonTools.BuildTasks {
         [Output]
         public ITaskItem[] ModuleNames { get; private set; }
 
-        public override bool Execute() {
+        public override bool Execute()
+        {
             var modules = new List<ITaskItem>();
 
-            foreach (var path in Paths) {
-                try {
+            foreach (var path in Paths)
+            {
+                try
+                {
                     modules.Add(new TaskItem(ModulePath.FromFullPath(path.ItemSpec, PathLimit).ModuleName));
-                } catch (ArgumentException ex) {
+                }
+                catch (ArgumentException ex)
+                {
                     modules.Add(new TaskItem(string.Empty));
-                    if (!IgnoreErrors) {
+                    if (!IgnoreErrors)
+                    {
                         Log.LogErrorFromException(ex);
                     }
                 }

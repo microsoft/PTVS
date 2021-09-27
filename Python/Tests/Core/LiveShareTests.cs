@@ -14,31 +14,24 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.PythonTools.Intellisense;
-using Microsoft.PythonTools.LiveShare;
-using Microsoft.VisualStudio.LanguageServer.Protocol;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using TestUtilities;
-using TestUtilities.Mocks;
-using TestUtilities.Python;
 using LS = Microsoft.VisualStudio.LiveShare.LanguageServices;
 
-namespace PythonToolsTests {
+namespace PythonToolsTests
+{
     [TestClass]
-    public class LiveShareTests {
+    public class LiveShareTests
+    {
         [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
+        public static void DoDeployment(TestContext context)
+        {
             AssertListener.Initialize();
         }
 
         private static Task<VsProjectAnalyzer> CreateAnalyzerAsync() =>
             CreateAnalyzerAsync(PythonPaths.Versions.LastOrDefault());
 
-        private static async Task<VsProjectAnalyzer> CreateAnalyzerAsync(PythonVersion version) {
+        private static async Task<VsProjectAnalyzer> CreateAnalyzerAsync(PythonVersion version)
+        {
             version.AssertInstalled();
             var factory = new MockPythonInterpreterFactory(version.Configuration);
             var sp = new MockServiceProvider();
@@ -54,10 +47,12 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public async Task LiveShareCallback_Initialize() {
+        public async Task LiveShareCallback_Initialize()
+        {
             var cb = PythonLanguageServiceProviderCallback.CreateTestInstance();
 
-            using (var analyzer = await CreateAnalyzerAsync()) {
+            using (var analyzer = await CreateAnalyzerAsync())
+            {
                 var res = await cb.RequestAsync(
                     new LS.LspRequest<InitializeParams, InitializeResult>(Methods.InitializeName),
                     null,
@@ -74,10 +69,12 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P0)]
-        public async Task LiveShareCallback_Completion() {
+        public async Task LiveShareCallback_Completion()
+        {
             var cb = PythonLanguageServiceProviderCallback.CreateTestInstance();
 
-            using (var analyzer = await CreateAnalyzerAsync()) {
+            using (var analyzer = await CreateAnalyzerAsync())
+            {
                 var t = analyzer.WaitForNextCompleteAnalysis();
                 var entry = await analyzer.AnalyzeFileAsync(TestData.GetPath("TestData", "LiveShare", "module.py"));
                 await t;
@@ -86,10 +83,12 @@ namespace PythonToolsTests {
 
                 var res = await cb.RequestAsync(
                     new LS.LspRequest<CompletionParams, CompletionList>(Methods.TextDocumentCompletionName),
-                    new CompletionParams {
+                    new CompletionParams
+                    {
                         TextDocument = new TextDocumentIdentifier { Uri = entry.DocumentUri },
                         Position = new Position { Line = 0, Character = 0 },
-                        Context = new CompletionContext {
+                        Context = new CompletionContext
+                        {
                             TriggerCharacter = "",
                             TriggerKind = CompletionTriggerKind.Invoked
                         }
@@ -107,10 +106,12 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public async Task LiveShareCallback_Hover() {
+        public async Task LiveShareCallback_Hover()
+        {
             var cb = PythonLanguageServiceProviderCallback.CreateTestInstance();
 
-            using (var analyzer = await CreateAnalyzerAsync()) {
+            using (var analyzer = await CreateAnalyzerAsync())
+            {
                 var t = analyzer.WaitForNextCompleteAnalysis();
                 var entry = await analyzer.AnalyzeFileAsync(TestData.GetPath("TestData", "LiveShare", "module.py"));
                 await t;
@@ -119,7 +120,8 @@ namespace PythonToolsTests {
 
                 var res = await cb.RequestAsync(
                     new LS.LspRequest<TextDocumentPositionParams, Hover>(Methods.TextDocumentHoverName),
-                    new TextDocumentPositionParams {
+                    new TextDocumentPositionParams
+                    {
                         TextDocument = new TextDocumentIdentifier { Uri = entry.DocumentUri },
                         Position = new Position { Line = 6, Character = 10 }
                     },
@@ -140,10 +142,12 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public async Task LiveShareCallback_Definition() {
+        public async Task LiveShareCallback_Definition()
+        {
             var cb = PythonLanguageServiceProviderCallback.CreateTestInstance();
 
-            using (var analyzer = await CreateAnalyzerAsync()) {
+            using (var analyzer = await CreateAnalyzerAsync())
+            {
                 var t = analyzer.WaitForNextCompleteAnalysis();
                 var entry = await analyzer.AnalyzeFileAsync(TestData.GetPath("TestData", "LiveShare", "module.py"));
                 await t;
@@ -152,7 +156,8 @@ namespace PythonToolsTests {
 
                 var res = await cb.RequestAsync(
                     new LS.LspRequest<TextDocumentPositionParams, Location[]>(Methods.TextDocumentDefinitionName),
-                    new TextDocumentPositionParams {
+                    new TextDocumentPositionParams
+                    {
                         TextDocument = new TextDocumentIdentifier { Uri = entry.DocumentUri },
                         Position = new Position { Line = 12, Character = 6 }
                     },
@@ -165,7 +170,8 @@ namespace PythonToolsTests {
 
                 res = await cb.RequestAsync(
                     new LS.LspRequest<TextDocumentPositionParams, Location[]>(Methods.TextDocumentDefinitionName),
-                    new TextDocumentPositionParams {
+                    new TextDocumentPositionParams
+                    {
                         TextDocument = new TextDocumentIdentifier { Uri = entry.DocumentUri },
                         Position = new Position { Line = 13, Character = 6 }
                     },
@@ -179,10 +185,12 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public async Task LiveShareCallback_References() {
+        public async Task LiveShareCallback_References()
+        {
             var cb = PythonLanguageServiceProviderCallback.CreateTestInstance();
 
-            using (var analyzer = await CreateAnalyzerAsync()) {
+            using (var analyzer = await CreateAnalyzerAsync())
+            {
                 var t = analyzer.WaitForNextCompleteAnalysis();
                 var entry = await analyzer.AnalyzeFileAsync(TestData.GetPath("TestData", "LiveShare", "module.py"));
                 await t;
@@ -192,10 +200,12 @@ namespace PythonToolsTests {
                 Location[] res = Array.Empty<Location>();
                 // References sometimes need extra warmup. This needs to be fixed on the language
                 // server side though, not here.
-                for (int retries = 5; retries > 0; --retries) {
+                for (int retries = 5; retries > 0; --retries)
+                {
                     res = await cb.RequestAsync(
                         new LS.LspRequest<ReferenceParams, Location[]>(Methods.TextDocumentReferencesName),
-                        new ReferenceParams {
+                        new ReferenceParams
+                        {
                             TextDocument = new TextDocumentIdentifier { Uri = entry.DocumentUri },
                             Position = new Position { Line = 2, Character = 10 },
                             Context = new ReferenceContext { IncludeDeclaration = true }
@@ -203,7 +213,8 @@ namespace PythonToolsTests {
                         null,
                         CancellationToken.None
                     );
-                    if (res != null && res.Length > 0) {
+                    if (res != null && res.Length > 0)
+                    {
                         break;
                     }
                     Thread.Sleep(100);
@@ -214,7 +225,8 @@ namespace PythonToolsTests {
 
                 res = await cb.RequestAsync(
                     new LS.LspRequest<ReferenceParams, Location[]>(Methods.TextDocumentReferencesName),
-                    new ReferenceParams {
+                    new ReferenceParams
+                    {
                         TextDocument = new TextDocumentIdentifier { Uri = entry.DocumentUri },
                         Position = new Position { Line = 3, Character = 10 },
                         Context = new ReferenceContext { IncludeDeclaration = true }

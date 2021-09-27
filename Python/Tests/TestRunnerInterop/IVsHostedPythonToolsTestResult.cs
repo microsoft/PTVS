@@ -14,13 +14,12 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Runtime.InteropServices;
-
-namespace TestRunnerInterop {
+namespace TestRunnerInterop
+{
     [ComImport]
     [Guid("69E79ED7-28D6-4D72-9343-73F24D042EB1")]
-    public interface IVsHostedPythonToolsTestResult {
+    public interface IVsHostedPythonToolsTestResult
+    {
         bool IsSuccess { get; }
 
         string ExceptionType { get; }

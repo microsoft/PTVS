@@ -14,19 +14,21 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.IO;
-
-namespace Microsoft.PythonTools.Interpreter {
-    public static class PythonInterpreterFactoryExtensions {
+namespace Microsoft.PythonTools.Interpreter
+{
+    public static class PythonInterpreterFactoryExtensions
+    {
         /// <summary>
         /// Determines whether two interpreter factories are equivalent.
         /// </summary>
-        public static bool IsEqual(this IPythonInterpreterFactory x, IPythonInterpreterFactory y) {
-            if (x == null || y == null) {
+        public static bool IsEqual(this IPythonInterpreterFactory x, IPythonInterpreterFactory y)
+        {
+            if (x == null || y == null)
+            {
                 return x == null && y == null;
             }
-            if (x.GetType() != y.GetType()) {
+            if (x.GetType() != y.GetType())
+            {
                 return false;
             }
 
@@ -50,11 +52,16 @@ namespace Microsoft.PythonTools.Interpreter {
         /// <exception cref="FileNotFoundException">
         /// factory's InterpreterPath does not exist on disk.
         /// </exception>
-        public static void ThrowIfNotRunnable(this IPythonInterpreterFactory factory, string parameterName = null) {
-            if (factory == null) {
-                if (string.IsNullOrEmpty(parameterName)) {
+        public static void ThrowIfNotRunnable(this IPythonInterpreterFactory factory, string parameterName = null)
+        {
+            if (factory == null)
+            {
+                if (string.IsNullOrEmpty(parameterName))
+                {
                     throw new NullReferenceException();
-                } else {
+                }
+                else
+                {
                     throw new ArgumentNullException(parameterName);
                 }
             }
@@ -77,20 +84,25 @@ namespace Microsoft.PythonTools.Interpreter {
         /// <exception cref="FileNotFoundException">
         /// config's InterpreterPath does not exist on disk.
         /// </exception>
-        public static void ThrowIfNotRunnable(this InterpreterConfiguration config, string parameterName = null) {
-            if (config == null) {
-                if (string.IsNullOrEmpty(parameterName)) {
+        public static void ThrowIfNotRunnable(this InterpreterConfiguration config, string parameterName = null)
+        {
+            if (config == null)
+            {
+                if (string.IsNullOrEmpty(parameterName))
+                {
                     throw new NullReferenceException();
                 }
 
                 throw new ArgumentNullException(parameterName);
             }
 
-            if (InterpreterRegistryConstants.IsNoInterpretersFactory(config.Id)) {
+            if (InterpreterRegistryConstants.IsNoInterpretersFactory(config.Id))
+            {
                 throw new NoInterpretersException();
             }
 
-            if (!File.Exists(config.InterpreterPath)) {
+            if (!File.Exists(config.InterpreterPath))
+            {
                 throw new FileNotFoundException(config.InterpreterPath ?? "(null)");
             }
         }
@@ -100,7 +112,8 @@ namespace Microsoft.PythonTools.Interpreter {
         /// the default interpreter.
         /// </summary>
         /// <remarks>New in 2.2</remarks>
-        public static bool CanBeAutoDefault(this InterpreterConfiguration config) {
+        public static bool CanBeAutoDefault(this InterpreterConfiguration config)
+        {
             return config is VisualStudioInterpreterConfiguration vsConfig &&
                 !vsConfig.UIMode.HasFlag(InterpreterUIMode.CannotBeDefault) &&
                 !vsConfig.UIMode.HasFlag(InterpreterUIMode.CannotBeAutoDefault);
@@ -117,7 +130,8 @@ namespace Microsoft.PythonTools.Interpreter {
         /// interpreter.
         /// </summary>
         /// <remarks>New in 2.2</remarks>
-        public static bool CanBeDefault(this IPythonInterpreterFactory factory) {
+        public static bool CanBeDefault(this IPythonInterpreterFactory factory)
+        {
             return factory != null &&
                    factory.Configuration is VisualStudioInterpreterConfiguration vsConfig &&
                    !vsConfig.UIMode.HasFlag(InterpreterUIMode.CannotBeDefault);
@@ -127,7 +141,8 @@ namespace Microsoft.PythonTools.Interpreter {
         /// Returns <c>true</c> if the factory should appear in the UI.
         /// </summary>
         /// <remarks>New in 2.2</remarks>
-        public static bool IsUIVisible(this IPythonInterpreterFactory factory) {
+        public static bool IsUIVisible(this IPythonInterpreterFactory factory)
+        {
             return factory != null &&
                    factory.Configuration is VisualStudioInterpreterConfiguration vsConfig &&
                    !vsConfig.UIMode.HasFlag(InterpreterUIMode.Hidden);
@@ -137,7 +152,8 @@ namespace Microsoft.PythonTools.Interpreter {
         /// Returns <c>true</c> if the factory should appear in the UI.
         /// </summary>
         /// <remarks>New in 2.2</remarks>
-        public static bool IsUIVisible(this InterpreterConfiguration config) {
+        public static bool IsUIVisible(this InterpreterConfiguration config)
+        {
             return config is VisualStudioInterpreterConfiguration vsConfig &&
                    !vsConfig.UIMode.HasFlag(InterpreterUIMode.Hidden);
         }
@@ -146,7 +162,8 @@ namespace Microsoft.PythonTools.Interpreter {
         /// Returns true if the factory can be run. This checks whether the
         /// configured InterpreterPath value is an actual file.
         /// </summary>
-        public static bool IsRunnable(this IPythonInterpreterFactory factory) {
+        public static bool IsRunnable(this IPythonInterpreterFactory factory)
+        {
             return factory != null && factory.Configuration.IsRunnable();
         }
 
@@ -154,7 +171,8 @@ namespace Microsoft.PythonTools.Interpreter {
         /// Returns true if the configuration can be run. This checks whether
         /// the configured InterpreterPath value is an actual file.
         /// </summary>
-        public static bool IsRunnable(this InterpreterConfiguration config) {
+        public static bool IsRunnable(this InterpreterConfiguration config)
+        {
             return config != null &&
                    !InterpreterRegistryConstants.IsNoInterpretersFactory(config.Id) &&
                    File.Exists(config.InterpreterPath);

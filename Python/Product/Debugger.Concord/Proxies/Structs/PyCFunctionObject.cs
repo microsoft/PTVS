@@ -14,21 +14,26 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
-    internal class PyCFunctionObject : PyObject {
-        private class Fields {
+namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
+{
+    internal class PyCFunctionObject : PyObject
+    {
+        private class Fields
+        {
             public StructField<PointerProxy<PyMethodDef>> m_ml;
         }
 
         private readonly Fields _fields;
 
         public PyCFunctionObject(DkmProcess process, ulong address)
-            : base(process, address) {
+            : base(process, address)
+        {
             InitializeStruct(this, out _fields);
             CheckPyType<PyCFunctionObject>();
         }
 
-        public PointerProxy<PyMethodDef> m_ml {
+        public PointerProxy<PyMethodDef> m_ml
+        {
             get { return GetFieldProxy(_fields.m_ml); }
         }
     }

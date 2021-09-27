@@ -14,76 +14,88 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Diagnostics;
-using System.Linq;
-using Microsoft.Dia;
-using Microsoft.PythonTools.Parsing;
-
-namespace Microsoft.PythonTools.Debugger.Concord.Proxies {
+namespace Microsoft.PythonTools.Debugger.Concord.Proxies
+{
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
-    internal class StructProxyAttribute : Attribute {
+    internal class StructProxyAttribute : Attribute
+    {
         public string StructName { get; set; }
         public PythonLanguageVersion MinVersion { get; set; }
         public PythonLanguageVersion MaxVersion { get; set; }
     }
 
     [AttributeUsage(AttributeTargets.Field, AllowMultiple = true)]
-    internal class FieldProxyAttribute : Attribute {
+    internal class FieldProxyAttribute : Attribute
+    {
         public string FieldName { get; set; }
         public PythonLanguageVersion MinVersion { get; set; }
         public PythonLanguageVersion MaxVersion { get; set; }
     }
 
     // Represents a reference to a struct inside the debuggee process.
-    internal abstract class StructProxy : IDataProxy<StructProxy> {
+    internal abstract class StructProxy : IDataProxy<StructProxy>
+    {
 
-        public class StructMetadata : DkmDataItem {
+        public class StructMetadata : DkmDataItem
+        {
             public DkmProcess Process { get; private set; }
             public string Name { get; private set; }
             public long Size { get; private set; }
             internal object Fields { get; set; }
             private readonly ComPtr<IDiaSymbol> _symbol;
 
-            public StructMetadata(DkmProcess process, string name) {
+            public StructMetadata(DkmProcess process, string name)
+            {
                 Process = process;
                 Name = name;
 
-                using (var pythonSymbols = process.GetPythonRuntimeInfo().DLLs.Python.GetSymbols()) {
+                using (var pythonSymbols = process.GetPythonRuntimeInfo().DLLs.Python.GetSymbols())
+                {
                     _symbol = pythonSymbols.Object.GetTypeSymbol(name);
                 }
                 Size = (long)Symbol.length;
             }
 
-            public IDiaSymbol Symbol {
+            public IDiaSymbol Symbol
+            {
                 get { return _symbol.Object; }
             }
 
-            protected override void OnClose() {
+            protected override void OnClose()
+            {
                 _symbol.Dispose();
                 base.OnClose();
             }
         }
 
         private class StructMetadata<TStruct> : StructMetadata
-            where TStruct : StructProxy {
+            where TStruct : StructProxy
+        {
 
             public StructMetadata(DkmProcess process)
-                : base(process, GetName(process)) {
+                : base(process, GetName(process))
+            {
             }
 
-            private static string GetName(DkmProcess process) {
+            private static string GetName(DkmProcess process)
+            {
                 var langVer = process.GetPythonRuntimeInfo().LanguageVersion;
 
                 var proxyAttrs = (StructProxyAttribute[])Attribute.GetCustomAttributes(typeof(TStruct), typeof(StructProxyAttribute));
-                if (proxyAttrs.Length == 0) {
+                if (proxyAttrs.Length == 0)
+                {
                     return typeof(TStruct).Name;
-                } else {
-                    foreach (var proxyAttr in proxyAttrs) {
-                        if (proxyAttr.MinVersion != PythonLanguageVersion.None && langVer < proxyAttr.MinVersion) {
+                }
+                else
+                {
+                    foreach (var proxyAttr in proxyAttrs)
+                    {
+                        if (proxyAttr.MinVersion != PythonLanguageVersion.None && langVer < proxyAttr.MinVersion)
+                        {
                             continue;
                         }
-                        if (proxyAttr.MaxVersion != PythonLanguageVersion.None && langVer > proxyAttr.MaxVersion) {
+                        if (proxyAttr.MaxVersion != PythonLanguageVersion.None && langVer > proxyAttr.MaxVersion)
+                        {
                             continue;
                         }
 
@@ -100,77 +112,100 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies {
         private readonly ulong _address;
         private StructMetadata _metadata;
 
-        protected StructProxy(DkmProcess process, ulong address) {
+        protected StructProxy(DkmProcess process, ulong address)
+        {
             Debug.Assert(process != null && address != 0);
             _process = process;
             _address = address;
         }
 
-        public DkmProcess Process {
+        public DkmProcess Process
+        {
             get { return _process; }
         }
 
-        public ulong Address {
+        public ulong Address
+        {
             get { return _address; }
         }
 
-        public long ObjectSize {
+        public long ObjectSize
+        {
             get { return _metadata.Size; }
         }
 
-        StructProxy IValueStore<StructProxy>.Read() {
+        StructProxy IValueStore<StructProxy>.Read()
+        {
             return this;
         }
 
-        object IValueStore.Read() {
+        object IValueStore.Read()
+        {
             return this;
         }
 
-        public override bool Equals(object obj) {
+        public override bool Equals(object obj)
+        {
             var other = obj as StructProxy;
-            if (other == null) {
+            if (other == null)
+            {
                 return false;
             }
             return this == other;
         }
 
-        public override int GetHashCode() {
+        public override int GetHashCode()
+        {
             return new { _process, _address }.GetHashCode();
         }
 
         protected TProxy GetFieldProxy<TProxy>(StructField<TProxy>? field, bool polymorphic = true)
-            where TProxy : IDataProxy {
+            where TProxy : IDataProxy
+        {
             return field.HasValue ? GetFieldProxy(field.Value) : default(TProxy);
         }
 
         protected TProxy GetFieldProxy<TProxy>(StructField<TProxy> field, bool polymorphic = true)
-            where TProxy : IDataProxy {
+            where TProxy : IDataProxy
+        {
             return DataProxy.Create<TProxy>(Process, Address.OffsetBy(field.Offset), polymorphic);
         }
 
-        public static bool operator ==(StructProxy lhs, StructProxy rhs) {
-            if ((object)lhs == null) {
-                if ((object)rhs == null) {
+        public static bool operator ==(StructProxy lhs, StructProxy rhs)
+        {
+            if ((object)lhs == null)
+            {
+                if ((object)rhs == null)
+                {
                     return true;
-                } else {
+                }
+                else
+                {
                     return rhs._address == 0;
                 }
-            } else if ((object)rhs == null) {
+            }
+            else if ((object)rhs == null)
+            {
                 return lhs._address == 0;
-            } else {
+            }
+            else
+            {
                 return lhs._process == rhs._process && lhs._address == rhs._address;
             }
         }
 
-        public static bool operator !=(StructProxy lhs, StructProxy rhs) {
+        public static bool operator !=(StructProxy lhs, StructProxy rhs)
+        {
             return !(lhs == rhs);
         }
 
         public static StructMetadata GetStructMetadata<TStruct>(DkmProcess process)
-            where TStruct : StructProxy {
+            where TStruct : StructProxy
+        {
 
             var metadata = process.GetDataItem<StructMetadata<TStruct>>();
-            if (metadata != null) {
+            if (metadata != null)
+            {
                 return metadata;
             }
 
@@ -179,12 +214,15 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies {
             return metadata;
         }
 
-        private static string GetFieldName(System.Reflection.FieldInfo fieldInfo, PythonLanguageVersion pyVersion) {
+        private static string GetFieldName(System.Reflection.FieldInfo fieldInfo, PythonLanguageVersion pyVersion)
+        {
             string name = fieldInfo.Name;
-            foreach (var attr in Attribute.GetCustomAttributes(fieldInfo, typeof(FieldProxyAttribute)).OfType<FieldProxyAttribute>()) {
+            foreach (var attr in Attribute.GetCustomAttributes(fieldInfo, typeof(FieldProxyAttribute)).OfType<FieldProxyAttribute>())
+            {
                 name = null;
                 if ((attr.MinVersion.IsNone() || pyVersion >= attr.MinVersion) &&
-                    (attr.MaxVersion.IsNone() || pyVersion <= attr.MaxVersion)) {
+                    (attr.MaxVersion.IsNone() || pyVersion <= attr.MaxVersion))
+                {
                     return string.IsNullOrEmpty(attr.FieldName) ? fieldInfo.Name : attr.FieldName;
                 }
             }
@@ -192,22 +230,27 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies {
         }
 
         private static TFields GetStructFields<TFields>(StructMetadata metadata)
-            where TFields : class, new() {
+            where TFields : class, new()
+        {
 
-            if (metadata.Fields != null) {
+            if (metadata.Fields != null)
+            {
                 return (TFields)metadata.Fields;
             }
 
             var pyVersion = metadata.Process.GetPythonRuntimeInfo().LanguageVersion;
 
             var fields = new TFields();
-            foreach (var fieldInfo in typeof(TFields).GetFields()) {
+            foreach (var fieldInfo in typeof(TFields).GetFields())
+            {
                 var fieldType = fieldInfo.FieldType;
-                if (fieldType.GetInterfaces().Contains(typeof(IStructField))) {
+                if (fieldType.GetInterfaces().Contains(typeof(IStructField)))
+                {
                     Debug.Assert(!fieldInfo.IsInitOnly);
 
                     var name = GetFieldName(fieldInfo, pyVersion);
-                    if (string.IsNullOrEmpty(name)) {
+                    if (string.IsNullOrEmpty(name))
+                    {
                         continue;
                     }
 
@@ -225,14 +268,16 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies {
 
         public static TFields GetStructFields<TStruct, TFields>(DkmProcess process)
             where TStruct : StructProxy
-            where TFields : class, new() {
+            where TFields : class, new()
+        {
             var metadata = GetStructMetadata<TStruct>(process);
             return GetStructFields<TFields>(metadata);
         }
 
         protected void InitializeStruct<TStruct, TFields>(TStruct this_, out TFields fields)
             where TStruct : StructProxy
-            where TFields : class, new() {
+            where TFields : class, new()
+        {
 
             Debug.Assert(this == this_);
 
@@ -242,18 +287,21 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies {
         }
 
         public static long SizeOf<TStruct>(DkmProcess process)
-            where TStruct : StructProxy {
+            where TStruct : StructProxy
+        {
             return GetStructMetadata<TStruct>(process).Size;
         }
     }
 
-    internal interface IStructField {
+    internal interface IStructField
+    {
         DkmProcess Process { get; set; }
         long Offset { get; set; }
     }
 
     internal struct StructField<TProxy> : IStructField
-        where TProxy : IDataProxy {
+        where TProxy : IDataProxy
+    {
         public DkmProcess Process { get; set; }
         public long Offset { get; set; }
     }

@@ -14,14 +14,10 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Reflection;
-using Microsoft.PythonTools.Interpreter;
-
-namespace Microsoft.IronPythonTools.Interpreter {
-    class IronPythonBuiltinFunctionTarget : IPythonFunctionOverload {
+namespace Microsoft.IronPythonTools.Interpreter
+{
+    class IronPythonBuiltinFunctionTarget : IPythonFunctionOverload
+    {
         private readonly IronPythonInterpreter _interpreter;
         private RemoteInterpreterProxy _remote;
         private readonly ObjectIdentityHandle _overload;
@@ -29,7 +25,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
         private IParameterInfo[] _params;
         private List<IPythonType> _returnType;
 
-        public IronPythonBuiltinFunctionTarget(IronPythonInterpreter interpreter, ObjectIdentityHandle overload, IronPythonType declType) {
+        public IronPythonBuiltinFunctionTarget(IronPythonInterpreter interpreter, ObjectIdentityHandle overload, IronPythonType declType)
+        {
             Debug.Assert(interpreter.Remote.TypeIs<MethodBase>(overload));
             _interpreter = interpreter;
             _interpreter.UnloadingDomain += Interpreter_UnloadingDomain;
@@ -38,7 +35,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
             _declaringType = declType;
         }
 
-        private void Interpreter_UnloadingDomain(object sender, EventArgs e) {
+        private void Interpreter_UnloadingDomain(object sender, EventArgs e)
+        {
             _remote = null;
             _interpreter.UnloadingDomain -= Interpreter_UnloadingDomain;
         }
@@ -46,28 +44,36 @@ namespace Microsoft.IronPythonTools.Interpreter {
         #region IBuiltinFunctionTarget Members
 
         // FIXME
-        public string Documentation {
+        public string Documentation
+        {
             get { return ""; }
         }
 
         // FIXME
-        public string ReturnDocumentation {
+        public string ReturnDocumentation
+        {
             get { return ""; }
         }
 
-        public IParameterInfo[] GetParameters() {
-            if (_params == null) {
+        public IParameterInfo[] GetParameters()
+        {
+            if (_params == null)
+            {
                 var ri = _remote;
                 bool isInstanceExtensionMethod = ri != null ? ri.IsInstanceExtensionMethod(_overload, _declaringType.Value) : false;
 
                 var parameters = ri != null ? ri.GetParametersNoCodeContext(_overload) : new ObjectIdentityHandle[0];
                 var res = new List<IParameterInfo>(parameters.Length);
-                foreach (var param in parameters) {
-                    if (res.Count == 0 && isInstanceExtensionMethod) {
+                foreach (var param in parameters)
+                {
+                    if (res.Count == 0 && isInstanceExtensionMethod)
+                    {
                         // skip instance parameter
                         isInstanceExtensionMethod = false;
                         continue;
-                    } else {
+                    }
+                    else
+                    {
                         res.Add(new IronPythonParameterInfo(_interpreter, param));
                     }
                 }
@@ -77,12 +83,16 @@ namespace Microsoft.IronPythonTools.Interpreter {
             return _params;
         }
 
-        public IReadOnlyList<IPythonType> ReturnType {
-            get {
-                if (_returnType == null) {
+        public IReadOnlyList<IPythonType> ReturnType
+        {
+            get
+            {
+                if (_returnType == null)
+                {
                     _returnType = new List<IPythonType>();
                     var ri = _remote;
-                    if (ri != null) {
+                    if (ri != null)
+                    {
                         _returnType.Add(_interpreter.GetTypeFromType(ri.GetBuiltinFunctionOverloadReturnType(_overload)));
                     }
                 }

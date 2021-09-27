@@ -14,14 +14,12 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Net;
-using System.Net.Sockets;
-using System.Threading;
-
-namespace Microsoft.PythonTools {
-    internal class OnPortOpenedHandler {
-        class OnPortOpenedInfo {
+namespace Microsoft.PythonTools
+{
+    internal class OnPortOpenedHandler
+    {
+        class OnPortOpenedInfo
+        {
             public readonly int Port;
             public readonly TimeSpan Timeout;
             public readonly int Sleep;
@@ -35,7 +33,8 @@ namespace Microsoft.PythonTools {
                 int? sleep = null,
                 Func<bool> shortCircuitPredicate = null,
                 Action action = null
-            ) {
+            )
+            {
                 Port = port;
                 Timeout = TimeSpan.FromMilliseconds(timeout ?? 60000);  // 1 min timeout
                 Sleep = sleep ?? 500;                                   // 1/2 second sleep
@@ -51,7 +50,8 @@ namespace Microsoft.PythonTools {
             int? sleep = null,
             Func<bool> shortCircuitPredicate = null,
             Action action = null
-        ) {
+        )
+        {
             ThreadPool.QueueUserWorkItem(
                 OnPortOpened,
                 new OnPortOpenedInfo(
@@ -64,28 +64,36 @@ namespace Microsoft.PythonTools {
             );
         }
 
-        private static void OnPortOpened(object infoObj) {
+        private static void OnPortOpened(object infoObj)
+        {
             var info = (OnPortOpenedInfo)infoObj;
 
-            using (var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp)) {
+            using (var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp))
+            {
                 socket.Blocking = true;
-                while (true) {
+                while (true)
+                {
                     // Short circuit
-                    if (info.ShortCircuitPredicate()) {
+                    if (info.ShortCircuitPredicate())
+                    {
                         return;
                     }
 
                     // Try connect
-                    try {
+                    try
+                    {
                         socket.Connect(IPAddress.Loopback, info.Port);
                         break;
-                    } catch {
+                    }
+                    catch
+                    {
                         // Connect failure
                         // Fall through
                     }
 
                     // Timeout
-                    if ((System.DateTime.Now - info.StartTime) >= info.Timeout) {
+                    if ((System.DateTime.Now - info.StartTime) >= info.Timeout)
+                    {
                         break;
                     }
 
@@ -95,7 +103,8 @@ namespace Microsoft.PythonTools {
             }
 
             // Launch browser (if not short-circuited)
-            if (!info.ShortCircuitPredicate()) {
+            if (!info.ShortCircuitPredicate())
+            {
                 info.Action();
             }
         }

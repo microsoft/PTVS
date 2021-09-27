@@ -14,29 +14,21 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Xml.Linq;
-using Microsoft.PythonTools;
-using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Parsing;
-using Microsoft.PythonTools.Project.ImportWizard;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using TestUtilities;
-using TestUtilities.Python;
-
-namespace PythonToolsTests {
+namespace PythonToolsTests
+{
     [TestClass]
-    public class ImportWizardTests {
+    public class ImportWizardTests
+    {
         [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
+        public static void DoDeployment(TestContext context)
+        {
             AssertListener.Initialize();
         }
 
-        private static string CreateRequestedProject(dynamic settings) {
-            return Task.Run(async () => {
+        private static string CreateRequestedProject(dynamic settings)
+        {
+            return Task.Run(async () =>
+            {
                 return await await WpfProxy.FromObject((object)settings).InvokeAsync(
                     async () => await (Task<string>)settings.CreateRequestedProjectAsync()
                 );
@@ -46,8 +38,10 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P0)]
-        public void ImportWizardSimple() {
-            using (var wpf = new WpfProxy()) {
+        public void ImportWizardSimple()
+        {
+            using (var wpf = new WpfProxy())
+            {
                 var root = TestData.GetTempPath();
                 FileUtils.CopyDirectory(TestData.GetPath(@"TestData\HelloWorld"), Path.Combine(root, "HelloWorld"));
                 FileUtils.CopyDirectory(TestData.GetPath(@"TestData\SearchPath1"), Path.Combine(root, "SearchPath1"));
@@ -75,8 +69,10 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void ImportWizardFiltered() {
-            using (var wpf = new WpfProxy()) {
+        public void ImportWizardFiltered()
+        {
+            using (var wpf = new WpfProxy())
+            {
                 var root = TestData.GetTempPath();
                 FileUtils.CopyDirectory(TestData.GetPath(@"TestData\HelloWorld"), Path.Combine(root, "HelloWorld"));
                 FileUtils.CopyDirectory(TestData.GetPath(@"TestData\SearchPath1"), Path.Combine(root, "SearchPath1"));
@@ -102,8 +98,10 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void ImportWizardFolders() {
-            using (var wpf = new WpfProxy()) {
+        public void ImportWizardFolders()
+        {
+            using (var wpf = new WpfProxy())
+            {
                 var root = TestData.GetTempPath();
                 FileUtils.CopyDirectory(TestData.GetPath(@"TestData\HelloWorld2"), Path.Combine(root, "HelloWorld2"));
 
@@ -133,8 +131,10 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void ImportWizardInterpreter() {
-            using (var wpf = new WpfProxy()) {
+        public void ImportWizardInterpreter()
+        {
+            using (var wpf = new WpfProxy())
+            {
                 var root = TestData.GetTempPath();
                 FileUtils.CopyDirectory(TestData.GetPath(@"TestData\HelloWorld"), Path.Combine(root, "HelloWorld"));
 
@@ -162,8 +162,10 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void ImportWizardStartupFile() {
-            using (var wpf = new WpfProxy()) {
+        public void ImportWizardStartupFile()
+        {
+            using (var wpf = new WpfProxy())
+            {
                 var root = TestData.GetTempPath();
                 FileUtils.CopyDirectory(TestData.GetPath(@"TestData\HelloWorld"), Path.Combine(root, "HelloWorld"));
 
@@ -183,9 +185,11 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void ImportWizardSemicolons() {
+        public void ImportWizardSemicolons()
+        {
             // https://pytools.codeplex.com/workitem/2022
-            using (var wpf = new WpfProxy()) {
+            using (var wpf = new WpfProxy())
+            {
                 var settings = wpf.Create(() => new ImportSettings(null, null));
                 var sourcePath = TestData.GetTempPath();
                 // Create a fake set of files to import
@@ -217,13 +221,15 @@ namespace PythonToolsTests {
             string venvModuleName,
             string expectedFile,
             bool brokenBaseInterpreter
-        ) {
+        )
+        {
             var mockService = new MockInterpreterOptionsService();
             mockService.AddProvider(new MockPythonInterpreterFactoryProvider("Test Provider",
                 new MockPythonInterpreterFactory(python.Configuration)
             ));
 
-            using (var wpf = new WpfProxy()) {
+            using (var wpf = new WpfProxy())
+            {
                 var settings = wpf.Create(() => new ImportSettings(null, mockService));
                 var sourcePath = TestData.GetTempPath();
                 // Create a fake set of files to import
@@ -231,21 +237,28 @@ namespace PythonToolsTests {
                 Directory.CreateDirectory(Path.Combine(sourcePath, "A"));
                 File.WriteAllText(Path.Combine(sourcePath, "A", "__init__.py"), "");
                 // Create a real virtualenv environment to import
-                using (var p = ProcessOutput.RunHiddenAndCapture(python.InterpreterPath, "-m", venvModuleName, Path.Combine(sourcePath, "env"))) {
+                using (var p = ProcessOutput.RunHiddenAndCapture(python.InterpreterPath, "-m", venvModuleName, Path.Combine(sourcePath, "env")))
+                {
                     Console.WriteLine(p.Arguments);
                     p.Wait();
                     Console.WriteLine(string.Join(Environment.NewLine, p.StandardOutputLines.Concat(p.StandardErrorLines)));
                     Assert.AreEqual(0, p.ExitCode);
                 }
 
-                if (brokenBaseInterpreter) {
+                if (brokenBaseInterpreter)
+                {
                     var cfgPath = Path.Combine(sourcePath, "env", "Lib", "orig-prefix.txt");
-                    if (File.Exists(cfgPath)) {
+                    if (File.Exists(cfgPath))
+                    {
                         File.WriteAllText(cfgPath, string.Format("C:\\{0:N}", Guid.NewGuid()));
-                    } else if (File.Exists((cfgPath = Path.Combine(sourcePath, "env", "pyvenv.cfg")))) {
+                    }
+                    else if (File.Exists((cfgPath = Path.Combine(sourcePath, "env", "pyvenv.cfg"))))
+                    {
                         File.WriteAllLines(cfgPath, File.ReadAllLines(cfgPath)
-                            .Select(line => {
-                                if (line.StartsWith("home = ")) {
+                            .Select(line =>
+                            {
+                                if (line.StartsWith("home = "))
+                                {
                                     return string.Format("home = C:\\{0:N}", Guid.NewGuid());
                                 }
                                 return line;
@@ -255,7 +268,8 @@ namespace PythonToolsTests {
                 }
 
                 Console.WriteLine("All files:");
-                foreach (var f in Directory.EnumerateFiles(sourcePath, "*", SearchOption.AllDirectories)) {
+                foreach (var f in Directory.EnumerateFiles(sourcePath, "*", SearchOption.AllDirectories))
+                {
                     Console.WriteLine(PathUtils.GetRelativeFilePath(sourcePath, f));
                 }
 
@@ -282,9 +296,12 @@ namespace PythonToolsTests {
                 );
 
                 var env = proj.Descendants(proj.GetName("Interpreter")).SingleOrDefault();
-                if (brokenBaseInterpreter) {
+                if (brokenBaseInterpreter)
+                {
                     Assert.IsNull(env);
-                } else {
+                }
+                else
+                {
                     Assert.AreEqual("env\\", env.Attribute("Include").Value);
                     Assert.AreNotEqual("", env.Descendant("Id").Value);
                     Assert.AreEqual(string.Format("env ({0})", python.Configuration.Description), env.Descendant("Description").Value);
@@ -298,7 +315,8 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P2)]
-        public void ImportWizardVirtualEnv() {
+        public void ImportWizardVirtualEnv()
+        {
             var python = PythonPaths.Versions.LastOrDefault(pv =>
                 pv.IsCPython &&
                 File.Exists(Path.Combine(pv.PrefixPath, "Lib", "site-packages", "virtualenv.py")) &&
@@ -311,7 +329,8 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P2)]
-        public void ImportWizardVEnv() {
+        public void ImportWizardVEnv()
+        {
             var python = PythonPaths.Versions.LastOrDefault(pv =>
                 pv.IsCPython && File.Exists(Path.Combine(pv.PrefixPath, "Lib", "venv", "__main__.py"))
             );
@@ -321,7 +340,8 @@ namespace PythonToolsTests {
 
         [TestMethod, Priority(UnitTestPriority.P2)]
         [TestCategory("10s")]
-        public void ImportWizardBrokenVirtualEnv() {
+        public void ImportWizardBrokenVirtualEnv()
+        {
             var python = PythonPaths.Versions.LastOrDefault(pv =>
                 pv.IsCPython &&
                 File.Exists(Path.Combine(pv.PrefixPath, "Lib", "site-packages", "virtualenv.py")) &&
@@ -335,7 +355,8 @@ namespace PythonToolsTests {
 
         [TestMethod, Priority(UnitTestPriority.P2)]
         [TestCategory("10s")]
-        public void ImportWizardBrokenVEnv() {
+        public void ImportWizardBrokenVEnv()
+        {
             var python = PythonPaths.Versions.LastOrDefault(pv =>
                 pv.IsCPython && File.Exists(Path.Combine(pv.PrefixPath, "Lib", "venv", "__main__.py"))
             );
@@ -343,8 +364,10 @@ namespace PythonToolsTests {
             ImportWizardVirtualEnvWorker(python, "venv", "pyvenv.cfg", true);
         }
 
-        private static void ImportWizardCustomizationsWorker(ProjectCustomization customization, Action<XDocument> verify) {
-            using (var wpf = new WpfProxy()) {
+        private static void ImportWizardCustomizationsWorker(ProjectCustomization customization, Action<XDocument> verify)
+        {
+            using (var wpf = new WpfProxy())
+            {
                 var settings = wpf.Create(() => new ImportSettings(null, null));
                 settings.SourcePath = TestData.GetPath("TestData\\HelloWorld\\");
                 settings.Filters = "*.py;*.pyproj";
@@ -365,25 +388,30 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P0)]
-        public void ImportWizardCustomizations() {
-            ImportWizardCustomizationsWorker(DefaultProjectCustomization.Instance, proj => {
+        public void ImportWizardCustomizations()
+        {
+            ImportWizardCustomizationsWorker(DefaultProjectCustomization.Instance, proj =>
+            {
                 Assert.AreEqual("Program.py", proj.Descendant("StartupFile").Value);
                 Assert.IsTrue(proj.Descendants(proj.GetName("Import")).Any(d => d.Attribute("Project").Value == @"$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets"));
                 Assert.AreEqual(0, proj.Descendants("UseCustomServer").Count());
             });
-            ImportWizardCustomizationsWorker(BottleProjectCustomization.Instance, proj => {
+            ImportWizardCustomizationsWorker(BottleProjectCustomization.Instance, proj =>
+            {
                 Assert.AreNotEqual(-1, proj.Descendant("ProjectTypeGuids").Value.IndexOf("e614c764-6d9e-4607-9337-b7073809a0bd", StringComparison.OrdinalIgnoreCase));
                 Assert.IsTrue(proj.Descendants(proj.GetName("Import")).Any(d => d.Attribute("Project").Value == @"$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.Web.targets"));
                 Assert.AreEqual("Web launcher", proj.Descendant("LaunchProvider").Value);
                 Assert.AreEqual("True", proj.Descendant("UseCustomServer").Value);
             });
-            ImportWizardCustomizationsWorker(DjangoProjectCustomization.Instance, proj => {
+            ImportWizardCustomizationsWorker(DjangoProjectCustomization.Instance, proj =>
+            {
                 Assert.AreNotEqual(-1, proj.Descendant("ProjectTypeGuids").Value.IndexOf("5F0BE9CA-D677-4A4D-8806-6076C0FAAD37", StringComparison.OrdinalIgnoreCase));
                 Assert.IsTrue(proj.Descendants(proj.GetName("Import")).Any(d => d.Attribute("Project").Value == @"$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.Django.targets"));
                 Assert.AreEqual("Django launcher", proj.Descendant("LaunchProvider").Value);
                 Assert.AreEqual("True", proj.Descendant("UseCustomServer").Value);
             });
-            ImportWizardCustomizationsWorker(FlaskProjectCustomization.Instance, proj => {
+            ImportWizardCustomizationsWorker(FlaskProjectCustomization.Instance, proj =>
+            {
                 Assert.AreNotEqual(-1, proj.Descendant("ProjectTypeGuids").Value.IndexOf("789894c7-04a9-4a11-a6b5-3f4435165112", StringComparison.OrdinalIgnoreCase));
                 Assert.IsTrue(proj.Descendants(proj.GetName("Import")).Any(d => d.Attribute("Project").Value == @"$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.Web.targets"));
                 Assert.AreEqual("Web launcher", proj.Descendant("LaunchProvider").Value);
@@ -392,13 +420,15 @@ namespace PythonToolsTests {
         }
 
 
-        static T Wait<T>(Task<T> task) {
+        static T Wait<T>(Task<T> task)
+        {
             task.Wait();
             return task.Result;
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void ImportWizardCandidateStartupFiles() {
+        public void ImportWizardCandidateStartupFiles()
+        {
             var sourcePath = TestData.GetTempPath();
             // Create a fake set of files to import
             File.WriteAllText(Path.Combine(sourcePath, "a.py"), "");
@@ -439,7 +469,8 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void ImportWizardDefaultStartupFile() {
+        public void ImportWizardDefaultStartupFile()
+        {
             var files = new[] { "a.py", "b.py", "c.py" };
             var expectedDefault = files[0];
 

@@ -14,12 +14,11 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using TestRunnerInterop;
-
-namespace DjangoUITestsRunner {
+namespace DjangoUITestsRunner
+{
     [TestClass]
-    public class DjangoAzureProjectUITests {
+    public class DjangoAzureProjectUITests
+    {
         #region UI test boilerplate
         public VsTestInvoker _vs => new VsTestInvoker(
             VsTestContext.Instance,
@@ -41,7 +40,8 @@ namespace DjangoUITestsRunner {
 
         [TestMethod, Priority(UITestPriority.P2_FAILING_UI_TEST)]
         [TestCategory("Installed")]
-        public void AddCloudProject() {
+        public void AddCloudProject()
+        {
             _vs.RunTest(nameof(DjangoUITests.DjangoAzureProjectUITests.AddCloudProject));
         }
     }

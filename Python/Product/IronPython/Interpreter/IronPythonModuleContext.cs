@@ -14,22 +14,25 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.PythonTools.Interpreter;
-
-namespace Microsoft.IronPythonTools.Interpreter {
-    class IronPythonModuleContext : IModuleContext {
+namespace Microsoft.IronPythonTools.Interpreter
+{
+    class IronPythonModuleContext : IModuleContext
+    {
         private bool _showClr;
         public static readonly IronPythonModuleContext ShowClrInstance = new IronPythonModuleContext(true);
         public static readonly IronPythonModuleContext DontShowClrInstance = new IronPythonModuleContext(false);
 
-        public IronPythonModuleContext() {
+        public IronPythonModuleContext()
+        {
         }
 
-        public IronPythonModuleContext(bool showClr) {
+        public IronPythonModuleContext(bool showClr)
+        {
             _showClr = showClr;
         }
 
-        public bool ShowClr {
+        public bool ShowClr
+        {
             get { return _showClr; }
             set { _showClr = value; }
         }

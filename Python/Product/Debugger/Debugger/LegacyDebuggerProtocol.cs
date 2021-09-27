@@ -14,30 +14,33 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using Microsoft.PythonTools.Ipc.Json;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-
-namespace Microsoft.PythonTools.Debugger {
+namespace Microsoft.PythonTools.Debugger
+{
     // IMPORTANT:
     // Names of all fields, commands and events must match the names in
     // ptvsd/debugger.py and ptvsd/attach_server.py
-    internal static class LegacyDebuggerProtocol {
+    internal static class LegacyDebuggerProtocol
+    {
         public static readonly Dictionary<string, Type> RegisteredTypes = CollectCommands();
 
-        private static Dictionary<string, Type> CollectCommands() {
+        private static Dictionary<string, Type> CollectCommands()
+        {
             Dictionary<string, Type> all = new Dictionary<string, Type>();
-            foreach (var type in typeof(LegacyDebuggerProtocol).GetNestedTypes()) {
-                if (type.IsSubclassOf(typeof(Request))) {
+            foreach (var type in typeof(LegacyDebuggerProtocol).GetNestedTypes())
+            {
+                if (type.IsSubclassOf(typeof(Request)))
+                {
                     var command = type.GetField("Command");
-                    if (command != null) {
+                    if (command != null)
+                    {
                         all["request." + (string)command.GetRawConstantValue()] = type;
                     }
-                } else if (type.IsSubclassOf(typeof(Event))) {
+                }
+                else if (type.IsSubclassOf(typeof(Event)))
+                {
                     var name = type.GetField("Name");
-                    if (name != null) {
+                    if (name != null)
+                    {
                         all["event." + (string)name.GetRawConstantValue()] = type;
                     }
                 }
@@ -49,7 +52,8 @@ namespace Microsoft.PythonTools.Debugger {
         /// Requests
         //////////////////////////////////////////////////////////////////////
 
-        public sealed class StepIntoRequest : GenericRequest {
+        public sealed class StepIntoRequest : GenericRequest
+        {
             public const string Command = "legacyStepInto";
 
             public override string command => Command;
@@ -57,7 +61,8 @@ namespace Microsoft.PythonTools.Debugger {
             public long threadId;
         }
 
-        public sealed class StepOutRequest : GenericRequest {
+        public sealed class StepOutRequest : GenericRequest
+        {
             public const string Command = "legacyStepOut";
 
             public override string command => Command;
@@ -65,7 +70,8 @@ namespace Microsoft.PythonTools.Debugger {
             public long threadId;
         }
 
-        public sealed class StepOverRequest : GenericRequest {
+        public sealed class StepOverRequest : GenericRequest
+        {
             public const string Command = "legacyStepOver";
 
             public override string command => Command;
@@ -73,13 +79,15 @@ namespace Microsoft.PythonTools.Debugger {
             public long threadId;
         }
 
-        public sealed class BreakAllRequest : GenericRequest {
+        public sealed class BreakAllRequest : GenericRequest
+        {
             public const string Command = "legacyBreakAll";
 
             public override string command => Command;
         }
 
-        public sealed class SetBreakpointRequest : GenericRequest {
+        public sealed class SetBreakpointRequest : GenericRequest
+        {
             public const string Command = "legacySetBreakpoint";
 
             public override string command => Command;
@@ -95,7 +103,8 @@ namespace Microsoft.PythonTools.Debugger {
             public int passCount;
         }
 
-        public sealed class RemoveBreakpointRequest : GenericRequest {
+        public sealed class RemoveBreakpointRequest : GenericRequest
+        {
             public const string Command = "legacyRemoveBreakpoint";
 
             public override string command => Command;
@@ -106,7 +115,8 @@ namespace Microsoft.PythonTools.Debugger {
             public string breakpointFileName;
         }
 
-        public sealed class SetBreakpointConditionRequest : GenericRequest {
+        public sealed class SetBreakpointConditionRequest : GenericRequest
+        {
             public const string Command = "legacySetBreakpointCondition";
 
             public override string command => Command;
@@ -116,7 +126,8 @@ namespace Microsoft.PythonTools.Debugger {
             public string condition;
         }
 
-        public sealed class SetBreakpointPassCountRequest : GenericRequest {
+        public sealed class SetBreakpointPassCountRequest : GenericRequest
+        {
             public const string Command = "legacySetBreakpointPassCount";
 
             public override string command => Command;
@@ -126,7 +137,8 @@ namespace Microsoft.PythonTools.Debugger {
             public int passCount;
         }
 
-        public sealed class SetBreakpointHitCountRequest : GenericRequest {
+        public sealed class SetBreakpointHitCountRequest : GenericRequest
+        {
             public const string Command = "legacySetBreakpointHitCount";
 
             public override string command => Command;
@@ -135,7 +147,8 @@ namespace Microsoft.PythonTools.Debugger {
             public int hitCount;
         }
 
-        public sealed class GetBreakpointHitCountRequest : Request<GetBreakpointHitCountResponse> {
+        public sealed class GetBreakpointHitCountRequest : Request<GetBreakpointHitCountResponse>
+        {
             public const string Command = "legacyGetBreakpointHitCount";
 
             public override string command => Command;
@@ -143,17 +156,20 @@ namespace Microsoft.PythonTools.Debugger {
             public int breakpointId;
         }
 
-        public sealed class GetBreakpointHitCountResponse : Response {
+        public sealed class GetBreakpointHitCountResponse : Response
+        {
             public int hitCount;
         }
 
-        public sealed class ResumeAllRequest : GenericRequest {
+        public sealed class ResumeAllRequest : GenericRequest
+        {
             public const string Command = "legacyResumeAll";
 
             public override string command => Command;
         }
 
-        public sealed class ResumeThreadRequest : GenericRequest {
+        public sealed class ResumeThreadRequest : GenericRequest
+        {
             public const string Command = "legacyResumeThread";
 
             public override string command => Command;
@@ -161,7 +177,8 @@ namespace Microsoft.PythonTools.Debugger {
             public long threadId;
         }
 
-        public sealed class AutoResumeThreadRequest : GenericRequest {
+        public sealed class AutoResumeThreadRequest : GenericRequest
+        {
             public const string Command = "legacyAutoResumeThread";
 
             public override string command => Command;
@@ -169,7 +186,8 @@ namespace Microsoft.PythonTools.Debugger {
             public long threadId;
         }
 
-        public sealed class ClearSteppingRequest : GenericRequest {
+        public sealed class ClearSteppingRequest : GenericRequest
+        {
             public const string Command = "legacyClearStepping";
 
             public override string command => Command;
@@ -177,7 +195,8 @@ namespace Microsoft.PythonTools.Debugger {
             public long threadId;
         }
 
-        public sealed class ExecuteTextRequest : GenericRequest {
+        public sealed class ExecuteTextRequest : GenericRequest
+        {
             public const string Command = "legacyExecuteText";
 
             public override string command => Command;
@@ -192,13 +211,15 @@ namespace Microsoft.PythonTools.Debugger {
             public bool printResult;
         }
 
-        public sealed class DetachRequest : GenericRequest {
+        public sealed class DetachRequest : GenericRequest
+        {
             public const string Command = "legacyDetach";
 
             public override string command => Command;
         }
 
-        public sealed class SetExceptionInfoRequest : GenericRequest {
+        public sealed class SetExceptionInfoRequest : GenericRequest
+        {
             public const string Command = "legacySetExceptionInfo";
 
             public override string command => Command;
@@ -207,13 +228,15 @@ namespace Microsoft.PythonTools.Debugger {
             public ExceptionInfo[] breakOn;
         }
 
-        public sealed class LastAckRequest : GenericRequest {
+        public sealed class LastAckRequest : GenericRequest
+        {
             public const string Command = "legacyLastAck";
 
             public override string command => Command;
         }
 
-        public sealed class EnumThreadFramesRequest : GenericRequest {
+        public sealed class EnumThreadFramesRequest : GenericRequest
+        {
             public const string Command = "legacyGetThreadFrames";
 
             public override string command => Command;
@@ -221,7 +244,8 @@ namespace Microsoft.PythonTools.Debugger {
             public long threadId;
         }
 
-        public sealed class EnumChildrenRequest : GenericRequest {
+        public sealed class EnumChildrenRequest : GenericRequest
+        {
             public const string Command = "legacyEnumChildren";
 
             public override string command => Command;
@@ -233,7 +257,8 @@ namespace Microsoft.PythonTools.Debugger {
             public FrameKind frameKind;
         }
 
-        public sealed class SetLineNumberRequest : Request<SetLineNumberResponse> {
+        public sealed class SetLineNumberRequest : Request<SetLineNumberResponse>
+        {
             public const string Command = "legacySetLineNumber";
 
             public override string command => Command;
@@ -243,7 +268,8 @@ namespace Microsoft.PythonTools.Debugger {
             public int lineNo;
         }
 
-        public sealed class SetLineNumberResponse : Response {
+        public sealed class SetLineNumberResponse : Response
+        {
             public int result;
             public long threadId;
             public int newLineNo;
@@ -251,7 +277,8 @@ namespace Microsoft.PythonTools.Debugger {
 
         // This request is in response to a RequestHandlersEvent.
         // Python process waits for this request after firing that event.
-        public sealed class SetExceptionHandlerInfoRequest : GenericRequest {
+        public sealed class SetExceptionHandlerInfoRequest : GenericRequest
+        {
             public const string Command = "legacySetExceptionHandlerInfo";
 
             public override string command => Command;
@@ -260,7 +287,8 @@ namespace Microsoft.PythonTools.Debugger {
             public ExceptionHandlerStatement[] statements;
         }
 
-        public sealed class RemoteDebuggerAuthenticateRequest : Request<RemoteDebuggerAuthenticateResponse> {
+        public sealed class RemoteDebuggerAuthenticateRequest : Request<RemoteDebuggerAuthenticateResponse>
+        {
             public const string Command = "legacyRemoteDebuggerAuthenticate";
 
             public override string command => Command;
@@ -270,24 +298,28 @@ namespace Microsoft.PythonTools.Debugger {
             public string clientSecret;
         }
 
-        public sealed class RemoteDebuggerAuthenticateResponse : Response {
+        public sealed class RemoteDebuggerAuthenticateResponse : Response
+        {
             public bool accepted;
         }
 
-        public sealed class RemoteDebuggerInfoRequest : Request<RemoteDebuggerInfoResponse> {
+        public sealed class RemoteDebuggerInfoRequest : Request<RemoteDebuggerInfoResponse>
+        {
             public const string Command = "legacyRemoteDebuggerInfo";
 
             public override string command => Command;
         }
 
-        public sealed class RemoteDebuggerInfoResponse : Response {
+        public sealed class RemoteDebuggerInfoResponse : Response
+        {
             public int processId;
             public string executable;
             public string user;
             public string pythonVersion; // maybe split into its components, right now it's just for display, it's never parsed
         }
 
-        public sealed class RemoteDebuggerAttachRequest : Request<RemoteDebuggerAttachResponse> {
+        public sealed class RemoteDebuggerAttachRequest : Request<RemoteDebuggerAttachResponse>
+        {
             public const string Command = "legacyRemoteDebuggerAttach";
 
             public override string command => Command;
@@ -295,7 +327,8 @@ namespace Microsoft.PythonTools.Debugger {
             public string debugOptions;
         }
 
-        public sealed class RemoteDebuggerAttachResponse : Response {
+        public sealed class RemoteDebuggerAttachResponse : Response
+        {
             public bool accepted;
             public int processId;
             public int pythonMajor;
@@ -303,13 +336,15 @@ namespace Microsoft.PythonTools.Debugger {
             public int pythonMicro;
         }
 
-        public sealed class ListReplModulesRequest : Request<ListReplModulesResponse> {
+        public sealed class ListReplModulesRequest : Request<ListReplModulesResponse>
+        {
             public const string Command = "legacyListReplModules";
 
             public override string command => Command;
         }
 
-        public sealed class ListReplModulesResponse : Response {
+        public sealed class ListReplModulesResponse : Response
+        {
             public ModuleItem[] modules;
         }
 
@@ -317,7 +352,8 @@ namespace Microsoft.PythonTools.Debugger {
         // Events
         //////////////////////////////////////////////////////////////////////
 
-        public sealed class LocalConnectedEvent : Event {
+        public sealed class LocalConnectedEvent : Event
+        {
             public const string Name = "legacyLocalConnected";
 
             public override string name => Name;
@@ -326,7 +362,8 @@ namespace Microsoft.PythonTools.Debugger {
             public int result;
         }
 
-        public sealed class RemoteConnectedEvent : Event {
+        public sealed class RemoteConnectedEvent : Event
+        {
             public const string Name = "legacyRemoteConnected";
 
             public override string name => Name;
@@ -335,19 +372,22 @@ namespace Microsoft.PythonTools.Debugger {
             public int debuggerProtocolVersion;
         }
 
-        public sealed class DetachEvent : Event {
+        public sealed class DetachEvent : Event
+        {
             public const string Name = "legacyDetach";
 
             public override string name => Name;
         }
 
-        public sealed class LastEvent : Event {
+        public sealed class LastEvent : Event
+        {
             public const string Name = "legacyLast";
 
             public override string name => Name;
         }
 
-        public sealed class RequestHandlersEvent : Event {
+        public sealed class RequestHandlersEvent : Event
+        {
             public const string Name = "legacyRequestHandlers";
 
             public override string name => Name;
@@ -355,7 +395,8 @@ namespace Microsoft.PythonTools.Debugger {
             public string fileName;
         }
 
-        public sealed class ExceptionEvent : Event {
+        public sealed class ExceptionEvent : Event
+        {
             public const string Name = "legacyException";
 
             public override string name => Name;
@@ -364,7 +405,8 @@ namespace Microsoft.PythonTools.Debugger {
             public Dictionary<string, string> data;
         }
 
-        public sealed class BreakpointHitEvent : Event {
+        public sealed class BreakpointHitEvent : Event
+        {
             public const string Name = "legacyBreakpointHit";
 
             public override string name => Name;
@@ -373,7 +415,8 @@ namespace Microsoft.PythonTools.Debugger {
             public long threadId;
         }
 
-        public sealed class AsyncBreakEvent : Event {
+        public sealed class AsyncBreakEvent : Event
+        {
             public const string Name = "legacyAsyncBreak";
 
             public override string name => Name;
@@ -381,7 +424,8 @@ namespace Microsoft.PythonTools.Debugger {
             public long threadId;
         }
 
-        public sealed class ThreadCreateEvent : Event {
+        public sealed class ThreadCreateEvent : Event
+        {
             public const string Name = "legacyThreadCreate";
 
             public override string name => Name;
@@ -389,7 +433,8 @@ namespace Microsoft.PythonTools.Debugger {
             public long threadId;
         }
 
-        public sealed class ThreadExitEvent : Event {
+        public sealed class ThreadExitEvent : Event
+        {
             public const string Name = "legacyThreadExit";
 
             public override string name => Name;
@@ -397,7 +442,8 @@ namespace Microsoft.PythonTools.Debugger {
             public long threadId;
         }
 
-        public sealed class ModuleLoadEvent : Event {
+        public sealed class ModuleLoadEvent : Event
+        {
             public const string Name = "legacyModuleLoad";
 
             public override string name => Name;
@@ -410,7 +456,8 @@ namespace Microsoft.PythonTools.Debugger {
             public bool isStdLib;
         }
 
-        public sealed class StepDoneEvent : Event {
+        public sealed class StepDoneEvent : Event
+        {
             public const string Name = "legacyStepDone";
 
             public override string name => Name;
@@ -418,7 +465,8 @@ namespace Microsoft.PythonTools.Debugger {
             public long threadId;
         }
 
-        public sealed class ProcessLoadEvent : Event {
+        public sealed class ProcessLoadEvent : Event
+        {
             public const string Name = "legacyProcessLoad";
 
             public override string name => Name;
@@ -426,7 +474,8 @@ namespace Microsoft.PythonTools.Debugger {
             public long threadId;
         }
 
-        public sealed class BreakpointSetEvent : Event {
+        public sealed class BreakpointSetEvent : Event
+        {
             public const string Name = "legacyBreakpointSet";
 
             public override string name => Name;
@@ -434,7 +483,8 @@ namespace Microsoft.PythonTools.Debugger {
             public int breakpointId;
         }
 
-        public sealed class BreakpointFailedEvent : Event {
+        public sealed class BreakpointFailedEvent : Event
+        {
             public const string Name = "legacyBreakpointFailed";
 
             public override string name => Name;
@@ -442,7 +492,8 @@ namespace Microsoft.PythonTools.Debugger {
             public int breakpointId;
         }
 
-        public sealed class DebuggerOutputEvent : Event {
+        public sealed class DebuggerOutputEvent : Event
+        {
             public const string Name = "legacyDebuggerOutput";
 
             public override string name => Name;
@@ -453,9 +504,12 @@ namespace Microsoft.PythonTools.Debugger {
 
             // Legacy fallback in case channel is not specified. Should only be used for serialization.
             [Obsolete]
-            public bool? isStdOut {
-                get {
-                    switch (channel) {
+            public bool? isStdOut
+            {
+                get
+                {
+                    switch (channel)
+                    {
                         case OutputChannel.stdout:
                             return true;
                         case OutputChannel.stderr:
@@ -464,8 +518,10 @@ namespace Microsoft.PythonTools.Debugger {
                             return null;
                     }
                 }
-                set {
-                    switch (value) {
+                set
+                {
+                    switch (value)
+                    {
                         case true:
                             channel = OutputChannel.stdout;
                             break;
@@ -479,7 +535,8 @@ namespace Microsoft.PythonTools.Debugger {
             }
         }
 
-        public sealed class ExecutionResultEvent : Event {
+        public sealed class ExecutionResultEvent : Event
+        {
             public const string Name = "legacyExecutionResult";
 
             public override string name => Name;
@@ -488,7 +545,8 @@ namespace Microsoft.PythonTools.Debugger {
             public PythonObject obj;
         }
 
-        public sealed class ExecutionExceptionEvent : Event {
+        public sealed class ExecutionExceptionEvent : Event
+        {
             public const string Name = "legacyExecutionException";
 
             public override string name => Name;
@@ -497,7 +555,8 @@ namespace Microsoft.PythonTools.Debugger {
             public string exceptionText;
         }
 
-        public sealed class EnumChildrenEvent : Event {
+        public sealed class EnumChildrenEvent : Event
+        {
             public const string Name = "legacyEnumChildrenResult";
 
             public override string name => Name;
@@ -506,7 +565,8 @@ namespace Microsoft.PythonTools.Debugger {
             public EnumChildrenItem[] children;
         }
 
-        public sealed class ThreadFrameListEvent : Event {
+        public sealed class ThreadFrameListEvent : Event
+        {
             public const string Name = "legacyThreadFrameList";
 
             public override string name => Name;
@@ -516,7 +576,8 @@ namespace Microsoft.PythonTools.Debugger {
             public ThreadFrameItem[] threadFrames;
         }
 
-        public sealed class ModulesChangedEvent : Event {
+        public sealed class ModulesChangedEvent : Event
+        {
             public const string Name = "legacyModulesChanged";
 
             public override string name => Name;
@@ -527,7 +588,8 @@ namespace Microsoft.PythonTools.Debugger {
         //////////////////////////////////////////////////////////////////////
 
         [Flags]
-        public enum EvaluationResultFlags {
+        public enum EvaluationResultFlags
+        {
             None = 0,
             Expandable = 1,
             MethodCall = 2,
@@ -536,30 +598,35 @@ namespace Microsoft.PythonTools.Debugger {
             HasRawRepr = 16,
         }
 
-        public enum LanguageKind {
+        public enum LanguageKind
+        {
             Python = 0,
             Django = 1,
         }
 
-        public enum FrameKind {
+        public enum FrameKind
+        {
             None = 0,
             Python = 1,
             Django = 2,
         }
 
-        public enum ReprKind {
+        public enum ReprKind
+        {
             Normal = 0,
             Raw = 1,
             RawLen = 2,
         }
 
-        public enum BreakpointConditionKind {
+        public enum BreakpointConditionKind
+        {
             Always = 0,
             WhenTrue = 1,
             WhenChanged = 2,
         }
 
-        public enum BreakpointPassCountKind {
+        public enum BreakpointPassCountKind
+        {
             Always = 0,
             Every = 1,
             WhenEqual = 2,
@@ -567,13 +634,15 @@ namespace Microsoft.PythonTools.Debugger {
         }
 
         [JsonConverter(typeof(StringEnumConverter))]
-        public enum OutputChannel {
+        public enum OutputChannel
+        {
             debug,
             stdout,
             stderr,
         }
 
-        public sealed class PythonObject {
+        public sealed class PythonObject
+        {
             public string objRepr;
             public string hexRepr;
             public string typeName;
@@ -581,23 +650,27 @@ namespace Microsoft.PythonTools.Debugger {
             public EvaluationResultFlags flags;
         }
 
-        public sealed class ExceptionInfo {
+        public sealed class ExceptionInfo
+        {
             public string name;
             public int mode;
         }
 
-        public sealed class EnumChildrenItem {
+        public sealed class EnumChildrenItem
+        {
             public string name;
             public string expression;
             public PythonObject obj;
         }
 
-        public sealed class ThreadFrameVariable {
+        public sealed class ThreadFrameVariable
+        {
             public string name;
             public PythonObject obj;
         }
 
-        public sealed class ThreadFrameItem {
+        public sealed class ThreadFrameItem
+        {
             public int startLine, endLine, lineNo, argCount;
             public string frameName, fileName;
             public FrameKind frameKind;
@@ -606,13 +679,15 @@ namespace Microsoft.PythonTools.Debugger {
             public ThreadFrameVariable[] variables;
         }
 
-        public sealed class ExceptionHandlerStatement {
+        public sealed class ExceptionHandlerStatement
+        {
             public int lineStart;
             public int lineEnd;
             public string[] expressions;
         }
 
-        public sealed class ModuleItem {
+        public sealed class ModuleItem
+        {
             public string name;
             public string fileName;
         }

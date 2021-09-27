@@ -14,51 +14,54 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Linq;
-using System.Threading;
-using Microsoft.PythonTools;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.Win32;
-using TestUtilities;
-
-namespace PythonToolsTests {
+namespace PythonToolsTests
+{
     [TestClass]
-    public class RegistryWatcherTest {
+    public class RegistryWatcherTest
+    {
         const string TESTKEY = @"Software\PythonToolsTestKey";
         const int TIMEOUT = 500;
 
         [TestInitialize]
-        public void CreateTestKey() {
+        public void CreateTestKey()
+        {
             Registry.CurrentUser.CreateSubKey(TESTKEY).Close();
         }
 
         [TestCleanup]
-        public void RemoveTestKey() {
+        public void RemoveTestKey()
+        {
             Registry.CurrentUser.DeleteSubKeyTree(TESTKEY, throwOnMissingSubKey: false);
         }
 
-        void SetValue(string subkey, string name, object value) {
+        void SetValue(string subkey, string name, object value)
+        {
             using (var reg1 = Registry.CurrentUser.OpenSubKey(TESTKEY, true))
-            using (var reg2 = reg1.CreateSubKey(subkey)) {
+            using (var reg2 = reg1.CreateSubKey(subkey))
+            {
                 reg2.SetValue(name, value);
             }
         }
 
-        void DeleteValue(string subkey, string name) {
+        void DeleteValue(string subkey, string name)
+        {
             using (var reg1 = Registry.CurrentUser.OpenSubKey(TESTKEY, true))
-            using (var reg2 = reg1.CreateSubKey(subkey)) {
+            using (var reg2 = reg1.CreateSubKey(subkey))
+            {
                 reg2.DeleteValue(name, throwOnMissingValue: false);
             }
         }
 
-        void DeleteKey(string subkey) {
-            using (var reg1 = Registry.CurrentUser.OpenSubKey(TESTKEY, true)) {
+        void DeleteKey(string subkey)
+        {
+            using (var reg1 = Registry.CurrentUser.OpenSubKey(TESTKEY, true))
+            {
                 reg1.DeleteSubKeyTree(subkey, throwOnMissingSubKey: false);
             }
         }
 
-        string GetKey(string subkey) {
+        string GetKey(string subkey)
+        {
             return TESTKEY + "\\" + subkey;
         }
 
@@ -67,7 +70,8 @@ namespace PythonToolsTests {
                         Action<RegistryChangedEventArgs> callback,
                         bool recursive = false,
                         bool notifyValueChange = true,
-                        bool notifyKeyChange = true) {
+                        bool notifyKeyChange = true)
+        {
             return watcher.Add(
                 RegistryHive.CurrentUser,
                 RegistryView.Default,
@@ -79,13 +83,15 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void RegistryWatcherUpdateNonRecursive() {
+        public void RegistryWatcherUpdateNonRecursive()
+        {
             string keyName = "RegistryWatcherUpdateNonRecursive";
 
             SetValue(keyName, "TestValue", "ABC");
             SetValue(keyName + "\\TestKey", "Value", 123);
 
-            using (var watcher = new RegistryWatcher()) {
+            using (var watcher = new RegistryWatcher())
+            {
                 RegistryChangedEventArgs args = null;
                 var argsSet = new ManualResetEventSlim();
 
@@ -125,13 +131,15 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void RegistryWatcherAddNonRecursive() {
+        public void RegistryWatcherAddNonRecursive()
+        {
             string keyName = "RegistryWatcherAddNonRecursive";
 
             SetValue(keyName, "TestValue", "ABC");
             SetValue(keyName + "\\TestKey", "Value", 123);
 
-            using (var watcher = new RegistryWatcher()) {
+            using (var watcher = new RegistryWatcher())
+            {
                 RegistryChangedEventArgs args = null;
                 var argsSet = new ManualResetEventSlim();
 
@@ -174,7 +182,8 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void RegistryWatcherDeleteNonRecursive() {
+        public void RegistryWatcherDeleteNonRecursive()
+        {
             string keyName = "RegistryWatcherDeleteNonRecursive";
 
             SetValue(keyName, "TestValue1", "ABC");
@@ -183,7 +192,8 @@ namespace PythonToolsTests {
             SetValue(keyName + "\\TestKey1", "Value", 123);
             SetValue(keyName + "\\TestKey2", "Value", 456);
 
-            using (var watcher = new RegistryWatcher()) {
+            using (var watcher = new RegistryWatcher())
+            {
                 RegistryChangedEventArgs args = null;
                 var argsSet = new ManualResetEventSlim();
 
@@ -228,13 +238,15 @@ namespace PythonToolsTests {
 
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void RegistryWatcherUpdateRecursive() {
+        public void RegistryWatcherUpdateRecursive()
+        {
             string keyName = "RegistryWatcherUpdateRecursive";
 
             SetValue(keyName, "TestValue", "ABC");
             SetValue(keyName + "\\TestKey", "Value", 123);
 
-            using (var watcher = new RegistryWatcher()) {
+            using (var watcher = new RegistryWatcher())
+            {
                 RegistryChangedEventArgs args = null;
                 var argsSet = new ManualResetEventSlim();
 
@@ -278,13 +290,15 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void RegistryWatcherAddRecursive() {
+        public void RegistryWatcherAddRecursive()
+        {
             string keyName = "RegistryWatcherAddRecursive";
 
             SetValue(keyName, "TestValue", "ABC");
             SetValue(keyName + "\\TestKey", "Value", 123);
 
-            using (var watcher = new RegistryWatcher()) {
+            using (var watcher = new RegistryWatcher())
+            {
                 RegistryChangedEventArgs args = null;
                 var argsSet = new ManualResetEventSlim();
 
@@ -332,7 +346,8 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void RegistryWatcherDeleteRecursive() {
+        public void RegistryWatcherDeleteRecursive()
+        {
             string keyName = "RegistryWatcherDeleteRecursive";
 
             SetValue(keyName, "TestValue1", "ABC");
@@ -341,7 +356,8 @@ namespace PythonToolsTests {
             SetValue(keyName + "\\TestKey1", "Value", 123);
             SetValue(keyName + "\\TestKey2", "Value", 456);
 
-            using (var watcher = new RegistryWatcher()) {
+            using (var watcher = new RegistryWatcher())
+            {
                 RegistryChangedEventArgs args = null;
                 var argsSet = new ManualResetEventSlim();
 
@@ -388,37 +404,44 @@ namespace PythonToolsTests {
         }
 
 
-        class ArgSetter {
+        class ArgSetter
+        {
             readonly RegistryChangedEventArgs[] Args;
             readonly ManualResetEventSlim[] ArgsSet;
             readonly int Index;
 
-            public ArgSetter(RegistryChangedEventArgs[] args, ManualResetEventSlim[] argsSet, int i) {
+            public ArgSetter(RegistryChangedEventArgs[] args, ManualResetEventSlim[] argsSet, int i)
+            {
                 Args = args;
                 ArgsSet = argsSet;
                 Index = i;
             }
 
-            public void Raised(RegistryChangedEventArgs e) {
+            public void Raised(RegistryChangedEventArgs e)
+            {
                 Args[Index] = e;
                 ArgsSet[Index].Set();
             }
         }
 
         [TestMethod, Priority(UnitTestPriority.P0)]
-        public void RegistryWatcher100Keys() {
+        public void RegistryWatcher100Keys()
+        {
             string keyName = "RegistryWatcher100Keys";
 
-            for (int i = 0; i < 100; ++i) {
+            for (int i = 0; i < 100; ++i)
+            {
                 SetValue(string.Format("{0}\\Key{1}", keyName, i), "Value", "ABC");
             }
 
-            using (var watcher = new RegistryWatcher()) {
+            using (var watcher = new RegistryWatcher())
+            {
                 var args = new RegistryChangedEventArgs[100];
                 var argsSet = args.Select(_ => new ManualResetEventSlim()).ToArray();
                 var tokens = new object[100];
 
-                for (int i = 0; i < 100; ++i) {
+                for (int i = 0; i < 100; ++i)
+                {
                     tokens[i] = AddWatch(watcher, string.Format("{0}\\Key{1}", keyName, i),
                         new ArgSetter(args, argsSet, i).Raised);
                 }

@@ -14,12 +14,11 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using TestRunnerInterop;
-
-namespace ReplWindowUITestsRunner {
+namespace ReplWindowUITestsRunner
+{
     [TestClass]
-    public class ReplWindowSendUITests {
+    public class ReplWindowSendUITests
+    {
         #region UI test boilerplate
         public VsTestInvoker _vs => new VsTestInvoker(
             VsTestContext.Instance,
@@ -41,55 +40,64 @@ namespace ReplWindowUITestsRunner {
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void SendToInteractiveLineByLine() {
+        public void SendToInteractiveLineByLine()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowSendUITests.SendToInteractiveLineByLine));
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void SendToInteractiveCellByCell() {
+        public void SendToInteractiveCellByCell()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowSendUITests.SendToInteractiveCellByCell));
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void SendToInteractiveDelayed() {
+        public void SendToInteractiveDelayed()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowSendUITests.SendToInteractiveDelayed));
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void SendToInteractiveSelection() {
+        public void SendToInteractiveSelection()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowSendUITests.SendToInteractiveSelection));
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void SendToInteractiveSelectionNoWait() {
+        public void SendToInteractiveSelectionNoWait()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowSendUITests.SendToInteractiveSelectionNoWait));
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void SendToInteractiveOutputSelected() {
+        public void SendToInteractiveOutputSelected()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowSendUITests.SendToInteractiveOutputSelected));
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void SendToInteractiveWorkspaceInterpreter() {
+        public void SendToInteractiveWorkspaceInterpreter()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowSendUITests.SendToInteractiveWorkspaceInterpreter));
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void SendToInteractiveWorkspacePackage() {
+        public void SendToInteractiveWorkspacePackage()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowSendUITests.SendToInteractiveWorkspacePackage));
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void SendToInteractiveWorkspaceSearchPathPackage() {
+        public void SendToInteractiveWorkspaceSearchPathPackage()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowSendUITests.SendToInteractiveWorkspaceSearchPathPackage));
         }
     }

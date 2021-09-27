@@ -14,24 +14,26 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Diagnostics;
-using System.Numerics;
-
-namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
-    internal class PyComplexObject : PyObject {
-        public class Fields {
+namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
+{
+    internal class PyComplexObject : PyObject
+    {
+        public class Fields
+        {
             public StructField<Py_complex> cval;
         }
 
         private readonly Fields _fields;
 
         public PyComplexObject(DkmProcess process, ulong address)
-            : base(process, address) {
+            : base(process, address)
+        {
             InitializeStruct(this, out _fields);
             CheckPyType<PyComplexObject>();
         }
 
-        public static PyComplexObject Create(DkmProcess process, Complex value) {
+        public static PyComplexObject Create(DkmProcess process, Complex value)
+        {
             var allocator = process.GetDataItem<PyObjectAllocator>();
             Debug.Assert(allocator != null);
 
@@ -41,21 +43,26 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             return result;
         }
 
-        public Py_complex cval {
+        public Py_complex cval
+        {
             get { return GetFieldProxy(_fields.cval); }
         }
 
-        public Complex ToComplex() {
+        public Complex ToComplex()
+        {
             return new Complex(cval.real.Read(), cval.imag.Read());
         }
 
-        public override void Repr(ReprBuilder builder) {
+        public override void Repr(ReprBuilder builder)
+        {
             builder.AppendLiteral(ToComplex());
         }
     }
 
-    internal class Py_complex : StructProxy {
-        public class Fields {
+    internal class Py_complex : StructProxy
+    {
+        public class Fields
+        {
             public StructField<DoubleProxy> real;
             public StructField<DoubleProxy> imag;
         }
@@ -63,15 +70,18 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
         private readonly Fields _fields;
 
         public Py_complex(DkmProcess process, ulong address)
-            : base(process, address) {
+            : base(process, address)
+        {
             InitializeStruct(this, out _fields);
         }
 
-        public DoubleProxy real {
+        public DoubleProxy real
+        {
             get { return GetFieldProxy(_fields.real); }
         }
 
-        public DoubleProxy imag {
+        public DoubleProxy imag
+        {
             get { return GetFieldProxy(_fields.imag); }
         }
     }

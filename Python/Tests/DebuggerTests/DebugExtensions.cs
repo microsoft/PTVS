@@ -14,32 +14,35 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.PythonTools.Debugger;
-using TestUtilities;
-
-namespace DebuggerTests {
-    static class DebugExtensions {
-        internal static PythonProcess DebugProcess(this PythonDebugger debugger, PythonVersion version, string filename, TextWriter debugLog, Func<PythonProcess, PythonThread, Task> onLoaded = null, bool resumeOnProcessLoaded = true, string interpreterOptions = null, PythonDebugOptions debugOptions = PythonDebugOptions.RedirectOutput, string cwd = null, string arguments = "") {
+namespace DebuggerTests
+{
+    static class DebugExtensions
+    {
+        internal static PythonProcess DebugProcess(this PythonDebugger debugger, PythonVersion version, string filename, TextWriter debugLog, Func<PythonProcess, PythonThread, Task> onLoaded = null, bool resumeOnProcessLoaded = true, string interpreterOptions = null, PythonDebugOptions debugOptions = PythonDebugOptions.RedirectOutput, string cwd = null, string arguments = "")
+        {
             string fullPath = Path.GetFullPath(filename);
             string dir = cwd ?? Path.GetFullPath(Path.GetDirectoryName(filename));
-            if (!String.IsNullOrEmpty(arguments)) {
+            if (!String.IsNullOrEmpty(arguments))
+            {
                 arguments = "\"" + fullPath + "\" " + arguments;
-            } else {
+            }
+            else
+            {
                 arguments = "\"" + fullPath + "\"";
             }
             var process = debugger.CreateProcess(version.Version, version.InterpreterPath, arguments, dir, "", interpreterOptions, debugOptions, debugLog);
-            process.DebuggerOutput += (sender, args) => {
+            process.DebuggerOutput += (sender, args) =>
+            {
                 Console.WriteLine("{0}: {1}", args.Thread?.Id, args.Output);
             };
-            process.ProcessLoaded += async (sender, args) => {
-                if (onLoaded != null) {
+            process.ProcessLoaded += async (sender, args) =>
+            {
+                if (onLoaded != null)
+                {
                     await onLoaded(process, args.Thread);
                 }
-                if (resumeOnProcessLoaded) {
+                if (resumeOnProcessLoaded)
+                {
                     await process.ResumeAsync(default(CancellationToken));
                 }
             };
@@ -47,15 +50,19 @@ namespace DebuggerTests {
             return process;
         }
 
-        internal static PythonBreakpoint AddBreakpointByFileExtension(this PythonProcess newproc, int line, string finalBreakFilename) {
+        internal static PythonBreakpoint AddBreakpointByFileExtension(this PythonProcess newproc, int line, string finalBreakFilename)
+        {
             PythonBreakpoint breakPoint;
             var ext = Path.GetExtension(finalBreakFilename);
 
             if (String.Equals(ext, ".html", StringComparison.OrdinalIgnoreCase) ||
                 String.Equals(ext, ".htm", StringComparison.OrdinalIgnoreCase) ||
-                String.Equals(ext, ".djt", StringComparison.OrdinalIgnoreCase)) {
+                String.Equals(ext, ".djt", StringComparison.OrdinalIgnoreCase))
+            {
                 breakPoint = newproc.AddDjangoBreakpoint(finalBreakFilename, line);
-            } else {
+            }
+            else
+            {
                 breakPoint = newproc.AddBreakpoint(finalBreakFilename, line);
             }
             return breakPoint;

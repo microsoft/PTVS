@@ -14,12 +14,11 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using TestRunnerInterop;
-
-namespace PythonToolsUITestsRunner {
+namespace PythonToolsUITestsRunner
+{
     [TestClass]
-    public class RemoveImportTests {
+    public class RemoveImportTests
+    {
         #region UI test boilerplate
         public VsTestInvoker _vs => new VsTestInvoker(
             VsTestContext.Instance,
@@ -41,175 +40,204 @@ namespace PythonToolsUITestsRunner {
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void FromImport1() {
+        public void FromImport1()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.RemoveImportTests.FromImport1));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void FromImport2() {
+        public void FromImport2()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.RemoveImportTests.FromImport2));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void FromImportParens1() {
+        public void FromImportParens1()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.RemoveImportTests.FromImportParens1));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void FromImportParens2() {
+        public void FromImportParens2()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.RemoveImportTests.FromImportParens2));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void FromImportParensTrailingComma1() {
+        public void FromImportParensTrailingComma1()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.RemoveImportTests.FromImportParensTrailingComma1));
         }
 
         [TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
-        public void FromImportParensTrailingComma2() {
+        public void FromImportParensTrailingComma2()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.RemoveImportTests.FromImportParensTrailingComma2));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void Import1() {
+        public void Import1()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.RemoveImportTests.Import1));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void Import2() {
+        public void Import2()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.RemoveImportTests.Import2));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void Import3() {
+        public void Import3()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.RemoveImportTests.Import3));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void Import4() {
+        public void Import4()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.RemoveImportTests.Import4));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void Import5() {
+        public void Import5()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.RemoveImportTests.Import5));
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void Import6() {
+        public void Import6()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.RemoveImportTests.Import6));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void ImportComment() {
+        public void ImportComment()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.RemoveImportTests.ImportComment));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void FromImportComment() {
+        public void FromImportComment()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.RemoveImportTests.FromImportComment));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void ImportDup() {
+        public void ImportDup()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.RemoveImportTests.ImportDup));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void FromImportDup() {
+        public void FromImportDup()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.RemoveImportTests.FromImportDup));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void Import() {
+        public void Import()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.RemoveImportTests.Import));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void FromImport() {
+        public void FromImport()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.RemoveImportTests.FromImport));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void FutureImport() {
+        public void FutureImport()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.RemoveImportTests.FutureImport));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void LocalScopeDontRemoveGlobal() {
+        public void LocalScopeDontRemoveGlobal()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.RemoveImportTests.LocalScopeDontRemoveGlobal));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void LocalScopeOnly() {
+        public void LocalScopeOnly()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.RemoveImportTests.LocalScopeOnly));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void ImportTrailingWhitespace() {
+        public void ImportTrailingWhitespace()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.RemoveImportTests.ImportTrailingWhitespace));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void ClosureReference() {
+        public void ClosureReference()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.RemoveImportTests.ClosureReference));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void NameMangledUnmangled() {
+        public void NameMangledUnmangled()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.RemoveImportTests.NameMangledUnmangled));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void NameMangledMangled() {
+        public void NameMangledMangled()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.RemoveImportTests.NameMangledMangled));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void EmptyFuncDef1() {
+        public void EmptyFuncDef1()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.RemoveImportTests.EmptyFuncDef1));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void EmptyFuncDef2() {
+        public void EmptyFuncDef2()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.RemoveImportTests.EmptyFuncDef2));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void EmptyFuncDefWhitespace() {
+        public void EmptyFuncDefWhitespace()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.RemoveImportTests.EmptyFuncDefWhitespace));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void ImportStar() {
+        public void ImportStar()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.RemoveImportTests.ImportStar));
         }
     }

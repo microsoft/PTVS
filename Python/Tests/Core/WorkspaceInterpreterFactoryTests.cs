@@ -14,26 +14,20 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading;
-using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Interpreter;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using TestUtilities;
-
-namespace PythonToolsTests {
+namespace PythonToolsTests
+{
     [TestClass]
-    public class WorkspaceInterpreterFactoryTests {
+    public class WorkspaceInterpreterFactoryTests
+    {
         [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
+        public static void DoDeployment(TestContext context)
+        {
             AssertListener.Initialize();
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void WatchWorkspaceFolderChanged() {
+        public void WatchWorkspaceFolderChanged()
+        {
             var workspaceFolder1 = TestData.GetTempPath();
             Directory.CreateDirectory(workspaceFolder1);
             File.WriteAllText(Path.Combine(workspaceFolder1, "app1.py"), string.Empty);
@@ -50,9 +44,11 @@ namespace PythonToolsTests {
 
             var workspaceContextProvider = new WorkspaceTestHelper.MockWorkspaceContextProvider(workspaceContext1);
 
-            using (var factoryProvider = new WorkspaceInterpreterFactoryProvider(workspaceContextProvider)) {
+            using (var factoryProvider = new WorkspaceInterpreterFactoryProvider(workspaceContextProvider))
+            {
                 // Load a different workspace
-                Action triggerDiscovery = () => {
+                Action triggerDiscovery = () =>
+                {
                     workspaceContextProvider.SimulateChangeWorkspace(workspaceContext2);
                 };
 
@@ -61,7 +57,8 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void WatchWorkspaceSettingsChanged() {
+        public void WatchWorkspaceSettingsChanged()
+        {
             var workspaceFolder = TestData.GetTempPath();
             Directory.CreateDirectory(workspaceFolder);
             File.WriteAllText(Path.Combine(workspaceFolder, "app.py"), string.Empty);
@@ -70,7 +67,8 @@ namespace PythonToolsTests {
             var workspaceContext = new WorkspaceTestHelper.MockWorkspaceContext(workspace);
 
             // Modify settings
-            Action triggerDiscovery = () => {
+            Action triggerDiscovery = () =>
+            {
                 workspaceContext.SimulateChangeInterpreterSetting("Global|PythonCore|3.7");
             };
 
@@ -78,7 +76,8 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P0)]
-        public void WatchWorkspaceVirtualEnvCreated() {
+        public void WatchWorkspaceVirtualEnvCreated()
+        {
             var python = PythonPaths.Python37_x64 ?? PythonPaths.Python37;
 
             var workspaceFolder = TestData.GetTempPath();
@@ -105,7 +104,8 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P0)]
-        public void DetectLocalEnvOutsideWorkspace() {
+        public void DetectLocalEnvOutsideWorkspace()
+        {
             var python = PythonPaths.Python37_x64 ?? PythonPaths.Python37;
 
             var tempFolder = TestData.GetTempPath();
@@ -116,7 +116,8 @@ namespace PythonToolsTests {
             File.WriteAllText(Path.Combine(workspaceFolder, "app.py"), string.Empty);
 
             // Create virtual env outside the workspace folder
-            using (var p = ProcessOutput.RunHiddenAndCapture(python.InterpreterPath, "-m", "venv", envFolder)) {
+            using (var p = ProcessOutput.RunHiddenAndCapture(python.InterpreterPath, "-m", "venv", envFolder))
+            {
                 Console.WriteLine(p.Arguments);
                 p.Wait();
                 Console.WriteLine(string.Join(Environment.NewLine, p.StandardOutputLines.Concat(p.StandardErrorLines)));
@@ -130,7 +131,8 @@ namespace PythonToolsTests {
             var workspaceContext = new WorkspaceTestHelper.MockWorkspaceContext(workspace, @"..\outside\scripts\python.exe");
             var workspaceContextProvider = new WorkspaceTestHelper.MockWorkspaceContextProvider(workspaceContext);
 
-            using (var factoryProvider = new WorkspaceInterpreterFactoryProvider(workspaceContextProvider)) {
+            using (var factoryProvider = new WorkspaceInterpreterFactoryProvider(workspaceContextProvider))
+            {
                 workspaceContextProvider.SimulateChangeWorkspace(workspaceContext);
                 var configs = factoryProvider.GetInterpreterConfigurations().ToArray();
 
@@ -144,7 +146,8 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public void WatchWorkspaceVirtualEnvRenamed() {
+        public void WatchWorkspaceVirtualEnvRenamed()
+        {
             const string ENV_NAME = "env";
             var workspaceContext = CreateEnvAndGetWorkspaceService(ENV_NAME);
 
@@ -158,7 +161,8 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void WatchWorkspaceVirtualEnvDeleted() {
+        public void WatchWorkspaceVirtualEnvDeleted()
+        {
             const string ENV_NAME = "env";
             var workspaceContext = CreateEnvAndGetWorkspaceService(ENV_NAME);
 
@@ -173,22 +177,29 @@ namespace PythonToolsTests {
                 Action triggerDiscovery,
                 IPythonWorkspaceContextProvider workspaceContextProvider = null,
                 bool useDiscoveryStartedEvent = false
-        ) {
+        )
+        {
             workspaceContextProvider = workspaceContextProvider
                 ?? new WorkspaceTestHelper.MockWorkspaceContextProvider(workspaceContext);
 
             using (var provider = new WorkspaceInterpreterFactoryProvider(workspaceContextProvider))
-            using (var evt = new AutoResetEvent(false)) {
+            using (var evt = new AutoResetEvent(false))
+            {
                 // This initializes the provider, discovers the initial set
                 // of factories and starts watching the filesystem.
                 provider.GetInterpreterFactories();
 
-                if (useDiscoveryStartedEvent) {
-                    provider.DiscoveryStarted += (sender, e) => {
+                if (useDiscoveryStartedEvent)
+                {
+                    provider.DiscoveryStarted += (sender, e) =>
+                    {
                         evt.Set();
                     };
-                } else {
-                    provider.InterpreterFactoriesChanged += (sender, e) => {
+                }
+                else
+                {
+                    provider.InterpreterFactoriesChanged += (sender, e) =>
+                    {
                         evt.Set();
                     };
                 }
@@ -199,7 +210,8 @@ namespace PythonToolsTests {
             }
         }
 
-        private WorkspaceTestHelper.MockWorkspaceContext CreateEnvAndGetWorkspaceService(string envName) {
+        private WorkspaceTestHelper.MockWorkspaceContext CreateEnvAndGetWorkspaceService(string envName)
+        {
             var python = PythonPaths.Python37_x64 ?? PythonPaths.Python37;
 
             var workspacePath = TestData.GetTempPath();

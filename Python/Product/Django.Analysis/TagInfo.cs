@@ -14,14 +14,15 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.PythonTools.Analysis;
+namespace Microsoft.PythonTools.Django.Analysis
+{
 
-namespace Microsoft.PythonTools.Django.Analysis {
-
-    class TagInfo {
+    class TagInfo
+    {
         public readonly string Documentation;
         public readonly IPythonProjectEntry Entry;
-        public TagInfo(string doc, IPythonProjectEntry entry) {
+        public TagInfo(string doc, IPythonProjectEntry entry)
+        {
             Documentation = doc;
             Entry = entry;
         }

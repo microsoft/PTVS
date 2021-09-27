@@ -14,19 +14,16 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Runtime.Remoting;
-using Microsoft.IronPythonTools.Interpreter;
-using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Parsing;
-using TestUtilities.Python;
-
-namespace IronPythonTests {
-    class IronPythonAnalysis : PythonAnalysis {
+namespace IronPythonTests
+{
+    class IronPythonAnalysis : PythonAnalysis
+    {
         public IronPythonAnalysis(PythonLanguageVersion version) : base(version) { }
 
         public IronPythonAnalysis(string idOrDescription) : base(idOrDescription) { }
 
-        public IronPythonAnalysis(IPythonInterpreterFactory factory) : base(factory) {
+        public IronPythonAnalysis(IPythonInterpreterFactory factory) : base(factory)
+        {
             ((IronPythonInterpreter)Analyzer.Interpreter).Remote.AddAssembly(new ObjectHandle(typeof(IronPythonAnalysisTest).Assembly));
         }
 

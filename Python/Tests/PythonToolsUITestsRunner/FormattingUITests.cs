@@ -14,12 +14,11 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using TestRunnerInterop;
-
-namespace PythonToolsUITestsRunner {
+namespace PythonToolsUITestsRunner
+{
     [TestClass]
-    public class FormattingUITests {
+    public class FormattingUITests
+    {
         #region UI test boilerplate
         public VsTestInvoker _vs => new VsTestInvoker(
             VsTestContext.Instance,
@@ -41,37 +40,43 @@ namespace PythonToolsUITestsRunner {
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void ToggleableOptionTest() {
+        public void ToggleableOptionTest()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.FormattingUITests.ToggleableOptionTest));
         }
 
         [TestMethod, Priority(UITestPriority.P2_FAILING_UI_TEST)]
         [TestCategory("Installed")]
-        public void FormatDocument() {
+        public void FormatDocument()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.FormattingUITests.FormatDocument));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void FormatAsyncDocument() {
+        public void FormatAsyncDocument()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.FormattingUITests.FormatAsyncDocument));
         }
 
         [TestMethod, Priority(UITestPriority.P2_FAILING_UI_TEST)]
         [TestCategory("Installed")]
-        public void FormatSelection() {
+        public void FormatSelection()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.FormattingUITests.FormatSelection));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void FormatSelectionNoSelection() {
+        public void FormatSelectionNoSelection()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.FormattingUITests.FormatSelectionNoSelection));
         }
 
         [TestMethod, Priority(UITestPriority.P2_FAILING_UI_TEST)]
         [TestCategory("Installed")]
-        public void FormatReduceLines() {
+        public void FormatReduceLines()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.FormattingUITests.FormatReduceLines));
         }
     }

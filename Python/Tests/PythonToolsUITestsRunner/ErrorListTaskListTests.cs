@@ -14,12 +14,11 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using TestRunnerInterop;
-
-namespace PythonToolsUITestsRunner {
+namespace PythonToolsUITestsRunner
+{
     [TestClass]
-    public class ErrorListTaskListTests {
+    public class ErrorListTaskListTests
+    {
         #region UI test boilerplate
         public VsTestInvoker _vs => new VsTestInvoker(
             VsTestContext.Instance,
@@ -41,49 +40,57 @@ namespace PythonToolsUITestsRunner {
 
         [TestMethod, Priority(UITestPriority.P2_FAILING_UI_TEST)]
         [TestCategory("Installed")]
-        public void ErrorList() {
+        public void ErrorList()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.ErrorListTaskListTests.ErrorList));
         }
 
         [TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
-        public void CommentTaskList() {
+        public void CommentTaskList()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.ErrorListTaskListTests.CommentTaskList));
         }
 
         [TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
-        public void ErrorListAndTaskListAreClearedWhenProjectIsDeleted() {
+        public void ErrorListAndTaskListAreClearedWhenProjectIsDeleted()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.ErrorListTaskListTests.ErrorListAndTaskListAreClearedWhenProjectIsDeleted));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void ErrorListAndTaskListAreClearedWhenProjectIsUnloaded() {
+        public void ErrorListAndTaskListAreClearedWhenProjectIsUnloaded()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.ErrorListTaskListTests.ErrorListAndTaskListAreClearedWhenProjectIsUnloaded));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void ErrorListAndTaskListAreClearedWhenProjectWithMultipleFilesIsUnloaded() {
+        public void ErrorListAndTaskListAreClearedWhenProjectWithMultipleFilesIsUnloaded()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.ErrorListTaskListTests.ErrorListAndTaskListAreClearedWhenProjectWithMultipleFilesIsUnloaded));
         }
 
         [TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
-        public void ErrorListAndTaskListAreClearedWhenFileIsDeleted() {
+        public void ErrorListAndTaskListAreClearedWhenFileIsDeleted()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.ErrorListTaskListTests.ErrorListAndTaskListAreClearedWhenFileIsDeleted));
         }
 
         [TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
-        public void ErrorListAndTaskListAreClearedWhenOpenFileIsDeleted() {
+        public void ErrorListAndTaskListAreClearedWhenOpenFileIsDeleted()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.ErrorListTaskListTests.ErrorListAndTaskListAreClearedWhenOpenFileIsDeleted));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void ErrorListEmptyForValidTypingFile() {
+        public void ErrorListEmptyForValidTypingFile()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.ErrorListTaskListTests.ErrorListEmptyForValidTypingFile));
         }
     }

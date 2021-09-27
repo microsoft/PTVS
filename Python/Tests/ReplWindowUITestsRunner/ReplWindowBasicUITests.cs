@@ -14,12 +14,11 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using TestRunnerInterop;
-
-namespace ReplWindowUITestsRunner {
+namespace ReplWindowUITestsRunner
+{
     [TestClass, Ignore]
-    public abstract class ReplWindowBasicUITests {
+    public abstract class ReplWindowBasicUITests
+    {
         #region UI test boilerplate
         public VsTestInvoker _vs => new VsTestInvoker(
             VsTestContext.Instance,
@@ -45,62 +44,72 @@ namespace ReplWindowUITestsRunner {
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void RegressionImportSysBackspace() {
+        public void RegressionImportSysBackspace()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.RegressionImportSysBackspace), Interpreter);
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void RegressionImportMultipleModules() {
+        public void RegressionImportMultipleModules()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.RegressionImportMultipleModules), Interpreter);
         }
 
         //[Ignore] // https://github.com/Microsoft/PTVS/issues/2762
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void SyntaxHighlightingRaiseException() {
+        public void SyntaxHighlightingRaiseException()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.SyntaxHighlightingRaiseException), Interpreter);
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void PrintWithParens() {
+        public void PrintWithParens()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.PrintWithParens), Interpreter);
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void UndeletableIndent() {
+        public void UndeletableIndent()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.UndeletableIndent), Interpreter);
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void InlineImage() {
+        public void InlineImage()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.InlineImage), Interpreter);
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void ImportCompletions() {
+        public void ImportCompletions()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.ImportCompletions), Interpreter);
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void Comments() {
+        public void Comments()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.Comments), Interpreter);
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void NoSnippets() {
+        public void NoSnippets()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.NoSnippets), Interpreter);
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void TestPydocRedirected() {
+        public void TestPydocRedirected()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.TestPydocRedirected), Interpreter);
         }
 
@@ -108,17 +117,20 @@ namespace ReplWindowUITestsRunner {
     }
 
     [TestClass]
-    public class ReplWindowBasicUITests27 : ReplWindowBasicUITests {
+    public class ReplWindowBasicUITests27 : ReplWindowBasicUITests
+    {
         protected override string Interpreter => "Python27|Python27_x64";
     }
 
     [TestClass]
-    public class ReplWindowBasicUITestsIPy27 : ReplWindowBasicUITests {
+    public class ReplWindowBasicUITestsIPy27 : ReplWindowBasicUITests
+    {
         protected override string Interpreter => "IronPython27|IronPython27_x64";
     }
 
     [TestClass]
-    public class ReplWindowBasicUITests36 : ReplWindowBasicUITests {
+    public class ReplWindowBasicUITests36 : ReplWindowBasicUITests
+    {
         protected override string Interpreter => "Python36|Python36_x64";
     }
 }

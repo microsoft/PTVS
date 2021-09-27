@@ -14,31 +14,22 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.ExceptionServices;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Repl;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using TestUtilities;
-using TestUtilities.Python;
-
-namespace PythonToolsTests {
+namespace PythonToolsTests
+{
     [TestClass]
-    public class ReplEvaluatorTests {
+    public class ReplEvaluatorTests
+    {
         [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
+        public static void DoDeployment(TestContext context)
+        {
             AssertListener.Initialize();
         }
 
         [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public void ExecuteTest() {
-            using (var evaluator = MakeEvaluator()) {
+        public void ExecuteTest()
+        {
+            using (var evaluator = MakeEvaluator())
+            {
                 var window = new MockReplWindow(evaluator);
                 evaluator._Initialize(window);
 
@@ -56,8 +47,10 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P3_FAILING)]
-        public void TestAbort() {
-            using (var evaluator = MakeEvaluator()) {
+        public void TestAbort()
+        {
+            using (var evaluator = MakeEvaluator())
+            {
                 var window = new MockReplWindow(evaluator);
                 evaluator._Initialize(window);
 
@@ -66,7 +59,8 @@ namespace PythonToolsTests {
                     evaluator,
                     "while True: pass\n",
                     false,
-                    (completed) => {
+                    (completed) =>
+                    {
                         Assert.IsTrue(!completed);
                         Thread.Sleep(1000);
 
@@ -80,8 +74,10 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public void TestCanExecute() {
-            using (var evaluator = MakeEvaluator()) {
+        public void TestCanExecute()
+        {
+            using (var evaluator = MakeEvaluator())
+            {
                 Assert.IsTrue(evaluator.CanExecuteCode("print 'hello'"));
                 Assert.IsTrue(evaluator.CanExecuteCode("42"));
                 Assert.IsTrue(evaluator.CanExecuteCode("for i in xrange(2):  print i\r\n\r\n"));
@@ -104,8 +100,10 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P3_FAILING)]
-        public async Task TestGetAllMembers() {
-            using (var evaluator = MakeEvaluator()) {
+        public async Task TestGetAllMembers()
+        {
+            using (var evaluator = MakeEvaluator())
+            {
                 var window = new MockReplWindow(evaluator);
                 await evaluator._Initialize(window);
 
@@ -113,7 +111,8 @@ namespace PythonToolsTests {
                 // onto the REPL evaluation thread, which leads to GetMemberNames being
                 // blocked as it's hogging the event loop.
                 AutoResetEvent are = new AutoResetEvent(false);
-                ThreadPool.QueueUserWorkItem(async (x) => {
+                ThreadPool.QueueUserWorkItem(async (x) =>
+                {
                     await evaluator.ExecuteText("globals()['my_new_value'] = 123");
                     are.Set();
                 }
@@ -126,7 +125,8 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public void ReplSplitCodeTest() {
+        public void ReplSplitCodeTest()
+        {
             // http://pytools.codeplex.com/workitem/606
 
             var testCases = new[] {
@@ -191,38 +191,45 @@ f()",
                 }
             };
 
-            using (var evaluator = MakeEvaluator()) {
+            using (var evaluator = MakeEvaluator())
+            {
                 int counter = 0;
-                foreach (var testCase in testCases) {
+                foreach (var testCase in testCases)
+                {
                     Console.WriteLine("Test case {0}", ++counter);
                     AssertUtil.AreEqual(ReplEditFilter.JoinToCompleteStatements(ReplEditFilter.SplitAndDedent(testCase.Code), Microsoft.PythonTools.Parsing.PythonLanguageVersion.V35), testCase.Expected);
                 }
             }
         }
 
-        private static PythonInteractiveEvaluator MakeEvaluator() {
+        private static PythonInteractiveEvaluator MakeEvaluator()
+        {
             var python = PythonPaths.Python27_x64 ?? PythonPaths.Python27;
             python.AssertInstalled();
             var provider = new SimpleFactoryProvider(python.InterpreterPath, python.InterpreterPath);
-            var eval = new PythonInteractiveEvaluator(PythonToolsTestUtilities.CreateMockServiceProvider()) {
+            var eval = new PythonInteractiveEvaluator(PythonToolsTestUtilities.CreateMockServiceProvider())
+            {
                 Configuration = new LaunchConfiguration(python.Configuration)
             };
             Assert.IsTrue(eval._Initialize(new MockReplWindow(eval)).Result.IsSuccessful);
             return eval;
         }
 
-        class SimpleFactoryProvider : IPythonInterpreterFactoryProvider {
+        class SimpleFactoryProvider : IPythonInterpreterFactoryProvider
+        {
             private readonly string _pythonExe;
             private readonly string _pythonWinExe;
             private readonly string _pythonLib;
 
-            public SimpleFactoryProvider(string pythonExe, string pythonWinExe) {
+            public SimpleFactoryProvider(string pythonExe, string pythonWinExe)
+            {
                 _pythonExe = pythonExe;
                 _pythonWinExe = pythonWinExe;
                 _pythonLib = Path.Combine(Path.GetDirectoryName(pythonExe), "Lib");
             }
 
-            public IEnumerable<IPythonInterpreterFactory> GetInterpreterFactories() {
+            public IEnumerable<IPythonInterpreterFactory> GetInterpreterFactories()
+            {
                 yield return InterpreterFactoryCreator.CreateInterpreterFactory(new VisualStudioInterpreterConfiguration(
                     "Test Interpreter",
                     "Python 2.6 32-bit",
@@ -233,16 +240,19 @@ f()",
                     InterpreterArchitecture.x86,
                     new Version(2, 6),
                     InterpreterUIMode.CannotBeDefault
-                ), new InterpreterFactoryCreationOptions {
+                ), new InterpreterFactoryCreationOptions
+                {
                     WatchFileSystem = false
                 });
             }
 
-            public IEnumerable<InterpreterConfiguration> GetInterpreterConfigurations() {
+            public IEnumerable<InterpreterConfiguration> GetInterpreterConfigurations()
+            {
                 return GetInterpreterFactories().Select(x => x.Configuration);
             }
 
-            public IPythonInterpreterFactory GetInterpreterFactory(string id) {
+            public IPythonInterpreterFactory GetInterpreterFactory(string id)
+            {
                 return GetInterpreterFactories()
                     .Where(x => x.Configuration.Id == id)
                     .FirstOrDefault();
@@ -253,42 +263,56 @@ f()",
             public event EventHandler InterpreterFactoriesChanged { add { } remove { } }
         }
 
-        private static void TestOutput(MockReplWindow window, PythonInteractiveEvaluator evaluator, string code, bool success, params string[] expectedOutput) {
+        private static void TestOutput(MockReplWindow window, PythonInteractiveEvaluator evaluator, string code, bool success, params string[] expectedOutput)
+        {
             TestOutput(window, evaluator, code, success, null, true, 3000, expectedOutput);
         }
 
-        private static void TestOutput(MockReplWindow window, PythonInteractiveEvaluator evaluator, string code, bool success, Action<bool> afterExecute, bool equalOutput, int timeout = 3000, params string[] expectedOutput) {
+        private static void TestOutput(MockReplWindow window, PythonInteractiveEvaluator evaluator, string code, bool success, Action<bool> afterExecute, bool equalOutput, int timeout = 3000, params string[] expectedOutput)
+        {
             window.ClearScreen();
 
             bool completed = false;
-            var task = evaluator.ExecuteText(code).ContinueWith(completedTask => {
+            var task = evaluator.ExecuteText(code).ContinueWith(completedTask =>
+            {
                 Assert.AreEqual(success, completedTask.Result.IsSuccessful);
 
                 var output = success ? window.Output : window.Error;
-                if (equalOutput) {
-                    if (output.Length == 0) {
+                if (equalOutput)
+                {
+                    if (output.Length == 0)
+                    {
                         Assert.IsTrue(expectedOutput.Length == 0);
-                    } else {
+                    }
+                    else
+                    {
                         // don't count ending \n as new empty line
                         output = output.Replace("\r\n", "\n");
-                        if (output[output.Length - 1] == '\n') {
+                        if (output[output.Length - 1] == '\n')
+                        {
                             output = output.Remove(output.Length - 1, 1);
                         }
 
                         var lines = output.Split('\n');
-                        if (lines.Length != expectedOutput.Length) {
-                            for (int i = 0; i < lines.Length; i++) {
+                        if (lines.Length != expectedOutput.Length)
+                        {
+                            for (int i = 0; i < lines.Length; i++)
+                            {
                                 Console.WriteLine("{0}: {1}", i, lines[i].ToString());
                             }
                         }
 
                         Assert.AreEqual(lines.Length, expectedOutput.Length);
-                        for (int i = 0; i < expectedOutput.Length; i++) {
+                        for (int i = 0; i < expectedOutput.Length; i++)
+                        {
                             Assert.AreEqual(lines[i], expectedOutput[i]);
                         }
                     }
-                } else {
-                    foreach (var line in expectedOutput) {
+                }
+                else
+                {
+                    foreach (var line in expectedOutput)
+                    {
                         Assert.IsTrue(output.Contains(line), string.Format("'{0}' does not contain '{1}'", output, line));
                     }
                 }
@@ -296,29 +320,37 @@ f()",
                 completed = true;
             });
 
-            if (afterExecute != null) {
+            if (afterExecute != null)
+            {
                 afterExecute(completed);
             }
 
-            try {
+            try
+            {
                 task.Wait(timeout);
-            } catch (AggregateException ex) {
-                if (ex.InnerException != null) {
+            }
+            catch (AggregateException ex)
+            {
+                if (ex.InnerException != null)
+                {
                     ExceptionDispatchInfo.Capture(ex.InnerException).Throw();
                 }
                 throw;
             }
 
-            if (!completed) {
+            if (!completed)
+            {
                 Assert.Fail(string.Format("command didn't complete in {0} seconds", timeout / 1000.0));
             }
         }
 
         [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public async Task NoInterpreterPath() {
+        public async Task NoInterpreterPath()
+        {
             // http://pytools.codeplex.com/workitem/662
 
-            var replEval = new PythonInteractiveEvaluator(PythonToolsTestUtilities.CreateMockServiceProvider()) {
+            var replEval = new PythonInteractiveEvaluator(PythonToolsTestUtilities.CreateMockServiceProvider())
+            {
                 DisplayName = "Test Interpreter"
             };
             var replWindow = new MockReplWindow(replEval);
@@ -332,10 +364,12 @@ f()",
         }
 
         [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public void BadInterpreterPath() {
+        public void BadInterpreterPath()
+        {
             // http://pytools.codeplex.com/workitem/662
 
-            var replEval = new PythonInteractiveEvaluator(PythonToolsTestUtilities.CreateMockServiceProvider()) {
+            var replEval = new PythonInteractiveEvaluator(PythonToolsTestUtilities.CreateMockServiceProvider())
+            {
                 DisplayName = "Test Interpreter",
                 Configuration = new LaunchConfiguration(new VisualStudioInterpreterConfiguration("InvalidInterpreter", "Test Interpreter", pythonExePath: "C:\\Does\\Not\\Exist\\Some\\Interpreter.exe"))
             };
@@ -345,7 +379,8 @@ f()",
             var errorText = replWindow.Error;
             const string expected = "the associated Python environment could not be found.";
 
-            if (!errorText.Contains(expected)) {
+            if (!errorText.Contains(expected))
+            {
                 Assert.Fail(string.Format(
                     "Did not find:\n{0}\n\nin:\n{1}",
                     expected,

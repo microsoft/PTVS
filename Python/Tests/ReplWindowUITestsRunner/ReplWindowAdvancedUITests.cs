@@ -14,12 +14,11 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using TestRunnerInterop;
-
-namespace ReplWindowUITestsRunner {
+namespace ReplWindowUITestsRunner
+{
     [TestClass, Ignore]
-    public abstract class ReplWindowAdvancedUITests {
+    public abstract class ReplWindowAdvancedUITests
+    {
         #region UI test boilerplate
         public VsTestInvoker _vs => new VsTestInvoker(
             VsTestContext.Instance,
@@ -45,7 +44,8 @@ namespace ReplWindowUITestsRunner {
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void ClearInputHelper() {
+        public void ClearInputHelper()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.ClearInputHelper), Interpreter);
         }
 
@@ -56,7 +56,8 @@ namespace ReplWindowUITestsRunner {
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Interactive")]
         [TestCategory("Installed")]
-        public void SimpleSignatureHelp() {
+        public void SimpleSignatureHelp()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.SimpleSignatureHelp), Interpreter);
         }
 
@@ -64,7 +65,8 @@ namespace ReplWindowUITestsRunner {
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Interactive")]
         [TestCategory("Installed")]
-        public void SignatureHelpDefaultValue() {
+        public void SignatureHelpDefaultValue()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.SignatureHelpDefaultValue), Interpreter);
         }
 
@@ -75,42 +77,48 @@ namespace ReplWindowUITestsRunner {
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Interactive")]
         [TestCategory("Installed")]
-        public void SimpleCompletion() {
+        public void SimpleCompletion()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.SimpleCompletion), Interpreter);
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Interactive")]
         [TestCategory("Installed")]
-        public void SimpleCompletionSpaceNoCompletion() {
+        public void SimpleCompletionSpaceNoCompletion()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.SimpleCompletionSpaceNoCompletion), Interpreter);
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Interactive")]
         [TestCategory("Installed")]
-        public void CompletionWrongText() {
+        public void CompletionWrongText()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.CompletionWrongText), Interpreter);
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Interactive")]
         [TestCategory("Installed")]
-        public void CompletionFullTextWithoutNewLine() {
+        public void CompletionFullTextWithoutNewLine()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.CompletionFullTextWithoutNewLine), Interpreter);
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Interactive")]
         [TestCategory("Installed")]
-        public void CompletionFullTextWithNewLine() {
+        public void CompletionFullTextWithNewLine()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.CompletionFullTextWithNewLine), Interpreter);
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Interactive")]
         [TestCategory("Installed")]
-        public void AutoListIdentifierCompletions() {
+        public void AutoListIdentifierCompletions()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.AutoListIdentifierCompletions), Interpreter);
         }
 
@@ -120,35 +128,40 @@ namespace ReplWindowUITestsRunner {
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void TestStdOutRedirected() {
+        public void TestStdOutRedirected()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.TestStdOutRedirected), Interpreter);
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Interactive")]
         [TestCategory("Installed")]
-        public void TestRawInput() {
+        public void TestRawInput()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.TestRawInput), Interpreter);
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Interactive")]
         [TestCategory("Installed")]
-        public void OnlyTypeInRawInput() {
+        public void OnlyTypeInRawInput()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.OnlyTypeInRawInput), Interpreter);
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Interactive")]
         [TestCategory("Installed")]
-        public void DeleteCharactersInRawInput() {
+        public void DeleteCharactersInRawInput()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.DeleteCharactersInRawInput), Interpreter);
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Interactive")]
         [TestCategory("Installed")]
-        public void TestIndirectInput() {
+        public void TestIndirectInput()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.TestIndirectInput), Interpreter);
         }
 
@@ -159,126 +172,144 @@ namespace ReplWindowUITestsRunner {
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Interactive")]
         [TestCategory("Installed")]
-        public void EnterInMiddleOfLine() {
+        public void EnterInMiddleOfLine()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.EnterInMiddleOfLine), Interpreter);
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Interactive")]
         [TestCategory("Installed")]
-        public void LineBreak() {
+        public void LineBreak()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.LineBreak), Interpreter);
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Interactive")]
         [TestCategory("Installed")]
-        public void LineBreakInMiddleOfLine() {
+        public void LineBreakInMiddleOfLine()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.LineBreakInMiddleOfLine), Interpreter);
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Interactive")]
         [TestCategory("Installed")]
-        public void CtrlEnterCommits() {
+        public void CtrlEnterCommits()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.CtrlEnterCommits), Interpreter);
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Interactive")]
         [TestCategory("Installed")]
-        public void EscapeClearsMultipleLines() {
+        public void EscapeClearsMultipleLines()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.EscapeClearsMultipleLines), Interpreter);
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Interactive")]
         [TestCategory("Installed")]
-        public void CtrlEnterOnPreviousInput() {
+        public void CtrlEnterOnPreviousInput()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.CtrlEnterOnPreviousInput), Interpreter);
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Interactive")]
         [TestCategory("Installed")]
-        public void CtrlEnterForceCommit() {
+        public void CtrlEnterForceCommit()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.CtrlEnterForceCommit), Interpreter);
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Interactive")]
         [TestCategory("Installed")]
-        public void CtrlEnterMultiLineForceCommit() {
+        public void CtrlEnterMultiLineForceCommit()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.CtrlEnterMultiLineForceCommit), Interpreter);
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Interactive")]
         [TestCategory("Installed")]
-        public void BackspacePrompt() {
+        public void BackspacePrompt()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.BackspacePrompt), Interpreter);
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Interactive")]
         [TestCategory("Installed")]
-        public void BackspaceSmartDedent() {
+        public void BackspaceSmartDedent()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.BackspaceSmartDedent), Interpreter);
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Interactive")]
         [TestCategory("Installed")]
-        public void BackspaceSecondaryPrompt() {
+        public void BackspaceSecondaryPrompt()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.BackspaceSecondaryPrompt), Interpreter);
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Interactive")]
         [TestCategory("Installed")]
-        public void BackspaceSecondaryPromptSelected() {
+        public void BackspaceSecondaryPromptSelected()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.BackspaceSecondaryPromptSelected), Interpreter);
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Interactive")]
         [TestCategory("Installed")]
-        public void DeleteSecondaryPromptSelected() {
+        public void DeleteSecondaryPromptSelected()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.DeleteSecondaryPromptSelected), Interpreter);
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Interactive")]
         [TestCategory("Installed")]
-        public void EditTypeSecondaryPromptSelected() {
+        public void EditTypeSecondaryPromptSelected()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.EditTypeSecondaryPromptSelected), Interpreter);
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Interactive")]
         [TestCategory("Installed")]
-        public void TestDelNoTextSelected() {
+        public void TestDelNoTextSelected()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.TestDelNoTextSelected), Interpreter);
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Interactive")]
         [TestCategory("Installed")]
-        public void TestDelAtEndOfLine() {
+        public void TestDelAtEndOfLine()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.TestDelAtEndOfLine), Interpreter);
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Interactive")]
         [TestCategory("Installed")]
-        public void TestDelAtEndOfBuffer() {
+        public void TestDelAtEndOfBuffer()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.TestDelAtEndOfBuffer), Interpreter);
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Interactive")]
         [TestCategory("Installed")]
-        public void TestDelInOutput() {
+        public void TestDelInOutput()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.TestDelInOutput), Interpreter);
         }
 
@@ -288,25 +319,29 @@ namespace ReplWindowUITestsRunner {
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void CtrlBreakInterrupts() {
+        public void CtrlBreakInterrupts()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.CtrlBreakInterrupts), Interpreter);
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void CtrlBreakInterruptsLongRunning() {
+        public void CtrlBreakInterruptsLongRunning()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.CtrlBreakInterruptsLongRunning), Interpreter);
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void CtrlBreakNotRunning() {
+        public void CtrlBreakNotRunning()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.CtrlBreakNotRunning), Interpreter);
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void CursorWhileCodeIsRunning() {
+        public void CursorWhileCodeIsRunning()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.CursorWhileCodeIsRunning), Interpreter);
         }
 
@@ -317,44 +352,51 @@ namespace ReplWindowUITestsRunner {
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Interactive")]
         [TestCategory("Installed")]
-        public void HistoryUpdateDef() {
+        public void HistoryUpdateDef()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.HistoryUpdateDef), Interpreter);
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Interactive")]
         [TestCategory("Installed")]
-        public void HistoryAppendDef() {
+        public void HistoryAppendDef()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.HistoryAppendDef), Interpreter);
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void HistoryBackForward() {
+        public void HistoryBackForward()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.HistoryBackForward), Interpreter);
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void HistoryMaximumLength() {
+        public void HistoryMaximumLength()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.HistoryMaximumLength), Interpreter);
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void HistoryUncommittedInput1() {
+        public void HistoryUncommittedInput1()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.HistoryUncommittedInput1), Interpreter);
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void HistoryUncommittedInput2() {
+        public void HistoryUncommittedInput2()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.HistoryUncommittedInput2), Interpreter);
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void HistorySearch() {
+        public void HistorySearch()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.HistorySearch), Interpreter);
         }
 
@@ -364,31 +406,36 @@ namespace ReplWindowUITestsRunner {
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void CommentPaste() {
+        public void CommentPaste()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.CommentPaste), Interpreter);
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void CsvPaste() {
+        public void CsvPaste()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.CsvPaste), Interpreter);
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void EditCutIncludingPrompt() {
+        public void EditCutIncludingPrompt()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.EditCutIncludingPrompt), Interpreter);
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void EditPasteSecondaryPromptSelected() {
+        public void EditPasteSecondaryPromptSelected()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.EditPasteSecondaryPromptSelected), Interpreter);
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void EditPasteSecondaryPromptSelectedInPromptMargin() {
+        public void EditPasteSecondaryPromptSelectedInPromptMargin()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.EditPasteSecondaryPromptSelectedInPromptMargin), Interpreter);
         }
 
@@ -398,55 +445,64 @@ namespace ReplWindowUITestsRunner {
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void ReplCommandUnknown() {
+        public void ReplCommandUnknown()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.ReplCommandUnknown), Interpreter);
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void ReplCommandComment() {
+        public void ReplCommandComment()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.ReplCommandComment), Interpreter);
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void ClearScreenCommand() {
+        public void ClearScreenCommand()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.ClearScreenCommand), Interpreter);
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void ReplCommandHelp() {
+        public void ReplCommandHelp()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.ReplCommandHelp), Interpreter);
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void CommandsLoadScript() {
+        public void CommandsLoadScript()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.CommandsLoadScript), Interpreter);
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void CommandsLoadScriptWithQuotes() {
+        public void CommandsLoadScriptWithQuotes()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.CommandsLoadScriptWithQuotes), Interpreter);
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void CommandsLoadScriptWithClass() {
+        public void CommandsLoadScriptWithClass()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.CommandsLoadScriptWithClass), Interpreter);
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void CommandsLoadScriptMultipleSubmissions() {
+        public void CommandsLoadScriptMultipleSubmissions()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.CommandsLoadScriptMultipleSubmissions), Interpreter);
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void CommandsLoadScriptMultipleSubmissionsWithClearScreen() {
+        public void CommandsLoadScriptMultipleSubmissionsWithClearScreen()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.CommandsLoadScriptMultipleSubmissionsWithClearScreen), Interpreter);
         }
 
@@ -456,13 +512,15 @@ namespace ReplWindowUITestsRunner {
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void InsertCode() {
+        public void InsertCode()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.InsertCode), Interpreter);
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void InsertCodeWhileRunning() {
+        public void InsertCodeWhileRunning()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.InsertCodeWhileRunning), Interpreter);
         }
 
@@ -472,19 +530,22 @@ namespace ReplWindowUITestsRunner {
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void PythonPathIgnored() {
+        public void PythonPathIgnored()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.PythonPathIgnored), Interpreter);
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void PythonPathNotIgnored() {
+        public void PythonPathNotIgnored()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.PythonPathNotIgnored), Interpreter);
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void PythonPathNotIgnoredButMissing() {
+        public void PythonPathNotIgnoredButMissing()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.PythonPathNotIgnoredButMissing), Interpreter);
         }
 
@@ -492,7 +553,8 @@ namespace ReplWindowUITestsRunner {
     }
 
     [TestClass]
-    public class ReplWindowAdvancedUITests27 : ReplWindowAdvancedUITests {
+    public class ReplWindowAdvancedUITests27 : ReplWindowAdvancedUITests
+    {
         protected override string Interpreter => "Python27|Python27_x64";
     }
 }

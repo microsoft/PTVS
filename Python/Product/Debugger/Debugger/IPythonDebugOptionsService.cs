@@ -14,8 +14,10 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Debugger {
-    public interface IPythonDebugOptionsService {
+namespace Microsoft.PythonTools.Debugger
+{
+    public interface IPythonDebugOptionsService
+    {
         /// <summary>
         /// True to ask the user whether to run when their code contains errors.
         /// Default is false.

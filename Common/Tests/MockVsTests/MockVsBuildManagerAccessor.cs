@@ -14,9 +14,6 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.Build.Execution;
-using Microsoft.VisualStudio.Shell.Interop;
-using System;
 using MSBuild = Microsoft.Build.Evaluation;
 
 namespace Microsoft.VisualStudioTools.MockVsTests

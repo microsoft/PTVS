@@ -14,14 +14,14 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Collections.Generic;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-namespace CookiecutterTests {
+namespace CookiecutterTests
+{
     [TestClass]
-    public class StringTelemetryRecorderTests {
+    public class StringTelemetryRecorderTests
+    {
         [TestMethod]
-        public void StringTelemetryRecorder_SimpleEventTest() {
+        public void StringTelemetryRecorder_SimpleEventTest()
+        {
             var eventName = "event";
 
             var telemetryRecorder = new TestTelemetryRecorder();
@@ -32,7 +32,8 @@ namespace CookiecutterTests {
         }
 
         [TestMethod]
-        public void StringTelemetryRecorder_EventWithDictionaryTest() {
+        public void StringTelemetryRecorder_EventWithDictionaryTest()
+        {
             var eventName = "event";
             var parameter1 = "parameter1";
             var value1 = "value1";
@@ -47,7 +48,8 @@ namespace CookiecutterTests {
         }
 
         [TestMethod]
-        public void StringTelemetryRecorder_EventWithAnonymousCollectionTest() {
+        public void StringTelemetryRecorder_EventWithAnonymousCollectionTest()
+        {
             var eventName = "event";
 
             var telemetryRecorder = new TestTelemetryRecorder();

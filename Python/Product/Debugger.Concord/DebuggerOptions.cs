@@ -14,10 +14,10 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.ComponentModel;
-
-namespace Microsoft.PythonTools.Debugger.Concord {
-    public static class DebuggerOptions {
+namespace Microsoft.PythonTools.Debugger.Concord
+{
+    public static class DebuggerOptions
+    {
         // These are intentionally not implemented as auto-properties to enable easily changing them at runtime, including when stopped in native code.
         private static bool _showNativePythonFrames;
         private static bool _usePythonStepping;
@@ -26,56 +26,71 @@ namespace Microsoft.PythonTools.Debugger.Concord {
 
         public static event PropertyChangedEventHandler PropertyChanged;
 
-        public static bool ShowNativePythonFrames {
-            get {
+        public static bool ShowNativePythonFrames
+        {
+            get
+            {
                 return _showNativePythonFrames;
             }
-            set {
+            set
+            {
                 _showNativePythonFrames = value;
                 RaisePropertyChanged("ShowNativePythonFrames");
             }
         }
 
-        public static bool UsePythonStepping {
-            get {
+        public static bool UsePythonStepping
+        {
+            get
+            {
                 return _usePythonStepping;
             }
-            set {
+            set
+            {
                 _usePythonStepping = value;
                 RaisePropertyChanged("UsePythonStepping");
             }
         }
 
-        public static bool ShowCppViewNodes {
-            get {
+        public static bool ShowCppViewNodes
+        {
+            get
+            {
                 return _showCppViewNodes;
             }
-            set {
+            set
+            {
                 _showCppViewNodes = value;
                 RaisePropertyChanged("ShowCppViewNodes");
             }
         }
 
-        public static bool ShowPythonViewNodes {
-            get {
+        public static bool ShowPythonViewNodes
+        {
+            get
+            {
                 return _showPythonViewNodes;
             }
-            set {
+            set
+            {
                 _showPythonViewNodes = value;
                 RaisePropertyChanged("ShowPythonViewNodes");
             }
         }
 
-        static DebuggerOptions() {
+        static DebuggerOptions()
+        {
             ShowNativePythonFrames = false;
             UsePythonStepping = true;
             ShowCppViewNodes = false;
             ShowPythonViewNodes = true;
         }
 
-        private static void RaisePropertyChanged(string propertyName) {
+        private static void RaisePropertyChanged(string propertyName)
+        {
             var propertyChanged = PropertyChanged;
-            if (propertyChanged != null) {
+            if (propertyChanged != null)
+            {
                 propertyChanged(null, new PropertyChangedEventArgs(propertyName));
             }
         }
@@ -84,21 +99,26 @@ namespace Microsoft.PythonTools.Debugger.Concord {
     /// <summary>
     /// Propagates changes to <see cref="DebuggerOptions"/> from VS to msvsmon.
     /// </summary>
-    internal class DebuggerOptionsPropagator : DkmDataItem {
+    internal class DebuggerOptionsPropagator : DkmDataItem
+    {
         private readonly DkmProcess _process;
-        public DebuggerOptionsPropagator(DkmProcess process) {
+        public DebuggerOptionsPropagator(DkmProcess process)
+        {
             _process = process;
             DebuggerOptions.PropertyChanged += DebuggerOptions_PropertyChanged;
             DebuggerOptions_PropertyChanged(null, null);
         }
 
-        protected override void OnClose() {
+        protected override void OnClose()
+        {
             DebuggerOptions.PropertyChanged -= DebuggerOptions_PropertyChanged;
             base.OnClose();
         }
 
-        private void DebuggerOptions_PropertyChanged(object sender, PropertyChangedEventArgs e) {
-            new RemoteComponent.SetDebuggerOptions {
+        private void DebuggerOptions_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            new RemoteComponent.SetDebuggerOptions
+            {
                 ShowNativePythonFrames = DebuggerOptions.ShowNativePythonFrames,
                 UsePythonStepping = DebuggerOptions.UsePythonStepping,
                 ShowCppViewNodes = DebuggerOptions.ShowCppViewNodes,

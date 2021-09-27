@@ -14,27 +14,20 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading;
-using Microsoft.PythonTools;
-using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Interpreter;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using TestUtilities;
-using TestUtilities.Python;
-
-namespace PythonToolsTests {
+namespace PythonToolsTests
+{
     [TestClass]
-    public class PythonWorkspaceContextTests {
+    public class PythonWorkspaceContextTests
+    {
         [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
+        public static void DoDeployment(TestContext context)
+        {
             AssertListener.Initialize();
         }
 
         [TestMethod, Priority(UnitTestPriority.P0)]
-        public void DefaultInterpreter() {
+        public void DefaultInterpreter()
+        {
             var data = PrepareWorkspace(WorkspaceTestHelper.PythonNoId);
 
             var workspaceContext = new PythonWorkspaceContext(data.Workspace, data.OptionsService, data.RegistryService);
@@ -46,7 +39,8 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void InstalledInterpreter() {
+        public void InstalledInterpreter()
+        {
             var data = PrepareWorkspace(WorkspaceTestHelper.Python27Id);
 
             var workspaceContext = new PythonWorkspaceContext(data.Workspace, data.OptionsService, data.RegistryService);
@@ -58,7 +52,8 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void UnavailableInterpreter() {
+        public void UnavailableInterpreter()
+        {
             var data = PrepareWorkspace(WorkspaceTestHelper.PythonUnavailableId);
 
             var workspaceContext = new PythonWorkspaceContext(data.Workspace, data.OptionsService, data.RegistryService);
@@ -70,7 +65,8 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void ChangeInterpreterSetting() {
+        public void ChangeInterpreterSetting()
+        {
             var data = PrepareWorkspace(WorkspaceTestHelper.Python27Id);
 
             var workspaceContext = new PythonWorkspaceContext(data.Workspace, data.OptionsService, data.RegistryService);
@@ -81,12 +77,15 @@ namespace PythonToolsTests {
             Assert.AreEqual(WorkspaceTestHelper.Python27Factory, workspaceContext.CurrentFactory);
 
             using (var activeInterpreterEvent = new AutoResetEvent(false))
-            using (var interpreterSettingEvent = new AutoResetEvent(false)) {
-                workspaceContext.ActiveInterpreterChanged += (sender, e) => {
+            using (var interpreterSettingEvent = new AutoResetEvent(false))
+            {
+                workspaceContext.ActiveInterpreterChanged += (sender, e) =>
+                {
                     activeInterpreterEvent.Set();
                 };
 
-                workspaceContext.InterpreterSettingChanged += (sender, e) => {
+                workspaceContext.InterpreterSettingChanged += (sender, e) =>
+                {
                     interpreterSettingEvent.Set();
                 };
 
@@ -105,7 +104,8 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void RemoveInterpreterSetting() {
+        public void RemoveInterpreterSetting()
+        {
             var data = PrepareWorkspace(WorkspaceTestHelper.Python27Id);
 
             var workspaceContext = new PythonWorkspaceContext(data.Workspace, data.OptionsService, data.RegistryService);
@@ -116,12 +116,15 @@ namespace PythonToolsTests {
             Assert.AreEqual(WorkspaceTestHelper.Python27Factory, workspaceContext.CurrentFactory);
 
             using (var activeInterpreterEvent = new AutoResetEvent(false))
-            using (var interpreterSettingEvent = new AutoResetEvent(false)) {
-                workspaceContext.ActiveInterpreterChanged += (sender, e) => {
+            using (var interpreterSettingEvent = new AutoResetEvent(false))
+            {
+                workspaceContext.ActiveInterpreterChanged += (sender, e) =>
+                {
                     activeInterpreterEvent.Set();
                 };
 
-                workspaceContext.InterpreterSettingChanged += (sender, e) => {
+                workspaceContext.InterpreterSettingChanged += (sender, e) =>
+                {
                     interpreterSettingEvent.Set();
                 };
 
@@ -140,7 +143,8 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void RemoveInterpreterSettingAlreadyDefault() {
+        public void RemoveInterpreterSettingAlreadyDefault()
+        {
             var data = PrepareWorkspace(WorkspaceTestHelper.DefaultFactory.Configuration.Id);
 
             var workspaceContext = new PythonWorkspaceContext(data.Workspace, data.OptionsService, data.RegistryService);
@@ -151,12 +155,15 @@ namespace PythonToolsTests {
             Assert.AreEqual(WorkspaceTestHelper.DefaultFactory, workspaceContext.CurrentFactory);
 
             using (var activeInterpreterEvent = new AutoResetEvent(false))
-            using (var interpreterSettingEvent = new AutoResetEvent(false)) {
-                workspaceContext.ActiveInterpreterChanged += (sender, e) => {
+            using (var interpreterSettingEvent = new AutoResetEvent(false))
+            {
+                workspaceContext.ActiveInterpreterChanged += (sender, e) =>
+                {
                     activeInterpreterEvent.Set();
                 };
 
-                workspaceContext.InterpreterSettingChanged += (sender, e) => {
+                workspaceContext.InterpreterSettingChanged += (sender, e) =>
+                {
                     interpreterSettingEvent.Set();
                 };
 
@@ -175,7 +182,8 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void ChangeDefaultInterpreterInUse() {
+        public void ChangeDefaultInterpreterInUse()
+        {
             var data = PrepareWorkspace(WorkspaceTestHelper.PythonNoId);
 
             var workspaceContext = new PythonWorkspaceContext(data.Workspace, data.OptionsService, data.RegistryService);
@@ -185,8 +193,10 @@ namespace PythonToolsTests {
             Assert.AreEqual(WorkspaceTestHelper.PythonNoId, interpreter);
             Assert.AreEqual(WorkspaceTestHelper.DefaultFactory, workspaceContext.CurrentFactory);
 
-            using (var activeInterpreterEvent = new AutoResetEvent(false)) {
-                workspaceContext.ActiveInterpreterChanged += (sender, e) => {
+            using (var activeInterpreterEvent = new AutoResetEvent(false))
+            {
+                workspaceContext.ActiveInterpreterChanged += (sender, e) =>
+                {
                     activeInterpreterEvent.Set();
                 };
 
@@ -201,7 +211,8 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void ChangeDefaultInterpreterNotInUse() {
+        public void ChangeDefaultInterpreterNotInUse()
+        {
             // We don't use the global default
             var data = PrepareWorkspace(WorkspaceTestHelper.Python27Id);
 
@@ -212,8 +223,10 @@ namespace PythonToolsTests {
             Assert.AreEqual(WorkspaceTestHelper.Python27Id, interpreter);
             Assert.AreEqual(WorkspaceTestHelper.Python27Factory, workspaceContext.CurrentFactory);
 
-            using (var activeInterpreterEvent = new AutoResetEvent(false)) {
-                workspaceContext.ActiveInterpreterChanged += (sender, e) => {
+            using (var activeInterpreterEvent = new AutoResetEvent(false))
+            {
+                workspaceContext.ActiveInterpreterChanged += (sender, e) =>
+                {
                     activeInterpreterEvent.Set();
                 };
 
@@ -228,7 +241,8 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void RemoveInterpreterInUse() {
+        public void RemoveInterpreterInUse()
+        {
             var data = PrepareWorkspace(WorkspaceTestHelper.Python27Id);
 
             var workspaceContext = new PythonWorkspaceContext(data.Workspace, data.OptionsService, data.RegistryService);
@@ -238,8 +252,10 @@ namespace PythonToolsTests {
             Assert.AreEqual(WorkspaceTestHelper.Python27Id, interpreter);
             Assert.AreEqual(WorkspaceTestHelper.Python27Factory, workspaceContext.CurrentFactory);
 
-            using (var activeInterpreterEvent = new AutoResetEvent(false)) {
-                workspaceContext.ActiveInterpreterChanged += (sender, e) => {
+            using (var activeInterpreterEvent = new AutoResetEvent(false))
+            {
+                workspaceContext.ActiveInterpreterChanged += (sender, e) =>
+                {
                     activeInterpreterEvent.Set();
                 };
 
@@ -256,7 +272,8 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void RemoveInterpreterNotInUse() {
+        public void RemoveInterpreterNotInUse()
+        {
             var data = PrepareWorkspace(WorkspaceTestHelper.Python27Id);
 
             var workspaceContext = new PythonWorkspaceContext(data.Workspace, data.OptionsService, data.RegistryService);
@@ -266,8 +283,10 @@ namespace PythonToolsTests {
             Assert.AreEqual(WorkspaceTestHelper.Python27Id, interpreter);
             Assert.AreEqual(WorkspaceTestHelper.Python27Factory, workspaceContext.CurrentFactory);
 
-            using (var activeInterpreterEvent = new AutoResetEvent(false)) {
-                workspaceContext.ActiveInterpreterChanged += (sender, e) => {
+            using (var activeInterpreterEvent = new AutoResetEvent(false))
+            {
+                workspaceContext.ActiveInterpreterChanged += (sender, e) =>
+                {
                     activeInterpreterEvent.Set();
                 };
 
@@ -289,7 +308,8 @@ namespace PythonToolsTests {
         ///     Checks that the 2 regexes for filtering test files (unit test and pytest) are working correctly
         /// </summary>
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void EnumerateWorkspaceFiles() {
+        public void EnumerateWorkspaceFiles()
+        {
             (var testDataSetup, var includedWorkspaceFilePaths) = GenerateWorkspace();
             var workspaceContext = new PythonWorkspaceContext(testDataSetup.Workspace, testDataSetup.OptionsService, testDataSetup.RegistryService);
 
@@ -297,16 +317,19 @@ namespace PythonToolsTests {
             TestRegexTwo(workspaceContext, includedWorkspaceFilePaths);
         }
 
-        private void TestRegexOne(PythonWorkspaceContext workspaceContext, IList<string> includedWorkspaceFilePaths) {
+        private void TestRegexOne(PythonWorkspaceContext workspaceContext, IList<string> includedWorkspaceFilePaths)
+        {
             var filteredFilePaths = workspaceContext.EnumerateUserFiles(
                 (x) => PythonConstants.TestFileExtensionRegex.IsMatch(PathUtils.GetFileOrDirectoryName(x))
             ).ToList();
 
             var expectedFiles = new List<string>();
-            foreach (var filePath in includedWorkspaceFilePaths) {
+            foreach (var filePath in includedWorkspaceFilePaths)
+            {
                 var fileName = PathUtils.GetFileOrDirectoryName(filePath).ToLower();
 
-                if ((fileName.EndsWith(".txt") || fileName.EndsWith(".py"))) {
+                if ((fileName.EndsWith(".txt") || fileName.EndsWith(".py")))
+                {
                     expectedFiles.Add(filePath);
                 }
             }
@@ -314,17 +337,20 @@ namespace PythonToolsTests {
             AssertUtil.CheckCollection(filteredFilePaths, expectedFiles, Enumerable.Empty<string>());
         }
 
-        private void TestRegexTwo(PythonWorkspaceContext workspaceContext, IList<string> includedWorkspaceFilePaths) {
+        private void TestRegexTwo(PythonWorkspaceContext workspaceContext, IList<string> includedWorkspaceFilePaths)
+        {
             var filteredFilePaths = workspaceContext.EnumerateUserFiles(
                 (x) => PythonConstants.DefaultTestFileNameRegex.IsMatch(PathUtils.GetFileOrDirectoryName(x))
             ).ToList();
 
             var expectedFiles = new List<string>();
-            foreach (var filePath in includedWorkspaceFilePaths) {
+            foreach (var filePath in includedWorkspaceFilePaths)
+            {
                 var fileName = PathUtils.GetFileOrDirectoryName(filePath).ToLower();
 
                 if ((fileName.StartsWith("test") && (fileName.EndsWith(".py") || fileName.EndsWith(".txt"))) ||
-                    fileName.EndsWith("_test.py") || fileName.EndsWith("_test.txt")) {
+                    fileName.EndsWith("_test.py") || fileName.EndsWith("_test.txt"))
+                {
                     Assert.IsTrue(filteredFilePaths.Remove(filePath));
                 }
             }
@@ -332,7 +358,8 @@ namespace PythonToolsTests {
             AssertUtil.CheckCollection(filteredFilePaths, expectedFiles, Enumerable.Empty<string>());
         }
 
-        private (TestSetupData, IList<string>) GenerateWorkspace() {
+        private (TestSetupData, IList<string>) GenerateWorkspace()
+        {
             var virtualEnvName = "virtualEnv";
 
             var mockWorkspace = WorkspaceTestHelper.CreateMockWorkspace(WorkspaceTestHelper.CreateWorkspaceFolder(), WorkspaceTestHelper.Python37Id);
@@ -347,7 +374,8 @@ namespace PythonToolsTests {
             };
             var registryService = new WorkspaceTestHelper.MockRegistryService(workspaceInterpreterFactories);
 
-            var testDataSetup = new TestSetupData {
+            var testDataSetup = new TestSetupData
+            {
                 OptionsService = optionsService,
                 RegistryService = registryService,
                 Workspace = mockWorkspace,
@@ -360,7 +388,8 @@ namespace PythonToolsTests {
         /// Creates a set of files for the workspace which include a fake virtual environment, folders, and files inside all folders. 
         /// </summary>
         /// <returns> A list of all the file paths that are in the workspace, but not in execluded folders</returns>
-        private IList<string> GenerateWorkspaceFiles(string workspacePath, string virtualEnvName, out string virtualEnvExePath) {
+        private IList<string> GenerateWorkspaceFiles(string workspacePath, string virtualEnvName, out string virtualEnvExePath)
+        {
             var excludedFolderNames = new List<string>() { virtualEnvName, ".vs" };
             var workspaceFolderNames = new List<string>() { "", "test_folder", "randomFolder", string.Concat(virtualEnvName, "folder") };
             var workspaceFileNames = new List<string>() {
@@ -375,19 +404,23 @@ namespace PythonToolsTests {
             virtualEnvExePath = Path.Combine(workspacePath, virtualEnvName, "scripts", "python.exe");
             File.WriteAllText(virtualEnvExePath, "some text");
 
-            foreach (var directoryName in excludedFolderNames) {
+            foreach (var directoryName in excludedFolderNames)
+            {
                 Directory.CreateDirectory(Path.Combine(workspacePath, directoryName));
 
-                foreach (var fileName in workspaceFileNames) {
+                foreach (var fileName in workspaceFileNames)
+                {
                     var filePath = Path.Combine(workspacePath, directoryName, fileName);
                     File.WriteAllText(filePath, "some text");
                 }
             }
 
-            foreach (var directoryName in workspaceFolderNames) {
+            foreach (var directoryName in workspaceFolderNames)
+            {
                 Directory.CreateDirectory(Path.Combine(workspacePath, directoryName));
 
-                foreach (var fileName in workspaceFileNames) {
+                foreach (var fileName in workspaceFileNames)
+                {
                     var filePath = Path.Combine(workspacePath, directoryName, fileName);
                     File.WriteAllText(filePath, "some text");
                     includedWorkspaceFilePaths.Add(filePath);
@@ -397,15 +430,18 @@ namespace PythonToolsTests {
             return includedWorkspaceFilePaths;
         }
 
-        private static TestSetupData PrepareWorkspace(string interpreterSetting) {
-            return new TestSetupData {
+        private static TestSetupData PrepareWorkspace(string interpreterSetting)
+        {
+            return new TestSetupData
+            {
                 OptionsService = new WorkspaceTestHelper.MockOptionsService(WorkspaceTestHelper.DefaultFactory),
                 RegistryService = new WorkspaceTestHelper.MockRegistryService(WorkspaceTestHelper.AllFactories),
                 Workspace = WorkspaceTestHelper.CreateMockWorkspace(WorkspaceTestHelper.CreateWorkspaceFolder(), interpreterSetting),
             };
         }
 
-        class TestSetupData {
+        class TestSetupData
+        {
             public WorkspaceTestHelper.MockOptionsService OptionsService { get; set; }
 
             public WorkspaceTestHelper.MockRegistryService RegistryService { get; set; }

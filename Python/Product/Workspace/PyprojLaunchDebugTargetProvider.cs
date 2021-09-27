@@ -14,19 +14,14 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Linq;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudio.Workspace;
-using Microsoft.VisualStudio.Workspace.Debug;
-
-namespace Microsoft.PythonTools.Workspace {
+namespace Microsoft.PythonTools.Workspace
+{
     [ExportLaunchDebugTarget(
         ProviderType,
         new[] { ".pyproj" }
     )]
-    class PyprojLaunchDebugTargetProvider : ILaunchDebugTargetProvider {
+    class PyprojLaunchDebugTargetProvider : ILaunchDebugTargetProvider
+    {
         private const string ProviderType = "F2B8B667-3D13-4E51-B067-00C188D0EB7E";
 
         public const string LaunchTypeName = "pyproj";
@@ -55,10 +50,12 @@ namespace Microsoft.PythonTools.Workspace {
     ""configuration"": ""#/definitions/pyprojFile""
 }";
 
-        public void LaunchDebugTarget(IWorkspace workspace, IServiceProvider serviceProvider, DebugLaunchActionContext debugLaunchActionContext) {
+        public void LaunchDebugTarget(IWorkspace workspace, IServiceProvider serviceProvider, DebugLaunchActionContext debugLaunchActionContext)
+        {
             var settings = debugLaunchActionContext.LaunchConfiguration;
             var moniker = settings.GetValue(ProjectKey, string.Empty);
-            if (string.IsNullOrEmpty(moniker)) {
+            if (string.IsNullOrEmpty(moniker))
+            {
                 throw new InvalidOperationException();
             }
 
@@ -66,7 +63,8 @@ namespace Microsoft.PythonTools.Workspace {
             var solution4 = solution as IVsSolution4;
             var debugger = serviceProvider.GetShellDebugger();
 
-            if (solution == null || solution4 == null) {
+            if (solution == null || solution4 == null)
+            {
                 throw new InvalidOperationException();
             }
 
@@ -74,14 +72,16 @@ namespace Microsoft.PythonTools.Workspace {
             var proj = solution.EnumerateLoadedPythonProjects()
                 .FirstOrDefault(p => string.Equals(p.GetMkDocument(), moniker, StringComparison.OrdinalIgnoreCase));
 
-            if (proj == null) {
+            if (proj == null)
+            {
                 throw new InvalidOperationException();
             }
 
             ErrorHandler.ThrowOnFailure(proj.GetLauncher().LaunchProject(true));
         }
 
-        public bool SupportsContext(IWorkspace workspace, string filePath) {
+        public bool SupportsContext(IWorkspace workspace, string filePath)
+        {
             throw new NotImplementedException();
         }
     }

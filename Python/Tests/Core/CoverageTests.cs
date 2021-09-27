@@ -14,27 +14,21 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
-using Microsoft.PythonTools.CodeCoverage;
-using Microsoft.PythonTools.Commands;
-using Microsoft.PythonTools.Parsing.Ast;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using TestUtilities;
-
-namespace PythonToolsTests {
+namespace PythonToolsTests
+{
     [TestClass]
-    public class CoverageTests {
+    public class CoverageTests
+    {
 
         [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
+        public static void DoDeployment(TestContext context)
+        {
             AssertListener.Initialize();
         }
 
         [TestMethod]
-        public void TestFlowControl() {
+        public void TestFlowControl()
+        {
             RunOneTest(
                 GetPath("FlowControl"),
                 Module("test",
@@ -84,7 +78,8 @@ namespace PythonToolsTests {
         }
 
         [TestMethod]
-        public void TestStatements() {
+        public void TestStatements()
+        {
             RunOneTest(
                 GetPath("Statements"),
                 Module("test",
@@ -111,7 +106,8 @@ namespace PythonToolsTests {
 
 
         [TestMethod]
-        public void TestMultiLineExpressions() {
+        public void TestMultiLineExpressions()
+        {
             RunOneTest(
                 GetPath("MultiLineExpressions"),
                 Module("test",
@@ -176,7 +172,8 @@ namespace PythonToolsTests {
 
 
         [TestMethod]
-        public void TestExpressions() {
+        public void TestExpressions()
+        {
             RunOneTest(
                 GetPath("Expressions"),
                 Module("test",
@@ -210,7 +207,8 @@ namespace PythonToolsTests {
         }
 
         [TestMethod]
-        public void TestSimple() {
+        public void TestSimple()
+        {
             RunOneTest(
                 GetPath("Simple"),
                 Module("test",
@@ -238,7 +236,8 @@ namespace PythonToolsTests {
         }
 
         [TestMethod]
-        public void TestMultiModule() {
+        public void TestMultiModule()
+        {
             RunOneTest(
                 GetPath("MultiModule"),
                 Module("xxx",
@@ -315,30 +314,38 @@ namespace PythonToolsTests {
         }
 
 
-        private static string GetPath(string name) {
+        private static string GetPath(string name)
+        {
             return TestData.GetPath(Path.Combine("TestData", "Coverage", name, "coverage.xml"));
         }
 
-        private void RunOneTest(string inputFile, params ModuleCoverage[] expected) {
+        private void RunOneTest(string inputFile, params ModuleCoverage[] expected)
+        {
             string baseDir = Path.GetDirectoryName(inputFile);
-            using (FileStream tmp = new FileStream(inputFile, FileMode.Open)) {
+            using (FileStream tmp = new FileStream(inputFile, FileMode.Open))
+            {
                 // Read in the data from coverage.py's XML file
                 CoverageFileInfo[] fileInfo = new CoveragePyConverter(baseDir, tmp).Parse();
 
                 // Convert that into offsets within the actual code
                 var covInfo = ImportCoverageCommand.Import(fileInfo);
 
-                try {
-                    foreach (var test in expected) {
+                try
+                {
+                    foreach (var test in expected)
+                    {
                         test.Validate(covInfo);
                     }
-                } finally {
+                }
+                finally
+                {
                     DumpCoverage(covInfo);
                 }
 
                 // verify we produce the expected .coveragexml
                 var exportedFile = Path.Combine(Path.GetDirectoryName(inputFile), "coverage.coveragexml");
-                if (File.Exists(exportedFile)) {
+                if (File.Exists(exportedFile))
+                {
                     var expectedExport = File.ReadAllText(exportedFile);
                     MemoryStream outputStream = new MemoryStream();
                     new CoverageExporter(
@@ -357,43 +364,55 @@ namespace PythonToolsTests {
             }
         }
 
-        class Call {
+        class Call
+        {
             public readonly string Header;
             public readonly Call[] Children;
 
-            public Call(string header, Call[] calls) {
+            public Call(string header, Call[] calls)
+            {
                 Header = header;
                 Children = calls;
             }
 
-            public override string ToString() {
+            public override string ToString()
+            {
                 StringBuilder tmp = new StringBuilder();
                 ToString(tmp, 3);
                 return tmp.ToString();
             }
 
-            public void ToString(StringBuilder builder, int depth) {
+            public void ToString(StringBuilder builder, int depth)
+            {
                 string indent = new string(' ', depth * 4);
 
-                if (Header != null) {
+                if (Header != null)
+                {
                     builder.Append(indent);
                     builder.Append(Header);
-                    if (Children.Length > 0) {
+                    if (Children.Length > 0)
+                    {
                         builder.AppendLine();
                     }
                 }
 
-                for (int i = 0; i < Children.Length; i++) {
+                for (int i = 0; i < Children.Length; i++)
+                {
                     Children[i].ToString(builder, depth + 1);
-                    if (i != Children.Length - 1) {
+                    if (i != Children.Length - 1)
+                    {
                         builder.AppendLine(",");
-                    } else {
+                    }
+                    else
+                    {
                         builder.AppendLine("");
                     }
                 }
 
-                if (Header != null) {
-                    if (Children.Length > 0) {
+                if (Header != null)
+                {
+                    if (Children.Length > 0)
+                    {
                         builder.Append(indent);
                     }
                     builder.Append(")");
@@ -401,19 +420,23 @@ namespace PythonToolsTests {
             }
         }
 
-        private void DumpCoverage(Dictionary<CoverageFileInfo, CoverageMapper> covInfo) {
+        private void DumpCoverage(Dictionary<CoverageFileInfo, CoverageMapper> covInfo)
+        {
             List<Call> calls = new List<Call>();
-            foreach (var file in covInfo) {
+            foreach (var file in covInfo)
+            {
                 List<Call> children = new List<Call>();
 
                 children.Add(WriteStats(file.Value.GlobalScope));
 
                 var methods = WriteMethods(file.Value.GlobalScope);
-                if (methods.Length > 0) {
+                if (methods.Length > 0)
+                {
                     children.Add(new Call("Global(", methods));
                 }
 
-                foreach (var klass in file.Value.Classes) {
+                foreach (var klass in file.Value.Classes)
+                {
                     List<Call> classMembers = new List<Call>();
                     classMembers.Add(WriteStats(klass));
                     classMembers.AddRange(WriteMethods(klass));
@@ -441,7 +464,8 @@ namespace PythonToolsTests {
             Console.WriteLine(new Call(null, calls.ToArray()).ToString());
         }
 
-        private Call WriteStats(CoverageScope scope) {
+        private Call WriteStats(CoverageScope scope)
+        {
             return new Call(
                 string.Format(
                     "Stats({0}, {1}, {2}, {3}",
@@ -454,7 +478,8 @@ namespace PythonToolsTests {
             );
         }
 
-        private Call[] WriteMethods(CoverageScope klass) {
+        private Call[] WriteMethods(CoverageScope klass)
+        {
             List<Call> calls = new List<Call>();
 
             WriteMethods(calls, klass);
@@ -462,10 +487,13 @@ namespace PythonToolsTests {
             return calls.ToArray();
         }
 
-        private void WriteMethods(List<Call> calls, CoverageScope klass) {
-            foreach (var child in klass.Children) {
+        private void WriteMethods(List<Call> calls, CoverageScope klass)
+        {
+            foreach (var child in klass.Children)
+            {
                 FunctionDefinition funcDef = child.Statement as FunctionDefinition;
-                if (funcDef != null) {
+                if (funcDef != null)
+                {
                     List<Call> lines = new List<Call>();
                     lines.Add(WriteStats(child));
                     lines.AddRange(WriteLines(child.Lines));
@@ -485,9 +513,11 @@ namespace PythonToolsTests {
             }
         }
 
-        private Call[] WriteLines(SortedDictionary<int, CoverageLineInfo> lineInfo) {
+        private Call[] WriteLines(SortedDictionary<int, CoverageLineInfo> lineInfo)
+        {
             List<Call> calls = new List<Call>();
-            foreach (var keyValue in lineInfo) {
+            foreach (var keyValue in lineInfo)
+            {
                 calls.Add(
                     new Call(
                         string.Format("{0}({1}, {2}, {3}",
@@ -504,52 +534,66 @@ namespace PythonToolsTests {
             return calls.ToArray();
         }
 
-        private static ModuleCoverage Module(string name, params ExpectedCoverage[] expected) {
+        private static ModuleCoverage Module(string name, params ExpectedCoverage[] expected)
+        {
             return new ModuleCoverage(name, expected);
         }
 
-        private static ExpectedCoverage Class(string name, params ExpectedCoverage[] expected) {
+        private static ExpectedCoverage Class(string name, params ExpectedCoverage[] expected)
+        {
             return new ClassCoverage(name, expected);
         }
 
-        private static ExpectedCoverage Global(params ExpectedCoverage[] expected) {
+        private static ExpectedCoverage Global(params ExpectedCoverage[] expected)
+        {
             return new GlobalCoverage(expected);
         }
 
 
-        private static ExpectedCoverage Function(string name, params ExpectedCoverage[] expected) {
+        private static ExpectedCoverage Function(string name, params ExpectedCoverage[] expected)
+        {
             return new FunctionCoverage(name, expected);
         }
 
-        private static ExpectedCoverage Covered(int lineNo, int startColumn, int endColumn) {
+        private static ExpectedCoverage Covered(int lineNo, int startColumn, int endColumn)
+        {
             return new LineCoverage(lineNo, startColumn, endColumn, true);
         }
 
-        private static ExpectedCoverage Uncovered(int lineNo, int startColumn, int endColumn) {
+        private static ExpectedCoverage Uncovered(int lineNo, int startColumn, int endColumn)
+        {
             return new LineCoverage(lineNo, startColumn, endColumn, false);
         }
 
-        private static ExpectedCoverage Stats(int blocksCovered, int blocksNotCovered, int linesCovered, int linesNotCovered) {
+        private static ExpectedCoverage Stats(int blocksCovered, int blocksNotCovered, int linesCovered, int linesNotCovered)
+        {
             return new StatsCoverage(blocksCovered, blocksNotCovered, linesCovered, linesNotCovered);
         }
 
-        abstract class ExpectedCoverage {
+        abstract class ExpectedCoverage
+        {
             internal abstract void Validate(CoverageMapper mapper, CoverageScope parentScope);
         }
 
-        class ModuleCoverage {
+        class ModuleCoverage
+        {
             private readonly ExpectedCoverage[] _expected;
             private readonly string _name;
 
-            public ModuleCoverage(string name, ExpectedCoverage[] expected) {
+            public ModuleCoverage(string name, ExpectedCoverage[] expected)
+            {
                 _name = name;
                 _expected = expected;
             }
 
-            public void Validate(Dictionary<CoverageFileInfo, CoverageMapper> info) {
-                foreach (var keyValue in info) {
-                    if (keyValue.Value.ModuleName == _name) {
-                        foreach (var expected in _expected) {
+            public void Validate(Dictionary<CoverageFileInfo, CoverageMapper> info)
+            {
+                foreach (var keyValue in info)
+                {
+                    if (keyValue.Value.ModuleName == _name)
+                    {
+                        foreach (var expected in _expected)
+                        {
                             expected.Validate(
                                 keyValue.Value,
                                 keyValue.Value.GlobalScope
@@ -562,19 +606,25 @@ namespace PythonToolsTests {
             }
         }
 
-        class ClassCoverage : ExpectedCoverage {
+        class ClassCoverage : ExpectedCoverage
+        {
             private readonly ExpectedCoverage[] _expected;
             private readonly string _name;
 
-            public ClassCoverage(string name, ExpectedCoverage[] expected) {
+            public ClassCoverage(string name, ExpectedCoverage[] expected)
+            {
                 _name = name;
                 _expected = expected;
             }
 
-            internal override void Validate(CoverageMapper mapper, CoverageScope parentScope) {
-                foreach (var scope in mapper.Classes) {
-                    if (CoverageExporter.GetQualifiedName(scope.Statement) == _name) {
-                        foreach (var expected in _expected) {
+            internal override void Validate(CoverageMapper mapper, CoverageScope parentScope)
+            {
+                foreach (var scope in mapper.Classes)
+                {
+                    if (CoverageExporter.GetQualifiedName(scope.Statement) == _name)
+                    {
+                        foreach (var expected in _expected)
+                        {
                             expected.Validate(mapper, scope);
                         }
                         return;
@@ -586,47 +636,60 @@ namespace PythonToolsTests {
 
         }
 
-        class GlobalCoverage : ExpectedCoverage {
+        class GlobalCoverage : ExpectedCoverage
+        {
             private readonly ExpectedCoverage[] _expected;
 
-            public GlobalCoverage(ExpectedCoverage[] expected) {
+            public GlobalCoverage(ExpectedCoverage[] expected)
+            {
                 _expected = expected;
             }
 
-            internal override void Validate(CoverageMapper mapper, CoverageScope parentScope) {
-                foreach (var expected in _expected) {
+            internal override void Validate(CoverageMapper mapper, CoverageScope parentScope)
+            {
+                foreach (var expected in _expected)
+                {
                     expected.Validate(mapper, parentScope);
                 }
             }
         }
 
-        class FunctionCoverage : ExpectedCoverage {
+        class FunctionCoverage : ExpectedCoverage
+        {
             private readonly ExpectedCoverage[] _expected;
             private readonly string _name;
 
-            public FunctionCoverage(string name, ExpectedCoverage[] expected) {
+            public FunctionCoverage(string name, ExpectedCoverage[] expected)
+            {
                 _name = name;
                 _expected = expected;
             }
 
-            internal override void Validate(CoverageMapper mapper, CoverageScope parentScope) {
+            internal override void Validate(CoverageMapper mapper, CoverageScope parentScope)
+            {
                 Assert.IsTrue(
                     FindFunction(mapper, parentScope),
                     "Failed to find function: " + _name
                 );
             }
 
-            private bool FindFunction(CoverageMapper mapper, CoverageScope parentScope) {
-                foreach (var scope in parentScope.Children) {
-                    if (scope.Statement is FunctionDefinition) {
-                        if (CoverageExporter.GetQualifiedFunctionName(scope.Statement) == _name) {
-                            foreach (var expected in _expected) {
+            private bool FindFunction(CoverageMapper mapper, CoverageScope parentScope)
+            {
+                foreach (var scope in parentScope.Children)
+                {
+                    if (scope.Statement is FunctionDefinition)
+                    {
+                        if (CoverageExporter.GetQualifiedFunctionName(scope.Statement) == _name)
+                        {
+                            foreach (var expected in _expected)
+                            {
                                 expected.Validate(mapper, scope);
                             }
                             return true;
                         }
 
-                        if (FindFunction(mapper, scope)) {
+                        if (FindFunction(mapper, scope))
+                        {
                             // nested function...
                             return true;
                         }
@@ -636,20 +699,23 @@ namespace PythonToolsTests {
             }
         }
 
-        class LineCoverage : ExpectedCoverage {
+        class LineCoverage : ExpectedCoverage
+        {
             private readonly int _endColumn;
             private readonly int _lineNo;
             private readonly int _startColumn;
             private readonly bool _covered;
 
-            public LineCoverage(int lineNo, int startColumn, int endColumn, bool covered) {
+            public LineCoverage(int lineNo, int startColumn, int endColumn, bool covered)
+            {
                 _lineNo = lineNo;
                 _startColumn = startColumn;
                 _endColumn = endColumn;
                 _covered = covered;
             }
 
-            internal override void Validate(CoverageMapper mapper, CoverageScope parentScope) {
+            internal override void Validate(CoverageMapper mapper, CoverageScope parentScope)
+            {
                 Assert.IsTrue(parentScope.Lines.ContainsKey(_lineNo), "Line number is missing coverage information");
                 var covInfo = parentScope.Lines[_lineNo];
 
@@ -659,17 +725,20 @@ namespace PythonToolsTests {
             }
         }
 
-        class StatsCoverage : ExpectedCoverage {
+        class StatsCoverage : ExpectedCoverage
+        {
             private readonly int BlocksCovered, BlocksNotCovered, LinesCovered, LinesNotCovered;
 
-            public StatsCoverage(int blocksCovered, int blocksNotCovered, int linesCovered, int linesNotCovered) {
+            public StatsCoverage(int blocksCovered, int blocksNotCovered, int linesCovered, int linesNotCovered)
+            {
                 BlocksCovered = blocksCovered;
                 BlocksNotCovered = blocksNotCovered;
                 LinesCovered = linesCovered;
                 LinesNotCovered = linesNotCovered;
             }
 
-            internal override void Validate(CoverageMapper mapper, CoverageScope parentScope) {
+            internal override void Validate(CoverageMapper mapper, CoverageScope parentScope)
+            {
                 Assert.AreEqual(BlocksCovered, parentScope.BlocksCovered);
                 Assert.AreEqual(BlocksNotCovered, parentScope.BlocksNotCovered);
                 Assert.AreEqual(LinesCovered, parentScope.LinesCovered);

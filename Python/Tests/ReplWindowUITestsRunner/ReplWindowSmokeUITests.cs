@@ -14,12 +14,11 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using TestRunnerInterop;
-
-namespace ReplWindowUITestsRunner {
+namespace ReplWindowUITestsRunner
+{
     [TestClass, Ignore]
-    public abstract class ReplWindowSmokeUITests {
+    public abstract class ReplWindowSmokeUITests
+    {
         #region UI test boilerplate
         public VsTestInvoker _vs => new VsTestInvoker(
             VsTestContext.Instance,
@@ -45,43 +44,50 @@ namespace ReplWindowUITestsRunner {
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void ExecuteInReplSysArgv() {
+        public void ExecuteInReplSysArgv()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.ExecuteInReplSysArgv), Interpreter);
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void ExecuteInReplSysArgvScriptArgs() {
+        public void ExecuteInReplSysArgvScriptArgs()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.ExecuteInReplSysArgvScriptArgs), Interpreter);
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void ExecuteInReplSysPath() {
+        public void ExecuteInReplSysPath()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.ExecuteInReplSysPath), Interpreter);
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void ExecuteInReplUnicodeFilename() {
+        public void ExecuteInReplUnicodeFilename()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.ExecuteInReplUnicodeFilename), Interpreter);
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void CwdImport() {
+        public void CwdImport()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.CwdImport), Interpreter);
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void QuitAndReset() {
+        public void QuitAndReset()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.QuitAndReset), Interpreter);
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void PrintAllCharacters() {
+        public void PrintAllCharacters()
+        {
             _vs.RunTest(nameof(ReplWindowUITests.ReplWindowUITests.PrintAllCharacters), Interpreter);
         }
 
@@ -89,22 +95,26 @@ namespace ReplWindowUITestsRunner {
     }
 
     [TestClass]
-    public class ReplWindowSmokeUITests27 : ReplWindowSmokeUITests {
+    public class ReplWindowSmokeUITests27 : ReplWindowSmokeUITests
+    {
         protected override string Interpreter => "Python27|Python27_x64";
     }
 
     [TestClass]
-    public class ReplWindowSmokeUITestsIPy27 : ReplWindowSmokeUITests {
+    public class ReplWindowSmokeUITestsIPy27 : ReplWindowSmokeUITests
+    {
         protected override string Interpreter => "IronPython27|IronPython27_x64";
     }
 
     [TestClass]
-    public class ReplWindowSmokeUITests35 : ReplWindowSmokeUITests {
+    public class ReplWindowSmokeUITests35 : ReplWindowSmokeUITests
+    {
         protected override string Interpreter => "Python35|Python36_x64";
     }
 
     [TestClass]
-    public class ReplWindowSmokeUITests37 : ReplWindowSmokeUITests {
+    public class ReplWindowSmokeUITests37 : ReplWindowSmokeUITests
+    {
         protected override string Interpreter => "Python37|Python37_x64";
     }
 }

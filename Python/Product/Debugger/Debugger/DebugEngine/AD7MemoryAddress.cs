@@ -14,22 +14,21 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Debugger.Interop;
-
-namespace Microsoft.PythonTools.Debugger.DebugEngine {
+namespace Microsoft.PythonTools.Debugger.DebugEngine
+{
     // An implementation of IDebugCodeContext2. 
     // Represents the starting position of a code instruction. 
     // For Python, this is fundamentally a specific line in the source code.
-    class AD7MemoryAddress : IDebugCodeContext2, IDebugCodeContext100 {
+    class AD7MemoryAddress : IDebugCodeContext2, IDebugCodeContext100
+    {
         private readonly AD7Engine _engine;
         private readonly uint _lineNo;
         private readonly string _filename;
         private readonly PythonStackFrame _frame;
         private IDebugDocumentContext2 _documentContext;
 
-        public AD7MemoryAddress(AD7Engine engine, string filename, uint lineno, PythonStackFrame frame = null) {
+        public AD7MemoryAddress(AD7Engine engine, string filename, uint lineno, PythonStackFrame frame = null)
+        {
             _engine = engine;
             _lineNo = (uint)lineno;
             _filename = filename;
@@ -42,38 +41,45 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             _documentContext = new AD7DocumentContext(filename, startPos, endPos, this, frame != null ? frame.Kind : FrameKind.None);
         }
 
-        public void SetDocumentContext(IDebugDocumentContext2 docContext) {
+        public void SetDocumentContext(IDebugDocumentContext2 docContext)
+        {
             _documentContext = docContext;
         }
 
         #region IDebugMemoryContext2 Members
 
         // Adds a specified value to the current context's address to create a new context.
-        public int Add(ulong dwCount, out IDebugMemoryContext2 newAddress) {
+        public int Add(ulong dwCount, out IDebugMemoryContext2 newAddress)
+        {
             newAddress = new AD7MemoryAddress(_engine, _filename, (uint)dwCount + _lineNo);
             return VSConstants.S_OK;
         }
 
         // Compares the memory context to each context in the given array in the manner indicated by compare flags, 
         // returning an index of the first context that matches.
-        public int Compare(enum_CONTEXT_COMPARE uContextCompare, IDebugMemoryContext2[] compareToItems, uint compareToLength, out uint foundIndex) {
+        public int Compare(enum_CONTEXT_COMPARE uContextCompare, IDebugMemoryContext2[] compareToItems, uint compareToLength, out uint foundIndex)
+        {
             foundIndex = uint.MaxValue;
 
             enum_CONTEXT_COMPARE contextCompare = (enum_CONTEXT_COMPARE)uContextCompare;
 
-            for (uint c = 0; c < compareToLength; c++) {
+            for (uint c = 0; c < compareToLength; c++)
+            {
                 AD7MemoryAddress compareTo = compareToItems[c] as AD7MemoryAddress;
-                if (compareTo == null) {
+                if (compareTo == null)
+                {
                     continue;
                 }
 
-                if (!AD7Engine.ReferenceEquals(this._engine, compareTo._engine)) {
+                if (!AD7Engine.ReferenceEquals(this._engine, compareTo._engine))
+                {
                     continue;
                 }
 
                 bool result;
 
-                switch (contextCompare) {
+                switch (contextCompare)
+                {
                     case enum_CONTEXT_COMPARE.CONTEXT_EQUAL:
                         result = (this._lineNo == compareTo._lineNo);
                         break;
@@ -96,11 +102,16 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
                     case enum_CONTEXT_COMPARE.CONTEXT_SAME_SCOPE:
                     case enum_CONTEXT_COMPARE.CONTEXT_SAME_FUNCTION:
-                        if (_frame != null) {
+                        if (_frame != null)
+                        {
                             result = compareTo._filename == _filename && (compareTo._lineNo + 1) >= _frame.StartLine && (compareTo._lineNo + 1) <= _frame.EndLine;
-                        } else if (compareTo._frame != null) {
+                        }
+                        else if (compareTo._frame != null)
+                        {
                             result = compareTo._filename == _filename && (_lineNo + 1) >= compareTo._frame.StartLine && (compareTo._lineNo + 1) <= compareTo._frame.EndLine;
-                        } else {
+                        }
+                        else
+                        {
                             result = this._lineNo == compareTo._lineNo && this._filename == compareTo._filename;
                         }
                         break;
@@ -118,7 +129,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                         return VSConstants.E_NOTIMPL;
                 }
 
-                if (result) {
+                if (result)
+                {
                     foundIndex = c;
                     return VSConstants.S_OK;
                 }
@@ -127,22 +139,27 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             return VSConstants.S_FALSE;
         }
 
-        public uint LineNumber {
-            get {
+        public uint LineNumber
+        {
+            get
+            {
                 return _lineNo;
             }
         }
 
         // Gets information that describes this context.
-        public int GetInfo(enum_CONTEXT_INFO_FIELDS dwFields, CONTEXT_INFO[] pinfo) {
+        public int GetInfo(enum_CONTEXT_INFO_FIELDS dwFields, CONTEXT_INFO[] pinfo)
+        {
             pinfo[0].dwFields = 0;
 
-            if ((dwFields & enum_CONTEXT_INFO_FIELDS.CIF_ADDRESS) != 0) {
+            if ((dwFields & enum_CONTEXT_INFO_FIELDS.CIF_ADDRESS) != 0)
+            {
                 pinfo[0].bstrAddress = _lineNo.ToString();
                 pinfo[0].dwFields |= enum_CONTEXT_INFO_FIELDS.CIF_ADDRESS;
             }
 
-            if ((dwFields & enum_CONTEXT_INFO_FIELDS.CIF_FUNCTION) != 0) {
+            if ((dwFields & enum_CONTEXT_INFO_FIELDS.CIF_FUNCTION) != 0)
+            {
                 pinfo[0].bstrFunction = _frame != null ? _frame.FunctionName : Strings.DebugUnknownFunctionName;
                 pinfo[0].dwFields |= enum_CONTEXT_INFO_FIELDS.CIF_FUNCTION;
             }
@@ -151,13 +168,15 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         }
 
         // Gets the user-displayable name for this context. Not supported for Python.
-        public int GetName(out string pbstrName) {
+        public int GetName(out string pbstrName)
+        {
             pbstrName = null;
             return VSConstants.E_NOTIMPL;
         }
 
         // Subtracts a specified value from the current context's address to create a new context.
-        public int Subtract(ulong dwCount, out IDebugMemoryContext2 ppMemCxt) {
+        public int Subtract(ulong dwCount, out IDebugMemoryContext2 ppMemCxt)
+        {
             ppMemCxt = new AD7MemoryAddress(_engine, _filename, (uint)dwCount - _lineNo);
             return VSConstants.S_OK;
         }
@@ -167,17 +186,22 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         #region IDebugCodeContext2 Members
 
         // Gets the document context for this code-context
-        public int GetDocumentContext(out IDebugDocumentContext2 ppSrcCxt) {
+        public int GetDocumentContext(out IDebugDocumentContext2 ppSrcCxt)
+        {
             ppSrcCxt = _documentContext;
             return VSConstants.S_OK;
         }
 
         // Gets the language information for this code context.
-        public int GetLanguageInfo(ref string pbstrLanguage, ref Guid pguidLanguage) {
-            if (_documentContext != null) {
+        public int GetLanguageInfo(ref string pbstrLanguage, ref Guid pguidLanguage)
+        {
+            if (_documentContext != null)
+            {
                 _documentContext.GetLanguageInfo(ref pbstrLanguage, ref pguidLanguage);
                 return VSConstants.S_OK;
-            } else {
+            }
+            else
+            {
                 return VSConstants.S_FALSE;
             }
         }
@@ -188,7 +212,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
         // Returns the program being debugged. For Python debug engine, AD7Engine
         // implements IDebugProgram2 which represents the program being debugged.
-        int IDebugCodeContext100.GetProgram(out IDebugProgram2 pProgram) {
+        int IDebugCodeContext100.GetProgram(out IDebugProgram2 pProgram)
+        {
             pProgram = _engine;
             return VSConstants.S_OK;
         }

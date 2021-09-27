@@ -14,22 +14,26 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.PythonTools.Interpreter;
-
-namespace Microsoft.IronPythonTools.Interpreter {
-    class IronPythonField : PythonObject, IBuiltinProperty {
+namespace Microsoft.IronPythonTools.Interpreter
+{
+    class IronPythonField : PythonObject, IBuiltinProperty
+    {
         private IPythonType _fieldType;
         private bool? _isStatic;
 
         public IronPythonField(IronPythonInterpreter interpreter, ObjectIdentityHandle field)
-            : base(interpreter, field) {
+            : base(interpreter, field)
+        {
         }
 
         #region IBuiltinProperty Members
 
-        public IPythonType Type {
-            get {
-                if (_fieldType == null) {
+        public IPythonType Type
+        {
+            get
+            {
+                if (_fieldType == null)
+                {
                     var ri = RemoteInterpreter;
                     _fieldType = ri != null ? (IPythonType)Interpreter.MakeObject(ri.GetFieldType(Value)) : null;
                 }
@@ -37,9 +41,12 @@ namespace Microsoft.IronPythonTools.Interpreter {
             }
         }
 
-        public bool IsStatic {
-            get {
-                if (_isStatic == null) {
+        public bool IsStatic
+        {
+            get
+            {
+                if (_isStatic == null)
+                {
                     var ri = RemoteInterpreter;
                     _isStatic = ri != null ? ri.IsFieldStatic(Value) : false;
                 }
@@ -48,18 +55,22 @@ namespace Microsoft.IronPythonTools.Interpreter {
             }
         }
 
-        public string Documentation {
-            get {
+        public string Documentation
+        {
+            get
+            {
                 var ri = RemoteInterpreter;
                 return ri != null ? ri.GetFieldDocumentation(Value) : string.Empty;
             }
         }
 
-        public string Description {
+        public string Description
+        {
             get { return Documentation; }
         }
 
-        public override PythonMemberType MemberType {
+        public override PythonMemberType MemberType
+        {
             get { return PythonMemberType.Field; }
         }
 

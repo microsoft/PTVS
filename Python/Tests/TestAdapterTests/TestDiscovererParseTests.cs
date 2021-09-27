@@ -14,26 +14,23 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using Microsoft.PythonTools.TestAdapter.Pytest;
-using Microsoft.PythonTools.TestAdapter.UnitTest;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-namespace TestAdapterTests {
+namespace TestAdapterTests
+{
     [TestClass]
-    public class TestDiscovererParseTests {
+    public class TestDiscovererParseTests
+    {
         [TestMethod]
         [ExpectedException(typeof(ArgumentNullException))]
-        public void PytestShouldThrowNullResults() {
+        public void PytestShouldThrowNullResults()
+        {
             var discoverer = new PytestTestDiscoverer();
             var testcases = discoverer.ParseDiscoveryResults(null, projectHome: "dummypath");
             testcases.Any();
         }
 
         [TestMethod]
-        public void PytestShouldHandleEmptyListResults() {
+        public void PytestShouldHandleEmptyListResults()
+        {
             var discoverer = new PytestTestDiscoverer();
             var results = new List<PytestDiscoveryResults>();
             var testcases = discoverer.ParseDiscoveryResults(results, projectHome: "dummypath");
@@ -42,7 +39,8 @@ namespace TestAdapterTests {
         }
 
         [TestMethod]
-        public void PytestShouldHandleEmptyResults() {
+        public void PytestShouldHandleEmptyResults()
+        {
             var discoverer = new PytestTestDiscoverer();
             var results = new List<PytestDiscoveryResults>() { new PytestDiscoveryResults() };
             var testcases = discoverer.ParseDiscoveryResults(results, projectHome: "dummypath");
@@ -52,14 +50,16 @@ namespace TestAdapterTests {
 
         [TestMethod]
         [ExpectedException(typeof(ArgumentNullException))]
-        public void UnnitShouldThrowNullResults() {
+        public void UnnitShouldThrowNullResults()
+        {
             var discoverer = new UnittestTestDiscoverer();
             var testcases = discoverer.ParseDiscoveryResults(null, projectHome: "dummypath");
             testcases.Any();
         }
 
         [TestMethod]
-        public void UnittestShouldHandleEmptyListResults() {
+        public void UnittestShouldHandleEmptyListResults()
+        {
             var discoverer = new UnittestTestDiscoverer();
             var results = new List<UnittestDiscoveryResults>();
             var testcases = discoverer.ParseDiscoveryResults(results, projectHome: "dummypath");
@@ -68,7 +68,8 @@ namespace TestAdapterTests {
         }
 
         [TestMethod]
-        public void UnittestShouldHandleEmptyResults() {
+        public void UnittestShouldHandleEmptyResults()
+        {
             var discoverer = new UnittestTestDiscoverer();
             var results = new List<UnittestDiscoveryResults>() { new UnittestDiscoveryResults() };
             var testcases = discoverer.ParseDiscoveryResults(results, projectHome: "dummypath");

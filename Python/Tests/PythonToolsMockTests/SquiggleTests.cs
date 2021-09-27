@@ -14,34 +14,23 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using Microsoft.PythonTools;
-using Microsoft.PythonTools.Intellisense;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Text.Adornments;
-using Microsoft.VisualStudio.Text.Tagging;
-using Microsoft.VisualStudio.Utilities;
-using TestUtilities;
-using TestUtilities.Mocks;
-using TestUtilities.Python;
 using PriorityAttribute = Microsoft.VisualStudio.TestTools.UnitTesting.PriorityAttribute;
 
-namespace PythonToolsMockTests {
+namespace PythonToolsMockTests
+{
     [TestClass]
-    public class SquiggleTests {
+    public class SquiggleTests
+    {
         public static IContentType PythonContentType = new MockContentType("Python", new IContentType[0]);
 
         [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
+        public static void DoDeployment(TestContext context)
+        {
             AssertListener.Initialize();
         }
 
-        private static string FormatErrorTag(TrackingTagSpan<ErrorTag> tag) {
+        private static string FormatErrorTag(TrackingTagSpan<ErrorTag> tag)
+        {
             return string.Format("{0}: {1} ({2}:{3})",
                 tag.Tag.ErrorType,
                 tag.Tag.ToolTipContent,
@@ -50,7 +39,8 @@ namespace PythonToolsMockTests {
             );
         }
 
-        private static string FormatErrorTagSpan(TrackingTagSpan<ErrorTag> tag) {
+        private static string FormatErrorTagSpan(TrackingTagSpan<ErrorTag> tag)
+        {
             return string.Format("{0}-{1}",
                 tag.Span.GetStartPoint(tag.Span.TextBuffer.CurrentSnapshot).Position,
                 tag.Span.GetEndPoint(tag.Span.TextBuffer.CurrentSnapshot).Position
@@ -59,10 +49,12 @@ namespace PythonToolsMockTests {
 
 
         [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public async Task UnresolvedImportSquiggle() {
+        public async Task UnresolvedImportSquiggle()
+        {
             List<string> squiggles;
 
-            using (var view = new PythonEditor("import fob, oar\r\nfrom baz import *\r\nfrom spam import eggs")) {
+            using (var view = new PythonEditor("import fob, oar\r\nfrom baz import *\r\nfrom spam import eggs"))
+            {
                 var errorProvider = view.VS.ServiceProvider.GetComponentModel().GetService<IErrorProviderFactory>();
                 var tagger = errorProvider.GetErrorTagger(view.View.TextView.TextBuffer);
                 // Ensure all tasks have been updated
@@ -76,7 +68,8 @@ namespace PythonToolsMockTests {
             }
 
             Console.WriteLine(" Squiggles found:");
-            foreach (var actual in squiggles) {
+            foreach (var actual in squiggles)
+            {
                 Console.WriteLine(actual);
             }
             Console.WriteLine(" Found {0} squiggle(s)", squiggles.Count);
@@ -88,7 +81,8 @@ namespace PythonToolsMockTests {
                 @".*warning:.*oar.*\(Python.+:12-15\)",
                 @".*warning:.*baz.*\(Python.+:22-25\)",
                 @".*warning:.*spam.*\(Python.+:41-45\)"
-            }) {
+            })
+            {
                 Assert.IsTrue(i < squiggles.Count, "Not enough squiggles");
                 AssertUtil.AreEqual(new Regex(expected, RegexOptions.IgnoreCase | RegexOptions.Singleline), squiggles[i]);
                 i += 1;
@@ -96,7 +90,8 @@ namespace PythonToolsMockTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P2_FAILING)]
-        public async Task HandledImportSquiggle() {
+        public async Task HandledImportSquiggle()
+        {
             var testCases = new List<Tuple<string, string[]>>();
             testCases.Add(Tuple.Create(
                 "try:\r\n    import spam\r\nexcept ValueError:\r\n    pass\r\n",
@@ -111,14 +106,16 @@ namespace PythonToolsMockTests {
                 ))
             );
 
-            using (var view = new PythonEditor()) {
+            using (var view = new PythonEditor())
+            {
                 var errorProvider = view.VS.ServiceProvider.GetComponentModel().GetService<IErrorProviderFactory>();
                 var tagger = errorProvider.GetErrorTagger(view.View.TextView.TextBuffer);
                 // Ensure all tasks have been updated
                 var taskProvider = (ErrorTaskProvider)view.VS.ServiceProvider.GetService(typeof(ErrorTaskProvider));
                 Assert.IsNotNull(taskProvider, "no ErrorTaskProvider available");
 
-                foreach (var testCase in testCases) {
+                foreach (var testCase in testCases)
+                {
                     view.Text = testCase.Item1;
                     var time = await taskProvider.FlushAsync();
                     Console.WriteLine("TaskProvider.FlushAsync took {0}ms", time.TotalMilliseconds);
@@ -129,14 +126,16 @@ namespace PythonToolsMockTests {
 
                     Console.WriteLine(testCase.Item1);
                     Console.WriteLine(" Squiggles found:");
-                    foreach (var actual in squiggles) {
+                    foreach (var actual in squiggles)
+                    {
                         Console.WriteLine(actual);
                     }
                     Console.WriteLine(" Found {0} squiggle(s)", squiggles.Count);
                     Console.WriteLine();
 
                     int i = 0;
-                    foreach (var expected in testCase.Item2) {
+                    foreach (var expected in testCase.Item2)
+                    {
                         Assert.IsTrue(i < squiggles.Count, "Not enough squiggles");
                         AssertUtil.AreEqual(new Regex(expected, RegexOptions.IgnoreCase | RegexOptions.Singleline), squiggles[i]);
                         i += 1;

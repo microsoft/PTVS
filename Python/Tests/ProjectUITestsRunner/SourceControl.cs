@@ -14,12 +14,11 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using TestRunnerInterop;
-
-namespace ProjectUITestsRunner {
+namespace ProjectUITestsRunner
+{
     [TestClass]
-    public class SourceControl {
+    public class SourceControl
+    {
         #region UI test boilerplate
         public VsTestInvoker _vs => new VsTestInvoker(
             VsTestContext.Instance,
@@ -42,31 +41,36 @@ namespace ProjectUITestsRunner {
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
         // Currently Fails: https://pytools.codeplex.com/workitem/2609
-        public void MoveFolderWithItem() {
+        public void MoveFolderWithItem()
+        {
             _vs.RunTest(nameof(ProjectUITests.SourceControl.MoveFolderWithItem));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void AddNewItem() {
+        public void AddNewItem()
+        {
             _vs.RunTest(nameof(ProjectUITests.SourceControl.AddNewItem));
         }
 
         [TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
-        public void AddExistingItem() {
+        public void AddExistingItem()
+        {
             _vs.RunTest(nameof(ProjectUITests.SourceControl.AddExistingItem));
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void IncludeInProject() {
+        public void IncludeInProject()
+        {
             _vs.RunTest(nameof(ProjectUITests.SourceControl.IncludeInProject));
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void RemoveItem() {
+        public void RemoveItem()
+        {
             _vs.RunTest(nameof(ProjectUITests.SourceControl.RemoveItem));
         }
 
@@ -75,7 +79,8 @@ namespace ProjectUITestsRunner {
         /// </summary>
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void BasicSourceControl() {
+        public void BasicSourceControl()
+        {
             _vs.RunTest(nameof(ProjectUITests.SourceControl.BasicSourceControl));
         }
 
@@ -84,7 +89,8 @@ namespace ProjectUITestsRunner {
         /// </summary>
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void SourceControlGlyphChanged() {
+        public void SourceControlGlyphChanged()
+        {
             _vs.RunTest(nameof(ProjectUITests.SourceControl.SourceControlGlyphChanged));
         }
 
@@ -93,7 +99,8 @@ namespace ProjectUITestsRunner {
         /// </summary>
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void SourceControlNoControl() {
+        public void SourceControlNoControl()
+        {
             _vs.RunTest(nameof(ProjectUITests.SourceControl.SourceControlNoControl));
         }
 
@@ -104,7 +111,8 @@ namespace ProjectUITestsRunner {
         /// </summary>
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void SourceControlExcludedFilesNotPresent() {
+        public void SourceControlExcludedFilesNotPresent()
+        {
             _vs.RunTest(nameof(ProjectUITests.SourceControl.SourceControlExcludedFilesNotPresent));
         }
 
@@ -113,7 +121,8 @@ namespace ProjectUITestsRunner {
         /// </summary>
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void SourceControlRenameFolder() {
+        public void SourceControlRenameFolder()
+        {
             _vs.RunTest(nameof(ProjectUITests.SourceControl.SourceControlRenameFolder));
         }
     }

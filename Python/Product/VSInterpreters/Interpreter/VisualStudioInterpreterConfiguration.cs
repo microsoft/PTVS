@@ -14,11 +14,10 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-
-namespace Microsoft.PythonTools.Interpreter {
-    public class VisualStudioInterpreterConfiguration : InterpreterConfiguration, IEquatable<VisualStudioInterpreterConfiguration> {
+namespace Microsoft.PythonTools.Interpreter
+{
+    public class VisualStudioInterpreterConfiguration : InterpreterConfiguration, IEquatable<VisualStudioInterpreterConfiguration>
+    {
         public string PrefixPath { get; }
 
         /// <summary>
@@ -35,7 +34,8 @@ namespace Microsoft.PythonTools.Interpreter {
         /// <summary>
         /// Reconstructs an interpreter configuration from a dictionary.
         /// </summary>
-        public static VisualStudioInterpreterConfiguration CreateFromDictionary(Dictionary<string, object> properties) {
+        public static VisualStudioInterpreterConfiguration CreateFromDictionary(Dictionary<string, object> properties)
+        {
             var id = Read(properties, nameof(InterpreterConfiguration.Id));
             var description = Read(properties, nameof(InterpreterConfiguration.Description)) ?? "";
             var prefixPath = Read(properties, nameof(PrefixPath));
@@ -45,24 +45,31 @@ namespace Microsoft.PythonTools.Interpreter {
             var architecture = InterpreterArchitecture.TryParse(Read(properties, nameof(InterpreterConfiguration.Architecture)));
 
             var version = default(Version);
-            try {
+            try
+            {
                 version = Version.Parse(Read(properties, nameof(Version)));
-            } catch (Exception ex) when (ex is ArgumentException || ex is FormatException) {
+            }
+            catch (Exception ex) when (ex is ArgumentException || ex is FormatException)
+            {
                 version = new Version();
             }
 
             InterpreterUIMode uiMode = 0;
-            foreach (var bit in (Read(properties, nameof(UIMode)) ?? "").Split('|')) {
-                if (Enum.TryParse(bit, out InterpreterUIMode m)) {
+            foreach (var bit in (Read(properties, nameof(UIMode)) ?? "").Split('|'))
+            {
+                if (Enum.TryParse(bit, out InterpreterUIMode m))
+                {
                     uiMode |= m;
                 }
             }
 
             var configuration = new VisualStudioInterpreterConfiguration(id, description, prefixPath, interpreterPath, windowsInterpreterPath, pathEnvironmentVariable, architecture, version, uiMode);
 
-            if (properties.TryGetValue(nameof(InterpreterConfiguration.SearchPaths), out object o)) {
+            if (properties.TryGetValue(nameof(InterpreterConfiguration.SearchPaths), out object o))
+            {
                 configuration.SearchPaths.Clear();
-                switch (o) {
+                switch (o)
+                {
                     case string s:
                         configuration.SearchPaths.AddRange(s.Split(';'));
                         break;
@@ -88,14 +95,17 @@ namespace Microsoft.PythonTools.Interpreter {
             InterpreterArchitecture architecture = default(InterpreterArchitecture),
             Version version = null,
             InterpreterUIMode uiMode = InterpreterUIMode.Normal
-        ) : base(id, description, pythonExePath, pathVar, string.Empty, string.Empty, architecture, version) {
+        ) : base(id, description, pythonExePath, pathVar, string.Empty, string.Empty, architecture, version)
+        {
             PrefixPath = prefixPath;
             WindowsInterpreterPath = string.IsNullOrEmpty(winPath) ? pythonExePath : winPath;
             UIMode = uiMode;
         }
 
-        public bool Equals(VisualStudioInterpreterConfiguration other) {
-            if (other == null) {
+        public bool Equals(VisualStudioInterpreterConfiguration other)
+        {
+            if (other == null)
+            {
                 return false;
             }
 
@@ -111,7 +121,8 @@ namespace Microsoft.PythonTools.Interpreter {
                    UIMode == other.UIMode;
         }
 
-        public override int GetHashCode() {
+        public override int GetHashCode()
+        {
             var cmp = StringComparer.OrdinalIgnoreCase;
             return cmp.GetHashCode(PrefixPath ?? "") ^
                    Id.GetHashCode() ^

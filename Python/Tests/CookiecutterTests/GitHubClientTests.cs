@@ -14,16 +14,14 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Threading.Tasks;
-using Microsoft.CookiecutterTools.Model;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using TestUtilities;
-
-namespace CookiecutterTests {
+namespace CookiecutterTests
+{
     [TestClass]
-    public class GitHubClientTests {
+    public class GitHubClientTests
+    {
         [TestMethod]
-        public async Task CheckEncoding() {
+        public async Task CheckEncoding()
+        {
             // Use a repository with a description in Chinese to check UTF-8 decoding
             var client = new GitHubClient();
             var details = await client.GetRepositoryDetails("chenyinxin", "cookiecutter-bitadmin-core");

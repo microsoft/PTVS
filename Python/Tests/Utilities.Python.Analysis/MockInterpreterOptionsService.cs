@@ -14,132 +14,160 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.PythonTools.Interpreter;
-
-namespace TestUtilities.Python {
-    public class MockInterpreterOptionsService : IInterpreterOptionsService, IInterpreterRegistryService {
+namespace TestUtilities.Python
+{
+    public class MockInterpreterOptionsService : IInterpreterOptionsService, IInterpreterRegistryService
+    {
         readonly List<IPythonInterpreterFactoryProvider> _providers;
         readonly IPythonInterpreterFactory _noInterpretersValue;
         IPythonInterpreterFactory _defaultInterpreter;
 
         readonly Dictionary<IPythonInterpreterFactory, IReadOnlyList<IPackageManager>> _packageManagers;
 
-        public MockInterpreterOptionsService() {
+        public MockInterpreterOptionsService()
+        {
             _providers = new List<IPythonInterpreterFactoryProvider>();
             _noInterpretersValue = new MockPythonInterpreterFactory(new VisualStudioInterpreterConfiguration("2.7", "No Interpreters", version: new Version(2, 7)));
             _packageManagers = new Dictionary<IPythonInterpreterFactory, IReadOnlyList<IPackageManager>>();
         }
 
-        public void AddProvider(IPythonInterpreterFactoryProvider provider) {
+        public void AddProvider(IPythonInterpreterFactoryProvider provider)
+        {
             _providers.Add(provider);
             provider.InterpreterFactoriesChanged += provider_InterpreterFactoriesChanged;
             var evt = InterpretersChanged;
-            if (evt != null) {
+            if (evt != null)
+            {
                 evt(this, EventArgs.Empty);
             }
         }
 
-        public void ClearProviders() {
-            foreach (var p in _providers) {
+        public void ClearProviders()
+        {
+            foreach (var p in _providers)
+            {
                 p.InterpreterFactoriesChanged -= provider_InterpreterFactoriesChanged;
             }
             _providers.Clear();
             var evt = InterpretersChanged;
-            if (evt != null) {
+            if (evt != null)
+            {
                 evt(this, EventArgs.Empty);
             }
         }
 
-        void provider_InterpreterFactoriesChanged(object sender, EventArgs e) {
+        void provider_InterpreterFactoriesChanged(object sender, EventArgs e)
+        {
             var evt = InterpretersChanged;
-            if (evt != null) {
+            if (evt != null)
+            {
                 evt(this, EventArgs.Empty);
             }
         }
 
 
-        public IEnumerable<IPythonInterpreterFactory> Interpreters {
+        public IEnumerable<IPythonInterpreterFactory> Interpreters
+        {
             get { return _providers.Where(p => p != null).SelectMany(p => p.GetInterpreterFactories()); }
         }
 
-        public IEnumerable<InterpreterConfiguration> Configurations {
+        public IEnumerable<InterpreterConfiguration> Configurations
+        {
             get { return _providers.Where(p => p != null).SelectMany(p => p.GetInterpreterFactories()).Select(x => x.Configuration); }
         }
 
-        public IEnumerable<IPythonInterpreterFactory> InterpretersOrDefault {
-            get {
-                if (Interpreters.Any()) {
+        public IEnumerable<IPythonInterpreterFactory> InterpretersOrDefault
+        {
+            get
+            {
+                if (Interpreters.Any())
+                {
                     return Interpreters;
                 }
                 return Enumerable.Repeat(_noInterpretersValue, 1);
             }
         }
 
-        public IPythonInterpreterFactory NoInterpretersValue {
+        public IPythonInterpreterFactory NoInterpretersValue
+        {
             get { return _noInterpretersValue; }
         }
 
         public event EventHandler InterpretersChanged;
 
-        public void BeginSuppressInterpretersChangedEvent() {
+        public void BeginSuppressInterpretersChangedEvent()
+        {
             throw new NotImplementedException();
         }
 
-        public void EndSuppressInterpretersChangedEvent() {
+        public void EndSuppressInterpretersChangedEvent()
+        {
             throw new NotImplementedException();
         }
 
-        public IPythonInterpreterFactory DefaultInterpreter {
-            get {
+        public IPythonInterpreterFactory DefaultInterpreter
+        {
+            get
+            {
                 return _defaultInterpreter ?? _noInterpretersValue;
             }
-            set {
-                if (value == _noInterpretersValue) {
+            set
+            {
+                if (value == _noInterpretersValue)
+                {
                     value = null;
                 }
-                if (value != _defaultInterpreter) {
+                if (value != _defaultInterpreter)
+                {
                     _defaultInterpreter = value;
                     var evt = DefaultInterpreterChanged;
-                    if (evt != null) {
+                    if (evt != null)
+                    {
                         evt(this, EventArgs.Empty);
                     }
                 }
             }
         }
 
-        public string DefaultInterpreterId {
-            get {
+        public string DefaultInterpreterId
+        {
+            get
+            {
                 return DefaultInterpreter?.Configuration?.Id;
             }
 
-            set {
+            set
+            {
                 DefaultInterpreter = FindInterpreter(value);
             }
         }
 
         public event EventHandler DefaultInterpreterChanged;
 
-        public bool IsInterpreterGeneratingDatabase(IPythonInterpreterFactory interpreter) {
+        public bool IsInterpreterGeneratingDatabase(IPythonInterpreterFactory interpreter)
+        {
             throw new NotImplementedException();
         }
 
-        public void RemoveConfigurableInterpreter(string id) {
+        public void RemoveConfigurableInterpreter(string id)
+        {
             throw new NotImplementedException();
         }
 
-        public bool IsConfigurable(string id) {
+        public bool IsConfigurable(string id)
+        {
             return true;
             //throw new NotImplementedException();
         }
 
-        public IPythonInterpreterFactory FindInterpreter(string id) {
-            foreach (var interp in _providers) {
-                foreach (var config in interp.GetInterpreterConfigurations()) {
-                    if (config.Id == id) {
+        public IPythonInterpreterFactory FindInterpreter(string id)
+        {
+            foreach (var interp in _providers)
+            {
+                foreach (var config in interp.GetInterpreterConfigurations())
+                {
+                    if (config.Id == id)
+                    {
                         return interp.GetInterpreterFactory(id);
                     }
                 }
@@ -147,22 +175,29 @@ namespace TestUtilities.Python {
             return null;
         }
 
-        public Task<object> LockInterpreterAsync(IPythonInterpreterFactory factory, object moniker, TimeSpan timeout) {
+        public Task<object> LockInterpreterAsync(IPythonInterpreterFactory factory, object moniker, TimeSpan timeout)
+        {
             throw new NotImplementedException();
         }
 
-        public bool IsInterpreterLocked(IPythonInterpreterFactory factory, object moniker) {
+        public bool IsInterpreterLocked(IPythonInterpreterFactory factory, object moniker)
+        {
             throw new NotImplementedException();
         }
 
-        public bool UnlockInterpreter(object cookie) {
+        public bool UnlockInterpreter(object cookie)
+        {
             throw new NotImplementedException();
         }
 
-        public InterpreterConfiguration FindConfiguration(string id) {
-            foreach (var interp in _providers) {
-                foreach (var config in interp.GetInterpreterConfigurations()) {
-                    if (config.Id == id) {
+        public InterpreterConfiguration FindConfiguration(string id)
+        {
+            foreach (var interp in _providers)
+            {
+                foreach (var config in interp.GetInterpreterConfigurations())
+                {
+                    if (config.Id == id)
+                    {
                         return config;
                     }
                 }
@@ -170,14 +205,19 @@ namespace TestUtilities.Python {
             return null;
         }
 
-        public string AddConfigurableInterpreter(string name, InterpreterConfiguration config) {
+        public string AddConfigurableInterpreter(string name, InterpreterConfiguration config)
+        {
             throw new NotImplementedException();
         }
 
-        public object GetProperty(string id, string propName) {
-            foreach (var interp in _providers) {
-                foreach (var config in interp.GetInterpreterConfigurations()) {
-                    if (config.Id == id) {
+        public object GetProperty(string id, string propName)
+        {
+            foreach (var interp in _providers)
+            {
+                foreach (var config in interp.GetInterpreterConfigurations())
+                {
+                    if (config.Id == id)
+                    {
                         return interp.GetProperty(id, propName);
                     }
                 }
@@ -185,21 +225,28 @@ namespace TestUtilities.Python {
             return null;
         }
 
-        public void GetSerializationInfo(IPythonInterpreterFactory factory, out string assembly, out string typeName, out Dictionary<string, object> properties) {
+        public void GetSerializationInfo(IPythonInterpreterFactory factory, out string assembly, out string typeName, out Dictionary<string, object> properties)
+        {
             var f = factory as ICustomInterpreterSerialization ?? (ICustomInterpreterSerialization)new MockPythonInterpreterFactory(factory.Configuration);
-            if (!f.GetSerializationInfo(out assembly, out typeName, out properties)) {
+            if (!f.GetSerializationInfo(out assembly, out typeName, out properties))
+            {
                 throw new InvalidOperationException($"Failed to serialize {factory.Configuration.Id}");
             }
         }
 
-        public void AddPackageManagers(IPythonInterpreterFactory factory, IReadOnlyList<IPackageManager> packageManagers) {
+        public void AddPackageManagers(IPythonInterpreterFactory factory, IReadOnlyList<IPackageManager> packageManagers)
+        {
             _packageManagers[factory] = packageManagers;
         }
 
-        public IEnumerable<IPackageManager> GetPackageManagers(IPythonInterpreterFactory factory) {
-            try {
+        public IEnumerable<IPackageManager> GetPackageManagers(IPythonInterpreterFactory factory)
+        {
+            try
+            {
                 return _packageManagers[factory];
-            } catch (KeyNotFoundException) {
+            }
+            catch (KeyNotFoundException)
+            {
                 return Enumerable.Empty<IPackageManager>();
             }
         }

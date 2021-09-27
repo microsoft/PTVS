@@ -14,9 +14,6 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.VisualStudio.Text.Adornments;
-using Microsoft.VisualStudio.Text.Tagging;
-
 namespace TestUtilities.Mocks
 {
     public class MockErrorProviderFactory : IErrorProviderFactory

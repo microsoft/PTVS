@@ -14,20 +14,22 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-
-namespace TestRunnerInterop {
-    class TestFailedException : Exception {
+namespace TestRunnerInterop
+{
+    class TestFailedException : Exception
+    {
         private readonly string _innerType;
         private readonly string _stackTrace;
 
-        public TestFailedException(string innerType, string message, string stackTrace) {
+        public TestFailedException(string innerType, string message, string stackTrace)
+        {
             _innerType = innerType;
             Message = $"{_innerType.Substring(_innerType.LastIndexOf('.') + 1)}: {message}";
             _stackTrace = stackTrace;
         }
 
-        public override string ToString() {
+        public override string ToString()
+        {
             return base.ToString().Replace(GetType().FullName, _innerType);
         }
 

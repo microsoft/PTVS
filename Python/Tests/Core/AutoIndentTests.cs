@@ -14,27 +14,24 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.PythonTools.Editor;
-using Microsoft.PythonTools.Parsing;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.VisualStudio.Text.Editor;
-using Microsoft.VisualStudio.Utilities;
-using TestUtilities;
-using TestUtilities.Mocks;
 using PriorityAttribute = Microsoft.VisualStudio.TestTools.UnitTesting.PriorityAttribute;
 
-namespace PythonToolsTests {
+namespace PythonToolsTests
+{
     [TestClass]
-    public class AutoIndentTests {
+    public class AutoIndentTests
+    {
         public static IContentType PythonContentType = new MockContentType("Python", new IContentType[0]);
 
         [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
+        public static void DoDeployment(TestContext context)
+        {
             AssertListener.Initialize();
         }
 
         [TestMethod, Priority(UnitTestPriority.P0)]
-        public void GetIndentation() {
+        public void GetIndentation()
+        {
             Assert.AreEqual(0, AutoIndent.GetIndentation("", 4));
             Assert.AreEqual(0, AutoIndent.GetIndentation("p", 4));
             Assert.AreEqual(4, AutoIndent.GetIndentation("    ", 4));
@@ -48,7 +45,8 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P0)]
-        public void GetLineIndentation() {
+        public void GetLineIndentation()
+        {
             AssertIndent("pass\n", 2, 0);
             AssertIndent("def f():\n", 2, 4);
             AssertIndent("f(x,\n", 2, 2);
@@ -85,7 +83,8 @@ namespace PythonToolsTests {
             AssertIndent("def a():\n    if b():\n        if c():\n            d()\n            p", 5, 12);
         }
 
-        private static void AssertIndent(string code, int lineNumber, int expected, int tabSize = 4, int indentSize = 4, PythonLanguageVersion version = PythonLanguageVersion.V36) {
+        private static void AssertIndent(string code, int lineNumber, int expected, int tabSize = 4, int indentSize = 4, PythonLanguageVersion version = PythonLanguageVersion.V36)
+        {
             var buffer = new MockTextBuffer(code, PythonContentType);
             var view = new MockTextView(buffer);
             view.Options.SetOptionValue(DefaultOptions.IndentSizeOptionId, indentSize);

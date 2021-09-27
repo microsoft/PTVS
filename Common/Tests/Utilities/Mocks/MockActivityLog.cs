@@ -14,12 +14,6 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text.RegularExpressions;
-
 namespace TestUtilities.Mocks
 {
 #pragma warning disable CS0246 // The type or namespace name 'IVsActivityLog' could not be found (are you missing a using directive or an assembly reference?)

@@ -14,31 +14,26 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Linq;
-using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Parsing;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.Win32;
-using TestUtilities;
-using TestUtilities.Python;
-
-namespace PythonToolsTests {
+namespace PythonToolsTests
+{
     [TestClass]
-    public class CPythonInterpreterTests {
+    public class CPythonInterpreterTests
+    {
         [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
+        public static void DoDeployment(TestContext context)
+        {
             AssertListener.Initialize();
         }
 
         [TestMethod, Priority(UnitTestPriority.P0)]
-        public void FactoryProvider() {
+        public void FactoryProvider()
+        {
             var provider = new CPythonInterpreterFactoryProvider(null, false);
             var factories = provider.GetInterpreterFactories().ToArray();
 
             Console.WriteLine("Discovered:");
-            foreach (var factory in factories) {
+            foreach (var factory in factories)
+            {
                 var id = factory.Configuration.Id;
                 Console.WriteLine("  {0} - {1}".FormatInvariant(id, factory.Configuration.Description));
 
@@ -47,13 +42,15 @@ namespace PythonToolsTests {
 
                 Assert.IsNotNull(factory.CreateInterpreter(), "failed to create interpreter");
 
-                if (id.StartsWith("Global|PythonCore|")) {
+                if (id.StartsWith("Global|PythonCore|"))
+                {
                     var description = factory.Configuration.Description;
                     var sysVersion = factory.Configuration.Version;
                     var sysArch = factory.Configuration.Architecture;
 
                     // Tests are not yet using a regular install of 3.7
-                    if (sysVersion != new Version(3, 7)) {
+                    if (sysVersion != new Version(3, 7))
+                    {
                         AssertUtil.Contains(description, "Python", sysVersion.ToString(), sysArch.ToString());
                     }
 
@@ -66,11 +63,14 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void DiscoverRegistryRace() {
+        public void DiscoverRegistryRace()
+        {
             // https://github.com/Microsoft/PTVS/issues/558
 
-            using (var key = Registry.CurrentUser.CreateSubKey(@"Software\Python\PythonCore")) {
-                for (int changes = 0; changes < 1000; ++changes) {
+            using (var key = Registry.CurrentUser.CreateSubKey(@"Software\Python\PythonCore"))
+            {
+                for (int changes = 0; changes < 1000; ++changes)
+                {
                     // Doesn't matter about the name - we just want to trigger
                     // discovery and then remove the key during GetSubKeyNames.
                     key.CreateSubKey("NotARealInterpreter").Close();
@@ -80,7 +80,8 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P2_FAILING)]
-        public void ImportFromSearchPath() {
+        public void ImportFromSearchPath()
+        {
             var analyzer = new PythonAnalysis(PythonLanguageVersion.V35);
             analyzer.AddModule("test-module", "from test_package import *");
             analyzer.WaitForAnalysis();
@@ -93,7 +94,8 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P2)]
-        public void ImportPydFromSearchPath() {
+        public void ImportPydFromSearchPath()
+        {
             var analyzer = new PythonAnalysis("Global|PythonCore|2.7-32");
 
             analyzer.AddModule("test-module", "from spam import *");
@@ -107,7 +109,8 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P2_FAILING)] // https://github.com/Microsoft/PTVS/issues/4226
-        public void ImportFromZipFile() {
+        public void ImportFromZipFile()
+        {
             var analyzer = new PythonAnalysis(PythonLanguageVersion.V35);
             analyzer.AddModule("test-module", "from test_package import *; from test_package.sub_package import *");
             analyzer.WaitForAnalysis();

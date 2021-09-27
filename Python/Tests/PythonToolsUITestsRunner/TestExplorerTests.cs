@@ -14,12 +14,11 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using TestRunnerInterop;
-
-namespace PythonToolsUITestsRunner {
+namespace PythonToolsUITestsRunner
+{
     [TestClass]
-    public class TestExplorerTests {
+    public class TestExplorerTests
+    {
         #region UI test boilerplate
         public VsTestInvoker _vs => new VsTestInvoker(
             VsTestContext.Instance,
@@ -41,49 +40,57 @@ namespace PythonToolsUITestsRunner {
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void RunAllUnittestProject() {
+        public void RunAllUnittestProject()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.TestExplorerTests.RunAllUnittestProject));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void RunAllUnittestWorkspace() {
+        public void RunAllUnittestWorkspace()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.TestExplorerTests.RunAllUnittestWorkspace));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void RunAllPytestProject() {
+        public void RunAllPytestProject()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.TestExplorerTests.RunAllPytestProject));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void RunAllPytestWorkspace() {
+        public void RunAllPytestWorkspace()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.TestExplorerTests.RunAllPytestWorkspace));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void DebugPytestProject() {
+        public void DebugPytestProject()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.TestExplorerTests.DebugPytestProject));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void DebugPytestWorkspace() {
+        public void DebugPytestWorkspace()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.TestExplorerTests.DebugPytestWorkspace));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void DebugUnittestProject() {
+        public void DebugUnittestProject()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.TestExplorerTests.DebugUnittestProject));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void DebugUnittestWorkspace() {
+        public void DebugUnittestWorkspace()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.TestExplorerTests.DebugUnittestWorkspace));
         }
     }

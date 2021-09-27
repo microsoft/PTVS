@@ -32,7 +32,7 @@ using Classification = Microsoft.PythonTools.Django.TemplateParsing.Classificati
 namespace DjangoTests {
     [TestClass]
     public class DjangoTemplateParserTests {
-        #region Filter parser tests
+#region Filter parser tests
 
         [TestMethod, Priority(UnitTestPriority.P0)]
         public void FilterRegexTests() {
@@ -104,9 +104,9 @@ namespace DjangoTests {
             }
         }
 
-        #endregion
+#endregion
 
-        #region Block parser tests
+#region Block parser tests
 
         [TestMethod, Priority(UnitTestPriority.P0)]
         public void BlockParserTests() {
@@ -528,9 +528,9 @@ namespace DjangoTests {
             _blockValidators[expected.GetType()](expected, got);
         }
 
-        #endregion
+#endregion
 
-        #region Template tokenizer tests
+#region Template tokenizer tests
 
         [TestMethod, Priority(UnitTestPriority.P0)]
         public void TestSimpleVariable() {
@@ -775,7 +775,7 @@ namespace DjangoTests {
             }
         }
 
-        #endregion
+#endregion
     }
 
     class TestCompletionContext : IDjangoCompletionContext {
@@ -791,7 +791,7 @@ namespace DjangoTests {
             }
         }
 
-        #region IDjangoCompletionContext Members       
+#region IDjangoCompletionContext Members       
 
         public Dictionary<string, TagInfo> Filters {
             get { return _filters; }
@@ -816,7 +816,7 @@ namespace DjangoTests {
             return new Dictionary<string, PythonMemberType>();
         }
 
-        #endregion
+#endregion
     }
 }
 

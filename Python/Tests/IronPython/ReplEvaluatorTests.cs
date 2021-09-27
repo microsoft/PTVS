@@ -14,41 +14,41 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Diagnostics;
-using System.Threading.Tasks;
-using Microsoft.PythonTools.Intellisense;
-using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Repl;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.VisualStudio.Text.Classification;
-using TestUtilities;
-using TestUtilities.Python;
-
-namespace IronPythonTests {
+namespace IronPythonTests
+{
     [TestClass]
-    public class IronPythonReplEvaluatorTests {
-        static IronPythonReplEvaluatorTests() {
+    public class IronPythonReplEvaluatorTests
+    {
+        static IronPythonReplEvaluatorTests()
+        {
             AssertListener.Initialize();
         }
 
-        protected virtual PythonVersion PythonVersion {
-            get {
+        protected virtual PythonVersion PythonVersion
+        {
+            get
+            {
                 return PythonPaths.IronPython27;
             }
         }
 
-        private PythonInteractiveEvaluator Evaluator {
-            get {
+        private PythonInteractiveEvaluator Evaluator
+        {
+            get
+            {
                 PythonVersion.AssertInstalled();
-                return new PythonInteractiveEvaluator(PythonToolsTestUtilities.CreateMockServiceProvider()) {
+                return new PythonInteractiveEvaluator(PythonToolsTestUtilities.CreateMockServiceProvider())
+                {
                     Configuration = new LaunchConfiguration(PythonVersion.Configuration)
                 };
             }
         }
 
         [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public void IronPythonModuleName() {
-            using (var replEval = Evaluator) {
+        public void IronPythonModuleName()
+        {
+            using (var replEval = Evaluator)
+            {
                 var replWindow = new MockReplWindow(replEval);
                 replEval._Initialize(replWindow).Wait();
                 replWindow.ClearScreen();
@@ -61,8 +61,10 @@ namespace IronPythonTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public void IronPythonSignatures() {
-            using (var replEval = Evaluator) {
+        public void IronPythonSignatures()
+        {
+            using (var replEval = Evaluator)
+            {
                 var replWindow = new MockReplWindow(replEval);
                 replEval._Initialize(replWindow).Wait();
                 var execute = replEval.ExecuteText("from System import Array");
@@ -70,7 +72,8 @@ namespace IronPythonTests {
                 Assert.IsTrue(execute.Result.IsSuccessful);
 
                 OverloadDoc[] sigs = null;
-                for (int retries = 0; retries < 5 && sigs == null; retries += 1) {
+                for (int retries = 0; retries < 5 && sigs == null; retries += 1)
+                {
                     sigs = replEval.GetSignatureDocumentation("Array[int]");
                 }
                 Assert.IsNotNull(sigs, "GetSignatureDocumentation timed out");
@@ -80,9 +83,11 @@ namespace IronPythonTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public void IronPythonCommentInput() {
+        public void IronPythonCommentInput()
+        {
             // http://pytools.codeplex.com/workitem/649
-            using (var replEval = Evaluator) {
+            using (var replEval = Evaluator)
+            {
                 var replWindow = new MockReplWindow(replEval);
                 replEval._Initialize(replWindow).Wait();
                 var execute = replEval.ExecuteText("#fob\n1+2");
@@ -92,9 +97,11 @@ namespace IronPythonTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public void ConsoleWriteLineTest() {
+        public void ConsoleWriteLineTest()
+        {
             // http://pytools.codeplex.com/workitem/649
-            using (var replEval = Evaluator) {
+            using (var replEval = Evaluator)
+            {
                 var replWindow = new MockReplWindow(replEval);
                 replEval._Initialize(replWindow).Wait();
                 var execute = replEval.ExecuteText("import System");
@@ -119,9 +126,11 @@ namespace IronPythonTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public void GenericMethodCompletions() {
+        public void GenericMethodCompletions()
+        {
             // http://pytools.codeplex.com/workitem/661
-            using (var replEval = Evaluator) {
+            using (var replEval = Evaluator)
+            {
                 var replWindow = new MockReplWindow(replEval);
                 replEval._Initialize(replWindow).Wait();
                 var execute = replEval.ExecuteText("from System.Threading.Tasks import Task");
@@ -142,20 +151,24 @@ namespace IronPythonTests {
                 replWindow.TextView.TextBuffer.Properties.AddProperty(typeof(VsProjectAnalyzer), replEval.Analyzer);
 
                 CompletionResult[] names = null;
-                for (int retries = 0; retries < 5 && names == null; retries += 1) {
+                for (int retries = 0; retries < 5 && names == null; retries += 1)
+                {
                     names = replEval.GetMemberNames("t");
                 }
                 Assert.IsNotNull(names, "GetMemberNames call timed out");
-                foreach (var name in names) {
+                foreach (var name in names)
+                {
                     Debug.WriteLine(name.Name);
                 }
             }
         }
 
         [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public async Task NoTraceFunction() {
+        public async Task NoTraceFunction()
+        {
             // http://pytools.codeplex.com/workitem/662
-            using (var replEval = Evaluator) {
+            using (var replEval = Evaluator)
+            {
                 var replWindow = new MockReplWindow(replEval);
                 await replEval._Initialize(replWindow);
                 var execute = await replEval.ExecuteText("import sys");
@@ -169,9 +182,11 @@ namespace IronPythonTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public void CommentFollowedByBlankLine() {
+        public void CommentFollowedByBlankLine()
+        {
             // http://pytools.codeplex.com/workitem/659
-            using (var replEval = Evaluator) {
+            using (var replEval = Evaluator)
+            {
                 var replWindow = new MockReplWindow(replEval);
                 replEval._Initialize(replWindow).Wait();
                 var execute = replEval.ExecuteText("# fob\r\n\r\n    \r\n\t\t\r\na = 42");
@@ -184,9 +199,11 @@ namespace IronPythonTests {
 
 
         [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public void AttachSupportMultiThreaded() {
+        public void AttachSupportMultiThreaded()
+        {
             // http://pytools.codeplex.com/workitem/663
-            using (var replEval = Evaluator) {
+            using (var replEval = Evaluator)
+            {
                 var replWindow = new MockReplWindow(replEval);
                 replEval._Initialize(replWindow).Wait();
                 var code = new[] {
@@ -197,7 +214,8 @@ namespace IronPythonTests {
                     "t2 = threading.Thread(target=sayHello)",
                     "t2.start()"
                 };
-                foreach (var line in code) {
+                foreach (var line in code)
+                {
                     var execute = replEval.ExecuteText(line);
                     execute.Wait();
                     Assert.IsTrue(execute.Result.IsSuccessful);
@@ -214,9 +232,12 @@ namespace IronPythonTests {
 
 
     [TestClass]
-    public class IronPythonx64ReplEvaluatorTests : IronPythonReplEvaluatorTests {
-        protected override PythonVersion PythonVersion {
-            get {
+    public class IronPythonx64ReplEvaluatorTests : IronPythonReplEvaluatorTests
+    {
+        protected override PythonVersion PythonVersion
+        {
+            get
+            {
                 return PythonPaths.IronPython27_x64;
             }
         }

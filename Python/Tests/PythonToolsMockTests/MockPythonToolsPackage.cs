@@ -14,35 +14,22 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.Composition;
-using System.ComponentModel.Design;
-using Microsoft.PythonTools;
-using Microsoft.PythonTools.Intellisense;
-using Microsoft.PythonTools.Navigation;
-using Microsoft.PythonTools.Options;
-using Microsoft.PythonTools.Project;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Settings;
-using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudioTools;
-using Microsoft.VisualStudioTools.MockVsTests;
-using TestUtilities.Python;
-
-namespace PythonToolsMockTests {
+namespace PythonToolsMockTests
+{
     [Export(typeof(IMockPackage))]
-    sealed class MockPythonToolsPackage : IMockPackage {
+    sealed class MockPythonToolsPackage : IMockPackage
+    {
         private readonly IServiceContainer _serviceContainer;
         private readonly List<Action> _onDispose = new List<Action>();
 
         [ImportingConstructor]
-        public MockPythonToolsPackage([Import(typeof(SVsServiceProvider))] IServiceContainer serviceProvider) {
+        public MockPythonToolsPackage([Import(typeof(SVsServiceProvider))] IServiceContainer serviceProvider)
+        {
             _serviceContainer = serviceProvider;
         }
 
-        public void Initialize() {
+        public void Initialize()
+        {
             var settings = (IVsSettingsManager)_serviceContainer.GetService(typeof(SVsSettingsManager));
             IVsWritableSettingsStore store;
             ErrorHandler.ThrowOnFailure(settings.GetWritableSettingsStore((uint)SettingsScope.Configuration, out store));
@@ -70,33 +57,44 @@ namespace PythonToolsMockTests {
             );
         }
 
-        public void RemoveService(Type type) {
+        public void RemoveService(Type type)
+        {
             _serviceContainer.RemoveService(type);
         }
 
         public static bool SuppressTaskProvider { get; set; }
 
-        private static object CreateTaskProviderService(IServiceContainer container, Type type) {
-            if (SuppressTaskProvider) {
+        private static object CreateTaskProviderService(IServiceContainer container, Type type)
+        {
+            if (SuppressTaskProvider)
+            {
                 return null;
             }
-            if (typeof(ErrorTaskProvider).IsEquivalentTo(type) || typeof(ErrorTaskProvider).GUID == type.GUID) {
+            if (typeof(ErrorTaskProvider).IsEquivalentTo(type) || typeof(ErrorTaskProvider).GUID == type.GUID)
+            {
                 return ErrorTaskProvider.CreateService(container, typeof(ErrorTaskProvider));
-            } else if (typeof(CommentTaskProvider).IsEquivalentTo(type) || typeof(CommentTaskProvider).GUID == type.GUID) {
+            }
+            else if (typeof(CommentTaskProvider).IsEquivalentTo(type) || typeof(CommentTaskProvider).GUID == type.GUID)
+            {
                 return CommentTaskProvider.CreateService(container, typeof(CommentTaskProvider));
-            } else {
+            }
+            else
+            {
                 return null;
             }
         }
 
-        public void Dispose() {
+        public void Dispose()
+        {
             List<Action> tasks;
-            lock (_onDispose) {
+            lock (_onDispose)
+            {
                 tasks = new List<Action>(_onDispose);
                 _onDispose.Clear();
             }
 
-            foreach (var t in tasks) {
+            foreach (var t in tasks)
+            {
                 t();
             }
         }

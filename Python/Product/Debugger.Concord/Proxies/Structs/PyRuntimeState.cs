@@ -14,15 +14,16 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.PythonTools.Parsing;
-
-namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
+namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
+{
     /// <summary>
     /// In Python 3.7, many global variables were combined into the _PyRuntime struct.
     /// </summary>
     [StructProxy(MinVersion = PythonLanguageVersion.V37, StructName = "_PyRuntimeState")]
-    internal class PyRuntimeState : StructProxy {
-        private class Fields {
+    internal class PyRuntimeState : StructProxy
+    {
+        private class Fields
+        {
             public StructField<BoolProxy> core_initialized;
             public StructField<BoolProxy> initialized;
             public StructField<pyinterpreters> interpreters;
@@ -32,7 +33,8 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
         private readonly Fields _fields;
 
         public PyRuntimeState(DkmProcess process, ulong address)
-            : base(process, address) {
+            : base(process, address)
+        {
             InitializeStruct(this, out _fields);
         }
 
@@ -43,8 +45,10 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
 
 
         [StructProxy(MinVersion = PythonLanguageVersion.V37, StructName = "pyinterpreters")]
-        public class pyinterpreters : StructProxy {
-            private class Fields {
+        public class pyinterpreters : StructProxy
+        {
+            private class Fields
+            {
                 public StructField<PointerProxy<PyInterpreterState>> head;
                 public StructField<PointerProxy<PyInterpreterState>> main;
             }
@@ -52,7 +56,8 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             private readonly Fields _fields;
 
             public pyinterpreters(DkmProcess process, ulong address)
-                : base(process, address) {
+                : base(process, address)
+            {
                 InitializeStruct(this, out _fields);
             }
 
@@ -61,8 +66,10 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
         }
 
         [StructProxy(MinVersion = PythonLanguageVersion.V37, StructName = "_ceval_runtime_state")]
-        public class ceval_runtime_state : StructProxy {
-            private class Fields {
+        public class ceval_runtime_state : StructProxy
+        {
+            private class Fields
+            {
                 public StructField<Int32Proxy> recursion_limit;
                 public StructField<Int32Proxy> tracing_possible;
             }
@@ -70,7 +77,8 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             private readonly Fields _fields;
 
             public ceval_runtime_state(DkmProcess process, ulong address)
-                : base(process, address) {
+                : base(process, address)
+            {
                 InitializeStruct(this, out _fields);
             }
 

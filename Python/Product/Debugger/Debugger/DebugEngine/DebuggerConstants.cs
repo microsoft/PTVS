@@ -14,11 +14,11 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
+namespace Microsoft.PythonTools.Debugger.DebugEngine
+{
 
-namespace Microsoft.PythonTools.Debugger.DebugEngine {
-
-    class DebuggerConstants {
+    class DebuggerConstants
+    {
         public const int E_WIN32_INVALID_NAME = ((282) & 0x0000FFFF) | (7 << 16) | unchecked((int)0x80000000);
 
         public const int RPC_E_SERVERFAULT = unchecked((int)0x80010105);
@@ -26,44 +26,52 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         public const int E_PORTSUPPLIER_NO_PORT = unchecked((int)0x80040080); // Cannot find port. Check the remote machine name.
 
         static private Guid _guidFilterRegisters = new Guid("223ae797-bd09-4f28-8241-2763bdc5f713");
-        static public Guid guidFilterRegisters {
+        static public Guid guidFilterRegisters
+        {
             get { return _guidFilterRegisters; }
         }
 
         static private Guid _guidFilterLocals = new Guid("b200f725-e725-4c53-b36a-1ec27aef12ef");
-        static public Guid guidFilterLocals {
+        static public Guid guidFilterLocals
+        {
             get { return _guidFilterLocals; }
         }
 
         static private Guid _guidFilterAllLocals = new Guid("196db21f-5f22-45a9-b5a3-32cddb30db06");
-        static public Guid guidFilterAllLocals {
+        static public Guid guidFilterAllLocals
+        {
             get { return _guidFilterAllLocals; }
         }
 
         static private Guid _guidFilterArgs = new Guid("804bccea-0475-4ae7-8a46-1862688ab863");
-        static public Guid guidFilterArgs {
+        static public Guid guidFilterArgs
+        {
             get { return _guidFilterArgs; }
         }
 
         static private Guid _guidFilterLocalsPlusArgs = new Guid("e74721bb-10c0-40f5-807f-920d37f95419");
-        static public Guid guidFilterLocalsPlusArgs {
+        static public Guid guidFilterLocalsPlusArgs
+        {
             get { return _guidFilterLocalsPlusArgs; }
         }
 
         static private Guid _guidFilterAllLocalsPlusArgs = new Guid("939729a8-4cb0-4647-9831-7ff465240d5f");
-        static public Guid guidFilterAllLocalsPlusArgs {
+        static public Guid guidFilterAllLocalsPlusArgs
+        {
             get { return _guidFilterAllLocalsPlusArgs; }
         }
 
         // Language guid for Python. Used when the language for a document context or a stack frame is requested.
         static private Guid _guidLanguagePython = new Guid("DA3C7D59-F9E4-4697-BEE7-3A0703AF6BFF");
-        static public Guid guidLanguagePython {
+        static public Guid guidLanguagePython
+        {
             get { return _guidLanguagePython; }
         }
 
         // Language guid for Python. Used when the language for a document context or a stack frame is requested.
         static private Guid _guidLanguageDjangoTemplate = new Guid("918E5764-7026-4D57-918D-19D86AD73AC4");
-        static public Guid guidLanguageDjangoTemplate {
+        static public Guid guidLanguageDjangoTemplate
+        {
             get { return _guidLanguageDjangoTemplate; }
         }
 
@@ -73,14 +81,16 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         public const int E_EVALUATE_TIMEOUT = unchecked((int)0x80040031);
     }
 
-    static class DebuggerLanguageNames {
+    static class DebuggerLanguageNames
+    {
         public const string DjangoTemplates = "Django Templates";
         public const string Python = "Python";
     }
 
     // Flags passed by the debugger to the engine to describe the desired format and execution options for properties 
     // (locals, arguments, etc...)
-    enum DEBUGPROP_INFO_FLAGS {
+    enum DEBUGPROP_INFO_FLAGS
+    {
         DEBUGPROP_INFO_FULLNAME = 0x00000001,
         DEBUGPROP_INFO_NAME = 0x00000002,
         DEBUGPROP_INFO_TYPE = 0x00000004,
@@ -98,7 +108,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         DEBUGPROP_INFO_STANDARD = DEBUGPROP_INFO_ATTRIB | DEBUGPROP_INFO_NAME | DEBUGPROP_INFO_TYPE | DEBUGPROP_INFO_VALUE,
     }
 
-    static class DBG_ATTRIB_FLAGS {
+    static class DBG_ATTRIB_FLAGS
+    {
         public static readonly ulong DBG_ATTRIB_NONE = 0x0000000000000000;
         public static readonly ulong DBG_ATTRIB_ALL = 0x00000000ffffffff;
 

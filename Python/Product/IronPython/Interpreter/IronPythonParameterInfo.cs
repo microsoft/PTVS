@@ -14,12 +14,10 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using Microsoft.PythonTools.Interpreter;
-
-namespace Microsoft.IronPythonTools.Interpreter {
-    class IronPythonParameterInfo : IParameterInfo {
+namespace Microsoft.IronPythonTools.Interpreter
+{
+    class IronPythonParameterInfo : IParameterInfo
+    {
         private readonly IronPythonInterpreter _interpreter;
         private RemoteInterpreterProxy _remote;
         private readonly ObjectIdentityHandle _parameterInfo;
@@ -29,25 +27,31 @@ namespace Microsoft.IronPythonTools.Interpreter {
         private string _defaultValue;
         private static readonly string _noDefaultValue = "<No Default Value>";  // sentinel value to mark when an object doesn't have a default value
 
-        public IronPythonParameterInfo(IronPythonInterpreter interpreter, ObjectIdentityHandle parameterInfo) {
+        public IronPythonParameterInfo(IronPythonInterpreter interpreter, ObjectIdentityHandle parameterInfo)
+        {
             _interpreter = interpreter;
             _interpreter.UnloadingDomain += Interpreter_UnloadingDomain;
             _remote = _interpreter.Remote;
             _parameterInfo = parameterInfo;
         }
 
-        private void Interpreter_UnloadingDomain(object sender, EventArgs e) {
+        private void Interpreter_UnloadingDomain(object sender, EventArgs e)
+        {
             _remote = null;
             _interpreter.UnloadingDomain -= Interpreter_UnloadingDomain;
         }
 
         #region IParameterInfo Members
 
-        public IList<IPythonType> ParameterTypes {
-            get {
-                if (_paramType == null) {
+        public IList<IPythonType> ParameterTypes
+        {
+            get
+            {
+                if (_paramType == null)
+                {
                     var ri = _remote;
-                    if (ri != null) {
+                    if (ri != null)
+                    {
                         _paramType = new[] { _interpreter.GetTypeFromType(ri.GetParameterPythonType(_parameterInfo)) };
                     }
                 }
@@ -56,13 +60,17 @@ namespace Microsoft.IronPythonTools.Interpreter {
         }
 
         // FIXME
-        public string Documentation {
+        public string Documentation
+        {
             get { return ""; }
         }
 
-        public string Name {
-            get {
-                if (_name == null) {
+        public string Name
+        {
+            get
+            {
+                if (_name == null)
+                {
                     var ri = _remote;
                     _name = ri != null ? ri.GetParameterName(_parameterInfo) : string.Empty;
                 }
@@ -70,9 +78,12 @@ namespace Microsoft.IronPythonTools.Interpreter {
             }
         }
 
-        public bool IsParamArray {
-            get {
-                if (_paramKind == ParameterKind.Unknown) {
+        public bool IsParamArray
+        {
+            get
+            {
+                if (_paramKind == ParameterKind.Unknown)
+                {
                     var ri = _remote;
                     _paramKind = ri != null ? ri.GetParameterKind(_parameterInfo) : ParameterKind.Unknown;
                 }
@@ -80,9 +91,12 @@ namespace Microsoft.IronPythonTools.Interpreter {
             }
         }
 
-        public bool IsKeywordDict {
-            get {
-                if (_paramKind == ParameterKind.Unknown) {
+        public bool IsKeywordDict
+        {
+            get
+            {
+                if (_paramKind == ParameterKind.Unknown)
+                {
                     var ri = _remote;
                     _paramKind = ri != null ? ri.GetParameterKind(_parameterInfo) : ParameterKind.Unknown;
                 }
@@ -90,14 +104,18 @@ namespace Microsoft.IronPythonTools.Interpreter {
             }
         }
 
-        public string DefaultValue {
-            get {
-                if (_defaultValue == null) {
+        public string DefaultValue
+        {
+            get
+            {
+                if (_defaultValue == null)
+                {
                     var ri = _remote;
                     _defaultValue = (ri != null ? ri.GetParameterDefaultValue(_parameterInfo) : null) ?? _noDefaultValue;
                 }
 
-                if (Object.ReferenceEquals(_defaultValue, _noDefaultValue)) {
+                if (Object.ReferenceEquals(_defaultValue, _noDefaultValue))
+                {
                     return null;
                 }
 

@@ -14,23 +14,22 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Net;
-using System.Threading.Tasks;
-using Microsoft.CookiecutterTools.Model;
-
-namespace CookiecutterTests {
-    class MockGitHubClient : IGitHubClient {
+namespace CookiecutterTests
+{
+    class MockGitHubClient : IGitHubClient
+    {
         public Dictionary<Tuple<string, string>, string> Descriptions { get; } = new Dictionary<Tuple<string, string>, string>();
 
-        public Task<bool> FileExistsAsync(GitHubRepoSearchItem repo, string filePath) {
+        public Task<bool> FileExistsAsync(GitHubRepoSearchItem repo, string filePath)
+        {
             throw new NotImplementedException();
         }
 
-        public Task<GitHubRepoSearchItem> GetRepositoryDetails(string owner, string name) {
+        public Task<GitHubRepoSearchItem> GetRepositoryDetails(string owner, string name)
+        {
             string description;
-            if (Descriptions.TryGetValue(Tuple.Create(owner, name), out description)) {
+            if (Descriptions.TryGetValue(Tuple.Create(owner, name), out description))
+            {
                 var item = new GitHubRepoSearchItem();
                 item.Description = description;
 
@@ -40,11 +39,13 @@ namespace CookiecutterTests {
             throw new WebException();
         }
 
-        public Task<GitHubRepoSearchResult> SearchRepositoriesAsync(string requestUrl) {
+        public Task<GitHubRepoSearchResult> SearchRepositoriesAsync(string requestUrl)
+        {
             throw new NotImplementedException();
         }
 
-        public Task<GitHubRepoSearchResult> StartSearchRepositoriesAsync(string[] terms) {
+        public Task<GitHubRepoSearchResult> StartSearchRepositoriesAsync(string[] terms)
+        {
             throw new NotImplementedException();
         }
     }

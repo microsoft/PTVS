@@ -14,11 +14,6 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.VisualStudio.Workspace;
-using Microsoft.VisualStudio.Workspace.VSIntegration.Contracts;
-using System;
-using System.ComponentModel.Composition;
-
 namespace Microsoft.VisualStudioTools.MockVsTests
 {
     [Export(typeof(IVsFolderWorkspaceService))]

@@ -14,18 +14,21 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-
-namespace Microsoft.PythonTools.Debugger {
-    class ModuleLoadedEventArgs : EventArgs {
+namespace Microsoft.PythonTools.Debugger
+{
+    class ModuleLoadedEventArgs : EventArgs
+    {
         private readonly PythonModule _module;
 
-        public ModuleLoadedEventArgs(PythonModule module) {
+        public ModuleLoadedEventArgs(PythonModule module)
+        {
             _module = module;
         }
 
-        public PythonModule Module {
-            get {
+        public PythonModule Module
+        {
+            get
+            {
                 return _module;
             }
         }

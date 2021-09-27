@@ -14,16 +14,13 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using Microsoft.VisualStudio;
-
-namespace Microsoft.PythonTools.Debugger.DebugEngine {
+namespace Microsoft.PythonTools.Debugger.DebugEngine
+{
     // This class represents a pending breakpoint which is an abstract representation of a breakpoint before it is bound.
     // When a user creates a new breakpoint, the pending breakpoint is created and is later bound. The bound breakpoints
     // become children of the pending breakpoint.
-    class AD7PendingBreakpoint : IDebugPendingBreakpoint2 {
+    class AD7PendingBreakpoint : IDebugPendingBreakpoint2
+    {
         // The breakpoint request that resulted in this pending breakpoint being created.
         private readonly IDebugBreakpointRequest2 _bpRequest;
         private BP_REQUEST_INFO _bpRequestInfo;
@@ -35,7 +32,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         private bool _enabled;
         private readonly bool _deleted;
 
-        public AD7PendingBreakpoint(IDebugBreakpointRequest2 pBPRequest, AD7Engine engine, BreakpointManager bpManager) {
+        public AD7PendingBreakpoint(IDebugBreakpointRequest2 pBPRequest, AD7Engine engine, BreakpointManager bpManager)
+        {
             _bpRequest = pBPRequest;
             BP_REQUEST_INFO[] requestInfo = new BP_REQUEST_INFO[1];
             EngineUtils.CheckOk(_bpRequest.GetRequestInfo(enum_BPREQI_FIELDS.BPREQI_BPLOCATION | enum_BPREQI_FIELDS.BPREQI_CONDITION | enum_BPREQI_FIELDS.BPREQI_ALLFIELDS, requestInfo));
@@ -49,9 +47,11 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             _deleted = false;
         }
 
-        private bool CanBind() {
+        private bool CanBind()
+        {
             // The Python engine only supports breakpoints on a file and line number. No other types of breakpoints are supported.
-            if (_deleted || _bpRequestInfo.bpLocation.bpLocationType != (uint)enum_BP_LOCATION_TYPE.BPLT_CODE_FILE_LINE) {
+            if (_deleted || _bpRequestInfo.bpLocation.bpLocationType != (uint)enum_BP_LOCATION_TYPE.BPLT_CODE_FILE_LINE)
+            {
                 return false;
             }
 
@@ -60,7 +60,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
         // Get the document context for this pending breakpoint. A document context is a abstract representation of a source file 
         // location.
-        public AD7DocumentContext GetDocumentContext(PythonBreakpoint address) {
+        public AD7DocumentContext GetDocumentContext(PythonBreakpoint address)
+        {
             IDebugDocumentPosition2 docPosition = (IDebugDocumentPosition2)(Marshal.GetObjectForIUnknown(_bpRequestInfo.bpLocation.unionmember2));
             string documentName;
             EngineUtils.CheckOk(docPosition.GetFileName(out documentName));
@@ -76,17 +77,22 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         }
 
         // Remove all of the bound breakpoints for this pending breakpoint
-        public void ClearBoundBreakpoints() {
-            lock (_boundBreakpoints) {
-                for (int i = _boundBreakpoints.Count - 1; i >= 0; i--) {
+        public void ClearBoundBreakpoints()
+        {
+            lock (_boundBreakpoints)
+            {
+                for (int i = _boundBreakpoints.Count - 1; i >= 0; i--)
+                {
                     ((IDebugBoundBreakpoint2)_boundBreakpoints[i]).Delete();
                 }
             }
         }
 
         // Called by bound breakpoints when they are being deleted.
-        public void OnBoundBreakpointDeleted(AD7BoundBreakpoint boundBreakpoint) {
-            lock (_boundBreakpoints) {
+        public void OnBoundBreakpointDeleted(AD7BoundBreakpoint boundBreakpoint)
+        {
+            lock (_boundBreakpoints)
+            {
                 _boundBreakpoints.Remove(boundBreakpoint);
             }
         }
@@ -94,8 +100,10 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         #region IDebugPendingBreakpoint2 Members
 
         // Binds this pending breakpoint to one or more code locations.
-        int IDebugPendingBreakpoint2.Bind() {
-            if (CanBind()) {
+        int IDebugPendingBreakpoint2.Bind()
+        {
+            if (CanBind())
+            {
                 IDebugDocumentPosition2 docPosition = (IDebugDocumentPosition2)(Marshal.GetObjectForIUnknown(_bpRequestInfo.bpLocation.unionmember2));
 
                 // Get the name of the document that the breakpoint was put in
@@ -108,8 +116,10 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                 TEXT_POSITION[] endPosition = new TEXT_POSITION[1];
                 EngineUtils.CheckOk(docPosition.GetRange(startPosition, endPosition));
 
-                lock (_boundBreakpoints) {
-                    if (_bpRequestInfo.guidLanguage == DebuggerConstants.guidLanguagePython) {
+                lock (_boundBreakpoints)
+                {
+                    if (_bpRequestInfo.guidLanguage == DebuggerConstants.guidLanguagePython)
+                    {
                         var bp = _engine.Process.AddBreakpoint(
                             documentName,
                             (int)(startPosition[0].dwLine + 1),
@@ -123,12 +133,15 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                         _boundBreakpoints.Add(boundBreakpoint);
                         _bpManager.AddBoundBreakpoint(bp, boundBreakpoint);
 
-                        if (_enabled) {
+                        if (_enabled)
+                        {
                             TaskHelpers.RunSynchronouslyOnUIThread(ct => bp.AddAsync(ct));
                         }
 
                         return VSConstants.S_OK;
-                    } else if (_bpRequestInfo.guidLanguage == DebuggerConstants.guidLanguageDjangoTemplate) {
+                    }
+                    else if (_bpRequestInfo.guidLanguage == DebuggerConstants.guidLanguageDjangoTemplate)
+                    {
 
                         // bind a Django template 
                         var bp = _engine.Process.AddDjangoBreakpoint(
@@ -141,7 +154,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                         _boundBreakpoints.Add(boundBreakpoint);
                         _bpManager.AddBoundBreakpoint(bp, boundBreakpoint);
 
-                        if (_enabled) {
+                        if (_enabled)
+                        {
                             TaskHelpers.RunSynchronouslyOnUIThread(ct => bp.AddAsync(ct));
                         }
 
@@ -159,10 +173,12 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         }
 
         // Determines whether this pending breakpoint can bind to a code location.
-        int IDebugPendingBreakpoint2.CanBind(out IEnumDebugErrorBreakpoints2 ppErrorEnum) {
+        int IDebugPendingBreakpoint2.CanBind(out IEnumDebugErrorBreakpoints2 ppErrorEnum)
+        {
             ppErrorEnum = null;
 
-            if (!CanBind()) {
+            if (!CanBind())
+            {
                 // Called to determine if a pending breakpoint can be bound. 
                 // The breakpoint may not be bound for many reasons such as an invalid location, an invalid expression, etc...
                 // TODO: return a valid enumeration of IDebugErrorBreakpoint2. The debugger will then display information about why
@@ -175,9 +191,12 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         }
 
         // Deletes this pending breakpoint and all breakpoints bound from it.
-        int IDebugPendingBreakpoint2.Delete() {
-            lock (_boundBreakpoints) {
-                for (int i = _boundBreakpoints.Count - 1; i >= 0; i--) {
+        int IDebugPendingBreakpoint2.Delete()
+        {
+            lock (_boundBreakpoints)
+            {
+                for (int i = _boundBreakpoints.Count - 1; i >= 0; i--)
+                {
                     ((IDebugBoundBreakpoint2)_boundBreakpoints[i]).Delete();
                 }
             }
@@ -186,11 +205,14 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         }
 
         // Toggles the enabled state of this pending breakpoint.
-        int IDebugPendingBreakpoint2.Enable(int fEnable) {
-            lock (_boundBreakpoints) {
+        int IDebugPendingBreakpoint2.Enable(int fEnable)
+        {
+            lock (_boundBreakpoints)
+            {
                 _enabled = fEnable == 0 ? false : true;
 
-                foreach (AD7BoundBreakpoint bp in _boundBreakpoints) {
+                foreach (AD7BoundBreakpoint bp in _boundBreakpoints)
+                {
                     ((IDebugBoundBreakpoint2)bp).Enable(fEnable);
                 }
             }
@@ -199,8 +221,10 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         }
 
         // Enumerates all breakpoints bound from this pending breakpoint
-        int IDebugPendingBreakpoint2.EnumBoundBreakpoints(out IEnumDebugBoundBreakpoints2 ppEnum) {
-            lock (_boundBreakpoints) {
+        int IDebugPendingBreakpoint2.EnumBoundBreakpoints(out IEnumDebugBoundBreakpoints2 ppEnum)
+        {
+            lock (_boundBreakpoints)
+            {
                 IDebugBoundBreakpoint2[] boundBreakpoints = _boundBreakpoints.ToArray();
                 ppEnum = new AD7BoundBreakpointsEnum(boundBreakpoints);
             }
@@ -208,7 +232,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         }
 
         // Enumerates all error breakpoints that resulted from this pending breakpoint.
-        int IDebugPendingBreakpoint2.EnumErrorBreakpoints(enum_BP_ERROR_TYPE bpErrorType, out IEnumDebugErrorBreakpoints2 ppEnum) {
+        int IDebugPendingBreakpoint2.EnumErrorBreakpoints(enum_BP_ERROR_TYPE bpErrorType, out IEnumDebugErrorBreakpoints2 ppEnum)
+        {
             // Called when a pending breakpoint could not be bound. This may occur for many reasons such as an invalid location, an invalid expression, etc...
             // TODO: send an instance of IDebugBreakpointErrorEvent2 to the UI and return a valid enumeration of IDebugErrorBreakpoint2
             // from IDebugPendingBreakpoint2::EnumErrorBreakpoints. The debugger will then display information about why the breakpoint
@@ -218,30 +243,39 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         }
 
         // Gets the breakpoint request that was used to create this pending breakpoint
-        int IDebugPendingBreakpoint2.GetBreakpointRequest(out IDebugBreakpointRequest2 ppBPRequest) {
+        int IDebugPendingBreakpoint2.GetBreakpointRequest(out IDebugBreakpointRequest2 ppBPRequest)
+        {
             ppBPRequest = _bpRequest;
             return VSConstants.S_OK;
         }
 
         // Gets the state of this pending breakpoint.
-        int IDebugPendingBreakpoint2.GetState(PENDING_BP_STATE_INFO[] pState) {
-            if (_deleted) {
+        int IDebugPendingBreakpoint2.GetState(PENDING_BP_STATE_INFO[] pState)
+        {
+            if (_deleted)
+            {
                 pState[0].state = (enum_PENDING_BP_STATE)enum_BP_STATE.BPS_DELETED;
-            } else if (_enabled) {
+            }
+            else if (_enabled)
+            {
                 pState[0].state = (enum_PENDING_BP_STATE)enum_BP_STATE.BPS_ENABLED;
-            } else {
+            }
+            else
+            {
                 pState[0].state = (enum_PENDING_BP_STATE)enum_BP_STATE.BPS_DISABLED;
             }
 
             return VSConstants.S_OK;
         }
 
-        int IDebugPendingBreakpoint2.SetCondition(BP_CONDITION bpCondition) {
+        int IDebugPendingBreakpoint2.SetCondition(BP_CONDITION bpCondition)
+        {
             _bpRequestInfo.bpCondition = bpCondition;
             return VSConstants.S_OK;
         }
 
-        int IDebugPendingBreakpoint2.SetPassCount(BP_PASSCOUNT bpPassCount) {
+        int IDebugPendingBreakpoint2.SetPassCount(BP_PASSCOUNT bpPassCount)
+        {
             _bpRequestInfo.bpPassCount = bpPassCount;
             return VSConstants.S_OK;
         }
@@ -249,16 +283,20 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         // Toggles the virtualized state of this pending breakpoint. When a pending breakpoint is virtualized, 
         // the debug engine will attempt to bind it every time new code loads into the program.
         // The Python engine does not support this.
-        int IDebugPendingBreakpoint2.Virtualize(int fVirtualize) {
+        int IDebugPendingBreakpoint2.Virtualize(int fVirtualize)
+        {
             return VSConstants.S_OK;
         }
 
         #endregion
     }
 
-    static class BreakpointEnumExtensions {
-        public static PythonBreakpointConditionKind ToPython(this enum_BP_COND_STYLE style) {
-            switch (style) {
+    static class BreakpointEnumExtensions
+    {
+        public static PythonBreakpointConditionKind ToPython(this enum_BP_COND_STYLE style)
+        {
+            switch (style)
+            {
                 case enum_BP_COND_STYLE.BP_COND_NONE:
                     return PythonBreakpointConditionKind.Always;
                 case enum_BP_COND_STYLE.BP_COND_WHEN_CHANGED:
@@ -270,8 +308,10 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             }
         }
 
-        public static PythonBreakpointPassCountKind ToPython(this enum_BP_PASSCOUNT_STYLE style) {
-            switch (style) {
+        public static PythonBreakpointPassCountKind ToPython(this enum_BP_PASSCOUNT_STYLE style)
+        {
+            switch (style)
+            {
                 case enum_BP_PASSCOUNT_STYLE.BP_PASSCOUNT_NONE:
                     return PythonBreakpointPassCountKind.Always;
                 case enum_BP_PASSCOUNT_STYLE.BP_PASSCOUNT_MOD:

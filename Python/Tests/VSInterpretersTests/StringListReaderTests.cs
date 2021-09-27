@@ -14,18 +14,18 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Collections.Generic;
-using System.Linq;
-using Microsoft.PythonTools.Infrastructure;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-namespace VSInterpretersTests {
+namespace VSInterpretersTests
+{
     [TestClass]
-    public class StringListReaderTests {
-        private static void AssertReadLines(IList<string> lines) {
-            using (var r = new StringListReader(lines)) {
+    public class StringListReaderTests
+    {
+        private static void AssertReadLines(IList<string> lines)
+        {
+            using (var r = new StringListReader(lines))
+            {
                 int lineno = 0;
-                foreach (var expected in lines) {
+                foreach (var expected in lines)
+                {
                     lineno += 1;
                     var actual = r.ReadLine();
                     Assert.AreEqual(expected, actual, $"Line #{lineno}");
@@ -34,10 +34,13 @@ namespace VSInterpretersTests {
             }
         }
 
-        private static void AssertRead(IList<string> lines) {
-            using (var r = new StringListReader(lines)) {
+        private static void AssertRead(IList<string> lines)
+        {
+            using (var r = new StringListReader(lines))
+            {
                 int charno = 0;
-                foreach (var expected in lines.SelectMany(s => s.AsEnumerable())) {
+                foreach (var expected in lines.SelectMany(s => s.AsEnumerable()))
+                {
                     charno += 1;
                     var actual = r.Read();
                     Assert.AreEqual((int)expected, actual, $"Character #{charno}");
@@ -47,19 +50,23 @@ namespace VSInterpretersTests {
         }
 
         [TestMethod]
-        public void BasicReadTest() {
+        public void BasicReadTest()
+        {
             var str = "A;B;C".Split(';');
             AssertReadLines(str);
             AssertRead(str);
         }
 
-        private static string ToString(IEnumerable<char> chars) {
+        private static string ToString(IEnumerable<char> chars)
+        {
             return chars.Aggregate("", (s, c) => s + c);
         }
 
         [TestMethod]
-        public void PartialReadTest() {
-            using (var r = new StringListReader(new[] { "0123456789", "ABCDEFGHIJ" })) {
+        public void PartialReadTest()
+        {
+            using (var r = new StringListReader(new[] { "0123456789", "ABCDEFGHIJ" }))
+            {
                 var buffer = new char[7];
                 Assert.AreEqual(7, r.Read(buffer, 0, 7));
                 Assert.AreEqual("0123456", ToString(buffer));
@@ -78,8 +85,10 @@ namespace VSInterpretersTests {
         }
 
         [TestMethod]
-        public void ReadBlockTest() {
-            using (var r = new StringListReader(new[] { "0123456789", "ABCDEFGHIJ" })) {
+        public void ReadBlockTest()
+        {
+            using (var r = new StringListReader(new[] { "0123456789", "ABCDEFGHIJ" }))
+            {
                 var buffer = new char[7];
                 Assert.AreEqual(7, r.ReadBlock(buffer, 0, 7));
                 Assert.AreEqual("0123456", ToString(buffer));
@@ -93,23 +102,27 @@ namespace VSInterpretersTests {
         }
 
         [TestMethod]
-        public void PeekTest() {
+        public void PeekTest()
+        {
             var buffer = new char[10];
 
-            using (var r = new StringListReader(new[] { "AB", "CD", "EF" })) {
+            using (var r = new StringListReader(new[] { "AB", "CD", "EF" }))
+            {
                 Assert.AreEqual('A', r.Peek());
                 Assert.AreEqual('A', r.Peek());
                 Assert.AreEqual('A', r.Read());
             }
 
-            using (var r = new StringListReader(new[] { "AB", "CD", "EF" })) {
+            using (var r = new StringListReader(new[] { "AB", "CD", "EF" }))
+            {
                 Assert.AreEqual('A', r.Peek());
                 Assert.AreEqual(2, r.Read(buffer, 0, 5));
                 Assert.AreEqual('A', buffer[0]);
                 Assert.AreEqual('B', buffer[1]);
             }
 
-            using (var r = new StringListReader(new[] { "AB", "CD", "EF" })) {
+            using (var r = new StringListReader(new[] { "AB", "CD", "EF" }))
+            {
                 Assert.AreEqual('A', r.Read());
                 Assert.AreEqual('B', r.Peek());
                 // Read after peeking the last char in a line will get us
@@ -120,7 +133,8 @@ namespace VSInterpretersTests {
                 Assert.AreEqual('D', buffer[2]);
             }
 
-            using (var r = new StringListReader(new[] { "AB", "CD", "EF" })) {
+            using (var r = new StringListReader(new[] { "AB", "CD", "EF" }))
+            {
                 Assert.AreEqual('A', r.Read());
                 Assert.AreEqual('B', r.Peek());
                 // Read after peeking the last char in a line will get us
@@ -131,17 +145,21 @@ namespace VSInterpretersTests {
         }
 
         [TestMethod]
-        public void ReadToEndTest() {
-            using (var r = new StringListReader(new[] { "A", "B", "C" })) {
+        public void ReadToEndTest()
+        {
+            using (var r = new StringListReader(new[] { "A", "B", "C" }))
+            {
                 Assert.AreEqual("ABC", r.ReadToEndWithoutAssert());
             }
 
-            using (var r = new StringListReader(new[] { "A", "B", "C" })) {
+            using (var r = new StringListReader(new[] { "A", "B", "C" }))
+            {
                 Assert.AreEqual('A', r.Read());
                 Assert.AreEqual("BC", r.ReadToEndWithoutAssert());
             }
 
-            using (var r = new StringListReader(new[] { "A", "B", "C" })) {
+            using (var r = new StringListReader(new[] { "A", "B", "C" }))
+            {
                 Assert.AreEqual('A', r.Peek());
                 Assert.AreEqual("ABC", r.ReadToEndWithoutAssert());
             }

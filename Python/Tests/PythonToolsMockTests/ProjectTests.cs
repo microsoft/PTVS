@@ -16,37 +16,24 @@
 
 extern alias analysis;
 extern alias pythontools;
-using System.Linq;
-using System.Threading;
-using System.Windows.Input;
-using analysis::Microsoft.PythonTools.Interpreter;
-using Microsoft.VisualStudio.ComponentModelHost;
-using Microsoft.VisualStudio.Language.Intellisense;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.VisualStudioTools;
-using Microsoft.VisualStudioTools.MockVsTests;
-using pythontools::Microsoft.PythonTools;
-using pythontools::Microsoft.PythonTools.Editor;
-using pythontools::Microsoft.PythonTools.Project;
-using pythontools::Microsoft.VisualStudioTools.Project.Automation;
-using TestUtilities;
-using TestUtilities.Python;
-using TestUtilities.SharedProject;
-using TestUtilities.UI.Python;
 
-namespace PythonToolsMockTests {
+namespace PythonToolsMockTests
+{
     [TestClass]
-    public class ProjectTests {
+    public class ProjectTests
+    {
         static PythonProjectGenerator Generator = PythonProjectGenerator.CreateStatic();
 
         [TestMethod, Priority(UnitTestPriority.P2_FAILING)]
-        public void BasicProjectTest() {
+        public void BasicProjectTest()
+        {
             var sln = Generator.Project(
                 "HelloWorld",
                 ProjectGenerator.Compile("server", "")
             ).Generate();
 
-            using (var vs = sln.ToMockVs()) {
+            using (var vs = sln.ToMockVs())
+            {
                 Assert.IsNotNull(vs.WaitForItem("HelloWorld", "Python Environments"));
                 Assert.IsNotNull(vs.WaitForItem("HelloWorld", "References"));
                 Assert.IsNotNull(vs.WaitForItem("HelloWorld", "Search Paths"));
@@ -54,21 +41,24 @@ namespace PythonToolsMockTests {
                 var view = vs.OpenItem("HelloWorld", "server.py");
 
                 var bi = PythonTextBufferInfo.TryGetForBuffer(view.TextView.TextBuffer);
-                for (int retries = 20; retries > 0 && bi.AnalysisEntry == null; --retries) {
+                for (int retries = 20; retries > 0 && bi.AnalysisEntry == null; --retries)
+                {
                     Thread.Sleep(500);
                 }
 
                 view.Invoke(() => view.Type("import"));
                 view.Invoke(() => view.Type(" "));
 
-                using (var sh = view.WaitForSession<ICompletionSession>()) {
+                using (var sh = view.WaitForSession<ICompletionSession>())
+                {
                     AssertUtil.Contains(sh.Session.Completions(), "sys");
                 }
             }
         }
 
         [TestMethod, Priority(UnitTestPriority.P2)]
-        public void CutRenamePaste() {
+        public void CutRenamePaste()
+        {
             var testDef = Generator.Project("DragDropCopyCutPaste",
                 ProjectGenerator.ItemGroup(
                     ProjectGenerator.Folder("CutRenamePaste"),
@@ -76,7 +66,8 @@ namespace PythonToolsMockTests {
                 )
             );
 
-            using (var solution = testDef.Generate().ToMockVs()) {
+            using (var solution = testDef.Generate().ToMockVs())
+            {
                 var project = solution.WaitForItem("DragDropCopyCutPaste");
                 var file = solution.WaitForItem("DragDropCopyCutPaste", "CutRenamePaste", $"CutRenamePaste{testDef.ProjectType.CodeExtension}");
 
@@ -98,14 +89,16 @@ namespace PythonToolsMockTests {
 
         [TestMethod, Priority(UnitTestPriority.P2_FAILING)]
         [TestCategory("Installed")]
-        public void ShouldWarnOnRun() {
+        public void ShouldWarnOnRun()
+        {
             var sln = Generator.Project(
                 "HelloWorld",
                 ProjectGenerator.Compile("app", "print \"hello\"")
             ).Generate();
 
             using (var vs = sln.ToMockVs())
-            using (var analyzerChanged = new AutoResetEvent(false)) {
+            using (var analyzerChanged = new AutoResetEvent(false))
+            {
                 var project = vs.GetProject("HelloWorld").GetPythonProject();
                 project.ProjectAnalyzerChanged += (s, e) => analyzerChanged.SetIfNotDisposed();
 
@@ -118,7 +111,8 @@ namespace PythonToolsMockTests {
                 var v34 = interpreters.Where(x => x.Configuration.Id == "Global|PythonCore|3.4-32").First();
                 var interpOptions = (UIThreadBase)project.GetService(typeof(IComponentModel));
 
-                uiThread.Invoke(() => {
+                uiThread.Invoke(() =>
+                {
                     project.AddInterpreter(v27.Configuration.Id);
                     project.AddInterpreter(v34.Configuration.Id);
                 });
@@ -142,13 +136,15 @@ namespace PythonToolsMockTests {
 
         [TestMethod, Priority(UnitTestPriority.P2_FAILING)]
         [TestCategory("Installed")] // Requires .targets file to be installed
-        public void OAProjectMustBeRightType() {
+        public void OAProjectMustBeRightType()
+        {
             var sln = Generator.Project(
                 "HelloWorld",
                 ProjectGenerator.Compile("server", "")
             ).Generate();
 
-            using (var vs = sln.ToMockVs()) {
+            using (var vs = sln.ToMockVs())
+            {
                 var proj = vs.GetProject("HelloWorld");
                 Assert.IsNotNull(proj);
                 Assert.IsInstanceOfType(proj, typeof(OAProject));

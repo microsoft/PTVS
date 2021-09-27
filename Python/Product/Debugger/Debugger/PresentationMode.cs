@@ -14,11 +14,8 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Runtime.Serialization;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-
-namespace Microsoft.PythonTools.Debugger {
+namespace Microsoft.PythonTools.Debugger
+{
 
     /// <summary>
     /// How variables can be presented through the IDE.
@@ -28,7 +25,8 @@ namespace Microsoft.PythonTools.Debugger {
     /// Inline means variables of this type are expanded into a single flat level.
     /// </summary>
     [JsonConverter(typeof(StringEnumConverter))]
-    public enum PresentationMode {
+    public enum PresentationMode
+    {
         [EnumMember(Value = "group")]
         Group,
 

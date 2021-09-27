@@ -14,13 +14,13 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-
-namespace Microsoft.PythonTools.Debugger {
+namespace Microsoft.PythonTools.Debugger
+{
     // These option names are also used as string literals in ptvsd/debugger.py, and so
     // renaming them here also requires updating the literals there.
     [Flags]
-    enum PythonDebugOptions {
+    enum PythonDebugOptions
+    {
         None,
         /// <summary>
         /// Passing this flag to the debugger will cause it to wait for input on an abnormal (non-zero)

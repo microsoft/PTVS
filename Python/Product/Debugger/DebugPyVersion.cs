@@ -15,8 +15,10 @@
 // permissions and limitations under the License.
 
 
-namespace Microsoft.PythonTools.Debugger {
-    static class DebugPyVersion {
+namespace Microsoft.PythonTools.Debugger
+{
+    static class DebugPyVersion
+    {
         // These version string is automatically updated at build.
         // See BundledDebugPyVersion in Debugger.csproj
         public const string Version = "1.0.0";

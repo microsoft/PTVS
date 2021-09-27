@@ -14,11 +14,6 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.VisualStudio.Setup.Configuration;
-using System;
-using System.IO;
-using System.Runtime.InteropServices;
-
 namespace TestUtilities
 {
     public static class VisualStudioPath

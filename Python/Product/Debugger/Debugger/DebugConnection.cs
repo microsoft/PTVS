@@ -14,21 +14,15 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Concurrent;
-using System.Diagnostics;
-using System.IO;
-using System.Net.Sockets;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.PythonTools.Ipc.Json;
 using LDP = Microsoft.PythonTools.Debugger.LegacyDebuggerProtocol;
 
-namespace Microsoft.PythonTools.Debugger {
+namespace Microsoft.PythonTools.Debugger
+{
     /// <summary>
     /// Handles connection from one debugger.
     /// </summary>
-    class DebugConnection : IDisposable {
+    class DebugConnection : IDisposable
+    {
         private Stream _stream;
         private TextWriter _debugLog;
         private Connection _connection;
@@ -68,14 +62,16 @@ namespace Microsoft.PythonTools.Debugger {
         public event EventHandler<LDP.RemoteConnectedEvent> LegacyRemoteConnected;
         public event EventHandler<LDP.ModulesChangedEvent> LegacyModulesChanged;
 
-        public DebugConnection(Stream stream, TextWriter debugLog) {
+        public DebugConnection(Stream stream, TextWriter debugLog)
+        {
             _stream = stream;
             _debugLog = debugLog ?? new DebugTextWriter();
             _connection = new Connection(stream, false, stream, false, null, LDP.RegisteredTypes, "DebugConnection", debugLog);
             _connection.EventReceived += _connection_EventReceived;
         }
 
-        private void _connection_EventReceived(object sender, EventReceivedEventArgs e) {
+        private void _connection_EventReceived(object sender, EventReceivedEventArgs e)
+        {
             // Process events in a separate thread from the one that is processing messages
             // so that event handling code that needs access to the UI thread don't end up racing with other
             // code on the UI thread which may be waiting for a response to a request.
@@ -87,7 +83,8 @@ namespace Microsoft.PythonTools.Debugger {
         /// <summary>
         /// Starts listening for debugger messages.
         /// </summary>
-        public void StartListening() {
+        public void StartListening()
+        {
             _eventThread = new Thread(EventHandlingThread);
             _eventThread.Name = "Python Debugger Event Handling " + _processGuid;
             _eventThread.Start();
@@ -100,80 +97,111 @@ namespace Microsoft.PythonTools.Debugger {
         }
 
         public async Task<T> SendRequestAsync<T>(Request<T> request, CancellationToken cancellationToken = default(CancellationToken), Action<T> postResponseAction = null)
-            where T : Response, new() {
+            where T : Response, new()
+        {
 
             // We'll never receive a response if we end up exiting out of
             // Connection.ProcessMessages during this request.
             // If that happens, we cancel the request.
             using (var stopped = new CancellationTokenSource())
-            using (var linkedSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, stopped.Token)) {
-                EventHandler handler = (object sender, EventArgs ea) => {
-                    try {
+            using (var linkedSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, stopped.Token))
+            {
+                EventHandler handler = (object sender, EventArgs ea) =>
+                {
+                    try
+                    {
                         stopped.Cancel();
-                    } catch (ObjectDisposedException) {
+                    }
+                    catch (ObjectDisposedException)
+                    {
                     }
                 };
 
                 ProcessingMessagesEnded += handler;
 
-                try {
+                try
+                {
                     // Final check before we send the request, if the state
                     // changes after this then our handler will be invoked.
-                    lock (_isListeningLock) {
-                        if (!_isListening) {
+                    lock (_isListeningLock)
+                    {
+                        if (!_isListening)
+                        {
                             throw new OperationCanceledException();
                         }
                     }
 
-                    try {
+                    try
+                    {
                         return await _connection.SendRequestAsync(
                             request,
                             linkedSource.Token,
                             postResponseAction
                         );
-                    } catch (IOException ex) {
-                        throw new OperationCanceledException(ex.Message, ex);
-                    } catch (ObjectDisposedException ex) {
+                    }
+                    catch (IOException ex)
+                    {
                         throw new OperationCanceledException(ex.Message, ex);
                     }
-                } finally {
+                    catch (ObjectDisposedException ex)
+                    {
+                        throw new OperationCanceledException(ex.Message, ex);
+                    }
+                }
+                finally
+                {
                     ProcessingMessagesEnded -= handler;
                 }
             }
         }
 
-        internal void SetProcess(Guid debugId) {
+        internal void SetProcess(Guid debugId)
+        {
             _processGuid = debugId;
         }
 
-        private void MessageProcessingThread() {
+        private void MessageProcessingThread()
+        {
             MessageProcessingThreadAsync().WaitAndUnwrapExceptions();
         }
 
-        private async Task MessageProcessingThreadAsync() {
+        private async Task MessageProcessingThreadAsync()
+        {
             _debugLog.WriteLine("MessageProcessingThreadAsync Started");
 
-            try {
+            try
+            {
                 Debug.Assert(_connection != null);
-                if (_connection != null) {
-                    lock (_isListeningLock) {
+                if (_connection != null)
+                {
+                    lock (_isListeningLock)
+                    {
                         _isListening = true;
                         _listeningReadyEvent.Set();
                     }
                     await _connection.ProcessMessages();
                 }
-            } catch (IOException) {
-            } catch (ObjectDisposedException ex) {
+            }
+            catch (IOException)
+            {
+            }
+            catch (ObjectDisposedException ex)
+            {
                 // Socket or stream have been disposed
                 Debug.Assert(
                     ex.ObjectName == typeof(NetworkStream).FullName ||
                     ex.ObjectName == typeof(Socket).FullName,
                     "Accidentally handled ObjectDisposedException(" + ex.ObjectName + ")"
                 );
-            } catch (Exception ex) when (!ex.IsCriticalException()) {
+            }
+            catch (Exception ex) when (!ex.IsCriticalException())
+            {
                 Debug.Fail(ex.ToUnhandledExceptionMessage(typeof(DebugConnection)));
-            } finally {
-                lock (_isListeningLock) {
+            }
+            finally
+            {
+                lock (_isListeningLock)
+                {
                     // Exit out of the event handling thread
                     _isListening = false;
                     _eventsPendingWakeUp.Set();
@@ -185,14 +213,18 @@ namespace Microsoft.PythonTools.Debugger {
             _debugLog.WriteLine("MessageProcessingThreadAsync Ended");
         }
 
-        private void EventHandlingThread() {
+        private void EventHandlingThread()
+        {
             _debugLog.WriteLine("EventHandlingThread Started");
             _listeningReadyEvent.Wait();
 
-            while (true) {
+            while (true)
+            {
                 bool paused;
-                lock (_isListeningLock) {
-                    if (!_isListening) {
+                lock (_isListeningLock)
+                {
+                    if (!_isListening)
+                    {
                         break;
                     }
 
@@ -200,14 +232,22 @@ namespace Microsoft.PythonTools.Debugger {
                 }
 
                 EventReceivedEventArgs eventReceived = null;
-                if (!paused && _eventsPending.TryDequeue(out eventReceived)) {
-                    try {
+                if (!paused && _eventsPending.TryDequeue(out eventReceived))
+                {
+                    try
+                    {
                         HandleEvent(eventReceived);
-                    } catch (OperationCanceledException) {
-                    } catch (Exception e) when (!e.IsCriticalException()) {
+                    }
+                    catch (OperationCanceledException)
+                    {
+                    }
+                    catch (Exception e) when (!e.IsCriticalException())
+                    {
                         Debug.Fail(string.Format("Error while handling debugger event '{0}'.\n{1}", eventReceived.Name, e));
                     }
-                } else {
+                }
+                else
+                {
                     _eventsPendingWakeUp.WaitOne();
                 }
             }
@@ -215,11 +255,14 @@ namespace Microsoft.PythonTools.Debugger {
             _debugLog.WriteLine("EventHandlingThread Ended");
         }
 
-        private void HandleEvent(EventReceivedEventArgs e) {
+        private void HandleEvent(EventReceivedEventArgs e)
+        {
             _debugLog.WriteLine(string.Format("PythonProcess handling event: {0}", e.Event.name));
-            lock (_eventHandlingLock) {
+            lock (_eventHandlingLock)
+            {
                 Debug.Assert(e.Event.name == LDP.LocalConnectedEvent.Name || e.Event.name == LDP.RemoteConnectedEvent.Name || _isAuthenticated);
-                switch (e.Event.name) {
+                switch (e.Event.name)
+                {
                     case LDP.AsyncBreakEvent.Name:
                         LegacyAsyncBreak?.Invoke(this, (LDP.AsyncBreakEvent)e.Event);
                         break;
@@ -290,9 +333,11 @@ namespace Microsoft.PythonTools.Debugger {
             }
         }
 
-        public void Dispose() {
+        public void Dispose()
+        {
             // Avoiding ?. syntax because FxCop doesn't understand it
-            if (_connection != null) {
+            if (_connection != null)
+            {
                 _connection.Dispose();
             }
             // The connection dispose above won't close the stream, because we don't give it ownership
@@ -303,32 +348,41 @@ namespace Microsoft.PythonTools.Debugger {
             _listeningReadyEvent.Dispose();
         }
 
-        public Stream DetachStream() {
+        public Stream DetachStream()
+        {
             var stream = _stream;
             _stream = null;
             return stream;
         }
 
-        private void WaitForWorkerThreads() {
-            if (!_debuggerThread.Join(5000)) {
+        private void WaitForWorkerThreads()
+        {
+            if (!_debuggerThread.Join(5000))
+            {
                 Debug.Fail("Failed to terminate debugger message thread");
             }
-            if (!_eventThread.Join(5000)) {
+            if (!_eventThread.Join(5000))
+            {
                 Debug.Fail("Failed to terminate debugger event thread");
             }
         }
 
-        internal void Authenticated() {
-            lock (_isListeningLock) {
+        internal void Authenticated()
+        {
+            lock (_isListeningLock)
+            {
                 _isAuthenticated = true;
-                if (!_isReady) {
+                if (!_isReady)
+                {
                     _isPaused = true;
                 }
             }
         }
 
-        internal void WaitForAuthentication() {
-            lock (_isListeningLock) {
+        internal void WaitForAuthentication()
+        {
+            lock (_isListeningLock)
+            {
                 _isPaused = false;
                 _isReady = true;
             }

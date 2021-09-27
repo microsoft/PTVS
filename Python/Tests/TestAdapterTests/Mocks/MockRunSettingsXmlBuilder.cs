@@ -14,11 +14,10 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.IO;
-using System.Text;
-
-namespace TestAdapterTests.Mocks {
-    class MockRunSettingsXmlBuilder {
+namespace TestAdapterTests.Mocks
+{
+    class MockRunSettingsXmlBuilder
+    {
         // {0} is the test results directory
         // {1} is one or more formatted _runSettingProject lines
         // {2} is 'true' or 'false' depending on whether the tests should be run
@@ -69,7 +68,8 @@ namespace TestAdapterTests.Mocks {
         private StringBuilder _searchLines = new StringBuilder();
         private StringBuilder _testLines = new StringBuilder();
 
-        public MockRunSettingsXmlBuilder(string testFramework, string interpreterPath, string resultsDir, string testDir, int discoveryWaitTimeInSeconds = -1, bool isWorkspace = true) {
+        public MockRunSettingsXmlBuilder(string testFramework, string interpreterPath, string resultsDir, string testDir, int discoveryWaitTimeInSeconds = -1, bool isWorkspace = true)
+        {
             _environmentLines = new StringBuilder();
             _searchLines = new StringBuilder();
             _testLines = new StringBuilder();
@@ -82,39 +82,47 @@ namespace TestAdapterTests.Mocks {
             _isWorkspace = isWorkspace;
         }
 
-        public MockRunSettingsXmlBuilder WithEnvironmentVariable(string name, string val) {
+        public MockRunSettingsXmlBuilder WithEnvironmentVariable(string name, string val)
+        {
             _environmentLines.Append(string.Format(_runSettingEnvironment, name, val));
             return this;
         }
 
-        public MockRunSettingsXmlBuilder WithSearchPath(string searchPath) {
+        public MockRunSettingsXmlBuilder WithSearchPath(string searchPath)
+        {
             _searchLines.Append(string.Format(_runSettingSearch, searchPath));
             return this;
         }
 
-        public MockRunSettingsXmlBuilder WithTestFile(string filePath) {
+        public MockRunSettingsXmlBuilder WithTestFile(string filePath)
+        {
             _testLines.Append(string.Format(_runSettingTest, filePath));
             return this;
         }
 
-        public MockRunSettingsXmlBuilder WithUnitTestConfiguration(string rootFolderPath, string pattern) {
+        public MockRunSettingsXmlBuilder WithUnitTestConfiguration(string rootFolderPath, string pattern)
+        {
             _unitTestConfigAttributes = string.Format(_unitTestConfig, rootFolderPath, pattern);
             return this;
         }
 
-        public MockRunSettingsXmlBuilder WithTestFilesFromFolder(string folderPath) {
-            foreach (var filePath in Directory.GetFiles(folderPath, "*.py")) {
+        public MockRunSettingsXmlBuilder WithTestFilesFromFolder(string folderPath)
+        {
+            foreach (var filePath in Directory.GetFiles(folderPath, "*.py"))
+            {
                 _testLines.Append(string.Format(_runSettingTest, filePath));
             }
             return this;
         }
 
-        public MockRunSettingsXmlBuilder WithCoverage() {
+        public MockRunSettingsXmlBuilder WithCoverage()
+        {
             _coverage = true;
             return this;
         }
 
-        public string ToXml() {
+        public string ToXml()
+        {
             var xml = string.Format(
                 _runSettings,
                 _resultsDir,

@@ -14,18 +14,10 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using Microsoft.IronPythonTools.Interpreter;
-using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Parsing;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-namespace TestUtilities {
-    public class PythonPaths {
+namespace TestUtilities
+{
+    public class PythonPaths
+    {
         private static readonly List<PythonInterpreterInformation> _foundInRegistry = PythonRegistrySearch
             .PerformDefaultSearch()
             .Where(pii => pii.Configuration.Id.Contains("PythonCore|") || pii.Configuration.Id.Contains("ContinuumAnalytics|"))
@@ -52,13 +44,16 @@ namespace TestUtilities {
 
         public static readonly PythonVersion Jython27 = GetJythonVersion(PythonLanguageVersion.V27);
 
-        private static PythonVersion GetIronPythonVersion(bool x64) {
+        private static PythonVersion GetIronPythonVersion(bool x64)
+        {
             var exeName = x64 ? "ipy64.exe" : "ipy.exe";
 
             var installPath = IronPythonResolver.GetPythonInstallDir();
-            if (Directory.Exists(installPath)) {
+            if (Directory.Exists(installPath))
+            {
                 // IronPython changed to Any CPU for ipy.exe and ipy32.exe for 32-bit in 2.7.8
-                if (File.Exists(Path.Combine(installPath, "ipy32.exe"))) {
+                if (File.Exists(Path.Combine(installPath, "ipy32.exe")))
+                {
                     exeName = x64 ? "ipy.exe" : "ipy32.exe";
                 }
 
@@ -79,26 +74,30 @@ namespace TestUtilities {
             return null;
         }
 
-        private static PythonVersion GetAnacondaVersion(PythonLanguageVersion version, InterpreterArchitecture arch) {
+        private static PythonVersion GetAnacondaVersion(PythonLanguageVersion version, InterpreterArchitecture arch)
+        {
             var res = _foundInRegistry.FirstOrDefault(ii =>
                 ii.Configuration.Id.StartsWith("Global|ContinuumAnalytics|") &&
                 ii.Configuration.Architecture == arch &&
                 ii.Configuration.Version == version.ToVersion()
             );
-            if (res != null) {
+            if (res != null)
+            {
                 return new PythonVersion(res.Configuration, cPython: true);
             }
 
             return null;
         }
 
-        private static PythonVersion GetCPythonVersion(PythonLanguageVersion version, InterpreterArchitecture arch) {
+        private static PythonVersion GetCPythonVersion(PythonLanguageVersion version, InterpreterArchitecture arch)
+        {
             var res = _foundInRegistry.FirstOrDefault(ii =>
                 ii.Configuration.Id.StartsWith("Global|PythonCore|") &&
                 ii.Configuration.Architecture == arch &&
                 ii.Configuration.Version == version.ToVersion()
             );
-            if (res != null) {
+            if (res != null)
+            {
                 return new PythonVersion(res.Configuration, cPython: true);
             }
 
@@ -109,14 +108,16 @@ namespace TestUtilities {
                 string.Format("Python{0}{1}_{2}", ver.Major, ver.Minor, arch.ToString("x")),
                 string.Format("Python{0}{1}-{2}", ver.Major, ver.Minor, arch.ToString("#")),
                 string.Format("Python{0}{1}_{2}", ver.Major, ver.Minor, arch.ToString("#")),
-            }) {
+            })
+            {
                 var prefixPath = Path.Combine(Environment.GetEnvironmentVariable("SystemDrive"), "\\", path);
                 var exePath = Path.Combine(prefixPath, CPythonInterpreterFactoryConstants.ConsoleExecutable);
                 var procArch = (arch == InterpreterArchitecture.x86) ? ProcessorArchitecture.X86 :
                     (arch == InterpreterArchitecture.x64) ? ProcessorArchitecture.Amd64 :
                     ProcessorArchitecture.None;
 
-                if (procArch == Microsoft.PythonTools.Infrastructure.NativeMethods.GetBinaryType(path)) {
+                if (procArch == Microsoft.PythonTools.Infrastructure.NativeMethods.GetBinaryType(path))
+                {
                     return new PythonVersion(new VisualStudioInterpreterConfiguration(
                         CPythonInterpreterFactoryConstants.GetInterpreterId("PythonCore", tag),
                         "Python {0} {1}".FormatInvariant(arch, ver),
@@ -131,30 +132,39 @@ namespace TestUtilities {
             return null;
         }
 
-        private static PythonVersion GetJythonVersion(PythonLanguageVersion version) {
+        private static PythonVersion GetJythonVersion(PythonLanguageVersion version)
+        {
             var candidates = new List<DirectoryInfo>();
             var ver = version.ToVersion();
             var path1 = string.Format("jython{0}{1}*", ver.Major, ver.Minor);
             var path2 = string.Format("jython{0}.{1}*", ver.Major, ver.Minor);
-            foreach (var drive in DriveInfo.GetDrives()) {
-                if (drive.DriveType != DriveType.Fixed) {
+            foreach (var drive in DriveInfo.GetDrives())
+            {
+                if (drive.DriveType != DriveType.Fixed)
+                {
                     continue;
                 }
 
-                try {
+                try
+                {
                     candidates.AddRange(drive.RootDirectory.EnumerateDirectories(path1));
                     candidates.AddRange(drive.RootDirectory.EnumerateDirectories(path2));
-                } catch {
+                }
+                catch
+                {
                 }
             }
 
-            foreach (var dir in candidates) {
+            foreach (var dir in candidates)
+            {
                 var interpreter = dir.EnumerateFiles("jython.bat").FirstOrDefault();
-                if (interpreter == null) {
+                if (interpreter == null)
+                {
                     continue;
                 }
                 var libPath = dir.EnumerateDirectories("Lib").FirstOrDefault();
-                if (libPath == null || !libPath.EnumerateFiles("site.py").Any()) {
+                if (libPath == null || !libPath.EnumerateFiles("site.py").Any())
+                {
                     continue;
                 }
                 return new PythonVersion(new VisualStudioInterpreterConfiguration(
@@ -171,8 +181,10 @@ namespace TestUtilities {
             return null;
         }
 
-        public static IEnumerable<PythonVersion> AnacondaVersions {
-            get {
+        public static IEnumerable<PythonVersion> AnacondaVersions
+        {
+            get
+            {
                 if (Anaconda37 != null) yield return Anaconda37;
                 if (Anaconda37_x64 != null) yield return Anaconda37_x64;
                 if (Anaconda36 != null) yield return Anaconda36;
@@ -182,8 +194,10 @@ namespace TestUtilities {
             }
         }
 
-        public static IEnumerable<PythonVersion> Versions {
-            get {
+        public static IEnumerable<PythonVersion> Versions
+        {
+            get
+            {
                 if (Python27 != null) yield return Python27;
                 if (Python35 != null) yield return Python35;
                 if (Python36 != null) yield return Python36;
@@ -204,7 +218,8 @@ namespace TestUtilities {
         /// <param name="nameExpr">Name or '|' separated list of names that match the fields on <c>PythonPaths</c>. Ex: "Python36", "Python36|Python36_x64"</param>
         /// <param name="filter">Additional filter.</param>
         /// <returns>Installed Python versions that match the names and filter.</returns>
-        public static PythonVersion[] GetVersionsByName(string nameExpr, Predicate<PythonVersion> filter = null) {
+        public static PythonVersion[] GetVersionsByName(string nameExpr, Predicate<PythonVersion> filter = null)
+        {
             return nameExpr
                 .Split('|')
                 .Select(v => typeof(PythonPaths).GetField(v, BindingFlags.Static | BindingFlags.Public)?.GetValue(null) as PythonVersion)
@@ -213,29 +228,40 @@ namespace TestUtilities {
         }
     }
 
-    public class PythonVersion {
+    public class PythonVersion
+    {
         public readonly InterpreterConfiguration Configuration;
         public readonly bool IsCPython;
         public readonly bool IsIronPython;
 
-        public PythonVersion(InterpreterConfiguration config, bool ironPython = false, bool cPython = false) {
+        public PythonVersion(InterpreterConfiguration config, bool ironPython = false, bool cPython = false)
+        {
             Configuration = config;
             IsCPython = cPython;
             IsIronPython = ironPython;
         }
 
-        public PythonVersion(string version) {
+        public PythonVersion(string version)
+        {
             PythonVersion selected;
-            if (version == "Anaconda27") {
+            if (version == "Anaconda27")
+            {
                 selected = PythonPaths.Anaconda27 ?? PythonPaths.Anaconda27_x64;
-            } else if (version == "Anaconda36") {
+            }
+            else if (version == "Anaconda36")
+            {
                 selected = PythonPaths.Anaconda36 ?? PythonPaths.Anaconda36_x64;
-            } else {
+            }
+            else
+            {
                 var v = System.Version.Parse(version).ToLanguageVersion();
                 var candididates = PythonPaths.Versions.Where(pv => pv.IsCPython && pv.Version == v).ToArray();
-                if (candididates.Length > 1) {
+                if (candididates.Length > 1)
+                {
                     selected = candididates.FirstOrDefault(c => c.Isx64) ?? candididates.First();
-                } else {
+                }
+                else
+                {
                     selected = candididates.FirstOrDefault();
                 }
             }
@@ -255,19 +281,27 @@ namespace TestUtilities {
         public InterpreterArchitecture Architecture => Configuration.Architecture;
     }
 
-    public static class PythonVersionExtensions {
-        public static void AssertInstalled(this PythonVersion pyVersion) {
-            if (pyVersion == null || !File.Exists(pyVersion.InterpreterPath)) {
-                if (pyVersion == null) {
+    public static class PythonVersionExtensions
+    {
+        public static void AssertInstalled(this PythonVersion pyVersion)
+        {
+            if (pyVersion == null || !File.Exists(pyVersion.InterpreterPath))
+            {
+                if (pyVersion == null)
+                {
                     Assert.Inconclusive("Python interpreter is not installed. pyVersion is null. ");
-                } else {
+                }
+                else
+                {
                     Assert.Inconclusive(string.Format("Python version {0} is not installed.", pyVersion.Configuration.Version.ToString()));
                 }
             }
         }
 
-        public static void AssertInstalled(this PythonVersion pyVersion, string customMessage) {
-            if (pyVersion == null || !File.Exists(pyVersion.InterpreterPath)) {
+        public static void AssertInstalled(this PythonVersion pyVersion, string customMessage)
+        {
+            if (pyVersion == null || !File.Exists(pyVersion.InterpreterPath))
+            {
                 Assert.Inconclusive(customMessage);
             }
         }
@@ -275,12 +309,15 @@ namespace TestUtilities {
         /// <summary>
         /// Creates a Python virtual environment in specified directory and installs the specified packages.
         /// </summary>
-        public static void CreateVirtualEnv(this PythonVersion pyVersion, string envPath, IEnumerable<string> packages) {
+        public static void CreateVirtualEnv(this PythonVersion pyVersion, string envPath, IEnumerable<string> packages)
+        {
             pyVersion.CreateVirtualEnv(envPath);
 
             var envPythonExePath = Path.Combine(envPath, "scripts", "python.exe");
-            foreach (var package in packages.MaybeEnumerate()) {
-                using (var output = ProcessOutput.RunHiddenAndCapture(envPythonExePath, "-m", "pip", "install", package)) {
+            foreach (var package in packages.MaybeEnumerate())
+            {
+                using (var output = ProcessOutput.RunHiddenAndCapture(envPythonExePath, "-m", "pip", "install", package))
+                {
                     Assert.IsTrue(output.Wait(TimeSpan.FromSeconds(30)));
                     Assert.AreEqual(0, output.ExitCode);
                 }
@@ -290,9 +327,11 @@ namespace TestUtilities {
         /// <summary>
         /// Creates a Python virtual environment in specified directory.
         /// </summary>
-        public static void CreateVirtualEnv(this PythonVersion pyVersion, string envPath) {
+        public static void CreateVirtualEnv(this PythonVersion pyVersion, string envPath)
+        {
             var virtualEnvModule = (pyVersion.Version < PythonLanguageVersion.V30) ? "virtualenv" : "venv";
-            using (var p = ProcessOutput.RunHiddenAndCapture(pyVersion.InterpreterPath, "-m", virtualEnvModule, envPath)) {
+            using (var p = ProcessOutput.RunHiddenAndCapture(pyVersion.InterpreterPath, "-m", virtualEnvModule, envPath))
+            {
                 Console.WriteLine(p.Arguments);
                 Assert.IsTrue(p.Wait(TimeSpan.FromMinutes(3)));
                 Console.WriteLine(string.Join(Environment.NewLine, p.StandardOutputLines.Concat(p.StandardErrorLines)));

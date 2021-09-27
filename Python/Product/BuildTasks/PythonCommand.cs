@@ -14,19 +14,13 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
-
-namespace Microsoft.PythonTools.BuildTasks {
+namespace Microsoft.PythonTools.BuildTasks
+{
     /// <summary>
     /// Creates an item representing a command.
     /// </summary>
-    public abstract class PythonCommandTask : Task {
+    public abstract class PythonCommandTask : Task
+    {
         public const string TargetTypeExecutable = "executable";
         public const string TargetTypeScript = "script";
         public const string TargetTypeModule = "module";
@@ -41,7 +35,8 @@ namespace Microsoft.PythonTools.BuildTasks {
 
         private static readonly string[] _executeIns = { ExecuteInNone, ExecuteInConsole, ExecuteInConsolePause };
 
-        internal PythonCommandTask(string projectPath, IBuildEngine buildEngine) {
+        internal PythonCommandTask(string projectPath, IBuildEngine buildEngine)
+        {
             BuildEngine = buildEngine;
             ProjectPath = projectPath;
         }
@@ -59,12 +54,16 @@ namespace Microsoft.PythonTools.BuildTasks {
         /// <summary>
         /// One of 'executable' (default), 'script', 'module', 'code' or 'pip'.
         /// </summary>
-        public string TargetType {
-            get {
+        public string TargetType
+        {
+            get
+            {
                 return _targetType;
             }
-            set {
-                if (!_targetTypes.Contains(value, StringComparer.OrdinalIgnoreCase)) {
+            set
+            {
+                if (!_targetTypes.Contains(value, StringComparer.OrdinalIgnoreCase))
+                {
                     throw new ArgumentException("TargetType must be one of: " + string.Join(", ", _targetTypes.Select(s => '"' + s + '"')));
                 }
                 _targetType = value;
@@ -73,7 +72,8 @@ namespace Microsoft.PythonTools.BuildTasks {
 
         private string _executeIn = ExecuteInConsole;
 
-        protected virtual bool IsValidExecuteInValue(string value, out string message) {
+        protected virtual bool IsValidExecuteInValue(string value, out string message)
+        {
             message = "ExecuteIn must be one of: " + string.Join(", ", _executeIns.Select(s => '"' + s + '"')); ;
             return _executeIns.Any(s => s.Equals(value, StringComparison.OrdinalIgnoreCase));
         }
@@ -81,13 +81,17 @@ namespace Microsoft.PythonTools.BuildTasks {
         /// <summary>
         /// One of 'console' (default), 'consolepause', 'repl', 'output' or 'none'.
         /// </summary>
-        public string ExecuteIn {
-            get {
+        public string ExecuteIn
+        {
+            get
+            {
                 return _executeIn;
             }
-            set {
+            set
+            {
                 string errorMessage;
-                if (value != null && !IsValidExecuteInValue(value, out errorMessage)) {
+                if (value != null && !IsValidExecuteInValue(value, out errorMessage))
+                {
                     throw new ArgumentException(errorMessage);
                 }
                 _executeIn = value;
@@ -169,7 +173,8 @@ namespace Microsoft.PythonTools.BuildTasks {
         public string[] RequiredPackages { get; set; }
     }
 
-    public class CreatePythonCommandItem : PythonCommandTask {
+    public class CreatePythonCommandItem : PythonCommandTask
+    {
         public const string TargetTypeKey = "TargetType";
         public const string ArgumentsKey = "Arguments";
         public const string WorkingDirectoryKey = "WorkingDirectory";
@@ -185,10 +190,12 @@ namespace Microsoft.PythonTools.BuildTasks {
         private static readonly string[] _executeIns = { ExecuteInConsole, ExecuteInConsolePause, ExecuteInRepl, ExecuteInOutput, ExecuteInNone };
 
         internal CreatePythonCommandItem(string projectPath, IBuildEngine buildEngine)
-            : base(projectPath, buildEngine) {
+            : base(projectPath, buildEngine)
+        {
         }
 
-        protected override bool IsValidExecuteInValue(string value, out string message) {
+        protected override bool IsValidExecuteInValue(string value, out string message)
+        {
             message = "ExecuteIn must be one of: " + string.Join(", ", _executeIns.Select(s => '"' + s + '"')); ;
             return _executeIns.Any(s => s.Equals(value, StringComparison.OrdinalIgnoreCase)) ||
                 value.StartsWithOrdinal(ExecuteInRepl, ignoreCase: true);
@@ -200,9 +207,11 @@ namespace Microsoft.PythonTools.BuildTasks {
         [Output]
         public ITaskItem[] Command { get; private set; }
 
-        public override bool Execute() {
+        public override bool Execute()
+        {
             if (!ExecuteInOutput.Equals(ExecuteIn, StringComparison.OrdinalIgnoreCase) &&
-                !(string.IsNullOrEmpty(ErrorRegex) && string.IsNullOrEmpty(WarningRegex) && string.IsNullOrEmpty(MessageRegex))) {
+                !(string.IsNullOrEmpty(ErrorRegex) && string.IsNullOrEmpty(WarningRegex) && string.IsNullOrEmpty(MessageRegex)))
+            {
                 Log.LogError("ErrorRegex and WarningRegex are only valid for ExecuteIn='output'");
                 return false;
             }
@@ -223,10 +232,13 @@ namespace Microsoft.PythonTools.BuildTasks {
             return true;
         }
 
-        private static string SplitEnvironment(string source) {
+        private static string SplitEnvironment(string source)
+        {
             var result = new StringBuilder();
-            foreach (var line in source.Split('\r', '\n')) {
-                if (string.IsNullOrWhiteSpace(line)) {
+            foreach (var line in source.Split('\r', '\n'))
+            {
+                if (string.IsNullOrWhiteSpace(line))
+                {
                     continue;
                 }
 
@@ -237,22 +249,27 @@ namespace Microsoft.PythonTools.BuildTasks {
         }
     }
 
-    public class RunPythonCommand : PythonCommandTask {
+    public class RunPythonCommand : PythonCommandTask
+    {
         private readonly Lazy<List<string>> _consoleOutput = new Lazy<List<string>>();
         private readonly Lazy<List<string>> _consoleError = new Lazy<List<string>>();
 
         internal RunPythonCommand(string projectPath, IBuildEngine buildEngine)
-            : base(projectPath, buildEngine) {
+            : base(projectPath, buildEngine)
+        {
         }
 
-        public bool ConsoleToMSBuild {
+        public bool ConsoleToMSBuild
+        {
             get;
             set;
         }
 
         [Output]
-        public string ConsoleOutput {
-            get {
+        public string ConsoleOutput
+        {
+            get
+            {
                 return _consoleOutput.IsValueCreated ?
                     string.Join(System.Environment.NewLine, _consoleOutput.Value) :
                     string.Empty;
@@ -260,34 +277,46 @@ namespace Microsoft.PythonTools.BuildTasks {
         }
 
         [Output]
-        public string ConsoleError {
-            get {
+        public string ConsoleError
+        {
+            get
+            {
                 return _consoleError.IsValueCreated ?
                     string.Join(System.Environment.NewLine, _consoleError.Value) :
                     string.Empty;
             }
         }
 
-        public override bool Execute() {
+        public override bool Execute()
+        {
             var psi = new ProcessStartInfo();
             psi.UseShellExecute = false;
 
-            if (TargetTypeExecutable.Equals(TargetType, StringComparison.OrdinalIgnoreCase)) {
+            if (TargetTypeExecutable.Equals(TargetType, StringComparison.OrdinalIgnoreCase))
+            {
                 psi.FileName = Target;
                 psi.Arguments = Arguments;
-            } else {
+            }
+            else
+            {
                 // We need the active environment to run these commands.
                 var resolver = new ResolveEnvironment(ProjectPath, BuildEngine);
-                if (!resolver.Execute()) {
+                if (!resolver.Execute())
+                {
                     return false;
                 }
                 psi.FileName = resolver.InterpreterPath;
 
-                if (TargetTypeModule.Equals(TargetType, StringComparison.OrdinalIgnoreCase)) {
+                if (TargetTypeModule.Equals(TargetType, StringComparison.OrdinalIgnoreCase))
+                {
                     psi.Arguments = string.Format("-m {0} {1}", Target, Arguments);
-                } else if (TargetTypeScript.Equals(TargetType, StringComparison.OrdinalIgnoreCase)) {
+                }
+                else if (TargetTypeScript.Equals(TargetType, StringComparison.OrdinalIgnoreCase))
+                {
                     psi.Arguments = string.Format("\"{0}\" {1}", Target, Arguments);
-                } else if (TargetTypeCode.Equals(TargetType, StringComparison.OrdinalIgnoreCase)) {
+                }
+                else if (TargetTypeCode.Equals(TargetType, StringComparison.OrdinalIgnoreCase))
+                {
                     psi.Arguments = string.Format("-c \"{0}\"", Target);
                 }
 
@@ -298,19 +327,25 @@ namespace Microsoft.PythonTools.BuildTasks {
 
             psi.WorkingDirectory = WorkingDirectory;
 
-            if (!string.IsNullOrEmpty(Environment)) {
-                foreach (var line in Environment.Split('\r', '\n')) {
+            if (!string.IsNullOrEmpty(Environment))
+            {
+                foreach (var line in Environment.Split('\r', '\n'))
+                {
                     int equals = line.IndexOf('=');
-                    if (equals > 0) {
+                    if (equals > 0)
+                    {
                         psi.EnvironmentVariables[line.Substring(0, equals)] = line.Substring(equals + 1);
                     }
                 }
             }
 
-            if (ExecuteInNone.Equals(ExecuteIn, StringComparison.OrdinalIgnoreCase)) {
+            if (ExecuteInNone.Equals(ExecuteIn, StringComparison.OrdinalIgnoreCase))
+            {
                 psi.CreateNoWindow = true;
                 psi.WindowStyle = ProcessWindowStyle.Hidden;
-            } else if (ExecuteInConsolePause.Equals(ExecuteIn, StringComparison.OrdinalIgnoreCase)) {
+            }
+            else if (ExecuteInConsolePause.Equals(ExecuteIn, StringComparison.OrdinalIgnoreCase))
+            {
                 psi.Arguments = string.Format(
                     "/C \"\"{0}\" {1}\" & pause",
                     psi.FileName,
@@ -321,7 +356,8 @@ namespace Microsoft.PythonTools.BuildTasks {
 
             psi.RedirectStandardOutput = true;
             psi.RedirectStandardError = true;
-            using (var process = Process.Start(psi)) {
+            using (var process = Process.Start(psi))
+            {
                 process.OutputDataReceived += Process_OutputDataReceived;
                 process.ErrorDataReceived += Process_ErrorDataReceived;
                 process.BeginOutputReadLine();
@@ -332,11 +368,16 @@ namespace Microsoft.PythonTools.BuildTasks {
             }
         }
 
-        private void Process_OutputDataReceived(object sender, DataReceivedEventArgs e) {
-            if (!string.IsNullOrEmpty(e.Data)) {
-                if (ConsoleToMSBuild) {
+        private void Process_OutputDataReceived(object sender, DataReceivedEventArgs e)
+        {
+            if (!string.IsNullOrEmpty(e.Data))
+            {
+                if (ConsoleToMSBuild)
+                {
                     _consoleOutput.Value.Add(e.Data);
-                } else {
+                }
+                else
+                {
                     BuildEngine.LogMessageEvent(new BuildMessageEventArgs(
                         e.Data,
                         "",
@@ -347,11 +388,16 @@ namespace Microsoft.PythonTools.BuildTasks {
             }
         }
 
-        private void Process_ErrorDataReceived(object sender, DataReceivedEventArgs e) {
-            if (!string.IsNullOrEmpty(e.Data)) {
-                if (ConsoleToMSBuild) {
+        private void Process_ErrorDataReceived(object sender, DataReceivedEventArgs e)
+        {
+            if (!string.IsNullOrEmpty(e.Data))
+            {
+                if (ConsoleToMSBuild)
+                {
                     _consoleError.Value.Add(e.Data);
-                } else {
+                }
+                else
+                {
                     BuildEngine.LogMessageEvent(new BuildMessageEventArgs(
                         e.Data,
                         "",
@@ -366,8 +412,10 @@ namespace Microsoft.PythonTools.BuildTasks {
     /// <summary>
     /// Constructs CreatePythonCommandItem task objects.
     /// </summary>
-    public sealed class CreatePythonCommandItemFactory : TaskFactory<CreatePythonCommandItem> {
-        public override ITask CreateTask(IBuildEngine taskFactoryLoggingHost) {
+    public sealed class CreatePythonCommandItemFactory : TaskFactory<CreatePythonCommandItem>
+    {
+        public override ITask CreateTask(IBuildEngine taskFactoryLoggingHost)
+        {
             return new CreatePythonCommandItem(Properties["ProjectPath"], taskFactoryLoggingHost);
         }
     }
@@ -375,8 +423,10 @@ namespace Microsoft.PythonTools.BuildTasks {
     /// <summary>
     /// Constructs RunPythonCommand task objects.
     /// </summary>
-    public sealed class RunPythonCommandFactory : TaskFactory<RunPythonCommand> {
-        public override ITask CreateTask(IBuildEngine taskFactoryLoggingHost) {
+    public sealed class RunPythonCommandFactory : TaskFactory<RunPythonCommand>
+    {
+        public override ITask CreateTask(IBuildEngine taskFactoryLoggingHost)
+        {
             return new RunPythonCommand(Properties["ProjectPath"], taskFactoryLoggingHost);
         }
     }

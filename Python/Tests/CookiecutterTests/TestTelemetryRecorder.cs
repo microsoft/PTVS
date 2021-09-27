@@ -14,61 +14,70 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Runtime.ExceptionServices;
-using System.Text;
-using Microsoft.CookiecutterTools.Telemetry;
-
-namespace CookiecutterTests {
-    internal sealed class TestTelemetryRecorder : ITelemetryRecorder, ITelemetryTestSupport {
+namespace CookiecutterTests
+{
+    internal sealed class TestTelemetryRecorder : ITelemetryRecorder, ITelemetryTestSupport
+    {
         private StringBuilder _stringBuilder = new StringBuilder();
 
         #region ITelemetryRecorder
-        public bool IsEnabled {
+        public bool IsEnabled
+        {
             get { return true; }
         }
 
-        public bool CanCollectPrivateInformation {
+        public bool CanCollectPrivateInformation
+        {
             get { return true; }
         }
 
-        public void RecordEvent(string eventName, object parameters = null) {
+        public void RecordEvent(string eventName, object parameters = null)
+        {
             _stringBuilder.AppendLine(eventName);
-            if (parameters != null) {
-                if (parameters is string) {
+            if (parameters != null)
+            {
+                if (parameters is string)
+                {
                     WriteProperty("Value", parameters as string);
-                } else {
+                }
+                else
+                {
                     WriteDictionary(DictionaryExtension.FromAnonymousObject(parameters));
                 }
             }
         }
 
-        public void RecordFault(string eventName, Exception ex, string description, bool dumpProcess) {
+        public void RecordFault(string eventName, Exception ex, string description, bool dumpProcess)
+        {
             ExceptionDispatchInfo.Capture(ex).Throw();
         }
 
         #endregion
 
         #region ITelemetryTestSupport
-        public void Reset() {
+        public void Reset()
+        {
             _stringBuilder.Clear();
         }
 
-        public string SessionLog {
+        public string SessionLog
+        {
             get { return _stringBuilder.ToString(); }
         }
         #endregion
 
         public void Dispose() { }
 
-        private void WriteDictionary(IDictionary<string, object> dict) {
-            foreach (KeyValuePair<string, object> kvp in dict) {
+        private void WriteDictionary(IDictionary<string, object> dict)
+        {
+            foreach (KeyValuePair<string, object> kvp in dict)
+            {
                 WriteProperty(kvp.Key, kvp.Value);
             }
         }
 
-        private void WriteProperty(string name, object value) {
+        private void WriteProperty(string name, object value)
+        {
             _stringBuilder.Append('\t');
             _stringBuilder.Append(name);
             _stringBuilder.Append(" : ");

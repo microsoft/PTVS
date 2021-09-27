@@ -14,12 +14,11 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using TestRunnerInterop;
-
-namespace ProjectUITestsRunner {
+namespace ProjectUITestsRunner
+{
     [TestClass]
-    public class ScriptProjectTests {
+    public class ScriptProjectTests
+    {
         #region UI test boilerplate
         public VsTestInvoker _vs => new VsTestInvoker(
             VsTestContext.Instance,
@@ -41,7 +40,8 @@ namespace ProjectUITestsRunner {
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void RunWithoutStartupFile() {
+        public void RunWithoutStartupFile()
+        {
             _vs.RunTest(nameof(ProjectUITests.ScriptProjectTests.RunWithoutStartupFile));
         }
 
@@ -51,13 +51,15 @@ namespace ProjectUITestsRunner {
         /// </summary>
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void RenameStartupFileFolder() {
+        public void RenameStartupFileFolder()
+        {
             _vs.RunTest(nameof(ProjectUITests.ScriptProjectTests.RenameStartupFileFolder));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void RenameStartupFile() {
+        public void RenameStartupFile()
+        {
             _vs.RunTest(nameof(ProjectUITests.ScriptProjectTests.RenameStartupFile));
         }
     }

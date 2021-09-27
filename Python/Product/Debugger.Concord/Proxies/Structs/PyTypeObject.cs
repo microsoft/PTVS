@@ -14,11 +14,12 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Linq;
-
-namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
-    internal class PyTypeObject : PyObject {
-        private class Fields {
+namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
+{
+    internal class PyTypeObject : PyObject
+    {
+        private class Fields
+        {
             public StructField<PointerProxy<CStringProxy>> tp_name;
             public StructField<SSizeTProxy> tp_basicsize;
             public StructField<SSizeTProxy> tp_itemsize;
@@ -33,73 +34,94 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
         private readonly Fields _fields;
 
         private PyTypeObject(DkmProcess process, ulong addr, bool checkType)
-            : base(process, addr) {
+            : base(process, addr)
+        {
             InitializeStruct(this, out _fields);
         }
 
         public PyTypeObject(DkmProcess process, ulong addr)
-            : this(process, addr, true) {
+            : this(process, addr, true)
+        {
         }
 
-        public unsafe static PyTypeObject FromNativeGlobalVariable(DkmProcess process, string name) {
+        public unsafe static PyTypeObject FromNativeGlobalVariable(DkmProcess process, string name)
+        {
             var addr = process.GetPythonRuntimeInfo().DLLs.Python.GetStaticVariableAddress(name);
             return new PyTypeObject(process, addr);
         }
 
-        public PointerProxy<CStringProxy> tp_name {
+        public PointerProxy<CStringProxy> tp_name
+        {
             get { return GetFieldProxy(_fields.tp_name); }
         }
 
-        public SSizeTProxy tp_basicsize {
+        public SSizeTProxy tp_basicsize
+        {
             get { return GetFieldProxy(_fields.tp_basicsize); }
         }
 
-        public SSizeTProxy tp_itemsize {
+        public SSizeTProxy tp_itemsize
+        {
             get { return GetFieldProxy(_fields.tp_itemsize); }
         }
 
-        public Int32Proxy tp_flags {
+        public Int32Proxy tp_flags
+        {
             get { return GetFieldProxy(_fields.tp_flags); }
         }
 
-        public PointerProxy<ArrayProxy<PyMemberDef>> tp_members {
+        public PointerProxy<ArrayProxy<PyMemberDef>> tp_members
+        {
             get { return GetFieldProxy(_fields.tp_members); }
         }
 
-        public SSizeTProxy tp_dictoffset {
+        public SSizeTProxy tp_dictoffset
+        {
             get { return GetFieldProxy(_fields.tp_dictoffset); }
         }
 
-        public PointerProxy<PyTypeObject> tp_base {
+        public PointerProxy<PyTypeObject> tp_base
+        {
             get { return GetFieldProxy(_fields.tp_base); }
         }
 
-        public PointerProxy<PyObject> tp_dict {
+        public PointerProxy<PyObject> tp_dict
+        {
             get { return GetFieldProxy(_fields.tp_dict); }
         }
 
-        public PointerProxy<PyTupleObject> tp_bases {
+        public PointerProxy<PyTupleObject> tp_bases
+        {
             get { return GetFieldProxy(_fields.tp_bases); }
         }
 
-        public string __name__ {
-            get {
-                if ((tp_flags.Read() & (int)Py_TPFLAGS.HEAPTYPE) != 0) {
+        public string __name__
+        {
+            get
+            {
+                if ((tp_flags.Read() & (int)Py_TPFLAGS.HEAPTYPE) != 0)
+                {
                     var heapType = new PyHeapTypeObject(Process, Address);
                     var nameObj = heapType.ht_name.Read() as IPyBaseStringObject;
                     return nameObj.ToStringOrNull();
-                } else {
+                }
+                else
+                {
                     string name = tp_name.Read().ReadUnicode();
                     return name.Split('.').LastOrDefault();
                 }
             }
         }
 
-        public string __module__ {
-            get {
-                if ((tp_flags.Read() & (int)Py_TPFLAGS.HEAPTYPE) != 0) {
+        public string __module__
+        {
+            get
+            {
+                if ((tp_flags.Read() & (int)Py_TPFLAGS.HEAPTYPE) != 0)
+                {
                     var dict = tp_dict.TryRead() as PyDictObject;
-                    if (dict == null) {
+                    if (dict == null)
+                    {
                         return null;
                     }
 
@@ -111,11 +133,14 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
                                   select value
                                  ).FirstOrDefault();
                     return (module as IPyBaseStringObject).ToStringOrNull();
-                } else {
+                }
+                else
+                {
                     string name = tp_name.Read().ReadUnicode();
 
                     int lastDot = name.LastIndexOf('.');
-                    if (lastDot < 0) {
+                    if (lastDot < 0)
+                    {
                         return "builtins";
                     }
 
@@ -124,20 +149,25 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             }
         }
 
-        public bool IsSubtypeOf(PyTypeObject type) {
-            if (this == type) {
+        public bool IsSubtypeOf(PyTypeObject type)
+        {
+            if (this == type)
+            {
                 return true;
             }
 
             var tp_base = this.tp_base.TryRead();
-            if (tp_base != null && tp_base.IsSubtypeOf(type)) {
+            if (tp_base != null && tp_base.IsSubtypeOf(type))
+            {
                 return true;
             }
 
             var tp_bases = this.tp_bases.TryRead();
-            if (tp_bases != null) {
+            if (tp_bases != null)
+            {
                 var bases = tp_bases.ReadElements().OfType<PyTypeObject>();
-                if (bases.Any(t => t.IsSubtypeOf(type))) {
+                if (bases.Any(t => t.IsSubtypeOf(type)))
+                {
                     return true;
                 }
             }
@@ -145,29 +175,35 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             return false;
         }
 
-        public override void Repr(ReprBuilder builder) {
+        public override void Repr(ReprBuilder builder)
+        {
             builder.AppendFormat("<class '{0}'>", tp_name.Read().ReadUnicode());
         }
     }
 
-    internal class PyHeapTypeObject : StructProxy {
-        private class Fields {
+    internal class PyHeapTypeObject : StructProxy
+    {
+        private class Fields
+        {
             public StructField<PointerProxy<PyObject>> ht_name;
         }
 
         private readonly Fields _fields;
 
         public PyHeapTypeObject(DkmProcess process, ulong address)
-            : base(process, address) {
+            : base(process, address)
+        {
             InitializeStruct(this, out _fields);
         }
 
-        public PointerProxy<PyObject> ht_name {
+        public PointerProxy<PyObject> ht_name
+        {
             get { return GetFieldProxy(_fields.ht_name); }
         }
     }
 
-    internal enum Py_TPFLAGS {
+    internal enum Py_TPFLAGS
+    {
         HEAPTYPE = 1 << 9
     }
 }

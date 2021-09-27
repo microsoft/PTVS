@@ -14,8 +14,10 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace TestRunnerInterop {
-    public static class UITestPriority {
+namespace TestRunnerInterop
+{
+    public static class UITestPriority
+    {
         public const int P0 = 0;    // Most stable tests. Should always pass. 
         public const int P1 = 1;
         public const int P2 = 20;

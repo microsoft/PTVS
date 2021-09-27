@@ -14,41 +14,39 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.Composition;
-using System.IO;
-using System.Linq;
-using System.Text.RegularExpressions;
-using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Parsing;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using TestUtilities;
-
-namespace VSInterpretersTests {
+namespace VSInterpretersTests
+{
     [TestClass]
-    public class VSInterpretersTests {
+    public class VSInterpretersTests
+    {
         [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
+        public static void DoDeployment(TestContext context)
+        {
             AssertListener.Initialize();
         }
 
         private static readonly List<string> _tempFiles = new List<string>();
 
         [ClassCleanup]
-        public static void RemoveFiles() {
-            foreach (var file in _tempFiles) {
-                try {
+        public static void RemoveFiles()
+        {
+            foreach (var file in _tempFiles)
+            {
+                try
+                {
                     File.Delete(file);
-                } catch {
+                }
+                catch
+                {
                 }
             }
         }
 
-        private static string CompileString(string csharpCode, string outFile) {
+        private static string CompileString(string csharpCode, string outFile)
+        {
             var provider = new Microsoft.CSharp.CSharpCodeProvider();
-            var parameters = new System.CodeDom.Compiler.CompilerParameters {
+            var parameters = new System.CodeDom.Compiler.CompilerParameters
+            {
                 OutputAssembly = outFile,
                 GenerateExecutable = false,
                 GenerateInMemory = false
@@ -57,24 +55,30 @@ namespace VSInterpretersTests {
             parameters.ReferencedAssemblies.Add(typeof(IPythonInterpreterFactoryProvider).Assembly.Location);
             parameters.ReferencedAssemblies.Add(typeof(InterpreterConfiguration).Assembly.Location);
             var result = provider.CompileAssemblyFromSource(parameters, csharpCode);
-            if (result.Errors.HasErrors) {
-                foreach (var err in result.Errors) {
+            if (result.Errors.HasErrors)
+            {
+                foreach (var err in result.Errors)
+                {
                     Console.WriteLine(err);
                 }
             }
 
-            if (!File.Exists(outFile)) {
+            if (!File.Exists(outFile))
+            {
                 Assert.Fail("Failed to compile {0}", outFile);
             }
             _tempFiles.Add(outFile);
             return outFile;
         }
 
-        private static string FactoryProviderSuccessPath {
-            get {
+        private static string FactoryProviderSuccessPath
+        {
+            get
+            {
                 var path = Path.ChangeExtension(Path.GetTempFileName(), "dll");
 
-                if (File.Exists(path)) {
+                if (File.Exists(path))
+                {
                     return path;
                 }
 
@@ -100,7 +104,8 @@ namespace FactoryProviderSuccess {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public void ProviderLoadLog_Success() {
+        public void ProviderLoadLog_Success()
+        {
             var path = FactoryProviderTypeLoadErrorPath;
 
             var catalogLog = new MockLogger();
@@ -115,11 +120,13 @@ namespace FactoryProviderSuccess {
             var service = container.GetExportedValue<IInterpreterOptionsService>();
             var registry = container.GetExportedValue<IInterpreterRegistryService>();
 
-            foreach (var interpreter in registry.Configurations) {
+            foreach (var interpreter in registry.Configurations)
+            {
                 Console.WriteLine(interpreter);
             }
 
-            foreach (var item in log.AllItems) {
+            foreach (var item in log.AllItems)
+            {
                 Console.WriteLine(item);
             }
 
@@ -127,7 +134,8 @@ namespace FactoryProviderSuccess {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void ProviderLoadLog_FileNotFound() {
+        public void ProviderLoadLog_FileNotFound()
+        {
             var catalogLog = new MockLogger();
 
             var path = Path.ChangeExtension(Path.GetTempFileName(), "dll");
@@ -146,7 +154,8 @@ namespace FactoryProviderSuccess {
             var service = container.GetExportedValue<IInterpreterOptionsService>();
             var registry = container.GetExportedValue<IInterpreterRegistryService>();
 
-            foreach (var interpreter in registry.Configurations) {
+            foreach (var interpreter in registry.Configurations)
+            {
                 Console.WriteLine(interpreter);
             }
 
@@ -155,21 +164,27 @@ namespace FactoryProviderSuccess {
             Assert.AreNotEqual(-1, error.IndexOf("System.IO.FileNotFoundException: "));
         }
 
-        private static string FactoryProviderCorruptPath {
-            get {
+        private static string FactoryProviderCorruptPath
+        {
+            get
+            {
                 var path = Path.ChangeExtension(Path.GetTempFileName(), "dll");
 
-                if (File.Exists(path)) {
+                if (File.Exists(path))
+                {
                     return path;
                 }
 
                 using (var src = new FileStream(FactoryProviderSuccessPath, FileMode.Open, FileAccess.Read))
-                using (var dest = new FileStream(path, FileMode.Create, FileAccess.Write)) {
+                using (var dest = new FileStream(path, FileMode.Create, FileAccess.Write))
+                {
                     var rnd = new Random();
                     var buffer = new byte[4096];
                     int read = src.Read(buffer, 0, buffer.Length);
-                    while (read > 0) {
-                        for (int count = 64; count > 0; --count) {
+                    while (read > 0)
+                    {
+                        for (int count = 64; count > 0; --count)
+                        {
                             var i = rnd.Next(buffer.Length);
                             buffer[i] = (byte)(buffer[i] + rnd.Next(byte.MaxValue));
                         }
@@ -184,7 +199,8 @@ namespace FactoryProviderSuccess {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public void ProviderLoadLog_CorruptImage() {
+        public void ProviderLoadLog_CorruptImage()
+        {
             var catalogLog = new MockLogger();
 
             var path = Path.ChangeExtension(Path.GetTempFileName(), "dll");
@@ -203,7 +219,8 @@ namespace FactoryProviderSuccess {
             var service = container.GetExportedValue<IInterpreterOptionsService>();
             var registry = container.GetExportedValue<IInterpreterRegistryService>();
 
-            foreach (var interpreter in registry.Configurations) {
+            foreach (var interpreter in registry.Configurations)
+            {
                 Console.WriteLine(interpreter);
             }
 
@@ -213,11 +230,14 @@ namespace FactoryProviderSuccess {
         }
 
 
-        private static string FactoryProviderTypeLoadErrorPath {
-            get {
+        private static string FactoryProviderTypeLoadErrorPath
+        {
+            get
+            {
                 var path = Path.ChangeExtension(Path.GetTempFileName(), "dll");
 
-                if (File.Exists(path)) {
+                if (File.Exists(path))
+                {
                     return path;
                 }
 
@@ -246,7 +266,8 @@ namespace FactoryProviderTypeLoadException {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public void ProviderLoadLog_TypeLoadException() {
+        public void ProviderLoadLog_TypeLoadException()
+        {
             var path = FactoryProviderTypeLoadErrorPath;
 
             var catalogLog = new MockLogger();
@@ -262,12 +283,14 @@ namespace FactoryProviderTypeLoadException {
             var service = container.GetExportedValue<IInterpreterOptionsService>();
             var registry = container.GetExportedValue<IInterpreterRegistryService>();
 
-            foreach (var interpreter in registry.Configurations) {
+            foreach (var interpreter in registry.Configurations)
+            {
                 Console.WriteLine(interpreter);
             }
 
             bool isMatch = false;
-            foreach (var msg in log.AllItems) {
+            foreach (var msg in log.AllItems)
+            {
                 Console.WriteLine(msg);
                 isMatch |= new Regex(@"Failed to get interpreter factory value:.*System\.ComponentModel\.Composition\.CompositionException").IsMatch(msg);
             }
@@ -278,7 +301,8 @@ namespace FactoryProviderTypeLoadException {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public void ProviderLoadLog_SuccessAndFailure() {
+        public void ProviderLoadLog_SuccessAndFailure()
+        {
             var path = FactoryProviderTypeLoadErrorPath;
 
             var catalogLog = new MockLogger();
@@ -295,11 +319,13 @@ namespace FactoryProviderTypeLoadException {
             var service = container.GetExportedValue<IInterpreterOptionsService>();
             var registry = container.GetExportedValue<IInterpreterRegistryService>();
 
-            foreach (var interpreter in registry.Configurations) {
+            foreach (var interpreter in registry.Configurations)
+            {
                 Console.WriteLine(interpreter);
             }
 
-            foreach (var item in log.AllItems) {
+            foreach (var item in log.AllItems)
+            {
                 Console.WriteLine(item);
             }
 
@@ -307,21 +333,28 @@ namespace FactoryProviderTypeLoadException {
         }
 
         [TestMethod, Priority(UnitTestPriority.P0)]
-        public void InvalidInterpreterVersion() {
-            try {
+        public void InvalidInterpreterVersion()
+        {
+            try
+            {
                 var lv = new Version(1, 0).ToLanguageVersion();
                 Assert.Fail("Expected InvalidOperationException");
-            } catch (InvalidOperationException) {
+            }
+            catch (InvalidOperationException)
+            {
             }
 
-            try {
+            try
+            {
                 InterpreterFactoryCreator.CreateInterpreterFactory(new VisualStudioInterpreterConfiguration(
                     Guid.NewGuid().ToString(),
                     "Test Interpreter",
                     version: new Version(1, 0)
                 ));
                 Assert.Fail("Expected ArgumentException");
-            } catch (ArgumentException ex) {
+            }
+            catch (ArgumentException ex)
+            {
                 // Expect version number in message
                 AssertUtil.Contains(ex.Message, "1.0");
             }
@@ -331,10 +364,12 @@ namespace FactoryProviderTypeLoadException {
     [Export(typeof(IInterpreterLog))]
     [Export(typeof(MockLogger))]
     [PartCreationPolicy(CreationPolicy.Shared)]
-    class MockLogger : ICatalogLog, IInterpreterLog {
+    class MockLogger : ICatalogLog, IInterpreterLog
+    {
         public readonly List<string> AllItems = new List<string>();
 
-        public void Log(string msg) {
+        public void Log(string msg)
+        {
             AllItems.Add(msg);
         }
     }

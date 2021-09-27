@@ -14,17 +14,10 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Diagnostics;
-using System.Runtime.ExceptionServices;
-using System.Runtime.InteropServices;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.Win32.SafeHandles;
-
-namespace TestRunnerInterop {
-    public sealed class VsInstance : IDisposable {
+namespace TestRunnerInterop
+{
+    public sealed class VsInstance : IDisposable
+    {
         private readonly object _lock = new object();
         private readonly SafeFileHandle _jobObject;
         private Process _vs;
@@ -34,9 +27,11 @@ namespace TestRunnerInterop {
 
         private string _currentSettings;
 
-        public VsInstance() {
+        public VsInstance()
+        {
             _jobObject = NativeMethods.CreateJobObject(IntPtr.Zero, null);
-            if (_jobObject.IsInvalid) {
+            if (_jobObject.IsInvalid)
+            {
                 throw new InvalidOperationException("Failed to create job object");
             }
 
@@ -47,18 +42,22 @@ namespace TestRunnerInterop {
                 NativeMethods.JOBOBJECTINFOCLASS.JobObjectExtendedLimitInformation,
                 ref objInfo,
                 Marshal.SizeOf(objInfo)
-            )) {
+            ))
+            {
                 _jobObject.Dispose();
                 throw new InvalidOperationException("Failed to set job info");
             }
         }
 
-        public void Restart() {
-            if (string.IsNullOrEmpty(_currentSettings)) {
+        public void Restart()
+        {
+            if (string.IsNullOrEmpty(_currentSettings))
+            {
                 throw new InvalidOperationException("No current settings to restart VS with");
             }
             var args = _currentSettings.Split(';');
-            if (args.Length != 4) {
+            if (args.Length != 4)
+            {
                 throw new InvalidOperationException($"Current settings are not valid: {_currentSettings}");
             }
 
@@ -70,11 +69,15 @@ namespace TestRunnerInterop {
             string devenvArguments,
             string testDataRoot,
             string tempRoot
-        ) {
-            lock (_lock) {
+        )
+        {
+            lock (_lock)
+            {
                 var settings = $"{devenvExe ?? ""};{devenvArguments ?? ""};{testDataRoot ?? ""};{tempRoot ?? ""}";
-                if (_vs != null && _app != null) {
-                    if (_currentSettings == settings) {
+                if (_vs != null && _app != null)
+                {
+                    if (_currentSettings == settings)
+                    {
                         return;
                     }
                     Console.WriteLine("Restarting VS because settings have changed");
@@ -82,7 +85,8 @@ namespace TestRunnerInterop {
                 _currentSettings = settings;
                 CloseCurrentInstance();
 
-                var psi = new ProcessStartInfo {
+                var psi = new ProcessStartInfo
+                {
                     FileName = devenvExe,
                     Arguments = devenvArguments,
                     ErrorDialog = false,
@@ -91,18 +95,24 @@ namespace TestRunnerInterop {
                     RedirectStandardError = true
                 };
                 psi.Environment["_PTVS_UI_TEST"] = "1";
-                if (!string.IsNullOrEmpty(testDataRoot)) {
+                if (!string.IsNullOrEmpty(testDataRoot))
+                {
                     psi.Environment["_TESTDATA_ROOT_PATH"] = testDataRoot;
                 }
-                if (!string.IsNullOrEmpty(tempRoot)) {
+                if (!string.IsNullOrEmpty(tempRoot))
+                {
                     psi.Environment["_TESTDATA_TEMP_PATH"] = tempRoot;
                 }
 
                 _vs = Process.Start(psi);
-                if (!NativeMethods.AssignProcessToJobObject(_jobObject, _vs.Handle)) {
-                    try {
+                if (!NativeMethods.AssignProcessToJobObject(_jobObject, _vs.Handle))
+                {
+                    try
+                    {
                         _vs.Kill();
-                    } catch (Exception) {
+                    }
+                    catch (Exception)
+                    {
                     }
                     _vs.Dispose();
                     throw new InvalidOperationException("Failed to add VS to our job object");
@@ -117,21 +127,27 @@ namespace TestRunnerInterop {
 
                 // Always allow at least five seconds to start
                 Thread.Sleep(5000);
-                if (_vs.HasExited) {
+                if (_vs.HasExited)
+                {
                     throw new InvalidOperationException("Failed to start VS");
                 }
                 _app = VisualStudioApp.FromProcessId(_vs.Id);
 
                 var stopAt = DateTime.Now.AddSeconds(60);
                 EnvDTE.DTE dte = null;
-                while (DateTime.Now < stopAt && dte == null) {
-                    try {
+                while (DateTime.Now < stopAt && dte == null)
+                {
+                    try
+                    {
                         dte = _app.GetDTE();
-                    } catch (InvalidOperationException) {
+                    }
+                    catch (InvalidOperationException)
+                    {
                         Thread.Sleep(1000);
                     }
                 }
-                if (dte == null) {
+                if (dte == null)
+                {
                     throw new InvalidOperationException("Failed to start VS");
                 }
 
@@ -139,28 +155,47 @@ namespace TestRunnerInterop {
             }
         }
 
-        private void CloseCurrentInstance(bool hard = false) {
-            lock (_lock) {
-                if (_vs != null) {
-                    try {
-                        if (hard) {
+        private void CloseCurrentInstance(bool hard = false)
+        {
+            lock (_lock)
+            {
+                if (_vs != null)
+                {
+                    try
+                    {
+                        if (hard)
+                        {
                             _vs.Kill();
-                        } else {
-                            if (!_vs.CloseMainWindow()) {
-                                try {
+                        }
+                        else
+                        {
+                            if (!_vs.CloseMainWindow())
+                            {
+                                try
+                                {
                                     _vs.Kill();
-                                } catch (Exception) {
+                                }
+                                catch (Exception)
+                                {
                                 }
                             }
-                            if (!_vs.WaitForExit(10000)) {
-                                try {
+                            if (!_vs.WaitForExit(10000))
+                            {
+                                try
+                                {
                                     _vs.Kill();
-                                } catch (Exception) {
+                                }
+                                catch (Exception)
+                                {
                                 }
                             }
                         }
-                    } catch (ObjectDisposedException) {
-                    } catch (InvalidOperationException) {
+                    }
+                    catch (ObjectDisposedException)
+                    {
+                    }
+                    catch (InvalidOperationException)
+                    {
                     }
                     _vs.Dispose();
                     _vs = null;
@@ -169,15 +204,21 @@ namespace TestRunnerInterop {
             }
         }
 
-        public bool IsRunning {
-            get {
-                if (_isDisposed || _vs == null || _vs.HasExited || _app == null) {
+        public bool IsRunning
+        {
+            get
+            {
+                if (_isDisposed || _vs == null || _vs.HasExited || _app == null)
+                {
                     return false;
                 }
 
-                try {
+                try
+                {
                     _app.GetDTE();
-                } catch (InvalidOperationException) {
+                }
+                catch (InvalidOperationException)
+                {
                     return false;
                 }
 
@@ -185,35 +226,46 @@ namespace TestRunnerInterop {
             }
         }
 
-        private static void AttachIfDebugging(Process targetVs) {
-            if (!Debugger.IsAttached) {
+        private static void AttachIfDebugging(Process targetVs)
+        {
+            if (!Debugger.IsAttached)
+            {
                 return;
             }
 
             // We are debugging tests, so attach the debugger to VS
             var selfId = Process.GetCurrentProcess().Id;
 
-            foreach (var p in Process.GetProcessesByName("devenv")) {
-                if (p.Id == targetVs.Id) {
+            foreach (var p in Process.GetProcessesByName("devenv"))
+            {
+                if (p.Id == targetVs.Id)
+                {
                     continue;
                 }
 
-                using (var vs = VisualStudioApp.FromProcessId(p.Id)) {
+                using (var vs = VisualStudioApp.FromProcessId(p.Id))
+                {
                     EnvDTE.DTE dte;
-                    try {
+                    try
+                    {
                         dte = vs.GetDTE();
-                    } catch (InvalidOperationException) {
+                    }
+                    catch (InvalidOperationException)
+                    {
                         // DTE is not available, which means VS has not been running
                         continue;
                     }
 
-                    if (dte.Debugger.CurrentMode == EnvDTE.dbgDebugMode.dbgDesignMode) {
+                    if (dte.Debugger.CurrentMode == EnvDTE.dbgDebugMode.dbgDesignMode)
+                    {
                         // Not the correct VS
                         continue;
                     }
 
-                    foreach (EnvDTE.Process dp in dte.Debugger.DebuggedProcesses) {
-                        if (dp.ProcessID == selfId) {
+                    foreach (EnvDTE.Process dp in dte.Debugger.DebuggedProcesses)
+                    {
+                        if (dp.ProcessID == selfId)
+                        {
                             // This is the correct VS, so attach and return.
 
                             vs.AttachToProcess(targetVs, null);
@@ -225,8 +277,10 @@ namespace TestRunnerInterop {
 
         }
 
-        public bool RunTest(string container, string name, TimeSpan timeout, object[] arguments, bool allowRetry) {
-            if (_isDisposed) {
+        public bool RunTest(string container, string name, TimeSpan timeout, object[] arguments, bool allowRetry)
+        {
+            if (_isDisposed)
+            {
                 throw new ObjectDisposedException(GetType().Name);
             }
 
@@ -235,9 +289,11 @@ namespace TestRunnerInterop {
             CancellationTokenSource cts = null;
             var startTime = DateTime.UtcNow;
 
-            if (!Debugger.IsAttached && timeout < TimeSpan.MaxValue) {
+            if (!Debugger.IsAttached && timeout < TimeSpan.MaxValue)
+            {
                 cts = new CancellationTokenSource();
-                Task.Delay(timeout, cts.Token).ContinueWith(t => {
+                Task.Delay(timeout, cts.Token).ContinueWith(t =>
+                {
                     timedOut = true;
                     Console.WriteLine($"Terminating {container}.{name}() after {DateTime.UtcNow - startTime}");
                     // Terminate VS to unblock the Execute() call below
@@ -245,10 +301,13 @@ namespace TestRunnerInterop {
                 }, TaskContinuationOptions.OnlyOnRanToCompletion);
             }
 
-            try {
+            try
+            {
                 var r = dte.GetObject(container).Execute(name, arguments);
-                if (!r.IsSuccess) {
-                    if (r.ExceptionType == "Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException") {
+                if (!r.IsSuccess)
+                {
+                    if (r.ExceptionType == "Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException")
+                    {
                         throw new AssertInconclusiveException(r.ExceptionMessage);
                     }
                     throw new TestFailedException(
@@ -258,30 +317,44 @@ namespace TestRunnerInterop {
                     );
                 }
                 return true;
-            } catch (InvalidComObjectException ex) {
+            }
+            catch (InvalidComObjectException ex)
+            {
                 Console.WriteLine(ex);
                 CloseCurrentInstance();
-                if (!allowRetry) {
+                if (!allowRetry)
+                {
                     ExceptionDispatchInfo.Capture(ex).Throw();
                 }
-            } catch (COMException ex) {
+            }
+            catch (COMException ex)
+            {
                 Console.WriteLine(ex);
                 CloseCurrentInstance();
-                if (timedOut) {
+                if (timedOut)
+                {
                     throw new TimeoutException($"Terminating {container}.{name}() after {DateTime.UtcNow - startTime}", ex);
                 }
-                if (!allowRetry) {
+                if (!allowRetry)
+                {
                     ExceptionDispatchInfo.Capture(ex).Throw();
                 }
-            } catch (ThreadAbortException ex) {
+            }
+            catch (ThreadAbortException ex)
+            {
                 Console.WriteLine(ex);
                 CloseCurrentInstance(hard: true);
                 ExceptionDispatchInfo.Capture(ex).Throw();
-            } catch (Exception ex) {
+            }
+            catch (Exception ex)
+            {
                 CloseCurrentInstance();
                 ExceptionDispatchInfo.Capture(ex).Throw();
-            } finally {
-                if (cts != null) {
+            }
+            finally
+            {
+                if (cts != null)
+                {
                     cts.Cancel();
                     cts.Dispose();
                 }
@@ -289,9 +362,12 @@ namespace TestRunnerInterop {
             return false;
         }
 
-        void Dispose(bool disposing) {
-            if (!_isDisposed) {
-                if (disposing) {
+        void Dispose(bool disposing)
+        {
+            if (!_isDisposed)
+            {
+                if (disposing)
+                {
                     // TODO: dispose managed state (managed objects).
                 }
 
@@ -302,11 +378,13 @@ namespace TestRunnerInterop {
             }
         }
 
-        ~VsInstance() {
+        ~VsInstance()
+        {
             Dispose(false);
         }
 
-        public void Dispose() {
+        public void Dispose()
+        {
             Dispose(true);
             GC.SuppressFinalize(this);
         }

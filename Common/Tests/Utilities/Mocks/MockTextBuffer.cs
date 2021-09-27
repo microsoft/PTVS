@@ -14,11 +14,6 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Utilities;
-using System;
-using System.IO;
-
 namespace TestUtilities.Mocks
 {
     public class MockTextBuffer : ITextBuffer

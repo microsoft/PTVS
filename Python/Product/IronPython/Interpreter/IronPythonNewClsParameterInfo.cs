@@ -14,49 +14,60 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Collections.Generic;
-using Microsoft.PythonTools.Interpreter;
-
-namespace Microsoft.IronPythonTools.Interpreter {
-    class IronPythonNewClsParameterInfo : IParameterInfo {
+namespace Microsoft.IronPythonTools.Interpreter
+{
+    class IronPythonNewClsParameterInfo : IParameterInfo
+    {
         private readonly IronPythonType _declaringType;
 
-        public IronPythonNewClsParameterInfo(IronPythonType declaringType) {
+        public IronPythonNewClsParameterInfo(IronPythonType declaringType)
+        {
             _declaringType = declaringType;
         }
 
         #region IParameterInfo Members
 
-        public IList<IPythonType> ParameterTypes {
-            get {
+        public IList<IPythonType> ParameterTypes
+        {
+            get
+            {
                 return new[] { _declaringType };
             }
         }
 
-        public string Documentation {
+        public string Documentation
+        {
             get { return ""; }
         }
 
-        public string Name {
-            get {
+        public string Name
+        {
+            get
+            {
                 return "cls";
             }
         }
 
-        public bool IsParamArray {
-            get {
+        public bool IsParamArray
+        {
+            get
+            {
                 return false;
             }
         }
 
-        public bool IsKeywordDict {
-            get {
+        public bool IsKeywordDict
+        {
+            get
+            {
                 return false;
             }
         }
 
-        public string DefaultValue {
-            get {
+        public string DefaultValue
+        {
+            get
+            {
                 return null;
             }
         }

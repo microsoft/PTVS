@@ -16,59 +16,55 @@
 
 extern alias analysis;
 extern alias pythontools;
-using System;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using analysis::Microsoft.PythonTools.Analysis;
-using analysis::Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Infrastructure;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Text.Classification;
-using pythontools::Microsoft.PythonTools.Intellisense;
-using pythontools::Microsoft.PythonTools.Navigation.Navigable;
-using TestUtilities;
 
-namespace PythonToolsMockTests {
+namespace PythonToolsMockTests
+{
     [TestClass]
-    public class NavigableTests {
+    public class NavigableTests
+    {
         [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
+        public static void DoDeployment(TestContext context)
+        {
             AssertListener.Initialize();
         }
 
         private static PythonVersion Version => PythonPaths.Python27 ?? PythonPaths.Python27_x64;
 
         [TestInitialize]
-        public void TestInit() {
+        public void TestInit()
+        {
             MockPythonToolsPackage.SuppressTaskProvider = true;
             VsProjectAnalyzer.SuppressTaskProvider = true;
         }
 
         [TestCleanup]
-        public void TestCleanup() {
+        public void TestCleanup()
+        {
             MockPythonToolsPackage.SuppressTaskProvider = false;
             VsProjectAnalyzer.SuppressTaskProvider = false;
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public async Task ModuleDefinition() {
+        public async Task ModuleDefinition()
+        {
             var code = @"import os
 ";
-            using (var helper = new NavigableHelper(code, Version)) {
+            using (var helper = new NavigableHelper(code, Version))
+            {
                 // os
                 await helper.CheckDefinitionLocations(7, 2, ExternalLocation(1, 1, "os.py"));
             }
         }
 
         [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public async Task ModuleImportDefinition() {
+        public async Task ModuleImportDefinition()
+        {
             var code = @"import sys
 
 sys.version
 ";
-            using (var helper = new NavigableHelper(code, Version)) {
+            using (var helper = new NavigableHelper(code, Version))
+            {
                 // sys
                 await helper.CheckDefinitionLocations(14, 3, null);
 
@@ -78,7 +74,8 @@ sys.version
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public async Task ClassDefinition() {
+        public async Task ClassDefinition()
+        {
             var code = @"class ClassBase(object):
     pass
 
@@ -88,7 +85,8 @@ class ClassDerived(ClassBase):
 obj = ClassDerived()
 obj
 ";
-            using (var helper = new NavigableHelper(code, Version)) {
+            using (var helper = new NavigableHelper(code, Version))
+            {
                 // ClassBase
                 await helper.CheckDefinitionLocations(57, 9, Location(1, 1), Location(1, 7));
 
@@ -107,7 +105,8 @@ obj
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public async Task ParameterDefinition() {
+        public async Task ParameterDefinition()
+        {
             var code = @"def my_func(param1, param2 = True):
     print(param1)
     print(param2)
@@ -115,7 +114,8 @@ obj
 my_func(1)
 my_func(2, param2=False)
 ";
-            using (var helper = new NavigableHelper(code, Version)) {
+            using (var helper = new NavigableHelper(code, Version))
+            {
                 // param1
                 await helper.CheckDefinitionLocations(12, 6, Location(1, 13));
                 await helper.CheckDefinitionLocations(47, 6, Location(1, 13));
@@ -133,7 +133,8 @@ my_func(2, param2=False)
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public async Task NamedArgumentDefinition() {
+        public async Task NamedArgumentDefinition()
+        {
             var code = @"class MyClass(object):
     def my_class_func1(self, param2 = True):
         pass
@@ -153,7 +154,8 @@ obj = MyClass()
 obj.my_class_func1(param2=False)
 obj.my_class_func2(param3=False)
 ";
-            using (var helper = new NavigableHelper(code, Version)) {
+            using (var helper = new NavigableHelper(code, Version))
+            {
                 // param3 in my_func(param3=False)
                 await helper.CheckDefinitionLocations(232, 6, Location(8, 13));
 
@@ -166,7 +168,8 @@ obj.my_class_func2(param3=False)
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public async Task PropertyDefinition() {
+        public async Task PropertyDefinition()
+        {
             var code = @"class MyClass(object):
     _my_attr_val = 0
 
@@ -183,7 +186,8 @@ obj.my_attr = 5
 print(obj.my_attr)
 print(obj._my_attr_val)
 ";
-            using (var helper = new NavigableHelper(code, Version)) {
+            using (var helper = new NavigableHelper(code, Version))
+            {
                 // my_attr
                 await helper.CheckDefinitionLocations(71, 7, Location(4, 5), Location(8, 5), Location(9, 9));
                 await helper.CheckDefinitionLocations(128, 7, Location(4, 5), Location(8, 5), Location(9, 9));
@@ -210,12 +214,14 @@ print(obj._my_attr_val)
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public async Task VariableDefinition() {
+        public async Task VariableDefinition()
+        {
             var code = @"my_var = 0
 my_var = 1
 res = my_var * 10
 ";
-            using (var helper = new NavigableHelper(code, Version)) {
+            using (var helper = new NavigableHelper(code, Version))
+            {
                 // 2 definitions for my_var
                 await helper.CheckDefinitionLocations(30, 6, Location(2, 1));
             }
@@ -229,23 +235,28 @@ res = my_var * 10
 
         #region NavigableHelper class
 
-        private class NavigableHelper : IDisposable {
+        private class NavigableHelper : IDisposable
+        {
             private readonly PythonEditor _view;
 
-            public NavigableHelper(string code, PythonVersion version) {
+            public NavigableHelper(string code, PythonVersion version)
+            {
                 var factory = InterpreterFactoryCreator.CreateInterpreterFactory(version.Configuration, new InterpreterFactoryCreationOptions() { WatchFileSystem = false });
                 _view = new PythonEditor("", version.Version, factory: factory);
-                if (_view.Analyzer.IsAnalyzing) {
+                if (_view.Analyzer.IsAnalyzing)
+                {
                     _view.Analyzer.WaitForCompleteAnalysis(_ => true);
                 }
                 _view.Text = code;
             }
 
-            public void Dispose() {
+            public void Dispose()
+            {
                 _view.Dispose();
             }
 
-            public async Task CheckDefinitionLocations(int pos, int length, params LocationInfo[] expectedLocations) {
+            public async Task CheckDefinitionLocations(int pos, int length, params LocationInfo[] expectedLocations)
+            {
                 var entry = (AnalysisEntry)_view.GetAnalysisEntry();
                 entry.Analyzer.WaitForCompleteAnalysis(_ => true);
 
@@ -255,7 +266,8 @@ res = my_var * 10
                 var actualLocations = await NavigableSymbolSource.GetDefinitionLocationsAsync(entry, snapshotSpan.Start);
 
                 Console.WriteLine($"Actual locations for pos={pos}, length={length}:");
-                foreach (var actualLocation in actualLocations) {
+                foreach (var actualLocation in actualLocations)
+                {
                     Console.WriteLine($"file={actualLocation.Location.DocumentUri},line={actualLocation.Location.StartLine},col={actualLocation.Location.StartColumn}");
                 }
 
@@ -266,18 +278,23 @@ res = my_var * 10
                     .Where(v => !File.Exists(v.Location.FilePath) || !PathUtils.IsSubpathOf(PathUtils.GetParent(typeof(IAnalysisVariable).Assembly.Location), v.Location.FilePath))
                     .ToArray();
 
-                if (expectedLocations != null) {
+                if (expectedLocations != null)
+                {
                     Assert.IsNotNull(actualLocations);
 
                     Assert.AreEqual(expectedLocations.Length, actualLocations.Length, "incorrect number of locations");
-                    for (int i = 0; i < expectedLocations.Length; i++) {
+                    for (int i = 0; i < expectedLocations.Length; i++)
+                    {
                         Assert.AreEqual(expectedLocations[i].StartLine, actualLocations[i].Location.StartLine, "incorrect line");
                         Assert.AreEqual(expectedLocations[i].StartColumn, actualLocations[i].Location.StartColumn, "incorrect column");
-                        if (expectedLocations[i].FilePath != null) {
+                        if (expectedLocations[i].FilePath != null)
+                        {
                             Assert.AreEqual(expectedLocations[i].FilePath, Path.GetFileName(actualLocations[i].Location.FilePath));
                         }
                     }
-                } else {
+                }
+                else
+                {
                     Assert.AreEqual(0, actualLocations.Length, "incorrect number of locations");
                 }
             }

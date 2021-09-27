@@ -14,8 +14,10 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
-    internal enum PyMemberDefType {
+namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
+{
+    internal enum PyMemberDefType
+    {
         T_SHORT = 0,
         T_INT = 1,
         T_LONG = 2,
@@ -38,8 +40,10 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
         T_NONE = 20
     }
 
-    internal class PyMemberDef : StructProxy {
-        private class Fields {
+    internal class PyMemberDef : StructProxy
+    {
+        private class Fields
+        {
             public StructField<PointerProxy<CStringProxy>> name;
             public StructField<Int32EnumProxy<PyMemberDefType>> type;
             public StructField<SSizeTProxy> offset;
@@ -48,19 +52,23 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
         private readonly Fields _fields;
 
         public PyMemberDef(DkmProcess process, ulong address)
-            : base(process, address) {
+            : base(process, address)
+        {
             InitializeStruct(this, out _fields);
         }
 
-        public PointerProxy<CStringProxy> name {
+        public PointerProxy<CStringProxy> name
+        {
             get { return GetFieldProxy(_fields.name); }
         }
 
-        public Int32EnumProxy<PyMemberDefType> type {
+        public Int32EnumProxy<PyMemberDefType> type
+        {
             get { return GetFieldProxy(_fields.type); }
         }
 
-        public SSizeTProxy offset {
+        public SSizeTProxy offset
+        {
             get { return GetFieldProxy(_fields.offset); }
         }
     }

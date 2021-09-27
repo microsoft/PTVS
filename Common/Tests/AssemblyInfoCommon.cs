@@ -2,7 +2,6 @@
 // Copyright (c) Microsoft Corporation.  All rights reserved.
 // </copyright>
 
-using System.Reflection;
 
 // The following assembly information is common to all VisualStudioTools Test assemblies.
 // If you get compiler errors CS0579, "Duplicate '<attributename>' attribute", check your 

@@ -14,23 +14,24 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Collections.Generic;
-using System.Linq;
-using Microsoft.PythonTools.Parsing;
-
-namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
+namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
+{
     [StructProxy(StructName = "PyDictObject", MaxVersion = PythonLanguageVersion.V27)]
     [PyType(VariableName = "PyDict_Type", MaxVersion = PythonLanguageVersion.V27)]
-    internal class PyDictObject27 : PyDictObject {
-        private class DummyHolder : DkmDataItem {
+    internal class PyDictObject27 : PyDictObject
+    {
+        private class DummyHolder : DkmDataItem
+        {
             public readonly PointerProxy<PyObject> Dummy;
 
-            public DummyHolder(DkmProcess process) {
+            public DummyHolder(DkmProcess process)
+            {
                 Dummy = process.GetPythonRuntimeInfo().DLLs.Python.GetStaticVariable<PointerProxy<PyObject>>("dummy", "dictobject.obj");
             }
         }
 
-        private class Fields {
+        private class Fields
+        {
             public StructField<SSizeTProxy> ma_mask;
             public StructField<PointerProxy<ArrayProxy<PyDictKeyEntry>>> ma_table;
         }
@@ -39,23 +40,28 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
         private readonly PyObject _dummy;
 
         public PyDictObject27(DkmProcess process, ulong address)
-            : base(process, address) {
+            : base(process, address)
+        {
             InitializeStruct(this, out _fields);
             CheckPyType<PyDictObject27>();
 
             _dummy = Process.GetOrCreateDataItem(() => new DummyHolder(Process)).Dummy.TryRead();
         }
 
-        public PointerProxy<ArrayProxy<PyDictKeyEntry>> ma_table {
+        public PointerProxy<ArrayProxy<PyDictKeyEntry>> ma_table
+        {
             get { return GetFieldProxy(_fields.ma_table); }
         }
 
-        public SSizeTProxy ma_mask {
+        public SSizeTProxy ma_mask
+        {
             get { return GetFieldProxy(_fields.ma_mask); }
         }
 
-        public override IEnumerable<KeyValuePair<PyObject, PointerProxy<PyObject>>> ReadElements() {
-            if (ma_table.IsNull) {
+        public override IEnumerable<KeyValuePair<PyObject, PointerProxy<PyObject>>> ReadElements()
+        {
+            if (ma_table.IsNull)
+            {
                 return Enumerable.Empty<KeyValuePair<PyObject, PointerProxy<PyObject>>>();
             }
 

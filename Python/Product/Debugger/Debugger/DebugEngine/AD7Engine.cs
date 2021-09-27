@@ -14,23 +14,11 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Threading;
-using System.Web;
-using System.Windows.Forms;
 using Microsoft.PythonTools.Debugger.Remote;
-using Microsoft.PythonTools.Parsing;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Debugger.Interop;
-using Microsoft.VisualStudio.Shell;
 using Task = System.Threading.Tasks.Task;
 
-namespace Microsoft.PythonTools.Debugger.DebugEngine {
+namespace Microsoft.PythonTools.Debugger.DebugEngine
+{
     // AD7Engine is the primary entrypoint object for the debugging engine. 
     //
     // It implements:
@@ -47,7 +35,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         Justification = "We do not control ownership of this class")]
     [ComVisible(true)]
     [Guid(Guids.DebugEngineCLSID)]
-    public sealed class AD7Engine : IDebugEngine2, IDebugEngineLaunch2, IDebugProgram3, IDebugSymbolSettings100, IThreadIdMapper {
+    public sealed class AD7Engine : IDebugEngine2, IDebugEngineLaunch2, IDebugProgram3, IDebugSymbolSettings100, IThreadIdMapper
+    {
         // used to send events to the debugger. Some examples of these events are thread create, exception thrown, module load.
         private IDebugEventCallback2 _events;
 
@@ -184,7 +173,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         /// </summary>
         public const string DirMappingSetting = "DIR_MAPPING";
 
-        public AD7Engine() {
+        public AD7Engine()
+        {
             _breakpointManager = new BreakpointManager(this);
             _defaultBreakOnExceptionMode = (int)enum_EXCEPTION_STATE.EXCEPTION_STOP_USER_UNCAUGHT;
             _debugOptions = PythonDebugOptions.None;
@@ -192,49 +182,63 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             _engines.Add(new WeakReference(this));
         }
 
-        ~AD7Engine() {
+        ~AD7Engine()
+        {
             Debug.WriteLine("Python Engine Finalized " + GetHashCode());
-            if (!_attached && _process != null) {
+            if (!_attached && _process != null)
+            {
                 // detach the process exited event, we don't need to send the exited event
                 // which could happen when we terminate the process and check if it's still
                 // running.
-                try {
+                try
+                {
                     _process.ProcessExited -= OnProcessExited;
 
                     // we launched the process, go ahead and kill it now that
                     // VS has released us
                     _process.Terminate();
-                } catch (InvalidOperationException) {
+                }
+                catch (InvalidOperationException)
+                {
                 }
             }
 
-            foreach (var engine in _engines) {
-                if (engine.Target == this) {
+            foreach (var engine in _engines)
+            {
+                if (engine.Target == this)
+                {
                     _engines.Remove(engine);
                     break;
                 }
             }
         }
 
-        internal static IList<AD7Engine> GetEngines() {
+        internal static IList<AD7Engine> GetEngines()
+        {
             List<AD7Engine> engines = new List<AD7Engine>();
-            foreach (var engine in AD7Engine._engines) {
+            foreach (var engine in AD7Engine._engines)
+            {
                 AD7Engine target = (AD7Engine)engine.Target;
-                if (target != null) {
+                if (target != null)
+                {
                     engines.Add(target);
                 }
             }
             return engines;
         }
 
-        internal PythonProcess Process {
-            get {
+        internal PythonProcess Process
+        {
+            get
+            {
                 return _process;
             }
         }
 
-        internal BreakpointManager BreakpointManager {
-            get {
+        internal BreakpointManager BreakpointManager
+        {
+            get
+            {
                 return _breakpointManager;
             }
         }
@@ -244,13 +248,18 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         /// or if it is already used), generates a new fake ID, and establishes the mapping between the two.
         /// </summary>
         /// <returns>The original ID if it could be used as is, generated ID otherwise.</returns>
-        internal uint RegisterThreadId(long tid) {
+        internal uint RegisterThreadId(long tid)
+        {
             uint vsTid;
 
-            if (tid <= uint.MaxValue && !_threadIdMapping.ContainsKey((uint)tid)) {
+            if (tid <= uint.MaxValue && !_threadIdMapping.ContainsKey((uint)tid))
+            {
                 vsTid = (uint)tid;
-            } else {
-                do {
+            }
+            else
+            {
+                do
+                {
                     vsTid = ++_lastGeneratedVsTid;
                 } while (_threadIdMapping.ContainsKey(vsTid));
             }
@@ -259,33 +268,39 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             return vsTid;
         }
 
-        internal void UnregisterThreadId(uint vsTid) {
+        internal void UnregisterThreadId(uint vsTid)
+        {
             _threadIdMapping.Remove(vsTid);
         }
 
-        long? IThreadIdMapper.GetPythonThreadId(uint vsThreadId) {
+        long? IThreadIdMapper.GetPythonThreadId(uint vsThreadId)
+        {
             long result;
             return _threadIdMapping.TryGetValue(vsThreadId, out result) ? result : (long?)null;
         }
 
-        private static bool IsDebuggingPythonOnly(IDebugProgram2 program) {
+        private static bool IsDebuggingPythonOnly(IDebugProgram2 program)
+        {
             IDebugProcess2 process;
             program.GetProcess(out process);
 
             IEnumDebugPrograms2 enumPrograms;
             process.EnumPrograms(out enumPrograms);
 
-            while (true) {
+            while (true)
+            {
                 IDebugProgram2[] programs = new IDebugProgram2[1];
                 uint fetched = 0;
-                if (enumPrograms.Next(1, programs, ref fetched) != VSConstants.S_OK || fetched != 1 || programs[0] == null) {
+                if (enumPrograms.Next(1, programs, ref fetched) != VSConstants.S_OK || fetched != 1 || programs[0] == null)
+                {
                     break;
                 }
 
                 string engineName;
                 Guid engineGuid;
                 programs[0].GetEngineInfo(out engineName, out engineGuid);
-                if (engineGuid != AD7Engine.DebugEngineGuid) {
+                if (engineGuid != AD7Engine.DebugEngineGuid)
+                {
                     return false;
                 }
             }
@@ -296,20 +311,23 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         #region IDebugEngine2 Members
 
         // Attach the debug engine to a program. 
-        int IDebugEngine2.Attach(IDebugProgram2[] rgpPrograms, IDebugProgramNode2[] rgpProgramNodes, uint celtPrograms, IDebugEventCallback2 ad7Callback, enum_ATTACH_REASON dwReason) {
+        int IDebugEngine2.Attach(IDebugProgram2[] rgpPrograms, IDebugProgramNode2[] rgpProgramNodes, uint celtPrograms, IDebugEventCallback2 ad7Callback, enum_ATTACH_REASON dwReason)
+        {
             Debug.WriteLine("PythonEngine Attach Begin " + GetHashCode());
 
             AssertMainThread();
             Debug.Assert(_ad7ProgramId == Guid.Empty);
 
-            if (celtPrograms != 1) {
+            if (celtPrograms != 1)
+            {
                 Debug.Fail("Python debugging only supports one program in a process");
                 throw new ArgumentException();
             }
 
             var program = rgpPrograms[0];
             int processId = EngineUtils.GetProcessId(program);
-            if (processId == 0) {
+            if (processId == 0)
+            {
                 // engine only supports system processes
                 Debug.WriteLine("PythonEngine failed to get process id during attach");
                 return VSConstants.E_NOTIMPL;
@@ -319,13 +337,15 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
             // Attach can either be called to attach to a new process, or to complete an attach
             // to a launched process
-            if (_process == null) {
+            if (_process == null)
+            {
                 _events = ad7Callback;
 
                 Send(new AD7CustomEvent(VsPackageMessage.SetDebugOptions, this), AD7CustomEvent.IID, null);
 
                 // Check whether we're debugging Python alongside something else. If so, let Concord handle everything.
-                if (!IsDebuggingPythonOnly(program)) {
+                if (!IsDebuggingPythonOnly(program))
+                {
                     _attached = true;
                     _mixedMode = true;
                     AD7EngineCreateEvent.Send(this);
@@ -337,13 +357,16 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
                 // Check if we're attaching remotely using the Python remote debugging transport
                 var remoteProgram = program as PythonRemoteDebugProgram;
-                try {
-                    if (remoteProgram != null) {
+                try
+                {
+                    if (remoteProgram != null)
+                    {
                         var remotePort = remoteProgram.DebugProcess.DebugPort;
 
                         var uriBuilder = new UriBuilder(remotePort.Uri);
                         string query = uriBuilder.Query ?? "";
-                        if (query.Length > 0) {
+                        if (query.Length > 0)
+                        {
                             // Strip leading "?" - UriBuilder.Query getter returns it as part of the string, but the setter
                             // will automatically prepend it even if it was already there, producing a malformed query.
                             query = query.Substring(1);
@@ -352,10 +375,14 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                         uriBuilder.Query = query;
 
                         _process = TaskHelpers.RunSynchronouslyOnUIThread(ct => PythonRemoteProcess.AttachAsync(uriBuilder.Uri, true, null, ct));
-                    } else {
+                    }
+                    else
+                    {
                         _process = PythonProcess.Attach(processId, _debugOptions);
                     }
-                } catch (ConnectionException ex) {
+                }
+                catch (ConnectionException ex)
+                {
                     MessageBox.Show(
                         Strings.FailedToAttachDebugger.FormatUI(ex.Message),
                         Strings.ProductTitle,
@@ -367,8 +394,11 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
                 AttachEvents(_process);
                 _attached = true;
-            } else {
-                if (processId != _process.Id) {
+            }
+            else
+            {
+                if (processId != _process.Id)
+                {
                     Debug.Fail("Asked to attach to a process while we are debugging");
                     return VSConstants.E_FAIL;
                 }
@@ -376,9 +406,11 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
             AD7EngineCreateEvent.Send(this);
 
-            lock (_syncLock) {
+            lock (_syncLock)
+            {
                 _engineCreated = true;
-                if (_isProgramCreateDelayed) {
+                if (_isProgramCreateDelayed)
+                {
                     _isProgramCreateDelayed = false;
                     SendProgramCreate();
                 }
@@ -388,24 +420,29 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             return VSConstants.S_OK;
         }
 
-        private void SendProgramCreate() {
+        private void SendProgramCreate()
+        {
             Debug.WriteLine("Sending program create " + GetHashCode());
             AD7ProgramCreateEvent.Send(this);
 
             _programCreated = true;
-            if (_processLoadedThread != null) {
+            if (_processLoadedThread != null)
+            {
                 SendLoadComplete(_processLoadedThread);
             }
         }
 
-        private void SendLoadComplete(AD7Thread thread) {
+        private void SendLoadComplete(AD7Thread thread)
+        {
             Debug.WriteLine("Sending load complete " + GetHashCode());
 
-            if (_startModule != null) {
+            if (_startModule != null)
+            {
                 SendModuleLoaded(_startModule);
                 _startModule = null;
             }
-            if (_startThread != null) {
+            if (_startThread != null)
+            {
                 SendThreadStart(_startThread);
                 _startThread = null;
             }
@@ -420,17 +457,21 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             StartWebBrowser();
         }
 
-        private bool ProcessExited() {
+        private bool ProcessExited()
+        {
             var process = _process;
-            if (process != null) {
+            if (process != null)
+            {
                 return process.HasExited;
             }
             return true;
         }
 
-        private void StartWebBrowser() {
+        private void StartWebBrowser()
+        {
             Uri uri;
-            if (_webBrowserUrl != null && Uri.TryCreate(_webBrowserUrl, UriKind.RelativeOrAbsolute, out uri)) {
+            if (_webBrowserUrl != null && Uri.TryCreate(_webBrowserUrl, UriKind.RelativeOrAbsolute, out uri))
+            {
                 OnPortOpenedHandler.CreateHandler(
                     uri.Port,
                     shortCircuitPredicate: ProcessExited,
@@ -439,7 +480,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             }
         }
 
-        private void LaunchBrowserDebugger() {
+        private void LaunchBrowserDebugger()
+        {
             var vsDebugger = (IVsDebugger2)ServiceProvider.GlobalProvider.GetService(typeof(SVsShellDebugger)); ;
 
             VsDebugTargetInfo2 info = new VsDebugTargetInfo2();
@@ -452,19 +494,25 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             IntPtr infoPtr = Marshal.AllocCoTaskMem(infoSize);
             Marshal.StructureToPtr(info, infoPtr, false);
 
-            try {
+            try
+            {
                 vsDebugger.LaunchDebugTargets2(1, infoPtr);
-            } finally {
-                if (infoPtr != IntPtr.Zero) {
+            }
+            finally
+            {
+                if (infoPtr != IntPtr.Zero)
+                {
                     Marshal.FreeCoTaskMem(infoPtr);
                 }
             }
         }
-        private void SendThreadStart(AD7Thread ad7Thread) {
+        private void SendThreadStart(AD7Thread ad7Thread)
+        {
             Send(new AD7ThreadCreateEvent(), AD7ThreadCreateEvent.IID, ad7Thread);
         }
 
-        private void SendModuleLoaded(AD7Module ad7Module) {
+        private void SendModuleLoaded(AD7Module ad7Module)
+        {
             AD7ModuleLoadEvent eventObject = new AD7ModuleLoadEvent(ad7Module, true /* this is a module load */);
 
             // TODO: Bind breakpoints when the module loads
@@ -475,8 +523,10 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         // Requests that all programs being debugged by this DE stop execution the next time one of their threads attempts to run.
         // This is normally called in response to the user clicking on the pause button in the debugger.
         // When the break is complete, an AsyncBreakComplete event will be sent back to the debugger.
-        int IDebugEngine2.CauseBreak() {
-            if (_mixedMode) {
+        int IDebugEngine2.CauseBreak()
+        {
+            if (_mixedMode)
+            {
                 return VSConstants.E_NOTIMPL;
             }
 
@@ -486,34 +536,43 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         }
 
         [Conditional("DEBUG")]
-        private static void AssertMainThread() {
+        private static void AssertMainThread()
+        {
             //Debug.Assert(Worker.MainThreadId == Worker.CurrentThreadId);
         }
 
         // Called by the SDM to indicate that a synchronous debug event, previously sent by the DE to the SDM,
         // was received and processed. 
-        int IDebugEngine2.ContinueFromSynchronousEvent(IDebugEvent2 eventObject) {
-            if (_mixedMode) {
+        int IDebugEngine2.ContinueFromSynchronousEvent(IDebugEvent2 eventObject)
+        {
+            if (_mixedMode)
+            {
                 return VSConstants.E_NOTIMPL;
             }
 
             AssertMainThread();
 
-            if (eventObject is AD7ProgramDestroyEvent) {
+            if (eventObject is AD7ProgramDestroyEvent)
+            {
                 var debuggedProcess = _process;
 
                 _events = null;
                 _process = null;
                 _ad7ProgramId = Guid.Empty;
-                foreach (var thread in _threads.Values) {
+                foreach (var thread in _threads.Values)
+                {
                     thread.Dispose();
                 }
                 _threads.Clear();
                 _modules.Clear();
 
                 debuggedProcess.Dispose();
-            } else if (eventObject is AD7CustomEvent) {
-            } else {
+            }
+            else if (eventObject is AD7CustomEvent)
+            {
+            }
+            else
+            {
                 Debug.Fail("Unknown synchronous event");
             }
 
@@ -522,8 +581,10 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
         // Creates a pending breakpoint in the engine. A pending breakpoint is contains all the information needed to bind a breakpoint to 
         // a location in the debuggee.
-        int IDebugEngine2.CreatePendingBreakpoint(IDebugBreakpointRequest2 pBPRequest, out IDebugPendingBreakpoint2 ppPendingBP) {
-            if (_mixedMode) {
+        int IDebugEngine2.CreatePendingBreakpoint(IDebugBreakpointRequest2 pBPRequest, out IDebugPendingBreakpoint2 ppPendingBP)
+        {
+            if (_mixedMode)
+            {
                 ppPendingBP = null;
                 return VSConstants.E_NOTIMPL;
             }
@@ -538,8 +599,10 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
         // Informs a DE that the program specified has been atypically terminated and that the DE should 
         // clean up all references to the program and send a program destroy event.
-        int IDebugEngine2.DestroyProgram(IDebugProgram2 pProgram) {
-            if (_mixedMode) {
+        int IDebugEngine2.DestroyProgram(IDebugProgram2 pProgram)
+        {
+            if (_mixedMode)
+            {
                 return VSConstants.E_NOTIMPL;
             }
 
@@ -552,13 +615,16 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         }
 
         // Gets the GUID of the DE.
-        int IDebugEngine2.GetEngineId(out Guid guidEngine) {
+        int IDebugEngine2.GetEngineId(out Guid guidEngine)
+        {
             guidEngine = new Guid(DebugEngineId);
             return VSConstants.S_OK;
         }
 
-        int IDebugEngine2.RemoveAllSetExceptions(ref Guid guidType) {
-            if (_mixedMode) {
+        int IDebugEngine2.RemoveAllSetExceptions(ref Guid guidType)
+        {
+            if (_mixedMode)
+            {
                 return VSConstants.E_NOTIMPL;
             }
 
@@ -569,49 +635,65 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             return VSConstants.S_OK;
         }
 
-        int IDebugEngine2.RemoveSetException(EXCEPTION_INFO[] pException) {
-            if (_mixedMode) {
+        int IDebugEngine2.RemoveSetException(EXCEPTION_INFO[] pException)
+        {
+            if (_mixedMode)
+            {
                 return VSConstants.E_NOTIMPL;
             }
 
             bool sendUpdate = false;
-            for (int i = 0; i < pException.Length; i++) {
-                if (pException[i].guidType == DebugEngineGuid) {
+            for (int i = 0; i < pException.Length; i++)
+            {
+                if (pException[i].guidType == DebugEngineGuid)
+                {
                     sendUpdate = true;
-                    if (pException[i].bstrExceptionName == "Python Exceptions") {
+                    if (pException[i].bstrExceptionName == "Python Exceptions")
+                    {
                         _defaultBreakOnExceptionMode = (int)enum_EXCEPTION_STATE.EXCEPTION_STOP_USER_UNCAUGHT;
-                    } else {
+                    }
+                    else
+                    {
                         _breakOnException.Remove(pException[i].bstrExceptionName);
                     }
                 }
             }
 
-            if (sendUpdate) {
+            if (sendUpdate)
+            {
                 TaskHelpers.RunSynchronouslyOnUIThread(ct => SetExceptionInfoAsync(_defaultBreakOnExceptionMode, _breakOnException, ct));
             }
             return VSConstants.S_OK;
         }
 
-        int IDebugEngine2.SetException(EXCEPTION_INFO[] pException) {
-            if (_mixedMode) {
+        int IDebugEngine2.SetException(EXCEPTION_INFO[] pException)
+        {
+            if (_mixedMode)
+            {
                 return VSConstants.E_NOTIMPL;
             }
 
             bool sendUpdate = false;
-            for (int i = 0; i < pException.Length; i++) {
-                if (pException[i].guidType == DebugEngineGuid) {
+            for (int i = 0; i < pException.Length; i++)
+            {
+                if (pException[i].guidType == DebugEngineGuid)
+                {
                     sendUpdate = true;
-                    if (pException[i].bstrExceptionName == "Python Exceptions") {
+                    if (pException[i].bstrExceptionName == "Python Exceptions")
+                    {
                         _defaultBreakOnExceptionMode =
                             (int)(pException[i].dwState & (enum_EXCEPTION_STATE.EXCEPTION_STOP_FIRST_CHANCE | enum_EXCEPTION_STATE.EXCEPTION_STOP_USER_UNCAUGHT));
-                    } else {
+                    }
+                    else
+                    {
                         _breakOnException[pException[i].bstrExceptionName] =
                             (int)(pException[i].dwState & (enum_EXCEPTION_STATE.EXCEPTION_STOP_FIRST_CHANCE | enum_EXCEPTION_STATE.EXCEPTION_STOP_USER_UNCAUGHT));
                     }
                 }
             }
 
-            if (sendUpdate) {
+            if (sendUpdate)
+            {
                 TaskHelpers.RunSynchronouslyOnUIThread(ct => SetExceptionInfoAsync(_defaultBreakOnExceptionMode, _breakOnException, ct));
             }
             return VSConstants.S_OK;
@@ -620,49 +702,60 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         // Sets the locale of the DE.
         // This method is called by the session debug manager (SDM) to propagate the locale settings of the IDE so that
         // strings returned by the DE are properly localized. The engine is not localized so this is not implemented.
-        int IDebugEngine2.SetLocale(ushort wLangID) {
+        int IDebugEngine2.SetLocale(ushort wLangID)
+        {
             return VSConstants.S_OK;
         }
 
         // A metric is a registry value used to change a debug engine's behavior or to advertise supported functionality. 
         // This method can forward the call to the appropriate form of the Debugging SDK Helpers function, SetMetric.
-        int IDebugEngine2.SetMetric(string pszMetric, object varValue) {
-            switch (pszMetric) {
-                case "JustMyCodeStepping": {
-                    var enabledUint = varValue as uint?;
-                    if (enabledUint.HasValue) {
-                        var enabled = enabledUint.Value != 0;
-                        if (_justMyCodeEnabled != enabled) {
-                            _justMyCodeEnabled = enabled;
-                            TaskHelpers.RunSynchronouslyOnUIThread(ct => SetExceptionInfoAsync(_defaultBreakOnExceptionMode, _breakOnException, ct));
+        int IDebugEngine2.SetMetric(string pszMetric, object varValue)
+        {
+            switch (pszMetric)
+            {
+                case "JustMyCodeStepping":
+                    {
+                        var enabledUint = varValue as uint?;
+                        if (enabledUint.HasValue)
+                        {
+                            var enabled = enabledUint.Value != 0;
+                            if (_justMyCodeEnabled != enabled)
+                            {
+                                _justMyCodeEnabled = enabled;
+                                TaskHelpers.RunSynchronouslyOnUIThread(ct => SetExceptionInfoAsync(_defaultBreakOnExceptionMode, _breakOnException, ct));
+                            }
                         }
-                    }
-                    return VSConstants.S_OK;
-                }
-
-                case DebugOptionsMetric: {
-                    if (_engineCreated) {
-                        Debug.Fail(DebugOptionsMetric + " metric can only be sent immediately in response to IDebugEngineCreateEvent2.");
-                        return VSConstants.E_FAIL;
+                        return VSConstants.S_OK;
                     }
 
-                    var options = varValue as string;
-                    if (!string.IsNullOrEmpty(options)) {
-                        // ParseOptions only overwrites the flags that are explicitly set to True or False, leaving any
-                        // already existing values intact. Thus, any options that were previouly passed to LaunchSuspended
-                        // are preserved unless explicitly overwritten here. 
-                        ParseOptions(options);
+                case DebugOptionsMetric:
+                    {
+                        if (_engineCreated)
+                        {
+                            Debug.Fail(DebugOptionsMetric + " metric can only be sent immediately in response to IDebugEngineCreateEvent2.");
+                            return VSConstants.E_FAIL;
+                        }
+
+                        var options = varValue as string;
+                        if (!string.IsNullOrEmpty(options))
+                        {
+                            // ParseOptions only overwrites the flags that are explicitly set to True or False, leaving any
+                            // already existing values intact. Thus, any options that were previouly passed to LaunchSuspended
+                            // are preserved unless explicitly overwritten here. 
+                            ParseOptions(options);
+                        }
+                        return VSConstants.S_OK;
                     }
-                    return VSConstants.S_OK;
-                }
 
                 default:
                     return VSConstants.S_OK;
             }
         }
 
-        private Task SetExceptionInfoAsync(int defaultBreakOnMode, IEnumerable<KeyValuePair<string, int>> breakOn, CancellationToken ct) {
-            if (!_justMyCodeEnabled) {
+        private Task SetExceptionInfoAsync(int defaultBreakOnMode, IEnumerable<KeyValuePair<string, int>> breakOn, CancellationToken ct)
+        {
+            if (!_justMyCodeEnabled)
+            {
                 // Mask out just my code related flag not masked out by VS SDM
                 var mask = ~(int)enum_EXCEPTION_STATE.EXCEPTION_STOP_USER_UNCAUGHT;
                 defaultBreakOnMode &= mask;
@@ -673,7 +766,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
         // Sets the registry root currently in use by the DE. Different installations of Visual Studio can change where their registry information is stored
         // This allows the debugger to tell the engine where that location is.
-        int IDebugEngine2.SetRegistryRoot(string pszRegistryRoot) {
+        int IDebugEngine2.SetRegistryRoot(string pszRegistryRoot)
+        {
             return VSConstants.S_OK;
         }
 
@@ -682,8 +776,10 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         #region IDebugEngineLaunch2 Members
 
         // Determines if a process can be terminated.
-        int IDebugEngineLaunch2.CanTerminateProcess(IDebugProcess2 process) {
-            if (_mixedMode) {
+        int IDebugEngineLaunch2.CanTerminateProcess(IDebugProcess2 process)
+        {
+            if (_mixedMode)
+            {
                 return VSConstants.S_OK;
             }
 
@@ -695,9 +791,12 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
             int processId = EngineUtils.GetProcessId(process);
 
-            if (processId == _process.Id) {
+            if (processId == _process.Id)
+            {
                 return VSConstants.S_OK;
-            } else {
+            }
+            else
+            {
                 return VSConstants.S_FALSE;
             }
         }
@@ -708,9 +807,11 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         // (for example, if the debug engine is part of an interpreter and the program being debugged is an interpreted language), 
         // in which case Visual Studio uses the IDebugEngineLaunch2::LaunchSuspended method
         // The IDebugEngineLaunch2::ResumeProcess method is called to start the process after the process has been successfully launched in a suspended state.
-        int IDebugEngineLaunch2.LaunchSuspended(string pszServer, IDebugPort2 port, string exe, string args, string dir, string env, string options, enum_LAUNCH_FLAGS launchFlags, uint hStdInput, uint hStdOutput, uint hStdError, IDebugEventCallback2 ad7Callback, out IDebugProcess2 process) {
+        int IDebugEngineLaunch2.LaunchSuspended(string pszServer, IDebugPort2 port, string exe, string args, string dir, string env, string options, enum_LAUNCH_FLAGS launchFlags, uint hStdInput, uint hStdOutput, uint hStdError, IDebugEventCallback2 ad7Callback, out IDebugProcess2 process)
+        {
             process = null;
-            if (_mixedMode) {
+            if (_mixedMode)
+            {
                 return VSConstants.E_NOTIMPL;
             }
 
@@ -725,20 +826,24 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             _engineCreated = _programCreated = false;
             _loadComplete.Reset();
 
-            if (options != null) {
+            if (options != null)
+            {
                 ParseOptions(options);
             }
 
             Send(new AD7CustomEvent(VsPackageMessage.SetDebugOptions, this), AD7CustomEvent.IID, null, null);
 
             // If this is a windowed application, there's no console to wait on, so disable those flags if they were set.
-            if (_debugOptions.HasFlag(PythonDebugOptions.IsWindowsApplication)) {
+            if (_debugOptions.HasFlag(PythonDebugOptions.IsWindowsApplication))
+            {
                 _debugOptions &= ~(PythonDebugOptions.WaitOnNormalExit | PythonDebugOptions.WaitOnAbnormalExit);
             }
 
             Guid processId;
-            if (_debugOptions.HasFlag(PythonDebugOptions.AttachRunning)) {
-                if (!Guid.TryParse(exe, out processId)) {
+            if (_debugOptions.HasFlag(PythonDebugOptions.AttachRunning))
+            {
+                if (!Guid.TryParse(exe, out processId))
+                {
                     Debug.Fail("When PythonDebugOptions.AttachRunning is used, the 'exe' parameter must be a debug session GUID.");
                     return VSConstants.E_INVALIDARG;
                 }
@@ -746,11 +851,14 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                 _process = DebugConnectionListener.GetProcess(processId);
                 _attached = true;
                 _pseudoAttach = true;
-            } else {
+            }
+            else
+            {
                 _process = new PythonProcess(_languageVersion, exe, args, dir, env, _interpreterOptions, _debugOptions, dirMapping: _dirMapping);
             }
 
-            if (!_debugOptions.HasFlag(PythonDebugOptions.AttachRunning)) {
+            if (!_debugOptions.HasFlag(PythonDebugOptions.AttachRunning))
+            {
                 TaskHelpers.RunSynchronouslyOnUIThread(ct => _process.StartAsync(false));
             }
 
@@ -768,21 +876,28 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             return VSConstants.S_OK;
         }
 
-        private static string[] SplitOptions(string options) {
+        private static string[] SplitOptions(string options)
+        {
             List<string> res = new List<string>();
             int lastStart = 0;
-            for (int i = 0; i < options.Length; i++) {
-                if (options[i] == ';') {
-                    if (i < options.Length - 1 && options[i + 1] != ';') {
+            for (int i = 0; i < options.Length; i++)
+            {
+                if (options[i] == ';')
+                {
+                    if (i < options.Length - 1 && options[i + 1] != ';')
+                    {
                         // valid option boundary
                         res.Add(options.Substring(lastStart, i - lastStart));
                         lastStart = i + 1;
-                    } else {
+                    }
+                    else
+                    {
                         i++;
                     }
                 }
             }
-            if (options.Length - lastStart > 0) {
+            if (options.Length - lastStart > 0)
+            {
                 res.Add(options.Substring(lastStart, options.Length - lastStart));
             }
             return res.ToArray();
@@ -791,56 +906,68 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         // TODO: turn PythonDebugOptions into a class that encapsulates all options (not just flags), including the "not set"
         // state for all of them, and that knows how to stringify and parse itself, and how to merge isntances, and refactor
         // this entire codepath, including the bits in DefaultPythonLauncher and in CustomDebuggerEventHandler, to use that.
-        private void ParseOptions(string options) {
-            foreach (var optionSetting in SplitOptions(options)) {
+        private void ParseOptions(string options)
+        {
+            foreach (var optionSetting in SplitOptions(options))
+            {
                 var setting = optionSetting.Split(new[] { '=' }, 2);
-                if (setting.Length == 2) {
-                    switch (setting[0]) {
+                if (setting.Length == 2)
+                {
+                    switch (setting[0])
+                    {
                         case VersionSetting:
                             _languageVersion = GetLanguageVersion(setting[1]);
                             break;
 
                         case WaitOnAbnormalExitSetting:
                             bool value;
-                            if (Boolean.TryParse(setting[1], out value) && value) {
+                            if (Boolean.TryParse(setting[1], out value) && value)
+                            {
                                 _debugOptions |= PythonDebugOptions.WaitOnAbnormalExit;
                             }
                             break;
 
                         case WaitOnNormalExitSetting:
-                            if (Boolean.TryParse(setting[1], out value) && value) {
+                            if (Boolean.TryParse(setting[1], out value) && value)
+                            {
                                 _debugOptions |= PythonDebugOptions.WaitOnNormalExit;
                             }
                             break;
 
                         case RedirectOutputSetting:
-                            if (Boolean.TryParse(setting[1], out value) && value) {
+                            if (Boolean.TryParse(setting[1], out value) && value)
+                            {
                                 _debugOptions |= PythonDebugOptions.RedirectOutput;
                             }
                             break;
 
                         case BreakSystemExitZero:
-                            if (Boolean.TryParse(setting[1], out value) && value) {
+                            if (Boolean.TryParse(setting[1], out value) && value)
+                            {
                                 _debugOptions |= PythonDebugOptions.BreakOnSystemExitZero;
                             }
                             break;
 
                         case DebugStdLib:
-                            if (Boolean.TryParse(setting[1], out value) && value) {
+                            if (Boolean.TryParse(setting[1], out value) && value)
+                            {
                                 _debugOptions |= PythonDebugOptions.DebugStdLib;
                             }
                             break;
 
                         case IsWindowsApplication:
-                            if (Boolean.TryParse(setting[1], out value) && value) {
+                            if (Boolean.TryParse(setting[1], out value) && value)
+                            {
                                 _debugOptions |= PythonDebugOptions.IsWindowsApplication;
                             }
                             break;
 
                         case DirMappingSetting:
                             string[] dirs = setting[1].Split('|');
-                            if (dirs.Length == 2) {
-                                if (_dirMapping == null) {
+                            if (dirs.Length == 2)
+                            {
+                                if (_dirMapping == null)
+                                {
                                     _dirMapping = new List<string[]>();
                                 }
                                 Debug.WriteLine(String.Format("Mapping dir {0} to {1}", dirs[0], dirs[1]));
@@ -853,7 +980,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                             break;
 
                         case AttachRunning:
-                            if (Boolean.TryParse(setting[1], out value) && value) {
+                            if (Boolean.TryParse(setting[1], out value) && value)
+                            {
                                 _debugOptions |= PythonDebugOptions.AttachRunning;
                             }
                             break;
@@ -863,7 +991,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                             break;
 
                         case EnableDjangoDebugging:
-                            if (Boolean.TryParse(setting[1], out value) && value) {
+                            if (Boolean.TryParse(setting[1], out value) && value)
+                            {
                                 _debugOptions |= PythonDebugOptions.DjangoDebugging;
                             }
                             break;
@@ -876,19 +1005,26 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         // else started our debugger they could choose not to provide the version.
         private const PythonLanguageVersion DefaultVersion = PythonLanguageVersion.V27;
 
-        private static PythonLanguageVersion GetLanguageVersion(string options) {
+        private static PythonLanguageVersion GetLanguageVersion(string options)
+        {
             PythonLanguageVersion langVersion;
             Version ver;
-            if (string.IsNullOrEmpty(options)) {
+            if (string.IsNullOrEmpty(options))
+            {
                 return DefaultVersion;
             }
-            if (Enum.TryParse(options, out langVersion)) {
+            if (Enum.TryParse(options, out langVersion))
+            {
                 return langVersion;
             }
-            if (Version.TryParse(options, out ver)) {
-                try {
+            if (Version.TryParse(options, out ver))
+            {
+                try
+                {
                     return ver.ToLanguageVersion();
-                } catch (InvalidOperationException) {
+                }
+                catch (InvalidOperationException)
+                {
                     // Version is not supported
                 }
             }
@@ -896,15 +1032,18 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         }
 
         // Resume a process launched by IDebugEngineLaunch2.LaunchSuspended
-        int IDebugEngineLaunch2.ResumeProcess(IDebugProcess2 process) {
-            if (_mixedMode) {
+        int IDebugEngineLaunch2.ResumeProcess(IDebugProcess2 process)
+        {
+            if (_mixedMode)
+            {
                 return VSConstants.E_NOTIMPL;
             }
 
             Debug.WriteLine("Python Debugger ResumeProcess Begin");
 
             AssertMainThread();
-            if (_events == null) {
+            if (_events == null)
+            {
                 // process failed to start
                 Debug.WriteLine("ResumeProcess fails, no events");
                 return VSConstants.E_FAIL;
@@ -916,7 +1055,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
             int processId = EngineUtils.GetProcessId(process);
 
-            if (processId != _process.Id) {
+            if (processId != _process.Id)
+            {
                 Debug.WriteLine("ResumeProcess fails, wrong process");
                 return VSConstants.S_FALSE;
             }
@@ -933,7 +1073,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
             EngineUtils.RequireOk(portNotify.AddProgramNode(new AD7ProgramNode(_process.Id)));
 
-            if (_ad7ProgramId == Guid.Empty) {
+            if (_ad7ProgramId == Guid.Empty)
+            {
                 Debug.WriteLine("ResumeProcess fails, empty program guid");
                 Debug.Fail("Unexpected problem -- IDebugEngine2.Attach wasn't called");
                 return VSConstants.E_FAIL;
@@ -945,8 +1086,10 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
         // This function is used to terminate a process that the engine launched
         // The debugger will call IDebugEngineLaunch2::CanTerminateProcess before calling this method.
-        int IDebugEngineLaunch2.TerminateProcess(IDebugProcess2 process) {
-            if (_mixedMode) {
+        int IDebugEngineLaunch2.TerminateProcess(IDebugProcess2 process)
+        {
+            if (_mixedMode)
+            {
                 return VSConstants.E_NOTIMPL;
             }
 
@@ -957,18 +1100,23 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             Debug.Assert(_process != null);
 
             int processId = EngineUtils.GetProcessId(process);
-            if (processId != _process.Id) {
+            if (processId != _process.Id)
+            {
                 return VSConstants.S_FALSE;
             }
 
             var detaching = EngineDetaching;
-            if (detaching != null) {
+            if (detaching != null)
+            {
                 detaching(this, new AD7EngineEventArgs(this));
             }
 
-            if (!_pseudoAttach) {
+            if (!_pseudoAttach)
+            {
                 _process.Terminate();
-            } else {
+            }
+            else
+            {
                 TaskHelpers.RunSynchronouslyOnUIThread(ct => _process.DetachAsync(ct));
             }
 
@@ -980,8 +1128,10 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         #region IDebugProgram2 Members
 
         // Determines if a debug engine (DE) can detach from the program.
-        public int CanDetach() {
-            if (_attached) {
+        public int CanDetach()
+        {
+            if (_attached)
+            {
                 return VSConstants.S_OK;
             }
             return VSConstants.S_FALSE;
@@ -989,8 +1139,10 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
         // The debugger calls CauseBreak when the user clicks on the pause button in VS. The debugger should respond by entering
         // breakmode. 
-        public int CauseBreak() {
-            if (_mixedMode) {
+        public int CauseBreak()
+        {
+            if (_mixedMode)
+            {
                 return VSConstants.E_NOTIMPL;
             }
 
@@ -1007,8 +1159,10 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         // and the debugger does not want to actually enter break mode.
         // It is also called to continue after load complete and autoresume after
         // entry point hit (when starting debugging with F5).
-        public int Continue(IDebugThread2 pThread) {
-            if (_mixedMode) {
+        public int Continue(IDebugThread2 pThread)
+        {
+            if (_mixedMode)
+            {
                 return VSConstants.E_NOTIMPL;
             }
 
@@ -1024,13 +1178,17 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
         // Detach is called when debugging is stopped and the process was attached to (as opposed to launched)
         // or when one of the Detach commands are executed in the UI.
-        public int Detach() {
+        public int Detach()
+        {
             Debug.WriteLine("PythonEngine Detach");
             AssertMainThread();
 
-            if (_mixedMode) {
+            if (_mixedMode)
+            {
                 Send(new AD7ProgramDestroyEvent(0), AD7ProgramDestroyEvent.IID, null);
-            } else {
+            }
+            else
+            {
                 AssertMainThread();
 
                 _breakpointManager.ClearBoundBreakpoints();
@@ -1045,8 +1203,10 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         }
 
         // Enumerates the code contexts for a given position in a source file.
-        public int EnumCodeContexts(IDebugDocumentPosition2 pDocPos, out IEnumDebugCodeContexts2 ppEnum) {
-            if (_mixedMode) {
+        public int EnumCodeContexts(IDebugDocumentPosition2 pDocPos, out IEnumDebugCodeContexts2 ppEnum)
+        {
+            if (_mixedMode)
+            {
                 ppEnum = null;
                 return VSConstants.E_NOTIMPL;
             }
@@ -1063,15 +1223,18 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
         // EnumCodePaths is used for the step-into specific feature -- right click on the current statment and decide which
         // function to step into. This is not something that we support.
-        public int EnumCodePaths(string hint, IDebugCodeContext2 start, IDebugStackFrame2 frame, int fSource, out IEnumCodePaths2 pathEnum, out IDebugCodeContext2 safetyContext) {
+        public int EnumCodePaths(string hint, IDebugCodeContext2 start, IDebugStackFrame2 frame, int fSource, out IEnumCodePaths2 pathEnum, out IDebugCodeContext2 safetyContext)
+        {
             pathEnum = null;
             safetyContext = null;
             return VSConstants.E_NOTIMPL;
         }
 
         // EnumModules is called by the debugger when it needs to enumerate the modules in the program.
-        public int EnumModules(out IEnumDebugModules2 ppEnum) {
-            if (_mixedMode) {
+        public int EnumModules(out IEnumDebugModules2 ppEnum)
+        {
+            if (_mixedMode)
+            {
                 ppEnum = null;
                 return VSConstants.E_NOTIMPL;
             }
@@ -1080,7 +1243,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
             AD7Module[] moduleObjects = new AD7Module[_modules.Count];
             int i = 0;
-            foreach (var keyValue in _modules) {
+            foreach (var keyValue in _modules)
+            {
                 var module = keyValue.Key;
                 var adModule = keyValue.Value;
 
@@ -1093,8 +1257,10 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         }
 
         // EnumThreads is called by the debugger when it needs to enumerate the threads in the program.
-        public int EnumThreads(out IEnumDebugThreads2 ppEnum) {
-            if (_mixedMode) {
+        public int EnumThreads(out IEnumDebugThreads2 ppEnum)
+        {
+            if (_mixedMode)
+            {
                 ppEnum = null;
                 return VSConstants.E_NOTIMPL;
             }
@@ -1103,7 +1269,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
             AD7Thread[] threadObjects = new AD7Thread[_threads.Count];
             int i = 0;
-            foreach (var keyValue in _threads) {
+            foreach (var keyValue in _threads)
+            {
                 var thread = keyValue.Key;
                 var adThread = keyValue.Value;
 
@@ -1121,24 +1288,28 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         // IDebugProperty2::EnumChildren method returns a list of all properties.
         // A program may expose any number and type of additional properties that can be described through the IDebugProperty2 interface. 
         // An IDE might display the additional program properties through a generic property browser user interface.
-        public int GetDebugProperty(out IDebugProperty2 ppProperty) {
+        public int GetDebugProperty(out IDebugProperty2 ppProperty)
+        {
             throw new Exception("The method or operation is not implemented.");
         }
 
         // The debugger calls this when it needs to obtain the IDebugDisassemblyStream2 for a particular code-context.
-        public int GetDisassemblyStream(enum_DISASSEMBLY_STREAM_SCOPE dwScope, IDebugCodeContext2 codeContext, out IDebugDisassemblyStream2 disassemblyStream) {
+        public int GetDisassemblyStream(enum_DISASSEMBLY_STREAM_SCOPE dwScope, IDebugCodeContext2 codeContext, out IDebugDisassemblyStream2 disassemblyStream)
+        {
             disassemblyStream = null;
             return VSConstants.E_NOTIMPL;
         }
 
         // This method gets the Edit and Continue (ENC) update for this program. A custom debug engine always returns E_NOTIMPL
-        public int GetENCUpdate(out object update) {
+        public int GetENCUpdate(out object update)
+        {
             update = null;
             return VSConstants.S_OK;
         }
 
         // Gets the name and identifier of the debug engine (DE) running this program.
-        public int GetEngineInfo(out string engineName, out Guid engineGuid) {
+        public int GetEngineInfo(out string engineName, out Guid engineGuid)
+        {
             engineName = "Python";
             engineGuid = new Guid(DebugEngineId);
             return VSConstants.S_OK;
@@ -1146,13 +1317,15 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
         // The memory bytes as represented by the IDebugMemoryBytes2 object is for the program's image in memory and not any memory 
         // that was allocated when the program was executed.
-        public int GetMemoryBytes(out IDebugMemoryBytes2 ppMemoryBytes) {
+        public int GetMemoryBytes(out IDebugMemoryBytes2 ppMemoryBytes)
+        {
             throw new Exception("The method or operation is not implemented.");
         }
 
         // Gets the name of the program.
         // The name returned by this method is always a friendly, user-displayable name that describes the program.
-        public int GetName(out string programName) {
+        public int GetName(out string programName)
+        {
             // The engine uses default transport and doesn't need to customize the name of the program,
             // so return NULL.
             programName = null;
@@ -1161,7 +1334,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
         // Gets a GUID for this program. A debug engine (DE) must return the program identifier originally passed to the IDebugProgramNodeAttach2::OnAttach
         // or IDebugEngine2::Attach methods. This allows identification of the program across debugger components.
-        public int GetProgramId(out Guid guidProgramId) {
+        public int GetProgramId(out Guid guidProgramId)
+        {
             guidProgramId = _ad7ProgramId;
             return guidProgramId == Guid.Empty ? VSConstants.E_FAIL : VSConstants.S_OK;
         }
@@ -1173,13 +1347,16 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         /// 
         /// In case there is any thread synchronization or communication between threads, other threads in the program should run when a particular thread is stepping.
         /// </summary>
-        public int Step(IDebugThread2 pThread, enum_STEPKIND sk, enum_STEPUNIT Step) {
-            if (_mixedMode) {
+        public int Step(IDebugThread2 pThread, enum_STEPKIND sk, enum_STEPUNIT Step)
+        {
+            if (_mixedMode)
+            {
                 return VSConstants.E_NOTIMPL;
             }
 
             var thread = ((AD7Thread)pThread).GetDebuggedThread();
-            switch (sk) {
+            switch (sk)
+            {
                 case enum_STEPKIND.STEP_INTO:
                     TaskHelpers.RunSynchronouslyOnUIThread(ct => thread.StepIntoAsync(ct));
                     break;
@@ -1194,7 +1371,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         }
 
         // Terminates the program.
-        public int Terminate() {
+        public int Terminate()
+        {
             Debug.WriteLine("PythonEngine Terminate");
             // Because we implement IDebugEngineLaunch2 we will terminate
             // the process in IDebugEngineLaunch2.TerminateProcess
@@ -1202,7 +1380,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         }
 
         // Writes a dump to a file.
-        public int WriteDump(enum_DUMPTYPE DUMPTYPE, string pszDumpUrl) {
+        public int WriteDump(enum_DUMPTYPE DUMPTYPE, string pszDumpUrl)
+        {
             return VSConstants.E_NOTIMPL;
         }
 
@@ -1213,8 +1392,10 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         // ExecuteOnThread is called when the SDM wants execution to continue and have 
         // stepping state cleared.  See http://msdn.microsoft.com/en-us/library/bb145596.aspx for a
         // description of different ways we can resume.
-        public int ExecuteOnThread(IDebugThread2 pThread) {
-            if (_mixedMode) {
+        public int ExecuteOnThread(IDebugThread2 pThread)
+        {
+            if (_mixedMode)
+            {
                 return VSConstants.E_NOTIMPL;
             }
 
@@ -1223,7 +1404,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             // clear stepping state on the thread the user was currently on
             AD7Thread thread = (AD7Thread)pThread;
 
-            TaskHelpers.RunSynchronouslyOnUIThread(async ct => {
+            TaskHelpers.RunSynchronouslyOnUIThread(async ct =>
+            {
                 await thread.GetDebuggedThread().ClearSteppingStateAsync(ct);
                 await _process.ResumeAsync(ct);
             });
@@ -1235,7 +1417,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
         #region IDebugSymbolSettings100 members
 
-        public int SetSymbolLoadState(int bIsManual, int bLoadAdjacent, string strIncludeList, string strExcludeList) {
+        public int SetSymbolLoadState(int bIsManual, int bLoadAdjacent, string strIncludeList, string strExcludeList)
+        {
             // The SDM will call this method on the debug engine when it is created, to notify it of the user's
             // symbol settings in Tools->Options->Debugging->Symbols.
             //
@@ -1253,27 +1436,31 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         #region Deprecated interface methods
         // These methods are not called by the Visual Studio debugger, so they don't need to be implemented
 
-        int IDebugEngine2.EnumPrograms(out IEnumDebugPrograms2 programs) {
+        int IDebugEngine2.EnumPrograms(out IEnumDebugPrograms2 programs)
+        {
             Debug.Fail("This function is not called by the debugger");
 
             programs = null;
             return VSConstants.E_NOTIMPL;
         }
 
-        public int Attach(IDebugEventCallback2 pCallback) {
+        public int Attach(IDebugEventCallback2 pCallback)
+        {
             Debug.Fail("This function is not called by the debugger");
 
             return VSConstants.E_NOTIMPL;
         }
 
-        public int GetProcess(out IDebugProcess2 process) {
+        public int GetProcess(out IDebugProcess2 process)
+        {
             Debug.Fail("This function is not called by the debugger");
 
             process = null;
             return VSConstants.E_NOTIMPL;
         }
 
-        public int Execute() {
+        public int Execute()
+        {
             Debug.Fail("This function is not called by the debugger.");
             return VSConstants.E_NOTIMPL;
         }
@@ -1282,32 +1469,39 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
         #region Events
 
-        internal void Send(IDebugEvent2 eventObject, string iidEvent, IDebugProgram2 program, IDebugThread2 thread) {
+        internal void Send(IDebugEvent2 eventObject, string iidEvent, IDebugProgram2 program, IDebugThread2 thread)
+        {
             uint attributes;
             Guid riidEvent = new Guid(iidEvent);
 
             EngineUtils.RequireOk(eventObject.GetAttributes(out attributes));
 
             var events = _events;
-            if (events == null) {
+            if (events == null)
+            {
                 // Probably racing with the end of the process.
                 Debug.Fail("_events is null");
                 return;
             }
 
             Debug.WriteLine(String.Format("Sending Event: {0} {1}", eventObject.GetType(), iidEvent));
-            try {
+            try
+            {
                 EngineUtils.RequireOk(events.Event(this, null, program, thread, eventObject, ref riidEvent, attributes));
-            } catch (InvalidCastException) {
+            }
+            catch (InvalidCastException)
+            {
                 // COM object has gone away
             }
         }
 
-        internal void Send(IDebugEvent2 eventObject, string iidEvent, IDebugThread2 thread) {
+        internal void Send(IDebugEvent2 eventObject, string iidEvent, IDebugThread2 thread)
+        {
             Send(eventObject, iidEvent, this, thread);
         }
 
-        private void AttachEvents(PythonProcess process) {
+        private void AttachEvents(PythonProcess process)
+        {
             process.Connected += OnConnected;
             process.ProcessLoaded += OnProcessLoaded;
             process.ModuleLoaded += OnModuleLoaded;
@@ -1328,7 +1522,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             TaskHelpers.RunSynchronouslyOnUIThread(ct => process.StartListeningAsync());
         }
 
-        private void OnThreadExited(object sender, ThreadEventArgs e) {
+        private void OnThreadExited(object sender, ThreadEventArgs e)
+        {
             // TODO: Thread exit code
             var oldThread = _threads[e.Thread];
             _threads.Remove(e.Thread);
@@ -1337,45 +1532,62 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             Send(new AD7ThreadDestroyEvent(0), AD7ThreadDestroyEvent.IID, oldThread);
         }
 
-        private void OnThreadCreated(object sender, ThreadEventArgs e) {
+        private void OnThreadCreated(object sender, ThreadEventArgs e)
+        {
             Debug.WriteLine("Thread created:  " + e.Thread.Id);
             var newThread = new AD7Thread(this, e.Thread);
             _threads.Add(e.Thread, newThread);
 
-            lock (_syncLock) {
-                if (_programCreated) {
+            lock (_syncLock)
+            {
+                if (_programCreated)
+                {
                     SendThreadStart(newThread);
-                } else {
+                }
+                else
+                {
                     _startThread = newThread;
                 }
             }
         }
 
-        private void OnStepComplete(object sender, ThreadEventArgs e) {
+        private void OnStepComplete(object sender, ThreadEventArgs e)
+        {
             Send(new AD7SteppingCompleteEvent(), AD7SteppingCompleteEvent.IID, _threads[e.Thread]);
         }
 
-        private void OnConnected(object sender, EventArgs e) {
-            lock (_syncLock) {
-                if (_engineCreated) {
+        private void OnConnected(object sender, EventArgs e)
+        {
+            lock (_syncLock)
+            {
+                if (_engineCreated)
+                {
                     SendProgramCreate();
-                } else {
+                }
+                else
+                {
                     Debug.WriteLine("Delaying program create " + GetHashCode());
                     _isProgramCreateDelayed = true;
                 }
             }
         }
 
-        private void OnProcessLoaded(object sender, ThreadEventArgs e) {
-            lock (_syncLock) {
-                if (_pseudoAttach) {
+        private void OnProcessLoaded(object sender, ThreadEventArgs e)
+        {
+            lock (_syncLock)
+            {
+                if (_pseudoAttach)
+                {
                     _process.Unregister();
                 }
 
-                if (_programCreated) {
+                if (_programCreated)
+                {
                     // we've delviered the program created event, deliver the load complete event
                     SendLoadComplete(_threads[e.Thread]);
-                } else {
+                }
+                else
+                {
                     Debug.WriteLine("Delaying load complete " + GetHashCode() + " on thread " + _threads[e.Thread].GetDebuggedThread().Id);
                     // we haven't delivered the program created event, wait until we do to deliver the process loaded event.
                     _processLoadedThread = _threads[e.Thread];
@@ -1383,29 +1595,40 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             }
         }
 
-        private void OnProcessExited(object sender, ProcessExitedEventArgs e) {
-            try {
+        private void OnProcessExited(object sender, ProcessExitedEventArgs e)
+        {
+            try
+            {
                 Send(new AD7ProgramDestroyEvent((uint)e.ExitCode), AD7ProgramDestroyEvent.IID, null);
-            } catch (InvalidOperationException) {
+            }
+            catch (InvalidOperationException)
+            {
                 // we can race at shutdown and deliver the event after the debugger is shutting down.
             }
         }
 
-        private void OnModuleLoaded(object sender, ModuleLoadedEventArgs e) {
-            lock (_syncLock) {
+        private void OnModuleLoaded(object sender, ModuleLoadedEventArgs e)
+        {
+            lock (_syncLock)
+            {
                 var adModule = _modules[e.Module] = new AD7Module(e.Module);
-                if (_programCreated) {
+                if (_programCreated)
+                {
                     SendModuleLoaded(adModule);
-                } else {
+                }
+                else
+                {
                     _startModule = adModule;
                 }
             }
         }
 
-        private void OnExceptionRaised(object sender, ExceptionRaisedEventArgs e) {
+        private void OnExceptionRaised(object sender, ExceptionRaisedEventArgs e)
+        {
             // Exception events are sent when an exception occurs in the debuggee that the debugger was not expecting.
             AD7Thread thread;
-            if (_threads.TryGetValue(e.Thread, out thread)) {
+            if (_threads.TryGetValue(e.Thread, out thread))
+            {
                 Send(
                     new AD7DebugExceptionEvent(this, e.Exception),
                     AD7DebugExceptionEvent.IID,
@@ -1414,7 +1637,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             }
         }
 
-        private void OnBreakpointHit(object sender, BreakpointHitEventArgs e) {
+        private void OnBreakpointHit(object sender, BreakpointHitEventArgs e)
+        {
             var boundBreakpoints = new[] { _breakpointManager.GetBreakpoint(e.Breakpoint) };
 
             // An engine that supports more advanced breakpoint features such as hit counts, conditions and filters
@@ -1423,11 +1647,13 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             Send(new AD7BreakpointEvent(new AD7BoundBreakpointsEnum(boundBreakpoints)), AD7BreakpointEvent.IID, _threads[e.Thread]);
         }
 
-        private void OnEntryPointHit(object sender, ThreadEventArgs e) {
+        private void OnEntryPointHit(object sender, ThreadEventArgs e)
+        {
             Send(new AD7EntryPointEvent(), AD7EntryPointEvent.IID, _threads[e.Thread]);
         }
 
-        private void OnBreakpointBindSucceeded(object sender, BreakpointEventArgs e) {
+        private void OnBreakpointBindSucceeded(object sender, BreakpointEventArgs e)
+        {
             IDebugPendingBreakpoint2 pendingBreakpoint;
             var boundBreakpoint = _breakpointManager.GetBreakpoint(e.Breakpoint);
             ((IDebugBoundBreakpoint2)boundBreakpoint).GetPendingBreakpoint(out pendingBreakpoint);
@@ -1439,23 +1665,29 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             );
         }
 
-        private void OnBreakpointBindFailed(object sender, BreakpointEventArgs e) {
+        private void OnBreakpointBindFailed(object sender, BreakpointEventArgs e)
+        {
         }
 
-        private void OnAsyncBreakComplete(object sender, ThreadEventArgs e) {
+        private void OnAsyncBreakComplete(object sender, ThreadEventArgs e)
+        {
             AD7Thread thread;
-            if (!_threads.TryGetValue(e.Thread, out thread)) {
+            if (!_threads.TryGetValue(e.Thread, out thread))
+            {
                 _threads[e.Thread] = thread = new AD7Thread(this, e.Thread);
             }
             Send(new AD7AsyncBreakCompleteEvent(), AD7AsyncBreakCompleteEvent.IID, thread);
         }
 
-        private void OnDebuggerOutput(object sender, OutputEventArgs e) {
+        private void OnDebuggerOutput(object sender, OutputEventArgs e)
+        {
             // Output from debug REPL code execution may be run on debugger
             // event handling thread, and e.Thread will be null.
             AD7Thread thread = null;
-            if (e.Thread != null) {
-                if (!_threads.TryGetValue(e.Thread, out thread)) {
+            if (e.Thread != null)
+            {
+                if (!_threads.TryGetValue(e.Thread, out thread))
+                {
                     _threads[e.Thread] = thread = new AD7Thread(this, e.Thread);
                 }
             }
@@ -1472,27 +1704,33 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         /// 
         /// New in 1.5.
         /// </summary>
-        internal static IDebugDocumentContext2 GetCodeMappingDocument(int processId, int threadId, int frame) {
-            if (frame < 0) {
+        internal static IDebugDocumentContext2 GetCodeMappingDocument(int processId, int threadId, int frame)
+        {
+            if (frame < 0)
+            {
                 return null;
             }
 
             var engine = _engines.Select(e => e.Target as AD7Engine).FirstOrDefault(e => e?._process?.Id == processId);
-            if (engine == null) {
+            if (engine == null)
+            {
                 return null;
             }
 
             var thread = engine._threads.Keys.FirstOrDefault(t => t.Id == threadId);
-            if (thread == null) {
+            if (thread == null)
+            {
                 return null;
             }
 
             var curFrame = thread.Frames.ElementAtOrDefault(frame);
-            if (curFrame == null) {
+            if (curFrame == null)
+            {
                 return null;
             }
 
-            if (curFrame.Kind == FrameKind.Django) {
+            if (curFrame.Kind == FrameKind.Django)
+            {
                 var djangoFrame = (DjangoStackFrame)curFrame;
 
                 return new AD7DocumentContext(djangoFrame.SourceFile,
@@ -1506,25 +1744,35 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             return null;
         }
 
-        internal Task RefreshThreadFrames(long threadId, CancellationToken ct) {
+        internal Task RefreshThreadFrames(long threadId, CancellationToken ct)
+        {
             return _process.RefreshThreadFramesAsync(threadId, ct);
         }
 
-        internal static AD7Engine GetEngineForProcess(EnvDTE.Process process) {
+        internal static AD7Engine GetEngineForProcess(EnvDTE.Process process)
+        {
             EnvDTE80.Process2 process2 = (EnvDTE80.Process2)process;
-            foreach (var engine in AD7Engine._engines) {
+            foreach (var engine in AD7Engine._engines)
+            {
                 AD7Engine target = (AD7Engine)engine.Target;
-                if (target != null) {
+                if (target != null)
+                {
                     var pythonProcess = target.Process as PythonRemoteProcess;
-                    if (pythonProcess != null) {
-                        if (process2.Transport.ID == PythonRemoteDebugPortSupplier.PortSupplierId) {
+                    if (pythonProcess != null)
+                    {
+                        if (process2.Transport.ID == PythonRemoteDebugPortSupplier.PortSupplierId)
+                        {
                             Uri transportUri;
-                            if (Uri.TryCreate(process2.TransportQualifier, UriKind.RelativeOrAbsolute, out transportUri) && (pythonProcess.Uri == transportUri)) {
+                            if (Uri.TryCreate(process2.TransportQualifier, UriKind.RelativeOrAbsolute, out transportUri) && (pythonProcess.Uri == transportUri))
+                            {
                                 return target;
                             }
                         }
-                    } else if (target.Process != null) {
-                        if ((target.Process.Id == process.ProcessID) && (Guid.Parse(process2.Transport.ID) == DebuggerConstants.guidLocalPortSupplier)) {
+                    }
+                    else if (target.Process != null)
+                    {
+                        if ((target.Process.Id == process.ProcessID) && (Guid.Parse(process2.Transport.ID) == DebuggerConstants.guidLocalPortSupplier))
+                        {
                             return target;
                         }
                     }

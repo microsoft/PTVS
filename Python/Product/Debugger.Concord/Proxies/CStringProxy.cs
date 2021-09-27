@@ -14,35 +14,36 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Diagnostics;
-using System.Text;
-using Microsoft.PythonTools.Parsing;
-
-namespace Microsoft.PythonTools.Debugger.Concord.Proxies {
+namespace Microsoft.PythonTools.Debugger.Concord.Proxies
+{
     /// <summary>
     /// A data proxy for a C-style null-terminated string.
     /// </summary>
     [DebuggerDisplay("& {Read()}")]
-    internal struct CStringProxy : IDataProxy {
+    internal struct CStringProxy : IDataProxy
+    {
         private static readonly Encoding _latin1 = Encoding.GetEncoding(28591);
 
         public DkmProcess Process { get; private set; }
         public ulong Address { get; private set; }
 
         public CStringProxy(DkmProcess process, ulong address)
-            : this() {
+            : this()
+        {
             Debug.Assert(process != null && address != 0);
             Process = process;
             Address = address;
         }
 
-        public long ObjectSize {
+        public long ObjectSize
+        {
             get { return ReadBytes().Length; }
         }
 
-        private Encoding Encoding {
-            get {
+        private Encoding Encoding
+        {
+            get
+            {
                 // Python 3.x consistently treats char* strings (T_STRING, tp_name etc) as UTF-8, so that's what we do here as well.
                 //
                 // In Python 2.x, the story is complicated, since char* is just mapped to non-Unicode Python strings, without any
@@ -62,26 +63,31 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies {
             }
         }
 
-        public unsafe byte[] ReadBytes() {
+        public unsafe byte[] ReadBytes()
+        {
             byte[] buf = Process.ReadMemoryString(Address, DkmReadMemoryFlags.None, 1, 0x10000);
-            if (buf.Length > 0 && buf[buf.Length - 1] == 0) {
+            if (buf.Length > 0 && buf[buf.Length - 1] == 0)
+            {
                 Array.Resize(ref buf, buf.Length - 1);
             }
             return buf;
         }
 
-        public string ReadUnicode() {
+        public string ReadUnicode()
+        {
             byte[] bytes = ReadBytes();
             return Encoding.GetString(bytes);
         }
 
-        public AsciiString ReadAscii() {
+        public AsciiString ReadAscii()
+        {
             byte[] bytes = ReadBytes();
             string s = Encoding.GetString(bytes);
             return new AsciiString(bytes, s);
         }
 
-        object IValueStore.Read() {
+        object IValueStore.Read()
+        {
             return ReadUnicode();
         }
     }

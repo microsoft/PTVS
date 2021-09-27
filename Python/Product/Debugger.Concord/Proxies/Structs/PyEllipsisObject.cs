@@ -14,15 +14,19 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
+namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
+{
     [StructProxy(StructName = "PyObject")]
-    internal class PyEllipsisObject : PyObject {
+    internal class PyEllipsisObject : PyObject
+    {
         public PyEllipsisObject(DkmProcess process, ulong address)
-            : base(process, address) {
+            : base(process, address)
+        {
             CheckPyType<PyEllipsisObject>();
         }
 
-        public override void Repr(ReprBuilder builder) {
+        public override void Repr(ReprBuilder builder)
+        {
             builder.Append("...");
         }
     }

@@ -13,15 +13,19 @@
 //
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
-using Microsoft.VisualStudio.Shell;
 
-namespace Microsoft.PythonTools.Debugger {
-    internal static class PythonDebugOptionsServiceHelper {
+namespace Microsoft.PythonTools.Debugger
+{
+    internal static class PythonDebugOptionsServiceHelper
+    {
         private static IPythonDebugOptionsService _pythonDebugOptions;
 
-        public static IPythonDebugOptionsService Options {
-            get {
-                if (_pythonDebugOptions == null) {
+        public static IPythonDebugOptionsService Options
+        {
+            get
+            {
+                if (_pythonDebugOptions == null)
+                {
                     var shell = (IVsShell)Package.GetGlobalService(typeof(SVsShell));
                     var ptvsPackage = Guids.PythonToolsPackageGUID;
                     shell.LoadPackage(ref ptvsPackage, out _);

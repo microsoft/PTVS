@@ -15,23 +15,14 @@
 // permissions and limitations under the License.
 
 extern alias pt;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using Microsoft.PythonTools;
-using Microsoft.PythonTools.TestAdapter.Pytest;
-using Microsoft.PythonTools.TestAdapter.UnitTest;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestAdapterTests.Mocks;
-using TestUtilities;
 using PythonConstants = pt::Microsoft.PythonTools.PythonConstants;
 
-namespace TestAdapterTests {
+namespace TestAdapterTests
+{
     [TestClass, Ignore]
-    public abstract partial class TestDiscovererTests {
+    public abstract partial class TestDiscovererTests
+    {
         private const string FrameworkPytest = "Pytest";
         private const string FrameworkUnittest = "Unittest";
 
@@ -40,21 +31,25 @@ namespace TestAdapterTests {
         protected virtual string ImportErrorFormat => "ModuleNotFoundError: No module named '{0}'";
 
         [ClassCleanup]
-        public static void ClassCleanup() {
+        public static void ClassCleanup()
+        {
             TestEnvironment.Clear();
         }
 
 
         [TestInitialize]
-        public void CheckVersion() {
-            if (Version == null) {
+        public void CheckVersion()
+        {
+            if (Version == null)
+            {
                 Assert.Inconclusive("Required version of Python is not installed");
             }
         }
 
         [TestMethod, Priority(UnitTestPriority.P0)]
         [TestCategory("10s")]
-        public void DiscoverPytest() {
+        public void DiscoverPytest()
+        {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
 
             var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_pt.py");
@@ -77,7 +72,8 @@ namespace TestAdapterTests {
 
         [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
-        public void DiscoverPytestUppercaseFileName() {
+        public void DiscoverPytestUppercaseFileName()
+        {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
 
             var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_Uppercase.py");
@@ -98,7 +94,8 @@ namespace TestAdapterTests {
 
         [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
-        public void DiscoverPytestTimeoutError() {
+        public void DiscoverPytestTimeoutError()
+        {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
 
             var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_timeout_pt.py");
@@ -128,7 +125,8 @@ namespace TestAdapterTests {
 
         [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
-        public void DiscoverPytestSearchPath() {
+        public void DiscoverPytestSearchPath()
+        {
             // test_search_path.py has an import at global scope that requires search path to resolve
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
 
@@ -157,7 +155,8 @@ namespace TestAdapterTests {
 
         [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
-        public void DiscoverPytestSyntaxErrorPartialResults() {
+        public void DiscoverPytestSyntaxErrorPartialResults()
+        {
             // one file has a valid passing test,
             // the other has a test with a syntax error in it
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
@@ -183,7 +182,8 @@ namespace TestAdapterTests {
 
         [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
-        public void DiscoverPytestSyntaxErrorLogErrors() {
+        public void DiscoverPytestSyntaxErrorLogErrors()
+        {
             // one file has a valid passing test,
             // the other has a test with a syntax error in it
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
@@ -220,7 +220,8 @@ namespace TestAdapterTests {
 
         [TestMethod, Priority(UnitTestPriority.P0)]
         [TestCategory("10s")]
-        public void DiscoverPytestImportError() {
+        public void DiscoverPytestImportError()
+        {
             // one file has a valid passing test,
             // the other has an unknown module import at global scope
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
@@ -246,7 +247,8 @@ namespace TestAdapterTests {
 
         [TestMethod, Priority(UnitTestPriority.P0)]
         [TestCategory("10s")]
-        public void DiscoverUnitTestImportError() {
+        public void DiscoverUnitTestImportError()
+        {
             // one file has a valid passing test,
             // the other has an unknown module import at global scope
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
@@ -272,7 +274,8 @@ namespace TestAdapterTests {
 
         [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
-        public void DiscoverUnitTestSyntaxErrorPartialResults() {
+        public void DiscoverUnitTestSyntaxErrorPartialResults()
+        {
             // one file has a valid passing test,
             // the other has an unknown module import at global scope
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
@@ -307,7 +310,8 @@ namespace TestAdapterTests {
 
         [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
-        public void DiscoverUnitTestSyntaxErrorLogErrors() {
+        public void DiscoverUnitTestSyntaxErrorLogErrors()
+        {
             // one file has a valid passing test,
             // the other has an unknown module import at global scope
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
@@ -338,11 +342,14 @@ namespace TestAdapterTests {
 
             var errors = string.Join(Environment.NewLine, logger.GetErrors());
 
-            if (Version.Version > Microsoft.PythonTools.Parsing.PythonLanguageVersion.V27) {
+            if (Version.Version > Microsoft.PythonTools.Parsing.PythonLanguageVersion.V27)
+            {
                 AssertUtil.Contains(errors,
                     "SyntaxError: invalid syntax"
                 );
-            } else {
+            }
+            else
+            {
                 Assert.Inconclusive("Python 2.7 unittest errors are not currently being printed to error logs");
             }
         }
@@ -350,7 +357,8 @@ namespace TestAdapterTests {
 
         [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
-        public void DiscoverPytestConfigPythonFiles() {
+        public void DiscoverPytestConfigPythonFiles()
+        {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
 
             FileUtils.CopyDirectory(TestData.GetPath("TestData", "TestDiscoverer", "ConfigPythonFiles"), testEnv.SourceFolderPath);
@@ -379,7 +387,8 @@ namespace TestAdapterTests {
 
         [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
-        public void DiscoverPytestConfigPythonFunctions() {
+        public void DiscoverPytestConfigPythonFunctions()
+        {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
 
             FileUtils.CopyDirectory(TestData.GetPath("TestData", "TestDiscoverer", "ConfigPythonFunctions"), testEnv.SourceFolderPath);
@@ -404,7 +413,8 @@ namespace TestAdapterTests {
 
         [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
-        public void DiscoverPytestNotInstalled() {
+        public void DiscoverPytestNotInstalled()
+        {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest, installFramework: false);
 
             var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_pt.py");
@@ -430,7 +440,8 @@ namespace TestAdapterTests {
 
         [TestMethod, Priority(UnitTestPriority.P0)]
         [TestCategory("10s")]
-        public void DiscoverUnittest() {
+        public void DiscoverUnittest()
+        {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
 
             var testFile1Path = Path.Combine(testEnv.SourceFolderPath, "test_ut.py");
@@ -456,7 +467,8 @@ namespace TestAdapterTests {
 
         [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
-        public void DiscoverUnittestConfiguration() {
+        public void DiscoverUnittestConfiguration()
+        {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
 
             FileUtils.CopyDirectory(TestData.GetPath("TestData", "TestDiscoverer", "ConfigUnittest"), testEnv.SourceFolderPath);
@@ -484,7 +496,8 @@ namespace TestAdapterTests {
 
         [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
-        public void DiscoverUnittestUppercaseFileName() {
+        public void DiscoverUnittestUppercaseFileName()
+        {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
 
             var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_Uppercase.py");
@@ -506,7 +519,8 @@ namespace TestAdapterTests {
 
         [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
-        public void DiscoverUnittestTimeoutError() {
+        public void DiscoverUnittestTimeoutError()
+        {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
 
             var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_ut.py");
@@ -537,7 +551,8 @@ namespace TestAdapterTests {
 
         [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
-        public void DiscoverUnittestDecoratorsIgnoreLineNumbers() {
+        public void DiscoverUnittestDecoratorsIgnoreLineNumbers()
+        {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
 
             var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_decorators_ut.py");
@@ -561,7 +576,8 @@ namespace TestAdapterTests {
         [Ignore] //until we fix https://github.com/microsoft/PTVS/issues/5497
         [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
-        public void DiscoverUnittestDecoratorsCorrectLineNumbers() {
+        public void DiscoverUnittestDecoratorsCorrectLineNumbers()
+        {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
 
             var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_decorators_ut.py");
@@ -584,7 +600,8 @@ namespace TestAdapterTests {
 
         [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
-        public void DiscoverUnittestRelativeImport() {
+        public void DiscoverUnittestRelativeImport()
+        {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
 
             FileUtils.CopyDirectory(TestData.GetPath("TestData", "TestDiscoverer", "RelativeImport"), testEnv.SourceFolderPath);
@@ -611,7 +628,8 @@ namespace TestAdapterTests {
 
         [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
-        public void DiscoverUnittestInheritance() {
+        public void DiscoverUnittestInheritance()
+        {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
 
             FileUtils.CopyDirectory(TestData.GetPath("TestData", "TestDiscoverer", "Inheritance"), testEnv.SourceFolderPath);
@@ -641,7 +659,8 @@ namespace TestAdapterTests {
 
         [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
-        public void DiscoverUnitTestWarnings() {
+        public void DiscoverUnitTestWarnings()
+        {
             // one file has a valid passing test,
             // the other has an unknown module import at global scope
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
@@ -664,7 +683,8 @@ namespace TestAdapterTests {
 
         [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
-        public void DiscoverPytestWarnings() {
+        public void DiscoverPytestWarnings()
+        {
             // one file has a valid passing test,
             // the other has an unknown module import at global scope
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
@@ -686,13 +706,15 @@ namespace TestAdapterTests {
         }
 
 
-        private static void DiscoverTests(TestEnvironment testEnv, string[] sources, MockRunSettings runSettings, TestInfo[] expectedTests) {
+        private static void DiscoverTests(TestEnvironment testEnv, string[] sources, MockRunSettings runSettings, TestInfo[] expectedTests)
+        {
             var discoveryContext = new MockDiscoveryContext(runSettings);
             var discoverySink = new MockTestCaseDiscoverySink();
             var logger = new MockMessageLogger();
 
             ITestDiscoverer discoverer = null;
-            switch (testEnv.TestFramework) {
+            switch (testEnv.TestFramework)
+            {
                 case FrameworkPytest:
                     discoverer = new PytestTestDiscoverer();
                     break;
@@ -710,15 +732,18 @@ namespace TestAdapterTests {
             ValidateDiscoveredTests(testEnv.TestFramework, discoverySink.Tests, expectedTests);
         }
 
-        private static void ValidateDiscoveredTests(string testFramework, IList<TestCase> actualTests, TestInfo[] expectedTests) {
+        private static void ValidateDiscoveredTests(string testFramework, IList<TestCase> actualTests, TestInfo[] expectedTests)
+        {
             PrintTestCases(actualTests);
 
             Assert.AreEqual(expectedTests.Length, actualTests.Count);
 
-            foreach (var expectedTest in expectedTests) {
+            foreach (var expectedTest in expectedTests)
+            {
                 var actualTestCase = actualTests.SingleOrDefault(tc => tc.FullyQualifiedName == expectedTest.FullyQualifiedName);
                 Assert.IsNotNull(actualTestCase, expectedTest.FullyQualifiedName);
-                switch (testFramework) {
+                switch (testFramework)
+                {
                     case FrameworkPytest:
                         Assert.AreEqual(new Uri(PythonConstants.PytestExecutorUriString), actualTestCase.ExecutorUri);
                         break;
@@ -731,20 +756,24 @@ namespace TestAdapterTests {
                 }
                 Assert.AreEqual(expectedTest.DisplayName, actualTestCase.DisplayName, expectedTest.FullyQualifiedName);
                 Assert.IsTrue(IsSameFile(expectedTest.FilePath, actualTestCase.CodeFilePath), expectedTest.FullyQualifiedName);
-                if (expectedTest.LineNumber > 0) {
+                if (expectedTest.LineNumber > 0)
+                {
                     Assert.AreEqual(expectedTest.LineNumber, actualTestCase.LineNumber, expectedTest.FullyQualifiedName);
                 }
             }
         }
 
-        private static bool IsSameFile(string a, string b) {
+        private static bool IsSameFile(string a, string b)
+        {
             return String.Compare(new FileInfo(a).FullName, new FileInfo(b).FullName, StringComparison.CurrentCultureIgnoreCase) == 0;
         }
 
-        private static void PrintTestCases(IEnumerable<TestCase> testCases) {
+        private static void PrintTestCases(IEnumerable<TestCase> testCases)
+        {
             Console.WriteLine("Discovered test cases:");
             Console.WriteLine("----------------------");
-            foreach (var tst in testCases) {
+            foreach (var tst in testCases)
+            {
                 Console.WriteLine($"FullyQualifiedName: {tst.FullyQualifiedName}");
                 Console.WriteLine($"Source: {tst.Source}");
                 Console.WriteLine($"Display: {tst.DisplayName}");
@@ -757,9 +786,11 @@ namespace TestAdapterTests {
     }
 
     [TestClass]
-    public class TestDiscovererTests27 : TestDiscovererTests {
+    public class TestDiscovererTests27 : TestDiscovererTests
+    {
         [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
+        public static void DoDeployment(TestContext context)
+        {
             AssertListener.Initialize();
         }
 
@@ -769,9 +800,11 @@ namespace TestAdapterTests {
     }
 
     [TestClass]
-    public class TestDiscovererTests35 : TestDiscovererTests {
+    public class TestDiscovererTests35 : TestDiscovererTests
+    {
         [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
+        public static void DoDeployment(TestContext context)
+        {
             AssertListener.Initialize();
         }
 
@@ -781,9 +814,11 @@ namespace TestAdapterTests {
     }
 
     [TestClass]
-    public class TestDiscovererTests37 : TestDiscovererTests {
+    public class TestDiscovererTests37 : TestDiscovererTests
+    {
         [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
+        public static void DoDeployment(TestContext context)
+        {
             AssertListener.Initialize();
         }
 

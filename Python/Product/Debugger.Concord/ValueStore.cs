@@ -14,12 +14,14 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Debugger.Concord {
+namespace Microsoft.PythonTools.Debugger.Concord
+{
 
     /// <summary>
     ///  Represents a stored value, with a potentially non-imdepotent (if the backing store changes) and potentially expensive retrieval operation.
     /// </summary>
-    internal interface IValueStore {
+    internal interface IValueStore
+    {
         /// <summary>
         /// Read the stored value.
         /// </summary>
@@ -32,25 +34,30 @@ namespace Microsoft.PythonTools.Debugger.Concord {
     /// <summary>
     /// Represents a stored typed value.
     /// </summary>
-    internal interface IValueStore<out T> : IValueStore {
+    internal interface IValueStore<out T> : IValueStore
+    {
         new T Read();
     }
 
     /// <summary>
     /// A simple implementation of <see cref="IValueStore"/> which simply wraps the provided value.
     /// </summary>
-    internal class ValueStore<T> : IValueStore<T> {
+    internal class ValueStore<T> : IValueStore<T>
+    {
         private readonly T _value;
 
-        public ValueStore(T value) {
+        public ValueStore(T value)
+        {
             _value = value;
         }
 
-        public T Read() {
+        public T Read()
+        {
             return _value;
         }
 
-        object IValueStore.Read() {
+        object IValueStore.Read()
+        {
             return Read();
         }
     }

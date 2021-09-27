@@ -14,12 +14,11 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using TestRunnerInterop;
-
-namespace PythonToolsUITestsRunner {
+namespace PythonToolsUITestsRunner
+{
     [TestClass]
-    public class EditorTests {
+    public class EditorTests
+    {
         #region UI test boilerplate
         public VsTestInvoker _vs => new VsTestInvoker(
             VsTestContext.Instance,
@@ -41,43 +40,50 @@ namespace PythonToolsUITestsRunner {
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void AutomaticBraceCompletion() {
+        public void AutomaticBraceCompletion()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.EditorTests.AutomaticBraceCompletion));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void UnregisteredFileExtensionEditor() {
+        public void UnregisteredFileExtensionEditor()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.EditorTests.UnregisteredFileExtensionEditor));
         }
 
         [TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
-        public void OutliningTest() {
+        public void OutliningTest()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.EditorTests.OutliningTest));
         }
 
         [TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
-        public void OutlineNestedFuncDef() {
+        public void OutlineNestedFuncDef()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.EditorTests.OutlineNestedFuncDef));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void OutliningBadForStatement() {
+        public void OutliningBadForStatement()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.EditorTests.OutliningBadForStatement));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void ClassificationTest() {
+        public void ClassificationTest()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.EditorTests.ClassificationTest));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void ClassificationMultiLineStringTest() {
+        public void ClassificationMultiLineStringTest()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.EditorTests.ClassificationMultiLineStringTest));
         }
 
@@ -86,103 +92,120 @@ namespace PythonToolsUITestsRunner {
         /// </summary>
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void ClassificationMultiLineStringTest2() {
+        public void ClassificationMultiLineStringTest2()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.EditorTests.ClassificationMultiLineStringTest2));
         }
 
         [TestMethod, Priority(UITestPriority.P2_FAILING_UI_TEST)]
         [TestCategory("Installed")]
-        public void SignaturesTest() {
+        public void SignaturesTest()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.EditorTests.SignaturesTest));
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void MultiLineSignaturesTest() {
+        public void MultiLineSignaturesTest()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.EditorTests.MultiLineSignaturesTest));
         }
 
         [TestMethod, Priority(UITestPriority.P2_FAILING_UI_TEST)]
         [TestCategory("Installed")]
-        public void CompletionsCaseSensitive() {
+        public void CompletionsCaseSensitive()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.EditorTests.CompletionsCaseSensitive));
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void AutoIndent() {
+        public void AutoIndent()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.EditorTests.AutoIndent));
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void AutoIndentExisting() {
+        public void AutoIndentExisting()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.EditorTests.AutoIndentExisting));
         }
 
         [TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
-        public void TypingTest() {
+        public void TypingTest()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.EditorTests.TypingTest));
         }
 
         [TestMethod, Priority(UITestPriority.P2_FAILING_UI_TEST)]
         [TestCategory("Installed")]
-        public void CompletionTests() {
+        public void CompletionTests()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.EditorTests.CompletionTests));
         }
 
         [TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
-        public void OpenInvalidUnicodeFile() {
+        public void OpenInvalidUnicodeFile()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.EditorTests.OpenInvalidUnicodeFile));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void IndentationInconsistencyWarning() {
+        public void IndentationInconsistencyWarning()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.EditorTests.IndentationInconsistencyWarning));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void IndentationInconsistencyError() {
+        public void IndentationInconsistencyError()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.EditorTests.IndentationInconsistencyError));
         }
 
         [TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
-        public void IndentationInconsistencyIgnore() {
+        public void IndentationInconsistencyIgnore()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.EditorTests.IndentationInconsistencyIgnore));
         }
 
         [TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST), TestCategory("Squiggle")]
         [TestCategory("Installed")]
-        public void ImportPresent() {
+        public void ImportPresent()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.EditorTests.ImportPresent));
         }
 
         [TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST), TestCategory("Squiggle")]
         [TestCategory("Installed")]
-        public void ImportSelf() {
+        public void ImportSelf()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.EditorTests.ImportSelf));
         }
 
         [TestMethod, Priority(UITestPriority.P2_FAILING_UI_TEST), TestCategory("Squiggle")]
         [TestCategory("Installed")]
-        public void ImportMissingThenAddThenExcludeFile() {
+        public void ImportMissingThenAddThenExcludeFile()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.EditorTests.ImportMissingThenAddThenExcludeFile));
         }
 
         [TestMethod, Priority(UITestPriority.P2), TestCategory("Squiggle")]
         [TestCategory("Installed")]
-        public void ImportPresentThenAddThenRemoveReference() {
+        public void ImportPresentThenAddThenRemoveReference()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.EditorTests.ImportPresentThenAddThenRemoveReference));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void DefaultAnalyzerForNonProjectFile() {
+        public void DefaultAnalyzerForNonProjectFile()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.EditorTests.DefaultAnalyzerForNonProjectFile));
         }
     }

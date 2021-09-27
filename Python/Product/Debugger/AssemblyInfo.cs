@@ -14,8 +14,6 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Reflection;
-using System.Runtime.CompilerServices;
 
 [assembly: AssemblyTitle("Visual Studio - Python debugger support")]
 [assembly: AssemblyDescription("Provides integration with the Visual Studio debugger for Python processes.")]

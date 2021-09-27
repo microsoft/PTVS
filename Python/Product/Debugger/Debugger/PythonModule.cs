@@ -14,11 +14,12 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.IO;
-
-namespace Microsoft.PythonTools.Debugger {
-    class PythonModule {
-        public PythonModule(int moduleId, string filename, string moduleName, bool isUserCode) {
+namespace Microsoft.PythonTools.Debugger
+{
+    class PythonModule
+    {
+        public PythonModule(int moduleId, string filename, string moduleName, bool isUserCode)
+        {
             ModuleId = moduleId;
             Filename = filename;
             ModuleName = moduleName;
@@ -30,13 +31,17 @@ namespace Microsoft.PythonTools.Debugger {
         public string ModuleName { get; }
         public bool IsUserCode { get; }
 
-        public string Name {
-            get {
-                if (!string.IsNullOrEmpty(ModuleName)) {
+        public string Name
+        {
+            get
+            {
+                if (!string.IsNullOrEmpty(ModuleName))
+                {
                     return ModuleName;
                 }
 
-                if (PathUtils.IsValidPath(Filename)) {
+                if (PathUtils.IsValidPath(Filename))
+                {
                     return Path.GetFileNameWithoutExtension(Filename);
                 }
                 return Filename;

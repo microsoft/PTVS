@@ -14,19 +14,14 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using Microsoft.PythonTools;
-using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Project.Web;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using TestUtilities;
-
-namespace PythonToolsTests {
+namespace PythonToolsTests
+{
     [TestClass]
-    public class LauncherTests {
+    public class LauncherTests
+    {
         [TestMethod, Priority(UnitTestPriority.P0)]
-        public void LaunchWebBrowserUriTests() {
+        public void LaunchWebBrowserUriTests()
+        {
             var testCases = new[] {
                 new { Url = "/fob", Port = 1, Expected = "http://localhost:1/fob" },
                 new { Url = "http://localhost:9999/fob", Port = 9999, Expected = "http://localhost:9999/fob" },
@@ -36,7 +31,8 @@ namespace PythonToolsTests {
                 new { Url = "/fob", Port = -1, Expected = "http://localhost:{port}/fob" },
             };
 
-            foreach (var testCase in testCases) {
+            foreach (var testCase in testCases)
+            {
                 Console.WriteLine("{0} {1} == {2}", testCase.Url, testCase.Port, testCase.Expected);
 
                 Uri url;
@@ -45,7 +41,8 @@ namespace PythonToolsTests {
                 var config = new LaunchConfiguration(null, new Dictionary<string, string> {
                     { PythonConstants.WebBrowserUrlSetting, testCase.Url }
                 });
-                if (testCase.Port >= 0) {
+                if (testCase.Port >= 0)
+                {
                     config.LaunchOptions[PythonConstants.WebBrowserPortSetting] = testCase.Port.ToString();
                 }
                 PythonWebLauncher.GetFullUrl(null, config, out url, out port);

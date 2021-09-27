@@ -14,11 +14,6 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Threading;
-using System.Windows;
-using System.Windows.Automation;
-using System.Windows.Input;
-
 namespace TestUtilities.UI
 {
     public class AddExistingItemDialog : AutomationDialog, IAddExistingItem

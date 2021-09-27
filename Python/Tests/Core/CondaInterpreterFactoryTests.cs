@@ -14,30 +14,27 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.IO;
-using System.Threading;
-using Microsoft.PythonTools.Interpreter;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.VisualStudio.Threading;
-using TestUtilities;
-
-namespace PythonToolsTests {
+namespace PythonToolsTests
+{
     [TestClass]
-    public class CondaInterpreterFactoryTests {
+    public class CondaInterpreterFactoryTests
+    {
         [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
+        public static void DoDeployment(TestContext context)
+        {
             AssertListener.Initialize();
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void CondaWatchEnvironmentsTxtWithoutCondafolder() {
+        public void CondaWatchEnvironmentsTxtWithoutCondafolder()
+        {
             // We start with no .conda folder
             var userProfileFolder = TestData.GetTempPath();
             string condaFolder = Path.Combine(userProfileFolder, ".conda");
 
             // We create .conda folder and environments.txt
-            Action triggerDiscovery = () => {
+            Action triggerDiscovery = () =>
+            {
                 Directory.CreateDirectory(condaFolder);
                 File.WriteAllText(Path.Combine(condaFolder, "environments.txt"), string.Empty);
             };
@@ -46,14 +43,16 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void CondaWatchEnvironmentsTxtWithCondafolder() {
+        public void CondaWatchEnvironmentsTxtWithCondafolder()
+        {
             // We start with a .conda folder but no environments.txt
             var userProfileFolder = TestData.GetTempPath();
             string condaFolder = Path.Combine(userProfileFolder, ".conda");
             Directory.CreateDirectory(condaFolder);
 
             // We create environments.txt
-            Action triggerDiscovery = () => {
+            Action triggerDiscovery = () =>
+            {
                 File.WriteAllText(Path.Combine(condaFolder, "environments.txt"), string.Empty);
             };
 
@@ -61,7 +60,8 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P0)]
-        public void CondaWatchEnvironmentsTxtWithCondafolderAndEnvTxt() {
+        public void CondaWatchEnvironmentsTxtWithCondafolderAndEnvTxt()
+        {
             // We start with a .conda folder and environments.txt
             var userProfileFolder = TestData.GetTempPath();
             string condaFolder = Path.Combine(userProfileFolder, ".conda");
@@ -69,21 +69,25 @@ namespace PythonToolsTests {
             File.WriteAllText(Path.Combine(condaFolder, "environments.txt"), string.Empty);
 
             // We modify environments.txt
-            Action triggerDiscovery = () => {
+            Action triggerDiscovery = () =>
+            {
                 File.WriteAllText(Path.Combine(condaFolder, "environments.txt"), string.Empty);
             };
 
             TestTriggerDiscovery(userProfileFolder, triggerDiscovery);
         }
 
-        private static void TestTriggerDiscovery(string userProfileFolder, Action triggerDiscovery) {
+        private static void TestTriggerDiscovery(string userProfileFolder, Action triggerDiscovery)
+        {
             using (var evt = new AutoResetEvent(false))
             using (var globalProvider = new CPythonInterpreterFactoryProvider(null, false))
-            using (var condaProvider = new CondaEnvironmentFactoryProvider(globalProvider, null, new JoinableTaskFactory(new JoinableTaskContext()), true, userProfileFolder)) {
+            using (var condaProvider = new CondaEnvironmentFactoryProvider(globalProvider, null, new JoinableTaskFactory(new JoinableTaskContext()), true, userProfileFolder))
+            {
                 // This initializes the provider, discovers the initial set
                 // of factories and starts watching the filesystem.
                 var configs = condaProvider.GetInterpreterConfigurations();
-                condaProvider.DiscoveryStarted += (sender, e) => {
+                condaProvider.DiscoveryStarted += (sender, e) =>
+                {
                     evt.Set();
                 };
                 triggerDiscovery();

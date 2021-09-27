@@ -14,22 +14,27 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
+namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
+{
     [PyType(VariableName = "_PyExc_BaseException")]
-    internal class PyBaseExceptionObject : PyObject {
-        public class Fields {
+    internal class PyBaseExceptionObject : PyObject
+    {
+        public class Fields
+        {
             public StructField<PointerProxy<PyObject>> args;
         }
 
         private readonly Fields _fields;
 
         public PyBaseExceptionObject(DkmProcess process, ulong address)
-            : base(process, address) {
+            : base(process, address)
+        {
             InitializeStruct(this, out _fields);
             CheckPyType<PyBaseExceptionObject>();
         }
 
-        public PointerProxy<PyObject> args {
+        public PointerProxy<PyObject> args
+        {
             get { return GetFieldProxy(_fields.args); }
         }
     }

@@ -14,20 +14,11 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Interpreter;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using TestUtilities;
-using TestUtilities.Python;
-
-namespace PythonToolsTests {
+namespace PythonToolsTests
+{
     [TestClass]
-    public class ProcessOutputTests {
+    public class ProcessOutputTests
+    {
         [TestInitialize]
         public void TestInitialize() => TestEnvironmentImpl.TestInitialize();
 
@@ -35,7 +26,8 @@ namespace PythonToolsTests {
         public void TestCleanup() => TestEnvironmentImpl.TestCleanup();
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void ArgumentQuoting() {
+        public void ArgumentQuoting()
+        {
             foreach (var testCase in new[] {
                 new { Source = "Abc", Expected = "Abc" },
                 new { Source = "Abc 123", Expected = "\"Abc 123\"" },
@@ -49,13 +41,15 @@ namespace PythonToolsTests {
                 new { Source = @"C:\Program Files\Application Path\", Expected = "\"C:\\Program Files\\Application Path\\\\\"" },
                 // C:\Program Files\Application Path => "C:\Program Files\Application Path"
                 new { Source = @"C:\Program Files\Application Path", Expected = "\"C:\\Program Files\\Application Path\"" },
-            }) {
+            })
+            {
                 Assert.AreEqual(testCase.Expected, ProcessOutput.QuoteSingleArgument(testCase.Source), string.Format("Source:<{0}>", testCase.Source));
             }
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void SplitLines() {
+        public void SplitLines()
+        {
             foreach (var testCase in new[] {
                 new { Source = "A\nB\nC\n", Expected = new[] { "A", "B", "C" } },
                 new { Source = "A\r\nB\r\nC\r\n", Expected = new[] { "A", "B", "C" } },
@@ -69,40 +63,51 @@ namespace PythonToolsTests {
                 new { Source = "\n", Expected = new[] { "" } },
                 new { Source = "\r\n", Expected = new[] { "" } },
                 new { Source = "\n\r", Expected = new[] { "", "" } },
-            }) {
+            })
+            {
                 var lines = ProcessOutput.SplitLines(testCase.Source).ToList();
                 Assert.AreEqual(testCase.Expected.Length, lines.Count, string.Format("Source:<{0}>", testCase.Source));
-                foreach (var pair in testCase.Expected.Zip(lines, Tuple.Create<string, string>)) {
+                foreach (var pair in testCase.Expected.Zip(lines, Tuple.Create<string, string>))
+                {
                     Console.WriteLine("[" + pair.Item1 + "]");
                     Console.WriteLine("{" + pair.Item2 + "}");
                 }
                 Console.WriteLine();
-                foreach (var pair in testCase.Expected.Zip(lines, Tuple.Create<string, string>)) {
+                foreach (var pair in testCase.Expected.Zip(lines, Tuple.Create<string, string>))
+                {
                     Assert.AreEqual(pair.Item1, pair.Item2, string.Format("Source:<{0}>", testCase.Source));
                 }
             }
         }
 
-        private static IEnumerable<IPythonInterpreterFactory> Factories {
-            get {
-                foreach (var interp in PythonPaths.Versions) {
+        private static IEnumerable<IPythonInterpreterFactory> Factories
+        {
+            get
+            {
+                foreach (var interp in PythonPaths.Versions)
+                {
                     yield return new MockPythonInterpreterFactory(interp.Configuration);
                 }
             }
         }
 
         [TestMethod, Priority(UnitTestPriority.P0)]
-        public void RunInterpreterOutput() {
-            foreach (var fact in Factories) {
-                using (var output = ProcessOutput.RunHiddenAndCapture(fact.Configuration.InterpreterPath, "-c", "import sys; print(sys.version)")) {
+        public void RunInterpreterOutput()
+        {
+            foreach (var fact in Factories)
+            {
+                using (var output = ProcessOutput.RunHiddenAndCapture(fact.Configuration.InterpreterPath, "-c", "import sys; print(sys.version)"))
+                {
                     Assert.IsTrue(output.Wait(TimeSpan.FromSeconds(30)), "Running " + fact.Configuration.Description + " exceeded timeout");
 
-                    foreach (var line in output.StandardOutputLines) {
+                    foreach (var line in output.StandardOutputLines)
+                    {
                         Console.WriteLine(line);
                     }
                     Console.WriteLine("END OF STDOUT");
 
-                    foreach (var line in output.StandardErrorLines) {
+                    foreach (var line in output.StandardErrorLines)
+                    {
                         Console.WriteLine(line);
                     }
                     Console.WriteLine("END OF STDERR");
@@ -115,13 +120,17 @@ namespace PythonToolsTests {
 
         [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
-        public void RunInterpreterError() {
-            foreach (var fact in Factories) {
-                using (var output = ProcessOutput.RunHiddenAndCapture(fact.Configuration.InterpreterPath, "-c", "assert False")) {
+        public void RunInterpreterError()
+        {
+            foreach (var fact in Factories)
+            {
+                using (var output = ProcessOutput.RunHiddenAndCapture(fact.Configuration.InterpreterPath, "-c", "assert False"))
+                {
                     Console.WriteLine(output.Arguments);
                     Assert.IsTrue(output.Wait(TimeSpan.FromSeconds(30)), "Running " + fact.Configuration.Description + " exceeded timeout");
 
-                    foreach (var line in output.StandardOutputLines) {
+                    foreach (var line in output.StandardOutputLines)
+                    {
                         Console.WriteLine(line);
                     }
                     Assert.AreEqual(0, output.StandardOutputLines.Count(), "Expected no standard output");
@@ -135,10 +144,12 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void ProcessOutputEncoding() {
+        public void ProcessOutputEncoding()
+        {
             var testDataPath = TestData.GetTempPath();
             var testData = Path.Combine(testDataPath, "ProcessOutputEncoding.txt");
-            for (int i = 1; File.Exists(testData); ++i) {
+            for (int i = 1; File.Exists(testData); ++i)
+            {
                 testData = Path.Combine(testDataPath, string.Format("ProcessOutputEncoding{0}.txt", i));
             }
 
@@ -154,11 +165,13 @@ namespace PythonToolsTests {
                 false,
                 null,
                 outputEncoding: new UTF8Encoding(false)
-            )) {
+            ))
+            {
                 output.Wait();
                 Assert.AreEqual(0, output.ExitCode);
 
-                foreach (var line in output.StandardOutputLines.Concat(output.StandardErrorLines)) {
+                foreach (var line in output.StandardOutputLines.Concat(output.StandardErrorLines))
+                {
                     Console.WriteLine(line);
                 }
 
@@ -167,7 +180,8 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public void RunElevatedProcess() {
+        public void RunElevatedProcess()
+        {
             var fact = Factories.First();
             var output = new List<string>();
             var redirector = new ListRedirector(output);
@@ -179,7 +193,8 @@ namespace PythonToolsTests {
                 redirector,
                 quoteArgs: true,
                 elevate: false      // don't really elevate for the test
-            )) {
+            ))
+            {
                 Assert.IsTrue(process.Wait(TimeSpan.FromSeconds(30)), "Running " + fact.Configuration.Description + " exceeded timeout");
 
                 Console.WriteLine(string.Join(Environment.NewLine, output));

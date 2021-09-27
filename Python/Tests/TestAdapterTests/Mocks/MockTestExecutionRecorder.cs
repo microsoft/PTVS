@@ -14,44 +14,50 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Collections.Generic;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
-
-namespace TestAdapterTests.Mocks {
-    class MockTestExecutionRecorder : IFrameworkHandle {
+namespace TestAdapterTests.Mocks
+{
+    class MockTestExecutionRecorder : IFrameworkHandle
+    {
         public readonly List<TestResult> Results = new List<TestResult>();
         public readonly List<string> Messages = new List<string>();
         public readonly List<AttachmentSet> Attachments = new List<AttachmentSet>();
 
-        public bool EnableShutdownAfterTestRun {
-            get {
+        public bool EnableShutdownAfterTestRun
+        {
+            get
+            {
                 return false;
             }
-            set {
+            set
+            {
             }
         }
 
-        public int LaunchProcessWithDebuggerAttached(string filePath, string workingDirectory, string arguments, IDictionary<string, string> environmentVariables) {
+        public int LaunchProcessWithDebuggerAttached(string filePath, string workingDirectory, string arguments, IDictionary<string, string> environmentVariables)
+        {
             return 0;
         }
 
-        public void RecordResult(TestResult result) {
+        public void RecordResult(TestResult result)
+        {
             this.Results.Add(result);
         }
 
-        public void RecordAttachments(IList<AttachmentSet> attachmentSets) {
+        public void RecordAttachments(IList<AttachmentSet> attachmentSets)
+        {
             Attachments.AddRange(attachmentSets);
         }
 
-        public void RecordEnd(TestCase testCase, TestOutcome outcome) {
+        public void RecordEnd(TestCase testCase, TestOutcome outcome)
+        {
         }
 
-        public void RecordStart(TestCase testCase) {
+        public void RecordStart(TestCase testCase)
+        {
         }
 
-        public void SendMessage(TestMessageLevel testMessageLevel, string message) {
+        public void SendMessage(TestMessageLevel testMessageLevel, string message)
+        {
             Messages.Add(string.Format("{0}:{1}", testMessageLevel, message));
         }
     }

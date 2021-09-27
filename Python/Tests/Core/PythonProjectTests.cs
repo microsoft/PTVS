@@ -15,33 +15,23 @@
 // permissions and limitations under the License.
 
 extern alias pythontools;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Xml;
-using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Interpreter;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pythontools::Microsoft.PythonTools;
-using pythontools::Microsoft.PythonTools.Intellisense;
-using pythontools::Microsoft.PythonTools.Project;
-using TestUtilities;
-using TestUtilities.Python;
 
-namespace PythonToolsTests {
+namespace PythonToolsTests
+{
     [TestClass]
-    public class PythonProjectTests {
+    public class PythonProjectTests
+    {
         [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
+        public static void DoDeployment(TestContext context)
+        {
             AssertListener.Initialize();
         }
 
         public TestContext TestContext { get; set; }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void UpdateWorkerRoleServiceDefinitionTest() {
+        public void UpdateWorkerRoleServiceDefinitionTest()
+        {
             var doc = new XmlDocument();
             doc.LoadXml(@"<?xml version=""1.0"" encoding=""utf-8""?>
 <ServiceDefinition name=""Azure1"" xmlns=""http://schemas.microsoft.com/ServiceHosting/2008/10/ServiceDefinition"" schemaVersion=""2014-01.2.3"">
@@ -79,7 +69,8 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P0)]
-        public void UpdateWebRoleServiceDefinitionTest() {
+        public void UpdateWebRoleServiceDefinitionTest()
+        {
             var doc = new XmlDocument();
             doc.LoadXml(@"<?xml version=""1.0"" encoding=""utf-8""?>
 <ServiceDefinition name=""Azure1"" xmlns=""http://schemas.microsoft.com/ServiceHosting/2008/10/ServiceDefinition"" schemaVersion=""2014-01.2.3"">
@@ -106,10 +97,14 @@ namespace PythonToolsTests {
 </ServiceDefinition>", doc);
         }
 
-        private static void WaitForEmptySet(WaitHandle activity, HashSet<string> set, CancellationToken token) {
-            while (true) {
-                lock (set) {
-                    if (!set.Any()) {
+        private static void WaitForEmptySet(WaitHandle activity, HashSet<string> set, CancellationToken token)
+        {
+            while (true)
+            {
+                lock (set)
+                {
+                    if (!set.Any())
+                    {
                         return;
                     }
                 }
@@ -119,16 +114,20 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public async Task LoadAndUnloadModule() {
+        public async Task LoadAndUnloadModule()
+        {
             var services = PythonToolsTestUtilities.CreateMockServiceProvider().GetEditorServices();
             using (var are = new AutoResetEvent(false))
-            using (var analyzer = await VsProjectAnalyzer.CreateForTestsAsync(services, InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(3, 6)))) {
+            using (var analyzer = await VsProjectAnalyzer.CreateForTestsAsync(services, InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(3, 6))))
+            {
                 var m1Path = TestData.GetPath("TestData\\SimpleImport\\module1.py");
                 var m2Path = TestData.GetPath("TestData\\SimpleImport\\module2.py");
 
                 var toAnalyze = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { m1Path, m2Path };
-                analyzer.AnalysisComplete += (s, e) => {
-                    lock (toAnalyze) {
+                analyzer.AnalysisComplete += (s, e) =>
+                {
+                    lock (toAnalyze)
+                    {
                         toAnalyze.Remove(e.Path);
                     }
                     are.Set();
@@ -182,10 +181,12 @@ namespace PythonToolsTests {
 
 
         [TestMethod, Priority(UnitTestPriority.P2_FAILING)]
-        public async Task AnalyzeBadEgg() {
+        public async Task AnalyzeBadEgg()
+        {
             var factories = new[] { InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(3, 4)) };
             var services = PythonToolsTestUtilities.CreateMockServiceProvider().GetEditorServices();
-            using (var analyzer = await VsProjectAnalyzer.CreateForTestsAsync(services, factories[0])) {
+            using (var analyzer = await VsProjectAnalyzer.CreateForTestsAsync(services, factories[0]))
+            {
                 await analyzer.SetSearchPathsAsync(new[] { TestData.GetPath(@"TestData\BadEgg.egg") });
                 analyzer.WaitForCompleteAnalysis(_ => true);
 

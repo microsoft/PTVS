@@ -14,60 +14,71 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
 using Microsoft.PythonTools.Debugger.Concord.Proxies.Structs;
-using Microsoft.PythonTools.Parsing;
 
-namespace Microsoft.PythonTools.Debugger.Concord {
-    internal class CallStackFilter : DkmDataItem {
-        private class StackWalkContextData : DkmDataItem {
+namespace Microsoft.PythonTools.Debugger.Concord
+{
+    internal class CallStackFilter : DkmDataItem
+    {
+        private class StackWalkContextData : DkmDataItem
+        {
             public bool? IsLastFrameNative { get; set; }
         }
 
         private readonly DkmProcess _process;
         private readonly PythonRuntimeInfo _pyrtInfo;
 
-        public CallStackFilter(DkmProcess process) {
+        public CallStackFilter(DkmProcess process)
+        {
             _process = process;
             _pyrtInfo = process.GetPythonRuntimeInfo();
         }
 
-        public DkmStackWalkFrame[] FilterNextFrame(DkmStackContext stackContext, DkmStackWalkFrame nativeFrame) {
+        public DkmStackWalkFrame[] FilterNextFrame(DkmStackContext stackContext, DkmStackWalkFrame nativeFrame)
+        {
             PyFrameObject pythonFrame = null;
             var nativeModuleInstance = nativeFrame.ModuleInstance;
-            if (nativeModuleInstance == _pyrtInfo.DLLs.DebuggerHelper) {
+            if (nativeModuleInstance == _pyrtInfo.DLLs.DebuggerHelper)
+            {
                 if (_pyrtInfo.LanguageVersion < PythonLanguageVersion.V36 ||
-                    (pythonFrame = PyFrameObject.TryCreate(nativeFrame)) == null) {
+                    (pythonFrame = PyFrameObject.TryCreate(nativeFrame)) == null)
+                {
                     return DebuggerOptions.ShowNativePythonFrames ? new[] { nativeFrame } : new DkmStackWalkFrame[0];
                 }
             }
 
             var result = new List<DkmStackWalkFrame>();
 
-            if (pythonFrame == null) {
+            if (pythonFrame == null)
+            {
                 var stackWalkData = stackContext.GetDataItem<StackWalkContextData>();
-                if (stackWalkData == null) {
+                if (stackWalkData == null)
+                {
                     stackWalkData = new StackWalkContextData();
                     stackContext.SetDataItem(DkmDataCreationDisposition.CreateNew, stackWalkData);
                 }
                 bool? wasLastFrameNative = stackWalkData.IsLastFrameNative;
 
-                if (nativeModuleInstance != _pyrtInfo.DLLs.Python && nativeModuleInstance != _pyrtInfo.DLLs.CTypes) {
+                if (nativeModuleInstance != _pyrtInfo.DLLs.Python && nativeModuleInstance != _pyrtInfo.DLLs.CTypes)
+                {
                     stackWalkData.IsLastFrameNative = true;
-                    if (wasLastFrameNative == false) {
+                    if (wasLastFrameNative == false)
+                    {
                         result.Add(DkmStackWalkFrame.Create(nativeFrame.Thread, null, nativeFrame.FrameBase, nativeFrame.FrameSize,
                             DkmStackWalkFrameFlags.NonuserCode, Strings.DebugCallStackNativeToPythonTransition, null, null));
-                    } else {
+                    }
+                    else
+                    {
                         stackWalkData.IsLastFrameNative = true;
                     }
                     result.Add(nativeFrame);
                     return result.ToArray();
-                } else {
+                }
+                else
+                {
                     stackWalkData.IsLastFrameNative = false;
-                    if (wasLastFrameNative == true) {
+                    if (wasLastFrameNative == true)
+                    {
                         result.Add(DkmStackWalkFrame.Create(nativeFrame.Thread, null, nativeFrame.FrameBase, nativeFrame.FrameSize,
                             DkmStackWalkFrameFlags.NonuserCode, Strings.DebugCallStackPythonToNativeTransition, null, null));
                     }
@@ -75,8 +86,10 @@ namespace Microsoft.PythonTools.Debugger.Concord {
 
                 pythonFrame = PyFrameObject.TryCreate(nativeFrame);
             }
-            if (pythonFrame == null) {
-                if (DebuggerOptions.ShowNativePythonFrames) {
+            if (pythonFrame == null)
+            {
+                if (DebuggerOptions.ShowNativePythonFrames)
+                {
                     result.Add(nativeFrame);
                 }
                 return result.ToArray();
@@ -92,7 +105,8 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             var pythonRuntime = _process.GetPythonRuntimeInstance();
             var pythonModuleInstances = pythonRuntime.GetModuleInstances().OfType<DkmCustomModuleInstance>();
             var pyModuleInstance = pythonModuleInstances.Where(m => m.FullName == loc.FileName).FirstOrDefault();
-            if (pyModuleInstance == null) {
+            if (pyModuleInstance == null)
+            {
                 pyModuleInstance = pythonModuleInstances.Single(m => m.Module.Id.Mvid == Guids.UnknownPythonModuleGuid);
             }
 
@@ -109,15 +123,18 @@ namespace Microsoft.PythonTools.Debugger.Concord {
                 nativeFrame.Annotations);
             result.Add(frame);
 
-            if (DebuggerOptions.ShowNativePythonFrames) {
+            if (DebuggerOptions.ShowNativePythonFrames)
+            {
                 result.Add(nativeFrame);
             }
             return result.ToArray();
         }
 
-        public void GetFrameName(DkmInspectionContext inspectionContext, DkmWorkList workList, DkmStackWalkFrame frame, DkmVariableInfoFlags argumentFlags, DkmCompletionRoutine<DkmGetFrameNameAsyncResult> completionRoutine) {
+        public void GetFrameName(DkmInspectionContext inspectionContext, DkmWorkList workList, DkmStackWalkFrame frame, DkmVariableInfoFlags argumentFlags, DkmCompletionRoutine<DkmGetFrameNameAsyncResult> completionRoutine)
+        {
             var insAddr = frame.InstructionAddress as DkmCustomInstructionAddress;
-            if (insAddr == null) {
+            if (insAddr == null)
+            {
                 Debug.Fail("GetFrameName called on a Python frame without a proper instruction address.");
                 throw new InvalidOperationException();
             }
@@ -126,7 +143,8 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             completionRoutine(new DkmGetFrameNameAsyncResult(loc.FunctionName));
         }
 
-        public void GetFrameReturnType(DkmInspectionContext inspectionContext, DkmWorkList workList, DkmStackWalkFrame frame, DkmCompletionRoutine<DkmGetFrameReturnTypeAsyncResult> completionRoutine) {
+        public void GetFrameReturnType(DkmInspectionContext inspectionContext, DkmWorkList workList, DkmStackWalkFrame frame, DkmCompletionRoutine<DkmGetFrameReturnTypeAsyncResult> completionRoutine)
+        {
             completionRoutine(new DkmGetFrameReturnTypeAsyncResult(null));
         }
     }

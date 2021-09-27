@@ -14,14 +14,6 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.VisualStudio.Language.Intellisense;
-using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Text.Editor;
-using Microsoft.VisualStudio.Utilities;
-using System;
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-
 namespace Microsoft.VisualStudioTools.MockVsTests
 {
     class MockCompletionSession : ICompletionSession

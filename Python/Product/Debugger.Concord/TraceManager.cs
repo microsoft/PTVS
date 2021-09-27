@@ -14,20 +14,16 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices;
 using Microsoft.PythonTools.Debugger.Concord.Proxies;
 
-namespace Microsoft.PythonTools.Debugger.Concord {
-    internal unsafe class TraceManager : DkmDataItem {
+namespace Microsoft.PythonTools.Debugger.Concord
+{
+    internal unsafe class TraceManager : DkmDataItem
+    {
         // Layout of this struct must always remain in sync with DebuggerHelper/trace.cpp.
         [StructLayout(LayoutKind.Sequential, Pack = 8)]
-        private struct DebuggerString {
+        private struct DebuggerString
+        {
             public const int SizeOf = 4;
             public int length;
             public fixed char data[1];
@@ -35,7 +31,8 @@ namespace Microsoft.PythonTools.Debugger.Concord {
 
         // Layout of this struct must always remain in sync with DebuggerHelper/trace.cpp.
         [StructLayout(LayoutKind.Sequential, Pack = 8)]
-        private struct BreakpointData {
+        private struct BreakpointData
+        {
             public int maxLineNumber;
             public ulong lineNumbers;
             public ulong fileNamesOffsets;
@@ -44,7 +41,8 @@ namespace Microsoft.PythonTools.Debugger.Concord {
 
         // Layout of this struct must always remain in sync with DebuggerHelper/trace.cpp.
         [StructLayout(LayoutKind.Sequential, Pack = 8)]
-        private struct CurrentSourceLocation {
+        private struct CurrentSourceLocation
+        {
             public readonly int lineNumber;
             public readonly ulong fileName;
         }
@@ -62,7 +60,8 @@ namespace Microsoft.PythonTools.Debugger.Concord {
         private readonly DkmRuntimeBreakpoint _onBreakpointHitBP, _onStepCompleteBP, _onStepFallThroughBP;
         private DkmStepper _stepper;
 
-        public TraceManager(DkmProcess process) {
+        public TraceManager(DkmProcess process)
+        {
             _process = process;
             _pyrtInfo = process.GetPythonRuntimeInfo();
 
@@ -89,56 +88,76 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             WriteBreakpoints();
         }
 
-        public void OnNativeBreakpointHit(DkmRuntimeBreakpoint nativeBP, DkmThread thread) {
-            if (nativeBP == _onBreakpointHitBP) {
+        public void OnNativeBreakpointHit(DkmRuntimeBreakpoint nativeBP, DkmThread thread)
+        {
+            if (nativeBP == _onBreakpointHitBP)
+            {
                 OnBreakpointHit(thread);
-            } else if (nativeBP == _onStepCompleteBP) {
+            }
+            else if (nativeBP == _onStepCompleteBP)
+            {
                 OnStepComplete(thread);
-            } else if (nativeBP == _onStepFallThroughBP) {
+            }
+            else if (nativeBP == _onStepFallThroughBP)
+            {
                 OnStepFallThrough(thread);
-            } else if (nativeBP.SourceId == Guids.PythonStepTargetSourceGuid) {
+            }
+            else if (nativeBP.SourceId == Guids.PythonStepTargetSourceGuid)
+            {
                 OnStepTargetBreakpoint(thread);
-            } else {
+            }
+            else
+            {
                 Debug.Fail("BreakpointManager notified about a native breakpoint that it didn't create.");
             }
         }
 
-        public void AddBreakpoint(DkmRuntimeBreakpoint bp) {
+        public void AddBreakpoint(DkmRuntimeBreakpoint bp)
+        {
             var loc = bp.GetDataItem<SourceLocation>();
             List<DkmRuntimeBreakpoint> bpsAtLoc;
-            if (!_breakpoints.TryGetValue(loc, out bpsAtLoc)) {
+            if (!_breakpoints.TryGetValue(loc, out bpsAtLoc))
+            {
                 _breakpoints[loc] = bpsAtLoc = new List<DkmRuntimeBreakpoint>();
             }
             bpsAtLoc.Add(bp);
             WriteBreakpoints();
         }
 
-        public void RemoveBreakpoint(DkmRuntimeBreakpoint bp) {
+        public void RemoveBreakpoint(DkmRuntimeBreakpoint bp)
+        {
             var loc = bp.GetDataItem<SourceLocation>();
             List<DkmRuntimeBreakpoint> bpsAtLoc;
-            if (!_breakpoints.TryGetValue(loc, out bpsAtLoc)) {
+            if (!_breakpoints.TryGetValue(loc, out bpsAtLoc))
+            {
                 return;
             }
-            if (!bpsAtLoc.Remove(bp)) {
+            if (!bpsAtLoc.Remove(bp))
+            {
                 return;
             }
-            if (bpsAtLoc.Count == 0) {
+            if (bpsAtLoc.Count == 0)
+            {
                 _breakpoints.Remove(loc);
             }
             WriteBreakpoints();
         }
 
-        private class StructuralArrayEqualityComparer<T> : EqualityComparer<T[]> {
-            public override bool Equals(T[] x, T[] y) {
+        private class StructuralArrayEqualityComparer<T> : EqualityComparer<T[]>
+        {
+            public override bool Equals(T[] x, T[] y)
+            {
                 return StructuralComparisons.StructuralEqualityComparer.Equals(x, y);
             }
 
-            public override int GetHashCode(T[] obj) {
+            public override int GetHashCode(T[] obj)
+            {
                 return StructuralComparisons.StructuralEqualityComparer.GetHashCode(obj);
             }
         }
 
-        private void WriteBreakpoints() {
+        private void WriteBreakpoints()
+        {
             int maxLineNumber = _breakpoints.Keys.Select(loc => loc.LineNumber).DefaultIfEmpty().Max();
             var lineNumbersStream = new MemoryStream((maxLineNumber + 1) * sizeof(int));
             var lineNumbersWriter = new BinaryWriter(lineNumbersStream);
@@ -147,10 +166,12 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             var stringsWriter = new BinaryWriter(stringsStream);
             var stringOffsets = new Dictionary<string, int>();
             stringsWriter.Write((int)0);
-            foreach (var s in _breakpoints.Keys.Select(loc => loc.FileName).Distinct()) {
+            foreach (var s in _breakpoints.Keys.Select(loc => loc.FileName).Distinct())
+            {
                 stringOffsets[s] = (int)stringsStream.Position;
                 stringsWriter.Write((int)s.Length);
-                foreach (char c in s) {
+                foreach (char c in s)
+                {
                     stringsWriter.Write((ushort)c);
                 }
                 stringsWriter.Write((ushort)0);
@@ -160,16 +181,19 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             var fileNamesOffsetsWriter = new BinaryWriter(fileNamesOffsetsStream);
             var fileNamesOffsetsIndices = new Dictionary<int[], int>(new StructuralArrayEqualityComparer<int>());
             fileNamesOffsetsWriter.Write((int)0);
-            foreach (var g in _breakpoints.Keys.GroupBy(loc => loc.LineNumber)) {
+            foreach (var g in _breakpoints.Keys.GroupBy(loc => loc.LineNumber))
+            {
                 var lineNumber = g.Key;
 
                 var fileNamesOffsets = g.Select(loc => stringOffsets[loc.FileName]).ToArray();
                 Array.Sort(fileNamesOffsets);
 
                 int fileNamesOffsetsIndex;
-                if (!fileNamesOffsetsIndices.TryGetValue(fileNamesOffsets, out fileNamesOffsetsIndex)) {
+                if (!fileNamesOffsetsIndices.TryGetValue(fileNamesOffsets, out fileNamesOffsetsIndex))
+                {
                     fileNamesOffsetsIndex = (int)fileNamesOffsetsStream.Position / sizeof(int);
-                    foreach (int offset in fileNamesOffsets) {
+                    foreach (int offset in fileNamesOffsets)
+                    {
                         fileNamesOffsetsWriter.Write(offset);
                     }
                     fileNamesOffsetsWriter.Write((int)0);
@@ -186,21 +210,27 @@ namespace Microsoft.PythonTools.Debugger.Concord {
 
             var bpDataProxy = _breakpointData[currentBreakpointData];
             BreakpointData bpData = bpDataProxy.Read();
-            if (bpData.lineNumbers != 0) {
+            if (bpData.lineNumbers != 0)
+            {
                 _process.FreeVirtualMemory(bpData.lineNumbers, 0, NativeMethods.MEM_RELEASE);
             }
-            if (bpData.fileNamesOffsets != 0) {
+            if (bpData.fileNamesOffsets != 0)
+            {
                 _process.FreeVirtualMemory(bpData.fileNamesOffsets, 0, NativeMethods.MEM_RELEASE);
             }
-            if (bpData.strings != 0) {
+            if (bpData.strings != 0)
+            {
                 _process.FreeVirtualMemory(bpData.strings, 0, NativeMethods.MEM_RELEASE);
             }
 
             bpData.maxLineNumber = maxLineNumber;
-            if (lineNumbersStream.Length > 0) {
+            if (lineNumbersStream.Length > 0)
+            {
                 bpData.lineNumbers = _process.AllocateVirtualMemory(0, (int)lineNumbersStream.Length, NativeMethods.MEM_COMMIT | NativeMethods.MEM_RESERVE, NativeMethods.PAGE_READWRITE);
                 _process.WriteMemory(bpData.lineNumbers, lineNumbersStream.ToArray());
-            } else {
+            }
+            else
+            {
                 bpData.lineNumbers = 0;
             }
 
@@ -213,7 +243,8 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             bpDataProxy.Write(bpData);
         }
 
-        private void OnBreakpointHit(DkmThread thread) {
+        private void OnBreakpointHit(DkmThread thread)
+        {
             CurrentSourceLocation cbp = _currentSourceLocation.Read();
 
             DebuggerString fileNameDS;
@@ -226,53 +257,66 @@ namespace Microsoft.PythonTools.Debugger.Concord {
 
             var loc = new SourceLocation(fileName, cbp.lineNumber);
             List<DkmRuntimeBreakpoint> bps;
-            if (!_breakpoints.TryGetValue(loc, out bps)) {
+            if (!_breakpoints.TryGetValue(loc, out bps))
+            {
                 Debug.Fail("TraceFunc signalled a breakpoint at a location that BreakpointManager does not know about.");
                 return;
             }
 
-            foreach (var bp in bps) {
+            foreach (var bp in bps)
+            {
                 bp.OnHit(thread, false);
             }
         }
 
-        private class StepBeginState : DkmDataItem {
+        private class StepBeginState : DkmDataItem
+        {
             public ulong FrameBase { get; set; }
         }
 
-        public void BeforeEnableNewStepper(DkmRuntimeInstance runtimeInstance, DkmStepper stepper) {
+        public void BeforeEnableNewStepper(DkmRuntimeInstance runtimeInstance, DkmStepper stepper)
+        {
             ulong retAddr, frameBase, vframe;
             stepper.Thread.GetCurrentFrameInfo(out retAddr, out frameBase, out vframe);
             stepper.SetDataItem(DkmDataCreationDisposition.CreateAlways, new StepBeginState { FrameBase = frameBase });
         }
 
-        public void Step(DkmStepper stepper, DkmStepArbitrationReason reason) {
+        public void Step(DkmStepper stepper, DkmStepArbitrationReason reason)
+        {
             var thread = stepper.Thread;
             var process = thread.Process;
 
-            if (stepper.StepKind == DkmStepKind.StepIntoSpecific) {
+            if (stepper.StepKind == DkmStepKind.StepIntoSpecific)
+            {
                 throw new NotSupportedException();
-            } else if (_stepper != null) {
+            }
+            else if (_stepper != null)
+            {
                 _stepper.CancelStepper(process.GetPythonRuntimeInstance());
                 _stepper = null;
             }
 
             // Check if this was a step out (or step over/in that fell through) from native to Python.
             // If so, we consider the step done, since we can report the correct callstack at this point.
-            if (reason == DkmStepArbitrationReason.TransitionModule) {
+            if (reason == DkmStepArbitrationReason.TransitionModule)
+            {
                 var beginState = stepper.GetDataItem<StepBeginState>();
-                if (beginState != null) {
+                if (beginState != null)
+                {
                     ulong retAddr, frameBase, vframe;
                     thread.GetCurrentFrameInfo(out retAddr, out frameBase, out vframe);
-                    if (frameBase >= beginState.FrameBase) {
+                    if (frameBase >= beginState.FrameBase)
+                    {
                         stepper.OnStepComplete(thread, false);
                         return;
                     }
                 }
             }
 
-            if (stepper.StepKind == DkmStepKind.Into) {
-                new LocalComponent.BeginStepInNotification {
+            if (stepper.StepKind == DkmStepKind.Into)
+            {
+                new LocalComponent.BeginStepInNotification
+                {
                     ThreadId = thread.UniqueId
                 }.SendHigher(process);
             }
@@ -283,10 +327,14 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             _steppingStackDepth.Write(0);
         }
 
-        public void CancelStep(DkmStepper stepper) {
-            if (_stepper == null) {
+        public void CancelStep(DkmStepper stepper)
+        {
+            if (_stepper == null)
+            {
                 return;
-            } else if (stepper != _stepper) {
+            }
+            else if (stepper != _stepper)
+            {
                 Debug.Fail("Trying to cancel a step while no step or another step is in progress.");
                 throw new InvalidOperationException();
             }
@@ -294,35 +342,45 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             StepDone(stepper.Thread);
         }
 
-        private void OnStepComplete(DkmThread thread) {
-            if (_stepper != null) {
+        private void OnStepComplete(DkmThread thread)
+        {
+            if (_stepper != null)
+            {
                 StepDone(thread).OnStepComplete(thread, false);
             }
         }
 
-        private void OnStepTargetBreakpoint(DkmThread thread) {
-            if (_stepper == null) {
+        private void OnStepTargetBreakpoint(DkmThread thread)
+        {
+            if (_stepper == null)
+            {
                 Debug.Fail("OnStepTargetBreakpoint called but no step operation is in progress.");
                 throw new InvalidOperationException();
             }
 
-            if (_stepper.StepKind == DkmStepKind.Into) {
+            if (_stepper.StepKind == DkmStepKind.Into)
+            {
                 StepDone(thread).OnStepArbitration(DkmStepArbitrationReason.ExitRuntime, _process.GetPythonRuntimeInstance());
-            } else {
+            }
+            else
+            {
                 // Just because we hit the return breakpoint doesn't mean that we've actually returned - it could be 
                 // a recursive call. Check stack depth to distinguish this from an actual return.
                 var beginState = _stepper.GetDataItem<StepBeginState>();
-                if (beginState != null) {
+                if (beginState != null)
+                {
                     ulong retAddr, frameBase, vframe;
                     thread.GetCurrentFrameInfo(out retAddr, out frameBase, out vframe);
-                    if (frameBase > beginState.FrameBase) {
+                    if (frameBase > beginState.FrameBase)
+                    {
                         OnStepComplete(thread);
                     }
                 }
             }
         }
 
-        private DkmStepper StepDone(DkmThread thread) {
+        private DkmStepper StepDone(DkmThread thread)
+        {
             new LocalComponent.StepCompleteNotification().SendHigher(thread.Process);
             new LocalStackWalkingComponent.StepCompleteNotification().SendHigher(thread.Process);
 
@@ -333,9 +391,11 @@ namespace Microsoft.PythonTools.Debugger.Concord {
 
         }
 
-        private void OnStepFallThrough(DkmThread thread) {
+        private void OnStepFallThrough(DkmThread thread)
+        {
             // Step fell through the end of the frame in which it began - time to register the breakpoint for the return address.
-            new LocalStackWalkingComponent.BeginStepOutNotification {
+            new LocalStackWalkingComponent.BeginStepOutNotification
+            {
                 ThreadId = thread.UniqueId
             }.SendHigher(_process);
         }

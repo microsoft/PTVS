@@ -14,12 +14,16 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
-    internal interface IPyBaseStringObject : IPyObject {
+namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
+{
+    internal interface IPyBaseStringObject : IPyObject
+    {
     }
 
-    internal static class PyBaseStringExtensions {
-        public static string ToStringOrNull(this IPyBaseStringObject s) {
+    internal static class PyBaseStringExtensions
+    {
+        public static string ToStringOrNull(this IPyBaseStringObject s)
+        {
             return s == null ? null : s.ToString();
         }
     }

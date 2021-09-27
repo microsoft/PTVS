@@ -14,43 +14,49 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using Microsoft.PythonTools.Interpreter;
-
-namespace TestUtilities.Python {
-    public class MockPythonInterpreterFactoryProvider : IPythonInterpreterFactoryProvider {
+namespace TestUtilities.Python
+{
+    public class MockPythonInterpreterFactoryProvider : IPythonInterpreterFactoryProvider
+    {
         readonly string _name;
         readonly List<IPythonInterpreterFactory> _factories;
 
-        public MockPythonInterpreterFactoryProvider(string name, params IPythonInterpreterFactory[] factories) {
+        public MockPythonInterpreterFactoryProvider(string name, params IPythonInterpreterFactory[] factories)
+        {
             _name = name;
             _factories = factories.ToList();
         }
 
-        public override string ToString() {
+        public override string ToString()
+        {
             return string.Format("{0}: {1}", GetType().Name, _name);
         }
 
-        public void AddFactory(IPythonInterpreterFactory factory) {
-            lock (_factories) {
+        public void AddFactory(IPythonInterpreterFactory factory)
+        {
+            lock (_factories)
+            {
                 _factories.Add(factory);
             }
             var evt = InterpreterFactoriesChanged;
-            if (evt != null) {
+            if (evt != null)
+            {
                 evt(this, EventArgs.Empty);
             }
         }
 
-        public bool RemoveFactory(IPythonInterpreterFactory factory) {
+        public bool RemoveFactory(IPythonInterpreterFactory factory)
+        {
             bool changed;
-            lock (_factories) {
+            lock (_factories)
+            {
                 changed = _factories.Remove(factory);
             }
-            if (changed) {
+            if (changed)
+            {
                 var evt = InterpreterFactoriesChanged;
-                if (evt != null) {
+                if (evt != null)
+                {
                     evt(this, EventArgs.Empty);
                 }
                 return true;
@@ -58,39 +64,48 @@ namespace TestUtilities.Python {
             return false;
         }
 
-        public void RemoveAllFactories() {
+        public void RemoveAllFactories()
+        {
             bool changed = false;
-            lock (_factories) {
-                if (_factories.Any()) {
+            lock (_factories)
+            {
+                if (_factories.Any())
+                {
                     _factories.Clear();
                     changed = true;
                 }
             }
-            if (changed) {
+            if (changed)
+            {
                 var evt = InterpreterFactoriesChanged;
-                if (evt != null) {
+                if (evt != null)
+                {
                     evt(this, EventArgs.Empty);
                 }
             }
         }
 
-        public IEnumerable<IPythonInterpreterFactory> GetInterpreterFactories() {
+        public IEnumerable<IPythonInterpreterFactory> GetInterpreterFactories()
+        {
             // Deliberately not locked so we simulate testing against 3rd-party
             // implementations that don't protect this function call.
             return _factories.Where(x => x != null);
         }
 
-        public IEnumerable<InterpreterConfiguration> GetInterpreterConfigurations() {
+        public IEnumerable<InterpreterConfiguration> GetInterpreterConfigurations()
+        {
             return GetInterpreterFactories().Select(x => x.Configuration);
         }
 
-        public IPythonInterpreterFactory GetInterpreterFactory(string id) {
+        public IPythonInterpreterFactory GetInterpreterFactory(string id)
+        {
             return GetInterpreterFactories()
                 .Where(x => x.Configuration.Id == id)
                 .FirstOrDefault();
         }
 
-        public object GetProperty(string id, string propName) {
+        public object GetProperty(string id, string propName)
+        {
             return (GetInterpreterFactory(id) as MockPythonInterpreterFactory)?.GetProperty(propName);
         }
 

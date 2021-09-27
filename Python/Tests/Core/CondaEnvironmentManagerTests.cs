@@ -14,24 +14,14 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Interpreter;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using TestUtilities;
-
-namespace PythonToolsUITests {
+namespace PythonToolsUITests
+{
     [TestClass]
-    public class CondaEnvironmentManagerTests {
+    public class CondaEnvironmentManagerTests
+    {
         [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
+        public static void DoDeployment(TestContext context)
+        {
             AssertListener.Initialize();
         }
 
@@ -51,15 +41,18 @@ namespace PythonToolsUITests {
         };
 
         [ClassCleanup]
-        public static void DoCleanup() {
-            foreach (var folder in DeleteFolder) {
+        public static void DoCleanup()
+        {
+            foreach (var folder in DeleteFolder)
+            {
                 FileUtils.DeleteDirectory(folder);
             }
         }
 
         [TestMethod, Priority(UnitTestPriority.P0)]
         [TestCategory("10s")]
-        public async Task CreateEnvironmentByPath() {
+        public async Task CreateEnvironmentByPath()
+        {
             var mgr = CreateEnvironmentManager();
             var ui = new MockCondaEnvironmentManagerUI();
 
@@ -74,7 +67,8 @@ namespace PythonToolsUITests {
 
         [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
-        public async Task CreateEnvironmentByPathNonExistingPackage() {
+        public async Task CreateEnvironmentByPathNonExistingPackage()
+        {
             var mgr = CreateEnvironmentManager();
             var ui = new MockCondaEnvironmentManagerUI();
 
@@ -94,7 +88,8 @@ namespace PythonToolsUITests {
 
         [TestMethod, Priority(UnitTestPriority.P0)]
         [TestCategory("10s")]
-        public async Task CreateEnvironmentByName() {
+        public async Task CreateEnvironmentByName()
+        {
             var mgr = CreateEnvironmentManager();
             var ui = new MockCondaEnvironmentManagerUI();
 
@@ -111,7 +106,8 @@ namespace PythonToolsUITests {
 
         [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
-        public async Task CreateEnvironmentByNameRelativePath() {
+        public async Task CreateEnvironmentByNameRelativePath()
+        {
             var mgr = CreateEnvironmentManager();
             var ui = new MockCondaEnvironmentManagerUI();
 
@@ -131,7 +127,8 @@ namespace PythonToolsUITests {
 
         [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
-        public async Task CreateEnvironmentByNameInvalidChars() {
+        public async Task CreateEnvironmentByNameInvalidChars()
+        {
             var mgr = CreateEnvironmentManager();
             var ui = new MockCondaEnvironmentManagerUI();
 
@@ -145,7 +142,8 @@ namespace PythonToolsUITests {
 
         [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
-        public async Task CreateEnvironmentByPathFromEnvironmentFileCondaOnly() {
+        public async Task CreateEnvironmentByPathFromEnvironmentFileCondaOnly()
+        {
             var mgr = CreateEnvironmentManager();
             var ui = new MockCondaEnvironmentManagerUI();
 
@@ -161,7 +159,8 @@ namespace PythonToolsUITests {
 
         [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
         [TestCategory("10s")]
-        public async Task CreateEnvironmentByPathFromEnvironmentFileCondaAndPip() {
+        public async Task CreateEnvironmentByPathFromEnvironmentFileCondaAndPip()
+        {
             var mgr = CreateEnvironmentManager();
             var ui = new MockCondaEnvironmentManagerUI();
 
@@ -177,7 +176,8 @@ namespace PythonToolsUITests {
 
         [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
-        public async Task CreateEnvironmentByPathFromEnvironmentFileNonExisting() {
+        public async Task CreateEnvironmentByPathFromEnvironmentFileNonExisting()
+        {
             var mgr = CreateEnvironmentManager();
             var ui = new MockCondaEnvironmentManagerUI();
 
@@ -192,7 +192,8 @@ namespace PythonToolsUITests {
 
         [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
-        public async Task CreateEnvironmentByPathFromExistingEnvironment() {
+        public async Task CreateEnvironmentByPathFromExistingEnvironment()
+        {
             var mgr = CreateEnvironmentManager();
             var ui = new MockCondaEnvironmentManagerUI();
 
@@ -206,7 +207,8 @@ namespace PythonToolsUITests {
 
         [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
-        public async Task ExportEnvironmentFile() {
+        public async Task ExportEnvironmentFile()
+        {
             var mgr = CreateEnvironmentManager();
             var ui = new MockCondaEnvironmentManagerUI();
 
@@ -226,7 +228,8 @@ namespace PythonToolsUITests {
 
         [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
-        public async Task ExportExplicitSpecificationFile() {
+        public async Task ExportExplicitSpecificationFile()
+        {
             var mgr = CreateEnvironmentManager();
             var ui = new MockCondaEnvironmentManagerUI();
 
@@ -246,7 +249,8 @@ namespace PythonToolsUITests {
 
         [TestMethod, Priority(UnitTestPriority.P0)]
         [TestCategory("10s")]
-        public async Task DeleteEnvironment() {
+        public async Task DeleteEnvironment()
+        {
             var mgr = CreateEnvironmentManager();
             var ui = new MockCondaEnvironmentManagerUI();
 
@@ -259,7 +263,8 @@ namespace PythonToolsUITests {
 
         [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
-        public async Task DeleteEnvironmentNonExisting() {
+        public async Task DeleteEnvironmentNonExisting()
+        {
             var mgr = CreateEnvironmentManager();
             var ui = new MockCondaEnvironmentManagerUI();
 
@@ -271,7 +276,8 @@ namespace PythonToolsUITests {
             Assert.IsTrue(ui.OutputText.Any(line => line.Contains($"Failed to delete '{envPath}'")));
         }
 
-        private static async Task<string> CreatePython27AndFlask012EnvAsync(CondaEnvironmentManager mgr, MockCondaEnvironmentManagerUI ui, string name) {
+        private static async Task<string> CreatePython27AndFlask012EnvAsync(CondaEnvironmentManager mgr, MockCondaEnvironmentManagerUI ui, string name)
+        {
             var envPath = Path.Combine(TestData.GetTempPath(), name);
             var result = await mgr.CreateAsync(envPath, Python27AndFlask012Packages, ui, CancellationToken.None);
 
@@ -283,38 +289,48 @@ namespace PythonToolsUITests {
             return envPath;
         }
 
-        private static void AssertCondaMetaFiles(string expectedEnvPath, params string[] fileFilters) {
-            foreach (var fileFilter in fileFilters) {
+        private static void AssertCondaMetaFiles(string expectedEnvPath, params string[] fileFilters)
+        {
+            foreach (var fileFilter in fileFilters)
+            {
                 Assert.IsTrue(Directory.EnumerateFiles(Path.Combine(expectedEnvPath, "conda-meta"), fileFilter).Any(), $"{fileFilter} not found.");
             }
         }
 
-        private static void AssertSitePackagesFile(string envPath, string fileRelativePath) {
+        private static void AssertSitePackagesFile(string envPath, string fileRelativePath)
+        {
             Assert.IsTrue(File.Exists(Path.Combine(envPath, "Lib", "site-packages", fileRelativePath)), $"{fileRelativePath} not found.");
         }
 
-        private async static Task<string> EnqueueEnvironmentDeletionAsync(CondaEnvironmentManager mgr, string envName) {
+        private async static Task<string> EnqueueEnvironmentDeletionAsync(CondaEnvironmentManager mgr, string envName)
+        {
             var envPath = await GetEnvironmentPathAsync(mgr, envName);
-            if (envPath != null) {
+            if (envPath != null)
+            {
                 DeleteFolder.Add(envPath);
-            } else {
+            }
+            else
+            {
                 Assert.Fail($"Path to '{envName}' was not found in conda info results.");
             }
             return envPath;
         }
 
-        private async static Task<string> GetEnvironmentPathAsync(CondaEnvironmentManager mgr, string envName) {
+        private async static Task<string> GetEnvironmentPathAsync(CondaEnvironmentManager mgr, string envName)
+        {
             var info = await CondaEnvironmentFactoryProvider.ExecuteCondaInfoAsync(mgr.CondaPath);
             return info.EnvironmentFolders.SingleOrDefault(absPath => string.Compare(PathUtils.GetFileOrDirectoryName(absPath), envName, StringComparison.OrdinalIgnoreCase) == 0);
         }
 
-        private async static Task<string> GetUnusedEnvironmentNameAsync(CondaEnvironmentManager mgr) {
+        private async static Task<string> GetUnusedEnvironmentNameAsync(CondaEnvironmentManager mgr)
+        {
             // Avoid names already used by any of the existing environments.
             var info = await CondaEnvironmentFactoryProvider.ExecuteCondaInfoAsync(mgr.CondaPath);
             var used = info.EnvironmentFolders.Select(absPath => PathUtils.GetFileOrDirectoryName(absPath));
             string name;
 
-            do {
+            do
+            {
                 // Pick a random name (instead of incrementing a numerical suffix)
                 // so this works better if we ever run tests in parallel.
                 name = Path.GetRandomFileName();
@@ -323,8 +339,10 @@ namespace PythonToolsUITests {
             return name;
         }
 
-        private static CondaEnvironmentManager CreateEnvironmentManager() {
-            if (!PythonPaths.AnacondaVersions.Any()) {
+        private static CondaEnvironmentManager CreateEnvironmentManager()
+        {
+            if (!PythonPaths.AnacondaVersions.Any())
+            {
                 Assert.Inconclusive("Anaconda is required.");
             }
 
@@ -334,35 +352,41 @@ namespace PythonToolsUITests {
             return CondaEnvironmentManager.Create(condaPath);
         }
 
-        class MockCondaEnvironmentManagerUI : ICondaEnvironmentManagerUI {
+        class MockCondaEnvironmentManagerUI : ICondaEnvironmentManagerUI
+        {
             public readonly List<string> ErrorText = new List<string>();
             public readonly List<string> OperationFinished = new List<string>();
             public readonly List<string> OperationStarted = new List<string>();
             public readonly List<string> OutputText = new List<string>();
 
-            public void Clear() {
+            public void Clear()
+            {
                 ErrorText.Clear();
                 OperationFinished.Clear();
                 OperationStarted.Clear();
                 OutputText.Clear();
             }
 
-            public void OnErrorTextReceived(ICondaEnvironmentManager sender, string text) {
+            public void OnErrorTextReceived(ICondaEnvironmentManager sender, string text)
+            {
                 ErrorText.Add(text);
                 Debug.WriteLine(text);
             }
 
-            public void OnOperationFinished(ICondaEnvironmentManager sender, string operation, bool success) {
+            public void OnOperationFinished(ICondaEnvironmentManager sender, string operation, bool success)
+            {
                 OperationFinished.Add(operation);
                 Debug.WriteLine(operation + $"; success={success}");
             }
 
-            public void OnOperationStarted(ICondaEnvironmentManager sender, string operation) {
+            public void OnOperationStarted(ICondaEnvironmentManager sender, string operation)
+            {
                 OperationStarted.Add(operation);
                 Debug.WriteLine(operation);
             }
 
-            public void OnOutputTextReceived(ICondaEnvironmentManager sender, string text) {
+            public void OnOutputTextReceived(ICondaEnvironmentManager sender, string text)
+            {
                 OutputText.Add(text);
                 Debug.WriteLine(text);
             }

@@ -14,20 +14,14 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using Microsoft.PythonTools.Interpreter;
-using Microsoft.VisualStudio.Workspace;
-using Microsoft.VisualStudio.Workspace.Debug;
-
-namespace Microsoft.PythonTools.Workspace {
+namespace Microsoft.PythonTools.Workspace
+{
     [ExportLaunchDebugTarget(
         ProviderType,
         new[] { PythonConstants.FileExtension, PythonConstants.WindowsFileExtension }
     )]
-    class PythonLaunchDebugTargetProvider : ILaunchDebugTargetProvider {
+    class PythonLaunchDebugTargetProvider : ILaunchDebugTargetProvider
+    {
         private const string ProviderType = "F2B8B667-3D13-4E51-B067-00C188D0EB7E";
 
         public const string LaunchTypeName = "python";
@@ -74,7 +68,8 @@ namespace Microsoft.PythonTools.Workspace {
     ""configuration"": ""#/definitions/pythonFile""
 }";
 
-        public void LaunchDebugTarget(IWorkspace workspace, IServiceProvider serviceProvider, DebugLaunchActionContext debugLaunchActionContext) {
+        public void LaunchDebugTarget(IWorkspace workspace, IServiceProvider serviceProvider, DebugLaunchActionContext debugLaunchActionContext)
+        {
             var registry = serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>();
 
             var settings = debugLaunchActionContext.LaunchConfiguration;
@@ -84,22 +79,30 @@ namespace Microsoft.PythonTools.Workspace {
             var path = interpreterVal;
             InterpreterConfiguration config = null;
 
-            if (string.IsNullOrEmpty(scriptName)) {
+            if (string.IsNullOrEmpty(scriptName))
+            {
                 throw new InvalidOperationException(Strings.DebugLaunchScriptNameMissing);
             }
 
-            if (!string.IsNullOrEmpty(path) && !DefaultInterpreterValue.Equals(path, StringComparison.OrdinalIgnoreCase)) {
-                if (PathUtils.IsValidPath(path) && !Path.IsPathRooted(path)) {
+            if (!string.IsNullOrEmpty(path) && !DefaultInterpreterValue.Equals(path, StringComparison.OrdinalIgnoreCase))
+            {
+                if (PathUtils.IsValidPath(path) && !Path.IsPathRooted(path))
+                {
                     path = workspace.MakeRooted(path);
                 }
 
-                if (File.Exists(path)) {
+                if (File.Exists(path))
+                {
                     config = registry.Configurations.FirstOrDefault(c => c.InterpreterPath.Equals(path, StringComparison.OrdinalIgnoreCase)) ??
                         new VisualStudioInterpreterConfiguration("Custom", path, PathUtils.GetParent(path), path);
-                } else {
+                }
+                else
+                {
                     config = registry.FindConfiguration(interpreterVal);
                 }
-            } else {
+            }
+            else
+            {
                 var options = serviceProvider.GetComponentModel().GetService<IInterpreterOptionsService>();
                 var interpreter = workspace.GetInterpreterFactory(registry, options);
                 interpreter.ThrowIfNotRunnable();
@@ -107,27 +110,34 @@ namespace Microsoft.PythonTools.Workspace {
                 path = config.InterpreterPath;
             }
 
-            if (!File.Exists(path)) {
+            if (!File.Exists(path))
+            {
                 throw new InvalidOperationException(Strings.DebugLaunchInterpreterMissing_Path.FormatUI(path));
             }
 
             var searchPaths = workspace.GetAbsoluteSearchPaths().ToList();
 
             var environment = new Dictionary<string, string>();
-            if (settings.TryGetValue<IPropertySettings>(EnvKey, out IPropertySettings envSettings)) {
-                foreach (var keyVal in envSettings) {
+            if (settings.TryGetValue<IPropertySettings>(EnvKey, out IPropertySettings envSettings))
+            {
+                foreach (var keyVal in envSettings)
+                {
                     environment[keyVal.Key] = keyVal.Value.ToString();
                 }
             }
 
             string workingDir = settings.GetValue(WorkingDirectoryKey, string.Empty);
-            if (string.IsNullOrEmpty(workingDir)) {
+            if (string.IsNullOrEmpty(workingDir))
+            {
                 workingDir = workspace.MakeRooted(".");
-            } else if (PathUtils.IsValidPath(workingDir) && !Path.IsPathRooted(workingDir)) {
+            }
+            else if (PathUtils.IsValidPath(workingDir) && !Path.IsPathRooted(workingDir))
+            {
                 workingDir = workspace.MakeRooted(workingDir);
             }
 
-            var launchConfig = new LaunchConfiguration(config) {
+            var launchConfig = new LaunchConfiguration(config)
+            {
                 InterpreterPath = config == null ? path : null,
                 InterpreterArguments = settings.GetValue(InterpreterArgumentsKey, string.Empty),
                 ScriptName = Path.IsPathRooted(scriptName) ? scriptName : Path.Combine(workingDir, scriptName),
@@ -140,7 +150,8 @@ namespace Microsoft.PythonTools.Workspace {
 
             IProjectLauncher launcher = null;
             var browserUrl = settings.GetValue(WebBrowserUrlKey, string.Empty);
-            if (!string.IsNullOrEmpty(browserUrl)) {
+            if (!string.IsNullOrEmpty(browserUrl))
+            {
                 launchConfig.LaunchOptions[PythonConstants.WebBrowserUrlSetting] = browserUrl;
                 launcher = new PythonWebLauncher(serviceProvider, launchConfig, launchConfig, launchConfig);
             }
@@ -148,7 +159,8 @@ namespace Microsoft.PythonTools.Workspace {
             (launcher ?? new DefaultPythonLauncher(serviceProvider, launchConfig)).LaunchProject(debug);
         }
 
-        public bool SupportsContext(IWorkspace workspace, string filePath) {
+        public bool SupportsContext(IWorkspace workspace, string filePath)
+        {
             throw new NotImplementedException();
         }
     }

@@ -14,23 +14,11 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.CookiecutterTools.Infrastructure;
-using Microsoft.CookiecutterTools.Model;
-using Microsoft.CookiecutterTools.Telemetry;
-using Microsoft.CookiecutterTools.ViewModel;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using TestUtilities;
-
-namespace CookiecutterTests {
+namespace CookiecutterTests
+{
     [TestClass]
-    public class CookiecutterIntegrationTests {
+    public class CookiecutterIntegrationTests
+    {
         private const string GitHubTemplatePath = "https://github.com/audreyr/Cookiecutter-pypackage";
         private const string NoUserConfigFilePath = "";
 
@@ -79,12 +67,14 @@ namespace CookiecutterTests {
         };
 
         [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
+        public static void DoDeployment(TestContext context)
+        {
             AssertListener.Initialize();
         }
 
         [TestInitialize]
-        public void SetupTest() {
+        public void SetupTest()
+        {
             _redirector = new MockRedirector();
 
             var output = TestData.GetTempPath();
@@ -120,16 +110,21 @@ namespace CookiecutterTests {
             ((CookiecutterClient)_cutterClient).DefaultBasePath = outputProjectFolder;
         }
 
-        private void ExecuteCommand(string name, string args) {
-            if (name == "File.OpenFolder") {
+        private void ExecuteCommand(string name, string args)
+        {
+            if (name == "File.OpenFolder")
+            {
                 _openedFolder = args.Trim('"');
-            } else if (name == "File.OpenFile") {
+            }
+            else if (name == "File.OpenFile")
+            {
                 _openedFileArgs = args;
             }
         }
 
         [TestMethod]
-        public async Task Search() {
+        public async Task Search()
+        {
             await _vm.SearchAsync();
 
             Assert.AreEqual(1, _vm.Installed.Templates.Count);
@@ -160,7 +155,8 @@ namespace CookiecutterTests {
         }
 
         [TestMethod]
-        public async Task SearchLocalTemplate() {
+        public async Task SearchLocalTemplate()
+        {
             _vm.SearchTerm = TestLocalTemplatePath;
             await _vm.SearchAsync();
 
@@ -179,7 +175,8 @@ namespace CookiecutterTests {
         }
 
         [TestMethod]
-        public async Task SearchNonExistingLocalTemplate() {
+        public async Task SearchNonExistingLocalTemplate()
+        {
             _vm.SearchTerm = NonExistingLocalTemplatePath;
             await _vm.SearchAsync();
 
@@ -190,7 +187,8 @@ namespace CookiecutterTests {
         }
 
         [TestMethod]
-        public async Task SearchOnlineTemplate() {
+        public async Task SearchOnlineTemplate()
+        {
             _vm.SearchTerm = OnlineTemplateUrl;
             await _vm.SearchAsync();
 
@@ -212,7 +210,8 @@ namespace CookiecutterTests {
         }
 
         [TestMethod]
-        public async Task SearchOnlineNotTemplate() {
+        public async Task SearchOnlineNotTemplate()
+        {
             // Right now, we don't validate that it's a cookiecutter template for user entered url
             _vm.SearchTerm = OnlineNotTemplateUrl;
             await _vm.SearchAsync();
@@ -224,7 +223,8 @@ namespace CookiecutterTests {
         }
 
         [TestMethod]
-        public async Task SearchOnlineNonExistingUrl() {
+        public async Task SearchOnlineNonExistingUrl()
+        {
             // Right now, we don't validate that it's an existing url
             _vm.SearchTerm = OnlineNonExistingUrl;
             await _vm.SearchAsync();
@@ -236,7 +236,8 @@ namespace CookiecutterTests {
         }
 
         [TestMethod]
-        public async Task CreateFromLocalTemplate() {
+        public async Task CreateFromLocalTemplate()
+        {
             await EnsureCookiecutterInstalledAsync();
 
             await LoadLocalTemplate(TestLocalTemplatePath);
@@ -250,20 +251,24 @@ namespace CookiecutterTests {
             Assert.IsTrue(PathUtils.IsSubpathOf(DefaultBasePath, targetPath),
                 "{0} is not in the {1} folder".FormatInvariant(targetPath, DefaultBasePath));
 
-            try {
+            try
+            {
                 await _vm.CreateFilesAsync();
                 Assert.AreEqual(OperationStatus.Succeeded, _vm.CreatingStatus);
                 VerifyLocalTemplateReport(
                     fullNameOverride: "Integration Test User",
                     licenseOverride: "Apache Software License 2.0"
                 );
-            } finally {
+            }
+            finally
+            {
                 FileUtils.DeleteDirectory(targetPath);
             }
         }
 
         [TestMethod]
-        public async Task CreateFromLocalTemplateWithCommand() {
+        public async Task CreateFromLocalTemplateWithCommand()
+        {
             await EnsureCookiecutterInstalledAsync();
 
             await LoadLocalTemplate(TestLocalTemplateOpenTxtPath);
@@ -271,9 +276,12 @@ namespace CookiecutterTests {
             Assert.AreEqual(true, _vm.ShouldExecutePostCommands);
 
             var targetPath = _vm.OutputFolderPath;
-            try {
+            try
+            {
                 await _vm.CreateFilesAsync();
-            } finally {
+            }
+            finally
+            {
                 FileUtils.DeleteDirectory(targetPath);
             }
 
@@ -282,7 +290,8 @@ namespace CookiecutterTests {
         }
 
         [TestMethod]
-        public async Task CreateFromLocalTemplateWithCommandSwitchValue() {
+        public async Task CreateFromLocalTemplateWithCommandSwitchValue()
+        {
             await EnsureCookiecutterInstalledAsync();
 
             await LoadLocalTemplate(TestLocalTemplateOpenTxtWithEditorPath);
@@ -290,9 +299,12 @@ namespace CookiecutterTests {
             Assert.AreEqual(true, _vm.ShouldExecutePostCommands);
 
             var targetPath = _vm.OutputFolderPath;
-            try {
+            try
+            {
                 await _vm.CreateFilesAsync();
-            } finally {
+            }
+            finally
+            {
                 FileUtils.DeleteDirectory(targetPath);
             }
 
@@ -301,7 +313,8 @@ namespace CookiecutterTests {
         }
 
         [TestMethod]
-        public async Task CreateFromLocalTemplateWithCommandSkipped() {
+        public async Task CreateFromLocalTemplateWithCommandSkipped()
+        {
             await EnsureCookiecutterInstalledAsync();
 
             await LoadLocalTemplate(TestLocalTemplateOpenTxtPath);
@@ -311,9 +324,12 @@ namespace CookiecutterTests {
             _vm.ShouldExecutePostCommands = false;
 
             var targetPath = _vm.OutputFolderPath;
-            try {
+            try
+            {
                 await _vm.CreateFilesAsync();
-            } finally {
+            }
+            finally
+            {
                 FileUtils.DeleteDirectory(targetPath);
             }
 
@@ -321,12 +337,14 @@ namespace CookiecutterTests {
         }
 
         [TestMethod]
-        public async Task AddFromLocalTemplate() {
+        public async Task AddFromLocalTemplate()
+        {
             await EnsureCookiecutterInstalledAsync();
 
             var targetPath = ((CookiecutterClient)_cutterClient).DefaultBasePath;
             Directory.CreateDirectory(targetPath);
-            try {
+            try
+            {
                 await AddFromTemplateAsync(targetPath, "Project1/Project1", "MockProjectKind", TestLocalTemplatePath);
 
                 var addedLocation = _projectSystemClient.Added[0].Item1;
@@ -357,18 +375,22 @@ namespace CookiecutterTests {
                 Assert.IsTrue(log.Contains("Test/Cookiecutter/Template/AddToProject"));
                 Assert.IsTrue(log.Contains("MockProjectKind"));
 
-            } finally {
+            }
+            finally
+            {
                 FileUtils.DeleteDirectory(targetPath);
             }
         }
 
         [TestMethod]
-        public async Task AddFromLocalTemplateReplaceAndBackup() {
+        public async Task AddFromLocalTemplateReplaceAndBackup()
+        {
             await EnsureCookiecutterInstalledAsync();
 
             var targetPath = ((CookiecutterClient)_cutterClient).DefaultBasePath;
             Directory.CreateDirectory(targetPath);
-            try {
+            try
+            {
                 // Create some existing files under the output folder to force a
                 // backup of those existing files by cookiecutter client before
                 // it replaces them.
@@ -415,12 +437,15 @@ namespace CookiecutterTests {
 
                 // Check the contents of the generated files
                 VerifyLocalTemplateReport();
-            } finally {
+            }
+            finally
+            {
                 FileUtils.DeleteDirectory(targetPath);
             }
         }
 
-        private async Task AddFromTemplateAsync(string targetPath, string projectUniqueName, string projectKind, string templateLocation) {
+        private async Task AddFromTemplateAsync(string targetPath, string projectUniqueName, string projectKind, string templateLocation)
+        {
             _vm.OutputFolderPath = targetPath;
             _vm.TargetProjectLocation = new ProjectLocation() { FolderPath = targetPath, ProjectUniqueName = projectUniqueName, ProjectKind = projectKind };
             _vm.FixedOutputFolder = true;
@@ -443,7 +468,8 @@ namespace CookiecutterTests {
         }
 
         [TestMethod]
-        public async Task CreateFromOnlineTemplate() {
+        public async Task CreateFromOnlineTemplate()
+        {
             await EnsureCookiecutterInstalledAsync();
 
             _vm.SearchTerm = OnlineTemplateUrl;
@@ -468,7 +494,8 @@ namespace CookiecutterTests {
             Assert.IsTrue(PathUtils.IsSubpathOf(DefaultBasePath, targetPath),
                 "{0} is not in the {1} folder".FormatInvariant(targetPath, DefaultBasePath));
 
-            try {
+            try
+            {
                 await _vm.CreateFilesAsync();
 
                 Assert.AreEqual(OperationStatus.Succeeded, _vm.CreatingStatus);
@@ -496,16 +523,20 @@ namespace CookiecutterTests {
                 Assert.IsTrue(log.Contains(PII(template.RepositoryOwner)));
 
                 Assert.AreEqual(targetPath, _openedFolder);
-            } finally {
+            }
+            finally
+            {
                 FileUtils.DeleteDirectory(targetPath);
             }
         }
 
         [TestMethod]
-        public async Task InstallFromOnlineMultipleTimes() {
+        public async Task InstallFromOnlineMultipleTimes()
+        {
             await EnsureCookiecutterInstalledAsync();
 
-            for (int i = 0; i < 3; i++) {
+            for (int i = 0; i < 3; i++)
+            {
                 _vm.SearchTerm = OnlineTemplateUrl;
                 await _vm.SearchAsync();
 
@@ -523,7 +554,8 @@ namespace CookiecutterTests {
             Assert.AreEqual(1, installed.Length);
         }
 
-        private async Task LoadLocalTemplate(string templatePath) {
+        private async Task LoadLocalTemplate(string templatePath)
+        {
             _vm.SearchTerm = templatePath;
             await _vm.SearchAsync();
 
@@ -541,7 +573,8 @@ namespace CookiecutterTests {
             PrintContextItems(_vm.ContextItems);
         }
 
-        private void VerifyLocalTemplateReport(string fullNameOverride = null, string licenseOverride = null) {
+        private void VerifyLocalTemplateReport(string fullNameOverride = null, string licenseOverride = null)
+        {
             var reportFilePath = Path.Combine(_vm.OutputFolderPath, "report.txt");
             Assert.IsTrue(File.Exists(reportFilePath), "Failed to generate some project files.");
             var report = CookiecutterClientTests.ReadReport(reportFilePath);
@@ -561,50 +594,66 @@ namespace CookiecutterTests {
             CollectionAssert.AreEqual(expected, report);
         }
 
-        private static string PII(string text) {
+        private static string PII(string text)
+        {
             return $"PII({text})";
         }
 
-        private async Task EnsureCookiecutterInstalledAsync() {
-            if (!_cutterClient.CookiecutterInstalled) {
+        private async Task EnsureCookiecutterInstalledAsync()
+        {
+            if (!_cutterClient.CookiecutterInstalled)
+            {
                 await _cutterClient.CreateCookiecutterEnv();
                 await _cutterClient.InstallPackage();
             }
         }
 
-        private static void PrintResults(ObservableCollection<object> items) {
-            foreach (var item in items) {
+        private static void PrintResults(ObservableCollection<object> items)
+        {
+            foreach (var item in items)
+            {
                 var template = item as TemplateViewModel;
-                if (template != null) {
+                if (template != null)
+                {
                     PrintTemplate(template);
-                } else {
+                }
+                else
+                {
                     Console.WriteLine(item);
                 }
             }
         }
 
-        private static void PrintContextItems(ObservableCollection<ContextItemViewModel> items) {
+        private static void PrintContextItems(ObservableCollection<ContextItemViewModel> items)
+        {
             Console.WriteLine("Context Items");
-            foreach (var item in items) {
+            foreach (var item in items)
+            {
                 Console.WriteLine($"Name: '{item.Name}', Value: '{item.Val}', Default: '{item.Default}'");
             }
         }
 
-        private static void PrintTemplate(TemplateViewModel template) {
+        private static void PrintTemplate(TemplateViewModel template)
+        {
             Console.WriteLine($"DisplayName: '{template.DisplayName}', RemoteUrl: '{template.RemoteUrl}', ClonedPath: '{template.ClonedPath}', Desc: '{template.Description}'");
         }
 
-        class ReplacedFileComparer : IComparer {
-            public int Compare(object x, object y) {
-                if (x == y) {
+        class ReplacedFileComparer : IComparer
+        {
+            public int Compare(object x, object y)
+            {
+                if (x == y)
+                {
                     return 0;
                 }
 
-                if (x == null) {
+                if (x == null)
+                {
                     return -1;
                 }
 
-                if (y == null) {
+                if (y == null)
+                {
                     return 1;
                 }
 
@@ -612,12 +661,14 @@ namespace CookiecutterTests {
                 var b = y as ReplacedFile;
 
                 var res = a.OriginalFilePath.CompareTo(b.OriginalFilePath);
-                if (res != 0) {
+                if (res != 0)
+                {
                     return res;
                 }
 
                 res = a.BackupFilePath.CompareTo(b.BackupFilePath);
-                if (res != 0) {
+                if (res != 0)
+                {
                     return res;
                 }
 

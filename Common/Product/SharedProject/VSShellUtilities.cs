@@ -14,7 +14,6 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
 /* Unmerged change from project 'PythonTools'
 Before:
 using Microsoft.VisualStudio.TextManager.Interop;
@@ -23,7 +22,6 @@ using Microsoft.VisualStudio.TextManager.Interop;
 using System;
 using System.Diagnostics;
 */
-
 
 namespace Microsoft.VisualStudioTools.Project
 {

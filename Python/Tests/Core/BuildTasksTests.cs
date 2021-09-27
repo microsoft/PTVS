@@ -14,21 +14,8 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using Microsoft.Build.Construction;
-using Microsoft.Build.Evaluation;
-using Microsoft.Build.Execution;
-using Microsoft.Build.Framework;
-using Microsoft.Build.Logging;
-using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Parsing;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using TestUtilities;
-
-namespace PythonToolsTests {
+namespace PythonToolsTests
+{
     // TODO: Rewrite these tests as UI tests
     // It's just too hard to convince MSBuild to load the correct
     // files from outside VS, so we either need to switch to discovering
@@ -36,14 +23,17 @@ namespace PythonToolsTests {
     // just run these within a VS instance.
 
     //[TestClass]
-    public class BuildTasksTests {
+    public class BuildTasksTests
+    {
         [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
+        public static void DoDeployment(TestContext context)
+        {
             AssertListener.Initialize();
         }
 
         //[TestMethod, Priority(UnitTestPriority.P3)]
-        public void TestResolveProjectHome() {
+        public void TestResolveProjectHome()
+        {
             var proj = ProjectRootElement.Create();
             var g = proj.AddPropertyGroup();
             var projectHome = g.AddProperty("ProjectHome", "");
@@ -54,7 +44,8 @@ namespace PythonToolsTests {
             proj.AddImport(TestData.GetPath("Microsoft.PythonTools.targets"));
 
             var target = proj.AddTarget("TestOutput");
-            foreach (var variable in new[] { "ProjectHome", "QualifiedProjectHome", "StartupFile", "StartupPath", "Expected" }) {
+            foreach (var variable in new[] { "ProjectHome", "QualifiedProjectHome", "StartupFile", "StartupPath", "Expected" })
+            {
                 var task = target.AddTask("Message");
                 task.SetParameter("Importance", "high");
                 task.SetParameter("Text", string.Format("{0} = $({0})", variable));
@@ -75,7 +66,8 @@ namespace PythonToolsTests {
                 new { ProjectHome="abc", Expected=loc + @"abc\" },
                 new { ProjectHome=@"a\b\c", Expected=loc + @"a\b\c\" },
                 new { ProjectHome=@"a\b\..\c", Expected=loc + @"a\c\" },
-            }) {
+            })
+            {
                 projectHome.Value = test.ProjectHome;
                 expected.Value = test.Expected;
                 var inst = new ProjectInstance(proj);
@@ -85,7 +77,8 @@ namespace PythonToolsTests {
 
         //[TestMethod, Priority(UnitTestPriority.P3)]
         [TestCategory("10s"), TestCategory("Installed")]
-        public void TestResolveEnvironment() {
+        public void TestResolveEnvironment()
+        {
             var proj1 = new Project(TestData.GetPath(@"TestData\Targets\Environments1.pyproj"));
             Assert.IsTrue(proj1.Build("TestResolveEnvironment", new ILogger[] { new ConsoleLogger(LoggerVerbosity.Detailed) }));
 
@@ -95,20 +88,23 @@ namespace PythonToolsTests {
 
         //[TestMethod, Priority(UnitTestPriority.P3)]
         //[TestCategory("10s"), TestCategory("Installed")]
-        public void TestResolveEnvironmentReference() {
+        public void TestResolveEnvironmentReference()
+        {
             var proj = new Project(TestData.GetPath(@"TestData\Targets\EnvironmentReferences1.pyproj"));
             Assert.IsTrue(proj.Build("TestResolveEnvironment", new ILogger[] { new ConsoleLogger(LoggerVerbosity.Detailed) }));
         }
 
         //[TestMethod, Priority(UnitTestPriority.P3), TestCategory("Installed")]
-        public void TestCommandDefinitions() {
+        public void TestCommandDefinitions()
+        {
             var proj = new Project(TestData.GetPath(@"TestData\Targets\Commands1.pyproj"));
             Assert.IsTrue(proj.Build("TestCommands", new ILogger[] { new ConsoleLogger(LoggerVerbosity.Detailed) }));
         }
 
         //[TestMethod, Priority(UnitTestPriority.P3)]
         //[TestCategory("10s"), TestCategory("60s")]
-        public void TestRunPythonCommand() {
+        public void TestRunPythonCommand()
+        {
             var expectedSearchPath = string.Format("['{0}', '{1}']",
                 TestData.GetPath(@"TestData").Replace("\\", "\\\\"),
                 TestData.GetPath(@"TestData\HelloWorld").Replace("\\", "\\\\")
@@ -116,8 +112,10 @@ namespace PythonToolsTests {
 
             var proj = new Project(TestData.GetPath(@"TestData\Targets\Commands4.pyproj"));
 
-            foreach (var version in PythonPaths.Versions) {
-                if (version.IsIronPython) {
+            foreach (var version in PythonPaths.Versions)
+            {
+                if (version.IsIronPython)
+                {
                     // IronPython isn't registered on developer machines...
                     continue;
                 }
@@ -134,7 +132,8 @@ namespace PythonToolsTests {
 
                 Console.WriteLine();
                 Console.WriteLine("Output from {0:B} {1}", version.Id, version.Version.ToVersion());
-                foreach (var line in log.Lines) {
+                foreach (var line in log.Lines)
+                {
                     Console.WriteLine("* {0}", line.TrimEnd('\r', '\n'));
                 }
 
@@ -145,11 +144,13 @@ namespace PythonToolsTests {
             }
         }
 
-        class StringLogger : Microsoft.Build.Logging.ConsoleLogger {
+        class StringLogger : Microsoft.Build.Logging.ConsoleLogger
+        {
             public readonly List<string> Lines = new List<string>();
 
             public StringLogger(LoggerVerbosity verbosity)
-                : base(verbosity) {
+                : base(verbosity)
+            {
                 WriteHandler = Lines.Add;
             }
         }

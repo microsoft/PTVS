@@ -14,8 +14,10 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Debugger {
-    internal enum VsPackageMessage {
+namespace Microsoft.PythonTools.Debugger
+{
+    internal enum VsPackageMessage
+    {
         None = 0,
         WarnAboutPythonSymbols = 1,
         // TODO: Evaluate if this is still necessary

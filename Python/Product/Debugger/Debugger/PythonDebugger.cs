@@ -14,16 +14,16 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.IO;
-using Microsoft.PythonTools.Parsing;
-
-namespace Microsoft.PythonTools.Debugger {
-    class PythonDebugger {
+namespace Microsoft.PythonTools.Debugger
+{
+    class PythonDebugger
+    {
         /// <summary>
         /// Creates a new PythonProcess object for debugging.  The process does not start until Start is called 
         /// on the returned PythonProcess object.
         /// </summary>
-        public PythonProcess CreateProcess(PythonLanguageVersion langVersion, string exe, string args, string dir, string env, string interpreterOptions = null, PythonDebugOptions debugOptions = PythonDebugOptions.None, TextWriter debugLog = null) {
+        public PythonProcess CreateProcess(PythonLanguageVersion langVersion, string exe, string args, string dir, string env, string interpreterOptions = null, PythonDebugOptions debugOptions = PythonDebugOptions.None, TextWriter debugLog = null)
+        {
             return new PythonProcess(langVersion, exe, args, dir, env, interpreterOptions, debugOptions, debugLog);
         }
     }

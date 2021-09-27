@@ -14,14 +14,14 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-
-namespace Microsoft.PythonTools.Interpreter {
+namespace Microsoft.PythonTools.Interpreter
+{
     /// <summary>
     /// Specifies the interpreter's behavior in the UI.
     /// </summary>
     [Flags]
-    public enum InterpreterUIMode : int {
+    public enum InterpreterUIMode : int
+    {
         /// <summary>
         /// Interpreter can be set or selected as the default, and is visible to
         /// the user.

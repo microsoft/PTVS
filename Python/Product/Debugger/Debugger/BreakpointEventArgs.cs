@@ -14,18 +14,21 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-
-namespace Microsoft.PythonTools.Debugger {
-    class BreakpointEventArgs : EventArgs {
+namespace Microsoft.PythonTools.Debugger
+{
+    class BreakpointEventArgs : EventArgs
+    {
         private readonly PythonBreakpoint _breakpoint;
 
-        public BreakpointEventArgs(PythonBreakpoint breakpoint) {
+        public BreakpointEventArgs(PythonBreakpoint breakpoint)
+        {
             _breakpoint = breakpoint;
         }
 
-        public PythonBreakpoint Breakpoint {
-            get {
+        public PythonBreakpoint Breakpoint
+        {
+            get
+            {
                 return _breakpoint;
             }
         }

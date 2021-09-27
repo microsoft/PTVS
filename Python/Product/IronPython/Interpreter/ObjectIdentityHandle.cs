@@ -14,9 +14,8 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-
-namespace Microsoft.IronPythonTools.Interpreter {
+namespace Microsoft.IronPythonTools.Interpreter
+{
     /// <summary>
     /// Represents an object in a remote domain whos identity has been captured.
     /// 
@@ -26,39 +25,49 @@ namespace Microsoft.IronPythonTools.Interpreter {
     /// across sources and compare incorrectly.
     /// </summary>
     [Serializable]
-    struct ObjectIdentityHandle : IEquatable<ObjectIdentityHandle> {
+    struct ObjectIdentityHandle : IEquatable<ObjectIdentityHandle>
+    {
         private readonly int _identity;
 
-        public ObjectIdentityHandle(int identity) {
+        public ObjectIdentityHandle(int identity)
+        {
             _identity = identity;
         }
 
-        public bool IsNull {
-            get {
+        public bool IsNull
+        {
+            get
+            {
                 return _identity == 0;
             }
         }
 
-        public int Id {
-            get {
+        public int Id
+        {
+            get
+            {
                 return _identity;
             }
         }
 
-        public override bool Equals(object obj) {
-            if (obj is ObjectIdentityHandle) {
+        public override bool Equals(object obj)
+        {
+            if (obj is ObjectIdentityHandle)
+            {
                 return this.Equals((ObjectIdentityHandle)obj);
             }
             return false;
         }
 
-        public override int GetHashCode() {
+        public override int GetHashCode()
+        {
             return _identity;
         }
 
         #region IEquatable<ObjectIdentityHandle> Members
 
-        public bool Equals(ObjectIdentityHandle other) {
+        public bool Equals(ObjectIdentityHandle other)
+        {
             return other._identity == _identity;
         }
 

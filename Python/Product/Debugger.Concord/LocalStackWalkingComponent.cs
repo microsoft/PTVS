@@ -14,12 +14,8 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Diagnostics;
-using System.Linq;
-using System.Runtime.Serialization;
-
-namespace Microsoft.PythonTools.Debugger.Concord {
+namespace Microsoft.PythonTools.Debugger.Concord
+{
     // TODO: remove VS 2010 workaround by merging LocalComponent and LocalStackWalkingComponent together.
     //
     // In VS 2010, a component with level below 9996005 cannot invoke stack walking APIs, and a component above that level will have other functionality
@@ -33,48 +29,58 @@ namespace Microsoft.PythonTools.Debugger.Concord {
     public class LocalStackWalkingComponent :
         ComponentBase,
         IDkmModuleInstanceLoadNotification,
-        IDkmRuntimeInstanceLoadNotification {
+        IDkmRuntimeInstanceLoadNotification
+    {
 
         public LocalStackWalkingComponent()
-            : base(Guids.LocalStackWalkingComponentGuid) {
+            : base(Guids.LocalStackWalkingComponentGuid)
+        {
         }
 
-        void IDkmModuleInstanceLoadNotification.OnModuleInstanceLoad(DkmModuleInstance moduleInstance, DkmWorkList workList, DkmEventDescriptorS eventDescriptor) {
+        void IDkmModuleInstanceLoadNotification.OnModuleInstanceLoad(DkmModuleInstance moduleInstance, DkmWorkList workList, DkmEventDescriptorS eventDescriptor)
+        {
             var process = moduleInstance.Process;
 
             var engines = process.DebugLaunchSettings.EngineFilter;
-            if (engines == null || !engines.Contains(Guids.PythonDebugEngineGuid)) {
+            if (engines == null || !engines.Contains(Guids.PythonDebugEngineGuid))
+            {
                 return;
             }
 
-            if (moduleInstance.RuntimeInstance == process.GetNativeRuntimeInstance()) {
+            if (moduleInstance.RuntimeInstance == process.GetNativeRuntimeInstance())
+            {
                 new LocalComponent.NativeModuleInstanceLoadedNotification { ModuleInstanceId = moduleInstance.UniqueId }.SendLower(process);
             }
         }
 
         [DataContract]
         [MessageTo(Guids.LocalStackWalkingComponentId)]
-        internal class BeforeCreatePythonRuntimeNotification : MessageBase<BeforeCreatePythonRuntimeNotification> {
+        internal class BeforeCreatePythonRuntimeNotification : MessageBase<BeforeCreatePythonRuntimeNotification>
+        {
             [DataMember]
             public Guid PythonDllModuleInstanceId { get; set; }
 
             [DataMember]
             public Guid DebuggerHelperDllModuleInstanceId { get; set; }
 
-            public override void Handle(DkmProcess process) {
+            public override void Handle(DkmProcess process)
+            {
                 var pyrtInfo = process.GetPythonRuntimeInfo();
                 var nativeModules = process.GetNativeRuntimeInstance().GetNativeModuleInstances();
 
                 pyrtInfo.DLLs.Python = nativeModules.Single(mi => mi.UniqueId == PythonDllModuleInstanceId);
 
-                if (DebuggerHelperDllModuleInstanceId != Guid.Empty) {
+                if (DebuggerHelperDllModuleInstanceId != Guid.Empty)
+                {
                     pyrtInfo.DLLs.DebuggerHelper = nativeModules.Single(mi => mi.UniqueId == DebuggerHelperDllModuleInstanceId);
                 }
             }
         }
 
-        unsafe void IDkmRuntimeInstanceLoadNotification.OnRuntimeInstanceLoad(DkmRuntimeInstance runtimeInstance, DkmEventDescriptor eventDescriptor) {
-            if (runtimeInstance.Id.RuntimeType != Guids.PythonRuntimeTypeGuid) {
+        unsafe void IDkmRuntimeInstanceLoadNotification.OnRuntimeInstanceLoad(DkmRuntimeInstance runtimeInstance, DkmEventDescriptor eventDescriptor)
+        {
+            if (runtimeInstance.Id.RuntimeType != Guids.PythonRuntimeTypeGuid)
+            {
                 Debug.Fail("OnRuntimeInstanceLoad notification for a non-Python runtime.");
                 throw new NotSupportedException();
             }
@@ -85,15 +91,18 @@ namespace Microsoft.PythonTools.Debugger.Concord {
 
         [DataContract]
         [MessageTo(Guids.LocalStackWalkingComponentId)]
-        internal class BeginStepOutNotification : MessageBase<BeginStepOutNotification> {
+        internal class BeginStepOutNotification : MessageBase<BeginStepOutNotification>
+        {
             [DataMember]
             public Guid ThreadId { get; set; }
 
-            public override void Handle(DkmProcess process) {
+            public override void Handle(DkmProcess process)
+            {
                 var thread = process.GetThreads().Single(t => t.UniqueId == ThreadId);
 
                 var traceHelper = process.GetDataItem<TraceManagerLocalHelper>();
-                if (traceHelper == null) {
+                if (traceHelper == null)
+                {
                     Debug.Fail("LocalStackWalkingComponent received a BeginStepOutNotification, but there's no TraceManagerLocalHelper to handle it.");
                     throw new InvalidOperationException();
                 }
@@ -104,11 +113,14 @@ namespace Microsoft.PythonTools.Debugger.Concord {
 
         [DataContract]
         [MessageTo(Guids.LocalStackWalkingComponentId)]
-        internal class StepCompleteNotification : MessageBase<StepCompleteNotification> {
-            public override void Handle(DkmProcess process) {
+        internal class StepCompleteNotification : MessageBase<StepCompleteNotification>
+        {
+            public override void Handle(DkmProcess process)
+            {
 
                 var traceHelper = process.GetDataItem<TraceManagerLocalHelper>();
-                if (traceHelper == null) {
+                if (traceHelper == null)
+                {
                     Debug.Fail("LocalStackWalkingComponent received a StepCompleteNotification, but there's no TraceManagerLocalHelper to handle it.");
                     throw new InvalidOperationException();
                 }

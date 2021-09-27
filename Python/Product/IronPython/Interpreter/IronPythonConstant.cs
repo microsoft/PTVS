@@ -14,24 +14,31 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.PythonTools.Interpreter;
-
-namespace Microsoft.IronPythonTools.Interpreter {
-    class IronPythonConstant : PythonObject, IPythonConstant {
+namespace Microsoft.IronPythonTools.Interpreter
+{
+    class IronPythonConstant : PythonObject, IPythonConstant
+    {
         private IPythonType _type;
         private PythonMemberType _memType;
 
         public IronPythonConstant(IronPythonInterpreter interpreter, ObjectIdentityHandle value)
-            : base(interpreter, value) {
+            : base(interpreter, value)
+        {
         }
 
-        public override PythonMemberType MemberType {
-            get {
-                if (_memType == PythonMemberType.Unknown) {
+        public override PythonMemberType MemberType
+        {
+            get
+            {
+                if (_memType == PythonMemberType.Unknown)
+                {
                     var ri = RemoteInterpreter;
-                    if (!Value.IsNull && ri != null && ri.IsEnumValue(Value)) {
+                    if (!Value.IsNull && ri != null && ri.IsEnumValue(Value))
+                    {
                         _memType = PythonMemberType.EnumInstance;
-                    } else {
+                    }
+                    else
+                    {
                         _memType = PythonMemberType.Constant;
                     }
                 }
@@ -39,12 +46,18 @@ namespace Microsoft.IronPythonTools.Interpreter {
             }
         }
 
-        public IPythonType Type {
-            get {
-                if (_type == null) {
-                    if (Value.IsNull) {
+        public IPythonType Type
+        {
+            get
+            {
+                if (_type == null)
+                {
+                    if (Value.IsNull)
+                    {
                         _type = Interpreter.GetBuiltinType(BuiltinTypeId.NoneType);
-                    } else {
+                    }
+                    else
+                    {
                         var ri = RemoteInterpreter;
                         _type = ri != null ? Interpreter.GetTypeFromType(ri.GetObjectPythonType(Value)) : null;
                     }

@@ -14,17 +14,19 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-
-namespace TestUtilities.Python {
-    public class MockCondaLocatorProvider : ICondaLocatorProvider {
+namespace TestUtilities.Python
+{
+    public class MockCondaLocatorProvider : ICondaLocatorProvider
+    {
         private readonly ICondaLocator _locator;
 
-        public MockCondaLocatorProvider(ICondaLocator locator) {
+        public MockCondaLocatorProvider(ICondaLocator locator)
+        {
             _locator = locator ?? throw new ArgumentNullException(nameof(locator));
         }
 
-        public ICondaLocator FindLocator() {
+        public ICondaLocator FindLocator()
+        {
             return _locator;
         }
     }

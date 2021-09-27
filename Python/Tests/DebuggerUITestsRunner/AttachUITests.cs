@@ -14,12 +14,11 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using TestRunnerInterop;
-
-namespace DebuggerUITestsRunner {
+namespace DebuggerUITestsRunner
+{
     [TestClass]
-    public class AttachUITests {
+    public class AttachUITests
+    {
         #region UI test boilerplate
         public VsTestInvoker _vs => new VsTestInvoker(
             VsTestContext.Instance,
@@ -41,37 +40,43 @@ namespace DebuggerUITestsRunner {
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void AttachBasic() {
+        public void AttachBasic()
+        {
             _vs.RunTest(nameof(DebuggerUITests.AttachUITests.AttachBasic));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void AttachBreakImmediately() {
+        public void AttachBreakImmediately()
+        {
             _vs.RunTest(nameof(DebuggerUITests.AttachUITests.AttachBreakImmediately));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void AttachUserSetsBreakpoint() {
+        public void AttachUserSetsBreakpoint()
+        {
             _vs.RunTest(nameof(DebuggerUITests.AttachUITests.AttachUserSetsBreakpoint));
         }
 
         [TestMethod, Priority(UITestPriority.P2_FAILING_UI_TEST)]
         [TestCategory("Installed")]
-        public void AttachThreadsBreakAllAndSetExitFlag() {
+        public void AttachThreadsBreakAllAndSetExitFlag()
+        {
             _vs.RunTest(nameof(DebuggerUITests.AttachUITests.AttachThreadsBreakAllAndSetExitFlag));
         }
 
         [TestMethod, Priority(UITestPriority.P2_FAILING_UI_TEST)]
         [TestCategory("Installed")]
-        public void AttachThreadsBreakOneAndSetExitFlag() {
+        public void AttachThreadsBreakOneAndSetExitFlag()
+        {
             _vs.RunTest(nameof(DebuggerUITests.AttachUITests.AttachThreadsBreakOneAndSetExitFlag));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void AttachLotsOfThreads() {
+        public void AttachLotsOfThreads()
+        {
             _vs.RunTest(nameof(DebuggerUITests.AttachUITests.AttachLotsOfThreads));
         }
     }

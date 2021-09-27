@@ -14,51 +14,54 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
-using Microsoft.Windows.Design.Host;
-
-namespace Microsoft.PythonTools.XamlDesignerSupport {
-    class WpfEventBindingProvider : EventBindingProvider {
+namespace Microsoft.PythonTools.XamlDesignerSupport
+{
+    class WpfEventBindingProvider : EventBindingProvider
+    {
         private readonly IXamlDesignerCallback _callback;
 
-        public WpfEventBindingProvider(IXamlDesignerCallback callback) {
+        public WpfEventBindingProvider(IXamlDesignerCallback callback)
+        {
             _callback = callback;
         }
 
-        public override bool AddEventHandler(EventDescription eventDescription, string objectName, string methodName) {
+        public override bool AddEventHandler(EventDescription eventDescription, string objectName, string methodName)
+        {
             // we return false here which causes the event handler to always be wired up via XAML instead of via code.
             return false;
         }
 
-        public override bool AllowClassNameForMethodName() {
+        public override bool AllowClassNameForMethodName()
+        {
             return true;
         }
 
-        public override void AppendStatements(EventDescription eventDescription, string methodName, string statements, int relativePosition) {
+        public override void AppendStatements(EventDescription eventDescription, string methodName, string statements, int relativePosition)
+        {
             throw new NotImplementedException();
         }
 
-        public override string CodeProviderLanguage {
+        public override string CodeProviderLanguage
+        {
             get { return "Python"; }
         }
 
-        public override bool CreateMethod(EventDescription eventDescription, string methodName, string initialStatements) {
-            if (!_callback.EnsureDocumentIsOpen()) {
+        public override bool CreateMethod(EventDescription eventDescription, string methodName, string initialStatements)
+        {
+            if (!_callback.EnsureDocumentIsOpen())
+            {
                 return false;
             }
 
             // build the new method handler
             var insertPoint = _callback.GetInsertionPoint(null);
 
-            if (insertPoint != null) {
+            if (insertPoint != null)
+            {
                 var view = _callback.TextView;
                 var textBuffer = _callback.Buffer;
-                using (var edit = textBuffer.CreateEdit()) {
+                using (var edit = textBuffer.CreateEdit())
+                {
                     var text = BuildMethod(
                         eventDescription,
                         methodName,
@@ -76,7 +79,8 @@ namespace Microsoft.PythonTools.XamlDesignerSupport {
             return false;
         }
 
-        private static string BuildMethod(EventDescription eventDescription, string methodName, string indentation, int tabSize) {
+        private static string BuildMethod(EventDescription eventDescription, string methodName, string indentation, int tabSize)
+        {
             StringBuilder text = new StringBuilder();
             text.AppendLine(indentation);
             text.Append(indentation);
@@ -84,15 +88,19 @@ namespace Microsoft.PythonTools.XamlDesignerSupport {
             text.Append(methodName);
             text.Append('(');
             text.Append("self");
-            foreach (var param in eventDescription.Parameters) {
+            foreach (var param in eventDescription.Parameters)
+            {
                 text.Append(", ");
                 text.Append(param.Name);
             }
             text.AppendLine("):");
-            if (tabSize < 0) {
+            if (tabSize < 0)
+            {
                 text.Append(indentation);
                 text.Append("\tpass");
-            } else {
+            }
+            else
+            {
                 text.Append(indentation);
                 text.Append(' ', tabSize);
                 text.Append("pass");
@@ -102,7 +110,8 @@ namespace Microsoft.PythonTools.XamlDesignerSupport {
             return text.ToString();
         }
 
-        public override string CreateUniqueMethodName(string objectName, EventDescription eventDescription) {
+        public override string CreateUniqueMethodName(string objectName, EventDescription eventDescription)
+        {
             var name = string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0}_{1}", objectName, eventDescription.Name);
             int count = 0;
 
@@ -111,57 +120,75 @@ namespace Microsoft.PythonTools.XamlDesignerSupport {
                null
            );
 
-            while (methods.Contains(name)) {
+            while (methods.Contains(name))
+            {
                 name = string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0}_{1}{2}", objectName, eventDescription.Name, ++count);
             }
             return name;
         }
 
-        public override IEnumerable<string> GetCompatibleMethods(EventDescription eventDescription) {
+        public override IEnumerable<string> GetCompatibleMethods(EventDescription eventDescription)
+        {
             return _callback.FindMethods(null, eventDescription.Parameters.Count() + 1);
         }
 
-        public override IEnumerable<string> GetMethodHandlers(EventDescription eventDescription, string objectName) {
+        public override IEnumerable<string> GetMethodHandlers(EventDescription eventDescription, string objectName)
+        {
             return new string[0];
         }
 
-        public override bool IsExistingMethodName(EventDescription eventDescription, string methodName) {
+        public override bool IsExistingMethodName(EventDescription eventDescription, string methodName)
+        {
             return _callback.FindMethods(null, null).Contains(methodName);
         }
 
-        private MethodInformation FindMethod(string methodName) {
+        private MethodInformation FindMethod(string methodName)
+        {
             return _callback.GetMethodInfo(null, methodName);
         }
 
-        public override bool RemoveEventHandler(EventDescription eventDescription, string objectName, string methodName) {
+        public override bool RemoveEventHandler(EventDescription eventDescription, string objectName, string methodName)
+        {
             var method = FindMethod(methodName);
-            if (method != null && method.IsFound) {
+            if (method != null && method.IsFound)
+            {
                 var view = _callback.TextView;
                 var textBuffer = _callback.Buffer;
 
                 // appending a method adds 2 extra newlines, we want to remove those if those are still
                 // present so that adding a handler and then removing it leaves the buffer unchanged.
 
-                using (var edit = textBuffer.CreateEdit()) {
+                using (var edit = textBuffer.CreateEdit())
+                {
                     int start = method.Start - 1;
 
                     // eat the newline we insert before the method
-                    while (start >= 0) {
+                    while (start >= 0)
+                    {
                         var curChar = edit.Snapshot[start];
-                        if (!Char.IsWhiteSpace(curChar)) {
+                        if (!Char.IsWhiteSpace(curChar))
+                        {
                             break;
-                        } else if (curChar == ' ' || curChar == '\t') {
+                        }
+                        else if (curChar == ' ' || curChar == '\t')
+                        {
                             start--;
                             continue;
-                        } else if (curChar == '\n') {
-                            if (start != 0) {
-                                if (edit.Snapshot[start - 1] == '\r') {
+                        }
+                        else if (curChar == '\n')
+                        {
+                            if (start != 0)
+                            {
+                                if (edit.Snapshot[start - 1] == '\r')
+                                {
                                     start--;
                                 }
                             }
                             start--;
                             break;
-                        } else if (curChar == '\r') {
+                        }
+                        else if (curChar == '\r')
+                        {
                             start--;
                             break;
                         }
@@ -172,21 +199,32 @@ namespace Microsoft.PythonTools.XamlDesignerSupport {
 
                     // eat the newline we insert at the end of the method
                     int end = method.End;
-                    while (end < edit.Snapshot.Length) {
-                        if (edit.Snapshot[end] == '\n') {
+                    while (end < edit.Snapshot.Length)
+                    {
+                        if (edit.Snapshot[end] == '\n')
+                        {
                             end++;
                             break;
-                        } else if (edit.Snapshot[end] == '\r') {
-                            if (end < edit.Snapshot.Length - 1 && edit.Snapshot[end + 1] == '\n') {
+                        }
+                        else if (edit.Snapshot[end] == '\r')
+                        {
+                            if (end < edit.Snapshot.Length - 1 && edit.Snapshot[end + 1] == '\n')
+                            {
                                 end += 2;
-                            } else {
+                            }
+                            else
+                            {
                                 end++;
                             }
                             break;
-                        } else if (edit.Snapshot[end] == ' ' || edit.Snapshot[end] == '\t') {
+                        }
+                        else if (edit.Snapshot[end] == ' ' || edit.Snapshot[end] == '\t')
+                        {
                             end++;
                             continue;
-                        } else {
+                        }
+                        else
+                        {
                             break;
                         }
                     }
@@ -201,20 +239,25 @@ namespace Microsoft.PythonTools.XamlDesignerSupport {
             return false;
         }
 
-        public override bool RemoveHandlesForName(string elementName) {
+        public override bool RemoveHandlesForName(string elementName)
+        {
             throw new NotImplementedException();
         }
 
-        public override bool RemoveMethod(EventDescription eventDescription, string methodName) {
+        public override bool RemoveMethod(EventDescription eventDescription, string methodName)
+        {
             throw new NotImplementedException();
         }
 
-        public override void SetClassName(string className) {
+        public override void SetClassName(string className)
+        {
         }
 
-        public override bool ShowMethod(EventDescription eventDescription, string methodName) {
+        public override bool ShowMethod(EventDescription eventDescription, string methodName)
+        {
             var method = FindMethod(methodName);
-            if (method != null && method.IsFound) {
+            if (method != null && method.IsFound)
+            {
                 var view = _callback.TextView;
                 view.Caret.MoveTo(new SnapshotPoint(view.TextSnapshot, method.Start));
                 view.Caret.EnsureVisible();
@@ -224,7 +267,8 @@ namespace Microsoft.PythonTools.XamlDesignerSupport {
             return false;
         }
 
-        public override void ValidateMethodName(EventDescription eventDescription, string methodName) {
+        public override void ValidateMethodName(EventDescription eventDescription, string methodName)
+        {
         }
     }
 }

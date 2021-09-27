@@ -14,11 +14,6 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.VisualStudio.Shell.Interop;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
 namespace TestUtilities.Mocks
 {
 #pragma warning disable CS0012 // The type 'SYSTEMTIME' is defined in an assembly that is not referenced. You must add a reference to assembly 'Microsoft.VisualStudio.Shell.Interop.8.0, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a'.

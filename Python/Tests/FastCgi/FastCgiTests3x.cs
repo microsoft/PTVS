@@ -14,19 +14,21 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using TestUtilities;
-
-namespace FastCgiTests {
+namespace FastCgiTests
+{
     [TestClass]
-    public class FastCgiTests3x : FastCgiTests2x {
+    public class FastCgiTests3x : FastCgiTests2x
+    {
         [ClassInitialize]
-        public static new void DoDeployment(TestContext context) {
+        public static new void DoDeployment(TestContext context)
+        {
             AssertListener.Initialize();
         }
 
-        public override PythonVersion PythonVersion {
-            get {
+        public override PythonVersion PythonVersion
+        {
+            get
+            {
                 return PythonPaths.Python37_x64 ?? PythonPaths.Python37 ??
                        PythonPaths.Python36_x64 ?? PythonPaths.Python36 ??
                        PythonPaths.Python35_x64 ?? PythonPaths.Python35;

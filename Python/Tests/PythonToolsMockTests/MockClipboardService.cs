@@ -14,33 +14,39 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.VisualStudioTools;
-
-namespace PythonToolsMockTests {
-    class MockClipboardService : IClipboardService {
+namespace PythonToolsMockTests
+{
+    class MockClipboardService : IClipboardService
+    {
         private IDataObject _data;
 
-        public void SetClipboard(IDataObject dataObject) {
+        public void SetClipboard(IDataObject dataObject)
+        {
             _data = dataObject;
         }
 
-        public IDataObject GetClipboard() {
+        public IDataObject GetClipboard()
+        {
             return _data;
         }
 
-        public void FlushClipboard() {
+        public void FlushClipboard()
+        {
             // TODO: We could try and copy the data locally, instead we just keep it alive.
         }
 
-        public bool OpenClipboard() {
+        public bool OpenClipboard()
+        {
             return true;
         }
 
-        public void EmptyClipboard() {
+        public void EmptyClipboard()
+        {
             _data = null;
         }
 
-        public void CloseClipboard() {
+        public void CloseClipboard()
+        {
         }
     }
 

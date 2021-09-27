@@ -14,34 +14,37 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Threading.Tasks;
-using Microsoft.CookiecutterTools.Infrastructure;
-using Microsoft.CookiecutterTools.Model;
-
-namespace CookiecutterTests {
-    class MockGitClient : IGitClient {
-        public Task<string> CloneAsync(Redirector redirector, string repoUrl, string targetParentFolderPath) {
+namespace CookiecutterTests
+{
+    class MockGitClient : IGitClient
+    {
+        public Task<string> CloneAsync(Redirector redirector, string repoUrl, string targetParentFolderPath)
+        {
             throw new NotImplementedException();
         }
 
-        public Task<DateTime?> GetLastCommitDateAsync(string repoFolderPath, string branch = null) {
+        public Task<DateTime?> GetLastCommitDateAsync(string repoFolderPath, string branch = null)
+        {
             throw new NotImplementedException();
         }
 
-        public Task<string> GetRemoteOriginAsync(string repoFolderPath) {
+        public Task<string> GetRemoteOriginAsync(string repoFolderPath)
+        {
             throw new NotImplementedException();
         }
 
-        public Task MergeAsync(string repoFolderPath) {
+        public Task MergeAsync(string repoFolderPath)
+        {
             throw new NotImplementedException();
         }
 
-        public Task FetchAsync(string repoFolderPath) {
+        public Task FetchAsync(string repoFolderPath)
+        {
             throw new NotImplementedException();
         }
 
-        public Task<string> CloneAsync(string repoUrl, string targetParentFolderPath) {
+        public Task<string> CloneAsync(string repoUrl, string targetParentFolderPath)
+        {
             throw new NotImplementedException();
         }
     }

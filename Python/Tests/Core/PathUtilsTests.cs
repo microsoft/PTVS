@@ -14,25 +14,20 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using Microsoft.PythonTools.Infrastructure;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using TestUtilities;
-using TestUtilities.Python;
-
-namespace PythonToolsTests {
+namespace PythonToolsTests
+{
     [TestClass]
-    public class PathUtilsTests {
+    public class PathUtilsTests
+    {
         [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
+        public static void DoDeployment(TestContext context)
+        {
             AssertListener.Initialize();
         }
 
         [TestMethod, Priority(UnitTestPriority.P0)]
-        public void TestMakeUri() {
+        public void TestMakeUri()
+        {
             Assert.AreEqual(@"C:\a\b\c\", PathUtils.MakeUri(@"C:\a\b\c", true, UriKind.Absolute).LocalPath);
             Assert.AreEqual(@"C:\a\b\c", PathUtils.MakeUri(@"C:\a\b\c", false, UriKind.Absolute).LocalPath);
             Assert.AreEqual(@"\\a\b\c\", PathUtils.MakeUri(@"\\a\b\c", true, UriKind.Absolute).LocalPath);
@@ -75,28 +70,32 @@ namespace PythonToolsTests {
             Assert.AreEqual(@"../a b c", PathUtils.MakeUri(@"../a b c", false, UriKind.Relative).ToString());
         }
 
-        private static void AssertIsNotSameDirectory(string first, string second) {
+        private static void AssertIsNotSameDirectory(string first, string second)
+        {
             Assert.IsFalse(PathUtils.IsSameDirectory(first, second), string.Format("First: {0} Second: {1}", first, second));
             first = first.Replace("\\", "/");
             second = second.Replace("\\", "/");
             Assert.IsFalse(PathUtils.IsSameDirectory(first, second), string.Format("First: {0} Second: {1}", first, second));
         }
 
-        private static void AssertIsSameDirectory(string first, string second) {
+        private static void AssertIsSameDirectory(string first, string second)
+        {
             Assert.IsTrue(PathUtils.IsSameDirectory(first, second), string.Format("First: {0} Second: {1}", first, second));
             first = first.Replace("\\", "/");
             second = second.Replace("\\", "/");
             Assert.IsTrue(PathUtils.IsSameDirectory(first, second), string.Format("First: {0} Second: {1}", first, second));
         }
 
-        private static void AssertIsNotSamePath(string first, string second) {
+        private static void AssertIsNotSamePath(string first, string second)
+        {
             Assert.IsFalse(PathUtils.IsSamePath(first, second), string.Format("First: {0} Second: {1}", first, second));
             first = first.Replace("\\", "/");
             second = second.Replace("\\", "/");
             Assert.IsFalse(PathUtils.IsSamePath(first, second), string.Format("First: {0} Second: {1}", first, second));
         }
 
-        private static void AssertIsSamePath(string first, string second) {
+        private static void AssertIsSamePath(string first, string second)
+        {
             Assert.IsTrue(PathUtils.IsSamePath(first, second), string.Format("First: {0} Second: {1}", first, second));
             first = first.Replace("\\", "/");
             second = second.Replace("\\", "/");
@@ -104,7 +103,8 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P0)]
-        public void TestIsSamePath() {
+        public void TestIsSamePath()
+        {
             // These paths should all look like files. Separators are added to the end
             // to test the directory cases. Paths ending in "." or ".." are always directories,
             // and will fail the tests here.
@@ -113,9 +113,11 @@ namespace PythonToolsTests {
                 @"a\b\.\c", @"a\b\c",
                 @"a\b\d\..\c", @"a\b\c",
                 @"a\b\c", @"a\..\a\b\..\b\c\..\c"
-                )) {
+                ))
+            {
 
-                foreach (var root in new[] { @"C:\", @"\\pc\Share\", @"ftp://me@ftp.home.net/" }) {
+                foreach (var root in new[] { @"C:\", @"\\pc\Share\", @"ftp://me@ftp.home.net/" })
+                {
                     string first, second;
                     first = root + testCase.Item1;
                     second = root + testCase.Item2;
@@ -123,10 +125,13 @@ namespace PythonToolsTests {
                     AssertIsNotSamePath(first + "\\", second);
                     AssertIsNotSamePath(first, second + "\\");
                     AssertIsSamePath(first + "\\", second + "\\");
-                    if (!root.StartsWith("ftp", StringComparison.OrdinalIgnoreCase)) {
+                    if (!root.StartsWith("ftp", StringComparison.OrdinalIgnoreCase))
+                    {
                         // Files are case-insensitive
                         AssertIsSamePath(first.ToLowerInvariant(), second.ToUpperInvariant());
-                    } else {
+                    }
+                    else
+                    {
                         // FTP is case-sensitive
                         AssertIsNotSamePath(first.ToLowerInvariant(), second.ToUpperInvariant());
                     }
@@ -135,10 +140,13 @@ namespace PythonToolsTests {
                     AssertIsSameDirectory(first + "\\", second);
                     AssertIsSameDirectory(first, second + "\\");
                     AssertIsSameDirectory(first + "\\", second + "\\");
-                    if (!root.StartsWith("ftp", StringComparison.OrdinalIgnoreCase)) {
+                    if (!root.StartsWith("ftp", StringComparison.OrdinalIgnoreCase))
+                    {
                         // Files are case-insensitive
                         AssertIsSameDirectory(first.ToLowerInvariant(), second.ToUpperInvariant());
-                    } else {
+                    }
+                    else
+                    {
                         // FTP is case-sensitive
                         AssertIsNotSameDirectory(first.ToLowerInvariant(), second.ToUpperInvariant());
                     }
@@ -150,8 +158,10 @@ namespace PythonToolsTests {
             foreach (var testCase in Pairs(
                 @"a\b\c\..", @"a\b",
                 @"a\b\c\..\..", @"a"
-                )) {
-                foreach (var root in new[] { @"C:\", @"\\pc\Share\", @"ftp://me@example.com/" }) {
+                ))
+            {
+                foreach (var root in new[] { @"C:\", @"\\pc\Share\", @"ftp://me@example.com/" })
+                {
                     string first, second;
                     first = root + testCase.Item1;
                     second = root + testCase.Item2;
@@ -165,10 +175,13 @@ namespace PythonToolsTests {
                     AssertIsSameDirectory(first + "\\", second);
                     AssertIsSameDirectory(first, second + "\\");
                     AssertIsSameDirectory(first + "\\", second + "\\");
-                    if (!root.StartsWith("ftp", StringComparison.OrdinalIgnoreCase)) {
+                    if (!root.StartsWith("ftp", StringComparison.OrdinalIgnoreCase))
+                    {
                         // Files are case-insensitive
                         AssertIsSameDirectory(first.ToLowerInvariant(), second.ToUpperInvariant());
-                    } else {
+                    }
+                    else
+                    {
                         // FTP is case-sensitive
                         AssertIsNotSameDirectory(first.ToLowerInvariant(), second.ToUpperInvariant());
                     }
@@ -177,7 +190,8 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P0)]
-        public void TestCreateFriendlyDirectoryPath() {
+        public void TestCreateFriendlyDirectoryPath()
+        {
             foreach (var testCase in Triples(
                 @"C:\a\b", @"C:\", @"..\..",
                 @"C:\a\b", @"C:\a", @"..",
@@ -197,7 +211,8 @@ namespace PythonToolsTests {
                 @"ftp://me@example.com/a/b", @"ftp://me@example.com/a/b", @".",
                 @"ftp://me@example.com/a/b", @"ftp://me@example.com/a/b/c", @"c",
                 @"ftp://me@example.com/a/b", @"ftp://me@another.example.com/a/b", @"ftp://me@another.example.com/a/b"
-                )) {
+                ))
+            {
                 var expected = testCase.Item3;
                 var actual = PathUtils.CreateFriendlyDirectoryPath(testCase.Item1, testCase.Item2);
 
@@ -206,7 +221,8 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P0)]
-        public void TestCreateFriendlyFilePath() {
+        public void TestCreateFriendlyFilePath()
+        {
             foreach (var testCase in Triples(
                 @"C:\a\b", @"C:\file.exe", @"..\..\file.exe",
                 @"C:\a\b", @"C:\a\file.exe", @"..\file.exe",
@@ -225,7 +241,8 @@ namespace PythonToolsTests {
                 @"ftp://me@example.com/a/b", @"ftp://me@example.com/a/b/file.exe", @"file.exe",
                 @"ftp://me@example.com/a/b", @"ftp://me@example.com/a/b/c/file.exe", @"c/file.exe",
                 @"ftp://me@example.com/a/b", @"ftp://me@another.example.com/a/b/file.exe", @"ftp://me@another.example.com/a/b/file.exe"
-                )) {
+                ))
+            {
                 var expected = testCase.Item3;
                 var actual = PathUtils.CreateFriendlyFilePath(testCase.Item1, testCase.Item2);
 
@@ -234,7 +251,8 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P0)]
-        public void TestGetRelativeDirectoryPath() {
+        public void TestGetRelativeDirectoryPath()
+        {
             foreach (var testCase in Triples(
                 @"C:\a\b", @"C:\", @"..\..\",
                 @"C:\a\b", @"C:\a", @"..\",
@@ -265,7 +283,8 @@ namespace PythonToolsTests {
 
                 "C:\\a\\b\\", @"C:\a\b", @"",
                 @"C:\a\b", "C:\\a\\b\\", @""
-            )) {
+            ))
+            {
                 var expected = testCase.Item3;
                 var actual = PathUtils.GetRelativeDirectoryPath(testCase.Item1, testCase.Item2);
 
@@ -274,7 +293,8 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P0)]
-        public void TestGetRelativeFilePath() {
+        public void TestGetRelativeFilePath()
+        {
             foreach (var testCase in Triples(
                 @"C:\a\b", @"C:\file.exe", @"..\..\file.exe",
                 @"C:\a\b", @"C:\a\file.exe", @"..\file.exe",
@@ -313,7 +333,8 @@ namespace PythonToolsTests {
                 // directory rather than a file.
                 "C:\\a\\", "C:\\a\\b\\", "b\\",
                 "C:\\a", "C:\\a\\b\\", "b\\"
-                )) {
+                ))
+            {
                 var expected = testCase.Item3;
                 var actual = PathUtils.GetRelativeFilePath(testCase.Item1, testCase.Item2);
 
@@ -322,7 +343,8 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P0)]
-        public void TestGetAbsoluteDirectoryPath() {
+        public void TestGetAbsoluteDirectoryPath()
+        {
             foreach (var testCase in Triples(
                 @"C:\a\b", @"\", @"C:\",
                 @"C:\a\b", @"..\", @"C:\a\",
@@ -340,7 +362,8 @@ namespace PythonToolsTests {
                 @"ftp://me@example.com/path", @"..", @"ftp://me@example.com/",
                 @"ftp://me@example.com/path", @"subpath", @"ftp://me@example.com/path/subpath/",
                 @"ftp://me@example.com/path", @"../otherpath/", @"ftp://me@example.com/otherpath/"
-            )) {
+            ))
+            {
                 var expected = testCase.Item3;
                 var actual = PathUtils.GetAbsoluteDirectoryPath(testCase.Item1, testCase.Item2);
 
@@ -349,7 +372,8 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P0)]
-        public void TestGetAbsoluteFilePath() {
+        public void TestGetAbsoluteFilePath()
+        {
             foreach (var testCase in Triples(
                 @"C:\a\b", @"\file.exe", @"C:\file.exe",
                 @"C:\a\b", @"..\file.exe", @"C:\a\file.exe",
@@ -368,7 +392,8 @@ namespace PythonToolsTests {
                 @"ftp://me@example.com/path", @"file.exe", @"ftp://me@example.com/path/file.exe",
                 @"ftp://me@example.com/path", @"subpath/file.exe", @"ftp://me@example.com/path/subpath/file.exe",
                 @"ftp://me@example.com/path", @"../otherpath/file.exe", @"ftp://me@example.com/otherpath/file.exe"
-            )) {
+            ))
+            {
                 var expected = testCase.Item3;
                 var actual = PathUtils.GetAbsoluteFilePath(testCase.Item1, testCase.Item2);
 
@@ -377,14 +402,17 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P0)]
-        public void TestNormalizeDirectoryPath() {
+        public void TestNormalizeDirectoryPath()
+        {
             foreach (var testCase in Pairs(
                 @"a\b\c", @"a\b\c\",
                 @"a\b\.\c", @"a\b\c\",
                 @"a\b\d\..\c", @"a\b\c\",
                 @"a\b\\c", @"a\b\c\"
-            )) {
-                foreach (var root in new[] { "", @".\", @"..\", @"\" }) {
+            ))
+            {
+                foreach (var root in new[] { "", @".\", @"..\", @"\" })
+                {
                     var expected = (root == @".\" ? "" : root) + testCase.Item2;
                     var actual = PathUtils.NormalizeDirectoryPath(root + testCase.Item1);
 
@@ -397,11 +425,14 @@ namespace PythonToolsTests {
                 @"a\b\.\c", @"a\b\c\",
                 @"a\b\d\..\c", @"a\b\c\",
                 @"a\..\..\b", @"b\"
-            )) {
-                foreach (var root in new[] { @"C:\", @"\\pc\share\", @"ftp://me@example.com/" }) {
+            ))
+            {
+                foreach (var root in new[] { @"C:\", @"\\pc\share\", @"ftp://me@example.com/" })
+                {
                     var expected = root + testCase.Item2;
                     var actual = PathUtils.NormalizeDirectoryPath(root + testCase.Item1);
-                    if (root.StartsWith("ftp", StringComparison.OrdinalIgnoreCase)) {
+                    if (root.StartsWith("ftp", StringComparison.OrdinalIgnoreCase))
+                    {
                         expected = expected.Replace('\\', '/');
                     }
 
@@ -415,14 +446,17 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P0)]
-        public void TestNormalizePath() {
+        public void TestNormalizePath()
+        {
             foreach (var testCase in Pairs(
                 @"a\b\c", @"a\b\c",
                 @"a\b\.\c", @"a\b\c",
                 @"a\b\d\..\c", @"a\b\c",
                 @"a\b\\c", @"a\b\c"
-            )) {
-                foreach (var root in new[] { "", @".\", @"..\", @"\" }) {
+            ))
+            {
+                foreach (var root in new[] { "", @".\", @"..\", @"\" })
+                {
                     var expected = (root == @".\" ? "" : root) + testCase.Item2;
                     var actual = PathUtils.NormalizePath(root + testCase.Item1);
 
@@ -440,11 +474,14 @@ namespace PythonToolsTests {
                 @"a\b\.\c", @"a\b\c",
                 @"a\b\d\..\c", @"a\b\c",
                 @"a\..\..\b", @"b"
-            )) {
-                foreach (var root in new[] { @"C:\", @"\\pc\share\", @"ftp://me@example.com/" }) {
+            ))
+            {
+                foreach (var root in new[] { @"C:\", @"\\pc\share\", @"ftp://me@example.com/" })
+                {
                     var expected = root + testCase.Item2;
                     var actual = PathUtils.NormalizePath(root + testCase.Item1);
-                    if (root.StartsWith("ftp", StringComparison.OrdinalIgnoreCase)) {
+                    if (root.StartsWith("ftp", StringComparison.OrdinalIgnoreCase))
+                    {
                         expected = expected.Replace('\\', '/');
                     }
 
@@ -452,7 +489,8 @@ namespace PythonToolsTests {
 
                     expected += @"\";
                     actual = PathUtils.NormalizePath(root + testCase.Item1 + @"\");
-                    if (root.StartsWith("ftp", StringComparison.OrdinalIgnoreCase)) {
+                    if (root.StartsWith("ftp", StringComparison.OrdinalIgnoreCase))
+                    {
                         expected = expected.Replace('\\', '/');
                     }
 
@@ -462,7 +500,8 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P0)]
-        public void TestTrimEndSeparator() {
+        public void TestTrimEndSeparator()
+        {
             // TrimEndSeparator uses System.IO.Path.(Alt)DirectorySeparatorChar
             // Here we assume these are '\\' and '/'
 
@@ -482,7 +521,8 @@ namespace PythonToolsTests {
                 @"C:\", @"C:\",
                 @"ftp://a/", @"ftp://a",
                 @"ftp://", @"ftp://"
-            )) {
+            ))
+            {
                 var expected = testCase.Item2;
                 var actual = PathUtils.TrimEndSeparator(testCase.Item1);
 
@@ -491,7 +531,8 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P0)]
-        public void TestIsSubpathOf() {
+        public void TestIsSubpathOf()
+        {
             // Positive tests
             foreach (var testCase in Pairs(
                 @"C:\a\b", @"C:\A\B",
@@ -501,7 +542,8 @@ namespace PythonToolsTests {
                 @"C:\a\b\", @"C:\A\B\C",    // Quick path should not be taken
                 @"C:", @"C:\a\b\",
                 @"C:\a\b", @"C:\A\X\..\B\C"
-                )) {
+                ))
+            {
                 Assert.IsTrue(PathUtils.IsSubpathOf(testCase.Item1, testCase.Item2), string.Format("{0} should be subpath of {1}", testCase.Item2, testCase.Item1));
             }
 
@@ -513,35 +555,43 @@ namespace PythonToolsTests {
                 @"C:\a\b", @"D:\A\B\C",
                 @"C:\a\b\c", @"C:\B\A\C\D",
                 @"C:\a\b\", @"C:\a\b\..\x\c" // Quick path should not be taken
-                )) {
+                ))
+            {
                 Assert.IsFalse(PathUtils.IsSubpathOf(testCase.Item1, testCase.Item2), string.Format("{0} should not be subpath of {1}", testCase.Item2, testCase.Item1));
             }
         }
 
         [TestMethod, Priority(UnitTestPriority.P0)]
-        public void TestGetLastDirectoryName() {
+        public void TestGetLastDirectoryName()
+        {
             foreach (var testCase in Pairs(
                 @"a\b\c", "b",
                 @"a\b\", "b",
                 @"a\b\c\", "c",
                 @"a\b\.\c", "b",
                 @"a\b\.\.\.\.\.\.\c", "b"
-            )) {
-                foreach (var scheme in new[] { "", "C:\\", "\\", ".\\", "\\\\share\\root\\", "ftp://" }) {
+            ))
+            {
+                foreach (var scheme in new[] { "", "C:\\", "\\", ".\\", "\\\\share\\root\\", "ftp://" })
+                {
                     var path = scheme + testCase.Item1;
 
                     Assert.AreEqual(testCase.Item2, PathUtils.GetLastDirectoryName(path), "Path: " + path);
 
-                    if (path.IndexOf('.') >= 0) {
+                    if (path.IndexOf('.') >= 0)
+                    {
                         // Path.GetFileName will always fail on these, so don't
                         // even bother testing.
                         continue;
                     }
 
                     string ioPathResult;
-                    try {
+                    try
+                    {
                         ioPathResult = Path.GetFileName(PathUtils.TrimEndSeparator(Path.GetDirectoryName(path)));
-                    } catch (ArgumentException) {
+                    }
+                    catch (ArgumentException)
+                    {
                         continue;
                     }
 
@@ -555,28 +605,35 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P0)]
-        public void TestGetParentOfDirectory() {
+        public void TestGetParentOfDirectory()
+        {
             foreach (var testCase in Pairs(
                 @"a\b\c", @"a\b\",
                 @"a\b\", @"a\",
                 @"a\b\c\", @"a\b\"
-            )) {
-                foreach (var scheme in new[] { "", "C:\\", "\\", ".\\", "\\\\share\\root\\", "ftp://" }) {
+            ))
+            {
+                foreach (var scheme in new[] { "", "C:\\", "\\", ".\\", "\\\\share\\root\\", "ftp://" })
+                {
                     var path = scheme + testCase.Item1;
                     var expected = scheme + testCase.Item2;
 
                     Assert.AreEqual(expected, PathUtils.GetParent(path), "Path: " + path);
 
-                    if (scheme.Contains("://")) {
+                    if (scheme.Contains("://"))
+                    {
                         // Path.GetFileName will always fail on these, so don't
                         // even bother testing.
                         continue;
                     }
 
                     string ioPathResult;
-                    try {
+                    try
+                    {
                         ioPathResult = Path.GetDirectoryName(PathUtils.TrimEndSeparator(path)) + Path.DirectorySeparatorChar;
-                    } catch (ArgumentException) {
+                    }
+                    catch (ArgumentException)
+                    {
                         continue;
                     }
 
@@ -590,30 +647,37 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P0)]
-        public void TestGetFileOrDirectoryName() {
+        public void TestGetFileOrDirectoryName()
+        {
             foreach (var testCase in Pairs(
                 @"a\b\c", @"c",
                 @"a\b\", @"b",
                 @"a\b\c\", @"c",
                 @"a", @"a",
                 @"a\", @"a"
-            )) {
-                foreach (var scheme in new[] { "", "C:\\", "\\", ".\\", "\\\\share\\root\\", "ftp://" }) {
+            ))
+            {
+                foreach (var scheme in new[] { "", "C:\\", "\\", ".\\", "\\\\share\\root\\", "ftp://" })
+                {
                     var path = scheme + testCase.Item1;
                     var expected = testCase.Item2;
 
                     Assert.AreEqual(expected, PathUtils.GetFileOrDirectoryName(path), "Path: " + path);
 
-                    if (scheme.Contains("://")) {
+                    if (scheme.Contains("://"))
+                    {
                         // Path.GetFileName will always fail on these, so don't
                         // even bother testing.
                         continue;
                     }
 
                     string ioPathResult;
-                    try {
+                    try
+                    {
                         ioPathResult = PathUtils.GetFileOrDirectoryName(path);
-                    } catch (ArgumentException) {
+                    }
+                    catch (ArgumentException)
+                    {
                         continue;
                     }
 
@@ -627,7 +691,8 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P0)]
-        public void TestEnumerateDirectories() {
+        public void TestEnumerateDirectories()
+        {
             // Use "Windows", as we won't be able to enumerate everything in
             // here, but we should still not crash.
             var windows = Environment.GetEnvironmentVariable("SYSTEMROOT");
@@ -649,7 +714,8 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P0)]
-        public void TestEnumerateFiles() {
+        public void TestEnumerateFiles()
+        {
             // Use "Windows", as we won't be able to enumerate everything in
             // here, but we should still not crash.
             var windows = Environment.GetEnvironmentVariable("SYSTEMROOT");
@@ -685,7 +751,8 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P0)]
-        public void TestFindFile() {
+        public void TestFindFile()
+        {
             var root = TestData.GetPath("TestData");
             // File is too deep - should not find
             Assert.IsNull(PathUtils.FindFile(root, "9E90EF25FCE648B397D0CCEC67305A68.txt", depthLimit: 0));
@@ -709,11 +776,15 @@ namespace PythonToolsTests {
             Assert.IsNotNull(PathUtils.FindFile(root, "D75BD8CE1BBA41A7A2547CF3652AD3AF.txt", depthLimit: 4));
         }
 
-        private IEnumerable<Tuple<string, string>> Pairs(params string[] items) {
-            using (var e = items.Cast<string>().GetEnumerator()) {
-                while (e.MoveNext()) {
+        private IEnumerable<Tuple<string, string>> Pairs(params string[] items)
+        {
+            using (var e = items.Cast<string>().GetEnumerator())
+            {
+                while (e.MoveNext())
+                {
                     var first = e.Current;
-                    if (!e.MoveNext()) {
+                    if (!e.MoveNext())
+                    {
                         yield break;
                     }
                     var second = e.Current;
@@ -723,15 +794,20 @@ namespace PythonToolsTests {
             }
         }
 
-        private IEnumerable<Tuple<string, string, string>> Triples(params string[] items) {
-            using (var e = items.Cast<string>().GetEnumerator()) {
-                while (e.MoveNext()) {
+        private IEnumerable<Tuple<string, string, string>> Triples(params string[] items)
+        {
+            using (var e = items.Cast<string>().GetEnumerator())
+            {
+                while (e.MoveNext())
+                {
                     var first = e.Current;
-                    if (!e.MoveNext()) {
+                    if (!e.MoveNext())
+                    {
                         yield break;
                     }
                     var second = e.Current;
-                    if (!e.MoveNext()) {
+                    if (!e.MoveNext())
+                    {
                         yield break;
                     }
                     var third = e.Current;

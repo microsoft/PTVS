@@ -14,48 +14,56 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Runtime.InteropServices;
-
-namespace Microsoft.PythonTools.Debugger.Concord {
+namespace Microsoft.PythonTools.Debugger.Concord
+{
     /// <summary>
     /// An owning reference to a COM object. When disposed, calls <see cref="Marshal.ReleaseComObject"/> on the pointee.
     /// </summary>
     internal struct ComPtr<T> : IDisposable
-        where T : class {
+        where T : class
+    {
 
         private T _obj;
 
-        public ComPtr(T obj) {
+        public ComPtr(T obj)
+        {
             _obj = obj;
         }
 
-        public T Object {
-            get {
+        public T Object
+        {
+            get
+            {
                 return _obj;
             }
         }
 
-        public void Dispose() {
-            if (_obj != null && Marshal.IsComObject(_obj)) {
+        public void Dispose()
+        {
+            if (_obj != null && Marshal.IsComObject(_obj))
+            {
                 Marshal.ReleaseComObject(_obj);
             }
             _obj = null;
         }
 
-        public ComPtr<T> Detach() {
+        public ComPtr<T> Detach()
+        {
             var result = this;
             _obj = null;
             return result;
         }
 
-        public static implicit operator T(ComPtr<T> ptr) {
+        public static implicit operator T(ComPtr<T> ptr)
+        {
             return ptr._obj;
         }
     }
 
-    internal static class ComPtr {
-        public static ComPtr<T> Create<T>(T obj) where T : class {
+    internal static class ComPtr
+    {
+        public static ComPtr<T> Create<T>(T obj) where T : class
+        {
             return new ComPtr<T>(obj);
         }
     }

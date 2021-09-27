@@ -14,31 +14,33 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
 using Task = System.Threading.Tasks.Task;
 
-namespace Microsoft.PythonTools.Debugger {
-    static class TaskHelpers {
-        private static readonly Lazy<IVsThreadedWaitDialogFactory> _twdf = new Lazy<IVsThreadedWaitDialogFactory>(() => {
+namespace Microsoft.PythonTools.Debugger
+{
+    static class TaskHelpers
+    {
+        private static readonly Lazy<IVsThreadedWaitDialogFactory> _twdf = new Lazy<IVsThreadedWaitDialogFactory>(() =>
+        {
             return (IVsThreadedWaitDialogFactory)Package.GetGlobalService(typeof(SVsThreadedWaitDialogFactory));
         });
 
-        public static void RunSynchronouslyOnUIThread(Func<CancellationToken, Task> method, double delayToShowDialog = 2) {
+        public static void RunSynchronouslyOnUIThread(Func<CancellationToken, Task> method, double delayToShowDialog = 2)
+        {
             ThreadHelper.ThrowIfNotOnUIThread();
 
-            using (var session = StartWaitDialog(delayToShowDialog)) {
+            using (var session = StartWaitDialog(delayToShowDialog))
+            {
                 var ct = session?.UserCancellationToken ?? default(CancellationToken);
                 ThreadHelper.JoinableTaskFactory.Run(() => method(ct));
             }
         }
 
-        public static T RunSynchronouslyOnUIThread<T>(Func<CancellationToken, Task<T>> method, double delayToShowDialog = 2) {
+        public static T RunSynchronouslyOnUIThread<T>(Func<CancellationToken, Task<T>> method, double delayToShowDialog = 2)
+        {
             T result;
-            using (var session = StartWaitDialog(delayToShowDialog)) {
+            using (var session = StartWaitDialog(delayToShowDialog))
+            {
                 var ct = session?.UserCancellationToken ?? default(CancellationToken);
                 result = ThreadHelper.JoinableTaskFactory.Run(() => method(ct));
             }
@@ -46,7 +48,8 @@ namespace Microsoft.PythonTools.Debugger {
             return result;
         }
 
-        private static ThreadedWaitDialogHelper.Session StartWaitDialog(double delayToShowDialog) {
+        private static ThreadedWaitDialogHelper.Session StartWaitDialog(double delayToShowDialog)
+        {
             return _twdf.Value?.StartWaitDialog(
                 null,
                 new ThreadedWaitDialogProgressData(Strings.DebuggerInProgress, isCancelable: true),

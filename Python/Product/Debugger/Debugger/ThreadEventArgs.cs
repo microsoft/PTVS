@@ -14,21 +14,24 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-
-namespace Microsoft.PythonTools.Debugger {
+namespace Microsoft.PythonTools.Debugger
+{
     /// <summary>
     /// Event args for start/stop of threads.
     /// </summary>
-    class ThreadEventArgs : EventArgs {
+    class ThreadEventArgs : EventArgs
+    {
         private readonly PythonThread _thread;
 
-        public ThreadEventArgs(PythonThread thread) {
+        public ThreadEventArgs(PythonThread thread)
+        {
             _thread = thread;
         }
 
-        public PythonThread Thread {
-            get {
+        public PythonThread Thread
+        {
+            get
+            {
                 return _thread;
             }
         }

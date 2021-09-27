@@ -14,20 +14,22 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-namespace CookiecutterTests {
+namespace CookiecutterTests
+{
     [TestClass]
-    public class TelemetryTestServiceTests {
+    public class TelemetryTestServiceTests
+    {
         [TestMethod]
-        public void TelemetryTestService_DefaultPrefixConstructorTest() {
+        public void TelemetryTestService_DefaultPrefixConstructorTest()
+        {
             var telemetryService = new TelemetryTestService();
             Assert.AreEqual(TelemetryTestService.EventNamePrefixString, telemetryService.EventNamePrefix);
             Assert.AreEqual(TelemetryTestService.PropertyNamePrefixString, telemetryService.PropertyNamePrefix);
         }
 
         [TestMethod]
-        public void TelemetryTestService_CustomPrefixConstructorTest() {
+        public void TelemetryTestService_CustomPrefixConstructorTest()
+        {
             var eventPrefix = "Event/Prefix/";
             var propertyPrefix = "Property.Prefix.";
 
@@ -37,7 +39,8 @@ namespace CookiecutterTests {
         }
 
         [TestMethod]
-        public void TelemetryTestService_SimpleEventTest() {
+        public void TelemetryTestService_SimpleEventTest()
+        {
             var area = "Options";
             var eventName = "event";
 
@@ -48,7 +51,8 @@ namespace CookiecutterTests {
         }
 
         [TestMethod]
-        public void TelemetryTestService_EventWithParametersTest() {
+        public void TelemetryTestService_EventWithParametersTest()
+        {
             var area = "Options";
             var eventName = "event";
 

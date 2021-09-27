@@ -14,12 +14,11 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using TestUtilities.Python;
-
-namespace PythonToolsTests {
+namespace PythonToolsTests
+{
     [TestClass]
-    public sealed class AssemblySetup {
+    public sealed class AssemblySetup
+    {
         [AssemblyInitialize]
         public static void Initialize(TestContext testContext)
             => MSTestEnvironment.Initialize().AddVsResolvePaths();

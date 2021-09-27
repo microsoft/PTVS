@@ -15,47 +15,37 @@
 // permissions and limitations under the License.
 
 extern alias pt;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.TestAdapter;
-using Microsoft.PythonTools.TestAdapter.Pytest;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.VisualStudio.TestWindow.Extensibility;
-using pt::Microsoft.PythonTools.CodeCoverage;
 using TestAdapterTests.Mocks;
-using TestUtilities;
-using TestUtilities.Python;
 
-namespace TestAdapterTests {
+namespace TestAdapterTests
+{
     [TestClass, Ignore]
-    public abstract class TestExecutorTests {
+    public abstract class TestExecutorTests
+    {
         private const string FrameworkPytest = "Pytest";
         private const string FrameworkUnittest = "Unittest";
 
         protected abstract PythonVersion Version { get; }
 
         [ClassCleanup]
-        public static void Cleanup() {
+        public static void Cleanup()
+        {
             TestEnvironment.Clear();
         }
 
         [TestInitialize]
-        public void CheckVersion() {
-            if (Version == null) {
+        public void CheckVersion()
+        {
+            if (Version == null)
+            {
                 Assert.Inconclusive("Required version of Python is not installed");
             }
         }
 
         [TestMethod, Priority(UnitTestPriority.P0)]
         [TestCategory("10s")]
-        public void RunUnittest() {
+        public void RunUnittest()
+        {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
 
             var testFile1Path = Path.Combine(testEnv.SourceFolderPath, "test_ut.py");
@@ -99,7 +89,8 @@ namespace TestAdapterTests {
 
         [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
-        public void RunUnittestLargeTestCount() {
+        public void RunUnittestLargeTestCount()
+        {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
 
             // Test that we don't try passing 1000 tests via command line arguments
@@ -118,7 +109,8 @@ if __name__ == '__main__':
             var className = "ManyTest";
             var testFilePath = Path.Combine(testEnv.SourceFolderPath, $"{moduleName}.py");
 
-            for (int i = 0; i < 1000; i++) {
+            for (int i = 0; i < 1000; i++)
+            {
                 var funcName = $"test_func_{i}";
                 testFunctions.AppendLine($"    def {funcName}(self): pass");
 
@@ -145,7 +137,8 @@ if __name__ == '__main__':
 
         [TestMethod, Priority(UnitTestPriority.P0)]
         [TestCategory("10s")]
-        public void RunPytest() {
+        public void RunPytest()
+        {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
 
             var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_pt.py");
@@ -192,7 +185,8 @@ if __name__ == '__main__':
 
         [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
-        public void RunPytestParameterizedAndDiscovery() {
+        public void RunPytestParameterizedAndDiscovery()
+        {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
 
             var testFilePath1 = Path.Combine(testEnv.SourceFolderPath, "test_indirect_list.py");
@@ -212,7 +206,8 @@ if __name__ == '__main__':
             discoverer.DiscoverTests(new[] { testFilePath1, testFilePath2 }, discoveryContext, logger, discoverySink);
 
             Console.WriteLine($"Discovered Tests");
-            foreach (var test in discoverySink.Tests) {
+            foreach (var test in discoverySink.Tests)
+            {
                 Console.WriteLine($"{test.DisplayName}");
             }
 
@@ -238,7 +233,8 @@ if __name__ == '__main__':
 
         [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
-        public void RunPytestSubmoduleWithIniAndDiscovery() {
+        public void RunPytestSubmoduleWithIniAndDiscovery()
+        {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
 
             FileUtils.CopyDirectory(TestData.GetPath("TestData", "TestExplorerPytestSubmodule"), testEnv.SourceFolderPath);
@@ -259,7 +255,8 @@ if __name__ == '__main__':
             discoverer.DiscoverTests(new[] { testFilePath1 }, discoveryContext, logger, discoverySink);
 
             Console.WriteLine($"Discovered Tests");
-            foreach (var test in discoverySink.Tests) {
+            foreach (var test in discoverySink.Tests)
+            {
                 Console.WriteLine($"{test.DisplayName}");
             }
 
@@ -282,7 +279,8 @@ if __name__ == '__main__':
 
         [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
-        public void RunPytestMissingPytestIdShowsErrorAndReturnsPartialResults() {
+        public void RunPytestMissingPytestIdShowsErrorAndReturnsPartialResults()
+        {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
 
             var testFilePath1 = Path.Combine(testEnv.SourceFolderPath, "test_indirect_list.py");
@@ -300,7 +298,8 @@ if __name__ == '__main__':
             discoverer.DiscoverTests(new[] { testFilePath1 }, discoveryContext, logger, discoverySink);
 
             Console.WriteLine($"Discovered Tests");
-            foreach (var test in discoverySink.Tests) {
+            foreach (var test in discoverySink.Tests)
+            {
                 Console.WriteLine($"{test.DisplayName}");
             }
 
@@ -339,7 +338,8 @@ if __name__ == '__main__':
 
         [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
-        public void RunPytestUppercaseFileName() {
+        public void RunPytestUppercaseFileName()
+        {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
 
             var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_Uppercase.py");
@@ -367,7 +367,8 @@ if __name__ == '__main__':
 
         [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
-        public void RunPytestSubpackages() {
+        public void RunPytestSubpackages()
+        {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
 
             FileUtils.CopyDirectory(TestData.GetPath("TestData", "TestExecutor", "SubPackages"), testEnv.SourceFolderPath);
@@ -406,7 +407,8 @@ if __name__ == '__main__':
 
         [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
-        public void RunPytestLargeTestCount() {
+        public void RunPytestLargeTestCount()
+        {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
 
             // Test that we don't try passing 1000 tests via command line arguments
@@ -416,7 +418,8 @@ if __name__ == '__main__':
             var moduleName = "test_many";
             var testFilePath = Path.Combine(testEnv.SourceFolderPath, $"{moduleName}.py");
 
-            for (int i = 0; i < 1000; i++) {
+            for (int i = 0; i < 1000; i++)
+            {
                 var funcName = $"test_func_{i}";
                 testContents.AppendLine($"def {funcName}(): pass");
 
@@ -443,7 +446,8 @@ if __name__ == '__main__':
 
         [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
-        public void RunUnittestCancel() {
+        public void RunUnittestCancel()
+        {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
             var executor = new UnittestTestExecutor();
             TestCancel(testEnv, executor);
@@ -451,14 +455,16 @@ if __name__ == '__main__':
 
         [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
-        public void RunPytestCancel() {
+        public void RunPytestCancel()
+        {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
             var executor = new PytestTestExecutor();
             TestCancel(testEnv, executor);
         }
 
 
-        private void TestCancel(TestEnvironment testEnv, ITestExecutor executor) {
+        private void TestCancel(TestEnvironment testEnv, ITestExecutor executor)
+        {
             var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_cancel.py");
             File.Copy(TestData.GetPath("TestData", "TestExecutor", "test_cancel.py"), testFilePath);
 
@@ -511,7 +517,8 @@ if __name__ == '__main__':
             var runContext = new MockRunContext(runSettings, testCases, testEnv.ResultsFolderPath);
             var recorder = new MockTestExecutionRecorder();
 
-            var thread = new System.Threading.Thread(o => {
+            var thread = new System.Threading.Thread(o =>
+            {
                 executor.RunTests(testCases, runContext, recorder);
             });
             thread.Start();
@@ -543,7 +550,8 @@ if __name__ == '__main__':
 
         [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
-        public void RunUnittestRelativeImport() {
+        public void RunUnittestRelativeImport()
+        {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
 
             FileUtils.CopyDirectory(TestData.GetPath("TestData", "TestDiscoverer", "RelativeImport"), testEnv.SourceFolderPath);
@@ -571,7 +579,8 @@ if __name__ == '__main__':
 
         [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
-        public void RunUnittestInheritance() {
+        public void RunUnittestInheritance()
+        {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
 
             FileUtils.CopyDirectory(TestData.GetPath("TestData", "TestDiscoverer", "Inheritance"), testEnv.SourceFolderPath);
@@ -638,7 +647,8 @@ if __name__ == '__main__':
 
         [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
-        public void RunUnittestImportError() {
+        public void RunUnittestImportError()
+        {
             // A load error is when unittest module fails to load the test (prior to running it)
             // For example, if the file where the test is defined has an unhandled ImportError.
             // We check that this only causes the tests that can't be loaded to fail,
@@ -678,7 +688,8 @@ if __name__ == '__main__':
 
         [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
-        public void RunUnittestCoverage() {
+        public void RunUnittestCoverage()
+        {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest, installCoverage: true);
 
             FileUtils.CopyDirectory(TestData.GetPath("TestData", "TestExecutor", "Coverage"), testEnv.SourceFolderPath);
@@ -725,7 +736,8 @@ if __name__ == '__main__':
 
         [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
-        public void RunPytestCoverage() {
+        public void RunPytestCoverage()
+        {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest, installCoverage: true);
 
             FileUtils.CopyDirectory(TestData.GetPath("TestData", "TestExecutor", "Coverage"), testEnv.SourceFolderPath);
@@ -783,7 +795,8 @@ if __name__ == '__main__':
 
         [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
-        public void RunUnitTestStackTrace() {
+        public void RunUnitTestStackTrace()
+        {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
 
             var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_stack_trace.py");
@@ -828,7 +841,8 @@ if __name__ == '__main__':
 
         [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
-        public void RunPytestEnvironmentVariable() {
+        public void RunPytestEnvironmentVariable()
+        {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
 
             var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_env_var.py");
@@ -857,7 +871,8 @@ if __name__ == '__main__':
 
         [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
-        public void RunPytestDuration() {
+        public void RunPytestDuration()
+        {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
 
             var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_duration.py");
@@ -904,7 +919,8 @@ if __name__ == '__main__':
 
         [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
-        public void RunUnittestDuration() {
+        public void RunUnittestDuration()
+        {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkUnittest);
 
             var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_duration.py");
@@ -948,7 +964,8 @@ if __name__ == '__main__':
 
         [TestMethod, Priority(UnitTestPriority.P0)]
         [TestCategory("10s")]
-        public void RunPytestSetupAndTeardown() {
+        public void RunPytestSetupAndTeardown()
+        {
             var testEnv = TestEnvironment.GetOrCreate(Version, FrameworkPytest);
 
             var testFilePath = Path.Combine(testEnv.SourceFolderPath, "test_teardown.py");
@@ -986,7 +1003,8 @@ if __name__ == '__main__':
 
         [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
-        public void RunPytestCodeFilePathNotFound() {
+        public void RunPytestCodeFilePathNotFound()
+        {
             var runSettings = new MockRunSettings(
                 new MockRunSettingsXmlBuilder("pytest", "", "", "")
                     .WithTestFile("DummyFilePath")
@@ -1005,7 +1023,8 @@ if __name__ == '__main__':
 
         [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
-        public void RunPytestNullCodeFilePath() {
+        public void RunPytestNullCodeFilePath()
+        {
             var runSettings = new MockRunSettings(
                 new MockRunSettingsXmlBuilder("pytest", "", "", "")
                     .WithTestFile("DummyFilePath")
@@ -1022,13 +1041,15 @@ if __name__ == '__main__':
             executor.RunTests(testCases, runContext, recorder);
         }
 
-        private static void ExecuteTests(TestEnvironment testEnv, MockRunSettings runSettings, TestInfo[] expectedTests, CoverageInfo[] expectedCoverages = null) {
+        private static void ExecuteTests(TestEnvironment testEnv, MockRunSettings runSettings, TestInfo[] expectedTests, CoverageInfo[] expectedCoverages = null)
+        {
             var testCases = CreateTestCasesFromTestInfo(testEnv, expectedTests);
             var runContext = new MockRunContext(runSettings, testCases, testEnv.ResultsFolderPath);
             var recorder = new MockTestExecutionRecorder();
 
             ITestExecutor executor = null;
-            switch (testEnv.TestFramework) {
+            switch (testEnv.TestFramework)
+            {
                 case FrameworkPytest:
                     executor = new PytestTestExecutor();
                     break;
@@ -1047,16 +1068,20 @@ if __name__ == '__main__':
             ValidateCoverage(testEnv.SourceFolderPath, expectedCoverages, recorder);
         }
 
-        private static List<TestCase> CreateTestCasesFromTestInfo(TestEnvironment testEnv, IEnumerable<TestInfo> expectedTests) {
-            return Enumerable.Select(expectedTests, ti => {
-                var testCase = new TestCase(ti.FullyQualifiedName, testEnv.ExecutionUri, ti.FilePath) {
+        private static List<TestCase> CreateTestCasesFromTestInfo(TestEnvironment testEnv, IEnumerable<TestInfo> expectedTests)
+        {
+            return Enumerable.Select(expectedTests, ti =>
+            {
+                var testCase = new TestCase(ti.FullyQualifiedName, testEnv.ExecutionUri, ti.FilePath)
+                {
                     DisplayName = ti.DisplayName,
                     CodeFilePath = ti.FilePath,
                     LineNumber = ti.LineNumber,
                 };
 
                 string id = ".\\" + ti.FullyQualifiedName;
-                if (testEnv.TestFramework == FrameworkPytest) {
+                if (testEnv.TestFramework == FrameworkPytest)
+                {
                     var classParts = ti.PytestXmlClassName.Split('.');
                     id = (classParts.Length > 1) ? id : ".\\" + Path.GetFileName(ti.FilePath) + "::" + ti.DisplayName;
                 }
@@ -1064,9 +1089,12 @@ if __name__ == '__main__':
                 // FullyQualifiedName as exec path suffix only works for test class case,
                 // for standalone methods, specify the exec path suffix when creating TestInfo.
                 string execPath;
-                if (ti.PytestExecPathSuffix != null) {
+                if (ti.PytestExecPathSuffix != null)
+                {
                     execPath = PathUtils.EnsureEndSeparator(ti.FilePath).ToLower() + "::" + ti.PytestExecPathSuffix;
-                } else {
+                }
+                else
+                {
                     execPath = PathUtils.EnsureEndSeparator(testEnv.SourceFolderPath).ToLower() + ti.FullyQualifiedName;
                 }
 
@@ -1075,54 +1103,64 @@ if __name__ == '__main__':
             }).ToList();
         }
 
-        private static void ValidateExecutedTests(TestInfo[] expectedTests, MockTestExecutionRecorder recorder) {
+        private static void ValidateExecutedTests(TestInfo[] expectedTests, MockTestExecutionRecorder recorder)
+        {
             PrintTestResults(recorder);
 
             var resultNames = recorder.Results.Select(tr => tr.TestCase.FullyQualifiedName).ToSet();
-            foreach (var expectedResult in expectedTests) {
+            foreach (var expectedResult in expectedTests)
+            {
                 AssertUtil.ContainsAtLeast(resultNames, expectedResult.FullyQualifiedName);
                 var actualResult = recorder.Results.SingleOrDefault(tr => tr.TestCase.FullyQualifiedName == expectedResult.FullyQualifiedName);
 
                 Assert.AreEqual(expectedResult.Outcome, actualResult.Outcome, expectedResult.FullyQualifiedName + " had incorrect result");
                 Assert.IsTrue(actualResult.Duration >= expectedResult.MinDuration, expectedResult.FullyQualifiedName + " had incorrect duration");
 
-                if (expectedResult.ContainedErrorMessage != null) {
+                if (expectedResult.ContainedErrorMessage != null)
+                {
                     AssertUtil.Contains(actualResult.ErrorMessage, expectedResult.ContainedErrorMessage);
                 }
 
-                if (expectedResult.ContainedStdOut != null) {
+                if (expectedResult.ContainedStdOut != null)
+                {
                     var stdOut = actualResult.Messages.Single(m => m.Category == "StdOutMsgs");
                     AssertUtil.Contains(stdOut.Text, expectedResult.ContainedStdOut);
                 }
 
-                if (expectedResult.StackFrames != null) {
+                if (expectedResult.StackFrames != null)
+                {
                     ValidateStackFrame(actualResult, expectedResult.StackFrames);
                 }
             }
         }
 
-        private static void ValidateStackFrame(TestResult result, StackFrame[] expectedFrames) {
+        private static void ValidateStackFrame(TestResult result, StackFrame[] expectedFrames)
+        {
             var stackTrace = result.ErrorStackTrace;
             var parser = new PythonStackTraceParser();
             var frames = parser.GetStackFrames(stackTrace).ToArray();
 
             Console.WriteLine("Actual frames:");
-            foreach (var f in frames) {
+            foreach (var f in frames)
+            {
                 Console.WriteLine("\"{0}\",\"{1}\",\"{2}\"", f.MethodDisplayName, f.FileName, f.LineNumber);
             }
 
             CollectionAssert.AreEqual(expectedFrames, frames, new StackFrameComparer());
         }
 
-        private static void PrintTestResults(MockTestExecutionRecorder recorder) {
+        private static void PrintTestResults(MockTestExecutionRecorder recorder)
+        {
             Console.WriteLine("Messages:");
-            foreach (var message in recorder.Messages) {
+            foreach (var message in recorder.Messages)
+            {
                 Console.WriteLine(message);
             }
             Console.WriteLine("");
 
             Console.WriteLine("Attachments:");
-            foreach (var attachment in recorder.Attachments) {
+            foreach (var attachment in recorder.Attachments)
+            {
                 Console.WriteLine($"DisplayName: {attachment.DisplayName}");
                 Console.WriteLine($"Uri: {attachment.Uri}");
                 Console.WriteLine($"Count: {attachment.Attachments.Count}");
@@ -1131,11 +1169,13 @@ if __name__ == '__main__':
             Console.WriteLine("");
 
             Console.WriteLine("Results:");
-            foreach (var result in recorder.Results) {
+            foreach (var result in recorder.Results)
+            {
                 Console.WriteLine($"FullyQualifiedName: {result.TestCase.FullyQualifiedName}");
                 Console.WriteLine($"Outcome: {result.Outcome}");
                 Console.WriteLine($"Duration: {result.Duration.TotalMilliseconds}ms");
-                foreach (var msg in result.Messages) {
+                foreach (var msg in result.Messages)
+                {
                     Console.WriteLine($"Message {msg.Category}:");
                     Console.WriteLine(msg.Text);
                 }
@@ -1143,9 +1183,11 @@ if __name__ == '__main__':
             }
         }
 
-        private static void ValidateCoverage(string sourceDir, CoverageInfo[] expectedCoverages, MockTestExecutionRecorder recorder) {
+        private static void ValidateCoverage(string sourceDir, CoverageInfo[] expectedCoverages, MockTestExecutionRecorder recorder)
+        {
             var coverageAttachment = recorder.Attachments.SingleOrDefault(x => x.Uri == pt.Microsoft.PythonTools.PythonConstants.PythonCodeCoverageUri);
-            if (expectedCoverages != null) {
+            if (expectedCoverages != null)
+            {
                 Assert.IsNotNull(coverageAttachment, "Coverage attachment not found");
                 Assert.AreEqual(1, coverageAttachment.Attachments.Count, "Expected 1 coverage data item");
 
@@ -1154,13 +1196,17 @@ if __name__ == '__main__':
                 Assert.IsTrue(File.Exists(coverageFilePath), $"File path '{coverageFilePath}' does not exist");
 
                 ValidateCoverage(sourceDir, expectedCoverages, coverageFilePath);
-            } else {
+            }
+            else
+            {
                 Assert.IsNull(coverageAttachment, "Coverage attachment should not have been found");
             }
         }
 
-        private static void ValidateCoverage(string sourceDir, CoverageInfo[] expectedCoverages, string coverageFilePath) {
-            using (var stream = new FileStream(coverageFilePath, FileMode.Open, FileAccess.Read)) {
+        private static void ValidateCoverage(string sourceDir, CoverageInfo[] expectedCoverages, string coverageFilePath)
+        {
+            using (var stream = new FileStream(coverageFilePath, FileMode.Open, FileAccess.Read))
+            {
                 var converter = new CoveragePyConverter(sourceDir, stream);
                 var result = converter.Parse()
                     .Where(fi => PathUtils.IsSubpathOf(sourceDir, fi.Filename))
@@ -1168,7 +1214,8 @@ if __name__ == '__main__':
 
                 Assert.AreEqual(expectedCoverages.Length, result.Length, "Unexpected number of files in coverage results");
 
-                foreach (var expectedInfo in expectedCoverages) {
+                foreach (var expectedInfo in expectedCoverages)
+                {
                     var filePath = Path.Combine(sourceDir, expectedInfo.FileName);
                     var actual = result.SingleOrDefault(x => PathUtils.IsSamePath(x.Filename, filePath));
                     Assert.IsNotNull(actual, $"Expected coverage result for '{filePath}'");
@@ -1178,8 +1225,10 @@ if __name__ == '__main__':
             }
         }
 
-        class CoverageInfo {
-            public CoverageInfo(string fileName, int[] coveredLines) {
+        class CoverageInfo
+        {
+            public CoverageInfo(string fileName, int[] coveredLines)
+            {
                 FileName = fileName;
                 CoveredLines = coveredLines;
             }
@@ -1189,35 +1238,43 @@ if __name__ == '__main__':
             public int[] CoveredLines { get; }
         }
 
-        class StackFrameComparer : IComparer {
-            public int Compare(object x, object y) {
-                if (x == y) {
+        class StackFrameComparer : IComparer
+        {
+            public int Compare(object x, object y)
+            {
+                if (x == y)
+                {
                     return 0;
                 }
 
                 var a = x as StackFrame;
                 var b = y as StackFrame;
 
-                if (a == null) {
+                if (a == null)
+                {
                     return -1;
                 }
 
-                if (b == null) {
+                if (b == null)
+                {
                     return 1;
                 }
 
                 int res = a.FileName.CompareTo(b.FileName);
-                if (res != 0) {
+                if (res != 0)
+                {
                     return res;
                 }
 
                 res = a.LineNumber.CompareTo(b.LineNumber);
-                if (res != 0) {
+                if (res != 0)
+                {
                     return res;
                 }
 
                 res = a.MethodDisplayName.CompareTo(b.MethodDisplayName);
-                if (res != 0) {
+                if (res != 0)
+                {
                     return res;
                 }
 
@@ -1227,9 +1284,11 @@ if __name__ == '__main__':
     }
 
     [TestClass]
-    public class TestExecutorTests27 : TestExecutorTests {
+    public class TestExecutorTests27 : TestExecutorTests
+    {
         [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
+        public static void DoDeployment(TestContext context)
+        {
             AssertListener.Initialize();
         }
 
@@ -1237,9 +1296,11 @@ if __name__ == '__main__':
     }
 
     [TestClass]
-    public class TestExecutorTests35 : TestExecutorTests {
+    public class TestExecutorTests35 : TestExecutorTests
+    {
         [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
+        public static void DoDeployment(TestContext context)
+        {
             AssertListener.Initialize();
         }
 
@@ -1247,9 +1308,11 @@ if __name__ == '__main__':
     }
 
     [TestClass]
-    public class TestExecutorTests37 : TestExecutorTests {
+    public class TestExecutorTests37 : TestExecutorTests
+    {
         [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
+        public static void DoDeployment(TestContext context)
+        {
             AssertListener.Initialize();
         }
 

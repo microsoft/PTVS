@@ -14,14 +14,12 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
-
-namespace TestAdapterTests.Mocks {
-    class MockRunContext : IRunContext {
-        public MockRunContext(IRunSettings runSettings, IReadOnlyList<TestCase> testCases, string resultsDirectory) {
+namespace TestAdapterTests.Mocks
+{
+    class MockRunContext : IRunContext
+    {
+        public MockRunContext(IRunSettings runSettings, IReadOnlyList<TestCase> testCases, string resultsDirectory)
+        {
             RunSettings = runSettings;
             TestCases = testCases;
             TestRunDirectory = resultsDirectory;
@@ -29,27 +27,33 @@ namespace TestAdapterTests.Mocks {
 
         public IReadOnlyList<TestCase> TestCases { get; }
 
-        public ITestCaseFilterExpression GetTestCaseFilter(IEnumerable<string> supportedProperties, Func<string, TestProperty> propertyProvider) {
+        public ITestCaseFilterExpression GetTestCaseFilter(IEnumerable<string> supportedProperties, Func<string, TestProperty> propertyProvider)
+        {
             throw new NotImplementedException();
         }
 
-        public bool InIsolation {
+        public bool InIsolation
+        {
             get { throw new NotImplementedException(); }
         }
 
-        public bool IsBeingDebugged {
+        public bool IsBeingDebugged
+        {
             get { return false; }
         }
 
-        public bool IsDataCollectionEnabled {
+        public bool IsDataCollectionEnabled
+        {
             get { throw new NotImplementedException(); }
         }
 
-        public bool KeepAlive {
+        public bool KeepAlive
+        {
             get { throw new NotImplementedException(); }
         }
 
-        public string SolutionDirectory {
+        public string SolutionDirectory
+        {
             get { throw new NotImplementedException(); }
         }
 

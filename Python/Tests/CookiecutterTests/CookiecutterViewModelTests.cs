@@ -14,19 +14,11 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.CookiecutterTools.Model;
-using Microsoft.CookiecutterTools.Telemetry;
-using Microsoft.CookiecutterTools.ViewModel;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using TestUtilities;
-
-namespace CookiecutterTests {
+namespace CookiecutterTests
+{
     [TestClass]
-    public class CookiecutterViewModelTests {
+    public class CookiecutterViewModelTests
+    {
         private const string GitHubTemplatePath = "https://github.com/audreyr/Cookiecutter-pypackage";
         private const string NoUserConfigFilePath = "";
 
@@ -46,12 +38,14 @@ namespace CookiecutterTests {
         private CookiecutterTelemetry _telemetry;
 
         [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
+        public static void DoDeployment(TestContext context)
+        {
             AssertListener.Initialize();
         }
 
         [TestInitialize]
-        public void SetupTest() {
+        public void SetupTest()
+        {
             _redirector = new MockRedirector();
             _gitClient = new MockGitClient();
             _gitHubClient = new MockGitHubClient();
@@ -83,7 +77,8 @@ namespace CookiecutterTests {
         }
 
         [TestMethod]
-        public async Task Search() {
+        public async Task Search()
+        {
             PopulateInstalledSource();
 
             await _vm.SearchAsync();
@@ -94,7 +89,8 @@ namespace CookiecutterTests {
         }
 
         [TestMethod]
-        public async Task CheckForUpdates() {
+        public async Task CheckForUpdates()
+        {
             PopulateInstalledSource();
 
             _installedTemplateSource.UpdatesAvailable.Add("https://github.com/owner1/template1", true);
@@ -121,7 +117,8 @@ namespace CookiecutterTests {
         }
 
         [TestMethod]
-        public async Task SearchClearsStatus() {
+        public async Task SearchClearsStatus()
+        {
             _vm.CloningStatus = OperationStatus.Failed;
             _vm.LoadingStatus = OperationStatus.Failed;
             _vm.CreatingStatus = OperationStatus.Failed;
@@ -140,7 +137,8 @@ namespace CookiecutterTests {
         }
 
         [TestMethod]
-        public async Task UpdateTemplate() {
+        public async Task UpdateTemplate()
+        {
             PopulateInstalledSource();
 
             _installedTemplateSource.UpdatesAvailable.Add("https://github.com/owner1/template1", true);
@@ -180,7 +178,8 @@ namespace CookiecutterTests {
         );
 
         [TestMethod]
-        public async Task ContextItemsFromProjectWizardOpenFolder() {
+        public async Task ContextItemsFromProjectWizardOpenFolder()
+        {
             _projectSystemClient.IsSolutionOpen = false;
             _vm.TargetProjectLocation = null;
             _vm.ProjectName = "TestProjectName";
@@ -201,7 +200,8 @@ namespace CookiecutterTests {
         }
 
         [TestMethod]
-        public async Task ContextItemsFromProjectWizardOpenProject() {
+        public async Task ContextItemsFromProjectWizardOpenProject()
+        {
             _projectSystemClient.IsSolutionOpen = false;
             _vm.TargetProjectLocation = null;
             _vm.ProjectName = "TestProjectName";
@@ -222,7 +222,8 @@ namespace CookiecutterTests {
         }
 
         [TestMethod]
-        public async Task ContextItemsAddNewProject() {
+        public async Task ContextItemsAddNewProject()
+        {
             _projectSystemClient.IsSolutionOpen = true;
             _vm.TargetProjectLocation = null;
             _vm.ProjectName = null;
@@ -242,9 +243,11 @@ namespace CookiecutterTests {
         }
 
         [TestMethod]
-        public async Task ContextItemsAddNewItem() {
+        public async Task ContextItemsAddNewItem()
+        {
             _projectSystemClient.IsSolutionOpen = true;
-            _vm.TargetProjectLocation = new ProjectLocation() {
+            _vm.TargetProjectLocation = new ProjectLocation()
+            {
                 ProjectUniqueName = "TestProject",
                 ProjectKind = "{EB4B2D97-897B-4A9B-926F-38D7FAAAF399}",
                 FolderPath = "C:\\TestProject",
@@ -265,7 +268,8 @@ namespace CookiecutterTests {
             Assert.IsTrue(_vm.AddingToExistingProject);
         }
 
-        private void PopulateInstalledSource() {
+        private void PopulateInstalledSource()
+        {
             _installedTemplateSource.Templates.Add(
                 Tuple.Create((string)null, (string)null),
                 Tuple.Create(new Template[] {

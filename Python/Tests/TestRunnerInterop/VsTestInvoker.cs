@@ -14,17 +14,18 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-
-namespace TestRunnerInterop {
-    public sealed class VsTestInvoker {
+namespace TestRunnerInterop
+{
+    public sealed class VsTestInvoker
+    {
         private readonly string _container, _className;
 
         public VsTestInvoker(
             VsTestContext context,
             string container,
             string className
-        ) {
+        )
+        {
             Context = context;
 
             _container = container;
@@ -35,7 +36,8 @@ namespace TestRunnerInterop {
 
         public void RunTest(string testName, params object[] arguments) => RunTest(Context.DefaultTimeout, testName, arguments);
 
-        public void RunTest(TimeSpan timeout, string testName, params object[] arguments) {
+        public void RunTest(TimeSpan timeout, string testName, params object[] arguments)
+        {
             Context.RunTest(_container, $"{_className}.{testName}", timeout, arguments);
         }
     }

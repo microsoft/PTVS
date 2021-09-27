@@ -14,23 +14,20 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.IO;
-using System.Linq;
-using Microsoft.PythonTools.Intellisense;
-using Microsoft.PythonTools.Parsing;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using TestUtilities;
-
-namespace PythonToolsTests {
+namespace PythonToolsTests
+{
     [TestClass]
-    public class ProximityExpressionWalkerTests {
+    public class ProximityExpressionWalkerTests
+    {
         [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
+        public static void DoDeployment(TestContext context)
+        {
             AssertListener.Initialize();
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void AutosRangeCheck() {
+        public void AutosRangeCheck()
+        {
             string code = @"
 a; b.\
 c.d[e]
@@ -41,12 +38,14 @@ len(i)";
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void AutosNames() {
+        public void AutosNames()
+        {
             ProximityTest("a", "a");
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void AutosMembers() {
+        public void AutosMembers()
+        {
             string code = @"
 a.b.c
 d
@@ -59,7 +58,8 @@ h(i.j).k
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void AutosIndexing() {
+        public void AutosIndexing()
+        {
             string code = @"
 a[b.c[d.e],f:g].h[abs(i[j])].k[l(m[n])].o[p]
 abs(q[r])[s]
@@ -71,7 +71,8 @@ abs(q[r])[s]
         }
 
         [TestMethod, Priority(UnitTestPriority.P0)]
-        public void AutosCalls() {
+        public void AutosCalls()
+        {
             string code = @"
 abs(a, len(b))
 c(d)
@@ -81,7 +82,8 @@ e.f.g(h)
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void AutosNoYield() {
+        public void AutosNoYield()
+        {
             string code = @"
 a.b
 (yield c).d
@@ -91,7 +93,8 @@ a.b
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void AutosNoBackQuotes() {
+        public void AutosNoBackQuotes()
+        {
             string code = @"
 a.b
 `c`.d
@@ -101,7 +104,8 @@ a.b
 
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void AutosNoTrueFalseInV27() {
+        public void AutosNoTrueFalseInV27()
+        {
             string code = @"
 a = True
 b = False
@@ -109,15 +113,18 @@ b = False
             ProximityTest(PythonLanguageVersion.V27, code, 0, int.MaxValue, "a", "b");
         }
 
-        private void ProximityTest(string code, params string[] exprs) {
+        private void ProximityTest(string code, params string[] exprs)
+        {
             ProximityTest(PythonLanguageVersion.V34, code, 0, int.MaxValue, exprs);
         }
 
-        private void ProximityTest(string code, int startLine, int endLine, params string[] exprs) {
+        private void ProximityTest(string code, int startLine, int endLine, params string[] exprs)
+        {
             ProximityTest(PythonLanguageVersion.V34, code, startLine, endLine, exprs);
         }
 
-        private void ProximityTest(PythonLanguageVersion ver, string code, int startLine, int endLine, params string[] exprs) {
+        private void ProximityTest(PythonLanguageVersion ver, string code, int startLine, int endLine, params string[] exprs)
+        {
             var parser = Parser.CreateParser(new StringReader(code), ver);
             var ast = parser.ParseFile();
             var walker = new ProximityExpressionWalker(ast, startLine, endLine);

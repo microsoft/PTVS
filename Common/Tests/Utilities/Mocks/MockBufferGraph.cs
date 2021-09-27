@@ -14,13 +14,6 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Text.Projection;
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-
 namespace TestUtilities.Mocks
 {
     public class MockBufferGraph : IBufferGraph

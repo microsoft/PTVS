@@ -14,16 +14,13 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Text.RegularExpressions;
-using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
-
-namespace Microsoft.PythonTools.BuildTasks {
+namespace Microsoft.PythonTools.BuildTasks
+{
     /// <summary>
     /// Checks whether a pattern is valid regex.
     /// </summary>
-    public class ValidateRegexPattern : Task {
+    public class ValidateRegexPattern : Task
+    {
         /// <summary>
         /// The pattern to validate.
         /// </summary>
@@ -41,13 +38,18 @@ namespace Microsoft.PythonTools.BuildTasks {
         [Output]
         public string IsValid { get; private set; }
 
-        public override bool Execute() {
-            try {
+        public override bool Execute()
+        {
+            try
+            {
                 var regex = new Regex(Pattern);
                 IsValid = bool.TrueString;
-            } catch (ArgumentException ex) {
+            }
+            catch (ArgumentException ex)
+            {
                 IsValid = bool.FalseString;
-                if (!string.IsNullOrEmpty(Message)) {
+                if (!string.IsNullOrEmpty(Message))
+                {
                     Log.LogError(string.Format(Message, ex.Message));
                 }
             }

@@ -14,31 +14,24 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections;
-using System.IO;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.CookiecutterTools;
-using Microsoft.CookiecutterTools.Model;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using TestUtilities;
-
-namespace CookiecutterTests {
+namespace CookiecutterTests
+{
     [TestClass]
-    public class FeedTemplateSourceTests {
+    public class FeedTemplateSourceTests
+    {
         private static string NonExistentFeedPath => "http://www.microsoft.com/invalidfeed.txt";
         private static string OnlineFeedPath => UrlConstants.DefaultRecommendedFeed;
         private static string LocalFeedPath => Path.Combine(TestData.GetPath("TestData"), "Cookiecutter", "feed.txt");
 
         [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
+        public static void DoDeployment(TestContext context)
+        {
             AssertListener.Initialize();
         }
 
         [TestMethod]
-        public async Task LoadOnlineFeed() {
+        public async Task LoadOnlineFeed()
+        {
             ITemplateSource source = new FeedTemplateSource(new Uri(OnlineFeedPath));
 
             var result = await source.GetTemplatesAsync(null, null, CancellationToken.None);
@@ -50,7 +43,8 @@ namespace CookiecutterTests {
         }
 
         [TestMethod]
-        public async Task LoadLocalFeed() {
+        public async Task LoadLocalFeed()
+        {
             ITemplateSource source = new FeedTemplateSource(new Uri(LocalFeedPath));
             Assert.IsTrue(File.Exists(LocalFeedPath));
 
@@ -90,18 +84,23 @@ namespace CookiecutterTests {
         }
 
         [TestMethod]
-        public async Task LoadNonExistentFeed() {
+        public async Task LoadNonExistentFeed()
+        {
             ITemplateSource source = new FeedTemplateSource(new Uri(NonExistentFeedPath));
 
-            try {
+            try
+            {
                 var result = await source.GetTemplatesAsync(null, null, CancellationToken.None);
                 Assert.Fail("Expected an TemplateEnumerationException when loading invalid feed.");
-            } catch (TemplateEnumerationException) {
+            }
+            catch (TemplateEnumerationException)
+            {
             }
         }
 
         [TestMethod]
-        public async Task SearchFeedSingleTerm() {
+        public async Task SearchFeedSingleTerm()
+        {
             ITemplateSource source = new FeedTemplateSource(new Uri(LocalFeedPath));
 
             var result = await source.GetTemplatesAsync("azure", null, CancellationToken.None);
@@ -111,7 +110,8 @@ namespace CookiecutterTests {
         }
 
         [TestMethod]
-        public async Task SearchFeedMultipleTerms() {
+        public async Task SearchFeedMultipleTerms()
+        {
             ITemplateSource source = new FeedTemplateSource(new Uri(LocalFeedPath));
 
             var result = await source.GetTemplatesAsync("flask,azure", null, CancellationToken.None);
@@ -121,41 +121,50 @@ namespace CookiecutterTests {
             Assert.IsNotNull(result.Templates.SingleOrDefault(t => t.Name == "sloria/cookiecutter-flask"));
         }
 
-        class TemplateComparer : IComparer {
-            public int Compare(object x, object y) {
-                if (x == y) {
+        class TemplateComparer : IComparer
+        {
+            public int Compare(object x, object y)
+            {
+                if (x == y)
+                {
                     return 0;
                 }
 
                 var a = x as Template;
                 var b = y as Template;
 
-                if (a == null) {
+                if (a == null)
+                {
                     return -1;
                 }
 
-                if (b == null) {
+                if (b == null)
+                {
                     return -1;
                 }
 
                 int res;
                 res = a.Name.CompareTo(b.Name);
-                if (res != 0) {
+                if (res != 0)
+                {
                     return res;
                 }
 
                 res = a.Description.CompareTo(b.Description);
-                if (res != 0) {
+                if (res != 0)
+                {
                     return res;
                 }
 
                 res = a.RemoteUrl.CompareTo(b.RemoteUrl);
-                if (res != 0) {
+                if (res != 0)
+                {
                     return res;
                 }
 
                 res = a.LocalFolderPath.CompareTo(b.LocalFolderPath);
-                if (res != 0) {
+                if (res != 0)
+                {
                     return res;
                 }
 

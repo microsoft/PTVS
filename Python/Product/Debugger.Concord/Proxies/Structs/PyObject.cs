@@ -14,39 +14,38 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Linq.Expressions;
-using Microsoft.PythonTools.Parsing;
-
-namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
+namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
+{
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
-    internal class PyTypeAttribute : Attribute {
+    internal class PyTypeAttribute : Attribute
+    {
         public string VariableName { get; set; }
         public PythonLanguageVersion MinVersion { get; set; }
         public PythonLanguageVersion MaxVersion { get; set; }
     }
 
-    internal interface IPyObject : IValueStore<PyObject>, IDataProxy<StructProxy> {
+    internal interface IPyObject : IValueStore<PyObject>, IDataProxy<StructProxy>
+    {
         PointerProxy<PyTypeObject> ob_type { get; }
     }
 
     [PyType(VariableName = "PyBaseObject_Type")]
-    internal class PyObject : StructProxy, IPyObject {
-        private struct ProxyInfo {
+    internal class PyObject : StructProxy, IPyObject
+    {
+        private struct ProxyInfo
+        {
             public readonly Type ProxyType;
             public readonly Func<DkmProcess, ulong, PyObject> ProxyFactory;
 
             public static readonly ProxyInfo Default = new ProxyInfo(typeof(PyObject));
 
-            public ProxyInfo(Type proxyType) {
+            public ProxyInfo(Type proxyType)
+            {
                 ProxyType = proxyType;
 
                 var ctor = proxyType.GetConstructor(new[] { typeof(DkmProcess), typeof(ulong) });
-                if (ctor == null) {
+                if (ctor == null)
+                {
                     Debug.Fail("PyObject-derived type " + proxyType.Name + " does not have a (DkmProcess, ulong) constructor.");
                     throw new NotSupportedException();
                 }
@@ -57,26 +56,35 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             }
         }
 
-        private class ProxyTypes : DkmDataItem {
+        private class ProxyTypes : DkmDataItem
+        {
             public readonly Dictionary<ulong, ProxyInfo> ProxyInfoFromPyTypePtr = new Dictionary<ulong, ProxyInfo>();
             public readonly Dictionary<Type, PyTypeObject> PyTypeFromType = new Dictionary<Type, PyTypeObject>();
 
-            public ProxyTypes(DkmProcess process) {
+            public ProxyTypes(DkmProcess process)
+            {
                 var langVer = process.GetPythonRuntimeInfo().LanguageVersion;
 
                 var proxyTypes = typeof(PyObject).Assembly.GetTypes().Where(t => typeof(PyObject).IsAssignableFrom(t) && !t.IsAbstract);
-                foreach (var proxyType in proxyTypes) {
+                foreach (var proxyType in proxyTypes)
+                {
                     string typeVarName = null;
 
                     var pyTypeAttrs = (PyTypeAttribute[])Attribute.GetCustomAttributes(proxyType, typeof(PyTypeAttribute), inherit: false);
-                    if (pyTypeAttrs.Length == 0) {
+                    if (pyTypeAttrs.Length == 0)
+                    {
                         typeVarName = ComputeVariableName(proxyType);
-                    } else {
-                        foreach (var pyTypeAttr in pyTypeAttrs) {
-                            if (pyTypeAttr.MinVersion != PythonLanguageVersion.None && langVer < pyTypeAttr.MinVersion) {
+                    }
+                    else
+                    {
+                        foreach (var pyTypeAttr in pyTypeAttrs)
+                        {
+                            if (pyTypeAttr.MinVersion != PythonLanguageVersion.None && langVer < pyTypeAttr.MinVersion)
+                            {
                                 continue;
                             }
-                            if (pyTypeAttr.MaxVersion != PythonLanguageVersion.None && langVer > pyTypeAttr.MaxVersion) {
+                            if (pyTypeAttr.MaxVersion != PythonLanguageVersion.None && langVer > pyTypeAttr.MaxVersion)
+                            {
                                 continue;
                             }
 
@@ -84,7 +92,8 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
                             break;
                         }
 
-                        if (typeVarName == null) {
+                        if (typeVarName == null)
+                        {
                             continue;
                         }
                     }
@@ -97,8 +106,10 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
                 }
             }
 
-            private static string ComputeVariableName(Type proxyType) {
-                if (!proxyType.Name.EndsWithOrdinal("Object")) {
+            private static string ComputeVariableName(Type proxyType)
+            {
+                if (!proxyType.Name.EndsWithOrdinal("Object"))
+                {
                     Debug.Fail("PyObject-derived type " + proxyType.Name + " must have name ending with 'Object' to infer type variable name.");
                     throw new NotSupportedException();
                 }
@@ -107,7 +118,8 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             }
         }
 
-        internal class PyObject_Fields {
+        internal class PyObject_Fields
+        {
             public StructField<SSizeTProxy> ob_refcnt;
             public StructField<PointerProxy> ob_type;
         }
@@ -115,40 +127,49 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
         private readonly PyObject_Fields _fields;
 
         public PyObject(DkmProcess process, ulong address)
-            : base(process, address) {
+            : base(process, address)
+        {
             InitializeStruct(this, out _fields);
         }
 
-        PyObject IValueStore<PyObject>.Read() {
+        PyObject IValueStore<PyObject>.Read()
+        {
             return this;
         }
 
-        object IValueStore.Read() {
+        object IValueStore.Read()
+        {
             return this;
         }
 
         [Conditional("DEBUG")]
-        protected void CheckPyType<TObject>() where TObject : PyObject {
+        protected void CheckPyType<TObject>() where TObject : PyObject
+        {
             // Check whether this is a freshly allocated object and skip the type check if so.
-            if (ob_refcnt.Read() == 0) {
+            if (ob_refcnt.Read() == 0)
+            {
                 return;
             }
 
             var proxyTypes = Process.GetOrCreateDataItem(() => new ProxyTypes(Process));
             var expectedType = proxyTypes.PyTypeFromType[typeof(TObject)];
             var ob_type = this.ob_type.Read();
-            if (!ob_type.IsSubtypeOf(expectedType)) {
+            if (!ob_type.IsSubtypeOf(expectedType))
+            {
                 Debug.Fail("Expected object of type " + expectedType.tp_name.Read().ReadUnicode() + " but got a " + ob_type.tp_name.Read().ReadUnicode() + " instead.");
                 throw new InvalidOperationException();
             }
         }
 
-        public SSizeTProxy ob_refcnt {
+        public SSizeTProxy ob_refcnt
+        {
             get { return GetFieldProxy(_fields.ob_refcnt); }
         }
 
-        public PointerProxy<PyTypeObject> ob_type {
-            get {
+        public PointerProxy<PyTypeObject> ob_type
+        {
+            get
+            {
                 // PyObject::ob_type is declared as PyTypeObject*, so layout of that struct is always valid and applicable;
                 // but ob_type->ob_type is not always PyTypeObject or a derived type (native modules can play shenanigans with
                 // metaclasses that way, and ctypes in particular does that). Since polymorphic creation relies on ob_type,
@@ -157,16 +178,22 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             }
         }
 
-        public PointerProxy<PyObject>? __dict__ {
-            get {
+        public PointerProxy<PyObject>? __dict__
+        {
+            get
+            {
                 var ob_type = this.ob_type.Read();
                 long dictoffset = ob_type.tp_dictoffset.Read();
 
-                if (dictoffset == 0) {
+                if (dictoffset == 0)
+                {
                     return null;
-                } else if (dictoffset < 0) {
+                }
+                else if (dictoffset < 0)
+                {
                     var varObj = this as PyVarObject;
-                    if (varObj == null) {
+                    if (varObj == null)
+                    {
                         throw new InvalidDataException();
                     }
 
@@ -186,14 +213,17 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             }
         }
 
-        public bool IsInstanceOf(PyTypeObject type) {
-            if (this == type) {
+        public bool IsInstanceOf(PyTypeObject type)
+        {
+            if (this == type)
+            {
                 return true;
             }
             return ob_type.Read().IsSubtypeOf(type);
         }
 
-        public override string ToString() {
+        public override string ToString()
+        {
             var pyrtInfo = Process.GetPythonRuntimeInfo();
             var reprBuilder = new ReprBuilder(new ReprOptions(Process));
             Repr(reprBuilder);
@@ -203,10 +233,14 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
         /// <summary>
         /// Appends a readable representation of the object to be shown in various debugger windows (Locals, Watch etc) of this object to <paramref name="builder"/>.
         /// </summary>
-        public virtual void Repr(ReprBuilder builder) {
-            if (this == None(Process)) {
+        public virtual void Repr(ReprBuilder builder)
+        {
+            if (this == None(Process))
+            {
                 builder.Append("None");
-            } else {
+            }
+            else
+            {
                 builder.AppendFormat("<{0} object at {1:PTR}>", ob_type.Read().tp_name.Read().ReadUnicode(), Address);
             }
         }
@@ -214,7 +248,8 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
         /// <summary>
         /// Returns a readable representation of the object to be shown in various debugger windows (Locals, Watch etc).
         /// </summary>
-        public string Repr(ReprOptions options) {
+        public string Repr(ReprOptions options)
+        {
             var builder = new ReprBuilder(options);
             Repr(builder);
             return builder.ToString();
@@ -228,82 +263,109 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
         /// The default implementation enumerates object fields specified via either __dict__ or __slots__. Most derived classes
         /// will want to keep that as is, except for collections.
         /// </remarks>
-        public virtual IEnumerable<PythonEvaluationResult> GetDebugChildren(ReprOptions reprOptions) {
+        public virtual IEnumerable<PythonEvaluationResult> GetDebugChildren(ReprOptions reprOptions)
+        {
             var children = GetDebugChildrenFromSlots();
 
             var maybeDictProxy = this.__dict__;
-            if (maybeDictProxy != null) {
+            if (maybeDictProxy != null)
+            {
                 var dictProxy = maybeDictProxy.Value;
-                if (!dictProxy.IsNull) {
+                if (!dictProxy.IsNull)
+                {
                     yield return new PythonEvaluationResult(dictProxy, "__dict__");
                     var dict = dictProxy.TryRead() as PyDictObject;
-                    if (dict != null) {
+                    if (dict != null)
+                    {
                         children = children.Concat(GetDebugChildrenFromDict(dict));
                     }
                 }
             }
 
             children = children.OrderBy(pair => pair.Name);
-            foreach (var pair in children) {
+            foreach (var pair in children)
+            {
                 yield return pair;
             }
         }
 
-        private IEnumerable<PythonEvaluationResult> GetDebugChildrenFromDict(PyDictObject dict) {
-            foreach (var pair in dict.ReadElements()) {
+        private IEnumerable<PythonEvaluationResult> GetDebugChildrenFromDict(PyDictObject dict)
+        {
+            foreach (var pair in dict.ReadElements())
+            {
                 var name = pair.Key as IPyBaseStringObject;
-                if (name != null && !pair.Value.IsNull) {
+                if (name != null && !pair.Value.IsNull)
+                {
                     yield return new PythonEvaluationResult(pair.Value, name.ToString());
                 }
             }
         }
 
-        private IEnumerable<PythonEvaluationResult> GetDebugChildrenFromSlots() {
+        private IEnumerable<PythonEvaluationResult> GetDebugChildrenFromSlots()
+        {
             var tp_members = ob_type.Read().tp_members;
-            if (tp_members.IsNull) {
+            if (tp_members.IsNull)
+            {
                 yield break;
             }
 
             var langVer = Process.GetPythonRuntimeInfo().LanguageVersion;
 
             var memberDefs = tp_members.Read().TakeWhile(md => !md.name.IsNull);
-            foreach (PyMemberDef memberDef in memberDefs) {
+            foreach (PyMemberDef memberDef in memberDefs)
+            {
                 var offset = memberDef.offset.Read();
                 IValueStore value;
-                switch (memberDef.type.Read()) {
+                switch (memberDef.type.Read())
+                {
                     case PyMemberDefType.T_OBJECT:
-                    case PyMemberDefType.T_OBJECT_EX: {
-                        var objProxy = GetFieldProxy(new StructField<PointerProxy<PyObject>> { Process = Process, Offset = offset });
-                        if (!objProxy.IsNull) {
-                            value = objProxy;
-                        } else {
-                            value = new ValueStore<PyObject>(None(Process));
+                    case PyMemberDefType.T_OBJECT_EX:
+                        {
+                            var objProxy = GetFieldProxy(new StructField<PointerProxy<PyObject>> { Process = Process, Offset = offset });
+                            if (!objProxy.IsNull)
+                            {
+                                value = objProxy;
+                            }
+                            else
+                            {
+                                value = new ValueStore<PyObject>(None(Process));
+                            }
                         }
-                    }
-                    break;
-                    case PyMemberDefType.T_STRING: {
-                        var ptr = GetFieldProxy(new StructField<PointerProxy> { Process = Process, Offset = offset }).Read();
-                        if (ptr != 0) {
-                            var proxy = new CStringProxy(Process, ptr);
-                            if (langVer <= PythonLanguageVersion.V27) {
+                        break;
+                    case PyMemberDefType.T_STRING:
+                        {
+                            var ptr = GetFieldProxy(new StructField<PointerProxy> { Process = Process, Offset = offset }).Read();
+                            if (ptr != 0)
+                            {
+                                var proxy = new CStringProxy(Process, ptr);
+                                if (langVer <= PythonLanguageVersion.V27)
+                                {
+                                    value = new ValueStore<AsciiString>(proxy.ReadAscii());
+                                }
+                                else
+                                {
+                                    value = new ValueStore<string>(proxy.ReadUnicode());
+                                }
+                            }
+                            else
+                            {
+                                value = new ValueStore<PyObject>(None(Process));
+                            }
+                        }
+                        break;
+                    case PyMemberDefType.T_STRING_INPLACE:
+                        {
+                            var proxy = new CStringProxy(Process, Address.OffsetBy(offset));
+                            if (langVer <= PythonLanguageVersion.V27)
+                            {
                                 value = new ValueStore<AsciiString>(proxy.ReadAscii());
-                            } else {
+                            }
+                            else
+                            {
                                 value = new ValueStore<string>(proxy.ReadUnicode());
                             }
-                        } else {
-                            value = new ValueStore<PyObject>(None(Process));
                         }
-                    }
-                    break;
-                    case PyMemberDefType.T_STRING_INPLACE: {
-                        var proxy = new CStringProxy(Process, Address.OffsetBy(offset));
-                        if (langVer <= PythonLanguageVersion.V27) {
-                            value = new ValueStore<AsciiString>(proxy.ReadAscii());
-                        } else {
-                            value = new ValueStore<string>(proxy.ReadUnicode());
-                        }
-                    }
-                    break;
+                        break;
                     case PyMemberDefType.T_BYTE:
                         value = GetFieldProxy(new StructField<SByteProxy> { Process = Process, Offset = offset });
                         break;
@@ -356,24 +418,30 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             }
         }
 
-        private class NoneHolder : DkmDataItem {
+        private class NoneHolder : DkmDataItem
+        {
             public readonly PyObject None;
 
-            public NoneHolder(DkmProcess process) {
+            public NoneHolder(DkmProcess process)
+            {
                 None = new PyObject(process, process.GetPythonRuntimeInfo().DLLs.Python.GetStaticVariableAddress("_Py_NoneStruct"));
             }
         }
 
-        public static PyObject None(DkmProcess process) {
+        public static PyObject None(DkmProcess process)
+        {
             return process.GetOrCreateDataItem(() => new NoneHolder(process)).None;
         }
 
-        public bool IsNone {
+        public bool IsNone
+        {
             get { return this == None(Process); }
         }
 
-        public static PyObject FromAddress(DkmProcess process, ulong address) {
-            if (address == 0) {
+        public static PyObject FromAddress(DkmProcess process, ulong address)
+        {
+            if (address == 0)
+            {
                 return null;
             }
 
@@ -385,14 +453,17 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             return proxyInfo.ProxyFactory(process, address);
         }
 
-        private static ProxyInfo? FindProxyInfoForPyType(DkmProcess process, ulong typePtr) {
-            if (typePtr == 0) {
+        private static ProxyInfo? FindProxyInfoForPyType(DkmProcess process, ulong typePtr)
+        {
+            if (typePtr == 0)
+            {
                 return null;
             }
 
             ProxyInfo proxyInfo;
             var map = process.GetOrCreateDataItem(() => new ProxyTypes(process)).ProxyInfoFromPyTypePtr;
-            if (map.TryGetValue(typePtr, out proxyInfo)) {
+            if (map.TryGetValue(typePtr, out proxyInfo))
+            {
                 return proxyInfo;
             }
 
@@ -400,15 +471,19 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             var typeObject = new PyTypeObject(process, typePtr);
             var tp_base = typeObject.tp_base.Raw.Read();
             var baseProxyInfo = FindProxyInfoForPyType(process, tp_base);
-            if (baseProxyInfo != null) {
+            if (baseProxyInfo != null)
+            {
                 return baseProxyInfo;
             }
 
             var tp_bases = typeObject.tp_bases.TryRead();
-            if (tp_bases != null) {
-                foreach (var bas in tp_bases.ReadElements()) {
+            if (tp_bases != null)
+            {
+                foreach (var bas in tp_bases.ReadElements())
+                {
                     baseProxyInfo = FindProxyInfoForPyType(process, bas.Raw.Read());
-                    if (baseProxyInfo != null) {
+                    if (baseProxyInfo != null)
+                    {
                         return baseProxyInfo;
                     }
                 }
@@ -418,26 +493,32 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
         }
 
         public static PyTypeObject GetPyType<TObject>(DkmProcess process)
-            where TObject : PyObject {
+            where TObject : PyObject
+        {
             var map = process.GetOrCreateDataItem(() => new ProxyTypes(process)).PyTypeFromType;
             return map[typeof(TObject)];
         }
     }
 
-    internal abstract class PyVarObject : PyObject {
-        internal class PyVarObject_Fields {
+    internal abstract class PyVarObject : PyObject
+    {
+        internal class PyVarObject_Fields
+        {
             public StructField<SSizeTProxy> ob_size;
         }
 
         private readonly PyVarObject_Fields _fields;
 
         public PyVarObject(DkmProcess process, ulong address)
-            : base(process, address) {
+            : base(process, address)
+        {
             InitializeStruct(this, out _fields);
         }
 
-        public SSizeTProxy ob_size {
-            get {
+        public SSizeTProxy ob_size
+        {
+            get
+            {
                 return GetFieldProxy(_fields.ob_size);
             }
         }

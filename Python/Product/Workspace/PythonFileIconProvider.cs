@@ -14,23 +14,21 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.ComponentModel.Composition;
-using System.IO;
-using Microsoft.VisualStudio.Imaging;
-using Microsoft.VisualStudio.Imaging.Interop;
-using Microsoft.VisualStudio.Workspace;
-
-namespace Microsoft.PythonTools.Workspace {
+namespace Microsoft.PythonTools.Workspace
+{
     [Export(typeof(IVsFileIconProvider))]
-    class PythonFileIconProvider : IVsFileIconProvider {
+    class PythonFileIconProvider : IVsFileIconProvider
+    {
         public AsyncEvent<FileIconsChangedEvent> OnFileIconsChanged { get; set; }
 
-        public bool GetIconForFile(string fullPath, out ImageMoniker imageMoniker, out int priority) {
-            if (!string.IsNullOrEmpty(fullPath)) {
+        public bool GetIconForFile(string fullPath, out ImageMoniker imageMoniker, out int priority)
+        {
+            if (!string.IsNullOrEmpty(fullPath))
+            {
                 var ext = Path.GetExtension(fullPath);
                 if (PythonConstants.FileExtension.Equals(ext, StringComparison.OrdinalIgnoreCase) ||
-                    PythonConstants.WindowsFileExtension.Equals(ext, StringComparison.OrdinalIgnoreCase)) {
+                    PythonConstants.WindowsFileExtension.Equals(ext, StringComparison.OrdinalIgnoreCase))
+                {
                     imageMoniker = KnownMonikers.PYFileNode;
                     priority = 1000;
                     return true;

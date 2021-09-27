@@ -14,21 +14,24 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-
-namespace Microsoft.PythonTools.Debugger.DebugEngine {
+namespace Microsoft.PythonTools.Debugger.DebugEngine
+{
     /// <summary>
     /// Event args for start/stop of engines.
     /// </summary>
-    class AD7EngineEventArgs : EventArgs {
+    class AD7EngineEventArgs : EventArgs
+    {
         private readonly AD7Engine _engine;
 
-        public AD7EngineEventArgs(AD7Engine engine) {
+        public AD7EngineEventArgs(AD7Engine engine)
+        {
             _engine = engine;
         }
 
-        public AD7Engine Engine {
-            get {
+        public AD7Engine Engine
+        {
+            get
+            {
                 return _engine;
             }
         }

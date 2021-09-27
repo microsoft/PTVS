@@ -14,17 +14,12 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Numerics;
-using System.Text;
 using Microsoft.PythonTools.Debugger.Concord.Proxies.Structs;
-using Microsoft.PythonTools.Parsing;
-using Microsoft.PythonTools.Parsing.Ast;
 
-namespace Microsoft.PythonTools.Debugger.Concord {
-    internal class ReprOptions {
+namespace Microsoft.PythonTools.Debugger.Concord
+{
+    internal class ReprOptions
+    {
         private int _maxLength = 1000;
 
         public PythonLanguageVersion LanguageVersion { get; set; }
@@ -33,23 +28,28 @@ namespace Microsoft.PythonTools.Debugger.Concord {
 
         public bool HexadecimalDisplay { get; set; }
 
-        public int MaxLength {
+        public int MaxLength
+        {
             get { return _maxLength; }
-            set {
-                if (value < 3) {
+            set
+            {
+                if (value < 3)
+                {
                     throw new ArgumentException(Strings.DebugReprMaxLengthAtLeast3);
                 }
                 _maxLength = value;
             }
         }
 
-        public ReprOptions(DkmProcess process) {
+        public ReprOptions(DkmProcess process)
+        {
             Is64Bit = process.Is64Bit();
             LanguageVersion = process.GetPythonRuntimeInfo().LanguageVersion;
         }
 
         public ReprOptions(DkmInspectionContext inspectionContext)
-            : this(inspectionContext.Thread.Process) {
+            : this(inspectionContext.Thread.Process)
+        {
             HexadecimalDisplay = (inspectionContext.Radix == 16);
         }
     }
@@ -58,7 +58,8 @@ namespace Microsoft.PythonTools.Debugger.Concord {
     /// A builder for Python object reprs. Analogous to <see cref="StringBuilder"/>, but also provides <c>Append</c> methods
     /// for Python objects and literals, and handles <see cref="PyObject"/> arguments in format strings as recursive repr.
     /// </summary>
-    internal class ReprBuilder : ICustomFormatter, IFormatProvider {
+    internal class ReprBuilder : ICustomFormatter, IFormatProvider
+    {
         public const int MaxJoinedItems = 10;
 
         private readonly StringBuilder _sb = new StringBuilder();
@@ -68,47 +69,59 @@ namespace Microsoft.PythonTools.Debugger.Concord {
 
         public ReprOptions Options { get; private set; }
 
-        public ReprBuilder(ReprOptions options) {
+        public ReprBuilder(ReprOptions options)
+        {
             Options = options;
             _visitedObjs = new HashSet<ulong>();
         }
 
-        private ReprBuilder(ReprBuilder parent) {
+        private ReprBuilder(ReprBuilder parent)
+        {
             Options = parent.Options;
             _visitedObjs = parent._visitedObjs;
             _nestingLevel = parent._nestingLevel;
         }
 
-        public bool IsTopLevel {
+        public bool IsTopLevel
+        {
             get { return _nestingLevel == 0; }
         }
 
-        public override string ToString() {
+        public override string ToString()
+        {
             CheckLength();
             return _sb.ToString();
         }
 
-        public void Clear() {
+        public void Clear()
+        {
             _sb.Clear();
         }
 
-        public ReprBuilder Append(string s) {
-            if (CheckLength()) {
+        public ReprBuilder Append(string s)
+        {
+            if (CheckLength())
+            {
                 _sb.Append(s);
             }
             return this;
         }
 
-        private ReprBuilder AppendDecOrHex<T>(T n, T negated = default(T)) where T : IComparable<T> {
+        private ReprBuilder AppendDecOrHex<T>(T n, T negated = default(T)) where T : IComparable<T>
+        {
             string format;
-            if (Options.HexadecimalDisplay) {
+            if (Options.HexadecimalDisplay)
+            {
                 // X format treats everything as unsigned, so we need to take care of the sign ourselves for negative numbers.
-                if (n.CompareTo(default(T)) < 0) {
+                if (n.CompareTo(default(T)) < 0)
+                {
                     _sb.Append('-');
                     n = negated;
                 }
                 format = "0x{0:x}";
-            } else {
+            }
+            else
+            {
                 format = "{0}";
             }
             _sb.AppendFormat(CultureInfo.InvariantCulture, format, n);
@@ -127,85 +140,108 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             { typeof(BigInteger), (rb, x) => rb.AppendDecOrHex((BigInteger)x, -(BigInteger)x) },
         };
 
-        private bool TryAppendDecOrHex(object x) {
+        private bool TryAppendDecOrHex(object x)
+        {
             Action<ReprBuilder, object> impl;
-            if (appendDecOrHex.TryGetValue(x.GetType(), out impl)) {
+            if (appendDecOrHex.TryGetValue(x.GetType(), out impl))
+            {
                 impl(this, x);
                 return true;
-            } else {
+            }
+            else
+            {
                 return false;
             }
         }
 
-        public ReprBuilder Append(sbyte n) {
+        public ReprBuilder Append(sbyte n)
+        {
             return AppendDecOrHex(n, (sbyte)-n);
         }
 
-        public ReprBuilder Append(byte n) {
+        public ReprBuilder Append(byte n)
+        {
             return AppendDecOrHex(n);
         }
 
-        public ReprBuilder Append(short n) {
+        public ReprBuilder Append(short n)
+        {
             return AppendDecOrHex(n, (short)-n);
         }
 
-        public ReprBuilder Append(ushort n) {
+        public ReprBuilder Append(ushort n)
+        {
             return AppendDecOrHex(n);
         }
 
-        public ReprBuilder Append(int n) {
+        public ReprBuilder Append(int n)
+        {
             return AppendDecOrHex(n, -n);
         }
 
-        public ReprBuilder Append(uint n) {
+        public ReprBuilder Append(uint n)
+        {
             return AppendDecOrHex(n);
         }
 
-        public ReprBuilder Append(long n) {
+        public ReprBuilder Append(long n)
+        {
             return AppendDecOrHex(n, -n);
         }
 
-        public ReprBuilder Append(ulong n) {
+        public ReprBuilder Append(ulong n)
+        {
             return AppendDecOrHex(n);
         }
 
-        public ReprBuilder Append(BigInteger n) {
+        public ReprBuilder Append(BigInteger n)
+        {
             return AppendDecOrHex(n, -n);
         }
 
-        public ReprBuilder Append(float n) {
+        public ReprBuilder Append(float n)
+        {
             AppendFormat("{0}", n);
             return this;
         }
 
-        public ReprBuilder Append(double n) {
+        public ReprBuilder Append(double n)
+        {
             AppendFormat("{0}", n);
             return this;
         }
 
-        public ReprBuilder AppendFormat(string format, object arg0) {
-            if (CheckLength()) {
+        public ReprBuilder AppendFormat(string format, object arg0)
+        {
+            if (CheckLength())
+            {
                 _sb.AppendFormat(this, format, arg0);
             }
             return this;
         }
 
-        public ReprBuilder AppendFormat(string format, object arg0, object arg1) {
-            if (CheckLength()) {
+        public ReprBuilder AppendFormat(string format, object arg0, object arg1)
+        {
+            if (CheckLength())
+            {
                 _sb.AppendFormat(this, format, arg0, arg1);
             }
             return this;
         }
 
-        public ReprBuilder AppendFormat(string format, object arg0, object arg1, object arg2) {
-            if (CheckLength()) {
+        public ReprBuilder AppendFormat(string format, object arg0, object arg1, object arg2)
+        {
+            if (CheckLength())
+            {
                 _sb.AppendFormat(this, format, arg0, arg1, arg2);
             }
             return this;
         }
 
-        public ReprBuilder AppendFormat(string format, object arg0, object arg1, object arg2, object arg3) {
-            if (CheckLength()) {
+        public ReprBuilder AppendFormat(string format, object arg0, object arg1, object arg2, object arg3)
+        {
+            if (CheckLength())
+            {
                 _sb.AppendFormat(this, format, arg0, arg1, arg2, arg3);
             }
             return this;
@@ -218,12 +254,17 @@ namespace Microsoft.PythonTools.Debugger.Concord {
         /// <remarks>
         /// Supports numeric types, booleans, and ASCII and Unicode strings. For integer types, representation depends on <see cref="HexadecimalDisplay"/>.
         /// </remarks>
-        public ReprBuilder AppendLiteral(object value) {
-            if (TryAppendDecOrHex(value)) {
-                if (value is BigInteger && Options.LanguageVersion <= PythonLanguageVersion.V27) {
+        public ReprBuilder AppendLiteral(object value)
+        {
+            if (TryAppendDecOrHex(value))
+            {
+                if (value is BigInteger && Options.LanguageVersion <= PythonLanguageVersion.V27)
+                {
                     Append("L");
                 }
-            } else {
+            }
+            else
+            {
                 var constExpr = new ConstantExpression(value);
                 Append(constExpr.GetConstantRepr(Options.LanguageVersion, escape8bitStrings: true));
             }
@@ -237,18 +278,24 @@ namespace Microsoft.PythonTools.Debugger.Concord {
         /// This method keeps track of nested <see cref="AppendRepr"/> invocations to detect recursion. If asked for a repr of an object
         /// as direct or indirect part of the computation of that object's repr that was triggered earlier, returns <c>"..."</c>.
         /// </remarks>
-        public ReprBuilder AppendRepr(PyObject obj) {
-            if (CheckLength()) {
-                if (obj == null) {
+        public ReprBuilder AppendRepr(PyObject obj)
+        {
+            if (CheckLength())
+            {
+                if (obj == null)
+                {
                     return Append("<NULL>");
                 }
 
-                if (_visitedObjs.Add(obj.Address)) {
+                if (_visitedObjs.Add(obj.Address))
+                {
                     ++_nestingLevel;
                     obj.Repr(this);
                     --_nestingLevel;
                     _visitedObjs.Remove(obj.Address);
-                } else {
+                }
+                else
+                {
                     Append("...");
                 }
             }
@@ -262,19 +309,25 @@ namespace Microsoft.PythonTools.Debugger.Concord {
         /// If there are more than <see cref="MaxJoinedItems"/> items in <param name="sequence"/>, <paramref name="appender"/> is only called the first
         /// <see cref="MaxJoinedItems"/> items; after that, another separator is appended, followed by <c>"..."</c>.
         /// </remarks>
-        public ReprBuilder AppendJoined<T>(string separator, IEnumerable<T> sequence, Action<T> appender) {
+        public ReprBuilder AppendJoined<T>(string separator, IEnumerable<T> sequence, Action<T> appender)
+        {
             bool first = true;
             int count = 0;
-            foreach (var item in sequence) {
-                if (++count > MaxJoinedItems) {
+            foreach (var item in sequence)
+            {
+                if (++count > MaxJoinedItems)
+                {
                     Append(separator);
                     Append("...");
                     return this;
                 }
 
-                if (first) {
+                if (first)
+                {
                     first = false;
-                } else {
+                }
+                else
+                {
                     Append(separator);
                 }
 
@@ -284,12 +337,15 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             return this;
         }
 
-        private bool CheckLength() {
-            if (_maxLengthExceeded) {
+        private bool CheckLength()
+        {
+            if (_maxLengthExceeded)
+            {
                 return false;
             }
 
-            if (_sb.Length > Options.MaxLength) {
+            if (_sb.Length > Options.MaxLength)
+            {
                 _sb.Length = Options.MaxLength - 3;
                 _sb.Append("...");
                 _maxLengthExceeded = true;
@@ -299,38 +355,58 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             return true;
         }
 
-        string ICustomFormatter.Format(string format, object arg, IFormatProvider formatProvider) {
+        string ICustomFormatter.Format(string format, object arg, IFormatProvider formatProvider)
+        {
             var obj = arg as PyObject;
-            if (obj != null) {
+            if (obj != null)
+            {
                 var builder = new ReprBuilder(Options);
                 builder.AppendRepr(obj);
                 return builder.ToString();
-            } else if (format == "PY") {
+            }
+            else if (format == "PY")
+            {
                 var builder = new ReprBuilder(Options);
                 builder.AppendLiteral(arg);
                 return builder.ToString();
-            } else if (format == "PTR") {
-                if (Options.Is64Bit) {
+            }
+            else if (format == "PTR")
+            {
+                if (Options.Is64Bit)
+                {
                     return string.Format("0x{0:X16}", arg);
-                } else {
+                }
+                else
+                {
                     return string.Format("0x{0:X8}", arg);
                 }
-            } else {
+            }
+            else
+            {
                 var formattable = arg as IFormattable;
-                if (formattable != null) {
+                if (formattable != null)
+                {
                     return formattable.ToString(format, formatProvider);
-                } else if (arg != null) {
+                }
+                else if (arg != null)
+                {
                     return arg.ToString();
-                } else {
+                }
+                else
+                {
                     return null;
                 }
             }
         }
 
-        object IFormatProvider.GetFormat(Type formatType) {
-            if (formatType == typeof(ICustomFormatter)) {
+        object IFormatProvider.GetFormat(Type formatType)
+        {
+            if (formatType == typeof(ICustomFormatter))
+            {
                 return this;
-            } else {
+            }
+            else
+            {
                 return CultureInfo.InvariantCulture.GetFormat(formatType);
             }
         }

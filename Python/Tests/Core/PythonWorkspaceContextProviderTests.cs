@@ -14,23 +14,20 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Threading;
-using Microsoft.PythonTools.Interpreter;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.VisualStudio.Threading;
-using TestUtilities;
-
-namespace PythonToolsTests {
+namespace PythonToolsTests
+{
     [TestClass]
-    public class PythonWorkspaceContextProviderTests {
+    public class PythonWorkspaceContextProviderTests
+    {
         [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
+        public static void DoDeployment(TestContext context)
+        {
             AssertListener.Initialize();
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void AlreadyOpenedWorkspace() {
+        public void AlreadyOpenedWorkspace()
+        {
             var workspaceFolder = WorkspaceTestHelper.CreateWorkspaceFolder();
             var workspace = WorkspaceTestHelper.CreateMockWorkspace(workspaceFolder, WorkspaceTestHelper.PythonNoId);
             var workspaceService = new WorkspaceTestHelper.MockWorkspaceService(workspace);
@@ -48,7 +45,8 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P0)]
-        public void LoadWorkspace() {
+        public void LoadWorkspace()
+        {
             var workspaceFolder = WorkspaceTestHelper.CreateWorkspaceFolder();
             var workspace = WorkspaceTestHelper.CreateMockWorkspace(workspaceFolder, WorkspaceTestHelper.PythonNoId);
             var workspaceService = new WorkspaceTestHelper.MockWorkspaceService(null);
@@ -66,7 +64,8 @@ namespace PythonToolsTests {
             using (var openEvent = new AutoResetEvent(false))
             using (var initEvent = new AutoResetEvent(false))
             using (var closingEvent = new AutoResetEvent(false))
-            using (var closedEvent = new AutoResetEvent(false)) {
+            using (var closedEvent = new AutoResetEvent(false))
+            {
                 provider.WorkspaceOpening += (sender, e) => { openEvent.Set(); };
                 provider.WorkspaceInitialized += (sender, e) => { initEvent.Set(); };
                 provider.WorkspaceClosed += (sender, e) => { closedEvent.Set(); };
@@ -85,7 +84,8 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P0)]
-        public void CloseWorkspace() {
+        public void CloseWorkspace()
+        {
             var workspaceFolder = WorkspaceTestHelper.CreateWorkspaceFolder();
             var workspace = WorkspaceTestHelper.CreateMockWorkspace(workspaceFolder, WorkspaceTestHelper.PythonNoId);
             var workspaceService = new WorkspaceTestHelper.MockWorkspaceService(workspace);
@@ -104,7 +104,8 @@ namespace PythonToolsTests {
             using (var openEvent = new AutoResetEvent(false))
             using (var initEvent = new AutoResetEvent(false))
             using (var closingEvent = new AutoResetEvent(false))
-            using (var closedEvent = new AutoResetEvent(false)) {
+            using (var closedEvent = new AutoResetEvent(false))
+            {
                 provider.WorkspaceOpening += (sender, e) => { openEvent.Set(); };
                 provider.WorkspaceInitialized += (sender, e) => { initEvent.Set(); };
                 provider.WorkspaceClosed += (sender, e) => { closedEvent.Set(); };
@@ -122,7 +123,8 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void SwitchWorkspace() {
+        public void SwitchWorkspace()
+        {
             var workspaceFolder1 = WorkspaceTestHelper.CreateWorkspaceFolder();
             var workspaceFolder2 = WorkspaceTestHelper.CreateWorkspaceFolder();
             var workspace1 = WorkspaceTestHelper.CreateMockWorkspace(workspaceFolder1, WorkspaceTestHelper.Python27Id);
@@ -143,7 +145,8 @@ namespace PythonToolsTests {
             using (var openEvent = new AutoResetEvent(false))
             using (var initEvent = new AutoResetEvent(false))
             using (var closingEvent = new AutoResetEvent(false))
-            using (var closedEvent = new AutoResetEvent(false)) {
+            using (var closedEvent = new AutoResetEvent(false))
+            {
                 provider.WorkspaceOpening += (sender, e) => { openEvent.Set(); };
                 provider.WorkspaceInitialized += (sender, e) => { initEvent.Set(); };
                 provider.WorkspaceClosed += (sender, e) => { closedEvent.Set(); };

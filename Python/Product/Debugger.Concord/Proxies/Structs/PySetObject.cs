@@ -14,33 +14,37 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Collections.Generic;
-using System.Linq;
-using Microsoft.PythonTools.Parsing;
-
-namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
-    internal class PySetObject : PyObject {
-        public class setentry : StructProxy {
-            private class Fields {
+namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
+{
+    internal class PySetObject : PyObject
+    {
+        public class setentry : StructProxy
+        {
+            private class Fields
+            {
                 public StructField<PointerProxy<PyObject>> key;
             }
 
             private readonly Fields _fields;
 
             public setentry(DkmProcess process, ulong address)
-                : base(process, address) {
+                : base(process, address)
+            {
                 InitializeStruct(this, out _fields);
             }
 
-            public PointerProxy<PyObject> key {
+            public PointerProxy<PyObject> key
+            {
                 get { return GetFieldProxy(_fields.key); }
             }
         }
 
-        private class DummyHolder : DkmDataItem {
+        private class DummyHolder : DkmDataItem
+        {
             public readonly PointerProxy<PyObject> Dummy;
 
-            public DummyHolder(DkmProcess process) {
+            public DummyHolder(DkmProcess process)
+            {
                 var pyrtInfo = process.GetPythonRuntimeInfo();
                 Dummy =
                     pyrtInfo.LanguageVersion >= PythonLanguageVersion.V34 ?
@@ -49,7 +53,8 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             }
         }
 
-        private class Fields {
+        private class Fields
+        {
             public StructField<SSizeTProxy> mask;
             public StructField<PointerProxy<ArrayProxy<setentry>>> table;
         }
@@ -58,23 +63,28 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
         private readonly PyObject _dummy;
 
         public PySetObject(DkmProcess process, ulong address)
-            : base(process, address) {
+            : base(process, address)
+        {
             InitializeStruct(this, out _fields);
             CheckPyType<PySetObject>();
 
             _dummy = Process.GetOrCreateDataItem(() => new DummyHolder(Process)).Dummy.TryRead();
         }
 
-        public SSizeTProxy mask {
+        public SSizeTProxy mask
+        {
             get { return GetFieldProxy(_fields.mask); }
         }
 
-        public PointerProxy<ArrayProxy<setentry>> table {
+        public PointerProxy<ArrayProxy<setentry>> table
+        {
             get { return GetFieldProxy(_fields.table); }
         }
 
-        public IEnumerable<PyObject> ReadElements() {
-            if (table.IsNull) {
+        public IEnumerable<PyObject> ReadElements()
+        {
+            if (table.IsNull)
+            {
                 return Enumerable.Empty<PyObject>();
             }
 
@@ -87,15 +97,19 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             return items;
         }
 
-        public override void Repr(ReprBuilder builder) {
+        public override void Repr(ReprBuilder builder)
+        {
             var count = ReadElements().Count();
-            if (count == 0) {
+            if (count == 0)
+            {
                 builder.Append(builder.Options.LanguageVersion >= PythonLanguageVersion.V30 ? "set()" : "set([])");
                 return;
             }
 
-            if (builder.IsTopLevel) {
-                if (count > ReprBuilder.MaxJoinedItems) {
+            if (builder.IsTopLevel)
+            {
+                if (count > ReprBuilder.MaxJoinedItems)
+                {
                     builder.AppendFormat("<set, len() = {0}>", count);
                     return;
                 }
@@ -106,12 +120,15 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             builder.Append(builder.Options.LanguageVersion >= PythonLanguageVersion.V30 ? "}" : "])");
         }
 
-        public override IEnumerable<PythonEvaluationResult> GetDebugChildren(ReprOptions reprOptions) {
-            yield return new PythonEvaluationResult(new ValueStore<long>(ReadElements().Count()), "len()") {
+        public override IEnumerable<PythonEvaluationResult> GetDebugChildren(ReprOptions reprOptions)
+        {
+            yield return new PythonEvaluationResult(new ValueStore<long>(ReadElements().Count()), "len()")
+            {
                 Category = DkmEvaluationResultCategory.Method
             };
 
-            foreach (var item in ReadElements()) {
+            foreach (var item in ReadElements())
+            {
                 yield return new PythonEvaluationResult(item);
             }
         }

@@ -14,12 +14,11 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using TestRunnerInterop;
-
-namespace PythonToolsUITestsRunner {
+namespace PythonToolsUITestsRunner
+{
     [TestClass]
-    public class InfoBarUITests {
+    public class InfoBarUITests
+    {
         #region UI test boilerplate
         public VsTestInvoker _vs => new VsTestInvoker(
             VsTestContext.Instance,
@@ -41,127 +40,148 @@ namespace PythonToolsUITestsRunner {
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void VirtualEnvProjectPrompt() {
+        public void VirtualEnvProjectPrompt()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.InfoBarUITests.VirtualEnvProjectPrompt));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void VirtualEnvProjectNoPromptGlobalSuppress() {
+        public void VirtualEnvProjectNoPromptGlobalSuppress()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.InfoBarUITests.VirtualEnvProjectNoPromptGlobalSuppress));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void VirtualEnvProjectNoPromptLocalSuppress() {
+        public void VirtualEnvProjectNoPromptLocalSuppress()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.InfoBarUITests.VirtualEnvProjectNoPromptLocalSuppress));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void VirtualEnvWorkspacePrompt() {
+        public void VirtualEnvWorkspacePrompt()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.InfoBarUITests.VirtualEnvWorkspacePrompt));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void VirtualEnvWorkspaceNoPromptGlobalSuppress() {
+        public void VirtualEnvWorkspaceNoPromptGlobalSuppress()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.InfoBarUITests.VirtualEnvWorkspaceNoPromptGlobalSuppress));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void VirtualEnvWorkspaceNoPromptLocalSuppress() {
+        public void VirtualEnvWorkspaceNoPromptLocalSuppress()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.InfoBarUITests.VirtualEnvWorkspaceNoPromptLocalSuppress));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void VirtualEnvWorkspaceNoPromptNoReqsTxt() {
+        public void VirtualEnvWorkspaceNoPromptNoReqsTxt()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.InfoBarUITests.VirtualEnvWorkspaceNoPromptNoReqsTxt));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void CondaEnvProjectPrompt() {
+        public void CondaEnvProjectPrompt()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.InfoBarUITests.CondaEnvProjectPrompt));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void CondaEnvProjectNoPromptGlobalSuppress() {
+        public void CondaEnvProjectNoPromptGlobalSuppress()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.InfoBarUITests.CondaEnvProjectNoPromptGlobalSuppress));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void CondaEnvProjectNoPromptLocalSuppress() {
+        public void CondaEnvProjectNoPromptLocalSuppress()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.InfoBarUITests.CondaEnvProjectNoPromptLocalSuppress));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void CondaEnvWorkspacePrompt() {
+        public void CondaEnvWorkspacePrompt()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.InfoBarUITests.CondaEnvWorkspacePrompt));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void CondaEnvWorkspaceNoPromptGlobalSuppress() {
+        public void CondaEnvWorkspaceNoPromptGlobalSuppress()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.InfoBarUITests.CondaEnvWorkspaceNoPromptGlobalSuppress));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void CondaEnvWorkspaceNoPromptLocalSuppress() {
+        public void CondaEnvWorkspaceNoPromptLocalSuppress()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.InfoBarUITests.CondaEnvWorkspaceNoPromptLocalSuppress));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void CondaEnvWorkspaceNoPromptNoEnvYml() {
+        public void CondaEnvWorkspaceNoPromptNoEnvYml()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.InfoBarUITests.CondaEnvWorkspaceNoPromptNoEnvYml));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void InstallPackagesProjectPrompt() {
+        public void InstallPackagesProjectPrompt()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.InfoBarUITests.InstallPackagesProjectPrompt));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void InstallPackagesProjectNoPromptNoMissingPackage() {
+        public void InstallPackagesProjectNoPromptNoMissingPackage()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.InfoBarUITests.InstallPackagesProjectNoPromptNoMissingPackage));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void InstallPackagesWorkspacePrompt() {
+        public void InstallPackagesWorkspacePrompt()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.InfoBarUITests.InstallPackagesWorkspacePrompt));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void InstallPackagesWorkspaceNoPromptGlobalSuppress() {
+        public void InstallPackagesWorkspaceNoPromptGlobalSuppress()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.InfoBarUITests.InstallPackagesWorkspaceNoPromptGlobalSuppress));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void InstallPackagesWorkspaceNoPromptLocalSuppress() {
+        public void InstallPackagesWorkspaceNoPromptLocalSuppress()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.InfoBarUITests.InstallPackagesWorkspaceNoPromptLocalSuppress));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void InstallPackagesWorkspaceNoPromptNoMissingPackage() {
+        public void InstallPackagesWorkspaceNoPromptNoMissingPackage()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.InfoBarUITests.InstallPackagesWorkspaceNoPromptNoMissingPackage));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void InstallPackagesWorkspaceNoPromptGlobalDefaultEnv() {
+        public void InstallPackagesWorkspaceNoPromptGlobalDefaultEnv()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.InfoBarUITests.InstallPackagesWorkspaceNoPromptGlobalDefaultEnv));
         }
     }

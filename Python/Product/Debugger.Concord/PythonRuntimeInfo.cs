@@ -14,14 +14,13 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Diagnostics;
-using System.Text.RegularExpressions;
 using Microsoft.PythonTools.Debugger.Concord.Proxies.Structs;
-using Microsoft.PythonTools.Parsing;
 
-namespace Microsoft.PythonTools.Debugger.Concord {
+namespace Microsoft.PythonTools.Debugger.Concord
+{
 
-    internal class PythonDLLs {
+    internal class PythonDLLs
+    {
         private static readonly Regex pythonName = new Regex(@"^python(\d\d)(?:_d)?\.dll$");
 
         public static readonly string[] DebuggerHelperNames = {
@@ -36,17 +35,22 @@ namespace Microsoft.PythonTools.Debugger.Concord {
         private readonly PythonRuntimeInfo _pyrtInfo;
         private DkmNativeModuleInstance _python;
 
-        public PythonDLLs(PythonRuntimeInfo pyrtInfo) {
+        public PythonDLLs(PythonRuntimeInfo pyrtInfo)
+        {
             _pyrtInfo = pyrtInfo;
         }
 
-        public DkmNativeModuleInstance Python {
-            get {
+        public DkmNativeModuleInstance Python
+        {
+            get
+            {
                 return _python;
             }
-            set {
+            set
+            {
                 _python = value;
-                if (value != null) {
+                if (value != null)
+                {
                     _pyrtInfo.LanguageVersion = GetPythonLanguageVersion(value);
                     Debug.Assert(_pyrtInfo.LanguageVersion != PythonLanguageVersion.None);
                 }
@@ -57,14 +61,17 @@ namespace Microsoft.PythonTools.Debugger.Concord {
 
         public DkmNativeModuleInstance CTypes { get; set; }
 
-        public static PythonLanguageVersion GetPythonLanguageVersion(DkmNativeModuleInstance moduleInstance) {
+        public static PythonLanguageVersion GetPythonLanguageVersion(DkmNativeModuleInstance moduleInstance)
+        {
             var m = pythonName.Match(moduleInstance.Name);
-            if (!m.Success) {
+            if (!m.Success)
+            {
                 return PythonLanguageVersion.None;
             }
 
             var ver = m.Groups[1].Value;
-            switch (ver) {
+            switch (ver)
+            {
                 case "27": return PythonLanguageVersion.V27;
                 case "33": return PythonLanguageVersion.V33;
                 case "34": return PythonLanguageVersion.V34;
@@ -77,25 +84,31 @@ namespace Microsoft.PythonTools.Debugger.Concord {
         }
     }
 
-    internal class PythonRuntimeInfo : DkmDataItem {
+    internal class PythonRuntimeInfo : DkmDataItem
+    {
         public PythonLanguageVersion LanguageVersion { get; set; }
 
         public PythonDLLs DLLs { get; private set; }
 
-        public PythonRuntimeInfo() {
+        public PythonRuntimeInfo()
+        {
             DLLs = new PythonDLLs(this);
         }
 
-        public PyRuntimeState GetRuntimeState() {
-            if (LanguageVersion < PythonLanguageVersion.V37) {
+        public PyRuntimeState GetRuntimeState()
+        {
+            if (LanguageVersion < PythonLanguageVersion.V37)
+            {
                 return null;
             }
             return DLLs.Python.GetStaticVariable<PyRuntimeState>("_PyRuntime");
         }
     }
 
-    internal static class PythonRuntimeInfoExtensions {
-        public static PythonRuntimeInfo GetPythonRuntimeInfo(this DkmProcess process) {
+    internal static class PythonRuntimeInfoExtensions
+    {
+        public static PythonRuntimeInfo GetPythonRuntimeInfo(this DkmProcess process)
+        {
             return process.GetOrCreateDataItem(() => new PythonRuntimeInfo());
         }
     }

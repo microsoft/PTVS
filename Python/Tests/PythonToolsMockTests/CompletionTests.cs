@@ -16,46 +16,40 @@
 
 extern alias analysis;
 extern alias pythontools;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using analysis::Microsoft.PythonTools.Parsing;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudioTools.MockVsTests;
-using pythontools::Microsoft.PythonTools;
-using pythontools::Microsoft.PythonTools.Intellisense;
-using TestUtilities;
 
-namespace PythonToolsMockTests {
+namespace PythonToolsMockTests
+{
     [TestClass]
-    public class CompletionTests {
+    public class CompletionTests
+    {
 
         [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
+        public static void DoDeployment(TestContext context)
+        {
             AssertListener.Initialize();
             VsProjectAnalyzer.DefaultTimeout = 10000;
             VsProjectAnalyzer.AssertOnRequestFailure = true;
         }
 
         [TestInitialize]
-        public void OnTestInitialized() {
+        public void OnTestInitialized()
+        {
             MockPythonToolsPackage.SuppressTaskProvider = true;
         }
 
         [TestCleanup]
-        public void OnTestCleanup() {
+        public void OnTestCleanup()
+        {
             MockPythonToolsPackage.SuppressTaskProvider = false;
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void GetApplicableSpanCompleteWordTest() {
+        public void GetApplicableSpanCompleteWordTest()
+        {
             var text = "if fob.oar(eggs, spam<=ham) :";
 
-            using (var view = new PythonEditor(text)) {
+            using (var view = new PythonEditor(text))
+            {
                 var snapshot = view.CurrentSnapshot;
 
                 // We check the applicable span at every index in the string.
@@ -73,11 +67,15 @@ namespace PythonToolsMockTests {
                     "", // between ':' and EOL
                 };
 
-                for (int i = 0; i < text.Length; ++i) {
+                for (int i = 0; i < text.Length; ++i)
+                {
                     var span = snapshot.GetApplicableSpan(i, completeWord: true);
-                    if (span == null) {
+                    if (span == null)
+                    {
                         Assert.AreEqual(expected[i], "", text.Substring(0, i) + "|" + text.Substring(i));
-                    } else {
+                    }
+                    else
+                    {
                         Assert.AreEqual(expected[i], span.GetText(snapshot), text.Substring(0, i) + "|" + text.Substring(i));
                     }
                 }
@@ -85,8 +83,10 @@ namespace PythonToolsMockTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void GetApplicableSpanAutoTest() {
-            using (var view = new PythonEditor("x = id")) {
+        public void GetApplicableSpanAutoTest()
+        {
+            using (var view = new PythonEditor("x = id"))
+            {
                 var snapshot = view.CurrentSnapshot;
                 var span = snapshot.GetApplicableSpan(5, completeWord: false);
                 Assert.AreEqual(4, span.GetStartPoint(snapshot).Position);
@@ -95,8 +95,10 @@ namespace PythonToolsMockTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void CtrlSpaceCompletions() {
-            using (var view = new PythonEditor()) {
+        public void CtrlSpaceCompletions()
+        {
+            using (var view = new PythonEditor())
+            {
                 view.Text = @"def f(param1, param2):
     g()";
 
@@ -117,7 +119,8 @@ namespace PythonToolsMockTests {
 ", @"def f():
     yield (2 + 3)
     
-    pass" }) {
+    pass" })
+                {
 
                     Debug.WriteLine(String.Format("Testing {0}", codeSnippet));
 
@@ -128,9 +131,11 @@ namespace PythonToolsMockTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void KeywordCompletions() {
+        public void KeywordCompletions()
+        {
             var code = "def f():\r\n     \r\n    x = abc, oar, \r\n    pass\r\n#2\r\n";
-            using (var view = new PythonEditor(code, version: PythonLanguageVersion.V35)) {
+            using (var view = new PythonEditor(code, version: PythonLanguageVersion.V35))
+            {
                 IEnumerable<string> completionList;
                 completionList = view.GetCompletions(code.IndexOfEnd("#2\r\n"));
 
@@ -155,7 +160,8 @@ namespace PythonToolsMockTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public void KeywordOrIdentifierCompletions() {
+        public void KeywordOrIdentifierCompletions()
+        {
             // http://pytools.codeplex.com/workitem/560
             string code = @"
 def h():
@@ -169,7 +175,8 @@ def g():
 
 yield_expression = 42
 ";
-            using (var view = new PythonEditor(code)) {
+            using (var view = new PythonEditor(code))
+            {
                 var completionList = view.GetCompletionsAfter("yield_");
 
                 AssertUtil.DoesntContain(completionList, "yield");
@@ -188,14 +195,16 @@ yield_expression = 42
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void LambdaCompletions() {
+        public void LambdaCompletions()
+        {
             // https://github.com/Microsoft/PTVS/issues/1000
             string code = @"
 l = (lambda b:b)
 l(42)
 
 ";
-            using (var view = new PythonEditor(code)) {
+            using (var view = new PythonEditor(code))
+            {
                 var completionList = view.GetCompletionsAfter(":");
 
                 AssertUtil.Contains(completionList, "b");
@@ -203,12 +212,16 @@ l(42)
         }
 
         [TestMethod, Priority(UnitTestPriority.P2_FAILING)]
-        public void TrueFalseNoneCompletions() {
+        public void TrueFalseNoneCompletions()
+        {
             // http://pytools.codeplex.com/workitem/1905
-            foreach (var version in new[] { PythonLanguageVersion.V27, PythonLanguageVersion.V33 }) {
-                using (var view = new PythonEditor(version: version)) {
+            foreach (var version in new[] { PythonLanguageVersion.V27, PythonLanguageVersion.V33 })
+            {
+                using (var view = new PythonEditor(version: version))
+                {
                     var completionList = view.GetCompletionList(0);
-                    foreach (var c in completionList) {
+                    foreach (var c in completionList)
+                    {
                         Console.WriteLine(c.DisplayText);
                     }
 
@@ -226,7 +239,8 @@ l(42)
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void CtrlSpaceAfterKeyword() {
+        public void CtrlSpaceAfterKeyword()
+        {
             // http://pytools.codeplex.com/workitem/560
             string code = @"
 def h():
@@ -236,14 +250,16 @@ print
 
 ";
 
-            using (var editor = new PythonEditor(code)) {
+            using (var editor = new PythonEditor(code))
+            {
                 AssertUtil.ContainsAtLeast(editor.GetCompletions(code.IndexOfEnd("return ")), "any");
                 AssertUtil.ContainsAtLeast(editor.GetCompletions(code.IndexOfEnd("print ")), "any");
             }
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void CtrlSpaceAfterNumber() {
+        public void CtrlSpaceAfterNumber()
+        {
             // http://pytools.codeplex.com/workitem/2323
             string code = @"
 2
@@ -252,7 +268,8 @@ print
 2.0.
 ";
 
-            using (var vs = new MockVs()) {
+            using (var vs = new MockVs())
+            {
                 AssertUtil.ContainsExactly(GetCompletions(vs, code.IndexOfEnd("2"), code));
                 AssertUtil.ContainsExactly(GetCompletions(vs, code.IndexOfEnd("2."), code));
                 AssertUtil.ContainsAtLeast(GetCompletions(vs, code.IndexOfEnd("2.."), code), "real", "imag");
@@ -261,9 +278,12 @@ print
         }
 
         [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public void ExceptionCompletions() {
-            using (var vs = new MockVs()) {
-                foreach (var ver in new[] { PythonLanguageVersion.V36, PythonLanguageVersion.V27 }) {
+        public void ExceptionCompletions()
+        {
+            using (var vs = new MockVs())
+            {
+                foreach (var ver in new[] { PythonLanguageVersion.V36, PythonLanguageVersion.V27 })
+                {
                     foreach (string code in new[] {
 @"import sys
 raise |",
@@ -280,7 +300,8 @@ except (|",
 @"import sys
 try:
     pass
-except (ValueError, |"}) {
+except (ValueError, |"})
+                    {
                         Console.WriteLine($"{ver}:: {code}");
 
                         var completionList = GetCompletions(vs, code.IndexOf("|"), code.Replace("|", ""), ver);
@@ -297,7 +318,8 @@ raise (sys.",
 @"import sys
 try:
     pass
-except (sys."}) {
+except (sys."})
+                    {
                         var completionList = GetCompletions(vs, code.IndexOfEnd("sys."), code, ver);
 
                         AssertUtil.CheckCollection(
@@ -311,8 +333,10 @@ except (sys."}) {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public async Task MemberCompletions() {
-            using (var view = new PythonEditor("x = 2\r\nx.")) {
+        public async Task MemberCompletions()
+        {
+            using (var view = new PythonEditor("x = 2\r\nx."))
+            {
                 // See tests in ExpressionFinder
 
                 // combining various partial expressions with previous expressions
@@ -332,8 +356,10 @@ except (sys."}) {
                     "f(x if False else y).",
                     "(\r\nx\r\n).",
                 };
-                foreach (var prefix in prefixes) {
-                    foreach (var expr in exprs) {
+                foreach (var prefix in prefixes)
+                {
+                    foreach (var expr in exprs)
+                    {
                         string test = prefix + expr;
                         Console.WriteLine("   -- {0}", test);
                         view.Text = test;
@@ -343,7 +369,8 @@ except (sys."}) {
                             ExpressionAtPointPurpose.EvaluateMembers,
                             TimeSpan.FromSeconds(10.0)
                         );
-                        if (foundExpr == null && Debugger.IsAttached) {
+                        if (foundExpr == null && Debugger.IsAttached)
+                        {
                             Debugger.Break();
                             foundExpr = await view.Analyzer.GetExpressionAtPointAsync(
                                 new SnapshotPoint(view.CurrentSnapshot, view.CurrentSnapshot.Length),
@@ -359,7 +386,8 @@ except (sys."}) {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void SignatureHelp() {
+        public void SignatureHelp()
+        {
             var prefixes = new[] { "", "(", "a = ", "f(", "l[", "{", "if " };
             var sigs = new[] {
                 new { Expr = "f(", Param = 0, Function="f" } ,
@@ -396,16 +424,20 @@ except (sys."}) {
                 new { Expr = "f({1:2", Param = 0, Function="f" },
             };
 
-            using (var view = new PythonEditor()) {
-                foreach (var prefix in prefixes) {
-                    foreach (var sig in sigs) {
+            using (var view = new PythonEditor())
+            {
+                foreach (var prefix in prefixes)
+                {
+                    foreach (var sig in sigs)
+                    {
                         var test = prefix + sig.Expr;
                         Console.WriteLine("   -- {0}", test);
                         view.Text = test;
                         var snapshot = view.CurrentSnapshot;
 
                         SignatureAnalysis res = null;
-                        view.VS.InvokeSync(() => {
+                        view.VS.InvokeSync(() =>
+                        {
                             res = view.VS.GetPyService().GetSignatures(
                                 view.View.TextView,
                                 snapshot,
@@ -422,15 +454,21 @@ except (sys."}) {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void SignatureHelpStarArgs() {
+        public void SignatureHelpStarArgs()
+        {
             SignatureAnalysis sigResult = null;
             using (var view = new PythonEditor(@"def f(a, *b, c=None): pass
-f(1, 2, 3, 4,")) {
-                for (int retries = 3; retries >= 0; --retries) {
+f(1, 2, 3, 4,"))
+            {
+                for (int retries = 3; retries >= 0; --retries)
+                {
                     TestSignature(view, -1, "f", 4, out sigResult);
-                    if (retries == 0) {
+                    if (retries == 0)
+                    {
                         Assert.IsTrue(sigResult.Signatures.Count >= 1, "No signature analysis results");
-                    } else if (sigResult.Signatures.Count >= 1) {
+                    }
+                    else if (sigResult.Signatures.Count >= 1)
+                    {
                         break;
                     }
                     Console.WriteLine("Retry {0}", retries);
@@ -441,8 +479,10 @@ f(1, 2, 3, 4,")) {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public void ImportCompletions() {
-            using (var view = new PythonEditor()) {
+        public void ImportCompletions()
+        {
+            using (var view = new PythonEditor())
+            {
                 view.Text = "import  ";
                 AssertUtil.ContainsAtLeast(view.GetCompletions(-2), "sys");
 
@@ -473,8 +513,10 @@ f(1, 2, 3, 4,")) {
         }
 
         [TestMethod, Priority(UnitTestPriority.P2_FAILING)]
-        public void FromImportCompletions() {
-            using (var view = new PythonEditor()) {
+        public void FromImportCompletions()
+        {
+            using (var view = new PythonEditor())
+            {
                 IEnumerable<string> completions = null;
                 view.Text = "from ";
                 AssertUtil.ContainsAtLeast(view.GetCompletions(-1), "nt", "sys");
@@ -493,11 +535,13 @@ f(1, 2, 3, 4,")) {
 
                 // This is the first time we have imported sys, so it will
                 // run Python in the background to scrape it. We can wait.
-                for (int retries = 100; retries > 0; --retries) {
+                for (int retries = 100; retries > 0; --retries)
+                {
                     view.Text = "from sys import ";
                     Thread.Sleep(100);
                     completions = view.GetCompletions(-1);
-                    if (completions.Count() > 1) {
+                    if (completions.Count() > 1)
+                    {
                         break;
                     }
                 }
@@ -544,23 +588,29 @@ f(1, 2, 3, 4,")) {
 
 
         [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public void FromOSPathImportCompletions2x() {
-            using (var vs = new MockVs()) {
+        public void FromOSPathImportCompletions2x()
+        {
+            using (var vs = new MockVs())
+            {
                 var factory = vs.Invoke(() => vs.GetPyService().InterpreterRegistryService.Interpreters.LastOrDefault(p => p.Configuration.Version.Major == 2));
                 OSPathImportTest(vs, factory);
             }
         }
 
         [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public void FromOSPathImportCompletions3x() {
-            using (var vs = new MockVs()) {
+        public void FromOSPathImportCompletions3x()
+        {
+            using (var vs = new MockVs())
+            {
                 var factory = vs.Invoke(() => vs.GetPyService().InterpreterRegistryService.Interpreters.LastOrDefault(p => p.Configuration.Version.Major == 3));
                 OSPathImportTest(vs, factory);
             }
         }
 
-        private static void OSPathImportTest(MockVs vs, Microsoft.PythonTools.Interpreter.IPythonInterpreterFactory factory) {
-            using (var editor = new PythonEditor(vs: vs, factory: factory)) {
+        private static void OSPathImportTest(MockVs vs, Microsoft.PythonTools.Interpreter.IPythonInterpreterFactory factory)
+        {
+            using (var editor = new PythonEditor(vs: vs, factory: factory))
+            {
                 editor.Text = "from ";
                 AssertUtil.ContainsAtLeast(editor.GetCompletions(-1), "os", "sys");
 
@@ -596,8 +646,10 @@ f(1, 2, 3, 4,")) {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void FromImportMultilineCompletions() {
-            using (var editor = new PythonEditor()) {
+        public void FromImportMultilineCompletions()
+        {
+            using (var editor = new PythonEditor())
+            {
                 editor.Text = "from sys import (";
                 var completions = editor.GetCompletions(-1);
                 AssertUtil.ContainsAtLeast(completions, "settrace", "api_version");
@@ -618,7 +670,8 @@ f(1, 2, 3, 4,")) {
 
         [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
-        public void CompletionInTripleQuotedString() {
+        public void CompletionInTripleQuotedString()
+        {
             string code = @"
 '''
 import 
@@ -629,8 +682,10 @@ sys.
 '''
 ";
 
-            using (var view = new PythonEditor(code)) {
-                for (int i = code.IndexOfEnd("'''"); i < code.LastIndexOf("'''"); ++i) {
+            using (var view = new PythonEditor(code))
+            {
+                for (int i = code.IndexOfEnd("'''"); i < code.LastIndexOf("'''"); ++i)
+                {
                     Console.WriteLine(code.Substring(0, i).Replace("\r", "\\r").Replace("\n", "\\n"));
                     AssertUtil.ContainsExactly(view.GetCompletions(i));
                 }
@@ -638,8 +693,10 @@ sys.
         }
 
         [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public void GotoDefinition() {
-            using (var vs = new MockVs()) {
+        public void GotoDefinition()
+        {
+            using (var vs = new MockVs())
+            {
                 string code = @"
 class C:
     def fff(self): pass
@@ -657,7 +714,8 @@ C().fff";
         }
 
         [TestMethod, Priority(UnitTestPriority.P2_FAILING)]
-        public void QuickInfo() {
+        public void QuickInfo()
+        {
             string code = @"
 x = ""ABCDEFGHIJKLMNOPQRSTUVWYXZ""
 cls._parse_block(ast.expr)
@@ -680,7 +738,8 @@ while True:
 lambda larg1, larg2: None";
 
 
-            using (var view = new PythonEditor(code, filename: "file.py")) {
+            using (var view = new PythonEditor(code, filename: "file.py"))
+            {
                 // we get the appropriate subexpression
                 TestQuickInfo(view, code.IndexOf("cls."), code.IndexOf("cls.") + 4, "cls: <unknown type>");
                 TestQuickInfo(view, code.IndexOf("cls.") + 4 + 1, code.IndexOf("cls.") + 4 + 1 + 11, "cls._parse_block: <unknown type>");
@@ -713,9 +772,11 @@ e): <unknown type>");
         }
 
         [TestMethod, Priority(UnitTestPriority.P2_FAILING)]
-        public void NormalOverrideCompletions() {
+        public void NormalOverrideCompletions()
+        {
             using (var view2 = new PythonEditor(version: PythonLanguageVersion.V27))
-            using (var view3 = new PythonEditor(version: PythonLanguageVersion.V33)) {
+            using (var view3 = new PythonEditor(version: PythonLanguageVersion.V33))
+            {
                 foreach (var code in new[] {
 @"class Fob(object):
     def func_a(self, a=100): pass
@@ -772,7 +833,8 @@ class Oar(object):
 class Baz(Fob, Oar):
     def func_c(self): pass
     def 
-"}) {
+"})
+                {
                     view2.Text = code;
 
                     Console.WriteLine(code);
@@ -797,8 +859,10 @@ class Baz(Fob, Oar):
             }
         }
 
-        static void AssertOverrideInsertionContains(PythonLanguageVersion version, string bases, string name, params string[] text) {
-            using (var view = new PythonEditor($"class Fob({bases}):\r\n    def \r\n", version: version)) {
+        static void AssertOverrideInsertionContains(PythonLanguageVersion version, string bases, string name, params string[] text)
+        {
+            using (var view = new PythonEditor($"class Fob({bases}):\r\n    def \r\n", version: version))
+            {
                 var comp = view.GetCompletionListAfter("def ").FirstOrDefault(c => c.DisplayText == name);
                 Assert.IsNotNull(comp, $"failed to find {name} in overrides list");
                 AssertUtil.Contains(comp.InsertionText, text);
@@ -806,7 +870,8 @@ class Baz(Fob, Oar):
         }
 
         [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public void BuiltinOverrideCompletions() {
+        public void BuiltinOverrideCompletions()
+        {
             AssertOverrideInsertionContains(PythonLanguageVersion.V27, "str", "capitalize", "capitalize(self):\r\n        return super(Fob, self).capitalize()");
             AssertOverrideInsertionContains(PythonLanguageVersion.V33, "str", "capitalize", "capitalize(self):\r\n        return super().capitalize()");
 
@@ -815,7 +880,8 @@ class Baz(Fob, Oar):
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void OverridesWithMismatchedAnalysis() {
+        public void OverridesWithMismatchedAnalysis()
+        {
             // Here we create a buffer and analyze. We then add some newlines
             // and a def, expecting completions from A (int). Because the def
             // has moved down into class B, GetCompletions() rolls it back
@@ -830,7 +896,8 @@ class B(dict):
 
 ";
 
-            using (var vs = new MockVs()) {
+            using (var vs = new MockVs())
+            {
                 var editText = "\r\n\r\n\r\n    def ";
                 var editInsert = code.IndexOf("pass") + 4;
                 var completions = EditAndGetCompletions(vs, code, editText, editInsert, "def ");
@@ -848,8 +915,10 @@ class B(dict):
         }
 
         [TestMethod, Priority(UnitTestPriority.P2)]
-        public void HideAdvancedMembers() {
-            using (var view = new PythonEditor()) {
+        public void HideAdvancedMembers()
+        {
+            using (var view = new PythonEditor())
+            {
                 // No text - expect all non-advanced members
                 AssertUtil.ContainsExactly(HideAdvancedMembersHelper(view, "", "a", "b", "__c__", "__d_e__", "_f_"),
                     "a", "b", "_f_"
@@ -874,7 +943,8 @@ class B(dict):
             }
         }
 
-        private IEnumerable<string> HideAdvancedMembersHelper(PythonEditor view, string text, params string[] completions) {
+        private IEnumerable<string> HideAdvancedMembersHelper(PythonEditor view, string text, params string[] completions)
+        {
             view.Text = text;
             var snapshot = view.CurrentSnapshot;
             var set = new FuzzyCompletionSet(
@@ -889,10 +959,12 @@ class B(dict):
             return set.Completions.Select(c => c.DisplayText).ToList();
         }
 
-        private static IEnumerable<string> GenerateText(int lines, int width, string prefix = "") {
+        private static IEnumerable<string> GenerateText(int lines, int width, string prefix = "")
+        {
             var rand = new Random();
             const string VALID_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.(),     '\"";
-            for (int i = 0; i < lines; ++i) {
+            for (int i = 0; i < lines; ++i)
+            {
                 yield return prefix + new String(Enumerable.Repeat(0, width - prefix.Length)
                     .Select(_ => rand.Next(VALID_CHARS.Length))
                     .Select(j => VALID_CHARS[j])
@@ -902,8 +974,10 @@ class B(dict):
         }
 
         [TestMethod, Priority(UnitTestPriority.P2_FAILING)]
-        public void CompletionWithLongDocString() {
-            using (var vs = new MockVs()) {
+        public void CompletionWithLongDocString()
+        {
+            using (var vs = new MockVs())
+            {
                 var docString = GenerateText(100, 72, "    ").ToArray();
                 string code = @"
 def func(a):
@@ -918,7 +992,8 @@ def func(a):
                 var expected1 = string.Join(Environment.NewLine, docString.Take(29)) + Environment.NewLine + "...";
                 var expected2 = string.Join(Environment.NewLine, docString.Take(15)).TrimStart() + Environment.NewLine + "...";
 
-                using (var view = new PythonEditor(code, filename: "file.py")) {
+                using (var view = new PythonEditor(code, filename: "file.py"))
+                {
                     TestQuickInfo(view, code.IndexOf("func"), code.IndexOf("func") + 4, "func:\r\nfile.func(a)\r\n" + expected1);
 
                     SignatureAnalysis sigs;
@@ -937,7 +1012,8 @@ def func(a):
 
 ";
 
-                using (var view = new PythonEditor(code, filename: "file.py")) {
+                using (var view = new PythonEditor(code, filename: "file.py"))
+                {
                     // The long lines cause us to truncate sooner.
                     expected1 = string.Join(Environment.NewLine, docString).Substring(0, 4096) + Environment.NewLine + "...";
                     expected2 = string.Join(Environment.NewLine, docString.Take(8)).TrimStart() + Environment.NewLine + "...";
@@ -955,7 +1031,8 @@ def func(a):
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void ClassCompletionOutsideFunction() {
+        public void ClassCompletionOutsideFunction()
+        {
             // Note that "eggs_and_spam" is longer than the indentation of each
             // scope.
             string code = @"
@@ -972,7 +1049,8 @@ class Spam(object):
 
 #3
 ";
-            using (var view = new PythonEditor()) {
+            using (var view = new PythonEditor())
+            {
                 view.Text = code.Replace("#1", "eggs_and_spam.");
                 var completionList = view.GetCompletionsAfter("eggs_and_spam.");
 
@@ -988,14 +1066,16 @@ class Spam(object):
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void ArgumentNameCompletion() {
+        public void ArgumentNameCompletion()
+        {
             const string code = @"
 def f(param1 = 123, param2 : int = 234):
     pass
 
 x = f(";
 
-            using (var view = new PythonEditor(code)) {
+            using (var view = new PythonEditor(code))
+            {
                 view.Text = view.Text;
                 AssertUtil.ContainsAtLeast(view.GetCompletions(-1), "param1=", "param2=");
                 AssertUtil.DoesntContain(view.GetCompletions(0), "param1");
@@ -1003,7 +1083,8 @@ x = f(";
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void MethodArgumentNameCompletion() {
+        public void MethodArgumentNameCompletion()
+        {
             const string code = @"
 class MyClass:
     def f(self, param1 = 123, param2 : int = 234):
@@ -1012,10 +1093,13 @@ class MyClass:
 m = MyClass()
 x = m.f(";
 
-            using (var view = new PythonEditor(code)) {
-                for (int retries = 3; retries >= 0; --retries) {
+            using (var view = new PythonEditor(code))
+            {
+                for (int retries = 3; retries >= 0; --retries)
+                {
                     var sigs = GetSignatureAnalysis(view, code.Length - 1);
-                    if (sigs.Signatures.Count > 0) {
+                    if (sigs.Signatures.Count > 0)
+                    {
                         break;
                     }
                     Console.WriteLine("Retry {0}", retries);
@@ -1027,7 +1111,8 @@ x = m.f(";
         }
 
         [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public void YieldFromExpressionCompletion() {
+        public void YieldFromExpressionCompletion()
+        {
             const string code = @"
 def f():
     yield 1
@@ -1039,7 +1124,8 @@ def g():
     (yield from f()).
 ";
 
-            using (var view = new PythonEditor(code, PythonLanguageVersion.V35)) {
+            using (var view = new PythonEditor(code, PythonLanguageVersion.V35))
+            {
                 AssertUtil.CheckCollection(view.GetCompletionsAfter("f()."),
                     new[] { "send", "throw" },
                     new[] { "real", "imag" }
@@ -1056,7 +1142,8 @@ def g():
         }
 
         [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public void AwaitExpressionCompletion() {
+        public void AwaitExpressionCompletion()
+        {
             const string code = @"
 async def f():
     return 1
@@ -1066,7 +1153,8 @@ async def g():
     await f().
     (await f()).";
 
-            using (var view = new PythonEditor(code, PythonLanguageVersion.V35)) {
+            using (var view = new PythonEditor(code, PythonLanguageVersion.V35))
+            {
                 AssertUtil.CheckCollection(view.GetCompletionsAfter("f()."),
                     new[] { "send", "throw" },
                     new[] { "real", "imag" }
@@ -1089,16 +1177,20 @@ async def g():
             int editInsert,
             string completeAfter,
             PythonLanguageVersion version = PythonLanguageVersion.V27
-        ) {
-            using (var view = new PythonEditor(code, version, vs)) {
+        )
+        {
+            using (var view = new PythonEditor(code, version, vs))
+            {
                 view.AdvancedOptions.HideAdvancedMembers = false;
 
                 var snapshot = view.CurrentSnapshot;
-                using (var evt = view.AnalysisCompleteEvent) {
+                using (var evt = view.AnalysisCompleteEvent)
+                {
                     view.View.MoveCaret(new SnapshotPoint(snapshot, editInsert));
                     view.Type(editText);
 
-                    if (!evt.WaitOne(10000)) {
+                    if (!evt.WaitOne(10000))
+                    {
                         Assert.Fail("Failed to wait for new analysis");
                     }
                 }
@@ -1110,40 +1202,50 @@ async def g():
             }
         }
 
-        private static void TestQuickInfo(PythonEditor view, int start, int end, string expected = null) {
+        private static void TestQuickInfo(PythonEditor view, int start, int end, string expected = null)
+        {
             var snapshot = view.CurrentSnapshot;
 
-            for (var i = start; i < end; i++) {
+            for (var i = start; i < end; i++)
+            {
                 var quickInfo = view.Analyzer.GetQuickInfoAsync(
                     (AnalysisEntry)view.GetAnalysisEntry(),
                     view.View.TextView,
                     new SnapshotPoint(snapshot, start)
                 ).Result;
 
-                if (expected != null) {
+                if (expected != null)
+                {
                     Assert.IsNotNull(quickInfo);
                     Assert.AreEqual(expected, quickInfo.Text);
-                } else {
+                }
+                else
+                {
                     Assert.IsNull(quickInfo);
                 }
             }
         }
 
-        private static void AnalyzeAndValidateExpression(MockVs vs, int start, int charCount, string code, string expectedExpr) {
+        private static void AnalyzeAndValidateExpression(MockVs vs, int start, int charCount, string code, string expectedExpr)
+        {
             // We check charCount + 1 positions to ensure that go to definition
             // works when caret is on the left AND right of identifier (and in between)
-            for (int i = 0; i <= charCount; i++) {
+            for (int i = 0; i <= charCount; i++)
+            {
                 var defAnalysis = AnalyzeExpression(vs, start + i, code);
                 Assert.AreEqual(expectedExpr, defAnalysis?.Expression);
             }
         }
 
-        private static ExpressionAnalysis AnalyzeExpression(MockVs vs, int location, string code, PythonLanguageVersion version = PythonLanguageVersion.V27) {
-            if (location < 0) {
+        private static ExpressionAnalysis AnalyzeExpression(MockVs vs, int location, string code, PythonLanguageVersion version = PythonLanguageVersion.V27)
+        {
+            if (location < 0)
+            {
                 location += code.Length + 1;
             }
 
-            using (var view = new PythonEditor(code, version, vs)) {
+            using (var view = new PythonEditor(code, version, vs))
+            {
                 var snapshot = view.CurrentSnapshot;
                 return vs.InvokeTask(() => view.Analyzer.AnalyzeExpressionAsync(
                     (AnalysisEntry)view.GetAnalysisEntry(),
@@ -1152,11 +1254,13 @@ async def g():
             }
         }
 
-        private static SignatureAnalysis GetSignatureAnalysis(PythonEditor view, int index) {
+        private static SignatureAnalysis GetSignatureAnalysis(PythonEditor view, int index)
+        {
             var snapshot = view.CurrentSnapshot;
 
             Task<SignatureAnalysis> task = null;
-            view.VS.InvokeSync(() => {
+            view.VS.InvokeSync(() =>
+            {
                 task = view.Analyzer.GetSignaturesAsync(
                     (AnalysisEntry)view.GetAnalysisEntry(),
                     view.View.TextView,
@@ -1168,8 +1272,10 @@ async def g():
         }
 
 
-        private static void TestSignature(PythonEditor view, int location, string expectedExpression, int paramIndex, out SignatureAnalysis sigs) {
-            if (location < 0) {
+        private static void TestSignature(PythonEditor view, int location, string expectedExpression, int paramIndex, out SignatureAnalysis sigs)
+        {
+            if (location < 0)
+            {
                 location = view.CurrentSnapshot.Length + location;
             }
 
@@ -1178,8 +1284,10 @@ async def g():
             Assert.AreEqual(paramIndex, sigs.ParameterIndex, view.Text);
         }
 
-        private static IEnumerable<string> GetCompletions(MockVs vs, int index, string code, PythonLanguageVersion version = PythonLanguageVersion.V27) {
-            using (var view = new PythonEditor(code, version, vs)) {
+        private static IEnumerable<string> GetCompletions(MockVs vs, int index, string code, PythonLanguageVersion version = PythonLanguageVersion.V27)
+        {
+            using (var view = new PythonEditor(code, version, vs))
+            {
                 return view.GetCompletions(index);
             }
         }

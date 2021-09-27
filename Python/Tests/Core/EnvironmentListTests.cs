@@ -14,47 +14,31 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.Composition.Hosting;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Runtime.ExceptionServices;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Windows.Input;
-using Microsoft.PythonTools.Environments;
-using Microsoft.PythonTools.EnvironmentsList;
-using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Parsing;
-using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.Win32;
-using TestUtilities;
-using TestUtilities.Mocks;
-using TestUtilities.Python;
-
-namespace PythonToolsUITests {
+namespace PythonToolsUITests
+{
     [TestClass]
-    public class EnvironmentListTests {
+    public class EnvironmentListTests
+    {
         [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
+        public static void DoDeployment(TestContext context)
+        {
             AssertListener.Initialize();
         }
 
         private static readonly List<string> DeleteFolder = new List<string>();
 
         [ClassCleanup]
-        public static void DoCleanup() {
-            foreach (var folder in DeleteFolder) {
+        public static void DoCleanup()
+        {
+            foreach (var folder in DeleteFolder)
+            {
                 FileUtils.DeleteDirectory(folder);
             }
         }
 
 
-        private static InterpreterConfiguration MockInterpreterConfiguration(string description, Version version, InterpreterUIMode uiMode) {
+        private static InterpreterConfiguration MockInterpreterConfiguration(string description, Version version, InterpreterUIMode uiMode)
+        {
             return new VisualStudioInterpreterConfiguration(
                 $"Mock|{Guid.NewGuid()}",
                 description,
@@ -69,13 +53,15 @@ namespace PythonToolsUITests {
             );
         }
 
-        private static InterpreterConfiguration MockInterpreterConfiguration(string description, Version version) {
+        private static InterpreterConfiguration MockInterpreterConfiguration(string description, Version version)
+        {
             return MockInterpreterConfiguration(description, version, InterpreterUIMode.Normal);
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
-        public void HasInterpreters() {
+        public void HasInterpreters()
+        {
             var sp = new MockServiceProvider();
             var mockService = new MockInterpreterOptionsService();
             mockService.AddProvider(new MockPythonInterpreterFactoryProvider("Test Provider 1",
@@ -91,7 +77,8 @@ namespace PythonToolsUITests {
             ));
 
             using (var wpf = new WpfProxy())
-            using (var list = new EnvironmentListProxy(wpf)) {
+            using (var list = new EnvironmentListProxy(wpf))
+            {
                 list.InitializeEnvironments(mockService, mockService);
                 var environments = list.Environments;
 
@@ -110,7 +97,8 @@ namespace PythonToolsUITests {
 
         [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
-        public void InterpretersWithSameNames() {
+        public void InterpretersWithSameNames()
+        {
             var sp = new MockServiceProvider();
             var mockService = new MockInterpreterOptionsService();
 
@@ -123,7 +111,8 @@ namespace PythonToolsUITests {
             mockService.AddProvider(new MockPythonInterpreterFactoryProvider("Test Provider 1", fact1, fact2, fact2));
 
             using (var wpf = new WpfProxy())
-            using (var list = new EnvironmentListProxy(wpf)) {
+            using (var list = new EnvironmentListProxy(wpf))
+            {
                 list.InitializeEnvironments(mockService, mockService);
                 var environments = list.Environments;
 
@@ -142,7 +131,8 @@ namespace PythonToolsUITests {
 
         [TestMethod, Priority(UnitTestPriority.P2)]
         [TestCategory("10s")]
-        public async Task InterpretersRaceCondition() {
+        public async Task InterpretersRaceCondition()
+        {
             var container = CreateCompositionContainer();
             var service = container.GetExportedValue<IInterpreterOptionsService>();
             var interpreters = container.GetExportedValue<IInterpreterRegistryService>();
@@ -165,13 +155,18 @@ namespace PythonToolsUITests {
             var ct = cts.Token;
             ExceptionDispatchInfo edi = null;
 
-            EventHandler interpretersChanged = (s, e) => {
-                if (ct.IsCancellationRequested) {
+            EventHandler interpretersChanged = (s, e) =>
+            {
+                if (ct.IsCancellationRequested)
+                {
                     return;
                 }
-                Task.Run(() => {
-                    try {
-                        foreach (var f in factories) {
+                Task.Run(() =>
+                {
+                    try
+                    {
+                        foreach (var f in factories)
+                        {
                             Thread.Sleep(1);
                             ct.ThrowIfCancellationRequested();
                             provider.AddFactory(f);
@@ -180,52 +175,75 @@ namespace PythonToolsUITests {
                         ct.ThrowIfCancellationRequested();
                         var interpretersList = interpreters.Interpreters.ToList();
                         Trace.TraceInformation("Got {0} interpreters", interpretersList.Count);
-                    } catch (OperationCanceledException) {
-                    } catch (Exception ex) {
+                    }
+                    catch (OperationCanceledException)
+                    {
+                    }
+                    catch (Exception ex)
+                    {
                         edi = ExceptionDispatchInfo.Capture(ex);
                     }
                 });
             };
             interpreters.InterpretersChanged += interpretersChanged;
 
-            var t1 = Task.Run(() => {
-                while (!ct.IsCancellationRequested) {
+            var t1 = Task.Run(() =>
+            {
+                while (!ct.IsCancellationRequested)
+                {
                     provider.RemoveAllFactories();
                     provider.AddFactory(factories.First());
                     Thread.Sleep(50);
-                    if (edi != null) {
+                    if (edi != null)
+                    {
                         edi.Throw();
                     }
                 }
             }, ct);
-            var t2 = Task.Run(() => {
-                try {
-                    while (!ct.IsCancellationRequested) {
+            var t2 = Task.Run(() =>
+            {
+                try
+                {
+                    while (!ct.IsCancellationRequested)
+                    {
                         var interpretersList = interpreters.InterpretersOrDefault.ToList();
                         Trace.TraceInformation("Got {0} interpreters or default", interpretersList.Count);
                         Thread.Sleep(10);
                     }
-                } finally {
+                }
+                finally
+                {
                     cts.Cancel();
                 }
             }, ct);
 
-            try {
+            try
+            {
                 await t1;
-            } catch (OperationCanceledException) {
-            } finally {
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            finally
+            {
                 cts.Cancel();
             }
-            try {
+            try
+            {
                 await t2;
-            } catch (OperationCanceledException) {
-            } finally {
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            finally
+            {
                 interpreters.InterpretersChanged -= interpretersChanged;
             }
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void NonDefaultInterpreter() {
+        public void NonDefaultInterpreter()
+        {
             var mockProvider = new MockPythonInterpreterFactoryProvider("Test Provider 1",
                 new MockPythonInterpreterFactory(MockInterpreterConfiguration("Test Factory 1", new Version(2, 7))),
                 new MockPythonInterpreterFactory(MockInterpreterConfiguration("Test Factory 2", new Version(3, 0), InterpreterUIMode.CannotBeDefault)),
@@ -233,7 +251,8 @@ namespace PythonToolsUITests {
             );
 
             using (var wpf = new WpfProxy())
-            using (var list = new EnvironmentListProxy(wpf)) {
+            using (var list = new EnvironmentListProxy(wpf))
+            {
                 var container = CreateCompositionContainer();
                 var service = container.GetExportedValue<IInterpreterOptionsService>();
                 var interpreters = container.GetExportedValue<IInterpreterRegistryService>();
@@ -246,7 +265,8 @@ namespace PythonToolsUITests {
                         }
                     )
                 });
-                try {
+                try
+                {
                     list.InitializeEnvironments(interpreters, service);
                     var environments = list.Environments;
 
@@ -261,7 +281,9 @@ namespace PythonToolsUITests {
                         wpf.Invoke(() => environments.Select(ev => ev.CanBeDefault).ToList()),
                         true, false, true
                     );
-                } finally {
+                }
+                finally
+                {
                     ((InterpreterRegistryService)interpreters).SetProviders(oldProviders);
                     service.DefaultInterpreter = oldDefault;
                 }
@@ -269,10 +291,12 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P0)]
-        public void AddFactories() {
+        public void AddFactories()
+        {
             var mockService = new MockInterpreterOptionsService();
             using (var wpf = new WpfProxy())
-            using (var list = wpf.Invoke(() => new EnvironmentListProxy(wpf))) {
+            using (var list = wpf.Invoke(() => new EnvironmentListProxy(wpf)))
+            {
                 var provider = new MockPythonInterpreterFactoryProvider("Test Provider 1",
                     new MockPythonInterpreterFactory(MockInterpreterConfiguration("Test Factory 1", new Version(2, 7))),
                     new MockPythonInterpreterFactory(MockInterpreterConfiguration("Test Factory 2", new Version(3, 0))),
@@ -298,9 +322,11 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void FactoryWithInvalidPath() {
+        public void FactoryWithInvalidPath()
+        {
             using (var wpf = new WpfProxy())
-            using (var list = new EnvironmentListProxy(wpf)) {
+            using (var list = new EnvironmentListProxy(wpf))
+            {
                 var service = new MockInterpreterOptionsService();
                 var provider = new MockPythonInterpreterFactoryProvider("Test Provider");
                 service.AddProvider(provider);
@@ -311,7 +337,8 @@ namespace PythonToolsUITests {
                     "",
                     "NOT A REAL PATH",
                     "*\\?\\\"\\^"
-                }) {
+                })
+                {
                     Console.WriteLine("Path: <{0}>", invalidPath ?? "(null)");
                     provider.RemoveAllFactories();
                     provider.AddFactory(new MockPythonInterpreterFactory(
@@ -333,15 +360,18 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void FactoryWithValidPath() {
+        public void FactoryWithValidPath()
+        {
             using (var wpf = new WpfProxy())
-            using (var list = new EnvironmentListProxy(wpf)) {
+            using (var list = new EnvironmentListProxy(wpf))
+            {
                 var service = new MockInterpreterOptionsService();
                 var provider = new MockPythonInterpreterFactoryProvider("Test Provider");
                 service.AddProvider(provider);
                 list.InitializeEnvironments(service, service);
 
-                foreach (var version in PythonPaths.Versions) {
+                foreach (var version in PythonPaths.Versions)
+                {
                     Console.WriteLine("Path: <{0}>", version.InterpreterPath);
                     provider.RemoveAllFactories();
                     provider.AddFactory(new MockPythonInterpreterFactory(
@@ -354,9 +384,11 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void InstalledFactories() {
+        public void InstalledFactories()
+        {
             using (var wpf = new WpfProxy())
-            using (var list = new EnvironmentListProxy(wpf)) {
+            using (var list = new EnvironmentListProxy(wpf))
+            {
                 var container = CreateCompositionContainer();
                 var service = container.GetExportedValue<IInterpreterOptionsService>();
                 var interpreters = container.GetExportedValue<IInterpreterRegistryService>();
@@ -386,9 +418,11 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void AddUpdateRemoveConfigurableFactory() {
+        public void AddUpdateRemoveConfigurableFactory()
+        {
             using (var wpf = new WpfProxy())
-            using (var list = new EnvironmentListProxy(wpf)) {
+            using (var list = new EnvironmentListProxy(wpf))
+            {
                 var container = CreateCompositionContainer();
                 var service = container.GetExportedValue<IInterpreterOptionsService>();
                 var interpreters = container.GetExportedValue<IInterpreterRegistryService>();
@@ -402,8 +436,10 @@ namespace PythonToolsUITests {
                 var id = Guid.NewGuid().ToString();
                 string fact;
 
-                using (new AssertInterpretersChanged(interpreters, TimeSpan.FromSeconds(5))) {
-                    try {
+                using (new AssertInterpretersChanged(interpreters, TimeSpan.FromSeconds(5)))
+                {
+                    try
+                    {
                         fact = list.Service.AddConfigurableInterpreter(
                             id,
                             new VisualStudioInterpreterConfiguration(
@@ -413,14 +449,17 @@ namespace PythonToolsUITests {
                                 TestData.GetPath("HelloWorld\\HelloWorld.pyproj")
                             )
                         );
-                    } catch (Exception ex) when (!ex.IsCriticalException()) {
+                    }
+                    catch (Exception ex) when (!ex.IsCriticalException())
+                    {
                         Registry.CurrentUser.DeleteSubKeyTree("Software\\Python\\VisualStudio\\" + id);
                         throw;
                     }
                 }
 
 
-                try {
+                try
+                {
                     var afterAdd = wpf.Invoke(() => new HashSet<string>(
                         list.Environments.Select(ev => (string)ev.InterpreterPath),
                         StringComparer.OrdinalIgnoreCase
@@ -432,7 +471,8 @@ namespace PythonToolsUITests {
                         TestData.GetPath("HelloWorld\\HelloWorld.pyproj")
                     );
 
-                    using (new AssertInterpretersChanged(interpreters, TimeSpan.FromSeconds(5))) {
+                    using (new AssertInterpretersChanged(interpreters, TimeSpan.FromSeconds(5)))
+                    {
                         list.Service.AddConfigurableInterpreter(
                             id,
                             new VisualStudioInterpreterConfiguration(
@@ -454,7 +494,9 @@ namespace PythonToolsUITests {
                         afterUpdate.Except(before),
                         TestData.GetPath("HelloWorld2\\HelloWorld.pyproj")
                     );
-                } finally {
+                }
+                finally
+                {
                     list.Service.RemoveConfigurableInterpreter(fact);
                 }
 
@@ -469,7 +511,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        private static async Task AddCustomEnvironment(EnvironmentListProxy list, IServiceProvider serviceProvider, IInterpreterRegistryService registry, IInterpreterOptionsService options) {
+        private static async Task AddCustomEnvironment(EnvironmentListProxy list, IServiceProvider serviceProvider, IInterpreterRegistryService registry, IInterpreterOptionsService options)
+        {
             var origCount = list.Environments.Count;
             var confView = new AddExistingEnvironmentView(
                 serviceProvider,
@@ -492,16 +535,19 @@ namespace PythonToolsUITests {
 
             await confView.ApplyAsync();
 
-            while (list.Environments.Count == origCount) {
+            while (list.Environments.Count == origCount)
+            {
                 await Task.Delay(10);
             }
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("60s")]
-        public async Task AddUpdateRemoveConfigurableFactoryThroughUI() {
+        public async Task AddUpdateRemoveConfigurableFactoryThroughUI()
+        {
             using (var wpf = new WpfProxy())
-            using (var list = new EnvironmentListProxy(wpf)) {
+            using (var list = new EnvironmentListProxy(wpf))
+            {
                 string newId = null;
                 var container = CreateCompositionContainer();
                 var options = container.GetExportedValue<IInterpreterOptionsService>();
@@ -515,7 +561,8 @@ namespace PythonToolsUITests {
                 var before = wpf.Invoke(() => new HashSet<string>(
                     list.Environments.Where(ev => ev.Factory != null).Select(ev => ev.Factory.Configuration.Id)));
 
-                try {
+                try
+                {
                     wpf.Invoke(() => AddCustomEnvironment(list, serviceProvider, interpreters, options)).Wait(10000);
 
                     var afterAdd = wpf.Invoke(() => new HashSet<string>(list.Environments.Where(ev => ev.Factory != null).Select(ev => ev.Factory.Configuration.Id)));
@@ -533,7 +580,8 @@ namespace PythonToolsUITests {
                     // command on the ConfigurationExtensionProvider's control
                     var view = wpf.Invoke(() => list.Environments.First(ev => ev.Factory.Configuration.Id == newId));
                     var extView = wpf.Invoke(() => view.Extensions.OfType<ConfigurationExtensionProvider>().First().WpfObject);
-                    var confView = wpf.Invoke(() => {
+                    var confView = wpf.Invoke(() =>
+                    {
                         // Extension is not sited in the tool window, so we need
                         // to set the DataContext in order to get the Subcontext
                         extView.DataContext = view;
@@ -544,12 +592,16 @@ namespace PythonToolsUITests {
 
                     var afterRemove = wpf.Invoke(() => new HashSet<string>(list.Environments.Where(ev => ev.Factory != null).Select(ev => ev.Factory.Configuration.Id)));
                     AssertUtil.ContainsExactly(afterRemove, before);
-                } finally {
+                }
+                finally
+                {
                     // Just in case, we want to clean up the registration
-                    if (newId != null) {
+                    if (newId != null)
+                    {
                         string company, tag;
                         if (CPythonInterpreterFactoryConstants.TryParseInterpreterId(newId, out company, out tag) &&
-                            company == "VisualStudio") {
+                            company == "VisualStudio")
+                        {
                             Registry.CurrentUser.DeleteSubKeyTree("Software\\Python\\VisualStudio\\" + tag, false);
                         }
                     }
@@ -558,21 +610,26 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void ChangeDefault() {
+        public void ChangeDefault()
+        {
             bool changed = false;
             var container = CreateCompositionContainer();
             var service = container.GetExportedValue<IInterpreterOptionsService>();
             var interpreters = container.GetExportedValue<IInterpreterRegistryService>();
             using (var defaultChanged = new AutoResetEvent(false))
             using (var wpf = new WpfProxy())
-            using (var list = new EnvironmentListProxy(wpf)) {
+            using (var list = new EnvironmentListProxy(wpf))
+            {
                 service.DefaultInterpreterChanged += (s, e) => { defaultChanged.SetIfNotDisposed(); };
                 list.InitializeEnvironments(interpreters, service);
                 var originalDefault = service.DefaultInterpreter;
-                try {
+                try
+                {
                     var testInterpreterPaths = PythonPaths.Versions.Select(v => v.Configuration.InterpreterPath);
-                    foreach (var interpreter in interpreters.Interpreters) {
-                        if (!testInterpreterPaths.Any(p => PathUtils.IsSamePath(p, interpreter.Configuration.InterpreterPath))) {
+                    foreach (var interpreter in interpreters.Interpreters)
+                    {
+                        if (!testInterpreterPaths.Any(p => PathUtils.IsSamePath(p, interpreter.Configuration.InterpreterPath)))
+                        {
                             // Don't try to use ones that aren't well known for out tests
                             Console.WriteLine("Skipping {0} because it is not a predefined test interpreter", interpreter.Configuration.Id);
                             continue;
@@ -583,7 +640,8 @@ namespace PythonToolsUITests {
                         );
                         Assert.IsNotNull(environment, string.Format("Did not find {0}", interpreter.Configuration.Description));
 
-                        if (!list.CanExecute(EnvironmentView.MakeGlobalDefault, environment)) {
+                        if (!list.CanExecute(EnvironmentView.MakeGlobalDefault, environment))
+                        {
                             Console.WriteLine("Skipping {0} because it cannot be made the default", interpreter.Configuration.Id);
                             continue;
                         }
@@ -601,25 +659,31 @@ namespace PythonToolsUITests {
 
                         changed = true;
                     }
-                } finally {
+                }
+                finally
+                {
                     service.DefaultInterpreter = originalDefault;
                 }
             }
 
-            if (!changed) {
+            if (!changed)
+            {
                 Assert.Inconclusive("There was no interpreter available that could be made default, other than the one already default.");
             }
         }
 
-        private static Task WaitForEvent(CancellationToken cancellationToken, Action<EventHandler> add, Action<EventHandler> remove) {
+        private static Task WaitForEvent(CancellationToken cancellationToken, Action<EventHandler> add, Action<EventHandler> remove)
+        {
             var tcs = new TaskCompletionSource<object>();
-            if (cancellationToken.CanBeCanceled) {
+            if (cancellationToken.CanBeCanceled)
+            {
                 cancellationToken.Register(() => tcs.TrySetCanceled());
             }
             EventHandler evt = (s, e) => { tcs.SetResult(null); };
             var mre = new ManualResetEventSlim();
             add(evt);
-            tcs.Task.ContinueWith(t => {
+            tcs.Task.ContinueWith(t =>
+            {
                 remove(evt);
             });
             return tcs.Task;
@@ -627,25 +691,29 @@ namespace PythonToolsUITests {
 
         [TestMethod, Priority(UnitTestPriority.P0)]
         [TestCategory("10s")]
-        public async Task PipExtensionInVirtualEnv() {
+        public async Task PipExtensionInVirtualEnv()
+        {
             var service = MakeEmptyVEnv();
             await CheckPipExtensionAsync(service);
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
-        public async Task PipExtensionInCondaEnv() {
+        public async Task PipExtensionInCondaEnv()
+        {
             var service = await MakeEmptyCondaEnvAsync(PythonLanguageVersion.V37);
             await CheckPipExtensionAsync(service);
         }
 
         [TestMethod, Priority(UnitTestPriority.P0)]
         [TestCategory("10s")]
-        public async Task CondaExtension() {
+        public async Task CondaExtension()
+        {
             var service = await MakeEmptyCondaEnvAsync(PythonLanguageVersion.V37);
 
             using (var wpf = new WpfProxy())
-            using (var list = new EnvironmentListProxy(wpf)) {
+            using (var list = new EnvironmentListProxy(wpf))
+            {
                 list.CreatePipExtension = true;
                 list.InitializeEnvironments(service, service);
 
@@ -663,9 +731,11 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public async Task SaveLoadCache() {
+        public async Task SaveLoadCache()
+        {
             var cachePath = Path.Combine(TestData.GetTempPath(), "pip.cache");
-            using (var cache = new TestPipPackageCache(cachePath)) {
+            using (var cache = new TestPipPackageCache(cachePath))
+            {
                 AssertUtil.ContainsExactly(await cache.TestGetAllPackageNamesAsync());
 
                 await cache.TestInjectPackageAsync("azure==0.9", "azure description");
@@ -679,7 +749,8 @@ namespace PythonToolsUITests {
                 await cache.TestWriteCacheToDiskAsync();
             }
 
-            using (var cache = new TestPipPackageCache(cachePath)) {
+            using (var cache = new TestPipPackageCache(cachePath))
+            {
                 AssertUtil.ContainsExactly(await cache.TestGetAllPackageNamesAsync());
 
                 await cache.TestReadCacheFromDiskAsync();
@@ -693,7 +764,8 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public async Task UpdatePackageInfo() {
+        public async Task UpdatePackageInfo()
+        {
             var pm = new MockPackageManager();
 
             var pv = new PipPackageView(pm, PackageSpec.FromRequirement("ptvsd==0.9"), true);
@@ -721,7 +793,8 @@ namespace PythonToolsUITests {
 
         [TestMethod, Priority(UnitTestPriority.P1)]
         [TestCategory("10s")]
-        public void VendorInfo() {
+        public void VendorInfo()
+        {
             var sp = new MockServiceProvider();
             var mockService = new MockInterpreterOptionsService();
 
@@ -737,7 +810,8 @@ namespace PythonToolsUITests {
             mockService.AddProvider(new MockPythonInterpreterFactoryProvider("Test Provider", noInfo, vendor, supportUrl, bothInfo));
 
             using (var wpf = new WpfProxy())
-            using (var list = new EnvironmentListProxy(wpf)) {
+            using (var list = new EnvironmentListProxy(wpf))
+            {
                 list.InitializeEnvironments(mockService, mockService);
                 var environments = list.Environments;
 
@@ -760,7 +834,8 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void FileNameEllipsis() {
+        public void FileNameEllipsis()
+        {
             TestFileNameEllipsis("C:\\Python\\python.exe", "C:\\", "Python", "\\python.exe");
             TestFileNameEllipsis("C:\\Python\\lib\\", "C:\\", "Python", "\\lib\\");
             TestFileNameEllipsis("C:\\python.exe", "C:", "", "\\python.exe");
@@ -772,7 +847,8 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void FilterInterpreterPython2() {
+        public void FilterInterpreterPython2()
+        {
             PythonVersion pythonInterpreter = PythonPaths.Python27_x64 ??
                                                 PythonPaths.Python27;
 
@@ -781,7 +857,8 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P0)]
-        public void FilterInterpreterPython3() {
+        public void FilterInterpreterPython3()
+        {
             PythonVersion pythonInterpreter = PythonPaths.Python37_x64 ??
                                                 PythonPaths.Python37 ??
                                                 PythonPaths.Python36_x64 ??
@@ -794,7 +871,8 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void FilterInterpreterConda2() {
+        public void FilterInterpreterConda2()
+        {
             PythonVersion condaInterpreter = PythonPaths.Anaconda27_x64 ?? PythonPaths.Anaconda27;
 
             condaInterpreter.AssertInstalled();
@@ -802,7 +880,8 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P0)]
-        public void FilterInterpreterConda3() {
+        public void FilterInterpreterConda3()
+        {
             PythonVersion condaInterpreter = PythonPaths.Anaconda37_x64 ??
                                                 PythonPaths.Anaconda36_x64 ??
                                                 PythonPaths.Anaconda37 ??
@@ -813,9 +892,11 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void FilterInterpreterIronpython2() {
+        public void FilterInterpreterIronpython2()
+        {
             PythonVersion ironpythonInterpreter = PythonPaths.IronPython27_x64 ?? PythonPaths.IronPython27;
-            if (ironpythonInterpreter == null) {
+            if (ironpythonInterpreter == null)
+            {
                 Assert.Inconclusive("Iron python 2.7 not found");
             }
 
@@ -829,13 +910,15 @@ namespace PythonToolsUITests {
         }
 
         #region Test Helpers
-        private void FilterPythonInterpreterEnv(PythonVersion pythonInterpreter) {
+        private void FilterPythonInterpreterEnv(PythonVersion pythonInterpreter)
+        {
             Assert.IsFalse(InterpreterView.ExcludeInterpreter(pythonInterpreter.Configuration, InterpreterView.InterpreterFilter.None));
             Assert.IsFalse(InterpreterView.ExcludeInterpreter(pythonInterpreter.Configuration, InterpreterView.InterpreterFilter.ExcludeVirtualEnv));
             Assert.IsFalse(InterpreterView.ExcludeInterpreter(pythonInterpreter.Configuration, InterpreterView.InterpreterFilter.ExcludeAll));
 
             var virtualEnvConfig = CreateVirtualEnv(pythonInterpreter);
-            if (virtualEnvConfig == null) {
+            if (virtualEnvConfig == null)
+            {
                 Assert.Inconclusive(
                     "Unable to test excluding virtual environment because creation of virtual environment has failed {0}",
                     virtualEnvConfig.Version.ToString()
@@ -851,7 +934,8 @@ namespace PythonToolsUITests {
             ));
         }
 
-        private void FilterCondaInterpreter(PythonVersion condaInterpreter) {
+        private void FilterCondaInterpreter(PythonVersion condaInterpreter)
+        {
             Assert.IsTrue(InterpreterView.ExcludeInterpreter(condaInterpreter.Configuration, InterpreterView.InterpreterFilter.ExcludeAll));
             Assert.IsTrue(InterpreterView.ExcludeInterpreter(condaInterpreter.Configuration, InterpreterView.InterpreterFilter.ExcludeCondaEnv));
             Assert.IsFalse(InterpreterView.ExcludeInterpreter(condaInterpreter.Configuration, InterpreterView.InterpreterFilter.None));
@@ -865,13 +949,16 @@ namespace PythonToolsUITests {
             //Also includes code for using the conda interpreter to generate a conda env   
         }
 
-        private VisualStudioInterpreterConfiguration CreateVirtualEnv(PythonVersion pythonVersion) {
-            if (pythonVersion == null) {
+        private VisualStudioInterpreterConfiguration CreateVirtualEnv(PythonVersion pythonVersion)
+        {
+            if (pythonVersion == null)
+            {
                 return null;
             }
 
             string env = TestData.GetTempPath();
-            if (env.Length > 140) {
+            if (env.Length > 140)
+            {
                 env = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
                 DeleteFolder.Add(env);
             }
@@ -891,7 +978,8 @@ namespace PythonToolsUITests {
             return interpreterConfiguration;
         }
 
-        private static void TestFileNameEllipsis(string path, string head, string body, string tail) {
+        private static void TestFileNameEllipsis(string path, string head, string body, string tail)
+        {
             var h = (string)new FileNameEllipsisConverter { IncludeHead = true }.Convert(path, typeof(string), null, null);
             var b = (string)new FileNameEllipsisConverter { IncludeBody = true }.Convert(path, typeof(string), null, null);
             var t = (string)new FileNameEllipsisConverter { IncludeTail = true }.Convert(path, typeof(string), null, null);
@@ -899,32 +987,39 @@ namespace PythonToolsUITests {
             Assert.AreEqual(head + "|" + body + "|" + tail, h + "|" + body + "|" + tail);
         }
 
-        private static bool LogException(Task task) {
+        private static bool LogException(Task task)
+        {
             var ex = task.Exception;
-            if (ex != null) {
+            if (ex != null)
+            {
                 Console.WriteLine(ex.InnerException ?? ex);
                 return false;
             }
             return true;
         }
 
-        private MockInterpreterOptionsService MakeEmptyVEnv() {
+        private MockInterpreterOptionsService MakeEmptyVEnv()
+        {
             var python = PythonPaths.Python37_x64 ?? PythonPaths.Python37 ?? PythonPaths.Python36_x64 ?? PythonPaths.Python36;
-            if (python == null) {
+            if (python == null)
+            {
                 Assert.Inconclusive("Required base Python environment not found.");
             }
 
             var env = TestData.GetTempPath();
-            if (env.Length > 140) {
+            if (env.Length > 140)
+            {
                 env = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
                 DeleteFolder.Add(env);
             }
             using (var proc = ProcessOutput.RunHiddenAndCapture(
                 python.InterpreterPath, "-m", "venv", env, "--clear"
-            )) {
+            ))
+            {
                 Console.WriteLine(proc.Arguments);
                 proc.Wait();
-                foreach (var line in proc.StandardOutputLines.Concat(proc.StandardErrorLines)) {
+                foreach (var line in proc.StandardOutputLines.Concat(proc.StandardErrorLines))
+                {
                     Console.WriteLine(line);
                 }
                 Assert.AreEqual(0, proc.ExitCode ?? -1, "Failed to create venv");
@@ -950,16 +1045,19 @@ namespace PythonToolsUITests {
             return service;
         }
 
-        private async Task<MockInterpreterOptionsService> MakeEmptyCondaEnvAsync(PythonLanguageVersion version) {
+        private async Task<MockInterpreterOptionsService> MakeEmptyCondaEnvAsync(PythonLanguageVersion version)
+        {
             var python = PythonPaths.AnacondaVersions.FirstOrDefault(p =>
                 p.IsCPython && File.Exists(Path.Combine(p.PrefixPath, "scripts", "conda.exe"))
             );
-            if (python == null) {
+            if (python == null)
+            {
                 Assert.Inconclusive("Requires Anaconda or Miniconda");
             }
 
             var env = TestData.GetTempPath();
-            if (env.Length > 140) {
+            if (env.Length > 140)
+            {
                 env = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
                 DeleteFolder.Add(env);
             }
@@ -972,10 +1070,12 @@ namespace PythonToolsUITests {
                 envVariables,
                 false,
                 null
-            )) {
+            ))
+            {
                 Console.WriteLine(proc.Arguments);
                 proc.Wait();
-                foreach (var line in proc.StandardOutputLines.Concat(proc.StandardErrorLines)) {
+                foreach (var line in proc.StandardOutputLines.Concat(proc.StandardErrorLines))
+                {
                     Console.WriteLine(line);
                 }
                 Assert.AreEqual(0, proc.ExitCode ?? -1, "Failed to create conda environment");
@@ -1002,9 +1102,11 @@ namespace PythonToolsUITests {
             return service;
         }
 
-        private static async Task CheckPipExtensionAsync(MockInterpreterOptionsService service) {
+        private static async Task CheckPipExtensionAsync(MockInterpreterOptionsService service)
+        {
             using (var wpf = new WpfProxy())
-            using (var list = new EnvironmentListProxy(wpf)) {
+            using (var list = new EnvironmentListProxy(wpf))
+            {
                 list.CreatePipExtension = true;
                 list.InitializeEnvironments(service, service);
 
@@ -1021,7 +1123,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        private static async Task InstallAndUninstallPackageAsync(WpfProxy wpf, PipExtensionProvider pip, string[] expectedInitialPackages, string packageName) {
+        private static async Task InstallAndUninstallPackageAsync(WpfProxy wpf, PipExtensionProvider pip, string[] expectedInitialPackages, string packageName)
+        {
             var packages = await pip.GetInstalledPackagesAsync();
             AssertUtil.ContainsAtLeast(packages.Select(pv => pv.Name), expectedInitialPackages);
 
@@ -1038,33 +1141,43 @@ namespace PythonToolsUITests {
             AssertUtil.DoesntContain(packages.Select(pv => pv.Name), packageName);
         }
 
-        sealed class EnvironmentListProxy : IDisposable {
+        sealed class EnvironmentListProxy : IDisposable
+        {
             private readonly WpfProxy _proxy;
             private readonly ToolWindow _window;
 
-            public EnvironmentListProxy(WpfProxy proxy) {
+            public EnvironmentListProxy(WpfProxy proxy)
+            {
                 _proxy = proxy;
                 _window = proxy.InvokeWithRetry(() => new ToolWindow());
                 _window.ViewCreated += Window_ViewCreated;
             }
 
-            public void Dispose() {
+            public void Dispose()
+            {
             }
 
-            public ToolWindow Window {
+            public ToolWindow Window
+            {
                 get { return _window; }
             }
 
-            private void Window_ViewCreated(object sender, EnvironmentViewEventArgs e) {
-                if (CreatePipExtension) {
+            private void Window_ViewCreated(object sender, EnvironmentViewEventArgs e)
+            {
+                if (CreatePipExtension)
+                {
                     var pms = Service.GetPackageManagers(e.View.Factory);
-                    foreach (var pm in pms) {
-                        try {
+                    foreach (var pm in pms)
+                    {
+                        try
+                        {
                             var pip = new PipExtensionProvider(e.View.Factory, pm);
                             pip.OutputTextReceived += (s, e2) => Console.Write("OUT: " + e2.Data);
                             pip.ErrorTextReceived += (s, e2) => Console.Write("ERR: " + e2.Data);
                             e.View.Extensions.Add(pip);
-                        } catch (NotSupportedException) {
+                        }
+                        catch (NotSupportedException)
+                        {
                         }
                     }
                 }
@@ -1072,35 +1185,44 @@ namespace PythonToolsUITests {
 
             public bool CreatePipExtension { get; set; }
 
-            public void InitializeEnvironments(IInterpreterRegistryService interpreters, IInterpreterOptionsService options) {
+            public void InitializeEnvironments(IInterpreterRegistryService interpreters, IInterpreterOptionsService options)
+            {
                 _proxy.Invoke(() => Window.InitializeEnvironments(interpreters, options, synchronous: true));
             }
 
-            public IInterpreterOptionsService Service {
-                get {
+            public IInterpreterOptionsService Service
+            {
+                get
+                {
                     return _proxy.Invoke(() => Window.OptionsService);
                 }
             }
 
-            public List<EnvironmentView> Environments {
-                get {
+            public List<EnvironmentView> Environments
+            {
+                get
+                {
                     return _proxy.Invoke(() =>
                         Window._environments.ToList()
                     );
                 }
             }
 
-            public bool CanExecute(RoutedCommand command, object parameter) {
+            public bool CanExecute(RoutedCommand command, object parameter)
+            {
                 return _proxy.CanExecute(command, _window, parameter);
             }
 
-            public Task Execute(RoutedCommand command, object parameter, CancellationToken token) {
+            public Task Execute(RoutedCommand command, object parameter, CancellationToken token)
+            {
                 return _proxy.Execute(command, _window, parameter, token);
             }
 
-            public T[] GetExtensions<T>(EnvironmentView view) where T : IEnvironmentViewExtension {
+            public T[] GetExtensions<T>(EnvironmentView view) where T : IEnvironmentViewExtension
+            {
                 var exts = _proxy.Invoke(() => view.Extensions.OfType<T>()).ToArray();
-                foreach (var ext in exts) {
+                foreach (var ext in exts)
+                {
                     // Get the WpfObject to ensure it is constructed on the
                     // UI thread.
                     var fe = _proxy.Invoke(() => ext.WpfObject);
@@ -1108,9 +1230,11 @@ namespace PythonToolsUITests {
                 return exts;
             }
 
-            public T GetExtensionOrDefault<T>(EnvironmentView view) where T : IEnvironmentViewExtension {
+            public T GetExtensionOrDefault<T>(EnvironmentView view) where T : IEnvironmentViewExtension
+            {
                 var ext = _proxy.Invoke(() => view.Extensions.OfType<T>().FirstOrDefault());
-                if (ext != null) {
+                if (ext != null)
+                {
                     // Get the WpfObject to ensure it is constructed on the
                     // UI thread.
                     var fe = _proxy.Invoke(() => ext.WpfObject);
@@ -1118,13 +1242,15 @@ namespace PythonToolsUITests {
                 return ext;
             }
 
-            public T GetExtensionOrAssert<T>(EnvironmentView view) where T : IEnvironmentViewExtension {
+            public T GetExtensionOrAssert<T>(EnvironmentView view) where T : IEnvironmentViewExtension
+            {
                 var ext = GetExtensionOrDefault<T>(view);
                 Assert.IsNotNull(ext, "Unable to get " + typeof(T).Name);
                 return ext;
             }
 
-            public PipExtensionProvider GetPipExtensionOrAssert(EnvironmentView view, string indexName) {
+            public PipExtensionProvider GetPipExtensionOrAssert(EnvironmentView view, string indexName)
+            {
                 var ext = GetExtensions<PipExtensionProvider>(view)
                     .SingleOrDefault(p => string.Compare(p.IndexName, indexName, StringComparison.OrdinalIgnoreCase) == 0);
                 Assert.IsNotNull(ext, $"Unable to get package manager extension {indexName}");
@@ -1132,7 +1258,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        static CompositionContainer CreateCompositionContainer(bool defaultProviders = true) {
+        static CompositionContainer CreateCompositionContainer(bool defaultProviders = true)
+        {
             var sp = new MockServiceProvider();
             sp.Services[typeof(SVsActivityLog).GUID] = new MockActivityLog();
             var settings = new MockSettingsManager();
@@ -1141,23 +1268,27 @@ namespace PythonToolsUITests {
             return InterpreterCatalog.CreateContainer(typeof(IInterpreterRegistryService), typeof(IInterpreterOptionsService));
         }
 
-        sealed class AssertInterpretersChanged : IDisposable {
+        sealed class AssertInterpretersChanged : IDisposable
+        {
             private readonly ManualResetEvent _evt;
             private readonly IInterpreterRegistryService _service;
             private readonly TimeSpan _timeout;
 
-            public AssertInterpretersChanged(IInterpreterRegistryService service, TimeSpan timeout) {
+            public AssertInterpretersChanged(IInterpreterRegistryService service, TimeSpan timeout)
+            {
                 _service = service;
                 _evt = new ManualResetEvent(false);
                 _timeout = timeout;
                 _service.InterpretersChanged += Service_InterpretersChanged;
             }
 
-            private void Service_InterpretersChanged(object sender, EventArgs e) {
+            private void Service_InterpretersChanged(object sender, EventArgs e)
+            {
                 _evt.Set();
             }
 
-            public void Dispose() {
+            public void Dispose()
+            {
                 bool changed = _evt.WaitOne((int)_timeout.TotalMilliseconds);
                 _service.InterpretersChanged -= Service_InterpretersChanged;
                 _evt.Dispose();
@@ -1168,73 +1299,101 @@ namespace PythonToolsUITests {
         #endregion
     }
 
-    class TestPipPackageCache : PipPackageCache {
+    class TestPipPackageCache : PipPackageCache
+    {
         public TestPipPackageCache(string cachePath = null) : base(
             null, null,
             cachePath ?? Path.Combine(TestData.GetTempPath(), "test.cache")
-        ) {
+        )
+        {
             _userCount = 1;
         }
 
-        internal async Task<PackageSpec> TestInjectPackageAsync(string packageSpec, string description) {
+        internal async Task<PackageSpec> TestInjectPackageAsync(string packageSpec, string description)
+        {
             await _cacheLock.WaitAsync();
-            try {
+            try
+            {
                 var p = PackageSpec.FromRequirement(packageSpec);
                 p.Description = description;
                 _cache[p.Name] = p;
                 _cacheAge = DateTime.Now;
                 return p;
-            } finally {
+            }
+            finally
+            {
                 _cacheLock.Release();
             }
         }
 
-        internal async Task TestClearPackagesAsync() {
+        internal async Task TestClearPackagesAsync()
+        {
             await _cacheLock.WaitAsync();
-            try {
+            try
+            {
                 _cache.Clear();
                 _cacheAge = DateTime.MinValue;
-            } finally {
+            }
+            finally
+            {
                 _cacheLock.Release();
             }
         }
 
-        internal async Task<List<string>> TestGetAllPackageNamesAsync() {
+        internal async Task<List<string>> TestGetAllPackageNamesAsync()
+        {
             await _cacheLock.WaitAsync();
-            try {
+            try
+            {
                 return _cache.Keys.ToList();
-            } finally {
+            }
+            finally
+            {
                 _cacheLock.Release();
             }
         }
 
-        internal async Task<List<string>> TestGetAllPackageSpecsAsync() {
+        internal async Task<List<string>> TestGetAllPackageSpecsAsync()
+        {
             await _cacheLock.WaitAsync();
-            try {
+            try
+            {
                 return _cache.Values.Select(p => "{0} #{1}".FormatInvariant(p.FullSpec, p.Description)).ToList();
-            } finally {
+            }
+            finally
+            {
                 _cacheLock.Release();
             }
         }
 
-        internal async Task TestWriteCacheToDiskAsync() {
+        internal async Task TestWriteCacheToDiskAsync()
+        {
             await _cacheLock.WaitAsync();
-            try {
-                using (var cts = new CancellationTokenSource(5000)) {
+            try
+            {
+                using (var cts = new CancellationTokenSource(5000))
+                {
                     await WriteCacheToDiskAsync(cts.Token);
                 }
-            } finally {
+            }
+            finally
+            {
                 _cacheLock.Release();
             }
         }
 
-        internal async Task TestReadCacheFromDiskAsync() {
+        internal async Task TestReadCacheFromDiskAsync()
+        {
             await _cacheLock.WaitAsync();
-            try {
-                using (var cts = new CancellationTokenSource(5000)) {
+            try
+            {
+                using (var cts = new CancellationTokenSource(5000))
+                {
                     await ReadCacheFromDiskAsync(cts.Token);
                 }
-            } finally {
+            }
+            finally
+            {
                 _cacheLock.Release();
             }
         }

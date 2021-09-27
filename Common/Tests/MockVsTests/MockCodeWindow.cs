@@ -14,11 +14,6 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.VisualStudio.ComponentModelHost;
-using Microsoft.VisualStudio.Editor;
-using Microsoft.VisualStudio.Text.Editor;
-using System;
-
 namespace Microsoft.VisualStudioTools.MockVsTests
 {
     class MockCodeWindow : IVsCodeWindow, IVsDropdownBarManager, Microsoft.VisualStudio.OLE.Interop.IConnectionPointContainer

@@ -14,8 +14,10 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Debugger.Concord {
-    internal static class NativeMethods {
+namespace Microsoft.PythonTools.Debugger.Concord
+{
+    internal static class NativeMethods
+    {
         public const int MEM_COMMIT = 0x1000;
         public const int MEM_RESERVE = 0x2000;
         public const int MEM_RELEASE = 0x8000;
@@ -23,7 +25,8 @@ namespace Microsoft.PythonTools.Debugger.Concord {
         public const int PAGE_READWRITE = 0x04;
     }
 
-    internal enum EXCEPTION_CODE : uint {
+    internal enum EXCEPTION_CODE : uint
+    {
         EXCEPTION_ACCESS_VIOLATION = 0xc0000005,
         EXCEPTION_ARRAY_BOUNDS_EXCEEDED = 0xc000008c,
         EXCEPTION_BREAKPOINT = 0x80000003,

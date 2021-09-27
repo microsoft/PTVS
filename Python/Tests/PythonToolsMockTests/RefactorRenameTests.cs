@@ -16,39 +16,33 @@
 
 extern alias analysis;
 extern alias pythontools;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using analysis::Microsoft.PythonTools.Parsing;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudioTools;
-using Microsoft.VisualStudioTools.MockVsTests;
-using pythontools::Microsoft.PythonTools.Intellisense;
-using pythontools::Microsoft.PythonTools.Refactoring;
-using TestUtilities;
 
-namespace PythonToolsMockTests {
+namespace PythonToolsMockTests
+{
     [TestClass]
-    public class RefactorRenameTests {
+    public class RefactorRenameTests
+    {
         private static readonly string ErrorModuleName = Microsoft.PythonTools.Strings.RenameVariable_CannotRenameModuleName;
 
         [ClassInitialize]
-        public static void DoDeployment(TestContext context) {
+        public static void DoDeployment(TestContext context)
+        {
             AssertListener.Initialize();
         }
 
         private MockVs _vs;
 
         [TestInitialize]
-        public void TestInit() {
+        public void TestInit()
+        {
             MockPythonToolsPackage.SuppressTaskProvider = true;
             VsProjectAnalyzer.SuppressTaskProvider = true;
             _vs = new MockVs();
         }
 
         [TestCleanup]
-        public void TestCleanup() {
+        public void TestCleanup()
+        {
             MockPythonToolsPackage.SuppressTaskProvider = false;
             VsProjectAnalyzer.SuppressTaskProvider = false;
             _vs.Dispose();
@@ -56,7 +50,8 @@ namespace PythonToolsMockTests {
 
 
         [TestMethod, Priority(UnitTestPriority.P2)]
-        public void PrivateMemberMangling() {
+        public void PrivateMemberMangling()
+        {
             RefactorTest("xyz", "__f",
                 new[] {
                     new FileInput(
@@ -271,7 +266,8 @@ namespace PythonToolsMockTests {
         }
 
         [TestMethod, Priority(UnitTestPriority.P2_FAILING)]
-        public void SanityClassField() {
+        public void SanityClassField()
+        {
             RefactorTest("xyz", "abc",
                 new[] {
                     new FileInput(
@@ -461,7 +457,8 @@ abc = 200
         }
 
         [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public void InheritedClassField() {
+        public void InheritedClassField()
+        {
 
             RefactorTest("xyz", "abc",
                 new[] {
@@ -509,7 +506,8 @@ abc = 200
         }
 
         [TestMethod, Priority(UnitTestPriority.P3_FAILING)]
-        public void RenameGeneratorVariable() {
+        public void RenameGeneratorVariable()
+        {
             // http://pytools.codeplex.com/workitem/454
             RefactorTest("xyz", "abc",
                 new[] { new FileInput("abc = 100; x = (abc for abc in range(abc))", "xyz = 100; x = (abc for abc in range(xyz))") }
@@ -523,7 +521,8 @@ abc = 200
         }
 
         [TestMethod, Priority(UnitTestPriority.P2)]
-        public void TypelessForVariable() {
+        public void TypelessForVariable()
+        {
             RefactorTest("baz", "abc",
                 new[] {
                     new FileInput(
@@ -542,7 +541,8 @@ abc = 200
 
         [TestMethod, Priority(UnitTestPriority.P2)]
         [TestCategory("10s")]
-        public void TupleForVariable() {
+        public void TupleForVariable()
+        {
             RefactorTest("baz", "abc",
                 new[] {
                     new FileInput(
@@ -635,7 +635,8 @@ abc = 200
         }
 
         [TestMethod, Priority(UnitTestPriority.P2)]
-        public void SanityInstanceField() {
+        public void SanityInstanceField()
+        {
             RefactorTest("xyz", "abc",
                 new[] {
                     new FileInput(
@@ -682,7 +683,8 @@ a.xyz
 
         [TestMethod, Priority(UnitTestPriority.P3_FAILING)]
         [TestCategory("10s")]
-        public void SanityParameter() {
+        public void SanityParameter()
+        {
             RefactorTest("xyz", "abc",
                 new[] {
                     new FileInput(
@@ -821,7 +823,8 @@ abc = 200
         }
 
         [TestMethod, Priority(UnitTestPriority.P2_FAILING)]
-        public void SanityLocal() {
+        public void SanityLocal()
+        {
             RefactorTest("xyz", "abc",
                 new[] {
                     new FileInput(
@@ -882,7 +885,8 @@ def h(abc):
         }
 
         [TestMethod, Priority(UnitTestPriority.P2_FAILING)]
-        public void SanityClosure() {
+        public void SanityClosure()
+        {
             RefactorTest("xyz", "abc",
                 new[] {
                     new FileInput(
@@ -942,7 +946,8 @@ abc = 200
         }
 
         [TestMethod, Priority(UnitTestPriority.P2_FAILING)]
-        public void SanityLambda() {
+        public void SanityLambda()
+        {
             RefactorTest("xyz", "abc",
                 new[] {
                     new FileInput(
@@ -996,7 +1001,8 @@ abc = 200
         }
 
         [TestMethod, Priority(UnitTestPriority.P2)]
-        public void SanityInlineIf() {
+        public void SanityInlineIf()
+        {
             RefactorTest("xyz", "abc",
                 new[] {
                     new FileInput(
@@ -1026,7 +1032,8 @@ abc = 200
         }
 
         [TestMethod, Priority(UnitTestPriority.P3)]
-        public void SanityGenerator() {
+        public void SanityGenerator()
+        {
             RefactorTest("xyz", "abc",
                 new[] {
                     new FileInput(
@@ -1092,7 +1099,8 @@ abc = 200
         }
 
         [TestMethod, Priority(UnitTestPriority.P3)]
-        public void SanityGeneratorFilter() {
+        public void SanityGeneratorFilter()
+        {
             RefactorTest("xyz", "abc",
                 new[] {
                     new FileInput(
@@ -1149,7 +1157,8 @@ abc = 200
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void SanitySlices() {
+        public void SanitySlices()
+        {
             RefactorTest("xyz", "abc", version: new Version(3, 2),
             inputs: new[] {
                     new FileInput(
@@ -1176,7 +1185,8 @@ x = y[xyz-1:xyz:xyz+1]
         }
 
         [TestMethod, Priority(UnitTestPriority.P2)]
-        public void SanityGlobal() {
+        public void SanityGlobal()
+        {
             RefactorTest("xyz", "abc",
                 new[] {
                     new FileInput(
@@ -1259,7 +1269,8 @@ xyz = 100
         }
 
         [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public void SanityNonLocal() {
+        public void SanityNonLocal()
+        {
             RefactorTest("xyz", "abc", version: new Version(3, 2),
             inputs: new[] {
                     new FileInput(
@@ -1337,7 +1348,8 @@ abc = 100
 
         [TestMethod, Priority(UnitTestPriority.P2)]
         [TestCategory("10s")]
-        public void SanityRenameClass() {
+        public void SanityRenameClass()
+        {
             RefactorTest("xyz", "abc",
             new[] {
                     new FileInput(
@@ -1454,7 +1466,8 @@ class x(xyz):
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void RenameMetaclass() {
+        public void RenameMetaclass()
+        {
             RefactorTest("xyz", "abc", version: new Version(2, 7),
             inputs: new[] {
                     new FileInput(
@@ -1492,7 +1505,8 @@ class x(metaclass=xyz):
         }
 
         [TestMethod, Priority(UnitTestPriority.P2)]
-        public void SanityRenameFunction() {
+        public void SanityRenameFunction()
+        {
             RefactorTest("xyz", "abc",
             new[] {
                     new FileInput(
@@ -1549,7 +1563,8 @@ fdoc = xyz.func_doc"
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void SanityDelLocal() {
+        public void SanityDelLocal()
+        {
             RefactorTest("xyz", "abc",
             new[] {
                     new FileInput(
@@ -1568,7 +1583,8 @@ def f():
         }
 
         [TestMethod, Priority(UnitTestPriority.P2)]
-        public void SanityDelInstanceMember() {
+        public void SanityDelInstanceMember()
+        {
             RefactorTest("xyz", "abc",
             new[] {
                     new FileInput(
@@ -1599,7 +1615,8 @@ def f():
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void SanityDelClassMember() {
+        public void SanityDelClassMember()
+        {
             RefactorTest("xyz", "abc",
             new[] {
                     new FileInput(
@@ -1628,7 +1645,8 @@ def f():
         }
 
         [TestMethod, Priority(UnitTestPriority.P2)]
-        public void SanityDelGlobal() {
+        public void SanityDelGlobal()
+        {
             RefactorTest("xyz", "abc",
             new[] {
                     new FileInput(
@@ -1675,7 +1693,8 @@ xyz = 100
         }
 
         [TestMethod, Priority(UnitTestPriority.P2_FAILING)]
-        public void DelNonLocal() {
+        public void DelNonLocal()
+        {
             RefactorTest("xyz", "abc", version: new Version(3, 2),
             inputs: new[] {
                     new FileInput(
@@ -1704,7 +1723,8 @@ abc = 100
 
         [TestMethod, Priority(UnitTestPriority.P3)]
         [TestCategory("10s")]
-        public void Decorators() {
+        public void Decorators()
+        {
             RefactorTest("abc", "xyz",
             new[] {
                     new FileInput(
@@ -1832,7 +1852,8 @@ def f():
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void TryStatement() {
+        public void TryStatement()
+        {
             RefactorTest("abc", "xyz",
             new[] {
                     new FileInput(
@@ -1872,7 +1893,8 @@ except Exception as abc:
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void FinallyStatement() {
+        public void FinallyStatement()
+        {
             RefactorTest("xyz", "abc",
             new[] {
                     new FileInput(
@@ -1897,7 +1919,8 @@ finally:
         }
 
         [TestMethod, Priority(UnitTestPriority.P2)]
-        public void RaiseStatement() {
+        public void RaiseStatement()
+        {
             RefactorTest("xyz", "abc", version: new Version(2, 7),
             inputs: new[] {
                     new FileInput(
@@ -1932,7 +1955,8 @@ raise Exception() from xyz
         }
 
         [TestMethod, Priority(UnitTestPriority.P2)]
-        public void ExecStatement() {
+        public void ExecStatement()
+        {
             RefactorTest("xyz", "abc", version: new Version(2, 7),
             inputs: new[] {
                     new FileInput(
@@ -2011,7 +2035,8 @@ exec('abc = 1', xyz, xyz)
         }
 
         [TestMethod, Priority(UnitTestPriority.P2)]
-        public void IsInstanceScope() {
+        public void IsInstanceScope()
+        {
             RefactorTest("abc", "xyz", version: new Version(3, 2),
             inputs: new[] {
                     new FileInput(
@@ -2032,7 +2057,8 @@ print(abc.upper())
 
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void WithStatement() {
+        public void WithStatement()
+        {
             RefactorTest("abc", "xyz", version: new Version(3, 2),
             inputs: new[] {
                     new FileInput(
@@ -2050,7 +2076,8 @@ with abc as abc:
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void YieldStatement() {
+        public void YieldStatement()
+        {
             RefactorTest("xyz", "abc",
             inputs: new[] {
                     new FileInput(
@@ -2069,7 +2096,8 @@ def a():
         }
 
         [TestMethod, Priority(UnitTestPriority.P2)]
-        public void KeywordParameter() {
+        public void KeywordParameter()
+        {
             RefactorTest("xyz", "abc",
             new[] {
                     new FileInput(
@@ -2158,7 +2186,8 @@ f(abc)
         }
 
         [TestMethod, Priority(UnitTestPriority.P2_FAILING)]
-        public void ImportAsStatement() {
+        public void ImportAsStatement()
+        {
             RefactorTest("xyz", "abc",
             new[] {
                     new FileInput(
@@ -2215,7 +2244,8 @@ x = xyz
         }
 
         [TestMethod, Priority(UnitTestPriority.P2)]
-        public void FromImportAsStatement() {
+        public void FromImportAsStatement()
+        {
             RefactorTest("xyz", "abc",
             new[] {
                     new FileInput(
@@ -2255,7 +2285,8 @@ x = xyz
         }
 
         [TestMethod, Priority(UnitTestPriority.P2)]
-        public void Annotations() {
+        public void Annotations()
+        {
             RefactorTest("xyz", "abc", version: new Version(3, 2),
                 inputs: new[] {
                     new FileInput(
@@ -2310,7 +2341,8 @@ abc = 200
         }
 
         [TestMethod, Priority(UnitTestPriority.P1_FAILING)]
-        public void NestedFunctions() {
+        public void NestedFunctions()
+        {
             RefactorTest("h", "g",
                 new[] {
                     new FileInput(
@@ -2339,7 +2371,8 @@ def g(a, b, c):
         }
 
         [TestMethod, Priority(UnitTestPriority.P2)]
-        public void CrossModuleRename() {
+        public void CrossModuleRename()
+        {
             RefactorTest("xyz", "abc",
                 new[] {
                     new FileInput(
@@ -2384,14 +2417,16 @@ def g(a, b, c):
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void CannotRename() {
+        public void CannotRename()
+        {
             CannotRename("abc", "import abc", ErrorModuleName);
             CannotRename("abc", "from abc import oar", ErrorModuleName);
             CannotRename("abc", "import abc as oar", ErrorModuleName);
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void ValidPythonIdentifier() {
+        public void ValidPythonIdentifier()
+        {
             string validUnicodeCharacters = "䶵䶴㐁";
             char invalidIdentifier = '!';
 
@@ -2421,34 +2456,42 @@ def g(a, b, c):
             CheckPythonIdentifierValidity(string.Concat(invalidIdentifier, "a1b3c3", validUnicodeCharacters), false, false);
         }
 
-        private static void CheckPythonIdentifierValidity(string identifier, bool isValidPython2Identifier = true, bool isValidPython3Identifier = true) {
+        private static void CheckPythonIdentifierValidity(string identifier, bool isValidPython2Identifier = true, bool isValidPython3Identifier = true)
+        {
             Assert.AreEqual(isValidPython2Identifier, ExtractMethodRequestView.IsValidPythonIdentifier(identifier, PythonLanguageVersion.V27));
             Assert.AreEqual(isValidPython3Identifier, ExtractMethodRequestView.IsValidPythonIdentifier(identifier, PythonLanguageVersion.V30));
         }
 
-        class FileInput {
+        class FileInput
+        {
             public readonly string Input, Output, Filename;
 
-            public FileInput(string input, string output, string filename = null) {
+            public FileInput(string input, string output, string filename = null)
+            {
                 Input = input;
                 Output = output;
                 Filename = filename ?? "test.py";
             }
         }
 
-        private void RefactorTest(string newName, string caretText, FileInput[] inputs, params ExpectedPreviewItem[] items) {
+        private void RefactorTest(string newName, string caretText, FileInput[] inputs, params ExpectedPreviewItem[] items)
+        {
             RefactorTest(newName, caretText, inputs, true, null, null, items);
         }
 
-        private void RefactorTest(string newName, string caretText, FileInput[] inputs, bool mutateTest = true, Version version = null, string expectedSelectedText = null, params ExpectedPreviewItem[] items) {
-            for (int i = 0; i < inputs.Length; ++i) {
+        private void RefactorTest(string newName, string caretText, FileInput[] inputs, bool mutateTest = true, Version version = null, string expectedSelectedText = null, params ExpectedPreviewItem[] items)
+        {
+            for (int i = 0; i < inputs.Length; ++i)
+            {
                 Console.WriteLine("Test code {0} {1}:\r\n{2}\r\n", i, inputs[i].Filename, inputs[i].Input);
             }
 
-            foreach (bool preview in new[] { true, false }) {
+            foreach (bool preview in new[] { true, false })
+            {
                 OneRefactorTest(newName, caretText, inputs, version, preview, null, items, expectedSelectedText);
 
-                if (mutateTest) {
+                if (mutateTest)
+                {
                     // try again w/ a longer name
                     MutateTest(newName, caretText, inputs, version, newName + newName, preview, expectedSelectedText);
 
@@ -2458,9 +2501,11 @@ def g(a, b, c):
             }
         }
 
-        private void MutateTest(string newName, string caretText, FileInput[] inputs, Version version, string altNewName, bool preview, string expectedSelectedText) {
+        private void MutateTest(string newName, string caretText, FileInput[] inputs, Version version, string altNewName, bool preview, string expectedSelectedText)
+        {
             FileInput[] moreInputs = new FileInput[inputs.Length];
-            for (int i = 0; i < moreInputs.Length; i++) {
+            for (int i = 0; i < moreInputs.Length; i++)
+            {
                 moreInputs[i] = new FileInput(
                     inputs[i].Input,
                     inputs[i].Output.Replace(newName, altNewName),
@@ -2471,27 +2516,33 @@ def g(a, b, c):
             OneRefactorTest(altNewName, caretText, moreInputs, version, preview, null, expectedSelectedText: expectedSelectedText);
         }
 
-        class ExpectedPreviewItem {
+        class ExpectedPreviewItem
+        {
             public readonly string Name;
             public readonly ExpectedPreviewItem[] Children;
 
-            public ExpectedPreviewItem(string name, params ExpectedPreviewItem[] children) {
+            public ExpectedPreviewItem(string name, params ExpectedPreviewItem[] children)
+            {
                 Name = name;
                 Children = children;
             }
         }
 
-        private void CannotRename(string caretText, string text, string error) {
+        private void CannotRename(string caretText, string text, string error)
+        {
             OneRefactorTest("xyz", caretText, new[] { new FileInput(text, null), new FileInput("def oar(): pass", "", null) }, null, false, error, null);
         }
 
-        private void OneRefactorTest(string newName, string caretText, FileInput[] inputs, Version version, bool preview, string error, ExpectedPreviewItem[] expected = null, string expectedSelectedText = null) {
+        private void OneRefactorTest(string newName, string caretText, FileInput[] inputs, Version version, bool preview, string error, ExpectedPreviewItem[] expected = null, string expectedSelectedText = null)
+        {
             Console.WriteLine("Replacing {0} with {1}", caretText, newName);
             version = version ?? new Version(2, 7);
 
-            for (int loops = 0; loops < 2; loops++) {
+            for (int loops = 0; loops < 2; loops++)
+            {
                 var views = new List<PythonEditor>();
-                try {
+                try
+                {
                     var mainView = new PythonEditor(inputs[0].Input, version.ToLanguageVersion(), _vs, filename: inputs[0].Filename, inProcAnalyzer: true);
                     var analyzer = mainView.Analyzer;
 
@@ -2499,7 +2550,8 @@ def g(a, b, c):
                     var bufferTable = new Dictionary<string, ITextBuffer> {
                         { mainView.BufferInfo.Filename, mainView.CurrentSnapshot.TextBuffer }
                     };
-                    foreach (var i in inputs.Skip(1)) {
+                    foreach (var i in inputs.Skip(1))
+                    {
                         var editor = new PythonEditor(i.Input, version.ToLanguageVersion(), _vs, mainView.Factory, analyzer, i.Filename);
                         views.Add(editor);
                         bufferTable[editor.BufferInfo.Filename] = editor.CurrentSnapshot.TextBuffer;
@@ -2507,7 +2559,8 @@ def g(a, b, c):
 
 
                     // test runs twice, one w/ original buffer, once w/ re-analyzed buffers.
-                    if (loops == 1) {
+                    if (loops == 1)
+                    {
                         // do it again w/ a changed buffer
                         mainView.Text = mainView.Text;
                     }
@@ -2517,7 +2570,8 @@ def g(a, b, c):
                     var previewChangesService = new TestPreviewChanges(expected);
 
                     var uiThread = _vs.ServiceProvider.GetUIThread();
-                    uiThread.InvokeTask(async () => {
+                    uiThread.InvokeTask(async () =>
+                    {
                         var snap = mainView.CurrentSnapshot;
                         var caretPos = snap.GetText().IndexOf(caretText);
                         mainView.View.MoveCaret(new SnapshotPoint(snap, caretPos));
@@ -2526,23 +2580,28 @@ def g(a, b, c):
                         var vr = new VariableRenamer(mainView.View.View, _vs.ServiceProvider);
                         await vr.RenameVariable(extractInput, previewChangesService);
                     }).Wait();
-                    if (error != null) {
+                    if (error != null)
+                    {
                         Assert.AreEqual(error, extractInput.Failure);
                         return;
                     }
                     Assert.IsNull(extractInput.Failure, "Unexpected error message: " + (extractInput.Failure ?? ""));
                     Assert.AreEqual(preview, previewChangesService.Previewed, preview ? "Changes were not previewed" : "Changes were previewed");
                     AssertUtil.ArrayEquals(inputs.Select(i => i.Output).ToList(), views.Select(v => v.Text).ToList());
-                } finally {
+                }
+                finally
+                {
                     views.Reverse();
-                    foreach (var v in views) {
+                    foreach (var v in views)
+                    {
                         v.Dispose();
                     }
                 }
             }
         }
 
-        class RenameVariableTestInput : IRenameVariableInput {
+        class RenameVariableTestInput : IRenameVariableInput
+        {
             private readonly string _originalName, _name;
             private readonly bool _preview, _searchInStrings, _searchInComments;
             internal readonly List<string> Log = new List<string>();
@@ -2556,7 +2615,8 @@ def g(a, b, c):
                 bool preview = true,
                 bool searchInStrings = false,
                 bool searchInComments = false
-            ) {
+            )
+            {
                 _originalName = expectedOriginalName;
                 _name = name;
                 _preview = preview;
@@ -2565,7 +2625,8 @@ def g(a, b, c):
                 _buffers = buffers;
             }
 
-            public RenameVariableRequest GetRenameInfo(string originalName, PythonLanguageVersion languageVersion) {
+            public RenameVariableRequest GetRenameInfo(string originalName, PythonLanguageVersion languageVersion)
+            {
                 Assert.IsTrue(_originalName.StartsWith(originalName) || originalName.StartsWith("__") && _originalName.EndsWith(originalName), $"Selected text {originalName} did not match {_originalName}");
 
                 var requestView = new RenameVariableRequestView(originalName, languageVersion);
@@ -2579,42 +2640,54 @@ def g(a, b, c):
                 return request;
             }
 
-            public void CannotRename(string message) {
+            public void CannotRename(string message)
+            {
                 Failure = message;
             }
 
-            public void OutputLog(string message) {
+            public void OutputLog(string message)
+            {
                 Log.Add(message);
             }
 
-            public ITextBuffer GetBufferForDocument(string filename) {
-                try {
+            public ITextBuffer GetBufferForDocument(string filename)
+            {
+                try
+                {
                     return _buffers[filename];
-                } catch (KeyNotFoundException ex) {
+                }
+                catch (KeyNotFoundException ex)
+                {
                     throw new KeyNotFoundException($"Failed to find {filename} in {string.Join(", ", _buffers.Keys)}", ex);
                 }
             }
 
-            IVsLinkedUndoTransactionManager IRenameVariableInput.BeginGlobalUndo() {
+            IVsLinkedUndoTransactionManager IRenameVariableInput.BeginGlobalUndo()
+            {
                 return null;
             }
 
-            public void EndGlobalUndo(IVsLinkedUndoTransactionManager undo) {
+            public void EndGlobalUndo(IVsLinkedUndoTransactionManager undo)
+            {
             }
 
-            public void ClearRefactorPane() {
+            public void ClearRefactorPane()
+            {
             }
         }
 
-        class TestPreviewChanges : IVsPreviewChangesService {
+        class TestPreviewChanges : IVsPreviewChangesService
+        {
             public bool Previewed = false;
             private readonly ExpectedPreviewItem[] _expected;
 
-            public TestPreviewChanges(ExpectedPreviewItem[] expected) {
+            public TestPreviewChanges(ExpectedPreviewItem[] expected)
+            {
                 _expected = expected;
             }
 
-            public int PreviewChanges(IVsPreviewChangesEngine pIVsPreviewChangesEngine) {
+            public int PreviewChanges(IVsPreviewChangesEngine pIVsPreviewChangesEngine)
+            {
                 object rootList;
                 pIVsPreviewChangesEngine.GetRootChangesList(out rootList);
                 IVsLiteTreeList list = rootList as IVsLiteTreeList;
@@ -2623,14 +2696,20 @@ def g(a, b, c):
                 Assert.AreNotEqual(null, list);
                 Assert.AreNotEqual(null, preview);
 
-                if (_expected != null && _expected.Length > 0) {
-                    try {
+                if (_expected != null && _expected.Length > 0)
+                {
+                    try
+                    {
                         VerifyList(list, _expected);
-                    } catch {
+                    }
+                    catch
+                    {
                         PrintList(list);
                         throw;
                     }
-                } else {
+                }
+                else
+                {
                     PrintList(list);
                 }
 
@@ -2638,44 +2717,52 @@ def g(a, b, c):
                 return pIVsPreviewChangesEngine.ApplyChanges();
             }
 
-            private static void VerifyList(IVsLiteTreeList list, ExpectedPreviewItem[] expected) {
+            private static void VerifyList(IVsLiteTreeList list, ExpectedPreviewItem[] expected)
+            {
                 uint count;
                 list.GetItemCount(out count);
 
                 Assert.AreEqual(expected.Length, (int)count);
-                for (int i = 0; i < expected.Length; i++) {
+                for (int i = 0; i < expected.Length; i++)
+                {
                     string text;
                     list.GetText((uint)i, VSTREETEXTOPTIONS.TTO_DEFAULT, out text);
                     Assert.AreEqual(expected[i].Name, text);
 
                     int expandable;
                     list.GetExpandable((uint)i, out expandable);
-                    if (expected[i].Children.Length != 0) {
+                    if (expected[i].Children.Length != 0)
+                    {
                         Assert.AreEqual(1, expandable);
                         int canRecurse;
                         IVsLiteTreeList subList;
                         list.GetExpandedList((uint)i, out canRecurse, out subList);
 
                         VerifyList(subList, expected[i].Children);
-                    } else {
+                    }
+                    else
+                    {
                         Assert.AreEqual(0, expandable);
                     }
                 }
             }
 
-            private static void PrintList(IVsLiteTreeList list, int indent = 0) {
+            private static void PrintList(IVsLiteTreeList list, int indent = 0)
+            {
                 uint count;
                 list.GetItemCount(out count);
 
 
-                for (int i = 0; i < count; i++) {
+                for (int i = 0; i < count; i++)
+                {
                     string text;
                     list.GetText((uint)i, VSTREETEXTOPTIONS.TTO_DEFAULT, out text);
                     Console.Write("{1}new ExpectedPreviewItem(\"{0}\"", text, new string(' ', indent * 4));
 
                     int expandable;
                     list.GetExpandable((uint)i, out expandable);
-                    if (expandable != 0) {
+                    if (expandable != 0)
+                    {
                         Console.WriteLine(", ");
                         int canRecurse;
                         IVsLiteTreeList subList;
@@ -2697,9 +2784,12 @@ def g(a, b, c):
 
                     // TODO: Valiate changes
 
-                    if (i != count - 1) {
+                    if (i != count - 1)
+                    {
                         Console.WriteLine("),");
-                    } else {
+                    }
+                    else
+                    {
                         Console.WriteLine(")");
                     }
                 }

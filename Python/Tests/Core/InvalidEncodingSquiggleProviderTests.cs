@@ -15,20 +15,17 @@
 // permissions and limitations under the License.
 
 extern alias pythontools;
-using System.Text;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.VisualStudio.Text.Classification;
-using pythontools::Microsoft.PythonTools.Intellisense;
-using TestUtilities;
-using TestUtilities.Mocks;
 
-namespace PythonToolsTests {
+namespace PythonToolsTests
+{
     [TestClass]
-    public class InvalidEncodingSquiggleProviderTests {
+    public class InvalidEncodingSquiggleProviderTests
+    {
         #region Test Cases
 
         [TestMethod, Priority(UnitTestPriority.P0)]
-        public void EncodingValidation() {
+        public void EncodingValidation()
+        {
             // https://www.python.org/dev/peps/pep-0263/
             RunTest(string.Empty, Encoding.UTF8, null, 0);
             RunTest(string.Empty, Encoding.ASCII, null, 0,
@@ -45,12 +42,16 @@ namespace PythonToolsTests {
                 "utf-8", "coding comment", "does not match", Encoding.ASCII.EncodingName);
         }
 
-        private void RunTest(string content, Encoding fileEncoding, string expectedMagicEncodingName, int expectedMagicEncodingIndex, params string[] messageContains) {
+        private void RunTest(string content, Encoding fileEncoding, string expectedMagicEncodingName, int expectedMagicEncodingIndex, params string[] messageContains)
+        {
             var snapshot = new MockTextSnapshot(new MockTextBuffer(content), content);
             var message = InvalidEncodingSquiggleProvider.CheckEncoding(snapshot, fileEncoding, out var magicEncodingName, out var magicEncodingIndex);
-            if (messageContains.Length > 0) {
+            if (messageContains.Length > 0)
+            {
                 AssertUtil.Contains(message, messageContains);
-            } else {
+            }
+            else
+            {
                 Assert.IsNull(message, message);
             }
             Assert.AreEqual(expectedMagicEncodingName, magicEncodingName);

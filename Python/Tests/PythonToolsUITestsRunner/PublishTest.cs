@@ -14,12 +14,11 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using TestRunnerInterop;
-
-namespace PythonToolsUITestsRunner {
+namespace PythonToolsUITestsRunner
+{
     [TestClass]
-    public class PublishTest {
+    public class PublishTest
+    {
         #region UI test boilerplate
         public VsTestInvoker _vs => new VsTestInvoker(
             VsTestContext.Instance,
@@ -41,19 +40,22 @@ namespace PythonToolsUITestsRunner {
 
         [TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
-        public void TestPublishFiles() {
+        public void TestPublishFiles()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.PublishTest.TestPublishFiles));
         }
 
         [TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
-        public void TestPublishReadOnlyFiles() {
+        public void TestPublishReadOnlyFiles()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.PublishTest.TestPublishReadOnlyFiles));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void TestPublishVirtualEnvironment() {
+        public void TestPublishVirtualEnvironment()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.PublishTest.TestPublishVirtualEnvironment));
         }
 

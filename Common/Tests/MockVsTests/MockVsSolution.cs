@@ -14,14 +14,6 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text.RegularExpressions;
-
 namespace Microsoft.VisualStudioTools.MockVsTests
 {
     public sealed class MockVsSolution : IVsSolution, IVsRegisterProjectTypes, IVsCreateAggregateProject, IVsHierarchy

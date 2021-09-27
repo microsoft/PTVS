@@ -14,38 +14,34 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Linq;
-using Microsoft.PythonTools;
-using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Intellisense;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Utilities;
-using TestUtilities;
-using TestUtilities.Mocks;
-
-namespace PythonToolsTests {
+namespace PythonToolsTests
+{
     using CCA = CodeCellAnalysis;
     using PriorityAttribute = Microsoft.VisualStudio.TestTools.UnitTesting.PriorityAttribute;
 
     [TestClass]
-    public class CodeCellTests {
+    public class CodeCellTests
+    {
         public static IContentType PythonContentType = new MockContentType("Python", new IContentType[0]);
 
-        private static string ShowWhitespace(string s) {
+        private static string ShowWhitespace(string s)
+        {
             return s.Replace(' ', '\u00B7').Replace('\t', '\u2409');
         }
 
         [TestMethod, Priority(UnitTestPriority.P0)]
-        public void CodeCellMarkers() {
+        public void CodeCellMarkers()
+        {
             foreach (var trueMarker in new[] {
                 "#%%",
                 "#%% Comment",
                 "# In[1]:",
                 "# In[abcdefg]:comment after",
                 "#In[1043540398340162312]:"
-            }) {
-                foreach (var ws in new[] { "", " ", "\t", "  \t  " }) {
+            })
+            {
+                foreach (var ws in new[] { "", " ", "\t", "  \t  " })
+                {
                     Assert.IsTrue(CCA.IsCellMarker(ws + trueMarker), ShowWhitespace(ws + trueMarker));
                     Assert.IsTrue(CCA.IsCellMarker(trueMarker + ws), ShowWhitespace(trueMarker + ws));
                     Assert.IsTrue(CCA.IsCellMarker(ws + trueMarker + ws), ShowWhitespace(ws + trueMarker + ws));
@@ -58,13 +54,15 @@ namespace PythonToolsTests {
                 "'''#%%'''",
                 "# In[abcdefg]",
                 "# In[abcdefg] :"
-            }) {
+            })
+            {
                 Assert.IsFalse(CCA.IsCellMarker(falseMarker), ShowWhitespace(falseMarker));
             }
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void EmptyCodeCell() {
+        public void EmptyCodeCell()
+        {
             var buffer = new MockTextBuffer(@"# comment here
 
 # In[ ]:
@@ -88,29 +86,38 @@ namespace PythonToolsTests {
 
         }
 
-        private static void AssertCellStart(ITextBuffer buffer, int startFromLine, int expectedLine) {
+        private static void AssertCellStart(ITextBuffer buffer, int startFromLine, int expectedLine)
+        {
             var found = CCA.FindStartOfCell(buffer.CurrentSnapshot.GetLineFromLineNumber(startFromLine));
-            if (expectedLine < 0) {
+            if (expectedLine < 0)
+            {
                 Assert.IsNull(found, "Actually found: " + found?.GetText() ?? "(null)");
-            } else {
+            }
+            else
+            {
                 Assert.IsNotNull(found, "Actually found: (null)\r\n\r\nExpected: " + buffer.CurrentSnapshot.GetLineFromLineNumber(expectedLine).GetText());
                 Assert.AreEqual(expectedLine, found.LineNumber, "Actually found: " + found.GetText());
             }
         }
 
-        private static void AssertCellEnd(ITextBuffer buffer, int startFromLine, int expectedLine, bool withWhitespace = false) {
+        private static void AssertCellEnd(ITextBuffer buffer, int startFromLine, int expectedLine, bool withWhitespace = false)
+        {
             var cellStart = CCA.FindStartOfCell(buffer.CurrentSnapshot.GetLineFromLineNumber(startFromLine));
             var found = CCA.FindEndOfCell(cellStart, buffer.CurrentSnapshot.GetLineFromLineNumber(startFromLine), withWhitespace);
-            if (expectedLine < 0) {
+            if (expectedLine < 0)
+            {
                 Assert.IsNull(found, "Actually found: " + found?.GetText() ?? "(null)");
-            } else {
+            }
+            else
+            {
                 Assert.IsNotNull(found, "Actually found: (null)\r\n\r\nExpected: " + buffer.CurrentSnapshot.GetLineFromLineNumber(expectedLine).GetText());
                 Assert.AreEqual(expectedLine, found.LineNumber, "Actually found: " + found.GetText());
             }
         }
 
         [TestMethod, Priority(UnitTestPriority.P0)]
-        public void FindStartOfCodeCell() {
+        public void FindStartOfCodeCell()
+        {
             var code = new MockTextBuffer(@"x
 # ...
 x
@@ -130,7 +137,8 @@ x
         }
 
         [TestMethod, Priority(UnitTestPriority.P0)]
-        public void FindEndOfCodeCell() {
+        public void FindEndOfCodeCell()
+        {
             var code = new MockTextBuffer(@"x
 # ...
 x
@@ -152,7 +160,8 @@ x
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void FindStartOfCodeCellWithComment() {
+        public void FindStartOfCodeCellWithComment()
+        {
             var code = new MockTextBuffer(@"
 # Preceding comment
 #
@@ -177,7 +186,8 @@ x
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void FindEndOfCodeCellWithComment() {
+        public void FindEndOfCodeCellWithComment()
+        {
             var code = new MockTextBuffer(@"
 # Preceding comment
 #
@@ -204,7 +214,8 @@ x
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void FindStartOfEmptyCodeCell() {
+        public void FindStartOfEmptyCodeCell()
+        {
             var code = new MockTextBuffer(@"
 #%% empty cell here
 
@@ -219,7 +230,8 @@ x
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void FindEndOfEmptyCodeCell() {
+        public void FindEndOfEmptyCodeCell()
+        {
             var code = new MockTextBuffer(@"
 #%% empty cell here
 
@@ -233,7 +245,8 @@ x
             AssertCellEnd(code, 3, 5, withWhitespace: true);
         }
 
-        private static void AssertTags(ITextBuffer buffer, params string[] spans) {
+        private static void AssertTags(ITextBuffer buffer, params string[] spans)
+        {
             var tags = OutliningTaggerProvider.OutliningTagger.ProcessCellTags(
                 buffer.CurrentSnapshot,
                 CancellationTokens.After1s
@@ -243,7 +256,8 @@ x
         }
 
         [TestMethod, Priority(UnitTestPriority.P1)]
-        public void OutlineCodeCell() {
+        public void OutlineCodeCell()
+        {
             AssertTags(new MockTextBuffer(@"#%% cell 1
 
 x

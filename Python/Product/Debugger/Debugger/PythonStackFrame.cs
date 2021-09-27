@@ -14,17 +14,12 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
-using Microsoft.PythonTools.Parsing;
 
-namespace Microsoft.PythonTools.Debugger {
-    class PythonStackFrame {
+namespace Microsoft.PythonTools.Debugger
+{
+    class PythonStackFrame
+    {
         private int _lineNo;    // mutates on set next line
         private readonly string _frameName, _filename;
         private readonly int _argCount, _frameId;
@@ -33,7 +28,8 @@ namespace Microsoft.PythonTools.Debugger {
         private readonly PythonThread _thread;
         private readonly FrameKind _kind;
 
-        public PythonStackFrame(PythonThread thread, string frameName, string filename, int startLine, int endLine, int lineNo, int argCount, int frameId, FrameKind kind) {
+        public PythonStackFrame(PythonThread thread, string frameName, string filename, int startLine, int endLine, int lineNo, int argCount, int frameId, FrameKind kind)
+        {
             _thread = thread;
             _frameName = frameName;
             _filename = filename;
@@ -48,8 +44,10 @@ namespace Microsoft.PythonTools.Debugger {
         /// <summary>
         /// The line nubmer where the current function/class/module starts
         /// </summary>
-        public int StartLine {
-            get {
+        public int StartLine
+        {
+            get
+            {
                 return _startLine;
             }
         }
@@ -57,41 +55,54 @@ namespace Microsoft.PythonTools.Debugger {
         /// <summary>
         /// The line number where the current function/class/module ends.
         /// </summary>
-        public int EndLine {
-            get {
+        public int EndLine
+        {
+            get
+            {
                 return _endLine;
             }
         }
 
-        public PythonThread Thread {
-            get {
+        public PythonThread Thread
+        {
+            get
+            {
                 return _thread;
             }
         }
 
-        public int LineNo {
-            get {
+        public int LineNo
+        {
+            get
+            {
                 return _lineNo;
             }
-            set {
+            set
+            {
                 _lineNo = value;
             }
         }
 
-        public string FunctionName {
-            get {
+        public string FunctionName
+        {
+            get
+            {
                 return _frameName;
             }
         }
 
-        public string FileName {
-            get {
+        public string FileName
+        {
+            get
+            {
                 return _thread.Process.MapFile(_filename, toDebuggee: false);
             }
         }
 
-        public FrameKind Kind {
-            get {
+        public FrameKind Kind
+        {
+            get
+            {
                 return _kind;
             }
         }
@@ -99,30 +110,39 @@ namespace Microsoft.PythonTools.Debugger {
         /// <summary>
         /// Gets the ID of the frame.  Frame 0 is the currently executing frame, 1 is the caller of the currently executing frame, etc...
         /// </summary>
-        public int FrameId {
-            get {
+        public int FrameId
+        {
+            get
+            {
                 return _frameId;
             }
         }
 
-        internal void SetVariables(PythonEvaluationResult[] variables) {
+        internal void SetVariables(PythonEvaluationResult[] variables)
+        {
             _variables = variables;
         }
 
-        public IList<PythonEvaluationResult> Locals {
-            get {
+        public IList<PythonEvaluationResult> Locals
+        {
+            get
+            {
                 PythonEvaluationResult[] res = new PythonEvaluationResult[_variables.Length - _argCount];
-                for (int i = _argCount; i < _variables.Length; i++) {
+                for (int i = _argCount; i < _variables.Length; i++)
+                {
                     res[i - _argCount] = _variables[i];
                 }
                 return res;
             }
         }
 
-        public IList<PythonEvaluationResult> Parameters {
-            get {
+        public IList<PythonEvaluationResult> Parameters
+        {
+            get
+            {
                 PythonEvaluationResult[] res = new PythonEvaluationResult[_argCount];
-                for (int i = 0; i < _argCount; i++) {
+                for (int i = 0; i < _argCount; i++)
+                {
                     res[i] = _variables[i];
                 }
                 return res;
@@ -133,13 +153,16 @@ namespace Microsoft.PythonTools.Debugger {
         /// Attempts to parse the given text.  Returns true if the text is a valid expression.  Returns false if the text is not
         /// a valid expression and assigns the error messages produced to errorMsg.
         /// </summary>
-        public virtual bool TryParseText(string text, out string errorMsg) {
+        public virtual bool TryParseText(string text, out string errorMsg)
+        {
             CollectingErrorSink errorSink = new CollectingErrorSink();
             Parser parser = Parser.CreateParser(new StringReader(text), _thread.Process.LanguageVersion, new ParserOptions() { ErrorSink = errorSink });
             var ast = parser.ParseSingleStatement();
-            if (errorSink.Errors.Count > 0) {
+            if (errorSink.Errors.Count > 0)
+            {
                 StringBuilder msg = new StringBuilder();
-                foreach (var error in errorSink.Errors) {
+                foreach (var error in errorSink.Errors)
+                {
                     msg.Append(error.Message);
                     msg.Append(Environment.NewLine);
                 }
@@ -155,27 +178,34 @@ namespace Microsoft.PythonTools.Debugger {
         /// <summary>
         /// Executes the given text against this stack frame.
         /// </summary>
-        public Task ExecuteTextAsync(string text, Action<PythonEvaluationResult> completion, CancellationToken ct) {
+        public Task ExecuteTextAsync(string text, Action<PythonEvaluationResult> completion, CancellationToken ct)
+        {
             return ExecuteTextAsync(text, PythonEvaluationResultReprKind.Normal, completion, ct);
         }
 
-        public Task ExecuteTextAsync(string text, PythonEvaluationResultReprKind reprKind, Action<PythonEvaluationResult> completion, CancellationToken ct) {
+        public Task ExecuteTextAsync(string text, PythonEvaluationResultReprKind reprKind, Action<PythonEvaluationResult> completion, CancellationToken ct)
+        {
             return _thread.Process.ExecuteTextAsync(text, reprKind, this, false, completion, ct);
         }
 
-        public async Task<PythonEvaluationResult> ExecuteTextAsync(string text, PythonEvaluationResultReprKind reprKind = PythonEvaluationResultReprKind.Normal, CancellationToken ct = default(CancellationToken)) {
+        public async Task<PythonEvaluationResult> ExecuteTextAsync(string text, PythonEvaluationResultReprKind reprKind = PythonEvaluationResultReprKind.Normal, CancellationToken ct = default(CancellationToken))
+        {
             var tcs = new TaskCompletionSource<PythonEvaluationResult>();
             var cancellationRegistration = ct.Register(() => tcs.TrySetCanceled());
 
-            EventHandler<ProcessExitedEventArgs> processExited = delegate {
+            EventHandler<ProcessExitedEventArgs> processExited = delegate
+            {
                 tcs.TrySetCanceled();
             };
 
             _thread.Process.ProcessExited += processExited;
-            try {
+            try
+            {
                 await ExecuteTextAsync(text, reprKind, result => tcs.TrySetResult(result), ct);
                 return await tcs.Task;
-            } finally {
+            }
+            finally
+            {
                 _thread.Process.ProcessExited -= processExited;
                 cancellationRegistration.Dispose();
             }
@@ -186,17 +216,21 @@ namespace Microsoft.PythonTools.Debugger {
         /// if the line was successfully set or false if the line number cannot be changed
         /// to this line.
         /// </summary>
-        public Task<bool> SetLineNumber(int lineNo, CancellationToken ct) {
+        public Task<bool> SetLineNumber(int lineNo, CancellationToken ct)
+        {
             return _thread.Process.SetLineNumberAsync(this, lineNo, ct);
         }
 
-        public string GetQualifiedFunctionName() {
+        public string GetQualifiedFunctionName()
+        {
             return GetQualifiedFunctionName(_thread.Process, FileName, LineNo, FunctionName);
         }
 
-        public static string GetQualifiedFunctionName(PythonProcess process, string filename, int lineNo, string functionName) {
+        public static string GetQualifiedFunctionName(PythonProcess process, string filename, int lineNo, string functionName)
+        {
             var ast = process.GetAst(filename);
-            if (ast == null) {
+            if (ast == null)
+            {
                 return functionName;
             }
 
@@ -209,12 +243,14 @@ namespace Microsoft.PythonTools.Debugger {
         }
     }
 
-    class DjangoStackFrame : PythonStackFrame {
+    class DjangoStackFrame : PythonStackFrame
+    {
         private readonly string _sourceFile;
         private readonly int _sourceLine;
 
         public DjangoStackFrame(PythonThread thread, string frameName, string filename, int startLine, int endLine, int lineNo, int argCount, int frameId, string sourceFile, int sourceLine)
-            : base(thread, frameName, filename, startLine, endLine, lineNo, argCount, frameId, FrameKind.Django) {
+            : base(thread, frameName, filename, startLine, endLine, lineNo, argCount, frameId, FrameKind.Django)
+        {
             _sourceFile = sourceFile;
             _sourceLine = sourceLine;
         }
@@ -223,8 +259,10 @@ namespace Microsoft.PythonTools.Debugger {
         /// The source .py file which implements the template logic.  The normal filename is the
         /// name of the template it's self.
         /// </summary>
-        public string SourceFile {
-            get {
+        public string SourceFile
+        {
+            get
+            {
                 return _sourceFile;
             }
         }
@@ -232,8 +270,10 @@ namespace Microsoft.PythonTools.Debugger {
         /// <summary>
         /// The line in the source .py file which implements the template logic.
         /// </summary>
-        public int SourceLine {
-            get {
+        public int SourceLine
+        {
+            get
+            {
                 return _sourceLine;
             }
         }

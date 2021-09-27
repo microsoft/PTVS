@@ -14,45 +14,50 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Diagnostics;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Debugger.Interop;
-
-namespace Microsoft.PythonTools.Debugger.DebugEngine {
+namespace Microsoft.PythonTools.Debugger.DebugEngine
+{
     // This class implements IDebugThread2 which represents a thread running in a program.
-    class AD7Thread : IDisposable, IDebugThread2, IDebugThread100 {
+    class AD7Thread : IDisposable, IDebugThread2, IDebugThread100
+    {
         private readonly AD7Engine _engine;
         private readonly PythonThread _debuggedThread;
 
         private readonly uint _vsTid;
 
-        public AD7Thread(AD7Engine engine, PythonThread debuggedThread) {
+        public AD7Thread(AD7Engine engine, PythonThread debuggedThread)
+        {
             _engine = engine;
             _debuggedThread = debuggedThread;
             _vsTid = engine.RegisterThreadId(debuggedThread.Id);
         }
 
-        public void Dispose() {
+        public void Dispose()
+        {
             _engine.UnregisterThreadId(_vsTid);
         }
 
-        private string GetCurrentLocation(bool fIncludeModuleName) {
-            if (_debuggedThread.Frames != null && _debuggedThread.Frames.Count > 0) {
+        private string GetCurrentLocation(bool fIncludeModuleName)
+        {
+            if (_debuggedThread.Frames != null && _debuggedThread.Frames.Count > 0)
+            {
                 return _debuggedThread.Frames[0].FunctionName;
             }
             return Strings.DebugThreadUnknownLocation;
         }
 
-        internal PythonThread GetDebuggedThread() {
+        internal PythonThread GetDebuggedThread()
+        {
             return _debuggedThread;
         }
 
-        private string Name {
-            get {
+        private string Name
+        {
+            get
+            {
                 string result = _debuggedThread.Name;
                 // If our fake ID is actually different from the real ID, prepend real ID info to thread name so that user can see it somewhere.
-                if (_vsTid != _debuggedThread.Id) {
+                if (_vsTid != _debuggedThread.Id)
+                {
                     result = "[" + _debuggedThread.Id + "] " + result;
                 }
                 return result;
@@ -63,15 +68,18 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
         // Determines whether the next statement can be set to the given stack frame and code context.
         // We need to try the step to verify it accurately so we allow say ok here.
-        int IDebugThread2.CanSetNextStatement(IDebugStackFrame2 stackFrame, IDebugCodeContext2 codeContext) {
+        int IDebugThread2.CanSetNextStatement(IDebugStackFrame2 stackFrame, IDebugCodeContext2 codeContext)
+        {
             return VSConstants.S_OK;
         }
 
         // Retrieves a list of the stack frames for this thread.
         // We currently call into the process and get the frames.  We might want to cache the frame info.
-        int IDebugThread2.EnumFrameInfo(enum_FRAMEINFO_FLAGS dwFieldSpec, uint nRadix, out IEnumDebugFrameInfo2 enumObject) {
+        int IDebugThread2.EnumFrameInfo(enum_FRAMEINFO_FLAGS dwFieldSpec, uint nRadix, out IEnumDebugFrameInfo2 enumObject)
+        {
             var stackFrames = _debuggedThread.Frames;
-            if (stackFrames == null) {
+            if (stackFrames == null)
+            {
                 enumObject = null;
                 return VSConstants.E_FAIL;
             }
@@ -80,7 +88,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
             var frameInfoArray = new FRAMEINFO[numStackFrames];
 
-            for (int i = 0; i < numStackFrames; i++) {
+            for (int i = 0; i < numStackFrames; i++)
+            {
                 AD7StackFrame frame = new AD7StackFrame(_engine, this, stackFrames[i]);
                 frame.SetFrameInfo(dwFieldSpec, out frameInfoArray[i]);
             }
@@ -90,48 +99,58 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         }
 
         // Get the name of the thread. 
-        int IDebugThread2.GetName(out string threadName) {
+        int IDebugThread2.GetName(out string threadName)
+        {
             threadName = Name;
             return VSConstants.S_OK;
         }
 
         // Return the program that this thread belongs to.
-        int IDebugThread2.GetProgram(out IDebugProgram2 program) {
+        int IDebugThread2.GetProgram(out IDebugProgram2 program)
+        {
             program = _engine;
             return VSConstants.S_OK;
         }
 
         // Gets the system thread identifier.
-        int IDebugThread2.GetThreadId(out uint threadId) {
+        int IDebugThread2.GetThreadId(out uint threadId)
+        {
             threadId = _vsTid;
             return VSConstants.S_OK;
         }
 
         // Gets properties that describe a thread.
-        int IDebugThread2.GetThreadProperties(enum_THREADPROPERTY_FIELDS dwFields, THREADPROPERTIES[] propertiesArray) {
+        int IDebugThread2.GetThreadProperties(enum_THREADPROPERTY_FIELDS dwFields, THREADPROPERTIES[] propertiesArray)
+        {
             THREADPROPERTIES props = new THREADPROPERTIES();
 
-            if ((dwFields & enum_THREADPROPERTY_FIELDS.TPF_ID) != 0) {
+            if ((dwFields & enum_THREADPROPERTY_FIELDS.TPF_ID) != 0)
+            {
                 props.dwThreadId = _vsTid;
                 props.dwFields |= enum_THREADPROPERTY_FIELDS.TPF_ID;
             }
-            if ((dwFields & enum_THREADPROPERTY_FIELDS.TPF_SUSPENDCOUNT) != 0) {
+            if ((dwFields & enum_THREADPROPERTY_FIELDS.TPF_SUSPENDCOUNT) != 0)
+            {
                 // sample debug engine doesn't support suspending threads
                 props.dwFields |= enum_THREADPROPERTY_FIELDS.TPF_SUSPENDCOUNT;
             }
-            if ((dwFields & enum_THREADPROPERTY_FIELDS.TPF_STATE) != 0) {
+            if ((dwFields & enum_THREADPROPERTY_FIELDS.TPF_STATE) != 0)
+            {
                 props.dwThreadState = (uint)enum_THREADSTATE.THREADSTATE_RUNNING;
                 props.dwFields |= enum_THREADPROPERTY_FIELDS.TPF_STATE;
             }
-            if ((dwFields & enum_THREADPROPERTY_FIELDS.TPF_PRIORITY) != 0) {
+            if ((dwFields & enum_THREADPROPERTY_FIELDS.TPF_PRIORITY) != 0)
+            {
                 props.bstrPriority = Strings.DebugThreadNormalPriority;
                 props.dwFields |= enum_THREADPROPERTY_FIELDS.TPF_PRIORITY;
             }
-            if ((dwFields & enum_THREADPROPERTY_FIELDS.TPF_NAME) != 0) {
+            if ((dwFields & enum_THREADPROPERTY_FIELDS.TPF_NAME) != 0)
+            {
                 props.bstrName = Name;
                 props.dwFields |= enum_THREADPROPERTY_FIELDS.TPF_NAME;
             }
-            if ((dwFields & enum_THREADPROPERTY_FIELDS.TPF_LOCATION) != 0) {
+            if ((dwFields & enum_THREADPROPERTY_FIELDS.TPF_LOCATION) != 0)
+            {
                 props.bstrLocation = GetCurrentLocation(true);
                 props.dwFields |= enum_THREADPROPERTY_FIELDS.TPF_LOCATION;
             }
@@ -142,7 +161,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
         // Resume a thread.
         // This is called when the user chooses "Unfreeze" from the threads window when a thread has previously been frozen.
-        int IDebugThread2.Resume(out uint suspendCount) {
+        int IDebugThread2.Resume(out uint suspendCount)
+        {
             // We don't support suspending/resuming threads
             suspendCount = 0;
             return VSConstants.E_NOTIMPL;
@@ -151,13 +171,17 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         internal const int E_CANNOT_SET_NEXT_STATEMENT_ON_EXCEPTION = unchecked((int)0x80040105);
 
         // Sets the next statement to the given stack frame and code context.
-        int IDebugThread2.SetNextStatement(IDebugStackFrame2 stackFrame, IDebugCodeContext2 codeContext) {
+        int IDebugThread2.SetNextStatement(IDebugStackFrame2 stackFrame, IDebugCodeContext2 codeContext)
+        {
             var frame = (AD7StackFrame)stackFrame;
             var context = (AD7MemoryAddress)codeContext;
 
-            if (TaskHelpers.RunSynchronouslyOnUIThread(ct => frame.StackFrame.SetLineNumber((int)context.LineNumber + 1, ct))) {
+            if (TaskHelpers.RunSynchronouslyOnUIThread(ct => frame.StackFrame.SetLineNumber((int)context.LineNumber + 1, ct)))
+            {
                 return VSConstants.S_OK;
-            } else if (frame.StackFrame.Thread.Process.StoppedForException) {
+            }
+            else if (frame.StackFrame.Thread.Process.StoppedForException)
+            {
                 return E_CANNOT_SET_NEXT_STATEMENT_ON_EXCEPTION;
             }
 
@@ -166,7 +190,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
         // suspend a thread.
         // This is called when the user chooses "Freeze" from the threads window
-        int IDebugThread2.Suspend(out uint suspendCount) {
+        int IDebugThread2.Suspend(out uint suspendCount)
+        {
             // We don't support suspending/resuming threads
             suspendCount = 0;
             return VSConstants.E_NOTIMPL;
@@ -176,13 +201,15 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
         #region IDebugThread100 Members
 
-        int IDebugThread100.SetThreadDisplayName(string name) {
+        int IDebugThread100.SetThreadDisplayName(string name)
+        {
             // Not necessary to implement in the debug engine. Instead
             // it is implemented in the SDM.
             return VSConstants.E_NOTIMPL;
         }
 
-        int IDebugThread100.GetThreadDisplayName(out string name) {
+        int IDebugThread100.GetThreadDisplayName(out string name)
+        {
             // Not necessary to implement in the debug engine. Instead
             // it is implemented in the SDM, which calls GetThreadProperties100()
             name = "";
@@ -190,24 +217,28 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         }
 
         // Returns whether this thread can be used to do function/property evaluation.
-        int IDebugThread100.CanDoFuncEval() {
+        int IDebugThread100.CanDoFuncEval()
+        {
             return VSConstants.S_FALSE;
         }
 
-        int IDebugThread100.SetFlags(uint flags) {
+        int IDebugThread100.SetFlags(uint flags)
+        {
             // Not necessary to implement in the debug engine. Instead
             // it is implemented in the SDM.
             return VSConstants.E_NOTIMPL;
         }
 
-        int IDebugThread100.GetFlags(out uint flags) {
+        int IDebugThread100.GetFlags(out uint flags)
+        {
             // Not necessary to implement in the debug engine. Instead
             // it is implemented in the SDM.
             flags = 0;
             return VSConstants.E_NOTIMPL;
         }
 
-        int IDebugThread100.GetThreadProperties100(uint dwFields, THREADPROPERTIES100[] props) {
+        int IDebugThread100.GetThreadProperties100(uint dwFields, THREADPROPERTIES100[] props)
+        {
             // Invoke GetThreadProperties to get the VS7/8/9 properties
             THREADPROPERTIES[] props90 = new THREADPROPERTIES[1];
             enum_THREADPROPERTY_FIELDS dwFields90 = (enum_THREADPROPERTY_FIELDS)(dwFields & 0x3f);
@@ -221,8 +252,10 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             props[0].dwThreadState = props90[0].dwThreadState;
 
             // Populate the new fields
-            if (hRes == VSConstants.S_OK && dwFields != (uint)dwFields90) {
-                if ((dwFields & (uint)enum_THREADPROPERTY_FIELDS100.TPF100_DISPLAY_NAME) != 0) {
+            if (hRes == VSConstants.S_OK && dwFields != (uint)dwFields90)
+            {
+                if ((dwFields & (uint)enum_THREADPROPERTY_FIELDS100.TPF100_DISPLAY_NAME) != 0)
+                {
                     // Thread display name is being requested
                     props[0].bstrDisplayName = Name;
                     props[0].dwFields |= (uint)enum_THREADPROPERTY_FIELDS100.TPF100_DISPLAY_NAME;
@@ -233,30 +266,37 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                     props[0].dwFields |= (uint)enum_THREADPROPERTY_FIELDS100.TPF100_DISPLAY_NAME_PRIORITY;
                 }
 
-                if ((dwFields & (uint)enum_THREADPROPERTY_FIELDS100.TPF100_CATEGORY) != 0) {
+                if ((dwFields & (uint)enum_THREADPROPERTY_FIELDS100.TPF100_CATEGORY) != 0)
+                {
                     // Thread category is being requested
-                    if (_debuggedThread.IsWorkerThread) {
+                    if (_debuggedThread.IsWorkerThread)
+                    {
                         props[0].dwThreadCategory = (uint)enum_THREADCATEGORY.THREADCATEGORY_Worker;
-                    } else {
+                    }
+                    else
+                    {
                         props[0].dwThreadCategory = (uint)enum_THREADCATEGORY.THREADCATEGORY_Main;
                     }
 
                     props[0].dwFields |= (uint)enum_THREADPROPERTY_FIELDS100.TPF100_CATEGORY;
                 }
 
-                if ((dwFields & (uint)enum_THREADPROPERTY_FIELDS100.TPF100_ID) != 0) {
+                if ((dwFields & (uint)enum_THREADPROPERTY_FIELDS100.TPF100_ID) != 0)
+                {
                     // Thread category is being requested
                     props[0].dwThreadId = _vsTid;
                     props[0].dwFields |= (uint)enum_THREADPROPERTY_FIELDS100.TPF100_ID;
                 }
 
-                if ((dwFields & (uint)enum_THREADPROPERTY_FIELDS100.TPF100_AFFINITY) != 0) {
+                if ((dwFields & (uint)enum_THREADPROPERTY_FIELDS100.TPF100_AFFINITY) != 0)
+                {
                     // Thread cpu affinity is being requested
                     props[0].AffinityMask = 0;
                     props[0].dwFields |= (uint)enum_THREADPROPERTY_FIELDS100.TPF100_AFFINITY;
                 }
 
-                if ((dwFields & (uint)enum_THREADPROPERTY_FIELDS100.TPF100_PRIORITY_ID) != 0) {
+                if ((dwFields & (uint)enum_THREADPROPERTY_FIELDS100.TPF100_PRIORITY_ID) != 0)
+                {
                     // Thread display name is being requested
                     props[0].priorityId = 0;
                     props[0].dwFields |= (uint)enum_THREADPROPERTY_FIELDS100.TPF100_PRIORITY_ID;
@@ -267,7 +307,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             return hRes;
         }
 
-        enum enum_THREADCATEGORY {
+        enum enum_THREADCATEGORY
+        {
             THREADCATEGORY_Worker = 0,
             THREADCATEGORY_UI = (THREADCATEGORY_Worker + 1),
             THREADCATEGORY_Main = (THREADCATEGORY_UI + 1),
@@ -280,14 +321,16 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         #region Uncalled interface methods
         // These methods are not currently called by the Visual Studio debugger, so they don't need to be implemented
 
-        int IDebugThread2.GetLogicalThread(IDebugStackFrame2 stackFrame, out IDebugLogicalThread2 logicalThread) {
+        int IDebugThread2.GetLogicalThread(IDebugStackFrame2 stackFrame, out IDebugLogicalThread2 logicalThread)
+        {
             Debug.Fail("This function is not called by the debugger");
 
             logicalThread = null;
             return VSConstants.E_NOTIMPL;
         }
 
-        int IDebugThread2.SetThreadName(string name) {
+        int IDebugThread2.SetThreadName(string name)
+        {
             Debug.Fail("This function is not called by the debugger");
 
             return VSConstants.E_NOTIMPL;

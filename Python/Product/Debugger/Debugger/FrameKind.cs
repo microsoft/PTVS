@@ -14,19 +14,23 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
 using Microsoft.PythonTools.Debugger.DebugEngine;
 
-namespace Microsoft.PythonTools.Debugger {
-    enum FrameKind {
+namespace Microsoft.PythonTools.Debugger
+{
+    enum FrameKind
+    {
         None,
         Python,
         Django
     }
 
-    internal static class FrameKindExtensions {
-        internal static void GetLanguageInfo(this FrameKind self, ref string pbstrLanguage, ref Guid pguidLanguage) {
-            switch (self) {
+    internal static class FrameKindExtensions
+    {
+        internal static void GetLanguageInfo(this FrameKind self, ref string pbstrLanguage, ref Guid pguidLanguage)
+        {
+            switch (self)
+            {
                 case FrameKind.Django:
                     pbstrLanguage = DebuggerLanguageNames.DjangoTemplates;
                     pguidLanguage = Guid.Empty;

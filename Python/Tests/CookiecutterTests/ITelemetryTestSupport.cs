@@ -14,8 +14,10 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace CookiecutterTests {
-    internal interface ITelemetryTestSupport {
+namespace CookiecutterTests
+{
+    internal interface ITelemetryTestSupport
+    {
         /// <summary>
         /// Resets current session and clear telemetry log.
         /// </summary>

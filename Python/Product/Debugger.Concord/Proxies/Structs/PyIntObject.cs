@@ -14,33 +14,36 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Diagnostics;
-using Microsoft.PythonTools.Parsing;
-
-namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
+namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
+{
     [StructProxy(MaxVersion = PythonLanguageVersion.V27)]
     [PyType(MaxVersion = PythonLanguageVersion.V27)]
-    internal class PyIntObject : PyObject {
-        private class Fields {
+    internal class PyIntObject : PyObject
+    {
+        private class Fields
+        {
             public StructField<Int32Proxy> ob_ival;
         }
 
         private readonly Fields _fields;
 
         public PyIntObject(DkmProcess process, ulong address)
-            : this(process, address, true) {
+            : this(process, address, true)
+        {
         }
 
         protected PyIntObject(DkmProcess process, ulong address, bool checkType)
-            : base(process, address) {
+            : base(process, address)
+        {
             InitializeStruct(this, out _fields);
-            if (checkType) {
+            if (checkType)
+            {
                 CheckPyType<PyIntObject>();
             }
         }
 
-        public static PyIntObject Create(DkmProcess process, int value) {
+        public static PyIntObject Create(DkmProcess process, int value)
+        {
             var allocator = process.GetDataItem<PyObjectAllocator>();
             Debug.Assert(allocator != null);
 
@@ -49,15 +52,18 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             return result;
         }
 
-        private Int32Proxy ob_ival {
+        private Int32Proxy ob_ival
+        {
             get { return GetFieldProxy(_fields.ob_ival); }
         }
 
-        public Int32 ToInt32() {
+        public Int32 ToInt32()
+        {
             return ob_ival.Read();
         }
 
-        public override void Repr(ReprBuilder builder) {
+        public override void Repr(ReprBuilder builder)
+        {
             builder.Append(ToInt32());
         }
     }

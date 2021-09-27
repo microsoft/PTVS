@@ -14,21 +14,14 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.CookiecutterTools.Model;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using TestUtilities;
-
-namespace CookiecutterTests {
+namespace CookiecutterTests
+{
     [TestClass]
-    public class GitHubDiscoveryTests {
+    public class GitHubDiscoveryTests
+    {
         //[TestMethod]
-        public async Task Discover() {
+        public async Task Discover()
+        {
             // Enable this test to create a list of templates currently available on GitHub
             // Note that this takes about 3 mins due to pauses between each query,
             // which are there to avoid 403 error.
@@ -45,14 +38,17 @@ namespace CookiecutterTests {
             File.WriteAllLines(Path.Combine(folderPath, "CookiecutterOwners.txt"), owners);
         }
 
-        private static async Task<List<Template>> GetAllGitHubTemplates() {
+        private static async Task<List<Template>> GetAllGitHubTemplates()
+        {
             var source = new GitHubTemplateSource(new GitHubClient());
             string continuation = null;
             var templates = new List<Template>();
-            do {
+            do
+            {
                 var result = await source.GetTemplatesAsync("", continuation, CancellationToken.None);
                 continuation = result.ContinuationToken;
-                foreach (var template in result.Templates) {
+                foreach (var template in result.Templates)
+                {
                     Console.WriteLine(template.RemoteUrl);
                 }
                 templates.AddRange(result.Templates);
@@ -61,12 +57,16 @@ namespace CookiecutterTests {
             return templates;
         }
 
-        private string GetTemplateOwner(Template template) {
+        private string GetTemplateOwner(Template template)
+        {
             string owner;
             string name;
-            if (ParseUtils.ParseGitHubRepoOwnerAndName(template.RemoteUrl, out owner, out name)) {
+            if (ParseUtils.ParseGitHubRepoOwnerAndName(template.RemoteUrl, out owner, out name))
+            {
                 return owner;
-            } else {
+            }
+            else
+            {
                 return null;
             }
         }

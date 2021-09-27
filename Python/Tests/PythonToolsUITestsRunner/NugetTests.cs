@@ -14,12 +14,11 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using TestRunnerInterop;
-
-namespace PythonToolsUITestsRunner {
+namespace PythonToolsUITestsRunner
+{
     [TestClass]
-    public class NugetTests {
+    public class NugetTests
+    {
         #region UI test boilerplate
         public VsTestInvoker _vs => new VsTestInvoker(
             VsTestContext.Instance,
@@ -41,13 +40,15 @@ namespace PythonToolsUITestsRunner {
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void AddDifferentFileType() {
+        public void AddDifferentFileType()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.NugetTests.AddDifferentFileType));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void FileNamesResolve() {
+        public void FileNamesResolve()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.NugetTests.FileNamesResolve));
         }
     }

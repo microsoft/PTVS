@@ -14,12 +14,11 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using TestRunnerInterop;
-
-namespace PythonToolsUITestsRunner {
+namespace PythonToolsUITestsRunner
+{
     [TestClass]
-    public class SendFeedbackTests {
+    public class SendFeedbackTests
+    {
         #region UI test boilerplate
         public VsTestInvoker _vs => new VsTestInvoker(
             VsTestContext.Instance,
@@ -42,7 +41,8 @@ namespace PythonToolsUITestsRunner {
         // Note: Report a problem feature requires the user to be signed in to VS
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void ReportAProblemDiagnostics() {
+        public void ReportAProblemDiagnostics()
+        {
             _vs.RunTest(nameof(PythonToolsUITests.SendFeedbackTests.ReportAProblemDiagnostics));
         }
     }

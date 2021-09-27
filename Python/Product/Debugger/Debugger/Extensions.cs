@@ -14,13 +14,10 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Diagnostics;
-using System.IO;
-using System.Text;
-
-namespace Microsoft.PythonTools.Debugger {
-    static class Extensions {
+namespace Microsoft.PythonTools.Debugger
+{
+    static class Extensions
+    {
         /// <summary>
         /// Reads a string from the socket which is encoded as:
         ///     U, byte count, bytes 
@@ -28,15 +25,18 @@ namespace Microsoft.PythonTools.Debugger {
         ///     
         /// Which supports either UTF-8 or ASCII strings.
         /// </summary>
-        internal static string ReadString(this Stream stream) {
+        internal static string ReadString(this Stream stream)
+        {
             int type = stream.ReadByte();
-            if (type < 0) {
+            if (type < 0)
+            {
                 Debug.Assert(false, "Socket.ReadString failed to read string type");
                 throw new IOException();
             }
 
             bool isUnicode;
-            switch ((char)type) {
+            switch ((char)type)
+            {
                 case 'N': // null string
                     return null;
                 case 'U':
@@ -54,22 +54,28 @@ namespace Microsoft.PythonTools.Debugger {
             byte[] buffer = new byte[len];
             stream.ReadToFill(buffer);
 
-            if (isUnicode) {
+            if (isUnicode)
+            {
                 return Encoding.UTF8.GetString(buffer);
-            } else {
+            }
+            else
+            {
                 char[] chars = new char[buffer.Length];
-                for (int i = 0; i < buffer.Length; i++) {
+                for (int i = 0; i < buffer.Length; i++)
+                {
                     chars[i] = (char)buffer[i];
                 }
                 return new string(chars);
             }
         }
 
-        internal static int ReadInt32(this Stream stream) {
+        internal static int ReadInt32(this Stream stream)
+        {
             return (int)stream.ReadInt64();
         }
 
-        internal static long ReadInt64(this Stream stream) {
+        internal static long ReadInt64(this Stream stream)
+        {
             byte[] buf = new byte[8];
             stream.ReadToFill(buf);
 
@@ -80,24 +86,30 @@ namespace Microsoft.PythonTools.Debugger {
             return (long)((hi << 0x20) | lo);
         }
 
-        internal static string ReadAsciiString(this Stream stream, int length) {
+        internal static string ReadAsciiString(this Stream stream, int length)
+        {
             var buf = new byte[length];
             stream.ReadToFill(buf);
             return Encoding.ASCII.GetString(buf, 0, buf.Length);
         }
 
-        internal static void ReadToFill(this Stream stream, byte[] b) {
+        internal static void ReadToFill(this Stream stream, byte[] b)
+        {
             int count = stream.ReadBytes(b, b.Length);
-            if (count != b.Length) {
+            if (count != b.Length)
+            {
                 throw new EndOfStreamException();
             }
         }
 
-        internal static int ReadBytes(this Stream stream, byte[] b, int count) {
+        internal static int ReadBytes(this Stream stream, byte[] b, int count)
+        {
             int i = 0;
-            while (i < count) {
+            while (i < count)
+            {
                 int read = stream.Read(b, i, count - i);
-                if (read == 0) {
+                if (read == 0)
+                {
                     break;
                 }
                 i += read;
@@ -105,11 +117,13 @@ namespace Microsoft.PythonTools.Debugger {
             return i;
         }
 
-        internal static void WriteInt32(this Stream stream, int x) {
+        internal static void WriteInt32(this Stream stream, int x)
+        {
             stream.WriteInt64(x);
         }
 
-        internal static void WriteInt64(this Stream stream, long x) {
+        internal static void WriteInt64(this Stream stream, long x)
+        {
             // Can't use BitConverter because we need to convert big-endian to little-endian here,
             // and BitConverter.IsLittleEndian is platform-dependent (and usually true).
             uint hi = (uint)((ulong)x >> 0x20);
@@ -127,90 +141,117 @@ namespace Microsoft.PythonTools.Debugger {
             stream.Write(buf, 0, buf.Length);
         }
 
-        internal static void WriteString(this Stream stream, string str) {
+        internal static void WriteString(this Stream stream, string str)
+        {
             byte[] bytes = Encoding.UTF8.GetBytes(str);
             stream.WriteInt32(bytes.Length);
-            if (bytes.Length > 0) {
+            if (bytes.Length > 0)
+            {
                 stream.Write(bytes);
             }
         }
 
-        internal static void Write(this Stream stream, byte[] b) {
+        internal static void Write(this Stream stream, byte[] b)
+        {
             stream.Write(b, 0, b.Length);
         }
 
         /// <summary>
         /// Replaces \uxxxx with the actual unicode char for a prettier display in local variables.
         /// </summary>
-        public static string FixupEscapedUnicodeChars(this string text) {
+        public static string FixupEscapedUnicodeChars(this string text)
+        {
             StringBuilder buf = null;
             int i = 0;
             int l = text.Length;
             int val;
-            while (i < l) {
+            while (i < l)
+            {
                 char ch = text[i++];
-                if (ch == '\\') {
-                    if (buf == null) {
+                if (ch == '\\')
+                {
+                    if (buf == null)
+                    {
                         buf = new StringBuilder(text.Length);
                         buf.Append(text, 0, i - 1);
                     }
 
-                    if (i >= l) {
+                    if (i >= l)
+                    {
                         return text;
                     }
                     ch = text[i++];
 
-                    if (ch == 'u' || ch == 'U') {
+                    if (ch == 'u' || ch == 'U')
+                    {
                         int len = (ch == 'u') ? 4 : 8;
                         int max = 16;
-                        if (TryParseInt(text, i, len, max, out val)) {
+                        if (TryParseInt(text, i, len, max, out val))
+                        {
                             buf.Append((char)val);
                             i += len;
-                        } else {
+                        }
+                        else
+                        {
                             return text;
                         }
-                    } else {
+                    }
+                    else
+                    {
                         buf.Append("\\");
                         buf.Append(ch);
                     }
-                } else if (buf != null) {
+                }
+                else if (buf != null)
+                {
                     buf.Append(ch);
                 }
             }
 
-            if (buf != null) {
+            if (buf != null)
+            {
                 return buf.ToString();
             }
             return text;
         }
 
 
-        private static bool TryParseInt(string text, int start, int length, int b, out int value) {
+        private static bool TryParseInt(string text, int start, int length, int b, out int value)
+        {
             value = 0;
-            if (start + length > text.Length) {
+            if (start + length > text.Length)
+            {
                 return false;
             }
-            for (int i = start, end = start + length; i < end; i++) {
+            for (int i = start, end = start + length; i < end; i++)
+            {
                 int onechar;
-                if (HexValue(text[i], out onechar) && onechar < b) {
+                if (HexValue(text[i], out onechar) && onechar < b)
+                {
                     value = value * b + onechar;
-                } else {
+                }
+                else
+                {
                     return false;
                 }
             }
             return true;
         }
 
-        private static int HexValue(char ch) {
+        private static int HexValue(char ch)
+        {
             int value;
-            if (!HexValue(ch, out value)) {
+            if (!HexValue(ch, out value))
+            {
                 throw new ArgumentException(Strings.InvalidHexValue.FormatUI(ch), nameof(ch));
             }
             return value;
         }
 
-        private static bool HexValue(char ch, out int value) {
-            switch (ch) {
+        private static bool HexValue(char ch, out int value)
+        {
+            switch (ch)
+            {
                 case '0':
                 case '\x660': value = 0; break;
                 case '1':
@@ -232,11 +273,16 @@ namespace Microsoft.PythonTools.Debugger {
                 case '9':
                 case '\x669': value = 9; break;
                 default:
-                    if (ch >= 'a' && ch <= 'z') {
+                    if (ch >= 'a' && ch <= 'z')
+                    {
                         value = ch - 'a' + 10;
-                    } else if (ch >= 'A' && ch <= 'Z') {
+                    }
+                    else if (ch >= 'A' && ch <= 'Z')
+                    {
                         value = ch - 'A' + 10;
-                    } else {
+                    }
+                    else
+                    {
                         value = -1;
                         return false;
                     }

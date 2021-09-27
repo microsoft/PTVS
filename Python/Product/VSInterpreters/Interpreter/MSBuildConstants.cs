@@ -14,10 +14,10 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Text.RegularExpressions;
-
-namespace Microsoft.PythonTools.Interpreter {
-    static class MSBuildConstants {
+namespace Microsoft.PythonTools.Interpreter
+{
+    static class MSBuildConstants
+    {
 
         // keys used for storing information about user defined interpreters
         public const string InterpreterItem = "Interpreter";

@@ -14,12 +14,11 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using TestRunnerInterop;
-
-namespace ProjectUITestsRunner {
+namespace ProjectUITestsRunner
+{
     [TestClass]
-    public class ShowAllFiles {
+    public class ShowAllFiles
+    {
         #region UI test boilerplate
         public VsTestInvoker _vs => new VsTestInvoker(
             VsTestContext.Instance,
@@ -41,121 +40,141 @@ namespace ProjectUITestsRunner {
 
         [TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
-        public void ShowAllFilesToggle() {
+        public void ShowAllFilesToggle()
+        {
             _vs.RunTest(nameof(ProjectUITests.ShowAllFiles.ShowAllFilesToggle));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void ShowAllFilesFilesAlwaysHidden() {
+        public void ShowAllFilesFilesAlwaysHidden()
+        {
             _vs.RunTest(nameof(ProjectUITests.ShowAllFiles.ShowAllFilesFilesAlwaysHidden));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void ShowAllFilesSymLinks() {
+        public void ShowAllFilesSymLinks()
+        {
             _vs.RunTest(nameof(ProjectUITests.ShowAllFiles.ShowAllFilesSymLinks));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void ShowAllFilesLinked() {
+        public void ShowAllFilesLinked()
+        {
             _vs.RunTest(nameof(ProjectUITests.ShowAllFiles.ShowAllFilesLinked));
         }
 
         [TestMethod, Priority(UITestPriority.P0_FAILING_UI_TEST)]
         [TestCategory("Installed")]
-        public void ShowAllFilesIncludeExclude() {
+        public void ShowAllFilesIncludeExclude()
+        {
             _vs.RunTest(nameof(ProjectUITests.ShowAllFiles.ShowAllFilesIncludeExclude));
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void ShowAllFilesChanges() {
+        public void ShowAllFilesChanges()
+        {
             _vs.RunTest(nameof(ProjectUITests.ShowAllFiles.ShowAllFilesChanges));
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void ShowAllFilesHiddenFiles() {
+        public void ShowAllFilesHiddenFiles()
+        {
             _vs.RunTest(nameof(ProjectUITests.ShowAllFiles.ShowAllFilesHiddenFiles));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void ShowAllFilesOnPerUser() {
+        public void ShowAllFilesOnPerUser()
+        {
             _vs.RunTest(nameof(ProjectUITests.ShowAllFiles.ShowAllFilesOnPerUser));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void ShowAllFilesOnPerProject() {
+        public void ShowAllFilesOnPerProject()
+        {
             _vs.RunTest(nameof(ProjectUITests.ShowAllFiles.ShowAllFilesOnPerProject));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void ShowAllFilesOffPerUser() {
+        public void ShowAllFilesOffPerUser()
+        {
             _vs.RunTest(nameof(ProjectUITests.ShowAllFiles.ShowAllFilesOffPerUser));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void ShowAllFilesOffPerProject() {
+        public void ShowAllFilesOffPerProject()
+        {
             _vs.RunTest(nameof(ProjectUITests.ShowAllFiles.ShowAllFilesOffPerProject));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void ShowAllFilesDefault() {
+        public void ShowAllFilesDefault()
+        {
             _vs.RunTest(nameof(ProjectUITests.ShowAllFiles.ShowAllFilesDefault));
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void ShowAllMoveNotInProject() {
+        public void ShowAllMoveNotInProject()
+        {
             _vs.RunTest(nameof(ProjectUITests.ShowAllFiles.ShowAllMoveNotInProject));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void ShowAllExcludeSelected() {
+        public void ShowAllExcludeSelected()
+        {
             _vs.RunTest(nameof(ProjectUITests.ShowAllFiles.ShowAllExcludeSelected));
         }
 
         [TestMethod, Priority(UITestPriority.P2)]
         [TestCategory("Installed")]
-        public void ShowAllFilesRapidChanges() {
+        public void ShowAllFilesRapidChanges()
+        {
             _vs.RunTest(nameof(ProjectUITests.ShowAllFiles.ShowAllFilesRapidChanges));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void ShowAllFilesRapidChanges2() {
+        public void ShowAllFilesRapidChanges2()
+        {
             _vs.RunTest(nameof(ProjectUITests.ShowAllFiles.ShowAllFilesRapidChanges2));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void ShowAllFilesCopyExcludedFolderWithItemByKeyboard() {
+        public void ShowAllFilesCopyExcludedFolderWithItemByKeyboard()
+        {
             _vs.RunTest(nameof(ProjectUITests.ShowAllFiles.ShowAllFilesCopyExcludedFolderWithItemByKeyboard));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void ShowAllFilesCopyExcludedFolderWithItemByMouse() {
+        public void ShowAllFilesCopyExcludedFolderWithItemByMouse()
+        {
             _vs.RunTest(nameof(ProjectUITests.ShowAllFiles.ShowAllFilesCopyExcludedFolderWithItemByMouse));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void ShowAllFilesMoveExcludedItemToExcludedFolderByKeyboard() {
+        public void ShowAllFilesMoveExcludedItemToExcludedFolderByKeyboard()
+        {
             _vs.RunTest(nameof(ProjectUITests.ShowAllFiles.ShowAllFilesMoveExcludedItemToExcludedFolderByKeyboard));
         }
 
         [TestMethod, Priority(UITestPriority.P0)]
         [TestCategory("Installed")]
-        public void ShowAllFilesMoveExcludedItemToExcludedFolderByMouse() {
+        public void ShowAllFilesMoveExcludedItemToExcludedFolderByMouse()
+        {
             _vs.RunTest(nameof(ProjectUITests.ShowAllFiles.ShowAllFilesMoveExcludedItemToExcludedFolderByMouse));
         }
     }

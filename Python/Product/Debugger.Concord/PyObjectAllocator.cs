@@ -14,16 +14,17 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using Microsoft.PythonTools.Debugger.Concord.Proxies;
 using Microsoft.PythonTools.Debugger.Concord.Proxies.Structs;
 
-namespace Microsoft.PythonTools.Debugger.Concord {
-    internal class PyObjectAllocator : DkmDataItem {
+namespace Microsoft.PythonTools.Debugger.Concord
+{
+    internal class PyObjectAllocator : DkmDataItem
+    {
         // Layout of this struct must always remain in sync with DebuggerHelper/trace.cpp.
         [StructLayout(LayoutKind.Sequential, Pack = 8)]
-        private struct ObjectToRelease {
+        private struct ObjectToRelease
+        {
             public ulong pyObject;
             public ulong next;
         }
@@ -32,14 +33,16 @@ namespace Microsoft.PythonTools.Debugger.Concord {
         private readonly List<ulong> _blocks = new List<ulong>();
         private readonly UInt64Proxy _objectsToRelease;
 
-        public PyObjectAllocator(DkmProcess process) {
+        public PyObjectAllocator(DkmProcess process)
+        {
             _process = process;
             var pyrtInfo = process.GetPythonRuntimeInfo();
 
             _objectsToRelease = pyrtInfo.DLLs.DebuggerHelper.GetExportedStaticVariable<UInt64Proxy>("objectsToRelease");
         }
 
-        private ulong Allocate(long size) {
+        private ulong Allocate(long size)
+        {
             GC();
             ulong block = _process.AllocateVirtualMemory(0, (int)size, NativeMethods.MEM_COMMIT | NativeMethods.MEM_RESERVE, NativeMethods.PAGE_READWRITE);
             _blocks.Add(block);
@@ -47,7 +50,8 @@ namespace Microsoft.PythonTools.Debugger.Concord {
         }
 
         public TObject Allocate<TObject>(long extraBytes = 0)
-            where TObject : PyObject {
+            where TObject : PyObject
+        {
             ulong ptr = Allocate(StructProxy.SizeOf<TObject>(_process) + extraBytes);
             var obj = DataProxy.Create<TObject>(_process, ptr, polymorphic: false);
             obj.ob_refcnt.Write(1);
@@ -58,9 +62,11 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             return obj;
         }
 
-        public unsafe void QueueForDecRef(PyObject obj) {
+        public unsafe void QueueForDecRef(PyObject obj)
+        {
             byte[] buf = new byte[sizeof(ObjectToRelease)];
-            fixed (byte* p = buf) {
+            fixed (byte* p = buf)
+            {
                 var otr = (ObjectToRelease*)p;
                 otr->pyObject = obj.Address;
                 otr->next = _objectsToRelease.Read();
@@ -71,13 +77,18 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             _objectsToRelease.Write(otrPtr);
         }
 
-        private void GC() {
-            _blocks.RemoveAll(block => {
+        private void GC()
+        {
+            _blocks.RemoveAll(block =>
+            {
                 var obj = new PyObject(_process, block);
-                if (obj.ob_refcnt.Read() <= 1) {
+                if (obj.ob_refcnt.Read() <= 1)
+                {
                     _process.FreeVirtualMemory(block, 0, NativeMethods.MEM_RELEASE);
                     return true;
-                } else {
+                }
+                else
+                {
                     return false;
                 }
             });

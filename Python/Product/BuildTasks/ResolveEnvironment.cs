@@ -14,40 +14,39 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
 #if !BUILDTASKS_CORE
-using System.ComponentModel.Composition.Hosting;
 #endif
-using System.Linq;
-using System.Text.RegularExpressions;
-using Microsoft.Build.Evaluation;
-using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
 using Microsoft.PythonTools.Interpreter;
 
-namespace Microsoft.PythonTools.BuildTasks {
+namespace Microsoft.PythonTools.BuildTasks
+{
     /// <summary>
     /// Resolves a project's active environment from the contents of the project
     /// file.
     /// </summary>
-    public sealed class ResolveEnvironment : ITask {
+    public sealed class ResolveEnvironment : ITask
+    {
         private readonly string _projectPath;
         internal readonly TaskLoggingHelper _log;
 
-        internal ResolveEnvironment(string projectPath, IBuildEngine buildEngine) {
+        internal ResolveEnvironment(string projectPath, IBuildEngine buildEngine)
+        {
             BuildEngine = buildEngine;
             _projectPath = projectPath;
             _log = new TaskLoggingHelper(this);
         }
 
 #if !BUILDTASKS_CORE
-        class CatalogLog : ICatalogLog {
+        class CatalogLog : ICatalogLog
+        {
             private readonly TaskLoggingHelper _helper;
-            public CatalogLog(TaskLoggingHelper helper) {
+            public CatalogLog(TaskLoggingHelper helper)
+            {
                 _helper = helper;
             }
 
-            public void Log(string msg) {
+            public void Log(string msg)
+            {
                 _helper.LogWarning(msg);
             }
         }
@@ -87,7 +86,8 @@ namespace Microsoft.PythonTools.BuildTasks {
 
         internal string[] SearchPaths { get; private set; }
 
-        public bool Execute() {
+        public bool Execute()
+        {
             string id = InterpreterId;
 
             ProjectCollection collection = null;
@@ -95,30 +95,39 @@ namespace Microsoft.PythonTools.BuildTasks {
 
 #if !BUILDTASKS_CORE
             var exports = GetExportProvider();
-            if (exports == null) {
+            if (exports == null)
+            {
                 _log.LogError("Unable to obtain interpreter service.");
                 return false;
             }
 #endif
 
-            try {
-                try {
+            try
+            {
+                try
+                {
                     project = ProjectCollection.GlobalProjectCollection.GetLoadedProjects(_projectPath).Single();
-                } catch (InvalidOperationException) {
+                }
+                catch (InvalidOperationException)
+                {
                     // Could not get exactly one project matching the path.
                 }
 
-                if (project == null) {
+                if (project == null)
+                {
                     collection = new ProjectCollection();
                     project = collection.LoadProject(_projectPath);
                 }
 
-                if (id == null) {
+                if (id == null)
+                {
                     id = project.GetPropertyValue("InterpreterId");
-                    if (String.IsNullOrWhiteSpace(id)) {
+                    if (String.IsNullOrWhiteSpace(id))
+                    {
 #if !BUILDTASKS_CORE
                         var options = exports.GetExportedValueOrDefault<IInterpreterOptionsService>();
-                        if (options != null) {
+                        if (options != null)
+                        {
                             id = options.DefaultInterpreterId;
                         }
 #endif
@@ -131,11 +140,14 @@ namespace Microsoft.PythonTools.BuildTasks {
                 );
 
                 var searchPath = project.GetPropertyValue("SearchPath");
-                if (!string.IsNullOrEmpty(searchPath)) {
+                if (!string.IsNullOrEmpty(searchPath))
+                {
                     SearchPaths = searchPath.Split(';')
                         .Select(p => PathUtils.GetAbsoluteFilePath(projectHome, p))
                         .ToArray();
-                } else {
+                }
+                else
+                {
                     SearchPaths = new string[0];
                 }
 
@@ -198,34 +210,46 @@ namespace Microsoft.PythonTools.BuildTasks {
                 // already loaded VsProjectContextProvider which is loaded in proc and already
                 // aware of the projects loaded in Solution Explorer.
                 var projectContext = exports.GetExportedValueOrDefault<MsBuildProjectContextProvider>();
-                if (projectContext != null) {
+                if (projectContext != null)
+                {
                     projectContext.AddContext(project);
                 }
-                try {
+                try
+                {
                     var config = exports.GetExportedValue<IInterpreterRegistryService>().FindConfiguration(id);
 
-                    if (config != null) {
+                    if (config != null)
+                    {
                         UpdateResultFromConfiguration(config, projectHome);
                         return true;
                     }
-                } finally {
-                    if (projectContext != null) {
+                }
+                finally
+                {
+                    if (projectContext != null)
+                    {
                         projectContext.RemoveContext(project);
                     }
                 }
 #endif
 
-                if (!string.IsNullOrEmpty(id)) {
+                if (!string.IsNullOrEmpty(id))
+                {
                     _log.LogError(
                         "The environment '{0}' is not available. Check your project configuration and try again.",
                         id
                     );
                     return false;
                 }
-            } catch (Exception ex) {
+            }
+            catch (Exception ex)
+            {
                 _log.LogErrorFromException(ex);
-            } finally {
-                if (collection != null) {
+            }
+            finally
+            {
+                if (collection != null)
+                {
                     collection.UnloadAllProjects();
                     collection.Dispose();
                 }
@@ -238,11 +262,15 @@ namespace Microsoft.PythonTools.BuildTasks {
         public IBuildEngine BuildEngine { get; set; }
         public ITaskHost HostObject { get; set; }
 
-        private void UpdateResultFromConfiguration(InterpreterConfiguration config, string projectHome) {
+        private void UpdateResultFromConfiguration(InterpreterConfiguration config, string projectHome)
+        {
             PrefixPath = PathUtils.EnsureEndSeparator(config.GetPrefixPath());
-            if (PathUtils.IsSubpathOf(projectHome, PrefixPath)) {
+            if (PathUtils.IsSubpathOf(projectHome, PrefixPath))
+            {
                 ProjectRelativePrefixPath = PathUtils.GetRelativeDirectoryPath(projectHome, PrefixPath);
-            } else {
+            }
+            else
+            {
                 ProjectRelativePrefixPath = string.Empty;
             }
             InterpreterPath = config.InterpreterPath;
@@ -255,7 +283,8 @@ namespace Microsoft.PythonTools.BuildTasks {
         }
 
 #if !BUILDTASKS_CORE
-        private ExportProvider GetExportProvider() {
+        private ExportProvider GetExportProvider()
+        {
             return InterpreterCatalog.CreateContainer(
                 new CatalogLog(_log),
                 typeof(MsBuildProjectContextProvider),
@@ -269,8 +298,10 @@ namespace Microsoft.PythonTools.BuildTasks {
     /// <summary>
     /// Constructs ResolveEnvironment task objects.
     /// </summary>
-    public sealed class ResolveEnvironmentFactory : TaskFactory<ResolveEnvironment> {
-        public override ITask CreateTask(IBuildEngine taskFactoryLoggingHost) {
+    public sealed class ResolveEnvironmentFactory : TaskFactory<ResolveEnvironment>
+    {
+        public override ITask CreateTask(IBuildEngine taskFactoryLoggingHost)
+        {
             return new ResolveEnvironment(Properties["ProjectPath"], taskFactoryLoggingHost);
         }
     }

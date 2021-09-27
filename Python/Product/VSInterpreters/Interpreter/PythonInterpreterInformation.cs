@@ -14,8 +14,10 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.Interpreter {
-    class PythonInterpreterInformation {
+namespace Microsoft.PythonTools.Interpreter
+{
+    class PythonInterpreterInformation
+    {
 #if !NO_FACTORIES
         private IPythonInterpreterFactory _factory;
 #endif
@@ -30,7 +32,8 @@ namespace Microsoft.PythonTools.Interpreter {
             string vendor,
             string vendorUrl,
             string supportUrl
-        ) {
+        )
+        {
             Configuration = configuration;
             Vendor = vendor;
             VendorUrl = vendorUrl;
@@ -38,10 +41,14 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
 #if !NO_FACTORIES
-        public IPythonInterpreterFactory GetOrCreateFactory(Func<PythonInterpreterInformation, IPythonInterpreterFactory> creator) {
-            if (_factory == null) {
-                lock (this) {
-                    if (_factory == null) {
+        public IPythonInterpreterFactory GetOrCreateFactory(Func<PythonInterpreterInformation, IPythonInterpreterFactory> creator)
+        {
+            if (_factory == null)
+            {
+                lock (this)
+                {
+                    if (_factory == null)
+                    {
                         _factory = creator(this);
                     }
                 }

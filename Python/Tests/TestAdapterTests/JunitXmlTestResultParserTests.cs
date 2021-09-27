@@ -14,19 +14,12 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Globalization;
-using System.Linq;
-using System.Threading;
-using System.Xml;
-using Microsoft.PythonTools.TestAdapter.Pytest;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-namespace TestAdapterTests {
+namespace TestAdapterTests
+{
 
     [TestClass]
-    public class JunitXmlTestResultParserTests {
+    public class JunitXmlTestResultParserTests
+    {
 
         private const string _junitXmlResultsFormat =
 @"<?xml version=""1.0"" encoding=""utf - 8""?>
@@ -37,7 +30,8 @@ namespace TestAdapterTests {
   </testsuites>";
 
         [TestMethod]
-        public void CreatePytestId_FuncInsideClass() {
+        public void CreatePytestId_FuncInsideClass()
+        {
             Assert.AreEqual(
                 ".\\test2.py::Test_test2::test_A",
                 JunitXmlTestResultParser.CreatePytestId("test2.py", "test2.Test_test2", "test_A")
@@ -45,7 +39,8 @@ namespace TestAdapterTests {
         }
 
         [TestMethod]
-        public void CreatePytestId_GlobalFunc() {
+        public void CreatePytestId_GlobalFunc()
+        {
             Assert.AreEqual(
                 ".\\test_sample.py::test_answer",
                 JunitXmlTestResultParser.CreatePytestId("test_sample.py", "test_sample", "test_answer")
@@ -53,7 +48,8 @@ namespace TestAdapterTests {
         }
 
         [TestMethod]
-        public void CreatePytestId_GlobalFuncRelative() {
+        public void CreatePytestId_GlobalFuncRelative()
+        {
             Assert.AreEqual(
                 ".\\tests\\unit\\test_statistics.py::test_key_creation",
                 JunitXmlTestResultParser.CreatePytestId("tests\\unit\\test_statistics.py", "tests.unit.test_statistics", "test_key_creation")
@@ -61,7 +57,8 @@ namespace TestAdapterTests {
         }
 
         [TestMethod]
-        public void CreatePytestId_ClassFuncWithRelativeFilename() {
+        public void CreatePytestId_ClassFuncWithRelativeFilename()
+        {
             Assert.AreEqual(
                 ".\\package1\\packageA\\test1.py::Test_test1::test_A",
                 JunitXmlTestResultParser.CreatePytestId("package1\\packageA\\test1.py", "package1.packageA.test1.Test_test1", "test_A")
@@ -69,7 +66,8 @@ namespace TestAdapterTests {
         }
 
         [TestMethod]
-        public void CreatePytestIdMatchesDiscoveryPytestId() {
+        public void CreatePytestIdMatchesDiscoveryPytestId()
+        {
             var projectRoot = "c:\\home\\";
             var filename = "Package1\\packageA\\Test1.py";
             var pytestId = ".\\package1\\packageA\\test1.py::Test_test1::test_A";
@@ -85,7 +83,8 @@ namespace TestAdapterTests {
         }
 
         [TestMethod]
-        public void PytestPassResult() {
+        public void PytestPassResult()
+        {
             var testPass = @"<testcase classname=""test_Parameters"" file=""test_Parameters.py"" line=""42"" name=""test_timedistance_v3[forward]"" time=""0.001""></testcase>";
             var xmlResults = string.Format(_junitXmlResultsFormat, testPass);
             TestResult result = ParseXmlTestUtil(xmlResults);
@@ -95,7 +94,8 @@ namespace TestAdapterTests {
         }
 
         [TestMethod]
-        public void PytestFailureResult() {
+        public void PytestFailureResult()
+        {
             var testPass = @"<testcase classname=""test_failures"" file=""test_failures.py"" line=""12"" name=""test_fail"" time=""0.001"">
             <failure message = ""assert 0"" >
                  def test_fail():
@@ -115,7 +115,8 @@ namespace TestAdapterTests {
         }
 
         [TestMethod]
-        public void PytestErrorResult() {
+        public void PytestErrorResult()
+        {
             var testPass = @" <testcase classname=""test_failures"" file=""test_failures.py"" line=""16"" name=""test_error"" time=""0.001"">
             <error message = ""test setup failure"" >
                  @pytest.fixture
@@ -136,7 +137,8 @@ namespace TestAdapterTests {
         }
 
         [TestMethod]
-        public void PytestSkipResult() {
+        public void PytestSkipResult()
+        {
             var testPass = @"<testcase classname=""test_failures"" file=""test_failures.py"" line=""20"" name=""test_skip"" time=""0.001"">
             <skipped message = ""skipping this test"" type = ""pytest.skip"" > C:\Users\bschnurr\source\repos\Parameters\Parameters\test_failures.py:22: skipping this test </skipped >
           </testcase>";
@@ -149,7 +151,8 @@ namespace TestAdapterTests {
         }
 
         [TestMethod]
-        public void PytestSkipXFailedResult() {
+        public void PytestSkipXFailedResult()
+        {
             var testPass = @"<testcase classname = ""test_failures"" file=""test_failures.py"" line=""24"" name=""test_xfail"" time=""0.200"">
             <skipped message = ""xfailing this test"" type = ""pytest.xfail"" ></skipped>
          </testcase>";
@@ -163,7 +166,8 @@ namespace TestAdapterTests {
         }
 
         [TestMethod]
-        public void PytestResultsStdOutAppendsToMessages() {
+        public void PytestResultsStdOutAppendsToMessages()
+        {
             var testPass = @"<testcase classname=""test_failures"" file=""test_failures.py"" line=""8"" name=""test_ok"" time=""0.002"">
             <system-out>
                   ok
@@ -179,7 +183,8 @@ namespace TestAdapterTests {
         }
 
         [TestMethod]
-        public void PytestResultsStdErrorAppendsToMessages() {
+        public void PytestResultsStdErrorAppendsToMessages()
+        {
             var testPass = @"<testcase classname=""test_failures"" file=""test_failures.py"" line=""8"" name=""test_ok"" time=""0.002"">
             <system-err>
                   bad
@@ -196,7 +201,8 @@ namespace TestAdapterTests {
 
         [TestMethod]
         [ExpectedException(typeof(ArgumentException))]
-        public void PytestWrongXmlNodeThrowsException() {
+        public void PytestWrongXmlNodeThrowsException()
+        {
             var testPass = @"<testcase classname=""test_Parameters"" file=""test_Parameters.py"" line=""42"" name=""test_timedistance_v3[forward]"" time=""0.001""></testcase>";
             var xmlResults = string.Format(_junitXmlResultsFormat, testPass);
 
@@ -209,7 +215,8 @@ namespace TestAdapterTests {
         }
 
         [TestMethod]
-        public void PytestHandlesCultureDurationWithPeriod() {
+        public void PytestHandlesCultureDurationWithPeriod()
+        {
             var test = @"<testcase classname=""test_failures"" file=""test_failures.py"" line=""8"" name=""test_ok"" time=""1.000""></testcase>";
             var xmlResults = string.Format(_junitXmlResultsFormat, test);
 
@@ -223,7 +230,8 @@ namespace TestAdapterTests {
         }
 
         [TestMethod]
-        public void PytestHandlesCultureDurationThousand() {
+        public void PytestHandlesCultureDurationThousand()
+        {
             var test = @"<testcase classname=""test_failures"" file=""test_failures.py"" line=""8"" name=""test_ok"" time=""1000""></testcase>";
             var xmlResults = string.Format(_junitXmlResultsFormat, test);
 
@@ -237,7 +245,8 @@ namespace TestAdapterTests {
         }
 
         [TestMethod]
-        public void PytestBadDurationShouldNotThrow() {
+        public void PytestBadDurationShouldNotThrow()
+        {
             var test = @"<testcase classname=""test_failures"" file=""test_failures.py"" line=""8"" name=""test_ok"" time=""baddata""></testcase>";
             var xmlResults = string.Format(_junitXmlResultsFormat, test);
 
@@ -246,7 +255,8 @@ namespace TestAdapterTests {
             Assert.AreEqual(TimeSpan.FromSeconds(0), result.Duration);
         }
 
-        private static TestResult ParseXmlTestUtil(string xmlResults) {
+        private static TestResult ParseXmlTestUtil(string xmlResults)
+        {
             var doc = new XmlDocument();
             doc.LoadXml(xmlResults);
             var result = new TestResult(new TestCase());

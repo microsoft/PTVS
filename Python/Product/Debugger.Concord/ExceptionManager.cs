@@ -14,52 +14,58 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
 using Microsoft.PythonTools.Debugger.Concord.Proxies.Structs;
-using Microsoft.PythonTools.Parsing;
 
-namespace Microsoft.PythonTools.Debugger.Concord {
-    internal class ExceptionManager : DkmDataItem {
+namespace Microsoft.PythonTools.Debugger.Concord
+{
+    internal class ExceptionManager : DkmDataItem
+    {
         private readonly DkmProcess _process;
         private readonly HashSet<string> _monitoredExceptions = new HashSet<string>();
 
-        public ExceptionManager(DkmProcess process) {
+        public ExceptionManager(DkmProcess process)
+        {
             _process = process;
         }
 
-        public string GetAdditionalInformation(DkmExceptionInformation exception) {
+        public string GetAdditionalInformation(DkmExceptionInformation exception)
+        {
             var customException = exception as DkmCustomExceptionInformation;
-            if (customException == null || customException.AdditionalInformation == null) {
+            if (customException == null || customException.AdditionalInformation == null)
+            {
                 return null;
             }
 
             return Encoding.Unicode.GetString(customException.AdditionalInformation.ToArray());
         }
 
-        public string GetDescription(DkmExceptionInformation exception) {
+        public string GetDescription(DkmExceptionInformation exception)
+        {
             return exception.Name;
         }
 
-        public void AddExceptionTrigger(DkmProcess process, Guid sourceId, DkmExceptionTrigger trigger) {
+        public void AddExceptionTrigger(DkmProcess process, Guid sourceId, DkmExceptionTrigger trigger)
+        {
             var nameTrigger = trigger as DkmExceptionNameTrigger;
-            if (nameTrigger != null && nameTrigger.ExceptionCategory == Guids.PythonExceptionCategoryGuid) {
+            if (nameTrigger != null && nameTrigger.ExceptionCategory == Guids.PythonExceptionCategoryGuid)
+            {
                 string name = nameTrigger.Name;
                 bool wasEmpty = _monitoredExceptions.Count == 0;
 
                 if (nameTrigger.ProcessingStage.HasFlag(DkmExceptionProcessingStage.Thrown) ||
                     nameTrigger.ProcessingStage.HasFlag(DkmExceptionProcessingStage.UserCodeSearch)
-                ) {
+                )
+                {
                     _monitoredExceptions.Add(nameTrigger.Name);
-                } else {
+                }
+                else
+                {
                     _monitoredExceptions.Remove(nameTrigger.Name);
                 }
 
                 bool isEmpty = _monitoredExceptions.Count == 0;
-                if (wasEmpty != isEmpty) {
+                if (wasEmpty != isEmpty)
+                {
                     new LocalComponent.MonitorExceptionsRequest { MonitorExceptions = !isEmpty }.SendHigher(process);
                 }
             }
@@ -67,8 +73,10 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             process.AddExceptionTrigger(sourceId, trigger);
         }
 
-        public void ClearExceptionTriggers(DkmProcess process, Guid sourceId) {
-            if (_monitoredExceptions.Count != 0) {
+        public void ClearExceptionTriggers(DkmProcess process, Guid sourceId)
+        {
+            if (_monitoredExceptions.Count != 0)
+            {
                 _monitoredExceptions.Clear();
                 new LocalComponent.MonitorExceptionsRequest { MonitorExceptions = false }.SendHigher(process);
             }
@@ -77,7 +85,8 @@ namespace Microsoft.PythonTools.Debugger.Concord {
         }
     }
 
-    internal class ExceptionManagerLocalHelper : DkmDataItem {
+    internal class ExceptionManagerLocalHelper : DkmDataItem
+    {
         private readonly DkmProcess _process;
         private bool _monitorExceptions = true;
 
@@ -85,7 +94,8 @@ namespace Microsoft.PythonTools.Debugger.Concord {
         // when at least one exception is set to break on throw, and disabled when all exceptions are cleared.
         private readonly List<DkmRuntimeBreakpoint> _exceptionBreakpoints = new List<DkmRuntimeBreakpoint>();
 
-        public ExceptionManagerLocalHelper(DkmProcess process) {
+        public ExceptionManagerLocalHelper(DkmProcess process)
+        {
             _process = process;
 
             // In Dev12, AddExceptionTrigger is not consistently called when user updates exception settings, and
@@ -95,28 +105,38 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             _monitorExceptions = false;
         }
 
-        public void OnPythonRuntimeInstanceLoaded() {
+        public void OnPythonRuntimeInstanceLoaded()
+        {
             var pyrtInfo = _process.GetPythonRuntimeInfo();
             var handlers = new PythonDllBreakpointHandlers(this);
             _exceptionBreakpoints.AddRange(LocalComponent.CreateRuntimeDllFunctionExitBreakpoints(
                 pyrtInfo.DLLs.Python, "PyErr_SetObject", handlers.PyErr_SetObject, enable: _monitorExceptions));
-            if (pyrtInfo.LanguageVersion <= PythonLanguageVersion.V27) {
+            if (pyrtInfo.LanguageVersion <= PythonLanguageVersion.V27)
+            {
                 _exceptionBreakpoints.AddRange(LocalComponent.CreateRuntimeDllFunctionExitBreakpoints(
                     pyrtInfo.DLLs.Python, "do_raise", handlers.do_raise, enable: _monitorExceptions));
             }
         }
 
-        public bool MonitorExceptions {
-            get {
+        public bool MonitorExceptions
+        {
+            get
+            {
                 return _monitorExceptions;
             }
-            set {
-                if (_monitorExceptions != value) {
+            set
+            {
+                if (_monitorExceptions != value)
+                {
                     _monitorExceptions = value;
-                    foreach (var bp in _exceptionBreakpoints) {
-                        if (_monitorExceptions) {
+                    foreach (var bp in _exceptionBreakpoints)
+                    {
+                        if (_monitorExceptions)
+                        {
                             bp.Enable();
-                        } else {
+                        }
+                        else
+                        {
                             bp.Disable();
                         }
                     }
@@ -124,8 +144,10 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             }
         }
 
-        public void OnException(DkmThread thread) {
-            if (thread.SystemPart == null) {
+        public void OnException(DkmThread thread)
+        {
+            if (thread.SystemPart == null)
+            {
                 Debug.Fail("OnException couldn't obtain system thread ID.");
                 return;
             }
@@ -133,14 +155,16 @@ namespace Microsoft.PythonTools.Debugger.Concord {
 
             var process = thread.Process;
             PyThreadState tstate = PyThreadState.GetThreadStates(process).FirstOrDefault(ts => ts.thread_id.Read() == tid);
-            if (tstate == null) {
+            if (tstate == null)
+            {
                 Debug.Fail("OnException couldn't find PyThreadState corresponding to system thread " + tid);
                 return;
             }
 
             var exc_type = tstate.curexc_type.TryRead();
             var exc_value = tstate.curexc_value.TryRead();
-            if (exc_type == null || exc_type.IsNone) {
+            if (exc_type == null || exc_type.IsNone)
+            {
                 return;
             }
 
@@ -148,56 +172,75 @@ namespace Microsoft.PythonTools.Debugger.Concord {
 
             string typeName = Strings.DebugUnknownExceptionType;
             string additionalInfo = "";
-            try {
+            try
+            {
                 var typeObject = exc_type as PyTypeObject;
-                if (typeObject != null) {
+                if (typeObject != null)
+                {
                     var mod = typeObject.__module__;
                     var ver = _process.GetPythonRuntimeInfo().LanguageVersion;
                     if ((mod == "builtins" && ver >= PythonLanguageVersion.V30) ||
-                        (mod == "exceptions" && ver < PythonLanguageVersion.V30)) {
+                        (mod == "exceptions" && ver < PythonLanguageVersion.V30))
+                    {
 
                         typeName = typeObject.__name__;
-                    } else {
+                    }
+                    else
+                    {
                         typeName = mod + "." + typeObject.__name__;
                     }
                 }
 
                 var exc = exc_value as PyBaseExceptionObject;
-                if (exc != null) {
+                if (exc != null)
+                {
                     var args = exc.args.TryRead();
-                    if (args != null) {
+                    if (args != null)
+                    {
                         additionalInfo = args.Repr(reprOptions);
                     }
-                } else {
+                }
+                else
+                {
                     var str = exc_value as IPyBaseStringObject;
-                    if (str != null) {
+                    if (str != null)
+                    {
                         additionalInfo = str.ToString();
-                    } else if (exc_value != null) {
+                    }
+                    else if (exc_value != null)
+                    {
                         additionalInfo = exc_value.Repr(reprOptions);
                     }
                 }
-            } catch {
+            }
+            catch
+            {
             }
 
-            new RemoteComponent.RaiseExceptionRequest {
+            new RemoteComponent.RaiseExceptionRequest
+            {
                 ThreadId = thread.UniqueId,
                 Name = typeName,
                 AdditionalInformation = Encoding.Unicode.GetBytes(additionalInfo)
             }.SendLower(process);
         }
 
-        private class PythonDllBreakpointHandlers {
+        private class PythonDllBreakpointHandlers
+        {
             private readonly ExceptionManagerLocalHelper _owner;
 
-            public PythonDllBreakpointHandlers(ExceptionManagerLocalHelper owner) {
+            public PythonDllBreakpointHandlers(ExceptionManagerLocalHelper owner)
+            {
                 _owner = owner;
             }
 
-            public void PyErr_SetObject(DkmThread thread, ulong frameBase, ulong vframe, ulong returnAddress) {
+            public void PyErr_SetObject(DkmThread thread, ulong frameBase, ulong vframe, ulong returnAddress)
+            {
                 _owner.OnException(thread);
             }
 
-            public void do_raise(DkmThread thread, ulong frameBase, ulong vframe, ulong returnAddress) {
+            public void do_raise(DkmThread thread, ulong frameBase, ulong vframe, ulong returnAddress)
+            {
                 _owner.OnException(thread);
             }
         }

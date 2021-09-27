@@ -14,23 +14,28 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.PythonTools.Interpreter;
-
-namespace Microsoft.IronPythonTools.Interpreter {
-    class IronPythonBuiltinMethodDescriptor : PythonObject, IPythonMethodDescriptor {
+namespace Microsoft.IronPythonTools.Interpreter
+{
+    class IronPythonBuiltinMethodDescriptor : PythonObject, IPythonMethodDescriptor
+    {
         private IPythonFunction _function;
 
         public IronPythonBuiltinMethodDescriptor(IronPythonInterpreter interpreter, ObjectIdentityHandle desc)
-            : base(interpreter, desc) {
+            : base(interpreter, desc)
+        {
         }
 
         #region IBuiltinMethodDescriptor Members
 
-        public IPythonFunction Function {
-            get {
-                if (_function == null) {
+        public IPythonFunction Function
+        {
+            get
+            {
+                if (_function == null)
+                {
                     var ri = RemoteInterpreter;
-                    if (ri != null) {
+                    if (ri != null)
+                    {
                         var func = ri.GetBuiltinMethodDescriptorTemplate(Value);
 
                         _function = (IPythonFunction)Interpreter.MakeObject(func);
@@ -40,8 +45,10 @@ namespace Microsoft.IronPythonTools.Interpreter {
             }
         }
 
-        public bool IsBound {
-            get {
+        public bool IsBound
+        {
+            get
+            {
                 return false;
             }
         }
@@ -50,7 +57,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
         #region IMember Members
 
-        public override PythonMemberType MemberType {
+        public override PythonMemberType MemberType
+        {
             get { return PythonMemberType.Method; }
         }
 

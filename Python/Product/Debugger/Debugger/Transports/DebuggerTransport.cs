@@ -14,13 +14,10 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Security.Authentication;
-
-namespace Microsoft.PythonTools.Debugger.Transports {
-    internal interface IDebuggerTransport {
+namespace Microsoft.PythonTools.Debugger.Transports
+{
+    internal interface IDebuggerTransport
+    {
         /// <summary>
         /// Validates the remote debugging endpoint URI for correctness.
         /// </summary>
@@ -46,7 +43,8 @@ namespace Microsoft.PythonTools.Debugger.Transports {
         Stream Connect(Uri uri, bool requireAuthentication);
     }
 
-    internal static class DebuggerTransportFactory {
+    internal static class DebuggerTransportFactory
+    {
         private static readonly Dictionary<string, Func<IDebuggerTransport>> _factories = new Dictionary<string, Func<IDebuggerTransport>> {
             { "tcp", () => new TcpTransport() },
             { "tcps", () => new TcpsTransport() },
@@ -58,11 +56,15 @@ namespace Microsoft.PythonTools.Debugger.Transports {
         /// <returns>
         /// An <see cref="IDebuggerTransport"/> that can validate and connect to <paramref name="uri"/>, or <c>null</c> if there is no such transport.
         /// </returns>
-        public static IDebuggerTransport Get(Uri uri) {
+        public static IDebuggerTransport Get(Uri uri)
+        {
             Func<IDebuggerTransport> factory;
-            if (_factories.TryGetValue(uri.Scheme, out factory)) {
+            if (_factories.TryGetValue(uri.Scheme, out factory))
+            {
                 return factory();
-            } else {
+            }
+            else
+            {
                 return null;
             }
         }

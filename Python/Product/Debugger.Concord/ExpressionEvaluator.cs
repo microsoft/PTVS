@@ -14,22 +14,13 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Numerics;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading;
 using Microsoft.PythonTools.Debugger.Concord.Proxies;
 using Microsoft.PythonTools.Debugger.Concord.Proxies.Structs;
-using Microsoft.PythonTools.Parsing;
-using Microsoft.PythonTools.Parsing.Ast;
 
-namespace Microsoft.PythonTools.Debugger.Concord {
-    internal class ExpressionEvaluator : DkmDataItem {
+namespace Microsoft.PythonTools.Debugger.Concord
+{
+    internal class ExpressionEvaluator : DkmDataItem
+    {
         // Value of this constant must always remain in sync with DebuggerHelper/trace.cpp.
         private const int ExpressionEvaluationBufferSize = 0x1000;
 
@@ -41,7 +32,8 @@ namespace Microsoft.PythonTools.Debugger.Concord {
         private readonly UInt32Proxy _evalLoopSEHCode;
         private readonly CStringProxy _evalLoopInput;
 
-        public ExpressionEvaluator(DkmProcess process) {
+        public ExpressionEvaluator(DkmProcess process)
+        {
             _process = process;
             var pyrtInfo = process.GetPythonRuntimeInfo();
 
@@ -57,22 +49,26 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             LocalComponent.CreateRuntimeDllExportedFunctionBreakpoint(pyrtInfo.DLLs.DebuggerHelper, "OnEvalComplete", OnEvalComplete, enable: true);
         }
 
-        private interface IPythonEvaluationResult {
+        private interface IPythonEvaluationResult
+        {
             List<DkmEvaluationResult> GetChildren(ExpressionEvaluator exprEval, DkmEvaluationResult result, DkmInspectionContext inspectionContext);
         }
 
-        private interface IPythonEvaluationResultAsync {
+        private interface IPythonEvaluationResultAsync
+        {
             void GetChildren(DkmEvaluationResult result, DkmWorkList workList, int initialRequestSize, DkmInspectionContext inspectionContext, DkmCompletionRoutine<DkmGetChildrenAsyncResult> completionRoutine);
         }
 
-        private class RawEvaluationResult : DkmDataItem {
+        private class RawEvaluationResult : DkmDataItem
+        {
             public object Value { get; set; }
         }
 
         /// <summary>
         /// Data item attached to a <see cref="DkmEvaluationResult"/> that represents a Python object (a variable, field of another object, collection item etc).
         /// </summary>
-        private class PyObjectEvaluationResult : DkmDataItem, IPythonEvaluationResult {
+        private class PyObjectEvaluationResult : DkmDataItem, IPythonEvaluationResult
+        {
 
             // Maps CLR types as returned from IValueStore.Read() to corresponding Python types.
             // Used to compute the expected Python type for a T_* slot of a native object, since we don't have the actual PyObject value yet.
@@ -99,7 +95,8 @@ namespace Microsoft.PythonTools.Debugger.Concord {
                 { typeof(AsciiString), "str" },
             };
 
-            public PyObjectEvaluationResult(DkmProcess process, string fullName, IValueStore<PyObject> valueStore, string cppTypeName, bool hasCppView, bool isOwned) {
+            public PyObjectEvaluationResult(DkmProcess process, string fullName, IValueStore<PyObject> valueStore, string cppTypeName, bool hasCppView, bool isOwned)
+            {
                 Process = process;
                 FullName = fullName;
                 ValueStore = valueStore;
@@ -134,15 +131,18 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             /// </summary>
             public bool IsOwned { get; private set; }
 
-            protected override void OnClose() {
+            protected override void OnClose()
+            {
                 base.OnClose();
-                if (IsOwned) {
+                if (IsOwned)
+                {
                     var obj = ValueStore.Read();
                     Process.GetDataItem<PyObjectAllocator>().QueueForDecRef(obj);
                 }
             }
 
-            public List<DkmEvaluationResult> GetChildren(ExpressionEvaluator exprEval, DkmEvaluationResult result, DkmInspectionContext inspectionContext) {
+            public List<DkmEvaluationResult> GetChildren(ExpressionEvaluator exprEval, DkmEvaluationResult result, DkmInspectionContext inspectionContext)
+            {
                 var stackFrame = result.StackFrame;
                 var cppEval = new CppExpressionEvaluator(inspectionContext, stackFrame);
                 var obj = ValueStore.Read();
@@ -150,24 +150,29 @@ namespace Microsoft.PythonTools.Debugger.Concord {
                 var reprOptions = new ReprOptions(inspectionContext);
                 var reprBuilder = new ReprBuilder(reprOptions);
 
-                if (DebuggerOptions.ShowCppViewNodes && !HasCppView) {
-                    if (CppTypeName == null) {
+                if (DebuggerOptions.ShowCppViewNodes && !HasCppView)
+                {
+                    if (CppTypeName == null)
+                    {
                         // Try to guess the object's C++ type by looking at function pointers in its PyTypeObject. If they are pointing
                         // into a module for which symbols are available, C++ EE should be able to resolve them into something like
                         // "0x1e120d50 {python33_d.dll!list_dealloc(PyListObject *)}". If we are lucky, one of those functions will have
                         // the first argument declared as a strongly typed pointer, rather than PyObject* or void*.
                         CppTypeName = "PyObject";
                         CppTypeModuleName = Process.GetPythonRuntimeInfo().DLLs.Python.Name;
-                        foreach (string methodField in _methodFields) {
+                        foreach (string methodField in _methodFields)
+                        {
                             var funcPtrEvalResult = cppEval.TryEvaluateObject(CppTypeModuleName, "PyObject", obj.Address, ".ob_type->" + methodField) as DkmSuccessEvaluationResult;
-                            if (funcPtrEvalResult == null || funcPtrEvalResult.Value.IndexOf('{') < 0) {
+                            if (funcPtrEvalResult == null || funcPtrEvalResult.Value.IndexOf('{') < 0)
+                            {
                                 continue;
                             }
 
                             var match = _cppFirstArgTypeFromFuncPtrRegex.Match(funcPtrEvalResult.Value);
                             string module = match.Groups["module"].Value;
                             string firstArgType = match.Groups["type"].Value;
-                            if (firstArgType != "void" && firstArgType != "PyObject" && firstArgType != "_object") {
+                            if (firstArgType != "void" && firstArgType != "PyObject" && firstArgType != "_object")
+                            {
                                 CppTypeName = firstArgType;
                                 CppTypeModuleName = module;
                                 break;
@@ -183,40 +188,53 @@ namespace Microsoft.PythonTools.Debugger.Concord {
                 }
 
                 int i = 0;
-                foreach (var child in obj.GetDebugChildren(reprOptions).Take(MaxDebugChildren)) {
-                    if (child.Name == null) {
+                foreach (var child in obj.GetDebugChildren(reprOptions).Take(MaxDebugChildren))
+                {
+                    if (child.Name == null)
+                    {
                         reprBuilder.Clear();
                         reprBuilder.AppendFormat("[{0:PY}]", i++);
                         child.Name = reprBuilder.ToString();
                     }
 
                     DkmEvaluationResult evalResult;
-                    if (child.ValueStore is IValueStore<PyObject>) {
+                    if (child.ValueStore is IValueStore<PyObject>)
+                    {
                         evalResult = exprEval.CreatePyObjectEvaluationResult(inspectionContext, stackFrame, FullName, child, cppEval);
-                    } else {
+                    }
+                    else
+                    {
                         var value = child.ValueStore.Read();
                         reprBuilder.Clear();
                         reprBuilder.AppendLiteral(value);
 
                         string type = null;
-                        if (Process.GetPythonRuntimeInfo().LanguageVersion <= PythonLanguageVersion.V27) {
+                        if (Process.GetPythonRuntimeInfo().LanguageVersion <= PythonLanguageVersion.V27)
+                        {
                             _typeMapping2x.TryGetValue(value.GetType(), out type);
                         }
-                        if (type == null) {
+                        if (type == null)
+                        {
                             _typeMapping.TryGetValue(value.GetType(), out type);
                         }
 
                         var flags = DkmEvaluationResultFlags.ReadOnly;
-                        if (value is string) {
+                        if (value is string)
+                        {
                             flags |= DkmEvaluationResultFlags.RawString;
                         }
 
                         string childFullName = child.Name;
-                        if (FullName != null) {
-                            if (childFullName.EndsWithOrdinal("()")) { // len()
+                        if (FullName != null)
+                        {
+                            if (childFullName.EndsWithOrdinal("()"))
+                            { // len()
                                 childFullName = childFullName.Substring(0, childFullName.Length - 2) + "(" + FullName + ")";
-                            } else {
-                                if (!childFullName.StartsWithOrdinal("[")) { // [0], ['fob'] etc
+                            }
+                            else
+                            {
+                                if (!childFullName.StartsWithOrdinal("["))
+                                { // [0], ['fob'] etc
                                     childFullName = "." + childFullName;
                                 }
                                 childFullName = FullName + childFullName;
@@ -239,17 +257,21 @@ namespace Microsoft.PythonTools.Debugger.Concord {
         /// <summary>
         /// Data item attached to the <see cref="DkmEvaluationResult"/> representing the [Globals] node.
         /// </summary>
-        private class GlobalsEvaluationResult : DkmDataItem, IPythonEvaluationResult {
+        private class GlobalsEvaluationResult : DkmDataItem, IPythonEvaluationResult
+        {
             public PyDictObject Globals { get; set; }
 
-            public List<DkmEvaluationResult> GetChildren(ExpressionEvaluator exprEval, DkmEvaluationResult result, DkmInspectionContext inspectionContext) {
+            public List<DkmEvaluationResult> GetChildren(ExpressionEvaluator exprEval, DkmEvaluationResult result, DkmInspectionContext inspectionContext)
+            {
                 var stackFrame = result.StackFrame;
                 var cppEval = new CppExpressionEvaluator(inspectionContext, stackFrame);
                 var evalResults = new List<DkmEvaluationResult>();
 
-                foreach (var pair in Globals.ReadElements()) {
+                foreach (var pair in Globals.ReadElements())
+                {
                     var name = pair.Key as IPyBaseStringObject;
-                    if (name == null) {
+                    if (name == null)
+                    {
                         continue;
                     }
 
@@ -264,17 +286,21 @@ namespace Microsoft.PythonTools.Debugger.Concord {
         /// <summary>
         /// Data item attached to the <see cref="DkmEvaluationResult"/> representing the [C++ view] node.
         /// </summary>
-        private class CppViewEvaluationResult : DkmDataItem, IPythonEvaluationResultAsync {
+        private class CppViewEvaluationResult : DkmDataItem, IPythonEvaluationResultAsync
+        {
             public DkmSuccessEvaluationResult CppEvaluationResult { get; set; }
 
-            public void GetChildren(DkmEvaluationResult result, DkmWorkList workList, int initialRequestSize, DkmInspectionContext inspectionContext, DkmCompletionRoutine<DkmGetChildrenAsyncResult> completionRoutine) {
-                CppEvaluationResult.GetChildren(workList, initialRequestSize, CppEvaluationResult.InspectionContext, (cppResult) => {
+            public void GetChildren(DkmEvaluationResult result, DkmWorkList workList, int initialRequestSize, DkmInspectionContext inspectionContext, DkmCompletionRoutine<DkmGetChildrenAsyncResult> completionRoutine)
+            {
+                CppEvaluationResult.GetChildren(workList, initialRequestSize, CppEvaluationResult.InspectionContext, (cppResult) =>
+                {
                     completionRoutine(cppResult);
                 });
             }
         }
 
-        private class EvaluationResults : DkmDataItem {
+        private class EvaluationResults : DkmDataItem
+        {
             public IEnumerable<DkmEvaluationResult> Results { get; set; }
         }
 
@@ -311,10 +337,12 @@ namespace Microsoft.PythonTools.Debugger.Concord {
         /// C++ struct name corresponding to this object type, for use by [C++ view] node. If not specified, it will be inferred from values of 
         /// various function pointers in <c>ob_type</c>, if possible. <c>PyObject</c> is the ultimate fallback.
         /// </param>
-        public DkmEvaluationResult CreatePyObjectEvaluationResult(DkmInspectionContext inspectionContext, DkmStackWalkFrame stackFrame, string parentName, PythonEvaluationResult pyEvalResult, CppExpressionEvaluator cppEval, string cppTypeName = null, bool hasCppView = false, bool isOwned = false) {
+        public DkmEvaluationResult CreatePyObjectEvaluationResult(DkmInspectionContext inspectionContext, DkmStackWalkFrame stackFrame, string parentName, PythonEvaluationResult pyEvalResult, CppExpressionEvaluator cppEval, string cppTypeName = null, bool hasCppView = false, bool isOwned = false)
+        {
             var name = pyEvalResult.Name;
             var valueStore = pyEvalResult.ValueStore as IValueStore<PyObject>;
-            if (valueStore == null) {
+            if (valueStore == null)
+            {
                 Debug.Fail("Non-PyObject PythonEvaluationResult passed to CreateEvaluationResult.");
                 throw new ArgumentException();
             }
@@ -326,27 +354,34 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             string repr = valueObj.Repr(reprOptions);
 
             var flags = pyEvalResult.Flags;
-            if (DebuggerOptions.ShowCppViewNodes || valueObj.GetDebugChildren(reprOptions).Any()) {
+            if (DebuggerOptions.ShowCppViewNodes || valueObj.GetDebugChildren(reprOptions).Any())
+            {
                 flags |= DkmEvaluationResultFlags.Expandable;
             }
-            if (!(valueStore is IWritableDataProxy)) {
+            if (!(valueStore is IWritableDataProxy))
+            {
                 flags |= DkmEvaluationResultFlags.ReadOnly;
             }
-            if (valueObj is IPyBaseStringObject) {
+            if (valueObj is IPyBaseStringObject)
+            {
                 flags |= DkmEvaluationResultFlags.RawString;
             }
 
             var boolObj = valueObj as IPyBoolObject;
-            if (boolObj != null) {
+            if (boolObj != null)
+            {
                 flags |= DkmEvaluationResultFlags.Boolean;
-                if (boolObj.ToBoolean()) {
+                if (boolObj.ToBoolean())
+                {
                     flags |= DkmEvaluationResultFlags.BooleanTrue;
                 }
             }
 
             string fullName = name;
-            if (parentName != null) {
-                if (!fullName.StartsWithOrdinal("[")) {
+            if (parentName != null)
+            {
+                if (!fullName.StartsWithOrdinal("["))
+                {
                     fullName = "." + fullName;
                 }
                 fullName = parentName + fullName;
@@ -359,9 +394,11 @@ namespace Microsoft.PythonTools.Debugger.Concord {
                 pyObjEvalResult);
         }
 
-        public void GetFrameLocals(DkmInspectionContext inspectionContext, DkmWorkList workList, DkmStackWalkFrame stackFrame, DkmCompletionRoutine<DkmGetFrameLocalsAsyncResult> completionRoutine) {
+        public void GetFrameLocals(DkmInspectionContext inspectionContext, DkmWorkList workList, DkmStackWalkFrame stackFrame, DkmCompletionRoutine<DkmGetFrameLocalsAsyncResult> completionRoutine)
+        {
             var pythonFrame = PyFrameObject.TryCreate(stackFrame);
-            if (pythonFrame == null) {
+            if (pythonFrame == null)
+            {
                 Debug.Fail("Non-Python frame passed to GetFrameLocals.");
                 throw new NotSupportedException();
             }
@@ -377,27 +414,32 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             var namesSeen = new HashSet<string>();
             var cellNames = f_code.co_cellvars.Read().ReadElements().Concat(f_code.co_freevars.Read().ReadElements());
             var cellSlots = f_localsplus.Skip(f_code.co_nlocals.Read());
-            foreach (var pair in cellNames.Zip(cellSlots, (nameObj, cellSlot) => new { nameObj, cellSlot = cellSlot })) {
+            foreach (var pair in cellNames.Zip(cellSlots, (nameObj, cellSlot) => new { nameObj, cellSlot = cellSlot }))
+            {
                 var nameObj = pair.nameObj;
                 var cellSlot = pair.cellSlot;
 
                 var name = (nameObj.Read() as IPyBaseStringObject).ToStringOrNull();
-                if (name == null) {
+                if (name == null)
+                {
                     continue;
                 }
                 namesSeen.Add(name);
 
-                if (cellSlot.IsNull) {
+                if (cellSlot.IsNull)
+                {
                     continue;
                 }
 
                 var cell = cellSlot.Read() as PyCellObject;
-                if (cell == null) {
+                if (cell == null)
+                {
                     continue;
                 }
 
                 var localPtr = cell.ob_ref;
-                if (localPtr.IsNull) {
+                if (localPtr.IsNull)
+                {
                     continue;
                 }
 
@@ -406,21 +448,25 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             }
 
             PyTupleObject co_varnames = f_code.co_varnames.Read();
-            foreach (var pair in co_varnames.ReadElements().Zip(f_localsplus, (nameObj, varSlot) => new { nameObj, cellSlot = varSlot })) {
+            foreach (var pair in co_varnames.ReadElements().Zip(f_localsplus, (nameObj, varSlot) => new { nameObj, cellSlot = varSlot }))
+            {
                 var nameObj = pair.nameObj;
                 var varSlot = pair.cellSlot;
 
                 var name = (nameObj.Read() as IPyBaseStringObject).ToStringOrNull();
-                if (name == null) {
+                if (name == null)
+                {
                     continue;
                 }
 
                 // Check for function argument that was promoted to a cell.
-                if (!namesSeen.Add(name)) {
+                if (!namesSeen.Add(name))
+                {
                     continue;
                 }
 
-                if (varSlot.IsNull) {
+                if (varSlot.IsNull)
+                {
                     continue;
                 }
 
@@ -429,7 +475,8 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             }
 
             var globals = pythonFrame.f_globals.TryRead();
-            if (globals != null) {
+            if (globals != null)
+            {
                 var globalsEvalResult = new GlobalsEvaluationResult { Globals = globals };
                 // TODO: Localization: is it safe to localize [Globals] ? Appears twice in this file
                 DkmEvaluationResult evalResult = DkmSuccessEvaluationResult.Create(
@@ -443,9 +490,12 @@ namespace Microsoft.PythonTools.Debugger.Concord {
                     null, null, null, globalsEvalResult);
 
                 // If it is a top-level module frame, show globals inline; otherwise, show them under the [Globals] node.
-                if (f_code.co_name.Read().ToStringOrNull() == "<module>") {
+                if (f_code.co_name.Read().ToStringOrNull() == "<module>")
+                {
                     evalResults.AddRange(globalsEvalResult.GetChildren(this, evalResult, inspectionContext));
-                } else {
+                }
+                else
+                {
                     evalResults.Add(evalResult);
 
                     // Show any globals that are directly referenced by the function inline even in local frames.
@@ -456,19 +506,23 @@ namespace Microsoft.PythonTools.Debugger.Concord {
                                      ).ToLookup(v => v.Name, v => v.Value);
 
                     PyTupleObject co_names = f_code.co_names.Read();
-                    foreach (var nameObj in co_names.ReadElements()) {
+                    foreach (var nameObj in co_names.ReadElements())
+                    {
                         var name = (nameObj.Read() as IPyBaseStringObject).ToStringOrNull();
-                        if (name == null) {
+                        if (name == null)
+                        {
                             continue;
                         }
 
                         // If this is a used name but it was not in varnames or freevars, it is a directly referenced global.
-                        if (!namesSeen.Add(name)) {
+                        if (!namesSeen.Add(name))
+                        {
                             continue;
                         }
 
                         var varSlot = globalVars[name].FirstOrDefault();
-                        if (varSlot.Process != null) {
+                        if (varSlot.Process != null)
+                        {
                             evalResult = CreatePyObjectEvaluationResult(inspectionContext, stackFrame, null, new PythonEvaluationResult(varSlot, name), cppEval);
                             evalResults.Add(evalResult);
                         }
@@ -481,9 +535,11 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             completionRoutine(new DkmGetFrameLocalsAsyncResult(enumContext));
         }
 
-        public void GetChildren(DkmEvaluationResult result, DkmWorkList workList, int initialRequestSize, DkmInspectionContext inspectionContext, DkmCompletionRoutine<DkmGetChildrenAsyncResult> completionRoutine) {
+        public void GetChildren(DkmEvaluationResult result, DkmWorkList workList, int initialRequestSize, DkmInspectionContext inspectionContext, DkmCompletionRoutine<DkmGetChildrenAsyncResult> completionRoutine)
+        {
             var asyncEvalResult = result.GetDataItem<CppViewEvaluationResult>();
-            if (asyncEvalResult != null) {
+            if (asyncEvalResult != null)
+            {
                 asyncEvalResult.GetChildren(result, workList, initialRequestSize, inspectionContext, completionRoutine);
                 return;
             }
@@ -491,7 +547,8 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             var pyEvalResult =
                 (IPythonEvaluationResult)result.GetDataItem<PyObjectEvaluationResult>() ??
                 (IPythonEvaluationResult)result.GetDataItem<GlobalsEvaluationResult>();
-            if (pyEvalResult != null) {
+            if (pyEvalResult != null)
+            {
                 var childResults = pyEvalResult.GetChildren(this, result, inspectionContext);
                 completionRoutine(
                     new DkmGetChildrenAsyncResult(
@@ -508,9 +565,11 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             throw new NotSupportedException();
         }
 
-        public void GetItems(DkmEvaluationResultEnumContext enumContext, DkmWorkList workList, int startIndex, int count, DkmCompletionRoutine<DkmEvaluationEnumAsyncResult> completionRoutine) {
+        public void GetItems(DkmEvaluationResultEnumContext enumContext, DkmWorkList workList, int startIndex, int count, DkmCompletionRoutine<DkmEvaluationEnumAsyncResult> completionRoutine)
+        {
             var evalResults = enumContext.GetDataItem<EvaluationResults>();
-            if (evalResults == null) {
+            if (evalResults == null)
+            {
                 Debug.Fail("GetItems called on a DkmEvaluationResultEnumContext without an associated EvaluationResults.");
                 throw new NotSupportedException();
             }
@@ -519,22 +578,32 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             completionRoutine(new DkmEvaluationEnumAsyncResult(result));
         }
 
-        public void EvaluateExpression(DkmInspectionContext inspectionContext, DkmWorkList workList, DkmLanguageExpression expression, DkmStackWalkFrame stackFrame, DkmCompletionRoutine<DkmEvaluateExpressionAsyncResult> completionRoutine) {
+        public void EvaluateExpression(DkmInspectionContext inspectionContext, DkmWorkList workList, DkmLanguageExpression expression, DkmStackWalkFrame stackFrame, DkmCompletionRoutine<DkmEvaluateExpressionAsyncResult> completionRoutine)
+        {
             var name = expression.Text;
-            GetFrameLocals(inspectionContext, workList, stackFrame, getFrameLocalsResult => {
-                getFrameLocalsResult.EnumContext.GetItems(workList, 0, int.MaxValue, localGetItemsResult => {
+            GetFrameLocals(inspectionContext, workList, stackFrame, getFrameLocalsResult =>
+            {
+                getFrameLocalsResult.EnumContext.GetItems(workList, 0, int.MaxValue, localGetItemsResult =>
+                {
                     var vars = localGetItemsResult.Items.OfType<DkmSuccessEvaluationResult>();
                     // TODO: Localization: is it safe to localize [Globals] ? Appears twice in this file
                     var globals = vars.FirstOrDefault(er => er.Name == "[Globals]");
-                    if (globals == null) {
-                        if (!EvaluateExpressionByWalkingObjects(vars, inspectionContext, workList, expression, stackFrame, completionRoutine)) {
+                    if (globals == null)
+                    {
+                        if (!EvaluateExpressionByWalkingObjects(vars, inspectionContext, workList, expression, stackFrame, completionRoutine))
+                        {
                             EvaluateExpressionViaInterpreter(inspectionContext, workList, expression, stackFrame, completionRoutine);
                         }
-                    } else {
-                        globals.GetChildren(workList, 0, inspectionContext, globalsGetChildrenResult => {
-                            globalsGetChildrenResult.EnumContext.GetItems(workList, 0, int.MaxValue, globalsGetItemsResult => {
+                    }
+                    else
+                    {
+                        globals.GetChildren(workList, 0, inspectionContext, globalsGetChildrenResult =>
+                        {
+                            globalsGetChildrenResult.EnumContext.GetItems(workList, 0, int.MaxValue, globalsGetItemsResult =>
+                            {
                                 vars = vars.Concat(globalsGetItemsResult.Items.OfType<DkmSuccessEvaluationResult>());
-                                if (!EvaluateExpressionByWalkingObjects(vars, inspectionContext, workList, expression, stackFrame, completionRoutine)) {
+                                if (!EvaluateExpressionByWalkingObjects(vars, inspectionContext, workList, expression, stackFrame, completionRoutine))
+                                {
                                     EvaluateExpressionViaInterpreter(inspectionContext, workList, expression, stackFrame, completionRoutine);
                                 }
                             });
@@ -553,7 +622,8 @@ namespace Microsoft.PythonTools.Debugger.Concord {
         /// <c>true</c> if evaluation was successful, or if it failed and no fallback is possible (e.g. expression is invalid).
         /// <c>false</c> if evaluation was not successful due to the limitations of this evaluator, and it may be possible to evaluate it correctly by other means.
         /// </returns>
-        private bool EvaluateExpressionByWalkingObjects(IEnumerable<DkmSuccessEvaluationResult> vars, DkmInspectionContext inspectionContext, DkmWorkList workList, DkmLanguageExpression expression, DkmStackWalkFrame stackFrame, DkmCompletionRoutine<DkmEvaluateExpressionAsyncResult> completionRoutine) {
+        private bool EvaluateExpressionByWalkingObjects(IEnumerable<DkmSuccessEvaluationResult> vars, DkmInspectionContext inspectionContext, DkmWorkList workList, DkmLanguageExpression expression, DkmStackWalkFrame stackFrame, DkmCompletionRoutine<DkmEvaluateExpressionAsyncResult> completionRoutine)
+        {
             var pyrtInfo = stackFrame.Thread.Process.GetPythonRuntimeInfo();
 
             var parserOptions = new ParserOptions { ErrorSink = new StringErrorSink() };
@@ -561,7 +631,8 @@ namespace Microsoft.PythonTools.Debugger.Concord {
 
             var expr = ((ReturnStatement)parser.ParseTopExpression().Body).Expression;
             string errorText = parserOptions.ErrorSink.ToString();
-            if (!string.IsNullOrEmpty(errorText)) {
+            if (!string.IsNullOrEmpty(errorText))
+            {
                 completionRoutine(new DkmEvaluateExpressionAsyncResult(DkmFailedEvaluationResult.Create(
                     inspectionContext, stackFrame, expression.Text, expression.Text,
                     errorText, DkmEvaluationResultFlags.Invalid, null)));
@@ -571,18 +642,22 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             // Unroll the AST into a sequence of member access and indexing operations, if possible.
             var path = new Stack<string>();
             var reprBuilder = new ReprBuilder(new ReprOptions(stackFrame.Thread.Process));
-            while (true) {
+            while (true)
+            {
                 var memberExpr = expr as MemberExpression;
-                if (memberExpr != null) {
+                if (memberExpr != null)
+                {
                     path.Push(memberExpr.Name);
                     expr = memberExpr.Target;
                     continue;
                 }
 
                 var indexingExpr = expr as IndexExpression;
-                if (indexingExpr != null) {
+                if (indexingExpr != null)
+                {
                     var indexExpr = indexingExpr.Index as ConstantExpression;
-                    if (indexExpr != null) {
+                    if (indexExpr != null)
+                    {
                         reprBuilder.Clear();
                         reprBuilder.AppendFormat("[{0:PY}]", indexExpr.Value);
                         path.Push(reprBuilder.ToString());
@@ -595,21 +670,25 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             }
 
             var varExpr = expr as NameExpression;
-            if (varExpr == null) {
+            if (varExpr == null)
+            {
                 return false;
             }
             path.Push(varExpr.Name);
 
             // Walk the path through Locals
-            while (true) {
+            while (true)
+            {
                 var name = path.Pop();
 
                 var evalResult = vars.FirstOrDefault(er => er.Name == name);
-                if (evalResult == null) {
+                if (evalResult == null)
+                {
                     return false;
                 }
 
-                if (path.Count == 0) {
+                if (path.Count == 0)
+                {
                     // Clone the evaluation result, but use expression text as its name.
                     DkmDataItem dataItem =
                         (DkmDataItem)evalResult.GetDataItem<PyObjectEvaluationResult>() ??
@@ -648,11 +727,13 @@ namespace Microsoft.PythonTools.Debugger.Concord {
 
         private AutoResetEvent _evalCompleteEvent, _evalAbortedEvent;
 
-        private void EvaluateExpressionViaInterpreter(DkmInspectionContext inspectionContext, DkmWorkList workList, DkmLanguageExpression expression, DkmStackWalkFrame stackFrame, DkmCompletionRoutine<DkmEvaluateExpressionAsyncResult> completionRoutine) {
+        private void EvaluateExpressionViaInterpreter(DkmInspectionContext inspectionContext, DkmWorkList workList, DkmLanguageExpression expression, DkmStackWalkFrame stackFrame, DkmCompletionRoutine<DkmEvaluateExpressionAsyncResult> completionRoutine)
+        {
             var thread = stackFrame.Thread;
             var process = thread.Process;
 
-            if (_evalLoopThreadId.Read() != (ulong)thread.SystemPart.Id) {
+            if (_evalLoopThreadId.Read() != (ulong)thread.SystemPart.Id)
+            {
                 completionRoutine(new DkmEvaluateExpressionAsyncResult(DkmFailedEvaluationResult.Create(
                     inspectionContext, stackFrame, expression.Text, expression.Text,
                     Strings.DebugArbitraryExpressionOnStoppedThreadOnly,
@@ -661,7 +742,8 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             }
 
             var pythonFrame = PyFrameObject.TryCreate(stackFrame);
-            if (pythonFrame == null) {
+            if (pythonFrame == null)
+            {
                 completionRoutine(new DkmEvaluateExpressionAsyncResult(DkmFailedEvaluationResult.Create(
                     inspectionContext, stackFrame, expression.Text, expression.Text,
                     Strings.DebugNoPythonFrameForCurrentFrame,
@@ -670,7 +752,8 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             }
 
             byte[] input = Encoding.UTF8.GetBytes(expression.Text + "\0");
-            if (input.Length > ExpressionEvaluationBufferSize) {
+            if (input.Length > ExpressionEvaluationBufferSize)
+            {
                 completionRoutine(new DkmEvaluateExpressionAsyncResult(DkmFailedEvaluationResult.Create(
                     inspectionContext, stackFrame, expression.Text, expression.Text,
                     Strings.DebugTooLongExpression,
@@ -682,20 +765,24 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             process.WriteMemory(_evalLoopInput.Address, input);
 
             bool timedOut;
-            using (_evalCompleteEvent = new AutoResetEvent(false)) {
+            using (_evalCompleteEvent = new AutoResetEvent(false))
+            {
                 thread.BeginFuncEvalExecution(DkmFuncEvalFlags.None);
                 timedOut = !_evalCompleteEvent.WaitOne(ExpressionEvaluationTimeout);
                 _evalCompleteEvent = null;
             }
 
-            if (timedOut) {
+            if (timedOut)
+            {
                 new RemoteComponent.AbortingEvalExecutionRequest().SendLower(process);
 
                 // We need to stop the process before we can report end of func eval completion
-                using (_evalAbortedEvent = new AutoResetEvent(false)) {
+                using (_evalAbortedEvent = new AutoResetEvent(false))
+                {
                     process.AsyncBreak(false);
 
-                    if (!_evalAbortedEvent.WaitOne(20000)) {
+                    if (!_evalAbortedEvent.WaitOne(20000))
+                    {
                         // This is a catastrophic error, since we can't report func eval completion unless we can stop the process,
                         // and VS will stop responding until we do report completion. At this point we can only kill the debuggee so that the
                         // VS at least gets back to a reasonable state.
@@ -723,25 +810,33 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             var exc_str = (PyObject.FromAddress(process, _evalLoopExcStr.Read()) as IPyBaseStringObject).ToStringOrNull();
             var sehCode = _evalLoopSEHCode.Read();
 
-            if (obj != null) {
+            if (obj != null)
+            {
                 var cppEval = new CppExpressionEvaluator(inspectionContext, stackFrame);
                 var pyEvalResult = new PythonEvaluationResult(obj, expression.Text) { Flags = DkmEvaluationResultFlags.SideEffect };
                 var evalResult = CreatePyObjectEvaluationResult(inspectionContext, stackFrame, null, pyEvalResult, cppEval, null, hasCppView: true, isOwned: true);
                 _evalLoopResult.Write(0); // don't let the eval loop decref the object - we will do it ourselves later, when eval result is closed
                 completionRoutine(new DkmEvaluateExpressionAsyncResult(evalResult));
-            } else if (sehCode != 0) {
+            }
+            else if (sehCode != 0)
+            {
                 completionRoutine(new DkmEvaluateExpressionAsyncResult(DkmFailedEvaluationResult.Create(
                     inspectionContext, stackFrame, expression.Text, expression.Text,
                     Enum.IsDefined(typeof(EXCEPTION_CODE), sehCode)
                         ? Strings.DebugStructuredExceptionWhileEvaluatingExpression.FormatUI(sehCode, (EXCEPTION_CODE)sehCode)
                         : Strings.DebugStructuredExceptionWhileEvaluatingExpressionNotAnEnumValue.FormatUI(sehCode),
                     DkmEvaluationResultFlags.Invalid, null)));
-            } else if (exc_type != null) {
+            }
+            else if (exc_type != null)
+            {
                 string typeName;
                 var typeObject = exc_type as PyTypeObject;
-                if (typeObject != null) {
+                if (typeObject != null)
+                {
                     typeName = typeObject.tp_name.Read().ReadUnicode();
-                } else {
+                }
+                else
+                {
                     typeName = Strings.DebugUnknownExceptionType;
                 }
 
@@ -749,7 +844,9 @@ namespace Microsoft.PythonTools.Debugger.Concord {
                     inspectionContext, stackFrame, expression.Text, expression.Text,
                     Strings.DebugErrorWhileEvaluatingExpression.FormatUI(typeName, exc_str),
                     DkmEvaluationResultFlags.Invalid, null)));
-            } else {
+            }
+            else
+            {
                 completionRoutine(new DkmEvaluateExpressionAsyncResult(DkmFailedEvaluationResult.Create(
                     inspectionContext, stackFrame, expression.Text, expression.Text,
                     Strings.DebugUnknownErrorWhileEvaluatingExpression,
@@ -757,30 +854,37 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             }
         }
 
-        private void OnEvalComplete(DkmThread thread, ulong frameBase, ulong vframe, ulong returnAddress) {
+        private void OnEvalComplete(DkmThread thread, ulong frameBase, ulong vframe, ulong returnAddress)
+        {
             var e = _evalCompleteEvent;
-            if (e != null) {
+            if (e != null)
+            {
                 new RemoteComponent.EndFuncEvalExecutionRequest { ThreadId = thread.UniqueId }.SendLower(thread.Process);
                 e.Set();
             }
         }
 
-        public void OnAsyncBreakComplete(DkmThread thread) {
+        public void OnAsyncBreakComplete(DkmThread thread)
+        {
             var e = _evalAbortedEvent;
-            if (e != null) {
+            if (e != null)
+            {
                 new RemoteComponent.EndFuncEvalExecutionRequest { ThreadId = thread.UniqueId }.SendLower(thread.Process);
                 e.Set();
             }
         }
 
-        public string GetUnderlyingString(DkmEvaluationResult result) {
+        public string GetUnderlyingString(DkmEvaluationResult result)
+        {
             var rawResult = result.GetDataItem<RawEvaluationResult>();
-            if (rawResult != null && rawResult.Value is string) {
+            if (rawResult != null && rawResult.Value is string)
+            {
                 return (string)rawResult.Value;
             }
 
             var objResult = result.GetDataItem<PyObjectEvaluationResult>();
-            if (objResult == null) {
+            if (objResult == null)
+            {
                 return null;
             }
 
@@ -788,27 +892,33 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             return str.ToStringOrNull();
         }
 
-        private class StringErrorSink : ErrorSink {
+        private class StringErrorSink : ErrorSink
+        {
             private readonly StringBuilder _builder = new StringBuilder();
 
-            public override void Add(string message, SourceSpan span, int errorCode, Severity severity) {
+            public override void Add(string message, SourceSpan span, int errorCode, Severity severity)
+            {
                 _builder.AppendLine(message);
             }
 
-            public override string ToString() {
+            public override string ToString()
+            {
                 return _builder.ToString();
             }
         }
 
-        public unsafe void SetValueAsString(DkmEvaluationResult result, string value, int timeout, out string errorText) {
+        public unsafe void SetValueAsString(DkmEvaluationResult result, string value, int timeout, out string errorText)
+        {
             var pyEvalResult = result.GetDataItem<PyObjectEvaluationResult>();
-            if (pyEvalResult == null) {
+            if (pyEvalResult == null)
+            {
                 Debug.Fail("SetValueAsString called on a DkmEvaluationResult without an associated PyObjectEvaluationResult.");
                 throw new NotSupportedException();
             }
 
             var proxy = pyEvalResult.ValueStore as IWritableDataProxy;
-            if (proxy == null) {
+            if (proxy == null)
+            {
                 Debug.Fail("SetValueAsString called on a DkmEvaluationResult that does not correspond to an IWritableDataProxy.");
                 throw new InvalidOperationException();
             }
@@ -821,14 +931,17 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             var parser = Parser.CreateParser(new StringReader(value), pyrtInfo.LanguageVersion, parserOptions);
             var body = (ReturnStatement)parser.ParseTopExpression().Body;
             errorText = parserOptions.ErrorSink.ToString();
-            if (!string.IsNullOrEmpty(errorText)) {
+            if (!string.IsNullOrEmpty(errorText))
+            {
                 return;
             }
 
             var expr = body.Expression;
-            while (true) {
+            while (true)
+            {
                 var parenExpr = expr as ParenthesisExpression;
-                if (parenExpr == null) {
+                if (parenExpr == null)
+                {
                     break;
                 }
                 expr = parenExpr.Expression;
@@ -840,68 +953,106 @@ namespace Microsoft.PythonTools.Debugger.Concord {
             PyObject newObj = null;
 
             var constExpr = expr as ConstantExpression;
-            if (constExpr != null) {
-                if (constExpr.Value == null) {
+            if (constExpr != null)
+            {
+                if (constExpr.Value == null)
+                {
                     newObj = PyObject.None(process);
-                } else if (constExpr.Value is bool) {
+                }
+                else if (constExpr.Value is bool)
+                {
                     // In 2.7, 'True' and 'False' are reported as identifiers, not literals, and are handled separately below.
                     newObj = PyBoolObject33.Create(process, (bool)constExpr.Value);
-                } else if (constExpr.Value is string) {
-                    if (pyrtInfo.LanguageVersion <= PythonLanguageVersion.V27) {
+                }
+                else if (constExpr.Value is string)
+                {
+                    if (pyrtInfo.LanguageVersion <= PythonLanguageVersion.V27)
+                    {
                         newObj = PyUnicodeObject27.Create(process, (string)constExpr.Value);
-                    } else {
+                    }
+                    else
+                    {
                         newObj = PyUnicodeObject33.Create(process, (string)constExpr.Value);
                     }
-                } else if (constExpr.Value is AsciiString) {
+                }
+                else if (constExpr.Value is AsciiString)
+                {
                     newObj = PyBytesObject.Create(process, (AsciiString)constExpr.Value);
                 }
-            } else {
+            }
+            else
+            {
                 var unaryExpr = expr as UnaryExpression;
-                if (unaryExpr != null && sign != 0) {
+                if (unaryExpr != null && sign != 0)
+                {
                     constExpr = unaryExpr.Expression as ConstantExpression;
-                    if (constExpr != null) {
-                        if (constExpr.Value is BigInteger) {
+                    if (constExpr != null)
+                    {
+                        if (constExpr.Value is BigInteger)
+                        {
                             newObj = PyLongObject.Create(process, (BigInteger)constExpr.Value * sign);
-                        } else if (constExpr.Value is int) {
-                            if (pyrtInfo.LanguageVersion <= PythonLanguageVersion.V27) {
+                        }
+                        else if (constExpr.Value is int)
+                        {
+                            if (pyrtInfo.LanguageVersion <= PythonLanguageVersion.V27)
+                            {
                                 newObj = PyIntObject.Create(process, (int)constExpr.Value * sign);
-                            } else {
+                            }
+                            else
+                            {
                                 newObj = PyLongObject.Create(process, (int)constExpr.Value * sign);
                             }
-                        } else if (constExpr.Value is double) {
+                        }
+                        else if (constExpr.Value is double)
+                        {
                             newObj = PyFloatObject.Create(process, (double)constExpr.Value * sign);
-                        } else if (constExpr.Value is Complex) {
+                        }
+                        else if (constExpr.Value is Complex)
+                        {
                             newObj = PyComplexObject.Create(process, (Complex)constExpr.Value * sign);
                         }
                     }
-                } else {
+                }
+                else
+                {
                     var binExpr = expr as BinaryExpression;
-                    if (binExpr != null && (binExpr.Operator == PythonOperator.Add || binExpr.Operator == PythonOperator.Subtract)) {
+                    if (binExpr != null && (binExpr.Operator == PythonOperator.Add || binExpr.Operator == PythonOperator.Subtract))
+                    {
                         int realSign;
                         var realExpr = ForceExplicitSign(binExpr.Left, out realSign) as UnaryExpression;
                         int imagSign;
                         var imagExpr = ForceExplicitSign(binExpr.Right, out imagSign) as UnaryExpression;
-                        if (realExpr != null && realSign != 0 && imagExpr != null && imagSign != 0) {
+                        if (realExpr != null && realSign != 0 && imagExpr != null && imagSign != 0)
+                        {
                             var realConst = realExpr.Expression as ConstantExpression;
                             var imagConst = imagExpr.Expression as ConstantExpression;
-                            if (realConst != null && imagConst != null) {
+                            if (realConst != null && imagConst != null)
+                            {
                                 var realVal = (realConst.Value as int? ?? realConst.Value as double?) as IConvertible;
                                 var imagVal = imagConst.Value as Complex?;
-                                if (realVal != null && imagVal != null) {
+                                if (realVal != null && imagVal != null)
+                                {
                                     double real = realVal.ToDouble(null) * realSign;
                                     double imag = imagVal.Value.Imaginary * imagSign * (binExpr.Operator == PythonOperator.Add ? 1 : -1);
                                     newObj = PyComplexObject.Create(process, new Complex(real, imag));
                                 }
                             }
                         }
-                    } else {
-                        if (pyrtInfo.LanguageVersion <= PythonLanguageVersion.V27) {
+                    }
+                    else
+                    {
+                        if (pyrtInfo.LanguageVersion <= PythonLanguageVersion.V27)
+                        {
                             // 'True' and 'False' are not literals in 2.x, but we want to treat them as such.
                             var name = expr as NameExpression;
-                            if (name != null) {
-                                if (name.Name == "True") {
+                            if (name != null)
+                            {
+                                if (name.Name == "True")
+                                {
                                     newObj = PyBoolObject27.Create(process, true);
-                                } else if (name.Name == "False") {
+                                }
+                                else if (name.Name == "False")
+                                {
                                     newObj = PyBoolObject27.Create(process, false);
                                 }
                             }
@@ -910,9 +1061,11 @@ namespace Microsoft.PythonTools.Debugger.Concord {
                 }
             }
 
-            if (newObj != null) {
+            if (newObj != null)
+            {
                 var oldObj = proxy.Read() as PyObject;
-                if (oldObj != null) {
+                if (oldObj != null)
+                {
                     // We can't free the original value without running some code in the process, and it may be holding heap locks.
                     // So don't decrement refcount now, but instead add it to the list of objects for TraceFunc to GC when it gets
                     // a chance to run next time.
@@ -921,21 +1074,27 @@ namespace Microsoft.PythonTools.Debugger.Concord {
 
                 newObj.ob_refcnt.Increment();
                 proxy.Write(newObj);
-            } else {
+            }
+            else
+            {
                 errorText = Strings.DebugOnlyBoolNumericStringAndNoneSupported;
             }
         }
 
-        private static Expression ForceExplicitSign(Expression expr, out int sign) {
+        private static Expression ForceExplicitSign(Expression expr, out int sign)
+        {
             var constExpr = expr as ConstantExpression;
-            if (constExpr != null && (constExpr.Value is int || constExpr.Value is double || constExpr.Value is BigInteger || constExpr.Value is Complex)) {
+            if (constExpr != null && (constExpr.Value is int || constExpr.Value is double || constExpr.Value is BigInteger || constExpr.Value is Complex))
+            {
                 sign = 1;
                 return new UnaryExpression(PythonOperator.Pos, constExpr);
             }
 
             var unaryExpr = expr as UnaryExpression;
-            if (unaryExpr != null) {
-                switch (unaryExpr.Op) {
+            if (unaryExpr != null)
+            {
+                switch (unaryExpr.Op)
+                {
                     case PythonOperator.Pos:
                         sign = 1;
                         return unaryExpr;
@@ -950,7 +1109,8 @@ namespace Microsoft.PythonTools.Debugger.Concord {
         }
     }
 
-    internal class PythonEvaluationResult {
+    internal class PythonEvaluationResult
+    {
         /// <summary>
         /// A store containing the evaluated value.
         /// </summary>
@@ -971,7 +1131,8 @@ namespace Microsoft.PythonTools.Debugger.Concord {
 
         public DkmEvaluationResultFlags Flags { get; set; }
 
-        public PythonEvaluationResult(IValueStore valueStore, string name = null) {
+        public PythonEvaluationResult(IValueStore valueStore, string name = null)
+        {
             ValueStore = valueStore;
             Name = name;
             Category = DkmEvaluationResultCategory.Data;

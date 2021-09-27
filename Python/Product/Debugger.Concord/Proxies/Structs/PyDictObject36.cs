@@ -14,14 +14,14 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Collections.Generic;
-using Microsoft.PythonTools.Parsing;
-
-namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
+namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs
+{
     [StructProxy(StructName = "PyDictObject", MinVersion = PythonLanguageVersion.V36)]
     [PyType(VariableName = "PyDict_Type", MinVersion = PythonLanguageVersion.V36)]
-    internal class PyDictObject36 : PyDictObject {
-        private class Fields {
+    internal class PyDictObject36 : PyDictObject
+    {
+        private class Fields
+        {
             public StructField<PointerProxy<PyDictKeysObject36>> ma_keys;
             public StructField<PointerProxy<ArrayProxy<PointerProxy<PyObject>>>> ma_values;
         }
@@ -29,27 +29,33 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
         private readonly Fields _fields;
 
         public PyDictObject36(DkmProcess process, ulong address)
-            : base(process, address) {
+            : base(process, address)
+        {
             InitializeStruct(this, out _fields);
             CheckPyType<PyDictObject36>();
         }
 
-        public PointerProxy<PyDictKeysObject36> ma_keys {
+        public PointerProxy<PyDictKeysObject36> ma_keys
+        {
             get { return GetFieldProxy(_fields.ma_keys); }
         }
 
-        public PointerProxy<ArrayProxy<PointerProxy<PyObject>>> ma_values {
+        public PointerProxy<ArrayProxy<PointerProxy<PyObject>>> ma_values
+        {
             get { return GetFieldProxy(_fields.ma_values); }
         }
 
-        public override IEnumerable<KeyValuePair<PyObject, PointerProxy<PyObject>>> ReadElements() {
-            if (ma_keys.IsNull) {
+        public override IEnumerable<KeyValuePair<PyObject, PointerProxy<PyObject>>> ReadElements()
+        {
+            if (ma_keys.IsNull)
+            {
                 yield break;
             }
 
             var keys = ma_keys.Read();
             var size = keys.dk_size.Read();
-            if (size <= 0) {
+            if (size <= 0)
+            {
                 yield break;
             }
 
@@ -57,23 +63,30 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
             var dk_entries = keys.dk_entries;
             var entry = dk_entries[0];
 
-            if (!ma_values.IsNull) {
+            if (!ma_values.IsNull)
+            {
                 var values = ma_values.Read();
                 var value = values[0];
 
-                for (int i = 0; i < n; ++i) {
+                for (int i = 0; i < n; ++i)
+                {
                     var key = entry.me_key;
-                    if (!value.IsNull && !key.IsNull) {
+                    if (!value.IsNull && !key.IsNull)
+                    {
                         yield return new KeyValuePair<PyObject, PointerProxy<PyObject>>(key.Read(), value);
                     }
                     entry = entry.GetAdjacentProxy(1);
                     value = value.GetAdjacentProxy(1);
                 }
-            } else {
-                for (int i = 0; i < n; ++i) {
+            }
+            else
+            {
+                for (int i = 0; i < n; ++i)
+                {
                     var key = entry.me_key;
                     var value = entry.me_value;
-                    if (!key.IsNull && !value.IsNull) {
+                    if (!key.IsNull && !value.IsNull)
+                    {
                         yield return new KeyValuePair<PyObject, PointerProxy<PyObject>>(key.Read(), value);
                     }
                     entry = entry.GetAdjacentProxy(1);
@@ -83,8 +96,10 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
     }
 
     [StructProxy(MinVersion = PythonLanguageVersion.V36, StructName = "_dictkeysobject")]
-    internal class PyDictKeysObject36 : StructProxy {
-        public class Fields {
+    internal class PyDictKeysObject36 : StructProxy
+    {
+        public class Fields
+        {
             public StructField<SSizeTProxy> dk_size;
             public StructField<SSizeTProxy> dk_nentries;
             public StructField<ArrayProxy<SByteProxy>> dk_indices;
@@ -92,29 +107,42 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
 
         public readonly Fields _fields;
 
-        public SSizeTProxy dk_size {
+        public SSizeTProxy dk_size
+        {
             get { return GetFieldProxy(_fields.dk_size); }
         }
 
-        public SSizeTProxy dk_nentries {
+        public SSizeTProxy dk_nentries
+        {
             get { return GetFieldProxy(_fields.dk_nentries); }
         }
 
-        public ArrayProxy<PyDictKeyEntry> dk_entries {
-            get {
+        public ArrayProxy<PyDictKeyEntry> dk_entries
+        {
+            get
+            {
                 // dk_entries is located after dk_indices, which is
                 // variable length depending on the size of the table.
                 long size = dk_size.Read();
                 long offset = _fields.dk_indices.Offset;
-                if (size <= 0) {
+                if (size <= 0)
+                {
                     return default(ArrayProxy<PyDictKeyEntry>);
-                } else if (size <= 0xFF) {
+                }
+                else if (size <= 0xFF)
+                {
                     offset += size;
-                } else if (size <= 0xFFFF) {
+                }
+                else if (size <= 0xFFFF)
+                {
                     offset += size * 2;
-                } else if (size <= 0xFFFFFFFF) {
+                }
+                else if (size <= 0xFFFFFFFF)
+                {
                     offset += size * 4;
-                } else {
+                }
+                else
+                {
                     offset += size * 8;
                 }
 
@@ -126,7 +154,8 @@ namespace Microsoft.PythonTools.Debugger.Concord.Proxies.Structs {
         }
 
         public PyDictKeysObject36(DkmProcess process, ulong address)
-            : base(process, address) {
+            : base(process, address)
+        {
             InitializeStruct(this, out _fields);
         }
     }

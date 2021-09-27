@@ -14,29 +14,38 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-namespace Microsoft.PythonTools.EnvironmentsList {
-    sealed class EnvironmentPathsExtensionProvider : IEnvironmentViewExtension {
+namespace Microsoft.PythonTools.EnvironmentsList
+{
+    sealed class EnvironmentPathsExtensionProvider : IEnvironmentViewExtension
+    {
         private EnvironmentPathsExtension _wpfObject;
 
-        public int SortPriority {
+        public int SortPriority
+        {
             get { return -10; }
         }
 
-        public string LocalizedDisplayName {
+        public string LocalizedDisplayName
+        {
             get { return Resources.EnvironmentPathsExtensionDisplayName; }
         }
 
-        public object HelpContent {
+        public object HelpContent
+        {
             get { return Resources.EnvironmentPathsExtensionHelpContent; }
         }
 
-        public string HelpText {
+        public string HelpText
+        {
             get { return Resources.EnvironmentPathsExtensionHelpContent; }
         }
 
-        public FrameworkElement WpfObject {
-            get {
-                if (_wpfObject == null) {
+        public FrameworkElement WpfObject
+        {
+            get
+            {
+                if (_wpfObject == null)
+                {
                     _wpfObject = new EnvironmentPathsExtension();
                 }
                 return _wpfObject;
@@ -44,68 +53,85 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         }
     }
 
-    public partial class EnvironmentPathsExtension : UserControl {
+    public partial class EnvironmentPathsExtension : UserControl
+    {
         public static readonly ICommand OpenInBrowser = new RoutedCommand();
         public static readonly ICommand OpenInFileExplorer = new RoutedCommand();
         public static readonly ICommand StartInterpreter = new RoutedCommand();
         public static readonly ICommand StartWindowsInterpreter = new RoutedCommand();
         public static readonly ICommand ConfigureEnvironment = new RoutedCommand();
 
-        public EnvironmentPathsExtension() {
+        public EnvironmentPathsExtension()
+        {
             InitializeComponent();
         }
 
-        void OpenInFileExplorer_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
+        void OpenInFileExplorer_CanExecute(object sender, CanExecuteRoutedEventArgs e)
+        {
             var path = e.Parameter as string;
             e.CanExecute = File.Exists(path) || Directory.Exists(path);
         }
 
-        private void OpenInFileExplorer_Executed(object sender, ExecutedRoutedEventArgs e) {
+        private void OpenInFileExplorer_Executed(object sender, ExecutedRoutedEventArgs e)
+        {
             var path = (string)e.Parameter;
             var psi = new ProcessStartInfo();
             psi.UseShellExecute = false;
             psi.FileName = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "explorer.exe");
 
-            if (File.Exists(path)) {
+            if (File.Exists(path))
+            {
                 psi.Arguments = "/select,\"" + path + "\"";
-            } else if (Directory.Exists(path)) {
+            }
+            else if (Directory.Exists(path))
+            {
                 psi.Arguments = "\"" + path + "\"";
             }
 
             Process.Start(psi);
         }
 
-        private void CopyToClipboard_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
+        private void CopyToClipboard_CanExecute(object sender, CanExecuteRoutedEventArgs e)
+        {
             e.CanExecute = e.Parameter is string || e.Parameter is IDataObject;
             e.Handled = true;
         }
 
-        private void CopyToClipboard_Executed(object sender, ExecutedRoutedEventArgs e) {
+        private void CopyToClipboard_Executed(object sender, ExecutedRoutedEventArgs e)
+        {
             var str = e.Parameter as string;
-            if (str != null) {
+            if (str != null)
+            {
                 Clipboard.SetText(str);
-            } else {
+            }
+            else
+            {
                 Clipboard.SetDataObject((IDataObject)e.Parameter);
             }
         }
 
-        private void OpenInBrowser_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
+        private void OpenInBrowser_CanExecute(object sender, CanExecuteRoutedEventArgs e)
+        {
             e.CanExecute = true;
         }
 
-        private void OpenInBrowser_Executed(object sender, ExecutedRoutedEventArgs e) {
+        private void OpenInBrowser_Executed(object sender, ExecutedRoutedEventArgs e)
+        {
             var url = (string)e.Parameter;
             Process.Start(url)?.Dispose();
         }
 
-        private void IsIPythonModeEnabled_Loaded(object sender, RoutedEventArgs e) {
+        private void IsIPythonModeEnabled_Loaded(object sender, RoutedEventArgs e)
+        {
             var ev = (e.Source as FrameworkElement)?.DataContext as EnvironmentView;
-            if (ev == null) {
+            if (ev == null)
+            {
                 return;
             }
 
             e.Handled = true;
-            if (ev.IsIPythonModeEnabled.HasValue) {
+            if (ev.IsIPythonModeEnabled.HasValue)
+            {
                 return;
             }
 

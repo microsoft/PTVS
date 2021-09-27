@@ -14,30 +14,32 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.ComponentModel.Composition;
-using System.Diagnostics;
-using Microsoft.Windows.Design.Host;
-
-namespace Microsoft.PythonTools.XamlDesignerSupport {
+namespace Microsoft.PythonTools.XamlDesignerSupport
+{
     /// <summary>
     /// Provides access to the DesignerContext and WpfEventBindingProvider assuming that functionality
     /// is installed into VS.  If it's not installed then this becomes a nop and DesignerContextType
     /// returns null;
     /// </summary>
     [Export(typeof(IXamlDesignerSupport))]
-    class XamlDesignerSupport : IXamlDesignerSupport {
-        private readonly Lazy<Guid> _DesignerContextTypeGuid = new Lazy<Guid>(() => {
-            try {
+    class XamlDesignerSupport : IXamlDesignerSupport
+    {
+        private readonly Lazy<Guid> _DesignerContextTypeGuid = new Lazy<Guid>(() =>
+        {
+            try
+            {
                 return typeof(DesignerContext).GUID;
-            } catch {
+            }
+            catch
+            {
                 return Guid.Empty;
             }
         });
 
         public Guid DesignerContextTypeGuid => _DesignerContextTypeGuid.Value;
 
-        public object CreateDesignerContext() {
+        public object CreateDesignerContext()
+        {
             var context = new DesignerContext();
             //Set the RuntimeNameProvider so the XAML designer will call it when items are added to
             //a design surface. Since the provider does not depend on an item context, we provide it at 
@@ -49,7 +51,8 @@ namespace Microsoft.PythonTools.XamlDesignerSupport {
             return context;
         }
 
-        public void InitializeEventBindingProvider(object designerContext, IXamlDesignerCallback callback) {
+        public void InitializeEventBindingProvider(object designerContext, IXamlDesignerCallback callback)
+        {
             Debug.Assert(designerContext is DesignerContext);
             ((DesignerContext)designerContext).EventBindingProvider = new WpfEventBindingProvider(callback);
         }
