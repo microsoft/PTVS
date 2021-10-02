@@ -353,6 +353,15 @@ namespace Microsoft.CookiecutterTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed to create virtual environment at &apos;{0}&apos;.
+        /// </summary>
+        public static string InstallingCookiecutterCreateEnvFailed {
+            get {
+                return ResourceManager.GetString("InstallingCookiecutterCreateEnvFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Creating virtual environment without pip at &apos;{0}&apos;.
         /// </summary>
         public static string InstallingCookiecutterCreateEnvWithoutPip {

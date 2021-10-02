@@ -30,19 +30,17 @@ namespace Microsoft.CookiecutterTools.Model {
     class CookiecutterClient : ICookiecutterClient {
         private readonly IServiceProvider _provider;
         private readonly CookiecutterPythonInterpreter _interpreter;
-        private readonly string _envFolderPath;
-        private readonly string _envInterpreterPath;
+        private readonly string _expectedEnvFolderPath;
+        private string _envFolderPath;
+        private string _envInterpreterPath;
         private readonly Redirector _redirector;
 
         internal string DefaultBasePath { get; set; } = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
 
+
         public bool CookiecutterInstalled {
             get {
-                if (!File.Exists(_envInterpreterPath)) {
-                    return false;
-                }
-
-                return true;
+                return File.Exists(_envInterpreterPath);
             }
         }
 
@@ -50,13 +48,20 @@ namespace Microsoft.CookiecutterTools.Model {
             _provider = provider;
             _interpreter = interpreter;
             var localAppDataFolderPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            _envFolderPath = Path.Combine(localAppDataFolderPath, "Microsoft", "CookiecutterTools", "env");
-            _envInterpreterPath = Path.Combine(_envFolderPath, "scripts", "python.exe");
+
+            // This is where the env *should* be created, but not necessarily where it will live on disk.
+            // See the GetRealPath function for more details
+            _expectedEnvFolderPath = Path.Combine(localAppDataFolderPath, "Microsoft", "CookiecutterTools", "env");
+
+            // get the real paths to the env and interpreter, in case they've been redirected
+            _envFolderPath = Task.Run(() => GetRealPath(_expectedEnvFolderPath)).Result;
+            _envInterpreterPath = GetInterpreterPathFromEnvFolderPath(_envFolderPath);
+
             _redirector = redirector;
         }
 
         public async Task<bool> IsCookiecutterInstalled() {
-            if (!File.Exists(_envInterpreterPath)) {
+            if (!CookiecutterInstalled) {
                 return false;
             }
 
@@ -72,36 +77,63 @@ namespace Microsoft.CookiecutterTools.Model {
         public async Task CreateCookiecutterEnv() {
             // Create a virtual environment using the global interpreter
             try {
-                await CreateVenv();
-            } catch (ProcessException ex) when (ex.Result.ExitCode == 1) {
-                // Create fails on some Anaconda due to venv failing to install pip.
-                // Try again by installing pip ourselves.
                 await CreateVenvWithoutPipThenInstallPip();
+            } catch (ProcessException ex) {
+                // critical exception is needed for EnsureCookiecutterIsInstalledAsync() to fail properly
+                var errMsg = Strings.InstallingCookiecutterCreateEnvFailed.FormatUI(_envFolderPath);
+                throw new CriticalException(errMsg, ex);
             }
         }
 
-        private async Task CreateVenv() {
-            RemoveExistingVenv();
+        private string GetInterpreterPathFromEnvFolderPath(string envFolderPath) {
+            return Path.Combine(envFolderPath, "scripts", "python.exe");
+        }
 
-            _redirector.WriteLine(Strings.InstallingCookiecutterCreateEnv.FormatUI(_envFolderPath));
+        // If the global interpreter comes from the Microsoft Store, and you try to create a venv
+        // under %localappdata%, the venv will actually be created under the python install localcache,
+        // and a redirect will be put in place that is only understood by the python.exe used to create
+        // the venv.
+        // Therefore, we have to use the python intepreter to check the real path of the venv,
+        // in case it's been redirected.
+        private async Task<string> GetRealPath(string path) {
+
+            // The expected path is going to be passed into python as a string, which means backslashes have to be escaped.
+            var expectedPath = path.Replace("\\", "\\\\");
+            var command = $"import os; print(os.path.realpath('{expectedPath}'))";
             var output = ProcessOutput.Run(
                 _interpreter.InterpreterExecutablePath,
-                new[] { "-m", "venv", _envFolderPath },
+                new[] { "-c", command },
                 null,
                 null,
                 false,
                 _redirector
             );
-            await WaitForOutput(_interpreter.InterpreterExecutablePath, output);
+
+            var result = await WaitForOutput(_interpreter.InterpreterExecutablePath, output);
+            return result.StandardOutputLines.FirstOrDefault();
         }
 
         private async Task CreateVenvWithoutPipThenInstallPip() {
+            
+            // The venv is not guaranteed to be created where expected, see GetRealPath() for more information.
+
+            // Also, Python has a bug (https://bugs.python.org/issue45337) where it doesn't
+            // keep track of the real location of the redirected venv when creating a venv with pip installed.
+            // In this case, the call to python.exe will have an exit code of 106.
+
+            // Therefore, the workaround is the following:
+            // 1. Create the venv WITHOUT PIP every time
+            // 2. Run python and check os.path.realpath against the expected venv path
+            // 3. If the real path comes back different, that's the real venv path.
+            // 5. Install pip using python.exe and the real venv path.
+
             RemoveExistingVenv();
 
-            _redirector.WriteLine(Strings.InstallingCookiecutterCreateEnvWithoutPip.FormatUI(_envFolderPath));
+            // create the venv without pip installed
+            _redirector.WriteLine(Strings.InstallingCookiecutterCreateEnvWithoutPip.FormatUI(_expectedEnvFolderPath));
             var output = ProcessOutput.Run(
                 _interpreter.InterpreterExecutablePath,
-                new[] { "-m", "venv", _envFolderPath, "--without-pip" },
+                new[] { "-m", "venv", _expectedEnvFolderPath, "--without-pip" },
                 null,
                 null,
                 false,
@@ -109,6 +141,12 @@ namespace Microsoft.CookiecutterTools.Model {
             );
             await WaitForOutput(_interpreter.InterpreterExecutablePath, output);
 
+            // If we get here, the environment was created successfully.
+            // Update the envFolderPath, in case it's been redirected.
+            _envFolderPath = Task.Run(() => GetRealPath(_expectedEnvFolderPath)).Result;
+            _envInterpreterPath = GetInterpreterPathFromEnvFolderPath(_envFolderPath);
+
+            // install pip in the new environment, wherever it is
             _redirector.WriteLine(Strings.InstallingCookiecutterInstallPip.FormatUI(_envFolderPath));
             var pipScriptPath = PythonToolsInstallPath.GetFile("pip_downloader.py");
             output = ProcessOutput.Run(

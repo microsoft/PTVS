@@ -53,7 +53,7 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
             static extern int SHFileOperation([In, Out] ref SHFILEOPSTRUCT lpFileOp);
 
 
-            [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode, Pack = 2)]
+            [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
             struct SHFILEOPSTRUCT {
                 public IntPtr hwnd;
                 public FO_Func wFunc;
