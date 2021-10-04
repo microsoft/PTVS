@@ -35,6 +35,7 @@ namespace Microsoft.CookiecutterTools.Model {
         private string _envInterpreterPath;
         private readonly Redirector _redirector;
 
+
         internal string DefaultBasePath { get; set; } = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
 
 
@@ -49,15 +50,15 @@ namespace Microsoft.CookiecutterTools.Model {
             _interpreter = interpreter;
             var localAppDataFolderPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
 
+            _redirector = redirector;
+
             // This is where the env *should* be created, but not necessarily where it will live on disk.
             // See the GetRealPath function for more details
             _expectedEnvFolderPath = Path.Combine(localAppDataFolderPath, "Microsoft", "CookiecutterTools", "env");
 
-            // get the real paths to the env and interpreter, in case they've been redirected
+            // Get the real paths to the env and interpreter, in case they've been redirected
             _envFolderPath = Task.Run(() => GetRealPath(_expectedEnvFolderPath)).Result;
             _envInterpreterPath = GetInterpreterPathFromEnvFolderPath(_envFolderPath);
-
-            _redirector = redirector;
         }
 
         public async Task<bool> IsCookiecutterInstalled() {
@@ -97,16 +98,20 @@ namespace Microsoft.CookiecutterTools.Model {
         // in case it's been redirected.
         private async Task<string> GetRealPath(string path) {
 
-            // The expected path is going to be passed into python as a string, which means backslashes have to be escaped.
-            var expectedPath = path.Replace("\\", "\\\\");
-            var command = $"import os; print(os.path.realpath('{expectedPath}'))";
-            var output = ProcessOutput.Run(
+            // if we can see the path, it hasn't been redirected, so no need to call into python
+            if (Directory.Exists(path) || File.Exists(path)) {
+                return path;
+            }
+
+            // get the redirected path from python
+            var command = $"import os; print(os.path.realpath(r'{ path }'))";
+            var output = ProcessOutput.Run (
                 _interpreter.InterpreterExecutablePath,
                 new[] { "-c", command },
                 null,
                 null,
                 false,
-                _redirector
+                null
             );
 
             var result = await WaitForOutput(_interpreter.InterpreterExecutablePath, output);
@@ -143,7 +148,7 @@ namespace Microsoft.CookiecutterTools.Model {
 
             // If we get here, the environment was created successfully.
             // Update the envFolderPath, in case it's been redirected.
-            _envFolderPath = Task.Run(() => GetRealPath(_expectedEnvFolderPath)).Result;
+            _envFolderPath = await GetRealPath(_expectedEnvFolderPath);
             _envInterpreterPath = GetInterpreterPathFromEnvFolderPath(_envFolderPath);
 
             // install pip in the new environment, wherever it is
