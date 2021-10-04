@@ -120,8 +120,11 @@ namespace Microsoft.CookiecutterTools.Model {
                 var redirectedPath = result.StandardOutputLines.FirstOrDefault();
                 _redirector.WriteLine(Strings.LookingForRedirectedEnvFound.FormatUI(redirectedPath));
                 return redirectedPath;
-            } catch (ProcessException){
+            } catch (ProcessException p){
                 _redirector.WriteLine(Strings.LookingForRedirectedEnvFailed.FormatUI(path));
+                foreach (var line in p.Result.StandardErrorLines) {
+                    _redirector.WriteLine(line);
+                }
                 throw;
             }
         }
