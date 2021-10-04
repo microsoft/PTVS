@@ -19,7 +19,7 @@ namespace Microsoft.CookiecutterTools {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class Strings {
@@ -475,6 +475,33 @@ namespace Microsoft.CookiecutterTools {
         public static string LoadTemplateValueSourceNotSupportedWarning {
             get {
                 return ResourceManager.GetString("LoadTemplateValueSourceNotSupportedWarning", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Looking for redirected environment at &apos;{0}&apos;.
+        /// </summary>
+        public static string LookingForRedirectedEnv {
+            get {
+                return ResourceManager.GetString("LookingForRedirectedEnv", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to look for redirected environment at &apos;{0}&apos;.
+        /// </summary>
+        public static string LookingForRedirectedEnvFailed {
+            get {
+                return ResourceManager.GetString("LookingForRedirectedEnvFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Found redirected environment at &apos;{0}&apos;.
+        /// </summary>
+        public static string LookingForRedirectedEnvFound {
+            get {
+                return ResourceManager.GetString("LookingForRedirectedEnvFound", resourceCulture);
             }
         }
         

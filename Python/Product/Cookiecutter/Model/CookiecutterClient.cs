@@ -104,6 +104,7 @@ namespace Microsoft.CookiecutterTools.Model {
             }
 
             // get the redirected path from python
+            _redirector.WriteLine(Strings.LookingForRedirectedEnv.FormatUI(path));
             var command = $"import os; print(os.path.realpath(r'{ path }'))";
             var output = ProcessOutput.Run (
                 _interpreter.InterpreterExecutablePath,
@@ -114,8 +115,15 @@ namespace Microsoft.CookiecutterTools.Model {
                 null
             );
 
-            var result = await WaitForOutput(_interpreter.InterpreterExecutablePath, output);
-            return result.StandardOutputLines.FirstOrDefault();
+            try {
+                var result = await WaitForOutput(_interpreter.InterpreterExecutablePath, output);
+                var redirectedPath = result.StandardOutputLines.FirstOrDefault();
+                _redirector.WriteLine(Strings.LookingForRedirectedEnvFound.FormatUI(redirectedPath));
+                return redirectedPath;
+            } catch (ProcessException){
+                _redirector.WriteLine(Strings.LookingForRedirectedEnvFailed.FormatUI(path));
+                throw;
+            }
         }
 
         private async Task CreateVenvWithoutPipThenInstallPip() {

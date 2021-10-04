@@ -542,4 +542,16 @@ Please delete the installed template and try again.</value>
     <value>Failed to create virtual environment at '{0}'</value>
     <comment>{0} is a folder path </comment>
   </data>
+  <data name="LookingForRedirectedEnv" xml:space="preserve">
+    <value>Looking for redirected environment at '{0}'</value>
+    <comment>{0} is a folder path</comment>
+  </data>
+  <data name="LookingForRedirectedEnvFailed" xml:space="preserve">
+    <value>Failed to look for redirected environment at '{0}'</value>
+    <comment>{0} is a folder path</comment>
+  </data>
+  <data name="LookingForRedirectedEnvFound" xml:space="preserve">
+    <value>Found redirected environment at '{0}'</value>
+    <comment>{0} is a folder path</comment>
+  </data>
 </root>
