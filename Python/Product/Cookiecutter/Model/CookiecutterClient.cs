@@ -33,17 +33,11 @@ namespace Microsoft.CookiecutterTools.Model {
         private readonly string _expectedEnvFolderPath;
         private string _envFolderPath;
         private string _envInterpreterPath;
+        private readonly Task<string> _redirectEnvTask;
         private readonly Redirector _redirector;
 
 
         internal string DefaultBasePath { get; set; } = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-
-
-        public bool CookiecutterInstalled {
-            get {
-                return File.Exists(_envInterpreterPath);
-            }
-        }
 
         public CookiecutterClient(IServiceProvider provider, CookiecutterPythonInterpreter interpreter, Redirector redirector) {
             _provider = provider;
@@ -56,14 +50,20 @@ namespace Microsoft.CookiecutterTools.Model {
             // See the GetRealPath function for more details
             _expectedEnvFolderPath = Path.Combine(localAppDataFolderPath, "Microsoft", "CookiecutterTools", "env");
 
+            // set up the task to check for env redirection
+            _redirectEnvTask = GetRealPath(_expectedEnvFolderPath);
+
             // Get the real paths to the env and interpreter, in case they've been redirected
-            _envFolderPath = Task.Run(() => GetRealPath(_expectedEnvFolderPath)).Result;
-            _envInterpreterPath = GetInterpreterPathFromEnvFolderPath(_envFolderPath);
+            //_envFolderPath = Task.Run(() => GetRealPath(_expectedEnvFolderPath)).Result;
+            //_envInterpreterPath = GetInterpreterPathFromEnvFolderPath(_envFolderPath);
         }
 
         public async Task<bool> IsCookiecutterInstalled() {
-            if (!CookiecutterInstalled) {
-                return false;
+
+            // wait for env redirection task
+            if (string.IsNullOrEmpty(_envFolderPath)) {
+                _envFolderPath = await _redirectEnvTask;
+                _envInterpreterPath = GetInterpreterPathFromEnvFolderPath(_envFolderPath);
             }
 
             try {
@@ -76,12 +76,13 @@ namespace Microsoft.CookiecutterTools.Model {
         }
 
         public async Task CreateCookiecutterEnv() {
+
             // Create a virtual environment using the global interpreter
             try {
                 await CreateVenvWithoutPipThenInstallPip();
             } catch (ProcessException ex) {
                 // critical exception is needed for EnsureCookiecutterIsInstalledAsync() to fail properly
-                var errMsg = Strings.InstallingCookiecutterCreateEnvFailed.FormatUI(_envFolderPath);
+                var errMsg = Strings.InstallingCookiecutterCreateEnvFailed.FormatUI(_expectedEnvFolderPath);
                 throw new CriticalException(errMsg, ex);
             }
         }
@@ -106,19 +107,17 @@ namespace Microsoft.CookiecutterTools.Model {
             // get the redirected path from python
             _redirector.WriteLine(Strings.LookingForRedirectedEnv.FormatUI(path));
             var command = $"import os; print(os.path.realpath(r'{ path }'))";
-            var output = ProcessOutput.Run (
+            var output = ProcessOutput.RunHiddenAndCapture (
                 _interpreter.InterpreterExecutablePath,
-                new[] { "-c", command },
-                null,
-                null,
-                false,
-                null
+                new[] { "-c", command }
             );
 
             try {
                 var result = await WaitForOutput(_interpreter.InterpreterExecutablePath, output);
                 var redirectedPath = result.StandardOutputLines.FirstOrDefault();
-                _redirector.WriteLine(Strings.LookingForRedirectedEnvFound.FormatUI(redirectedPath));
+                if (!string.IsNullOrEmpty(redirectedPath) && Directory.Exists(redirectedPath)) {
+                    _redirector.WriteLine(Strings.LookingForRedirectedEnvFound.FormatUI(redirectedPath));
+                }
                 return redirectedPath;
             } catch (ProcessException p){
                 _redirector.WriteLine(Strings.LookingForRedirectedEnvFailed.FormatUI(path));
@@ -130,7 +129,13 @@ namespace Microsoft.CookiecutterTools.Model {
         }
 
         private async Task CreateVenvWithoutPipThenInstallPip() {
-            
+
+            // wait for env redirection task
+            if (string.IsNullOrEmpty(_envFolderPath)) {
+                _envFolderPath = await _redirectEnvTask;
+                _envInterpreterPath = GetInterpreterPathFromEnvFolderPath(_envFolderPath);
+            }
+
             // The venv is not guaranteed to be created where expected, see GetRealPath() for more information.
 
             // Also, Python has a bug (https://bugs.python.org/issue45337) where it doesn't
@@ -143,7 +148,7 @@ namespace Microsoft.CookiecutterTools.Model {
             // 3. If the real path comes back different, that's the real venv path.
             // 5. Install pip using python.exe and the real venv path.
 
-            RemoveExistingVenv();
+            RemoveExistingVenv(_envFolderPath);
 
             // create the venv without pip installed
             _redirector.WriteLine(Strings.InstallingCookiecutterCreateEnvWithoutPip.FormatUI(_expectedEnvFolderPath));
@@ -176,17 +181,24 @@ namespace Microsoft.CookiecutterTools.Model {
             await WaitForOutput(_interpreter.InterpreterExecutablePath, output);
         }
 
-        private void RemoveExistingVenv() {
-            if (Directory.Exists(_envFolderPath)) {
-                _redirector.WriteLine(Strings.InstallingCookiecutterDeleteEnv.FormatUI(_envFolderPath));
+        private void RemoveExistingVenv(string envPath) {
+            if (Directory.Exists(envPath)) {
+                _redirector.WriteLine(Strings.InstallingCookiecutterDeleteEnv.FormatUI(envPath));
                 try {
-                    Directory.Delete(_envFolderPath, true);
+                    Directory.Delete(envPath, true);
                 } catch (DirectoryNotFoundException) {
                 }
             }
         }
 
         public async Task InstallPackage() {
+
+            // wait for env redirection task
+            if (string.IsNullOrEmpty(_envFolderPath)) {
+                _envFolderPath = await _redirectEnvTask;
+                _envInterpreterPath = GetInterpreterPathFromEnvFolderPath(_envFolderPath);
+            }
+
             _redirector.WriteLine(Strings.InstallingCookiecutterInstallPackages.FormatUI(_envFolderPath));
             var output = ProcessOutput.Run(
                 _envInterpreterPath,
@@ -203,6 +215,12 @@ namespace Microsoft.CookiecutterTools.Model {
         public async Task<TemplateContext> LoadUnrenderedContextAsync(string localTemplateFolder, string userConfigFilePath) {
             if (localTemplateFolder == null) {
                 throw new ArgumentNullException(nameof(localTemplateFolder));
+            }
+
+            // wait for env redirection task
+            if (string.IsNullOrEmpty(_envFolderPath)) {
+                _envFolderPath = await _redirectEnvTask;
+                _envInterpreterPath = GetInterpreterPathFromEnvFolderPath(_envFolderPath);
             }
 
             var unrenderedContext = new TemplateContext();
@@ -257,6 +275,12 @@ namespace Microsoft.CookiecutterTools.Model {
 
             if (outputFolderPath == null) {
                 throw new ArgumentNullException(nameof(outputFolderPath));
+            }
+
+            // wait for env redirection task
+            if (string.IsNullOrEmpty(_envFolderPath)) {
+                _envFolderPath = await _redirectEnvTask;
+                _envInterpreterPath = GetInterpreterPathFromEnvFolderPath(_envFolderPath);
             }
 
             var renderedContext = new TemplateContext();
@@ -400,6 +424,12 @@ namespace Microsoft.CookiecutterTools.Model {
 
             if (outputFolderPath == null) {
                 throw new ArgumentNullException(nameof(outputFolderPath));
+            }
+
+            // wait for env redirection task
+            if (string.IsNullOrEmpty(_envFolderPath)) {
+                _envFolderPath = await _redirectEnvTask;
+                _envInterpreterPath = GetInterpreterPathFromEnvFolderPath(_envFolderPath);
             }
 
             string tempFolder = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
