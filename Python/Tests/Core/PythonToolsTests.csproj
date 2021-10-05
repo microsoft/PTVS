@@ -121,6 +121,10 @@
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
+    <Reference Include="System.Web.Razor, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.AspNet.Razor.3.2.7\lib\net45\System.Web.Razor.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System.Xaml" />
     <Reference Include="System.XML" />
     <Reference Include="System.Xml.Linq" />
@@ -133,7 +137,13 @@
     <Compile Include="AssemblySetup.cs" />
     <Compile Include="AutoIndentTests.cs" />
     <Compile Include="BuildTasksTests.cs" />
-    <Compile Include="CodeCellTests.cs" />
+    <ApplicationDefinition Include="CodeCellTests.cs" />
+    <Compile Include="CodeCellTestsBase.cs" />
+    <Compile Include="CodeCellTestsBase1.cs" />
+    <Compile Include="CodeCellTestsBase11.cs" />
+    <Compile Include="CodeCellTestsBase2.cs" />
+    <Compile Include="CodeCellTestsBase3.cs" />
+    <Compile Include="ITextBuffer.cs" />
     <Compile Include="PythonWorkspaceContextProviderTests.cs" />
     <Compile Include="PythonWorkspaceContextTests.cs" />
     <Compile Include="WorkspaceInterpreterFactoryTests.cs" />

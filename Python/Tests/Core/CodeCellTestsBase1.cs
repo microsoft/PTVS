@@ -14,25 +14,10 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using PythonToolsTests;
-
-namespace PythonToolsTests
-{
-	using System.Web.Razor.Text;
-
-	using CCA = CodeCellAnalysis;
-	using PriorityAttribute = Microsoft.VisualStudio.TestTools.UnitTesting.PriorityAttribute;
-}
-
-namespace PythonToolsTests
-{
-}
-
 namespace Microsoft.PythonTools.Debugger.Concord
 {
-
 	[TestClass]
-	public class CodeCellTests : CodeCellTestsBase
+	public class CodeCellTestsBase
 	{
 	}
 }
